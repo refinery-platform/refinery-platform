@@ -30,11 +30,8 @@ def api(request,api_key):
     return HttpResponse("Refinery Galaxy Connector<br><br>API Key: %s" % api_key )
 
 def history(request,api_key):
-    histories = get( api_key, "http://localhost:8080/api/histories" )
+    
+    # NOTE: in the future the Galaxy instance URL will be replaced with the connection information
+    histories = get( api_key, "http://fisher.med.harvard.edu:4216/api/histories" )
      
-    #template = loader.get_template('galaxy_connector/histories.html')
-    #context = Context({ 'histories': histories, })
-
-    #return HttpResponse(template.render(context))
-    #return render_to_response( "galaxy_connector/histories.html", { "histories": histories } )
     return render_to_response( "galaxy_connector/histories.html", { "histories": histories }, context_instance=RequestContext( request ) )
