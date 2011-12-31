@@ -1,0 +1,21 @@
+{% extends "galaxy_connector/base.html" %}
+
+{% block title %}
+{{ block.super }} - Histories
+{% endblock %}
+
+{% block subheader %}
+Histories
+{% endblock %}
+
+{% block content %}
+{% if histories %}
+    <ul>
+    {% for history in histories %}
+        <li>{{ history.name }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No histories available.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,45 @@
+body {
+    margin-top: 20px;
+    margin-left: 30px;  
+    margin-right: 30px; 
+    margin-bottom: 20px;    
+    background-color: #153759;
+}
+
+#header {
+    font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
+    color: #fffeff; 
+}
+
+#header h1 {
+    text-shadow: rgba(0,0,0,0.5) 0px 0px 2px;
+}
+
+#subheader h3 {
+    text-shadow: rgba(0,0,0,0.5) 0px 0px 2px;
+}
+
+#subheader {
+    font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+    color: #ddde52;
+}
+
+#footer {
+    color: #fffeff;
+    text-transform: none;   
+    font: normal normal small "Lucida Grande", Lucida, Verdana, sans-serif;
+    text-align: left;
+    padding-top: 5px;
+}
+
+#content {
+    border-top: 1px dotted #c5d355;
+    border-bottom: 1px dotted #c5d355;      
+    margin-bottom: 5px;
+    margin-top: 5px;
+    background-color: #184169;
+    color: #90bce7;
+    font: small "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+}
+
+
