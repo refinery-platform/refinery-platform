@@ -24,6 +24,13 @@ body {
     color: #ddde52;
 }
 
+#subheader a {
+    font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+    color: #ddde52;
+    text-decoration: none;
+    border-bottom: 1px solid #ddde52;
+}
+
 #footer {
     color: #fffeff;
     text-transform: none;   
@@ -38,6 +45,11 @@ body {
     margin-bottom: 5px;
     margin-top: 5px;
     background-color: #184169;
+    color: #90bce7;
+    font: small "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+}
+
+#content a {
     color: #90bce7;
     font: small "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
 }

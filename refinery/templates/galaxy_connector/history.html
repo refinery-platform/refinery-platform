@@ -1,0 +1,32 @@
+{% extends "galaxy_connector/base.html" %}
+
+{% block title %}
+{{ block.super }} - Histories
+{% endblock %}
+
+{% block subheader %}
+{{ instance }} &gt; <a href="..">Histories</a> &gt; <a href="">{{ history.name }}</a>  
+{% endblock %}
+
+{% block content %}
+{% if history %}	
+    <ul>
+    {% for state,result in history.state_details.items %}
+        <li>{{ state }}: {{ result }}</li>
+    {% endfor %}
+    </ul>
+    
+	{% if contents %}	
+	    <ul>
+    	{% for content in contents %}
+        	<li><a href="contents/{{ content.id }}">{{ content.name }} ({{ content.type }})</a></li>
+    	{% endfor %}
+    	</ul>
+	{% else %}
+	    <p>No contents available.</p>
+	{% endif %}
+    
+{% else %}
+    <p>No history available.</p>
+{% endif %}
+{% endblock %}

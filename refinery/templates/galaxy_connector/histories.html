@@ -5,14 +5,14 @@
 {% endblock %}
 
 {% block subheader %}
-Histories
+{{ instance }} &gt; <a href="">Histories</a>  
 {% endblock %}
 
 {% block content %}
-{% if histories %}
+{% if histories %}	
     <ul>
     {% for history in histories %}
-        <li>{{ history.name }}</li>
+        <li><a href="{{ history.id }}">{{ history.name }}</a></li>
     {% endfor %}
     </ul>
 {% else %}

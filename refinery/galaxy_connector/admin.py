@@ -1,4 +1,4 @@
-from galaxy_connector.models import Connection
+from galaxy_connector.models import Instance
 from django.contrib import admin
 
-admin.site.register(Connection)
+admin.site.register(Instance)

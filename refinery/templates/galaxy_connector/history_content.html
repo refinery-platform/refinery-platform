@@ -1,0 +1,19 @@
+{% extends "galaxy_connector/base.html" %}
+
+{% block title %}
+{{ block.super }} - Histories
+{% endblock %}
+
+{% block subheader %}
+{{ instance }} &gt; <a href="../../..">Histories</a> &gt; <a href="../..">{{ history.name }}</a> &gt; <a href="">{{ content.name }}</a>  
+{% endblock %}
+
+{% block content %}
+{% if content %}	
+    <ul>
+    	<li><a href="{{data_url}}/{{ content.id }}">{{ content.name }} ({{ content.data_type }}, {{ content.file_size}} bytes)</a></li>
+	</ul>
+{% else %}
+    <p>No contents available.</p>
+{% endif %}
+{% endblock %}
