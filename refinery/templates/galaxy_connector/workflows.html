@@ -12,7 +12,12 @@ Workflows for {{ instance }}
 {% if workflows %}	
     <ul>
     {% for workflow in workflows %}
-        <li>{{ workflow.name }}</li>
+        <li>{{ workflow }}</li>
+	    <ul>
+	    {% for input in workflow.inputs %}
+	        <li>{{ input }}</li>	        
+	    {% endfor %}
+	    </ul>
     {% endfor %}
     </ul>
 {% else %}

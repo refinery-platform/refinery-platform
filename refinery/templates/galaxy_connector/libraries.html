@@ -1,0 +1,26 @@
+{% extends "galaxy_connector/base.html" %}
+
+{% block title %}
+{{ block.super }} - Libraries
+{% endblock %}
+
+{% block subheader %}
+{{ instance }} &gt; <a href="">Libraries</a>  
+{% endblock %}
+
+{% block content %}
+{% if libraries %}	
+    <ul>
+    {% for library in libraries %}
+        <li><a href="{{ library.id }}">{{ library.name }} ({{ library.items|length }})</a></li>
+	    <ul>
+	    {% for item in library.items %}
+	        <li><a href="{{data_url}}/{{ item.identifier }}">{{ item.name }}: {{ item.type }}</a></li>
+	    {% endfor %}
+	    </ul>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No libraries available.</p>
+{% endif %}
+{% endblock %}
