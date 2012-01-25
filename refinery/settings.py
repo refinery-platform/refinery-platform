@@ -139,6 +139,7 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
     'galaxy_connector',
+    'isa_tab',
 )
 
 # A sample logging configuration. The only tangible logging
