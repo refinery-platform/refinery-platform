@@ -17,7 +17,7 @@ class Investigator(models.Model):
     email = models.EmailField(max_length=255, primary_key=True)
     last_name = models.CharField(max_length=100)
     first_name = models.CharField(max_length=100)
-    mid_initial = models.CharField(max_length=1, blank=True)
+    mid_initial = models.CharField(max_length=1, blank=True, null=True)
     affiliation = models.CharField(max_length=50)
     investigation = models.ManyToManyField(Investigation)
 
@@ -47,7 +47,8 @@ class Assay(models.Model):
 
     name = models.CharField(max_length=100)
     raw_data = models.ManyToManyField(Raw_Data)
-    processed_data = models.ManyToManyField(Processed_Data, blank=True)
+    processed_data = models.ManyToManyField(Processed_Data, blank=True, 
+                                            null=True)
     investigation = models.ForeignKey(Investigation)
 
 class Characteristic(models.Model):
