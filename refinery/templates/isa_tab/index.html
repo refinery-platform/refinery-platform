@@ -1,0 +1,13 @@
+{% if investigation_list %}
+    <ul>
+    {% for investigation in investigation_list %}
+        <li>
+        	<a href="/isa_tab/{{ investigation.accession }}/">
+        		{{ investigation.description }}
+        	</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No investigations are available.</p>
+{% endif %}
