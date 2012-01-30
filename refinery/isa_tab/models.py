@@ -11,7 +11,7 @@ class Investigation(models.Model):
 
 class Investigator(models.Model):
     def __unicode__(self):
-        name = "%s, %s" % (self.last_name, self.first_name)
+        name = "%s, %s %s" % (self.last_name, self.first_name, self.mid_initial)
         return name
 
     email = models.EmailField(max_length=255, primary_key=True)
@@ -19,7 +19,7 @@ class Investigator(models.Model):
     first_name = models.CharField(max_length=100)
     mid_initial = models.CharField(max_length=1, blank=True, null=True)
     affiliation = models.CharField(max_length=50)
-    investigation = models.ManyToManyField(Investigation)
+    investigations = models.ManyToManyField(Investigation)
 
 class Sub_Type(models.Model):
     def __unicode__(self):
@@ -29,23 +29,21 @@ class Sub_Type(models.Model):
     
 class Raw_Data(models.Model):
     def __unicode__(self):
-        return self.file_name
+        return self.url
 
-    file_name = models.CharField(max_length=255)
-    url = models.CharField(max_length=2048)
+    url = models.CharField(max_length=2048, primary_key=True)
 
 class Processed_Data(models.Model):
     def __unicode__(self):
-        return self.file_name
+        return self.url
 
-    file_name = models.CharField(max_length=255)
-    url = models.CharField(max_length=2048)
+    url = models.CharField(max_length=2048, primary_key=True)
     
 class Assay(models.Model):
     def __unicode__(self):
         return self.name
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, primary_key=True)
     raw_data = models.ManyToManyField(Raw_Data)
     processed_data = models.ManyToManyField(Processed_Data, blank=True, 
                                             null=True)
@@ -53,16 +51,22 @@ class Assay(models.Model):
 
 class Characteristic(models.Model):
     def __unicode__(self):
-        return self.type
+        return "%s: %s" % (self.type.type, self.value)
 
     value = models.CharField(max_length=20)
     type = models.ForeignKey(Sub_Type)
     assay = models.ForeignKey(Assay)
+    
+    class Meta:
+        unique_together = ('type', 'assay')
 
 class Factor_Value(models.Model):
     def __unicode__(self):
-        return self.type
+        return "%s: %s" % (self.type.type, self.value)
 
     value = models.CharField(max_length=20)
     type = models.ForeignKey(Sub_Type)
     assay = models.ForeignKey(Assay)
+    
+    class Meta:
+        unique_together = ('type', 'assay')
