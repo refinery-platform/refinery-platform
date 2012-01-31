@@ -1,13 +1,25 @@
 {% if investigation_list %}
-    <ul>
+    <table>
     {% for investigation in investigation_list %}
-        <li>
-        	<a href="/isa_tab/{{ investigation.accession }}/">
-        		{{ investigation.description }}
-        	</a>
-        </li>
+    	<tr>
+        	<td>
+        		<a href="/isa_tab/{{ investigation.accession }}/">
+        			{{ investigation.accession }}
+        		</a>
+        	</td>
+        	<td>
+        		<a href="/isa_tab/{{ investigation.accession }}/">
+        			{{ investigation.title }}
+        		</a>
+        	</td>
+        	<td>
+        		<a href="/isa_tab/{{ investigation.accession }}/">
+        			{{ investigation.description }}
+        		</a>
+        	</td>
+        </tr>
     {% endfor %}
-    </ul>
+    </table>
 {% else %}
     <p>No investigations are available.</p>
 {% endif %}
