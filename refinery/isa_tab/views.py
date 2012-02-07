@@ -1,22 +1,48 @@
 # Create your views here.
-from django.views.generic import View
-from django.shortcuts import render_to_response, get_object_or_404, get_list_or_404
-from django.http import Http404
-from isa_tab.models import *
+from isa_tab.models import Investigation
+from django.shortcuts import render_to_response, get_object_or_404
+from django.http import HttpResponseRedirect
+from django.template import RequestContext
+from django.core.urlresolvers import reverse
+from isa_tab.tasks import call_download
+import simplejson
 
-#displays Investigation accession, title, and description
+
 def index(request):
     investigation_list = Investigation.objects.all()
     return render_to_response('isa_tab/index.html', 
                               {'investigation_list': investigation_list})
 
-#displays all parsed ISA-Tab information
 def detail(request, accession):
     i = get_object_or_404(Investigation, pk=accession)
-    a = get_list_or_404(Assay, investigation=i)
+    return render_to_response('isa_tab/detail.html', {'investigation': i},
+                              context_instance=RequestContext(request))
+    
+def results(request, accession):
+    i = get_object_or_404(Investigation, pk=accession)
+    return render_to_response('isa_tab/results.html', {'investigation': i})
 
-    return render_to_response('isa_tab/detail.html', 
-                              {
-                               'investigation': i,
-                               'assay': a
-                               })
+
+def download(request, accession):
+    raw_choice = "off"
+    processed_choice = "off"
+    
+    try:
+        raw_choice = request.POST['raw']
+    except KeyError:
+        pass
+    
+    try:
+        processed_choice = request.POST['processed']
+    except KeyError:
+        pass
+    
+    file_types_to_download = 0
+    if(raw_choice == 'on'):
+        file_types_to_download = 1
+    if(processed_choice == 'on'):
+        if(file_types_to_download): #both types being downloaded
+            file_types_to_download = 2
+    
+    call_download.delay(accession, file_types_to_download)
+    return HttpResponseRedirect(reverse('isa_tab.views.results', args=(accession,)))
