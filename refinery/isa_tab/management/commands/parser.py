@@ -9,7 +9,7 @@ class Command(LabelCommand):
     help = "Takes the directory of an ISA-Tab file as input, parses, and"
     help = "%s inputs it into the database" % help
     
-    args = '[isa_tab_directory ...]'
+    args = '[isatab_directory ...]'
 
 
     """
@@ -44,7 +44,7 @@ class Command(LabelCommand):
         """
         def insert_subtype(subtypes):
             s = Sub_Type(type=subtypes)
-            #s.save()
+            s.save()
     
         """
         Name: parse_investigation_file
@@ -118,7 +118,7 @@ class Command(LabelCommand):
         """
         Name: insert_investigation
         Description:
-        
+            inserts investigation information & investigator information
         Parameters:
             i_dict: dictionary of investigation file
         """
@@ -143,7 +143,7 @@ class Command(LabelCommand):
             #print i_dict
     
         """
-        Name: 
+        Name: parse_study_file
         Description:
             parse the fields relevant to our Django model and put them into a
             dictionary
@@ -172,7 +172,7 @@ class Command(LabelCommand):
             return study_info
     
         """
-        Name: 
+        Name: parse_assay_file
         Description:
             parse the fields relevant to our Django model and put them into a
             dictionary
@@ -227,7 +227,7 @@ class Command(LabelCommand):
         """
         Name: insert_assay
         Description:
-        
+            insert study and assay information
         Parameters:
             s_dict: dictionary of study file
             a_dict: dictionary of assay file
@@ -285,11 +285,8 @@ class Command(LabelCommand):
 
 
         """ main program starts """
-        #argument check
-        assert len(sys.argv) > 2, "Need to provide the Accession Number"
-
         base_dir = "/Users/psalmhaseley/Documents/isa-tab/cnvrt"
-        isa_ref = sys.argv[2]
+        isa_ref = label
         
         isa_dir = os.path.join(base_dir, isa_ref)
         
