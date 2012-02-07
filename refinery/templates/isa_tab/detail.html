@@ -8,7 +8,8 @@
     
     <p>{{investigation.description}}</p>
     <ul>
-    {% for a in assay %}
+    {# iterates over all of the assay/study files assoc. with investigation #}
+    {% for a in investigation.assay_set.all %}
     	<li>
     		<p>{{a.name}}<br /></p>
     		Characteristics:
@@ -73,6 +74,15 @@
     	</li>
     {% endfor %}
     </ul>
+    {% if error_message %}<p><strong>{{error_message}}</strong></p>{% endif %}
+    <form action="/isa_tab/{{investigation.accession}}/download/" method="post">
+    	{% csrf_token %}
+    	<input type="checkbox" name="raw" id="raw" />
+    	<label for="raw">Analyze Raw Data</label>
+    	<input type="checkbox" name="processed" id="processed" />
+    	<label for="processed">Analyze Processed Data</label>
+    	<input type="submit" value="Submit" />
+    </form>
     
 {% else %}
     <p>No information for this investigation is available.</p>
