@@ -1,21 +1,37 @@
-{% if investigation_list %}
+{% if investigations.paginator.count > 0 %}
     <table>
-    {% for investigation in investigation_list %}
+    {# when upgrading to newer django, delete the ".object_list" part #}
+    {% for investigation in investigations.object_list %}
     	<tr>
-        	<td>
+        	<td style="vertical-align: top">
         		<a href="/isa_tab/{{ investigation.accession }}/">
-        			{{ investigation.accession }}
+        			{{investigation.accession}}
         		</a>
         	</td>
-        	<td>
-        		<p>{{ investigation.title }}</p>
+        	<td style="vertical-align: top">
+        		<p>{{investigation.title}}</p>
         	</td>
         	<td>
-        		<p>{{ investigation.description }}</p>
+        		<p>{{investigation.description}}</p>
         	</td>
         </tr>
     {% endfor %}
     </table>
+    <div class="pagination">
+    <span class="step-links">
+        {% if investigations.has_previous %}
+            <a href="?page={{investigations.previous_page_number}}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{investigations.number}} of {{investigations.paginator.num_pages}}
+        </span>
+
+        {% if investigations.has_next %}
+            <a href="?page={{investigations.next_page_number}}">next</a>
+        {% endif %}
+    </span>
+</div>
 {% else %}
     <p>No investigations are available.</p>
 {% endif %}
