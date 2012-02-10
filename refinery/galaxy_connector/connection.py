@@ -133,6 +133,19 @@ class Connection( object ):
         except urllib2.HTTPError, e:
             print str( e.read( 1024 ) )
             return 'Error. '+ str( e.read( 1024 ) )
+        
+    def delete_history(self, history_id):
+        """
+        DELETE /api/histories/{history_id}
+        Deletes a specified history
+        """
+        data = {}
+        data[ 'purge' ] = True    
+        try:
+            return self.delete( "histories" + "/" + history_id, data )
+        except urllib2.HTTPError, e:
+            print str( e.read( 1024 ) )
+            return "Error. " + str( e.read( 1024 ) )
 
     # =========================================================================================================
 
