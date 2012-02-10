@@ -107,8 +107,11 @@ class Command(LabelCommand):
                             dictionary['email'] = string.strip(e)
                             dictionary['first_name'] = string.strip(first[i])
                             dictionary['last_name'] = string.strip(last[i])
-                            dictionary['mid_initial'] = string.strip(mid[i])
                             dictionary['affiliation'] = string.strip(aff[i])
+                            try:
+                                dictionary['mid_initial'] = string.strip(mid[i])
+                            except IndexError:
+                                pass
                             
                             #append investigator dictionary to info list
                             invest_info['tor'].append(dictionary)
@@ -287,6 +290,7 @@ class Command(LabelCommand):
         """ main program starts """
         base_dir = "/Users/psalmhaseley/Documents/isa-tab/cnvrt"
         isa_ref = label
+        print label
         
         isa_dir = os.path.join(base_dir, isa_ref)
         
