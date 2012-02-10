@@ -287,6 +287,45 @@ class Connection( object ):
             print str( e.read( 1024 ) )
             return "Error. " + str( e.read( 1024 ) )
 
+
+    def get_workflow_dict(self, workflow_id):
+        """
+        GET /api/workflows/{encoded_workflow_id}/download
+        Returns a selected workflow as a json dictionary. 
+        """
+        try:
+            return self.get( "workflows/download/" + workflow_id )
+        except urllib2.HTTPError, e:
+            print str( e.read( 1024 ) )
+            return "Error. " + str( e.read( 1024 ) )
+        
+    def delete_workflow(self, workflow_id):
+        """
+        DELETE /api/workflows/{encoded_workflow_id}
+        Deletes a specified workflow
+        """
+        
+        data = {}
+        data[ 'purge' ] = True
+        
+        try:
+            return self.delete( "workflows" + "/" + workflow_id, data )
+        except urllib2.HTTPError, e:
+            print str( e.read( 1024 ) )
+            return "Error. " + str( e.read( 1024 ) )
+
+    def import_workflow(self, data):
+        """
+        POST /api/workflows
+        Importing dynamic workflows from the api. Return newly generated workflow id.
+        # currently assumes payload['workflow'] is a json representation of a workflow to be inserted into the database
+        """
+                
+        try:
+            return self.post("workflows", data);
+        except urllib2.HTTPError, e:
+            print str( e.read( 1024 ) )
+            return "Error. " + str( e.read( 1024 ) )
             
     # =========================================================================================================    
     

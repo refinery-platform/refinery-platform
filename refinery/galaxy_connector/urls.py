@@ -13,6 +13,9 @@ urlpatterns = patterns('galaxy_connector.views',
     url(r'^run/$', 'run'),
 
     url(r'^login/$', 'obtain_instance'),
-    url(r'^logout/$', 'release_instance')
+    url(r'^logout/$', 'release_instance'),
+    
+    url(r'^workflows/(?P<workflow_id>[a-z0-9]+)/download/$', 'workflow_content')
+    
 )
 

@@ -4,6 +4,8 @@ from django.template import RequestContext
 from galaxy_connector.connection import Connection
 from galaxy_connector.models import Instance
 from galaxy_connector.models import DataFile
+from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps
+import simplejson
 
 
 def index(request):
@@ -111,6 +113,9 @@ def run(request):
     # get all data file entries from the database
     all_data_files = DataFile.objects.all()
     
+    # TO DEBUG PYTHON WEBAPPS ##
+    #import pdb; pdb.set_trace()
+    
     if len( all_data_files ) < 1:
         return HttpResponse( 'No data files available in database. Create at least one data file object using the admin interface.' )
     
@@ -123,3 +128,23 @@ def run(request):
     print result
     
     return ( history( request, result["history"] ) )
+
+
+def workflow_content(request, workflow_id):
+    """
+    Returns a specified workflow_id as a dictionary object 
+    Requires simplejson
+    """
+    if not 'active_galaxy_instance' in request.session:
+        return HttpResponse( 'Unable to fulfill request. No Galaxy instance is available. You need to log in first.' )
+    else:
+        instance = request.session['active_galaxy_instance'] 
+        
+    connection = Connection( instance.base_url, instance.data_url, instance.api_url, instance.api_key )
+    
+    result = connection.get_workflow_dict(workflow_id);
+    #import pdb; pdb.set_trace()
+    
+    #return HttpResponse( 'Workflow Content called' ) 
+    return HttpResponse( simplejson.dumps(result) ) 
+
