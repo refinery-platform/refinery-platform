@@ -6,7 +6,7 @@ class Investigation(models.Model):
         return self.accession
 
     accession = models.CharField(max_length=20, primary_key=True)
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=255)
     description = models.CharField(max_length=2048)
 
 class Investigator(models.Model):
@@ -43,8 +43,8 @@ class Assay(models.Model):
     def __unicode__(self):
         return self.name
 
-    name = models.CharField(max_length=100, primary_key=True)
-    raw_data = models.ManyToManyField(Raw_Data)
+    name = models.CharField(max_length=255, primary_key=True)
+    raw_data = models.ManyToManyField(Raw_Data, null=True, blank=True)
     processed_data = models.ManyToManyField(Processed_Data, blank=True, 
                                             null=True)
     investigation = models.ForeignKey(Investigation)
