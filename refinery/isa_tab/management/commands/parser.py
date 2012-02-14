@@ -288,7 +288,8 @@ class Command(LabelCommand):
 
 
         """ main program starts """
-        base_dir = "/Users/psalmhaseley/Documents/isa-tab/cnvrt"
+        #base_dir = "/Users/psalmhaseley/Documents/isa-tab/cnvrt"
+        base_dir = "/Users/richardpark/Desktop/PROJECTS/chip_seq/galaxy_local/isa-tab"
         isa_ref = label
         print label
         

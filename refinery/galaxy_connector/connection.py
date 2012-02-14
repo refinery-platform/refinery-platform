@@ -300,6 +300,38 @@ class Connection( object ):
             print str( e.read( 1024 ) )
             return "Error. " + str( e.read( 1024 ) )
 
+    
+    def run_workflow2( self, workflow_id, input_map, history_id ):
+        workflow = self.get_workflow( workflow_id )
+        data = {}
+        data["workflow_id"] = workflow_id
+        data["history"] = "hist_id=%s" % ( history_id )
+        data["ds_map"] = {}
+        
+        # TODO: NEED A MUCH BETTER WAY OF MAPPING INPUT TO EXPERIMENT #
+        
+        #------------ CONFIGURE INPUT FILES -------------------------- #   
+        exp_count = 0;
+        input_count = 0;
+        
+        for in_key, input_details in workflow["inputs"].iteritems():
+            inType = workflow['inputs'][in_key]['label'];
+            if inType == 'input_file':
+                winput_id = input_map[input_count]['input'];
+                input_count += 1;
+            else:
+                winput_id = input_map[exp_count]['exp'];
+                exp_count += 1;
+            
+            data["ds_map"][in_key] = { "src": "ld", "id": winput_id }
+            
+        
+        try:            
+            return self.post( "workflows", data )
+        except urllib2.HTTPError, e:
+            print str( e.read( 1024 ) )
+            return "Error. " + str( e.read( 1024 ) )
+   
 
     def get_workflow_dict(self, workflow_id):
         """
@@ -333,9 +365,11 @@ class Connection( object ):
         Importing dynamic workflows from the api. Return newly generated workflow id.
         # currently assumes payload['workflow'] is a json representation of a workflow to be inserted into the database
         """
-                
+        wdata = {};
+        wdata ['workflow'] = data;
+        
         try:
-            return self.post("workflows", data);
+            return self.post("workflows/upload", wdata);
         except urllib2.HTTPError, e:
             print str( e.read( 1024 ) )
             return "Error. " + str( e.read( 1024 ) )

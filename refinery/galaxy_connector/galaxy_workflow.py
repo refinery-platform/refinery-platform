@@ -99,8 +99,16 @@ def createSteps(repeat_num, workflow):
                 top_pos = pos_dict["top"];
                 left_pos = pos_dict["left"]
                 # TODO: find a better way of defining positions 
-                pos_dict["top"] = top_pos * (i);
-
+                pos_dict["top"] = top_pos * (i+1);
+            
+            # 4. if an input module
+            #print len(curr_workflow_step['inputs'])
+           # if len(curr_workflow_step['inputs']) ==1:
+            #    curr_workflow_step["inputs"][0]['repeat'] = i;
+                #print curr_workflow_step["name"];
+                #print curr_workflow_step['inputs']
+                #print curr_workflow_step["name"];
+            
             # Adds updated module 
             updated_dict[curr_id] = curr_workflow_step;
             
