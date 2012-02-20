@@ -99,27 +99,4 @@ def workflows(request):
     return render_to_response( "galaxy_connector/workflows.html", { "workflows": connection.get_complete_workflows(), "instance": instance.description }, context_instance=RequestContext( request ) )
 
 
-def run(request):    
-
-    if not 'active_galaxy_instance' in request.session:
-        return HttpResponse( 'Unable to fulfill request. No Galaxy instance is available. You need to log in first.' )
-    else:
-        instance = request.session['active_galaxy_instance'] 
-        
-    connection = Connection( instance.base_url, instance.data_url, instance.api_url, instance.api_key )
     
-    # get all data file entries from the database
-    all_data_files = DataFile.objects.all()
-    
-    if len( all_data_files ) < 1:
-        return HttpResponse( 'No data files available in database. Create at least one data file object using the admin interface.' )
-    
-    library_id = connection.create_library( "ABC" );
-    history_id = connection.create_history( "ABC" );
-    workflow_id = connection.get_workflow_id( "Simple Input Test Workflow" )[0];
-    file_id = connection.put_into_library( library_id, instance.staging_path + "/" + all_data_files[0].path )
-        
-    result = connection.run_workflow(workflow_id, [file_id], history_id )    
-    print result
-    
-    return ( history( request, result["history"] ) )
