@@ -94,9 +94,7 @@ class Command(BaseCommand):
             #call(['python', 'download_ftp_file.py', ftp_url, out_dir])
             dl_task = download_ftp_file.delay(ftp_url, out_dir)
             return dl_task.task_id
-            #s.delay()
-            #proc = subprocess.Popen(args=command, shell=True)
-            #exit_code = proc.wait()
+
 
         """
         Name: get_processed
