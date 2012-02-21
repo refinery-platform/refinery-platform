@@ -8,9 +8,15 @@ from isa_tab.tasks import call_download
 import simplejson
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
+from celery import states
+#from celery.registry import tasks
+from celery.result import AsyncResult
+
+
 
 def index(request):
     investigation_list = Investigation.objects.all()
+    
     paginator = Paginator(investigation_list, 5) # Show 5 investigations per page
 
     page = request.GET.get('page', 1)
@@ -24,15 +30,40 @@ def index(request):
         investigations = paginator.page(paginator.num_pages)
     return render_to_response('isa_tab/index.html', 
                               {'investigations': investigations})
+    
+
 
 def detail(request, accession):
     i = get_object_or_404(Investigation, pk=accession)
-    return render_to_response('isa_tab/detail.html', {'investigation_list': i},
+    return render_to_response('isa_tab/detail.html', {'investigation': i},
                               context_instance=RequestContext(request))
     
 def results(request, accession):
     i = get_object_or_404(Investigation, pk=accession)
-    return render_to_response('isa_tab/results.html', {'investigation': i})
+    """Returns task status and result in JSON format."""
+    ids = request.session['isa_tab_task_ids']
+    task_ids_str = ids.get()
+    task_ids = eval(task_ids_str)
+    task_progress = list()
+    for task_id in task_ids:
+        result = AsyncResult(task_id)
+        """state, retval = result.state, result.result
+        response_data = dict(id=task_id, status=state, result=retval)
+        if state in states.EXCEPTION_STATES:
+            traceback = result.traceback
+            response_data.update({"result": safe_repr(retval),
+                              "exc": get_full_cls_name(retval.__class__),
+                              "traceback": traceback})"""
+                              
+        task_progress.append(result.state)
+        if(result.state == "PROGRESS"):
+            task_progress.append(result.result)
+    
+    return render_to_response('isa_tab/results.html', 
+                              {
+                                'investigation': i, 
+                                'task_progress': task_progress
+                                })
 
 
 def download(request, accession):
@@ -56,5 +87,6 @@ def download(request, accession):
         if(file_types_to_download): #both types being downloaded
             file_types_to_download = 2
     
-    call_download.delay(accession, file_types_to_download)
+    task_ids = call_download.delay(accession, file_types_to_download)
+    request.session['isa_tab_task_ids'] = task_ids
     return HttpResponseRedirect(reverse('isa_tab.views.results', args=(accession,)))

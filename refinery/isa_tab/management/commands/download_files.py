@@ -4,8 +4,6 @@ from refinery.isa_tab.models import Processed_Data
 import sys, os, subprocess, re, string
 from collections import defaultdict
 from isa_tab.tasks import download_ftp_file, download_http_file
-from celery.task import subtask
-from isa_tab.tasks import download_ftp_file, download_http_file
 
 class Command(BaseCommand):
     help = "Takes the directory of an ISA-Tab file as input, parses, and"
@@ -92,12 +90,11 @@ class Command(BaseCommand):
             ftp_url = string.join(ftp, '/')
     
             command = "python download_ftp.py %s downloads" % ftp_url
-            self.stdout.write("%s\n" % command)
+            #print "%s\n" % command
             #call(['python', 'download_ftp_file.py', ftp_url, out_dir])
-            download_ftp_file.subtask(args=(ftp_url, out_dir)).delay()
-            #s.delay()
-            #proc = subprocess.Popen(args=command, shell=True)
-            #exit_code = proc.wait()
+            dl_task = download_ftp_file.delay(ftp_url, out_dir)
+            return dl_task.task_id
+
 
         """
         Name: get_processed
@@ -122,7 +119,8 @@ class Command(BaseCommand):
             command = "python download_http.py %s downloads" % url
             #self.stdout.write("%s\n" % command)
             #call(['python', 'download_http_file.py', url, out_dir])
-            download_http_file.subtask(args=(url, out_dir)).delay()
+            dl_task = download_http_file.delay(url, out_dir)
+            return dl_task.task_id
         
         
         """ main program start """
@@ -135,9 +133,16 @@ class Command(BaseCommand):
         accessions = args[::2] #list of all even-indexed arguments 
         file_types = args[1::2] #list of all odd-indexed arguments
 
+        task_ids = list()
         for accession, f_type in zip(accessions, file_types):
             files = select_files(accession, f_type)
             for r in files['raw']:
-                get_raw(r, output_directory)
+                id = get_raw(r, output_directory)
+                task_ids.append(id)
+            #print files['processed'][0]
+            #get_processed(files['processed'][0], accession, output_directory)
             for p in files['processed']:
-                get_processed(p, accession, output_directory)
+                id = get_processed(p, accession, output_directory)
+                task_ids.append(id)
+        #print "task_ids:"        
+        print task_ids
