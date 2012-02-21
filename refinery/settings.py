@@ -10,7 +10,7 @@ DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    ('Nils Gehlenborg', 'nils@hms.harvard.edu'),
+    ('Refinery Admin', 'refinery@hms.harvard.edu'),
 )
 
 MANAGERS = ADMINS
@@ -140,6 +140,7 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     'galaxy_connector',
     'isa_tab',
+    'core',
 )
 
 # A sample logging configuration. The only tangible logging

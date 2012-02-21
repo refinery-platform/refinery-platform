@@ -5,7 +5,10 @@ from django.contrib import admin
 admin.autodiscover()
 
 #patterns for all of the different applications
-urlpatterns = patterns('',
+urlpatterns = patterns('',    
+    #links in core urls
+    url(r'^', include('core.urls')),
+
     #links in galaxy_connector urls 
     url(r'^galaxy_connector/', include('galaxy_connector.urls')),
     
