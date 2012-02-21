@@ -1,8 +1,27 @@
 <h1>{{ investigation.accession }}</h1>
 
 <p>
-	Successfully submitted Data for Processing.  You will be updated as each
-	step in the analysis is completed.
+	Successfully submitted Data for Processing.  Refresh the page to see the
+	progress of your analysis.
 </p>
+<h1>Task Information</h1>
+<ul>
+	<li><p>Task Result</p></li>
+	<li>{{task_result}}</li>
+	<li><p>Task ID</p></li>
+	<li>
+		{{task_id}}
+	</li>
+	<li><p>Task Successful?</p></li>
+	<li>{{task_successful}}</li>
+	<li><p>task_ids variable type</p></li>
+	<li>{{task_ids}}</li>
+</ul>
+<h1>Task Progress</h1>
+<ul>
+	{% for task in task_progress %}
+	<li>{{task}}</li>
+	{% endfor %}
+</ul>
 
 <a href="/isa_tab/">Analyze another?</a>
