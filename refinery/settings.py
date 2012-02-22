@@ -10,7 +10,7 @@ DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    ('Nils Gehlenborg', 'nils@hms.harvard.edu'),
+    ('Refinery Admin', 'refinery@hms.harvard.edu'),
 )
 
 MANAGERS = ADMINS
@@ -138,8 +138,10 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
+    'djcelery', #django-celery
     'galaxy_connector',
     'isa_tab',
+    'core',
 )
 
 # A sample logging configuration. The only tangible logging

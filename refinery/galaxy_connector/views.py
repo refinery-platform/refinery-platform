@@ -95,6 +95,7 @@ def run(request):
     
     return ( history( request, result["history"] ) )
 
+
 def run2(request):
     """
     Test function for running spp workflow for multiple inputs
@@ -233,8 +234,3 @@ def configWorkflowInput(in_list):
             print "I AM INPUT FILE"
             cur_dict['input'] = file_id;
     """
-        
-        
-    
-    
-    

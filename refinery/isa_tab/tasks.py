@@ -1,14 +1,25 @@
-from celery.task import task
+from celery.task import task, Task
 from django.core.management import call_command
+from celery import current_app, events
 import sys, os, string
+from StringIO import StringIO
 
 @task()
 def call_download(accession, file_download_flag):
     args = (accession, file_download_flag)
+    orig_stdout = sys.stdout
+    sys.stdout = content = StringIO()
     call_command('download_files', *args)
+    sys.stdout = orig_stdout
+    content.seek(0)
+    
+    task_ids = content.read()
+    print "call_download"
+    print task_ids
+    return task_ids
 
 @task()
-def download_ftp_file(ftp, out_dir):
+def download_ftp_file(ftp, out_dir):        
     import ftplib, socket
     
     file_name = ftp.split('/')[-1] #get the file name
@@ -42,9 +53,25 @@ def download_ftp_file(ftp, out_dir):
         except ftplib.error_perm:
             print 'ERROR: cannot CD to "%s"' % new_dir
             f.quit()
-
+            
+        size = int(f.size(file_name))
+        downloaded = [0] #can't change non-local vars until Py3, so hack
+        file = open(file_path, 'wb')
+        
+        #defined here because those 3 vars needed to be defined first
+        def handleDownload(block):
+            downloaded[0] += len(block)
+            file.write(block)
+            
+            percent_dl = downloaded[0] * 100. / size
+            download_ftp_file.update_state(state="PROGRESS",
+                            meta={"percent_done": "%3.2f%%" % (percent_dl)})
+            #status = r"%3.2f%% downloaded" % (percent_dl)
+            #status = status + chr(8)*(len(status)+1)
+            #print status,
+            
         try:
-            f.retrbinary('RETR %s' % file_name, open(file_path, 'wb').write)
+            f.retrbinary('RETR %s' % file_name, handleDownload)
         except ftplib.error_perm:
             print 'ERROR: cannot read file "%s"' % file_path
             os.unlink(file_path)
@@ -74,9 +101,13 @@ def download_http_file(url, out_dir):
 
             file_size_dl += len(buffer)
             f.write(buffer)
-            status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / file_size)
-            status = status + chr(8)*(len(status)+1)
-            print status,
+            
+            downloaded = file_size_dl * 100. / file_size
+            download_http_file.update_state(state="PROGRESS",
+                        meta={"percent_done": "%3.2f%%" % (downloaded)})
+            
+            #status = r"%10d  [%3.2f%%]" % (file_size_dl, downloaded)
+            #status = status + chr(8)*(len(status)+1)
+            #print status,
 
         f.close()
-    

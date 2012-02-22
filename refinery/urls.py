@@ -5,7 +5,10 @@ from django.contrib import admin
 admin.autodiscover()
 
 #patterns for all of the different applications
-urlpatterns = patterns('',
+urlpatterns = patterns('',    
+    #links in core urls
+    url(r'^', include('core.urls')),
+
     #links in galaxy_connector urls 
     url(r'^galaxy_connector/', include('galaxy_connector.urls')),
     
@@ -19,6 +22,7 @@ urlpatterns = patterns('',
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
+    url(r'^tasks/', include('djcelery.urls')),
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),

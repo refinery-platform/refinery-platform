@@ -3,11 +3,13 @@ from isa_tab.models import Investigation, Investigator, Sub_Type, Raw_Data, Proc
 
 
 class InvestigationAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['accession', 'title']
+    search_fields = ['accession', 'title', 'description']
 
 
 class InvestigatorAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['last_name', 'first_name', 'mid_initial', 'email']
+    search_fields = ['last_name', 'first_name', 'affiliation']
 
 
 class Sub_TypeAdmin(admin.ModelAdmin):

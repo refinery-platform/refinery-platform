@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ STATIC_URL }}core/style.css" />
+    <title>Refinery {% block title %}{% endblock %}</title>
+</head>
+
+<body>
+    <div id="header">
+        <h1>Refinery</h1>
+    </div>
+    <div id="subheader">
+        <h3>{% block subheader %}{% endblock %}</h3>
+    </div>
+    <div id="navigation">
+        {% block navigation %}        
+        {% endblock %}
+    </div>
+
+    <div id="content">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <div id="footer">
+        <small>Copyright &copy; 2012 Park Lab | Center for Biomedical Informatics at Harvard Medical School. All rights reserved.</small>
+    </div>
+</body>
+</html>

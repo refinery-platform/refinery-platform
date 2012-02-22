@@ -1,0 +1,54 @@
+{% extends "core/base.html" %}
+
+{% block title %}
+{{ block.super }} - Home
+{% endblock %}
+
+{% block content %}
+{% if users %}
+	{{ users|length }} users 
+    <ul>
+    {% for user in users %}
+        <li><a href="user/{{ user.uuid }}">{{ user.name }}</a>: {{ user.first_name }} {{ user.last_name }} ({{ user.email }})</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No users available.</p>
+{% endif %}
+
+{% if projects %}
+	{{ projects|length }} projects 
+    <ul>
+    {% for project in projects %}
+        <li><a href="project/{{ project.uuid }}">{{ project.name }}</a>: {{ project.summary }} ({{ project.get_visibility_display }}; members: {{ project.users.all|length }})</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No projects available.</p>
+{% endif %}
+
+{% if workflows %}
+	{{ workflows|length }} workflows 
+    <ul>
+    {% for workflow in workflows %}
+        <li>{{ workflow.name }}: {{ workflow.summary }} ({{ workflow.get_visibility_display }}; members: {{ workflow.users.all|length }})</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No workflows available.</p>
+{% endif %}
+
+{% if data_sets %}
+	{{ data_sets|length }} data sets 
+    <ul>
+    {% for data_set in data_sets %}
+        <li><a href="data_set/{{ data_set.uuid }}">{{ data_set.name }}</a>: {{ data_set.summary }} ({{ data_set.get_visibility_display }}; members: {{ data_set.users.all|length }})</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No data sets available.</p>
+{% endif %}
+
+
+
+{% endblock %}
