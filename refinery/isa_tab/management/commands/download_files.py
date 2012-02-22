@@ -21,7 +21,7 @@ class Command(BaseCommand):
             grabs the (raw or processed) files out of the Django database
         Parameters:
             accession (ArrayExpress accession number)
-            files_option (valued at 0[only processed], 1[only raw], or 2[both])
+            files_option (valued 0[only processed], 1[only raw], or 2[both])
         """
         def select_files(accession, files_option):
             try:
@@ -34,19 +34,19 @@ class Command(BaseCommand):
             assays = i.assay_set.all() #get assays via fk
 
             #object to return, dictionary of url lists
-            file_lists = defaultdict(list)
+            file_lists = defaultdict(set)
     
             for a in assays:
                 files_option = str(files_option)
                 if files_option != '1': #get processed data
                     processed = a.processed_data.all() #assoc. processed data
                     for p in processed:
-                        file_lists['processed'].append(p.url)
+                        file_lists['processed'].add(p.url)
 
                 if files_option != '0': #get raw data
                     raw = a.raw_data.all() #list of associated raw data
                     for r in raw:
-                        file_lists['raw'].append(r.url)
+                        file_lists['raw'].add(r.url)
     
             return file_lists
 
@@ -72,7 +72,7 @@ class Command(BaseCommand):
             ftp.append(f_name[:6])
     
             #isolate the ENA/SRA accession number
-            split = f_name.split('.') #split on periods for ENA/SRA acc (ind=0)
+            split = f_name.split('.') #split on "." for ENA/SRA acc (ind=0)
             #if paired-end data, remove the _1/_2 from end before list append
             if re.search(r'_(1|2)$', split[0]):
                 #add everything but last 2 chars (_1 or _2)
