@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+
+{% block title %}
+{{ block.super }} - User {{ user.name }}
+{% endblock %}
+
+{% block content %}
+{% if user %}
+	<h2>{{ user.first_name }} {{ user.last_name }}: {{ user.name }} ({{ user.uuid }})</h2>
+	
+	<small>Created: {{ user.creation_date }} | Last Modified: {{ user.modification_date }} </small>
+	
+    <h3>Projects</h3>
+    
+	{% if project_rels|length > 0 %}	
+	    {% for rel in project_rels %}	    		    	
+	        <li><a href="{% url project rel.resource.uuid %}">{{ rel.resource.name }}</a> ({{ rel.get_userRole_display }}, joined {{ rel.creation_date }}) </li>
+	    {% endfor %}
+	{% else %}
+		No projects.
+	{% endif %}
+	
+{% else %}
+    <p>No valid user.</p>
+{% endif %}
+
+{% endblock %}

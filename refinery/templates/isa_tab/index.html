@@ -18,7 +18,7 @@
     {% endfor %}
     </table>
     <div class="pagination">
-    <span class="step-links">
+    	<span class="step-links">
         {% if investigations.has_previous %}
             <a href="?page={{investigations.previous_page_number}}">previous</a>
         {% endif %}
@@ -30,8 +30,8 @@
         {% if investigations.has_next %}
             <a href="?page={{investigations.next_page_number}}">next</a>
         {% endif %}
-    </span>
-</div>
+    	</span>
+	</div>
 {% else %}
     <p>No investigations are available.</p>
 {% endif %}

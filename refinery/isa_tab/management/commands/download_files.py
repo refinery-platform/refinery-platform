@@ -4,8 +4,6 @@ from refinery.isa_tab.models import Processed_Data
 import sys, os, subprocess, re, string
 from collections import defaultdict
 from isa_tab.tasks import download_ftp_file, download_http_file
-from celery.task import subtask
-from isa_tab.tasks import download_ftp_file, download_http_file
 
 class Command(BaseCommand):
     help = "Takes the directory of an ISA-Tab file as input, parses, and"
@@ -23,7 +21,7 @@ class Command(BaseCommand):
             grabs the (raw or processed) files out of the Django database
         Parameters:
             accession (ArrayExpress accession number)
-            files_option (valued at 0[only processed], 1[only raw], or 2[both])
+            files_option (valued 0[only processed], 1[only raw], or 2[both])
         """
         def select_files(accession, files_option):
             try:
@@ -36,19 +34,19 @@ class Command(BaseCommand):
             assays = i.assay_set.all() #get assays via fk
 
             #object to return, dictionary of url lists
-            file_lists = defaultdict(list)
+            file_lists = defaultdict(set)
     
             for a in assays:
                 files_option = str(files_option)
                 if files_option != '1': #get processed data
                     processed = a.processed_data.all() #assoc. processed data
                     for p in processed:
-                        file_lists['processed'].append(p.url)
+                        file_lists['processed'].add(p.url)
 
                 if files_option != '0': #get raw data
                     raw = a.raw_data.all() #list of associated raw data
                     for r in raw:
-                        file_lists['raw'].append(r.url)
+                        file_lists['raw'].add(r.url)
     
             return file_lists
 
@@ -74,7 +72,7 @@ class Command(BaseCommand):
             ftp.append(f_name[:6])
     
             #isolate the ENA/SRA accession number
-            split = f_name.split('.') #split on periods for ENA/SRA acc (ind=0)
+            split = f_name.split('.') #split on "." for ENA/SRA acc (ind=0)
             #if paired-end data, remove the _1/_2 from end before list append
             if re.search(r'_(1|2)$', split[0]):
                 #add everything but last 2 chars (_1 or _2)
@@ -92,12 +90,11 @@ class Command(BaseCommand):
             ftp_url = string.join(ftp, '/')
     
             command = "python download_ftp.py %s downloads" % ftp_url
-            self.stdout.write("%s\n" % command)
+            #print "%s\n" % command
             #call(['python', 'download_ftp_file.py', ftp_url, out_dir])
-            download_ftp_file.subtask(args=(ftp_url, out_dir)).delay()
-            #s.delay()
-            #proc = subprocess.Popen(args=command, shell=True)
-            #exit_code = proc.wait()
+            dl_task = download_ftp_file.delay(ftp_url, out_dir)
+            return dl_task.task_id
+
 
         """
         Name: get_processed
@@ -122,7 +119,8 @@ class Command(BaseCommand):
             command = "python download_http.py %s downloads" % url
             #self.stdout.write("%s\n" % command)
             #call(['python', 'download_http_file.py', url, out_dir])
-            download_http_file.subtask(args=(url, out_dir)).delay()
+            dl_task = download_http_file.delay(url, out_dir)
+            return dl_task.task_id
         
         
         """ main program start """
@@ -135,9 +133,16 @@ class Command(BaseCommand):
         accessions = args[::2] #list of all even-indexed arguments 
         file_types = args[1::2] #list of all odd-indexed arguments
 
+        task_ids = list()
         for accession, f_type in zip(accessions, file_types):
             files = select_files(accession, f_type)
             for r in files['raw']:
-                get_raw(r, output_directory)
+                id = get_raw(r, output_directory)
+                task_ids.append(id)
+            #print files['processed'][0]
+            #get_processed(files['processed'][0], accession, output_directory)
             for p in files['processed']:
-                get_processed(p, accession, output_directory)
+                id = get_processed(p, accession, output_directory)
+                task_ids.append(id)
+        #print "task_ids:"        
+        print task_ids
