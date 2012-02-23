@@ -4,7 +4,7 @@ from django.template import RequestContext
 from galaxy_connector.connection import Connection
 from galaxy_connector.models import Instance
 from galaxy_connector.models import DataFile
-from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps
+from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps, createStepsAnnot
 import simplejson
 import os
 
@@ -108,22 +108,9 @@ def run2(request):
     #Getting working version of library 
     #library_id = connection.create_library( "TEST MY API" );
     # debug library id
-    library_id = "a799d38679e985db";
+    library_id = "bf60fd5f5f7f44bf";
     
     history_id = connection.create_history( "TEST MY API" );
- 
-    #------------ WORKFLOWS -------------------------- #   
-    workflow_id = connection.get_workflow_id("Workflow: spp + bam")[0];
-    workflow_dict = connection.get_workflow_dict(workflow_id);
-    
-    # creating base workflow to replicate input workflow
-    new_workflow = createBaseWorkflow(workflow_dict["name"])
-        
-    # Updating steps in imported workflow X number of times
-    new_workflow["steps"] = createSteps(2, workflow_dict);
-    
-    # import newly generated workflow 
-    new_workflow_info = connection.import_workflow(new_workflow);
     
     #------------ IMPORT FILES -------------------------- #   
     # get all data file entries from the database
@@ -156,28 +143,32 @@ def run2(request):
                 a_dict['input'] = False;
             
             annot.append(a_dict);
-            
+    
+    #------------ WORKFLOWS -------------------------- #   
     ret_list = configWorkflowInput(annot);
+    
+    #workflow_id = connection.get_workflow_id("Workflow: spp + bam")[0];
+    workflow_id = connection.get_workflow_id("Workflow: spp + bam2")[0];
+    
+    workflow_dict = connection.get_workflow_dict(workflow_id);
+    
+    # creating base workflow to replicate input workflow
+    new_workflow = createBaseWorkflow(workflow_dict["name"])
+        
+    # Updating steps in imported workflow X number of times
+    new_workflow["steps"] = createStepsAnnot(ret_list, workflow_dict);
+    
+    # import newly generated workflow 
+    new_workflow_info = connection.import_workflow(new_workflow);
+    
     
     # Running workflow 
     result = connection.run_workflow2(new_workflow_info['id'], ret_list, history_id )    
     
-            
-
     #------------ DELETE WORKFLOW -------------------------- #   
-    
-    del_workflow_id = connection.delete_workflow(new_workflow_info['id']);
-    
-    print("workflow_id: " + workflow_id);
-    print ("library_id:" + library_id)
-    print ("file_id: " + file_id);
+    #del_workflow_id = connection.delete_workflow(new_workflow_info['id']);
     
     
-    #result = connection.run_workflow(workflow_id, [file_id], history_id )    
-    #return ( history( request, result["history"] ) )
-
-    
-
     return HttpResponse("OK")
 
 
@@ -203,6 +194,24 @@ def searchInput(input_string):
     ret_status = ret_string.find('input');
     return ret_status;
 
+
+def getInputExp(input1, exp1):
+    ret_dict = {};
+    ret_dict['input'] = {};
+    ret_dict['input']['id'] = input1['file_id'];
+    input_name = input1['path'].split( '/');
+    input_name = input_name[len(input_name)-1]
+    ret_dict['input']['filename'] = str(input_name);
+    
+    ret_dict['exp'] = {};
+    ret_dict['exp']['id'] = exp1['file_id'];
+    exp_name = exp1['path'].split('/');
+    exp_name = exp_name[len(exp_name)-1]
+    ret_dict['exp']['filename'] = str(exp_name);
+    
+    return ret_dict;
+    
+
 def configWorkflowInput(in_list):
     """
     
@@ -211,15 +220,8 @@ def configWorkflowInput(in_list):
     """
     
     ret_list = [];
-    cur_dict = {};
-    cur_dict['input'] = in_list[0]["file_id"];
-    cur_dict['exp'] = in_list[1]["file_id"];
-    ret_list.append(cur_dict);
-    
-    exp_dict = {};
-    exp_dict['input'] = in_list[2]["file_id"];
-    exp_dict['exp'] = in_list[3]["file_id"];
-    ret_list.append(exp_dict);
+    ret_list.append(getInputExp(in_list[0], in_list[1]));
+    ret_list.append(getInputExp(in_list[2], in_list[3]));
     
     return ret_list;
     
