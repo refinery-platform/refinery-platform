@@ -317,10 +317,10 @@ class Connection( object ):
         for in_key, input_details in workflow["inputs"].iteritems():
             inType = workflow['inputs'][in_key]['label'];
             if inType == 'input_file':
-                winput_id = input_map[input_count]['input'];
+                winput_id = input_map[input_count]['input']['id'];
                 input_count += 1;
             else:
-                winput_id = input_map[exp_count]['exp'];
+                winput_id = input_map[exp_count]['exp']['id'];
                 exp_count += 1;
             
             data["ds_map"][in_key] = { "src": "ld", "id": winput_id }

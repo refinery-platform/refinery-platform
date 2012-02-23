@@ -127,7 +127,7 @@ class Command(BaseCommand):
         assert len(args) > 1, "Need at least one accession & download flag"
         
         #directory where downloads will go
-        output_directory = "/Users/psalmhaseley/Downloads"
+        output_directory = "/data/home/galaxy/refinery_downloads"
 
         #separate arguments into two arrays, accession and file_types
         accessions = args[::2] #list of all even-indexed arguments 
