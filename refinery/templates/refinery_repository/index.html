@@ -1,0 +1,37 @@
+{% if investigations %}
+    <table>
+    {# when upgrading to newer django, delete the ".object_list" part #}
+    {% for investigation in investigations %}
+    	<tr>
+        	<td style="vertical-align: top">
+        		<a href="/refinery_repository/{{ investigation.accession }}/">
+        			{{investigation.accession}}
+        		</a>
+        	</td>
+        	<td style="vertical-align: top">
+        		<p>{{investigation.title}}</p>
+        	</td>
+        	<td>
+        		<p>{{investigation.description}}</p>
+        	</td>
+        </tr>
+    {% endfor %}
+    </table>
+    <div class="pagination">
+    	<span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page={{page_obj.previous_page_number}}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{page_obj.number}} of {{page_obj.paginator.num_pages}}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{page_obj.next_page_number}}">next</a>
+        {% endif %}
+    	</span>
+	</div>
+{% else %}
+    <p>No investigations are available.</p>
+{% endif %}

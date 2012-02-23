@@ -1,0 +1,89 @@
+{% if investigation %}
+    <h3>{{investigation.accession}}: {{investigation.title}}</h3>
+    
+    {# fetches all investigators associated with current investigation #}
+    {% for i in investigation.investigator_set.all %}
+    	<h4>{{i}} &lt;{{i.email}}&gt; {{i.affiliation}}</h4>
+    {% endfor %}
+    
+    <p>{{investigation.description}}</p>
+    <ul>
+    {# iterates over all of the assay/study files assoc. with investigation #}
+    {% for a in investigation.assay_set.all %}
+    	<li>
+    		<p>{{a.name}}<br /></p>
+    		Characteristics:
+    		<table>
+    			<tr>
+    			{# grabs all characteristics associated with "a" via fk #}
+    			{% for c in a.characteristic_set.all %}
+    				<th>
+    					{# header is subtype #}
+    					{{c.type.type}}
+    				</th>
+    			{% endfor %}
+    			</tr>
+    			<tr>
+    			{% for c in a.characteristic_set.all %}
+    				<td>
+    					{{c.value}}
+    				</td>
+    			{% endfor %}
+    			</tr>
+    		</table>
+    		Factor Values:
+    		<table>
+    			<tr>
+    			{# grabs all factor values associated with "a" via fk #}
+    			{% for f in a.factor_value_set.all %}
+    				<th>
+    					{# header is subtype #}
+    					{{f.type.type}}
+    				</th>
+    			{% endfor %}
+    			</tr>
+    			<tr>
+    			{% for f in a.factor_value_set.all %}
+    				<td>
+    					{{f.value}}
+    				</td>
+    			{% endfor %}
+    			</tr>
+    		</table>
+    		Raw File(s):
+    		<table>
+    			<tr>
+    			{# to get many-to-many, assay.other_table.all #}
+    			{% for r in a.raw_data.all %}
+    				<td>
+    					{{r}}
+    				</td>
+    			{% endfor %}
+    			</tr>
+    		</table>
+    		Processed File(s):
+    		<table>
+    			<tr>
+    			{% for p in a.processed_data.all %}
+    				<td>
+    					{{p}}
+    				</td>
+    			{% endfor %}
+    			</tr>
+    		</table>
+    	</li>
+    {% endfor %}
+    </ul>
+    {% if error_message %}<p><strong>{{error_message}}</strong></p>{% endif %}
+    <form action="/refinery_repository/{{investigation.accession}}/download/" method="post">
+    	{% csrf_token %}
+    	<input type="checkbox" name="raw" id="raw" />
+    	<label for="raw">Analyze Raw Data</label>
+    	<input type="checkbox" name="processed" id="processed" />
+    	<label for="processed">Analyze Processed Data</label>
+    	<input type="submit" value="Submit" />
+    </form>
+    
+{% else %}
+    <p>No information for this investigation is available.</p>
+{% endif %}
