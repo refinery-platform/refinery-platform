@@ -1,3 +1,8 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+
+
 {% if investigation %}
     <h3>{{investigation.accession}}: {{investigation.title}}</h3>
     
@@ -87,3 +92,5 @@
 {% else %}
     <p>No information for this investigation is available.</p>
 {% endif %}
+
+{% endblock %}
