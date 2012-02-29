@@ -1,3 +1,7 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+
 <h1>{{ investigation.accession }}</h1>
 
 <p>
@@ -12,3 +16,5 @@
 </ul>
 
 <a href="/refinery_repository/">Analyze another?</a>
+
+{% endblock %}
