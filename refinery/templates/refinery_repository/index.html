@@ -1,3 +1,6 @@
+{% extends "core/base.html" %}
+{% block content %}
+
 {% if investigations %}
     <table>
     {# when upgrading to newer django, delete the ".object_list" part #}
@@ -35,3 +38,5 @@
 {% else %}
     <p>No investigations are available.</p>
 {% endif %}
+
+{% endblock %}
