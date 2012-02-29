@@ -33,8 +33,8 @@ class User ( BaseResource ):
         
 class AbstractUserResource ( BaseResource ):
     VISIBILITY_CHOICES = (
-        ( 1, u'Private' ), # create, read, update, delete,
-        ( 2, u'Public' ), # read, update
+        ( 1, u'Private' ),
+        ( 2, u'Public' ),
     )    
 
     visibility = models.IntegerField( choices=VISIBILITY_CHOICES )
