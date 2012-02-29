@@ -127,6 +127,8 @@ class SubType(models.Model):
     type = models.CharField(max_length=255, primary_key=True)
 
 class Comment(models.Model):
+    def __unicode__(self):
+        return "%s: %s" % (self.type.type, self.value)
     value = models.CharField(max_length=1024)
     type = models.ForeignKey(SubType)
     
@@ -171,14 +173,14 @@ class RawData(models.Model):
 
 class ProcessedData(models.Model):
     def __unicode__(self):
-        return self.url
+        return self.derived_arrayexpress_ftp_file
 
     derived_arrayexpress_ftp_file = models.CharField(max_length=2048)
-    derived_array_data_file = models.CharField(max_length=1024)
+    derived_data_file = models.CharField(max_length=1024)
     
 class Assay(models.Model):
     def __unicode__(self):
-        return self.name
+        return self.sample_name
 
     sample_name = models.CharField(max_length=255)
     material_type = models.CharField(max_length=255, blank=True, null=True)
