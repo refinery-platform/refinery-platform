@@ -1,5 +1,5 @@
 from django.core.management.base import LabelCommand
-from django.conf import settings
+from datetime import datetime
 from refinery.refinery_repository.models import *
 import csv, sys, re, string, os, glob
 from collections import defaultdict
@@ -265,7 +265,7 @@ class Command(LabelCommand):
                         #return everything before '[' and lowercase it
                         key = string.split(header[j], '[').pop(0).lower().strip()
                         sub_key = get_subtype(header[j])
-                        subtype = insert_subtype(sub_key)
+                        insert_subtype(sub_key)
                         
                         if re.search(r'Characteristics', header[j]):
                             temp = dict()
@@ -334,7 +334,7 @@ class Command(LabelCommand):
                 for k, v in comment_dict.items():
                     sub_type = SubType.objects.get(pk=k)
                     comment = Comment(value=v.pop(0), study=s, type=sub_type)
-                    #comment.save()
+                    comment.save()
                     
             #insert characteristics
             for s in study_list:
@@ -345,17 +345,24 @@ class Command(LabelCommand):
                     sub_type = SubType.objects.get(pk=k)
                     characteristic['type'] = sub_type
                     char = Characteristic(**characteristic)
-                    #char.save()
+                    char.save()
             
             #insert protocols
             #zip lets you iterate through two lists in parallel
             for s, p in zip(study_list, prot_list):
                 for prot in p:
-                    #s.protocols.add(protocols[prot])
-                    self
+                    s.protocols.add(protocols[prot])
+                    
 
             return study_list
    
+        """
+        Name: get_raw_url
+        Description:
+            fixes the malformed URL and returns the fixed version
+        Parameters:
+            ftp_file (malformed download URL)
+        """
         def get_raw_url(ftp_file):
             #list that has different parts of final ftp link to concatenate
             ftp = ["ftp://ftp.sra.ebi.ac.uk/vol1/fastq"]
@@ -388,6 +395,14 @@ class Command(LabelCommand):
             ftp_url = string.join(ftp, '/')
             return ftp_url
 
+        """
+        Name: get_processed_url
+        Description:
+            fixes the malformed URL and returns the fixed version
+        Parameters:
+            ftp_file (malformed download URL)
+            acc (associated investigation study identifier)
+        """
         def get_processed_url(ftp_file, acc):
             #isolate the file name
             #get the index of the last / in the given ftp link
@@ -444,7 +459,13 @@ class Command(LabelCommand):
                     if not re.search(r'^\s*$', field):
                         if re.search(r'FASTQ URI', header[j]) or re.search(r'Raw Data', header[j]):
                             raw_file = get_raw_url(field)
-                            dictionary['r']['raw_data_file'] = field
+                            if not 'raw_data_file' in dictionary['r']:
+                                dictionary['r']['raw_data_file'] = raw_file
+                            else: #paired end data (2 raw data files)
+                                raw = list()
+                                raw.append(dictionary['r']['raw_data_file'])
+                                raw.append(raw_file)
+                                dictionary['r']['raw_data_file'] = raw
                         elif re.search(r'\[.+\]', header[j]):
                             sub_key = get_subtype(header[j])
                             subtype = insert_subtype(sub_key)
@@ -539,30 +560,109 @@ class Command(LabelCommand):
             hs_list = a_dict['have_subtype']
             prot_list = a_dict['protocol']
             
-            print '\n assay \n'
+            #make study list a study dictionary instead so it's easier for
+            #assays to find their associated studies
+            s_dict = dict()
+            for s in s_list:
+                s_dict[s.sample_name] = s
+            
             assay_dict = dict()
             for a in assay_list:
-                print a
-            
-            print '\n comment \n'    
+                #remove row number from the dictionary
+                row_num = a['row_num']
+                del a['row_num']
+                
+                #grab associated study and investigation
+                study = s_dict[a['sample_name']]
+                a['study'] = study
+                a['investigation'] = investigation
+                #create assay 
+                assay = Assay(**a)
+                assay.save()
+                
+                #add to assay_dict for the other models to use
+                assay_dict[row_num] = assay
+                
             for c in comment_list:
-                print c
-            
-            print '\n factor value \n'
+                row_num = c['row_num']
+                del c['row_num']
+                
+                #grab asssociated assay
+                assay = assay_dict[row_num]
+                c['assay'] = assay
+                #create Comment
+                comment = Comment(**c)
+                comment.save()
+                
             for fv in fv_list:
-                print fv
+                row_num = fv['row_num']
+                del fv['row_num']
                 
-            print '\n have subtype \n'
+                #grab asssociated assay
+                assay = assay_dict[row_num]
+                fv['assay'] = assay
+                #create FactorValue
+                factor_value = FactorValue(**fv)
+                factor_value.save()
+                
             for hs in hs_list:
-                print hs
+                row_num = hs['row_num']
+                del hs['row_num']
                 
-            print '\n raw \n'
-            for r in raw_list:
-                print r
+                #grab asssociated assay
+                assay = assay_dict[row_num]
+                hs['assay'] = assay
+                #create HaveSubtype
+                have_subtype = HaveSubtype(**hs)
+                have_subtype.save()
             
-            print '\n processed \n'
+            """ Many to Manys """    
+            for r in raw_list:
+                row_num = r['row_num']
+                del r['row_num']
+                
+                #grab asssociated assay
+                assay = assay_dict[row_num]
+
+                #create RawData
+                multiple_raws = r['raw_data_file']
+                if len(multiple_raws) < 3:
+                    #delete the list since it's backed up
+                    del r['raw_data_file']
+                    for i in multiple_raws:
+                        #replace the contents of 'raw_data_file'
+                        r['raw_data_file'] = i
+                        raw_data = RawData(**r)
+                        raw_data.save()
+                        
+                        #associate the assay
+                        raw_data.assay_set.add(assay)
+                else:
+                    raw_data = RawData(**r)
+                    raw_data.save()
+                    
+                    #associate the assay
+                    raw_data.assay_set.add(assay)
+                
             for p in processed_list:
-                print p
+                row_num = p['row_num']
+                del p['row_num']
+                
+                #grab asssociated assay
+                assay = assay_dict[row_num]
+                
+                #create ProcessedData
+                processed_data = ProcessedData(**p)
+                processed_data.save()
+                
+                #associate the assay
+                processed_data.assay_set.add(assay)
+                
+            #insert protocols
+            for i, p in enumerate(prot_list):
+                a = assay_dict[i]
+                for prot in p:
+                    a.protocols.add(protocols[prot])
 
 
         """ main program starts """
@@ -587,9 +687,9 @@ class Command(LabelCommand):
         assay_file = "%s/a_%s_assay.txt" % (isa_dir, isa_ref)
         assert os.path.exists(assay_file), "Not assay file %s" % assay_file
 
-        #investigation_dict = parse_investigation_file(investigation_file)
-        #investigation = insert_investigation(investigation_dict)
-        investigation = Investigation.objects.get(pk='E-GEOD-18588')
+        investigation_dict = parse_investigation_file(investigation_file)
+        investigation = insert_investigation(investigation_dict)
+        #investigation = Investigation.objects.get(pk='E-GEOD-18588')
         
         #get a dictionary of possible protocol names in the studies and assays
         #so it's easier to associate them to the originals
@@ -604,9 +704,9 @@ class Command(LabelCommand):
             abbr = "P--%s" % number
             protocols[abbr] = p
         
-        #study_dict = parse_study_file(study_file)
-        #studys_list = insert_study(investigation, study_dict, protocols)
-        studys_list = investigation.study_set.all()
+        study_dict = parse_study_file(study_file)
+        studys_list = insert_study(investigation, study_dict, protocols)
+        #studys_list = investigation.study_set.all()
     
         assay_dict = parse_assay_file(assay_file, investigation.study_identifier)
         insert_assay(investigation, studys_list, assay_dict, protocols)
