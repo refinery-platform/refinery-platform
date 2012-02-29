@@ -1,3 +1,8 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+
+
 <h1>{{ investigation.accession }}</h1>
 
 <p>
@@ -11,4 +16,6 @@
 	{% endfor %}
 </ul>
 
-<a href="/isa_tab/">Analyze another?</a>
+<a href="/refinery_repository/">Analyze another?</a>
+
+{% endblock %}

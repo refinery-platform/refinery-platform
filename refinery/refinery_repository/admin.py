@@ -1,5 +1,5 @@
 from django.contrib import admin
-from isa_tab.models import Investigation, Investigator, Sub_Type, Raw_Data, Processed_Data, Assay, Characteristic, Factor_Value
+from refinery_repository.models import Investigation, Investigator, Sub_Type, Raw_Data, Processed_Data, Assay, Characteristic, Factor_Value
 
 
 class InvestigationAdmin(admin.ModelAdmin):
