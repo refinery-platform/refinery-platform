@@ -1,3 +1,8 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+
+
 {% if investigation %}
     <h3>{{investigation.accession}}: {{investigation.title}}</h3>
     
@@ -75,7 +80,7 @@
     {% endfor %}
     </ul>
     {% if error_message %}<p><strong>{{error_message}}</strong></p>{% endif %}
-    <form action="/isa_tab/{{investigation.accession}}/download/" method="post">
+    <form action="/refinery_repository/{{investigation.accession}}/download/" method="post">
     	{% csrf_token %}
     	<input type="checkbox" name="raw" id="raw" />
     	<label for="raw">Analyze Raw Data</label>
@@ -87,3 +92,5 @@
 {% else %}
     <p>No information for this investigation is available.</p>
 {% endif %}
+
+{% endblock %}

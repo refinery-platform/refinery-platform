@@ -65,7 +65,13 @@ def download_ftp_file(ftp, out_dir):
             
             percent_dl = downloaded[0] * 100. / size
             download_ftp_file.update_state(state="PROGRESS",
-                            meta={"percent_done": "%3.2f%%" % (percent_dl)})
+                            meta={
+                                  "percent_done": "%3.2f%%" % (percent_dl),
+                                  'current': downloaded[0],
+                                  'total': size,
+                                  'download_location': file_path,
+                                  'download_url': "ftp://%s" % ftp
+                            })
             #status = r"%3.2f%% downloaded" % (percent_dl)
             #status = status + chr(8)*(len(status)+1)
             #print status,
@@ -104,7 +110,11 @@ def download_http_file(url, out_dir):
             
             downloaded = file_size_dl * 100. / file_size
             download_http_file.update_state(state="PROGRESS",
-                        meta={"percent_done": "%3.2f%%" % (downloaded)})
+                        meta={
+                              "percent_done": "%3.2f%%" % (downloaded),
+                              'current': file_size_dl,
+                              'total': file_size
+                        })
             
             #status = r"%10d  [%3.2f%%]" % (file_size_dl, downloaded)
             #status = status + chr(8)*(len(status)+1)

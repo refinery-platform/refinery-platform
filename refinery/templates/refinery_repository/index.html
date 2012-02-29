@@ -1,10 +1,15 @@
-{% if investigations.paginator.count > 0 %}
+{% extends "core/base.html" %}
+
+{% block content %}
+
+
+{% if investigations %}
     <table>
     {# when upgrading to newer django, delete the ".object_list" part #}
-    {% for investigation in investigations.object_list %}
+    {% for investigation in investigations %}
     	<tr>
         	<td style="vertical-align: top">
-        		<a href="/isa_tab/{{ investigation.accession }}/">
+        		<a href="/refinery_repository/{{ investigation.accession }}/">
         			{{investigation.accession}}
         		</a>
         	</td>
@@ -19,19 +24,21 @@
     </table>
     <div class="pagination">
     	<span class="step-links">
-        {% if investigations.has_previous %}
-            <a href="?page={{investigations.previous_page_number}}">previous</a>
+        {% if page_obj.has_previous %}
+            <a href="?page={{page_obj.previous_page_number}}">previous</a>
         {% endif %}
 
         <span class="current">
-            Page {{investigations.number}} of {{investigations.paginator.num_pages}}
+            Page {{page_obj.number}} of {{page_obj.paginator.num_pages}}
         </span>
 
-        {% if investigations.has_next %}
-            <a href="?page={{investigations.next_page_number}}">next</a>
+        {% if page_obj.has_next %}
+            <a href="?page={{page_obj.next_page_number}}">next</a>
         {% endif %}
     	</span>
 	</div>
 {% else %}
     <p>No investigations are available.</p>
 {% endif %}
+
+{% endblock %}

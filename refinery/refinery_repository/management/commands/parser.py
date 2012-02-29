@@ -1,8 +1,10 @@
 from django.core.management.base import LabelCommand
 from django.db import transaction
-from refinery.isa_tab.models import *
+from refinery.refinery_repository.models import *
 import csv, sys, re, string, os, glob
 from collections import defaultdict
+from django.conf import settings
+
 
 class Command(LabelCommand):
     
@@ -288,8 +290,10 @@ class Command(LabelCommand):
 
 
         """ main program starts """
+        #CHANGE ME!!!
         #base_dir = "/Users/psalmhaseley/Documents/isa-tab/cnvrt"
-        base_dir = "/Users/richardpark/Desktop/PROJECTS/chip_seq/galaxy_local/isa-tab"
+        base_dir = settings.ISA_TAB_DIR;
+
         isa_ref = label
         print label
         

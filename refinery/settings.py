@@ -140,7 +140,7 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     'djcelery', #django-celery
     'galaxy_connector',
-    'isa_tab',
+    'refinery_repository',
     'core',
 )
 
