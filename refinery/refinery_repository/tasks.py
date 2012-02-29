@@ -68,7 +68,9 @@ def download_ftp_file(ftp, out_dir):
                             meta={
                                   "percent_done": "%3.2f%%" % (percent_dl),
                                   'current': downloaded[0],
-                                  'total': size
+                                  'total': size,
+                                  'download_location': file_path,
+                                  'download_url': "ftp://%s" % ftp
                             })
             #status = r"%3.2f%% downloaded" % (percent_dl)
             #status = status + chr(8)*(len(status)+1)

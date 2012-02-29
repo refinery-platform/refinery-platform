@@ -5,6 +5,7 @@ from refinery.refinery_repository.models import Processed_Data
 import sys, os, subprocess, re, string
 from collections import defaultdict
 from refinery_repository.tasks import download_ftp_file, download_http_file
+from django.conf import settings
 
 class Command(BaseCommand):
     help = "Takes the directory of an ISA-Tab file as input, parses, and"
@@ -55,7 +56,8 @@ class Command(BaseCommand):
         assert len(args) > 1, "Need at least one accession & download flag"
         
         #directory where downloads will go
-        output_directory = settings.DOWNLOAD_BASE_DIR
+        #output_directory = "/data/home/galaxy/refinery_downloads"
+        output_directory = settings.DOWNLOAD_BASE_DIR;
 
         #separate arguments into two arrays, accession and file_types
         accessions = args[::2] #list of all even-indexed arguments 
