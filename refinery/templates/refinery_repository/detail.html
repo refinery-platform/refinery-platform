@@ -15,30 +15,11 @@
     {% for a in investigation.assay_set.all %}
     	<li>
     		<p>{{a.sample_name}}<br /></p>
-    		Characteristics:
-    		<table>
-    			<tr>
-    			{# grabs all characteristics associated with "a" via fk #}
-    			{% for c in a.characteristic_set.all %}
-    				<th>
-    					{# header is subtype #}
-    					{{c.type.type}}
-    				</th>
-    			{% endfor %}
-    			</tr>
-    			<tr>
-    			{% for c in a.characteristic_set.all %}
-    				<td>
-    					{{c.value}}
-    				</td>
-    			{% endfor %}
-    			</tr>
-    		</table>
     		Factor Values:
     		<table>
     			<tr>
     			{# grabs all factor values associated with "a" via fk #}
-    			{% for f in a.factor_value_set.all %}
+    			{% for f in a.factorvalue_set.all %}
     				<th>
     					{# header is subtype #}
     					{{f.type.type}}
@@ -46,7 +27,7 @@
     			{% endfor %}
     			</tr>
     			<tr>
-    			{% for f in a.factor_value_set.all %}
+    			{% for f in a.factorvalue_set.all %}
     				<td>
     					{{f.value}}
     				</td>
@@ -78,7 +59,7 @@
     {% endfor %}
     </ul>
     {% if error_message %}<p><strong>{{error_message}}</strong></p>{% endif %}
-    <form action="/refinery_repository/{{investigation.accession}}/download/" method="post">
+    <form action="/refinery_repository/{{investigation.study_identifier}}/download/" method="post">
     	{% csrf_token %}
     	<input type="checkbox" name="raw" id="raw" />
     	<label for="raw">Analyze Raw Data</label>
