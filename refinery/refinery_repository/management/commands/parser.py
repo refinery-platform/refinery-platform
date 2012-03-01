@@ -233,9 +233,9 @@ class Command(LabelCommand):
         def parse_study_file(s_file):
             #dictionary of dictionary of lists
             study_info = {
-                          'study': defaultdict(list),
-                          'comment': defaultdict(list),
-                          'characteristics': defaultdict(list),
+                          'study': list(),
+                          'comment': list(),
+                          'characteristics': list(),
                           'protocol': list()
                           }
             
@@ -256,48 +256,64 @@ class Command(LabelCommand):
             
             #iterate over the file
             for i, row in enumerate(file_reader):
-                #some data structures for special cases
+                #some data structures for temporary insertion
                 protocols = list()
-                #each row is a dictionary, so iterate over that
+                dictionary = defaultdict(dict)
+
                 for j, field in enumerate(row):
-                    #comment or characteristic
-                    if re.search(r"\[.+\]", header[j]):
-                        #return everything before '[' and lowercase it
-                        key = string.split(header[j], '[').pop(0).lower().strip()
-                        sub_key = get_subtype(header[j])
-                        insert_subtype(sub_key)
+                    if not re.search(r'^\s*$', field):
+                        #comment or characteristic
+                        if re.search(r"\[.+\]", header[j]):
+                            #return everything before '[' and lowercase it
+                            key = string.split(header[j], '[').pop(0).lower().strip()
+                            sub_key = get_subtype(header[j])
+                            subtype = insert_subtype(sub_key)
                         
-                        if re.search(r'Characteristics', header[j]):
-                            temp = dict()
-                            temp['value'] = field
-                            study_info[key][sub_key].append(temp)
+                            #assign values
+                            try:
+                                dictionary['b'][key][sub_key]['type'] = subtype
+                            except KeyError:
+                                dictionary['b'][key] = defaultdict(dict)
+                                dictionary['b'][key][sub_key]['type'] = subtype
+                                
+                            dictionary['b'][key][sub_key]['value'] = field
                         else:
-                            study_info[key][sub_key].append(field)
-                    elif re.search(r'^[0-9]+ Term', header[j]):
-                        #isolate index of corresponding characteristic
-                        #and prepare to substitute underscores for spaces
-                        split = string.split(header[j], ' ')
-                        #get Characteristics[something]
-                        char = header[int(split.pop(0))]
-                        sub_type = get_subtype(char)
-                        #key is the key for study_info
-                        key = string.split(char, '[').pop(0).lower().strip()
-                        #field header
-                        sub_key = string.join(split, '_').lower()
+                            #get name of the header with '_' substituted for ' ' and lowercase
+                            key_parts = [x.lower().strip() for x in string.split(header[j], ' ')]
+                            key = string.join(key_parts, '_')
                         
-                        #'i' is the row index; position of subtype list 
-                        study_info[key][sub_type][i][sub_key] = field
-                    else:
-                        #get name of the header with '_' substituted for ' ' and lowercase
-                        key_parts = [x.lower().strip() for x in string.split(header[j], ' ')]
-                        key = string.join(key_parts, '_')
+                            if re.search(r'Protocol ', header[j]):
+                                protocols.append(field)
+                            elif re.search(r'^[0-9]+ Term', header[j]):
+                                #isolate index of corresponding characteristic
+                                #and prepare to substitute underscores for spaces
+                                split = string.split(header[j], ' ')
+                                #get Characteristics[something]
+                                char = header[int(split.pop(0))]
+                                sub_type = get_subtype(char)
+                                #key is the key for study_info
+                                key = string.split(char, '[').pop(0).lower().strip()
+                                #field header
+                                sub_key = string.join(split, '_').lower()
                         
-                        if re.search(r'Protocol ', header[j]):
-                            protocols.append(field)
-                        else:
-                            study_info['study'][key].append(field)
+                                #'i' is the row index; position of subtype list 
+                                dictionary['b'][key][sub_type][sub_key] = field
+                            else:
+                                dictionary['s'][key] = field
+                #append list of protocol lists
                 study_info['protocol'].append(protocols)
-    
+                
+                #assign row number to end of dicts so we know what's together
+                #and append them to the study_info
+                dictionary['s']['row_num'] = i
+                study_info['study'].append(dictionary['s'])
+                #organize bracketed items into proper categories
+                for d in dictionary['b']:
+                    for k in dictionary['b'][d]:
+                        temp = dictionary['b'][d][k]
+                        temp['row_num'] = i
+                        study_info[d].append(temp)
+
             return study_info
         
         """
@@ -310,51 +326,71 @@ class Command(LabelCommand):
             protocols: dictionary of protocols and abbreviations
         """
         def insert_study(investigation, s_dict, protocols):
-            comment_dict = s_dict['comment']
-            study_dict = s_dict['study']
-            char_dict = s_dict['characteristics']
+            comment_list = s_dict['comment']
+            study_list = s_dict['study']
+            char_list = s_dict['characteristics']
             prot_list = s_dict['protocol']
             
             #list of studies entered, needs to be returned
-            study_list = list()
+            s_list = list()
+            #row_num: study pairs, makes it easy to associate other models
+            #to the proper study
+            study_dict = dict()
             
             #insert studies
-            while len(study_dict['source_name']):
-                temp = dict()
-                for k, s in study_dict.items():
-                    temp[k] = s.pop(0)
-                temp['investigation'] = investigation
+            #print '\n study \n'
+            for s in study_list:
+                #remove row number from the dictionary
+                row_num = s['row_num']
+                del s['row_num']
                 
-                study = Study(**temp)
+                #grab associated investigation
+                s['investigation'] = investigation
+                #print s
+                #create assay 
+                study = Study(**s)
                 study.save()
-                study_list.append(study)
+                
+                #add to study_dict for the other models to use
+                study_dict[row_num] = study
+                #add to list for returning
+                s_list.append(study)
             
             #insert comments
-            for s in study_list:
-                for k, v in comment_dict.items():
-                    sub_type = SubType.objects.get(pk=k)
-                    comment = Comment(value=v.pop(0), study=s, type=sub_type)
-                    comment.save()
+            #print '\n comments \n'
+            for c in comment_list:
+                row_num = c['row_num']
+                del c['row_num']
+                
+                #grab asssociated study
+                study = study_dict[row_num]
+                c['study'] = study
+                #print c
+                #create Comment
+                comment = Comment(**c)
+                comment.save()
                     
             #insert characteristics
-            for s in study_list:
-                for k, v in char_dict.items():
-                    characteristic = v.pop(0)
-                    characteristic['study'] = s
-                    
-                    sub_type = SubType.objects.get(pk=k)
-                    characteristic['type'] = sub_type
-                    char = Characteristic(**characteristic)
-                    char.save()
+            #print '\n char \n'
+            for c in char_list:
+                row_num = c['row_num']
+                del c['row_num']
+                
+                #grab asssociated study
+                study = study_dict[row_num]
+                c['study'] = study
+                #print c
+                #create Comment
+                characteristic = Characteristic(**c)
+                characteristic.save()
             
             #insert protocols
-            #zip lets you iterate through two lists in parallel
-            for s, p in zip(study_list, prot_list):
+            for i, p in enumerate(prot_list):
+                s = study_dict[i]
                 for prot in p:
                     s.protocols.add(protocols[prot])
                     
-
-            return study_list
+            return s_list
    
         """
         Name: get_raw_url
@@ -456,7 +492,7 @@ class Command(LabelCommand):
                 protocols = list()
                 dictionary = defaultdict(dict)
                 for j, field in enumerate(row):
-                    if not re.search(r'^\s*$', field):
+                    if not re.search(r'^\s*$', field): #if not empty
                         if re.search(r'FASTQ URI', header[j]) or re.search(r'Raw Data', header[j]):
                             raw_file = get_raw_url(field)
                             if not 'raw_data_file' in dictionary['r']:
@@ -506,7 +542,7 @@ class Command(LabelCommand):
                                 fv = header[int(split.pop(0))]
                                 
                                 sub_type = get_subtype(fv)
-                                #key is the key for study_info
+                                #key is the key for assay_info
                                 key = string.split(fv, '[').pop(0).lower().strip()
                                 key = re.sub(r' ', r'_', key)
                                 #field header
@@ -521,9 +557,13 @@ class Command(LabelCommand):
                 #assign row number to end of dict so we know what's together
                 for k, v in dictionary.items():
                     v['row_num'] = i
-                assay_info['raw_data'].append(dictionary['r'])
-                assay_info['assay'].append(dictionary['a'])
-                assay_info['processed_data'].append(dictionary['p'])
+                
+                if dictionary['r']:
+                    assay_info['raw_data'].append(dictionary['r'])
+                if dictionary['a']:
+                    assay_info['assay'].append(dictionary['a'])
+                if dictionary['p']:
+                    assay_info['processed_data'].append(dictionary['p'])
                 
                 #can't iterate an int, so delete and re-add later
                 del dictionary['b']['row_num']
@@ -567,6 +607,7 @@ class Command(LabelCommand):
                 s_dict[s.sample_name] = s
             
             assay_dict = dict()
+            print '\n assay \n'
             for a in assay_list:
                 #remove row number from the dictionary
                 row_num = a['row_num']
@@ -576,6 +617,7 @@ class Command(LabelCommand):
                 study = s_dict[a['sample_name']]
                 a['study'] = study
                 a['investigation'] = investigation
+                print a
                 #create assay 
                 assay = Assay(**a)
                 assay.save()
@@ -583,6 +625,7 @@ class Command(LabelCommand):
                 #add to assay_dict for the other models to use
                 assay_dict[row_num] = assay
                 
+            print '\n comment \n'
             for c in comment_list:
                 row_num = c['row_num']
                 del c['row_num']
@@ -590,10 +633,12 @@ class Command(LabelCommand):
                 #grab asssociated assay
                 assay = assay_dict[row_num]
                 c['assay'] = assay
+                print c
                 #create Comment
                 comment = Comment(**c)
                 comment.save()
                 
+            print '\n factor value \n'
             for fv in fv_list:
                 row_num = fv['row_num']
                 del fv['row_num']
@@ -601,10 +646,12 @@ class Command(LabelCommand):
                 #grab asssociated assay
                 assay = assay_dict[row_num]
                 fv['assay'] = assay
+                print fv
                 #create FactorValue
                 factor_value = FactorValue(**fv)
                 factor_value.save()
                 
+            print '\n have subtype \n'
             for hs in hs_list:
                 row_num = hs['row_num']
                 del hs['row_num']
@@ -612,11 +659,13 @@ class Command(LabelCommand):
                 #grab asssociated assay
                 assay = assay_dict[row_num]
                 hs['assay'] = assay
+                print hs
                 #create HaveSubtype
                 have_subtype = HaveSubtype(**hs)
                 have_subtype.save()
             
             """ Many to Manys """    
+            print '\n raw data \n'
             for r in raw_list:
                 row_num = r['row_num']
                 del r['row_num']
@@ -632,18 +681,21 @@ class Command(LabelCommand):
                     for i in multiple_raws:
                         #replace the contents of 'raw_data_file'
                         r['raw_data_file'] = i
+                        print r
                         raw_data = RawData(**r)
                         raw_data.save()
                         
                         #associate the assay
                         raw_data.assay_set.add(assay)
                 else:
+                    print r
                     raw_data = RawData(**r)
                     raw_data.save()
                     
                     #associate the assay
                     raw_data.assay_set.add(assay)
                 
+            print '\n processed data \n'
             for p in processed_list:
                 row_num = p['row_num']
                 del p['row_num']
@@ -652,6 +704,7 @@ class Command(LabelCommand):
                 assay = assay_dict[row_num]
                 
                 #create ProcessedData
+                print p
                 processed_data = ProcessedData(**p)
                 processed_data.save()
                 
@@ -659,10 +712,14 @@ class Command(LabelCommand):
                 processed_data.assay_set.add(assay)
                 
             #insert protocols
+            print '\n protocols \n'
             for i, p in enumerate(prot_list):
                 a = assay_dict[i]
                 for prot in p:
                     a.protocols.add(protocols[prot])
+                
+                print a,
+                print a.protocols.all()
 
 
         """ main program starts """
@@ -689,7 +746,7 @@ class Command(LabelCommand):
 
         investigation_dict = parse_investigation_file(investigation_file)
         investigation = insert_investigation(investigation_dict)
-        #investigation = Investigation.objects.get(pk='E-GEOD-18588')
+        #investigation = Investigation.objects.get(pk='E-GEOD-27003')
         
         #get a dictionary of possible protocol names in the studies and assays
         #so it's easier to associate them to the originals
