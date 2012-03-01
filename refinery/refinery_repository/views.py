@@ -33,6 +33,57 @@ def index(request):
                               {'investigations': investigations})
 """    
 
+def dictfetchall(cursor):
+    "Returns all rows from a cursor as a dict"
+    desc = cursor.description
+    return [
+        dict(zip([col[0] for col in desc], row))
+        for row in cursor.fetchall()
+    ]
+
+def get_available_files(request):
+    """
+    Returns all available files to use in workflows
+    """
+    from django.db import connection
+    
+    cursor = connection.cursor()
+    cursor.execute(""" SELECT a.investigation_id, a.assay_name, o.species, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.raw_data_file FROM
+(SELECT id, sample_name, assay_name, investigation_id, study_id from refinery_repository_assay) a
+LEFT OUTER JOIN
+(SELECT value as species, type_id, study_id from refinery_repository_characteristic where type_id = 'ORGANISM') o
+ON (a.study_id = o.study_id)
+LEFT OUTER JOIN 
+(SELECT assay_id, raw_data_file, data_transformation_name from refinery_repository_assay_raw_data a JOIN refinery_repository_rawdata b ON a.rawdata_id = b.id) r ON a.id = r.assay_id
+LEFT OUTER JOIN
+(SELECT value as chip_antibody, type_id, assay_id from refinery_repository_factorvalue where type_id = 'CHIP_ANTIBODY') ca ON a.id = ca.assay_id
+LEFT OUTER JOIN
+(SELECT value as antibody, type_id, assay_id from refinery_repository_factorvalue where type_id = 'ANTIBODY') as ab ON a.id = ab.assay_id
+LEFT OUTER JOIN
+(SELECT value as tissue, type_id, assay_id from refinery_repository_factorvalue where type_id = 'TISSUE') as t ON a.id = t.assay_id
+LEFT OUTER JOIN
+(SELECT value as genotype, type_id, assay_id from refinery_repository_factorvalue where type_id = 'GENOTYPE') as g ON a.id = g.assay_id""")
+    results = cursor.fetchall() 
+    #results_dict = dictfetchall(cursor)
+    
+    #print ("results")
+    #print results
+    #print len(results)
+    paginator = Paginator(results, 5) # Show 5 investigations per page
+
+    page = request.GET.get('page', 1)
+    try:
+        sample_pages = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        sample_pages = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        sample_pages = paginator.page(paginator.num_pages)
+        
+    #return render_to_response('refinery_repository/index.html', {'investigations': investigations})
+    return render_to_response('refinery_repository/samples.html', {'results': sample_pages}, context_instance=RequestContext(request)) 
+
 
 def detail(request, accession):
     i = get_object_or_404(Investigation, pk=accession)
