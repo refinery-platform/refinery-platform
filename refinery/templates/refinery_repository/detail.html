@@ -10,61 +10,63 @@
     {% endfor %}
     
     <p>{{investigation.study_description}}</p>
-    <ul>
-    {# iterates over all of the assay/study files assoc. with investigation #}
-    {% for a in investigation.assay_set.all %}
-    	<li>
-    		<p>{{a.sample_name}}<br /></p>
-    		Factor Values:
-    		<table>
-    			<tr>
-    			{# grabs all factor values associated with "a" via fk #}
-    			{% for f in a.factorvalue_set.all %}
-    				<th>
-    					{# header is subtype #}
-    					{{f.type.type}}
-    				</th>
-    			{% endfor %}
-    			</tr>
-    			<tr>
-    			{% for f in a.factorvalue_set.all %}
-    				<td>
-    					{{f.value}}
-    				</td>
-    			{% endfor %}
-    			</tr>
-    		</table>
-    		Raw File(s):
-    		<table>
-    			<tr>
-    			{# to get many-to-many, assay.other_table.all #}
-    			{% for r in a.raw_data.all %}
-    				<td>
-    					{{r}}
-    				</td>
-    			{% endfor %}
-    			</tr>
-    		</table>
-    		Processed File(s):
-    		<table>
-    			<tr>
-    			{% for p in a.processed_data.all %}
-    				<td>
-    					{{p}}
-    				</td>
-    			{% endfor %}
-    			</tr>
-    		</table>
-    	</li>
-    {% endfor %}
-    </ul>
     {% if error_message %}<p><strong>{{error_message}}</strong></p>{% endif %}
     <form action="/refinery_repository/{{investigation.study_identifier}}/download/" method="post">
-    	{% csrf_token %}
-    	<input type="checkbox" name="raw" id="raw" />
-    	<label for="raw">Analyze Raw Data</label>
-    	<input type="checkbox" name="processed" id="processed" />
-    	<label for="processed">Analyze Processed Data</label>
+    {% csrf_token %}
+    	<ul>
+    	{# iterates over all of the assay/study files assoc. with investigation #}
+    	{% for a in investigation.assay_set.all %}
+    		<li>
+    			<p>{{a.sample_name}}<br /></p>
+    			Factor Values:
+    			<table>
+    				<tr>
+    				{# grabs all factor values associated with "a" via fk #}
+    				{% for f in a.factorvalue_set.all %}
+    					<th>
+    						{# header is subtype #}
+    						{{f.type.type}}
+    					</th>
+    				{% endfor %}
+    				</tr>
+    				<tr>
+    				{% for f in a.factorvalue_set.all %}
+    					<td>
+    						{{f.value}}
+    					</td>
+    				{% endfor %}
+    				</tr>
+    			</table>
+    			{% if a.raw_data.all %}
+    			Raw File(s):
+    			<table>
+    				<tr>
+    				{# to get many-to-many, assay.other_table.all #}
+    				{% for r in a.raw_data.all %}
+    					<td>
+    						<input type="checkbox" name="{{r}}" id="{{r}}" />
+							<label for="{{r}}">{{r}}</label>
+    					</td>
+    				{% endfor %}
+    				</tr>
+    			</table>
+    			{% endif %}
+    			{% if a.processed_data.all %}
+    			Processed File(s):
+    			<table>
+    				<tr>
+    				{% for p in a.processed_data.all %}
+    					<td>
+    						<input type="checkbox" name="{{p}}" id="{{p}}" />
+							<label for="{{p}}">{{p}}</label>
+    					</td>
+    				{% endfor %}
+    				</tr>
+    			</table>
+    			{% endif %}
+    		</li>
+    	{% endfor %}
+    	</ul>
     	<input type="submit" value="Submit" />
     </form>
     
