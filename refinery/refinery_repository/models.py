@@ -44,7 +44,7 @@ class Protocol(models.Model):
     study_protocol_type = models.TextField(blank=True, null=True)
     study_protocol_type_term_accession_number = models.TextField(blank=True, null=True)
     study_protocol_type_term_source_ref = models.TextField(blank=True, null=True)
-    study_protocol_description = models.TextField(2048, blank=True, null=True)
+    study_protocol_description = models.TextField(blank=True, null=True)
     study_protocol_uri = models.TextField(blank=True, null=True)
     study_protocol_version = models.TextField(blank=True, null=True)
     study_protocol_parameters_name = models.TextField(blank=True, null=True)
