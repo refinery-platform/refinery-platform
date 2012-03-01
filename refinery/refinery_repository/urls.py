@@ -7,7 +7,8 @@ urlpatterns = patterns('refinery_repository.views',
 #    url(r'^$', 'index'),
     url(r'^(?P<accession>E-[A-Z]+-\d+)/$', 'detail'),
     url(r'^(?P<accession>E-[A-Z]+-\d+)/results/$', 'results'),
-    url(r'^(?P<accession>E-[A-Z]+-\d+)/download/$', 'download')
+    url(r'^(?P<accession>E-[A-Z]+-\d+)/download/$', 'download'),
+    url(r'samples/$', 'get_available_files')
 )
 
 urlpatterns += patterns('',
@@ -18,4 +19,5 @@ urlpatterns += patterns('',
             paginate_by=5,
             template_name='refinery_repository/index.html'
         ))
+                        
 )
