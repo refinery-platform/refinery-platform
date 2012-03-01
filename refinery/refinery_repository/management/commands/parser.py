@@ -607,7 +607,6 @@ class Command(LabelCommand):
                 s_dict[s.sample_name] = s
             
             assay_dict = dict()
-            #print '\n assay \n'
             for a in assay_list:
                 #remove row number from the dictionary
                 row_num = a['row_num']
@@ -617,7 +616,6 @@ class Command(LabelCommand):
                 study = s_dict[a['sample_name']]
                 a['study'] = study
                 a['investigation'] = investigation
-                #print a
                 #create assay 
                 assay = Assay(**a)
                 assay.save()
@@ -625,7 +623,7 @@ class Command(LabelCommand):
                 #add to assay_dict for the other models to use
                 assay_dict[row_num] = assay
                 
-            #print '\n comment \n'
+            #insert comments
             for c in comment_list:
                 row_num = c['row_num']
                 del c['row_num']
@@ -633,12 +631,11 @@ class Command(LabelCommand):
                 #grab asssociated assay
                 assay = assay_dict[row_num]
                 c['assay'] = assay
-                #print c
                 #create Comment
                 comment = Comment(**c)
                 comment.save()
                 
-            #print '\n factor value \n'
+            #insert factor values
             for fv in fv_list:
                 row_num = fv['row_num']
                 del fv['row_num']
@@ -646,12 +643,11 @@ class Command(LabelCommand):
                 #grab asssociated assay
                 assay = assay_dict[row_num]
                 fv['assay'] = assay
-                #print fv
                 #create FactorValue
                 factor_value = FactorValue(**fv)
                 factor_value.save()
                 
-            #print '\n have subtype \n'
+            #insert have subtype
             for hs in hs_list:
                 row_num = hs['row_num']
                 del hs['row_num']
@@ -659,13 +655,11 @@ class Command(LabelCommand):
                 #grab asssociated assay
                 assay = assay_dict[row_num]
                 hs['assay'] = assay
-                #print hs
                 #create HaveSubtype
                 have_subtype = HaveSubtype(**hs)
                 have_subtype.save()
             
-            """ Many to Manys """    
-            #print '\n raw data \n'
+            """ Many to Manys """
             for r in raw_list:
                 row_num = r['row_num']
                 del r['row_num']
@@ -681,21 +675,19 @@ class Command(LabelCommand):
                     for i in multiple_raws:
                         #replace the contents of 'raw_data_file'
                         r['raw_data_file'] = i
-                        #print r
                         raw_data = RawData(**r)
                         raw_data.save()
                         
                         #associate the assay
                         raw_data.assay_set.add(assay)
                 else:
-                    #print r
                     raw_data = RawData(**r)
                     raw_data.save()
                     
                     #associate the assay
                     raw_data.assay_set.add(assay)
                 
-            #print '\n processed data \n'
+            #insert processed data
             for p in processed_list:
                 row_num = p['row_num']
                 del p['row_num']
@@ -704,7 +696,6 @@ class Command(LabelCommand):
                 assay = assay_dict[row_num]
                 
                 #create ProcessedData
-                #print p
                 processed_data = ProcessedData(**p)
                 processed_data.save()
                 
@@ -712,19 +703,13 @@ class Command(LabelCommand):
                 processed_data.assay_set.add(assay)
                 
             #insert protocols
-            #print '\n protocols \n'
             for i, p in enumerate(prot_list):
                 a = assay_dict[i]
                 for prot in p:
                     a.protocols.add(protocols[prot])
-                
-                #print a,
-                #print a.protocols.all()
 
 
         """ main program starts """
-        #CHANGE ME!!!
-        #base_dir = "/Users/psalmhaseley/Documents/isa-tab/cnvrt"
         base_dir = settings.ISA_TAB_DIR;
 
         isa_ref = label
@@ -746,7 +731,6 @@ class Command(LabelCommand):
 
         investigation_dict = parse_investigation_file(investigation_file)
         investigation = insert_investigation(investigation_dict)
-        #investigation = Investigation.objects.get(pk='E-GEOD-27003')
         
         #get a dictionary of possible protocol names in the studies and assays
         #so it's easier to associate them to the originals
@@ -763,7 +747,6 @@ class Command(LabelCommand):
         
         study_dict = parse_study_file(study_file)
         studys_list = insert_study(investigation, study_dict, protocols)
-        #studys_list = investigation.study_set.all()
     
         assay_dict = parse_assay_file(assay_file, investigation.study_identifier)
         insert_assay(investigation, studys_list, assay_dict, protocols)
