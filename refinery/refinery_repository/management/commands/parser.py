@@ -607,7 +607,7 @@ class Command(LabelCommand):
                 s_dict[s.sample_name] = s
             
             assay_dict = dict()
-            print '\n assay \n'
+            #print '\n assay \n'
             for a in assay_list:
                 #remove row number from the dictionary
                 row_num = a['row_num']
@@ -617,7 +617,7 @@ class Command(LabelCommand):
                 study = s_dict[a['sample_name']]
                 a['study'] = study
                 a['investigation'] = investigation
-                print a
+                #print a
                 #create assay 
                 assay = Assay(**a)
                 assay.save()
@@ -625,7 +625,7 @@ class Command(LabelCommand):
                 #add to assay_dict for the other models to use
                 assay_dict[row_num] = assay
                 
-            print '\n comment \n'
+            #print '\n comment \n'
             for c in comment_list:
                 row_num = c['row_num']
                 del c['row_num']
@@ -633,12 +633,12 @@ class Command(LabelCommand):
                 #grab asssociated assay
                 assay = assay_dict[row_num]
                 c['assay'] = assay
-                print c
+                #print c
                 #create Comment
                 comment = Comment(**c)
                 comment.save()
                 
-            print '\n factor value \n'
+            #print '\n factor value \n'
             for fv in fv_list:
                 row_num = fv['row_num']
                 del fv['row_num']
@@ -646,12 +646,12 @@ class Command(LabelCommand):
                 #grab asssociated assay
                 assay = assay_dict[row_num]
                 fv['assay'] = assay
-                print fv
+                #print fv
                 #create FactorValue
                 factor_value = FactorValue(**fv)
                 factor_value.save()
                 
-            print '\n have subtype \n'
+            #print '\n have subtype \n'
             for hs in hs_list:
                 row_num = hs['row_num']
                 del hs['row_num']
@@ -659,13 +659,13 @@ class Command(LabelCommand):
                 #grab asssociated assay
                 assay = assay_dict[row_num]
                 hs['assay'] = assay
-                print hs
+                #print hs
                 #create HaveSubtype
                 have_subtype = HaveSubtype(**hs)
                 have_subtype.save()
             
             """ Many to Manys """    
-            print '\n raw data \n'
+            #print '\n raw data \n'
             for r in raw_list:
                 row_num = r['row_num']
                 del r['row_num']
@@ -681,21 +681,21 @@ class Command(LabelCommand):
                     for i in multiple_raws:
                         #replace the contents of 'raw_data_file'
                         r['raw_data_file'] = i
-                        print r
+                        #print r
                         raw_data = RawData(**r)
                         raw_data.save()
                         
                         #associate the assay
                         raw_data.assay_set.add(assay)
                 else:
-                    print r
+                    #print r
                     raw_data = RawData(**r)
                     raw_data.save()
                     
                     #associate the assay
                     raw_data.assay_set.add(assay)
                 
-            print '\n processed data \n'
+            #print '\n processed data \n'
             for p in processed_list:
                 row_num = p['row_num']
                 del p['row_num']
@@ -704,7 +704,7 @@ class Command(LabelCommand):
                 assay = assay_dict[row_num]
                 
                 #create ProcessedData
-                print p
+                #print p
                 processed_data = ProcessedData(**p)
                 processed_data.save()
                 
@@ -712,14 +712,14 @@ class Command(LabelCommand):
                 processed_data.assay_set.add(assay)
                 
             #insert protocols
-            print '\n protocols \n'
+            #print '\n protocols \n'
             for i, p in enumerate(prot_list):
                 a = assay_dict[i]
                 for prot in p:
                     a.protocols.add(protocols[prot])
                 
-                print a,
-                print a.protocols.all()
+                #print a,
+                #print a.protocols.all()
 
 
         """ main program starts """
