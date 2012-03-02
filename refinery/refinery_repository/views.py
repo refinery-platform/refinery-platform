@@ -63,12 +63,12 @@ LEFT OUTER JOIN
 LEFT OUTER JOIN
 (SELECT value as genotype, type_id, assay_id from refinery_repository_factorvalue where type_id = 'GENOTYPE') as g ON a.id = g.assay_id""")
     results = cursor.fetchall() 
-    #results_dict = dictfetchall(cursor)
+    #results = dictfetchall(cursor)
     
     #print ("results")
     #print results
     #print len(results)
-    paginator = Paginator(results, 5) # Show 5 investigations per page
+    paginator = Paginator(results, 10) # Show 5 investigations per page
 
     page = request.GET.get('page', 1)
     try:
