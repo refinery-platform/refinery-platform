@@ -12,26 +12,7 @@ from django.conf import settings
 from celery import states
 #from celery.registry import tasks
 from celery.result import AsyncResult
-
-
-"""
-def index(request):
-    investigation_list = Investigation.objects.all()
-    
-    paginator = Paginator(investigation_list, 5) # Show 5 investigations per page
-
-    page = request.GET.get('page', 1)
-    try:
-        investigations = paginator.page(page)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        investigations = paginator.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        investigations = paginator.page(paginator.num_pages)
-    return render_to_response('refinery_repository/index.html', 
-                              {'investigations': investigations})
-"""    
+ 
 
 def dictfetchall(cursor):
     "Returns all rows from a cursor as a dict"
