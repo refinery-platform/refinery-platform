@@ -9,6 +9,7 @@ class Investigation(models.Model):
     title = models.CharField(max_length=255)
     description = models.CharField(max_length=2048)
 
+
 class Investigator(models.Model):
     def __unicode__(self):
         name = "%s, %s %s" % (self.last_name, self.first_name, self.mid_initial)
