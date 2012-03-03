@@ -1,30 +1,44 @@
 from django.contrib import admin
-from refinery_repository.models import Investigation, Investigator, Sub_Type, Raw_Data, Processed_Data, Assay, Characteristic, Factor_Value
+from refinery_repository.models import Ontology, StudyDesignDescriptor, StudyFactor, Protocol, Investigation, Publication, Investigator, SubType, Comment, Study, Characteristic, RawData, ProcessedData, Assay, FactorValue, HaveSubtype
+
+
+class OntologyAdmin(admin.ModelAdmin):
+    pass
+
+
+class StudyDesignDescriptorAdmin(admin.ModelAdmin):
+    pass
+
+
+class StudyFactorAdmin(admin.ModelAdmin):
+    pass
+
+
+class ProtocolAdmin(admin.ModelAdmin):
+    pass
 
 
 class InvestigationAdmin(admin.ModelAdmin):
-    list_display = ['accession', 'title']
-    search_fields = ['accession', 'title', 'description']
+    pass
+
+
+class PublicationAdmin(admin.ModelAdmin):
+    pass
 
 
 class InvestigatorAdmin(admin.ModelAdmin):
-    list_display = ['last_name', 'first_name', 'mid_initial', 'email']
-    search_fields = ['last_name', 'first_name', 'affiliation']
-
-
-class Sub_TypeAdmin(admin.ModelAdmin):
     pass
 
 
-class Raw_DataAdmin(admin.ModelAdmin):
+class SubTypeAdmin(admin.ModelAdmin):
     pass
 
 
-class Processed_DataAdmin(admin.ModelAdmin):
+class CommentAdmin(admin.ModelAdmin):
     pass
 
 
-class AssayAdmin(admin.ModelAdmin):
+class StudyAdmin(admin.ModelAdmin):
     pass
 
 
@@ -32,17 +46,41 @@ class CharacteristicAdmin(admin.ModelAdmin):
     pass
 
 
-class Factor_ValueAdmin(admin.ModelAdmin):
+class RawDataAdmin(admin.ModelAdmin):
+    pass
+
+
+class ProcessedDataAdmin(admin.ModelAdmin):
+    pass
+
+
+class AssayAdmin(admin.ModelAdmin):
+    pass
+
+
+class FactorValueAdmin(admin.ModelAdmin):
+    pass
+
+
+class HaveSubtypeAdmin(admin.ModelAdmin):
     pass
 
 
 
+admin.site.register(Ontology, OntologyAdmin)
+admin.site.register(StudyDesignDescriptor, StudyDesignDescriptorAdmin)
+admin.site.register(StudyFactor, StudyFactorAdmin)
+admin.site.register(Protocol, ProtocolAdmin)
 admin.site.register(Investigation, InvestigationAdmin)
+admin.site.register(Publication, PublicationAdmin)
 admin.site.register(Investigator, InvestigatorAdmin)
-admin.site.register(Sub_Type, Sub_TypeAdmin)
-admin.site.register(Raw_Data, Raw_DataAdmin)
-admin.site.register(Processed_Data, Processed_DataAdmin)
-admin.site.register(Assay, AssayAdmin)
+admin.site.register(SubType, SubTypeAdmin)
+admin.site.register(Comment, CommentAdmin)
+admin.site.register(Study, StudyAdmin)
 admin.site.register(Characteristic, CharacteristicAdmin)
-admin.site.register(Factor_Value, Factor_ValueAdmin)
+admin.site.register(RawData, RawDataAdmin)
+admin.site.register(ProcessedData, ProcessedDataAdmin)
+admin.site.register(Assay, AssayAdmin)
+admin.site.register(FactorValue, FactorValueAdmin)
+admin.site.register(HaveSubtype, HaveSubtypeAdmin)
 

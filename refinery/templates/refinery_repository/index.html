@@ -1,7 +1,5 @@
 {% extends "core/base.html" %}
-
 {% block content %}
-
 
 {% if investigations %}
     <table>
@@ -9,15 +7,15 @@
     {% for investigation in investigations %}
     	<tr>
         	<td style="vertical-align: top">
-        		<a href="/refinery_repository/{{ investigation.accession }}/">
-        			{{investigation.accession}}
+        		<a href="/refinery_repository/{{ investigation.study_identifier }}/">
+        			{{investigation.study_identifier}}
         		</a>
         	</td>
         	<td style="vertical-align: top">
-        		<p>{{investigation.title}}</p>
+        		<p>{{investigation.study_title}}</p>
         	</td>
         	<td>
-        		<p>{{investigation.description}}</p>
+        		<p>{{investigation.study_description}}</p>
         	</td>
         </tr>
     {% endfor %}

@@ -1,7 +1,7 @@
 from celery.task import task, Task
 from django.core.management import call_command
 from celery import current_app, events
-import sys, os, string
+import sys, os, string, errno
 from StringIO import StringIO
 
 @task()
@@ -18,11 +18,23 @@ def call_download(accession, file_download_flag):
     print task_ids
     return task_ids
 
+def create_dir(file_path):
+    try:
+        os.makedirs(out_dir)
+    except OSError, e:
+        if e.errno != errno.EEXIST:
+            raise
+
 @task()
-def download_ftp_file(ftp, out_dir):        
+def download_ftp_file(ftp, out_dir, accession):        
     import ftplib, socket
     
     file_name = ftp.split('/')[-1] #get the file name
+    out_dir = "%s/%s" % (out_dir, directory) #directory where file downloads
+    
+    #make super-directory (out_dir/accession) if it doesn't exist
+    create_dir(out_dir)
+
     file_path = "%s/%s" % (out_dir, file_name) # path where file downloads
     if(not os.path.exists(file_path)): #if file exists already don't download
         ftp = ftp[6:] #remove the ftp:// part from the front
@@ -85,10 +97,14 @@ def download_ftp_file(ftp, out_dir):
     
 
 @task()
-def download_http_file(url, out_dir):
+def download_http_file(url, out_dir, accession):
     import urllib2
     
     file_name = url.split('/')[-1] #get the file name
+    
+    #make super-directory (out_dir/accession) if it doesn't exist
+    create_dir(out_dir)
+    
     file_path = "%s/%s" % (out_dir, file_name) # path where file downloads
 
     if(not os.path.exists(file_path)):
