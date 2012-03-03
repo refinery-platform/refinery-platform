@@ -1,0 +1,28 @@
+{% extends "core/base.html" %}
+
+{% block subheader %}
+Available Samples
+{% endblock %}
+
+{% block content %}
+	{% if results %}
+	<table>
+		{% for result in results.object_list %}
+		<tr>
+			{% for row in result %} <td>
+			<br>
+			{{ row }} </td>
+			{% endfor %}
+		</tr>
+		{% endfor %}
+	</table>
+	<div class="pagination">
+		<span class="step-links"> {% if results.has_previous %} <a href="?page={{results.previous_page_number}}">previous</a> {% endif %} <span class="current"> Page {{results.number}} of {{results.paginator.num_pages}} </span> {% if results.has_next %} <a href="?page={{results.next_page_number}}">next</a> {% endif %} </span>
+	</div>
+	{% else %}
+	<p>
+		No available files
+	</p>
+	{% endif %}
+
+{% endblock %} 
