@@ -1,14 +1,15 @@
 from django.db import models
+from django_extensions.db.fields import UUIDField
 
 # Create your models here.
 """ tables created from investigation file """
 class Ontology(models.Model):
     def __unicode__(self):
-        return self.term_source_name
+        return "%s: %s" % (self.term_source_name, self.term_source_file)
     
     term_source_name = models.TextField()
     term_source_version = models.TextField(blank=True, null=True)
-    term_source_file = models.TextField(primary_key=True)
+    term_source_file = models.TextField(blank=True, null=True)
     term_source_description = models.TextField(blank=True, null=True)
     
     class Meta:
@@ -59,6 +60,7 @@ class Investigation(models.Model):
     def __unicode__(self):
         return self.study_identifier
 
+    uuid = UUIDField(unique=True, auto=True)
     study_identifier = models.TextField(primary_key=True)
     study_title = models.TextField()
     study_description = models.TextField()
@@ -142,6 +144,8 @@ class Comment(models.Model):
 class Study(models.Model):
     def __unicode__(self):
         return self.source_name
+    
+    uuid = UUIDField(unique=True, auto=True)
     source_name = models.TextField(primary_key=True)
     sample_name = models.TextField()
     material_type = models.TextField(blank=True, null=True)
@@ -168,6 +172,7 @@ class RawData(models.Model):
     def __unicode__(self):
         return self.raw_data_file
 
+    uuid = UUIDField(unique=True, auto=True)
     raw_data_file = models.TextField()
     data_transformation_name = models.TextField()
 
@@ -175,6 +180,7 @@ class ProcessedData(models.Model):
     def __unicode__(self):
         return self.derived_arrayexpress_ftp_file
 
+    uuid = UUIDField(unique=True, auto=True)
     derived_arrayexpress_ftp_file = models.TextField()
     derived_data_file = models.TextField()
     
@@ -182,6 +188,7 @@ class Assay(models.Model):
     def __unicode__(self):
         return self.sample_name
 
+    uuid = UUIDField(unique=True, auto=True)
     sample_name = models.TextField()
     material_type = models.TextField(blank=True, null=True)
     assay_name = models.TextField(blank=True, null=True)
