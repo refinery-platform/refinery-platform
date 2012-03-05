@@ -99,6 +99,7 @@ class Publication(models.Model):
 
     investigation = models.ForeignKey(Investigation)
 
+
 class Investigator(models.Model):
     def __unicode__(self):
         name = "%s, %s %s" % (self.study_person_last_name, 
