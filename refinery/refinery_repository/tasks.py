@@ -1,26 +1,14 @@
 from celery.task import task, Task
-from django.core.management import call_command
 from celery import current_app, events
 import sys, os, string, errno
 from StringIO import StringIO
-
-@task()
-def call_download(accession, file_download_flag):
-    args = (accession, file_download_flag)
-    orig_stdout = sys.stdout
-    sys.stdout = content = StringIO()
-    call_command('download_files', *args)
-    sys.stdout = orig_stdout
-    content.seek(0)
-    
-    task_ids = content.read()
-    print "call_download"
-    print task_ids
-    return task_ids
+from django.conf import settings
+from refinery_repository.models import Investigation
+        
 
 def create_dir(file_path):
     try:
-        os.makedirs(out_dir)
+        os.makedirs(file_path)
     except OSError, e:
         if e.errno != errno.EEXIST:
             raise
@@ -30,7 +18,7 @@ def download_ftp_file(ftp, out_dir, accession):
     import ftplib, socket
     
     file_name = ftp.split('/')[-1] #get the file name
-    out_dir = "%s/%s" % (out_dir, directory) #directory where file downloads
+    out_dir = "%s/%s" % (out_dir, accession) #directory where file downloads
     
     #make super-directory (out_dir/accession) if it doesn't exist
     create_dir(out_dir)
@@ -101,11 +89,16 @@ def download_http_file(url, out_dir, accession):
     import urllib2
     
     file_name = url.split('/')[-1] #get the file name
+    out_dir = "%s/%s" % (out_dir, accession) #directory where file downloads
+    print 'out_dir:',
+    print out_dir
     
     #make super-directory (out_dir/accession) if it doesn't exist
     create_dir(out_dir)
     
     file_path = "%s/%s" % (out_dir, file_name) # path where file downloads
+    print 'file_path:',
+    print file_path
 
     if(not os.path.exists(file_path)):
         u = urllib2.urlopen(url)
@@ -117,7 +110,6 @@ def download_http_file(url, out_dir, accession):
         block_sz = 8192
         while True:
             buffer = u.read(block_sz)
-#        buffer = u.read()
             if not buffer:
                 break
 
@@ -137,3 +129,44 @@ def download_http_file(url, out_dir, accession):
             #print status,
 
         f.close()
+        
+        
+@task()
+def call_download(file_url):
+    """args = (file_url)
+    orig_stdout = sys.stdout
+    sys.stdout = content = StringIO()
+    call_command('download_files', *args)
+    sys.stdout = orig_stdout
+    content.seek(0)
+    
+    task_ids = content.read()
+    print "call_download"
+    print task_ids
+    return task_ids"""
+    #isolate accession number
+    file_name = file_url.split('/')[-1] #get the file name
+    accession = file_name.split('.')[0]
+    
+    try:
+        #get investigation with primary key
+        i = Investigation.objects.get(pk=accession)
+    except Investigation.DoesNotExist:
+        raise "Investigation %s is not available" % accession
+            
+    assays = i.assay_set.all() #get assays via fk
+
+    #object to return, set of urls to download
+    file_list = set()
+    
+    for a in assays:
+        processed = a.processed_data.all() #associated processed data
+        for p in processed:
+            file_list.add(p.derived_arrayexpress_ftp_file)
+
+    task_ids = list()
+    for f in file_list:
+        id = download_http_file.delay(f, settings.DOWNLOAD_BASE_DIR, accession)
+        task_ids.append(id)
+
+    return task_ids
