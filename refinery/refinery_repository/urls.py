@@ -5,10 +5,11 @@ from refinery_repository.models import Investigation
 
 urlpatterns = patterns('refinery_repository.views',
 #    url(r'^$', 'index'),
-    url(r'^(?P<accession>E-[A-Z]+-\d+)/$', 'detail'),
-    url(r'^(?P<accession>E-[A-Z]+-\d+)/results/$', 'results'),
-    url(r'^(?P<accession>E-[A-Z]+-\d+)/download/$', 'download'),
-    url(r'samples/$', 'get_available_files')
+    url(r'^(?P<accession>.*\d+)/$', 'detail'),
+    url(r'^(?P<accession>.*\d+)/results/$', 'results'),
+    url(r'^(?P<accession>.*\d+)/download/$', 'download'),
+    url(r'samples/$', 'get_available_files'),
+    url(r'cancelled/$', 'cancelled')
 )
 
 urlpatterns += patterns('',

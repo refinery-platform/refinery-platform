@@ -69,11 +69,11 @@ def detail(request, accession):
     return render_to_response('refinery_repository/detail.html', {'investigation': i},
                               context_instance=RequestContext(request))
     
-def canceled(request):
+def cancelled(request):
     task_ids = request.session['refinery_repository_task_ids']
     for id in task_ids:
         revoke(id)
-    return render_to_response('refinery_repository/canceled.html')
+    return render_to_response('refinery_repository/cancelled.html')
     
 def results(request, accession):
     i = get_object_or_404(Investigation, pk=accession)
