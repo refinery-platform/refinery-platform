@@ -199,7 +199,6 @@ class Assay(models.Model):
     hybridization_assay_name = models.TextField(blank=True, null=True)
     array_data_file = models.TextField(blank=True, null=True)
     array_design_ref = models.TextField(blank=True, null=True)
-    protocol_ref = models.TextField(blank=True, null=True)
     date = models.DateField(blank=True, null=True)
     
     #one raw/processed data file may be associated with multiple assays
