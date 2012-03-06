@@ -3,7 +3,7 @@ from datetime import datetime
 from refinery.refinery_repository.models import *
 import csv, sys, re, string, os, glob
 from collections import defaultdict
-from django.conf import settings
+from django.conf import settings 
 
 class Command(LabelCommand):
     
@@ -104,6 +104,10 @@ class Command(LabelCommand):
                         #database columns are the header names, made lower
                         #case and joined by "_" (e.g. study_title)
                         name = fields.pop(0).lower()
+                        
+                        #remove surrounding "s
+                        fields = [x.strip(r'"') for x in fields]
+                        
                         db_col = string.join(string.split(name, ' '), '_')
                         if(db_col):
                             invest_info[current_header][db_col] = fields
@@ -120,19 +124,23 @@ class Command(LabelCommand):
                          'tion': 'study_identifier'
                          }
             investigation = defaultdict(list) #object to return
-            for k, v in invest_info.items(): #v is dict of lists
-                indexes = list() #indexes that have information to grab
+            #v is dict of lists e.g. {'address': ['', ''], 'phone': ['', '']}
+            for k, v in invest_info.items():
+                #column indexes that have information to grab for each section
+                indexes = list() 
                 for i, val in enumerate(v[key_terms[k]]):
-                    if val: #make sure val not empty
+                    if not re.search(r'^\s*$', val): #make sure val not empty
                         indexes.append(i)
+                        
+                #for every column that has information to insert
                 for i in indexes:
                     temp_dict = dict()
-                    #inv_key (e.g. study_person_fax, study_protocol_name, etc)
+                    #inv_key (e.g. study_person_fax, study_protocol_name)
                     for inv_key, inv_list in v.items():
                         try:
                             temp_dict[inv_key] = inv_list[i]
                         except IndexError:
-                            temp_dict[inv_key] = ''
+                            pass
                     investigation[k].append(temp_dict)
             
             return investigation
@@ -159,10 +167,9 @@ class Command(LabelCommand):
                 if re.search(r'_date', k):
                     try:
                         the_date = datetime.strptime(v, '%Y-%m-%d').date()
+                        tion_dict[k] = the_date
                     except ValueError:
-                        the_date = ''
-                    tion_dict[k] = the_date
-            del tion_dict['study_submission_date']
+                        del tion_dict[k]
 
             investigation = Investigation(**tion_dict)
             investigation.save()
@@ -170,6 +177,11 @@ class Command(LabelCommand):
             #add investigation to tor dictionary and insert investigator(s)
             
             for tor_dict in tor_list:
+                #in case there are unicode characters
+                #authors = pub_dict['study_publication_author_list']
+                #insert_authors = authors.decode('utf-8')
+                #pub_dict['study_publication_author_list'] = insert_authors
+                
                 investigator = Investigator(**tor_dict)
                 investigator.save()
                     
@@ -179,15 +191,29 @@ class Command(LabelCommand):
             #add investigation to ont dictionary and insert ontology/ontologies
             for ont_dict in ont_list:
                 ontology = Ontology(**ont_dict)
-                ontology.save()
+                try:
+                    ontology.save()
+                except:
+                    name = ont_dict['term_source_name']
+                    file = ont_dict['term_source_file']
+                    ver = ont_dict['term_source_version']
+                    ontology = Ontology.objects.get(term_source_name=name, 
+                                                    term_source_file=file,
+                                                    term_source_version=ver)
                     
-                #add investigation to ontology
-                ontology.investigation_set.add(investigation)
-                    
+                #add ontology to investigation
+                investigation.ontologies.add(ontology)
+
             #add investigation to pub dictionary and insert publication(s)
             for pub_dict in pub_list:
                 #using foreign key, so need to assign
                 pub_dict['investigation'] = investigation
+                
+                #in case there are unicode characters
+                authors = unicode(pub_dict['study_publication_author_list'])
+                insert_authors = authors
+                pub_dict['study_publication_author_list'] = insert_authors
+                
                 publication = Publication(**pub_dict)
                 publication.save()
                     
@@ -201,24 +227,19 @@ class Command(LabelCommand):
             
             #add investigation to sdd dictionary and insert study design descriptor(s)
             for sdd_dict in sdd_list:
+                #add investigation as Foreign Key
+                sdd_dict['investigation'] = investigation
+                #create StudyDesignDescriptor
                 sdd = StudyDesignDescriptor(**sdd_dict)
                 sdd.save()
-                
-                #add investigation to sdd
-                sdd.investigation_set.add(investigation)
                     
             #add investigation to prot dictionary and insert protocol(s)
             for sf_dict in sf_list:
+                #add investigation as Foreign Key
+                sf_dict['investigation'] = investigation
+                #create StudyFactor
                 sf = StudyFactor(**sf_dict)
-                try:
-                    sf.save()
-                except:
-                    sf = StudyFactor.objects.get(
-                            study_factor_name=sf_dict['study_factor_name'],
-                            study_factor_type=sf_dict['study_factor_type']
-                            )
-                #add investigation to protocol
-                sf.investigation_set.add(investigation)
+                sf.save()
 
             return investigation
 
@@ -271,11 +292,12 @@ class Command(LabelCommand):
                         
                             #assign values
                             try:
-                                dictionary['b'][key][sub_key]['type'] = subtype
+                                dictionary['b'][key][sub_key]['sub_type'] = subtype
                             except KeyError:
                                 dictionary['b'][key] = defaultdict(dict)
-                                dictionary['b'][key][sub_key]['type'] = subtype
-                                
+                                dictionary['b'][key][sub_key]['sub_type'] = subtype
+                            
+                            dictionary['b'][key][sub_key]['type'] = key
                             dictionary['b'][key][sub_key]['value'] = field
                         else:
                             #get name of the header with '_' substituted for ' ' and lowercase
@@ -313,6 +335,8 @@ class Command(LabelCommand):
                         temp = dictionary['b'][d][k]
                         temp['row_num'] = i
                         study_info[d].append(temp)
+                        
+            print study_info
 
             return study_info
         
@@ -367,7 +391,7 @@ class Command(LabelCommand):
                 c['study'] = study
                 #print c
                 #create Comment
-                comment = Comment(**c)
+                comment = StudyBracketedField(**c)
                 comment.save()
                     
             #insert characteristics
@@ -381,7 +405,7 @@ class Command(LabelCommand):
                 c['study'] = study
                 #print c
                 #create Comment
-                characteristic = Characteristic(**c)
+                characteristic = StudyBracketedField(**c)
                 characteristic.save()
             
             #insert protocols
@@ -464,10 +488,8 @@ class Command(LabelCommand):
             assay_info = {
                           'raw_data': list(),
                           'processed_data': list(),
-                          'have_subtype': list(),
-                          'factor_value': list(),
                           'protocol': list(),
-                          'comment': list(),
+                          'assaybracketedfield': list(),
                           'assay': list()
                           }
             #read in assay file, can't use dictionary because keys may be 
@@ -510,11 +532,12 @@ class Command(LabelCommand):
                         
                             #assign values
                             try:
-                                dictionary['b'][key][sub_key]['type'] = subtype
+                                dictionary['b'][key][sub_key]['sub_type'] = subtype
                             except KeyError:
                                 dictionary['b'][key] = defaultdict(dict)
-                                dictionary['b'][key][sub_key]['type'] = subtype
+                                dictionary['b'][key][sub_key]['sub_type'] = subtype
 
+                            dictionary['b'][key][sub_key]['type'] = key
                             dictionary['b'][key][sub_key]['value'] = field
                         else:
                             #get name of the header with '_' substituted for ' '
@@ -528,10 +551,7 @@ class Command(LabelCommand):
 
                                 dictionary['p'][key] = field
                             elif re.search(r'Protocol REF', header[j]):
-                                if re.search(r'-', field):
-                                    protocols.append(field)
-                                else:
-                                    dictionary['a'][key] = field
+                                protocols.append(field)
                             elif re.search(r'Data Transformation', header[j]):
                                 dictionary['r'][key] = field
                             elif re.search(r'^[0-9]+ Term', header[j]):
@@ -560,25 +580,33 @@ class Command(LabelCommand):
                 
                 if dictionary['r']:
                     assay_info['raw_data'].append(dictionary['r'])
+                    del dictionary['r']
                 if dictionary['a']:
                     assay_info['assay'].append(dictionary['a'])
+                    del dictionary['a']
                 if dictionary['p']:
                     assay_info['processed_data'].append(dictionary['p'])
+                    del dictionary['p']
+                    
+                #print dictionary
+                #print
+                
                 
                 #can't iterate an int, so delete and re-add later
-                del dictionary['b']['row_num']
-                
-                #organize bracketed items into proper categories
-                for d in dictionary['b']:
-                    for k in dictionary['b'][d]:
-                        temp = dictionary['b'][d][k]
-                        temp['row_num'] = i
-                        if not (re.search(r'comment', d) or re.search(r'factor', d)):
-                            temp['super_type'] = d
-                            assay_info['have_subtype'].append(temp)
-                        else:
-                            assay_info[d].append(temp)
+                try:
+                    del dictionary['b']['row_num']
+                    
+                    #organize bracketed items into proper categories
+                    for d in dictionary['b']:
+                        for k in dictionary['b'][d]:
+                            temp = dictionary['b'][d][k]
+                            temp['row_num'] = i
+                            assay_info['assaybracketedfield'].append(temp)
+                except KeyError: #no bracketed information
+                    pass
 
+            #print
+            #print assay_info
             return assay_info
     
         """
@@ -592,12 +620,10 @@ class Command(LabelCommand):
             protocols: dictionary of protocols and abbreviations
         """
         def insert_assay(investigation, s_list, a_dict, protocols):
-            comment_list = a_dict['comment']
             assay_list = a_dict['assay']
             raw_list = a_dict['raw_data']
             processed_list = a_dict['processed_data']
-            fv_list = a_dict['factor_value']
-            hs_list = a_dict['have_subtype']
+            abf_list = a_dict['assaybracketedfield']
             prot_list = a_dict['protocol']
             
             #make study list a study dictionary instead so it's easier for
@@ -624,45 +650,6 @@ class Command(LabelCommand):
                 
                 #add to assay_dict for the other models to use
                 assay_dict[row_num] = assay
-                
-            #print '\n comment \n'
-            for c in comment_list:
-                row_num = c['row_num']
-                del c['row_num']
-                
-                #grab asssociated assay
-                assay = assay_dict[row_num]
-                c['assay'] = assay
-                #print c
-                #create Comment
-                comment = Comment(**c)
-                comment.save()
-                
-            #print '\n factor value \n'
-            for fv in fv_list:
-                row_num = fv['row_num']
-                del fv['row_num']
-                
-                #grab asssociated assay
-                assay = assay_dict[row_num]
-                fv['assay'] = assay
-                #print fv
-                #create FactorValue
-                factor_value = FactorValue(**fv)
-                factor_value.save()
-                
-            #print '\n have subtype \n'
-            for hs in hs_list:
-                row_num = hs['row_num']
-                del hs['row_num']
-                
-                #grab asssociated assay
-                assay = assay_dict[row_num]
-                hs['assay'] = assay
-                #print hs
-                #create HaveSubtype
-                have_subtype = HaveSubtype(**hs)
-                have_subtype.save()
             
             """ Many to Manys """    
             #print '\n raw data \n'
@@ -712,20 +699,35 @@ class Command(LabelCommand):
                 processed_data.assay_set.add(assay)
                 
             #insert protocols
-            #print '\n protocols \n'
+            print '\n protocols \n'
             for i, p in enumerate(prot_list):
                 a = assay_dict[i]
                 for prot in p:
-                    a.protocols.add(protocols[prot])
+                    print 'inserting protocol'
+                    try:
+                        a.protocols.add(protocols[prot])
+                    except KeyError:
+                        protocol = Protocol(study_protocol_name=prot)
+                        protocol.save()
+                        a.protocols.add(protocol)
+                    print "inserted protocol"
                 
-                #print a,
-                #print a.protocols.all()
+            #print '\n have subtype \n'
+            for abf in abf_list:
+                row_num = abf['row_num']
+                del abf['row_num']
+                
+                #grab asssociated assay
+                assay = assay_dict[row_num]
+                abf['assay'] = assay
+                #print abf
+                #create HaveSubtype
+                assay_bracket_field = AssayBracketedField(**abf)
+                assay_bracket_field.save()
 
 
         """ main program starts """
-        #CHANGE ME!!!
-        #base_dir = "/Users/psalmhaseley/Documents/isa-tab/cnvrt"
-        base_dir = settings.ISA_TAB_DIR;
+        base_dir = settings.ISA_TAB_DIR
 
         isa_ref = label
         print label
@@ -734,19 +736,20 @@ class Command(LabelCommand):
         
         assert os.path.isdir(isa_dir), "Invalid Accession: %s" % isa_ref
 
+        
         #assign files to proper file locations and make sure they're correct    
-        investigation_file = "%s/i_%s_investigation.txt" % (isa_dir, isa_ref)
+        investigation_file = glob.glob("%s/i_*.txt" % isa_dir).pop()
         assert os.path.exists(investigation_file), "%s" % investigation_file
         
-        study_file = "%s/s_%s_studysample.txt" % (isa_dir, isa_ref)
+        study_file = glob.glob("%s/s_*.txt" % isa_dir).pop()
         assert os.path.exists(study_file), "Not study file %s" % study_file
         
-        assay_file = "%s/a_%s_assay.txt" % (isa_dir, isa_ref)
+        assay_file = glob.glob("%s/a_*.txt" % isa_dir).pop()
         assert os.path.exists(assay_file), "Not assay file %s" % assay_file
 
         investigation_dict = parse_investigation_file(investigation_file)
         investigation = insert_investigation(investigation_dict)
-        #investigation = Investigation.objects.get(pk='E-GEOD-27003')
+        #investigation = Investigation.objects.get(pk='E-GEOD-18588')
         
         #get a dictionary of possible protocol names in the studies and assays
         #so it's easier to associate them to the originals
