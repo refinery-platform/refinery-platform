@@ -6,13 +6,11 @@ from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from refinery_repository.tasks import call_download, download_ftp_file
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-import simplejson, re
 from django.conf import settings
-
+from celery.task.control import revoke
 from celery import states
-#from celery.registry import tasks
 from celery.result import AsyncResult
- 
+import simplejson, re
 
 def dictfetchall(cursor):
     "Returns all rows from a cursor as a dict"
@@ -71,13 +69,18 @@ def detail(request, accession):
     return render_to_response('refinery_repository/detail.html', {'investigation': i},
                               context_instance=RequestContext(request))
     
+def canceled(request):
+    task_ids = request.session['refinery_repository_task_ids']
+    for id in task_ids:
+        revoke(id)
+    return render_to_response('refinery_repository/canceled.html')
+    
 def results(request, accession):
     i = get_object_or_404(Investigation, pk=accession)
     """Returns task status and result in JSON format."""
-    task_progress = request.session['refinery_repository_task_ids']
-    #task_ids_str = ids.get()
-    #task_progress = eval(ids)
-    """task_progress = list()
+    task_ids = request.session['refinery_repository_task_ids']
+    
+    task_progress = list()
     for task_id in task_ids:
         result = AsyncResult(task_id)
         state, retval = result.state, result.result
@@ -90,7 +93,7 @@ def results(request, accession):
                               
         task_progress.append(result.state)
         if(result.state == "PROGRESS"):
-            task_progress.append(result.result)"""
+            task_progress.append(result.result)
     
     return render_to_response('refinery_repository/results.html', 
                               {
@@ -102,7 +105,11 @@ def results(request, accession):
 def download(request, accession):
     task_ids = list()
     for i in request.POST:
-        if re.search('^ftp', i):
+        if re.search('\.zip$', i):
+            ids = call_download(i)
+            for id in ids:
+                task_ids.append(id)
+        elif re.search('\.gz$', i):
             id = download_ftp_file.delay(i, settings.DOWNLOAD_BASE_DIR, accession)
             task_ids.append(id)
     request.session['refinery_repository_task_ids'] = task_ids
