@@ -3,7 +3,9 @@ from datetime import datetime
 from refinery.refinery_repository.models import *
 import csv, sys, re, string, os, glob
 from collections import defaultdict
+from django.db import connection
 from django.conf import settings 
+
 
 class Command(LabelCommand):
     
@@ -187,27 +189,33 @@ class Command(LabelCommand):
                     
                 #add investigation to investigator
                 investigator.investigations.add(investigation)
+            
+            #import pdb; pdb.set_trace()
+
 
             #add investigation to ont dictionary and insert ontology/ontologies
             for ont_dict in ont_list:
-                ontology = Ontology(**ont_dict)
+                ontology_a = Ontology(**ont_dict)
                 try:
-                    ontology.save()
+                    ontology_a.save()
                 except:
+                    connection._rollback()
                     name = ont_dict['term_source_name']
                     file = ont_dict['term_source_file']
                     ver = ont_dict['term_source_version']
+                    
                     ontologies = Ontology.objects.filter(term_source_name=name)
-                    print ontologies
+                    #print ontologies
+                    
                     for ont in ontologies:
                         if ont.term_source_file == file:
                             if ont.term_source_version == ver:
-                                ontology = ont
-                                print ontology
+                                ontology_a = ont
+                                print ontology_a
                     
                     
                 #add ontology to investigation
-                investigation.ontologies.add(ontology)
+                investigation.ontologies.add(ontology_a)
 
             #add investigation to pub dictionary and insert publication(s)
             for pub_dict in pub_list:
