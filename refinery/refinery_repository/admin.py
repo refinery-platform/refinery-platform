@@ -1,5 +1,5 @@
 from django.contrib import admin
-from refinery_repository.models import Ontology, StudyDesignDescriptor, StudyFactor, Protocol, Investigation, Publication, Investigator, SubType, Comment, Study, Characteristic, RawData, ProcessedData, Assay, FactorValue, HaveSubtype
+from refinery_repository.models import Ontology, StudyDesignDescriptor, StudyFactor, Protocol, Investigation, Publication, Investigator, SubType, Study, StudyBracketedField, RawData, ProcessedData, Assay, AssayBracketedField
 
 
 class OntologyAdmin(admin.ModelAdmin):
@@ -34,15 +34,11 @@ class SubTypeAdmin(admin.ModelAdmin):
     pass
 
 
-class CommentAdmin(admin.ModelAdmin):
-    pass
-
-
 class StudyAdmin(admin.ModelAdmin):
     pass
 
 
-class CharacteristicAdmin(admin.ModelAdmin):
+class StudyBracketedFieldAdmin(admin.ModelAdmin):
     pass
 
 
@@ -58,11 +54,7 @@ class AssayAdmin(admin.ModelAdmin):
     pass
 
 
-class FactorValueAdmin(admin.ModelAdmin):
-    pass
-
-
-class HaveSubtypeAdmin(admin.ModelAdmin):
+class AssayBracketedFieldAdmin(admin.ModelAdmin):
     pass
 
 
@@ -75,12 +67,10 @@ admin.site.register(Investigation, InvestigationAdmin)
 admin.site.register(Publication, PublicationAdmin)
 admin.site.register(Investigator, InvestigatorAdmin)
 admin.site.register(SubType, SubTypeAdmin)
-admin.site.register(Comment, CommentAdmin)
 admin.site.register(Study, StudyAdmin)
-admin.site.register(Characteristic, CharacteristicAdmin)
+admin.site.register(StudyBracketedField, StudyBracketedFieldAdmin)
 admin.site.register(RawData, RawDataAdmin)
 admin.site.register(ProcessedData, ProcessedDataAdmin)
 admin.site.register(Assay, AssayAdmin)
-admin.site.register(FactorValue, FactorValueAdmin)
-admin.site.register(HaveSubtype, HaveSubtypeAdmin)
+admin.site.register(AssayBracketedField, AssayBracketedFieldAdmin)
 
