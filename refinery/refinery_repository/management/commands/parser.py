@@ -3,8 +3,9 @@ from datetime import datetime
 from refinery.refinery_repository.models import *
 import csv, sys, re, string, os, glob
 from collections import defaultdict
-from django.conf import settings 
 from django.db import connection
+from django.conf import settings 
+
 
 class Command(LabelCommand):
     
@@ -188,31 +189,33 @@ class Command(LabelCommand):
                     
                 #add investigation to investigator
                 investigator.investigations.add(investigation)
+            
+            #import pdb; pdb.set_trace()
+
 
             #add investigation to ont dictionary and insert ontology/ontologies
             for ont_dict in ont_list:
-                ontology = Ontology(**ont_dict)
+                ontology_a = Ontology(**ont_dict)
                 try:
-                    ontology.save()
+                    ontology_a.save()
                 except:
                     connection._rollback()
                     name = ont_dict['term_source_name']
-                    try:
-                        file = ont_dict['term_source_file']
-                    except KeyError:
-                        file = ''
-                    try:
-                        ver = ont_dict['term_source_version']
-                    except KeyError:
-                        ver = ''
-
-                    ontology = Ontology.objects.get(term_source_name=name,
-                                                      term_source_file=file,
-                                                      term_source_version=ver)
+                    file = ont_dict['term_source_file']
+                    ver = ont_dict['term_source_version']
+                    
+                    ontologies = Ontology.objects.filter(term_source_name=name)
+                    #print ontologies
+                    
+                    for ont in ontologies:
+                        if ont.term_source_file == file:
+                            if ont.term_source_version == ver:
+                                ontology_a = ont
+                                print ontology_a
                     
                     
                 #add ontology to investigation
-                investigation.ontologies.add(ontology)
+                investigation.ontologies.add(ontology_a)
 
             #add investigation to pub dictionary and insert publication(s)
             for pub_dict in pub_list:
@@ -346,7 +349,7 @@ class Command(LabelCommand):
                         temp['row_num'] = i
                         study_info[d].append(temp)
                         
-            #print study_info
+            print study_info
 
             return study_info
         
@@ -580,10 +583,7 @@ class Command(LabelCommand):
                             elif re.search(r'Protocol REF', header[j]):
                                 protocols.append(field)
                             elif re.search(r'Data Transformation', header[j]):
-                                if 'raw_data_file' in dictionary['r']:
-                                    dictionary['r'][key] = field
-                                else:
-                                    dictionary['a'][key] = field
+                                dictionary['r'][key] = field
                             elif re.search(r'^[0-9]+ Term', header[j]):
                                 #isolate index of corresponding characteristic
                                 #and prepare to substitute '_' for ' '
@@ -604,23 +604,24 @@ class Command(LabelCommand):
                     
                 assay_info['protocol'].append(protocols)
                 
+                #assign row number to end of dict so we know what's together
+                for k, v in dictionary.items():
+                    v['row_num'] = i
+                
                 if dictionary['r']:
-                    #assign row number to dict so we know what's together
-                    dictionary['r']['row_num'] = i
                     assay_info['raw_data'].append(dictionary['r'])
-                    print
-                    print assay_info['raw_data']
                     del dictionary['r']
                 if dictionary['a']:
-                    dictionary['a']['row_num'] = i
                     assay_info['assay'].append(dictionary['a'])
                     del dictionary['a']
                 if dictionary['p']:
-                    dictionary['p']['row_num'] = i
                     assay_info['processed_data'].append(dictionary['p'])
                     del dictionary['p']
                 
+                #can't iterate an int, so delete and re-add later
                 try:
+                    del dictionary['b']['row_num']
+                    
                     #organize bracketed items into proper categories
                     for d in dictionary['b']:
                         for k in dictionary['b'][d]:
@@ -761,6 +762,7 @@ class Command(LabelCommand):
         print label
         
         isa_dir = os.path.join(base_dir, isa_ref)
+        print isa_dir
         
         assert os.path.isdir(isa_dir), "Invalid Accession: %s" % isa_ref
 
