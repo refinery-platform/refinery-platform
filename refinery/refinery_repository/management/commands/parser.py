@@ -197,9 +197,14 @@ class Command(LabelCommand):
                     name = ont_dict['term_source_name']
                     file = ont_dict['term_source_file']
                     ver = ont_dict['term_source_version']
-                    ontology = Ontology.objects.get(term_source_name=name, 
-                                                    term_source_file=file,
-                                                    term_source_version=ver)
+                    ontologies = Ontology.objects.filter(term_source_name=name)
+                    print ontologies
+                    for ont in ontologies:
+                        if ont.term_source_file == file:
+                            if ont.term_source_version == ver:
+                                ontology = ont
+                                print ontology
+                    
                     
                 #add ontology to investigation
                 investigation.ontologies.add(ontology)
@@ -749,6 +754,7 @@ class Command(LabelCommand):
         print label
         
         isa_dir = os.path.join(base_dir, isa_ref)
+        print isa_dir
         
         assert os.path.isdir(isa_dir), "Invalid Accession: %s" % isa_ref
 
