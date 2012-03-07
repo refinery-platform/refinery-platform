@@ -201,6 +201,7 @@ class Assay(models.Model):
     array_design_ref = models.TextField(blank=True, null=True)
     date = models.DateField(blank=True, null=True)
     data_transformation_name = models.TextField(blank=True, null=True)
+    term_source_ref = models.TextField(blank=True, null=True)
     
     #one raw/processed data file may be associated with multiple assays
     raw_data = models.ManyToManyField(RawData, null=True, blank=True)
