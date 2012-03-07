@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from refinery.refinery_repository.models import Investigation, Assay, Raw_Data
-from refinery.refinery_repository.models import Processed_Data
+from refinery.refinery_repository.models import Investigation, Assay, RawData
+from refinery.refinery_repository.models import ProcessedData
 import sys, os, subprocess, re, string
 from collections import defaultdict
 from refinery_repository.tasks import download_ftp_file, download_http_file
@@ -41,14 +41,14 @@ class Command(BaseCommand):
             for a in assays:
                 files_option = str(files_option)
                 if files_option != '1': #get processed data
-                    processed = a.processed_data.all() #assoc. processed data
+                    processed = a.processeddata.all() #assoc. processed data
                     for p in processed:
-                        file_lists['processed'].add(p.url)
+                        file_lists['processed'].add(p.derived_arrayexpress_ftp_file)
 
                 if files_option != '0': #get raw data
-                    raw = a.raw_data.all() #list of associated raw data
+                    raw = a.rawdata.all() #list of associated raw data
                     for r in raw:
-                        file_lists['raw'].add(r.url)
+                        file_lists['raw'].add(r.raw_data_file)
     
             return file_lists
 
@@ -67,12 +67,12 @@ class Command(BaseCommand):
         for accession, f_type in zip(accessions, file_types):
             files = select_files(accession, f_type)
             for r in files['raw']:
-                id = download_ftp_file.delay(r, output_directory)
+                id = download_ftp_file.delay(r, output_directory, accession)
                 task_ids.append(id.task_id)
             #print files['processed'][0]
             #get_processed(files['processed'][0], accession, output_directory)
             for p in files['processed']:
-                id = download_http_file.delay(p, output_directory)
+                id = download_http_file.delay(p, output_directory, accession)
                 task_ids.append(id.task_id)
         #print "task_ids:"        
         print task_ids

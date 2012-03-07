@@ -6,7 +6,19 @@
     
     {# fetches all investigators associated with current investigation #}
     {% for i in investigation.investigator_set.all %}
-    	<h4>{{i}} &lt;{{i.study_person_email}}&gt; {{i.study_person_affiliation}}</h4>
+    	<h4>{{i}} </h4>
+    	<div>
+    		<ul>
+    			<li>{{i.study_person_affiliation}}</li>
+    			<li>{{i.study_person_email}}</li>
+    			{% if i.study_person_phone %}
+    			<li>{{i.study_person_phone}}</li>
+    			{% endif %}
+    			{% if i.study_person_fax %}
+    			<li>{{i.study_person_fax}}</li>
+    			{% endif %}
+    		</ul>
+    	</div>
     {% endfor %}
     
     <p>{{investigation.study_description}}</p>
@@ -45,7 +57,7 @@
     				{% for r in a.raw_data.all %}
     					<td>
     						<input type="checkbox" name="{{r}}" id="{{r}}" />
-							<label for="{{r}}">{{r}}</label>
+							<label for="{{r}}">{{r.data_transformation_name}}</label>
     					</td>
     				{% endfor %}
     				</tr>
@@ -58,7 +70,7 @@
     				{% for p in a.processed_data.all %}
     					<td>
     						<input type="checkbox" name="{{p}}" id="{{p}}" />
-							<label for="{{p}}">{{p}}</label>
+							<label for="{{p}}">{{p.derived_data_file}}</label>
     					</td>
     				{% endfor %}
     				</tr>
