@@ -189,33 +189,31 @@ class Command(LabelCommand):
                     
                 #add investigation to investigator
                 investigator.investigations.add(investigation)
-            
-            #import pdb; pdb.set_trace()
 
 
             #add investigation to ont dictionary and insert ontology/ontologies
             for ont_dict in ont_list:
-                ontology_a = Ontology(**ont_dict)
+                ontology = Ontology(**ont_dict)
                 try:
-                    ontology_a.save()
+                    ontology.save()
                 except:
                     connection._rollback()
                     name = ont_dict['term_source_name']
-                    file = ont_dict['term_source_file']
-                    ver = ont_dict['term_source_version']
+                    try:
+                        file = ont_dict['term_source_file']
+                    except KeyError:
+                        file = ''
+                    try:
+                        ver = ont_dict['term_source_version']
+                    except KeyError:
+                        ver = ''
                     
-                    ontologies = Ontology.objects.filter(term_source_name=name)
-                    #print ontologies
-                    
-                    for ont in ontologies:
-                        if ont.term_source_file == file:
-                            if ont.term_source_version == ver:
-                                ontology_a = ont
-                                print ontology_a
-                    
+                    ontology = Ontology.objects.get(term_source_name=name,
+                                                    term_source_file=file,
+                                                    term_source_version=ver)
                     
                 #add ontology to investigation
-                investigation.ontologies.add(ontology_a)
+                investigation.ontologies.add(ontology)
 
             #add investigation to pub dictionary and insert publication(s)
             for pub_dict in pub_list:
@@ -349,7 +347,7 @@ class Command(LabelCommand):
                         temp['row_num'] = i
                         study_info[d].append(temp)
                         
-            print study_info
+            #print study_info
 
             return study_info
         
@@ -509,18 +507,32 @@ class Command(LabelCommand):
             #potentially overwritten
             file_reader = csv.reader(open(a_file, 'rb'), dialect='excel-tab')
             
+            sub_terms = {
+                         'Hybridization Assay Name': 'Assay Name',
+                         'Array Data File': 'Raw Data File',
+                         'Derived Array Data Matrix File': 'Derived Data File',
+                         'Comment [Derived ArrayExpress FTP file]': 'Derived ArrayExpress FTP file',
+                         }
+            
             #grab first row to get field headers
             header_row = file_reader.next()
             #dictionary that correlates column index and header text
             header = dict()
             current_protocol = 0
             for i, j in enumerate(header_row):
+                if j in sub_terms:
+                    j = sub_terms[j]
+
                 if re.search(r'Term Source REF', j):
-                    header[i] = "%s %s" % (str(i - 1), j)
+                    if re.search(r'\[', header[i-1]):
+                        header[i] = "%s %s" % (str(i - 1), j)
+                    else:
+                        header[i] = j
                 elif re.search(r'Term Accession Number', j):
-                    header[i] = "%s %s" % (str(i - 2), j)
-                elif re.search(r'Derived ArrayExpress FTP file', j):
-                    header[i] = 'Derived ArrayExpress FTP file'
+                    if re.search(r'\[', header[i-2]):
+                        header[i] = "%s %s" % (str(i - 2), j)
+                    else:
+                        header[i] = j
                 elif re.search(r'Parameter', j):
                     header[i] = "%s %s" % (current_protocol, j)
                 else:
@@ -583,7 +595,10 @@ class Command(LabelCommand):
                             elif re.search(r'Protocol REF', header[j]):
                                 protocols.append(field)
                             elif re.search(r'Data Transformation', header[j]):
-                                dictionary['r'][key] = field
+                                if 'raw_data_file' in dictionary['r']:
+                                    dictionary['r'][key] = field
+                                else:
+                                    dictionary['a'][key] = field
                             elif re.search(r'^[0-9]+ Term', header[j]):
                                 #isolate index of corresponding characteristic
                                 #and prepare to substitute '_' for ' '
@@ -603,18 +618,21 @@ class Command(LabelCommand):
                                 dictionary['a'][key] = field
                     
                 assay_info['protocol'].append(protocols)
-                
-                #assign row number to end of dict so we know what's together
-                for k, v in dictionary.items():
-                    v['row_num'] = i
+
                 
                 if dictionary['r']:
+                    #assign row number to dict so we know what's together
+                    dictionary['r']['row_num'] = i
                     assay_info['raw_data'].append(dictionary['r'])
                     del dictionary['r']
                 if dictionary['a']:
+                    #assign row number to dict so we know what's together
+                    dictionary['a']['row_num'] = i
                     assay_info['assay'].append(dictionary['a'])
                     del dictionary['a']
                 if dictionary['p']:
+                    #assign row number to dict so we know what's together
+                    dictionary['p']['row_num'] = i
                     assay_info['processed_data'].append(dictionary['p'])
                     del dictionary['p']
                 
@@ -630,7 +648,7 @@ class Command(LabelCommand):
                             assay_info['assaybracketedfield'].append(temp)
                 except KeyError: #no bracketed information
                     pass
-
+                
             return assay_info
     
         """
@@ -649,6 +667,7 @@ class Command(LabelCommand):
             processed_list = a_dict['processed_data']
             abf_list = a_dict['assaybracketedfield']
             prot_list = a_dict['protocol']
+            print raw_list
             
             #make study list a study dictionary instead so it's easier for
             #assays to find their associated studies
@@ -736,7 +755,7 @@ class Command(LabelCommand):
                         #add to hash for future look up 
                         protocols[prot] = protocol
                 
-            print '\n assay bracketed field \n'
+            #print '\n assay bracketed field \n'
             for abf in abf_list:
                 row_num = abf['row_num']
                 del abf['row_num']
@@ -749,7 +768,7 @@ class Command(LabelCommand):
                 #the proper protocol
                 if 'protocol' in abf:
                     abf['protocol'] = protocols[abf['protocol']]
-                print abf
+                #print abf
                 #create AssayBracketedField
                 assay_bracket_field = AssayBracketedField(**abf)
                 assay_bracket_field.save()
@@ -762,7 +781,6 @@ class Command(LabelCommand):
         print label
         
         isa_dir = os.path.join(base_dir, isa_ref)
-        print isa_dir
         
         assert os.path.isdir(isa_dir), "Invalid Accession: %s" % isa_ref
 
@@ -779,7 +797,7 @@ class Command(LabelCommand):
 
         investigation_dict = parse_investigation_file(investigation_file)
         investigation = insert_investigation(investigation_dict)
-        #investigation = Investigation.objects.get(pk='E-GEOD-18588')
+        #investigation = Investigation.objects.get(pk='E-GEOD-16375')
         
         #get a dictionary of possible protocol names in the studies and assays
         #so it's easier to associate them to the originals
