@@ -500,6 +500,7 @@ class Command(LabelCommand):
             header_row = file_reader.next()
             #dictionary that correlates column index and header text
             header = dict()
+            current_protocol = 0
             for i, j in enumerate(header_row):
                 if re.search(r'Term Source REF', j):
                     header[i] = "%s %s" % (str(i - 1), j)
@@ -507,8 +508,12 @@ class Command(LabelCommand):
                     header[i] = "%s %s" % (str(i - 2), j)
                 elif re.search(r'Derived ArrayExpress FTP file', j):
                     header[i] = 'Derived ArrayExpress FTP file'
+                elif re.search(r'Parameter', j):
+                    header[i] = "%s %s" % (current_protocol, j)
                 else:
                     header[i] = j
+                    if re.search(r'Protocol', j):
+                        current_protocol = i
             
             for i, row in enumerate(file_reader):
                 protocols = list()
@@ -527,8 +532,15 @@ class Command(LabelCommand):
                         elif re.search(r'\[.+\]', header[j]):
                             sub_key = get_subtype(header[j])
                             subtype = insert_subtype(sub_key)
+                            
                             key = string.split(header[j], '[').pop(0).lower().strip()
-                            key = re.sub(r' ', r'_', key)
+                            key_parts = string.split(key, ' ')
+                            
+                            #index of associated protocol if parameter value
+                            protocol_ind = 0
+                            if re.search(r'^[0-9]+', key):
+                                 protocol_ind = key_parts.pop(0)
+                            key = string.join(key_parts, '_')
                         
                             #assign values
                             try:
@@ -539,6 +551,11 @@ class Command(LabelCommand):
 
                             dictionary['b'][key][sub_key]['type'] = key
                             dictionary['b'][key][sub_key]['value'] = field
+                            
+                            #will only run if protocol_ind has a value other than 0
+                            if protocol_ind:
+                                ind = int(protocol_ind)
+                                dictionary['b'][key][sub_key]['protocol'] = row[ind]
                         else:
                             #get name of the header with '_' substituted for ' '
                             #and lowercase
@@ -587,10 +604,6 @@ class Command(LabelCommand):
                 if dictionary['p']:
                     assay_info['processed_data'].append(dictionary['p'])
                     del dictionary['p']
-                    
-                #print dictionary
-                #print
-                
                 
                 #can't iterate an int, so delete and re-add later
                 try:
@@ -605,8 +618,6 @@ class Command(LabelCommand):
                 except KeyError: #no bracketed information
                     pass
 
-            #print
-            #print assay_info
             return assay_info
     
         """
@@ -699,20 +710,20 @@ class Command(LabelCommand):
                 processed_data.assay_set.add(assay)
                 
             #insert protocols
-            print '\n protocols \n'
+            #print '\n protocols \n'
             for i, p in enumerate(prot_list):
                 a = assay_dict[i]
                 for prot in p:
-                    print 'inserting protocol'
                     try:
                         a.protocols.add(protocols[prot])
                     except KeyError:
                         protocol = Protocol(study_protocol_name=prot)
                         protocol.save()
                         a.protocols.add(protocol)
-                    print "inserted protocol"
+                        #add to hash for future look up 
+                        protocols[prot] = protocol
                 
-            #print '\n have subtype \n'
+            print '\n assay bracketed field \n'
             for abf in abf_list:
                 row_num = abf['row_num']
                 del abf['row_num']
@@ -720,8 +731,13 @@ class Command(LabelCommand):
                 #grab asssociated assay
                 assay = assay_dict[row_num]
                 abf['assay'] = assay
-                #print abf
-                #create HaveSubtype
+                
+                #if a parameter value (protocol field not empty), associate
+                #the proper protocol
+                if 'protocol' in abf:
+                    abf['protocol'] = protocols[abf['protocol']]
+                print abf
+                #create AssayBracketedField
                 assay_bracket_field = AssayBracketedField(**abf)
                 assay_bracket_field.save()
 
