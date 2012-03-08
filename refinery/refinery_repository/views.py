@@ -106,11 +106,11 @@ def download(request, accession):
     task_ids = list()
     for i in request.POST:
         if re.search('\.zip$', i):
-            ids = call_download(i)
-            for id in ids:
-                task_ids.append(id)
+            async_results = call_download(i)
+            for ar in async_results:
+                task_ids.append(ar.task_id)
         elif re.search('\.gz$', i):
-            id = download_ftp_file.delay(i, settings.DOWNLOAD_BASE_DIR, accession)
-            task_ids.append(id)
+            async_result = download_ftp_file.delay(i, settings.DOWNLOAD_BASE_DIR, accession)
+            task_ids.append(async_result.task_id)
     request.session['refinery_repository_task_ids'] = task_ids
     return HttpResponseRedirect(reverse('refinery_repository.views.results', args=(accession,)))
