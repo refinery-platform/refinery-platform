@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Le styles -->
+    
+    <link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}js/datatables/css/DT_bootstrap.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ STATIC_URL }}js/bootstrap/css/style.css">
+    
+    <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/jquery-1.7.js"></script>
+    <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap.js"></script>	
+    <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/jquery.dataTables.js"></script>		
+    <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/DT_bootstrap.js"></script>		
+    	
+    <script language="javascript" type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+	
+	{% block head_html %}{% endblock %}
+    
+    <title>Refinery {% block title %}{% endblock %}</title>
+</head>
+
+<body>
+    <div id="header">
+        <h1>Refinery</h1>
+    </div>
+    <div id="subheader">
+        <h3>{% block subheader %}{% endblock %}</h3>
+    </div>
+    <div id="navigation">
+        {% block navigation %}        
+        {% endblock %}
+    </div>
+
+    <div class="container-fluid"> 
+    	<div class="row-fluid">
+    		<div class="span12">
+    			<div id="content">	
+        			{% block content %}{% endblock %}
+        		</div>
+        	</div>
+       </div>
+    </div>
+    
+    <div id="footer">
+        <small>Copyright &copy; 2012 Park Lab | Center for Biomedical Informatics at Harvard Medical School. All rights reserved.</small>
+    </div>
+    
+    
+</body>
+</html>
