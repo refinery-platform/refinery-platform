@@ -1,6 +1,6 @@
 from celery.task import task, Task
 from celery import current_app, events
-import sys, os, string, errno
+import sys, os, string, errno, subprocess
 from StringIO import StringIO
 from django.conf import settings
 from refinery_repository.models import Investigation
@@ -14,7 +14,7 @@ def create_dir(file_path):
             raise
 
 @task()
-def download_ftp_file(ftp, out_dir, accession):        
+def download_ftp_file(ftp, out_dir, accession):
     import ftplib, socket
     
     file_name = ftp.split('/')[-1] #get the file name
@@ -83,7 +83,6 @@ def download_ftp_file(ftp, out_dir, accession):
             os.unlink(file_path)
         f.quit()
     
-
 @task()
 def download_http_file(url, out_dir, accession):
     import urllib2
@@ -129,8 +128,7 @@ def download_http_file(url, out_dir, accession):
             #print status,
 
         f.close()
-        
-        
+                
 @task()
 def call_download(file_url):
     """args = (file_url)
@@ -170,3 +168,33 @@ def call_download(file_url):
         task_ids.append(id)
 
     return task_ids
+
+@task()
+def convert_to_isatab(accession):
+    command = "%s %s" % (settings.CONVERSION, accession)
+    subprocess.call(command) 
+    
+@task()
+def get_arrayexpress_studies():
+    wget_cmd = "wget -O arrayexpress_studies -P %s %s" % (settings.WGET_DIR,
+                                                          settings.WGET_URL)
+    subprocess.call(wget_cmd)
+    
+    ae_accessions = list()
+    f = open("%s/arrayexpress_studies" % settings.WGET_DIR, 'rb')
+    for line in f:
+        #get the date that the study was updated between "lastupdatedate" tags
+        updated = string.split(line, 'lastupdatedate>').pop(1)
+        updated = updated[:-2] #take off the </ connected to the date
+        accessions = string.split(line, 'accession>')
+        for a in accessions: #many accessions, so search for right one
+            if re.search(r'^E-', a):
+                isatab_dir = os.path.join(settings.ISA_TAB_DIR, ae_accession)
+                #will only convert new studies
+                if not os.path.isdir(isatab_dir):
+                    ae_accessions.append(a)
+                else: #if updated recently, then convert also
+                    updated
+
+    for ae_accession in ae_accessions:        
+            convert_to_isatab.delay(ae_accession)

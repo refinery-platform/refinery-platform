@@ -23,6 +23,65 @@ class Command(LabelCommand):
     def handle_label(self, label, **options):
         
         """
+        Name: get_raw_url
+        Description:
+            fixes the malformed URL and returns the fixed version
+        Parameters:
+            ftp_file (malformed download URL)
+        """
+        def get_raw_url(ftp_file):
+            #list that has different parts of final ftp link to concatenate
+            ftp = ["ftp://ftp.sra.ebi.ac.uk/vol1/fastq"]
+    
+            """isolate the file name"""
+            #get the index of the last / in the given ftp link
+            rind = string.rindex(ftp_file, '/')
+            #take substring from the last slash to the end of given ftp link
+            f_name = ftp_file[rind+1:] #file name
+    
+            #add first 6 characters of the ENA/SRA accession to list
+            ftp.append(f_name[:6])
+    
+            #isolate the ENA/SRA accession number
+            split = f_name.split('.') #split on "." for ENA/SRA acc (ind=0)
+            #if paired-end data, remove the _1/_2 from end before list append
+            if re.search(r'_(1|2)$', split[0]):
+                #add everything but last 2 chars (_1 or _2)
+                ftp.append(split[0][:-2])
+            else:
+                ftp.append(split[0]) 
+    
+            #if getting FASTQ file, make sure gzip version
+            if re.search(r'\.fastq$', f_name):
+                f_name += ".gz"
+            #add file name to the end of the list
+            ftp.append(f_name)
+    
+            #concatenate everything to get the final FTP link
+            ftp_url = string.join(ftp, '/')
+            return ftp_url
+
+        """
+        Name: get_zipped_url
+        Description:
+            fixes the malformed URL and returns the fixed version
+        Parameters:
+            ftp_file (malformed download URL)
+            acc (associated investigation study identifier)
+        """
+        def get_zipped_url(ftp_file, acc):
+            #isolate the file name
+            #get the index of the last / in the given ftp link
+            rind = string.rindex(ftp_file, '/')
+            #take substring from the last slash to the end of given ftp link
+            f_name = ftp_file[rind+1:] #file name
+    
+            #format final url, plugging in the accession and the file name
+            url = "http://www.ebi.ac.uk/arrayexpress/files"
+            url = "%s/%s/%s" % (url, acc, f_name)
+            return url
+        
+        """
         Name: get_subtype
         Description:
             extracts the sub-type from the Characteristic or Factor Value
@@ -426,66 +485,7 @@ class Command(LabelCommand):
                     s.protocols.add(protocols[prot])
                     
             return s_list
-   
-        """
-        Name: get_raw_url
-        Description:
-            fixes the malformed URL and returns the fixed version
-        Parameters:
-            ftp_file (malformed download URL)
-        """
-        def get_raw_url(ftp_file):
-            #list that has different parts of final ftp link to concatenate
-            ftp = ["ftp://ftp.sra.ebi.ac.uk/vol1/fastq"]
-    
-            """isolate the file name"""
-            #get the index of the last / in the given ftp link
-            rind = string.rindex(ftp_file, '/')
-            #take substring from the last slash to the end of given ftp link
-            f_name = ftp_file[rind+1:] #file name
-    
-            #add first 6 characters of the ENA/SRA accession to list
-            ftp.append(f_name[:6])
-    
-            #isolate the ENA/SRA accession number
-            split = f_name.split('.') #split on "." for ENA/SRA acc (ind=0)
-            #if paired-end data, remove the _1/_2 from end before list append
-            if re.search(r'_(1|2)$', split[0]):
-                #add everything but last 2 chars (_1 or _2)
-                ftp.append(split[0][:-2])
-            else:
-                ftp.append(split[0]) 
-    
-            #if getting FASTQ file, make sure gzip version
-            if re.search(r'\.fastq$', f_name):
-                f_name += ".gz"
-            #add file name to the end of the list
-            ftp.append(f_name)
-    
-            #concatenate everything to get the final FTP link
-            ftp_url = string.join(ftp, '/')
-            return ftp_url
-
-        """
-        Name: get_processed_url
-        Description:
-            fixes the malformed URL and returns the fixed version
-        Parameters:
-            ftp_file (malformed download URL)
-            acc (associated investigation study identifier)
-        """
-        def get_processed_url(ftp_file, acc):
-            #isolate the file name
-            #get the index of the last / in the given ftp link
-            rind = string.rindex(ftp_file, '/')
-            #take substring from the last slash to the end of given ftp link
-            f_name = ftp_file[rind+1:] #file name
-    
-            #format final url, plugging in the accession and the file name
-            url = "http://www.ebi.ac.uk/arrayexpress/files"
-            url = "%s/%s/%s" % (url, acc, f_name)
-            return url
-            
+               
         """
         Name: parse_assay_file
         Description:
@@ -512,6 +512,8 @@ class Command(LabelCommand):
                          'Array Data File': 'Raw Data File',
                          'Derived Array Data Matrix File': 'Derived Data File',
                          'Comment [Derived ArrayExpress FTP file]': 'Derived ArrayExpress FTP file',
+                         'Comment [ArrayExpress FTP file]': 'Raw Data File',
+                         'Comment [FASTQ URI]': 'Raw Data File'
                          }
             
             #grab first row to get field headers
@@ -545,8 +547,11 @@ class Command(LabelCommand):
                 dictionary = defaultdict(dict)
                 for j, field in enumerate(row):
                     if not re.search(r'^\s*$', field): #if not empty
-                        if re.search(r'FASTQ URI', header[j]) or re.search(r'Raw Data', header[j]):
-                            raw_file = get_raw_url(field)
+                        if re.search(r'Raw Data', header[j]):
+                            if not re.search(r'\.zip$', field):
+                                raw_file = get_raw_url(field)
+                            else:
+                                raw_file = get_zipped_url(field)
                             if not 'raw_data_file' in dictionary['r']:
                                 dictionary['r']['raw_data_file'] = raw_file
                             else: #paired end data (2 raw data files)
@@ -589,7 +594,7 @@ class Command(LabelCommand):
                         
                             if re.search(r'Derived', header[j]):
                                 if re.search(r'FTP', header[j]):
-                                    field = get_processed_url(field, accession)
+                                    field = get_zipped_url(field, accession)
 
                                 dictionary['p'][key] = field
                             elif re.search(r'Protocol REF', header[j]):
@@ -667,7 +672,7 @@ class Command(LabelCommand):
             processed_list = a_dict['processed_data']
             abf_list = a_dict['assaybracketedfield']
             prot_list = a_dict['protocol']
-            print raw_list
+            #print raw_list
             
             #make study list a study dictionary instead so it's easier for
             #assays to find their associated studies
@@ -768,7 +773,6 @@ class Command(LabelCommand):
                 #the proper protocol
                 if 'protocol' in abf:
                     abf['protocol'] = protocols[abf['protocol']]
-                #print abf
                 #create AssayBracketedField
                 assay_bracket_field = AssayBracketedField(**abf)
                 assay_bracket_field.save()
