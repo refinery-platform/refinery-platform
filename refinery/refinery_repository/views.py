@@ -117,6 +117,8 @@ def download(request, accession):
     request.session['refinery_repository_task_ids'] = task_ids
     return HttpResponseRedirect(reverse('refinery_repository.views.results', args=(accession,)))
 
+
+""" Richard's views """
 def get_available_files(request):
     """
     Returns all available files to use in workflows
@@ -195,15 +197,18 @@ def results_selected(request):
         #                      "traceback": traceback})
                               
         #task_progress.append(result.state)
-        if(result.state == "PROGRESS"):
-        #if task_id.task_id is not None:
-            print "results"
-            print result
+        dictionary = dict()
+        if(result.state == "PROGRESS"):    
             dictionary = result.result
-            print "dict"
-            print dictionary
-            dictionary['task_id'] = task_id
-            task_progress.append(dictionary)
+        
+        dictionary['task_id'] = task_id
+        dictionary['state'] = state
+        task_progress.append(dictionary)
+        print "results"
+        print result    
+        print "dict"
+        print dictionary
+        
         
     if (request.is_ajax()):
         print "RETURNING AJAX"
@@ -239,7 +244,7 @@ def download_selected_samples(request):
             accession, new_i = i.split(',');
             print new_i
             print accession
-            async_result = download_ftp_file.delay(i, settings.DOWNLOAD_BASE_DIR, accession)
+            async_result = download_ftp_file.delay(new_i, settings.DOWNLOAD_BASE_DIR, accession)
             task_ids.append(async_result.task_id)
             
             #id = download_ftp_file.delay(new_i, settings.DOWNLOAD_BASE_DIR, accession)
