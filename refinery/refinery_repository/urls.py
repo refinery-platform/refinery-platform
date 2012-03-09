@@ -9,7 +9,7 @@ urlpatterns = patterns('refinery_repository.views',
     url(r'^(?P<accession>.*\d+)/results/$', 'results'),
     url(r'^(?P<accession>.*\d+)/download/$', 'download'),
     url(r'samples/$', 'get_available_files'),
-    url(r'cancelled/$', 'cancelled')
+    url(r'^cancelled/$', 'cancelled')
 )
 
 urlpatterns += patterns('',
