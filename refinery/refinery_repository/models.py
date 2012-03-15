@@ -118,14 +118,6 @@ class Investigator(models.Model):
     study_person_roles_term_source_ref = models.TextField(blank=True, null=True)
     
     investigations = models.ManyToManyField(Investigation)
-    
-
-""" tables created from study or assay file """
-class SubType(models.Model):
-    def __unicode__(self):
-        return self.type
-
-    type = models.TextField(primary_key=True)
 
     
 """ tables created from study file """
@@ -142,14 +134,28 @@ class Study(models.Model):
     #usually more than one protocol per study
     protocols = models.ManyToManyField(Protocol)
     investigation = models.ForeignKey(Investigation)
+        
+    def factorvalue_set(self):
+        return self.studybracketedfield_set.filter(type="factor_value")
+    
+    def parametervalue_set(self):
+        return self.studybracketedfield_set.filter(type="parameter_value")
+    
+    def comment_set(self):
+        return self.studybracketedfield_set.filter(type="comment")
+    
+    def characteristics_set(self):
+        return self.studybracketedfield_set.filter(type="characteristics")
 
 class StudyBracketedField(models.Model):
     def __unicode__(self):
-        return "%s[%s]: %s" % (self.type, self.sub_type.type, self.value)
+        return "%s[%s]: %s" % (self.type, self.sub_type, self.value)
     #required fields
     value = models.TextField()
     #characteristic, factor value, parameter value, comment
     type = models.TextField()
+    #stuff between the brackets
+    sub_type = models.TextField()
     
     #optional fields
     term_source_ref = models.TextField(blank=True, null=True)
@@ -157,7 +163,6 @@ class StudyBracketedField(models.Model):
     unit = models.TextField(blank=True, null=True)
     
     #foreign keys
-    sub_type = models.ForeignKey(SubType)
     study = models.ForeignKey(Study)
     #if a parameter value, it's associated with a Protocol
     protocol = models.ForeignKey(Protocol, blank=True, null=True)
@@ -212,13 +217,27 @@ class Assay(models.Model):
     investigation = models.ForeignKey(Investigation)
     study = models.ForeignKey(Study)
     
+    def factorvalue_set(self):
+        return self.assaybracketedfield_set.filter(type="factor_value")
+    
+    def parametervalue_set(self):
+        return self.assaybracketedfield_set.filter(type="parameter_value")
+    
+    def comment_set(self):
+        return self.assaybracketedfield_set.filter(type="comment")
+    
+    def characteristics_set(self):
+        return self.assaybracketedfield_set.filter(type="characteristics")
+    
 class AssayBracketedField(models.Model):
     def __unicode__(self):
-        return "%s[%s]: %s" % (self.type, self.sub_type.type, self.value)
+        return "%s[%s]: %s" % (self.type, self.sub_type, self.value)
     #required fields
     value = models.TextField()
     #characteristic, factor value, parameter value, comment
     type = models.TextField()
+    #stuff in between the brackets
+    sub_type = models.TextField()
     
     #optional fields
     term_source_ref = models.TextField(blank=True, null=True)
@@ -226,7 +245,6 @@ class AssayBracketedField(models.Model):
     unit = models.TextField(blank=True, null=True)
     
     #foreign keys
-    sub_type = models.ForeignKey(SubType)
     assay = models.ForeignKey(Assay)
     #if a parameter value, it's associated with a Protocol
     protocol = models.ForeignKey(Protocol, blank=True, null=True)
