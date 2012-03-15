@@ -101,20 +101,7 @@ class Command(LabelCommand):
             sub_type = string.join(string.split(subtype, ' '), '_')
             #return the sub-type
             return sub_type 
-    
-        """
-        Name: insert_subtype
-        Description:
-            inserts the sub-type from the Characteristic or Factor Value
-            header into a Django model
-        Parameters:
-            subtypes: an array of all the sub-types that need to be inserted 
-        """
-        def insert_subtype(subtypes):
-            s = SubType(type=subtypes)
-            s.save()
-            return s
-    
+
         """
         Name: parse_investigation_file
         Description:
@@ -358,14 +345,13 @@ class Command(LabelCommand):
                             #return everything before '[' and lowercase it
                             key = string.split(header[j], '[').pop(0).lower().strip()
                             sub_key = get_subtype(header[j])
-                            subtype = insert_subtype(sub_key)
                         
                             #assign values
                             try:
-                                dictionary['b'][key][sub_key]['sub_type'] = subtype
+                                dictionary['b'][key][sub_key]['sub_type'] = sub_key
                             except KeyError:
                                 dictionary['b'][key] = defaultdict(dict)
-                                dictionary['b'][key][sub_key]['sub_type'] = subtype
+                                dictionary['b'][key][sub_key]['sub_type'] = sub_key
                             
                             dictionary['b'][key][sub_key]['type'] = key
                             dictionary['b'][key][sub_key]['value'] = field
@@ -561,7 +547,6 @@ class Command(LabelCommand):
                                 dictionary['r']['raw_data_file'] = raw
                         elif re.search(r'\[.+\]', header[j]):
                             sub_key = get_subtype(header[j])
-                            subtype = insert_subtype(sub_key)
                             
                             key = string.split(header[j], '[').pop(0).lower().strip()
                             key_parts = string.split(key, ' ')
@@ -574,10 +559,10 @@ class Command(LabelCommand):
                         
                             #assign values
                             try:
-                                dictionary['b'][key][sub_key]['sub_type'] = subtype
+                                dictionary['b'][key][sub_key]['sub_type'] = sub_key
                             except KeyError:
                                 dictionary['b'][key] = defaultdict(dict)
-                                dictionary['b'][key][sub_key]['sub_type'] = subtype
+                                dictionary['b'][key][sub_key]['sub_type'] = sub_key
 
                             dictionary['b'][key][sub_key]['type'] = key
                             dictionary['b'][key][sub_key]['value'] = field
@@ -624,7 +609,8 @@ class Command(LabelCommand):
                     
                 assay_info['protocol'].append(protocols)
 
-                
+                #print dictionary
+                #print
                 if dictionary['r']:
                     #assign row number to dict so we know what's together
                     dictionary['r']['row_num'] = i
@@ -643,8 +629,6 @@ class Command(LabelCommand):
                 
                 #can't iterate an int, so delete and re-add later
                 try:
-                    del dictionary['b']['row_num']
-                    
                     #organize bracketed items into proper categories
                     for d in dictionary['b']:
                         for k in dictionary['b'][d]:
@@ -672,7 +656,6 @@ class Command(LabelCommand):
             processed_list = a_dict['processed_data']
             abf_list = a_dict['assaybracketedfield']
             prot_list = a_dict['protocol']
-            #print raw_list
             
             #make study list a study dictionary instead so it's easier for
             #assays to find their associated studies
