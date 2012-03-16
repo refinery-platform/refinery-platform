@@ -130,21 +130,21 @@ def get_available_files(request):
     cursor.execute(""" SELECT distinct a.investigation_id, a.assay_name, o.species, d.description, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.file, r.raw_data_file FROM
 (SELECT id, sample_name, assay_name, investigation_id, study_id from refinery_repository_assay) a
 LEFT OUTER JOIN
-(SELECT value as species, study_id from refinery_repository_studybracketedfield where sub_type_id ='ORGANISM') o
+(SELECT value as species, study_id from refinery_repository_studybracketedfield where sub_type ='ORGANISM') o
 ON (a.study_id = o.study_id)
 LEFT OUTER JOIN
-(SELECT value as description, study_id from refinery_repository_studybracketedfield where sub_type_id = 'SAMPLE_DESCRIPTION') d
+(SELECT value as description, study_id from refinery_repository_studybracketedfield where sub_type = 'SAMPLE_DESCRIPTION') d
 ON (a.study_id = d.study_id)
 LEFT OUTER JOIN 
 (SELECT assay_id, raw_data_file, data_transformation_name as file from refinery_repository_assay_raw_data a JOIN refinery_repository_rawdata b ON a.rawdata_id = b.id) r ON a.id = r.assay_id
 LEFT OUTER JOIN
-(SELECT value as chip_antibody, assay_id from refinery_repository_assaybracketedfield where sub_type_id = 'CHIP_ANTIBODY') ca ON a.id = ca.assay_id
+(SELECT value as chip_antibody, assay_id from refinery_repository_assaybracketedfield where sub_type = 'CHIP_ANTIBODY') ca ON a.id = ca.assay_id
 LEFT OUTER JOIN
-(SELECT value as antibody, assay_id from refinery_repository_assaybracketedfield where sub_type_id = 'ANTIBODY') as ab ON a.id = ab.assay_id
+(SELECT value as antibody, assay_id from refinery_repository_assaybracketedfield where sub_type = 'ANTIBODY') as ab ON a.id = ab.assay_id
 LEFT OUTER JOIN
-(SELECT value as tissue, assay_id from refinery_repository_assaybracketedfield where sub_type_id = 'TISSUE') as t ON a.id = t.assay_id
+(SELECT value as tissue, assay_id from refinery_repository_assaybracketedfield where sub_type = 'TISSUE') as t ON a.id = t.assay_id
 LEFT OUTER JOIN
-(SELECT value as genotype, assay_id from refinery_repository_assaybracketedfield where sub_type_id = 'GENOTYPE') as g ON a.id = g.assay_id order by a.investigation_id""")
+(SELECT value as genotype, assay_id from refinery_repository_assaybracketedfield where sub_type = 'GENOTYPE') as g ON a.id = g.assay_id order by a.investigation_id""")
 
 
     
