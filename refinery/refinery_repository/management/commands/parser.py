@@ -765,7 +765,7 @@ class Command(LabelCommand):
         base_dir = settings.ISA_TAB_DIR
 
         isa_ref = label
-        print label
+        #sys.stderr.write("%s\n" % label)
         
         isa_dir = os.path.join(base_dir, isa_ref)
         
