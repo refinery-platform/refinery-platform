@@ -28,7 +28,21 @@ $(function(){
 Available Samples
 {% endblock %}
 
-{% block content %}		
+{% block content %}	
+	<div class="btn-toolbar">
+        <div class="btn-group">
+          <button class="btn btn-primary btn-large">Choose Workflow</button>
+          <button class="btn btn-primary dropdown-toggle btn-large" data-toggle="dropdown"><span class="caret"></span></button>
+          <ul class="dropdown-menu">
+            <li><a href="#">Workflow 1</a></li>
+            <li><a href="#">Workflow 2</a></li>
+            <li><a href="#">Workflow 3</a></li>
+            <li class="divider"></li>
+            <li><a href="#">Separated link</a></li>
+          </ul>
+        </div><!-- /btn-group -->
+      </div>
+	
 	{% if results %}
 	<form action="/refinery_repository/download/" method="post">
     {% csrf_token %}
