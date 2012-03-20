@@ -120,7 +120,7 @@
          "modification_date": "2012-03-20 09:34:30",
          "visibility": 2,
          "summary": "",
-         "internal_id": 123,
+         "internal_id": "123",
          "creation_date": "2012-03-20 09:34:30",
          "name": "Test Workflow 1"
       }
@@ -136,7 +136,7 @@
          "modification_date": "2012-03-20 10:13:52",
          "visibility": 2,
          "summary": "",
-         "internal_id": 132,
+         "internal_id": "132",
          "creation_date": "2012-03-20 10:13:52",
          "name": "Test Workflow 2"
       }
