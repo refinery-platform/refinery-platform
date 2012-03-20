@@ -78,12 +78,22 @@ class DataSet ( AbstractUserResource ):
 
 class DataSetUserRelationship( AbstractUserRelationship ):
     resource = models.ForeignKey( DataSet )
-    
+
+
+class WorkflowDataInput( models.Model ):
+    name = models.CharField( max_length=200 )
+    internal_id = models.IntegerField()
+
+    def __unicode__(self):
+        return self.name + " (" + str( self.internal_id ) + ")"
+             
         
 class Workflow ( AbstractUserResource ):
     summary = models.CharField( max_length=1000, blank=True )
 
-    users = models.ManyToManyField( User, through="WorkflowUserRelationship" )    
+    users = models.ManyToManyField( User, through="WorkflowUserRelationship" )
+    data_inputs = models.ManyToManyField( WorkflowDataInput )
+    internal_id = models.IntegerField()    
 
     def __unicode__(self):
         return self.name + " - " + self.summary
@@ -114,8 +124,16 @@ class Project ( AbstractUserResource ):
         
 class ProjectUserRelationship( AbstractUserRelationship ):
     resource = models.ForeignKey( Project )
-            
-            
+
+
+class WorkflowDataInputMap( models.Model ):
+    workflow_data_input_internal_id = models.IntegerField()
+    data_uuid = UUIDField( editable=True )
+    
+    def __unicode__(self):
+        return str( self.workflow_data_input_internal_id ) + " <-> " + self.data_uuid
+    
+                
 class Analysis ( BaseResource ):
     creator = models.ForeignKey( User )
     summary = models.CharField( max_length=1000, blank=True )
@@ -124,6 +142,8 @@ class Analysis ( BaseResource ):
     project = models.ForeignKey( Project )
     data_set = models.ForeignKey( DataSet, blank=True )
     workflow = models.ForeignKey( Workflow, blank=True )
+    workflow_data_input_maps = models.ManyToManyField( WorkflowDataInputMap )
+    
 
     def __unicode__(self):
         return self.name + " - " + self.summary
