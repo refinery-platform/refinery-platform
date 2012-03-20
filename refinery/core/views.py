@@ -1,8 +1,4 @@
-from core.models import User
-from core.models import Project
-from core.models import Workflow
-from core.models import DataSet
-from core.models import ProjectUserRelationship
+from core.models import *
 from django.template import RequestContext
 from django.shortcuts import render_to_response, get_object_or_404
 
@@ -11,8 +7,9 @@ def index(request):
     projects = Project.objects.all()
     workflows = Workflow.objects.all()
     data_sets = DataSet.objects.all()
+    analyses = Analysis.objects.all()
 
-    return render_to_response('core/index.html', {'users': users, 'projects': projects, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext( request ) )
+    return render_to_response('core/index.html', {'users': users, 'projects': projects, 'workflows': workflows, 'data_sets': data_sets, 'analyses': analyses }, context_instance=RequestContext( request ) )
 
 def user(request,query):
     

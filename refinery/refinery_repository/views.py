@@ -1,7 +1,7 @@
 # Create your views here.
 from refinery_repository.models import Investigation
 from django.shortcuts import render_to_response, get_object_or_404
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from refinery_repository.tasks import call_download, download_ftp_file
@@ -178,8 +178,10 @@ LEFT OUTER JOIN
     #return render_to_response('refinery_repository/samples.html', {'fields':field_names, 'order':field_order, 'results': sample_pages}, context_instance=RequestContext(request)) 
     return render_to_response('refinery_repository/samples.html', {'order':field_order, 'results': sample_pages}, context_instance=RequestContext(request)) 
 
+
 def results_selected(request):
     """Returns task status and result in JSON format."""
+    #print request;
     task_ids = request.session['refinery_repository_task_ids']
     
     print "task_ids"
@@ -204,23 +206,24 @@ def results_selected(request):
         dictionary['task_id'] = task_id
         dictionary['state'] = state
         task_progress.append(dictionary)
+        
+        """
         print "results"
         print result    
         print "dict"
         print dictionary
-        
+        """
         
     if (request.is_ajax()):
         print "RETURNING AJAX"
-        return HttpResponse(simplejson.dumps({'task_progress': task_progress},
-            ensure_ascii=False), mimetype='application/javascript')
+        print task_progress;
+        #return HttpResponse(simplejson.dumps({'task_progress': task_progress}, ensure_ascii=False), mimetype='application/javascript')
+        return HttpResponse(simplejson.dumps( task_progress, ensure_ascii=False), mimetype='application/javascript')
+    
     else:
         print "NOT AJAX"
-        #return render_to_response('refinery_repository/results_download.html', 
-        return render_to_response('refinery_repository/results.html', 
-                              {
-                                'task_progress': task_progress
-                                }, context_instance=RequestContext(request))
+        #return render_to_response('refinery_repository/results.html',  
+        return render_to_response('refinery_repository/results_download.html', { 'task_progress': task_progress }, context_instance=RequestContext(request))
 
 """ 
 Function for dealing w/ selected samples to download and input into workflow
@@ -229,13 +232,12 @@ Function for dealing w/ selected samples to download and input into workflow
 def download_selected_samples(request):
     task_ids = list()
     
-    #values = request.POST.getlist(u'selected_sample')
-    #print values;
+    values = request.POST.getlist(u'selected_sample')
+    print values;
     print request.POST;
     
     for i in request.POST:
-        print i;
-        
+        print i;   
         if re.search('\.zip$', i):
             async_results = call_download(i)
             for ar in async_results:
