@@ -1,4 +1,4 @@
-from celery.task import task, Task, periodic_task
+from celery.task import task, periodic_task
 from celery.schedules import crontab
 #from celery import current_app, events
 import os, errno
@@ -285,6 +285,7 @@ def get_arrayexpress_studies():
     results = result.join() #list of the results in dispatch order
     
     success_list = list()
+    
     for a, r in zip(ae_accessions, results):
         if(r):
             success_list.append(a)
