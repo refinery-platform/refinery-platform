@@ -1,0 +1,301 @@
+[
+   {
+      "pk": 1,
+      "model": "core.user",
+      "fields": {
+         "first_name": "Nils",
+         "last_name": "Gehlenborg",
+         "uuid": "3f0bbfdc-7296-11e1-a492-c8bcc8ed32d3",
+         "modification_date": "2012-03-20 09:09:02",
+         "creation_date": "2012-03-20 09:09:02",
+         "affiliation": "Harvard Medical School",
+         "email": "nils@hms.harvard.edu",
+         "name": "nils"
+      }
+   },
+   {
+      "pk": 2,
+      "model": "core.user",
+      "fields": {
+         "first_name": "Richard",
+         "last_name": "Park",
+         "uuid": "50a638b0-7296-11e1-ae82-c8bcc8ed32d3",
+         "modification_date": "2012-03-20 09:09:32",
+         "creation_date": "2012-03-20 09:09:32",
+         "affiliation": "Boston University",
+         "email": "rpark@bu.edu",
+         "name": "rpark"
+      }
+   },
+   {
+      "pk": 1,
+      "model": "core.dataset",
+      "fields": {
+         "uuid": "6cbfcde1-7296-11e1-82fe-c8bcc8ed32d3",
+         "modification_date": "2012-03-20 09:10:19",
+         "visibility": 1,
+         "summary": "",
+         "creation_date": "2012-03-20 09:10:19",
+         "name": "Data Set 1"
+      }
+   },
+   {
+      "pk": 2,
+      "model": "core.dataset",
+      "fields": {
+         "uuid": "7167ffb8-7296-11e1-b8a0-c8bcc8ed32d3",
+         "modification_date": "2012-03-20 09:10:27",
+         "visibility": 2,
+         "summary": "",
+         "creation_date": "2012-03-20 09:10:27",
+         "name": "Data Set 2"
+      }
+   },
+   {
+      "pk": 1,
+      "model": "core.datasetuserrelationship",
+      "fields": {
+         "creation_date": "2012-03-20 09:29:29",
+         "resource": 1,
+         "user": 1,
+         "modification_date": "2012-03-20 09:29:29",
+         "userRole": 1
+      }
+   },
+   {
+      "pk": 2,
+      "model": "core.datasetuserrelationship",
+      "fields": {
+         "creation_date": "2012-03-20 09:29:44",
+         "resource": 2,
+         "user": 1,
+         "modification_date": "2012-03-20 09:29:44",
+         "userRole": 3
+      }
+   },
+   {
+      "pk": 3,
+      "model": "core.datasetuserrelationship",
+      "fields": {
+         "creation_date": "2012-03-20 09:29:55",
+         "resource": 2,
+         "user": 2,
+         "modification_date": "2012-03-20 09:29:55",
+         "userRole": 1
+      }
+   },
+   {
+      "pk": 1,
+      "model": "core.workflowdatainput",
+      "fields": {
+         "name": "file1",
+         "internal_id": 1
+      }
+   },
+   {
+      "pk": 2,
+      "model": "core.workflowdatainput",
+      "fields": {
+         "name": "file2",
+         "internal_id": 2
+      }
+   },
+   {
+      "pk": 3,
+      "model": "core.workflowdatainput",
+      "fields": {
+         "name": "file3",
+         "internal_id": 3
+      }
+   },
+   {
+      "pk": 1,
+      "model": "core.workflow",
+      "fields": {
+         "data_inputs": [
+            1,
+            3
+         ],
+         "uuid": "cdbbd123-7299-11e1-b6db-c8bcc8ed32d3",
+         "modification_date": "2012-03-20 09:34:30",
+         "visibility": 2,
+         "summary": "",
+         "internal_id": 123,
+         "creation_date": "2012-03-20 09:34:30",
+         "name": "Test Workflow 1"
+      }
+   },
+   {
+      "pk": 2,
+      "model": "core.workflow",
+      "fields": {
+         "data_inputs": [
+            2
+         ],
+         "uuid": "4d9f87e6-729f-11e1-bd93-c8bcc8ed32d3",
+         "modification_date": "2012-03-20 10:13:52",
+         "visibility": 2,
+         "summary": "",
+         "internal_id": 132,
+         "creation_date": "2012-03-20 10:13:52",
+         "name": "Test Workflow 2"
+      }
+   },
+   {
+      "pk": 1,
+      "model": "core.workflowuserrelationship",
+      "fields": {
+         "creation_date": "2012-03-20 09:34:32",
+         "resource": 1,
+         "user": 1,
+         "modification_date": "2012-03-20 09:34:32",
+         "userRole": 1
+      }
+   },
+   {
+      "pk": 2,
+      "model": "core.workflowuserrelationship",
+      "fields": {
+         "creation_date": "2012-03-20 09:34:45",
+         "resource": 1,
+         "user": 2,
+         "modification_date": "2012-03-20 09:34:45",
+         "userRole": 3
+      }
+   },
+   {
+      "pk": 1,
+      "model": "core.project",
+      "fields": {
+         "uuid": "60904f73-7296-11e1-886d-c8bcc8ed32d3",
+         "modification_date": "2012-03-20 09:09:58",
+         "description": "",
+         "visibility": 2,
+         "summary": "",
+         "workflows": [],
+         "data_sets": [],
+         "creation_date": "2012-03-20 09:09:58",
+         "name": "Test Project 1"
+      }
+   },
+   {
+      "pk": 2,
+      "model": "core.project",
+      "fields": {
+         "uuid": "668d2366-7296-11e1-9e01-c8bcc8ed32d3",
+         "modification_date": "2012-03-20 09:10:08",
+         "description": "",
+         "visibility": 1,
+         "summary": "",
+         "workflows": [],
+         "data_sets": [],
+         "creation_date": "2012-03-20 09:10:08",
+         "name": "Test Project 2"
+      }
+   },
+   {
+      "pk": 1,
+      "model": "core.projectuserrelationship",
+      "fields": {
+         "creation_date": "2012-03-20 09:30:10",
+         "resource": 1,
+         "user": 1,
+         "modification_date": "2012-03-20 09:30:10",
+         "userRole": 1
+      }
+   },
+   {
+      "pk": 2,
+      "model": "core.projectuserrelationship",
+      "fields": {
+         "creation_date": "2012-03-20 09:30:21",
+         "resource": 2,
+         "user": 2,
+         "modification_date": "2012-03-20 09:30:21",
+         "userRole": 1
+      }
+   },
+   {
+      "pk": 1,
+      "model": "core.workflowdatainputmap",
+      "fields": {
+         "workflow_data_input_internal_id": 1,
+         "data_uuid": "2339af14-7297-11e1-9f19-c8bcc8ed32d3"
+      }
+   },
+   {
+      "pk": 2,
+      "model": "core.workflowdatainputmap",
+      "fields": {
+         "workflow_data_input_internal_id": 3,
+         "data_uuid": "08d2b86e-7299-11e1-aa99-c8bcc8ed32d3"
+      }
+   },
+   {
+      "pk": 3,
+      "model": "core.workflowdatainputmap",
+      "fields": {
+         "workflow_data_input_internal_id": 2,
+         "data_uuid": "5d99644f-729f-11e1-9218-c8bcc8ed32d3"
+      }
+   },
+   {
+      "pk": 1,
+      "model": "core.analysis",
+      "fields": {
+         "uuid": "618dbc94-729a-11e1-9df5-c8bcc8ed32d3",
+         "modification_date": "2012-03-20 09:38:38",
+         "creator": 1,
+         "data_set": 1,
+         "workflow": 1,
+         "summary": "Test Analysis 1",
+         "project": 1,
+         "version": 1,
+         "workflow_data_input_maps": [
+            1,
+            2
+         ],
+         "creation_date": "2012-03-20 09:38:38",
+         "name": "Analysis 1"
+      }
+   },
+   {
+      "pk": 2,
+      "model": "core.analysis",
+      "fields": {
+         "uuid": "7237f6f5-729a-11e1-b076-c8bcc8ed32d3",
+         "modification_date": "2012-03-20 10:13:30",
+         "creator": 1,
+         "data_set": 1,
+         "workflow": 1,
+         "summary": "Test Analysis 2",
+         "project": 2,
+         "version": 1,
+         "workflow_data_input_maps": [
+            1,
+            2
+         ],
+         "creation_date": "2012-03-20 09:39:06",
+         "name": "Analysis 2"
+      }
+   },
+   {
+      "pk": 3,
+      "model": "core.analysis",
+      "fields": {
+         "uuid": "61c5e92e-729f-11e1-a91d-c8bcc8ed32d3",
+         "modification_date": "2012-03-20 10:14:40",
+         "creator": 1,
+         "data_set": 2,
+         "workflow": 2,
+         "summary": "An analysis that is using Workflow 2.",
+         "project": 1,
+         "version": 1,
+         "workflow_data_input_maps": [
+            3
+         ],
+         "creation_date": "2012-03-20 10:14:26",
+         "name": "Analysis 3"
+      }
+   }
+]
