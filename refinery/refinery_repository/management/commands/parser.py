@@ -266,10 +266,11 @@ class Command(LabelCommand):
                 #using foreign key, so need to assign
                 pub_dict['investigation'] = investigation
                 
-                #in case there are unicode characters
-                authors = unicode(pub_dict['study_publication_author_list'])
-                insert_authors = authors
-                pub_dict['study_publication_author_list'] = insert_authors
+                #for some reason, sometimes 'Study Publication DOI DOI'; fix
+                if 'study_publication_doi_doi' in pub_dict:
+                    spd = pub_dict['study_publication_doi_doi']
+                    del pub_dict['study_publication_doi_doi']
+                    pub_dict['study_publication_doi'] = spd
                 
                 publication = Publication(**pub_dict)
                 publication.save()
@@ -468,8 +469,14 @@ class Command(LabelCommand):
             for i, p in enumerate(prot_list):
                 s = study_dict[i]
                 for prot in p:
-                    s.protocols.add(protocols[prot])
-                    
+                    try:
+                        s.protocols.add(protocols[prot])
+                    except KeyError:
+                        protocol = Protocol(study_protocol_name=prot)
+                        protocol.save()
+                        s.protocols.add(protocol)
+                        #add to hash for future look up 
+                        protocols[prot] = protocol
             return s_list
                
         """
@@ -495,11 +502,12 @@ class Command(LabelCommand):
             
             sub_terms = {
                          'Hybridization Assay Name': 'Assay Name',
-                         'Array Data File': 'Raw Data File',
                          'Derived Array Data Matrix File': 'Derived Data File',
                          'Comment [Derived ArrayExpress FTP file]': 'Derived ArrayExpress FTP file',
                          'Comment [ArrayExpress FTP file]': 'Raw Data File',
-                         'Comment [FASTQ URI]': 'Raw Data File'
+                         'Comment [FASTQ URI]': 'Raw Data File',
+                         'Array Data File': 'Raw Data File',
+                         'Derived Array Data File': 'Derived Data File'
                          }
             
             #grab first row to get field headers
@@ -510,6 +518,18 @@ class Command(LabelCommand):
             for i, j in enumerate(header_row):
                 if j in sub_terms:
                     j = sub_terms[j]
+                    
+                #there aren't spaces between words & not ArrayExpress
+                if not (re.search(r'ArrayExpress', j) or re.search(r'\[', j)):
+                    if re.search(r'[A-Z][a-z]+[A-Z][a-z]+', j):
+                        print j
+                        s = list(j) #convert string to a list
+                        for x, y in enumerate(s): #for every character
+                            #if a capital letter, prepend space
+                            if re.search(r'[A-Z]', y): 
+                                s[x] = " %s" % y
+                        j = string.join(s, '').strip()
+                        print j
 
                 if re.search(r'Term Source REF', j):
                     if re.search(r'\[', header[i-1]):
@@ -522,7 +542,10 @@ class Command(LabelCommand):
                     else:
                         header[i] = j
                 elif re.search(r'Parameter', j):
-                    header[i] = "%s %s" % (current_protocol, j)
+                    if current_protocol:
+                        header[i] = "%s %s" % (current_protocol, j)
+                    else:
+                        header[i] = j
                 else:
                     header[i] = j
                     if re.search(r'Protocol', j):
@@ -765,7 +788,7 @@ class Command(LabelCommand):
         base_dir = settings.ISA_TAB_DIR
 
         isa_ref = label
-        #sys.stderr.write("%s\n" % label)
+        sys.stderr.write("%s\n" % label)
         
         isa_dir = os.path.join(base_dir, isa_ref)
         
