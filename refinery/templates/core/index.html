@@ -31,7 +31,13 @@
 	{{ workflows|length }} workflows 
     <ul>
     {% for workflow in workflows %}
-        <li>{{ workflow.name }}: {{ workflow.summary }} ({{ workflow.get_visibility_display }}; members: {{ workflow.users.all|length }})</li>
+        <li>{{ workflow.name }}: {{ workflow.summary }} ({{ workflow.get_visibility_display }}; members: {{ workflow.users.all|length }})
+		    <ol>
+			{% for data_input in workflow.data_inputs.all %}
+			    <li>{{ data_input.name }} ({{ data_input.internal_id }})</li>
+			{% endfor %}
+			</ol>
+		</li>
     {% endfor %}
     </ul>
 {% else %}
@@ -48,6 +54,30 @@
 {% else %}
     <p>No data sets available.</p>
 {% endif %}
+
+{% if analyses %}
+	{{ analyses|length }} analyses 
+    <ul>
+    {% for analysis in analyses %}
+        <li>{{  analysis.name }}: {{ analysis.summary }}
+        	<ul>
+				<li><i>Project</i>: {{ analysis.project.name }}</li>
+				<li><i>Workflow</i>: {{ analysis.workflow.name }}
+					<ul>
+					    {% for map in analysis.workflow_data_input_maps.all %}
+					    	<li>{{ map }}</li>
+					    {% endfor %}						
+					</ul>
+				</li>				
+				<li><i>Data Set</i>: {{ analysis.data_set.name }}</li>        		
+        	</ul>
+    	</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No analyses available.</p>
+{% endif %}
+
 
 
 
