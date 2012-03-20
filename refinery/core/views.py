@@ -7,7 +7,25 @@ def index(request):
     projects = Project.objects.all()
     workflows = Workflow.objects.all()
     data_sets = DataSet.objects.all()
+    
+    '''
+    # How to create a simple analysis object
+    analysis = Analysis( name="My Test Analysis", creator=users[0], summary="Adhoc test analysis", version=1, project=projects[0], data_set=data_sets[0], workflow=workflows[0] )
+    analysis.save();
+    
+    input1 = WorkflowDataInputMap( workflow_data_input_internal_id=1, data_uuid="2339af14-7297-11e1-9f19-c8bcc8ed32d3" );
+    input1.save();
+
+    input2 = WorkflowDataInputMap( workflow_data_input_internal_id=3, data_uuid="1459af14-7297-11e1-9f19-c8bcc8ed32d3" );
+    input2.save();
+
+    analysis.workflow_data_input_maps.add( input1 ) 
+    analysis.workflow_data_input_maps.add( input2 ) 
+    analysis.save();
+    '''
+    
     analyses = Analysis.objects.all()
+    
 
     return render_to_response('core/index.html', {'users': users, 'projects': projects, 'workflows': workflows, 'data_sets': data_sets, 'analyses': analyses }, context_instance=RequestContext( request ) )
 
