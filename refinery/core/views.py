@@ -1,6 +1,9 @@
 from core.models import *
 from django.template import RequestContext
 from django.shortcuts import render_to_response, get_object_or_404
+from core.tasks import grab_workflows
+from django.http import HttpResponse
+
 
 def index(request):
     users = User.objects.all()
@@ -21,7 +24,6 @@ def index(request):
 
     analysis.workflow_data_input_maps.add( input1 ) 
     analysis.workflow_data_input_maps.add( input2 ) 
-    analysis.save();
     '''
     
     analyses = Analysis.objects.all()
@@ -46,3 +48,11 @@ def project(request,uuid):
     user_rels = ProjectUserRelationship.objects.filter( resource=project )
     
     return render_to_response('core/project.html', { 'project': project, 'project_rels': user_rels }, context_instance=RequestContext( request ) )
+
+def import_workflows(request):
+    
+    current_workflow_count = Workflow.objects.count()    
+    grab_workflows();
+    new_workflow_count = Workflow.objects.count()
+    
+    return HttpResponse( str( ( new_workflow_count - current_workflow_count ) ) + ' workflows imported.' ) 
