@@ -14,7 +14,7 @@ class Ontology(models.Model):
     
     class Meta:
         #even though pk is an auto-incremented number, ensures every row has a
-        #unique combination of these two fields
+        #unique combination of these three fields
         unique_together = ('term_source_name', 'term_source_file', 'term_source_version')
 
 class StudyDesignDescriptor(models.Model):
@@ -175,7 +175,7 @@ class RawData(models.Model):
 
     uuid = UUIDField(unique=True, auto=True)
     raw_data_file = models.TextField()
-    data_transformation_name = models.TextField()
+    file_name = models.TextField()
 
 class ProcessedData(models.Model):
     def __unicode__(self):
