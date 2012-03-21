@@ -40,3 +40,5 @@ settings_local.py
 .project
 .DS_Store
 .pydevproject
+refinery/celeryev.pid
+.settings/*
