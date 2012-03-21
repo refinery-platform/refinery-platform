@@ -20,50 +20,6 @@ def dictfetchall(cursor):
         for row in cursor.fetchall()
     ]
 
-def get_available_files(request):
-    """
-    Returns all available files to use in workflows
-    """
-    from django.db import connection
-    
-    cursor = connection.cursor()
-    cursor.execute(""" SELECT a.investigation_id, a.assay_name, o.species, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.raw_data_file FROM
-(SELECT id, sample_name, assay_name, investigation_id, study_id from refinery_repository_assay) a
-LEFT OUTER JOIN
-(SELECT value as species, type_id, study_id from refinery_repository_characteristic where type_id = 'ORGANISM') o
-ON (a.study_id = o.study_id)
-LEFT OUTER JOIN 
-(SELECT assay_id, raw_data_file, data_transformation_name from refinery_repository_assay_raw_data a JOIN refinery_repository_rawdata b ON a.rawdata_id = b.id) r ON a.id = r.assay_id
-LEFT OUTER JOIN
-(SELECT value as chip_antibody, type_id, assay_id from refinery_repository_factorvalue where type_id = 'CHIP_ANTIBODY') ca ON a.id = ca.assay_id
-LEFT OUTER JOIN
-(SELECT value as antibody, type_id, assay_id from refinery_repository_factorvalue where type_id = 'ANTIBODY') as ab ON a.id = ab.assay_id
-LEFT OUTER JOIN
-(SELECT value as tissue, type_id, assay_id from refinery_repository_factorvalue where type_id = 'TISSUE') as t ON a.id = t.assay_id
-LEFT OUTER JOIN
-(SELECT value as genotype, type_id, assay_id from refinery_repository_factorvalue where type_id = 'GENOTYPE') as g ON a.id = g.assay_id""")
-    results = cursor.fetchall() 
-    #results = dictfetchall(cursor)
-    
-    #print ("results")
-    #print results
-    #print len(results)
-    paginator = Paginator(results, 10) # Show 5 investigations per page
-
-    page = request.GET.get('page', 1)
-    try:
-        sample_pages = paginator.page(page)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        sample_pages = paginator.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        sample_pages = paginator.page(paginator.num_pages)
-        
-    #return render_to_response('refinery_repository/index.html', {'investigations': investigations})
-    return render_to_response('refinery_repository/samples.html', {'results': sample_pages}, context_instance=RequestContext(request)) 
-
-
 def detail(request, accession):
     i = get_object_or_404(Investigation, pk=accession)
     return render_to_response('refinery_repository/detail.html', {'investigation': i},
@@ -146,8 +102,6 @@ LEFT OUTER JOIN
 LEFT OUTER JOIN
 (SELECT value as genotype, assay_id from refinery_repository_assaybracketedfield where sub_type = 'GENOTYPE') as g ON a.id = g.assay_id order by a.investigation_id""")
 
-
-    
     #import pdb; pdb.set_trace()
     
     #field_names = getColumnNamesDict(cursor)
@@ -177,6 +131,54 @@ LEFT OUTER JOIN
     #return render_to_response('refinery_repository/index.html', {'investigations': investigations})
     #return render_to_response('refinery_repository/samples.html', {'fields':field_names, 'order':field_order, 'results': sample_pages}, context_instance=RequestContext(request)) 
     return render_to_response('refinery_repository/samples.html', {'order':field_order, 'results': sample_pages}, context_instance=RequestContext(request)) 
+
+def get_available_files2(request):
+    """
+    Returns all available files to use in workflows
+    """
+    print "refinery_repository.get_available_files2"
+    
+    from django.db import connection
+    
+    cursor = connection.cursor()
+    
+    cursor.execute(""" SELECT distinct a.investigation_id, a.assay_name, o.species, d.description, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.file, r.raw_data_file FROM
+(SELECT id, sample_name, assay_name, investigation_id, study_id from refinery_repository_assay) a
+LEFT OUTER JOIN
+(SELECT value as species, study_id from refinery_repository_studybracketedfield where sub_type ='ORGANISM') o
+ON (a.study_id = o.study_id)
+LEFT OUTER JOIN
+(SELECT value as description, study_id from refinery_repository_studybracketedfield where sub_type = 'SAMPLE_DESCRIPTION') d
+ON (a.study_id = d.study_id)
+LEFT OUTER JOIN 
+(SELECT assay_id, raw_data_file, data_transformation_name as file from refinery_repository_assay_raw_data a JOIN refinery_repository_rawdata b ON a.rawdata_id = b.id) r ON a.id = r.assay_id
+LEFT OUTER JOIN
+(SELECT value as chip_antibody, assay_id from refinery_repository_assaybracketedfield where sub_type = 'CHIP_ANTIBODY') ca ON a.id = ca.assay_id
+LEFT OUTER JOIN
+(SELECT value as antibody, assay_id from refinery_repository_assaybracketedfield where sub_type = 'ANTIBODY') as ab ON a.id = ab.assay_id
+LEFT OUTER JOIN
+(SELECT value as tissue, assay_id from refinery_repository_assaybracketedfield where sub_type = 'TISSUE') as t ON a.id = t.assay_id
+LEFT OUTER JOIN
+(SELECT value as genotype, assay_id from refinery_repository_assaybracketedfield where sub_type = 'GENOTYPE') as g ON a.id = g.assay_id order by a.investigation_id""")
+
+    #field_names = getColumnNamesDict(cursor)
+    field_order = getColumnNames(cursor)
+    #results = cursor.fetchall() 
+    results = dictfetchall(cursor)
+
+    paginator = Paginator(results, 25) # Show 5 investigations per page
+
+    page = request.GET.get('page', 1)
+    try:
+        sample_pages = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        sample_pages = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        sample_pages = paginator.page(paginator.num_pages)
+        
+    return render_to_response('refinery_repository/analysis_samples.html', {'order':field_order, 'results': sample_pages}, context_instance=RequestContext(request)) 
 
 
 def results_selected(request):
