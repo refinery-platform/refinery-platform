@@ -7,7 +7,7 @@ def grab_workflows():
     from galaxy_connector.models import Instance
     from galaxy_connector.connection import Connection
     from core.models import Workflow, WorkflowDataInput
-    
+
     #get instance
     instance = Instance.objects.all()[0]
     #get conenction
@@ -15,7 +15,7 @@ def grab_workflows():
                             instance.api_url, instance.api_key)
     #get all your workflows
     workflows = connection.get_complete_workflows()
-    
+
     #for each workflow, create a core Workflow object and its associated 
     #WorkflowDataInput objects
     for workflow in workflows:
@@ -26,7 +26,7 @@ def grab_workflows():
                          }
         w = Workflow(**workflow_dict)
         w.save()
-        
+
         inputs = workflow.inputs
         for input in inputs:
             input_dict = {
