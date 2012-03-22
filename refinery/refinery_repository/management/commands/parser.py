@@ -207,8 +207,7 @@ class Command(LabelCommand):
             #dictionary of dictionary of lists
             study_info = {
                           'study': list(),
-                          'comment': list(),
-                          'characteristics': list(),
+                          'studybracketedfield': list(),
                           'protocol': list()
                           }
             
@@ -285,7 +284,7 @@ class Command(LabelCommand):
                     for k in dictionary['b'][d]:
                         temp = dictionary['b'][d][k]
                         temp['row_num'] = i
-                        study_info[d].append(temp)
+                        study_info['studybracketedfield'].append(temp)
                         
             #print study_info
 
@@ -316,8 +315,8 @@ class Command(LabelCommand):
                          'Hybridization Assay Name': 'Assay Name',
                          'Derived Array Data Matrix File': 'Derived Data File',
                          'Comment [Derived ArrayExpress FTP file]': 'Derived ArrayExpress FTP file',
-                         'Comment [ArrayExpress FTP file]': 'Raw Data File',
-                         'Comment [FASTQ URI]': 'Raw Data File',
+                         'Comment[ArrayExpress FTP file]': 'Raw Data File',
+                         'Comment[FASTQ_URI]': 'Raw Data File',
                          'Array Data File': 'Raw Data File',
                          'Derived Array Data File': 'Derived Data File'
                          }
@@ -369,24 +368,23 @@ class Command(LabelCommand):
                 for j, field in enumerate(row):
                     if not re.search(r'^\s*$', field): #if not empty
                         if re.search(r'Raw Data', header[j]):
-                            #print field
-                            raw_file = ""
+                            #raw.x.zip file
                             if re.search(r'\.zip$', field):
                                 raw_file = get_zipped_url(field, accession)
-                            elif re.search('\.fastq$', field):
+                            elif re.search('\.fastq', field): #ftp SRA file
                                 raw_file = get_raw_url(field)
-                            else:
+                            else: #anything else, file name & raw the same
                                 dictionary['r']['file_name'] = field
+                                raw_file = field
 
-                            if raw_file:
-                                #paired end data, 2 raw files
-                                if 'raw_data_file' in dictionary['r']:
-                                    raw = list()
-                                    raw.append(dictionary['r']['raw_data_file'])
-                                    raw.append(raw_file)
-                                    dictionary['r']['raw_data_file'] = raw
-                                else:
-                                    dictionary['r']['raw_data_file'] = raw_file
+                            #paired end data, 2 raw files
+                            if 'raw_data_file' in dictionary['r']:
+                                raw = list()
+                                raw.append(dictionary['r']['raw_data_file'])
+                                raw.append(raw_file)
+                                dictionary['r']['raw_data_file'] = raw
+                            else:
+                                dictionary['r']['raw_data_file'] = raw_file
                         elif re.search(r'\[.+\]', header[j]):
                             sub_key = get_subtype(header[j])
 
@@ -446,20 +444,21 @@ class Command(LabelCommand):
                     
                 assay_info['protocol'].append(protocols)
 
-                #print dictionary
-                #print
                 if dictionary['r']:
                     #assign row number to dict so we know what's together
                     dictionary['r']['row_num'] = i
                     #print dictionary['r']
                     
                     #take care of missing file names
-                    """if not 'file_name' in dictionary['r']:
-                        #get the index of the last / in the given ftp link
-                        rind = string.rindex(dictionary['r']['raw_data_file'], '/')
-                        #take substring from '/' to end to get file name
-                        f_name = dictionary['r']['raw_data_file'][rind+1:]
-                        dictionary['r']['file_name'] = f_name"""
+                    if not 'file_name' in dictionary['r']:
+                        try:
+                            #get the index of the last / in the given ftp link
+                            rind = string.rindex(dictionary['r']['raw_data_file'], '/')
+                            #take substring from '/' to end to get file name
+                            f_name = dictionary['r']['raw_data_file'][rind+1:]
+                            dictionary['r']['file_name'] = f_name
+                        except AttributeError:
+                            pass
                     assay_info['raw_data'].append(dictionary['r'])
                     del dictionary['r']
                 if dictionary['a']:
@@ -568,6 +567,7 @@ class Command(LabelCommand):
                 #add investigation to prot dictionary and insert protocol(s)
                 for prot_dict in prot_list:
                     protocol = Protocol(**prot_dict)
+                    print prot_dict
                     protocol.save()
                     
                     #add investigation to protocol
@@ -604,9 +604,8 @@ class Command(LabelCommand):
                     sf.save()
                 
                 """Studies"""
-                comment_list = s_dict['comment']
+                sbf_list = s_dict['studybracketedfield']
                 study_list = s_dict['study']
-                char_list = s_dict['characteristics']
                 prot_list = s_dict['protocol']
             
                 #list of studies entered, needs to be returned
@@ -631,32 +630,6 @@ class Command(LabelCommand):
                     #add to list for returning
                     s_list.append(study)
             
-                #insert comments
-                for c in comment_list:
-                    row_num = c['row_num']
-                    del c['row_num']
-                
-                    #grab asssociated study
-                    study = study_dict[row_num]
-                    c['study'] = study
-                    #print c
-                    #create Comment
-                    comment = StudyBracketedField(**c)
-                    comment.save()
-                    
-                #insert characteristics
-                for c in char_list:
-                    row_num = c['row_num']
-                    del c['row_num']
-                
-                    #grab asssociated study
-                    study = study_dict[row_num]
-                    c['study'] = study
-                    #print c
-                    #create Comment
-                    characteristic = StudyBracketedField(**c)
-                    characteristic.save()
-            
                 #insert protocols
                 for i, p in enumerate(prot_list):
                     s = study_dict[i]
@@ -669,6 +642,24 @@ class Command(LabelCommand):
                             s.protocols.add(protocol)
                             #add to hash for future look up 
                             protocols[prot] = protocol
+
+                #insert StudyBracketedFields
+                for sbf in sbf_list:
+                    row_num = sbf['row_num']
+                    del sbf['row_num']
+                
+                    #grab asssociated study
+                    study = study_dict[row_num]
+                    sbf['study'] = study
+                    
+                    #if a parameter value (protocol field not empty), 
+                    #associate the proper protocol
+                    if 'protocol' in sbf:
+                        sbf['protocol'] = protocols[sbf['protocol']]
+                    #create StudyBracketedField
+                    study_bracketed_field = StudyBracketedField(**sbf)
+                    study_bracketed_field.save()                
+
 
                 """Assays"""
                 assay_list = a_dict['assay']
@@ -701,6 +692,7 @@ class Command(LabelCommand):
                     assay_dict[row_num] = assay
             
                 """ Many to Manys """
+                raw_data_list = list()
                 for r in raw_list:
                     row_num = r['row_num']
                     del r['row_num']
@@ -717,27 +709,34 @@ class Command(LabelCommand):
                         for i in multiple_raws:
                             #replace the contents of 'raw_data_file'
                             r['raw_data_file'] = i
-                            #print r
+                            
+                            #get the index of the last / in the given ftp link
+                            rind = string.rindex(r['raw_data_file'], '/')
+                            #take substring from '/' to end to get file name
+                            f_name = r['raw_data_file'][rind+1:]
+                            r['file_name'] = f_name
                             raw_data = RawData(**r)
                             try:
                                 raw_data.save()
-                            except IntegrityError:
+                            except IntegrityError: #if already exists, grab
                                 connection._rollback()
                                 raw_data = RawData.objects.get(**r)
-                                #print raw_data
                         
                             #associate the assay
                             raw_data.assay_set.add(assay)
+                            raw_data_list.append(raw_data)
                     else:
                         raw_data = RawData(**r)
                         try:
                             raw_data.save()
-                        except IntegrityError:
+                        except IntegrityError: #if already exists, grab
                             connection._rollback()
                             raw_data = RawData.objects.get(**r)
                         #associate the assay
                         raw_data.assay_set.add(assay)
+                        raw_data_list.append(raw_data)
 
+                processed_data_list = list()
                 for p in processed_list:
                     row_num = p['row_num']
                     del p['row_num']
@@ -749,12 +748,13 @@ class Command(LabelCommand):
                     processed_data = ProcessedData(**p)
                     try:
                         processed_data.save()
-                    except IntegrityError:
+                    except IntegrityError: #if already exists, grab
                         connection._rollback()
                         processed_data = ProcessedData.objects.get(**p)
                 
                     #associate the assay
                     processed_data.assay_set.add(assay)
+                    processed_data_list.append(processed_data)
                 
                 #insert protocols
                 for i, p in enumerate(prot_list):
@@ -778,23 +778,20 @@ class Command(LabelCommand):
                     assay = assay_dict[row_num]
                     abf['assay'] = assay
                 
-                    #if a parameter value (protocol field not empty), associate
-                    #the proper protocol
+                    #if a parameter value (protocol field not empty), 
+                    #associate the proper protocol
                     if 'protocol' in abf:
                         abf['protocol'] = protocols[abf['protocol']]
                     #create AssayBracketedField
                     assay_bracket_field = AssayBracketedField(**abf)
-                    assay_bracket_field.save() 
-            except:
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                print "*** print_tb:"
-                traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
-                print "*** print_exception:"
-                traceback.print_exception(exc_type, exc_value, exc_traceback,
-                              limit=2, file=sys.stdout)
-                #investigation.delete()
-            print 'successful finish'   
-            
+                    assay_bracket_field.save()
+            except IntegrityError:
+                #if there's an error, delete everything you put in
+                investigation.delete()
+                for r in raw_data_list:
+                    r.delete()
+                for p in processed_data_list:
+                    p.delete()  
         
 
         """ main program starts """
