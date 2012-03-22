@@ -176,6 +176,9 @@ class RawData(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     raw_data_file = models.TextField()
     file_name = models.TextField()
+    # FIXME: ####
+    # added b/c of fixture and parser is broken 
+    data_transformation_name = models.TextField()
 
 class ProcessedData(models.Model):
     def __unicode__(self):
