@@ -11,6 +11,10 @@ from celery.task.control import revoke
 from celery import states
 from celery.result import AsyncResult
 import simplejson, re
+from core.models import *
+from core.tasks import grab_workflows
+from django.db import connection
+      
 
 def dictfetchall(cursor):
     "Returns all rows from a cursor as a dict"
@@ -83,7 +87,7 @@ def get_available_files(request):
     
     cursor = connection.cursor()
     
-    cursor.execute(""" SELECT distinct a.investigation_id, a.assay_name, o.species, d.description, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.file, r.raw_data_file FROM
+    cursor.execute(""" SELECT distinct a.id as assay_id, a.investigation_id, a.assay_name, o.species, d.description, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.file, r.raw_data_file FROM
 (SELECT id, sample_name, assay_name, investigation_id, study_id from refinery_repository_assay) a
 LEFT OUTER JOIN
 (SELECT value as species, study_id from refinery_repository_studybracketedfield where sub_type ='ORGANISM') o
@@ -109,12 +113,9 @@ LEFT OUTER JOIN
     #results = cursor.fetchall() 
     results = dictfetchall(cursor)
     
-    #print "results"
-    #print results
-    #print "field_names"
-    #print field_names;
-    print "field_order"
-    print field_order
+    #print "field_order"
+    #print field_order
+    workflows = Workflow.objects.all();
 
     paginator = Paginator(results, 25) # Show 5 investigations per page
 
@@ -128,9 +129,8 @@ LEFT OUTER JOIN
         # If page is out of range (e.g. 9999), deliver last page of results.
         sample_pages = paginator.page(paginator.num_pages)
         
-    #return render_to_response('refinery_repository/index.html', {'investigations': investigations})
     #return render_to_response('refinery_repository/samples.html', {'fields':field_names, 'order':field_order, 'results': sample_pages}, context_instance=RequestContext(request)) 
-    return render_to_response('refinery_repository/samples.html', {'order':field_order, 'results': sample_pages}, context_instance=RequestContext(request)) 
+    return render_to_response('refinery_repository/samples.html', {'workflows': workflows, 'order':field_order, 'results': sample_pages}, context_instance=RequestContext(request)) 
 
 def get_available_files2(request):
     """
@@ -138,12 +138,10 @@ def get_available_files2(request):
     """
     print "refinery_repository.get_available_files2"
     
-    from django.db import connection
-    
     cursor = connection.cursor()
     
-    cursor.execute(""" SELECT distinct a.investigation_id, a.assay_name, o.species, d.description, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.file, r.raw_data_file FROM
-(SELECT id, sample_name, assay_name, investigation_id, study_id from refinery_repository_assay) a
+    cursor.execute(""" SELECT distinct a.uuid, a.id as assay_id, a.investigation_id, a.assay_name, o.species, d.description, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.file, r.raw_data_file FROM
+(SELECT distinct on (assay_name) id, uuid, sample_name, assay_name, investigation_id, study_id from refinery_repository_assay) a
 LEFT OUTER JOIN
 (SELECT value as species, study_id from refinery_repository_studybracketedfield where sub_type ='ORGANISM') o
 ON (a.study_id = o.study_id)
@@ -159,12 +157,15 @@ LEFT OUTER JOIN
 LEFT OUTER JOIN
 (SELECT value as tissue, assay_id from refinery_repository_assaybracketedfield where sub_type = 'TISSUE') as t ON a.id = t.assay_id
 LEFT OUTER JOIN
-(SELECT value as genotype, assay_id from refinery_repository_assaybracketedfield where sub_type = 'GENOTYPE') as g ON a.id = g.assay_id order by a.investigation_id""")
+(SELECT value as genotype, assay_id from refinery_repository_assaybracketedfield where sub_type = 'GENOTYPE') as g ON a.id = g.assay_id order by a.investigation_id, a.assay_name""")
 
     #field_names = getColumnNamesDict(cursor)
     field_order = getColumnNames(cursor)
     #results = cursor.fetchall() 
     results = dictfetchall(cursor)
+    
+    # getting available workflows
+    workflows = Workflow.objects.all();
 
     paginator = Paginator(results, 25) # Show 5 investigations per page
 
@@ -178,12 +179,82 @@ LEFT OUTER JOIN
         # If page is out of range (e.g. 9999), deliver last page of results.
         sample_pages = paginator.page(paginator.num_pages)
         
-    return render_to_response('refinery_repository/analysis_samples.html', {'order':field_order, 'results': sample_pages}, context_instance=RequestContext(request)) 
+    return render_to_response('refinery_repository/analysis_samples.html', {'workflows':workflows, 'order':field_order, 'results': sample_pages}, context_instance=RequestContext(request)) 
 
+def update_workflows(request):
+    """ 
+    ajax function for updating available workflows from galaxy 
+    """
+    print "refinery_repository.update_workflows"
+    
+    if request.is_ajax:
+        # do your stuff here
+        print "is ajax"
+        grab_workflows();
+        result_dict = {};
+        result_dict['status'] = "kicked off workflow task";
+        return HttpResponse(simplejson.dumps( result_dict, ensure_ascii=False), mimetype='application/javascript')
+    else:
+        return HttpResponse(status=400)
+
+def analysis_run(request):
+    print "refinery_repository.analysis_run called";
+    print request.POST;
+    
+    # TODO: ensure form has a requested workflow (in workflow_choice)
+    
+    values = request.POST.getlist('csrfmiddlewaretoken')
+    print "values"
+    print values;
+    print len(values)
+    
+    workflow_uuid = ""
+    
+    for i, val in request.POST.iteritems():
+        if (val and val != ""):
+            print "i"
+            print i
+            if (i == 'workflow_choice'):
+                workflow_uuid = val
+            print val
+    
+    
+    users = User.objects.all()
+    projects = Project.objects.all()
+    #workflows = Workflow.objects.all()
+    curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+    data_sets = DataSet.objects.all()
+    
+    # How to create a simple analysis object
+    analysis = Analysis( creator=users[0], summary="Adhoc test analysis", version=1, project=projects[0], data_set=data_sets[0], workflow=curr_workflow )
+    analysis.save();
+    
+    print "curr_workflow: inputs"
+    print curr_workflow.data_inputs.all();
+    #for data_input in curr_workflow.data_inputs:
+    #    print data_input
+    
+    print "analysis"
+    print analysis
+    
+    """ 
+    input1 = WorkflowDataInputMap( workflow_data_input_internal_id=1, data_uuid="2339af14-7297-11e1-9f19-c8bcc8ed32d3" );
+    input1.save();
+
+    input2 = WorkflowDataInputMap( workflow_data_input_internal_id=3, data_uuid="1459af14-7297-11e1-9f19-c8bcc8ed32d3" );
+    input2.save();
+
+    analysis.workflow_data_input_maps.add( input1 ) 
+    analysis.workflow_data_input_maps.add( input2 ) 
+    analysis.save();
+    """
+    
+    #return HttpResponseRedirect(reverse('refinery_repository.views.results', args=(accession,)))
+    return render_to_response('refinery_repository/base.html', context_instance=RequestContext(request))
 
 def results_selected(request):
     """Returns task status and result in JSON format."""
-    #print request;
+    print "refinery_repository.results_selected called";
     task_ids = request.session['refinery_repository_task_ids']
     
     print "task_ids"
@@ -224,7 +295,6 @@ def results_selected(request):
     
     else:
         print "NOT AJAX"
-        #return render_to_response('refinery_repository/results.html',  
         return render_to_response('refinery_repository/results_download.html', { 'task_progress': task_progress }, context_instance=RequestContext(request))
 
 """ 
@@ -232,14 +302,21 @@ Function for dealing w/ selected samples to download and input into workflow
 """
 
 def download_selected_samples(request):
-    task_ids = list()
-    
-    values = request.POST.getlist(u'selected_sample')
-    print values;
+    print "refinery_repository.download_selected_samples called";
     print request.POST;
     
-    for i in request.POST:
-        print i;   
+    task_ids = list()
+    
+    values = request.POST.getlist('csrfmiddlewaretoken')
+    print "values"
+    print values;
+    print len(values)
+    
+    #for i in request.POST:
+    for i, val in request.POST.iteritems():
+        print "i"
+        print i
+        print val
         if re.search('\.zip$', i):
             async_results = call_download(i)
             for ar in async_results:

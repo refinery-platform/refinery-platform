@@ -57,9 +57,9 @@ def run_workflow(instance, connection):
     #import pdb; pdb.set_trace()
     
     #Getting working version of library 
-    #library_id = connection.create_library( "TEST MY API" );
+    library_id = connection.create_library( "TEST MY Library API" );
     # debug library id
-    library_id = "bf60fd5f5f7f44bf";
+    #library_id = "bf60fd5f5f7f44bf";
     
     history_id = connection.create_history( "TEST MY API" );
     
@@ -117,4 +117,4 @@ def run_workflow(instance, connection):
     result = connection.run_workflow2(new_workflow_info['id'], ret_list, history_id )    
     
     #------------ DELETE WORKFLOW -------------------------- #   
-    #del_workflow_id = connection.delete_workflow(new_workflow_info['id']);
+    del_workflow_id = connection.delete_workflow(new_workflow_info['id']);
