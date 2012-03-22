@@ -8,10 +8,14 @@ urlpatterns = patterns('refinery_repository.views',
     url(r'^(?P<accession>.*\d+)/$', 'detail'),
     url(r'^(?P<accession>.*\d+)/results/$', 'results'),
     url(r'^(?P<accession>.*\d+)/download/$', 'download'),
-    url(r'samples/$', 'get_available_files'),
-    url(r'cancelled/$', 'cancelled'),
-    url(r'download/$', 'download_selected_samples'),
-    url(r'results/$', 'results_selected')
+    url(r'^samples/$', 'get_available_files'),
+    url(r'^cancelled/$', 'cancelled'),
+    url(r'^download/$', 'download_selected_samples'),
+    url(r'^results/$', 'results_selected'),
+    
+    url(r'^analysis_samples/$', 'get_available_files2'),
+    url(r'^analysis_run/$', 'analysis_run'),
+    url(r'^update_workflows/$', 'update_workflows')
 )
 
 urlpatterns += patterns('',
