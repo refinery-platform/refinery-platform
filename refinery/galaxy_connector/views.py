@@ -24,14 +24,16 @@ def checkActiveInstance(req):
         return instance, connection
         
 
-def obtain_instance(request):
+def obtain_instance(request, index=0 ):
     # NOTE: this is no a real login - all one needs to do is to is call this url to add a Galaxy instance object to the session 
     # create an instance
+    index = int(index)
+    
     if not 'active_galaxy_instance' in request.session:
         # get all instances from the database
         all_instances = Instance.objects.all()
-        request.session['active_galaxy_instance'] = all_instances[0]
-        return HttpResponse( 'New Galaxy instance obtained: ' + all_instances[0].description )
+        request.session['active_galaxy_instance'] = all_instances[index]
+        return HttpResponse( 'New Galaxy instance obtained: ' + all_instances[index].description )
     else:
         return HttpResponse( 'A Galaxy instance has already been obtained.' ) 
 
