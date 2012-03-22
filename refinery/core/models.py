@@ -93,7 +93,7 @@ class Workflow ( AbstractUserResource ):
 
     users = models.ManyToManyField( User, through="WorkflowUserRelationship" )
     data_inputs = models.ManyToManyField( WorkflowDataInput )
-    internal_id = models.CharField( max_length=50 )    
+    internal_id = models.CharField( max_length=50, unique=True )    
 
     def __unicode__(self):
         return self.name + " - " + self.summary
