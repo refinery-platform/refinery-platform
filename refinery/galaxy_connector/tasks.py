@@ -22,7 +22,7 @@ def getInputExp(input1, exp1):
     exp_name = exp1['path'].split('/');
     exp_name = exp_name[len(exp_name)-1]
     ret_dict['exp']['filename'] = str(exp_name);
-    
+        
     return ret_dict;
     
 

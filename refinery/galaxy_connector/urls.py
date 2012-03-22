@@ -12,6 +12,7 @@ urlpatterns = patterns('galaxy_connector.views',
     url(r'^workflows/$', 'workflows'),
     url(r'^run/$', 'run'),
 
+    url(r'^login/(\d{1})/$', 'obtain_instance'),
     url(r'^login/$', 'obtain_instance'),
     url(r'^logout/$', 'release_instance'),
     
