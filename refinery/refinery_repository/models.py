@@ -161,6 +161,8 @@ class StudyBracketedField(models.Model):
     term_source_ref = models.TextField(blank=True, null=True)
     term_accession_number = models.TextField(blank=True, null=True)
     unit = models.TextField(blank=True, null=True)
+    unit_term_source_ref = models.TextField(blank=True, null=True)
+    unit_term_accession_number = models.TextField(blank=True, null=True)
     
     #foreign keys
     study = models.ForeignKey(Study)
@@ -176,6 +178,13 @@ class RawData(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     raw_data_file = models.TextField()
     file_name = models.TextField()
+    
+    class Meta:
+        #even though pk is an auto-incremented number, ensures every row has a
+        #unique combination of these fields
+        unique_together = ('raw_data_file', 'file_name')
+
+    
 
 class ProcessedData(models.Model):
     def __unicode__(self):
@@ -184,6 +193,12 @@ class ProcessedData(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     derived_arrayexpress_ftp_file = models.TextField()
     derived_data_file = models.TextField()
+    
+    class Meta:
+        #even though pk is an auto-incremented number, ensures every row has a
+        #unique combination of these three fields
+        unique_together = ('derived_arrayexpress_ftp_file', 'derived_data_file')
+
     
 class Assay(models.Model):
     def __unicode__(self):
@@ -243,6 +258,8 @@ class AssayBracketedField(models.Model):
     term_source_ref = models.TextField(blank=True, null=True)
     term_accession_number = models.TextField(blank=True, null=True)
     unit = models.TextField(blank=True, null=True)
+    unit_term_source_ref = models.TextField(blank=True, null=True)
+    unit_term_accession_number = models.TextField(blank=True, null=True)
     
     #foreign keys
     assay = models.ForeignKey(Assay)
