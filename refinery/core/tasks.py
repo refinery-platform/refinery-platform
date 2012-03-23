@@ -1,4 +1,5 @@
 from celery.task import task
+from django.db import connection
 
 @task()
 def grab_workflows():
@@ -11,10 +12,10 @@ def grab_workflows():
     #get instance
     instance = Instance.objects.all()[0]
     #get conenction
-    connection = Connection(instance.base_url, instance.data_url, 
+    connection_galaxy = Connection(instance.base_url, instance.data_url, 
                             instance.api_url, instance.api_key)
     #get all your workflows
-    workflows = connection.get_complete_workflows()
+    workflows = connection_galaxy.get_complete_workflows()
 
     #for each workflow, create a core Workflow object and its associated 
     #WorkflowDataInput objects
@@ -25,14 +26,18 @@ def grab_workflows():
                          'visibility': 2 #give public visibility for now
                          }
         w = Workflow(**workflow_dict)
-        w.save()
+        try:
+            w.save()
+            inputs = workflow.inputs
+            for input in inputs:
+                input_dict = {
+                              'name': input.name,
+                              'internal_id': input.identifier
+                              }
+                i = WorkflowDataInput(**input_dict)
+                i.save()
+                w.data_inputs.add(i)
+        except:
+            connection._rollback()
+        
 
-        inputs = workflow.inputs
-        for input in inputs:
-            input_dict = {
-                          'name': input.name,
-                          'internal_id': input.identifier
-                          }
-            i = WorkflowDataInput(**input_dict)
-            i.save()
-            w.data_inputs.add(i)

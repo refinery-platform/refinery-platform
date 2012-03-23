@@ -83,11 +83,13 @@ class Connection( object ):
             if history['name'] == history_name:
                 identifiers.append( history['id'] )
         
-        return identifiers    
-            
+        return identifiers                
             
     def get_history( self, history_id ):            
         return self.get( "histories" + "/" + history_id )
+
+    def get_history_state_details( self, history_id ):            
+        return self.get( "histories" + "/" + history_id )["state_details"]
 
     def get_history_contents( self, history_id ):            
         return self.get( "histories" + "/" + history_id + "/" + "contents" )
