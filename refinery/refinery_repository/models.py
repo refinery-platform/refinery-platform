@@ -79,6 +79,8 @@ class Investigation(models.Model):
     study_assay_technology_type_term_source_ref = models.TextField(blank=True, null=True)
     study_assay_technology_platform = models.TextField(blank=True, null=True)
     study_assay_file_name = models.TextField()
+    pre_isatab_file = models.FilePathField()
+    isatab_file = models.FilePathField()
     
     #0, 1, or more ontologies can be used for many different investigations
     ontologies = models.ManyToManyField(Ontology, blank=True, null=True)
