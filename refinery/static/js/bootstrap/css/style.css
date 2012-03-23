@@ -62,4 +62,20 @@ body {
     font: small "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
 }
 
-
+input,
+textarea,
+select,
+.uneditable-input {
+  display: inline-block;
+  width: auto;
+/*  height: 18px; */
+  padding: 4px;
+  margin-bottom: 9px;
+  font-size: 13px;
+  line-height: 18px;
+  color: #555555;
+  border: 1px solid #ccc;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+}
