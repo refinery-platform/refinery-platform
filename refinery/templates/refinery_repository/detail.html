@@ -160,7 +160,7 @@
     						{% for r in a.raw_data.all %}
     							<td>
     								<input type="checkbox" name="{{r}}" id="{{r}}" />
-									<label for="{{r}}">{{r}}</label>
+									<label for="{{r}}">{{r.file_name}}</label>
 	    						</td>
     						{% endfor %}
     						</tr>
