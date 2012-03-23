@@ -333,14 +333,14 @@ class Command(LabelCommand):
                 #there aren't spaces between words & not ArrayExpress
                 if not (re.search('ArrayExpress', j) or re.search(r'\[', j)):
                     if re.search(r'[A-Z][a-z]+[A-Z][a-z]+', j):
-                        print j
+                        #print j
                         s = list(j) #convert string to a list
                         for x, y in enumerate(s): #for every character
                             #if a capital letter, prepend space
                             if re.search(r'[A-Z]', y): 
                                 s[x] = " %s" % y
                         j = string.join(s, '').strip()
-                        print j
+                        #print j
 
                 if re.search(r'Term Source REF', j):
                     if re.search(r'\[', header[i-1]):
@@ -567,11 +567,12 @@ class Command(LabelCommand):
                 #add investigation to prot dictionary and insert protocol(s)
                 for prot_dict in prot_list:
                     protocol = Protocol(**prot_dict)
-                    print prot_dict
+                    #print prot_dict
                     protocol.save()
                     
                     #add investigation to protocol
                     protocol.investigation_set.add(investigation)
+                    #print 'protocol_saved'
             
                 #get a dictionary of possible protocol names in the studies
                 #and assays so it's easier to associate them to the originals
@@ -785,14 +786,33 @@ class Command(LabelCommand):
                     #create AssayBracketedField
                     assay_bracket_field = AssayBracketedField(**abf)
                     assay_bracket_field.save()
-            except IntegrityError:
+            except:
+                #error reporting for now
+                print "error: Investigation %s" % investigation.study_identifier
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                print "*** print_tb:"
+                traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+                print "*** print_exception:"
+                traceback.print_exception(exc_type, exc_value, exc_traceback,
+                              limit=2, file=sys.stdout)
+                
                 #if there's an error, delete everything you put in
+                #since there was an error, rollback so the rest works
+                connection._rollback()
                 investigation.delete()
-                for r in raw_data_list:
-                    r.delete()
-                for p in processed_data_list:
-                    p.delete()  
-        
+                #try to delete raw and processed files, if fails, it's
+                #because they haven't been created yet
+                try:
+                    for r in raw_data_list:
+                        r.delete()
+                except:
+                    pass
+                
+                try:
+                    for p in processed_data_list:
+                        p.delete()
+                except:
+                    pass
 
         """ main program starts """
         base_dir = settings.ISA_TAB_DIR
@@ -823,14 +843,3 @@ class Command(LabelCommand):
                             investigation_dict['tion'][0]['study_identifier'])
         
         insert_isatab(investigation_dict, study_dict, assay_dict)
-        """
-        try:
-            insert_isatab(investigation_dict, study_dict, assay_dict)
-        except IntegrityError:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            print "*** print_tb:"
-            traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
-            print "*** print_exception:"
-            traceback.print_exception(exc_type, exc_value, exc_traceback,
-                              limit=2, file=sys.stdout)
-        """
