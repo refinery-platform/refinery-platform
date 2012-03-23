@@ -219,12 +219,19 @@ def get_arrayexpress_studies():
     from django.core.management import call_command
     from StringIO import StringIO
     from datetime import date, datetime, timedelta
-
+    
     create_dir(settings.WGET_DIR) #make the directory if it's not there
+    
+    #find out when the last pull from ArrayExpress was
+    ae_file = os.path.join(settings.WGET_DIR, 'arrayexpress_studies')
+    try:
+        t = os.path.getmtime(ae_file)
+        last_date_run = datetime.fromtimestamp(t).date()
+    except: #if file doesn't exist yet, then just make last_date_run today
+        last_date_run = date.today()
 
     print "getting %s" % settings.WGET_URL
     u = urllib2.urlopen(settings.WGET_URL)
-    ae_file = os.path.join(settings.WGET_DIR, 'arrayexpress_studies')
     
     print "writing to file %s" % ae_file
     f = open(ae_file, 'w')
@@ -238,8 +245,6 @@ def get_arrayexpress_studies():
         f.write(buffer) #write what you read from url to file
 
     f.close()
-    
-    last_date_run = datetime.strptime(settings.LAST_AE_UPDATE, '%Y-%m-%d').date()
     
     ae_accessions = list()
     f = open(ae_file, 'r')
@@ -313,5 +318,3 @@ def get_arrayexpress_studies():
         s.sendmail(settings.FROM_EMAIL, [settings.TO_EMAIL], msg.as_string())
         s.quit()
         """
-            
-    #settings.LAST_AE_UPDATE = str(date.today())
