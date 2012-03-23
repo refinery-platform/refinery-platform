@@ -1,11 +1,15 @@
 from django.http import HttpResponse
+from django.http import HttpResponseRedirect
+from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from galaxy_connector.connection import Connection
 from galaxy_connector.models import Instance
 from galaxy_connector.models import DataFile
 from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps, createStepsAnnot
+from galaxy_connector.tasks import run_workflow 
 import simplejson
+from celery.result import AsyncResult
 import os
 
 
@@ -43,9 +47,9 @@ def release_instance(request):
     # create an instance
     if 'active_galaxy_instance' in request.session:
         del request.session['active_galaxy_instance'] 
-        return HttpResponse( 'Unable to release Galaxy instance because no instance has been obtained.' )
+        return HttpResponse( 'Galaxy instance released.' )        
     else:
-        return HttpResponse( 'Galaxy instance released.' ) 
+        return HttpResponse( 'Unable to release Galaxy instance because no instance has been obtained.' ) 
 
 
 def histories(request):    
@@ -60,10 +64,12 @@ def libraries(request):
 
 def history(request, history_id):    
     instance, connection = checkActiveInstance(request);
-    # create a new history!
-    #connection.create_history( "Nils' New History!" )
     return render_to_response( "galaxy_connector/history.html", { "history": connection.get_history( history_id ), "contents": connection.get_history_contents( history_id ), "instance": instance.description, "data_url": instance.base_url + "/" + instance.data_url }, context_instance=RequestContext( request ) )
 
+
+def history_state(request, history_id):    
+    instance, connection = checkActiveInstance(request);
+    return HttpResponse( simplejson.dumps(connection.get_history_state_details( history_id )) ) 
 
 def history_content(request, history_id, content_id ):    
     instance, connection = checkActiveInstance(request);
@@ -98,17 +104,28 @@ def run(request):
     return ( history( request, result["history"] ) )
 
 
+def task_progress(request, task_id ):
+    task = AsyncResult( task_id )
+    instance, connection = checkActiveInstance(request)
+    
+    progress = None;
+    
+    if task.state != "PENDING" and task.result != None:
+        progress = connection.get_history( task.result["history_id"] )
+ 
+    return render_to_response('galaxy_connector/task_progress.html', {'progress': progress, 'task': task }, context_instance=RequestContext( request ) )
+
+
 def run2(request):
-    from galaxy_connector.tasks import run_workflow 
     """
     Test function for running spp workflow for multiple inputs
     """
-    instance, connection = checkActiveInstance(request);
+    instance, connection = checkActiveInstance(request)
     
     workflow_task = run_workflow.delay(instance, connection)
-    
-    
-    return HttpResponse("OK")
+    workflow_task.track_started = True
+     
+    return HttpResponseRedirect( reverse( 'task_progress', args=(workflow_task.task_id,) ) )
 
 
 def workflow_content(request, workflow_id):

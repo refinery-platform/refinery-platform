@@ -1,0 +1,18 @@
+{% extends "galaxy_connector/base.html" %}
+
+{% block title %}
+{{ block.super }} - Task Progress
+{% endblock %}
+
+{% block subheader %}
+Task Progress  
+{% endblock %}
+
+{% block content %}
+Task {{ task }}: {{ task.state }} - {{ task.result }}<br>
+
+{% if progress %}
+State: {{ progress.state }}
+{% endif %}
+
+{% endblock %}
