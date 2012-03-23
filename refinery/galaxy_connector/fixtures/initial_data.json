@@ -5,12 +5,24 @@
         "fields": {
             "data_url": "datasets",
             "description": "rpark on galaxy-dev",
-            "base_url": "http://localhost:1234",
+            "base_url": "http://fisher.med.harvard.edu:4216",
             "staging_path": "/data/home/galaxy/galaxy-staging",
             "api_key": "cd75199a08e4a5bcb548be36ef572efb",
             "api_url": "api"
         }
     },
+    {
+        "pk": 2,
+        "model": "galaxy_connector.instance",
+        "fields": {
+            "data_url": "datasets",
+            "description": "nils on galaxy-dev ",
+            "base_url": "http://fisher.med.harvard.edu:4216",
+            "staging_path": "/data/home/galaxy/galaxy-staging",
+            "api_key": "98e6d89c453a33b78b18be3fbbad9e20",
+            "api_url": "api"
+        }
+    },    
     {
         "pk": 4,
         "model": "galaxy_connector.datafile",

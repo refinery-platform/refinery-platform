@@ -1,4 +1,7 @@
 from celery.task import task
+from galaxy_connector.models import DataFile
+from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps, createStepsAnnot
+from datetime import datetime
 
 def searchInput(input_string):
     """
@@ -49,34 +52,39 @@ def configWorkflowInput(in_list):
             cur_dict['input'] = file_id;
     """
 
+#@task()
+#def monitor_history( connection, history_id ):
+#    return
+
 @task()
-def run_workflow(instance, connection):
-    from galaxy_connector.models import DataFile
-    from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps, createStepsAnnot
+def run_workflow( instance, connection ):
     # TO DEBUG PYTHON WEBAPPS ##
     #import pdb; pdb.set_trace()
     
     #Getting working version of library 
-    #library_id = connection.create_library( "TEST MY API" );
+    library_id = connection.create_library( "Refinery Test Library - " + str( datetime.now() ) );
     # debug library id
-    library_id = "bf60fd5f5f7f44bf";
+    #library_id = "bf60fd5f5f7f44bf";
     
-    history_id = connection.create_history( "TEST MY API" );
+    history_id = connection.create_history( "Refinery Test History - " + str( datetime.now() ) )
+    run_workflow.update_state( state="PROGRESS", meta={ "history_id": history_id, "library_id": library_id } )
+    
+    #monitor_task = monitor_history.delay( connection, history_id )
     
     #------------ IMPORT FILES -------------------------- #   
     # get all data file entries from the database
     all_data_files = DataFile.objects.all()
     current_path = all_data_files[0].path;
-    annot = []; # remembers asssociated meta data with each file to determine if file is an chip-seq input file
+    annot = []; # remembers associated meta data with each file to determine if file is an chip-seq input file
     
     if len( all_data_files ) < 1:
         return 'No data files available in database. Create at least one data file object using the admin interface.'
     else:
         for i in range(len(all_data_files)):
-            print "i:: " + str(i);
+            print "i: " + str(i);
             # Importing file into galaxy library
             file_id = connection.put_into_library( library_id, instance.staging_path + "/" + all_data_files[i].path )
-            print(file_id);
+            print( "file id: " + file_id);
             
             a_dict = {};
             a_dict['path'] = all_data_files[i].path;
