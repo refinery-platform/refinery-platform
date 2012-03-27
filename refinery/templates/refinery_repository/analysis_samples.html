@@ -18,13 +18,14 @@ Available Samples
 	
     
 	{% if results %}
-	<form action="/refinery_repository/analysis_run/" method="post">
+	<!-- <form action="/refinery_repository/analysis_run/" id="sampleForm" method="post">  -->
+	<form id="sampleForm" method="post">
     {% csrf_token %}
     
     <div class="span4">
 		<div class="control-group input-prepend ">
 			<span class="add-on">Workflow</span>
-			<select class="combobox pull-left" name="workflow_choice">
+			<select class="combobox pull-left" name="workflow_choice" id="workflow_choice">
 	      		<option></option>
 	      		{% for work in workflows %}
 	      			<option value="{{work.uuid}}">{{work.name}}</option>
@@ -48,11 +49,8 @@ Available Samples
 
 		<tr>
 			<td>
-				<!-- <select name="webmenu" id="webmenu"  onchange="showValue(this.value)"> -->
 				<select name="{{ result.uuid }}" id="webmenu" class="OGcombobox">
     				<option></option>
-    				<option value="input">Input</option>
-    				<option value="experiment">Exp</option>
   				</select>
 			</td>
 			
@@ -132,7 +130,8 @@ Available Samples
   
 		{% endfor %}
 	</table>
-    	<button input type="submit" class="btn btn-primary btn-large"> 
+    	<!-- <button input type="submit" class="btn btn-primary btn-large" id="submitSamplesBtn">  -->
+    	<button class="btn btn-primary btn-large" id="submitSamplesBtn">
     	<i class="icon-road"></i>
     	Run Workflow
     	</button>
@@ -159,7 +158,42 @@ Available Samples
 	
 
 	<script>
-	// Button to get updates available workflows
+	
+	// function for updating available workflows
+	$("#workflow_choice").change(function(  ) {
+		var temp_url = "/refinery_repository/workflow_inputs/" + $("#workflow_choice").val() + "/";
+		 $.ajax({
+		     url:temp_url,
+		     type:"POST",
+		     dataType: "json",
+		     data: {csrfmiddlewaretoken: "{{ csrf_token }}" },
+		     success: function(result){
+		     	// emptys all dropdown menus with current inputs
+		     	$(".OGcombobox").empty();
+		     	$('.OGcombobox').append('<option></option>');
+		     	// adds options for the specified workflow
+		     	for (var i = 0; i < result.length; i++) { 
+              		$('.OGcombobox').append('<option value="'+ result[i].fields["name"] + '">' + result[i].fields["name"] + '</option>');
+          		}
+			}
+			});
+	});
+	
+	// validate form inputs: To ensure a workflow is chosen
+	$("#submitSamplesBtn").click( function() {
+		event.preventDefault(); // cancel default behavior
+		// getting currently selected workflow
+		var temp_value = $("#workflow_choice").val();
+		if (temp_value != "") {
+			document.getElementById('sampleForm').action='/refinery_repository/analysis_run/'; // Where to go
+			document.getElementById('sampleForm').submit(); // Send POST data and go there
+		}
+		else { 
+			alert("Please Select a Workflow");
+		}
+  	});
+  	
+	// Button to update available workflows from galaxy
 	$("#update_workflow_btn").click( function() {
     	$.ajax({
 		     url:"/refinery_repository/update_workflows/",
@@ -167,10 +201,8 @@ Available Samples
 		     dataType: "json",
 		     data: {csrfmiddlewaretoken: "{{ csrf_token }}" },
 		     success: function(result){
-		     	//console.log("SUCCESSFULLY UPDATED WORKFLOWS");
-		     	//console.log(result);
 		     	alert("SUCCESSFULLY UPDATED WORKFLOWS"); 	
-		     	}
+   				}
 			});
 		});
 

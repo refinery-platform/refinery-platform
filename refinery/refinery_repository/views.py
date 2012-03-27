@@ -14,6 +14,7 @@ import simplejson, re
 from core.models import *
 from core.tasks import grab_workflows
 from django.db import connection
+from django.core import serializers
       
 
 def dictfetchall(cursor):
@@ -187,12 +188,13 @@ def update_workflows(request):
     """
     print "refinery_repository.update_workflows"
     
-    if request.is_ajax:
+    if request.is_ajax():
         # do your stuff here
         print "is ajax"
         grab_workflows();
         result_dict = {};
         result_dict['status'] = "kicked off workflow task";
+        print result_dict
         return HttpResponse(simplejson.dumps( result_dict, ensure_ascii=False), mimetype='application/javascript')
     else:
         return HttpResponse(status=400)
@@ -221,33 +223,25 @@ def analysis_run(request):
     
     users = User.objects.all()
     projects = Project.objects.all()
-    #workflows = Workflow.objects.all()
+    
+    # retrieving workflow based on input workflow_uuid
     curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
     data_sets = DataSet.objects.all()
     
     # How to create a simple analysis object
     analysis = Analysis( creator=users[0], summary="Adhoc test analysis", version=1, project=projects[0], data_set=data_sets[0], workflow=curr_workflow )
-    analysis.save();
+    analysis.save()
     
-    print "curr_workflow: inputs"
-    print curr_workflow.data_inputs.all();
-    #for data_input in curr_workflow.data_inputs:
-    #    print data_input
+    # Adding workflow data inputs based on POST
+    for data_input in curr_workflow.data_inputs.all():
+        temp_input =  WorkflowDataInputMap( workflow_data_input_internal_id=data_input.internal_id, data_uuid=data_input.name )
+        temp_input.save() 
+        analysis.workflow_data_input_maps.add( temp_input ) 
+        analysis.save()
     
     print "analysis"
     print analysis
     
-    """ 
-    input1 = WorkflowDataInputMap( workflow_data_input_internal_id=1, data_uuid="2339af14-7297-11e1-9f19-c8bcc8ed32d3" );
-    input1.save();
-
-    input2 = WorkflowDataInputMap( workflow_data_input_internal_id=3, data_uuid="1459af14-7297-11e1-9f19-c8bcc8ed32d3" );
-    input2.save();
-
-    analysis.workflow_data_input_maps.add( input1 ) 
-    analysis.workflow_data_input_maps.add( input2 ) 
-    analysis.save();
-    """
     
     #return HttpResponseRedirect(reverse('refinery_repository.views.results', args=(accession,)))
     return render_to_response('refinery_repository/base.html', context_instance=RequestContext(request))
@@ -336,6 +330,19 @@ def download_selected_samples(request):
     return HttpResponseRedirect(reverse('refinery_repository.views.results_selected', args=()))
     #return HttpResponseRedirect(reverse('refinery_repository.views.results', args=(accession,)))
 
+"""
+Function for AJAX returning WorkflowDataInputMap for a specified workflow_uuid
+"""
+def getWorkflowDataInputMap(request, workflow_uuid):
+    print "refinery_repository.getWorkflowDataInputMap called";
+        
+    curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+    data = serializers.serialize('json',curr_workflow.data_inputs.all())
+    
+    if request.is_ajax():
+        return HttpResponse(data, mimetype='application/javascript')
+    else:
+        return HttpResponse(data,mimetype='application/json')
     
 """
 Helper function for returning rawsql as a dictionary object
