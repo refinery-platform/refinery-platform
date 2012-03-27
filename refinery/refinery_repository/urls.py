@@ -15,7 +15,9 @@ urlpatterns = patterns('refinery_repository.views',
     
     url(r'^analysis_samples/$', 'get_available_files2'),
     url(r'^analysis_run/$', 'analysis_run'),
-    url(r'^update_workflows/$', 'update_workflows')
+    url(r'^update_workflows/$', 'update_workflows'),
+    url(r'^workflow_inputs/(?P<workflow_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'getWorkflowDataInputMap')
+    
 )
 
 urlpatterns += patterns('',
