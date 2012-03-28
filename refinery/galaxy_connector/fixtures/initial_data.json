@@ -5,7 +5,7 @@
         "fields": {
             "data_url": "datasets",
             "description": "rpark on galaxy-dev",
-            "base_url": "http://fisher.med.harvard.edu:4216",
+            "base_url": "http://localhost:1234",
             "staging_path": "/data/home/galaxy/galaxy-staging",
             "api_key": "cd75199a08e4a5bcb548be36ef572efb",
             "api_url": "api"
