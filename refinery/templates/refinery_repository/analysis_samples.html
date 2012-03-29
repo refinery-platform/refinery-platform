@@ -49,7 +49,7 @@ Available Samples
 
 		<tr>
 			<td>
-				<select name="{{ result.uuid }}" id="webmenu" class="OGcombobox">
+				<select name="assay_{{ result.uuid }}" id="webmenu" class="OGcombobox">
     				<option></option>
   				</select>
 			</td>
@@ -201,6 +201,18 @@ Available Samples
 		     dataType: "json",
 		     data: {csrfmiddlewaretoken: "{{ csrf_token }}" },
 		     success: function(result){
+		     	//console.log(result);
+		     	//$("#workflow_choice").empty();
+		     	//$('.dropdown-menu').empty();
+		     	//$('.combobox').combobox();
+		     	
+		     	/*
+		     	for (var i = 0; i < result.length; i++) { 
+		     		console.log(result[i].fields.name);
+		     		console.log(result[i].fields.uuid);
+		     	}
+		     	*/
+		     	
 		     	alert("SUCCESSFULLY UPDATED WORKFLOWS"); 	
    				}
 			});

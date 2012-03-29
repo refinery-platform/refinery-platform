@@ -333,8 +333,17 @@ class Connection( object ):
         except urllib2.HTTPError, e:
             print str( e.read( 1024 ) )
             return "Error. " + str( e.read( 1024 ) )
-   
 
+    def run_workflow3(self, data):
+        """
+        Run galaxy workflow with preconfigured inputs (ds_map)
+        """
+        try:            
+            return self.post( "workflows", data )
+        except urllib2.HTTPError, e:
+            print str( e.read( 1024 ) )
+            return "Error. " + str( e.read( 1024 ) )
+        
     def get_workflow_dict(self, workflow_id):
         """
         GET /api/workflows/{encoded_workflow_id}/download
