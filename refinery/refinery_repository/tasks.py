@@ -1,9 +1,13 @@
+import os, errno, subprocess, shutil, tempfile, os.path, urllib2, time, re
+import ftplib, socket, string, sys
 from celery.task import task, periodic_task
 from celery.schedules import crontab
-#from celery import current_app, events
-import os, errno
+from celery.task.sets import TaskSet
+from django.core.management import call_command
+from refinery_repository.models import Investigation
 from django.conf import settings
-
+from StringIO import StringIO
+from datetime import date, datetime, timedelta
         
 """
 Name: create_dir
@@ -19,10 +23,18 @@ def create_dir(file_path):
         if e.errno != errno.EEXIST:
             raise
 
+"""
+Name: download_ftp_file
+Description:
+    downloads a file from an FTP server
+Parameters:
+    ftp: URL for the file being downloaded
+    out_dir: base directory where file is being downloaded
+    accession: name of directory that will house the downloaded file, in this
+               case, the investigation accession
+"""
 @task()
 def download_ftp_file(ftp, out_dir, accession):
-    import ftplib, socket, os.path, string, sys
-
     file_name = ftp.split('/')[-1] #get the file name
     out_dir = os.path.join(out_dir, accession) #directory where file downloads
     
@@ -37,16 +49,18 @@ def download_ftp_file(ftp, out_dir, accession):
         ind = string.index(ftp, '/')
         host = ftp[:ind]
     
-        #get the directory to change to
+        #get the directory to change to once connected to the FTP server
         rind = string.rindex(ftp, '/')
         new_dir = ftp[ind+1:rind]
 
+        #connect to host
         try:
             f = ftplib.FTP(host)
         except (socket.error, socket.gaierror), e:
             print 'ERROR: Cannot read "%s"' % host
             sys.exit()
 
+        #login to server
         try:
             f.login()
         except ftplib.error_perm:
@@ -54,17 +68,20 @@ def download_ftp_file(ftp, out_dir, accession):
             f.quit()
             sys.exit()
 
+        #change to the proper directory the file lives in
         try:
             f.cwd(new_dir)
         except ftplib.error_perm:
             print 'ERROR: cannot CD to "%s"' % new_dir
             f.quit()
-            
+        
+        #get size of the file, open local file to write to
         size = int(f.size(file_name))
         downloaded = [0] #can't change non-local vars until Py3, so hack
         file = open(file_path, 'wb')
         
         #defined here because those 3 vars needed to be defined first
+        #calculates the amount of download completed and tells Celery
         def handleDownload(block):
             downloaded[0] += len(block)
             file.write(block)
@@ -88,11 +105,19 @@ def download_ftp_file(ftp, out_dir, accession):
             print 'ERROR: cannot read file "%s"' % file_path
             os.unlink(file_path)
         f.quit()
-    
+
+"""
+Name: download_http_file
+Description:
+    downloads a file from a given URL
+Parameters:
+    url: URL for the file being downloaded
+    out_dir: base directory where file is being downloaded
+    accession: name of directory that will house the downloaded file, in this
+               case, the investigation accession
+"""
 @task()
 def download_http_file(url, out_dir, accession):
-    import urllib2, os.path
-    
     file_name = url.split('/')[-1] #get the file name
     out_dir = os.path.join(out_dir, accession) #directory where file downloads
     
@@ -130,11 +155,19 @@ def download_http_file(url, out_dir, accession):
             #print status,
 
         f.close()
-                
+
+"""
+Name: call_download
+Description:
+    downloads a file from an FTP server
+Parameters:
+    ftp: URL for the file being downloaded
+    out_dir: base directory where file is being downloaded
+    accession: name of directory that will house the downloaded file, in this
+               case, the investigation accession
+"""
 @task()
 def call_download(file_url):
-    from refinery_repository.models import Investigation
-    
     """args = (file_url)
     orig_stdout = sys.stdout
     sys.stdout = content = StringIO()
@@ -173,10 +206,16 @@ def call_download(file_url):
 
     return task_ids
 
+"""
+Name: convert_to_isatab
+Description:
+    converts MAGE-Tab file from ArrayExpress into ISA-Tab, zips up the 
+    ISA-Tab, and zips up the MAGE-Tab
+Parameters:
+    accession: ArrayExpress study to convert
+"""
 @task()
 def convert_to_isatab(accession):
-    import subprocess, shutil, tempfile, os.path
-    
     retval = 1 #successful conversion
     command = "./convert.sh %s" % accession
     
@@ -204,22 +243,78 @@ def convert_to_isatab(accession):
         else:
             #print stderr
             retval = 0 #unsuccessful conversion, but clean exit
+    else: #successfully converted
+        #zip up ISA-Tab files 
+        isatab_file_location = os.path.join(settings.ISA_TAB_DIR, accession)
+        """
+        shutil makes a zip, tar, tar.gz, etc file out of files in given dir 
+        Params:
+        zip file prefix
+        type of archive (e.g. zip, tar)
+        superdirectory of the directory you want to archive
+        name of directory that's being archived
+        """ 
+        shutil.make_archive(isatab_file_location, 'zip',  
+                                        settings.ISA_TAB_DIR, accession)
+        
+        #move into the ISA-Tab folder
+        shutil.move("%s.zip" % isatab_file_location, isatab_file_location)
+        
+        #Get and zip up the MAGE-TAB and put in the ISA-Tab folder
+		#make file name for ArrayExpress information to download into
+        ae_name = tempfile.NamedTemporaryFile(dir=temp_dir, prefix='ae_').name
+		#make url to fetch the experiment
+        url = "%s/%s" % (settings.AE_BASE_URL, accession)
+        
+        #get ArrayExpress information to get URLs to download
+        u = urllib2.urlopen(url)
+        f = open(ae_name, 'wb')
+        f.write(u.read()) #small file, so just grab whole thing in one go
+        f.close()
+        
+		#open and read in the last line (the HTML) that has the info we want
+        f = open(ae_name, 'rb')
+        lines = f.readlines()
+        f.close()
+        last_line = lines[-1]
+		
+		#isolate the links by splitting on '<a href="'
+        a_hrefs = string.split(last_line, '<a href="')
+		#get the links we want
+        for a_href in a_hrefs:
+            if re.search('sdrf.txt', a_href) or re.search('idf.txt', a_href):
+                link = string.split(a_href, '"').pop(0) #grab the link
+                file_name = link.split('/')[-1] #get the file name
+				
+                #download and zip up locally because needs to be sequential
+                dir_to_zip = os.path.join(temp_dir, accession)
+                create_dir(dir_to_zip)
+                
+                u = urllib2.urlopen(link)
+                file = os.path.join(dir_to_zip, file_name)
+                f = open(file, 'wb')
+                f.write(u.read()) #again, shouldn't be a large file
+                f.close()
+		
+		#zip up and move the MAGE-TAB files
+        shutil.make_archive(dir_to_zip, 'zip', temp_dir, 
+                                                "MAGE-TAB_%s" % accession)
+        shutil.move("%s.zip" % dir_to_zip, isatab_file_location)
 
     #clean up the temporary directory and other files
-    os.unlink(stderr_n)
-    os.unlink(stdout_n)
-    os.rmdir(temp_dir)
+    shutil.rmtree(tmp_dir)
 
     return retval
-   
-@periodic_task(run_every=crontab(minute="*/15", day_of_week="thursday"))
+
+"""
+Name: get_arrayexpress_studies
+Description:
+    task that runs every Friday at 9:00PM that checks ArrayExpress for new
+    and updated studies, then pulls down their metadata, converts it to
+    ISA-Tab, and parses it into the Django database
+"""
+@periodic_task(run_every=crontab(hour="12", day_of_week="friday"))
 def get_arrayexpress_studies():
-    import urllib2, time, re, os.path, string, sys
-    from celery.task.sets import TaskSet
-    from django.core.management import call_command
-    from StringIO import StringIO
-    from datetime import date, datetime, timedelta
-    
     create_dir(settings.WGET_DIR) #make the directory if it's not there
     
     #find out when the last pull from ArrayExpress was
