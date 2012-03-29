@@ -8,6 +8,9 @@ from core.models import Workflow, WorkflowDataInput
 @task()
 def grab_workflows(instance=None, connection_galaxy=None):
     
+    # Delete old references to workflows
+    Workflow.objects.all().delete() 
+    
     # checks to see if an existing galaxy connection, otherwise create a connection
     if (connection_galaxy is None):
         print ("instnace is none")

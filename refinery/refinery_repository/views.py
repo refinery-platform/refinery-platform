@@ -1,5 +1,5 @@
 # Create your views here.
-from refinery_repository.models import Investigation
+from refinery_repository.models import Investigation, Assay, RawData
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponseRedirect, HttpResponse
 from django.template import RequestContext
@@ -15,6 +15,9 @@ from core.models import *
 from core.tasks import grab_workflows
 from django.db import connection
 from django.core import serializers
+import os, errno
+from galaxy_connector.tasks import run_workflow_ui
+from galaxy_connector.views import checkActiveInstance, obtain_instance
       
 
 def dictfetchall(cursor):
@@ -88,8 +91,8 @@ def get_available_files(request):
     
     cursor = connection.cursor()
     
-    cursor.execute(""" SELECT distinct a.id as assay_id, a.investigation_id, a.assay_name, o.species, d.description, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.file, r.raw_data_file FROM
-(SELECT id, sample_name, assay_name, investigation_id, study_id from refinery_repository_assay) a
+    cursor.execute(""" SELECT distinct a.uuid, a.id as assay_id, a.investigation_id, a.assay_name, o.species, d.description, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.file, r.raw_data_file FROM
+(SELECT distinct on (assay_name) id, uuid, sample_name, assay_name, investigation_id, study_id from refinery_repository_assay) a
 LEFT OUTER JOIN
 (SELECT value as species, study_id from refinery_repository_studybracketedfield where sub_type ='ORGANISM') o
 ON (a.study_id = o.study_id)
@@ -97,7 +100,7 @@ LEFT OUTER JOIN
 (SELECT value as description, study_id from refinery_repository_studybracketedfield where sub_type = 'SAMPLE_DESCRIPTION') d
 ON (a.study_id = d.study_id)
 LEFT OUTER JOIN 
-(SELECT assay_id, raw_data_file, data_transformation_name as file from refinery_repository_assay_raw_data a JOIN refinery_repository_rawdata b ON a.rawdata_id = b.id) r ON a.id = r.assay_id
+(SELECT assay_id, raw_data_file, file_name as file from refinery_repository_assay_raw_data a JOIN refinery_repository_rawdata b ON a.rawdata_id = b.id) r ON a.id = r.assay_id
 LEFT OUTER JOIN
 (SELECT value as chip_antibody, assay_id from refinery_repository_assaybracketedfield where sub_type = 'CHIP_ANTIBODY') ca ON a.id = ca.assay_id
 LEFT OUTER JOIN
@@ -105,7 +108,7 @@ LEFT OUTER JOIN
 LEFT OUTER JOIN
 (SELECT value as tissue, assay_id from refinery_repository_assaybracketedfield where sub_type = 'TISSUE') as t ON a.id = t.assay_id
 LEFT OUTER JOIN
-(SELECT value as genotype, assay_id from refinery_repository_assaybracketedfield where sub_type = 'GENOTYPE') as g ON a.id = g.assay_id order by a.investigation_id""")
+(SELECT value as genotype, assay_id from refinery_repository_assaybracketedfield where sub_type = 'GENOTYPE') as g ON a.id = g.assay_id order by a.investigation_id, a.assay_name""")
 
     #import pdb; pdb.set_trace()
     
@@ -150,7 +153,7 @@ LEFT OUTER JOIN
 (SELECT value as description, study_id from refinery_repository_studybracketedfield where sub_type = 'SAMPLE_DESCRIPTION') d
 ON (a.study_id = d.study_id)
 LEFT OUTER JOIN 
-(SELECT assay_id, raw_data_file, data_transformation_name as file from refinery_repository_assay_raw_data a JOIN refinery_repository_rawdata b ON a.rawdata_id = b.id) r ON a.id = r.assay_id
+(SELECT assay_id, raw_data_file, file_name as file from refinery_repository_assay_raw_data a JOIN refinery_repository_rawdata b ON a.rawdata_id = b.id) r ON a.id = r.assay_id
 LEFT OUTER JOIN
 (SELECT value as chip_antibody, assay_id from refinery_repository_assaybracketedfield where sub_type = 'CHIP_ANTIBODY') ca ON a.id = ca.assay_id
 LEFT OUTER JOIN
@@ -189,61 +192,58 @@ def update_workflows(request):
     print "refinery_repository.update_workflows"
     
     if request.is_ajax():
-        # do your stuff here
-        print "is ajax"
-        grab_workflows();
-        result_dict = {};
-        result_dict['status'] = "kicked off workflow task";
-        print result_dict
-        return HttpResponse(simplejson.dumps( result_dict, ensure_ascii=False), mimetype='application/javascript')
+        # function for updating workflows from galaxy instance
+        instance, connection = checkActiveInstance(request)
+        grab_workflows(instance, connection)
+        # getting updated available workflows
+        workflows = Workflow.objects.all()    
+        json_serializer = serializers.get_serializer("json")()
+        return HttpResponse(json_serializer.serialize(workflows, ensure_ascii=False), mimetype='application/javascript')
     else:
         return HttpResponse(status=400)
 
 def analysis_run(request):
     print "refinery_repository.analysis_run called";
-    print request.POST;
     
-    # TODO: ensure form has a requested workflow (in workflow_choice)
+    #values = request.POST.getlist('csrfmiddlewaretoken')
     
-    values = request.POST.getlist('csrfmiddlewaretoken')
-    print "values"
-    print values;
-    print len(values)
+    # gets workflow_uuid
+    workflow_uuid = request.POST.getlist('workflow_choice')[0]
     
-    workflow_uuid = ""
+    # list of selected assays
+    selected_data = [];
     
     for i, val in request.POST.iteritems():
         if (val and val != ""):
-            print "i"
-            print i
-            if (i == 'workflow_choice'):
-                workflow_uuid = val
-            print val
+            #print "i"
+            #print i
+            #print val
+            if (i.startswith('assay_')):
+                selected_data.append({"assay_uuid":i.lstrip('assay_'), 'workflow_input_type':val})
     
+    run_info_all = [];
     
-    users = User.objects.all()
-    projects = Project.objects.all()
+    for sd in selected_data:
+        curr_assay = Assay.objects.filter(uuid=sd['assay_uuid'])[0];
+        curr_rawdata = curr_assay.raw_data.values()[0];
+        curr_filename = curr_rawdata['file_name'];
+        
+        # run_info defines parameters needed to run workflow in galaxy
+        run_info = {}
+        temp_info = {};
+        # full file path
+        temp_info['filename'] = os.path.join(settings.DOWNLOAD_BASE_DIR, curr_assay.investigation_id, curr_filename)
+        # assay_uid
+        temp_info['assay_uuid'] = sd['assay_uuid']
+        run_info[sd['workflow_input_type']] = temp_info;
+        run_info_all.append(run_info);
+        
+    # getting current connection to galaxy
+    instance, connection = checkActiveInstance(request)
     
-    # retrieving workflow based on input workflow_uuid
-    curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
-    data_sets = DataSet.objects.all()
+    # calling task to setup galaxy workflow and run
+    run_workflow_ui(instance, connection, request, workflow_uuid, run_info_all)
     
-    # How to create a simple analysis object
-    analysis = Analysis( creator=users[0], summary="Adhoc test analysis", version=1, project=projects[0], data_set=data_sets[0], workflow=curr_workflow )
-    analysis.save()
-    
-    # Adding workflow data inputs based on POST
-    for data_input in curr_workflow.data_inputs.all():
-        temp_input =  WorkflowDataInputMap( workflow_data_input_internal_id=data_input.internal_id, data_uuid=data_input.name )
-        temp_input.save() 
-        analysis.workflow_data_input_maps.add( temp_input ) 
-        analysis.save()
-    
-    print "analysis"
-    print analysis
-    
-    
-    #return HttpResponseRedirect(reverse('refinery_repository.views.results', args=(accession,)))
     return render_to_response('refinery_repository/base.html', context_instance=RequestContext(request))
 
 def results_selected(request):
