@@ -2,6 +2,10 @@ from celery.task import task
 from galaxy_connector.models import DataFile
 from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps, createStepsAnnot
 from datetime import datetime
+from refinery_repository.models import Investigation, Assay, RawData
+from core.models import *
+import os
+
 
 def searchInput(input_string):
     """
@@ -31,27 +35,14 @@ def getInputExp(input1, exp1):
 
 def configWorkflowInput(in_list):
     """
-    
     TODO:: Need to figure out generic way of matching input to experiment for chip-seq pipeline
-    
     """
-    
     ret_list = [];
     ret_list.append(getInputExp(in_list[0], in_list[1]));
     ret_list.append(getInputExp(in_list[2], in_list[3]));
     
     return ret_list;
     
-    """
-    ret_list = [];
-    cur_dict = {};
-    for j in range(len(in_list)):
-        print j;
-        if (in_list[j]['input']):
-            print "I AM INPUT FILE"
-            cur_dict['input'] = file_id;
-    """
-
 #@task()
 #def monitor_history( connection, history_id ):
 #    return
@@ -125,4 +116,123 @@ def run_workflow( instance, connection ):
     result = connection.run_workflow2(new_workflow_info['id'], ret_list, history_id )    
     
     #------------ DELETE WORKFLOW -------------------------- #   
-    #del_workflow_id = connection.delete_workflow(new_workflow_info['id']);
+    del_workflow_id = connection.delete_workflow(new_workflow_info['id']);
+    
+
+@task()
+def run_workflow_ui(instance, connection, requests, workflow_uuid, run_info):
+    """
+    Runs Galaxy workflow through django web interface
+    """
+    print "\ngalaxy_connector.tasks.run_workflow_ui called\n"
+
+    print "run_info"
+    print run_info
+    
+    # creates new library in galaxy
+    library_id = connection.create_library( "UI Refinery Test Library - " + str( datetime.now() ) );
+    
+    # creates new history in galaxy
+    history_id = connection.create_history( "UI Refinery Test History - " + str( datetime.now() ) )
+    #run_workflow_ui.update_state( state="PROGRESS", meta={ "history_id": history_id, "library_id": library_id } )
+            
+    # retrieving workflow based on input workflow_uuid
+    curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+    # gets galaxy internal id for specified workflow
+    workflow_galaxy_id = curr_workflow.internal_id
+    # gets dictionary version of workflow
+    workflow_dict = connection.get_workflow_dict(workflow_galaxy_id);
+    
+    
+    ### REFINERY MODEL UPDATES ###
+    # core.models (updating states for refinery 
+    users = User.objects.all()
+    projects = Project.objects.all()
+    data_sets = DataSet.objects.all()
+    
+    # How to create a simple analysis object
+    analysis = Analysis( creator=users[0], summary="Adhoc test analysis", version=1, project=projects[0], data_set=data_sets[0], workflow=curr_workflow )
+    analysis.save()
+    
+    # Importing file(s) into galaxy library
+    for file in run_info:
+        for k,v in file.items():
+            cur_file = file[k];
+            file_path = cur_file["filename"] 
+            
+            # Check that file exists
+            if(os.path.exists(file_path)): 
+               ### TODO :: ### call datastore and download files automatically
+               # insert data into galaxy library
+               file_id = connection.put_into_library( library_id, file_path )
+               cur_file["galaxy_id"] = file_id
+               #print( "file id: " + file_id);
+    
+    # Parameter map to run galaxy workflow
+    data = {}
+    data["workflow_id"] = workflow_galaxy_id
+    data["history"] = "hist_id=%s" % ( history_id )
+    data["ds_map"] = {}    
+    
+    workflow_data_inputs = curr_workflow.data_inputs.all()
+    
+    # If number of workflow inputs equals the number of files
+    if len(run_info) == len(workflow_data_inputs):
+        print "workflows are the same size"
+        
+        # going through each data input for a galaxy workflow
+        for data_input in curr_workflow.data_inputs.all():
+            w_name = data_input.name
+            w_galaxy_input_id = data_input.internal_id
+            
+            # iterating through selected samples 
+            for file in run_info:
+                for k,v in file.items():
+                    if (k == data_input.name):
+                        #data["ds_map"][w_galaxy_input_id] = { "src": "ld", "id":  "alkdaw3f3d" }
+                        w_galaxy_data_id = file[k]["galaxy_id"]
+                        data["ds_map"][w_galaxy_input_id] = { "src": "ld", "id":  w_galaxy_data_id}
+                        del file[k]
+    
+    #{'workflow_id': '1cd8e2f6b131e891', 'ds_map': {'50': {'src': 'ld', 'id': 'a799d38679e985db'}, '52': {'src': 'ld', 'id': '33b43b4e7093c91f'}}, 'history': 'Test API'}
+    #print "#### deleted run_info"
+    print run_info
+    print data;
+    
+    # Running workflow 
+    result = connection.run_workflow3(data)    
+    
+    
+        #temp_input =  WorkflowDataInputMap( workflow_data_input_internal_id=data_input.internal_id, data_uuid=data_input.name )
+        #data["ds_map"][in_key] = { "src": "ld", "id": winput_id }
+    
+    #[{'input': {'id': '54504b7a9a13a00f', 'filename':
+    #'test_elate7_input.fastq'}, 'exp': {'id': '82aa661b182e9e77', 'filename':
+    #'test_elate7_hp2.fastq '}}, {'input': {'id': 'b33e1f78e90a230d',
+    #'filename': 'small_input.fastq'}, 'exp': {'id': '15851351f4d86d24',
+    #'filename': 'small_hp1a.fastq'}}]
+    
+    #print curr_workflow.data_inputs.all()
+    #print len(curr_workflow.data_inputs.all())
+    #for data_input in curr_workflow.data_inputs.all():
+    #    print "-----"
+    #    print data_input;
+        #temp_input =  WorkflowDataInputMap( workflow_data_input_internal_id=data_input.internal_id, data_uuid=data_input.name )
+    
+    
+
+    # TODO: handle this analysis update, b/c workflows are not created yet
+    
+    # Adding workflow data inputs based on POST
+    for data_input in curr_workflow.data_inputs.all():
+        #print "-----"
+        #print data_input;
+        temp_input =  WorkflowDataInputMap( workflow_data_input_internal_id=data_input.internal_id, data_uuid=data_input.name )
+        temp_input.save() 
+        analysis.workflow_data_input_maps.add( temp_input ) 
+        analysis.save()   
+    
+    ### GET FILE PATHS FROM UUIDS for RAWDATA
+    ### INSERT INTO GALAXY for analysis
+    ### COPY galaxy_connector.tasks
+    
