@@ -7,6 +7,8 @@ Created on Jan 11, 2012
 import simplejson
 import copy
 import ast
+from datetime import datetime
+
 
 class GalaxyWorkflow( object ):
     '''
@@ -46,6 +48,23 @@ class GalaxyWorkflowInput( object ):
 # =========================================================================================================
 # Helper functions 
 # =========================================================================================================
+def combineInputExp(in_list, repeat_num):
+    """
+    combineInputExp function for generating combined list for workflow configuration
+    """
+    
+    ret_list = [];
+    
+    input_list = in_list['input_file']
+    exp_list = in_list['exp_file']
+    
+    for i in range(0, repeat_num):
+        temp_dict = {}; 
+        temp_dict['input_file'] = input_list[i]
+        temp_dict['exp_file'] = exp_list[i]
+        ret_list.append(temp_dict)
+    
+    return ret_list
 
 def openWorkflow(in_file):   
     """
@@ -63,7 +82,7 @@ def createBaseWorkflow(workflow_name):
     base_dict["a_galaxy_workflow"] = "true";
     base_dict["annotation"] = "";
     base_dict["format-version"] = "0.1"
-    base_dict["name"] = workflow_name;
+    base_dict["name"] = workflow_name + "-" + str( datetime.now() );
     base_dict["steps"] = {};
     return base_dict;
 
@@ -83,9 +102,9 @@ def workflowMap(workflow):
         
         if (len(input_dict) > 0):
             if input_dict[0]["name"] == 'exp_file':
-                map[input_id] = 'exp';
+                map[input_id] = 'exp_file';
             elif input_dict[0]["name"] == 'input_file':
-                map[input_id] = 'input'
+                map[input_id] = 'input_file'
     
     # mapping rest of workflow to either "input_file" or "exp_file"
     for k in range(0, len(temp_steps)):
@@ -126,9 +145,9 @@ def createStepsAnnot(file_list, workflow):
     
     map = workflowMap(workflow);
     
-    print "filelist"
-    print file_list
-    print len(file_list);
+    #print "filelist"
+    #print file_list
+    #print len(file_list);
     
     for i in range(0, repeat_num):
         for j in range(0, len(temp_steps)):
@@ -164,12 +183,12 @@ def createStepsAnnot(file_list, workflow):
                 input_type = map[int(curr_step)];
                 # getting current filename for workflow
                 curr_filename = '';
-                if (input_type == 'exp'):
-                    curr_filename = removeFileExt(file_list[i]['exp']['filename']);
-                elif (input_type == 'input'):
-                    curr_filename = removeFileExt(file_list[i]['input']['filename']);
+                if (input_type == 'exp_file'):
+                    curr_filename = removeFileExt(file_list[i]['exp_file']['filename']);
+                elif (input_type == 'input_file'):
+                    curr_filename = removeFileExt(file_list[i]['input_file']['filename']);
                 else: 
-                    curr_filename = removeFileExt(file_list[i]['exp']['filename']) + ',' + removeFileExt(file_list[i]['input']['filename']);
+                    curr_filename = removeFileExt(file_list[i]['exp_file']['filename']) + ',' + removeFileExt(file_list[i]['input_file']['filename']);
                 
                 
                 # TODO: get list of ["outputs"]["name"]
