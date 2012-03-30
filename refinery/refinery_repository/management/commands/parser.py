@@ -311,6 +311,8 @@ class Command(LabelCommand):
             #potentially overwritten
             file_reader = csv.reader(open(a_file, 'rb'), dialect='excel-tab')
             
+            #terms that can be substituted in for the standard ones
+            #substitute: standard
             sub_terms = {
                          'Hybridization Assay Name': 'Assay Name',
                          'Derived Array Data Matrix File': 'Derived Data File',
@@ -491,10 +493,13 @@ class Command(LabelCommand):
             insert all of the ISA-Tab information or bust
         Parameters:
             i_dict: dictionary of investigation file
+            isatab: location of zipped ISA-Tab
+            pre_isatab: location of zipped files that were converted into
+                        ISA-Tab (may or may not exist)
             s_dict: dictionary of study file
             a_dict: dictionary of assay file
         """
-        def insert_isatab(i_dict, s_dict, a_dict):
+        def insert_isatab(i_dict, isatab, pre_isatab, s_dict, a_dict):
             try:
                 tor_list = i_dict['tor'] #investigator
                 tion_dict = i_dict['tion'][0] #investigation
@@ -513,6 +518,10 @@ class Command(LabelCommand):
                             tion_dict[k] = the_date
                         except ValueError:
                             del tion_dict[k]
+                            
+                    #add in pre_isatab_file and isatab_file
+                    tion_dict['isatab_file'] = isatab
+                    tion_dict['pre_isatab_file'] = pre_isatab
 
                     investigation = Investigation(**tion_dict)
                     investigation.save()
@@ -825,15 +834,29 @@ class Command(LabelCommand):
         assert os.path.isdir(isa_dir), "Invalid Accession: %s" % isa_ref
 
         
-        #assign files to proper file locations and make sure they're correct    
-        investigation_file = glob.glob("%s/i_*.txt" % isa_dir).pop()
-        assert os.path.exists(investigation_file), "%s" % investigation_file
+        #assign files to proper file locations and make sure they're correct
+        try:    
+            investigation_file = glob.glob("%s/i_*.txt" % isa_dir).pop()
+        except IndexError:
+            raise "Missing investigation file\n"
         
-        study_file = glob.glob("%s/s_*.txt" % isa_dir).pop()
-        assert os.path.exists(study_file), "Not study file %s" % study_file
+        try:
+            study_file = glob.glob("%s/s_*.txt" % isa_dir).pop()
+        except IndexError:
+            raise "Missing study file\n"
+
+        try:
+            assay_file = glob.glob("%s/a_*.txt" % isa_dir).pop()
+        except IndexError:
+            raise "Missing study file\n"
         
-        assay_file = glob.glob("%s/a_*.txt" % isa_dir).pop()
-        assert os.path.exists(assay_file), "Not assay file %s" % assay_file
+        isatab_file = os.path.join(isa_dir, "%s.zip" % isa_ref)
+        assert os.path.exists(isatab_file), "%s doesn't exist" % isatab_file
+        
+        try:
+            pre_isatab_file = glob.glob("%s/*_%s.zip" % (isa_dir, isa_ref)).pop()
+        except IndexError:
+            pre_isatab_file = ''
 
         investigation_dict = parse_investigation_file(investigation_file)
 
@@ -842,4 +865,4 @@ class Command(LabelCommand):
         assay_dict = parse_assay_file(assay_file, 
                             investigation_dict['tion'][0]['study_identifier'])
         
-        insert_isatab(investigation_dict, study_dict, assay_dict)
+        insert_isatab(investigation_dict, isatab_file, pre_isatab_file, study_dict, assay_dict)
