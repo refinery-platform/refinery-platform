@@ -219,7 +219,7 @@
       "pk": 1,
       "model": "core.workflowdatainputmap",
       "fields": {
-         "workflow_data_input_internal_name": "input1",
+         "workflow_data_input_name": "input1",
          "data_uuid": "2339af14-7297-11e1-9f19-c8bcc8ed32d3"
       }
    },
@@ -227,7 +227,7 @@
       "pk": 2,
       "model": "core.workflowdatainputmap",
       "fields": {
-         "workflow_data_input_internal_name": "input3",
+         "workflow_data_input_name": "input3",
          "data_uuid": "08d2b86e-7299-11e1-aa99-c8bcc8ed32d3"
       }
    },
@@ -235,7 +235,7 @@
       "pk": 3,
       "model": "core.workflowdatainputmap",
       "fields": {
-         "workflow_data_input_internal_name": "input2",
+         "workflow_data_input_name": "input2",
          "data_uuid": "5d99644f-729f-11e1-9218-c8bcc8ed32d3"
       }
    },
