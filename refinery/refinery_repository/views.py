@@ -92,7 +92,7 @@ def get_available_files(request):
     cursor = connection.cursor()
     
     cursor.execute(""" SELECT distinct a.uuid, a.id as assay_id, a.investigation_id, a.assay_name, o.species, d.description, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.file, r.raw_data_file FROM
-(SELECT distinct on (assay_name) id, uuid, sample_name, assay_name, investigation_id, study_id from refinery_repository_assay) a
+(SELECT distinct on (assay_name) id, assay_uuid as uuid, sample_name, assay_name, investigation_id, study_id from refinery_repository_assay) a
 LEFT OUTER JOIN
 (SELECT value as species, study_id from refinery_repository_studybracketedfield where sub_type ='ORGANISM') o
 ON (a.study_id = o.study_id)
@@ -145,7 +145,7 @@ def get_available_files2(request):
     cursor = connection.cursor()
     
     cursor.execute(""" SELECT distinct a.uuid, a.id as assay_id, a.investigation_id, a.assay_name, o.species, d.description, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.file, r.raw_data_file FROM
-(SELECT distinct on (assay_name) id, uuid, sample_name, assay_name, investigation_id, study_id from refinery_repository_assay) a
+(SELECT distinct on (assay_name) id, assay_uuid as uuid, sample_name, assay_name, investigation_id, study_id from refinery_repository_assay) a
 LEFT OUTER JOIN
 (SELECT value as species, study_id from refinery_repository_studybracketedfield where sub_type ='ORGANISM') o
 ON (a.study_id = o.study_id)
