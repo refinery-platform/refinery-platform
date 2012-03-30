@@ -64,7 +64,7 @@ class Investigation(models.Model):
     def __unicode__(self):
         return self.study_identifier
 
-    uuid = UUIDField(unique=True, auto=True)
+    investigation_uuid = UUIDField(unique=True, auto=True)
     study_identifier = models.TextField(primary_key=True)
     study_title = models.TextField()
     study_description = models.TextField()
@@ -128,7 +128,7 @@ class Study(models.Model):
     def __unicode__(self):
         return self.source_name
     
-    uuid = UUIDField(unique=True, auto=True)
+    study_uuid = UUIDField(unique=True, auto=True)
     source_name = models.TextField(primary_key=True)
     sample_name = models.TextField()
     material_type = models.TextField(blank=True, null=True)
@@ -176,7 +176,7 @@ class RawData(models.Model):
     def __unicode__(self):
         return self.raw_data_file
 
-    uuid = UUIDField(unique=True, auto=True)
+    rawdata_uuid = UUIDField(unique=True, auto=True)
     raw_data_file = models.TextField()
     file_name = models.TextField()
     
@@ -184,7 +184,7 @@ class ProcessedData(models.Model):
     def __unicode__(self):
         return self.derived_arrayexpress_ftp_file
 
-    uuid = UUIDField(unique=True, auto=True)
+    processeddata_uuid = UUIDField(unique=True, auto=True)
     derived_arrayexpress_ftp_file = models.TextField()
     derived_data_file = models.TextField()
     
@@ -192,7 +192,7 @@ class Assay(models.Model):
     def __unicode__(self):
         return self.sample_name
 
-    uuid = UUIDField(unique=True, auto=True)
+    assay_uuid = UUIDField(unique=True, auto=True)
     sample_name = models.TextField()
     extract_name = models.TextField(blank=True, null=True)
     labeled_extract_name = models.TextField(blank=True, null=True)
