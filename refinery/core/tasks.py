@@ -13,7 +13,7 @@ def grab_workflows(instance=None, connection_galaxy=None):
     
     # checks to see if an existing galaxy connection, otherwise create a connection
     if (connection_galaxy is None):
-        print ("instnace is none")
+        print ("instance is none")
         #get instance
         instance = Instance.objects.all()[0]
         #get conenction
@@ -42,6 +42,4 @@ def grab_workflows(instance=None, connection_galaxy=None):
                 i.save()
                 w.data_inputs.add(i)
         except:
-            connection._rollback()
-        
-
+            connection.rollback()
