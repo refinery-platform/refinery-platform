@@ -132,7 +132,7 @@ class WorkflowDataInputMap( models.Model ):
     data_uuid = UUIDField( editable=True )
     
     def __unicode__(self):
-        return str( self.workflow_data_input_internal_id ) + " <-> " + self.data_uuid
+        return str( self.workflow_data_input_name ) + " <-> " + self.data_uuid
     
                 
 class Analysis ( BaseResource ):

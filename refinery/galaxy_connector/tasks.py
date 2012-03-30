@@ -47,7 +47,7 @@ def configWorkflowInput(in_list):
     return ret_list;
     
 @task()
-def monitor_workflow( instance, connection, interval=5.0, workflow ):
+def monitor_workflow( instance, connection, interval=5.0 ):
     '''
     Run and monitor a test workflow in Galaxy. 
     '''
