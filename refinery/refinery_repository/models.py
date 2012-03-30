@@ -81,7 +81,7 @@ class Investigation(models.Model):
     study_assay_technology_platform = models.TextField(blank=True, null=True)
     study_assay_file_name = models.TextField()
     pre_isatab_file = models.FilePathField(path=settings.ISA_TAB_DIR, match=r"\S{3,}_\S{3,}\.zip", recursive=True, blank=True, null=True)
-    isatab_file = models.FilePathField(path=settings.ISA_TAB_DIR, match=r'\S{3,}\.zip', recursive=True)
+    isatab_file = models.FilePathField(path=settings.ISA_TAB_DIR, match=r'\S{3,}\.zip', recursive=True, blank=True, null=True)
     
     #0, 1, or more ontologies can be used for many different investigations
     ontologies = models.ManyToManyField(Ontology, blank=True, null=True)
