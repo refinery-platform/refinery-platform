@@ -851,7 +851,7 @@ class Command(LabelCommand):
             raise "Missing study file\n"
         
         isatab_file = os.path.join(isa_dir, "%s.zip" % isa_ref)
-        assert os.path.exists(isatab_file), "%s doesn't exist" % isatab_file
+        #assert os.path.exists(isatab_file), "%s doesn't exist" % isatab_file
         
         try:
             pre_isatab_file = glob.glob("%s/*_%s.zip" % (isa_dir, isa_ref)).pop()
