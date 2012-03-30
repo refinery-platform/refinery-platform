@@ -91,6 +91,9 @@ class Connection( object ):
     def get_history_state_details( self, history_id ):            
         return self.get( "histories" + "/" + history_id )["state_details"]
 
+    def get_progress( self, history_id ):            
+        return self.get( "histories" + "/" + history_id )["state_details"]
+
     def get_history_contents( self, history_id ):            
         return self.get( "histories" + "/" + history_id + "/" + "contents" )
 

@@ -41,4 +41,4 @@ settings_local.py
 .DS_Store
 .pydevproject
 refinery/celeryev.pid
-.settings/*
+.settings/*	
