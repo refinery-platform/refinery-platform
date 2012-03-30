@@ -230,9 +230,12 @@ def analysis_run(request):
         
         # run_info defines parameters needed to run workflow in galaxy
         run_info = {}
-        temp_info = {};
+        temp_info = {}
         # full file path
-        temp_info['filename'] = os.path.join(settings.DOWNLOAD_BASE_DIR, curr_assay.investigation_id, curr_filename)
+        temp_info['filepath'] = os.path.join(settings.DOWNLOAD_BASE_DIR, curr_assay.investigation_id, curr_filename)
+        # Short file name description
+        temp_info['filename'] = curr_filename.split('.')[0]
+        
         # assay_uid
         temp_info['assay_uuid'] = sd['assay_uuid']
         run_info[sd['workflow_input_type']] = temp_info;
