@@ -87,12 +87,7 @@ class Connection( object ):
             
     def get_history( self, history_id ):            
         return self.get( "histories" + "/" + history_id )
-
-    def get_history_state_details( self, history_id ):            
-        return self.get( "histories" + "/" + history_id )["state_details"]
-
-    def get_progress( self, history_id ):            
-        return self.get( "histories" + "/" + history_id )["state_details"]
+        
 
     def get_history_contents( self, history_id ):            
         return self.get( "histories" + "/" + history_id + "/" + "contents" )
@@ -247,6 +242,17 @@ class Connection( object ):
         
         return libraries
 
+
+    # =========================================================================================================
+
+    def get_progress( self, history_id ):            
+        history = self.get( "histories" + "/" + history_id );
+        
+        if "state_details" not in history:
+            return ( { "percent_complete": 0, "workflow_state": history["state"], "message": "Preparing ..." } )
+        else:
+             
+            return ( { "percent_complete": 100, "workflow_state": history["state"], "message": history["state_details"] } )
 
     # =========================================================================================================
 

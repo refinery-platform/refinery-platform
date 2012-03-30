@@ -127,7 +127,7 @@ class ProjectUserRelationship( AbstractUserRelationship ):
 
 
 class WorkflowDataInputMap( models.Model ):
-    workflow_data_input_internal_id = models.IntegerField()
+    workflow_data_input_internal_id = models.IntegerField()    
     data_uuid = UUIDField( editable=True )
     
     def __unicode__(self):
