@@ -94,7 +94,7 @@ class Publication(models.Model):
 
 class Study_Assay(models.Model):
     def __unicode__(self):
-        return study_assay_file_name
+        return self.study_assay_file_name
 
     study_assay_measurement_type = models.TextField(blank=True, null=True)
     study_assay_measurement_type_term_accession_number = models.TextField(blank=True, null=True)
