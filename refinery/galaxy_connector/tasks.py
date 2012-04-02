@@ -1,11 +1,14 @@
 from celery.task import task
+from celery.task.sets import subtask
 from galaxy_connector.models import DataFile
 from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps, createStepsAnnot, combineInputExp
 from datetime import datetime
 from refinery_repository.models import Investigation, Assay, RawData
 from core.models import *
 import os
-
+from celery import Celery
+from celery import states
+import time
 
 def searchInput(input_string):
     """
@@ -43,22 +46,64 @@ def configWorkflowInput(in_list):
     
     return ret_list;
     
-#@task()
-#def monitor_history( connection, history_id ):
-#    return
+@task()
+def monitor_workflow( instance, connection, interval=5.0 ):
+    '''
+    Run and monitor a test workflow in Galaxy. 
+    '''
+
+    # create library and history
+    library_id = connection.create_library( "Refinery Test Library - " + str( datetime.now() ) )    
+    history_id = connection.create_history( "Refinery Test History - " + str( datetime.now() ) )
+    
+    workflow_task = subtask( run_workflow ).delay( instance, connection, library_id, history_id )
+    
+    while True:
+        progress = connection.get_progress( history_id )
+        monitor_workflow.update_state( state="PROGRESS", meta=progress )
+        print  "Sleeping ..."
+        time.sleep( interval );
+        print  "Awake ..."
+        print  "Workflow Task State: " + workflow_task.state + "\n"
+        print  "Workflow State: " + progress["workflow_state"] + "\n"
+                
+        if workflow_task.state == "SUCCESS":
+            print "Workflow task finished successfully."
+            
+            if progress["workflow_state"] == "ok":
+                print "Workflow finished successfully. Stopping monitor ..."
+                break
+
+            if progress["workflow_state"] == "error":
+                print "Workflow failed. Stopping monitor ..."
+                break
+             
+            if progress["workflow_state"] == "queued":
+                print "Workflow running."
+
+            if progress["workflow_state"] == "new":
+                print "Workflow being prepared."
+
+        
+        if workflow_task.state == "FAILURE":
+            print "Workflow task failed . Stopping monitor ..."
+            break
+    
+    # return the final state information  
+    return progress
+
 
 @task()
-def run_workflow( instance, connection ):
+def run_workflow( instance, connection, library_id, history_id ):
     # TO DEBUG PYTHON WEBAPPS ##
     #import pdb; pdb.set_trace()
     
-    #Getting working version of library 
-    library_id = connection.create_library( "Refinery Test Library - " + str( datetime.now() ) );
-    # debug library id
-    #library_id = "bf60fd5f5f7f44bf";
     
-    history_id = connection.create_history( "Refinery Test History - " + str( datetime.now() ) )
-    run_workflow.update_state( state="PROGRESS", meta={ "history_id": history_id, "library_id": library_id } )
+    #print "From run_workflow: calling monitor_progress subtask"
+    #subtask( monitor_progress ).delay( connection, history_id, run_workflow.task_id ) 
+    #print "From run_workflow: calling monitor_progress subtask: DONE"
+    
+    #run_workflow.update_state( state="PROGRESS", meta={ "history_id": history_id, "library_id": library_id } )
     
     #monitor_task = monitor_history.delay( connection, history_id )
     

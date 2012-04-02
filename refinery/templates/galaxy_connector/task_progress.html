@@ -9,10 +9,8 @@ Task Progress
 {% endblock %}
 
 {% block content %}
-Task {{ task }}: {{ task.state }} - {{ task.result }}<br>
-
-{% if progress %}
-State: {{ progress.state }}
-{% endif %}
+<!-- {{ progress }}<br> -->
+State: {{ progress.workflow_state }}<br>
+Progress: {{ progress.message.ok }} completed / {{ progress.message.running }} running / {{ progress.message.queued }} queued / {{ progress.message.error }} failed<br>
 
 {% endblock %}
