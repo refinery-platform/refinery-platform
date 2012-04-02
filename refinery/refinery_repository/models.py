@@ -71,15 +71,6 @@ class Investigation(models.Model):
     study_public_release_date = models.DateField(blank=True, null=True)
     study_submission_date = models.DateField(blank=True, null=True)
     study_file_name = models.TextField()
-    #assay attributes
-    study_assay_measurement_type = models.TextField(blank=True, null=True)
-    study_assay_measurement_type_term_accession_number = models.TextField(blank=True, null=True)
-    study_assay_measurement_type_term_source_ref = models.TextField(blank=True, null=True)
-    study_assay_technology_type = models.TextField(blank=True, null=True)
-    study_assay_technology_type_term_accession_number = models.TextField(blank=True, null=True)
-    study_assay_technology_type_term_source_ref = models.TextField(blank=True, null=True)
-    study_assay_technology_platform = models.TextField(blank=True, null=True)
-    study_assay_file_name = models.TextField()
     pre_isatab_file = models.FilePathField(path=settings.ISA_TAB_DIR, match=r"\S{3,}_\S{3,}\.zip", recursive=True, blank=True, null=True)
     isatab_file = models.FilePathField(path=settings.ISA_TAB_DIR, match=r'\S{3,}\.zip', recursive=True, blank=True, null=True)
     
@@ -99,6 +90,21 @@ class Publication(models.Model):
     study_publication_status_term_accession_number = models.TextField(blank=True, null=True)
     study_publication_status_term_source_ref = models.TextField(blank=True, null=True)
 
+    investigation = models.ForeignKey(Investigation)
+
+class Study_Assay(models.Model):
+    def __unicode__(self):
+        return study_assay_file_name
+
+    study_assay_measurement_type = models.TextField(blank=True, null=True)
+    study_assay_measurement_type_term_accession_number = models.TextField(blank=True, null=True)
+    study_assay_measurement_type_term_source_ref = models.TextField(blank=True, null=True)
+    study_assay_technology_type = models.TextField(blank=True, null=True)
+    study_assay_technology_type_term_accession_number = models.TextField(blank=True, null=True)
+    study_assay_technology_type_term_source_ref = models.TextField(blank=True, null=True)
+    study_assay_technology_platform = models.TextField(blank=True, null=True)
+    study_assay_file_name = models.TextField()
+    
     investigation = models.ForeignKey(Investigation)
 
 class Investigator(models.Model):
