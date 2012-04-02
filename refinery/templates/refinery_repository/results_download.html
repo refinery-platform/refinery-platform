@@ -9,33 +9,22 @@ var timerId = 0;
 function getUpdate() {
 	
 	counter += 1;
-	console.log("getupdate called");
-	console.log(counter);
-	
-	//if (counter == 5 ) {
-	//	console.log("clearTimeout called");
-	//	clearTimeout ( timerId );
-	//}
-	
 
 	$.ajax({
      url:"/refinery_repository/results/",
      type:"POST",
-     //contentType: 'application/JSON',
      dataType: "json",
      data: {csrfmiddlewaretoken: "{{ csrf_token }}" },
      success: function(result){
+     	// EXAMPLE JSON RETURN
      	//{'task_id': '38a4e411-2d0c-421c-b32f-a7c33e5b5f3e', 'download_location': u'/Users/richardpark/Desktop/refinery_downloads/E-GEOD-11074/SRR001655.fastq.gz', 'download_url': u'ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR001/SRR001655/SRR001655.fastq.gz', 'current': 1254656, 'state': u'PROGRESS', 'percent_done': '0.18%', 'total': 694369271} 
         
         var arLen=result.length;
         var allFinished = true;
 		for ( var i=0, len=arLen; i<len; ++i ){
-  			//console.log(result[i]);
-  			//console.log(i);
   			var temp_id = '#'+result[i].task_id;
   			$(temp_id).text(JSON.stringify(result[i]));
-  			//console.log(JSON.stringify(result[i]));
-  			
+  		
   			var temp_bar = '#bar_' +result[i].task_id;
   			
   			// REMOVING ACTIVE CLASS STATUS
@@ -51,9 +40,7 @@ function getUpdate() {
   				$(temp_bar).css({ 'width': temp_percent });
   			}
   		}
-  		
-  		//console.log("allfinished");
-  		//console.log(allFinished);
+
   		// if all files have been downloaded
   		if (allFinished == true) { 
   			clearTimeout ( timerId );
