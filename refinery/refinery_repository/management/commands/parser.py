@@ -119,6 +119,7 @@ class Command(LabelCommand):
                            'ont': defaultdict(list), #ontology
                            'sdd': defaultdict(list), #study design descriptor
                            'sf': defaultdict(list), #study factor
+                           'sa': defaultdict(list), #study assay
                            'prot': defaultdict(list), #protocol
                            'pub': defaultdict(list) #publication
                            }
@@ -147,7 +148,9 @@ class Command(LabelCommand):
                         current_header = 'prot'
                     elif re.search(r'STUDY CONTACTS', row):
                         current_header = 'tor'
-                    elif re.search(r'STUDY ASSAYS', row) or re.search(r'STUDY', row):
+                    elif re.search(r'STUDY ASSAYS', row):
+                        current_header = 'sa'
+                    elif re.search(r'STUDY', row):
                         current_header = 'tion'   
                 else: #if an information row, then push the information into the dictionary
                     if not current_header == 'investigation':
@@ -169,6 +172,7 @@ class Command(LabelCommand):
                          'tor': 'study_person_email',
                          'sdd': 'study_design_type',
                          'sf': 'study_factor_name',
+                         'sa': 'study_assay_file_name',
                          'pub': 'study_pubmed_id',
                          'prot': 'study_protocol_name',
                          'tion': 'study_identifier'
@@ -192,7 +196,7 @@ class Command(LabelCommand):
                         except IndexError:
                             pass
                     investigation[k].append(temp_dict)
-            
+
             return investigation
 
         """
@@ -508,6 +512,7 @@ class Command(LabelCommand):
                 sdd_list = i_dict['sdd'] #study design descriptors
                 sf_list = i_dict['sf'] #study factors
                 pub_list = i_dict['pub'] #publications
+                sa_list = i_dict['sa'] #study assays
 
                 # "**" converts dictionary to arguments
                 #make sure dates are datetime.date objects
@@ -572,6 +577,14 @@ class Command(LabelCommand):
                 
                     publication = Publication(**pub_dict)
                     publication.save()
+                    
+                #add investigation to sa dictionary and insert study assay(s)
+                for sa_dict in sa_list:
+                    #using foreign key, so need to assign
+                    sa_dict['investigation'] = investigation
+                    
+                    sa = Study_Assay(**sa_dict)
+                    sa.save()
                     
                 #add investigation to prot dictionary and insert protocol(s)
                 for prot_dict in prot_list:
