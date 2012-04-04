@@ -73,6 +73,10 @@ def history_progress(request, history_id):
     instance, connection = checkActiveInstance(request);
     return HttpResponse( simplejson.dumps(connection.get_progress( history_id )) ) 
 
+def history_file_list(request, history_id):    
+    instance, connection = checkActiveInstance(request);
+    return HttpResponse( simplejson.dumps(connection.get_history_file_list( history_id )) ) 
+
 def history_content(request, history_id, content_id ):    
     instance, connection = checkActiveInstance(request);
     return render_to_response( "galaxy_connector/history_content.html", { "history": connection.get_history( history_id ), "contents": connection.get_history_contents( history_id ), "content": connection.get_history_content( history_id, content_id ), "instance": instance.description, "data_url": instance.base_url + "/" + instance.data_url}, context_instance=RequestContext( request ) )

@@ -12,7 +12,7 @@
 {% if histories %}	
     <ul>
     {% for history in histories %}
-        <li><a href="{{ history.id }}">{{ history.name }} ( {{ history.items|length }} ): {{ history.state }}</a></li>
+        <li><a href="{{ history.identifier }}">{{ history.identifier }} - {{ history.name }} ( {{ history.items|length }} ): {{ history.state }}</a></li>
 	    <ul>
 	    {% for item in history.items %}
 	        <li><a href="{{data_url}}/{{ item.identifier }}">{{ item.name }}: {{ item.state }}</a></li>
