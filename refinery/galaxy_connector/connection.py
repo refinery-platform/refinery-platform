@@ -92,10 +92,75 @@ class Connection( object ):
     def get_history_contents( self, history_id ):            
         return self.get( "histories" + "/" + history_id + "/" + "contents" )
 
+
     def get_history_content( self, history_id, content_id ):            
         return self.get( "histories" + "/" + history_id + "/" + "contents" + "/" + content_id )
+        
+        
+    def get_history_file_type( self, history_id, content_id ):
+        '''
+        Content_id expected to be of type "file".
+        Returns the history content data_type, i.e. the file type of a content item in the history.
+        ''' 
+        history_content = self.get_history_content( history_id, content_id )        
+        
+        if "data_type" not in history_content:
+            return ( None )
+        else:
+            return ( history_content["data_type"] )
 
 
+    def get_history_file_type( self, history_id, content_id ):
+        '''
+        Content_id expected to be of type "file".
+        Returns the history content data_type, i.e. the file type of a content item in the history.
+        ''' 
+        history_content = self.get_history_content( history_id, content_id )        
+        
+        if "data_type" not in history_content:
+            return ( None )
+        else:
+            return ( history_content["data_type"] )
+        
+        
+    def get_history_file_list( self, history_id ):
+        '''
+        Returns a list of dictionaries that contain the name, type, state and download URL of all _files_ in a history.
+        '''        
+        files = []
+        
+        print self.get_history_contents( history_id )
+        
+        for history_content_entry in self.get_history_contents( history_id ):
+            
+            if "type" not in history_content_entry:
+                continue
+            
+            if history_content_entry["type"] != "file":
+                continue
+            
+            file_info = {}
+            
+            file_info["name"] = history_content_entry["name"]
+            file_info["url"] = history_content_entry["url"]
+            
+            history_content = self.get_history_content( history_id, history_content_entry["id"] )        
+                       
+            if "data_type" not in history_content:
+                file_info["type"] = None
+            else:
+                file_info["type"] = history_content["data_type"]
+
+            if "state" not in history_content:
+                file_info["state"] = None
+            else:
+                file_info["state"] = history_content["state"]
+            
+            files.append( file_info )
+        
+        return files    
+        
+        
     def get_complete_histories( self ):
         histories = []
         
@@ -246,12 +311,11 @@ class Connection( object ):
     # =========================================================================================================
 
     def get_progress( self, history_id ):            
-        history = self.get( "histories" + "/" + history_id );
+        history = self.get_history( "histories" + "/" + history_id )
         
         if "state_details" not in history:
             return ( { "percent_complete": 0, "workflow_state": history["state"], "message": "Preparing ..." } )
         else:
-             
             return ( { "percent_complete": 100, "workflow_state": history["state"], "message": history["state_details"] } )
 
     # =========================================================================================================

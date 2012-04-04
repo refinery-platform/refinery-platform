@@ -12,6 +12,7 @@ urlpatterns = patterns('galaxy_connector.views',
     url(r'^workflows/$', 'workflows'),
     url(r'^run/$', 'run'),
     url(r'^histories/(?P<history_id>[a-z0-9]+)/state$', 'history_progress' ),
+    url(r'^histories/(?P<history_id>[a-z0-9]+)/files$', 'history_file_list' ),
 
     url(r'^login/(\d{1})/$', 'obtain_instance'),
     url(r'^login/$', 'obtain_instance'),
