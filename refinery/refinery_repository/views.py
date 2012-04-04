@@ -224,7 +224,7 @@ def analysis_run(request):
     run_info_all = [];
     
     for sd in selected_data:
-        curr_assay = Assay.objects.filter(uuid=sd['assay_uuid'])[0];
+        curr_assay = Assay.objects.filter(assay_uuid=sd['assay_uuid'])[0];
         curr_rawdata = curr_assay.raw_data.values()[0];
         curr_filename = curr_rawdata['file_name'];
         
