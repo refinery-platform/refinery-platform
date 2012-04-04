@@ -42,3 +42,4 @@ settings_local.py
 .pydevproject
 refinery/celeryev.pid
 .settings/*
+*.conflict
