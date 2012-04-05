@@ -16,7 +16,7 @@ from core.tasks import grab_workflows
 from django.db import connection
 from django.core import serializers
 import os, errno
-from galaxy_connector.tasks import run_workflow_ui
+from galaxy_connector.tasks import run_workflow_ui, download_history_files
 from galaxy_connector.views import checkActiveInstance, obtain_instance
       
 
@@ -244,10 +244,13 @@ def analysis_run(request):
     # getting current connection to galaxy
     instance, connection = checkActiveInstance(request)
     
-    # calling task to setup galaxy workflow and run
-    #run_workflow_ui(instance, connection, request, workflow_uuid, run_info_all).delay()
-    # To run as background task
-    task_result = run_workflow_ui.delay(connection, workflow_uuid, run_info_all)
+    # RUNNING WORKFLOW
+    #run_workflow_ui(connection, workflow_uuid, run_info_all)
+    task_result = run_workflow_ui.delay(connection, workflow_uuid, run_info_all) # To run as background task
+    
+    ### DEBUGGING history download
+    #download_history_files(connection, "eca0af6fb47bf90c") # local galaxy
+    #download_history_files(connection, "510f5ee2885d8b3f") # on fisher
             
     return render_to_response('refinery_repository/base.html', context_instance=RequestContext(request))
 
@@ -289,7 +292,6 @@ def results_selected(request):
     if (request.is_ajax()):
         print "RETURNING AJAX"
         print task_progress;
-        #return HttpResponse(simplejson.dumps({'task_progress': task_progress}, ensure_ascii=False), mimetype='application/javascript')
         return HttpResponse(simplejson.dumps( task_progress, ensure_ascii=False), mimetype='application/javascript')
     
     else:

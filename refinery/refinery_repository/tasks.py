@@ -117,23 +117,42 @@ Parameters:
                case, the investigation accession
 """
 @task()
-def download_http_file(url, out_dir, accession, new_name=None):
-    file_name = url.split('/')[-1] #get the file name
+def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=None):
     out_dir = os.path.join(out_dir, accession) #directory where file downloads
+    
+    print "refinery_repository.download_http_file called"
     
     #make super-directory (out_dir/accession) if it doesn't exist
     create_dir(out_dir)
     
     if (new_name is None):
+        file_name = url.split('/')[-1] #get the file name
         file_path = os.path.join(out_dir, file_name) # path where file downloads
     else:
+        file_name = new_name
         file_path = os.path.join(out_dir, new_name) 
-
+        
+    print "file_path"
+    print file_path
+    print "file_name"
+    print file_name
+    print "out_dir"
+    print out_dir
+    print "url"
+    print url
+    
     if(not os.path.exists(file_path)):
         u = urllib2.urlopen(url)
         f = open(file_path, 'wb')
-        meta = u.info()
-        file_size = int(meta.getheaders("Content-Length")[0])
+        
+        if (galaxy_file_size is None):
+            meta = u.info()
+            print "meta"
+            print meta
+            file_size = int(meta.getheaders("Content-Length")[0])
+        else:
+            file_size = galaxy_file_size
+            
         print "Downloading: %s Bytes: %s" % (file_name, file_size)
         file_size_dl = 0
         block_sz = 8192
@@ -153,9 +172,9 @@ def download_http_file(url, out_dir, accession, new_name=None):
                               'total': file_size
                         })
             
-            #status = r"%10d  [%3.2f%%]" % (file_size_dl, downloaded)
-            #status = status + chr(8)*(len(status)+1)
-            #print status,
+            status = r"%10d  [%3.2f%%]" % (file_size_dl, downloaded)
+            status = status + chr(8)*(len(status)+1)
+            print status,
 
         f.close()
 
