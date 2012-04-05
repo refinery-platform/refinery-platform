@@ -101,13 +101,11 @@ def run_workflow( instance, connection, library_id, history_id ):
     # TO DEBUG PYTHON WEBAPPS ##
     #import pdb; pdb.set_trace()
     
-    
     #print "From run_workflow: calling monitor_progress subtask"
     #subtask( monitor_progress ).delay( connection, history_id, run_workflow.task_id ) 
     #print "From run_workflow: calling monitor_progress subtask: DONE"
     
     #run_workflow.update_state( state="PROGRESS", meta={ "history_id": history_id, "library_id": library_id } )
-    
     #monitor_task = monitor_history.delay( connection, history_id )
     
     #------------ IMPORT FILES -------------------------- #   
@@ -221,13 +219,7 @@ def run_workflow_ui(connection, workflow_uuid, run_info):
             annot_inputs[k].append(cur_file);
     
     # ----------------------------------------------------------------#
-    # Parameter map to run galaxy workflow
-    data = {}
-    data["workflow_id"] = workflow_galaxy_id
-    data["history"] = "hist_id=%s" % ( history_id )
-    data["ds_map"] = {}    
-    
-    workflow_data_inputs = curr_workflow.data_inputs.all()
+    ### REFINERY WORKFLOW UPDATES ###
     
     # number of times to expand the selected workflow
     repeat_num = int(len(run_info) / len(workflow_data_inputs))

@@ -170,6 +170,11 @@ class Connection( object ):
             else:
                 file_info["file_size"] = history_content["file_size"]
             
+            if "visible" not in history_content:
+                file_info["visible"] = None
+            else:
+                file_info["visible"] = history_content["visible"]
+            
             files.append( file_info )
             
         return files    
