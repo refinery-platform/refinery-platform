@@ -69,6 +69,8 @@ def run_analysis( analysis, interval=5.0 ):
 # task: monitor preprocessing (calls subtask that does the actual work)
 @task()
 def monitor_analysis_preprocessing( analysis ):
+    #TODO: monitor async task execution
+    run_analysis_preprocessing( analysis )
     return
 
 # task: perform postprocessing (innermost task, does the actual work)
@@ -76,7 +78,10 @@ def monitor_analysis_preprocessing( analysis ):
 def run_analysis_preprocessing( analysis ):
     
     # run two task in parallel:
-    # 1. obtain files
+    #
+    # 1a. obtain files
+    # 1b. put files into Galaxy
+    #
     # 2. obtain expanded workflow
     
     return
@@ -84,6 +89,8 @@ def run_analysis_preprocessing( analysis ):
 # task: monitor workflow execution (calls subtask that does the actual work)
 @task()
 def monitor_analysis_execution( analysis ):    
+    #TODO: monitor async task execution
+    run_analysis_execution( analysis )
     return
 
 # task: perform execution (innermost task, does the actual work)
@@ -91,10 +98,14 @@ def monitor_analysis_execution( analysis ):
 def run_analysis_execution( analysis ):
     return
 
+
 # task: monitor postprocessing (calls subtask that does the actual work)
 @task()
 def monitor_analysis_postprocessing( analysis ):
+    #TODO: monitor async task execution    
+    run_analysis_postprocessing( analysis )    
     return
+
 
 # task: perform postprocessing (innermost task, does the actual work)
 @task()
