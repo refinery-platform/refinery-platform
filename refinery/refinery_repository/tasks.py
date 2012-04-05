@@ -117,14 +117,17 @@ Parameters:
                case, the investigation accession
 """
 @task()
-def download_http_file(url, out_dir, accession):
+def download_http_file(url, out_dir, accession, new_name=None):
     file_name = url.split('/')[-1] #get the file name
     out_dir = os.path.join(out_dir, accession) #directory where file downloads
     
     #make super-directory (out_dir/accession) if it doesn't exist
     create_dir(out_dir)
     
-    file_path = os.path.join(out_dir, file_name) # path where file downloads
+    if (new_name is None):
+        file_path = os.path.join(out_dir, file_name) # path where file downloads
+    else:
+        file_path = os.path.join(out_dir, new_name) 
 
     if(not os.path.exists(file_path)):
         u = urllib2.urlopen(url)
