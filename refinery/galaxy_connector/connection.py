@@ -34,13 +34,17 @@ class Connection( object ):
 
     # =========================================================================================================
                 
-    def make_url( self, command, args=None ):
+    def make_url( self, command, args=None, is_data=False ):
         # Adds the API Key to the URL if it's not already there.
         if args is None:
             args = []
         argsep = '?'
         args.insert( 0, ( 'key', self.api_key ) )
-        return self.base_url + '/' + self.api_url + '/' + command + argsep + '&'.join( [ '='.join( t ) for t in args ] )
+        if (is_data):
+            return self.base_url + '/' + self.data_url + '/' + command + argsep + '&'.join( [ '='.join( t ) for t in args ] )
+        else:
+            return self.base_url + '/' + self.api_url + '/' + command + argsep + '&'.join( [ '='.join( t ) for t in args ] )
+        
         
     def get( self, command ):
         url = self.make_url( command )
@@ -156,8 +160,18 @@ class Connection( object ):
             else:
                 file_info["state"] = history_content["state"]
             
+            if "id" not in history_content:
+                file_info["dataset_id"] = None
+            else:
+                file_info["dataset_id"] = history_content["id"]
+            
+            if "file_size" not in history_content:
+                file_info["file_size"] = None
+            else:
+                file_info["file_size"] = history_content["file_size"]
+            
             files.append( file_info )
-        
+            
         return files    
         
         

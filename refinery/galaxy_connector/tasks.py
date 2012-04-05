@@ -4,11 +4,14 @@ from galaxy_connector.models import DataFile
 from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps, createStepsAnnot, combineInputExp
 from datetime import datetime
 from refinery_repository.models import Investigation, Assay, RawData
+from refinery_repository.tasks import download_http_file
 from core.models import *
 import os
 from celery import Celery
 from celery import states
 import time
+from django.conf import settings
+
 
 def searchInput(input_string):
     """
@@ -201,9 +204,12 @@ def run_workflow_ui(connection, workflow_uuid, run_info):
             file_path = cur_file["filepath"]
             file_name = cur_file["filename"] 
             
+            ###############################################################
+            ### TODO :: ### call datastore and download files automatically
+            ###############################################################
+               
             # Check that file exists
             if(os.path.exists(file_path)): 
-               ### TODO :: ### call datastore and download files automatically
                # insert data into galaxy library
                file_id = connection.put_into_library( library_id, file_path )
                cur_file["id"] = file_id
@@ -279,13 +285,42 @@ def run_workflow_ui(connection, workflow_uuid, run_info):
             analysis.workflow_data_input_maps.add( temp_input ) 
             analysis.save() 
     
-            
     ### ----------------------------------------------------------------#
     # Downloading results from history
-    download_list = connection.get_history_file_list(history_id);
+    download_history_files(history_id)
     
-    print "download_list"
-    print download_list
-            
     #{'workflow_id': '1cd8e2f6b131e891', 'ds_map': {'50': {'src': 'ld', 'id': 'a799d38679e985db'}, '52': {'src': 'ld', 'id': '33b43b4e7093c91f'}}, 'history': 'Test API'}
     #data["ds_map"][in_key] = { "src": "ld", "id": winput_id }
+
+@task
+def download_history_files(connection, history_id) :
+    """
+    Download entire histories from galaxy. Getting files out of history to file store
+    """
+    download_list = connection.get_history_file_list(history_id)
+    
+    for results in download_list:
+        # download file if result state is "ok"
+        if results['state'] == 'ok':
+            file_type = results["type"]
+            
+            # checks to see if history file is raw fastq file, excluding from download
+            check_fastq = file_type.lower().find('fastq')
+            check_sam = file_type.lower().find('sam')
+            
+            if (check_fastq < 0 and check_sam < 0):
+                # name of file
+                result_name = results['name'] + '.' + file_type
+                # size of file defined by galaxy
+                file_size = results['file_size']
+                # URL to download
+                download_url = connection.make_url(str(results['dataset_id']), is_data=True)
+                
+                #####################################
+                # TODO: change location results being downloaded too
+                #####################################
+                
+                # location to download to 
+                loc_url = settings.DOWNLOAD_BASE_DIR;
+                
+                id = download_http_file.delay(download_url, loc_url, "analyze_test", new_name=result_name, galaxy_file_size=file_size) 
