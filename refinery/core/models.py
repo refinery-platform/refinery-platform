@@ -130,6 +130,7 @@ class WorkflowDataInputMap( models.Model ):
     #workflow_data_input_internal_id = models.IntegerField()
     workflow_data_input_name = models.CharField( max_length=200 )    
     data_uuid = UUIDField( editable=True )
+    pair_id = models.IntegerField(blank=True, null=True)
     
     def __unicode__(self):
         return str( self.workflow_data_input_name ) + " <-> " + self.data_uuid
@@ -144,6 +145,8 @@ class Analysis ( BaseResource ):
     data_set = models.ForeignKey( DataSet, blank=True )
     workflow = models.ForeignKey( Workflow, blank=True )
     workflow_data_input_maps = models.ManyToManyField( WorkflowDataInputMap )
+    workflow_steps_num = models.IntegerField(blank=True, null=True)
+    workflow_copy = models.TextField(blank=True, null=True)
     
 
     def __unicode__(self):
