@@ -167,7 +167,7 @@ def run_workflow( instance, connection, library_id, history_id ):
     
 
 @task()
-def run_workflow_ui(instance, connection, requests, workflow_uuid, run_info):
+def run_workflow_ui(connection, workflow_uuid, run_info):
     """
     Runs Galaxy workflow through django web interface
     """
@@ -244,7 +244,8 @@ def run_workflow_ui(instance, connection, requests, workflow_uuid, run_info):
           
     #------------ DELETE WORKFLOW -------------------------- #   
     del_workflow_id = connection.delete_workflow(new_workflow_info['id']);
-          
+         
+    """ 
     print "\nannot_inputs"
     print annot_inputs
     print "run_info"
@@ -255,6 +256,7 @@ def run_workflow_ui(instance, connection, requests, workflow_uuid, run_info):
     print ret_list
     print "num_steps"
     print new_workflow_steps
+    """
     
     ### ----------------------------------------------------------------#
     ### REFINERY MODEL UPDATES ###
@@ -276,6 +278,14 @@ def run_workflow_ui(instance, connection, requests, workflow_uuid, run_info):
             temp_input.save() 
             analysis.workflow_data_input_maps.add( temp_input ) 
             analysis.save() 
+    
+            
+    ### ----------------------------------------------------------------#
+    # Downloading results from history
+    download_list = connection.get_history_file_list(history_id);
+    
+    print "download_list"
+    print download_list
             
     #{'workflow_id': '1cd8e2f6b131e891', 'ds_map': {'50': {'src': 'ld', 'id': 'a799d38679e985db'}, '52': {'src': 'ld', 'id': '33b43b4e7093c91f'}}, 'history': 'Test API'}
     #data["ds_map"][in_key] = { "src": "ld", "id": winput_id }
