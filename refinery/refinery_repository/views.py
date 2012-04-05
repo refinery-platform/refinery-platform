@@ -245,7 +245,7 @@ def analysis_run(request):
     instance, connection = checkActiveInstance(request)
     
     # calling task to setup galaxy workflow and run
-    run_workflow_ui(instance, connection, request, workflow_uuid, run_info_all)
+    run_workflow_ui(instance, connection, request, workflow_uuid, run_info_all).delay()
     
     return render_to_response('refinery_repository/base.html', context_instance=RequestContext(request))
 
