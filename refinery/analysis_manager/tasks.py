@@ -83,6 +83,7 @@ def run_analysis_preprocessing( analysis ):
     # 1b. put files into Galaxy
     #
     # 2. obtain expanded workflow
+    # galaxy_workflow_id = configure_workflow( analysis.workflow.uuid, analysis.workflow_data_input_maps )
     
     return
 
