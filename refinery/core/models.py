@@ -8,6 +8,7 @@ from django.db import models
 from django_extensions.db.fields import UUIDField
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
+from django.forms import ModelForm
 
 
 class UserProfile ( models.Model ):
@@ -122,14 +123,16 @@ class WorkflowUserRelationship( AbstractUserRelationship ):
     resource = models.ForeignKey( Workflow )
    
     
-class Project ( AbstractUserResource ):
+class Project( models.Model ):
+    uuid = UUIDField( unique=True, auto=True )
+    name = models.CharField( max_length=250 )
     summary = models.CharField( max_length=1000, blank=True )
     description = models.CharField( max_length=5000, blank=True )
     
-    users = models.ManyToManyField( User, through="ProjectUserRelationship" )    
+    #users = models.ManyToManyField( User, through="ProjectUserRelationship" )    
     
-    data_sets = models.ManyToManyField( DataSet, blank=True ) 
-    workflows = models.ManyToManyField( Workflow, blank=True ) 
+    #data_sets = models.ManyToManyField( DataSet, blank=True ) 
+    #workflows = models.ManyToManyField( Workflow, blank=True ) 
 
     def __unicode__(self):
         return self.name + " - " + self.summary
@@ -138,11 +141,19 @@ class Project ( AbstractUserResource ):
         ''' overwriting default save behavior to create relationship between current user and project '''
         super( Project, self ).save( *args, **kwargs ) # Call the "real" save() method.
         # if a user is logged in, create a ProjectUserRelationship with the current user as an administrator
-        # if this is done through the admin interface, have the admin select a user an make this user the project administrator   
-
+        # if this is done through the admin interface, have the admin select a user an make this user the project administrator
         
-class ProjectUserRelationship( AbstractUserRelationship ):
-    resource = models.ForeignKey( Project )
+    class Meta:
+        permissions = (
+            ('read_project', 'Can read project'),
+        )
+
+class ProjectForm( ModelForm ):
+    class Meta:
+        model = Project
+        
+#class ProjectUserRelationship( AbstractUserRelationship ):
+#    resource = models.ForeignKey( Project )
 
 
 class WorkflowDataInputMap( models.Model ):
@@ -167,6 +178,5 @@ class Analysis ( BaseResource ):
     workflow_steps_num = models.IntegerField(blank=True, null=True)
     workflow_copy = models.TextField(blank=True, null=True)
     
-
     def __unicode__(self):
         return self.name + " - " + self.summary

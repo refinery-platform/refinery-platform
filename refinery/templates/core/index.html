@@ -13,7 +13,7 @@ Contents
 	{{ users|length }} users 
     <ul>
     {% for user in users %}
-        <li><a href="user/{{ user.get_profile.uuid }}">{{ user.username }}</a>: {{ user.first_name }} {{ user.last_name }} ({{ user.get_profile.affiliation }}): {{ user.email }}</li>
+        <li><a href="user/{{ user.username }}">{{ user.username }}</a>: {{ user.first_name }} {{ user.last_name }} ({{ user.get_profile.affiliation }}): {{ user.email }}</li>
     {% endfor %}
     </ul>
 {% else %}
@@ -24,7 +24,7 @@ Contents
 	{{ projects|length }} projects 
     <ul>
     {% for project in projects %}
-        <li><a href="project/{{ project.uuid }}">{{ project.name }}</a>: {{ project.summary }} ({{ project.get_visibility_display }}; members: {{ project.users.all|length }})</li>
+        <li><a href="project/{{ project.uuid }}">{{ project.name }}</a>: {{ project.summary }}</li>
     {% endfor %}
     </ul>
 {% else %}

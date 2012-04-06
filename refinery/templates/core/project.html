@@ -8,22 +8,25 @@
 {% if project %}
 	<h2>{{ project.name }} ({{ project.uuid }})</h2>
 	
-	{{ project.summary }}
+	<p>{{ project.description }}</p>
+
+	<p>{{ project.summary }}</p>
+	
+	{% if permissions|length > 0 %}
+		<ul>
+		{% for user, permission in permissions.items %}
+		    <li>{{ user }}: {{ permission|join:" | " }}</li>
+		{% endfor %}
+		</ul>
+	{% else %}
+		No permissions.
+	{% endif %}
+	
 	
 	<small>Created: {{ project.creation_date }} | Last Modified: {{ project.modification_date }} </small>
 	
-    <h3>Users</h3>
-    
-	{% if user_rels|length > 0 %}	
-	    {% for rel in project_rels %}
-	        <li><a href="{% url user rel.user.uuid %}">{{ rel.user.name }}</a> ({{ rel.get_userRole_display }}, joined {{ rel.creation_date }}) </li>
-	    {% endfor %}
-	{% else %}
-		No users.
-	{% endif %}
-	
 {% else %}
-    <p>No valid user.</p>
+    <p>No valid project.</p>
 {% endif %}
 
 {% endblock %}
