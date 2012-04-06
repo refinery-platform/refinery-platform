@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - Data Set {{ data_set.name }}
+{% endblock %}
+
+{% block subheader %}
+ Data Set: <i>{{ data_set.name }}</i>
+{% endblock %}
+
+{% block content %}
+{% if data_set %}
+	<div class="label">Summary</div>	
+	<p>{{ data_set.summary }}</p>
+	
+	<div class="label">Permissions</div>	
+	{% if permissions|length > 0 %}
+		<ul>
+		{% for user, permission in permissions.items %}
+		    <li>{{ user }}: {{ permission|join:" | " }}</li>
+		{% endfor %}
+		</ul>
+	{% else %}
+		No permissions.
+	{% endif %}
+	
+	<div class="label">History</div>	
+	<p>Created: {{ data_set.creation_date }} | Last Modified: {{ data_set.modification_date }}</p>
+	
+	<div class="label">UUID</div>
+	<p class="fixed">{{ data_set.uuid }}</p>	
+	
+{% else %}
+    <p>No valid data set.</p>
+{% endif %}
+
+{% endblock %}

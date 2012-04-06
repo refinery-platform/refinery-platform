@@ -13,7 +13,7 @@ from django.forms import ModelForm
 
 class UserProfile ( models.Model ):
     '''
-    Extended Django user model: https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
+    Extends Django user model: https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
     '''
     uuid = UUIDField( unique=True, auto=True )
 
@@ -42,65 +42,41 @@ class BaseResource ( models.Model ):
     uuid = UUIDField( unique=True, auto=True )
     name = models.CharField( max_length=250 )
     creation_date = models.DateTimeField( auto_now_add=True )
-    modification_date = models.DateTimeField( auto_now=True )
+    modification_date = models.DateTimeField( auto_now=True )    
 
     def __unicode__(self):
-        return self.name + " (created: " + str( self.creation_date ) + ", modified: " + str( self.modification_date ) + ")"
+        return self.name + " (" + self.uuid + ")"
         
     class Meta:
         abstract = True
 
-        
-class AbstractUserResource ( BaseResource ):
-    VISIBILITY_CHOICES = (
-        ( 1, u'Private' ),
-        ( 2, u'Public' ),
-    )    
 
-    visibility = models.IntegerField( choices=VISIBILITY_CHOICES )
-
-    class Meta:
-        abstract = True
-
-        
-class AbstractUserRelationship ( models.Model ):
+class SharableResource ( BaseResource ):
     '''
-    Abstract base class for relationships between users and user resources (projects, data sets, workflows, etc.).
-    
-    See https://docs.djangoproject.com/en/1.3/topics/db/models/#abstract-base-classes for details.
+    Abstract base class for core resources that can be shared (projects, data sets, workflows, workflow engines, etc.).
     '''
 
-    ROLE_CHOICES = (
-        ( 1, u'Administrator' ), # create, read, update, delete,
-        ( 2, u'Editor' ), # read, update
-        ( 3, u'Viewer' ), # read
-    )    
-    
-    user = models.ForeignKey( User )
-    userRole = models.IntegerField( choices=ROLE_CHOICES )     
-    creation_date = models.DateTimeField(  auto_now_add=True )
-    modification_date = models.DateTimeField(  auto_now=True )
-        
     def __unicode__(self):
-        return self.user.username + ": " + self.get_userRole_display() + " of " + self.resource.name
-
+        return self.name
+        
     class Meta:
         abstract = True
-    
+
         
-class DataSet ( AbstractUserResource ):
+class DataSet ( SharableResource ):
     summary = models.CharField( max_length=1000, blank=True )
-
-    users = models.ManyToManyField( User, through="DataSetUserRelationship" )    
 
     def __unicode__(self):
         return self.name + " - " + self.summary
 
-class DataSetUserRelationship( AbstractUserRelationship ):
-    resource = models.ForeignKey( DataSet )
+    class Meta:
+        permissions = (
+            ('read_data_set', 'Can read data set'),
+            ('share_data_set', 'Can share data set'),
+        )
 
 
-class WorkflowDataInput( models.Model ):
+class WorkflowDataInput ( models.Model ):
     name = models.CharField( max_length=200 )
     internal_id = models.IntegerField()
 
@@ -108,53 +84,40 @@ class WorkflowDataInput( models.Model ):
         return self.name + " (" + str( self.internal_id ) + ")"
              
         
-class Workflow ( AbstractUserResource ):
+class Workflow ( SharableResource ):
     summary = models.CharField( max_length=1000, blank=True )
 
-    users = models.ManyToManyField( User, through="WorkflowUserRelationship" )
-    data_inputs = models.ManyToManyField( WorkflowDataInput )
-    internal_id = models.CharField( max_length=50, unique=True )    
+    data_inputs = models.ManyToManyField( WorkflowDataInput, blank=True )
+    internal_id = models.CharField( max_length=50, unique=True, blank=True )    
 
     def __unicode__(self):
         return self.name + " - " + self.summary
 
-
-class WorkflowUserRelationship( AbstractUserRelationship ):
-    resource = models.ForeignKey( Workflow )
-   
+    class Meta:
+        permissions = (
+            ('read_workflow', 'Can read worklow'),
+            ('share_workflow', 'Can share workflow'),
+        )
     
-class Project( models.Model ):
-    uuid = UUIDField( unique=True, auto=True )
-    name = models.CharField( max_length=250 )
+    
+class Project( SharableResource ):
     summary = models.CharField( max_length=1000, blank=True )
-    description = models.CharField( max_length=5000, blank=True )
-    
-    #users = models.ManyToManyField( User, through="ProjectUserRelationship" )    
-    
-    #data_sets = models.ManyToManyField( DataSet, blank=True ) 
-    #workflows = models.ManyToManyField( Workflow, blank=True ) 
+    description = models.CharField( max_length=5000, blank=True )    
 
     def __unicode__(self):
         return self.name + " - " + self.summary
     
-    def save(self, *args, **kwargs):
-        ''' overwriting default save behavior to create relationship between current user and project '''
-        super( Project, self ).save( *args, **kwargs ) # Call the "real" save() method.
+    #def save(self, *args, **kwargs):
+        #''' overwriting default save behavior to create relationship between current user and project '''
+        #super( Project, self ).save( *args, **kwargs ) # Call the "real" save() method.
         # if a user is logged in, create a ProjectUserRelationship with the current user as an administrator
         # if this is done through the admin interface, have the admin select a user an make this user the project administrator
         
     class Meta:
         permissions = (
             ('read_project', 'Can read project'),
+            ('share_project', 'Can share project'),
         )
-
-class ProjectForm( ModelForm ):
-    class Meta:
-        model = Project
-        
-#class ProjectUserRelationship( AbstractUserRelationship ):
-#    resource = models.ForeignKey( Project )
-
 
 class WorkflowDataInputMap( models.Model ):
     #workflow_data_input_internal_id = models.IntegerField()
@@ -167,14 +130,12 @@ class WorkflowDataInputMap( models.Model ):
     
                 
 class Analysis ( BaseResource ):
-    creator = models.ForeignKey( User )
     summary = models.CharField( max_length=1000, blank=True )
-    version = models.IntegerField()
 
-    project = models.ForeignKey( Project )
+    project = models.ForeignKey( Project, related_name="analyses" )
     data_set = models.ForeignKey( DataSet, blank=True )
     workflow = models.ForeignKey( Workflow, blank=True )
-    workflow_data_input_maps = models.ManyToManyField( WorkflowDataInputMap )
+    workflow_data_input_maps = models.ManyToManyField( WorkflowDataInputMap, blank=True )
     workflow_steps_num = models.IntegerField(blank=True, null=True)
     workflow_copy = models.TextField(blank=True, null=True)
     

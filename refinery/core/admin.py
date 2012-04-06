@@ -12,24 +12,28 @@ from core.models import Workflow
 from core.models import WorkflowDataInput
 from core.models import WorkflowDataInputMap
 from core.models import Analysis
-from core.models import WorkflowUserRelationship
-from core.models import DataSetUserRelationship
+from django.contrib.auth.models import Permission
 from guardian.admin import GuardedModelAdmin
 
 
 class ProjectAdmin(GuardedModelAdmin):
     pass
 
+class WorkflowAdmin(GuardedModelAdmin):
+    pass
+
+class DataSetAdmin(GuardedModelAdmin):
+    pass
+
 admin.site.register(UserProfile)
 admin.site.register(Project,ProjectAdmin)
-admin.site.register(DataSet)
-admin.site.register(DataSetUserRelationship)
-admin.site.register(Workflow)
+admin.site.register(DataSet,DataSetAdmin)
+admin.site.register(Workflow,WorkflowAdmin)
 admin.site.register(WorkflowDataInput)
 admin.site.register(WorkflowDataInputMap)
-admin.site.register(WorkflowUserRelationship)
 admin.site.register(Analysis)
 
+admin.site.register( Permission )
 
 
 

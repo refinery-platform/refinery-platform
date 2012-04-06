@@ -1,21 +1,18 @@
 {% extends "base.html" %}
 
 {% block title %}
-{{ block.super }} - Project {{ project.name }}
+{{ block.super }} - Workflow {{ workflow.name }}
 {% endblock %}
 
 {% block subheader %}
- Project: <i>{{ project.name }}</i>
+Workflow: <i>{{ workflow.name }}</i>
 {% endblock %}
 
 {% block content %}
-{% if project %}
+{% if workflow %}	
 	<div class="label">Summary</div>
-	<p>{{ project.summary }}</p>
+	<p>{{ workflow.summary }}</p>
 	
-	<div class="label">Description</div>
-	<p>{{ project.description }}</p>
-
 	<div class="label">Permissions</div>
 	{% if permissions|length > 0 %}
 		<ul>
@@ -28,12 +25,12 @@
 	{% endif %}
 	
 	<div class="label">History</div>	
-	<p>Created: {{ project.creation_date }} | Last Modified: {{ project.modification_date }} </p>
-
+	<p>Created: {{ workflow.creation_date }} | Last Modified: {{ workflow.modification_date }}</p>
+	
 	<div class="label">UUID</div>
-	<p class="fixed">{{ project.uuid }}</p>		
+	<p class="fixed">{{ workflow.uuid }}</p>	
 {% else %}
-    <p>No valid project.</p>
+    <p>No valid workflow.</p>
 {% endif %}
 
 {% endblock %}
