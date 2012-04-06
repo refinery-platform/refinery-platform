@@ -139,9 +139,18 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
     'djcelery', #django-celery
+    'guardian',
     'galaxy_connector',
     'refinery_repository',
     'core',
+    'analysis_manager',
+    'workflow_manager'    
+)
+
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend', # default
+    'guardian.backends.ObjectPermissionBackend',
 )
 
 # A sample logging configuration. The only tangible logging
