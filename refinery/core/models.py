@@ -9,7 +9,7 @@ from django_extensions.db.fields import UUIDField
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.forms import ModelForm
-
+from galaxy_connector.models import Instance
 
 class UserProfile ( models.Model ):
     '''
@@ -41,6 +41,7 @@ class BaseResource ( models.Model ):
     '''
     uuid = UUIDField( unique=True, auto=True )
     name = models.CharField( max_length=250 )
+    summary = models.CharField( max_length=1000, blank=True )
     creation_date = models.DateTimeField( auto_now_add=True )
     modification_date = models.DateTimeField( auto_now=True )    
 
@@ -64,7 +65,6 @@ class SharableResource ( BaseResource ):
 
         
 class DataSet ( SharableResource ):
-    summary = models.CharField( max_length=1000, blank=True )
 
     def __unicode__(self):
         return self.name + " - " + self.summary
@@ -82,13 +82,29 @@ class WorkflowDataInput ( models.Model ):
 
     def __unicode__(self):
         return self.name + " (" + str( self.internal_id ) + ")"
-             
+
+
+class WorkflowEngine ( SharableResource ):
+    # TODO: remove Galaxy dependency
+    instance = models.ForeignKey( Instance, blank=True )
+    
+    def __unicode__(self):
+        return self.name + " - " + self.summary
+
+    class Meta:
+        permissions = (
+            ('read_workflow_engine', 'Can read workflow engine'),
+            ('share_workflow_engine', 'Can share workflow engine'),
+        )
+                 
         
 class Workflow ( SharableResource ):
-    summary = models.CharField( max_length=1000, blank=True )
 
     data_inputs = models.ManyToManyField( WorkflowDataInput, blank=True )
-    internal_id = models.CharField( max_length=50, unique=True, blank=True )    
+    internal_id = models.CharField( max_length=50, unique=True, blank=True )
+    
+    # TODO: require this information
+    workflow_engine = models.ForeignKey( WorkflowEngine, blank=True, null=True )    
 
     def __unicode__(self):
         return self.name + " - " + self.summary
@@ -98,10 +114,9 @@ class Workflow ( SharableResource ):
             ('read_workflow', 'Can read worklow'),
             ('share_workflow', 'Can share workflow'),
         )
-    
+
     
 class Project( SharableResource ):
-    summary = models.CharField( max_length=1000, blank=True )
     description = models.CharField( max_length=5000, blank=True )    
 
     def __unicode__(self):
@@ -130,8 +145,6 @@ class WorkflowDataInputMap( models.Model ):
     
                 
 class Analysis ( BaseResource ):
-    summary = models.CharField( max_length=1000, blank=True )
-
     project = models.ForeignKey( Project, related_name="analyses" )
     data_set = models.ForeignKey( DataSet, blank=True )
     workflow = models.ForeignKey( Workflow, blank=True )
