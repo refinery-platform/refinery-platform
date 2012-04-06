@@ -147,11 +147,17 @@ INSTALLED_APPS = (
     'workflow_manager'    
 )
 
-
+# NG: added for django-guardian
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend', # default
     'guardian.backends.ObjectPermissionBackend',
 )
+
+# NG: added to support anonymous users through django-guardian (id can be set to any value apparently)
+ANONYMOUS_USER_ID = -1
+
+# NG: added to enable user profiles (recommended way to extend Django user model)
+AUTH_PROFILE_MODULE = 'core.UserProfile'
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to

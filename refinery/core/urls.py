@@ -1,4 +1,9 @@
-#isatab pages
+'''
+Created on Feb 20, 2012
+
+@author: nils
+'''
+
 from django.conf.urls.defaults import patterns, url
 
 urlpatterns = patterns('core.views',
