@@ -86,7 +86,6 @@ def workflows(request):
     instance, connection = checkActiveInstance(request);
     return render_to_response( "galaxy_connector/workflows.html", { "workflows": connection.get_complete_workflows(), "instance": instance.description }, context_instance=RequestContext( request ) )
 
-
 def run(request):    
 
     instance, connection = checkActiveInstance(request);

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - Workflow Engine {{ workflow_engine.name }}
+{% endblock %}
+
+{% block subheader %}
+Workflow Engine: <i>{{ workflow_engine.name }}</i>
+{% endblock %}
+
+{% block content %}
+{% if workflow_engine %}	
+	<div class="label">Summary</div>
+	<p>{{ workflow_engine.summary }}</p>
+
+	<div class="label">Instance</div>
+	<p>{{ workflow_engine.instance }} at <a href="{{workflow_engine.instance.base_url}}">{{workflow_engine.instance.base_url}}</a></p>
+	
+	<div class="label">Permissions</div>
+	{% if permissions|length > 0 %}
+		<ul>
+		{% for user, permission in permissions.items %}
+		    <li>{{ user }}: {{ permission|join:" | " }}</li>
+		{% endfor %}
+		</ul>
+	{% else %}
+		No permissions.
+	{% endif %}
+	
+	<div class="label">History</div>	
+	<p>Created: {{ workflow_engine.creation_date }} | Last Modified: {{ workflow_engine.modification_date }}</p>
+	
+	<div class="label">UUID</div>
+	<p class="fixed">{{ workflow_engine.uuid }}</p>	
+{% else %}
+    <p>No valid workflow engine.</p>
+{% endif %}
+
+{% endblock %}

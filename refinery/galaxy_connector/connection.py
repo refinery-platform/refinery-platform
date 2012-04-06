@@ -114,19 +114,6 @@ class Connection( object ):
             return ( history_content["data_type"] )
 
 
-    def get_history_file_type( self, history_id, content_id ):
-        '''
-        Content_id expected to be of type "file".
-        Returns the history content data_type, i.e. the file type of a content item in the history.
-        ''' 
-        history_content = self.get_history_content( history_id, content_id )        
-        
-        if "data_type" not in history_content:
-            return ( None )
-        else:
-            return ( history_content["data_type"] )
-        
-        
     def get_history_file_list( self, history_id ):
         '''
         Returns a list of dictionaries that contain the name, type, state and download URL of all _files_ in a history.
