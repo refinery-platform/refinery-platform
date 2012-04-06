@@ -12,13 +12,16 @@ from core.models import Workflow
 from core.models import WorkflowDataInput
 from core.models import WorkflowDataInputMap
 from core.models import Analysis
-from core.models import ProjectUserRelationship
 from core.models import WorkflowUserRelationship
 from core.models import DataSetUserRelationship
+from guardian.admin import GuardedModelAdmin
+
+
+class ProjectAdmin(GuardedModelAdmin):
+    pass
 
 admin.site.register(UserProfile)
-admin.site.register(Project)
-admin.site.register(ProjectUserRelationship)
+admin.site.register(Project,ProjectAdmin)
 admin.site.register(DataSet)
 admin.site.register(DataSetUserRelationship)
 admin.site.register(Workflow)

@@ -6,15 +6,15 @@
 
 {% block content %}
 {% if user %}
-	<h2>{{ user.first_name }} {{ user.last_name }}: {{ user.username }} ({{ user.get_profile.uuid }})</h2>
+	<h2>{{ user.first_name }} {{ user.last_name }}: {{ user.username }} ({{ user.id }})</h2>
 	
 	<small>Created: {{ user.creation_date }} | Last Modified: {{ user.modification_date }} </small>
 	
     <h3>Projects</h3>
     
-	{% if project_rels|length > 0 %}	
-	    {% for rel in project_rels %}	    		    	
-	        <li><a href="{% url project rel.resource.uuid %}">{{ rel.resource.name }}</a> ({{ rel.get_userRole_display }}, joined {{ rel.creation_date }}) </li>
+	{% if projects|length > 0 %}	
+	    {% for project in projects %}	    		    	
+	        <li>{{ project.name }} ({{ project.uuid }})</li>
 	    {% endfor %}
 	{% else %}
 		No projects.

@@ -137,58 +137,6 @@
    },
    {
       "pk": 1,
-      "model": "core.project",
-      "fields": {
-         "uuid": "60904f73-7296-11e1-886d-c8bcc8ed32d3",
-         "modification_date": "2012-03-20 09:09:58",
-         "description": "",
-         "visibility": 2,
-         "summary": "",
-         "workflows": [],
-         "data_sets": [],
-         "creation_date": "2012-03-20 09:09:58",
-         "name": "Test Project 1"
-      }
-   },
-   {
-      "pk": 2,
-      "model": "core.project",
-      "fields": {
-         "uuid": "668d2366-7296-11e1-9e01-c8bcc8ed32d3",
-         "modification_date": "2012-03-20 09:10:08",
-         "description": "",
-         "visibility": 1,
-         "summary": "",
-         "workflows": [],
-         "data_sets": [],
-         "creation_date": "2012-03-20 09:10:08",
-         "name": "Test Project 2"
-      }
-   },
-   {
-      "pk": 1,
-      "model": "core.projectuserrelationship",
-      "fields": {
-         "creation_date": "2012-03-20 09:30:10",
-         "resource": 1,
-         "user": 1,
-         "modification_date": "2012-03-20 09:30:10",
-         "userRole": 1
-      }
-   },
-   {
-      "pk": 2,
-      "model": "core.projectuserrelationship",
-      "fields": {
-         "creation_date": "2012-03-20 09:30:21",
-         "resource": 2,
-         "user": 2,
-         "modification_date": "2012-03-20 09:30:21",
-         "userRole": 1
-      }
-   },
-   {
-      "pk": 1,
       "model": "core.workflowdatainputmap",
       "fields": {
          "workflow_data_input_name": "input1",
