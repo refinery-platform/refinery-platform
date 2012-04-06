@@ -12,6 +12,9 @@ Workflow: <i>{{ workflow.name }}</i>
 {% if workflow %}	
 	<div class="label">Summary</div>
 	<p>{{ workflow.summary }}</p>
+
+	<div class="label">Internal Id</div>
+	<p>{{ workflow.internal_id }} (<a href="/workflow_manager/{{workflow.uuid}}/download">Download</a>)</p>
 	
 	<div class="label">Permissions</div>
 	{% if permissions|length > 0 %}

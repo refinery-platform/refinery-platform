@@ -47,17 +47,16 @@ Launch Pad for {{ user.first_name }}
     <p>No projects available.</p>
 {% endif %}
 
-{% if workflows %}
-	<h2>Workflows ({{ workflows|length }})</h2> 
+{% if workflow_engines %}
+	<h2>Workflow Engines ({{ workflow_engines|length }})</h2> 
     <ul>
-    {% for workflow in workflows %}
-        <li><a href="workflow/{{ workflow.uuid }}">{{ workflow.name }}</a>
-		    <ol>
-			{% for data_input in workflow.data_inputs.all %}
-			    <li>{{ data_input.name }} ({{ data_input.internal_id }})</li>
-			{% endfor %}
-			</ol>
-		</li>
+    {% for workflow_engine in workflow_engines %}
+        <li><a href="workflow_engine/{{ workflow_engine.uuid }}">{{ workflow_engine.name }}</a> ({{workflow_engine.workflow_set.all|length}})</li>
+        <ul>
+        	{% for workflow in workflow_engine.workflow_set.all %}
+        		<li><a href="workflow/{{ workflow.uuid }}">{{ workflow.name }}</a></li>
+    		{% endfor %}
+        </ul>
     {% endfor %}
     </ul>
 {% else %}
