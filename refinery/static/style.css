@@ -40,6 +40,7 @@ body {
 #header_area h1 {
 	margin-bottom: 3px;
 	margin-top: 3px;
+	letter-spacing: 0.03em;
 }
 
 #header_area h1 a {
@@ -76,11 +77,32 @@ body {
 }
 
 #content_area h2 {
-    font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;	
+    font-family: "Open Sans", "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
 }
 
 #content_area h3 {
-    font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;	
+    font-family: "Open Sans", "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+}
+
+#content_area p {
+	margin-top: 0px;
+	margin-bottom: 2px;
+}
+
+#content_area p.fixed {
+	font: small "Courier New", Courier, mono;
+}
+
+#content_area ul {
+	margin-top: 0px;
+	margin-bottom: 2px;
+}
+
+
+#content_area .label {
+	margin-top: 10px;
+    color: #999;	
+    font: 12px "Arvo", "Lucida Grande", Lucida, Verdana, sans-serif;
 }
 
 

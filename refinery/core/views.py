@@ -3,22 +3,24 @@ from django.contrib.auth.models import User
 from django.template import RequestContext
 from django.shortcuts import render_to_response, get_object_or_404
 from core.tasks import grab_workflows
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from guardian.shortcuts import get_objects_for_user, get_perms, get_users_with_perms
 
 
 @login_required()
 def index(request):
-    users = User.objects.all()
-    #projects = Project.objects.all()
-    projects = get_objects_for_user( request.user, ["core.read_project", "core.change_project"] )
-    workflows = Workflow.objects.all()
-    data_sets = DataSet.objects.all()
     
-    analyses = Analysis.objects.all()
-    
-    return render_to_response('core/index.html', {'users': users, 'projects': projects, 'workflows': workflows, 'data_sets': data_sets, 'analyses': analyses }, context_instance=RequestContext( request ) )
+    if request.user.is_superuser:
+        users = User.objects.all()
+    else:
+        users = []
+
+    projects = get_objects_for_user( request.user, "core.read_project" )
+    workflows = get_objects_for_user( request.user, "core.read_workflow" )
+    data_sets = get_objects_for_user( request.user, "core.read_data_set" )
+            
+    return render_to_response('core/index.html', {'users': users, 'projects': projects, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext( request ) )
 
 @login_required()
 def user(request,query):
@@ -27,20 +29,46 @@ def user(request,query):
         user = User.objects.get( username=query )
     except User.DoesNotExist:
         user = get_object_or_404( UserProfile, uuid=query ).user
-            
-    projects = get_objects_for_user( request.user, ["core.read_project", "core.change_project"] )
-    
-    return render_to_response('core/user.html', {'user': user, 'projects': projects }, context_instance=RequestContext( request ) )
+        
+    if not request.user.id == user.id:
+        return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view the profile of user " + user.username + ".</h1>" )
+                        
+    return render_to_response('core/user.html', {'user': user }, context_instance=RequestContext( request ) )
 
 
-@login_required()
 def project(request,uuid):
     project = get_object_or_404( Project, uuid=uuid )
+    
+    if not request.user.has_perm('core.read_project', project ):
+        return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this project.</h1>" )
+            
     permissions = get_users_with_perms( project, attach_perms=True )
     
-    print permissions
-    
     return render_to_response('core/project.html', { 'project': project, "permissions": permissions }, context_instance=RequestContext( request ) )
+
+
+def data_set(request,uuid):
+    
+    data_set = get_object_or_404( DataSet, uuid=uuid )
+    
+    if not request.user.has_perm('core.read_data_set', data_set ):
+        return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this data set.</h1>" )
+        
+    permissions = get_users_with_perms( data_set, attach_perms=True )
+    
+    return render_to_response('core/data_set.html', { 'data_set': data_set, "permissions": permissions }, context_instance=RequestContext( request ) )
+
+
+def workflow(request,uuid):
+    
+    workflow = get_object_or_404( Workflow, uuid=uuid )
+    
+    if not request.user.has_perm('core.read_workflow', workflow ):
+        return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this workflow.</h1>" )
+        
+    permissions = get_users_with_perms( workflow, attach_perms=True )
+    
+    return render_to_response('core/workflow.html', { 'workflow': workflow, "permissions": permissions }, context_instance=RequestContext( request ) )
 
 
 @login_required()

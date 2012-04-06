@@ -1,221 +1,229 @@
 [
-   {
-      "pk": 1,
-      "model": "core.dataset",
-      "fields": {
-         "uuid": "6cbfcde1-7296-11e1-82fe-c8bcc8ed32d3",
-         "modification_date": "2012-03-20 09:10:19",
-         "visibility": 1,
-         "summary": "",
-         "creation_date": "2012-03-20 09:10:19",
-         "name": "Data Set 1"
-      }
-   },
-   {
-      "pk": 2,
-      "model": "core.dataset",
-      "fields": {
-         "uuid": "7167ffb8-7296-11e1-b8a0-c8bcc8ed32d3",
-         "modification_date": "2012-03-20 09:10:27",
-         "visibility": 2,
-         "summary": "",
-         "creation_date": "2012-03-20 09:10:27",
-         "name": "Data Set 2"
-      }
-   },
-   {
-      "pk": 1,
-      "model": "core.datasetuserrelationship",
-      "fields": {
-         "creation_date": "2012-03-20 09:29:29",
-         "resource": 1,
-         "user": 1,
-         "modification_date": "2012-03-20 09:29:29",
-         "userRole": 1
-      }
-   },
-   {
-      "pk": 2,
-      "model": "core.datasetuserrelationship",
-      "fields": {
-         "creation_date": "2012-03-20 09:29:44",
-         "resource": 2,
-         "user": 1,
-         "modification_date": "2012-03-20 09:29:44",
-         "userRole": 3
-      }
-   },
-   {
-      "pk": 3,
-      "model": "core.datasetuserrelationship",
-      "fields": {
-         "creation_date": "2012-03-20 09:29:55",
-         "resource": 2,
-         "user": 2,
-         "modification_date": "2012-03-20 09:29:55",
-         "userRole": 1
-      }
-   },
-   {
-      "pk": 1,
-      "model": "core.workflowdatainput",
-      "fields": {
-         "name": "file1",
-         "internal_id": 1
-      }
-   },
-   {
-      "pk": 2,
-      "model": "core.workflowdatainput",
-      "fields": {
-         "name": "file2",
-         "internal_id": 2
-      }
-   },
-   {
-      "pk": 3,
-      "model": "core.workflowdatainput",
-      "fields": {
-         "name": "file3",
-         "internal_id": 3
-      }
-   },
-   {
-      "pk": 1,
-      "model": "core.workflow",
-      "fields": {
-         "data_inputs": [
-            1,
-            3
-         ],
-         "uuid": "cdbbd123-7299-11e1-b6db-c8bcc8ed32d3",
-         "modification_date": "2012-03-20 09:34:30",
-         "visibility": 2,
-         "summary": "",
-         "internal_id": "123",
-         "creation_date": "2012-03-20 09:34:30",
-         "name": "Test Workflow 1"
-      }
-   },
-   {
-      "pk": 2,
-      "model": "core.workflow",
-      "fields": {
-         "data_inputs": [
-            2
-         ],
-         "uuid": "4d9f87e6-729f-11e1-bd93-c8bcc8ed32d3",
-         "modification_date": "2012-03-20 10:13:52",
-         "visibility": 2,
-         "summary": "",
-         "internal_id": "132",
-         "creation_date": "2012-03-20 10:13:52",
-         "name": "Test Workflow 2"
-      }
-   },
-   {
-      "pk": 1,
-      "model": "core.workflowuserrelationship",
-      "fields": {
-         "creation_date": "2012-03-20 09:34:32",
-         "resource": 1,
-         "user": 1,
-         "modification_date": "2012-03-20 09:34:32",
-         "userRole": 1
-      }
-   },
-   {
-      "pk": 2,
-      "model": "core.workflowuserrelationship",
-      "fields": {
-         "creation_date": "2012-03-20 09:34:45",
-         "resource": 1,
-         "user": 2,
-         "modification_date": "2012-03-20 09:34:45",
-         "userRole": 3
-      }
-   },
-   {
-      "pk": 1,
-      "model": "core.workflowdatainputmap",
-      "fields": {
-         "workflow_data_input_name": "input1",
-         "data_uuid": "2339af14-7297-11e1-9f19-c8bcc8ed32d3"
-      }
-   },
-   {
-      "pk": 2,
-      "model": "core.workflowdatainputmap",
-      "fields": {
-         "workflow_data_input_name": "input3",
-         "data_uuid": "08d2b86e-7299-11e1-aa99-c8bcc8ed32d3"
-      }
-   },
-   {
-      "pk": 3,
-      "model": "core.workflowdatainputmap",
-      "fields": {
-         "workflow_data_input_name": "input2",
-         "data_uuid": "5d99644f-729f-11e1-9218-c8bcc8ed32d3"
-      }
-   },
-   {
-      "pk": 1,
-      "model": "core.analysis",
-      "fields": {
-         "uuid": "618dbc94-729a-11e1-9df5-c8bcc8ed32d3",
-         "modification_date": "2012-03-20 09:38:38",
-         "creator": 1,
-         "data_set": 1,
-         "workflow": 1,
-         "summary": "Test Analysis 1",
-         "project": 1,
-         "version": 1,
-         "workflow_data_input_maps": [
-            1,
-            2
-         ],
-         "creation_date": "2012-03-20 09:38:38",
-         "name": "Analysis 1"
-      }
-   },
-   {
-      "pk": 2,
-      "model": "core.analysis",
-      "fields": {
-         "uuid": "7237f6f5-729a-11e1-b076-c8bcc8ed32d3",
-         "modification_date": "2012-03-20 10:13:30",
-         "creator": 1,
-         "data_set": 1,
-         "workflow": 1,
-         "summary": "Test Analysis 2",
-         "project": 2,
-         "version": 1,
-         "workflow_data_input_maps": [
-            1,
-            2
-         ],
-         "creation_date": "2012-03-20 09:39:06",
-         "name": "Analysis 2"
-      }
-   },
-   {
-      "pk": 3,
-      "model": "core.analysis",
-      "fields": {
-         "uuid": "61c5e92e-729f-11e1-a91d-c8bcc8ed32d3",
-         "modification_date": "2012-03-20 10:14:40",
-         "creator": 1,
-         "data_set": 2,
-         "workflow": 2,
-         "summary": "An analysis that is using Workflow 2.",
-         "project": 1,
-         "version": 1,
-         "workflow_data_input_maps": [
-            3
-         ],
-         "creation_date": "2012-03-20 10:14:26",
-         "name": "Analysis 3"
-      }
-   }
+    {
+        "pk": 1,
+        "model": "core.userprofile",
+        "fields": {
+            "affiliation": "Harvard Medical School",
+            "uuid": "a1a9ec54-7ff0-11e1-8ece-109add4e19d8",
+            "user": 1
+        }
+    },
+    {
+        "pk": 2,
+        "model": "core.userprofile",
+        "fields": {
+            "affiliation": "Boston University",
+            "uuid": "ad92ed8a-7ff0-11e1-b9db-109add4e19d8",
+            "user": 2
+        }
+    },
+    {
+        "pk": 3,
+        "model": "core.userprofile",
+        "fields": {
+            "affiliation": "Harvard School of Public Health",
+            "uuid": "b8d56497-7ff0-11e1-b92d-109add4e19d8",
+            "user": 3
+        }
+    },
+    {
+        "pk": 4,
+        "model": "core.userprofile",
+        "fields": {
+            "affiliation": "Harvard School of Public Health",
+            "uuid": "dfa860b5-7ff0-11e1-8e69-109add4e19d8",
+            "user": 4
+        }
+    },
+    {
+        "pk": 5,
+        "model": "core.userprofile",
+        "fields": {
+            "affiliation": "Brigham & Women's Hospital",
+            "uuid": "09ad4c9c-7ff1-11e1-aafe-109add4e19d8",
+            "user": 5
+        }
+    },
+    {
+        "pk": 6,
+        "model": "core.userprofile",
+        "fields": {
+            "affiliation": "",
+            "uuid": "2e60757d-7ff4-11e1-ae6e-109add4e19d8",
+            "user": 6
+        }
+    },
+    {
+        "pk": 1,
+        "model": "core.dataset",
+        "fields": {
+            "creation_date": "2012-04-06 09:53:13",
+            "summary": "Data Set 1 summary.",
+            "uuid": "6a1e4be8-7ff2-11e1-83c4-109add4e19d8",
+            "modification_date": "2012-04-06 09:53:13",
+            "name": "Data Set 1"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "core.dataset",
+        "fields": {
+            "creation_date": "2012-04-06 09:53:13",
+            "summary": "Data Set 2 summary.",
+            "uuid": "7029714a-7ff2-11e1-9704-109add4e19d8",
+            "modification_date": "2012-04-06 09:53:13",
+            "name": "Data Set 2"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "core.dataset",
+        "fields": {
+            "creation_date": "2012-04-06 09:53:13",
+            "summary": "Data Set 3 summary.",
+            "uuid": "7540dd45-7ff2-11e1-9048-109add4e19d8",
+            "modification_date": "2012-04-06 09:53:13",
+            "name": "Data Set 3"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "core.dataset",
+        "fields": {
+            "creation_date": "2012-04-06 09:53:13",
+            "summary": "Data Set 4 summary.",
+            "uuid": "7bca1e0a-7ff2-11e1-8b13-109add4e19d8",
+            "modification_date": "2012-04-06 09:53:13",
+            "name": "Data Set 4"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "core.workflowdatainput",
+        "fields": {
+            "name": "input1",
+            "internal_id": 1
+        }
+    },
+    {
+        "pk": 2,
+        "model": "core.workflowdatainput",
+        "fields": {
+            "name": "input2",
+            "internal_id": 2
+        }
+    },
+    {
+        "pk": 1,
+        "model": "core.workflow",
+        "fields": {
+            "data_inputs": [
+                1,
+                2
+            ],
+            "uuid": "a14a5e5e-7ff2-11e1-a040-109add4e19d8",
+            "internal_id": "1",
+            "name": "Workflow 1",
+            "creation_date": "2012-04-06 09:53:13",
+            "summary": "Workflow 1 summary.",
+            "modification_date": "2012-04-06 09:53:13"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "core.workflow",
+        "fields": {
+            "data_inputs": [
+                2
+            ],
+            "uuid": "7c096f05-8001-11e1-a9b9-109add4e19d8",
+            "internal_id": "",
+            "name": "Workflow 2",
+            "creation_date": "2012-04-06 10:59:26",
+            "summary": "Workflow 2 summary.",
+            "modification_date": "2012-04-06 10:59:26"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "core.project",
+        "fields": {
+            "description": "Project 1 description.",
+            "modification_date": "2012-04-06 09:53:13",
+            "name": "Project 1",
+            "creation_date": "2012-04-06 09:53:13",
+            "summary": "Project 1 summary.",
+            "uuid": "33bab873-7ff2-11e1-b1fc-109add4e19d8"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "core.project",
+        "fields": {
+            "description": "Project 2 description.",
+            "modification_date": "2012-04-06 09:53:13",
+            "name": "Project 2",
+            "creation_date": "2012-04-06 09:53:13",
+            "summary": "Project 2 summary.",
+            "uuid": "3bab6b94-7ff2-11e1-be37-109add4e19d8"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "core.project",
+        "fields": {
+            "description": "Project 3 description.",
+            "modification_date": "2012-04-06 09:53:53",
+            "name": "Project 3",
+            "creation_date": "2012-04-06 09:53:13",
+            "summary": "Project 3 summary.",
+            "uuid": "447ff9f5-7ff2-11e1-82a2-109add4e19d8"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "core.project",
+        "fields": {
+            "description": "Project 4 description.",
+            "modification_date": "2012-04-06 09:53:13",
+            "name": "Project 4",
+            "creation_date": "2012-04-06 09:53:13",
+            "summary": "Project 4 summary.",
+            "uuid": "4ee49ab3-7ff2-11e1-9a2e-109add4e19d8"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "core.analysis",
+        "fields": {
+            "workflow_steps_num": null,
+            "uuid": "52bb25b0-7ff8-11e1-8abe-109add4e19d8",
+            "modification_date": "2012-04-06 09:53:51",
+            "workflow": 1,
+            "data_set": 1,
+            "creation_date": "2012-04-06 09:53:51",
+            "project": 3,
+            "workflow_copy": "",
+            "workflow_data_input_maps": [],
+            "summary": "Analysis with Workflow 1 on Data Set 1",
+            "name": "Workflow 1 Analysis"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "core.analysis",
+        "fields": {
+            "workflow_steps_num": null,
+            "uuid": "a129cd17-8002-11e1-9a0d-109add4e19d8",
+            "modification_date": "2012-04-06 11:07:38",
+            "workflow": 2,
+            "data_set": 3,
+            "creation_date": "2012-04-06 11:07:38",
+            "project": 4,
+            "workflow_copy": "",
+            "workflow_data_input_maps": [],
+            "summary": "",
+            "name": "Workflow 2 Analysis"
+        }
+    }
 ]

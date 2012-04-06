@@ -5,26 +5,42 @@
 {% endblock %}
 
 {% block subheader %}
-Contents
+Launch Pad for {{ user.first_name }} 
 {% endblock %}
 
 {% block content %}
 {% if users %}
-	{{ users|length }} users 
+	<!-- only super users get to see this -->
+	<h2>Users ({{ users|length}})</h2> 
     <ul>
     {% for user in users %}
         <li><a href="user/{{ user.username }}">{{ user.username }}</a>: {{ user.first_name }} {{ user.last_name }} ({{ user.get_profile.affiliation }}): {{ user.email }}</li>
     {% endfor %}
     </ul>
-{% else %}
-    <p>No users available.</p>
 {% endif %}
 
 {% if projects %}
-	{{ projects|length }} projects 
+	<h2>Projects ({{ projects|length }})</h2> 
     <ul>
     {% for project in projects %}
-        <li><a href="project/{{ project.uuid }}">{{ project.name }}</a>: {{ project.summary }}</li>
+        <li><a href="project/{{ project.uuid }}">{{ project.name }}</a>        	
+		    <ul>
+		    {% for analysis in project.analyses.all %}
+		        <li>{{  analysis.name }}: {{ analysis.summary }}
+		        	<ul>
+						<li><i>Data Set</i>: {{ analysis.data_set.name }}
+						<li><i>Workflow</i>: {{ analysis.workflow.name }}
+							<ul>
+							    {% for map in analysis.workflow_data_input_maps.all %}
+							    	<li>{{ map }}</li>
+							    {% endfor %}						
+							</ul>
+						</li>				
+		        	</ul>
+		    	</li>
+		    {% endfor %}
+		    </ul>	        
+        </li>                
     {% endfor %}
     </ul>
 {% else %}
@@ -32,10 +48,10 @@ Contents
 {% endif %}
 
 {% if workflows %}
-	{{ workflows|length }} workflows 
+	<h2>Workflows ({{ workflows|length }})</h2> 
     <ul>
     {% for workflow in workflows %}
-        <li>{{ workflow.name }}: {{ workflow.summary }} ({{ workflow.get_visibility_display }}; members: {{ workflow.users.all|length }})
+        <li><a href="workflow/{{ workflow.uuid }}">{{ workflow.name }}</a>
 		    <ol>
 			{% for data_input in workflow.data_inputs.all %}
 			    <li>{{ data_input.name }} ({{ data_input.internal_id }})</li>
@@ -49,40 +65,14 @@ Contents
 {% endif %}
 
 {% if data_sets %}
-	{{ data_sets|length }} data sets 
+	<h2>Data Sets ({{ data_sets|length }})</h2> 
     <ul>
     {% for data_set in data_sets %}
-        <li><a href="data_set/{{ data_set.uuid }}">{{ data_set.name }}</a>: {{ data_set.summary }} ({{ data_set.get_visibility_display }}; members: {{ data_set.users.all|length }})</li>
+        <li><a href="data_set/{{ data_set.uuid }}">{{ data_set.name }}</a></li>
     {% endfor %}
     </ul>
 {% else %}
     <p>No data sets available.</p>
 {% endif %}
-
-{% if analyses %}
-	{{ analyses|length }} analyses 
-    <ul>
-    {% for analysis in analyses %}
-        <li>{{  analysis.name }}: {{ analysis.summary }}
-        	<ul>
-				<li><i>Project</i>: {{ analysis.project.name }}</li>
-				<li><i>Workflow</i>: {{ analysis.workflow.name }}
-					<ul>
-					    {% for map in analysis.workflow_data_input_maps.all %}
-					    	<li>{{ map }}</li>
-					    {% endfor %}						
-					</ul>
-				</li>				
-				<li><i>Data Set</i>: {{ analysis.data_set.name }}</li>        		
-        	</ul>
-    	</li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No analyses available.</p>
-{% endif %}
-
-
-
 
 {% endblock %}
