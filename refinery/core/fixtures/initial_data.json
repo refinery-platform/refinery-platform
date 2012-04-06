@@ -1,34 +1,6 @@
 [
    {
       "pk": 1,
-      "model": "core.user",
-      "fields": {
-         "first_name": "Nils",
-         "last_name": "Gehlenborg",
-         "uuid": "3f0bbfdc-7296-11e1-a492-c8bcc8ed32d3",
-         "modification_date": "2012-03-20 09:09:02",
-         "creation_date": "2012-03-20 09:09:02",
-         "affiliation": "Harvard Medical School",
-         "email": "nils@hms.harvard.edu",
-         "name": "nils"
-      }
-   },
-   {
-      "pk": 2,
-      "model": "core.user",
-      "fields": {
-         "first_name": "Richard",
-         "last_name": "Park",
-         "uuid": "50a638b0-7296-11e1-ae82-c8bcc8ed32d3",
-         "modification_date": "2012-03-20 09:09:32",
-         "creation_date": "2012-03-20 09:09:32",
-         "affiliation": "Boston University",
-         "email": "rpark@bu.edu",
-         "name": "rpark"
-      }
-   },
-   {
-      "pk": 1,
       "model": "core.dataset",
       "fields": {
          "uuid": "6cbfcde1-7296-11e1-82fe-c8bcc8ed32d3",

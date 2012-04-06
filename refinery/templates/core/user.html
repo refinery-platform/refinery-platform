@@ -1,4 +1,4 @@
-{% extends "core/base.html" %}
+{% extends "base.html" %}
 
 {% block title %}
 {{ block.super }} - User {{ user.name }}
@@ -6,7 +6,7 @@
 
 {% block content %}
 {% if user %}
-	<h2>{{ user.first_name }} {{ user.last_name }}: {{ user.name }} ({{ user.uuid }})</h2>
+	<h2>{{ user.first_name }} {{ user.last_name }}: {{ user.username }} ({{ user.get_profile.uuid }})</h2>
 	
 	<small>Created: {{ user.creation_date }} | Last Modified: {{ user.modification_date }} </small>
 	

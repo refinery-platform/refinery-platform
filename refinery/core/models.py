@@ -1,10 +1,40 @@
+'''
+Created on Feb 20, 2012
+
+@author: nils
+'''
+
 from django.db import models
 from django_extensions.db.fields import UUIDField
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+
+
+class UserProfile ( models.Model ):
+    '''
+    Extended Django user model: https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
+    '''
+    uuid = UUIDField( unique=True, auto=True )
+
+    user = models.OneToOneField( User )
+    affiliation = models.CharField( max_length=100, blank=True )
+
+    def __unicode__(self):
+        return self.user.first_name + " " + self.user.last_name + " (" + self.affiliation + "): " + self.user.email
+
+
+# automatic creation of a user profile when a user is created: 
+def create_user_profile( sender, instance, created, **kwargs ):
+    if created:
+        UserProfile.objects.create( user=instance )
+
+post_save.connect( create_user_profile, sender=User )            
+
 
 
 class BaseResource ( models.Model ):
     '''
-    Abstract base class for core resources such as users, projects, analyses, data sets and so on.
+    Abstract base class for core resources such as projects, analyses, data sets and so on.
     
     See https://docs.djangoproject.com/en/1.3/topics/db/models/#abstract-base-classes for details.
     '''
@@ -18,17 +48,6 @@ class BaseResource ( models.Model ):
         
     class Meta:
         abstract = True
-
-
-class User ( BaseResource ):
-    first_name = models.CharField( max_length=50 ) 
-    last_name = models.CharField( max_length=50 )    
-    # email address length: http://www.rfc-editor.org/errata_search.php?rfc=3696&eid=1690    
-    email = models.EmailField( max_length=254 )
-    affiliation = models.CharField( max_length=100, blank=True )
-            
-    def __unicode__(self):
-        return self.first_name + " " + self.last_name + " (" + self.email + ")"
 
         
 class AbstractUserResource ( BaseResource ):
@@ -62,7 +81,7 @@ class AbstractUserRelationship ( models.Model ):
     modification_date = models.DateTimeField(  auto_now=True )
         
     def __unicode__(self):
-        return self.user.name + ": " + self.get_userRole_display() + " of " + self.resource.name
+        return self.user.username + ": " + self.get_userRole_display() + " of " + self.resource.name
 
     class Meta:
         abstract = True

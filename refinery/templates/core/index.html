@@ -1,7 +1,11 @@
-{% extends "core/base.html" %}
+{% extends "base.html" %}
 
 {% block title %}
 {{ block.super }} - Home
+{% endblock %}
+
+{% block subheader %}
+Contents
 {% endblock %}
 
 {% block content %}
@@ -9,7 +13,7 @@
 	{{ users|length }} users 
     <ul>
     {% for user in users %}
-        <li><a href="user/{{ user.uuid }}">{{ user.name }}</a>: {{ user.first_name }} {{ user.last_name }} ({{ user.email }})</li>
+        <li><a href="user/{{ user.get_profile.uuid }}">{{ user.username }}</a>: {{ user.first_name }} {{ user.last_name }} ({{ user.get_profile.affiliation }}): {{ user.email }}</li>
     {% endfor %}
     </ul>
 {% else %}

@@ -1,0 +1,112 @@
+@import url(http://fonts.googleapis.com/css?family=Arvo:700,400italic,700italic,400);
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,700);
+
+html {
+	margin: 0px;
+	padding: 0px;
+}
+
+body {
+    margin-top: 0px;
+    margin-left: 30px;  
+    margin-right: 30px; 
+    margin-bottom: 20px;    
+    background-color: #fff;
+    padding: 0px;
+}
+
+#auth_area {
+    color: #fff;
+    background-color: #739D00;
+    text-transform: none;   
+    font: small "Arvo", "Lucida Grande", Lucida, Verdana, sans-serif;
+    text-align: right;
+    margin: 0px 0px 5px 0px;
+	padding-top: 3px;
+	padding-bottom: 3px;
+	padding-right: 10px;
+}
+
+#auth_area a {
+	color: #D4F870;
+}
+
+#header_area {
+    color: #000;
+	font: italic bold x-large "Arvo", "Lucida Grande", Lucida, Verdana, sans-serif;
+	margin-top: 10px;
+}
+
+#header_area h1 {
+	margin-bottom: 3px;
+	margin-top: 3px;
+}
+
+#header_area h1 a {
+	text-decoration: none;
+	color: inherit;
+}
+
+
+#subheader_area {
+    font-family: "Open Sans", "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+    color: #999;
+}
+
+#subheader_area h3 {
+}
+
+#subheader_area a {
+    font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+    color: #999;
+    text-decoration: none;
+    border-bottom: 1px solid #ddde52;
+}
+
+#content_area {
+    border-top: 1px dashed #999;
+    border-bottom: 1px dashed #999;
+    margin-bottom: 5px;
+    margin-top: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    background-color: #fff;
+    color: #000;
+    font: small "Open Sans", "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+}
+
+#content_area h2 {
+    font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;	
+}
+
+#content_area h3 {
+    font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;	
+}
+
+
+#content_area form input {
+	border: none;
+	background: #eee;
+	padding: 5px;
+    font: small "Open Sans", "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;	
+}
+
+#content_area form label {
+    font: small "Arvo", "Lucida Grande", Lucida, Verdana, sans-serif;
+    color: #999;
+}
+
+#content_area a {
+    color: #999;
+    font: bold small "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+    text-decoration: none;    
+}
+
+#footer_area {
+    color: #739D00;
+    font: small "Arvo", "Lucida Grande", Lucida, Verdana, sans-serif;
+    text-align: center;
+    padding-top: 5px;
+}
+
+

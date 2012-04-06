@@ -3,8 +3,10 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response, get_object_or_404
 from core.tasks import grab_workflows
 from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
 
 
+@login_required()
 def index(request):
     users = User.objects.all()
     projects = Project.objects.all()
@@ -31,24 +33,29 @@ def index(request):
 
     return render_to_response('core/index.html', {'users': users, 'projects': projects, 'workflows': workflows, 'data_sets': data_sets, 'analyses': analyses }, context_instance=RequestContext( request ) )
 
+@login_required()
 def user(request,query):
     
     try:
-        user = User.objects.get( name=query )
+        user = User.objects.get( username=query )
     except User.DoesNotExist:
-        user = get_object_or_404( User, uuid=query )
+        user = get_object_or_404( UserProfile, uuid=query ).user
             
     project_rels = ProjectUserRelationship.objects.filter( user=user )
     print project_rels
     
     return render_to_response('core/user.html', {'user': user, 'project_rels': project_rels }, context_instance=RequestContext( request ) )
 
+
+@login_required()
 def project(request,uuid):
     project = get_object_or_404( Project, uuid=uuid )
     user_rels = ProjectUserRelationship.objects.filter( resource=project )
     
     return render_to_response('core/project.html', { 'project': project, 'project_rels': user_rels }, context_instance=RequestContext( request ) )
 
+
+@login_required()
 def import_workflows(request):
     
     current_workflow_count = Workflow.objects.count()    
