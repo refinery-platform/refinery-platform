@@ -11,6 +11,7 @@ from celery import Celery
 from celery import states
 import time
 from django.conf import settings
+from analysis_manager.tasks import run_analysis
 
 
 def searchInput(input_string):
@@ -173,24 +174,43 @@ def run_workflow_ui(connection, workflow_uuid, run_info):
     Runs Galaxy workflow through django web interface
     """
     print "\ngalaxy_connector.tasks.run_workflow_ui called\n"
-
-    # creates new library in galaxy
-    library_id = connection.create_library( "UI Refinery Test Library - " + str( datetime.now() ) );
     
-    # creates new history in galaxy
-    history_id = connection.create_history( "UI Refinery Test History - " + str( datetime.now() ) )
-    #run_workflow_ui.update_state( state="PROGRESS", meta={ "history_id": history_id, "library_id": library_id } )
-            
     # retrieving workflow based on input workflow_uuid
     curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+    
+    ### ----------------------------------------------------------------#
+    ### REFINERY MODEL UPDATES ###
+    # core.models (updating states for refinery 
+    users = User.objects.all()
+    projects = Project.objects.all()
+    data_sets = DataSet.objects.all()
+    
+    ######### ANALYSIS MODEL 
+    # How to create a simple analysis object
+    #analysis = Analysis( creator=users[0], summary="Adhoc test analysis: " + str( datetime.now()), version=1, project=projects[0], data_set=data_sets[0], workflow=curr_workflow, workflow_copy=new_workflow, workflow_steps_num=new_workflow_steps )
+    analysis = Analysis( creator=users[0], summary="Adhoc test analysis: " + str( datetime.now()), version=1, project=projects[0], data_set=data_sets[0], workflow=curr_workflow )
+    analysis.save()
+    
+    # call function
+    #analysis_manager.run_analysis(analysis)
+    run_analysis(analysis, 5.0)
+    
+    ######################
+    ### PREPROCESSING ###
+    ######################      
+    
+    # creates new library in galaxy
+    library_id = connection.create_library( "UI Refinery Test Library - " + str( datetime.now() ) );
+            
     # gets galaxy internal id for specified workflow
     workflow_galaxy_id = curr_workflow.internal_id
     # gets dictionary version of workflow
     workflow_dict = connection.get_workflow_dict(workflow_galaxy_id);
     
     # getting distinct workflow inputs
+    workflow_data_inputs = curr_workflow.data_inputs.all()
     annot_inputs = {};
-    for data_input in curr_workflow.data_inputs.all():
+    for data_input in workflow_data_inputs:
         input_type = data_input.name
         annot_inputs[input_type] = [];
     
@@ -226,6 +246,17 @@ def run_workflow_ui(connection, workflow_uuid, run_info):
     
     # creating input list to create expanded workflow      
     ret_list = combineInputExp(annot_inputs, repeat_num)
+    
+    ######### ANALYSIS MODEL 
+    # Updating Refinery Models for updated workflow input (galaxy worfkflow input id & assay_uuid 
+    count = 0;
+    for samp in ret_list:
+        count += 1
+        for k,v in samp.items():
+            temp_input =  WorkflowDataInputMap( workflow_data_input_name=k, data_uuid=samp[k]["assay_uuid"], pair_id=count)
+            temp_input.save() 
+            analysis.workflow_data_input_maps.add( temp_input ) 
+            analysis.save() 
           
     # creating base workflow to replicate input workflow
     new_workflow = createBaseWorkflow( (workflow_dict["name"]) )
@@ -236,54 +267,39 @@ def run_workflow_ui(connection, workflow_uuid, run_info):
           
     # import newly generated workflow 
     new_workflow_info = connection.import_workflow(new_workflow);
+    
+    ######### ANALYSIS MODEL 
+    # updating analysis object
+    analysis.workflow_copy = new_workflow
+    analysis.workflow_steps_num = new_workflow_steps
+    analysis.save()
+    
+    ######################
+    ### EXECUTION ###
+    ######################      
+    
+    # creates new history in galaxy
+    history_id = connection.create_history( "UI Refinery Test History - " + str( datetime.now() ) )
           
     # Running workflow 
     result = connection.run_workflow2(new_workflow_info['id'], ret_list, history_id )    
-          
-    #------------ DELETE WORKFLOW -------------------------- #   
-    del_workflow_id = connection.delete_workflow(new_workflow_info['id']);
-         
-    """ 
-    print "\nannot_inputs"
-    print annot_inputs
-    print "run_info"
-    print run_info
-    print "data"
-    print data;
-    print "ret_list"
-    print ret_list
-    print "num_steps"
-    print new_workflow_steps
-    """
     
-    ### ----------------------------------------------------------------#
-    ### REFINERY MODEL UPDATES ###
-    # core.models (updating states for refinery 
-    users = User.objects.all()
-    projects = Project.objects.all()
-    data_sets = DataSet.objects.all()
-    
-    # How to create a simple analysis object
-    analysis = Analysis( creator=users[0], summary="Adhoc test analysis: " + str( datetime.now()), version=1, project=projects[0], data_set=data_sets[0], workflow=curr_workflow, workflow_copy=new_workflow, workflow_steps_num=new_workflow_steps )
-    analysis.save()
-    
-    # Updating Refinery Models for updated workflow input (galaxy worfkflow input id & assay_uuid 
-    count = 0;
-    for samp in ret_list:
-        count += 1
-        for k,v in samp.items():
-            temp_input =  WorkflowDataInputMap( workflow_data_input_name=k, data_uuid=samp[k]["assay_uuid"], pair_id=count)
-            temp_input.save() 
-            analysis.workflow_data_input_maps.add( temp_input ) 
-            analysis.save() 
-    
+    ######################
+    ### POSTPROCESSING ###
+    ######################      
+
     ### ----------------------------------------------------------------#
     # Downloading results from history
-    download_history_files(history_id)
+    download_history_files(connection, history_id)
     
-    #{'workflow_id': '1cd8e2f6b131e891', 'ds_map': {'50': {'src': 'ld', 'id': 'a799d38679e985db'}, '52': {'src': 'ld', 'id': '33b43b4e7093c91f'}}, 'history': 'Test API'}
-    #data["ds_map"][in_key] = { "src": "ld", "id": winput_id }
-
+    #------------ DELETE WORKFLOW -------------------------- #   
+    del_workflow_id = connection.delete_workflow(new_workflow_info['id']);
+    
+    # delete history
+    connection.delete_history(history_id)
+    # need to add to connection delete_library
+    
+    
 @task
 def download_history_files(connection, history_id) :
     """

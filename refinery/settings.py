@@ -142,6 +142,8 @@ INSTALLED_APPS = (
     'galaxy_connector',
     'refinery_repository',
     'core',
+    'analysis_manager',
+    'workflow_manager'
 )
 
 # A sample logging configuration. The only tangible logging
