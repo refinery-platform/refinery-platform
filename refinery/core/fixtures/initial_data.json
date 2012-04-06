@@ -1,60 +1,6 @@
 [
     {
         "pk": 1,
-        "model": "core.userprofile",
-        "fields": {
-            "affiliation": "Harvard Medical School",
-            "uuid": "a1a9ec54-7ff0-11e1-8ece-109add4e19d8",
-            "user": 1
-        }
-    },
-    {
-        "pk": 2,
-        "model": "core.userprofile",
-        "fields": {
-            "affiliation": "Boston University",
-            "uuid": "ad92ed8a-7ff0-11e1-b9db-109add4e19d8",
-            "user": 2
-        }
-    },
-    {
-        "pk": 3,
-        "model": "core.userprofile",
-        "fields": {
-            "affiliation": "Harvard School of Public Health",
-            "uuid": "b8d56497-7ff0-11e1-b92d-109add4e19d8",
-            "user": 3
-        }
-    },
-    {
-        "pk": 4,
-        "model": "core.userprofile",
-        "fields": {
-            "affiliation": "Harvard School of Public Health",
-            "uuid": "dfa860b5-7ff0-11e1-8e69-109add4e19d8",
-            "user": 4
-        }
-    },
-    {
-        "pk": 5,
-        "model": "core.userprofile",
-        "fields": {
-            "affiliation": "Brigham & Women's Hospital",
-            "uuid": "09ad4c9c-7ff1-11e1-aafe-109add4e19d8",
-            "user": 5
-        }
-    },
-    {
-        "pk": 6,
-        "model": "core.userprofile",
-        "fields": {
-            "affiliation": "",
-            "uuid": "2e60757d-7ff4-11e1-ae6e-109add4e19d8",
-            "user": 6
-        }
-    },
-    {
-        "pk": 1,
         "model": "core.dataset",
         "fields": {
             "creation_date": "2012-04-06 09:53:13",
