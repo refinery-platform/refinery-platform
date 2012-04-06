@@ -49,3 +49,9 @@ def get_workflows(instance=None, connection_galaxy=None):
                 w.data_inputs.add(i)
         except:
             connection.rollback()
+            
+def configure_workflow(workflow_uuid, workflow_data_input_map, instance=None, connection_galaxy=None):
+    """
+    
+    """
+    return
