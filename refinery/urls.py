@@ -1,4 +1,6 @@
 from django.conf.urls.defaults import patterns, include, url
+from core.views import admin_test_data
+from workflow_manager.views import import_workflows
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -26,7 +28,9 @@ urlpatterns = patterns('',
 
     url(r'^tasks/', include('djcelery.urls')),
 
-    # Uncomment the next line to enable the admin:
+    # NG: added to include additional views for admin (this is not the recommended way but the only one I got to work)
+    url(r"^admin/core/test_workflows/$", admin.site.admin_view( import_workflows ) ),    
+    url(r"^admin/core/test_data/$", admin.site.admin_view( admin_test_data ) ),    
     url(r'^admin/', include(admin.site.urls)),
     
     url(r'^login/$', 'django.contrib.auth.views.login' ),

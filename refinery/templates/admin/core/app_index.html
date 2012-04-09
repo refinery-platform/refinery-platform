@@ -1,0 +1,13 @@
+{% extends "admin/app_index.html" %}
+{% load i18n %}
+
+
+{% block content %}
+	{{ block.super }}
+	
+	<h1>Refinery Features</h1>
+	<ul>
+		<li><a href="test_data">Create Test Data for Refinery</a></li>		
+		<li><a href="test_workflows">Import Workflows from Workflow Engines</a> (Workflow Engines must exist)</li>
+	</ul>
+{% endblock %}

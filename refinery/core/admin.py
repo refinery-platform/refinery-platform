@@ -13,9 +13,7 @@ from core.models import WorkflowEngine
 from core.models import WorkflowDataInput
 from core.models import WorkflowDataInputMap
 from core.models import Analysis
-from django.contrib.auth.models import Permission
 from guardian.admin import GuardedModelAdmin
-
 
 class ProjectAdmin(GuardedModelAdmin):
     pass
@@ -37,8 +35,3 @@ admin.site.register(WorkflowEngine,WorkflowEngineAdmin)
 admin.site.register(WorkflowDataInput)
 admin.site.register(WorkflowDataInputMap)
 admin.site.register(Analysis)
-
-admin.site.register( Permission )
-
-
-
