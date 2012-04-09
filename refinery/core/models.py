@@ -71,8 +71,8 @@ class DataSet ( SharableResource ):
 
     class Meta:
         permissions = (
-            ('read_data_set', 'Can read data set'),
-            ('share_data_set', 'Can share data set'),
+            ('read_dataset', 'Can read data set'),
+            ('share_dataset', 'Can share data set'),
         )
 
 
@@ -93,8 +93,8 @@ class WorkflowEngine ( SharableResource ):
 
     class Meta:
         permissions = (
-            ('read_workflow_engine', 'Can read workflow engine'),
-            ('share_workflow_engine', 'Can share workflow engine'),
+            ('read_workflowengine', 'Can read workflow engine'),
+            ('share_workflowengine', 'Can share workflow engine'),
         )
                  
         

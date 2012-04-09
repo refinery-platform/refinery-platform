@@ -18,14 +18,15 @@ def import_workflows(request):
     
     workflow_engines = WorkflowEngine.objects.all()
     
+    workflows = 0
+    
     for engine in workflow_engines:
-        current_workflow_count = engine.workflow_set.all().count()    
         get_workflows( engine );
         new_workflow_count = engine.workflow_set.all().count()
-        print "Engine: " + engine.name + " - " + str( ( current_workflow_count ) ) + ' workflows before.'
         print "Engine: " + engine.name + " - " + str( ( new_workflow_count ) ) + ' workflows after.'
+        workflows += new_workflow_count
     
-    return HttpResponse( str( ( new_workflow_count - current_workflow_count ) ) + ' workflows imported.' ) 
+    return HttpResponse( str( workflows ) + ' workflows imported.' ) 
 
 
 def download_workflow ( request, workflow_uuid ):

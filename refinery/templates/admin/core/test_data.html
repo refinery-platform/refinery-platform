@@ -1,0 +1,45 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load url from future %}
+
+
+{% block breadcrumbs %}
+	<div class="breadcrumbs">
+	    <a href="{% url "admin:index" %}">{% trans "Home" %}</a> &rsaquo;
+		Test Data
+	</div>
+{% endblock %}
+
+{% block content %}
+    <h1>Test Data</h1>
+    
+    <h2>Users</h2>
+    <ol>
+    {% for user in users %}
+    	<li>{{ user.username }}: {{ user.first_name }} {{ user.last_name }}</li>
+    {% endfor %}    	
+    </ol>
+
+    <h2>Groups</h2>
+    <ol>
+    {% for group in groups %}
+    	<li>{{ group.name }}</li>
+    {% endfor %}
+    </ol>
+
+    <h2>Projects</h2>
+    <ol>
+    {% for project in projects %}
+    	<li>{{ project.name }}: {{ project.summary }}</li>
+    {% endfor %}
+    </ol>
+
+    <h2>Data Sets</h2>
+    <ol>
+    {% for data_set in data_sets %}
+    	<li>{{ data_set.name }}: {{ data_set.summary }}</li>
+    {% endfor %}
+    </ol>
+
+    
+{% endblock %}

@@ -5,7 +5,9 @@
 {% endblock %}
 
 {% block subheader %}
-Launch Pad for {{ user.first_name }} 
+	{% if user.is_authenticated  %}
+		Launch Pad for {{ user.first_name }}
+	{% endif %} 
 {% endblock %}
 
 {% block content %}
@@ -60,7 +62,7 @@ Launch Pad for {{ user.first_name }}
     {% endfor %}
     </ul>
 {% else %}
-    <p>No workflows available.</p>
+    <p>No workflow engines available.</p>
 {% endif %}
 
 {% if data_sets %}
