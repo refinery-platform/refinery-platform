@@ -152,6 +152,11 @@ class Analysis ( BaseResource ):
     workflow_data_input_maps = models.ManyToManyField( WorkflowDataInputMap, blank=True )
     workflow_steps_num = models.IntegerField(blank=True, null=True)
     workflow_copy = models.TextField(blank=True, null=True)
+    history_id = models.TextField(blank=True, null=True)
+    workflow_galaxy_id = models.TextField(blank=True, null=True)
+    library_id = models.TextField(blank=True, null=True)
+    
+
     
     def __unicode__(self):
         return self.name + " - " + self.summary

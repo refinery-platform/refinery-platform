@@ -12,6 +12,7 @@ from celery import states
 import time
 from django.conf import settings
 from analysis_manager.tasks import run_analysis
+import copy
 
 
 def searchInput(input_string):
@@ -191,10 +192,6 @@ def run_workflow_ui(connection, workflow_uuid, run_info):
     analysis = Analysis( creator=users[0], summary="Adhoc test analysis: " + str( datetime.now()), version=1, project=projects[0], data_set=data_sets[0], workflow=curr_workflow )
     analysis.save()
     
-    # call function
-    #analysis_manager.run_analysis(analysis)
-    run_analysis(analysis, 5.0)
-    
     ######################
     ### PREPROCESSING ###
     ######################      
@@ -299,6 +296,58 @@ def run_workflow_ui(connection, workflow_uuid, run_info):
     connection.delete_history(history_id)
     # need to add to connection delete_library
     
+@task()
+def run_workflow_test(connection, workflow_uuid, ret_list):
+    """
+    Runs Galaxy workflow through django web interface
+    """
+    print "\ngalaxy_connector.tasks.run_workflow_test called\n"
+    
+    # retrieving workflow based on input workflow_uuid
+    curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+    
+    ### ----------------------------------------------------------------#
+    ### REFINERY MODEL UPDATES ###
+    # core.models (updating states for refinery 
+    users = User.objects.all()
+    projects = Project.objects.all()
+    data_sets = DataSet.objects.all()
+    
+    project = Project(name="Test Project: " + str( datetime.now() )) 
+    project.save()
+    
+    data_set = DataSet(name="Test Project: " + str( datetime.now() )) 
+    data_set.save()
+    
+    ######### ANALYSIS MODEL ########
+    # How to create a simple analysis object
+    analysis = Analysis( summary="Adhoc test analysis: " + str( datetime.now()), project=project, data_set=data_set, workflow=curr_workflow )
+    analysis.save()
+    
+    ######################
+    ### PREPROCESSING ###
+    ######################      
+            
+    # gets galaxy internal id for specified workflow
+    workflow_galaxy_id = curr_workflow.internal_id
+    
+    # getting distinct workflow inputs
+    workflow_data_inputs = curr_workflow.data_inputs.all()
+    
+    ######### ANALYSIS MODEL 
+    # Updating Refinery Models for updated workflow input (galaxy worfkflow input id & assay_uuid 
+    count = 0;
+    for samp in ret_list:
+        count += 1
+        for k,v in samp.items():
+            temp_input =  WorkflowDataInputMap( workflow_data_input_name=k, data_uuid=samp[k]["assay_uuid"], pair_id=count)
+            temp_input.save() 
+            analysis.workflow_data_input_maps.add( temp_input ) 
+            analysis.save() 
+    
+    
+    # call function via analysis_manager
+    run_analysis.delay(analysis, 5.0)
     
 @task
 def download_history_files(connection, history_id) :
