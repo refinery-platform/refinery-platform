@@ -150,7 +150,8 @@ INSTALLED_APPS = (
     'refinery_repository',
     'core',
     'analysis_manager',
-    'workflow_manager'    
+    'workflow_manager',
+    'file_store'
 )
 
 # NG: added for django-guardian
