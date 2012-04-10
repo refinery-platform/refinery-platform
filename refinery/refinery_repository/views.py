@@ -15,10 +15,13 @@ from core.models import *
 from core.tasks import grab_workflows
 from django.db import connection
 from django.core import serializers
-import os, errno
-from galaxy_connector.tasks import run_workflow_ui, download_history_files
+import os, errno, copy
+from galaxy_connector.tasks import run_workflow_ui, run_workflow_test
 from galaxy_connector.views import checkActiveInstance, obtain_instance
-      
+from analysis_manager.tasks import download_history_files, run_analysis
+from workflow_manager.tasks import get_workflow_inputs
+from datetime import datetime
+
 
 def dictfetchall(cursor):
     "Returns all rows from a cursor as a dict"
@@ -192,6 +195,7 @@ def update_workflows(request):
     print "refinery_repository.update_workflows"
     
     if request.is_ajax():
+        print "is ajax"
         # function for updating workflows from galaxy instance
         instance, connection = checkActiveInstance(request)
         grab_workflows(instance, connection)
@@ -221,39 +225,99 @@ def analysis_run(request):
             if (i.startswith('assay_')):
                 selected_data.append({"assay_uuid":i.lstrip('assay_'), 'workflow_input_type':val})
     
-    run_info_all = [];
+    #### DEBUG CODE ####
+    # Turn input from POST into ingestable data/exp format 
+    # retrieving workflow based on input workflow_uuid
+    annot_inputs = get_workflow_inputs(workflow_uuid)
     
-    for sd in selected_data:
-        curr_assay = Assay.objects.filter(assay_uuid=sd['assay_uuid'])[0];
-        curr_rawdata = curr_assay.raw_data.values()[0];
-        curr_filename = curr_rawdata['file_name'];
-        
-        # run_info defines parameters needed to run workflow in galaxy
-        run_info = {}
-        temp_info = {}
-        # full file path
-        temp_info['filepath'] = os.path.join(settings.DOWNLOAD_BASE_DIR, curr_assay.investigation_id, curr_filename)
-        # Short file name description
-        temp_info['filename'] = curr_filename.split('.')[0]
-        
-        # assay_uid
-        temp_info['assay_uuid'] = sd['assay_uuid']
-        run_info[sd['workflow_input_type']] = temp_info;
-        run_info_all.append(run_info);
-        
+    #------------ CONFIGURE INPUT FILES -------------------------- #   
+    ret_list = [];
+    ret_item = copy.deepcopy(annot_inputs)
+    pair_count = 0
+    pair = 1;
+    tcount = 0
+    #for sd in selected_data:
+    while len(selected_data) != 0:
+        tcount += 1
+        if tcount > 5000:
+            break
+        for k, v in ret_item.iteritems():
+            for index, sd in enumerate(selected_data):
+                if k == sd["workflow_input_type"] and ret_item[k] is None:
+                    ret_item[k] = {};
+                    ret_item[k]["assay_uuid"] = sd['assay_uuid']
+                    ret_item[k]["pair_id"] = pair
+                    pair_count += 1
+                    selected_data.remove(sd)
+                if pair_count == 2:
+                    ret_list.append(ret_item)
+                    ret_item = copy.deepcopy(annot_inputs)
+                    pair_count = 0
+                    pair += 1
+    
+    # retrieving workflow based on input workflow_uuid
+    curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+    
+    ### ----------------------------------------------------------------#
+    ### REFINERY MODEL UPDATES ###
+    users = User.objects.all()
+    projects = Project.objects.all()
+    data_sets = DataSet.objects.all()
+    
+    project = Project(name="Test Project: " + str( datetime.now() )) 
+    project.save()
+    
+    data_set = DataSet(name="Test Project: " + str( datetime.now() )) 
+    data_set.save()
+    
+    ######### ANALYSIS MODEL ########
+    # How to create a simple analysis object
+    analysis = Analysis( summary="Adhoc test analysis: " + str( datetime.now()), project=project, data_set=data_set, workflow=curr_workflow )
+    analysis.save()   
+            
+    # gets galaxy internal id for specified workflow
+    workflow_galaxy_id = curr_workflow.internal_id
+    
+    # getting distinct workflow inputs
+    workflow_data_inputs = curr_workflow.data_inputs.all()
+    
+    ######### ANALYSIS MODEL 
+    # Updating Refinery Models for updated workflow input (galaxy worfkflow input id & assay_uuid 
+    count = 0;
+    for samp in ret_list:
+        count += 1
+        for k,v in samp.items():
+            temp_input =  WorkflowDataInputMap( workflow_data_input_name=k, data_uuid=samp[k]["assay_uuid"], pair_id=count)
+            temp_input.save() 
+            analysis.workflow_data_input_maps.add( temp_input ) 
+            analysis.save() 
+    
+    # call function via analysis_manager
+    run_analysis.delay(analysis, 5.0)
+    
+    return render_to_response('refinery_repository/base.html', context_instance=RequestContext(request))
+
+    """
+    #-----------------------------------------------------
     # getting current connection to galaxy
     instance, connection = checkActiveInstance(request)
     
-    # RUNNING WORKFLOW
-    #run_workflow_ui(connection, workflow_uuid, run_info_all)
-    task_result = run_workflow_ui.delay(connection, workflow_uuid, run_info_all) # To run as background task
+    run_workflow_test(connection, workflow_uuid, ret_list)
     
+    # RUNNING WORKFLOW
+    #task_result = run_workflow_ui.delay(connection, workflow_uuid, run_info_all) # To run as background task
+    #run_workflow_test(connection, workflow_uuid, run_info_all)
+    
+    ########################################
     ### DEBUGGING history download
+    ########################################
+    
     #download_history_files(connection, "eca0af6fb47bf90c") # local galaxy
     #download_history_files(connection, "510f5ee2885d8b3f") # on fisher
+    
+    """
             
-    return render_to_response('refinery_repository/base.html', context_instance=RequestContext(request))
-
+    
 def results_selected(request):
     """Returns task status and result in JSON format."""
     print "refinery_repository.results_selected called";
@@ -281,13 +345,6 @@ def results_selected(request):
         dictionary['task_id'] = task_id
         dictionary['state'] = state
         task_progress.append(dictionary)
-        
-        """
-        print "results"
-        print result    
-        print "dict"
-        print dictionary
-        """
         
     if (request.is_ajax()):
         print "RETURNING AJAX"

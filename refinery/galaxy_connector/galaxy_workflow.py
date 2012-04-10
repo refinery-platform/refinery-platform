@@ -184,11 +184,11 @@ def createStepsAnnot(file_list, workflow):
                 # getting current filename for workflow
                 curr_filename = '';
                 if (input_type == 'exp_file'):
-                    curr_filename = removeFileExt(file_list[i]['exp_file']['filename']);
+                    curr_filename = removeFileExt(file_list[i]['exp_file']['assay_uuid']);
                 elif (input_type == 'input_file'):
-                    curr_filename = removeFileExt(file_list[i]['input_file']['filename']);
+                    curr_filename = removeFileExt(file_list[i]['input_file']['assay_uuid']);
                 else: 
-                    curr_filename = removeFileExt(file_list[i]['exp_file']['filename']) + ',' + removeFileExt(file_list[i]['input_file']['filename']);
+                    curr_filename = removeFileExt(file_list[i]['exp_file']['assay_uuid']) + ',' + removeFileExt(file_list[i]['input_file']['assay_uuid']);
                 
                 
                 # TODO: get list of ["outputs"]["name"]
@@ -204,7 +204,8 @@ def createStepsAnnot(file_list, workflow):
                     
                     for oname in output_names:
                         temp_key = 'RenameDatasetAction' + str(oname);
-                        new_output_name = tool_name + ',' + input_type + ',' + str(oname) + ',' + curr_filename
+                        #new_output_name = tool_name + ',' + input_type + ',' + str(oname) + ',' + curr_filename
+                        new_output_name =  curr_filename + ","  + tool_name + ',' + input_type + ',' + str(oname)
                         
                         # if rename dataset action already exists for this tool output
                         if temp_key in pja_dict:
