@@ -39,8 +39,9 @@ def run_analysis( analysis, interval=5.0 ):
             break
 
 
+
     # EXECUTION
-    execution_task = subtask( monitor_analysis_execution).delay( analysis )
+    execution_task = subtask( monitor_analysis_execution ).delay( analysis )
     
     while True:
         run_analysis.update_state( state="EXECUTION" )
@@ -76,7 +77,7 @@ def run_analysis( analysis, interval=5.0 ):
 
 # task: monitor preprocessing (calls subtask that does the actual work)
 @task()
-def monitor_analysis_preprocessing( analysis ):
+def monitor_analysis_preprocessing( analysis, interval=5.0 ):
     #TODO: monitor async task execution
     run_analysis_preprocessing( analysis )
     return
@@ -96,7 +97,7 @@ def run_analysis_preprocessing( analysis ):
     connection = get_analysis_connection(analysis)
     
     # creates new library in galaxy
-    library_id = connection.create_library( "UI Refinery Test Library - " + str( datetime.now() ) );
+    library_id = connection.create_library( "Refinery Analysis - " + str( analysis.uuid ) + " (" + str( datetime.now() ) + ")" );
     
     ### generates same ret_list purely based on analysis object ###
     ret_list = get_analysis_config(analysis)
@@ -111,7 +112,7 @@ def run_analysis_preprocessing( analysis ):
     new_workflow_steps = len(new_workflow["steps"])
     
      # creates new history in galaxy
-    history_id = connection.create_history( "UI Refinery Test History - " + str( datetime.now() ) )
+    history_id = connection.create_history( "Refinery Analysis - " + str( analysis.uuid ) + " (" + str( datetime.now() ) + ")" )
     
     # updating analysis object
     analysis.workflow_copy = new_workflow
@@ -125,9 +126,45 @@ def run_analysis_preprocessing( analysis ):
 
 # task: monitor workflow execution (calls subtask that does the actual work)
 @task()
-def monitor_analysis_execution( analysis ):    
-    #TODO: monitor async task execution
-    run_analysis_execution( analysis )
+def monitor_analysis_execution( analysis, interval=5.0 ):    
+
+    # required to get updated state (move out of this function) 
+    analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+    
+    analysis_execution_task = subtask( run_analysis_execution ).delay( analysis )
+    
+    connection = get_analysis_connection( analysis )
+    
+    while True:
+        progress = connection.get_progress( analysis.history_id )
+        monitor_analysis_execution.update_state( state="PROGRESS", meta=progress )
+        print  "Sleeping ..."
+        time.sleep( interval );
+        print  "Awake ..."
+        print  "Analysis Execution Task State: " + analysis_execution_task.state + "\n"
+        print  "Workflow State: " + progress["workflow_state"] + "\n"
+                
+        if analysis_execution_task.state == "SUCCESS":
+            print "Analysis Execution Task task finished successfully."
+            
+            if progress["workflow_state"] == "ok":
+                print "Workflow finished successfully. Stopping monitor ..."
+                break
+
+            if progress["workflow_state"] == "error":
+                print "Workflow failed. Stopping monitor ..."
+                break
+             
+            if progress["workflow_state"] == "queued":
+                print "Workflow running."
+
+            if progress["workflow_state"] == "new":
+                print "Workflow being prepared."
+
+        
+        if analysis_execution_task.state == "FAILURE":
+            print "Analysis Execution Task failed . Stopping monitor ..."
+            break    
     return
 
 # task: perform execution (innermost task, does the actual work)
