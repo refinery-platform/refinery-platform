@@ -16,10 +16,10 @@ from core.tasks import grab_workflows
 from django.db import connection
 from django.core import serializers
 import os, errno, copy
-from galaxy_connector.tasks import run_workflow_ui, run_workflow_test
+from galaxy_connector.tasks import run_workflow_ui
 from galaxy_connector.views import checkActiveInstance, obtain_instance
 from analysis_manager.tasks import download_history_files, run_analysis
-from workflow_manager.tasks import get_workflow_inputs
+from workflow_manager.tasks import get_workflow_inputs, get_workflows
 from datetime import datetime
 
 
@@ -197,8 +197,19 @@ def update_workflows(request):
     if request.is_ajax():
         print "is ajax"
         # function for updating workflows from galaxy instance
-        instance, connection = checkActiveInstance(request)
-        grab_workflows(instance, connection)
+        #instance, connection = checkActiveInstance(request)
+        #grab_workflows(instance, connection)
+        
+        workflow_engines = WorkflowEngine.objects.all()
+        workflows = 0
+        
+        for engine in workflow_engines:
+            get_workflows( engine );
+            new_workflow_count = engine.workflow_set.all().count()
+            print "Engine: " + engine.name + " - " + str( ( new_workflow_count ) ) + ' workflows after.'
+            workflows += new_workflow_count
+        
+        #get_workflows
         # getting updated available workflows
         workflows = Workflow.objects.all()    
         json_serializer = serializers.get_serializer("json")()
