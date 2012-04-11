@@ -26,8 +26,8 @@ def grab_workflows(instance=None, connection_galaxy=None):
     for workflow in workflows:
         workflow_dict = {
                          'name': workflow.name,
-                         'internal_id': workflow.identifier,
-                         'visibility': 2 #give public visibility for now
+                         'internal_id': workflow.identifier
+                         #'visibility': 2 #give public visibility for now
                          }
         w = Workflow(**workflow_dict)
         try:

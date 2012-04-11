@@ -12,6 +12,7 @@ from celery import states
 import time
 from django.conf import settings
 from analysis_manager.tasks import run_analysis
+import copy
 
 
 def searchInput(input_string):
@@ -191,10 +192,6 @@ def run_workflow_ui(connection, workflow_uuid, run_info):
     analysis = Analysis( creator=users[0], summary="Adhoc test analysis: " + str( datetime.now()), version=1, project=projects[0], data_set=data_sets[0], workflow=curr_workflow )
     analysis.save()
     
-    # call function
-    #analysis_manager.run_analysis(analysis)
-    run_analysis(analysis, 5.0)
-    
     ######################
     ### PREPROCESSING ###
     ######################      
@@ -298,7 +295,6 @@ def run_workflow_ui(connection, workflow_uuid, run_info):
     # delete history
     connection.delete_history(history_id)
     # need to add to connection delete_library
-    
     
 @task
 def download_history_files(connection, history_id) :
