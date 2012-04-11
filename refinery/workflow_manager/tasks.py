@@ -11,6 +11,7 @@ from galaxy_connector.connection import Connection
 from core.models import Workflow, WorkflowDataInput
 from guardian.shortcuts import assign
 from django.contrib.auth.models import Group 
+from galaxy_connector.galaxy_workflow import createBaseWorkflow, createStepsAnnot
     
 @task()
 def get_workflows( workflow_engine ):
@@ -49,9 +50,45 @@ def get_workflows( workflow_engine ):
             i.save()
             workflow_object.data_inputs.add(i)
     
-            
-def configure_workflow( workflow_uuid, workflow_data_input_map, instance=None, connection_galaxy=None ):
+@task()                 
+def configure_workflow( workflow_uuid, ret_list, connection_galaxy=None ):
     """
+    Takes a workflow_uuid and associated data input map to return an expanded workflow 
+    from core.models.workflow and workflow_data_input_map    
+    """
+    #print "workflow.manager configure_workflow called"
     
+    curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+    # gets galaxy internal id for specified workflow
+    workflow_galaxy_id = curr_workflow.internal_id
+    
+    # gets dictionary version of workflow
+    workflow_dict = connection_galaxy.get_workflow_dict(workflow_galaxy_id)
+    
+    # number of times to repeat workflow expansion
+    repeat_num = len(ret_list)
+    
+    # creating base workflow to replicate input workflow
+    new_workflow = createBaseWorkflow( (workflow_dict["name"]) )
+    
+    # Updating steps in imported workflow X number of times
+    new_workflow["steps"] = createStepsAnnot(ret_list, workflow_dict);
+          
+    return new_workflow
+
+@task()
+def get_workflow_inputs(workflow_uuid):
     """
-    return
+    Returns unique workflow inputs i.e. {u'exp_file': None, u'input_file': None}
+    """
+    curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+    
+    # getting distinct workflow inputs
+    workflow_data_inputs = curr_workflow.data_inputs.all()
+    annot_inputs = {};
+    for data_input in workflow_data_inputs:
+        input_type = data_input.name
+        annot_inputs[input_type] = None
+    
+    return annot_inputs
+    
