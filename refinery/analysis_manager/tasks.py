@@ -110,11 +110,15 @@ def run_analysis_preprocessing( analysis ):
     ######### ANALYSIS MODEL 
     new_workflow_steps = len(new_workflow["steps"])
     
+     # creates new history in galaxy
+    history_id = connection.create_history( "UI Refinery Test History - " + str( datetime.now() ) )
+    
     # updating analysis object
     analysis.workflow_copy = new_workflow
     analysis.workflow_steps_num = new_workflow_steps
     analysis.workflow_galaxy_id = new_workflow_info['id']
     analysis.library_id = library_id
+    analysis.history_id = history_id
     analysis.save()
     
     return
@@ -142,16 +146,9 @@ def run_analysis_execution( analysis ):
 
     #### NEED TO IMPORT TO GALAXY TO GET GALAXY_IDS ###
     ret_list = import_analysis_in_galaxy(ret_list, analysis.library_id, connection)
-
-    # creates new history in galaxy
-    history_id = connection.create_history( "UI Refinery Test History - " + str( datetime.now() ) )
-    
-    # save galaxy history_id associated with current analysis
-    analysis.history_id = history_id
-    analysis.save()
           
     # Running workflow 
-    result = connection.run_workflow2(analysis.workflow_galaxy_id, ret_list, history_id )  
+    result = connection.run_workflow2(analysis.workflow_galaxy_id, ret_list, analysis.history_id )  
     
     return
 
