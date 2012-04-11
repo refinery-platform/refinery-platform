@@ -101,11 +101,8 @@ def workflowMap(workflow):
         input_dict = curr_workflow_step["inputs"];
         
         if (len(input_dict) > 0):
-            if input_dict[0]["name"] == 'exp_file':
-                map[input_id] = 'exp_file';
-            elif input_dict[0]["name"] == 'input_file':
-                map[input_id] = 'input_file'
-    
+            map[input_id] = input_dict[0]["name"] 
+            
     # mapping rest of workflow to either "input_file" or "exp_file"
     for k in range(0, len(temp_steps)):
         curr_workflow_step = temp_steps[str(k)]
@@ -118,7 +115,7 @@ def workflowMap(workflow):
                     map[input_id] = map[step_input_id];
         elif (len(connect_dict)) > 1:
              map[input_id] = "all"
-                    
+    
     return map;
 
 def removeFileExt(file_name):
@@ -144,10 +141,6 @@ def createStepsAnnot(file_list, workflow):
     repeat_num = len(file_list);
     
     map = workflowMap(workflow);
-    
-    #print "filelist"
-    #print file_list
-    #print len(file_list);
     
     for i in range(0, repeat_num):
         for j in range(0, len(temp_steps)):
@@ -181,24 +174,26 @@ def createStepsAnnot(file_list, workflow):
             if (len(curr_workflow_step['inputs']) == 0):
                 tool_name = curr_workflow_step["tool_id"];
                 input_type = map[int(curr_step)];
+                
                 # getting current filename for workflow
                 curr_filename = '';
-                if (input_type == 'exp_file'):
-                    curr_filename = removeFileExt(file_list[i]['exp_file']['assay_uuid']);
-                elif (input_type == 'input_file'):
-                    curr_filename = removeFileExt(file_list[i]['input_file']['assay_uuid']);
-                else: 
+                
+                if input_type in file_list[i].keys():
+                    curr_filename = removeFileExt(file_list[i][input_type]['assay_uuid'])
+                elif input_type == 'all':
                     curr_filename = removeFileExt(file_list[i]['exp_file']['assay_uuid']) + ',' + removeFileExt(file_list[i]['input_file']['assay_uuid']);
+                #### TODO ###
+                # deal with over input_types from various workflows
+                #else:
                 
-                
-                # TODO: get list of ["outputs"]["name"]
+                # creates list of output names from specified tool to rename
                 output_names = [];
                 output_list = curr_workflow_step['outputs']
                 if (len(output_list) > 0):
                     for ofiles in output_list:
                         output_names.append(ofiles['name']);
                 
-                # TODO: change post_job_actions: [RenameDatasetAction][newname] to newly generated (id + tool + filename)
+                # uses renamedataset action to rename output of specified tool
                 if "post_job_actions" in curr_workflow_step:
                     pja_dict = curr_workflow_step["post_job_actions"];
                     
@@ -212,50 +207,10 @@ def createStepsAnnot(file_list, workflow):
                             pja_dict[temp_key]['action_arguments']['newname'] = new_output_name;
                         # whether post_job_action,RenameDatasetAction exists or not
                         else:
-                            #new_rename_action =  '{"%s": { "action_arguments": { "newname": "%s" }, "action_type": "RenameDatasetAction", "output_name": "%s"}}' % (temp_key, new_output_name, oname);
                             new_rename_action =  '{ "action_arguments": { "newname": "%s" }, "action_type": "RenameDatasetAction", "output_name": "%s"}' % (new_output_name, oname);
-                            
                             new_rename_dict = ast.literal_eval(new_rename_action);
                             pja_dict[temp_key] = new_rename_dict;
 
-            """
-                #print pja_dict;
-                for k, v in pja_dict.iteritems():
-                    print "num_inputs"
-                    print num_inputs;
-                    
-                    # If the post job actions contain a RenameDatasetAction
-                    if "action_type" in v:
-                        if v["action_type"] == 'RenameDatasetAction':
-                            print "------"
-                            print("Post Job Actions");
-                            print("NAME: " + curr_workflow_step['name'])
-                            print pja_dict;
-                    
-                            print k;
-                            print v;
-                            v["action_arguments"]["newname"] = v["action_arguments"]["newname"] + "_" + str(i+1);                
-                            print v["action_arguments"]["newname"];
-            """
-                
-                
-                    
-            """
-            if 'RenameDatasetActionoutput_file' in pja_dict:
-                    print pja_dict['RenameDatasetActionoutput_file']
-                    print pja_dict['RenameDatasetActionoutput_file']['action_arguments']['newname']
-                
-            "post_job_actions": {
-                "RenameDatasetActionoutput1": {
-                    "action_arguments": {
-                        "newname": "sam_to_bam_02"
-                        }, 
-                    "action_type": "RenameDatasetAction", 
-                        "output_name": "output1"
-                    }
-                }
-            """
-            
             # Adds updated module 
             updated_dict[curr_id] = curr_workflow_step;
             
