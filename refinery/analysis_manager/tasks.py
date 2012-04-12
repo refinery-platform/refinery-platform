@@ -39,7 +39,7 @@ def run_analysis( analysis, interval=5.0 ):
     
 
     # EXECUTION
-    execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )) ]).apply_async()            
+    execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )), monitor_analysis_execution.subtask((analysis, )), ]).apply_async()            
     execution_taskset.save()
     
     analysis_status.execution_taskset_id = execution_taskset.taskset_id 
@@ -159,9 +159,7 @@ def run_analysis_preprocessing( analysis ):
     analysis.workflow_galaxy_id = new_workflow_info['id']
     analysis.library_id = library_id
     analysis.history_id = history_id
-    print "Before save - Library Id: " + str( analysis.library_id )
     analysis.save()
-    print "After save - Library Id: " + str( analysis.library_id )    
     
     return
 
@@ -170,12 +168,7 @@ def run_analysis_preprocessing( analysis ):
 def monitor_analysis_execution( analysis, interval=5.0 ):    
 
     # required to get updated state (move out of this function) 
-    print "Before update - Library Id: " + str( analysis.library_id )
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-    print "After update - Library Id: " + str( analysis.library_id )
-    
-    analysis_execution_task = subtask( run_analysis_execution ).delay( analysis )
-
     
     connection = get_analysis_connection( analysis )
     
