@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - Home
+{% endblock %}
+
+{% block subheader %}
+	{% if user.is_authenticated  %}
+		Analysis Status
+	{% else %}
+		Analysis Status
+	{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if statuses %}
+	<h2>Analysis</h2> 
+    <ul>
+    {% for status in statuses %}
+        <li>{{ status.analysis_uuid }} | {{ status.preprocessing_taskset_id }} | {{ status.execution_taskset_id }} | {{ status.postprocessing_taskset_id }}</li>
+    {% endfor %}
+    </ul>
+{% endif %}
+{% endblock %}
