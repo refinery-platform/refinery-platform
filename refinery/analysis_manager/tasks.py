@@ -5,9 +5,10 @@ Created on Apr 5, 2012
 '''
 
 from core.models import Analysis
+from analysis_manager.models import AnalysisStatus
 from refinery_repository.models import Assay
 from celery.task import task
-from celery.task.sets import subtask
+from celery.task.sets import subtask, TaskSet
 import time, os, copy
 from django.conf import settings
 from galaxy_connector.connection import Connection
@@ -20,8 +21,42 @@ from datetime import datetime
 def run_analysis( analysis, interval=5.0 ):
     
     print "analysis_manager.tasks run_analysis called"
+    
+    analysis_status = AnalysisStatus.objects.create( analysis_uuid=analysis.uuid )
+    analysis_status.save()
+    
+    # PREPROCESSING            
+    preprocessing_taskset = TaskSet( run_analysis_preprocessing.subtask( analysis ) ).apply_async()
+    preprocessing_taskset.save();
 
-    # PREPROCESSING
+    analysis_status.preprocessing_taskset_id = preprocessing_taskset.taskset_id 
+    analysis_status.save()
+    
+    # TODO: use less dangerous method, e.g. callback (possible with TaskSet?)
+    preprocessing_taskset.wait()
+    
+
+    # EXECUTION            
+    execution_taskset = TaskSet( run_analysis_execution.subtask( analysis ) ).apply_async()
+    execution_taskset.save();
+
+    analysis_status.execution_taskset_id = execution_taskset.taskset_id 
+    analysis_status.save()
+    
+    # TODO: use less dangerous method, e.g. callback (possible with TaskSet?)
+    execution_taskset.wait()
+
+
+    # POSTPROCESSING        
+    postprocessing_taskset = TaskSet( run_analysis_postprocessing.subtask( analysis ) ).apply_async()
+    postprocessing_taskset.save();
+
+    analysis_status.postprocessing_taskset_id = postprocessing_taskset.taskset_id 
+    analysis_status.save()
+
+
+    '''
+    # PREPROCESSING        
     preprocessing_task = subtask( monitor_analysis_preprocessing ).delay( analysis )
     
     #TODO: create a function to do this
@@ -37,7 +72,6 @@ def run_analysis( analysis, interval=5.0 ):
         if preprocessing_task.state == "FAILURE":
             print "Preprocessing task failed . Stopping monitor ..."
             break
-
 
 
     # EXECUTION
@@ -72,6 +106,7 @@ def run_analysis( analysis, interval=5.0 ):
         if postprocessing_task.state == "FAILURE":
             print "Postprocessing task failed . Stopping monitor ..."
             break
+    '''
         
     return
 
