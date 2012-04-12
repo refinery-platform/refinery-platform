@@ -27,6 +27,7 @@ def run_analysis( analysis, interval=5.0 ):
     
     # PREPROCESSING            
     preprocessing_taskset = TaskSet( task=[run_analysis_preprocessing.subtask(( analysis, )) ]).apply_async()
+    preprocessing_taskset.save()
     
     analysis_status.preprocessing_taskset_id = preprocessing_taskset.taskset_id 
     analysis_status.save()
@@ -39,6 +40,7 @@ def run_analysis( analysis, interval=5.0 ):
 
     # EXECUTION
     execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )) ]).apply_async()            
+    execution_taskset.save()
     
     analysis_status.execution_taskset_id = execution_taskset.taskset_id 
     analysis_status.save()
@@ -51,6 +53,7 @@ def run_analysis( analysis, interval=5.0 ):
     
     # POSTPROCESSING       
     postprocessing_taskset = TaskSet( task=[run_analysis_postprocessing.subtask(( analysis, )) ]).apply_async()            
+    postprocessing_taskset.save()
     
     analysis_status.postprocessing_taskset_id = postprocessing_taskset.taskset_id 
     analysis_status.save()
