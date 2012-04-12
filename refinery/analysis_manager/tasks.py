@@ -26,31 +26,32 @@ def run_analysis( analysis, interval=5.0 ):
     analysis_status.save()
     
     # PREPROCESSING            
-    preprocessing_taskset = TaskSet( run_analysis_preprocessing.subtask( analysis ) ).apply_async()
-    preprocessing_taskset.save();
-
+    preprocessing_taskset = TaskSet( task=[run_analysis_preprocessing.subtask(( analysis, )) ]).apply_async()
+    
     analysis_status.preprocessing_taskset_id = preprocessing_taskset.taskset_id 
     analysis_status.save()
-    
+
+    print "before preprocessing_taskset.join()"   
     # TODO: use less dangerous method, e.g. callback (possible with TaskSet?)
-    preprocessing_taskset.wait()
+    preprocessing_taskset.join()
+    print "after preprocessing_taskset.join()"    
     
 
-    # EXECUTION            
-    execution_taskset = TaskSet( run_analysis_execution.subtask( analysis ) ).apply_async()
-    execution_taskset.save();
-
+    # EXECUTION
+    execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )) ]).apply_async()            
+    
     analysis_status.execution_taskset_id = execution_taskset.taskset_id 
     analysis_status.save()
     
+    print "before execution_taskset.join()"
     # TODO: use less dangerous method, e.g. callback (possible with TaskSet?)
-    execution_taskset.wait()
-
-
-    # POSTPROCESSING        
-    postprocessing_taskset = TaskSet( run_analysis_postprocessing.subtask( analysis ) ).apply_async()
-    postprocessing_taskset.save();
-
+    execution_taskset.join()
+    print "after execution_taskset.join()"    
+    
+    
+    # POSTPROCESSING       
+    postprocessing_taskset = TaskSet( task=[run_analysis_postprocessing.subtask(( analysis, )) ]).apply_async()            
+    
     analysis_status.postprocessing_taskset_id = postprocessing_taskset.taskset_id 
     analysis_status.save()
 
