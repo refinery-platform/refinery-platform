@@ -9,4 +9,6 @@ from django.http import HttpResponse, HttpResponseForbidden
 def index(request):
     statuses = AnalysisStatus.objects.all()
     
+    
+    
     return render_to_response( 'analysis_manager/index.html', { 'statuses': statuses }, context_instance=RequestContext( request ) )
