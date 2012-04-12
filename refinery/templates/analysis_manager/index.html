@@ -17,7 +17,10 @@
 	<h2>Analysis</h2> 
     <ul>
     {% for status in statuses %}
-        <li>{{ status.analysis_uuid }} | {{ status.preprocessing_taskset_id }} | {{ status.execution_taskset_id }} | {{ status.postprocessing_taskset_id }}</li>
+        <li> Analysis: {{ status.analysis_uuid }}<br>
+        	{{ status.preprocessing_taskset_id }} | {{ status.execution_taskset_id }} | {{ status.postprocessing_taskset_id }}<br>
+        	{{ status.current }}
+        </li>
     {% endfor %}
     </ul>
 {% endif %}
