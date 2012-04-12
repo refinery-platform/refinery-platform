@@ -19,9 +19,9 @@ xrange(10)).apply_async()
 class AnalysisStatus( models.Model ):
     analysis_uuid = UUIDField( unique=True, auto=False )
     
-    preprocessing_taskset_id = models.IntegerField( blank=True )
-    execution_taskset_id = models.IntegerField( blank=True )
-    postprocessing_taskset_id = models.IntegerField( blank=True )
+    preprocessing_taskset_id = models.IntegerField( blank=True, null=True )
+    execution_taskset_id = models.IntegerField( blank=True, null=True )
+    postprocessing_taskset_id = models.IntegerField( blank=True, null=True )
     
     
 
