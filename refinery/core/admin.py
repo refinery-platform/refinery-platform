@@ -27,6 +27,9 @@ class WorkflowEngineAdmin(GuardedModelAdmin):
 class DataSetAdmin(GuardedModelAdmin):
     pass
 
+class AnalysisAdmin(GuardedModelAdmin):
+    pass
+
 admin.site.register(UserProfile)
 admin.site.register(Project,ProjectAdmin)
 admin.site.register(DataSet,DataSetAdmin)
@@ -34,4 +37,4 @@ admin.site.register(Workflow,WorkflowAdmin)
 admin.site.register(WorkflowEngine,WorkflowEngineAdmin)
 admin.site.register(WorkflowDataInput)
 admin.site.register(WorkflowDataInputMap)
-admin.site.register(Analysis)
+admin.site.register(Analysis,AnalysisAdmin)

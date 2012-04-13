@@ -28,16 +28,19 @@ def index(request):
             projects = get_objects_for_group( group, "core.read_project" )
             workflow_engines = get_objects_for_group( group, "core.read_workflowengine" )
             data_sets = get_objects_for_group( group, "core.read_dataset" )
+            workflows = get_objects_for_group( group, "core.read_workflow" )
         else:
             projects = []
             workflow_engines = []
             data_sets = []
+            workflows = []
     else:
         projects = get_objects_for_user( request.user, "core.read_project" )
         workflow_engines = get_objects_for_user( request.user, "core.read_workflowengine" )
+        workflows = get_objects_for_user( request.user, "core.read_workflow" )
         data_sets = get_objects_for_user( request.user, "core.read_dataset" )
             
-    return render_to_response('core/index.html', {'users': users, 'projects': projects, 'workflow_engines': workflow_engines, 'data_sets': data_sets }, context_instance=RequestContext( request ) )
+    return render_to_response('core/index.html', {'users': users, 'projects': projects, 'workflow_engines': workflow_engines, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext( request ) )
 
 @login_required()
 def user(request,query):
@@ -223,10 +226,8 @@ def admin_test_data( request ):
             project_object.delete()
 
         project_object = Project.objects.create( name=project_name, summary=project_summary )
-        assign( "share_project", user_object, project_object )
-        assign( "read_project", user_object, project_object )
-        assign( "delete_project", user_object, project_object )
-        assign( "change_project", user_object, project_object )
+        project_object.set_owner( user_object )
+        
         project_objects.append( project_object )
         
 
@@ -240,12 +241,10 @@ def admin_test_data( request ):
             project_object.delete()
 
         project_object = Project.objects.create( name=project_name, summary=project_summary )
-        assign( "share_project", user_object, project_object )
-        assign( "read_project", user_object, project_object )
-        assign( "delete_project", user_object, project_object )
-        assign( "change_project", user_object, project_object )
+        project_object.set_owner( user_object )
         group_object = Group.objects.get( name__exact="Public" )
-        assign( "read_project", group_object, project_object )
+        project_object.share( group_object )
+
         project_objects.append( project_object )
             
 
@@ -259,12 +258,10 @@ def admin_test_data( request ):
             project_object.delete()
 
         project_object = Project.objects.create( name=project_name, summary=project_summary )
-        assign( "share_project", user_object, project_object )
-        assign( "read_project", user_object, project_object )
-        assign( "delete_project", user_object, project_object )
-        assign( "change_project", user_object, project_object )
+        project_object.set_owner( user_object )
         group_object = Group.objects.get( name__exact=".Refinery Project" )
-        assign( "read_project", group_object, project_object )
+        project_object.share( group_object )
+
         project_objects.append( project_object )
 
     
@@ -278,13 +275,9 @@ def admin_test_data( request ):
             project_object.delete()
 
         project_object = Project.objects.create( name=project_name, summary=project_summary )
-        assign( "share_project", user_object, project_object )
-        assign( "read_project", user_object, project_object )
-        assign( "delete_project", user_object, project_object )
-        assign( "change_project", user_object, project_object )
+        project_object.set_owner( user_object )
         group_object = user_object.groups.get( name__contains="Lab" )
-        assign( "read_project", group_object, project_object )
-        assign( "change_project", group_object, project_object )
+        project_object.share( group_object, readonly=False )
         project_objects.append( project_object )
 
 
@@ -303,10 +296,7 @@ def admin_test_data( request ):
             data_set_object.delete()
 
         data_set_object = DataSet.objects.create( name=data_set_name, summary=data_set_summary )
-        assign( "share_dataset", user_object, data_set_object )
-        assign( "read_dataset", user_object, data_set_object )
-        assign( "delete_dataset", user_object, data_set_object )
-        assign( "change_dataset", user_object, data_set_object )
+        data_set_object.set_owner( user_object )
         data_set_objects.append( data_set_object )
         
 
@@ -320,12 +310,9 @@ def admin_test_data( request ):
             data_set_object.delete()
 
         data_set_object = DataSet.objects.create( name=data_set_name, summary=data_set_summary )
-        assign( "share_dataset", user_object, data_set_object )
-        assign( "read_dataset", user_object, data_set_object )
-        assign( "delete_dataset", user_object, data_set_object )
-        assign( "change_dataset", user_object, data_set_object )
+        data_set_object.set_owner( user_object )
         group_object = Group.objects.get( name__exact="Public" )
-        assign( "read_dataset", group_object, data_set_object )
+        data_set_object.share( group_object )
         data_set_objects.append( data_set_object )
             
 
@@ -339,12 +326,9 @@ def admin_test_data( request ):
             data_set_object.delete()
 
         data_set_object = DataSet.objects.create( name=data_set_name, summary=data_set_summary )
-        assign( "share_dataset", user_object, data_set_object )
-        assign( "read_dataset", user_object, data_set_object )
-        assign( "delete_dataset", user_object, data_set_object )
-        assign( "change_dataset", user_object, data_set_object )
+        data_set_object.set_owner( user_object )
         group_object = Group.objects.get( name__exact=".Refinery Project" )
-        assign( "read_dataset", group_object, data_set_object )
+        data_set_object.share( group_object )
         data_set_objects.append( data_set_object )
 
     
@@ -358,24 +342,18 @@ def admin_test_data( request ):
             data_set_object.delete()
 
         data_set_object = DataSet.objects.create( name=data_set_name, summary=data_set_summary )
-        assign( "share_dataset", user_object, data_set_object )
-        assign( "read_dataset", user_object, data_set_object )
-        assign( "delete_dataset", user_object, data_set_object )
-        assign( "change_dataset", user_object, data_set_object )
+        data_set_object.set_owner( user_object )
         group_object = user_object.groups.get( name__contains="Lab" )
-        assign( "read_dataset", group_object, data_set_object )
-        assign( "change_dataset", group_object, data_set_object )
+        data_set_object.share( group_object, readonly=False )
         data_set_objects.append( data_set_object )
 
     workflow_engine_objects = []
     
     for instance in Instance.objects.all():
         workflow_engine_object = WorkflowEngine.objects.create( instance=instance, name=instance.description, summary=instance.base_url + " " + instance.api_key )
-        # TODO: introduce group managers and assign ownership to them
-        group_object = Group.objects.get( name__exact="Public" )
-        assign( "read_workflowengine", group_object, workflow_engine_object )
-        assign( "change_workflowengine", group_object, workflow_engine_object )
-        
+        # TODO: introduce group managers and assign ownership to them        
+        workflow_engine_object.set_owner( User.objects.get( username__exact=".nils" ) )
+                
         workflow_engine_objects.append( workflow_engine_object )
         
 
