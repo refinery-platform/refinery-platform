@@ -349,6 +349,8 @@ def admin_test_data( request ):
 
     workflow_engine_objects = []
     
+    WorkflowEngine.objects.all().delete()
+    
     for instance in Instance.objects.all():
         workflow_engine_object = WorkflowEngine.objects.create( instance=instance, name=instance.description, summary=instance.base_url + " " + instance.api_key )
         # TODO: introduce group managers and assign ownership to them        
