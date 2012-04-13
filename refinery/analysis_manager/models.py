@@ -25,23 +25,29 @@ class AnalysisStatus( models.Model ):
     postprocessing_taskset_id = UUIDField( blank=True, null=True )
     
     def current(self):        
-        preprocessing_result = True
-        execution_result = True
-        postprocessing_result = True
+        preprocessing_result = False
+        execution_result = False
+        postprocessing_result = False
         
         if not self.preprocessing_taskset_id is None:
             preprocessing_taskset = TaskSetResult.restore( self.preprocessing_taskset_id )
-            preprocessing_result = preprocessing_taskset.waiting()
+            if preprocessing_taskset is not None:
+                preprocessing_result = preprocessing_taskset.waiting()
+                preprocessing_subtasks = []
+                for res in preprocessing_taskset.results:
+                    preprocessing_subtasks.append(res.task_id)
             
         if not self.preprocessing_taskset_id is None:
             execution_taskset = TaskSetResult.restore( self.execution_taskset_id )
-            execution_result = execution_taskset.waiting()
+            if execution_taskset is not None:
+                execution_result = execution_taskset.waiting()
             
         if not self.preprocessing_taskset_id is None:            
             postprocessing_taskset = TaskSetResult.restore( self.postprocessing_taskset_id )
-            postprocessing_result = postprocessing_taskset.waiting()
+            if postprocessing_taskset is not None:
+                postprocessing_result = postprocessing_taskset.waiting()
         
-        return { "preprocessing": preprocessing_result, "execution": execution_result, "postprocessing": postprocessing_result } 
+        return { "preprocessing": preprocessing_result, "preprocessing_tasks": preprocessing_subtasks, "execution": execution_result, "postprocessing": postprocessing_result } 
 
 
 
