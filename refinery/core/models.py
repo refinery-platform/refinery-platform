@@ -10,6 +10,8 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.forms import ModelForm
 from galaxy_connector.models import Instance
+from guardian.shortcuts import assign, get_users_with_perms
+
 
 class UserProfile ( models.Model ):
     '''
@@ -52,16 +54,58 @@ class BaseResource ( models.Model ):
         abstract = True
 
 
-class SharableResource ( BaseResource ):
+class OwnableResource ( BaseResource ):
+    '''
+    Abstract base class for core resources that can be owned (projects, data sets, workflows, workflow engines, etc.).
+    
+    IMPORTANT: expects derived classes to have "add/read/change/write_xxx" permissions, where "xxx" is the simple_modelname
+    '''
+    def __unicode__( self ):
+        return self.name
+    
+    def set_owner( self, user ):
+        assign( "add_%s" % self._meta.verbose_name, user, self )
+        assign( "read_%s" % self._meta.verbose_name, user, self )
+        assign( "delete_%s" % self._meta.verbose_name, user, self )
+        assign( "change_%s" % self._meta.verbose_name, user, self )
+
+    def get_owner( self ):
+        # ownership is determined by "add" permission
+        user_permissions = get_users_with_perms( self, attach_perms=True, with_group_users=False )
+        
+        for user, permission in user_permissions.iteritems():
+            if "add_%s" % self._meta.verbose_name in permission:
+                return user
+    
+    class Meta:
+        verbose_name = "ownableresource"
+        abstract = True
+        
+
+class SharableResource ( OwnableResource ):
     '''
     Abstract base class for core resources that can be shared (projects, data sets, workflows, workflow engines, etc.).
+    
+    IMPORTANT: expects derived classes to have "add/read/change/write_xxx" + "share_xxx" permissions, where "xxx" is the simple_modelname    
     '''
-
     def __unicode__(self):
         return self.name
+    
+    def set_owner( self, user ):
+        super( SharableResource, self ).set_owner( user )
+        assign( "share_%s" % self._meta.verbose_name, user, self )
+        
+    def share( self, group, readonly=True ):
+        assign( "read_%s" % self._meta.verbose_name, group, self )
+        
+        if not readonly:
+            assign( "change_%s" % self._meta.verbose_name, group, self )
+        
         
     class Meta:
+        verbose_name = "sharableresource"
         abstract = True
+
 
         
 class DataSet ( SharableResource ):
@@ -70,9 +114,10 @@ class DataSet ( SharableResource ):
         return self.name + " - " + self.summary
 
     class Meta:
+        verbose_name = "dataset"
         permissions = (
-            ('read_dataset', 'Can read data set'),
-            ('share_dataset', 'Can share data set'),
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
+            ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
 
 
@@ -84,7 +129,7 @@ class WorkflowDataInput ( models.Model ):
         return self.name + " (" + str( self.internal_id ) + ")"
 
 
-class WorkflowEngine ( SharableResource ):
+class WorkflowEngine ( OwnableResource ):
     # TODO: remove Galaxy dependency
     instance = models.ForeignKey( Instance, blank=True )
     
@@ -92,9 +137,9 @@ class WorkflowEngine ( SharableResource ):
         return self.name + " - " + self.summary
 
     class Meta:
+        verbose_name = "workflowengine"
         permissions = (
-            ('read_workflowengine', 'Can read workflow engine'),
-            ('share_workflowengine', 'Can share workflow engine'),
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
         )
                  
         
@@ -110,9 +155,10 @@ class Workflow ( SharableResource ):
         return self.name + " - " + self.summary
 
     class Meta:
+        verbose_name = "workflow"
         permissions = (
-            ('read_workflow', 'Can read worklow'),
-            ('share_workflow', 'Can share workflow'),
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
+            ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
 
     
@@ -129,10 +175,12 @@ class Project( SharableResource ):
         # if this is done through the admin interface, have the admin select a user an make this user the project administrator
         
     class Meta:
+        verbose_name = "project"
         permissions = (
-            ('read_project', 'Can read project'),
-            ('share_project', 'Can share project'),
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
+            ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
+
 
 class WorkflowDataInputMap( models.Model ):
     #workflow_data_input_internal_id = models.IntegerField()
@@ -145,7 +193,7 @@ class WorkflowDataInputMap( models.Model ):
         return str( self.workflow_data_input_name ) + " <-> " + self.data_uuid
     
                 
-class Analysis ( BaseResource ):
+class Analysis ( OwnableResource ):
     project = models.ForeignKey( Project, related_name="analyses" )
     data_set = models.ForeignKey( DataSet, blank=True )
     workflow = models.ForeignKey( Workflow, blank=True )
@@ -154,9 +202,13 @@ class Analysis ( BaseResource ):
     workflow_copy = models.TextField(blank=True, null=True)
     history_id = models.TextField(blank=True, null=True)
     workflow_galaxy_id = models.TextField(blank=True, null=True)
-    library_id = models.TextField(blank=True, null=True)
-    
-
+    library_id = models.TextField(blank=True, null=True)    
     
     def __unicode__(self):
         return self.name + " - " + self.summary
+    
+    class Meta:
+        verbose_name = "analysis"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' %  verbose_name ),
+        )

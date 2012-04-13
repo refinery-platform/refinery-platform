@@ -8,8 +8,7 @@ from celery.task import task
 from galaxy_connector.galaxy_workflow import GalaxyWorkflow, GalaxyWorkflowInput
 from galaxy_connector.models import Instance
 from galaxy_connector.connection import Connection
-from core.models import Workflow, WorkflowDataInput
-from guardian.shortcuts import assign
+from core.models import Workflow, WorkflowDataInput, WorkflowEngine
 from django.contrib.auth.models import Group 
 from galaxy_connector.galaxy_workflow import createBaseWorkflow, createStepsAnnot
     
@@ -34,10 +33,11 @@ def get_workflows( workflow_engine ):
     #for each workflow, create a core Workflow object and its associated WorkflowDataInput objects
     for workflow in workflows:
         workflow_object = Workflow.objects.create( name=workflow.name, internal_id=workflow.identifier, workflow_engine=workflow_engine )        
+        workflow_object.set_owner( workflow_engine.get_owner() )
+                
         # TODO: fix these assignments!!!
         group_object = Group.objects.get( name__exact="Public" )
-        assign( "read_workflow", group_object, workflow_object )
-        assign( "change_workflow", group_object, workflow_object )
+        workflow_object.share( group_object )
 
         inputs = workflow.inputs
         
