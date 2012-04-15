@@ -1,5 +1,4 @@
 from core.models import *
-from django.contrib.auth.models import User, Group, AnonymousUser 
 from django.template import RequestContext
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseForbidden
@@ -7,10 +6,6 @@ from django.contrib.auth.decorators import login_required
 from guardian.shortcuts import get_objects_for_user
 from guardian.shortcuts import get_objects_for_group
 from guardian.shortcuts import get_perms
-from guardian.shortcuts import get_users_with_perms
-from guardian.shortcuts import assign
-# TODO: resolve this dependency
-from galaxy_connector.models import Instance
 
 def index(request):
     
@@ -21,7 +16,7 @@ def index(request):
 
     if not request.user.is_authenticated():
         # TODO: formalize "Public" group
-        groups = Group.objects.filter( name__exact="Public" )
+        groups = ExtendedGroup.objects.filter( name__exact="Public" )
         
         if len( groups ) == 1:
             group = groups[0]        
@@ -58,7 +53,7 @@ def user(request,query):
 
 def project(request,uuid):
     project = get_object_or_404( Project, uuid=uuid )
-    public_group = Group.objects.get( name__exact="Public")
+    public_group = ExtendedGroup.objects.get( name__exact="Public")
     
     print get_perms( public_group, project )
     
@@ -73,7 +68,7 @@ def project(request,uuid):
 
 def data_set(request,uuid):    
     data_set = get_object_or_404( DataSet, uuid=uuid )
-    public_group = Group.objects.get( name__exact="Public")
+    public_group = ExtendedGroup.objects.get( name__exact="Public")
         
     if not request.user.has_perm( 'core.read_dataset', data_set ):
         if not 'read_dataset' in get_perms( public_group, data_set ):
@@ -86,7 +81,7 @@ def data_set(request,uuid):
 
 def workflow(request,uuid):
     workflow = get_object_or_404( Workflow, uuid=uuid )
-    public_group = Group.objects.get( name__exact="Public")
+    public_group = ExtendedGroup.objects.get( name__exact="Public")
     
     if not request.user.has_perm('core.read_workflow', workflow ):
         if not 'read_workflow' in get_perms( public_group, workflow ):
@@ -99,7 +94,7 @@ def workflow(request,uuid):
 
 def workflow_engine(request,uuid):  
     workflow_engine = get_object_or_404( WorkflowEngine, uuid=uuid )
-    public_group = Group.objects.get( name__exact="Public")
+    public_group = ExtendedGroup.objects.get( name__exact="Public")
     
     if not request.user.has_perm('core.read_workflowengine', workflow_engine ):
         if not 'read_workflowengine' in get_perms( public_group, workflow_engine ):
@@ -185,7 +180,7 @@ def admin_test_data( request ):
                   "members": [ ".ilya", ".shannan" ]
                 },
                 { "name": ".Refinery Project",
-                  "members": [ ".nils", ".richard", ".psalm", ".ilya", ".shannan" ]
+                  "members": [ ".nils", ".shannan", ".richard", ".psalm", ".ilya" ]
                 },
                 { "name": "Public",
                   "members": [ ".nils", ".richard", ".psalm", ".ilya", ".shannan" ]
@@ -198,24 +193,71 @@ def admin_test_data( request ):
     for group in groups:
         
         # delete if exists
-        group_object = Group.objects.filter( name__exact=group["name"] )
-        if group_object is not None:
+        try:
+            group_object = ExtendedGroup.objects.get( group["name"] )            
+            if group_object.is_managed():
+                print( group_object.manager_group )
+                group_object.manager_group.delete()
             group_object.delete()
+        except:
+            pass
 
-        group_object = Group.objects.create( name=group["name"] )
+        group_object = ExtendedGroup.objects.create( name=group["name"] )
+        manager_group_object = ExtendedGroup.objects.create( name=str( group["name"] + " Managers" ) )
+        
+        group_object.manager_group = manager_group_object
+        group_object.save()
 
         # Add users to group
         for username in group["members"]:
             user_object = User.objects.get( username__exact=username )
             user_object.groups.add( group_object )
-            
+        
+        # Add first two members of each group to the manager group    
+        User.objects.get( username__exact=group["members"][0] ).groups.add( manager_group_object )
+        User.objects.get( username__exact=group["members"][1] ).groups.add( manager_group_object )
+                    
         group_objects.append( group_object )
         
+
+    # disk quotas (for each user) 
+    for user_object in user_objects:
+                
+        ## PRIVATE PROJECT
+        quota_name = user_object.first_name + "\'s Quota"
+        quota_summary = "Initial user quota."
+        
+        # delete if exists
+        quota_object = DiskQuota.objects.filter( name__exact=quota_name )
+        if quota_object is not None:
+            quota_object.delete()
+    
+        quota_object = DiskQuota.objects.create( name=quota_name, summary=quota_summary, maximum=20*1024*1024*1024, current=20*1024*1024*1024 )
+        quota_object.set_owner( user_object )
+
+
+    # disk quotas (for each user) 
+    for group_object in group_objects:
+                
+        ## PRIVATE PROJECT
+        quota_name = group_object.name + "\'s Quota"
+        quota_summary = "Initial group quota."
+        
+        # delete if exists
+        quota_object = DiskQuota.objects.filter( name__exact=quota_name )
+        if quota_object is not None:
+            quota_object.delete()
+    
+        quota_object = DiskQuota.objects.create( name=quota_name, summary=quota_summary, maximum=100*1024*1024*1024, current=100*1024*1024*1024 )
+        quota_object.set_manager_group( group_object.manager_group )
+        quota_object.share( group_object, readonly=False )
+
+
     project_objects = []
 
     # create projects (for each user: private, lab shared read/write, project group shared read-only, public shared) 
     for user_object in user_objects:
-        
+                
         ## PRIVATE PROJECT
         project_name = user_object.first_name + "\'s Private Project"
         project_summary = "A project that is only visible to " + user_object.first_name + "."
@@ -224,13 +266,13 @@ def admin_test_data( request ):
         project_object = Project.objects.filter( name__exact=project_name )
         if project_object is not None:
             project_object.delete()
-
+    
         project_object = Project.objects.create( name=project_name, summary=project_summary )
         project_object.set_owner( user_object )
         
         project_objects.append( project_object )
         
-
+    
         ## PUBLIC PROJECT
         project_name = user_object.first_name + "\'s Public Project" 
         project_summary = "A project that is owned by " + user_object.first_name + " and shared for reading with the general public."
@@ -239,44 +281,44 @@ def admin_test_data( request ):
         project_object = Project.objects.filter( name__exact=project_name, summary=project_summary )
         if project_object is not None:
             project_object.delete()
-
+    
         project_object = Project.objects.create( name=project_name, summary=project_summary )
         project_object.set_owner( user_object )
-        group_object = Group.objects.get( name__exact="Public" )
+        group_object = ExtendedGroup.objects.get( name__exact="Public" )
         project_object.share( group_object )
-
+    
         project_objects.append( project_object )
             
-
+    
         ## PROJECT GROUP READ-ONLY PROJECT
         project_name = user_object.first_name + "\'s Refinery Project" 
-        project_summary = "A project that is owned by " + user_object.first_name + " and shared for reading with the \'Refinery Project\' group."
+        project_summary = "A project that is owned by " + user_object.first_name + " and shared for reading with the \'Refinery Project\' ExtendedGroup."
         
         # delete if exists
         project_object = Project.objects.filter( name__exact=project_name )
         if project_object is not None:
             project_object.delete()
-
+    
         project_object = Project.objects.create( name=project_name, summary=project_summary )
         project_object.set_owner( user_object )
-        group_object = Group.objects.get( name__exact=".Refinery Project" )
+        group_object = ExtendedGroup.objects.get( name__exact=".Refinery Project" )
         project_object.share( group_object )
-
+    
         project_objects.append( project_object )
-
+    
     
         ## LAB READ/WRITE PROJECT
         project_name = user_object.first_name + "\'s Lab Project" 
-        project_summary = "A project that is owned by " + user_object.first_name + " and shared for reading and writing their lab group."
+        project_summary = "A project that is owned by " + user_object.first_name + " and shared for reading and writing their lab ExtendedGroup."
         
         # delete if exists
         project_object = Project.objects.filter( name__exact=project_name )
         if project_object is not None:
             project_object.delete()
-
+    
         project_object = Project.objects.create( name=project_name, summary=project_summary )
         project_object.set_owner( user_object )
-        group_object = user_object.groups.get( name__contains="Lab" )
+        group_object = user_object.groups.get( name__endswith="Lab" )
         project_object.share( group_object, readonly=False )
         project_objects.append( project_object )
 
@@ -311,14 +353,14 @@ def admin_test_data( request ):
 
         data_set_object = DataSet.objects.create( name=data_set_name, summary=data_set_summary )
         data_set_object.set_owner( user_object )
-        group_object = Group.objects.get( name__exact="Public" )
+        group_object = ExtendedGroup.objects.get( name__exact="Public" )
         data_set_object.share( group_object )
         data_set_objects.append( data_set_object )
             
 
         ## data_set GROUP READ-ONLY data_set
         data_set_name = user_object.first_name + "\'s Refinery Data Set" 
-        data_set_summary = "A data_set that is owned by " + user_object.first_name + " and shared for reading with the \'Refinery data_set\' group."
+        data_set_summary = "A data_set that is owned by " + user_object.first_name + " and shared for reading with the \'Refinery Project\' group."
         
         # delete if exists
         data_set_object = DataSet.objects.filter( name__exact=data_set_name )
@@ -327,7 +369,7 @@ def admin_test_data( request ):
 
         data_set_object = DataSet.objects.create( name=data_set_name, summary=data_set_summary )
         data_set_object.set_owner( user_object )
-        group_object = Group.objects.get( name__exact=".Refinery Project" )
+        group_object = ExtendedGroup.objects.get( name__exact=".Refinery Project" )
         data_set_object.share( group_object )
         data_set_objects.append( data_set_object )
 
@@ -343,7 +385,7 @@ def admin_test_data( request ):
 
         data_set_object = DataSet.objects.create( name=data_set_name, summary=data_set_summary )
         data_set_object.set_owner( user_object )
-        group_object = user_object.groups.get( name__contains="Lab" )
+        group_object = user_object.groups.get( name__endswith="Lab" )
         data_set_object.share( group_object, readonly=False )
         data_set_objects.append( data_set_object )
 
@@ -354,7 +396,7 @@ def admin_test_data( request ):
     for instance in Instance.objects.all():
         workflow_engine_object = WorkflowEngine.objects.create( instance=instance, name=instance.description, summary=instance.base_url + " " + instance.api_key )
         # TODO: introduce group managers and assign ownership to them        
-        workflow_engine_object.set_owner( User.objects.get( username__exact=".nils" ) )
+        workflow_engine_object.set_manager_group( ExtendedGroup.objects.get( name__exact="Public Managers" ) )
                 
         workflow_engine_objects.append( workflow_engine_object )
         

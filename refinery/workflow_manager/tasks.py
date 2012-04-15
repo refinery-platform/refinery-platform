@@ -33,7 +33,7 @@ def get_workflows( workflow_engine ):
     #for each workflow, create a core Workflow object and its associated WorkflowDataInput objects
     for workflow in workflows:
         workflow_object = Workflow.objects.create( name=workflow.name, internal_id=workflow.identifier, workflow_engine=workflow_engine )        
-        workflow_object.set_owner( workflow_engine.get_owner() )
+        workflow_object.set_manager_group( workflow_engine.get_manager_group() )
                 
         # TODO: fix these assignments!!!
         group_object = Group.objects.get( name__exact="Public" )
