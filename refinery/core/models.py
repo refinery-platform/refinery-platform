@@ -6,11 +6,11 @@ Created on Feb 20, 2012
 
 from django.db import models
 from django_extensions.db.fields import UUIDField
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save
 from django.forms import ModelForm
 from galaxy_connector.models import Instance
-from guardian.shortcuts import assign, get_users_with_perms
+from guardian.shortcuts import assign, get_users_with_perms, get_groups_with_perms
 
 
 class UserProfile ( models.Model ):
@@ -107,6 +107,32 @@ class SharableResource ( OwnableResource ):
         abstract = True
 
 
+class ManageableResource:
+    '''
+    Abstract base class for manageable resources such as disk space and workflow engines.    
+    '''
+
+    def __unicode__(self):
+        return self.name + " (" + self.uuid + ")"
+
+    def set_manager_group( self, group ):
+        assign( "add_%s" % self._meta.verbose_name, group, self )
+        assign( "read_%s" % self._meta.verbose_name, group, self )
+        assign( "delete_%s" % self._meta.verbose_name, group, self )
+        assign( "change_%s" % self._meta.verbose_name, group, self )
+
+    def get_manager_group( self ):
+        # ownership is determined by "add" permission
+        group_permissions = get_groups_with_perms( self, attach_perms=True )
+        
+        for group, permission in group_permissions.iteritems():
+            if "add_%s" % self._meta.verbose_name in permission:
+                return group
+    
+    class Meta:
+        verbose_name = "manageableresource"
+        abstract = True
+
         
 class DataSet ( SharableResource ):
 
@@ -129,7 +155,7 @@ class WorkflowDataInput ( models.Model ):
         return self.name + " (" + str( self.internal_id ) + ")"
 
 
-class WorkflowEngine ( OwnableResource ):
+class WorkflowEngine ( OwnableResource, ManageableResource ):
     # TODO: remove Galaxy dependency
     instance = models.ForeignKey( Instance, blank=True )
     
@@ -141,9 +167,25 @@ class WorkflowEngine ( OwnableResource ):
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
         )
+
                  
+class DiskQuota ( SharableResource, ManageableResource ):
+    # quota is given in bytes
+    maximum = models.IntegerField()
+    current = models.IntegerField()
+    
+    def __unicode__(self):
+        return self.name + " - Quota: " + str(self.current/(1024*1024*1024)) + " of " + str(self.maximum/(1024*1024*1024)) + "GB available"
+
+    class Meta:
+        verbose_name = "diskquota"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
+            ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
+        )
+
         
-class Workflow ( SharableResource ):
+class Workflow ( SharableResource, ManageableResource ):
 
     data_inputs = models.ManyToManyField( WorkflowDataInput, blank=True )
     internal_id = models.CharField( max_length=50, unique=True, blank=True )
@@ -212,3 +254,15 @@ class Analysis ( OwnableResource ):
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' %  verbose_name ),
         )
+
+
+class ExtendedGroup ( Group ):
+    ''' Extends the default Django Group in auth with a group of users that own and manage manageable resources for the group.'''    
+    manager_group = models.ForeignKey( "self", blank=True, null=True )
+    
+    def delete(self):
+                
+        super( ExtendedGroup, self).delete()
+    
+    def is_managed(self):
+        return ( self.manager_group is not None ); 
