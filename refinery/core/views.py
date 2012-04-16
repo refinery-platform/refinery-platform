@@ -1,7 +1,8 @@
 from core.models import *
+from core.forms import ProjectForm
 from django.template import RequestContext
 from django.shortcuts import render_to_response, get_object_or_404
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from guardian.shortcuts import get_objects_for_user
 from guardian.shortcuts import get_objects_for_group
@@ -64,6 +65,52 @@ def project(request,uuid):
     permissions = get_users_with_perms( project, attach_perms=True )
     
     return render_to_response('core/project.html', { 'project': project, "permissions": permissions }, context_instance=RequestContext( request ) )
+
+
+@login_required()
+def project_new(request):
+    if request.method == "POST": # If the form has been submitted...
+        form = ProjectForm( request.POST ) # A form bound to the POST data
+        if form.is_valid(): # All validation rules pass
+            
+            project = form.save()
+            project.set_owner( request.user )
+            # Process the data in form.cleaned_data
+            # ...
+            return HttpResponseRedirect( "/" ) # Redirect after POST
+    else:
+        form = ProjectForm() # An unbound form
+
+    return render_to_response( "core/project_new.html", {
+        'form': form
+        },
+        context_instance=RequestContext( request )
+    )    
+
+
+@login_required()
+def project_edit(request,uuid):
+    project = get_object_or_404( Project, uuid=uuid )
+        
+    if not request.user.has_perm('core.change_project', project ):
+        return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to edit this project.</h1>" )
+            
+    if request.method == "POST": # If the form has been submitted...
+        form = ProjectForm( request.POST, instance=project ) # A form bound to the POST data
+        if form.is_valid(): # All validation rules pass            
+            form.save()
+            # Process the data in form.cleaned_data
+            # ...
+            return HttpResponseRedirect( "/" ) # Redirect after POST
+    else:
+        form = ProjectForm( instance=project ) # An unbound form
+
+    return render_to_response( "core/project_edit.html", {
+        'form': form,
+        'project': project
+        },
+        context_instance=RequestContext( request )
+    )    
 
 
 def data_set(request,uuid):    
