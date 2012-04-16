@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - New Project
+{% endblock %}
+
+{% block subheader %}
+ New Project
+{% endblock %}
+
+{% block content %}
+	<form action="/projects/new/" method="post">{% csrf_token %}
+		<table>		
+			{{ form.as_table }}
+		</table>
+		<input type="submit" value="Save" />
+	</form>	
+{% endblock %}
