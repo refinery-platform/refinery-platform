@@ -16,16 +16,17 @@
 	<h2>Users ({{ users|length}})</h2> 
     <ul>
     {% for user in users %}
-        <li><a href="user/{{ user.username }}">{{ user.username }}</a>: {{ user.first_name }} {{ user.last_name }} ({{ user.get_profile.affiliation }}): {{ user.email }}</li>
+        <li><a href="users/{{ user.username }}">{{ user.username }}</a>: {{ user.first_name }} {{ user.last_name }} ({{ user.get_profile.affiliation }}): {{ user.email }}</li>
     {% endfor %}
     </ul>
 {% endif %}
 
+<h2>Projects</h2>
+<p><a href={% url project_new %}>Create a project</a></p> 
 {% if projects %}
-	<h2>Projects ({{ projects|length }})</h2> 
     <ul>
     {% for project in projects %}
-        <li><a href="project/{{ project.uuid }}">{{ project.name }}</a>        	
+        <li>[<a href="projects/{{ project.uuid }}/edit/">Edit</a>] <a href="projects/{{ project.uuid }}">{{ project.name }}</a>        	
 		    <ul>
 		    {% for analysis in project.analyses.all %}
 		        <li>{{  analysis.name }}: {{ analysis.summary }}
@@ -45,35 +46,44 @@
         </li>                
     {% endfor %}
     </ul>
-{% else %}
-    <p>No projects available.</p>
+	<p>Count: {{ projects|length }}</p>
 {% endif %}
 
 {% if workflow_engines %}
 	<h2>Workflow Engines ({{ workflow_engines|length }})</h2> 
     <ul>
     {% for workflow_engine in workflow_engines %}
-        <li><a href="workflow_engine/{{ workflow_engine.uuid }}">{{ workflow_engine.name }}</a> ({{workflow_engine.workflow_set.all|length}})</li>
+        <li><a href="workflow_engines/{{ workflow_engine.uuid }}">{{ workflow_engine.name }}</a> ({{workflow_engine.workflow_set.all|length}}): Owned by {{workflow_engine.get_owner.username}}</li>
         <ul>
         	{% for workflow in workflow_engine.workflow_set.all %}
-        		<li><a href="workflow/{{ workflow.uuid }}">{{ workflow.name }}</a></li>
+        		<li><a href="workflows/{{ workflow.uuid }}">{{ workflow.name }}</a></li>
     		{% endfor %}
         </ul>
     {% endfor %}
     </ul>
-{% else %}
-    <p>No workflow engines available.</p>
 {% endif %}
+
+{% if workflows %}
+	<h2>Workflows ({{ workflows|length }})</h2> 
+    <ul>
+    {% for workflow in workflows %}
+        <li><a href="workflows/{{ workflow.uuid }}">{{ workflow.name }}</a> ({{workflow.workflow_engine.name}})</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <h2>No workflows available.</h2>
+{% endif %}
+
 
 {% if data_sets %}
 	<h2>Data Sets ({{ data_sets|length }})</h2> 
     <ul>
     {% for data_set in data_sets %}
-        <li><a href="data_set/{{ data_set.uuid }}">{{ data_set.name }}</a></li>
+        <li><a href="data_sets/{{ data_set.uuid }}">{{ data_set.name }}</a></li>
     {% endfor %}
     </ul>
 {% else %}
-    <p>No data sets available.</p>
+    <h2>No data sets available.</h2>
 {% endif %}
 
 {% endblock %}

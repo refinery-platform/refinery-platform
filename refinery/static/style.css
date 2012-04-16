@@ -113,6 +113,18 @@ body {
     font: small "Open Sans", "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;	
 }
 
+#content_area form textarea {
+	border: none;
+	background: #eee;
+	padding: 5px;
+    font: small "Open Sans", "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;	
+}
+
+#content_area form tr {
+	vertical-align: top;
+	text-align: left;
+}
+
 #content_area form label {
     font: small "Arvo", "Lucida Grande", Lucida, Verdana, sans-serif;
     color: #999;
