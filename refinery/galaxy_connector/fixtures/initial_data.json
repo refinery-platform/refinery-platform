@@ -1,74 +1,86 @@
 [
-    {
-        "pk": 1,
-        "model": "galaxy_connector.instance",
-        "fields": {
-            "data_url": "datasets",
-            "description": "rpark on galaxy-dev",
-            "base_url": "http://localhost:1234",
-            "staging_path": "/data/home/galaxy/galaxy-staging",
-            "api_key": "cd75199a08e4a5bcb548be36ef572efb",
-            "api_url": "api"
-        }
-    },
-    {
-        "pk": 2,
-        "model": "galaxy_connector.instance",
-        "fields": {
-            "data_url": "datasets",
-            "description": "nils on galaxy-dev ",
-            "base_url": "http://fisher.med.harvard.edu:4216",
-            "staging_path": "/data/home/galaxy/galaxy-staging",
-            "api_key": "98e6d89c453a33b78b18be3fbbad9e20",
-            "api_url": "api"
-        }
-    },
-    {
-        "pk": 3,
-        "model": "galaxy_connector.instance",
-        "fields": {
-            "data_url": "datasets",
-            "description": "rpark on local_machine",
-            "base_url": "http://127.0.0.1:8080",
-            "staging_path": "/Users/richardpark/Projects/galaxy-central",
-            "api_key": "35a24ae2643785ff3d046c98ea362c7f",
-            "api_url": "api"
-        }
-    },
-    {
-        "pk": 4,
-        "model": "galaxy_connector.datafile",
-        "fields": {
-            "path": "test_small/test_elate7_input.fastq",
-            "kind": "input",
-            "description": "chip-seq input"
-        }
-    },
-    {
-        "pk": 3,
-        "model": "galaxy_connector.datafile",
-        "fields": {
-            "path": "test_small/test_elate7_hp2.fastq ",
-            "kind": "hp2 chip-seq file",
-            "description": "hp2 modification"
-        }
-    },
-    {
-        "pk": 2,
-        "model": "galaxy_connector.datafile",
-        "fields": {
-            "path": "test_small/small_input.fastq",
-            "kind": "fastq experiment fil",
-            "description": "input"
-        }
-    },
-    {
-        "pk": 1,
-        "model": "galaxy_connector.datafile",
-        "fields": {
-            "path": "test_small/small_hp1a.fastq",
-            "kind": "fastq experiment fil",
-            "description": "test file, modification"
-        }
-    }
+   {
+      "pk": 1,
+      "model": "galaxy_connector.instance",
+      "fields": {
+         "data_url": "datasets",
+         "description": "rpark on galaxy-dev",
+         "base_url": "http://localhost:1234",
+         "staging_path": "/data/home/galaxy/galaxy-staging",
+         "api_key": "cd75199a08e4a5bcb548be36ef572efb",
+         "api_url": "api"
+      }
+   },
+   {
+      "pk": 2,
+      "model": "galaxy_connector.instance",
+      "fields": {
+         "data_url": "datasets",
+         "description": "nils on galaxy-dev ",
+         "base_url": "http://fisher.med.harvard.edu:4216",
+         "staging_path": "/data/home/galaxy/galaxy-staging",
+         "api_key": "98e6d89c453a33b78b18be3fbbad9e20",
+         "api_url": "api"
+      }
+   },
+   {
+      "pk": 3,
+      "model": "galaxy_connector.instance",
+      "fields": {
+         "data_url": "datasets",
+         "description": "rpark on local_machine",
+         "base_url": "http://127.0.0.1:8080",
+         "staging_path": "/Users/richardpark/Projects/galaxy-central",
+         "api_key": "35a24ae2643785ff3d046c98ea362c7f",
+         "api_url": "api"
+      }
+   },
+   {
+      "pk": 4,
+      "model": "galaxy_connector.instance",
+      "fields": {
+         "data_url": "datasets",
+         "description": "refinery-worker-01 on galaxy-dev",
+         "base_url": "http://localhost:1234",
+         "staging_path": "/data/home/galaxy/galaxy-staging",
+         "api_key": "32dacec9f04e51f5a79fb0262f7f0f9c",
+         "api_url": "api"
+      }
+   },
+   {
+      "pk": 4,
+      "model": "galaxy_connector.datafile",
+      "fields": {
+         "path": "test_small/test_elate7_input.fastq",
+         "kind": "input",
+         "description": "chip-seq input"
+      }
+   },
+   {
+      "pk": 3,
+      "model": "galaxy_connector.datafile",
+      "fields": {
+         "path": "test_small/test_elate7_hp2.fastq ",
+         "kind": "hp2 chip-seq file",
+         "description": "hp2 modification"
+      }
+   },
+   {
+      "pk": 2,
+      "model": "galaxy_connector.datafile",
+      "fields": {
+         "path": "test_small/small_input.fastq",
+         "kind": "fastq experiment fil",
+         "description": "input"
+      }
+   },
+   {
+      "pk": 1,
+      "model": "galaxy_connector.datafile",
+      "fields": {
+         "path": "test_small/small_hp1a.fastq",
+         "kind": "fastq experiment fil",
+         "description": "test file, modification"
+      }
+   }
 ]
