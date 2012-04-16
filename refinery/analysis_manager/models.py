@@ -31,11 +31,11 @@ class AnalysisStatus( models.Model ):
         
         if not self.preprocessing_taskset_id is None:
             preprocessing_taskset = TaskSetResult.restore( self.preprocessing_taskset_id )
-            print "preprocessing_taskset"
-            print preprocessing_taskset
-            print self.preprocessing_taskset_id
             if preprocessing_taskset is not None:
                 preprocessing_result = preprocessing_taskset.waiting()
+                preprocessing_subtasks = []
+                for res in preprocessing_taskset.results:
+                    preprocessing_subtasks.append(res.task_id)
             
         if not self.preprocessing_taskset_id is None:
             execution_taskset = TaskSetResult.restore( self.execution_taskset_id )
@@ -47,7 +47,7 @@ class AnalysisStatus( models.Model ):
             if postprocessing_taskset is not None:
                 postprocessing_result = postprocessing_taskset.waiting()
         
-        return { "preprocessing": preprocessing_result, "execution": execution_result, "postprocessing": postprocessing_result } 
+        return { "preprocessing": preprocessing_result, "preprocessing_tasks": preprocessing_subtasks, "execution": execution_result, "postprocessing": postprocessing_result } 
 
 
 
