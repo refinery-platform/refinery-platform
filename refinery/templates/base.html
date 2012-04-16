@@ -9,7 +9,7 @@
 	<div id="auth_area">
         {% block authentication %}        
 		{% if user.is_authenticated %}       
-        	{{ user.get_full_name }} | <a href="/user/{{user.username}}">Profile</a> | <a href="{% url django.contrib.auth.views.logout %}">Logout</a>
+        	{{ user.get_full_name }} | <a href="/users/{{user.username}}">Profile</a> | <a href="{% url django.contrib.auth.views.logout %}">Logout</a>
         {% else %}
 			<a href="{% url django.contrib.auth.views.login %}?next={% firstof request.path '/' %}">Login</a>
         {% endif %}		
