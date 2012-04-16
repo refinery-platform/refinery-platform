@@ -210,12 +210,6 @@ class Project( SharableResource ):
     def __unicode__(self):
         return self.name + " - " + self.summary
     
-    #def save(self, *args, **kwargs):
-        #''' overwriting default save behavior to create relationship between current user and project '''
-        #super( Project, self ).save( *args, **kwargs ) # Call the "real" save() method.
-        # if a user is logged in, create a ProjectUserRelationship with the current user as an administrator
-        # if this is done through the admin interface, have the admin select a user an make this user the project administrator
-        
     class Meta:
         verbose_name = "project"
         permissions = (
