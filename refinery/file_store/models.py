@@ -1,10 +1,12 @@
+import os
+import urllib2
 from django.db import models
 from django_extensions.db.fields import UUIDField
-from settings_local import MEDIA_ROOT, FILE_STORE_BASE_DIR
-import os
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.core.files import File
+from django.core.files.temp import NamedTemporaryFile
+from settings_local import MEDIA_ROOT, FILE_STORE_BASE_DIR
 
 # provide a default location for file store
 if not FILE_STORE_BASE_DIR:
@@ -15,6 +17,7 @@ def file_path(modelinstance, filename):
     Return local file system path for uploaded files
     Based on http://michaelandrews.typepad.com/the_technical_times/2009/10/creating-a-hashed-directory-structure.html
     '''
+    #TODO: include share_name in the path
     hashcode = hash(filename)   # duplicate file names get _N (N is int) added to the name
     mask = 255  # bitmask
     # use the first and second bytes of the hash code represented as zero-padded hex numbers as directory names
@@ -36,7 +39,8 @@ def _delete_file_on_disk(sender, **kwargs):
     Delete the file that belongs to this model from file system
     Call this function only when deleting the model
     Otherwise, this will result in models pointing to files that don't exist
-    ''' 
+    '''
+    #TODO: raise exception if file not found?
     instance = kwargs.get('instance')
     instance.datafile.delete(save=False)    # don't save the model back to DB after file was deleted
 
@@ -45,6 +49,7 @@ def read_file(uuid):
     try:
         datafile = RepositoryFile.objects.get(uuid=uuid).file
     except RepositoryFile.DoesNotExist:
+        #TODO: write error msg to log
         return None
     return datafile
 
@@ -53,8 +58,10 @@ def delete_file(uuid):
     try:
         f = RepositoryFile.objects.get(uuid=uuid)
     except RepositoryFile.DoesNotExist:
+        #TODO: write error msg to log
         return False
     f.delete()
+    #TODO: check if completed successfully
     return True
 
 def write_file(abssrcpath, share_name='', link=False):
@@ -97,8 +104,45 @@ def write_remote_file(url, share_name=''):
     '''
     Download file from provided URL
     '''
-    pass
-    # return uuid
+    # download file to temp file object
+    req = urllib2.Request(url)
+    try:
+        response = urllib2.urlopen(req)
+    except urllib2.URLError, e:
+        #TODO: write error to log
+        response.close()
+        return None
+
+    # download and save the file
+    #TODO: download data directly to a file in MEDIA_ROOT to avoid copying from temp file after download is finished
+    tmpfile = NamedTemporaryFile()  # django.core.files.File cannot handle file-like objects like those returned by urlopen
+    remotefilesize = int(response.info().getheaders("Content-Length")[0])
+    filename = response.geturl().split('/')[-1]    # get file name from its URL
+
+    print "Downloading: %s Bytes:" 
+    localfilesize = 0       # bytes
+    blocksize = 8 * 1024    # bytes
+    while True:
+        buf = response.read(blocksize)
+        if not buf:
+            break
+
+        localfilesize += len(buf)
+        tmpfile.write(buf)
+
+#        downloaded = localfilesize * 100. / remotefilesize
+#        status = r"%10d  [%3.2f%%]" % (localfilesize, downloaded)
+#        status = status + chr(8) * (len(status) + 1)
+#        print status,
+
+    tmpfile.flush()
+    
+    rf = RepositoryFile()
+    rf.datafile.save(filename, File(tmpfile))
+
+    tmpfile.close()
+    response.close()
+    return rf.uuid
 
 class RepositoryCache:
     '''
