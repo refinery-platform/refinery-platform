@@ -317,7 +317,7 @@ class Connection( object ):
     # =========================================================================================================
 
     def get_progress( self, history_id ):            
-        history = self.get_history( "histories" + "/" + history_id )
+        history = self.get_history( history_id )
         
         if "state_details" not in history:
             return ( { "percent_complete": 0, "workflow_state": history["state"], "message": "Preparing ..." } )
