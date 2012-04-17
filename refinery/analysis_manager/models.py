@@ -23,6 +23,7 @@ class AnalysisStatus( models.Model ):
     preprocessing_taskset_id = UUIDField( blank=True, null=True )
     execution_taskset_id = UUIDField( blank=True, null=True )
     postprocessing_taskset_id = UUIDField( blank=True, null=True )
+    execution_monitor_task_id = UUIDField( blank=True, null=True )
     
     def current(self):        
         preprocessing_result = False
@@ -47,7 +48,8 @@ class AnalysisStatus( models.Model ):
             if postprocessing_taskset is not None:
                 postprocessing_result = postprocessing_taskset.waiting()
         
-        return { "preprocessing": preprocessing_result, "preprocessing_tasks": preprocessing_subtasks, "execution": execution_result, "postprocessing": postprocessing_result } 
+        #return { "preprocessing": preprocessing_result, "preprocessing_tasks": preprocessing_subtasks, "execution": execution_result, "postprocessing": postprocessing_result } 
+        return { "preprocessing": preprocessing_result, "execution": execution_result, "postprocessing": postprocessing_result } 
 
 
 
