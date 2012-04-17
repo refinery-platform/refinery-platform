@@ -15,6 +15,77 @@ from galaxy_connector.connection import Connection
 from refinery_repository.tasks import download_http_file
 from workflow_manager.tasks import configure_workflow
 from datetime import datetime
+from celery.task import chord
+from celery.utils import uuid
+from celery.task.chords import Chord
+from celery import current_app as celery
+
+# example from: http://www.manasupo.com/2012/03/chord-progress-in-celery.html
+class progress_chord(object):
+    Chord = Chord
+
+    def __init__(self, tasks, **options):
+        self.tasks = tasks
+        self.options = options
+
+    def __call__(self, body, **options):
+        tid = body.options.setdefault("task_id", uuid())
+        r = self.Chord.apply_async((list(self.tasks), body),
+                                   self.options,
+                                   **options)
+        return body.type.app.AsyncResult(tid), r
+
+@task
+def chord_execution( ret_val, analysis ):
+    
+    analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+    analysis_status = AnalysisStatus.objects.filter( analysis_uuid=analysis.uuid )[0]
+    
+    # EXECUTION
+    #execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )), monitor_analysis_execution.subtask((analysis, )), ]).apply_async()            
+    #execution_taskset.save()
+    
+    #execution_taskset = TaskSet( task=[run_analysis_preprocessing.subtask(( analysis, )) ])
+    #execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )), monitor_analysis_execution.subtask((analysis, )), ])            
+    execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )) ])            
+    result_chord, result_set = progress_chord(execution_taskset)(chord_postprocessing.subtask((analysis,)))
+    
+    analysis_status.execution_taskset_id = result_set.task_id 
+    analysis_status.save()
+    
+    #print "before execution_taskset.join()"
+    # TODO: use less dangerous method, e.g. callback (possible with TaskSet?)
+    #execution_taskset.join()
+    print "after chord_execution"    
+    
+    return
+
+@task
+def emptyTask(ret_val):
+    return 
+
+@task
+def chord_postprocessing (ret_val, analysis ):
+    
+    analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+    analysis_status = AnalysisStatus.objects.filter( analysis_uuid=analysis.uuid )[0]
+    
+    # POSTPROCESSING       
+    #postprocessing_taskset = TaskSet( task=[run_analysis_postprocessing.subtask(( analysis, )) ]).apply_async()            
+    #postprocessing_taskset.save()
+    
+    postprocessing_taskset = TaskSet( task=[run_analysis_postprocessing.subtask(( analysis, )) ])          
+    #result_chord, result_set = progress_chord(postprocessing_taskset)(syncTask.subtask(params))
+    result_chord, result_set = progress_chord(postprocessing_taskset)(emptyTask.subtask())
+    analysis_status.postprocessing_taskset_id = result_set.task_id 
+    analysis_status.save()
+    
+    
+    print "after chord_postprocessing"   
+    #analysis_status.postprocessing_taskset_id = postprocessing_taskset.taskset_id 
+    #analysis_status.save()
+    
+    return 
 
 # task: run analysis (outermost task, calls subtasks that monitor and run preprocessing, execution, postprocessing)
 @task()
@@ -26,37 +97,42 @@ def run_analysis( analysis, interval=5.0 ):
     analysis_status.save()
     
     # PREPROCESSING            
-    preprocessing_taskset = TaskSet( task=[run_analysis_preprocessing.subtask(( analysis, )) ]).apply_async()
-    preprocessing_taskset.save()
+    #preprocessing_taskset = TaskSet( task=[run_analysis_preprocessing.subtask(( analysis, )) ]).apply_async()
+    #preprocessing_taskset.save()
+    #analysis_status.preprocessing_taskset_id = preprocessing_taskset.taskset_id 
+    #analysis_status.save()
     
-    analysis_status.preprocessing_taskset_id = preprocessing_taskset.taskset_id 
+    preprocessing_taskset = TaskSet( task=[run_analysis_preprocessing.subtask(( analysis, )) ])
+    result_chord, result_set = progress_chord(preprocessing_taskset)(chord_execution.subtask( analysis=analysis, ) )
+    analysis_status.preprocessing_taskset_id = result_set.task_id 
     analysis_status.save()
-
-    print "before preprocessing_taskset.join()"   
+    
+    
+    #print "before preprocessing_taskset.join()"   
     # TODO: use less dangerous method, e.g. callback (possible with TaskSet?)
-    preprocessing_taskset.join()
-    print "after preprocessing_taskset.join()"    
+    #preprocessing_taskset.join()
+    print "after preprocessing"    
     
 
     # EXECUTION
-    execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )), monitor_analysis_execution.subtask((analysis, )), ]).apply_async()            
-    execution_taskset.save()
+    #execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )), monitor_analysis_execution.subtask((analysis, )), ]).apply_async()            
+    #execution_taskset.save()
     
-    analysis_status.execution_taskset_id = execution_taskset.taskset_id 
-    analysis_status.save()
+    #analysis_status.execution_taskset_id = execution_taskset.taskset_id 
+    #analysis_status.save()
     
-    print "before execution_taskset.join()"
+    #print "before execution_taskset.join()"
     # TODO: use less dangerous method, e.g. callback (possible with TaskSet?)
-    execution_taskset.join()
-    print "after execution_taskset.join()"    
+    #execution_taskset.join()
+    #print "after execution_taskset.join()"    
     
     
     # POSTPROCESSING       
-    postprocessing_taskset = TaskSet( task=[run_analysis_postprocessing.subtask(( analysis, )) ]).apply_async()            
-    postprocessing_taskset.save()
+    #postprocessing_taskset = TaskSet( task=[run_analysis_postprocessing.subtask(( analysis, )) ]).apply_async()            
+    #postprocessing_taskset.save()
     
-    analysis_status.postprocessing_taskset_id = postprocessing_taskset.taskset_id 
-    analysis_status.save()
+    #analysis_status.postprocessing_taskset_id = postprocessing_taskset.taskset_id 
+    #analysis_status.save()
 
 
     '''
@@ -150,7 +226,7 @@ def run_analysis_preprocessing( analysis ):
     ######### ANALYSIS MODEL 
     new_workflow_steps = len(new_workflow["steps"])
     
-     # creates new history in galaxy
+    # creates new history in galaxy
     history_id = connection.create_history( "Refinery Analysis - " + str( analysis.uuid ) + " (" + str( datetime.now() ) + ")" )
     
     # updating analysis object
@@ -160,6 +236,14 @@ def run_analysis_preprocessing( analysis ):
     analysis.library_id = library_id
     analysis.history_id = history_id
     analysis.save()
+    
+    # start monitoring task
+    execution_monitor_task_id = monitor_analysis_execution.subtask((analysis, )).apply_async().task_id
+    
+    analysis_status = AnalysisStatus.objects.filter( analysis_uuid=analysis.uuid )[0]
+    analysis_status.execution_monitor_task_id = execution_monitor_task_id
+    analysis_status.save()
+    
     
     return
 
@@ -172,36 +256,44 @@ def monitor_analysis_execution( analysis, interval=5.0 ):
     
     connection = get_analysis_connection( analysis )
     
+    print "analysis.history_id "
+    print analysis.history_id 
+    print "connection"
+    print connection.make_url("histories")
+    print "Get history"
+    print connection.get_history(analysis.history_id)
+    
     while True:
         progress = connection.get_progress( analysis.history_id )
         monitor_analysis_execution.update_state( state="PROGRESS", meta=progress )
         print  "Sleeping ..."
+        print progress
         time.sleep( interval );
         print  "Awake ..."
-        print  "Analysis Execution Task State: " + analysis_execution_task.state + "\n"
+        #print  "Analysis Execution Task State: " + analysis_execution_task.state + "\n"
         print  "Workflow State: " + progress["workflow_state"] + "\n"
                 
-        if analysis_execution_task.state == "SUCCESS":
-            print "Analysis Execution Task task finished successfully."
+        #if analysis_execution_task.state == "SUCCESS":
+        print "Analysis Execution Task task finished successfully."
             
-            if progress["workflow_state"] == "ok":
-                print "Workflow finished successfully. Stopping monitor ..."
-                break
+        if progress["workflow_state"] == "ok":
+            print "Workflow finished successfully. Stopping monitor ..."
+        #    break
 
-            if progress["workflow_state"] == "error":
-                print "Workflow failed. Stopping monitor ..."
-                break
+        if progress["workflow_state"] == "error":
+            print "Workflow failed. Stopping monitor ..."
+        #    break
              
-            if progress["workflow_state"] == "queued":
-                print "Workflow running."
+        if progress["workflow_state"] == "queued":
+            print "Workflow running."
 
-            if progress["workflow_state"] == "new":
-                print "Workflow being prepared."
+        if progress["workflow_state"] == "new":
+            print "Workflow being prepared."
 
         
-        if analysis_execution_task.state == "FAILURE":
-            print "Analysis Execution Task failed . Stopping monitor ..."
-            break    
+        #if analysis_execution_task.state == "FAILURE":
+        #    print "Analysis Execution Task failed . Stopping monitor ..."
+        #    break    
     return
 
 # task: perform execution (innermost task, does the actual work)
@@ -249,6 +341,10 @@ def run_analysis_postprocessing( analysis ):
     # TODO
     # 4. delete specified library
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+    analysis_status = AnalysisStatus.objects.filter( analysis_uuid=analysis.uuid )[0]
+    
+    # kill monitoring task
+    celery.control.revoke(analysis_status.execution_monitor_task_id, terminate=True)
     
     connection = get_analysis_connection(analysis)
     
