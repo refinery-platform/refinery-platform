@@ -357,7 +357,9 @@ def run_analysis_postprocessing( analysis ):
     
     # delete history
     connection.delete_history(analysis.history_id)
-    # need to add to connection delete_library
+    
+    # delete_library
+    connection.delete_library(analysis.library_id)
     
     return
 
@@ -436,6 +438,9 @@ def download_history_files(connection, history_id) :
     """
     Download entire histories from galaxy. Getting files out of history to file store
     """
+    
+    print "analysis_manger.download_history_files called"
+    
     download_list = connection.get_history_file_list(history_id)
     
     for results in download_list:
@@ -446,6 +451,12 @@ def download_history_files(connection, history_id) :
             # checks to see if history file is raw fastq file, excluding from download
             check_fastq = file_type.lower().find('fastq')
             check_sam = file_type.lower().find('sam')
+            
+            print "checking file types:"
+            print "check_fastq"
+            print check_fastq
+            print "check_sam"
+            print check_sam
             
             if (check_fastq < 0 and check_sam < 0):
                 # name of file
