@@ -266,7 +266,7 @@ def admin_test_data( request ):
                     
         group_objects.append( group_object )
         
-
+    """
     # disk quotas (for each user) 
     for user_object in user_objects:
                 
@@ -282,7 +282,7 @@ def admin_test_data( request ):
         quota_object = DiskQuota.objects.create( name=quota_name, summary=quota_summary, maximum=20*1024*1024*1024, current=20*1024*1024*1024 )
         quota_object.set_owner( user_object )
 
-
+    
     # disk quotas (for each user) 
     for group_object in group_objects:
                 
@@ -298,6 +298,7 @@ def admin_test_data( request ):
         quota_object = DiskQuota.objects.create( name=quota_name, summary=quota_summary, maximum=100*1024*1024*1024, current=100*1024*1024*1024 )
         quota_object.set_manager_group( group_object.manager_group )
         quota_object.share( group_object, readonly=False )
+    """
 
 
     project_objects = []
