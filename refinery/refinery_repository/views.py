@@ -21,6 +21,7 @@ from galaxy_connector.views import checkActiveInstance, obtain_instance
 from analysis_manager.tasks import download_history_files, run_analysis
 from workflow_manager.tasks import get_workflow_inputs, get_workflows
 from datetime import datetime
+from django.http import Http404
 
 
 def dictfetchall(cursor):
@@ -85,6 +86,33 @@ def download(request, accession):
     return HttpResponseRedirect(reverse('refinery_repository.views.results', args=(accession,)))
 
 
+# TODO: check perms
+def investigations( request ):
+    investigations = Investigation.objects.all()
+
+    return render_to_response( "refinery_repository/investigations.html", 
+                              {
+                                "investigations": investigations
+                              },
+                              context_instance=RequestContext( request ) )
+    
+# TODO: check perms    
+def investigation( request, query ):
+
+    investigation = None
+    
+    try:
+        investigation = Investigation.objects.get( investigation_uuid=query )
+    except:
+        raise Http404
+
+    return render_to_response( "refinery_repository/investigation.html", 
+                              {
+                                "investigation": investigation
+                              },
+                              context_instance=RequestContext( request ) )    
+
+     
 """ Richard's views """
 def get_available_files(request):
     """
