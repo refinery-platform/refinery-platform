@@ -313,6 +313,17 @@ class Connection( object ):
         
         return libraries
 
+    def delete_library(self, library_id):
+        """
+        DELETE /api/library/{library_id}
+        Deletes a specified library
+        """
+        # TODO: Figure out way to purge data library
+        try:
+            return self.delete( "histories" + "/" + history_id )
+        except urllib2.HTTPError, e:
+            print str( e.read( 1024 ) )
+            return "Error. " + str( e.read( 1024 ) )
 
     # =========================================================================================================
 
