@@ -12,4 +12,4 @@ class ProjectForm(ModelForm):
         model = Project
         widgets = {
             'description': Textarea(attrs={'cols': 80, 'rows': 20}),
-        }
+        }   
