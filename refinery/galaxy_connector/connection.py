@@ -320,7 +320,7 @@ class Connection( object ):
         """
         # TODO: Figure out way to purge data library
         try:
-            return self.delete( "histories" + "/" + history_id )
+            return self.delete( "histories" + "/" + library_id )
         except urllib2.HTTPError, e:
             print str( e.read( 1024 ) )
             return "Error. " + str( e.read( 1024 ) )
