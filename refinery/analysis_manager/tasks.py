@@ -30,8 +30,8 @@ class progress_chord(object):
 
     def __call__(self, body, **options):
         tid = body.options.setdefault("task_id", uuid())
-        #r = self.Chord.apply_async((list(self.tasks), body), self.options, **options)
-        r = self.tasks.apply_async() 
+        r = self.Chord.apply_async((list(self.tasks), body), self.options, **options)
+        #r = self.Chord.apply_async((self.tasks, body), self.options, **options)
         return body.type.app.AsyncResult(tid), r
 
 @task
@@ -49,10 +49,13 @@ def chord_execution( ret_val, analysis ):
     execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )) ])            
     result_chord, result_set = progress_chord(execution_taskset)(chord_postprocessing.subtask((analysis,)))
     
-    result_set.save()
+    #result_set.save()
     analysis_status.execution_taskset_id = result_set.task_id 
     #analysis_status.execution_taskset_id = execution_taskset.taskset_id 
     analysis_status.save()
+    print "analyisstate_execution_taskset_id"
+    print result_set.task_id 
+    
     
     #print "before execution_taskset.join()"
     # TODO: use less dangerous method, e.g. callback (possible with TaskSet?)
@@ -92,7 +95,7 @@ def chord_postprocessing (ret_val, analysis ):
     result_chord, result_set = progress_chord(postprocessing_taskset)(chord_cleanup.subtask( analysis=analysis, ) )
     
     #else:
-    result_set.save()
+    #result_set.save()
     analysis_status.postprocessing_taskset_id = result_set.task_id 
     #postprocessing_taskset.save()
     #analysis_status.postprocessing_taskset_id = postprocessing_taskset.task_id 
@@ -116,7 +119,7 @@ def chord_cleanup(ret_val, analysis):
     result_chord, result_set = progress_chord(cleanup_taskset)(emptyTask.subtask())
     
     ### TODO ###  UPDATE CLEANUP TASKID FOR ANALYSIS_STATUS
-    result_set.save()
+    #result_set.save()
     #cleanup_taskset.save()
     analysis_status.cleanup_taskset_id = result_set.task_id 
     #analysis_status.cleanup_taskset_id = cleanup_taskset.taskset_id 
@@ -144,10 +147,15 @@ def run_analysis( analysis, interval=5.0 ):
     
     preprocessing_taskset = TaskSet( task=[run_analysis_preprocessing.subtask(( analysis, )) ])
     result_chord, result_set = progress_chord(preprocessing_taskset)(chord_execution.subtask( analysis=analysis, ) )
-    result_set.save()
+    #result_set.save()
+    
     analysis_status.preprocessing_taskset_id = result_set.task_id 
     #analysis_status.preprocessing_taskset_id = preprocessing_taskset.taskset_id 
     #preprocessing_taskset.save()
+    print "result_chord"
+    print result_chord
+    print "result_set"
+    print result_set
     
     analysis_status.save()
     
