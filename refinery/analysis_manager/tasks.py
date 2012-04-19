@@ -4,21 +4,21 @@ Created on Apr 5, 2012
 @author: nils
 '''
 
-from core.models import Analysis
+from core.models import Analysis, AnalysisResults
 from analysis_manager.models import AnalysisStatus
 from refinery_repository.models import Assay
 from celery.task import task
 from celery.task.sets import subtask, TaskSet
-import time, os, copy
+import time, os, copy, urllib2
 from django.conf import settings
 from galaxy_connector.connection import Connection
-from refinery_repository.tasks import download_http_file
 from workflow_manager.tasks import configure_workflow
 from datetime import datetime
 from celery.task import chord
 from celery.utils import uuid
 from celery.task.chords import Chord
 from celery import current_app as celery
+from refinery_repository.tasks import create_dir
 
 # example from: http://www.manasupo.com/2012/03/chord-progress-in-celery.html
 class progress_chord(object):
@@ -30,9 +30,8 @@ class progress_chord(object):
 
     def __call__(self, body, **options):
         tid = body.options.setdefault("task_id", uuid())
-        r = self.Chord.apply_async((list(self.tasks), body),
-                                   self.options,
-                                   **options)
+        #r = self.Chord.apply_async((list(self.tasks), body), self.options, **options)
+        r = self.tasks.apply_async() 
         return body.type.app.AsyncResult(tid), r
 
 @task
@@ -50,7 +49,9 @@ def chord_execution( ret_val, analysis ):
     execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )) ])            
     result_chord, result_set = progress_chord(execution_taskset)(chord_postprocessing.subtask((analysis,)))
     
+    result_set.save()
     analysis_status.execution_taskset_id = result_set.task_id 
+    #analysis_status.execution_taskset_id = execution_taskset.taskset_id 
     analysis_status.save()
     
     #print "before execution_taskset.join()"
@@ -67,25 +68,64 @@ def emptyTask(ret_val):
 @task
 def chord_postprocessing (ret_val, analysis ):
     
+    print "analysis_manager.chord_postprocessing called"
+    
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     analysis_status = AnalysisStatus.objects.filter( analysis_uuid=analysis.uuid )[0]
     
-    # POSTPROCESSING       
-    #postprocessing_taskset = TaskSet( task=[run_analysis_postprocessing.subtask(( analysis, )) ]).apply_async()            
-    #postprocessing_taskset.save()
+    ## NEED TO CALL DOWNLOAD CHORD HERE AND THEN KICK OFF chord_cleanup
     
-    postprocessing_taskset = TaskSet( task=[run_analysis_postprocessing.subtask(( analysis, )) ])          
+    # kill monitoring task
+    celery.control.revoke(analysis_status.execution_monitor_task_id, terminate=True)
+    
+    # TODO: hook somewhere into filestore
+    # getting list of tasks for download history files
+    postprocessing_taskset = download_history_files(analysis)
+    
+    print "downloading history task_list"
+    print postprocessing_taskset
+    
+    #postprocessing_taskset = TaskSet( task=[run_analysis_postprocessing.subtask(( analysis, )) ])          
     #result_chord, result_set = progress_chord(postprocessing_taskset)(syncTask.subtask(params))
-    result_chord, result_set = progress_chord(postprocessing_taskset)(emptyTask.subtask())
+    #if len(postprocessing_taskset) > 0:
+    
+    result_chord, result_set = progress_chord(postprocessing_taskset)(chord_cleanup.subtask( analysis=analysis, ) )
+    
+    #else:
+    result_set.save()
     analysis_status.postprocessing_taskset_id = result_set.task_id 
+    #postprocessing_taskset.save()
+    #analysis_status.postprocessing_taskset_id = postprocessing_taskset.task_id 
     analysis_status.save()
     
     
     print "after chord_postprocessing"   
-    #analysis_status.postprocessing_taskset_id = postprocessing_taskset.taskset_id 
-    #analysis_status.save()
-    
     return 
+
+@task
+def chord_cleanup(ret_val, analysis):
+    """
+    Code to cleanup galaxy after downloading of results from history
+    """
+    print "analysis_manager.chord_cleanup called"
+    
+    analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+    analysis_status = AnalysisStatus.objects.filter( analysis_uuid=analysis.uuid )[0]
+    
+    cleanup_taskset = TaskSet( task=[run_analysis_cleanup.subtask(( analysis, )) ])          
+    result_chord, result_set = progress_chord(cleanup_taskset)(emptyTask.subtask())
+    
+    ### TODO ###  UPDATE CLEANUP TASKID FOR ANALYSIS_STATUS
+    result_set.save()
+    #cleanup_taskset.save()
+    analysis_status.cleanup_taskset_id = result_set.task_id 
+    #analysis_status.cleanup_taskset_id = cleanup_taskset.taskset_id 
+    analysis_status.save()
+    
+    #result_set.save()
+    
+    print "after chord_cleanup"   
+    return
 
 # task: run analysis (outermost task, calls subtasks that monitor and run preprocessing, execution, postprocessing)
 @task()
@@ -104,7 +144,11 @@ def run_analysis( analysis, interval=5.0 ):
     
     preprocessing_taskset = TaskSet( task=[run_analysis_preprocessing.subtask(( analysis, )) ])
     result_chord, result_set = progress_chord(preprocessing_taskset)(chord_execution.subtask( analysis=analysis, ) )
+    result_set.save()
     analysis_status.preprocessing_taskset_id = result_set.task_id 
+    #analysis_status.preprocessing_taskset_id = preprocessing_taskset.taskset_id 
+    #preprocessing_taskset.save()
+    
     analysis_status.save()
     
     
@@ -117,77 +161,6 @@ def run_analysis( analysis, interval=5.0 ):
     # EXECUTION
     #execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )), monitor_analysis_execution.subtask((analysis, )), ]).apply_async()            
     #execution_taskset.save()
-    
-    #analysis_status.execution_taskset_id = execution_taskset.taskset_id 
-    #analysis_status.save()
-    
-    #print "before execution_taskset.join()"
-    # TODO: use less dangerous method, e.g. callback (possible with TaskSet?)
-    #execution_taskset.join()
-    #print "after execution_taskset.join()"    
-    
-    
-    # POSTPROCESSING       
-    #postprocessing_taskset = TaskSet( task=[run_analysis_postprocessing.subtask(( analysis, )) ]).apply_async()            
-    #postprocessing_taskset.save()
-    
-    #analysis_status.postprocessing_taskset_id = postprocessing_taskset.taskset_id 
-    #analysis_status.save()
-
-
-    '''
-    # PREPROCESSING        
-    preprocessing_task = subtask( monitor_analysis_preprocessing ).delay( analysis )
-    
-    #TODO: create a function to do this
-    while True:
-        run_analysis.update_state( state="PREPROCESSING" )
-        time.sleep( interval );
-        print  "Preprocessing Task State: " + preprocessing_task.state + "\n"
-                
-        if preprocessing_task.state == "SUCCESS":
-            print "Preprocessing task finished successfully. Stopping monitor ..."
-            break;
-        
-        if preprocessing_task.state == "FAILURE":
-            print "Preprocessing task failed . Stopping monitor ..."
-            break
-
-
-    # EXECUTION
-    execution_task = subtask( monitor_analysis_execution ).delay( analysis )
-    
-    while True:
-        run_analysis.update_state( state="EXECUTION" )
-        time.sleep( interval );
-        print  "Execution Task State: " + execution_task.state + "\n"
-                
-        if execution_task.state == "SUCCESS":
-            print "Execution task finished successfully. Stopping monitor ..."
-            break;
-        
-        if execution_task.state == "FAILURE":
-            print "Execution task failed . Stopping monitor ..."
-            break
-
-
-    # POSTPROCESSING
-    postprocessing_task = subtask( monitor_analysis_postprocessing ).delay( analysis )
-
-    while True:
-        run_analysis.update_state( state="POSTPROCESSING" )
-        time.sleep( interval );
-        print  "Postprocessing Task State: " + postprocessing_task.state + "\n"
-                
-        if postprocessing_task.state == "SUCCESS":
-            print "Postprocessing task finished successfully. Stopping monitor ..."
-            break;
-        
-        if postprocessing_task.state == "FAILURE":
-            print "Postprocessing task failed . Stopping monitor ..."
-            break
-    '''
-        
     return
 
 # task: monitor preprocessing (calls subtask that does the actual work)
@@ -240,10 +213,10 @@ def run_analysis_preprocessing( analysis ):
     # start monitoring task
     execution_monitor_task_id = monitor_analysis_execution.subtask((analysis, )).apply_async().task_id
     
+    # save execution monitoring task to analysis_status object
     analysis_status = AnalysisStatus.objects.filter( analysis_uuid=analysis.uuid )[0]
     analysis_status.execution_monitor_task_id = execution_monitor_task_id
     analysis_status.save()
-    
     
     return
 
@@ -271,7 +244,7 @@ def monitor_analysis_execution( analysis, interval=5.0 ):
         time.sleep( interval );
         print  "Awake ..."
         #print  "Analysis Execution Task State: " + analysis_execution_task.state + "\n"
-        print  "Workflow State: " + progress["workflow_state"] + "\n"
+        #print  "Workflow State: " + progress["workflow_state"] + "\n"
                 
         #if analysis_execution_task.state == "SUCCESS":
         print "Analysis Execution Task task finished successfully."
@@ -338,21 +311,35 @@ def run_analysis_postprocessing( analysis ):
     # 1. dowloads results from history
     # 2. delete dynamic workflow in galaxy
     # 3. delete history 
-    # TODO
     # 4. delete specified library
+    
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     analysis_status = AnalysisStatus.objects.filter( analysis_uuid=analysis.uuid )[0]
     
     # kill monitoring task
     celery.control.revoke(analysis_status.execution_monitor_task_id, terminate=True)
     
-    connection = get_analysis_connection(analysis)
-    
     ### ----------------------------------------------------------------#
     # Downloading results from history
-    download_history_files(connection, analysis.history_id)
+    task_list = download_history_files(analysis)
     
-    #------------ DELETE WORKFLOW -------------------------- #   
+    print "downloading history task_list"
+    print task_list
+    
+    return
+
+# task: perform cleanup, after download of results cleanup galaxy run
+@task()
+def run_analysis_cleanup( analysis ):
+    print "analysis_manager.run_analysis_cleanup called"
+    
+    analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+    #analysis_status = AnalysisStatus.objects.filter( analysis_uuid=analysis.uuid )[0]
+    
+    # gets current galaxy connection
+    connection = get_analysis_connection(analysis)
+    
+    # delete workflow 
     del_workflow_id = connection.delete_workflow(analysis.workflow_galaxy_id);
     
     # delete history
@@ -427,23 +414,28 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
                # insert data into galaxy library
                file_id = connection.put_into_library( library_id, file_path )
                cur_item["id"] = file_id
-               print( "file id: " + file_id);
             else:
                 print "FILE DOES NOT EXIST, please download and try again"
     
     return ret_list
 
 @task
-def download_history_files(connection, history_id) :
+def download_history_files(analysis) :
     """
     Download entire histories from galaxy. Getting files out of history to file store
     """
     
     print "analysis_manger.download_history_files called"
     
-    download_list = connection.get_history_file_list(history_id)
+    # gets current galaxy connection
+    connection = get_analysis_connection(analysis)
+    
+    download_list = connection.get_history_file_list(analysis.history_id)
+    task_list = []
     
     for results in download_list:
+        print "#######results"
+        print results
         # download file if result state is "ok"
         if results['state'] == 'ok':
             file_type = results["type"]
@@ -470,10 +462,90 @@ def download_history_files(connection, history_id) :
                 # TODO: change location results being downloaded too
                 #####################################
                 
+                # adding history files to django model 
+                temp_file = AnalysisResults( analysis_uuid=analysis.uuid, file_name=result_name)
+                temp_file.save() 
+                analysis.results.add( temp_file ) 
+                analysis.save() 
+                
                 # location to download to 
                 loc_url = settings.DOWNLOAD_BASE_DIR;
                 
-                id = download_http_file.delay(download_url, loc_url, "analyze_test", new_name=result_name, galaxy_file_size=file_size)
+                task_id = download_http_file.delay(download_url, loc_url, "analyze_test", new_name=result_name, galaxy_file_size=file_size)
+                task_list.append(task_id)
+    return task_list
+
+"""
+Name: download_http_file
+Description:
+    downloads a file from a given URL
+Parameters:
+    url: URL for the file being downloaded
+    out_dir: base directory where file is being downloaded
+    accession: name of directory that will house the downloaded file, in this
+               case, the investigation accession
+"""
+@task()
+def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=None):
+    out_dir = os.path.join(out_dir, accession) #directory where file downloads
+    
+    print "refinery_repository.download_http_file called"
+    
+    #make super-directory (out_dir/accession) if it doesn't exist
+    create_dir(out_dir)
+    
+    if (new_name is None):
+        file_name = url.split('/')[-1] #get the file name
+        file_path = os.path.join(out_dir, file_name) # path where file downloads
+    else:
+        file_name = new_name
+        file_path = os.path.join(out_dir, new_name) 
+        
+    print "file_path"
+    print file_path
+    print "file_name"
+    print file_name
+    print "out_dir"
+    print out_dir
+    print "url"
+    print url
+    
+    if(not os.path.exists(file_path)):
+        u = urllib2.urlopen(url)
+        f = open(file_path, 'wb')
+        
+        if (galaxy_file_size is None):
+            meta = u.info()
+            print "meta"
+            print meta
+            file_size = int(meta.getheaders("Content-Length")[0])
+        else:
+            file_size = galaxy_file_size
+            
+        print "Downloading: %s Bytes: %s" % (file_name, file_size)
+        file_size_dl = 0
+        block_sz = 8192
+        while True:
+            buffer = u.read(block_sz)
+            if not buffer:
+                break
+
+            file_size_dl += len(buffer)
+            f.write(buffer)
+            
+            downloaded = file_size_dl * 100. / file_size
+            download_http_file.update_state(state="PROGRESS",
+                        meta={
+                              "percent_done": "%3.2f%%" % (downloaded),
+                              'current': file_size_dl,
+                              'total': file_size
+                        })
+            
+            status = r"%10d  [%3.2f%%]" % (file_size_dl, downloaded)
+            status = status + chr(8)*(len(status)+1)
+            #print status,
+
+        f.close()
 
 @task()
 def get_analysis_connection(analysis): 
