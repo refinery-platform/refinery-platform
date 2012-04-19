@@ -227,7 +227,16 @@ class WorkflowDataInputMap( models.Model ):
     
     def __unicode__(self):
         return str( self.workflow_data_input_name ) + " <-> " + self.data_uuid
+
+class AnalysisResults (models.Model):
+    analysis_uuid = UUIDField( auto=False )
+    file_name = models.TextField()
+    ### TODO ### ?galaxy_id?
+    # add reference to file_store models
     
+    def __unicode__(self):
+        return str( self.file_name ) + " <-> " + self.analysis_uuid
+       
                 
 class Analysis ( OwnableResource ):
     project = models.ForeignKey( Project, related_name="analyses" )
@@ -238,7 +247,8 @@ class Analysis ( OwnableResource ):
     workflow_copy = models.TextField(blank=True, null=True)
     history_id = models.TextField(blank=True, null=True)
     workflow_galaxy_id = models.TextField(blank=True, null=True)
-    library_id = models.TextField(blank=True, null=True)    
+    library_id = models.TextField(blank=True, null=True)
+    results = models.ManyToManyField(AnalysisResults, blank=True)    
     
     def __unicode__(self):
         return self.name + " - " + self.summary
@@ -248,7 +258,7 @@ class Analysis ( OwnableResource ):
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' %  verbose_name ),
         )
-
+    
 
 class ExtendedGroup ( Group ):
     ''' Extends the default Django Group in auth with a group of users that own and manage manageable resources for the group.'''    
