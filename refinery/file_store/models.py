@@ -24,21 +24,23 @@ def file_path(modelinstance, filename):
     # provides 256 * 256 = 65536 of possible directory combinations
     dir1 = "{:0>2x}".format(hashcode & mask)
     dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
-    return os.path.join(FILE_STORE_BASE_DIR, dir1, dir2, filename)
+    return os.path.join(FILE_STORE_BASE_DIR, modelinstance.sharename, dir1, dir2, filename)
 
-class RepositoryFile(models.Model):
+class RefineryFile(models.Model):
+    ''' Represents data files on disk '''
     datafile = models.FileField(upload_to=file_path)
     uuid = UUIDField(unique=True, auto=True)
     sourceURL = models.URLField(blank=True)     # should contain file name if file was uploaded?
+    sharename = models.CharField(max_length=20, blank=True)
     def __unicode__(self):
         return self.datafile.name + ' : ' + self.uuid
 
-@receiver(post_delete, sender=RepositoryFile)
+@receiver(post_delete, sender=RefineryFile)
 def _delete_file_on_disk(sender, **kwargs):
     '''
-    Delete the file that belongs to this model from file system
-    Call this function only when deleting the model
-    Otherwise, this will result in models pointing to files that don't exist
+    Delete the file that belongs to this RefineryFile instance from the file system
+    Call this function only when deleting the instance
+    Otherwise, this will result in instances pointing to files that don't exist
     '''
     #TODO: raise exception if file not found?
     instance = kwargs.get('instance')
@@ -47,24 +49,24 @@ def _delete_file_on_disk(sender, **kwargs):
 def read_file(uuid):
     ''' Return a FileField object given UUID '''
     try:
-        datafile = RepositoryFile.objects.get(uuid=uuid).file
-    except RepositoryFile.DoesNotExist:
+        datafile = RefineryFile.objects.get(uuid=uuid).file
+    except RefineryFile.DoesNotExist:
         #TODO: write error msg to log
         return None
     return datafile
 
 def delete_file(uuid):
-    ''' Delete RepositoryFile given UUID '''
+    ''' Delete RefineryFile given UUID '''
     try:
-        f = RepositoryFile.objects.get(uuid=uuid)
-    except RepositoryFile.DoesNotExist:
+        f = RefineryFile.objects.get(uuid=uuid)
+    except RefineryFile.DoesNotExist:
         #TODO: write error msg to log
         return False
     f.delete()
     #TODO: check if completed successfully
     return True
 
-def write_file(abssrcpath, share_name='', link=False):
+def write_file(abssrcpath, sharename='', link=False):
     '''
     Store file specified by absolute file system path
     '''
@@ -76,7 +78,7 @@ def write_file(abssrcpath, share_name='', link=False):
     srcfilename = os.path.basename(abssrcpath)
     # create a symlink to original file or copy original file to a new file
     if link:
-        rf = RepositoryFile()
+        rf = RefineryFile(sharename=sharename)
         # create symlink destination path and check if there's a name conflict
         reldstpath = rf.datafile.storage.get_available_name(file_path(None, srcfilename))
         # absolute destination path is need to create the symlink
@@ -94,13 +96,13 @@ def write_file(abssrcpath, share_name='', link=False):
         rf.save()
     else:   # copy file
         srcfile = File(srcfo)
-        rf = RepositoryFile()
+        rf = RefineryFile(sharename=sharename)
         rf.datafile.save(srcfilename, srcfile)  # model is saved by default after file has been altered
         srcfile.close()
     srcfo.close()
     return rf.uuid
 
-def write_remote_file(url, share_name=''):
+def write_remote_file(url, sharename=''):
     '''
     Download file from provided URL
     '''
@@ -119,7 +121,6 @@ def write_remote_file(url, share_name=''):
     remotefilesize = int(response.info().getheaders("Content-Length")[0])
     filename = response.geturl().split('/')[-1]    # get file name from its URL
 
-    print "Downloading: %s Bytes:" 
     localfilesize = 0       # bytes
     blocksize = 8 * 1024    # bytes
     while True:
@@ -137,14 +138,15 @@ def write_remote_file(url, share_name=''):
 
     tmpfile.flush()
     
-    rf = RepositoryFile()
+    #TODO: move tmpfile to file store dir to avoid copying large files
+    rf = RefineryFile()
     rf.datafile.save(filename, File(tmpfile))
 
     tmpfile.close()
     response.close()
     return rf.uuid
 
-class RepositoryCache:
+class RefineryCache:
     '''
     LRU file cache
     '''
