@@ -231,6 +231,7 @@ class WorkflowDataInputMap( models.Model ):
 class AnalysisResults (models.Model):
     analysis_uuid = UUIDField( auto=False )
     file_name = models.TextField()
+    file_type = models.TextField()
     ### TODO ### ?galaxy_id?
     # add reference to file_store models
     
