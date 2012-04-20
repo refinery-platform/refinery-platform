@@ -44,22 +44,15 @@ def chord_execution( ret_val, analysis ):
     #execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )), monitor_analysis_execution.subtask((analysis, )), ]).apply_async()            
     #execution_taskset.save()
     
-    #execution_taskset = TaskSet( task=[run_analysis_preprocessing.subtask(( analysis, )) ])
     #execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )), monitor_analysis_execution.subtask((analysis, )), ])            
     execution_taskset = TaskSet( task=[run_analysis_execution.subtask(( analysis, )) ])            
     result_chord, result_set = progress_chord(execution_taskset)(chord_postprocessing.subtask((analysis,)))
     
-    #result_set.save()
     analysis_status.execution_taskset_id = result_set.task_id 
     #analysis_status.execution_taskset_id = execution_taskset.taskset_id 
     analysis_status.save()
     print "analyisstate_execution_taskset_id"
     print result_set.task_id 
-    
-    
-    #print "before execution_taskset.join()"
-    # TODO: use less dangerous method, e.g. callback (possible with TaskSet?)
-    #execution_taskset.join()
     print "after chord_execution"    
     
     return
@@ -91,14 +84,10 @@ def chord_postprocessing (ret_val, analysis ):
     #postprocessing_taskset = TaskSet( task=[run_analysis_postprocessing.subtask(( analysis, )) ])          
     #result_chord, result_set = progress_chord(postprocessing_taskset)(syncTask.subtask(params))
     #if len(postprocessing_taskset) > 0:
-    
     result_chord, result_set = progress_chord(postprocessing_taskset)(chord_cleanup.subtask( analysis=analysis, ) )
     
     #else:
-    #result_set.save()
     analysis_status.postprocessing_taskset_id = result_set.task_id 
-    #postprocessing_taskset.save()
-    #analysis_status.postprocessing_taskset_id = postprocessing_taskset.task_id 
     analysis_status.save()
     
     
@@ -119,13 +108,8 @@ def chord_cleanup(ret_val, analysis):
     result_chord, result_set = progress_chord(cleanup_taskset)(emptyTask.subtask())
     
     ### TODO ###  UPDATE CLEANUP TASKID FOR ANALYSIS_STATUS
-    #result_set.save()
-    #cleanup_taskset.save()
     analysis_status.cleanup_taskset_id = result_set.task_id 
-    #analysis_status.cleanup_taskset_id = cleanup_taskset.taskset_id 
     analysis_status.save()
-    
-    #result_set.save()
     
     print "after chord_cleanup"   
     return
@@ -156,6 +140,11 @@ def run_analysis( analysis, interval=5.0 ):
     print result_chord
     print "result_set"
     print result_set
+    #print "len(task_set_result.results)"
+    #print len(result_set.result) 
+    #print "task_set_result.results)"
+    #print result_set.result
+    
     
     analysis_status.save()
     
@@ -247,6 +236,8 @@ def monitor_analysis_execution( analysis, interval=5.0 ):
     while True:
         progress = connection.get_progress( analysis.history_id )
         monitor_analysis_execution.update_state( state="PROGRESS", meta=progress )
+        
+        """
         print  "Sleeping ..."
         print progress
         time.sleep( interval );
@@ -275,6 +266,7 @@ def monitor_analysis_execution( analysis, interval=5.0 ):
         #if analysis_execution_task.state == "FAILURE":
         #    print "Analysis Execution Task failed . Stopping monitor ..."
         #    break    
+        """
     return
 
 # task: perform execution (innermost task, does the actual work)
@@ -444,6 +436,7 @@ def download_history_files(analysis) :
     for results in download_list:
         print "#######results"
         print results
+        
         # download file if result state is "ok"
         if results['state'] == 'ok':
             file_type = results["type"]
@@ -452,11 +445,11 @@ def download_history_files(analysis) :
             check_fastq = file_type.lower().find('fastq')
             check_sam = file_type.lower().find('sam')
             
-            print "checking file types:"
-            print "check_fastq"
-            print check_fastq
-            print "check_sam"
-            print check_sam
+            #print "checking file types:"
+            #print "check_fastq"
+            #print check_fastq
+            #print "check_sam"
+            #print check_sam
             
             if (check_fastq < 0 and check_sam < 0):
                 # name of file
