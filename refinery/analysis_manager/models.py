@@ -38,6 +38,15 @@ class AnalysisStatus( models.Model ):
             #preprocessing_taskset = TaskSetResult.restore( self.preprocessing_taskset_id )
             preprocessing_taskset = AsyncResult( self.preprocessing_taskset_id )
             
+            print "preprocessing_result"
+            print preprocessing_result
+            """
+            for i in range (0,len(preprocessing_taskset.result.results)):
+                task = preprocessing_taskset.result.results[i].result
+                print "task"
+                print task
+            """
+            
             if preprocessing_taskset is not None:
                 preprocessing_result = preprocessing_taskset.state
                 preprocessing_subtasks = []
@@ -69,7 +78,14 @@ class AnalysisStatus( models.Model ):
             #execution_monitor_taskset = TaskSetResult.restore( self.execution_monitor_task_id )
             if execution_monitor_taskset is not None:
                 execution_monitor_result = execution_monitor_taskset.state
-           
+        
+        #print "analysis_manager current called"
+        # TO DEBUG PYTHON WEBAPPS ##
+        #import pdb; pdb.set_trace()
+       # print 
+        import pdb; pdb.set_trace()
+            
+        
         #return { "preprocessing": preprocessing_result, "preprocessing_tasks": preprocessing_subtasks, "execution": execution_result, "postprocessing": postprocessing_result } 
         return { "preprocessing": preprocessing_result, "execution": execution_result, "postprocessing": postprocessing_result, "execution_monitor":execution_monitor_result, "cleanup":cleanup_result } 
 
