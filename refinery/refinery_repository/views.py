@@ -227,20 +227,16 @@ def update_workflows(request):
     
     if request.is_ajax():
         print "is ajax"
-        # function for updating workflows from galaxy instance
-        #instance, connection = checkActiveInstance(request)
-        #grab_workflows(instance, connection)
-        
         workflow_engines = WorkflowEngine.objects.all()
         workflows = 0
         
         for engine in workflow_engines:
+            # function for updating workflows from galaxy instance
             get_workflows( engine );
             new_workflow_count = engine.workflow_set.all().count()
             print "Engine: " + engine.name + " - " + str( ( new_workflow_count ) ) + ' workflows after.'
             workflows += new_workflow_count
         
-        #get_workflows
         # getting updated available workflows
         workflows = Workflow.objects.all()    
         json_serializer = serializers.get_serializer("json")()
@@ -337,31 +333,11 @@ def analysis_run(request):
     # keeping new reference to analysis_status
     analysis_status = AnalysisStatus.objects.create(analysis_uuid=analysis.uuid)
     analysis_status.save()
+    
     # call function via analysis_manager
     run_analysis.delay(analysis, 5.0)
     
     return HttpResponseRedirect(reverse('analysis_manager.views.analysis', args=(analysis.uuid,)))
-    
-    
-    """
-    #-----------------------------------------------------
-    # getting current connection to galaxy
-    instance, connection = checkActiveInstance(request)
-    
-    run_workflow_test(connection, workflow_uuid, ret_list)
-    
-    # RUNNING WORKFLOW
-    #task_result = run_workflow_ui.delay(connection, workflow_uuid, run_info_all) # To run as background task
-    #run_workflow_test(connection, workflow_uuid, run_info_all)
-    
-    ########################################
-    ### DEBUGGING history download
-    ########################################
-    
-    #download_history_files(connection, "eca0af6fb47bf90c") # local galaxy
-    #download_history_files(connection, "510f5ee2885d8b3f") # on fisher
-    
-    """
             
     
 def results_selected(request):
