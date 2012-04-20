@@ -1,0 +1,25 @@
+{% extends "refinery_repository/base.html" %}
+
+{% block title %}
+{{ block.super }} - Home : 
+{% endblock %}
+
+{% block subheader %}
+	{% if user.is_authenticated  %}
+		ANALYSIS STATUS
+	{% else %}
+		ANALYSIS STATUS
+	{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if statuses %}
+	<h2>Analysis</h2> 
+    <ul>
+    <li> Analysis: {{ statuses.analysis_uuid }}<br>
+       	{{ statuses.preprocessing_taskset_id }} | {{ statuses.execution_taskset_id }} | {{ statuses.postprocessing_taskset_id }}<br>
+        {{ statuses.current }}
+    </li>
+    </ul>
+{% endif %}
+{% endblock %}

@@ -21,6 +21,19 @@
 </head>
 
 <body>
+	<div class="container-fluid"> 
+    
+	<div id="auth_area">
+        {% block authentication %}        
+		{% if user.is_authenticated %}       
+        	{{ user.get_full_name }} | <a href="/users/{{user.username}}">Profile</a> | <a href="{% url django.contrib.auth.views.logout %}">Logout</a>
+        {% else %}
+			<a href="{% url django.contrib.auth.views.login %}?next={% firstof request.path '/' %}">Login</a>
+        {% endif %}		
+        {% endblock %}
+	</div>
+	
+	
     <div id="header">
         <h1>Refinery</h1>
     </div>
@@ -32,7 +45,6 @@
         {% endblock %}
     </div>
 
-    <div class="container-fluid"> 
     	<div class="row-fluid">
     		<div class="span12">
     			<div id="content">	
@@ -40,12 +52,12 @@
         		</div>
         	</div>
        </div>
-    </div>
     
     <div id="footer">
         <small>Copyright &copy; 2012 Park Lab | Center for Biomedical Informatics at Harvard Medical School. All rights reserved.</small>
     </div>
     
+    </div>
     
 </body>
 </html>

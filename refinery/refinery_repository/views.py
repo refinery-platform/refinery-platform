@@ -22,6 +22,9 @@ from analysis_manager.tasks import download_history_files, run_analysis
 from workflow_manager.tasks import get_workflow_inputs, get_workflows
 from datetime import datetime
 from django.http import Http404
+from django.core.urlresolvers import resolve
+from analysis_manager.models import AnalysisStatus
+
 
 
 def dictfetchall(cursor):
@@ -331,11 +334,15 @@ def analysis_run(request):
             analysis.workflow_data_input_maps.add( temp_input ) 
             analysis.save() 
     
+    # keeping new reference to analysis_status
+    analysis_status = AnalysisStatus.objects.create(analysis_uuid=analysis.uuid)
+    analysis_status.save()
     # call function via analysis_manager
     run_analysis.delay(analysis, 5.0)
     
-    return render_to_response('refinery_repository/base.html', context_instance=RequestContext(request))
-
+    return HttpResponseRedirect(reverse('analysis_manager.views.analysis', args=(analysis.uuid,)))
+    
+    
     """
     #-----------------------------------------------------
     # getting current connection to galaxy
