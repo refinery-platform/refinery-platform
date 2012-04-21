@@ -13,6 +13,7 @@ urlpatterns = patterns('',
 
     url(r'^workflow_manager/', include('workflow_manager.urls')),
     url(r'^analysis_manager/', include('analysis_manager.urls')),
+    url(r'^file_server/', include('file_server.urls')),
 
     #links in galaxy_connector urls 
     url(r'^galaxy_connector/', include('galaxy_connector.urls')),

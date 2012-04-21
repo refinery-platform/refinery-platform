@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - File Server
+{% endblock %}
+
+{% block subheader %}
+	File Server
+{% endblock %}
+
+{% block content %}
+{% if statuses %}
+	<h2>Nothing to show</h2> 
+{% endif %}
+{% endblock %}
