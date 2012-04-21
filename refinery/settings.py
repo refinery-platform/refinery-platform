@@ -151,7 +151,8 @@ INSTALLED_APPS = (
     'core',
     'analysis_manager',
     'workflow_manager',
-    'file_store'
+    'file_store',
+    'file_server',    
 )
 
 # NG: added for django-guardian
