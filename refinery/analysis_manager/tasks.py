@@ -68,13 +68,19 @@ def chord_postprocessing (ret_val, analysis):
     # getting list of tasks for download history files
     postprocessing_taskset = download_history_files(analysis)
     
-    print "downloading history task_list"
-    print postprocessing_taskset
+    #print "downloading history task_list"
+    #print postprocessing_taskset
+    #print "#### length"
+    #print len(postprocessing_taskset)
     
     #result_chord, result_set = progress_chord(postprocessing_taskset)(syncTask.subtask(params))
-    #if len(postprocessing_taskset) > 0:
-    result_chord, result_set = progress_chord(postprocessing_taskset)(chord_cleanup.subtask(analysis=analysis,))
-    #else:
+    if len(postprocessing_taskset) < 1:
+        print "---------- less than 1 -----------"
+        temp_task = emptyTask.subtask(("ret_val",))
+        result_chord, result_set = progress_chord([temp_task])(chord_cleanup.subtask(analysis=analysis,))
+    else:
+        print "---------- greater than 1 -----------"
+        result_chord, result_set = progress_chord(postprocessing_taskset)(chord_cleanup.subtask(analysis=analysis,))
     
     analysis_status.postprocessing_taskset_id = result_set.task_id 
     analysis_status.save()
@@ -124,7 +130,7 @@ def run_analysis(analysis, interval=5.0):
             out_dir = os.path.join(settings.DOWNLOAD_BASE_DIR, investigation_id) #directory where file downloads
             file_path = os.path.join(out_dir, file_name) # path where file downloads
             if(not os.path.exists(file_path)): #if file exists already don't download
-                task_id = download_ftp_file.delay(cur_file.raw_data_file, settings.DOWNLOAD_BASE_DIR, investigation_id)
+                task_id = download_ftp_file.subtask((cur_file.raw_data_file, settings.DOWNLOAD_BASE_DIR, investigation_id,))
                 download_tasks.append(task_id)
                 file_info = {"raw_data_file":cur_file.raw_data_file, "investigation_id":investigation_id}
                 print file_info
@@ -209,32 +215,31 @@ def monitor_analysis_execution(analysis, interval=5.0):
     #print connection.get_history(analysis.history_id)
     revoke_task = False
     
-    while True:
+    while not revoke_task:
         print  "Sleeping ..."
         progress = connection.get_progress(analysis.history_id)
+        monitor_analysis_execution.update_state(state="PROGRESS", meta=progress)
         print progress
         
         #print  "Awake ..."
         #print  "Analysis Execution Task State: " + analysis_execution_task.state + "\n"
         #print  "Workflow State: " + progress["workflow_state"] + "\n"
         
-        monitor_analysis_execution.update_state(state="PROGRESS", meta=progress)
         
         if progress["workflow_state"] == "error":
             print "Workflow failed. Stopping monitor ..."
             revoke_task = True
             #break
-        
-        if progress["workflow_state"] == "ok":
+        elif progress["workflow_state"] == "ok":
             print "Analysis Execution Task task finished successfully."
             revoke_task = True
-            #break
-             
-        if progress["workflow_state"] == "queued":
+            #break   
+        elif progress["workflow_state"] == "queued":
             print "Workflow running."
-
-        if progress["workflow_state"] == "new":
+        elif progress["workflow_state"] == "new":
             print "Workflow being prepared."
+            
+        
 
         
         # stop celery task if workflow run is in error or finished
