@@ -20,6 +20,9 @@
 }
 .combobox-container .uneditable-input {
   border-left-color: #ccc;
+  width: 100px;
+}
+
 }
 .combobox-container .add-on {
   float: left;
