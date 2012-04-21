@@ -2,6 +2,8 @@ from django.db import models
 from django_extensions.db.fields import UUIDField
 from celery.result import TaskSetResult 
 from celery.result import AsyncResult
+from core.models import Analysis
+import math
 
 '''
 http://permalink.gmane.org/gmane.comp.python.amqp.celery.user/2036
@@ -31,7 +33,17 @@ class AnalysisStatus( models.Model ):
         return getPayload(self.preprocessing_taskset_id)
     
     def execution_status(self):
-        return getPayload(self.execution_monitor_task_id)
+        total_steps = Analysis.objects.get(uuid=self.analysis_uuid).workflow_steps_num        
+        test = getPayload(self.execution_monitor_task_id)
+        print "test lgneth"
+        print len(test)
+            
+        test[0]['total_steps'] = total_steps
+        if 'ok' in test[0].keys():
+            test[0]['percent_done'] =  str(100*float(test[0]['ok'])/float(total_steps)) + '%'
+        else:
+            test[0]['percent_done'] = '0%'
+        return test
     
     def postprocessing_status(self):
         return getPayload(self.postprocessing_taskset_id)
@@ -110,6 +122,7 @@ def getPayload(ts_id):
             if type(ts.result) ==type(dict()):
                 temp_ret = ts.result['message']
                 temp_ret['state'] = ts.state
+                temp_ret['task_id'] = ts.task_id
                 payload.append(temp_ret)
             elif (ts.result.__class__.__name__ == 'TaskSetResult'):
                 #print "        $$$$$$$$"
@@ -128,6 +141,7 @@ def getPayload(ts_id):
                         if ts.result.results[j].result:
                             temp_ret = ts.result.results[j].result
                             temp_ret['state'] = ts.result.results[j].state
+                            temp_ret['task_id'] = ts.result.results[j].task_id
                             payload.append(temp_ret)
                             #payload.append(ts.result.results[j].result)
                             #print ts.result.results[j].state
@@ -135,19 +149,20 @@ def getPayload(ts_id):
                             #print "elseelseelseelseelseelse "
                             #import pdb; pdb.set_trace()
                             temp_ret['state'] = ts.result.results[j].state
+                            temp_ret['task_id'] = ts.result.results[j].task_id
                             payload.append(temp_ret)
                 #else:
                 #    print "00000 tasks"
                 #    print ts.result
             else:
                 #print " ))))))))))) \t \ tDIFFERENT TYPE"
-                temp_ret = {'state':ts.state, 'info':ts.result}
+                temp_ret = {'state':ts.state, 'info':ts.result, 'task_id':ts.task_id}
                 payload.append(temp_ret)
                 #print ts.result
         else:
             #print "<<<<<<<<<<<<<<<<<< "
             #temp_ret
-            temp_ret = {'state':ts.state}
+            temp_ret = {'state':ts.state, 'task_id':ts.task_id}
             payload.append(temp_ret)
     else:
         print "!!!!nottstststststst"
