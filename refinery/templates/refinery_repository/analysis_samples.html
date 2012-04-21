@@ -3,7 +3,6 @@
 {% block head_html %}
 <link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap-combobox.css" rel="stylesheet">
 <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap-combobox.js"></script>
-
 {% endblock %}
 
 {% block subheader %}
@@ -16,6 +15,22 @@ Available Samples
 		Update Workflow(s)
 	</button>
 	
+	<!-- 
+	<div class="spinner" style="width: 28px; height: 28px">
+    <div class="bar1"></div>
+    <div class="bar2"></div>
+    <div class="bar3"></div>
+    <div class="bar4"></div>
+    <div class="bar5"></div>
+    <div class="bar6"></div>
+    <div class="bar7"></div>
+    <div class="bar8"></div>
+    <div class="bar9"></div>
+    <div class="bar10"></div>
+    <div class="bar11"></div>
+    <div class="bar12"></div>
+  </div>
+ -->
     
 	{% if results %}
 	<!-- <form action="/refinery_repository/analysis_run/" id="sampleForm" method="post">  -->
@@ -33,8 +48,7 @@ Available Samples
 	    	</select>
 		</div>
 	</div>
-    
-	<table class="table table-bordered table-condensed dataTable" id="samples1">
+    <table class="table table-striped table-bordered table-condensed dataTable" id="samples1">
 		<thead>	<tr> 
 			<th>options</th>
 		{% for field in order %}
