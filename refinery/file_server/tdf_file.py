@@ -7,7 +7,6 @@ Created on Apr 21, 2012
 from bitstring import ConstBitStream
 import math
 import zlib
-import copy
 
 
 class TDFBitStream(ConstBitStream):
