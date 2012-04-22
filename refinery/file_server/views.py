@@ -7,7 +7,6 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from file_server.tdf_file import TDFFile
-import simplejson
 
 # Create your views here.
 def index( request ):    
