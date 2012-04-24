@@ -1,12 +1,9 @@
 import os
-import urllib2
 from django.db import models
 from django_extensions.db.fields import UUIDField
-from django.db.models.signals import post_delete
+from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-from django.core.files import File
-from django.core.files.temp import NamedTemporaryFile
-from settings_local import MEDIA_ROOT, FILE_STORE_BASE_DIR
+from settings_local import FILE_STORE_BASE_DIR
 
 # provide a default location for file store
 if not FILE_STORE_BASE_DIR:
@@ -26,129 +23,52 @@ def file_path(modelinstance, filename):
     dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
     return os.path.join(FILE_STORE_BASE_DIR, modelinstance.sharename, dir1, dir2, filename)
 
-class RefineryFile(models.Model):
+class FileStoreItem(models.Model):
     ''' Represents data files on disk '''
     datafile = models.FileField(upload_to=file_path)
     uuid = UUIDField(unique=True, auto=True)
-    sourceURL = models.URLField(blank=True)     # should contain file name if file was uploaded?
+    source = models.CharField(max_length=1024, blank=True)     # URL or absolute file system path
     sharename = models.CharField(max_length=20, blank=True)
     def __unicode__(self):
-        return self.datafile.name + ' : ' + self.uuid
+        return self.datafile.name + ' - ' + self.uuid
 
-@receiver(post_delete, sender=RefineryFile)
+@receiver(pre_delete, sender=FileStoreItem)
 def _delete_file_on_disk(sender, **kwargs):
     '''
-    Delete the file that belongs to this RefineryFile instance from the file system
+    Delete the file that belongs to this FileStoreItem instance from the file system
     Call this function only when deleting the instance
     Otherwise, this will result in instances pointing to files that don't exist
     '''
-    #TODO: raise exception if file not found?
-    instance = kwargs.get('instance')
-    instance.datafile.delete(save=False)    # don't save the model back to DB after file was deleted
+    item = kwargs.get('instance')
+    # delete files that are located within the file store directory only
+    #TODO: expand inline to avoid extra DB query when looking up by UUID
+    if is_local(item.uuid):
+        try:
+            item.datafile.delete()
+        except OSError:
+            #TODO: write error msg to log
+            pass
 
-def read_file(uuid):
-    ''' Return a FileField object given UUID '''
-    try:
-        datafile = RefineryFile.objects.get(uuid=uuid).file
-    except RefineryFile.DoesNotExist:
-        #TODO: write error msg to log
-        return None
-    return datafile
-
-def delete_file(uuid):
-    ''' Delete RefineryFile given UUID '''
-    try:
-        f = RefineryFile.objects.get(uuid=uuid)
-    except RefineryFile.DoesNotExist:
-        #TODO: write error msg to log
-        return False
-    f.delete()
-    #TODO: check if completed successfully
-    return True
-
-def write_file(abssrcpath, sharename='', link=False):
-    '''
-    Store file specified by absolute file system path
-    '''
-    # check if source file exists
-    try:
-        srcfo = open(abssrcpath)
-    except IOError:
-        return None
-    srcfilename = os.path.basename(abssrcpath)
-    # create a symlink to original file or copy original file to a new file
-    if link:
-        rf = RefineryFile(sharename=sharename)
-        # create symlink destination path and check if there's a name conflict
-        reldstpath = rf.datafile.storage.get_available_name(file_path(None, srcfilename))
-        # absolute destination path is need to create the symlink
-        absdstpath = os.path.join(MEDIA_ROOT, reldstpath)
-        (dstdirname, dstfilename) = os.path.split(absdstpath)
-        # create intermediate directories if they don't exist
-        if not os.path.isdir(dstdirname):
-            os.makedirs(dstdirname)
-        os.symlink(abssrcpath, absdstpath)
-        # assign symlink path to FileField
-        rf.datafile.name = reldstpath
-        # associate the file on disk with FileField
-        rf.datafile.file = open(absdstpath)
-        # save the model instance
-        rf.save()
-    else:   # copy file
-        srcfile = File(srcfo)
-        rf = RefineryFile(sharename=sharename)
-        rf.datafile.save(srcfilename, srcfile)  # model is saved by default after file has been altered
-        srcfile.close()
-    srcfo.close()
-    return rf.uuid
-
-def write_remote_file(url, sharename=''):
-    '''
-    Download file from provided URL
-    '''
-    # download file to temp file object
-    req = urllib2.Request(url)
-    try:
-        response = urllib2.urlopen(req)
-    except urllib2.URLError, e:
-        #TODO: write error to log
-        response.close()
-        return None
-
-    # download and save the file
-    #TODO: download data directly to a file in MEDIA_ROOT to avoid copying from temp file after download is finished
-    tmpfile = NamedTemporaryFile()  # django.core.files.File cannot handle file-like objects like those returned by urlopen
-    remotefilesize = int(response.info().getheaders("Content-Length")[0])
-    filename = response.geturl().split('/')[-1]    # get file name from its URL
-
-    localfilesize = 0       # bytes
-    blocksize = 8 * 1024    # bytes
-    while True:
-        buf = response.read(blocksize)
-        if not buf:
-            break
-
-        localfilesize += len(buf)
-        tmpfile.write(buf)
-
-#        downloaded = localfilesize * 100. / remotefilesize
-#        status = r"%10d  [%3.2f%%]" % (localfilesize, downloaded)
-#        status = status + chr(8) * (len(status) + 1)
-#        print status,
-
-    tmpfile.flush()
-    
-    #TODO: move tmpfile to file store dir to avoid copying large files
-    rf = RefineryFile()
-    rf.datafile.save(filename, File(tmpfile))
-
-    tmpfile.close()
-    response.close()
-    return rf.uuid
-
-class RefineryCache:
+class FileStoreCache:
     '''
     LRU file cache
     '''
     # doubly-linked list or heapq
     pass
+
+def is_local(uuid):
+    ''' Check if the file is physically located within the file store directory '''
+    try:
+        f = FileStoreItem.objects.get(uuid=uuid).datafile
+    except FileStoreItem.DoesNotExist:
+        #TODO: write msg to log
+        return False
+    # local files are stored with relative path names
+    if not f or os.path.isabs(f.name):
+        return False
+    else:
+        return True
+
+def is_permanent(uuid):
+    ''' Check if FileStoreItem instance is referenced in the cache '''
+    return True

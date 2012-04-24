@@ -1,4 +1,4 @@
 from django.contrib import admin
-from refinery.file_store.models import RefineryFile
+from refinery.file_store.models import FileStoreItem
 
-admin.site.register(RefineryFile)
+admin.site.register(FileStoreItem)
