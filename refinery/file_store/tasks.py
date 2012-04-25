@@ -10,8 +10,8 @@ def create(source, sharename='', permanent=False):
     item = FileStoreItem(source=source, sharename=sharename)
     item.save()
     if permanent:
-        import_file (item.uuid, permanent=True)    # download/copy but don't add to cache
-    return item.uuid
+        if import_file(item.uuid, permanent=True):    # download/copy but don't add to cache
+            return item.uuid
 
 @task()
 def import_file(uuid, permanent=False):
@@ -63,7 +63,12 @@ def import_file(uuid, permanent=False):
     
             localfilesize += len(buf)
             tmpfile.write(buf)
-#            downloaded = localfilesize * 100. / remotefilesize
+            downloaded = localfilesize * 100. / remotefilesize
+            import_file.update_state(
+                state="PROGRESS",
+                meta={"percent_done": "%3.2f%%" % (downloaded), 'current': localfilesize, 'total': remotefilesize}
+                )
+
 #            status = r"%10d  [%3.2f%%]" % (localfilesize, downloaded)
 #            status = status + chr(8) * (len(status) + 1)
 #            print status,
