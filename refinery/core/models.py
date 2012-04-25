@@ -232,8 +232,11 @@ class AnalysisResults (models.Model):
     analysis_uuid = UUIDField( auto=False )
     file_name = models.TextField()
     file_type = models.TextField()
+    # associated tdf file 
+    
     ### TODO ### ?galaxy_id?
     # add reference to file_store models
+    # foreign key into analysis
     
     def __unicode__(self):
         return str( self.file_name ) + " <-> " + self.analysis_uuid
