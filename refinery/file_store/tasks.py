@@ -5,11 +5,7 @@ from django.core.files.temp import NamedTemporaryFile
 from celery.task import task
 from file_store.models import FileStoreItem
 
-# for testing
 @task()
-def add(x, y):
-    return x + y
-
 def create(source, sharename='', permanent=False):
     item = FileStoreItem(source=source, sharename=sharename)
     item.save()
@@ -17,7 +13,7 @@ def create(source, sharename='', permanent=False):
         import_file (item.uuid, permanent=True)    # download/copy but don't add to cache
     return item.uuid
 
-#@task()
+@task()
 def import_file(uuid, permanent=False):
     '''
     Download or copy file specified by UUID. If permanent is False then add to cache.
@@ -30,7 +26,7 @@ def import_file(uuid, permanent=False):
         return False
     src = item.source
     # if source is an absolute file system path then copy, if URL then download, return False otherwise?
-    if src[0] == '/':   # assume UNIX-style path only
+    if src.startswith('/'):   # assume UNIX-style paths only
         # check if source file exists
         try:
             srcfo = open(src)
@@ -86,7 +82,7 @@ def import_file(uuid, permanent=False):
 
     return item.datafile
 
-#@task()
+@task()
 def read(uuid):
     '''
     Return a File object given UUID
@@ -100,7 +96,7 @@ def read(uuid):
         return None
     return f
 
-#@task()
+@task()
 def delete(uuid):
     ''' Delete the FileStoreItem given UUID '''
     try:
@@ -112,10 +108,12 @@ def delete(uuid):
     #TODO: check if deletion was successful
     return True
 
-#@task()
+@task()
 def update(uuid, source):
     ''' Replace the file while keeping the same UUID '''
-    # delete file from disk if exists
-    # update source
+    # save source and sharename of the old FileStoreItem 
+    # delete FileStoreItem
     # import new file from source
+    # create new FileStoreItem
+    # update UUID, source and sharename of the new FileStoreItem
     return True
