@@ -10,8 +10,9 @@ def create(source, sharename='', permanent=False):
     item = FileStoreItem(source=source, sharename=sharename)
     item.save()
     if permanent:
-        if import_file(item.uuid, permanent=True):    # download/copy but don't add to cache
-            return item.uuid
+        if not import_file(item.uuid, permanent=True):    # download/copy but don't add to cache
+            return None
+    return item.uuid
 
 @task()
 def import_file(uuid, permanent=False):
