@@ -76,8 +76,14 @@ def chord_postprocessing (ret_val, analysis):
     #result_chord, result_set = progress_chord(postprocessing_taskset)(syncTask.subtask(params))
     if len(postprocessing_taskset) < 1:
         print "---------- less than 1 -----------"
+        #temp_task = emptyTask.subtask(("ret_val",))
         temp_task = emptyTask.subtask(("ret_val",))
         result_chord, result_set = progress_chord([temp_task])(chord_cleanup.subtask(analysis=analysis,))
+        
+        #temp_task = []
+        #temp_task.append(chord_cleanup.subtask(analysis=analysis,))
+        #result_chord, result_set = progress_chord([temp_task])
+        
     else:
         print "---------- greater than 1 -----------"
         result_chord, result_set = progress_chord(postprocessing_taskset)(chord_cleanup.subtask(analysis=analysis,))
@@ -133,7 +139,7 @@ def run_analysis(analysis, interval=5.0):
                 task_id = download_ftp_file.subtask((cur_file.raw_data_file, settings.DOWNLOAD_BASE_DIR, investigation_id,))
                 download_tasks.append(task_id)
                 file_info = {"raw_data_file":cur_file.raw_data_file, "investigation_id":investigation_id}
-                print file_info
+                #print file_info
     
     # PREPROCESSING            
     task_id = run_analysis_preprocessing.subtask( (analysis,) ) 
@@ -216,10 +222,10 @@ def monitor_analysis_execution(analysis, interval=5.0):
     revoke_task = False
     
     while not revoke_task:
-        print  "Sleeping ..."
+        #print  "Sleeping ..."
         progress = connection.get_progress(analysis.history_id)
         monitor_analysis_execution.update_state(state="PROGRESS", meta=progress)
-        print progress
+        #print progress
         
         #print  "Awake ..."
         #print  "Analysis Execution Task State: " + analysis_execution_task.state + "\n"
@@ -234,16 +240,17 @@ def monitor_analysis_execution(analysis, interval=5.0):
             print "Analysis Execution Task task finished successfully."
             revoke_task = True
             #break   
-        elif progress["workflow_state"] == "queued":
-            print "Workflow running."
-        elif progress["workflow_state"] == "new":
-            print "Workflow being prepared."
+        #elif progress["workflow_state"] == "queued":
+        #    print "Workflow running."
+        #elif progress["workflow_state"] == "new":
+        #    print "Workflow being prepared."
             
         
 
         
         # stop celery task if workflow run is in error or finished
         if revoke_task:
+            print "revoking/KILLING task"
             analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
             # kill monitoring task
             celery.control.revoke(analysis_status.execution_monitor_task_id, terminate=True)
@@ -424,8 +431,8 @@ def download_history_files(analysis) :
     task_list = []
     
     for results in download_list:
-        print "#######results"
-        print results
+        #print "#######results"
+        #print results
         
         # download file if result state is "ok"
         if results['state'] == 'ok':
@@ -462,8 +469,14 @@ def download_history_files(analysis) :
                 # location to download to 
                 loc_url = settings.DOWNLOAD_BASE_DIR;
                 
+                print "before download_http_file called"
+                print download_url
+                print loc_url
+                print result_name
+                print file_size
+                
                 #task_id = download_http_file.delay(download_url, loc_url, "analyze_test", new_name=result_name, galaxy_file_size=file_size)
-                task_id = download_http_file.subtask(download_url, loc_url, "analyze_test", new_name=result_name, galaxy_file_size=file_size)
+                task_id = download_http_file.subtask( (download_url, loc_url, "analyze_test", result_name, file_size, ) )
                 task_list.append(task_id)
     return task_list
 
@@ -483,6 +496,15 @@ def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=
     
     print "refinery_repository.download_http_file called"
     
+    print "out_dir"
+    print out_dir
+    print "url"
+    print url
+    print "accession"
+    print accession
+    print "galaxy_file_size"
+    print galaxy_file_size
+    
     #make super-directory (out_dir/accession) if it doesn't exist
     create_dir(out_dir)
     
@@ -497,10 +519,7 @@ def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=
     print file_path
     print "file_name"
     print file_name
-    print "out_dir"
-    print out_dir
-    print "url"
-    print url
+
     
     if(not os.path.exists(file_path)):
         u = urllib2.urlopen(url)
@@ -508,13 +527,13 @@ def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=
         
         if (galaxy_file_size is None):
             meta = u.info()
-            print "meta"
-            print meta
+            #print "meta"
+            #print meta
             file_size = int(meta.getheaders("Content-Length")[0])
         else:
             file_size = galaxy_file_size
             
-        print "Downloading: %s Bytes: %s" % (file_name, file_size)
+        #print "Downloading: %s Bytes: %s" % (file_name, file_size)
         file_size_dl = 0
         block_sz = 8192
         while True:

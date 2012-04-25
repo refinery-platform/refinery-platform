@@ -3,8 +3,21 @@
 {% block head_html %}
 <script>
 
-	var counter = 0;
+var counter = 0;
 var timerId = 0;
+
+function isFinished(result) { 
+	var retStatus = false;
+	
+	if (result.length) 
+	var arLen=result.length;
+	if (arLen == 1) {
+		if ((result[0].task_id == 'SUCCESS') || (result[0].task_id == 'FAILURE')) { 
+			retStatus = true;
+		}
+	}
+	return retStatus;	
+}
 
 function updateProgress(result, section) { 
 	var allFinished = true;
@@ -12,6 +25,11 @@ function updateProgress(result, section) {
 	for ( var i=0, len=arLen; i<len; ++i ){
 		var temp_id = '#'+result[i].task_id;
 		var temp_bar = '#bar_' +result[i].task_id;
+		
+		//$('element').length == 0; // no element found
+		var temp_id = '#text_'+result[i].task_id;
+  		$(temp_id).text(JSON.stringify(result[i]));
+  		
 		if (result[i].state == 'PROGRESS') {
 			var temp_percent = result[i].percent_done;
 			$(temp_bar).css({ 'width': temp_percent });
@@ -21,8 +39,9 @@ function updateProgress(result, section) {
   			$(temp_bar).css({ 'width': '100%'});
   			var temp_bar_class = '#bar_class_'+result[i].task_id;
   			$(temp_bar_class).removeClass('active');
-  			$("#"+section).collapse("hide");
-  			//$(temp_bar_class).fadeOut('slow');
+  			$(temp_bar_class).fadeOut('slow');
+  			//$("#"+section).collapse("hide");
+  			
   		}
   		
   		/*
@@ -37,8 +56,10 @@ function updateProgress(result, section) {
  
 function getUpdate() {
 	
+	console.log("counter");
 	counter += 1;
-
+	
+	
 	$.ajax({
      url:"/analysis_manager/{{uuid}}/",
      type:"POST",
@@ -46,9 +67,9 @@ function getUpdate() {
      data: {csrfmiddlewaretoken: "{{ csrf_token }}" },
      success: function(result){
      	console.log("ajaxed returned some shit")
-     	console.log(result.preprocessing)
-     	console.log(result.execution)
-     	console.log(result.postprocessing)
+     	//console.log(result.preprocessing)
+     	//console.log(result.execution)
+     	//console.log(result.postprocessing)
      	
      	console.log(counter)
      	
@@ -56,36 +77,21 @@ function getUpdate() {
      	updateProgress(result.execution, "collapseTwo");
      	updateProgress(result.postprocessing, "collapseThree");
      	
-     	
-     	/*
-        var allFinished = true;
-		for ( var i=0, len=arLen; i<len; ++i ){
-  			var temp_id = '#'+result[i].task_id;
-  			$(temp_id).text(JSON.stringify(result[i]));
-  		
-  			var temp_bar = '#bar_' +result[i].task_id;
-  			
-  			// REMOVING ACTIVE CLASS STATUS
-  			if (result[i].state == 'SUCCESS') {
-  				$(temp_bar).css({ 'width': '100%'});
-  				var temp_bar_class = '#bar_class_'+result[i].task_id;
-  				$(temp_bar_class).removeClass('active');
-  				$(temp_bar_class).fadeOut('slow');
-  			}
-  			else { 
-  				allFinished = false;
-  				var temp_percent = result[i].percent_done;
-  				$(temp_bar).css({ 'width': temp_percent });
-  			}
-  			
-  		}
-
+     	var allFinished = false;
+		
+		if (isFinished(result.preprocessing) && isFinished(result.execution) && isFinished(result.postprocessing)) {
+			allFinished = true;
+			console.log("allfinished");
+			console.log(allFinished);
+		}
+		
   		// if all files have been downloaded
   		if (allFinished == true) { 
   			clearTimeout ( timerId );
   		}
-  		*/
-  		if (counter == 5) {
+  		
+  		if (counter == 1000) {
+  			console.loge("HIT 1000")
   			clearTimeout ( timerId );
   		}
   		
@@ -139,15 +145,22 @@ $(document).ready(function() {
                   Preprocessing
                 </a>
               </div>
-              <div id="collapseOne" class="accordion-body collapse" style="height: 0px; ">
+              <div id="collapseOne" class="accordion-body collapse in" style="height: auto; ">
                 <div class="accordion-inner">
                 	{% for stat in statuses.preprocessing_status %}
+                		<li>
+                		
                 		{% if stat.download_url %}
-                		<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
-                			<div class="bar" id="bar_{{stat.task_id}}" style="width:{{stat.percent_done}};"></div>
-                		</div>
+                			<div id="text_{{stat.task_id}}">{{stat}}</div>
+                			<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
+                				<div class="bar" id="bar_{{stat.task_id}}" style="width:{{stat.percent_done}};"></div>
+                			</div>
+                		{% else %}
+                			<div id="text_{{stat.task_id}}">{{stat}}</div>
                 		{% endif %}
-                	{{stat}}
+                		</li>
+                		
+                		
                 	{% endfor %}
                 </div>
               </div>
@@ -158,13 +171,16 @@ $(document).ready(function() {
                   Execution
                 </a>
               </div>
-              <div id="collapseTwo" class="accordion-body collapse" style="height: 0px; ">
+              <div id="collapseTwo" class="accordion-body collapse" style="height: auto; ">
                 <div class="accordion-inner">
-                  {% for stat in statuses.execution_status %}
-                	<div id="bar_class_{{task.task_id}}" class="progress progress-striped active">
-                		<div class="bar" id="bar_{{task.task_id}}" style="width:{{stat.percent_done}};"></div>
+                 	{% for stat in statuses.execution_status %}
+                 	<li>
+                 		<div id="text_{{stat.task_id}}">{{stat}}</div>
+                	<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
+                		<div class="bar" id="bar_{{stat.task_id}}" style="width:{{stat.percent_done}};"></div>
                 	</div>
-                	{{stat}}
+                	
+                	</li>
                 	{% endfor %}
                   
                 </div>
@@ -172,17 +188,20 @@ $(document).ready(function() {
             </div>
             <div class="accordion-group">
               <div class="accordion-heading ">
-                <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion3" href="#collapseThree">
+                <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseThree">
                   Postprocessing
                 </a>
               </div>
-              <div id="collapseThree" class="accordion-body in" style="height: auto; ">
+              <div id="collapseThree" class="accordion-body collapse" style="height: auto; ">
                 <div class="accordion-inner">
                   {% for stat in statuses.postprocessing_status %}
-                	<div id="bar_class_{{task.task_id}}" class="progress progress-striped active">
-                		<div class="bar" id="bar_{{task.task_id}}" style="width: 0%;"></div>
+                  	<li>
+                  		<div id="text_{{stat.task_id}}">{{stat}}</div>
+                	<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
+                		<div class="bar" id="bar_{{stat.task_id}}" style="width: 0%;"></div>
                 	</div>
-                	{{stat}}
+                	
+                	</li>
                 	{% endfor %}
                   	{{ statuses.cleanup }}
                   
@@ -192,6 +211,7 @@ $(document).ready(function() {
           </div>
           
     <script>
+	
 	$(".collapse").collapse("show");
 
 </script>
