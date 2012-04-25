@@ -1,0 +1,3812 @@
+[
+    {
+        "pk": 1,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030341/SRR030341.fastq",
+            "datafile": "",
+            "uuid": "f14f21c7-8f15-11e1-a630-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 2,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030374/SRR030374.fastq",
+            "datafile": "",
+            "uuid": "f151d1d7-8f15-11e1-876b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 3,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030315/SRR030315.fastq",
+            "datafile": "",
+            "uuid": "f152cbfd-8f15-11e1-b5b4-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 4,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030354/SRR030354.fastq",
+            "datafile": "",
+            "uuid": "f15441ca-8f15-11e1-aedb-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 5,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030279/SRR030279.fastq",
+            "datafile": "",
+            "uuid": "f15548fd-8f15-11e1-8116-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 6,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030376/SRR030376.fastq",
+            "datafile": "",
+            "uuid": "f156586e-8f15-11e1-a6f8-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 7,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030358/SRR030358.fastq",
+            "datafile": "",
+            "uuid": "f15787c0-8f15-11e1-bb35-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 8,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030317/SRR030317.fastq",
+            "datafile": "",
+            "uuid": "f15906a3-8f15-11e1-918f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 9,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030295/SRR030295.fastq",
+            "datafile": "",
+            "uuid": "f159eff5-8f15-11e1-8b5a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 10,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030360/SRR030360.fastq",
+            "datafile": "",
+            "uuid": "f15bb9a8-8f15-11e1-a1bc-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 11,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030305/SRR030305.fastq",
+            "datafile": "",
+            "uuid": "f15cb18c-8f15-11e1-91b1-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 12,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030317/SRR030317.fastq",
+            "datafile": "",
+            "uuid": "f15db76b-8f15-11e1-bbae-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 13,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030332/SRR030332.fastq",
+            "datafile": "",
+            "uuid": "f15e99ca-8f15-11e1-8ec1-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 14,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030271/SRR030271.fastq",
+            "datafile": "",
+            "uuid": "f160a0b0-8f15-11e1-834a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 15,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030334/SRR030334.fastq",
+            "datafile": "",
+            "uuid": "f161872b-8f15-11e1-8163-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 16,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030374/SRR030374.fastq",
+            "datafile": "",
+            "uuid": "f162be9c-8f15-11e1-8130-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 17,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030285/SRR030285.fastq",
+            "datafile": "",
+            "uuid": "f163c15c-8f15-11e1-a381-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 18,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030327/SRR030327.fastq",
+            "datafile": "",
+            "uuid": "f164ef47-8f15-11e1-9ec5-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 19,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030351/SRR030351.fastq",
+            "datafile": "",
+            "uuid": "f165d794-8f15-11e1-b643-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 20,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030340/SRR030340.fastq",
+            "datafile": "",
+            "uuid": "f167e4a6-8f15-11e1-a1e4-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 21,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030355/SRR030355.fastq",
+            "datafile": "",
+            "uuid": "f168dec5-8f15-11e1-b770-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 22,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030281/SRR030281.fastq",
+            "datafile": "",
+            "uuid": "f16a47a1-8f15-11e1-a649-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 23,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030330/SRR030330.fastq",
+            "datafile": "",
+            "uuid": "f16b4b7a-8f15-11e1-b36f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 24,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030362/SRR030362.fastq",
+            "datafile": "",
+            "uuid": "f16c7111-8f15-11e1-900d-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 25,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030283/SRR030283.fastq",
+            "datafile": "",
+            "uuid": "f16d7697-8f15-11e1-9fa8-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 26,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030309/SRR030309.fastq",
+            "datafile": "",
+            "uuid": "f16ef6f8-8f15-11e1-92d6-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 27,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030299/SRR030299.fastq",
+            "datafile": "",
+            "uuid": "f17010b8-8f15-11e1-bbc0-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 28,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030325/SRR030325.fastq",
+            "datafile": "",
+            "uuid": "f17101ca-8f15-11e1-a8fb-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 29,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030324/SRR030324.fastq",
+            "datafile": "",
+            "uuid": "f1725d1e-8f15-11e1-93a3-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 30,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030334/SRR030334.fastq",
+            "datafile": "",
+            "uuid": "f1736a07-8f15-11e1-952b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 31,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030372/SRR030372.fastq",
+            "datafile": "",
+            "uuid": "f175e557-8f15-11e1-a280-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 32,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030340/SRR030340.fastq",
+            "datafile": "",
+            "uuid": "f177c59e-8f15-11e1-99af-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 33,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030378/SRR030378.fastq",
+            "datafile": "",
+            "uuid": "f178bae3-8f15-11e1-a0c2-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 34,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030355/SRR030355.fastq",
+            "datafile": "",
+            "uuid": "f179fe40-8f15-11e1-90c6-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 35,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030304/SRR030304.fastq",
+            "datafile": "",
+            "uuid": "f17aeeeb-8f15-11e1-8e27-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 36,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030302/SRR030302.fastq",
+            "datafile": "",
+            "uuid": "f17c079e-8f15-11e1-ada5-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 37,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030301/SRR030301.fastq",
+            "datafile": "",
+            "uuid": "f17cf76b-8f15-11e1-9d33-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 38,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030300/SRR030300.fastq",
+            "datafile": "",
+            "uuid": "f17f17fd-8f15-11e1-b9d5-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 39,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030292/SRR030292.fastq",
+            "datafile": "",
+            "uuid": "f1800dee-8f15-11e1-8329-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 40,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030278/SRR030278.fastq",
+            "datafile": "",
+            "uuid": "f1812905-8f15-11e1-a817-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 41,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030303/SRR030303.fastq",
+            "datafile": "",
+            "uuid": "f18247e3-8f15-11e1-9655-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 42,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030318/SRR030318.fastq",
+            "datafile": "",
+            "uuid": "f1839459-8f15-11e1-8951-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 43,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030342/SRR030342.fastq",
+            "datafile": "",
+            "uuid": "f184a411-8f15-11e1-84e7-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 44,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030323/SRR030323.fastq",
+            "datafile": "",
+            "uuid": "f186a033-8f15-11e1-8edf-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 45,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030364/SRR030364.fastq",
+            "datafile": "",
+            "uuid": "f1879a07-8f15-11e1-9bd6-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 46,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030297/SRR030297.fastq",
+            "datafile": "",
+            "uuid": "f188e702-8f15-11e1-b84a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 47,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030368/SRR030368.fastq",
+            "datafile": "",
+            "uuid": "f189f911-8f15-11e1-b4df-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 48,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030364/SRR030364.fastq",
+            "datafile": "",
+            "uuid": "f18b1a02-8f15-11e1-95f4-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 49,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030308/SRR030308.fastq",
+            "datafile": "",
+            "uuid": "f18c2063-8f15-11e1-8496-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 50,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030272/SRR030272.fastq",
+            "datafile": "",
+            "uuid": "f18e0e94-8f15-11e1-871a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 51,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030281/SRR030281.fastq",
+            "datafile": "",
+            "uuid": "f18f0b28-8f15-11e1-b7d8-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 52,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030343/SRR030343.fastq",
+            "datafile": "",
+            "uuid": "f1905780-8f15-11e1-9198-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 53,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030276/SRR030276.fastq",
+            "datafile": "",
+            "uuid": "f1916742-8f15-11e1-9b9f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 54,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030316/SRR030316.fastq",
+            "datafile": "",
+            "uuid": "f192a6f3-8f15-11e1-9e91-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 55,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030338/SRR030338.fastq",
+            "datafile": "",
+            "uuid": "f193c18f-8f15-11e1-968c-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 56,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030296/SRR030296.fastq",
+            "datafile": "",
+            "uuid": "f195f5d1-8f15-11e1-832d-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 57,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030287/SRR030287.fastq",
+            "datafile": "",
+            "uuid": "f196f023-8f15-11e1-9858-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 58,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030308/SRR030308.fastq",
+            "datafile": "",
+            "uuid": "f198259e-8f15-11e1-adca-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 59,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030351/SRR030351.fastq",
+            "datafile": "",
+            "uuid": "f1991f94-8f15-11e1-91fb-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 60,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030354/SRR030354.fastq",
+            "datafile": "",
+            "uuid": "f19a4735-8f15-11e1-b401-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 61,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030361/SRR030361.fastq",
+            "datafile": "",
+            "uuid": "f19b8c17-8f15-11e1-8731-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 62,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030312/SRR030312.fastq",
+            "datafile": "",
+            "uuid": "f19d93c7-8f15-11e1-9e5b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 63,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030373/SRR030373.fastq",
+            "datafile": "",
+            "uuid": "f19e8d14-8f15-11e1-801c-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 64,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030299/SRR030299.fastq",
+            "datafile": "",
+            "uuid": "f19fc9e1-8f15-11e1-9b8a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 65,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030379/SRR030379.fastq",
+            "datafile": "",
+            "uuid": "f1a0ccd1-8f15-11e1-9017-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 66,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030379/SRR030379.fastq",
+            "datafile": "",
+            "uuid": "f1a3110c-8f15-11e1-b9cb-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 67,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030292/SRR030292.fastq",
+            "datafile": "",
+            "uuid": "f1a47378-8f15-11e1-ad27-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 68,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030307/SRR030307.fastq",
+            "datafile": "",
+            "uuid": "f1a552c0-8f15-11e1-a373-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 69,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030356/SRR030356.fastq",
+            "datafile": "",
+            "uuid": "f1a766d1-8f15-11e1-9f8b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 70,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030333/SRR030333.fastq",
+            "datafile": "",
+            "uuid": "f1a89ed9-8f15-11e1-ba57-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 71,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030293/SRR030293.fastq",
+            "datafile": "",
+            "uuid": "f1a98840-8f15-11e1-9161-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 72,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030284/SRR030284.fastq",
+            "datafile": "",
+            "uuid": "f1aa6aa6-8f15-11e1-b309-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 73,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030328/SRR030328.fastq",
+            "datafile": "",
+            "uuid": "f1ab602b-8f15-11e1-8ea3-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 74,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030343/SRR030343.fastq",
+            "datafile": "",
+            "uuid": "f1acb361-8f15-11e1-ae09-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 75,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030376/SRR030376.fastq",
+            "datafile": "",
+            "uuid": "f1ae49f0-8f15-11e1-95d5-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 76,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030298/SRR030298.fastq",
+            "datafile": "",
+            "uuid": "f1af401e-8f15-11e1-ac66-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 77,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030353/SRR030353.fastq",
+            "datafile": "",
+            "uuid": "f1b03851-8f15-11e1-88a8-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 78,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030305/SRR030305.fastq",
+            "datafile": "",
+            "uuid": "f1b1a8b8-8f15-11e1-95da-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 79,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030288/SRR030288.fastq",
+            "datafile": "",
+            "uuid": "f1b2c3cc-8f15-11e1-b7d3-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 80,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030363/SRR030363.fastq",
+            "datafile": "",
+            "uuid": "f1b3cfcf-8f15-11e1-b966-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 81,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030347/SRR030347.fastq",
+            "datafile": "",
+            "uuid": "f1b4dad7-8f15-11e1-b14b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 82,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030332/SRR030332.fastq",
+            "datafile": "",
+            "uuid": "f1b6ead1-8f15-11e1-b80f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 83,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030273/SRR030273.fastq",
+            "datafile": "",
+            "uuid": "f1b7d4b8-8f15-11e1-942e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 84,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030350/SRR030350.fastq",
+            "datafile": "",
+            "uuid": "f1b8d0fa-8f15-11e1-814e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 85,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030349/SRR030349.fastq",
+            "datafile": "",
+            "uuid": "f1ba01a1-8f15-11e1-8ab3-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 86,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030375/SRR030375.fastq",
+            "datafile": "",
+            "uuid": "f1bb043a-8f15-11e1-8bbd-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 87,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030342/SRR030342.fastq",
+            "datafile": "",
+            "uuid": "f1bc0d30-8f15-11e1-9b79-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 88,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030298/SRR030298.fastq",
+            "datafile": "",
+            "uuid": "f1bd1f85-8f15-11e1-9ea0-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 89,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030337/SRR030337.fastq",
+            "datafile": "",
+            "uuid": "f1bf056b-8f15-11e1-ad2b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 90,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030359/SRR030359.fastq",
+            "datafile": "",
+            "uuid": "f1c00426-8f15-11e1-9c76-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 91,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030339/SRR030339.fastq",
+            "datafile": "",
+            "uuid": "f1c1368c-8f15-11e1-80ce-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 92,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030371/SRR030371.fastq",
+            "datafile": "",
+            "uuid": "f1c2369c-8f15-11e1-a399-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 93,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030381/SRR030381.fastq",
+            "datafile": "",
+            "uuid": "f1c34e54-8f15-11e1-a6fc-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 94,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030275/SRR030275.fastq",
+            "datafile": "",
+            "uuid": "f1c43bcc-8f15-11e1-b66d-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 95,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030382/SRR030382.fastq",
+            "datafile": "",
+            "uuid": "f1c629a1-8f15-11e1-ad74-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 96,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030274/SRR030274.fastq",
+            "datafile": "",
+            "uuid": "f1c71517-8f15-11e1-b4b9-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 97,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030360/SRR030360.fastq",
+            "datafile": "",
+            "uuid": "f1c821e1-8f15-11e1-8b90-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 98,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030353/SRR030353.fastq",
+            "datafile": "",
+            "uuid": "f1c95aa8-8f15-11e1-9a3e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 99,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030275/SRR030275.fastq",
+            "datafile": "",
+            "uuid": "f1ca4882-8f15-11e1-a935-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 100,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030378/SRR030378.fastq",
+            "datafile": "",
+            "uuid": "f1cb70b8-8f15-11e1-b6ee-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 101,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030336/SRR030336.fastq",
+            "datafile": "",
+            "uuid": "f1cc7275-8f15-11e1-8c03-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 102,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030333/SRR030333.fastq",
+            "datafile": "",
+            "uuid": "f1ce5121-8f15-11e1-983c-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 103,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030357/SRR030357.fastq",
+            "datafile": "",
+            "uuid": "f1cf4ee1-8f15-11e1-9a74-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 104,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030315/SRR030315.fastq",
+            "datafile": "",
+            "uuid": "f1d09533-8f15-11e1-a900-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 105,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030335/SRR030335.fastq",
+            "datafile": "",
+            "uuid": "f1d19ac5-8f15-11e1-bc29-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 106,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030330/SRR030330.fastq",
+            "datafile": "",
+            "uuid": "f1d2c07a-8f15-11e1-b3b5-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 107,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030291/SRR030291.fastq",
+            "datafile": "",
+            "uuid": "f1d3ae2b-8f15-11e1-bc87-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 108,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030358/SRR030358.fastq",
+            "datafile": "",
+            "uuid": "f1d5be9c-8f15-11e1-bf85-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 109,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030359/SRR030359.fastq",
+            "datafile": "",
+            "uuid": "f1d6b414-8f15-11e1-84d9-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 110,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030371/SRR030371.fastq",
+            "datafile": "",
+            "uuid": "f1d81d7d-8f15-11e1-8d27-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 111,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030319/SRR030319.fastq",
+            "datafile": "",
+            "uuid": "f1d90f33-8f15-11e1-8927-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 112,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030331/SRR030331.fastq",
+            "datafile": "",
+            "uuid": "f1da0aeb-8f15-11e1-bcf5-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 113,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030282/SRR030282.fastq",
+            "datafile": "",
+            "uuid": "f1db2dfa-8f15-11e1-95a7-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 114,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030270/SRR030270.fastq",
+            "datafile": "",
+            "uuid": "f1dd0fee-8f15-11e1-9a3b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 115,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030280/SRR030280.fastq",
+            "datafile": "",
+            "uuid": "f1de046b-8f15-11e1-a876-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 116,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030293/SRR030293.fastq",
+            "datafile": "",
+            "uuid": "f1df6fee-8f15-11e1-8b77-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 117,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030369/SRR030369.fastq",
+            "datafile": "",
+            "uuid": "f1e07b3d-8f15-11e1-94ff-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 118,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030313/SRR030313.fastq",
+            "datafile": "",
+            "uuid": "f1e16a07-8f15-11e1-b29f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 119,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030344/SRR030344.fastq",
+            "datafile": "",
+            "uuid": "f1e2a27d-8f15-11e1-8f60-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 120,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030277/SRR030277.fastq",
+            "datafile": "",
+            "uuid": "f1e3c59e-8f15-11e1-85de-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 121,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030269/SRR030269.fastq",
+            "datafile": "",
+            "uuid": "f1e54266-8f15-11e1-a3fd-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 122,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030313/SRR030313.fastq",
+            "datafile": "",
+            "uuid": "f1e6368c-8f15-11e1-855d-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 123,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030279/SRR030279.fastq",
+            "datafile": "",
+            "uuid": "f1e77447-8f15-11e1-a686-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 124,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030356/SRR030356.fastq",
+            "datafile": "",
+            "uuid": "f1e879ae-8f15-11e1-a951-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 125,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030294/SRR030294.fastq",
+            "datafile": "",
+            "uuid": "f1e9a928-8f15-11e1-9f58-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 126,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030269/SRR030269.fastq",
+            "datafile": "",
+            "uuid": "f1eaa487-8f15-11e1-a4c7-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 127,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030301/SRR030301.fastq",
+            "datafile": "",
+            "uuid": "f1ec7a23-8f15-11e1-8a43-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 128,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030321/SRR030321.fastq",
+            "datafile": "",
+            "uuid": "f1ed634c-8f15-11e1-b3db-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 129,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030291/SRR030291.fastq",
+            "datafile": "",
+            "uuid": "f1eec1d9-8f15-11e1-8047-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 130,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030336/SRR030336.fastq",
+            "datafile": "",
+            "uuid": "f1efc2c5-8f15-11e1-89a8-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 131,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030338/SRR030338.fastq",
+            "datafile": "",
+            "uuid": "f1f0be73-8f15-11e1-9969-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 132,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030311/SRR030311.fastq",
+            "datafile": "",
+            "uuid": "f1f1da82-8f15-11e1-98f0-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 133,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030372/SRR030372.fastq",
+            "datafile": "",
+            "uuid": "f1f37dd7-8f15-11e1-8a06-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 134,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030346/SRR030346.fastq",
+            "datafile": "",
+            "uuid": "f1f4747a-8f15-11e1-8a63-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 135,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030312/SRR030312.fastq",
+            "datafile": "",
+            "uuid": "f1f561fd-8f15-11e1-952b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 136,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030370/SRR030370.fastq",
+            "datafile": "",
+            "uuid": "f1f6ac91-8f15-11e1-ab73-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 137,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030306/SRR030306.fastq",
+            "datafile": "",
+            "uuid": "f1f79dfa-8f15-11e1-8b29-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 138,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030339/SRR030339.fastq",
+            "datafile": "",
+            "uuid": "f1f8b123-8f15-11e1-a724-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 139,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030352/SRR030352.fastq",
+            "datafile": "",
+            "uuid": "f1f9d8b8-8f15-11e1-b4e9-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 140,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030365/SRR030365.fastq",
+            "datafile": "",
+            "uuid": "f1fbd6f3-8f15-11e1-9f1a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 141,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030296/SRR030296.fastq",
+            "datafile": "",
+            "uuid": "f1fcc2cf-8f15-11e1-a74a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 142,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030366/SRR030366.fastq",
+            "datafile": "",
+            "uuid": "f1fe0dca-8f15-11e1-a042-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 143,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030307/SRR030307.fastq",
+            "datafile": "",
+            "uuid": "f1ff264c-8f15-11e1-935a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 144,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030286/SRR030286.fastq",
+            "datafile": "",
+            "uuid": "f20040e8-8f15-11e1-9322-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 145,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030380/SRR030380.fastq",
+            "datafile": "",
+            "uuid": "f201486e-8f15-11e1-9112-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 146,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030273/SRR030273.fastq",
+            "datafile": "",
+            "uuid": "f202cc85-8f15-11e1-a1ec-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 147,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030369/SRR030369.fastq",
+            "datafile": "",
+            "uuid": "f203c878-8f15-11e1-85fc-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 148,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030329/SRR030329.fastq",
+            "datafile": "",
+            "uuid": "f204b557-8f15-11e1-8f19-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 149,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030381/SRR030381.fastq",
+            "datafile": "",
+            "uuid": "f205f72e-8f15-11e1-bfd8-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 150,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030365/SRR030365.fastq",
+            "datafile": "",
+            "uuid": "f206ff7a-8f15-11e1-bc19-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 151,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030367/SRR030367.fastq",
+            "datafile": "",
+            "uuid": "f2081380-8f15-11e1-921e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 152,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030366/SRR030366.fastq",
+            "datafile": "",
+            "uuid": "f2092517-8f15-11e1-89c3-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 153,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030306/SRR030306.fastq",
+            "datafile": "",
+            "uuid": "f20b21ae-8f15-11e1-b2fc-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 154,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030302/SRR030302.fastq",
+            "datafile": "",
+            "uuid": "f20c0d75-8f15-11e1-8ac4-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 155,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030325/SRR030325.fastq",
+            "datafile": "",
+            "uuid": "f20d5f3a-8f15-11e1-95c6-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 156,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030320/SRR030320.fastq",
+            "datafile": "",
+            "uuid": "f20e7b0f-8f15-11e1-8308-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 157,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030367/SRR030367.fastq",
+            "datafile": "",
+            "uuid": "f20f77d4-8f15-11e1-a707-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 158,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030309/SRR030309.fastq",
+            "datafile": "",
+            "uuid": "f21087e8-8f15-11e1-8c0c-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 159,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030368/SRR030368.fastq",
+            "datafile": "",
+            "uuid": "f217545e-8f15-11e1-b77d-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 160,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030310/SRR030310.fastq",
+            "datafile": "",
+            "uuid": "f2189438-8f15-11e1-8443-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 161,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030337/SRR030337.fastq",
+            "datafile": "",
+            "uuid": "f2199ca1-8f15-11e1-9197-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 162,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030303/SRR030303.fastq",
+            "datafile": "",
+            "uuid": "f21a9030-8f15-11e1-87ae-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 163,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030311/SRR030311.fastq",
+            "datafile": "",
+            "uuid": "f21ba42b-8f15-11e1-baf3-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 164,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030322/SRR030322.fastq",
+            "datafile": "",
+            "uuid": "f21c9aba-8f15-11e1-9f46-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 165,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030285/SRR030285.fastq",
+            "datafile": "",
+            "uuid": "f21d7e4c-8f15-11e1-aa67-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 166,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030375/SRR030375.fastq",
+            "datafile": "",
+            "uuid": "f222582e-8f15-11e1-84bf-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 167,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030271/SRR030271.fastq",
+            "datafile": "",
+            "uuid": "f226008c-8f15-11e1-92e8-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 168,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030319/SRR030319.fastq",
+            "datafile": "",
+            "uuid": "f2402502-8f15-11e1-b0a4-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 169,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030314/SRR030314.fastq",
+            "datafile": "",
+            "uuid": "f241b6a3-8f15-11e1-9d63-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 170,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030310/SRR030310.fastq",
+            "datafile": "",
+            "uuid": "f243a02e-8f15-11e1-af40-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 171,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030348/SRR030348.fastq",
+            "datafile": "",
+            "uuid": "f2706ec2-8f15-11e1-b411-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 172,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030290/SRR030290.fastq",
+            "datafile": "",
+            "uuid": "f27b0d51-8f15-11e1-8b11-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 173,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030300/SRR030300.fastq",
+            "datafile": "",
+            "uuid": "f27c0f05-8f15-11e1-9bf7-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 174,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030277/SRR030277.fastq",
+            "datafile": "",
+            "uuid": "f27d2880-8f15-11e1-9596-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 175,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030295/SRR030295.fastq",
+            "datafile": "",
+            "uuid": "f27e1af5-8f15-11e1-b35b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 176,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030327/SRR030327.fastq",
+            "datafile": "",
+            "uuid": "f27f13d4-8f15-11e1-b0c9-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 177,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030289/SRR030289.fastq",
+            "datafile": "",
+            "uuid": "f28003ca-8f15-11e1-a3b5-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 178,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030331/SRR030331.fastq",
+            "datafile": "",
+            "uuid": "f2813940-8f15-11e1-add8-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 179,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030287/SRR030287.fastq",
+            "datafile": "",
+            "uuid": "f28241e3-8f15-11e1-9d7b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 180,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030341/SRR030341.fastq",
+            "datafile": "",
+            "uuid": "f283b7a3-8f15-11e1-9693-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 181,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030329/SRR030329.fastq",
+            "datafile": "",
+            "uuid": "f284fc8f-8f15-11e1-8c57-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 182,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030345/SRR030345.fastq",
+            "datafile": "",
+            "uuid": "f285ec85-8f15-11e1-8472-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 183,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030326/SRR030326.fastq",
+            "datafile": "",
+            "uuid": "f286f98c-8f15-11e1-9d17-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 184,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030357/SRR030357.fastq",
+            "datafile": "",
+            "uuid": "f287edf5-8f15-11e1-8fc5-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 185,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030289/SRR030289.fastq",
+            "datafile": "",
+            "uuid": "f28a56ca-8f15-11e1-832f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 186,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030321/SRR030321.fastq",
+            "datafile": "",
+            "uuid": "f28b390c-8f15-11e1-8fc7-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 187,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030377/SRR030377.fastq",
+            "datafile": "",
+            "uuid": "f28d3a5e-8f15-11e1-bf0e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 188,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030370/SRR030370.fastq",
+            "datafile": "",
+            "uuid": "f28e2b26-8f15-11e1-ad4a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 189,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030294/SRR030294.fastq",
+            "datafile": "",
+            "uuid": "f28f3f02-8f15-11e1-8e8a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 190,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030361/SRR030361.fastq",
+            "datafile": "",
+            "uuid": "f2903285-8f15-11e1-af7f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 191,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030290/SRR030290.fastq",
+            "datafile": "",
+            "uuid": "f2913f14-8f15-11e1-8162-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 192,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030352/SRR030352.fastq",
+            "datafile": "",
+            "uuid": "f29295ee-8f15-11e1-88ec-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 193,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030373/SRR030373.fastq",
+            "datafile": "",
+            "uuid": "f293a40c-8f15-11e1-9a19-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 194,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030283/SRR030283.fastq",
+            "datafile": "",
+            "uuid": "f294f38f-8f15-11e1-8efc-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 195,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030304/SRR030304.fastq",
+            "datafile": "",
+            "uuid": "f295f228-8f15-11e1-8e25-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 196,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030323/SRR030323.fastq",
+            "datafile": "",
+            "uuid": "f29713b3-8f15-11e1-a90d-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 197,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030350/SRR030350.fastq",
+            "datafile": "",
+            "uuid": "f29822ca-8f15-11e1-8a35-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 198,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030362/SRR030362.fastq",
+            "datafile": "",
+            "uuid": "f2997a94-8f15-11e1-ac37-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 199,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030328/SRR030328.fastq",
+            "datafile": "",
+            "uuid": "f29a7c45-8f15-11e1-9b1f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 200,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030335/SRR030335.fastq",
+            "datafile": "",
+            "uuid": "f29ba2ee-8f15-11e1-9574-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 201,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030377/SRR030377.fastq",
+            "datafile": "",
+            "uuid": "f29cecc2-8f15-11e1-b046-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 202,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030297/SRR030297.fastq",
+            "datafile": "",
+            "uuid": "f29df3c5-8f15-11e1-87b7-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 203,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR030/SRR030363/SRR030363.fastq",
+            "datafile": "",
+            "uuid": "f29f1e05-8f15-11e1-994d-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 204,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f2a0536e-8f15-11e1-af49-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 205,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f2a2595c-8f15-11e1-a408-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 206,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f2a40247-8f15-11e1-95a9-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 207,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f2a4f7de-8f15-11e1-bc4d-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 208,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f2a60ed9-8f15-11e1-be3b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 209,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f2a70d4c-8f15-11e1-8e7e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 210,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f2a85378-8f15-11e1-9de3-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 211,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f2a96121-8f15-11e1-baa6-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 212,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f2aa4ab8-8f15-11e1-b8be-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 213,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f2ab7c61-8f15-11e1-beb7-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 214,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f2ac640f-8f15-11e1-933c-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 215,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f2ad60a3-8f15-11e1-9c62-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 216,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f2ae71c2-8f15-11e1-b894-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 217,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f2af8063-8f15-11e1-9552-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 218,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f2b08fe1-8f15-11e1-af0a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 219,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f2b18780-8f15-11e1-acb1-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 220,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f2b3266b-8f15-11e1-8a9c-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 221,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f2b41a6e-8f15-11e1-a8fb-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 222,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f2b51d80-8f15-11e1-a2f3-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 223,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f2b62ff3-8f15-11e1-89fe-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 224,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f2b7288c-8f15-11e1-803a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 225,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f2b803a6-8f15-11e1-a93b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 226,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f2b90a11-8f15-11e1-ba51-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 227,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f2ba14c0-8f15-11e1-a520-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 228,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f2bb2bb3-8f15-11e1-adc6-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 229,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f2bc1400-8f15-11e1-a2ff-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 230,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f2bd0494-8f15-11e1-9e8e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 231,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f2bde9cc-8f15-11e1-b14c-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 232,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f2bec499-8f15-11e1-8c71-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 233,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f2bfd57a-8f15-11e1-8f54-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 234,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f2c0cb30-8f15-11e1-adb4-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 235,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f2c1ab35-8f15-11e1-809f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 236,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f2c2a445-8f15-11e1-a797-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 237,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f2c3a52e-8f15-11e1-8e6f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 238,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f2c48891-8f15-11e1-8e77-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 239,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f2c5e187-8f15-11e1-8ad7-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 240,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f2c6e1dc-8f15-11e1-bc03-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 241,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f2c7d823-8f15-11e1-8e6d-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 242,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f2c8c7e8-8f15-11e1-8e4f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 243,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f2c9e34f-8f15-11e1-be82-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 244,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f2cae066-8f15-11e1-870d-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 245,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f2cbc261-8f15-11e1-b0f4-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 246,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f2cca94f-8f15-11e1-b63b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 247,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f2cda0a8-8f15-11e1-ad96-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 248,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f2ce7fb3-8f15-11e1-a5ba-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 249,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f2cf808a-8f15-11e1-b9bf-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 250,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f2d06459-8f15-11e1-9304-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 251,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f2d13c17-8f15-11e1-8568-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 252,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f2d22fcc-8f15-11e1-9478-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 253,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f2d33bd9-8f15-11e1-b093-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 254,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f2d4261c-8f15-11e1-8daf-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 255,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f2d507a8-8f15-11e1-b14f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 256,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f2da277d-8f15-11e1-b46e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 257,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f2db1e02-8f15-11e1-926b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 258,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f2dc2073-8f15-11e1-a655-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 259,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f2dd2545-8f15-11e1-9358-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 260,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f2de1cc5-8f15-11e1-ae20-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 261,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f2def659-8f15-11e1-9a96-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 262,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f2dfe95c-8f15-11e1-b956-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 263,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f2e0df91-8f15-11e1-acd3-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 264,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f2e1e69e-8f15-11e1-bafe-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 265,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f2e2cf82-8f15-11e1-aa5e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 266,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f2e3ab80-8f15-11e1-b144-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 267,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f2e4870a-8f15-11e1-82dc-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 268,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f2e57c45-8f15-11e1-a386-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 269,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f2e65628-8f15-11e1-8859-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 270,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f2e7447a-8f15-11e1-96cd-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 271,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f2e82319-8f15-11e1-8336-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 272,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f2e9024c-8f15-11e1-a88f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 273,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f2ea0e26-8f15-11e1-a712-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 274,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f2eaf540-8f15-11e1-84fd-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 275,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f2ec10a6-8f15-11e1-8c28-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 276,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f2ed072b-8f15-11e1-ad22-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 277,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f2edeffd-8f15-11e1-a70a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 278,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f2eed502-8f15-11e1-b83c-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 279,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f2efb617-8f15-11e1-bf3d-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 280,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f2f0b475-8f15-11e1-a1fa-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 281,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f2f1efd9-8f15-11e1-840a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 282,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f2f2ef82-8f15-11e1-83c6-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 283,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f2f3d138-8f15-11e1-be78-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 284,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f2f4d97a-8f15-11e1-b1dd-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 285,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f2f60885-8f15-11e1-ba68-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 286,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f2f6e61e-8f15-11e1-8b74-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 287,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f2f7d6c0-8f15-11e1-b9b3-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 288,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f2f8b282-8f15-11e1-8069-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 289,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f2f99ae6-8f15-11e1-8359-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 290,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f2fa8461-8f15-11e1-934f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 291,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f2fb6842-8f15-11e1-9487-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 292,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f2fc5a4c-8f15-11e1-8d6e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 293,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f2fd6521-8f15-11e1-a2e6-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 294,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f2fe45f0-8f15-11e1-80f6-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 295,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f2ff1fd1-8f15-11e1-942c-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 296,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f3001628-8f15-11e1-9cf2-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 297,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f3010ede-8f15-11e1-83e8-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 298,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f3022bde-8f15-11e1-befb-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 299,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f3030e94-8f15-11e1-8b66-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 300,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f303f235-8f15-11e1-bd5e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 301,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f304e3c2-8f15-11e1-b42a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 302,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f305c65c-8f15-11e1-aa7e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 303,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f306a251-8f15-11e1-967f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 304,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f307b021-8f15-11e1-90fd-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 305,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f308b742-8f15-11e1-a3be-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 306,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f309a170-8f15-11e1-b7d3-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 307,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f30aaf78-8f15-11e1-bbdb-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 308,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f30b8d63-8f15-11e1-905b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 309,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f30c781e-8f15-11e1-a109-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 310,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f30d6968-8f15-11e1-beb1-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 311,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f30e43b0-8f15-11e1-bb50-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 312,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f30f27c5-8f15-11e1-a01b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 313,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f3102e63-8f15-11e1-bf06-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 314,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f31114fa-8f15-11e1-9b29-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 315,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f312205c-8f15-11e1-a0ed-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 316,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f31303dc-8f15-11e1-9326-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 317,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f313ecc0-8f15-11e1-a6df-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 318,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f314f82b-8f15-11e1-bf8a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 319,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f315e459-8f15-11e1-b5e4-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 320,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f316eaba-8f15-11e1-ba83-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 321,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f317cdae-8f15-11e1-a4c1-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 322,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f318b3fd-8f15-11e1-9fa9-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 323,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f319a975-8f15-11e1-be69-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 324,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f31a8e19-8f15-11e1-a893-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 325,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f31b98c5-8f15-11e1-80af-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 326,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f31c8fe1-8f15-11e1-bd96-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 327,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f31d76e6-8f15-11e1-ad59-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 328,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f31e5ee3-8f15-11e1-9a4d-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 329,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f31f4d8f-8f15-11e1-b316-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 330,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f3203f51-8f15-11e1-8c3e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 331,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f3212c14-8f15-11e1-8ff0-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 332,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f3220761-8f15-11e1-81bc-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 333,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f3230438-8f15-11e1-a177-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 334,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f3240a7d-8f15-11e1-add0-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 335,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f324fe33-8f15-11e1-ab6a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 336,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f325df47-8f15-11e1-a9cf-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 337,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f326c142-8f15-11e1-a339-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 338,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f327b426-8f15-11e1-b541-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 339,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f328da85-8f15-11e1-a21f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 340,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f329bc1c-8f15-11e1-8c1b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 341,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f32aadc0-8f15-11e1-8f57-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 342,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f32b8ce8-8f15-11e1-8c46-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 343,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f32c82f8-8f15-11e1-ab23-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 344,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f32dae4c-8f15-11e1-955b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 345,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f32eb170-8f15-11e1-9c64-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 346,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f32f9c7a-8f15-11e1-8df0-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 347,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f3307e9e-8f15-11e1-8d1d-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 348,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f331661c-8f15-11e1-be1e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 349,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f3325b4a-8f15-11e1-b34e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 350,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f33350c2-8f15-11e1-aa68-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 351,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.7.zip",
+            "datafile": "",
+            "uuid": "f334370a-8f15-11e1-8df0-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 352,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f335180a-8f15-11e1-9a4e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 353,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f335f659-8f15-11e1-8f6f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 354,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f336e11c-8f15-11e1-ac6f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 355,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f337f778-8f15-11e1-9b23-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 356,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f338d417-8f15-11e1-992f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 357,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f339ae4c-8f15-11e1-9b66-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 358,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f33a9f8c-8f15-11e1-8fc4-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 359,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f33b8c75-8f15-11e1-8f7d-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 360,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f33c7c94-8f15-11e1-87b2-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 361,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f33d9afa-8f15-11e1-a914-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 362,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f33e7d26-8f15-11e1-bc91-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 363,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f33f9487-8f15-11e1-92a2-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 364,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f340803a-8f15-11e1-818f-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 365,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f3418675-8f15-11e1-9e40-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 366,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
+            "datafile": "",
+            "uuid": "f342ad6b-8f15-11e1-8f9a-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 367,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f34390d7-8f15-11e1-b681-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 368,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f3447c9e-8f15-11e1-a821-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 369,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.9.zip",
+            "datafile": "",
+            "uuid": "f3456494-8f15-11e1-9174-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 370,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f34663b3-8f15-11e1-b4e7-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 371,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f3474e61-8f15-11e1-adfe-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 372,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.10.zip",
+            "datafile": "",
+            "uuid": "f3483c3a-8f15-11e1-8769-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 373,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f3492228-8f15-11e1-bd9b-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 374,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f34a2e8c-8f15-11e1-8d34-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 375,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.4.zip",
+            "datafile": "",
+            "uuid": "f34b1361-8f15-11e1-bc2c-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 376,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f34bf7f8-8f15-11e1-a84c-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 377,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.6.zip",
+            "datafile": "",
+            "uuid": "f34d2db3-8f15-11e1-b6cd-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 378,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.5.zip",
+            "datafile": "",
+            "uuid": "f34e73ae-8f15-11e1-9ae2-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 379,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.1.zip",
+            "datafile": "",
+            "uuid": "f34f69ba-8f15-11e1-833e-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 380,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.8.zip",
+            "datafile": "",
+            "uuid": "f3507314-8f15-11e1-a1d8-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 381,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.3.zip",
+            "datafile": "",
+            "uuid": "f35172ae-8f15-11e1-8351-002332b1159e",
+            "sharename": ""
+        }
+    }
+]
