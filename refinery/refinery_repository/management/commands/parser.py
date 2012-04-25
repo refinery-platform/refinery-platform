@@ -578,6 +578,8 @@ class Command(LabelCommand):
                 if not re.search(r'^\s*$', field): #if not empty
                     if re.search(r'Raw Data', header[j]):
                         temp_dict = dict()
+                        if re.search(r'fastq$', field):
+                            field += ".gz"
                         temp_dict['raw_data_file'] = field
                         #raw.x.zip file
                         if re.search(r'^http', field) or re.search(r'^ftp', field):
