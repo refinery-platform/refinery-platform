@@ -67,66 +67,6 @@ class Command(LabelCommand):
     
     dictionary = defaultdict(list)
 
-    """
-    Name: get_raw_url
-    Description:
-        fixes the malformed URL and returns the fixed version
-    Parameters:
-        ftp_file (malformed download URL)
-    
-    def get_raw_url(self, ftp_file):
-        #list that has different parts of final ftp link to concatenate
-        ftp = ["ftp://ftp.sra.ebi.ac.uk/vol1/fastq"]
-    
-        #isolate the file name
-        #get the index of the last / in the given ftp link
-        rind = string.rindex(ftp_file, '/')
-        #take substring from the last slash to the end of given ftp link
-        f_name = ftp_file[rind+1:] #file name
-    
-        #add first 6 characters of the ENA/SRA accession to list
-        ftp.append(f_name[:6])
-    
-        #isolate the ENA/SRA accession number
-        split = f_name.split('.') #split on "." for ENA/SRA acc (ind=0)
-        #if paired-end data, remove the _1/_2 from end before list append
-        if re.search(r'_(1|2)$', split[0]):
-            #add everything but last 2 chars (_1 or _2)
-            ftp.append(split[0][:-2])
-        else:
-            ftp.append(split[0]) 
-    
-        #if getting FASTQ file, make sure gzip version
-        if re.search(r'\.fastq$', f_name):
-            f_name += ".gz"
-        #add file name to the end of the list
-        ftp.append(f_name)
-    
-        #concatenate everything to get the final FTP link
-        ftp_url = string.join(ftp, '/')
-        return ftp_url
-        """
-
-    """
-     Name: get_zipped_url
-     Description:
-         fixes the malformed URL and returns the fixed version
-     Parameters:
-         ftp_file (malformed download URL)
-         acc (associated investigation study identifier)
-    
-    def get_zipped_url(self, ftp_file, acc):
-        #isolate the file name
-        #get the index of the last / in the given ftp link
-        rind = string.rindex(ftp_file, '/')
-        #take substring from the last slash to the end of given ftp link
-        f_name = ftp_file[rind+1:] #file name
-
-        #format final url, plugging in the accession and the file name
-        url = "http://www.ebi.ac.uk/arrayexpress/files"
-        url = "%s/%s/%s" % (url, acc, f_name)
-        return url
-    """
     
     def get_subtype(self, field):
         """
@@ -378,8 +318,9 @@ class Command(LabelCommand):
                 elif re.search(r'Date', j):
                     cpd = i
 
-        print header
-        print
+        #print 'header:'
+        #print header
+        #print
         return header
     
     def get_bracketed_info(self, row, header_dict, index):
@@ -419,7 +360,6 @@ class Command(LabelCommand):
         self.dictionary['b'][key][sub_key]['value'] = row[index]
         self.dictionary['b'][key][sub_key]['node_name'] = node_name
         self.dictionary['b'][key][sub_key]['node_index'] = node
-        print '[key][sub_key] = %s' % (self.dictionary['b'][key][sub_key])
         
         #if parameter value, there will be more things to grab
         #index of associated protocol if parameter value
@@ -429,11 +369,11 @@ class Command(LabelCommand):
             key_name = string.split(header_dict[ind], ' ').pop(0).lower()
             #assign
             self.dictionary['b'][key][sub_key][key_name] = row[ind]
+        #print 'from get_bracketed_info'
+        #print '[%s][%s] = %s' % (key, sub_key, self.dictionary['b'][key][sub_key])
 
     def lab(self, header_string, field, current_header):
         sub_type = self.get_subtype(header_string)
-        print 'sub_type:',
-        print sub_type
 
         #key is the key for study_info
         key = string.split(header_string, '[').pop(0).lower().strip()
@@ -441,15 +381,12 @@ class Command(LabelCommand):
         if re.search(r'[0-9]+', key):
             key_parts = string.split(key, '\t')
             key = key_parts.pop()
-        print 'key:',
-        print key
 
         #field header
         sub_key = re.sub(r' ', r'_', current_header).lower()
-        print 'sub_key:',
-        print sub_key
-        print self.dictionary['b']
 
+        #print 'from lab'
+        #print 'dictionary[b][%s][%s][%s] = %s' % (key, sub_type, sub_key, field)
         self.dictionary['b'][key][sub_type][sub_key] = field
 
     """
@@ -484,21 +421,16 @@ class Command(LabelCommand):
             self.dictionary = defaultdict(dict)
 
             for j, field in enumerate(row):
-                print 'header: %s; field: %s' % (header[j], field)
-                print '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
-                
                 if not re.search(r'^\s*$', field):
                     #comment or characteristic
                     if re.search(r"\[", header[j]):
-                        print header[j]
-                        print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
                         self.get_bracketed_info(row, header, j)   
                     else:
                         #get name of the header with '_' substituted for ' ' and lowercase
                         key_parts = [x.lower().strip() for x in string.split(header[j], ' ')]
                         key = string.join(key_parts, '_')
                     
-                        if re.search(r'Protocol ', header[j]):
+                        if re.search(r'^Protocol ', header[j]):
                             protocols.append(field)
                         elif re.search(r'^[0-9]+', header[j]):
                             #isolate index of corresponding characteristic
@@ -525,6 +457,7 @@ class Command(LabelCommand):
                     temp['row_num'] = i
                     study_info['studybracketedfield'].append(temp)
 
+        """
         print '----------------------------'
         print 'study'
         print study_info['study']
@@ -536,6 +469,7 @@ class Command(LabelCommand):
         print study_info['protocol']
         print '----------------------------'
         print
+        """
 
         return study_info
            
@@ -576,10 +510,11 @@ class Command(LabelCommand):
 
             for j, field in enumerate(row):
                 if not re.search(r'^\s*$', field): #if not empty
-                    if re.search(r'Raw Data', header[j]):
+                    if re.search(r'^Raw Data', header[j]):
                         temp_dict = dict()
                         if re.search(r'fastq$', field):
                             field += ".gz"
+
                         temp_dict['raw_data_file'] = field
                         #raw.x.zip file
                         if re.search(r'^http', field) or re.search(r'^ftp', field):
@@ -621,7 +556,7 @@ class Command(LabelCommand):
                             key_parts = [x.lower().strip() for x in string.split(header[j], ' ')]
                             key = string.join(key_parts, '_')
 
-                            if re.search(r'Derived', header[j]):
+                            if re.search(r'^Derived', header[j]):
                                 try:
                                     temp_dict = self.dictionary['p'].pop()
                                 except:
@@ -637,7 +572,7 @@ class Command(LabelCommand):
                                 else:
                                     temp_dict[key] = field
                                 self.dictionary['p'].append(temp_dict)
-                            elif re.search(r'Protocol REF', header[j]):
+                            elif re.search(r'^Protocol REF', header[j]):
                                 protocols.append(field)
                             else:
                                 self.dictionary['a'][key] = field
@@ -681,7 +616,7 @@ class Command(LabelCommand):
             except KeyError: #no bracketed information
                 pass
 
-        
+        """
         print '----------------------------'
         print 'assay'
         print assay_info['assay']
@@ -702,6 +637,7 @@ class Command(LabelCommand):
         print assay_info['datatransformation']
         print '----------------------------'
         print
+        """
         
         return assay_info
 
@@ -729,53 +665,53 @@ class Command(LabelCommand):
         #try:
         for ind, i_dict in enumerate(i_list):
             tor_list = i_dict['tor'] #investigator
-            
+            """
             print 'tor_list'
             print tor_list
             print
-            
+            """
             tion_dict = i_dict['tion'][0] #investigation
-            
+            """
             print 'tion_dict'
             print tion_dict
             print
-            
+            """
             ont_list = i_dict['ont'] #ontology
-            
+            """
             print 'ont_list'
             print ont_list
             print
-            
+            """
             prot_list = i_dict['prot'] #protocols
-            
+            """
             print 'prot_list'
             print prot_list
             print
-            
+            """
             sdd_list = i_dict['sdd'] #study design descriptors
-            
+            """
             print 'sdd_list'
             print sdd_list
             print
-            
+            """
             sf_list = i_dict['sf'] #study factors
-            
+            """
             print 'sf_list'
             print sf_list
             print
-            
+            """
             pub_list = i_dict['pub'] #publications
-            
+            """
             print 'pub_list'
             print pub_list
             print
-            
+            """
             sa_list = i_dict['sa'] #study assays
-            
+            """
             print 'sa_list'
             print sa_list
             print
-            
+            """
 
             # "**" converts dictionary to arguments
             #make sure dates are datetime.date objects
@@ -791,12 +727,9 @@ class Command(LabelCommand):
             tion_dict['isatab_file'] = isatab
             tion_dict['pre_isatab_file'] = pre_isatab
 
-            print 'investigation problem?'
-            print tion_dict
             investigation = Investigation(**tion_dict)
             investigation.save()
 
-            print 'investigator problem?'
             for tor_dict in tor_list:
                 investigator = Investigator(**tor_dict)
                 investigator.save()
@@ -804,8 +737,6 @@ class Command(LabelCommand):
                 #add investigation to investigator
                 investigator.investigations.add(investigation)
 
-
-            print 'ontology problem?'
             #add investigation to ont dictionary and insert ontologies
             for ont_dict in ont_list:
                 #ont_dict['investigation'] = investigation
@@ -831,7 +762,6 @@ class Command(LabelCommand):
 
                 investigation.ontologies.add(ontology)
 
-            print 'publication problem?'
             #add investigation to pub dictionary and insert publication(s)
             for pub_dict in pub_list:
                 #sometimes 'Study Publication DOI DOI'; fix
@@ -847,8 +777,7 @@ class Command(LabelCommand):
                 publication.investigation_set.add(investigation)
                 #add to master list
                 publications_master_list.append(publication)
-            
-            print 'study assay problem?'
+
             #add investigation to sa dictionary and insert study assay(s)
             for sa_dict in sa_list:
                 #using foreign key, so need to assign
@@ -857,7 +786,6 @@ class Command(LabelCommand):
                 sa = StudyAssay(**sa_dict)
                 sa.save()
 
-            print 'protocol problem?'
             #add investigation to prot dictionary and insert protocol(s)
             for prot_dict in prot_list:
                 #print prot_dict
@@ -882,7 +810,6 @@ class Command(LabelCommand):
                 abbr = "P--%s" % number
                 protocols[abbr] = p
 
-            print 'study design descriptor problem?'
             #add investigation to sdd dictionary and insert 
             #study design descriptor(s)
             for sdd_dict in sdd_list:
@@ -892,7 +819,6 @@ class Command(LabelCommand):
                 sdd = StudyDesignDescriptor(**sdd_dict)
                 sdd.save()
 
-            print 'study factor problem?'
             #add investigation to prot dictionary and insert protocol(s)
             for sf_dict in sf_list:
                 #add investigation as Foreign Key
@@ -903,23 +829,24 @@ class Command(LabelCommand):
                 
             """Studies"""
             sbf_list = stud_list[ind]['studybracketedfield']
-            
+            """
             print 'sbf_list'
             print sbf_list
             print
+            """
             
             study_list = stud_list[ind]['study']
-            
+            """
             print 'study_list'
             print study_list
             print
-            
+            """
             prot_list = stud_list[ind]['protocol']
-            
+            """
             print 'prot_list'
             print prot_list
             print '----------------------------------'
-            
+            """
         
             
             #list of studies entered, needs to be returned
@@ -978,42 +905,42 @@ class Command(LabelCommand):
             """Assays"""
             for a_dict in assay_dictionary[tion_dict['study_identifier']]:
                 assay_list = a_dict['assay']
-                
+                """
                 print 'assay_list'
                 print assay_list
                 print
-                
+                """
                 raw_list = a_dict['raw_data']
-                
+                """
                 print 'raw_list'
                 print raw_list
                 print
-                
+                """
                 processed_list = a_dict['processed_data']
-                
+                """
                 print 'processed_list'
                 print processed_list
                 print
-                
+                """
                 abf_list = a_dict['assaybracketedfield']
-                
+                """
                 print 'abf_list'
                 print abf_list
                 print
-                
+                """
                 prot_list = a_dict['protocol']
-                
+                """
                 print 'prot_list'
                 print prot_list
                 print
-                
+                """
                 datatransform_list = a_dict['datatransformation']
-                
+                """
                 print 'datatransform_list'
                 print datatransform_list
                 print
                 print '============================'
-                
+                """
                 #make study list a study dictionary instead so it's easier for
                 #assays to find their associated studies
                 study_dict = dict()
@@ -1025,9 +952,6 @@ class Command(LabelCommand):
                     #remove row number from the dictionary
                     row_num = a['row_num']
                     del a['row_num']
-                    print "a"
-                    print a
-                    print "********************"
                 
                     #grab associated study and investigation
                     study = study_dict[a['sample_name']]
@@ -1042,20 +966,8 @@ class Command(LabelCommand):
                 
 
                 """ Many to Manys """
-                print 'raw_list:',
-                print raw_list
-                print
-                print '%%%%%%%%%%%%%%%%%%%%%'
                 for r_list in raw_list:
-                    print 'r_list:',
-                    print r_list
-                    print
-                    print '&&&&&&&&&&&&&&&&&&&&&'
                     for r in r_list:
-                        print 'r:',
-                        print r
-                        print 
-                        print '@@@@@@@@@@@@@@@@@@'
                         row_num = r['row_num']
                         del r['row_num']
                 
@@ -1071,15 +983,12 @@ class Command(LabelCommand):
                         try:
                             raw_data.save()
                         except IntegrityError: #if already exists, grab
-                            print 'rolling back and getting'
-                            print r
                             connection._rollback()
                             raw_data = RawData.objects.get(**r)
                         
                         #associate the assay
                         raw_data.assay_set.add(assay)
                         raw_data_master_list.append(raw_data)
-                        print 'saved the rawdata file'
 
                 for p_list in processed_list:
                     for p in p_list:
