@@ -34,11 +34,7 @@ class FileStoreItem(models.Model):
 
 @receiver(pre_delete, sender=FileStoreItem)
 def _delete_file_on_disk(sender, **kwargs):
-    '''
-    Delete the file that belongs to this FileStoreItem instance from the file system
-    Call this function only when deleting the instance
-    Otherwise, this will result in instances pointing to files that don't exist
-    '''
+    ''' Delete the file that belongs to this FileStoreItem instance from the file system '''
     item = kwargs.get('instance')
     # delete files that are located within the file store directory only
     #TODO: expand inline to avoid extra DB query when looking up by UUID
@@ -61,13 +57,13 @@ def is_local(uuid):
     try:
         f = FileStoreItem.objects.get(uuid=uuid).datafile
     except FileStoreItem.DoesNotExist:
-        #TODO: write msg to log
+        #TODO: write error msg to log
         return False
-    # local files are stored with relative path names
-    if not f or os.path.isabs(f.name):
-        return False
-    else:
+    # local files are stored with relative path names that begin with FILE_STORE_BASE_DIR
+    if f and f.name.startswith(FILE_STORE_BASE_DIR):
         return True
+    else:
+        return False
 
 def is_permanent(uuid):
     ''' Check if FileStoreItem instance is referenced in the cache '''
