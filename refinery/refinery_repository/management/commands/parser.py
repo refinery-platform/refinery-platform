@@ -1,3 +1,5 @@
+__docformat__ = 'restructuredtext'
+
 from django.core.management.base import LabelCommand
 from django.db import transaction
 from django.db.utils import IntegrityError
@@ -153,15 +155,15 @@ class Command(LabelCommand):
         
         return investigation
 
-    """
-    Name: parse_investigation_file
-    Description:
-        parse the fields relevant to our Django model and put them into a
-        dictionary
-    Parameters:
-        i_file: path to investigation file
-    """
     def parse_investigation_file(self, i_file):
+        """
+        Name: parse_investigation_file
+        Description:
+            parse the fields relevant to our Django model and put them into a
+            dictionary
+        Parameters:
+            i_file: path to investigation file
+        """
         invest_info = {
                        'tor': defaultdict(list), #investigator
                        'tion': defaultdict(list), #investigation
@@ -217,18 +219,18 @@ class Command(LabelCommand):
                 del investigation_dict['inv'] #information is in 'tion', so delete
             except KeyError:
                 pass
-
-            """
-            for k, v in investigation_dict.items():
-                print "%s:" % k,
-                print v
-                print
-            print '================================='
-            """
         
         return investigation
 
     def parse_header_row(self, header_row):
+        """
+        Name: parse_header_row
+        Description:
+            adds and edits information in the header row to keep track of 
+            all the correlations between columns in the study and assay files
+        Parameters:
+            header_row: header row of the file
+        """
         header = dict()
         cp = 0 #most recent protocol
         cpp = 0 #most recent protocol performer
@@ -389,15 +391,15 @@ class Command(LabelCommand):
         #print 'dictionary[b][%s][%s][%s] = %s' % (key, sub_type, sub_key, field)
         self.dictionary['b'][key][sub_type][sub_key] = field
 
-    """
-    Name: parse_study_file
-    Description:
-        parse the fields relevant to our Django model and put them into a
-        dictionary
-    Parameters:
-        s_file: path to study file
-    """
     def parse_study_file(self, s_file):
+        """
+        Name: parse_study_file
+        Description:
+            parse the fields relevant to our Django model and put them into a
+            dictionary
+        Parameters:
+            s_file: path to study file
+        """
         #dictionary of dictionary of lists
         study_info = {
                       'study': list(),
@@ -473,16 +475,16 @@ class Command(LabelCommand):
 
         return study_info
            
-    """
-    Name: parse_assay_file
-    Description:
-        parse the fields relevant to our Django model and put them into a
-        dictionary
-    Parameters:
-        a_file: path to assay file
-        accession: associated investigation study identifier
-    """
     def parse_assay_file(self, a_file, accession):
+        """
+        Name: parse_assay_file
+        Description:
+            parse the fields relevant to our Django model and put them into a
+            dictionary
+        Parameters:
+            a_file: path to assay file
+            accession: associated investigation study identifier
+        """
         assay_info = {
                       'raw_data': list(),
                       'processed_data': list(),
@@ -641,423 +643,429 @@ class Command(LabelCommand):
         
         return assay_info
 
-    """
-    Name: insert_isatab
-    Description:
-        insert all of the ISA-Tab information or bust
-    Parameters:
-        i_list: list of dictionaries of investigation file
-        isatab: location of zipped ISA-Tab
-        pre_isatab: location of zipped files that were converted into
-                    ISA-Tab (may or may not exist)
-        stud_list: list of dictionaries of study file(s)
-        assay_dictionary: dictionary of lists of assay file(s); dictionary 
-                          key is the investigation accession
-    """
+        
     def insert_isatab(self, i_list, isatab, pre_isatab, stud_list, assay_dictionary):
-        #keep track of every publication, raw data, and processed data object
-        #that is inserted in to make it easy to delete them if something 
-        #goes wrong
+        """
+        Name: insert_isatab
+        Description:
+            insert all of the ISA-Tab information or bust
+        Parameters:
+            i_list: list of dictionaries of investigation file
+            isatab: location of zipped ISA-Tab
+            pre_isatab: location of zipped files that were converted into
+                        ISA-Tab (may or may not exist)
+            stud_list: list of dictionaries of study file(s)
+            assay_dictionary: dictionary of lists of assay file(s); dictionary 
+                              key is the investigation accession
+        """
         publications_master_list = list()
         raw_data_master_list = list()
         processed_data_master_list = list()
+        """
+        keep track of every publication, raw data, and processed data object
+        that is inserted in to make it easy to delete them if something 
+        goes wrong
+        """
 
-        #try:
-        for ind, i_dict in enumerate(i_list):
-            tor_list = i_dict['tor'] #investigator
-            """
-            print 'tor_list'
-            print tor_list
-            print
-            """
-            tion_dict = i_dict['tion'][0] #investigation
-            """
-            print 'tion_dict'
-            print tion_dict
-            print
-            """
-            ont_list = i_dict['ont'] #ontology
-            """
-            print 'ont_list'
-            print ont_list
-            print
-            """
-            prot_list = i_dict['prot'] #protocols
-            """
-            print 'prot_list'
-            print prot_list
-            print
-            """
-            sdd_list = i_dict['sdd'] #study design descriptors
-            """
-            print 'sdd_list'
-            print sdd_list
-            print
-            """
-            sf_list = i_dict['sf'] #study factors
-            """
-            print 'sf_list'
-            print sf_list
-            print
-            """
-            pub_list = i_dict['pub'] #publications
-            """
-            print 'pub_list'
-            print pub_list
-            print
-            """
-            sa_list = i_dict['sa'] #study assays
-            """
-            print 'sa_list'
-            print sa_list
-            print
-            """
-
-            # "**" converts dictionary to arguments
-            #make sure dates are datetime.date objects
-            for k, v in tion_dict.items():
-                if re.search(r'_date', k):
-                    try:
-                        the_date = datetime.strptime(v, '%Y-%m-%d').date()
-                        tion_dict[k] = the_date
-                    except ValueError:
-                        del tion_dict[k]
-                        
-            #add in pre_isatab_file and isatab_file
-            tion_dict['isatab_file'] = isatab
-            tion_dict['pre_isatab_file'] = pre_isatab
-
-            investigation = Investigation(**tion_dict)
-            investigation.save()
-
-            for tor_dict in tor_list:
-                investigator = Investigator(**tor_dict)
-                investigator.save()
-                
-                #add investigation to investigator
-                investigator.investigations.add(investigation)
-
-            #add investigation to ont dictionary and insert ontologies
-            for ont_dict in ont_list:
-                #ont_dict['investigation'] = investigation
-                ontology = Ontology(**ont_dict)
-                #print ontology
-                try:
-                    ontology.save()
-                except:
-                    connection._rollback()
-                    name = ont_dict['term_source_name']
-                    try:
-                        file = ont_dict['term_source_file']
-                    except KeyError:
-                        file = ''
-                    try:
-                        ver = ont_dict['term_source_version']
-                    except KeyError:
-                        ver = ''
-                
-                    ontology = Ontology.objects.get(term_source_name=name,
-                                                term_source_file=file,
-                                                term_source_version=ver)
-
-                investigation.ontologies.add(ontology)
-
-            #add investigation to pub dictionary and insert publication(s)
-            for pub_dict in pub_list:
-                #sometimes 'Study Publication DOI DOI'; fix
-                if 'study_publication_doi_doi' in pub_dict:
-                    spd = pub_dict['study_publication_doi_doi']
-                    del pub_dict['study_publication_doi_doi']
-                    pub_dict['study_publication_doi'] = spd
-            
-                publication = Publication(**pub_dict)
-                publication.save()
-                
-                #add investigation to publication
-                publication.investigation_set.add(investigation)
-                #add to master list
-                publications_master_list.append(publication)
-
-            #add investigation to sa dictionary and insert study assay(s)
-            for sa_dict in sa_list:
-                #using foreign key, so need to assign
-                sa_dict['investigation'] = investigation
-                
-                sa = StudyAssay(**sa_dict)
-                sa.save()
-
-            #add investigation to prot dictionary and insert protocol(s)
-            for prot_dict in prot_list:
-                #print prot_dict
-                protocol = Protocol(**prot_dict)
-                #print prot_dict
-                protocol.save()
-                
-                #add investigation to protocol
-                protocol.investigation_set.add(investigation)
-                #print 'protocol_saved'
-        
-            #get a dictionary of possible protocol names in the studies
-            #and assays so it's easier to associate them to the originals
-            protocol_list = investigation.protocols.all()
-            protocols = dict()
-            for p in protocol_list:
-                name = p.study_protocol_name
-                protocols[name] = p
-                #create an abbreviated name
-                #get the number on the end of the full protocol name
-                number = string.split(name, '-').pop()
-                abbr = "P--%s" % number
-                protocols[abbr] = p
-
-            #add investigation to sdd dictionary and insert 
-            #study design descriptor(s)
-            for sdd_dict in sdd_list:
-                #add investigation as Foreign Key
-                sdd_dict['investigation'] = investigation
-                #create StudyDesignDescriptor
-                sdd = StudyDesignDescriptor(**sdd_dict)
-                sdd.save()
-
-            #add investigation to prot dictionary and insert protocol(s)
-            for sf_dict in sf_list:
-                #add investigation as Foreign Key
-                sf_dict['investigation'] = investigation
-                #create StudyFactor
-                sf = StudyFactor(**sf_dict)
-                sf.save()
-                
-            """Studies"""
-            sbf_list = stud_list[ind]['studybracketedfield']
-            """
-            print 'sbf_list'
-            print sbf_list
-            print
-            """
-            
-            study_list = stud_list[ind]['study']
-            """
-            print 'study_list'
-            print study_list
-            print
-            """
-            prot_list = stud_list[ind]['protocol']
-            """
-            print 'prot_list'
-            print prot_list
-            print '----------------------------------'
-            """
-        
-            
-            #list of studies entered, needs to be returned
-            s_list = list()
-            #row_num: study pairs, makes it easy to associate other models
-            #to the proper study
-            study_dict = dict()
-        
-            for s in study_list:
-                #remove row number from the dictionary
-                row_num = s['row_num']
-                del s['row_num']
-            
-                #grab associated investigation
-                s['investigation'] = investigation
-                #create study 
-                study = Study(**s)
-                study.save()
-            
-                #add to study_dict for the other models to use
-                study_dict[row_num] = study
-                #add to list for returning
-                s_list.append(study)
-        
-            #insert protocols
-            for i, p in enumerate(prot_list):
-                s = study_dict[i]
-                for prot in p:
-                    try:
-                        s.protocols.add(protocols[prot])
-                    except KeyError:
-                        protocol = Protocol(study_protocol_name=prot)
-                        protocol.save()
-                        s.protocols.add(protocol)
-                        #add to hash for future look up 
-                        protocols[prot] = protocol
-
-            #insert StudyBracketedFields
-            for sbf in sbf_list:
-                row_num = sbf['row_num']
-                del sbf['row_num']
-            
-                #grab asssociated study
-                study = study_dict[row_num]
-                sbf['study'] = study
-                
-                #if a parameter value (protocol field not empty), 
-                #associate the proper protocol
-                if 'protocol' in sbf:
-                    sbf['protocol'] = protocols[sbf['protocol']]
-                #create StudyBracketedField
-                study_bracketed_field = StudyBracketedField(**sbf)
-                study_bracketed_field.save()
-            
-
-            """Assays"""
-            for a_dict in assay_dictionary[tion_dict['study_identifier']]:
-                assay_list = a_dict['assay']
+        try:
+            for ind, i_dict in enumerate(i_list):
+                tor_list = i_dict['tor'] #investigator
                 """
-                print 'assay_list'
-                print assay_list
+                print 'tor_list'
+                print tor_list
                 print
                 """
-                raw_list = a_dict['raw_data']
+                tion_dict = i_dict['tion'][0] #investigation
                 """
-                print 'raw_list'
-                print raw_list
+                print 'tion_dict'
+                print tion_dict
                 print
                 """
-                processed_list = a_dict['processed_data']
+                ont_list = i_dict['ont'] #ontology
                 """
-                print 'processed_list'
-                print processed_list
+                print 'ont_list'
+                print ont_list
                 print
                 """
-                abf_list = a_dict['assaybracketedfield']
-                """
-                print 'abf_list'
-                print abf_list
-                print
-                """
-                prot_list = a_dict['protocol']
+                prot_list = i_dict['prot'] #protocols
                 """
                 print 'prot_list'
                 print prot_list
                 print
                 """
-                datatransform_list = a_dict['datatransformation']
+                sdd_list = i_dict['sdd'] #study design descriptors
                 """
-                print 'datatransform_list'
-                print datatransform_list
+                print 'sdd_list'
+                print sdd_list
                 print
-                print '============================'
                 """
-                #make study list a study dictionary instead so it's easier for
-                #assays to find their associated studies
-                study_dict = dict()
-                for s in s_list:
-                    study_dict[s.sample_name] = s
+                sf_list = i_dict['sf'] #study factors
+                """
+                print 'sf_list'
+                print sf_list
+                print
+                """
+                pub_list = i_dict['pub'] #publications
+                """
+                print 'pub_list'
+                print pub_list
+                print
+                """
+                sa_list = i_dict['sa'] #study assays
+                """
+                print 'sa_list'
+                print sa_list
+                print
+                """
+    
+                # "**" converts dictionary to arguments
+                #make sure dates are datetime.date objects
+                for k, v in tion_dict.items():
+                    if re.search(r'_date', k):
+                        try:
+                            the_date = datetime.strptime(v, '%Y-%m-%d').date()
+                            tion_dict[k] = the_date
+                        except ValueError:
+                            del tion_dict[k]
+                            
+                #add in pre_isatab_file and isatab_file
+                tion_dict['isatab_file'] = isatab
+                tion_dict['pre_isatab_file'] = pre_isatab
+    
+                investigation = Investigation(**tion_dict)
+                investigation.save()
+    
+                for tor_dict in tor_list:
+                    investigator = Investigator(**tor_dict)
+                    investigator.save()
+                    
+                    #add investigation to investigator
+                    investigator.investigations.add(investigation)
+    
+                #add investigation to ont dictionary and insert ontologies
+                for ont_dict in ont_list:
+                    #ont_dict['investigation'] = investigation
+                    ontology = Ontology(**ont_dict)
+                    #print ontology
+                    try:
+                        ontology.save()
+                    except:
+                        connection._rollback()
+                        name = ont_dict['term_source_name']
+                        try:
+                            file = ont_dict['term_source_file']
+                        except KeyError:
+                            file = ''
+                        try:
+                            ver = ont_dict['term_source_version']
+                        except KeyError:
+                            ver = ''
+                    
+                        ontology = Ontology.objects.get(term_source_name=name,
+                                                    term_source_file=file,
+                                                    term_source_version=ver)
+    
+                    investigation.ontologies.add(ontology)
+    
+                #add investigation to pub dictionary and insert publication(s)
+                for pub_dict in pub_list:
+                    #sometimes 'Study Publication DOI DOI'; fix
+                    if 'study_publication_doi_doi' in pub_dict:
+                        spd = pub_dict['study_publication_doi_doi']
+                        del pub_dict['study_publication_doi_doi']
+                        pub_dict['study_publication_doi'] = spd
+                
+                    publication = Publication(**pub_dict)
+                    publication.save()
+                    
+                    #add investigation to publication
+                    publication.investigation_set.add(investigation)
+                    #add to master list
+                    publications_master_list.append(publication)
+    
+                #add investigation to sa dictionary and insert study assay(s)
+                for sa_dict in sa_list:
+                    #using foreign key, so need to assign
+                    sa_dict['investigation'] = investigation
+                    
+                    sa = StudyAssay(**sa_dict)
+                    sa.save()
+    
+                #add investigation to prot dictionary and insert protocol(s)
+                for prot_dict in prot_list:
+                    #print prot_dict
+                    protocol = Protocol(**prot_dict)
+                    #print prot_dict
+                    protocol.save()
+                    
+                    #add investigation to protocol
+                    protocol.investigation_set.add(investigation)
+                    #print 'protocol_saved'
             
-                assay_dict = dict()
-                for a in assay_list:
+                #get a dictionary of possible protocol names in the studies
+                #and assays so it's easier to associate them to the originals
+                protocol_list = investigation.protocols.all()
+                protocols = dict()
+                for p in protocol_list:
+                    name = p.study_protocol_name
+                    protocols[name] = p
+                    #create an abbreviated name
+                    #get the number on the end of the full protocol name
+                    number = string.split(name, '-').pop()
+                    abbr = "P--%s" % number
+                    protocols[abbr] = p
+    
+                #add investigation to sdd dictionary and insert 
+                #study design descriptor(s)
+                for sdd_dict in sdd_list:
+                    #add investigation as Foreign Key
+                    sdd_dict['investigation'] = investigation
+                    #create StudyDesignDescriptor
+                    sdd = StudyDesignDescriptor(**sdd_dict)
+                    sdd.save()
+    
+                #add investigation to prot dictionary and insert protocol(s)
+                for sf_dict in sf_list:
+                    #add investigation as Foreign Key
+                    sf_dict['investigation'] = investigation
+                    #create StudyFactor
+                    sf = StudyFactor(**sf_dict)
+                    sf.save()
+                    
+                """Studies"""
+                sbf_list = stud_list[ind]['studybracketedfield']
+                """
+                print 'sbf_list'
+                print sbf_list
+                print
+                """
+                
+                study_list = stud_list[ind]['study']
+                """
+                print 'study_list'
+                print study_list
+                print
+                """
+                prot_list = stud_list[ind]['protocol']
+                """
+                print 'prot_list'
+                print prot_list
+                print '----------------------------------'
+                """
+            
+                
+                #list of studies entered, needs to be returned
+                s_list = list()
+                #row_num: study pairs, makes it easy to associate other models
+                #to the proper study
+                study_dict = dict()
+            
+                for s in study_list:
                     #remove row number from the dictionary
-                    row_num = a['row_num']
-                    del a['row_num']
+                    row_num = s['row_num']
+                    del s['row_num']
                 
-                    #grab associated study and investigation
-                    study = study_dict[a['sample_name']]
-                    a['study'] = study
-                    a['investigation'] = investigation
-                    #create assay 
-                    assay = Assay(**a)
-                    assay.save()
+                    #grab associated investigation
+                    s['investigation'] = investigation
+                    #create study 
+                    study = Study(**s)
+                    study.save()
                 
-                    #add to assay_dict for the other models to use
-                    assay_dict[row_num] = assay
-                
-
-                """ Many to Manys """
-                for r_list in raw_list:
-                    for r in r_list:
-                        row_num = r['row_num']
-                        del r['row_num']
-                
-                        #grab asssociated assay
-                        assay = assay_dict[row_num]
-                        
-                        #grab rawdata_uuid from file store
-                        r['rawdata_uuid'] = create(r['raw_data_file'])
-                        #print r
-
-                        #create RawData
-                        raw_data = RawData(**r)
-                        try:
-                            raw_data.save()
-                        except IntegrityError: #if already exists, grab
-                            connection._rollback()
-                            raw_data = RawData.objects.get(**r)
-                        
-                        #associate the assay
-                        raw_data.assay_set.add(assay)
-                        raw_data_master_list.append(raw_data)
-
-                for p_list in processed_list:
-                    for p in p_list:
-                        row_num = p['row_num']
-                        del p['row_num']
-                
-                        #grab asssociated assay
-                        assay = assay_dict[row_num]
-                
-                        #create ProcessedData
-                        p['processeddata_uuid'] = create(p['derived_data_file'])
-                        processed_data = ProcessedData(**p)
-                        try:
-                            processed_data.save()
-                        except IntegrityError: #if already exists, grab
-                            connection._rollback()
-                            processed_data = ProcessedData.objects.get(**p)
-                
-                        #associate the assay
-                        processed_data.assay_set.add(assay)
-                        processed_data_master_list.append(processed_data)
-                
+                    #add to study_dict for the other models to use
+                    study_dict[row_num] = study
+                    #add to list for returning
+                    s_list.append(study)
+            
                 #insert protocols
                 for i, p in enumerate(prot_list):
-                    a = assay_dict[i]
+                    s = study_dict[i]
                     for prot in p:
                         try:
-                            a.protocols.add(protocols[prot])
+                            s.protocols.add(protocols[prot])
                         except KeyError:
                             protocol = Protocol(study_protocol_name=prot)
                             protocol.save()
-                            a.protocols.add(protocol)
+                            s.protocols.add(protocol)
                             #add to hash for future look up 
                             protocols[prot] = protocol
-                
-                #print '\n assay bracketed field \n'
-                for abf in abf_list:
-                    row_num = abf['row_num']
-                    del abf['row_num']
     
-                    #grab asssociated assay
-                    assay = assay_dict[row_num]
-                    abf['assay'] = assay
+                #insert StudyBracketedFields
+                for sbf in sbf_list:
+                    row_num = sbf['row_num']
+                    del sbf['row_num']
                 
+                    #grab asssociated study
+                    study = study_dict[row_num]
+                    sbf['study'] = study
+                    
                     #if a parameter value (protocol field not empty), 
                     #associate the proper protocol
-                    if 'protocol' in abf:
-                        abf['protocol'] = protocols[abf['protocol']]
-                    #create AssayBracketedField
-                    assay_bracket_field = AssayBracketedField(**abf)
-                    assay_bracket_field.save()
-
-                for dt_list in datatransform_list:
-                    for dt in dt_list:
-                        row_num = dt['row_num']
-                        del dt['row_num']
-                        
-                        #grab associated assay
-                        dt['assay'] = assay_dict[row_num]
-                        #get associated protocol
-                        dt['protocol'] = protocols[dt['protocol']]
-                        
-                        data_transformation = DataTransformation(**dt)
-                        data_transformation.save()
-                    
+                    if 'protocol' in sbf:
+                        sbf['protocol'] = protocols[sbf['protocol']]
+                    #create StudyBracketedField
+                    study_bracketed_field = StudyBracketedField(**sbf)
+                    study_bracketed_field.save()
                 
-        #except:
-            #error reporting for now
-            """
+    
+                """Assays"""
+                for a_dict in assay_dictionary[tion_dict['study_identifier']]:
+                    assay_list = a_dict['assay']
+                    """
+                    print 'assay_list'
+                    print assay_list
+                    print
+                    """
+                    raw_list = a_dict['raw_data']
+                    """
+                    print 'raw_list'
+                    print raw_list
+                    print
+                    """
+                    processed_list = a_dict['processed_data']
+                    """
+                    print 'processed_list'
+                    print processed_list
+                    print
+                    """
+                    abf_list = a_dict['assaybracketedfield']
+                    """
+                    print 'abf_list'
+                    print abf_list
+                    print
+                    """
+                    prot_list = a_dict['protocol']
+                    """
+                    print 'prot_list'
+                    print prot_list
+                    print
+                    """
+                    datatransform_list = a_dict['datatransformation']
+                    """
+                    print 'datatransform_list'
+                    print datatransform_list
+                    print
+                    print '============================'
+                    """
+                    #make study list a study dictionary instead so it's easier for
+                    #assays to find their associated studies
+                    study_dict = dict()
+                    for s in s_list:
+                        study_dict[s.sample_name] = s
+                
+                    assay_dict = dict()
+                    for a in assay_list:
+                        #remove row number from the dictionary
+                        row_num = a['row_num']
+                        del a['row_num']
+                    
+                        #grab associated study and investigation
+                        study = study_dict[a['sample_name']]
+                        a['study'] = study
+                        a['investigation'] = investigation
+                        #create assay 
+                        assay = Assay(**a)
+                        assay.save()
+                    
+                        #add to assay_dict for the other models to use
+                        assay_dict[row_num] = assay
+                    
+    
+                    """ Many to Manys """
+                    for r_list in raw_list:
+                        for r in r_list:
+                            row_num = r['row_num']
+                            del r['row_num']
+                    
+                            """grab asssociated assay"""
+                            assay = assay_dict[row_num]
+                            
+                            """grab rawdata_uuid from file store"""
+                            r['rawdata_uuid'] = create(r['raw_data_file'])
+                            #print r
+    
+                            """create RawData object"""
+                            raw_data = RawData(**r)
+                            try:
+                                raw_data.save()
+                            except IntegrityError:
+                                connection._rollback()
+                                raw_data = RawData.objects.get(**r)
+                            """
+                            Try saving; if already exists, grab the record from the database. 
+                            Need to rollback the connection because there was an 
+                            `IntegrityError`, so other database calls, like getting the RawData 
+                            object, will work.
+                            """
+
+                            raw_data.assay_set.add(assay)
+                            """associate the assay with the RawData object"""
+                            raw_data_master_list.append(raw_data)
+    
+                    for p_list in processed_list:
+                        for p in p_list:
+                            row_num = p['row_num']
+                            del p['row_num']
+                    
+                            #grab asssociated assay
+                            assay = assay_dict[row_num]
+                    
+                            #create ProcessedData
+                            p['processeddata_uuid'] = create(p['derived_data_file'])
+                            processed_data = ProcessedData(**p)
+                            try:
+                                processed_data.save()
+                            except IntegrityError: #if already exists, grab
+                                connection._rollback()
+                                processed_data = ProcessedData.objects.get(**p)
+                    
+                            #associate the assay
+                            processed_data.assay_set.add(assay)
+                            processed_data_master_list.append(processed_data)
+                    
+                    #insert protocols
+                    for i, p in enumerate(prot_list):
+                        a = assay_dict[i]
+                        for prot in p:
+                            try:
+                                a.protocols.add(protocols[prot])
+                            except KeyError:
+                                protocol = Protocol(study_protocol_name=prot)
+                                protocol.save()
+                                a.protocols.add(protocol)
+                                #add to hash for future look up 
+                                protocols[prot] = protocol
+                    
+                    #print '\n assay bracketed field \n'
+                    for abf in abf_list:
+                        row_num = abf['row_num']
+                        del abf['row_num']
+        
+                        #grab asssociated assay
+                        assay = assay_dict[row_num]
+                        abf['assay'] = assay
+                    
+                        #if a parameter value (protocol field not empty), 
+                        #associate the proper protocol
+                        if 'protocol' in abf:
+                            abf['protocol'] = protocols[abf['protocol']]
+                        #create AssayBracketedField
+                        assay_bracket_field = AssayBracketedField(**abf)
+                        assay_bracket_field.save()
+    
+                    for dt_list in datatransform_list:
+                        for dt in dt_list:
+                            row_num = dt['row_num']
+                            del dt['row_num']
+                            
+                            #grab associated assay
+                            dt['assay'] = assay_dict[row_num]
+                            #get associated protocol
+                            dt['protocol'] = protocols[dt['protocol']]
+                            
+                            data_transformation = DataTransformation(**dt)
+                            data_transformation.save()        
+        except:
+            """if there's an error, delete everything you just put in"""
             print "error: Investigation %s" % investigation.study_identifier
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print "*** print_tb:"
@@ -1066,16 +1074,15 @@ class Command(LabelCommand):
             traceback.print_exception(exc_type, exc_value, exc_traceback,
                           limit=2, file=sys.stdout)
             
-            #if there's an error, delete everything you put in
-            #since there was an error, rollback so the rest works
             connection._rollback()
+            """there was an error, so rollback so other db calls will work"""
             for inv in i_list:
-                accession = inv['tion']['study_identifier']
-                #try:
-                invest = Investigation.objects.get(pk=accession)
-                invest.delete()
-                #except:
-                #    connection._rollback()
+                accession = inv['tion'][0]['study_identifier']
+                try:
+                    invest = Investigation.objects.get(pk=accession)
+                    invest.delete()
+                except:
+                    connection._rollback()
             
             for r in raw_data_master_list:
                 r.delete()
@@ -1083,7 +1090,7 @@ class Command(LabelCommand):
                 p.delete()
             for pub in publications_master_list:
                 pub.delete()
-            """
+            
      
 
     """
