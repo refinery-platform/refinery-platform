@@ -8,11 +8,10 @@ var timerId = 0;
 
 function isFinished(result) { 
 	var retStatus = false;
-	
 	if (result.length) 
 	var arLen=result.length;
 	if (arLen == 1) {
-		if ((result[0].task_id == 'SUCCESS') || (result[0].task_id == 'FAILURE')) { 
+		if ((result[0].state == 'SUCCESS') || (result[0].state == 'FAILURE')) { 
 			retStatus = true;
 		}
 	}
@@ -20,38 +19,66 @@ function isFinished(result) {
 }
 
 function updateProgress(result, section) { 
+	console.log("updateProgress");
+	console.log(result);
+	console.log("TEXTTTT")
+	console.log($.trim($("#collapseOne").text()));
+	console.log($.trim($("#collapseOne > div").text()));
+	
 	var allFinished = true;
 	var arLen=result.length;
 	for ( var i=0, len=arLen; i<len; ++i ){
 		var temp_id = '#'+result[i].task_id;
-		var temp_bar = '#bar_' +result[i].task_id;
 		
-		//$('element').length == 0; // no element found
-		var temp_id = '#text_'+result[i].task_id;
-  		$(temp_id).text(JSON.stringify(result[i]));
-  		
-		if (result[i].state == 'PROGRESS') {
-			var temp_percent = result[i].percent_done;
-			$(temp_bar).css({ 'width': temp_percent });
-		}
-		// REMOVING ACTIVE CLASS STATUS
-  		if (result[i].state == 'SUCCESS') {
-  			$(temp_bar).css({ 'width': '100%'});
-  			var temp_bar_class = '#bar_class_'+result[i].task_id;
-  			$(temp_bar_class).removeClass('active');
-  			$(temp_bar_class).fadeOut('slow');
-  			//$("#"+section).collapse("hide");
-  			
+		if ($(temp_id).length > 0) { // no element found
+			var temp_bar = '#bar_' +result[i].task_id;
+			var temp_id = '#text_'+result[i].task_id;
+	  		$(temp_id).text(JSON.stringify(result[i]));
+	  		
+			if (result[i].state == 'PROGRESS') {
+				var temp_percent = result[i].percent_done;
+				$(temp_bar).css({ 'width': temp_percent });
+			}
+			// REMOVING ACTIVE CLASS STATUS
+	  		if (result[i].state == 'SUCCESS') {
+	  			$(temp_bar).css({ 'width': '100%'});
+	  			var temp_bar_class = '#bar_class_'+result[i].task_id;
+	  			$(temp_bar_class).removeClass('active');
+	  			//$(temp_bar_class).fadeOut('slow');
+	  			//$("#"+section).collapse("hide");
+	  		}
   		}
-  		
-  		/*
   		else { 
-  			allFinished = false;
-  			var temp_percent = result[i].percent_done;
-  			$(temp_bar).css({ 'width': temp_percent });
+	  		console.log("ELEMENT DOES NOT EXIST \n NEED TO CREATE AND APPEND")
+	  		if (result[i].task_id != null) {
+	  			var template = 	"<li><div id=" + result[i].task_id+ "> <div id=text_" + result[i].task_id + ">" + result[i] + "</div>";
+	  			//if (result[i].percent_download != null) {
+	  			//if (result[i].percent_done != null) {
+	  				 template += "<div id='bar_class_"+ result[i].task_id + "' class='progress progress-striped active'>";
+	  				 template += "<div class='bar' id='bar_"+ result[i].task_id + "' style='width:{{stat.percent_done}};'></div></div>";
+	  			//} 
+			    template += "</div></li>";
+			    console.log(template);      
+			    
+			    var cur_text = $.trim($("#"+section + " > div").text());
+			    if (cur_text == 'Pending') {
+			    	$("#"+section + " > div").html(template);
+			    //	$('#collapseOne').text(template);
+			    }
+			    else { 
+			    	$("#"+section + " > div").append(template);
+			    }
+	
+			    //.accordion-inner)
+			    
+			    $("#"+section).collapse("show");	
+		    	//$("#collapseOne").collapse("hide");	
+		    	//$("#collapseOne").collapse("show");		
+		   }
+            				
   		}
-  		*/
 	}
+	
 }
  
 function getUpdate() {
@@ -66,7 +93,7 @@ function getUpdate() {
      dataType: "json",
      data: {csrfmiddlewaretoken: "{{ csrf_token }}" },
      success: function(result){
-     	console.log("ajaxed returned some shit")
+     	console.log("ajaxed returned something")
      	//console.log(result.preprocessing)
      	//console.log(result.execution)
      	//console.log(result.postprocessing)
@@ -88,6 +115,10 @@ function getUpdate() {
   		// if all files have been downloaded
   		if (allFinished == true) { 
   			clearTimeout ( timerId );
+  			// GOING TO ANALYSIS RESULTS PAGE
+  			var url = "/analysis_manager/{{uuid}}/results"
+  			console.log(url);
+  			window.location = url;
   		}
   		
   		if (counter == 1000) {
@@ -95,13 +126,17 @@ function getUpdate() {
   			clearTimeout ( timerId );
   		}
   		
+  		//console.log("allfinished");
+		//console.log(allFinished);
+  		
+  		
      }
 	});
 }
 
 
 $(document).ready(function() {
-	timerId = setInterval(getUpdate, 1000);
+	timerId = setInterval(getUpdate, 2800);
 
 });
 
@@ -148,20 +183,23 @@ $(document).ready(function() {
               <div id="collapseOne" class="accordion-body collapse in" style="height: auto; ">
                 <div class="accordion-inner">
                 	{% for stat in statuses.preprocessing_status %}
-                		<li>
-                		
-                		{% if stat.download_url %}
-                			<div id="text_{{stat.task_id}}">{{stat}}</div>
-                			<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
-                				<div class="bar" id="bar_{{stat.task_id}}" style="width:{{stat.percent_done}};"></div>
-                			</div>
-                		{% else %}
-                			<div id="text_{{stat.task_id}}">{{stat}}</div>
-                		{% endif %}
-                		</li>
-                		
-                		
-                	{% endfor %}
+            			<li>
+            			{% if preprocessing_status|length > 1 and stat.task_id == null %}
+   							Pending
+						{% else %}
+							<div id="{{stat.task_id}}">
+	            				<div id="text_{{stat.task_id}}">{{stat}}</div>
+		            			{% if stat.download_url %}
+		            				<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
+		            					<div class="bar" id="bar_{{stat.task_id}}" style="width:{{stat.percent_done}};"></div>
+		            				</div>
+		            			{% endif %}
+		            		</div>
+            			</li>
+            			{% endif %}
+            		{% endfor %}
+            		
+                	
                 </div>
               </div>
             </div>
@@ -174,12 +212,17 @@ $(document).ready(function() {
               <div id="collapseTwo" class="accordion-body collapse" style="height: auto; ">
                 <div class="accordion-inner">
                  	{% for stat in statuses.execution_status %}
-                 	<li>
-                 		<div id="text_{{stat.task_id}}">{{stat}}</div>
-                	<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
-                		<div class="bar" id="bar_{{stat.task_id}}" style="width:{{stat.percent_done}};"></div>
-                	</div>
-                	
+                 		<li>
+                 		{% if execution_status|length > 1 and stat.task_id == null %}
+   							Pending
+						{% else %}
+							<div id="{{stat.task_id}}">
+	                 			<div id="text_{{stat.task_id}}">{{stat}}</div>
+	                			<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
+	                				<div class="bar" id="bar_{{stat.task_id}}" style="width:{{stat.percent_done}};"></div>
+	                			</div>
+	                		</div>
+                		{% endif %}
                 	</li>
                 	{% endfor %}
                   
@@ -195,12 +238,17 @@ $(document).ready(function() {
               <div id="collapseThree" class="accordion-body collapse" style="height: auto; ">
                 <div class="accordion-inner">
                   {% for stat in statuses.postprocessing_status %}
-                  	<li>
-                  		<div id="text_{{stat.task_id}}">{{stat}}</div>
-                	<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
-                		<div class="bar" id="bar_{{stat.task_id}}" style="width: 0%;"></div>
-                	</div>
-                	
+                  		<li>
+                  		{% if postprocessing_status|length > 1 and stat.task_id == null %}
+   							Pending
+						{% else %}
+							<div id="{{stat.task_id}}">
+	                  			<div id="text_{{stat.task_id}}">{{stat}}</div>
+	                			<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
+	                				<div class="bar" id="bar_{{stat.task_id}}" style="width: 0%;"></div>
+	                			</div>
+	                		</div>
+	                	{% endif %}
                 	</li>
                 	{% endfor %}
                   	{{ statuses.cleanup }}
