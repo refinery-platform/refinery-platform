@@ -7,6 +7,9 @@ from file_store.models import FileStoreItem
 
 @task()
 def create(source, sharename='', permanent=False):
+    print "file_store create called"
+    print source
+    
     ''' Create a FileStoreItem instance and return its UUID '''
     # check if source file is available
     if source.startswith('/'):   # if source is a UNIX-style path
@@ -34,12 +37,14 @@ def create(source, sharename='', permanent=False):
     return item.uuid
 
 @task()
-def import_file(uuid, permanent=False):
+def import_file(uuid, permanent=False, galaxy_file_size=None):
     '''
     Download or copy file specified by UUID
     If permanent=False then add to cache
     Return Django File object
     '''
+    print "import_file"
+    print import_file
     # check if UUID is valid
     try:
         item = FileStoreItem.objects.get(uuid=uuid)
@@ -72,7 +77,11 @@ def import_file(uuid, permanent=False):
 
         # download and save the file
         tmpfile = NamedTemporaryFile()
-        remotefilesize = int(response.info().getheaders("Content-Length")[0])
+        if (galaxy_file_size is None):
+            remotefilesize = int(response.info().getheaders("Content-Length")[0])
+        else:
+            remotefilesize = galaxy_file_size 
+            print "galayx_file_size used"
         filename = response.geturl().split('/')[-1]    # get file name from its URL
     
         localfilesize = 0       # bytes
@@ -89,7 +98,7 @@ def import_file(uuid, permanent=False):
                 state="PROGRESS",
                 meta={"percent_done": "%3.2f%%" % (downloaded), 'current': localfilesize, 'total': remotefilesize}
                 )
-
+            print downloaded
 #            status = r"%10d  [%3.2f%%]" % (localfilesize, downloaded)
 #            status = status + chr(8) * (len(status) + 1)
 #            print status,

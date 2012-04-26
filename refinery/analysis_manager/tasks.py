@@ -19,7 +19,8 @@ from celery.utils import uuid
 from celery.task.chords import Chord
 from celery import current_app as celery
 from refinery_repository.tasks import create_dir, download_ftp_file
-
+from file_store.models import FileStoreItem
+from file_store.tasks import import_file, create
 
 # example from: http://www.manasupo.com/2012/03/chord-progress-in-celery.html
 class progress_chord(object):
@@ -131,6 +132,12 @@ def run_analysis(analysis, interval=5.0):
         curr_raw = curr_assay.raw_data.all()
         investigation_id = curr_assay.investigation.study_identifier
         for cur_file in curr_raw:
+            # calling filestore on remote file
+            print "calling filestore"
+            print cur_file.rawdata_uuid
+            task_id = import_file.subtask((cur_file.rawdata_uuid, True,))
+            download_tasks.append(task_id)
+            """
             # temp
             file_name = cur_file.raw_data_file.split('/')[-1] #get the file name
             out_dir = os.path.join(settings.DOWNLOAD_BASE_DIR, investigation_id) #directory where file downloads
@@ -140,7 +147,8 @@ def run_analysis(analysis, interval=5.0):
                 download_tasks.append(task_id)
                 file_info = {"raw_data_file":cur_file.raw_data_file, "investigation_id":investigation_id}
                 #print file_info
-    
+                """
+            
     # PREPROCESSING            
     task_id = run_analysis_preprocessing.subtask( (analysis,) ) 
     download_tasks.append(task_id)
@@ -448,36 +456,34 @@ def download_history_files(analysis) :
             #print "check_sam"
             #print check_sam
             
-            if (check_fastq < 0 and check_sam < 0):
-                # name of file
-                result_name = results['name'] + '.' + file_type
-                # size of file defined by galaxy
-                file_size = results['file_size']
-                # URL to download
-                download_url = connection.make_url(str(results['dataset_id']), is_data=True)
-                
-                #####################################
-                # TODO: change location results being downloaded too
-                #####################################
-                
-                # adding history files to django model 
-                temp_file = AnalysisResults(analysis_uuid=analysis.uuid, file_name=result_name, file_type=file_type)
-                temp_file.save() 
-                analysis.results.add(temp_file) 
-                analysis.save() 
-                
-                # location to download to 
-                loc_url = settings.DOWNLOAD_BASE_DIR;
-                
-                print "before download_http_file called"
-                print download_url
-                print loc_url
-                print result_name
-                print file_size
-                
-                #task_id = download_http_file.delay(download_url, loc_url, "analyze_test", new_name=result_name, galaxy_file_size=file_size)
-                task_id = download_http_file.subtask( (download_url, loc_url, "analyze_test", result_name, file_size, ) )
-                task_list.append(task_id)
+            #if (check_fastq < 0 and check_sam < 0):
+            # name of file
+            result_name = results['name'] + '.' + file_type
+            # size of file defined by galaxy
+            file_size = results['file_size']
+            # URL to download
+            download_url = connection.make_url(str(results['dataset_id']), is_data=True)
+            
+            # getting file_store_uuid
+            filestore_uuid = create(download_url)
+            
+            # adding history files to django model 
+            temp_file = AnalysisResults(analysis_uuid=analysis.uuid, file_store_uuid=filestore_uuid, file_name=result_name, file_type=file_type)
+            temp_file.save() 
+            analysis.results.add(temp_file) 
+            analysis.save() 
+            
+            # downloading analysis results into file_store
+            task_id = import_file.subtask((filestore_uuid, False, file_size,))
+            task_list.append(task_id)
+            
+            """
+            # location to download to 
+            loc_url = settings.DOWNLOAD_BASE_DIR;
+            
+            task_id = download_http_file.subtask( (download_url, loc_url, "analyze_test", result_name, file_size, ) )
+            task_list.append(task_id)
+            """
     return task_list
 
 """
