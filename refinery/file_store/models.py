@@ -3,7 +3,7 @@ from django.db import models
 from django_extensions.db.fields import UUIDField
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-from settings_local import FILE_STORE_BASE_DIR
+from settings_local import MEDIA_ROOT, FILE_STORE_BASE_DIR
 
 # provide a default location for file store
 if not FILE_STORE_BASE_DIR:
@@ -29,8 +29,17 @@ class FileStoreItem(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     source = models.CharField(max_length=1024, blank=True)     # URL or absolute file system path
     sharename = models.CharField(max_length=20, blank=True)
+
     def __unicode__(self):
         return self.datafile.name + ' - ' + self.uuid
+    
+    def get_absolute_path(self):
+        ''' Return absolute path of the file '''
+        if self.datafile:
+            return os.path.join(MEDIA_ROOT, self.datafile.name)
+        if os.path.isabs(self.source):
+            return self.source
+        return None
 
 @receiver(pre_delete, sender=FileStoreItem)
 def _delete_file_on_disk(sender, **kwargs):
@@ -41,9 +50,9 @@ def _delete_file_on_disk(sender, **kwargs):
     if is_local(item.uuid):
         try:
             item.datafile.delete()
-        except OSError:
+        except OSError as e:
             #TODO: write error msg to log
-            pass
+            print e.errno, e.filename, e.strerror
 
 class FileStoreCache:
     '''
@@ -58,6 +67,7 @@ def is_local(uuid):
         f = FileStoreItem.objects.get(uuid=uuid).datafile
     except FileStoreItem.DoesNotExist:
         #TODO: write error msg to log
+        print "File with UUID ", uuid, "does not exist"
         return False
     # local files are stored with relative path names that begin with FILE_STORE_BASE_DIR
     if f and f.name.startswith(FILE_STORE_BASE_DIR):
