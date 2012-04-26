@@ -210,7 +210,6 @@ def monitor_analysis_execution(analysis, interval=5.0):
 
     # required to get updated state (move out of this function) 
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-    
     connection = get_analysis_connection(analysis)
     
     #print "analysis.history_id "
@@ -233,11 +232,11 @@ def monitor_analysis_execution(analysis, interval=5.0):
         
         
         if progress["workflow_state"] == "error":
-            print "Workflow failed. Stopping monitor ..."
+            #print "Workflow failed. Stopping monitor ..."
             revoke_task = True
             #break
         elif progress["workflow_state"] == "ok":
-            print "Analysis Execution Task task finished successfully."
+            #print "Analysis Execution Task task finished successfully."
             revoke_task = True
             #break   
         #elif progress["workflow_state"] == "queued":
@@ -254,7 +253,8 @@ def monitor_analysis_execution(analysis, interval=5.0):
             analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
             # kill monitoring task
             celery.control.revoke(analysis_status.execution_monitor_task_id, terminate=True)
-            return
+            #return
+            break
         else:
             time.sleep( interval );
         
