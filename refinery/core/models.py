@@ -230,6 +230,7 @@ class WorkflowDataInputMap( models.Model ):
 
 class AnalysisResults (models.Model):
     analysis_uuid = UUIDField( auto=False )
+    file_store_uuid = UUIDField( auto=False )
     file_name = models.TextField()
     file_type = models.TextField()
     # associated tdf file 

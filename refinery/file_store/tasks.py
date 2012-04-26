@@ -7,6 +7,28 @@ from file_store.models import FileStoreItem
 
 @task()
 def create(source, sharename='', permanent=False):
+    print "file_store create called"
+    print source
+    
+    ''' Create a FileStoreItem instance and return its UUID '''
+    # check if source file is available
+    if source.startswith('/'):   # if source is a UNIX-style path
+        # check if source file exists
+        try:
+            srcfo = open(source)
+            srcfo.close()
+        except IOError:
+            #TODO: write error msg to log
+            return None
+    else:
+        req = urllib2.Request(source)
+        try:
+            response = urllib2.urlopen(req)
+            response.close()
+        except urllib2.URLError, e:
+            #TODO: write error to log
+            return None
+
     item = FileStoreItem(source=source, sharename=sharename)
     item.save()
     if permanent:
@@ -15,20 +37,24 @@ def create(source, sharename='', permanent=False):
     return item.uuid
 
 @task()
-def import_file(uuid, permanent=False):
+def import_file(uuid, permanent=False, galaxy_file_size=None):
     '''
-    Download or copy file specified by UUID. If permanent is False then add to cache.
-    return File or True|False?
+    Download or copy file specified by UUID
+    If permanent=False then add to cache
+    Return Django File object
     '''
+    print "import_file"
+    print import_file
+    # check if UUID is valid
     try:
         item = FileStoreItem.objects.get(uuid=uuid)
     except FileStoreItem.DoesNotExist:
         #TODO: write msg to log
-        return False
+        return None
     src = item.source
-    # if source is an absolute file system path then copy, if URL then download, return False otherwise?
+    # if source is an absolute file system path then copy, if URL then download
     if src.startswith('/'):   # assume UNIX-style paths only
-        # check if source file exists
+        # check if source file can be opened
         try:
             srcfo = open(src)
         except IOError:
@@ -42,17 +68,20 @@ def import_file(uuid, permanent=False):
         srcfo.close()
     else:
         req = urllib2.Request(src)
+        # check if source file can be opened
         try:
             response = urllib2.urlopen(req)
         except urllib2.URLError, e:
-            #TODO: write error to log
-            response.close()
+            #TODO: write error msg to log
             return None
 
         # download and save the file
-        #TODO: download data directly to a file in MEDIA_ROOT to avoid copying from temp file after download is finished
-        tmpfile = NamedTemporaryFile()  # django.core.files.File cannot handle file-like objects like those returned by urlopen
-        remotefilesize = int(response.info().getheaders("Content-Length")[0])
+        tmpfile = NamedTemporaryFile()
+        if (galaxy_file_size is None):
+            remotefilesize = int(response.info().getheaders("Content-Length")[0])
+        else:
+            remotefilesize = galaxy_file_size 
+            print "galayx_file_size used"
         filename = response.geturl().split('/')[-1]    # get file name from its URL
     
         localfilesize = 0       # bytes
@@ -69,7 +98,7 @@ def import_file(uuid, permanent=False):
                 state="PROGRESS",
                 meta={"percent_done": "%3.2f%%" % (downloaded), 'current': localfilesize, 'total': remotefilesize}
                 )
-
+            print downloaded
 #            status = r"%10d  [%3.2f%%]" % (localfilesize, downloaded)
 #            status = status + chr(8) * (len(status) + 1)
 #            print status,
@@ -92,14 +121,13 @@ def import_file(uuid, permanent=False):
 def read(uuid):
     '''
     Return a File object given UUID
-    If file is not local then import the file
+    If file is not local then import the file and add to cache
     '''
     try:
         f = FileStoreItem.objects.get(uuid=uuid).datafile
     except FileStoreItem.DoesNotExist:
         #TODO: write msg to log
-        # import file
-        return None
+        f = import_file(uuid, permanent=False)
     return f
 
 @task()
