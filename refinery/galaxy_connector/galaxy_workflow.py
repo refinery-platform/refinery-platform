@@ -181,7 +181,15 @@ def createStepsAnnot(file_list, workflow):
                 if input_type in file_list[i].keys():
                     curr_filename = removeFileExt(file_list[i][input_type]['assay_uuid'])
                 elif input_type == 'all':
-                    curr_filename = removeFileExt(file_list[i]['exp_file']['assay_uuid']) + ',' + removeFileExt(file_list[i]['input_file']['assay_uuid']);
+                    curr_filename = ''
+                    for itypes in file_list[i].keys():
+                        if curr_filename == '':
+                            curr_filename += removeFileExt(file_list[i][itypes]['assay_uuid'])
+                        else:
+                            curr_filename += ','+removeFileExt(file_list[i][itypes]['assay_uuid'])
+                    #print "curr_filename"
+                    #print curr_filename
+                        #curr_filename = removeFileExt(file_list[i]['exp_file']['assay_uuid']) + ',' + removeFileExt(file_list[i]['input_file']['assay_uuid']);
                 #### TODO ###
                 # deal with over input_types from various workflows
                 #else:
