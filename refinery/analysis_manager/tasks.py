@@ -19,7 +19,7 @@ from celery.utils import uuid
 from celery.task.chords import Chord
 from celery import current_app as celery
 from refinery_repository.tasks import create_dir, download_ftp_file
-from file_store.models import FileStoreItem
+from file_store.models import FileStoreItem, is_local
 from file_store.tasks import import_file, create
 
 # example from: http://www.manasupo.com/2012/03/chord-progress-in-celery.html
@@ -133,10 +133,13 @@ def run_analysis(analysis, interval=5.0):
         investigation_id = curr_assay.investigation.study_identifier
         for cur_file in curr_raw:
             # calling filestore on remote file
-            print "calling filestore"
-            print cur_file.rawdata_uuid
-            task_id = import_file.subtask((cur_file.rawdata_uuid, True,))
-            download_tasks.append(task_id)
+            #print "calling filestore"
+            #print cur_file.rawdata_uuid
+            if not is_local(cur_file.rawdata_uuid):
+                print "not_local"
+                task_id = import_file.subtask((cur_file.rawdata_uuid, False,))
+                download_tasks.append(task_id)
+            
             """
             # temp
             file_name = cur_file.raw_data_file.split('/')[-1] #get the file name
@@ -147,7 +150,8 @@ def run_analysis(analysis, interval=5.0):
                 download_tasks.append(task_id)
                 file_info = {"raw_data_file":cur_file.raw_data_file, "investigation_id":investigation_id}
                 #print file_info
-                """
+            """
+                
             
     # PREPROCESSING            
     task_id = run_analysis_preprocessing.subtask( (analysis,) ) 
@@ -329,7 +333,7 @@ def run_analysis_postprocessing(analysis):
     task_list = download_history_files(analysis)
     
     print "downloading history task_list"
-    print task_list
+    #print task_list
     
     return
 
@@ -394,8 +398,10 @@ def get_analysis_config(analysis):
             curr_rawdata = curr_assay.raw_data.values()[0];
             curr_filename = curr_rawdata['file_name'];
             
+            # TODO: update for case where there are many files per assay
+            
             # current filepath
-            curr_set['filepath'] = os.path.join(settings.DOWNLOAD_BASE_DIR, curr_assay.investigation_id, curr_filename)
+            #curr_set['filepath'] = os.path.join(settings.DOWNLOAD_BASE_DIR, curr_assay.investigation_id, curr_filename)
             # Short file name description
             curr_set['filename'] = curr_filename.split('.')[0]
       
@@ -412,15 +418,37 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
     for fileset in ret_list:
         for k, v in fileset.iteritems():
             cur_item = fileset[k]
-            file_path = cur_item['filepath']
+            #file_path = cur_item['filepath']
+            
+            curr_assay_uuid = cur_item['assay_uuid']
+            #print "cur_item"
+            #print cur_item
+            
+            # getting current filestoreitem
+            curr_assay = Assay.objects.get(assay_uuid=curr_assay_uuid)
+            curr_raw = curr_assay.raw_data.all()[0]
+            #for cur_file in curr_raw:
+            
+            # changing to use filestore
+            curr_filestore = FileStoreItem.objects.get(uuid=curr_raw.rawdata_uuid)
+            #print curr_filestore.get_absolute_path
+            #file_path = str(curr_filestore.get_absolute_path)
+            #print "got curr_filestore item"
+            #print curr_filestore.datafile.path
+            #print curr_filestore.datafile.url
+            
+            file_path = curr_filestore.datafile.path
+            cur_item["filepath"] = file_path
+            file_id = connection.put_into_library(library_id, file_path)
+            cur_item["id"] = file_id
             
             # Check that file exists
-            if(os.path.exists(file_path)): 
+            #if(os.path.exists(file_path)): 
                # insert data into galaxy library
-               file_id = connection.put_into_library(library_id, file_path)
-               cur_item["id"] = file_id
-            else:
-                print "FILE DOES NOT EXIST, please download and try again"
+            #   file_id = connection.put_into_library(library_id, file_path)
+            #   cur_item["id"] = file_id
+            #else:
+            #    print "FILE DOES NOT EXIST, please download and try again"
     
     return ret_list
 
@@ -456,34 +484,32 @@ def download_history_files(analysis) :
             #print "check_sam"
             #print check_sam
             
-            #if (check_fastq < 0 and check_sam < 0):
-            # name of file
-            result_name = results['name'] + '.' + file_type
-            # size of file defined by galaxy
-            file_size = results['file_size']
-            # URL to download
-            download_url = connection.make_url(str(results['dataset_id']), is_data=True)
+            if (check_fastq < 0 and check_sam < 0):
+                # name of file
+                result_name = results['name'] + '.' + file_type
+                # size of file defined by galaxy
+                file_size = results['file_size']
+                # URL to download
+                download_url = connection.make_url(str(results['dataset_id']), is_data=True)
+                
+                # getting file_store_uuid
+                filestore_uuid = create(download_url)
+                
+                # adding history files to django model 
+                temp_file = AnalysisResults(analysis_uuid=analysis.uuid, file_store_uuid=filestore_uuid, file_name=result_name, file_type=file_type)
+                temp_file.save() 
+                analysis.results.add(temp_file) 
+                analysis.save() 
+                
+                # downloading analysis results into file_store
+                task_id = import_file.subtask((filestore_uuid, False, file_size,))
+                task_list.append(task_id)
+                
+                # location to download to 
+                #loc_url = settings.DOWNLOAD_BASE_DIR;
+                #task_id = download_http_file.subtask( (download_url, loc_url, "analyze_test", result_name, file_size, ) )
+                #task_list.append(task_id)
             
-            # getting file_store_uuid
-            filestore_uuid = create(download_url)
-            
-            # adding history files to django model 
-            temp_file = AnalysisResults(analysis_uuid=analysis.uuid, file_store_uuid=filestore_uuid, file_name=result_name, file_type=file_type)
-            temp_file.save() 
-            analysis.results.add(temp_file) 
-            analysis.save() 
-            
-            # downloading analysis results into file_store
-            task_id = import_file.subtask((filestore_uuid, False, file_size,))
-            task_list.append(task_id)
-            
-            """
-            # location to download to 
-            loc_url = settings.DOWNLOAD_BASE_DIR;
-            
-            task_id = download_http_file.subtask( (download_url, loc_url, "analyze_test", result_name, file_size, ) )
-            task_list.append(task_id)
-            """
     return task_list
 
 """

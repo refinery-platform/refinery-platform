@@ -238,6 +238,7 @@ class AnalysisResults (models.Model):
     ### TODO ### ?galaxy_id?
     # add reference to file_store models
     # foreign key into analysis
+    #analysis = models.ForeignKey('Analysis')
     
     def __unicode__(self):
         return str( self.file_name ) + " <-> " + self.analysis_uuid

@@ -48,8 +48,6 @@ def import_file(uuid, permanent=False, file_size=None, refresh=False):
     Download or copy file specified by UUID
     If permanent=False then add to cache
     '''
-    print "import_file"
-    print import_file
     # check if there's a FileStoreItem with this UUID
     try:
         item = FileStoreItem.objects.get(uuid=uuid)
@@ -94,7 +92,6 @@ def import_file(uuid, permanent=False, file_size=None, refresh=False):
             remotefilesize = int(response.info().getheaders("Content-Length")[0])
         else:
             remotefilesize = file_size 
-            print "file_size used"
         filename = response.geturl().split('/')[-1]    # get file name from its URL
     
         localfilesize = 0       # bytes
@@ -111,8 +108,7 @@ def import_file(uuid, permanent=False, file_size=None, refresh=False):
                 state="PROGRESS",
                 meta={"percent_done": "%3.2f%%" % (downloaded), 'current': localfilesize, 'total': remotefilesize}
                 )
-            print downloaded
-
+        
         tmpfile.flush()
         
         #TODO: move tmpfile to file store dir to avoid copying large files
