@@ -20,10 +20,11 @@ function isFinished(result) {
 
 function updateProgress(result, section) { 
 	console.log("updateProgress");
-	console.log(result);
-	console.log("TEXTTTT")
-	console.log($.trim($("#collapseOne").text()));
-	console.log($.trim($("#collapseOne > div").text()));
+	
+	//console.log(result);
+	//console.log("TEXTTTT")
+	//console.log($.trim($("#collapseOne").text()));
+	//console.log($.trim($("#collapseOne > div").text()));
 	
 	var allFinished = true;
 	var arLen=result.length;
@@ -44,8 +45,9 @@ function updateProgress(result, section) {
 	  			$(temp_bar).css({ 'width': '100%'});
 	  			var temp_bar_class = '#bar_class_'+result[i].task_id;
 	  			$(temp_bar_class).removeClass('active');
-	  			//$(temp_bar_class).fadeOut('slow');
+	  			$(temp_bar_class).fadeOut('slow');
 	  			//$("#"+section).collapse("hide");
+	  			//$("#"+section).collapse("show");
 	  		}
   		}
   		else { 
@@ -106,7 +108,8 @@ function getUpdate() {
      	
      	var allFinished = false;
 		
-		if (isFinished(result.preprocessing) && isFinished(result.execution) && isFinished(result.postprocessing)) {
+		//if (isFinished(result.preprocessing) && isFinished(result.execution) && isFinished(result.postprocessing)) {
+		if (isFinished(result.postprocessing)) {
 			allFinished = true;
 			console.log("allfinished");
 			console.log(allFinished);
@@ -189,7 +192,7 @@ $(document).ready(function() {
 						{% else %}
 							<div id="{{stat.task_id}}">
 	            				<div id="text_{{stat.task_id}}">{{stat}}</div>
-		            			{% if stat.download_url %}
+		            			{% if stat.percent_done %}
 		            				<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
 		            					<div class="bar" id="bar_{{stat.task_id}}" style="width:{{stat.percent_done}};"></div>
 		            				</div>
@@ -244,9 +247,11 @@ $(document).ready(function() {
 						{% else %}
 							<div id="{{stat.task_id}}">
 	                  			<div id="text_{{stat.task_id}}">{{stat}}</div>
+	                  			{% if stat.percent_done %}
 	                			<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
 	                				<div class="bar" id="bar_{{stat.task_id}}" style="width: 0%;"></div>
 	                			</div>
+	                			{% endif %}
 	                		</div>
 	                	{% endif %}
                 	</li>

@@ -152,14 +152,30 @@ def getPayload(ts_id):
                         #print "\t \t jjjjjjj:" + str(j)
                         temp_ret = {};
                         if ts.result.results[j].result:
-                            #print "error_perm"
-                            #print ts.result.results[j]
+                            print "error_perm"
+                            print ts.result.results[j]
+                            print ts.result.results[j].state
+                            print ts.result.results[j].status
+                            print ts.result.results[j].info
+                            
+                            
+                            print type(ts.result.results[j])
+                            
                             #print ts.result.results[j].state
-                            #print ts.result.results[j].result
-                            temp_ret = ts.result.results[j].result
-                            temp_ret['state'] = str(ts.result.results[j].state)
-                            temp_ret['task_id'] = str(ts.result.results[j].task_id)
-                            payload.append(temp_ret)
+                            print type(ts.result.results[j].result)
+                          #  u'SUCCESS
+                            print ts.result.results[j].result.__class__.__name__
+                            if ts.result.results[j].result.__class__.__name__ == 'FileStoreItem':
+                                temp_ret['state'] = ts.result.results[j].state
+                                temp_ret['task_id'] = ts.result.results[j].task_id
+                                #temp_ret['task_id'] = ts.result.results[j].r
+                                payload.append(temp_ret)
+                            
+                            else:
+                                temp_ret = ts.result.results[j].result
+                                temp_ret['state'] = str(ts.result.results[j].state)
+                                temp_ret['task_id'] = str(ts.result.results[j].task_id)
+                                payload.append(temp_ret)
                             #payload.append(ts.result.results[j].result)
                             #print ts.result.results[j].state
                         else:
