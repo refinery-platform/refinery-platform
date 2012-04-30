@@ -21,6 +21,7 @@ class UserProfile ( models.Model ):
 
     user = models.OneToOneField( User )
     affiliation = models.CharField( max_length=100, blank=True )
+    catch_all_project = models.ForeignKey( 'Project' )
 
     def __unicode__(self):
         return self.user.first_name + " " + self.user.last_name + " (" + self.affiliation + "): " + self.user.email
@@ -29,8 +30,10 @@ class UserProfile ( models.Model ):
 # automatic creation of a user profile when a user is created: 
 def create_user_profile( sender, instance, created, **kwargs ):
     if created:
-        UserProfile.objects.create( user=instance )
-
+        project = Project.objects.create( name="Catch-All Project", is_catch_all=True )
+        project.set_owner( instance )
+        UserProfile.objects.create( user=instance, catch_all_project=project )
+        
 post_save.connect( create_user_profile, sender=User )            
 
 
@@ -205,7 +208,8 @@ class Workflow ( SharableResource, ManageableResource ):
 
     
 class Project( SharableResource ):
-    description = models.CharField( max_length=5000, blank=True )    
+    description = models.CharField( max_length=5000, blank=True )
+    is_catch_all = models.BooleanField( default=False )
 
     def __unicode__(self):
         return self.name + " - " + self.summary
