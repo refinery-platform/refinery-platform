@@ -18,7 +18,6 @@ from celery.task import chord
 from celery.utils import uuid
 from celery.task.chords import Chord
 from celery import current_app as celery
-from refinery_repository.tasks import create_dir, download_ftp_file
 from file_store.models import FileStoreItem, is_local
 from file_store.tasks import import_file, create
 
@@ -41,9 +40,16 @@ def chord_execution(ret_val, analysis):
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
     
-    # EXECUTION
-    execution_taskset = TaskSet(task=[run_analysis_execution.subtask((analysis,)) ])            
+    execution_taskset = []; 
+    execution_taskset.append(monitor_analysis_execution.subtask((analysis,)) )
+    execution_taskset.append(run_analysis_execution.subtask((analysis,)) )
     result_chord, result_set = progress_chord(execution_taskset)(chord_postprocessing.subtask((analysis,)))
+     
+    # EXECUTION
+    ## TESTING NEW DEBUGGING ###
+    # execution_monitor_task_id = monitor_analysis_execution.subtask((analysis,)).apply_async().task_id
+    #execution_taskset = TaskSet(task=[run_analysis_execution.subtask((analysis,)) ])            
+    #result_chord, result_set = progress_chord(execution_taskset)(chord_postprocessing.subtask((analysis,)))
     
     analysis_status.execution_taskset_id = result_set.task_id 
     analysis_status.save()
@@ -62,10 +68,6 @@ def chord_postprocessing (ret_val, analysis):
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
     
-    # kill monitoring task
-    #celery.control.revoke(analysis_status.execution_monitor_task_id, terminate=True)
-    
-    # TODO: hook somewhere into filestore
     # getting list of tasks for download history files
     postprocessing_taskset = download_history_files(analysis)
     
@@ -140,19 +142,6 @@ def run_analysis(analysis, interval=5.0):
                 task_id = import_file.subtask((cur_file.rawdata_uuid, False,))
                 download_tasks.append(task_id)
             
-            """
-            # temp
-            file_name = cur_file.raw_data_file.split('/')[-1] #get the file name
-            out_dir = os.path.join(settings.DOWNLOAD_BASE_DIR, investigation_id) #directory where file downloads
-            file_path = os.path.join(out_dir, file_name) # path where file downloads
-            if(not os.path.exists(file_path)): #if file exists already don't download
-                task_id = download_ftp_file.subtask((cur_file.raw_data_file, settings.DOWNLOAD_BASE_DIR, investigation_id,))
-                download_tasks.append(task_id)
-                file_info = {"raw_data_file":cur_file.raw_data_file, "investigation_id":investigation_id}
-                #print file_info
-            """
-                
-            
     # PREPROCESSING            
     task_id = run_analysis_preprocessing.subtask( (analysis,) ) 
     download_tasks.append(task_id)
@@ -162,13 +151,6 @@ def run_analysis(analysis, interval=5.0):
     analysis_status.preprocessing_taskset_id = result_set.task_id 
     analysis_status.save()
     
-    return
-
-# task: monitor preprocessing (calls subtask that does the actual work)
-@task()
-def monitor_analysis_preprocessing(analysis, interval=5.0):
-    #TODO: monitor async task execution
-    run_analysis_preprocessing(analysis)
     return
 
 # task: perform postprocessing (innermost task, does the actual work)
@@ -207,23 +189,31 @@ def run_analysis_preprocessing(analysis):
     analysis.save()
     
     # start monitoring task
-    execution_monitor_task_id = monitor_analysis_execution.subtask((analysis,)).apply_async().task_id
+    # execution_monitor_task_id = monitor_analysis_execution.subtask((analysis,)).apply_async().task_id
     
     # save execution monitoring task to analysis_status object
-    analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
-    analysis_status.execution_monitor_task_id = execution_monitor_task_id
-    analysis_status.save()
+    # analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
+    # analysis_status.execution_monitor_task_id = execution_monitor_task_id
+    # analysis_status.save()
     
     return
 
 # task: monitor workflow execution (calls subtask that does the actual work)
 @task()
-def monitor_analysis_execution(analysis, interval=5.0):    
+def monitor_analysis_execution(analysis, interval=5.0, task_id=None):    
 
     # required to get updated state (move out of this function) 
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-    connection = get_analysis_connection(analysis)
+    analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
     
+    # start monitoring task
+    if analysis_status.execution_monitor_task_id is None:
+        #print "TASKTASKTASKTASK :::: "
+        #print monitor_analysis_execution.request.id
+        analysis_status.execution_monitor_task_id = monitor_analysis_execution.request.id
+        analysis_status.save()
+    
+    connection = get_analysis_connection(analysis)
     #print "analysis.history_id "
     #print analysis.history_id 
     #print "connection"
@@ -242,7 +232,6 @@ def monitor_analysis_execution(analysis, interval=5.0):
         #print  "Analysis Execution Task State: " + analysis_execution_task.state + "\n"
         #print  "Workflow State: " + progress["workflow_state"] + "\n"
         
-        
         if progress["workflow_state"] == "error":
             #print "Workflow failed. Stopping monitor ..."
             revoke_task = True
@@ -256,27 +245,26 @@ def monitor_analysis_execution(analysis, interval=5.0):
         #elif progress["workflow_state"] == "new":
         #    print "Workflow being prepared."
             
-        
-
-        
         # stop celery task if workflow run is in error or finished
-        if revoke_task:
-            print "revoking/KILLING task"
-            analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
+        #if revoke_task:
+            #analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
             # kill monitoring task
-            celery.control.revoke(analysis_status.execution_monitor_task_id, terminate=True)
+            #celery.control.revoke(analysis_status.execution_monitor_task_id, terminate=True)
             #return
-            break
-        else:
+            #break
+        #else:
+        #    time.sleep( interval );
+        
+        if not revoke_task:
             time.sleep( interval );
         
-    
         #if analysis_execution_task.state == "SUCCESS":
         #if analysis_execution_task.state == "FAILURE":
         #    print "Analysis Execution Task failed . Stopping monitor ..."
         #    break    
     
-    return
+    #return
+    print "revoking/KILLING task finished monitoring task"
 
 # task: perform execution (innermost task, does the actual work)
 @task()
@@ -299,14 +287,6 @@ def run_analysis_execution(analysis):
     result = connection.run_workflow2(analysis.workflow_galaxy_id, ret_list, analysis.history_id)  
     
     return
-
-# task: monitor postprocessing (calls subtask that does the actual work)
-@task()
-def monitor_analysis_postprocessing(analysis):
-    #TODO: monitor async task execution    
-    run_analysis_postprocessing(analysis)    
-    return
-
 
 # task: perform postprocessing (innermost task, does the actual work)
 @task()
@@ -375,10 +355,17 @@ def get_analysis_config(analysis):
     ret_list = [];
     ret_item = copy.deepcopy(annot_inputs)
     
+    print "ret_item"
+    print ret_item
+    
     temp_count = 0
     temp_len = len(annot_inputs)
     t2 = analysis.workflow_data_input_maps.all().order_by('pair_id')
+    print "T2"
+    print t2
     for wd in t2:
+        print "wd"
+        print wd
         if ret_item[wd.workflow_data_input_name] is None:
             ret_item[wd.workflow_data_input_name] = {}
             ret_item[wd.workflow_data_input_name]['pair_id'] = wd.pair_id
@@ -441,14 +428,6 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
             cur_item["filepath"] = file_path
             file_id = connection.put_into_library(library_id, file_path)
             cur_item["id"] = file_id
-            
-            # Check that file exists
-            #if(os.path.exists(file_path)): 
-               # insert data into galaxy library
-            #   file_id = connection.put_into_library(library_id, file_path)
-            #   cur_item["id"] = file_id
-            #else:
-            #    print "FILE DOES NOT EXIST, please download and try again"
     
     return ret_list
 
@@ -504,91 +483,8 @@ def download_history_files(analysis) :
                 # downloading analysis results into file_store
                 task_id = import_file.subtask((filestore_uuid, False, file_size,))
                 task_list.append(task_id)
-                
-                # location to download to 
-                #loc_url = settings.DOWNLOAD_BASE_DIR;
-                #task_id = download_http_file.subtask( (download_url, loc_url, "analyze_test", result_name, file_size, ) )
-                #task_list.append(task_id)
             
     return task_list
-
-"""
-Name: download_http_file
-Description:
-    downloads a file from a given URL
-Parameters:
-    url: URL for the file being downloaded
-    out_dir: base directory where file is being downloaded
-    accession: name of directory that will house the downloaded file, in this
-               case, the investigation accession
-"""
-@task()
-def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=None):
-    out_dir = os.path.join(out_dir, accession) #directory where file downloads
-    
-    print "refinery_repository.download_http_file called"
-    
-    print "out_dir"
-    print out_dir
-    print "url"
-    print url
-    print "accession"
-    print accession
-    print "galaxy_file_size"
-    print galaxy_file_size
-    
-    #make super-directory (out_dir/accession) if it doesn't exist
-    create_dir(out_dir)
-    
-    if (new_name is None):
-        file_name = url.split('/')[-1] #get the file name
-        file_path = os.path.join(out_dir, file_name) # path where file downloads
-    else:
-        file_name = new_name
-        file_path = os.path.join(out_dir, new_name) 
-        
-    print "file_path"
-    print file_path
-    print "file_name"
-    print file_name
-
-    
-    if(not os.path.exists(file_path)):
-        u = urllib2.urlopen(url)
-        f = open(file_path, 'wb')
-        
-        if (galaxy_file_size is None):
-            meta = u.info()
-            #print "meta"
-            #print meta
-            file_size = int(meta.getheaders("Content-Length")[0])
-        else:
-            file_size = galaxy_file_size
-            
-        #print "Downloading: %s Bytes: %s" % (file_name, file_size)
-        file_size_dl = 0
-        block_sz = 8192
-        while True:
-            buffer = u.read(block_sz)
-            if not buffer:
-                break
-
-            file_size_dl += len(buffer)
-            f.write(buffer)
-            
-            downloaded = file_size_dl * 100. / file_size
-            download_http_file.update_state(state="PROGRESS",
-                        meta={
-                              "percent_done": "%3.2f%%" % (downloaded),
-                              'current': file_size_dl,
-                              'total': file_size
-                        })
-            
-            status = r"%10d  [%3.2f%%]" % (file_size_dl, downloaded)
-            status = status + chr(8) * (len(status) + 1)
-            #print status,
-
-        f.close()
         
 @task()
 def get_analysis_connection(analysis): 
