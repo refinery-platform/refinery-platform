@@ -257,17 +257,17 @@ def monitor_analysis_execution(analysis, interval=5.0):
         #    print "Workflow being prepared."
             
         
-
-        
         # stop celery task if workflow run is in error or finished
-        if revoke_task:
-            print "revoking/KILLING task"
-            analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
+        #if revoke_task:
+            #analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
             # kill monitoring task
-            celery.control.revoke(analysis_status.execution_monitor_task_id, terminate=True)
+            #celery.control.revoke(analysis_status.execution_monitor_task_id, terminate=True)
             #return
-            break
-        else:
+            #break
+        #else:
+        #    time.sleep( interval );
+        
+        if not revoke_task:
             time.sleep( interval );
         
     
@@ -276,7 +276,8 @@ def monitor_analysis_execution(analysis, interval=5.0):
         #    print "Analysis Execution Task failed . Stopping monitor ..."
         #    break    
     
-    return
+    #return
+    print "revoking/KILLING task finished monitoring task"
 
 # task: perform execution (innermost task, does the actual work)
 @task()
