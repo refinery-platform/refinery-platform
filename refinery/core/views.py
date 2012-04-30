@@ -21,22 +21,25 @@ def index(request):
         
         if len( groups ) == 1:
             group = groups[0]        
-            projects = get_objects_for_group( group, "core.read_project" )
+            projects = get_objects_for_group( group, "core.read_project" ).filter( is_catch_all=False )
             workflow_engines = get_objects_for_group( group, "core.read_workflowengine" )
             data_sets = get_objects_for_group( group, "core.read_dataset" )
             workflows = get_objects_for_group( group, "core.read_workflow" )
+            unassigned_analyses = []
         else:
             projects = []
             workflow_engines = []
             data_sets = []
             workflows = []
+            unassigned_analyses = []
     else:
-        projects = get_objects_for_user( request.user, "core.read_project" )
+        projects = get_objects_for_user( request.user, "core.read_project" ).filter( is_catch_all=False )
+        unassigned_analyses = request.user.get_profile().catch_all_project.analyses
         workflow_engines = get_objects_for_user( request.user, "core.read_workflowengine" )
         workflows = get_objects_for_user( request.user, "core.read_workflow" )
         data_sets = get_objects_for_user( request.user, "core.read_dataset" )
             
-    return render_to_response('core/index.html', {'users': users, 'projects': projects, 'workflow_engines': workflow_engines, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext( request ) )
+    return render_to_response('core/index.html', {'users': users, 'projects': projects, 'unassigned_analyses': unassigned_analyses, 'workflow_engines': workflow_engines, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext( request ) )
 
 @login_required()
 def user(request,query):
@@ -242,9 +245,9 @@ def admin_test_data( request ):
         # delete if exists
         try:
             group_object = ExtendedGroup.objects.get( group["name"] )            
-            if group_object.is_managed():
-                print( group_object.manager_group )
-                group_object.manager_group.delete()
+            #if group_object.is_managed():
+            #    print( group_object.manager_group )
+            #    group_object.manager_group.delete()
             group_object.delete()
         except:
             pass
