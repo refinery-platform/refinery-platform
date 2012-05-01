@@ -64,7 +64,21 @@ class TDFFile(object):
         self.index = None
         
     def __str__(self):
-        return ( "TDF Reader (" + self.filename + ")" )
+        return ( "TDF File (" + self.filename + ")" )
+
+
+    # prepare object for pickling (the bitstream cannot be serialized ... doh!)
+    # see example here: http://docs.python.org/library/pickle.html
+    def __getstate__(self):
+        odict = self.__dict__.copy() # copy the dict since we change it
+        del odict['bitstream'] # remove bitstream
+        return odict
+    
+    # prepare object for unpickling (the bitstream needs to be restored)    
+    def __setstate__(self, dict):
+        bitstream = TDFBitStream(filename=dict['filename']) # reopen file bistream
+        self.__dict__.update(dict) # update attributes
+        self.bitstream = bitstream  # save the bitstream    
 
 
     def create_data_set_name(self, sequence_name, zoom_level, window_function ):
@@ -74,7 +88,7 @@ class TDFFile(object):
 
         if self.preamble is not None:
             data_set_name = "/" + sequence_name + "/" + zoom_level
-            if self.get_version() >= 2 and len( window_function.strip() ) > 0:
+            if self.get_version() >= 2 and len( window_function.strip() ) > 0 and zoom_level != "raw":
                 data_set_name += "/" + window_function
         
         return data_set_name
@@ -89,6 +103,31 @@ class TDFFile(object):
             if data_set is not None:                
                 data_set.read()
                 return data_set
+        
+        return None
+    
+    def decompose_data_set_name(self, data_set_name):
+        '''
+        This is a class method because data set names are different between v1 (window function is assumed to be "mean"
+        and later versions of the TDF format.
+        '''  
+
+        # cannot decompose data set name without version information from the preamble
+        if self.preamble is None:
+            return None
+              
+        # data set name format is "/<sequence_name>/<zoom_level>/<window_function>"
+        components = data_set_name.split("/")
+        
+        if self.get_version() == 1 and len(components) == 3:
+            return ( { "sequence_name": components[1], "zoom_level": components[2], "window_function": "mean" } )
+
+        # zoom_level "raw" does not have a window_function 
+        if self.get_version() > 1 and len( components ) == 3: 
+            return ( { "sequence_name": components[1], "zoom_level": "raw", "window_function": "none" } )
+
+        if self.get_version() > 1 and len( components ) == 4: 
+            return ( { "sequence_name": components[1], "zoom_level": components[2], "window_function": components[3] } )
         
         return None
     
@@ -181,8 +220,8 @@ class TDFFile(object):
                 print ""
                 
                 if tile.type == TDFTile.Type.EMPTY:
-                    location["start"] = tile_index * data_sets[0].tile_width + 1
-                    location["end"] = (tile_index+1) * data_sets[0].tile_width
+                    location["start"] = int( tile_index * data_sets[window_function].tile_width + 1 )
+                    location["end"] = int( (tile_index+1) * data_sets[window_function].tile_width )
                     location[window_function] = 0
                     
                     profile.append(location)                    
@@ -190,23 +229,23 @@ class TDFFile(object):
                     if tile.type == TDFTile.Type.VARIABLE_STEP:
                         # update location
                         # need check if start_location and locations[0] are the same for all window functions!
-                        location["start"] = tile.start_location
-                        location["end"] = tile.start_locations[0] - 1
+                        location["start"] = int( tile.start_location )
+                        location["end"] = int( tile.start_locations[0] - 1 )
                         location[window_function] = 0
                         profile.append(location)                    
                     
                     for location_index in range(len(tile.data[0])):                        
                         
                         if tile.type == TDFTile.Type.VARIABLE_STEP:
-                            location["start"] = tile.start_locations[location_index]
-                            location["end"] = location["start"] + tile.span
+                            location["start"] = int( tile.start_locations[location_index] )
+                            location["end"] = int( location["start"] + tile.span )
                             location[window_function] = tile.data[0][location_index]
                                                     
                             if math.isnan(location[window_function]):
                                 location[window_function] = 0
                         elif tile.type == TDFTile.Type.FIXED_STEP:
-                            location["start"] = tile.start_location + math.floor(tile.span * location_index)
-                            location["end"] = tile.start_location + math.floor(tile.span * (location_index + 1))
+                            location["start"] = int( tile.start_location + math.floor(tile.span * location_index) )
+                            location["end"] = int( tile.start_location + math.floor(tile.span * (location_index + 1)) )
                             location[window_function] = tile.data[0][location_index]                        
 
                             if math.isnan(location[window_function]):
@@ -222,6 +261,7 @@ class TDFFile(object):
                     
         return profile
  
+ 
 
 class TDFElement(object):
 
@@ -231,6 +271,7 @@ class TDFElement(object):
         '''
         self.tdf_file = tdf_file
         self.offset = offset
+
 
 
     
@@ -386,6 +427,8 @@ class TDFDataSet( TDFIndexedElement ):
         '''
         super( TDFDataSet, self ).__init__( tdf_file, offset )        
         
+        self.is_compressed = tdf_file.is_compressed()
+        self.track_names = tdf_file.get_track_names()
         self.attributes = None
         self.data_type = None
         self.tile_width = None
@@ -417,7 +460,7 @@ class TDFDataSet( TDFIndexedElement ):
         return self
     
 
-    def get_tile(self, tile_number):
+    def get_tile(self, tile_number, filename=None):
         # TODO: implement caching
         if tile_number < 0 or tile_number >= len( self.tile_index ): 
             return None        
@@ -425,22 +468,25 @@ class TDFDataSet( TDFIndexedElement ):
         if self.tile_index[tile_number] is None:
             return None
         
-        return self.tile_index[tile_number].read()
+        return self.tile_index[tile_number].read(filename, self.is_compressed, self.track_names )
             
                     
-    def get_tiles(self, start_location, end_location):
+    def get_tiles(self, start_location, end_location, filename=None):
         # TODO: implement caching
         start_tile = int( math.floor(start_location/self.tile_width) )
         end_tile = int( math.floor(end_location/self.tile_width) )
      
         tiles = []
         for i in range(start_tile, end_tile+1):
-            tiles.append( self.get_tile(i) )
+            
+            tile = self.get_tile(i,filename)                
+            
+            if tile is not None:
+                tiles.append( tile )
         
         return tiles
     
     
-
 class TDFGroup( TDFIndexedElement ):
     pass
 
@@ -490,17 +536,27 @@ class TDFTile( TDFElement ):
         return self        
     
     
-    def read(self):
+    def read(self,filename=None,is_compressed=False,track_names=None):                        
         if self.index_position < 0 and self.index_length == 0:
             # don't read anything
             self.type = self.Type.EMPTY
             return self
         
+        if filename is not None:
+            self.tdf_file = TDFFile( filename )
+        
         self.tdf_file.update_offset( self.index_position )
         tile_data = self.tdf_file.read_bytes( self.index_length )
-                        
-        if self.tdf_file.is_compressed():
-            tile_data = zlib.decompress( tile_data )
+        
+        if filename is None:                     
+            if self.tdf_file.is_compressed():
+                tile_data = zlib.decompress( tile_data )
+        else:
+            if is_compressed:
+                tile_data = zlib.decompress( tile_data )
+                
+        if track_names is None:
+            track_names = self.tdf_file.get_track_names()
             
         # create a new BitStream for the tile
         tile_stream = TDFBitStream( bytes=tile_data )
@@ -509,13 +565,13 @@ class TDFTile( TDFElement ):
         
         if self.type == self.Type.BED or self.type == self.Type.BED_WITH_NAME:
             bedTile = TDFBedTile(self)
-            self = bedTile.read(tile_stream)
+            self = bedTile.read(tile_stream,track_names)
         elif self.type == self.Type.VARIABLE_STEP:
             variableTile = TDFVariableTile(self)
-            self = variableTile.read(tile_stream)
+            self = variableTile.read(tile_stream,track_names)
         elif self.type == self.Type.FIXED_STEP:
             fixedTile = TDFFixedTile(self)
-            self = fixedTile.read(tile_stream)
+            self = fixedTile.read(tile_stream,track_names)
         else:
             return self; 
         
@@ -532,7 +588,7 @@ class TDFFixedTile(TDFTile):
         self.start_location = None
 
         
-    def read(self,tile_stream):
+    def read(self,tile_stream,track_names=None):
         
         location_count = tile_stream.read_integer()
                 
@@ -540,7 +596,7 @@ class TDFFixedTile(TDFTile):
         self.span = tile_stream.read_float()
         
         self.data = []        
-        for track in range( len( self.tdf_file.get_track_names() ) ):            
+        for track in range( len( track_names ) ):            
             self.data.append( [] )
             for location in range( location_count ):
                 self.data[track].append( tile_stream.read_float() )
@@ -558,7 +614,7 @@ class TDFVariableTile(TDFTile):
         self.start_location = None
 
         
-    def read(self,tile_stream):
+    def read(self,tile_stream,track_names):
         
         self.start_location = tile_stream.read_integer()
         self.span = tile_stream.read_float()
@@ -573,7 +629,7 @@ class TDFVariableTile(TDFTile):
         # assert( track_count = len( self.tdf_file.get_track_names() ) )
                 
         self.data = []        
-        for track in range( len( self.tdf_file.get_track_names() ) ):            
+        for track in range( len( track_names ) ):            
             self.data.append( [] )
             for location in range( location_count ):
                 self.data[track].append( tile_stream.read_float() )
@@ -591,7 +647,7 @@ class TDFBedTile(TDFTile):
         self.names = None
         
         
-    def read(self,tile_stream):
+    def read(self,tile_stream,track_names):
                 
         location_count = tile_stream.read_integer()
         self.start_locations = []
@@ -606,7 +662,7 @@ class TDFBedTile(TDFTile):
         # assert( track_count = len( self.tdf_file.get_track_names() ) )
                 
         self.data = []        
-        for track in range( len( self.tdf_file.get_track_names() ) ):            
+        for track in range( len( track_names ) ):            
             self.data.append( [] )
             for location in range( location_count ):
                 self.data[track].append( tile_stream.read_float() )
@@ -614,9 +670,72 @@ class TDFBedTile(TDFTile):
         # if this is a "bed with name" track load the names
         if self.type == self.Type.BED_WITH_NAME:
             self.names = []        
-            for track in range( len( self.tdf_file.get_track_names() ) ):            
+            for track in range( len( track_names ) ):            
                 self.names.append( [] )
                 for location in range( location_count ):
                     self.names[track].append( tile_stream.read_string() )
         
         return self    
+    
+
+def get_profile_from_file(data_set, start_location, end_location, filename ):
+    '''
+    window_functions = array of window function names (e.g. "mean", "max", "min", etc.)
+    '''
+    
+    profile = []
+            
+    tiles = data_set.get_tiles(start_location,end_location,filename) 
+    
+    # assumes that the number of tiles is equal across all window functions
+    for tile_index in range(len(tiles)):
+        print "Tile: " + str( tile_index )
+        # TODO: compute correct start position (first tile_index is usually > 0)                    
+        location = []
+
+        tile = tiles[tile_index]
+        
+        print "Type: " + str( tile.type )
+        print ""
+        
+        if tile.type == TDFTile.Type.EMPTY:
+            location.append( int( tile_index * data_set.tile_width + 1 ) )
+            location.append( int( (tile_index+1) * data_set.tile_width ) )
+            location.append( 0 )
+            
+            profile.append(location)                    
+        else:
+            if tile.type == TDFTile.Type.VARIABLE_STEP:
+                # update location
+                # need check if start_location and locations[0] are the same for all window functions!
+                location.append( int( tile.start_location ) )
+                location.append( int( tile.start_locations[0] - 1 ) )
+                location.append( 0 )
+                profile.append(location)                    
+            
+            for location_index in range(len(tile.data[0])):                        
+                
+                if tile.type == TDFTile.Type.VARIABLE_STEP:
+                    location.append( int( tile.start_locations[location_index] ) )
+                    location.append( int( tile.start_locations[location_index] + tile.span ) )
+                    location.append( tile.data[0][location_index] )
+                                            
+                    if math.isnan(location[2]):
+                        location[2] = 0
+                elif tile.type == TDFTile.Type.FIXED_STEP:
+                    location.append( int( tile.start_location + math.floor(tile.span * location_index) ) )
+                    location.append( int( tile.start_location + math.floor(tile.span * (location_index + 1)) ) )
+                    location.append( tile.data[0][location_index] )
+
+                    if math.isnan(location[2]):
+                        location[2] = 0
+                
+                elif tile.type == TDFTile.Type.BED or tile.type == TDFTile.Type.BED_WITH_NAME:
+                    raise "BED TILE " + tile_index
+                else:
+                    raise "Unknown tile type in tile " + tile_index
+                
+                profile.append(location)
+                location = []
+                
+    return profile

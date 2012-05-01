@@ -161,6 +161,9 @@ AUTHENTICATION_BACKENDS = (
     'guardian.backends.ObjectPermissionBackend',
 )
 
+# NG: added to support sessions
+SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
+
 # NG: added to support anonymous users through django-guardian (id can be set to any value apparently)
 ANONYMOUS_USER_ID = -1
 
