@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block htmlhead %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v2.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/viewers/profile-viewer.js"></script>
+    <style type="text/css">
+      rect { fill: #fff; }
+      ul {
+        list-style-type: none;
+        margin: 0.5em 0em 0.5em 0em;
+        width: 100%; }
+        ul li {
+          display: table-cell;
+          vertical-align: middle;
+          margin: 0em;
+          padding: 0em 1em; }
+      .axis { font-size: 9pt; }
+      .chart {
+        width: 1000px;
+        height: 200px; }
+      circle, .line {
+        fill: none;
+        stroke: #000;
+        stroke-width: 1px; }
+      circle {
+        fill: white;
+        fill-opacity: 0.2;
+        cursor: move; }
+        circle.selected {
+          fill: #ff7f0e;
+          stroke: #ff7f0e; }
+        circle:hover {
+          fill: #ff7f0e;
+          stroke: #707f0e; }
+        circle.selected:hover {
+          fill: #ff7f0e;
+          stroke: #ff7f0e; }
+    </style>
+{% endblock %}
+
+{% block title %}
+
+{{ block.super }} - Profile Viewer
+{% endblock %}
+
+{% block subheader %}
+	Profile Viewer
+{% endblock %}
+
+{% block content %}
+    <div id="viewer" class="chart"></div>
+
+    <p>
+    	Sequence: {{ sequence_name  }}
+    </p>
+
+    <script type="text/javascript">
+      graph = new ProfileViewer("viewer", {
+      	  "base_url": "{{ hostname }}" + "/file_server/tdf",
+      	  "start_location": {{ start_location  }},
+      	  "end_location": {{ end_location  }},
+      	  "sequence_name": "{{ sequence_name }}",      	   
+      	  "uuid": "{{ uuid }}",      	   
+          "xmin": {{ start_location }}, "xmax": {{ end_location }},
+          "ymax": 40, "ymin": 0, 
+          "title": "",
+          "xlabel": "Coordinate",
+          "ylabel": "Signal"  
+        });
+    </script>
+{% endblock %}

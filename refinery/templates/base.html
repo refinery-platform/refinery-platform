@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="{{ STATIC_URL }}/style.css" />
-    <title>Refinery {% block title %}{% endblock %}</title>
+    <title>Refinery {% block title %}{% endblock %}</title>    
+    {% block htmlhead %}{% endblock %}
 </head>
 
 <body>
