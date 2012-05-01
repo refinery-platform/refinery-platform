@@ -48,6 +48,24 @@
     </ul>
 	<p>Count: {{ projects|length }}</p>
 {% endif %}
+{% if unassigned_analyses %}
+<h3>Unassigned Analyses</h3>
+    {% for analysis in unassigned_analyses.all %}
+        <li>{{  analysis.name }}: {{ analysis.summary }}
+        	<ul>
+				<li><i>Data Set</i>: {{ analysis.data_set.name }}
+				<li><i>Workflow</i>: {{ analysis.workflow.name }}
+					<ul>
+					    {% for map in analysis.workflow_data_input_maps.all %}
+					    	<li>{{ map }}</li>
+					    {% endfor %}						
+					</ul>
+				</li>				
+        	</ul>
+    	</li>
+    {% endfor %}	
+{% endif %}
+
 
 {% if workflow_engines %}
 	<h2>Workflow Engines ({{ workflow_engines|length }})</h2> 
