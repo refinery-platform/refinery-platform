@@ -228,7 +228,7 @@ class WorkflowDataInputMap( models.Model ):
     def __unicode__(self):
         return str( self.workflow_data_input_name ) + " <-> " + self.data_uuid
 
-class AnalysisResults (models.Model):
+class AnalysisResult (models.Model):
     analysis_uuid = UUIDField( auto=False )
     file_store_uuid = UUIDField( auto=False )
     file_name = models.TextField()
@@ -254,7 +254,7 @@ class Analysis ( OwnableResource ):
     history_id = models.TextField(blank=True, null=True)
     workflow_galaxy_id = models.TextField(blank=True, null=True)
     library_id = models.TextField(blank=True, null=True)
-    results = models.ManyToManyField(AnalysisResults, blank=True)    
+    results = models.ManyToManyField(AnalysisResult, blank=True)    
     
     def __unicode__(self):
         return self.name + " - " + self.summary

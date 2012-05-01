@@ -4,7 +4,7 @@ Created on Apr 5, 2012
 @author: nils
 '''
 
-from core.models import Analysis, AnalysisResults
+from core.models import Analysis, AnalysisResult
 from analysis_manager.models import AnalysisStatus
 from refinery_repository.models import Assay, RawData
 from celery.task import task
@@ -497,7 +497,7 @@ def download_history_files(analysis) :
                 filestore_uuid = create(download_url)
                 
                 # adding history files to django model 
-                temp_file = AnalysisResults(analysis_uuid=analysis.uuid, file_store_uuid=filestore_uuid, file_name=result_name, file_type=file_type)
+                temp_file = AnalysisResult(analysis_uuid=analysis.uuid, file_store_uuid=filestore_uuid, file_name=result_name, file_type=file_type)
                 temp_file.save() 
                 analysis.results.add(temp_file) 
                 analysis.save() 
