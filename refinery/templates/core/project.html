@@ -31,7 +31,8 @@
 	<p>Created: {{ project.creation_date }} | Last Modified: {{ project.modification_date }} </p>
 
 	<div class="label">UUID</div>
-	<p class="fixed">{{ project.uuid }}</p>		
+	<p class="fixed">{{ project.uuid }}</p>
+	<a href="/projects/{{ project.uuid }}/analyses/">Analyses</a>
 {% else %}
     <p>No valid project.</p>
 {% endif %}

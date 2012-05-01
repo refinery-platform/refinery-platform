@@ -42,7 +42,7 @@ def index(request):
     return render_to_response('core/index.html', {'users': users, 'projects': projects, 'unassigned_analyses': unassigned_analyses, 'workflow_engines': workflow_engines, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext( request ) )
 
 @login_required()
-def user(request,query):
+def user(request, query):
     
     try:
         user = User.objects.get( username=query )
@@ -55,7 +55,7 @@ def user(request,query):
     return render_to_response('core/user.html', {'user': user }, context_instance=RequestContext( request ) )
 
 
-def project(request,uuid):
+def project(request, uuid):
     project = get_object_or_404( Project, uuid=uuid )
     public_group = ExtendedGroup.objects.get( name__exact="Public")
     
@@ -67,7 +67,9 @@ def project(request,uuid):
             
     permissions = get_users_with_perms( project, attach_perms=True )
     
-    return render_to_response('core/project.html', { 'project': project, "permissions": permissions }, context_instance=RequestContext( request ) )
+    analyses = project.analysis_set.all()
+    
+    return render_to_response('core/project.html', { 'project': project, "permissions": permissions, "analyses": analyses }, context_instance=RequestContext( request ) )
 
 
 @login_required()
@@ -458,5 +460,34 @@ def admin_test_data( request ):
     return render_to_response( template, { "users": user_objects, "groups": group_objects, "projects": project_objects, "data_sets": data_set_objects, "workflow_engines": workflow_engine_objects }, context_instance=RequestContext( request ) )
 
 
+def analyses(request, project_uuid):
+    project = Project.objects.get(uuid=project_uuid)
+    
+    analyses = project.analysis_set.all()
+    
+    return render_to_response('core/analyses.html', 
+                              {"project": project, "analyses": analyses},
+                              context_instance=RequestContext(request)
+                              )
+
 def analysis_view(request, analysis_uuid):
     analysis = Analysis.objects.get(uuid=analysis_uuid)
+    
+    project = analysis.project
+    """Project associated with this Analysis"""
+    data_inputs = analysis.workflow_data_input_maps.order_by('pair_id')
+    """List of analysis inputs"""
+    analysis_results = analysis.results
+    """List of analysis results"""
+    workflow = analysis.workflow
+    
+    return render_to_response('core/analysis.html',
+                              {
+                               "analysis": analysis,
+                               "analysis_results": analysis_results,
+                               "inputs": data_inputs,
+                               "project": project,
+                               "workflow": workflow
+                               },
+                              context_instance=RequestContext(request)
+                              )

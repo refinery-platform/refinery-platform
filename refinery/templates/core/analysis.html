@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+<h1>{{analysis.name}}</h1>
+<ul>
+	<li><p>Workflow: {{workflow.name}}</p></li>
+	<li><p>{{workflow.summary}}</p></li>
+</ul>
+<h4>Inputs:</h4>
+{% for input in inputs %}
+<p>{{input.workflow_data_input_name}}</p>
+{% endfor %}
+<h4>Outputs:</h4>
+{% for result in analysis_results %}
+<p>{{result.file_name}}</p>
+{% endfor %}
+{% endblock %}
