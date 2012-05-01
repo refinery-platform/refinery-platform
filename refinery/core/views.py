@@ -470,7 +470,7 @@ def analyses(request, project_uuid):
                               context_instance=RequestContext(request)
                               )
 
-def analysis_view(request, analysis_uuid):
+def analysis(request, project_uuid, analysis_uuid ):
     analysis = Analysis.objects.get(uuid=analysis_uuid)
     
     project = analysis.project
