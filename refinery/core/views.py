@@ -67,7 +67,7 @@ def project(request, uuid):
             
     permissions = get_users_with_perms( project, attach_perms=True )
     
-    analyses = project.analysis_set.all()
+    analyses = project.analyses.all()
     
     return render_to_response('core/project.html', { 'project': project, "permissions": permissions, "analyses": analyses }, context_instance=RequestContext( request ) )
 
@@ -460,10 +460,10 @@ def admin_test_data( request ):
     return render_to_response( template, { "users": user_objects, "groups": group_objects, "projects": project_objects, "data_sets": data_set_objects, "workflow_engines": workflow_engine_objects }, context_instance=RequestContext( request ) )
 
 
-def analyses(request, project_uuid):
+def analyses(request, project_uuid ):
     project = Project.objects.get(uuid=project_uuid)
     
-    analyses = project.analysis_set.all()
+    analyses = project.analyses.all()
     
     return render_to_response('core/analyses.html', 
                               {"project": project, "analyses": analyses},
