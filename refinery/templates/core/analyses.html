@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% for analysis in analyses %}
+<a href="/projects/{{project.uuid}}/analyses/{{analysis.uuid}}/">{{analysis.name}}</a>
+{% endfor %}
+{% endblock %}
