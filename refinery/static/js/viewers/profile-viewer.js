@@ -16,6 +16,19 @@ ProfileViewer = function(elemid, options) {
   this.options.ymax = options.ymax || 10;
   this.options.ymin = options.ymin || 0;
   this.loading = false;
+  this.zoom_level_ranges = null;
+  
+  // retrieve zoom table for this sequence
+  d3.json( this.options.base_url + "/" + this.options.uuid + "/" + this.options.sequence_name + "/zoom_levels",
+  		function ( result ) {
+  			self.zoom_level_ranges = result;
+  			auto_zoom_level = self.get_auto_zoom_level();
+  			
+  			self.loading = true;
+  			d3.json( self.options.base_url + "/" + self.options.uuid + "/" + self.options.sequence_name + "/" + auto_zoom_level + "/" + Math.max( 1, self.options.start_location ) + "/" + self.options.end_location,
+  				function ( result ) { self.loading = false; self.update_points( self, result ); } );  			
+  			} );
+
 
   this.padding = {
      "top":    this.options.title  ? 40 : 20,
@@ -59,10 +72,6 @@ ProfileViewer = function(elemid, options) {
   
   this.points = []; // d3.range(datacount).map( function( i ) { return {}; }, self);
  
-  this.loading = true;
-  d3.json( this.options.base_url + "/" + this.options.uuid + "/" + this.options.sequence_name + "/" + this.options.zoom_level + "/" + Math.max( 1, this.options.start_location ) + "/" + this.options.end_location,
-  			function ( result ) { self.loading = false; self.update_points( self, result ); } );
-
   this.vis = d3.select(this.chart).append("svg")
       .attr("width",  this.cx)
       .attr("height", this.cy)
@@ -165,6 +174,31 @@ ProfileViewer.prototype.update_points = function ( instance, result ) {
 	// refresh the view
 	instance.redraw()();
 };
+
+
+ProfileViewer.prototype.get_auto_zoom_level = function ( instance ) {
+	//console.log( result );
+	var self = this;
+	
+	if ( self.zoom_level_ranges != null )
+	{
+		// compute current bp_per_unit from window size and plot width
+	    var window_in_bp = Math.ceil( self.x.domain()[1] ) - Math.floor( self.x.domain()[0] ); 
+		var bp_per_unit = window_in_bp/self.size.width; 
+		 		
+		for ( var zoom_level in self.zoom_level_ranges )
+		{
+			if ( ( bp_per_unit > self.zoom_level_ranges[zoom_level][0] ) && ( bp_per_unit < self.zoom_level_ranges[zoom_level][1] ) )
+			{
+				return zoom_level;
+			}
+		}
+	}
+	
+	return "z0"; 
+};
+
+
 
 ProfileViewer.prototype.plot_drag = function() {
   var self = this;
@@ -324,7 +358,6 @@ ProfileViewer.prototype.redraw = function() {
   var self = this;
   return function() {
     var tx = function(d) {
-   	  console.log( d ); 
       return "translate(" + self.x(d) + ",0)"; 
     },
     ty = function(d) { 
@@ -417,7 +450,7 @@ ProfileViewer.prototype.redraw = function() {
 	    	self.options.xmin = Math.floor( self.x.domain()[0] ); 
 	    	self.options.xmax = Math.ceil( self.x.domain()[1] ); 
 	
-		    d3.json( self.options.base_url + "/" + self.options.uuid + "/" + self.options.sequence_name + "/" + self.options.zoom_level + "/" + Math.max( 1, self.options.xmin ) + "/" + self.options.xmax,
+		    d3.json( self.options.base_url + "/" + self.options.uuid + "/" + self.options.sequence_name + "/" + self.get_auto_zoom_level() + "/" + Math.max( 1, self.options.xmin ) + "/" + self.options.xmax,
 	  			function ( result ) { self.loading = false; self.update_points( self, result ); } );
      	}
      	else {
