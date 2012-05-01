@@ -16,7 +16,7 @@
           padding: 0em 1em; }
       .axis { font-size: 9pt; }
       .chart {
-        width: 960px;
+        width: 1000px;
         height: 200px; }
       circle, .line {
         fill: none;
@@ -53,22 +53,12 @@
     <p>
     	Sequence: {{ sequence_name  }}
     </p>
-    <p>
-    	Start: {{ start_location  }}
-    </p>
-    <p>
-    	End: {{ end_location  }}
-    </p>
-    <p>
-    	Zoom Level: {{ zoom_level }}
-    </p>
-    
+
     <script type="text/javascript">
       graph = new ProfileViewer("viewer", {
       	  "base_url": "{{ hostname }}" + "/file_server/tdf",
       	  "start_location": {{ start_location  }},
       	  "end_location": {{ end_location  }},
-      	  "zoom_level": "{{ zoom_level }}",      	   
       	  "sequence_name": "{{ sequence_name }}",      	   
       	  "uuid": "{{ uuid }}",      	   
           "xmin": {{ start_location }}, "xmax": {{ end_location }},

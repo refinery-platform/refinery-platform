@@ -225,12 +225,43 @@ def get_tdf_profile( request, uuid, sequence_name, zoom_level, start_location, e
     
     print( "Profile Length: " + str( len( profile ) ) )
         
-    return HttpResponse( simplejson.dumps( profile ), mimetype='application/json' )     
+    return HttpResponse( simplejson.dumps( profile ), mimetype='application/json' )   
+
+        
+
+def get_zoom_levels( request, uuid, sequence_name ):
+    # TODO: support window functions, include raw
+    cache_tdf(request,uuid)
+    window_function = "mean"
+    
+    data_set_information = _get_tdf_data_set_information_from_cache( request.session, uuid )        
+    sorted_zoom_levels = sorted( data_set_information[sequence_name] )
+    
+    if sorted_zoom_levels[0] == "raw":
+        del sorted_zoom_levels[0] # assuming this is "raw"
+    
+    zoom_level_ranges = {}
+    
+    for i in range( len( sorted_zoom_levels ) ):
+        
+        zoom_level = sorted_zoom_levels[i]        
+        upper_bound = int( data_set_information[sequence_name][zoom_level][window_function]["tile_width"]/700.0 ) + 1
+        
+        if i < len( sorted_zoom_levels ) - 1: 
+            next_zoom_level = sorted_zoom_levels[i+1]
+            lower_bound = int( data_set_information[sequence_name][next_zoom_level][window_function]["tile_width"]/700.0 ) + 1 
+        else:
+            lower_bound = 0
+        
+        zoom_level_ranges[zoom_level] = [ lower_bound, upper_bound ]
+    
+    return HttpResponse( simplejson.dumps( zoom_level_ranges, sort_keys=True, indent=4 ), mimetype='application/json' )   
+    
 
 
-def profile_viewer( request, uuid, sequence_name, zoom_level, start_location, end_location ):
+def profile_viewer( request, uuid, sequence_name, start_location, end_location ):
         
     uri = request.build_absolute_uri()
     hostname = uri.split( request.get_full_path() )[0]
 
-    return render_to_response( 'file_server/profile_viewer.html', { "hostname": hostname, "uuid": uuid, "sequence_name": sequence_name, "zoom_level": zoom_level, "start_location": start_location, "end_location": end_location } , context_instance=RequestContext( request ) )
+    return render_to_response( 'file_server/profile_viewer.html', { "hostname": hostname, "uuid": uuid, "sequence_name": sequence_name, "start_location": start_location, "end_location": end_location } , context_instance=RequestContext( request ) )
