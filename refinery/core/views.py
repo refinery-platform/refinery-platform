@@ -457,3 +457,6 @@ def admin_test_data( request ):
     
     return render_to_response( template, { "users": user_objects, "groups": group_objects, "projects": project_objects, "data_sets": data_set_objects, "workflow_engines": workflow_engine_objects }, context_instance=RequestContext( request ) )
 
+
+def analysis_view(request, analysis_uuid):
+    analysis = Analysis.objects.get(uuid=analysis_uuid)

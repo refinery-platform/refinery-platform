@@ -267,6 +267,12 @@ def analysis_run(request):
     # Turn input from POST into ingestable data/exp format 
     # retrieving workflow based on input workflow_uuid
     annot_inputs = get_workflow_inputs(workflow_uuid)
+    len_inputs = len(set(annot_inputs))
+    
+    print "annot_inputs"
+    print annot_inputs
+    print "len_inputs"
+    print len_inputs
     
     #------------ CONFIGURE INPUT FILES -------------------------- #   
     ret_list = [];
@@ -279,19 +285,39 @@ def analysis_run(request):
         tcount += 1
         if tcount > 5000:
             break
+        
         for k, v in ret_item.iteritems():
+            #print "#######"
+            #print "k"
+            #print k
+            #print "v"
+            #print ret_item[k]
             for index, sd in enumerate(selected_data):
-                if k == sd["workflow_input_type"] and ret_item[k] is None:
+                if len_inputs > 1:
+                    if k == sd["workflow_input_type"] and ret_item[k] is None:
+                        ret_item[k] = {};
+                        ret_item[k]["assay_uuid"] = sd['assay_uuid']
+                        ret_item[k]["pair_id"] = pair
+                        pair_count += 1
+                        selected_data.remove(sd)
+                    if pair_count == 2:
+                        ret_list.append(ret_item)
+                        ret_item = copy.deepcopy(annot_inputs)
+                        pair_count = 0
+                        pair += 1
+                elif len_inputs == 1:            
+                    #print "--------"
+                    #print index
+                    #print sd
                     ret_item[k] = {};
                     ret_item[k]["assay_uuid"] = sd['assay_uuid']
                     ret_item[k]["pair_id"] = pair
-                    pair_count += 1
-                    selected_data.remove(sd)
-                if pair_count == 2:
                     ret_list.append(ret_item)
-                    ret_item = copy.deepcopy(annot_inputs)
-                    pair_count = 0
-                    pair += 1
+                    selected_data.remove(sd)
+                    pair += 1;
+    
+    #print 'ret_list'
+    #print ret_list
     
     # retrieving workflow based on input workflow_uuid
     curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
@@ -302,17 +328,23 @@ def analysis_run(request):
     projects = Project.objects.all()
     data_sets = DataSet.objects.all()
     
-    project = Project(name="Test Project: " + str( datetime.now() )) 
-    project.save()
+    # gets user from url request
+    #cur_user = request.user
+    #cur_user.get_profile().catch_all_project
+    #project = 
+    #project = Project(name="Test Project: " + str( datetime.now() )) 
+    #project.save()
     
     data_set = DataSet(name="Test Project: " + str( datetime.now() )) 
     data_set.save()
     
+    
+    
     ######### ANALYSIS MODEL ########
     # How to create a simple analysis object
-    analysis = Analysis( summary="Adhoc test analysis: " + str( datetime.now()), project=project, data_set=data_set, workflow=curr_workflow )
+    analysis = Analysis( summary="Adhoc test analysis: " + str( datetime.now()), project=request.user.get_profile().catch_all_project, data_set=data_set, workflow=curr_workflow )
     analysis.save()   
-            
+    
     # gets galaxy internal id for specified workflow
     workflow_galaxy_id = curr_workflow.internal_id
     
