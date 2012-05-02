@@ -8,6 +8,8 @@
  * Designed and built with all the love in the world @twitter by @mdo and @fat.
  */
 
+@import url(http://fonts.googleapis.com/css?family=Arvo:700,400italic,700italic,400);
+
 article,
 aside,
 details,
@@ -3599,9 +3601,11 @@ input[type="submit"].btn.btn-mini {
   padding: 8px 20px 12px;
   margin-left: -20px;
   font-size: 20px;
-  font-weight: 200;
+  font-weight: 700;
+  font-style: italic;
   line-height: 1;
   color: #999999;
+  font-family: "Arvo", "Lucida Grande", Lucida, Verdana, sans-serif;
 }
 
 .navbar .navbar-text {
