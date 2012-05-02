@@ -3,16 +3,25 @@
 
 {% block content %}
 <h1>{{analysis.name}}</h1>
+<p>{{analysis.summary}}</p>
 <ul>
 	<li><p>Workflow: {{workflow.name}}</p></li>
 	<li><p>{{workflow.summary}}</p></li>
 </ul>
 <h4>Inputs:</h4>
-{% for input in inputs %}
-<p>{{input.workflow_data_input_name}}</p>
+<ul>
+{% for input in inputs.all %}
+	<li><p>{{input.workflow_data_input_name}}</p></li>
+	<li><p>{{input.data_uuid}}</p></li>
+	<li><p>{{input.pair_id}}</p></li>
 {% endfor %}
+</ul>
 <h4>Outputs:</h4>
+<ul>
 {% for result in analysis_results.all %}
-<p>{{result.file_name}}</p>
+	<li><p>{{result.file_name}}</p></li>
+	<li><p>{{result.file_type}}</p></li>
+	<li><p>{{result.file_store_uuid}}</p></li>
 {% endfor %}
+</ul>
 {% endblock %}
