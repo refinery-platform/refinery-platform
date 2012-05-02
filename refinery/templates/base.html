@@ -1,39 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="{{ STATIC_URL }}/style.css" />
-    <title>Refinery {% block title %}{% endblock %}</title>    
-    {% block htmlhead %}{% endblock %}
+    <!-- Le styles -->
+    <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/jquery-1.7.js"></script>
+    
+    <link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}js/datatables/css/DT_bootstrap.css" rel="stylesheet">
+    
+    
+    <!-- <link rel="stylesheet" href="{{ STATIC_URL }}js/bootstrap/css/style.css"> -->
+    <link rel="stylesheet" href="{{ STATIC_URL }}core/boot_style.css">
+    
+    <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap.js"></script>
+    <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/jquery.dataTables.js"></script>		
+    <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/DT_bootstrap.js"></script>		
+    <script language="javascript" type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+	
+	
+    
+    {% block head_html %}{% endblock %}
+    <title>Refinery {% block title %}{% endblock %}</title>
+    
 </head>
 
 <body>
-	<div id="auth_area">
-        {% block authentication %}        
-		{% if user.is_authenticated %}       
-        	{{ user.get_full_name }} | <a href="/users/{{user.username}}">Profile</a> | <a href="{% url django.contrib.auth.views.logout %}">Logout</a>
-        {% else %}
-			<a href="{% url django.contrib.auth.views.login %}?next={% firstof request.path '/' %}">Login</a>
-        {% endif %}		
-        {% endblock %}
-	</div>
 	
-    <div id="header_area">
-		<h1><a href="/">Refinery</a></h1>		
+	<!-- header navigation bar -->
+	<div class="navbar navbar-fixed-top">
+      <div class="navbar-inner header_bkgd">
+        <div class="container-fluid">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="/">Refinery</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a>Home</a></li>
+              <li><a >About</a></li>
+              <li><a>Contact</a></li>
+            </ul>
+              <div id="auth_area">
+              <p class="navbar-text pull-right">
+              	<!-- <Logged in as <a href="#">username</a> -->
+              		{% block authentication %}        
+					{% if user.is_authenticated %}       
+        				{{ user.get_full_name }} | <a href="/users/{{user.username}}">Profile</a> | <a href="{% url django.contrib.auth.views.logout %}">Logout</a>
+        			{% else %}
+						<a href="{% url django.contrib.auth.views.login %}?next={% firstof request.path '/' %}">Login</a>
+        			{% endif %}		
+        			{% endblock %}
+              </p>
+            </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
     </div>
-    <div id="subheader_area">
-        <h3>{% block subheader %}{% endblock %}</h3>
+	
+	
+	<div class="container-fluid"> 
+		<div class="row-fluid">
+   		<div id="subheader well">
+	        <h2>{% block subheader %}{% endblock %}</h2>
+	    </div>
     </div>
-    <div id="navigation_area">
+		{% block content %}{% endblock %}
+    
+
+    
+    <!--
+    <div id="navigation">
         {% block navigation %}        
         {% endblock %}
     </div>
-
-    <div id="content_area">
-        {% block content %}{% endblock %}
+-->
+    	<div class="row-fluid">
+    		<div class="span12">
+    			<div id="content">	
+        			
+        		</div>
+        	</div>
+       </div>
+    
+    <div id="footer">
+        <small>Copyright &copy; 2012 Park Lab | Center for Biomedical Informatics at Harvard Medical School. All rights reserved.</small>
     </div>
     
-    <div id="footer_area">
-        Copyright &copy; 2012 Park Lab | Center for Biomedical Informatics at Harvard Medical School. All rights reserved.
     </div>
+    
 </body>
 </html>
