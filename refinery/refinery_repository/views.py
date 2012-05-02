@@ -330,7 +330,9 @@ def analysis_run(request):
     
     ######### ANALYSIS MODEL ########
     # How to create a simple analysis object
-    analysis = Analysis( summary="Adhoc test analysis: " + str( datetime.now()), project=request.user.get_profile().catch_all_project, data_set=data_set, workflow=curr_workflow )
+    temp_name = "Adhoc test analysis: " + str( datetime.now())
+    summary_name = "Test Summary"
+    analysis = Analysis( summary=summary_name, name=temp_name, project=request.user.get_profile().catch_all_project, data_set=data_set, workflow=curr_workflow )
     analysis.save()   
     
     # gets galaxy internal id for specified workflow
