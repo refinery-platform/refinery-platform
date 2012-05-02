@@ -10,6 +10,9 @@
 
 body {
 	padding-top: 50px; 
+	background-image: url(../js/bootstrap/img/grid-18px-masked.png);
+  	background-repeat: repeat-x repeat-y;
+  	background-position: 0 40px;
 	/* background: -webkit-gradient(radial, 45 45, 50, 50 10, 640, from(#ffffff), to(#EEE)) !important; */
 /*
 background:
