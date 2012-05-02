@@ -11,6 +11,7 @@ urlpatterns = patterns('',
     #links in core urls
     url(r'^', include('core.urls')),
 
+    url(r'^annotation_server/', include('annotation_server.urls')),
     url(r'^workflow_manager/', include('workflow_manager.urls')),
     url(r'^analysis_manager/', include('analysis_manager.urls')),
     url(r'^file_server/', include('file_server.urls')),
