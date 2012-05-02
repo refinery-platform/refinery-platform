@@ -3601,11 +3601,12 @@ input[type="submit"].btn.btn-mini {
   padding: 8px 20px 12px;
   margin-left: -20px;
   font-size: 20px;
-  font-weight: 700;
+  font-weight: bold;
   font-style: italic;
   line-height: 1;
   color: #999999;
   font-family: "Arvo", "Lucida Grande", Lucida, Verdana, sans-serif;
+  letter-spacing: 1px;
 }
 
 .navbar .navbar-text {
