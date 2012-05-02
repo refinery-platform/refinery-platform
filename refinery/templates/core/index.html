@@ -57,7 +57,7 @@
 	{% for analysis in unassigned_analyses.all %}
 	    <tr>
 	    	<td colspan="2">
-	    		<i class="icon-empty"></i> <a href="projects/{{ project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> - {{analysis.summary}}
+	    		<i class="icon-empty"></i> <a href="projects/{{ project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }} - {{analysis.summary}}</a>
 	    	</td>
 	    </tr>
 	{% endfor %}	
