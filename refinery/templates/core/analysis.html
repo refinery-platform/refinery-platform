@@ -1,27 +1,32 @@
 {% extends "base.html" %}
 
+{% block title %}
+{{ block.super }} - Analysis {{ analysis.name }}
+{% endblock %}
+
+{% block subheader %}
+ Analysis: <i>{{ analysis.name }}</i>
+{% endblock %}
 
 {% block content %}
-<h1>{{analysis.name}}</h1>
+<div class="label">Summary</div>
 <p>{{analysis.summary}}</p>
-<ul>
-	<li><p>Workflow: {{workflow.name}}</p></li>
-	<li><p>{{workflow.summary}}</p></li>
-</ul>
-<h4>Inputs:</h4>
+
+<div class="label">Workflow - {{workflow.name}}</div>
+
+
+<div class="label">Analysis Inputs</div>
 <ul>
 {% for input in inputs.all %}
-	<li><p>{{input.workflow_data_input_name}}</p></li>
-	<li><p>{{input.data_uuid}}</p></li>
-	<li><p>{{input.pair_id}}</p></li>
+	<li><p>Workflow Input Name: {{input.workflow_data_input_name}}</p></li>
 {% endfor %}
 </ul>
-<h4>Outputs:</h4>
+
+<div class="label">Analysis Outputs</div>
 <ul>
 {% for result in analysis_results.all %}
 	<li><p>{{result.file_name}}</p></li>
 	<li><p>{{result.file_type}}</p></li>
-	<li><p>{{result.file_store_uuid}}</p></li>
 {% endfor %}
 </ul>
 {% endblock %}
