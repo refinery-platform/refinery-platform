@@ -30,6 +30,16 @@
         }
     },
     {
+        "pk": 3,
+        "model": "refinery_repository.studydesigndescriptor",
+        "fields": {
+            "study_design_type_term_accession_number": "",
+            "study_design_type_term_source_ref": "",
+            "investigation": "simple_test1",
+            "study_design_type": "ChIP-seq by high throughput sequencing"
+        }
+    },
+    {
         "pk": 1,
         "model": "refinery_repository.studyfactor",
         "fields": {
@@ -137,6 +147,17 @@
             "investigation": "E-GEOD-16013",
             "study_factor_type_term_source_ref": null,
             "study_factor_type": "antibody"
+        }
+    },
+    {
+        "pk": 11,
+        "model": "refinery_repository.studyfactor",
+        "fields": {
+            "study_factor_type_term_accession_number": "",
+            "study_factor_name": "chip antibody",
+            "investigation": "simple_test1",
+            "study_factor_type_term_source_ref": "",
+            "study_factor_type": "chip antibody"
         }
     },
     {
@@ -2610,6 +2631,227 @@
         }
     },
     {
+        "pk": "P-GSE18588-1",
+        "model": "refinery_repository.protocol",
+        "fields": {
+            "study_protocol_parameters_name": "",
+            "study_protocol_components_type_term_source_ref": "",
+            "study_protocol_type_term_source_ref": "",
+            "study_protocol_version": "",
+            "study_protocol_uri": "",
+            "study_protocol_parameters_name_term_source_ref": "",
+            "study_protocol_components_type_term_accession_number": "",
+            "study_protocol_type_term_accession_number": "",
+            "study_protocol_components_type": "",
+            "study_protocol_description": "n/a",
+            "study_protocol_components_name": "",
+            "study_protocol_type": "specified_biomaterial_action",
+            "study_protocol_parameters_name_term_accession_number": ""
+        }
+    },
+    {
+        "pk": "P-GSE18588-3",
+        "model": "refinery_repository.protocol",
+        "fields": {
+            "study_protocol_parameters_name": "",
+            "study_protocol_components_type_term_source_ref": "",
+            "study_protocol_type_term_source_ref": "",
+            "study_protocol_version": "",
+            "study_protocol_uri": "",
+            "study_protocol_parameters_name_term_source_ref": "",
+            "study_protocol_components_type_term_accession_number": "",
+            "study_protocol_type_term_accession_number": "",
+            "study_protocol_components_type": "",
+            "study_protocol_description": "Chromatin Immunoprecipitation was performed with a KDM2A-specific antibody.  ChIP DNA was prepared for Illumina Genome Analyzer II sequencing using by blunting the DNA with a mixture of T4 DNA polymerase, Klenow DNA polymerase, and T4 PNK (NEB) according to manufacturer's instruction. dA overhangs were then added and Illumina adapters ligated. Adapter-ligated DNA was subject to 18 cycles of PCR before size selection by agarose gel electrophoresis. Amplified DNA was purified using the Qiaquick gel extraction kit (Qiagen). The purified DNA was quantified both with an Agilent Bioanalyzer and Invitrogen Qubit and diluted to a working concentration of 10 nM prior sequencing. Sequencing on a Illumina Genome Analyzer II instrument was carried out according to the manufacturer's instructions.",
+            "study_protocol_components_name": "",
+            "study_protocol_type": "nucleic_acid_extraction",
+            "study_protocol_parameters_name_term_accession_number": ""
+        }
+    },
+    {
+        "pk": "P-GSE18588-2",
+        "model": "refinery_repository.protocol",
+        "fields": {
+            "study_protocol_parameters_name": "",
+            "study_protocol_components_type_term_source_ref": "",
+            "study_protocol_type_term_source_ref": "",
+            "study_protocol_version": "",
+            "study_protocol_uri": "",
+            "study_protocol_parameters_name_term_source_ref": "",
+            "study_protocol_components_type_term_accession_number": "",
+            "study_protocol_type_term_accession_number": "",
+            "study_protocol_components_type": "",
+            "study_protocol_description": "Murine V6.5 ES cells (C57BL/6(F) x 129/sv(M)) were cultured on inactivated MEFs in DMEM supplemented with 15% FCS, leukemia-inhibiting factor, penicillin/streptomycin, L-glutamine and non-essential amino-acids.  Prior to use in ChIP experiments, V6.5 cells were cultured for two passages under feeder-free conditions on 0.2% gelatin",
+            "study_protocol_components_name": "",
+            "study_protocol_type": "grow",
+            "study_protocol_parameters_name_term_accession_number": ""
+        }
+    },
+    {
+        "pk": "P-GSE18588-5",
+        "model": "refinery_repository.protocol",
+        "fields": {
+            "study_protocol_parameters_name": "",
+            "study_protocol_components_type_term_source_ref": "",
+            "study_protocol_type_term_source_ref": "",
+            "study_protocol_version": "",
+            "study_protocol_uri": "",
+            "study_protocol_parameters_name_term_source_ref": "",
+            "study_protocol_components_type_term_accession_number": "",
+            "study_protocol_type_term_accession_number": "",
+            "study_protocol_components_type": "",
+            "study_protocol_description": "",
+            "study_protocol_components_name": "",
+            "study_protocol_type": "feature_extraction",
+            "study_protocol_parameters_name_term_accession_number": ""
+        }
+    },
+    {
+        "pk": "P-GSE18588-9",
+        "model": "refinery_repository.protocol",
+        "fields": {
+            "study_protocol_parameters_name": "",
+            "study_protocol_components_type_term_source_ref": "",
+            "study_protocol_type_term_source_ref": "",
+            "study_protocol_version": "",
+            "study_protocol_uri": "",
+            "study_protocol_parameters_name_term_source_ref": "",
+            "study_protocol_components_type_term_accession_number": "",
+            "study_protocol_type_term_accession_number": "",
+            "study_protocol_components_type": "",
+            "study_protocol_description": "<chromosome> <strand> <coordinate> <read count in the library>",
+            "study_protocol_components_name": "",
+            "study_protocol_type": "feature_extraction",
+            "study_protocol_parameters_name_term_accession_number": ""
+        }
+    },
+    {
+        "pk": "P-GSE18588-8",
+        "model": "refinery_repository.protocol",
+        "fields": {
+            "study_protocol_parameters_name": "",
+            "study_protocol_components_type_term_source_ref": "",
+            "study_protocol_type_term_source_ref": "",
+            "study_protocol_version": "",
+            "study_protocol_uri": "",
+            "study_protocol_parameters_name_term_source_ref": "",
+            "study_protocol_components_type_term_accession_number": "",
+            "study_protocol_type_term_accession_number": "",
+            "study_protocol_components_type": "",
+            "study_protocol_description": "The format of these files is as follows:",
+            "study_protocol_components_name": "",
+            "study_protocol_type": "feature_extraction",
+            "study_protocol_parameters_name_term_accession_number": ""
+        }
+    },
+    {
+        "pk": "P-GSE18588-7",
+        "model": "refinery_repository.protocol",
+        "fields": {
+            "study_protocol_parameters_name": "",
+            "study_protocol_components_type_term_source_ref": "",
+            "study_protocol_type_term_source_ref": "",
+            "study_protocol_version": "",
+            "study_protocol_uri": "",
+            "study_protocol_parameters_name_term_source_ref": "",
+            "study_protocol_components_type_term_accession_number": "",
+            "study_protocol_type_term_accession_number": "",
+            "study_protocol_components_type": "",
+            "study_protocol_description": "The tab files (input.tab and kdm2a.tab) list Solexa read coordinates for the input and IP samples used in ChIP-Seq experiment.",
+            "study_protocol_components_name": "",
+            "study_protocol_type": "feature_extraction",
+            "study_protocol_parameters_name_term_accession_number": ""
+        }
+    },
+    {
+        "pk": "P-GSE18588-6",
+        "model": "refinery_repository.protocol",
+        "fields": {
+            "study_protocol_parameters_name": "",
+            "study_protocol_components_type_term_source_ref": "",
+            "study_protocol_type_term_source_ref": "",
+            "study_protocol_version": "",
+            "study_protocol_uri": "",
+            "study_protocol_parameters_name_term_source_ref": "",
+            "study_protocol_components_type_term_accession_number": "",
+            "study_protocol_type_term_accession_number": "",
+            "study_protocol_components_type": "",
+            "study_protocol_description": "The tab files (processed data) provide information about binding of lysine demethylase enzyme KDM2A in mouse embryonic stem cells.",
+            "study_protocol_components_name": "",
+            "study_protocol_type": "feature_extraction",
+            "study_protocol_parameters_name_term_accession_number": ""
+        }
+    },
+    {
+        "pk": "P-GSE18588-4",
+        "model": "refinery_repository.protocol",
+        "fields": {
+            "study_protocol_parameters_name": "",
+            "study_protocol_components_type_term_source_ref": "",
+            "study_protocol_type_term_source_ref": "",
+            "study_protocol_version": "",
+            "study_protocol_uri": "",
+            "study_protocol_parameters_name_term_source_ref": "",
+            "study_protocol_components_type_term_accession_number": "",
+            "study_protocol_type_term_accession_number": "",
+            "study_protocol_components_type": "",
+            "study_protocol_description": "Sequenced tags of 51 bp in length were mapped to the mouse genome (build mm9) using Bowtie aligner. Only uniquely mapped tags with no more than two mismatches in the first 28 base pairs of the read were retained. Positions in genome with the numbers of mapped tags above the significance threshold defined by a Z-score of 7 were identified as anomalous, potentially resulting from amplification bias, and the tags mapped to those positions were discarded. The tag frequency at each genome position was calculated separately for DNA positive and negative strands.",
+            "study_protocol_components_name": "",
+            "study_protocol_type": "feature_extraction",
+            "study_protocol_parameters_name_term_accession_number": ""
+        }
+    },
+    {
+        "pk": "GSM462291 LE 1",
+        "model": "refinery_repository.protocol",
+        "fields": {
+            "study_protocol_parameters_name": null,
+            "study_protocol_components_type_term_source_ref": null,
+            "study_protocol_type_term_source_ref": null,
+            "study_protocol_version": null,
+            "study_protocol_uri": null,
+            "study_protocol_parameters_name_term_source_ref": null,
+            "study_protocol_components_type_term_accession_number": null,
+            "study_protocol_type_term_accession_number": null,
+            "study_protocol_components_type": null,
+            "study_protocol_description": null,
+            "study_protocol_components_name": null,
+            "study_protocol_type": null,
+            "study_protocol_parameters_name_term_accession_number": null
+        }
+    },
+    {
+        "pk": "GSM462292 LE 1",
+        "model": "refinery_repository.protocol",
+        "fields": {
+            "study_protocol_parameters_name": null,
+            "study_protocol_components_type_term_source_ref": null,
+            "study_protocol_type_term_source_ref": null,
+            "study_protocol_version": null,
+            "study_protocol_uri": null,
+            "study_protocol_parameters_name_term_source_ref": null,
+            "study_protocol_components_type_term_accession_number": null,
+            "study_protocol_type_term_accession_number": null,
+            "study_protocol_components_type": null,
+            "study_protocol_description": null,
+            "study_protocol_components_name": null,
+            "study_protocol_type": null,
+            "study_protocol_parameters_name_term_accession_number": null
+        }
+    },
+    {
+        "pk": 20417597,
+        "model": "refinery_repository.publication",
+        "fields": {
+            "study_publication_author_list": "Blackledge NP, Zhou JC, Tolstorukov MY, Farcas AM, Park PJ, Klose RJ",
+            "study_publication_status": "",
+            "study_publication_status_term_source_ref": "",
+            "study_publication_title": "CpG islands recruit a histone H3 lysine 36 demethylase.",
+            "study_publication_status_term_accession_number": "",
+            "study_publication_doi": ""
+        }
+    },
+    {
         "pk": "E-GEOD-16013",
         "model": "refinery_repository.investigation",
         "fields": {
@@ -2651,6 +2893,42 @@
         }
     },
     {
+        "pk": "simple_test1",
+        "model": "refinery_repository.investigation",
+        "fields": {
+            "protocols": [
+                "P-GSE18588-1",
+                "P-GSE18588-3",
+                "P-GSE18588-2",
+                "P-GSE18588-5",
+                "P-GSE18588-9",
+                "P-GSE18588-8",
+                "P-GSE18588-7",
+                "P-GSE18588-6",
+                "P-GSE18588-4"
+            ],
+            "investigation_identifier": "",
+            "publications": [
+                20417597
+            ],
+            "investigation_description": "",
+            "study_description": "Eukaryotic gene expression profiles are largely defined by transcription factors that recognize specific DNA sequences in gene regulatory regions and impact RNA polymerase recruitment and transcription. In addition to specific core promoter regulatory elements, up to 70% of genes in higher eukaryotes are also characterized by an overrepresentation of cytosine/guanine base pairs (CpGs) surrounding promoters and gene regulatory units.  These features, called CpG islands, were identified over twenty years ago but there remains little mechanistic evidence to suggest how these enigmatic elements contribute to promoter function, with the exception that they are refractory to epigenetic silencing by DNA methylation. Here we uncover a role for CpG islands in buffering gene regulatory elements from repressive histone H3 lysine 36 methylation by directly recruiting the H3K36 specific lysine demethylase enzyme KDM2A. KDM2A is recruited to CpG islands by a zinc finger CxxC (ZF-CxxC) domain that specifically recognizes CpG DNA and is blocked by DNA methylation. This capacity to sense the epigenetic methylation state of DNA constrains KDM2A to non-methylated CpG islands. Importantly, these observations suggest CpG islands may function to delineate gene regulatory elements from bulk chromatin by recruiting factors that create unique chromatin architecture. This study provides information about binding of lysine demethylase enzyme KDM2A in mouse embryonic stem cells.",
+            "pre_isatab_file": "",
+            "investigation_title": "",
+            "investigation_public_release_date": null,
+            "ontologies": [
+                1
+            ],
+            "isatab_file": "/Users/psalmhaseley/Documents/isa-tab/cnvrt/ultimate_example/ultimate_example.zip",
+            "study_submission_date": null,
+            "study_file_name": "s_ultimate_example.txt",
+            "study_title": "CpG islands recruit a histone H3 lysine 36 demethylase [Illumina sequencing data]",
+            "investigation_submission_date": null,
+            "investigation_uuid": "0285f380-9466-11e1-8d39-70cd60f26e14",
+            "study_public_release_date": null
+        }
+    },
+    {
         "pk": 1,
         "model": "refinery_repository.studyassay",
         "fields": {
@@ -2663,6 +2941,21 @@
             "investigation": "E-GEOD-16013",
             "study_assay_technology_type_term_source_ref": null,
             "study_assay_measurement_type_term_source_ref": null
+        }
+    },
+    {
+        "pk": 2,
+        "model": "refinery_repository.studyassay",
+        "fields": {
+            "study_assay_technology_type": "nucleotide sequencing",
+            "study_assay_technology_platform": "",
+            "study_assay_measurement_type_term_accession_number": "",
+            "study_assay_file_name": "a_ultimate_example.txt",
+            "study_assay_measurement_type": "protein-DNA binding site identification",
+            "study_assay_technology_type_term_accession_number": "",
+            "investigation": "simple_test1",
+            "study_assay_technology_type_term_source_ref": "",
+            "study_assay_measurement_type_term_source_ref": ""
         }
     },
     {
@@ -2681,6 +2974,25 @@
             "study_person_fax": "",
             "study_person_roles_term_accession_number": "",
             "study_person_affiliation": "The University of Chicago",
+            "study_person_roles": "submitter"
+        }
+    },
+    {
+        "pk": "peter_park@harvard.edu",
+        "model": "refinery_repository.investigator",
+        "fields": {
+            "study_person_roles_term_source_ref": null,
+            "study_person_address": "Center for Biomedical Informatics, Harvard Medical School, 10 Shattuck St, Boston, MA, USA",
+            "study_person_mid_initials": "J",
+            "investigations": [
+                "simple_test1"
+            ],
+            "study_person_phone": "617-432-7373",
+            "study_person_first_name": "Peter",
+            "study_person_last_name": "Park",
+            "study_person_fax": "617-432-0693",
+            "study_person_roles_term_accession_number": "",
+            "study_person_affiliation": "Harvard Medical School",
             "study_person_roles": "submitter"
         }
     },
@@ -4887,6 +5199,44 @@
                 "P-GSE16013-8"
             ],
             "description": null
+        }
+    },
+    {
+        "pk": "GSM462291 1",
+        "model": "refinery_repository.study",
+        "fields": {
+            "sample_name": "GSM462291 extract 1",
+            "material_type": null,
+            "investigation": "simple_test1",
+            "material_type_term_source_ref": null,
+            "provider": "la",
+            "study_uuid": "028fdc21-9466-11e1-bab1-70cd60f26e14",
+            "material_type_term_accession_number": null,
+            "protocols": [
+                "P-GSE18588-1",
+                "P-GSE18588-3",
+                "P-GSE18588-2"
+            ],
+            "description": "la"
+        }
+    },
+    {
+        "pk": "GSM462292 1",
+        "model": "refinery_repository.study",
+        "fields": {
+            "sample_name": "GSM462292 extract 1",
+            "material_type": null,
+            "investigation": "simple_test1",
+            "material_type_term_source_ref": null,
+            "provider": "la",
+            "study_uuid": "0290281c-9466-11e1-8865-70cd60f26e14",
+            "material_type_term_accession_number": null,
+            "protocols": [
+                "P-GSE18588-1",
+                "P-GSE18588-3",
+                "P-GSE18588-2"
+            ],
+            "description": "la"
         }
     },
     {
@@ -30030,6 +30380,286 @@
         }
     },
     {
+        "pk": 1258,
+        "model": "refinery_repository.studybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "study": "GSM462291 1",
+            "value": "Chromatin IP against KDM2A",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "protocol": null,
+            "node_name": "Source Name",
+            "type": "comment",
+            "sub_type": "SAMPLE_DESCRIPTION",
+            "unit": null
+        }
+    },
+    {
+        "pk": 1259,
+        "model": "refinery_repository.studybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "study": "GSM462291 1",
+            "value": "Embryonic stem cells",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "protocol": null,
+            "node_name": "Source Name",
+            "type": "comment",
+            "sub_type": "SAMPLE_SOURCE_NAME",
+            "unit": null
+        }
+    },
+    {
+        "pk": 1260,
+        "model": "refinery_repository.studybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "study": "GSM462291 1",
+            "value": "KDM2A",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "protocol": null,
+            "node_name": "Source Name",
+            "type": "characteristics",
+            "sub_type": "CHIP_ANTIBODY",
+            "unit": null
+        }
+    },
+    {
+        "pk": 1261,
+        "model": "refinery_repository.studybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "study": "GSM462291 1",
+            "value": "V6.5 embryonic stem cells",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "protocol": null,
+            "node_name": "Source Name",
+            "type": "characteristics",
+            "sub_type": "CELL_TYPE",
+            "unit": null
+        }
+    },
+    {
+        "pk": 1262,
+        "model": "refinery_repository.studybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "performer": null,
+            "term_accession_number": "http://purl.org/obo/owl/NCBITaxon#NCBITaxon_10090",
+            "term_source_ref": "EFO",
+            "study": "GSM462291 1",
+            "value": "Mus musculus",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "protocol": null,
+            "node_name": "Source Name",
+            "type": "characteristics",
+            "sub_type": "ORGANISM",
+            "unit": null
+        }
+    },
+    {
+        "pk": 1263,
+        "model": "refinery_repository.studybracketedfield",
+        "fields": {
+            "unit_term_accession_number": "4",
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "study": "GSM462291 1",
+            "value": "C57BL/6",
+            "node_index": 0,
+            "unit_term_source_ref": "4",
+            "date": null,
+            "protocol": null,
+            "node_name": "Source Name",
+            "type": "characteristics",
+            "sub_type": "STRAIN",
+            "unit": "4"
+        }
+    },
+    {
+        "pk": 1264,
+        "model": "refinery_repository.studybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "study": "GSM462291 1",
+            "value": "Illumina Genome Analyzer II (Mus musculus)",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "protocol": "P-GSE18588-1",
+            "node_name": "Source Name",
+            "type": "parameter_value",
+            "sub_type": "SEQUENCING_INSTRUMENT",
+            "unit": "v2"
+        }
+    },
+    {
+        "pk": 1265,
+        "model": "refinery_repository.studybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "study": "GSM462292 1",
+            "value": "input DNA",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "protocol": null,
+            "node_name": "Source Name",
+            "type": "comment",
+            "sub_type": "SAMPLE_DESCRIPTION",
+            "unit": null
+        }
+    },
+    {
+        "pk": 1266,
+        "model": "refinery_repository.studybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "study": "GSM462292 1",
+            "value": "Embryonic stem cells",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "protocol": null,
+            "node_name": "Source Name",
+            "type": "comment",
+            "sub_type": "SAMPLE_SOURCE_NAME",
+            "unit": null
+        }
+    },
+    {
+        "pk": 1267,
+        "model": "refinery_repository.studybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "study": "GSM462292 1",
+            "value": "none",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "protocol": null,
+            "node_name": "Source Name",
+            "type": "characteristics",
+            "sub_type": "CHIP_ANTIBODY",
+            "unit": null
+        }
+    },
+    {
+        "pk": 1268,
+        "model": "refinery_repository.studybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "study": "GSM462292 1",
+            "value": "V6.5 embryonic stem cells",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "protocol": null,
+            "node_name": "Source Name",
+            "type": "characteristics",
+            "sub_type": "CELL_TYPE",
+            "unit": null
+        }
+    },
+    {
+        "pk": 1269,
+        "model": "refinery_repository.studybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "performer": null,
+            "term_accession_number": "http://purl.org/obo/owl/NCBITaxon#NCBITaxon_10090",
+            "term_source_ref": "EFO",
+            "study": "GSM462292 1",
+            "value": "Mus musculus",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "protocol": null,
+            "node_name": "Source Name",
+            "type": "characteristics",
+            "sub_type": "ORGANISM",
+            "unit": null
+        }
+    },
+    {
+        "pk": 1270,
+        "model": "refinery_repository.studybracketedfield",
+        "fields": {
+            "unit_term_accession_number": "4",
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "study": "GSM462292 1",
+            "value": "C57BL/6",
+            "node_index": 0,
+            "unit_term_source_ref": "4",
+            "date": null,
+            "protocol": null,
+            "node_name": "Source Name",
+            "type": "characteristics",
+            "sub_type": "STRAIN",
+            "unit": "4"
+        }
+    },
+    {
+        "pk": 1271,
+        "model": "refinery_repository.studybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "study": "GSM462292 1",
+            "value": "Illumina Genome Analyzer II (Mus musculus)",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "protocol": "P-GSE18588-1",
+            "node_name": "Source Name",
+            "type": "parameter_value",
+            "sub_type": "SEQUENCING_INSTRUMENT",
+            "unit": "v2"
+        }
+    },
+    {
         "pk": 1,
         "model": "refinery_repository.rawdata",
         "fields": {
@@ -31857,6 +32487,24 @@
         }
     },
     {
+        "pk": 204,
+        "model": "refinery_repository.rawdata",
+        "fields": {
+            "file_name": "E-GEOD-18588.idf.txt",
+            "raw_data_file": "http://www.ebi.ac.uk/arrayexpress/files/E-GEOD-18588/E-GEOD-18588.idf.txt",
+            "rawdata_uuid": "030ec3c0-9466-11e1-8506-70cd60f26e14"
+        }
+    },
+    {
+        "pk": 205,
+        "model": "refinery_repository.rawdata",
+        "fields": {
+            "file_name": "E-GEOD-18588.sdrf.txt",
+            "raw_data_file": "http://www.ebi.ac.uk/arrayexpress/files/E-GEOD-18588/E-GEOD-18588.sdrf.txt",
+            "rawdata_uuid": "033f7807-9466-11e1-8aa9-70cd60f26e14"
+        }
+    },
+    {
         "pk": 1,
         "model": "refinery_repository.processeddata",
         "fields": {
@@ -33459,11 +34107,48 @@
         }
     },
     {
+        "pk": 179,
+        "model": "refinery_repository.processeddata",
+        "fields": {
+            "processeddata_uuid": "0468dd82-9466-11e1-b9c2-70cd60f26e14",
+            "file_name": "GSM462291_kdm2a.tab",
+            "derived_data_file": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-18588/E-GEOD-18588.processed.1.zip"
+        }
+    },
+    {
+        "pk": 180,
+        "model": "refinery_repository.processeddata",
+        "fields": {
+            "processeddata_uuid": "0499ce9c-9466-11e1-8394-70cd60f26e14",
+            "file_name": null,
+            "derived_data_file": "http://www.ebi.ac.uk/arrayexpress/files/E-GEOD-18588/E-GEOD-18588.sdrf.txt"
+        }
+    },
+    {
+        "pk": 181,
+        "model": "refinery_repository.processeddata",
+        "fields": {
+            "processeddata_uuid": "05a89dcc-9466-11e1-a81b-70cd60f26e14",
+            "file_name": "GSM462292_input.tab",
+            "derived_data_file": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-18588/E-GEOD-18588.processed.1.zip"
+        }
+    },
+    {
+        "pk": 182,
+        "model": "refinery_repository.processeddata",
+        "fields": {
+            "processeddata_uuid": "05d9f907-9466-11e1-923f-70cd60f26e14",
+            "file_name": null,
+            "derived_data_file": "http://www.ebi.ac.uk/arrayexpress/files/E-GEOD-18588/E-GEOD-18588.sdrf.txt"
+        }
+    },
+    {
         "pk": 1,
         "model": "refinery_repository.assay",
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33243b11-8f1b-11e1-acf8-002332b1159e",
@@ -33508,6 +34193,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3324f1d7-8f1b-11e1-bc0b-002332b1159e",
@@ -33552,6 +34238,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33254f1e-8f1b-11e1-8e45-002332b1159e",
@@ -33596,6 +34283,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3325a573-8f1b-11e1-9e16-002332b1159e",
@@ -33640,6 +34328,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3325f8f8-8f1b-11e1-80f6-002332b1159e",
@@ -33684,6 +34373,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33268fa3-8f1b-11e1-9193-002332b1159e",
@@ -33728,6 +34418,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33270f85-8f1b-11e1-9e66-002332b1159e",
@@ -33772,6 +34463,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "332779ee-8f1b-11e1-92a9-002332b1159e",
@@ -33816,6 +34508,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3327da80-8f1b-11e1-b4f8-002332b1159e",
@@ -33860,6 +34553,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "332834d7-8f1b-11e1-a088-002332b1159e",
@@ -33904,6 +34598,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33288af8-8f1b-11e1-830b-002332b1159e",
@@ -33948,6 +34643,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3328ee78-8f1b-11e1-a9da-002332b1159e",
@@ -33992,6 +34688,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33295a0a-8f1b-11e1-8564-002332b1159e",
@@ -34036,6 +34733,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3329e01c-8f1b-11e1-bf61-002332b1159e",
@@ -34080,6 +34778,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "332a317a-8f1b-11e1-a8c2-002332b1159e",
@@ -34124,6 +34823,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "332a8705-8f1b-11e1-8407-002332b1159e",
@@ -34168,6 +34868,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "332ad9a3-8f1b-11e1-b5a5-002332b1159e",
@@ -34212,6 +34913,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "332b2882-8f1b-11e1-9b17-002332b1159e",
@@ -34256,6 +34958,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "332b775e-8f1b-11e1-a413-002332b1159e",
@@ -34300,6 +35003,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "332bfc6b-8f1b-11e1-98cd-002332b1159e",
@@ -34344,6 +35048,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "332dcd30-8f1b-11e1-b0f7-002332b1159e",
@@ -34388,6 +35093,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "332e3202-8f1b-11e1-9ed6-002332b1159e",
@@ -34432,6 +35138,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "332e896e-8f1b-11e1-beaa-002332b1159e",
@@ -34476,6 +35183,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "332edd23-8f1b-11e1-bab6-002332b1159e",
@@ -34520,6 +35228,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "332f2e97-8f1b-11e1-a546-002332b1159e",
@@ -34564,6 +35273,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "332f9f3d-8f1b-11e1-82ad-002332b1159e",
@@ -34608,6 +35318,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33301842-8f1b-11e1-948e-002332b1159e",
@@ -34652,6 +35363,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33307a9e-8f1b-11e1-a9d6-002332b1159e",
@@ -34696,6 +35408,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3330e02e-8f1b-11e1-ba82-002332b1159e",
@@ -34738,6 +35451,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33313838-8f1b-11e1-9d21-002332b1159e",
@@ -34782,6 +35496,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33318fba-8f1b-11e1-86f2-002332b1159e",
@@ -34826,6 +35541,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3331eb85-8f1b-11e1-958d-002332b1159e",
@@ -34870,6 +35586,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333240f3-8f1b-11e1-bed0-002332b1159e",
@@ -34914,6 +35631,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333299bd-8f1b-11e1-83c6-002332b1159e",
@@ -34958,6 +35676,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3333cc9e-8f1b-11e1-95e7-002332b1159e",
@@ -35002,6 +35721,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33343197-8f1b-11e1-a1c8-002332b1159e",
@@ -35046,6 +35766,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33347d54-8f1b-11e1-987a-002332b1159e",
@@ -35090,6 +35811,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3334c48a-8f1b-11e1-9d90-002332b1159e",
@@ -35134,6 +35856,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3335cd8c-8f1b-11e1-95bc-002332b1159e",
@@ -35178,6 +35901,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33363011-8f1b-11e1-8ffb-002332b1159e",
@@ -35220,6 +35944,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333688f8-8f1b-11e1-92d1-002332b1159e",
@@ -35264,6 +35989,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3336e366-8f1b-11e1-a6cb-002332b1159e",
@@ -35306,6 +36032,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3337356e-8f1b-11e1-b8c1-002332b1159e",
@@ -35350,6 +36077,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333788c0-8f1b-11e1-9033-002332b1159e",
@@ -35394,6 +36122,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3337dbca-8f1b-11e1-b175-002332b1159e",
@@ -35438,6 +36167,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33382f75-8f1b-11e1-81ed-002332b1159e",
@@ -35482,6 +36212,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33387e57-8f1b-11e1-91c8-002332b1159e",
@@ -35526,6 +36257,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3339190f-8f1b-11e1-9e96-002332b1159e",
@@ -35570,6 +36302,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333976d9-8f1b-11e1-87a6-002332b1159e",
@@ -35614,6 +36347,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3339cb3a-8f1b-11e1-ac81-002332b1159e",
@@ -35656,6 +36390,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333a26f3-8f1b-11e1-85e9-002332b1159e",
@@ -35700,6 +36435,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333a7bca-8f1b-11e1-b476-002332b1159e",
@@ -35744,6 +36480,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333ad48a-8f1b-11e1-8f10-002332b1159e",
@@ -35786,6 +36523,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333b28b8-8f1b-11e1-9bcc-002332b1159e",
@@ -35828,6 +36566,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333bc48a-8f1b-11e1-b891-002332b1159e",
@@ -35872,6 +36611,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333c23a6-8f1b-11e1-9b42-002332b1159e",
@@ -35916,6 +36656,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333c90eb-8f1b-11e1-8914-002332b1159e",
@@ -35960,6 +36701,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333cea70-8f1b-11e1-b844-002332b1159e",
@@ -36004,6 +36746,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333d44b8-8f1b-11e1-96d2-002332b1159e",
@@ -36048,6 +36791,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333da187-8f1b-11e1-ba72-002332b1159e",
@@ -36092,6 +36836,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333df8a3-8f1b-11e1-a041-002332b1159e",
@@ -36136,6 +36881,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333e5682-8f1b-11e1-9d05-002332b1159e",
@@ -36180,6 +36926,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333eb102-8f1b-11e1-af53-002332b1159e",
@@ -36224,6 +36971,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333f09c5-8f1b-11e1-a06f-002332b1159e",
@@ -36268,6 +37016,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333f5e42-8f1b-11e1-9153-002332b1159e",
@@ -36312,6 +37061,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "333faf78-8f1b-11e1-91f6-002332b1159e",
@@ -36356,6 +37106,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "334003f5-8f1b-11e1-9340-002332b1159e",
@@ -36400,6 +37151,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33405cdc-8f1b-11e1-a871-002332b1159e",
@@ -36444,6 +37196,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3340b59e-8f1b-11e1-a6af-002332b1159e",
@@ -36488,6 +37241,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33411187-8f1b-11e1-b5e6-002332b1159e",
@@ -36532,6 +37286,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33416dae-8f1b-11e1-a404-002332b1159e",
@@ -36576,6 +37331,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3341c2c2-8f1b-11e1-9378-002332b1159e",
@@ -36618,6 +37374,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "334215e1-8f1b-11e1-bb3c-002332b1159e",
@@ -36662,6 +37419,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "334262de-8f1b-11e1-bd10-002332b1159e",
@@ -36706,6 +37464,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3342ba19-8f1b-11e1-bdbe-002332b1159e",
@@ -36750,6 +37509,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33431780-8f1b-11e1-ac9b-002332b1159e",
@@ -36794,6 +37554,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33436fdc-8f1b-11e1-83f8-002332b1159e",
@@ -36838,6 +37599,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3343c085-8f1b-11e1-9891-002332b1159e",
@@ -36882,6 +37644,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33440f63-8f1b-11e1-afdd-002332b1159e",
@@ -36924,6 +37687,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3344652b-8f1b-11e1-9e2a-002332b1159e",
@@ -36968,6 +37732,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3344b57d-8f1b-11e1-ae28-002332b1159e",
@@ -37010,6 +37775,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "334503f5-8f1b-11e1-94c6-002332b1159e",
@@ -37054,6 +37820,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33455c0a-8f1b-11e1-a2ab-002332b1159e",
@@ -37098,6 +37865,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33469f0f-8f1b-11e1-8629-002332b1159e",
@@ -37142,6 +37910,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3347b7ca-8f1b-11e1-b0ce-002332b1159e",
@@ -37184,6 +37953,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "334815f0-8f1b-11e1-ad3f-002332b1159e",
@@ -37228,6 +37998,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3348688f-8f1b-11e1-b92d-002332b1159e",
@@ -37272,6 +38043,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3348c068-8f1b-11e1-b246-002332b1159e",
@@ -37316,6 +38088,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "334915d7-8f1b-11e1-9e90-002332b1159e",
@@ -37360,6 +38133,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33496d80-8f1b-11e1-b43f-002332b1159e",
@@ -37404,6 +38178,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3349cac7-8f1b-11e1-8299-002332b1159e",
@@ -37448,6 +38223,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "334a22ab-8f1b-11e1-b940-002332b1159e",
@@ -37492,6 +38268,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "334a7d19-8f1b-11e1-80bf-002332b1159e",
@@ -37536,6 +38313,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "334ad740-8f1b-11e1-b656-002332b1159e",
@@ -37580,6 +38358,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "334b3082-8f1b-11e1-ba10-002332b1159e",
@@ -37622,6 +38401,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "334b9770-8f1b-11e1-a797-002332b1159e",
@@ -37664,6 +38444,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "334bef9c-8f1b-11e1-83b4-002332b1159e",
@@ -37708,6 +38489,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "334c4902-8f1b-11e1-baab-002332b1159e",
@@ -37752,6 +38534,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "334cd68a-8f1b-11e1-81a1-002332b1159e",
@@ -37796,6 +38579,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33506051-8f1b-11e1-98b7-002332b1159e",
@@ -37840,6 +38624,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3350be75-8f1b-11e1-94b0-002332b1159e",
@@ -37884,6 +38669,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33511c5e-8f1b-11e1-91b2-002332b1159e",
@@ -37928,6 +38714,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33517619-8f1b-11e1-8383-002332b1159e",
@@ -37972,6 +38759,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3352ecbd-8f1b-11e1-83cb-002332b1159e",
@@ -38016,6 +38804,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33534842-8f1b-11e1-ac9d-002332b1159e",
@@ -38060,6 +38849,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33544a6e-8f1b-11e1-9816-002332b1159e",
@@ -38104,6 +38894,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3354b775-8f1b-11e1-a375-002332b1159e",
@@ -38148,6 +38939,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "335512b5-8f1b-11e1-a1a7-002332b1159e",
@@ -38192,6 +38984,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33556b68-8f1b-11e1-9996-002332b1159e",
@@ -38236,6 +39029,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3355c5cf-8f1b-11e1-b5b7-002332b1159e",
@@ -38280,6 +39074,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33562a1e-8f1b-11e1-a75d-002332b1159e",
@@ -38324,6 +39119,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33568091-8f1b-11e1-8ea7-002332b1159e",
@@ -38368,6 +39164,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3356d50f-8f1b-11e1-9e77-002332b1159e",
@@ -38410,6 +39207,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33573026-8f1b-11e1-9473-002332b1159e",
@@ -38452,6 +39250,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33578878-8f1b-11e1-b810-002332b1159e",
@@ -38494,6 +39293,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3357e3e8-8f1b-11e1-bbe4-002332b1159e",
@@ -38538,6 +39338,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33583eee-8f1b-11e1-9520-002332b1159e",
@@ -38582,6 +39383,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33589787-8f1b-11e1-95ce-002332b1159e",
@@ -38626,6 +39428,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3358f291-8f1b-11e1-a8c8-002332b1159e",
@@ -38668,6 +39471,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33594df3-8f1b-11e1-b5d9-002332b1159e",
@@ -38712,6 +39516,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3359aab5-8f1b-11e1-8600-002332b1159e",
@@ -38756,6 +39561,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3359fd0f-8f1b-11e1-a76c-002332b1159e",
@@ -38800,6 +39606,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "335a572e-8f1b-11e1-8bf7-002332b1159e",
@@ -38844,6 +39651,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "335ab657-8f1b-11e1-944b-002332b1159e",
@@ -38888,6 +39696,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "335b0b6b-8f1b-11e1-84e0-002332b1159e",
@@ -38932,6 +39741,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "335b6fba-8f1b-11e1-8864-002332b1159e",
@@ -38976,6 +39786,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "335bc514-8f1b-11e1-8666-002332b1159e",
@@ -39020,6 +39831,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "335c3238-8f1b-11e1-9b25-002332b1159e",
@@ -39064,6 +39876,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "335d82a1-8f1b-11e1-81f1-002332b1159e",
@@ -39108,6 +39921,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "335eb34f-8f1b-11e1-96af-002332b1159e",
@@ -39152,6 +39966,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "335f1066-8f1b-11e1-8080-002332b1159e",
@@ -39196,6 +40011,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "335f67a8-8f1b-11e1-9900-002332b1159e",
@@ -39240,6 +40056,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "335fb9c7-8f1b-11e1-9f23-002332b1159e",
@@ -39284,6 +40101,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33603fe1-8f1b-11e1-a2bc-002332b1159e",
@@ -39326,6 +40144,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3360c81e-8f1b-11e1-b696-002332b1159e",
@@ -39370,6 +40189,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33614002-8f1b-11e1-b05a-002332b1159e",
@@ -39414,6 +40234,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33619f8c-8f1b-11e1-8bf0-002332b1159e",
@@ -39458,6 +40279,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3361f36b-8f1b-11e1-a01a-002332b1159e",
@@ -39502,6 +40324,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33624e0c-8f1b-11e1-825b-002332b1159e",
@@ -39546,6 +40369,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3362a6ca-8f1b-11e1-a693-002332b1159e",
@@ -39590,6 +40414,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3362fb40-8f1b-11e1-b018-002332b1159e",
@@ -39634,6 +40459,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3363520a-8f1b-11e1-b71c-002332b1159e",
@@ -39678,6 +40504,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3363b151-8f1b-11e1-9c6f-002332b1159e",
@@ -39722,6 +40549,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33641168-8f1b-11e1-8bcd-002332b1159e",
@@ -39764,6 +40592,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33646dde-8f1b-11e1-a0fd-002332b1159e",
@@ -39806,6 +40635,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3364c019-8f1b-11e1-a018-002332b1159e",
@@ -39850,6 +40680,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33651845-8f1b-11e1-a1c3-002332b1159e",
@@ -39894,6 +40725,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33656dd9-8f1b-11e1-9756-002332b1159e",
@@ -39938,6 +40770,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3365cadc-8f1b-11e1-a2be-002332b1159e",
@@ -39982,6 +40815,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33661e91-8f1b-11e1-9891-002332b1159e",
@@ -40026,6 +40860,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3366704a-8f1b-11e1-868e-002332b1159e",
@@ -40070,6 +40905,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3367abc2-8f1b-11e1-a16a-002332b1159e",
@@ -40114,6 +40950,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3368bfee-8f1b-11e1-bc3e-002332b1159e",
@@ -40158,6 +40995,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33693559-8f1b-11e1-8702-002332b1159e",
@@ -40202,6 +41040,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336991c7-8f1b-11e1-ac8a-002332b1159e",
@@ -40246,6 +41085,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3369e90a-8f1b-11e1-9189-002332b1159e",
@@ -40288,6 +41128,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336a3f40-8f1b-11e1-9575-002332b1159e",
@@ -40332,6 +41173,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336aa1f5-8f1b-11e1-a0ce-002332b1159e",
@@ -40376,6 +41218,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336afb05-8f1b-11e1-971e-002332b1159e",
@@ -40420,6 +41263,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336b4da3-8f1b-11e1-a3c9-002332b1159e",
@@ -40464,6 +41308,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336ba28f-8f1b-11e1-b23e-002332b1159e",
@@ -40508,6 +41353,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336c0919-8f1b-11e1-92f9-002332b1159e",
@@ -40552,6 +41398,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336c7e21-8f1b-11e1-ac81-002332b1159e",
@@ -40596,6 +41443,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336cdae8-8f1b-11e1-a984-002332b1159e",
@@ -40638,6 +41486,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336d31bd-8f1b-11e1-b1b9-002332b1159e",
@@ -40682,6 +41531,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336d93f3-8f1b-11e1-b5a7-002332b1159e",
@@ -40726,6 +41576,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336df728-8f1b-11e1-b3c4-002332b1159e",
@@ -40770,6 +41621,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336e5170-8f1b-11e1-af62-002332b1159e",
@@ -40814,6 +41666,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336e9ebd-8f1b-11e1-a4f2-002332b1159e",
@@ -40856,6 +41709,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336eee6e-8f1b-11e1-8c3b-002332b1159e",
@@ -40900,6 +41754,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336f47d7-8f1b-11e1-b079-002332b1159e",
@@ -40942,6 +41797,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336f979c-8f1b-11e1-a28c-002332b1159e",
@@ -40986,6 +41842,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "336fe6de-8f1b-11e1-b602-002332b1159e",
@@ -41030,6 +41887,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33703670-8f1b-11e1-be31-002332b1159e",
@@ -41074,6 +41932,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33709899-8f1b-11e1-82dd-002332b1159e",
@@ -41118,6 +41977,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3371ebe6-8f1b-11e1-866d-002332b1159e",
@@ -41162,6 +42022,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "337306f3-8f1b-11e1-948b-002332b1159e",
@@ -41206,6 +42067,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3373669c-8f1b-11e1-9d46-002332b1159e",
@@ -41250,6 +42112,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3373bba6-8f1b-11e1-90a4-002332b1159e",
@@ -41294,6 +42157,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33740fde-8f1b-11e1-bde2-002332b1159e",
@@ -41338,6 +42202,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33746a1c-8f1b-11e1-9a3a-002332b1159e",
@@ -41382,6 +42247,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3374bd80-8f1b-11e1-aa75-002332b1159e",
@@ -41424,6 +42290,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33751199-8f1b-11e1-8bc7-002332b1159e",
@@ -41466,6 +42333,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "337563ca-8f1b-11e1-b2c0-002332b1159e",
@@ -41510,6 +42378,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3375caae-8f1b-11e1-b28a-002332b1159e",
@@ -41554,6 +42423,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33762468-8f1b-11e1-9600-002332b1159e",
@@ -41598,6 +42468,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33767c05-8f1b-11e1-9b89-002332b1159e",
@@ -41642,6 +42513,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3376d2e6-8f1b-11e1-925f-002332b1159e",
@@ -41686,6 +42558,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33772d68-8f1b-11e1-af17-002332b1159e",
@@ -41730,6 +42603,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "337789fa-8f1b-11e1-b0d4-002332b1159e",
@@ -41774,6 +42648,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3377e242-8f1b-11e1-bea6-002332b1159e",
@@ -41818,6 +42693,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3378419e-8f1b-11e1-8338-002332b1159e",
@@ -41862,6 +42738,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "337895ca-8f1b-11e1-849f-002332b1159e",
@@ -41906,6 +42783,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3378e3a6-8f1b-11e1-9658-002332b1159e",
@@ -41950,6 +42828,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "337933d9-8f1b-11e1-aecc-002332b1159e",
@@ -41994,6 +42873,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "33799ba1-8f1b-11e1-907b-002332b1159e",
@@ -42038,6 +42918,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "3379f028-8f1b-11e1-8d74-002332b1159e",
@@ -42082,6 +42963,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "337a4321-8f1b-11e1-8198-002332b1159e",
@@ -42126,6 +43008,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "337a9500-8f1b-11e1-a1f1-002332b1159e",
@@ -42170,6 +43053,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "337bdb42-8f1b-11e1-ba15-002332b1159e",
@@ -42214,6 +43098,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "337c3f68-8f1b-11e1-8f29-002332b1159e",
@@ -42258,6 +43143,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "337d56d4-8f1b-11e1-aa00-002332b1159e",
@@ -42302,6 +43188,7 @@
         "fields": {
             "material_type": "genomic DNA",
             "labeled_extract_name": null,
+            "array_design_file": null,
             "array_design_ref": null,
             "labeled_extract_name_material_type": null,
             "assay_uuid": "337db0ca-8f1b-11e1-8762-002332b1159e",
@@ -42338,6 +43225,108 @@
             "material_type_term_source_ref": null,
             "extract_name_material_type_term_source_ref": null,
             "study": "GSM439451 1"
+        }
+    },
+    {
+        "pk": 204,
+        "model": "refinery_repository.assay",
+        "fields": {
+            "material_type": "genomic DNA",
+            "labeled_extract_name": null,
+            "array_design_file": null,
+            "array_design_ref": null,
+            "labeled_extract_name_material_type": null,
+            "assay_uuid": "029470f3-9466-11e1-94d0-70cd60f26e14",
+            "material_type_term_accession_number": null,
+            "normalization_name": null,
+            "assay_name_date": null,
+            "labeled_extract_name_description": null,
+            "technology_type": null,
+            "label": null,
+            "label_term_accession_number": null,
+            "investigation": "simple_test1",
+            "processed_data": [
+                179,
+                180
+            ],
+            "sample_name": "GSM462291 extract 1",
+            "labeled_extract_name_material_type_term_accession_number": null,
+            "label_term_source_ref": null,
+            "image_name": null,
+            "assay_name_performer": null,
+            "extract_name": null,
+            "labeled_extract_name_material_type_term_source_ref": null,
+            "extract_name_description": null,
+            "protocols": [
+                "P-GSE18588-5",
+                "P-GSE18588-9",
+                "P-GSE18588-8",
+                "P-GSE18588-7",
+                "P-GSE18588-6",
+                "P-GSE18588-4",
+                "GSM462291 LE 1"
+            ],
+            "extract_name_material_type": null,
+            "raw_data": [
+                204
+            ],
+            "scan_name": null,
+            "assay_name": "GSM462291",
+            "extract_name_material_type_term_accession_number": null,
+            "material_type_term_source_ref": null,
+            "extract_name_material_type_term_source_ref": null,
+            "study": "GSM462291 1"
+        }
+    },
+    {
+        "pk": 205,
+        "model": "refinery_repository.assay",
+        "fields": {
+            "material_type": "genomic DNA",
+            "labeled_extract_name": null,
+            "array_design_file": null,
+            "array_design_ref": null,
+            "labeled_extract_name_material_type": null,
+            "assay_uuid": "0294ccdc-9466-11e1-baa0-70cd60f26e14",
+            "material_type_term_accession_number": null,
+            "normalization_name": null,
+            "assay_name_date": null,
+            "labeled_extract_name_description": null,
+            "technology_type": null,
+            "label": null,
+            "label_term_accession_number": null,
+            "investigation": "simple_test1",
+            "processed_data": [
+                181,
+                182
+            ],
+            "sample_name": "GSM462292 extract 1",
+            "labeled_extract_name_material_type_term_accession_number": null,
+            "label_term_source_ref": null,
+            "image_name": null,
+            "assay_name_performer": null,
+            "extract_name": null,
+            "labeled_extract_name_material_type_term_source_ref": null,
+            "extract_name_description": null,
+            "protocols": [
+                "P-GSE18588-5",
+                "P-GSE18588-9",
+                "P-GSE18588-8",
+                "P-GSE18588-7",
+                "P-GSE18588-6",
+                "P-GSE18588-4",
+                "GSM462292 LE 1"
+            ],
+            "extract_name_material_type": null,
+            "raw_data": [
+                205
+            ],
+            "scan_name": null,
+            "assay_name": "GSM462292",
+            "extract_name_material_type_term_accession_number": null,
+            "material_type_term_source_ref": null,
+            "extract_name_material_type_term_source_ref": null,
+            "study": "GSM462292 1"
         }
     },
     {
@@ -44571,6 +45560,50 @@
             "data_transformation_name": "SRR030363",
             "performer": null,
             "assay": 203
+        }
+    },
+    {
+        "pk": 204,
+        "model": "refinery_repository.datatransformation",
+        "fields": {
+            "date": null,
+            "protocol": "P-GSE18588-4",
+            "data_transformation_name": "SRR036789",
+            "performer": null,
+            "assay": 204
+        }
+    },
+    {
+        "pk": 205,
+        "model": "refinery_repository.datatransformation",
+        "fields": {
+            "date": null,
+            "protocol": "P-GSE18588-5",
+            "data_transformation_name": "dt2",
+            "performer": null,
+            "assay": 204
+        }
+    },
+    {
+        "pk": 206,
+        "model": "refinery_repository.datatransformation",
+        "fields": {
+            "date": null,
+            "protocol": "P-GSE18588-4",
+            "data_transformation_name": "SRR036790",
+            "performer": null,
+            "assay": 205
+        }
+    },
+    {
+        "pk": 207,
+        "model": "refinery_repository.datatransformation",
+        "fields": {
+            "date": null,
+            "protocol": "P-GSE18588-5",
+            "data_transformation_name": "dt2",
+            "performer": null,
+            "assay": 205
         }
     },
     {
@@ -105467,6 +106500,246 @@
             "unit_term_source_ref": null,
             "date": null,
             "assay": 203,
+            "node_name": "Sample Name",
+            "type": "parameter_value",
+            "sub_type": "SEQUENCING_INSTRUMENT",
+            "unit": null
+        }
+    },
+    {
+        "pk": 3046,
+        "model": "refinery_repository.assaybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "protocol": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "value": "SRR036789",
+            "node_index": 8,
+            "unit_term_source_ref": null,
+            "date": null,
+            "assay": 204,
+            "node_name": "Assay Name",
+            "type": "comment",
+            "sub_type": "ENA_RUN",
+            "unit": null
+        }
+    },
+    {
+        "pk": 3047,
+        "model": "refinery_repository.assaybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "protocol": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "value": "SRX017108",
+            "node_index": 8,
+            "unit_term_source_ref": null,
+            "date": null,
+            "assay": 204,
+            "node_name": "Assay Name",
+            "type": "comment",
+            "sub_type": "ENA_EXPERIMENT",
+            "unit": null
+        }
+    },
+    {
+        "pk": 3048,
+        "model": "refinery_repository.assaybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "protocol": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "value": "KDM2A",
+            "node_index": 18,
+            "unit_term_source_ref": null,
+            "date": null,
+            "assay": 204,
+            "node_name": "Derived Data File",
+            "type": "factor_value",
+            "sub_type": "CHIP_ANTIBODY",
+            "unit": null
+        }
+    },
+    {
+        "pk": 3049,
+        "model": "refinery_repository.assaybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "protocol": "GSM462291 LE 1",
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "value": "1",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "assay": 204,
+            "node_name": "Sample Name",
+            "type": "parameter_value",
+            "sub_type": "LIBRARY_LAYOUT",
+            "unit": null
+        }
+    },
+    {
+        "pk": 3050,
+        "model": "refinery_repository.assaybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "protocol": "GSM462291 LE 1",
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "value": "assay",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "assay": 204,
+            "node_name": "Sample Name",
+            "type": "parameter_value",
+            "sub_type": "MID",
+            "unit": null
+        }
+    },
+    {
+        "pk": 3051,
+        "model": "refinery_repository.assaybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "protocol": "GSM462291 LE 1",
+            "performer": null,
+            "term_accession_number": "http://purl.org/obo/owl/NCBITaxon#NCBITaxon_10090",
+            "term_source_ref": "EFO",
+            "value": "Illumina Genome Analyzer II (Mus musculus)",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "assay": 204,
+            "node_name": "Sample Name",
+            "type": "parameter_value",
+            "sub_type": "SEQUENCING_INSTRUMENT",
+            "unit": null
+        }
+    },
+    {
+        "pk": 3052,
+        "model": "refinery_repository.assaybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "protocol": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "value": "SRR036790",
+            "node_index": 8,
+            "unit_term_source_ref": null,
+            "date": null,
+            "assay": 205,
+            "node_name": "Assay Name",
+            "type": "comment",
+            "sub_type": "ENA_RUN",
+            "unit": null
+        }
+    },
+    {
+        "pk": 3053,
+        "model": "refinery_repository.assaybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "protocol": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "value": "SRX017109",
+            "node_index": 8,
+            "unit_term_source_ref": null,
+            "date": null,
+            "assay": 205,
+            "node_name": "Assay Name",
+            "type": "comment",
+            "sub_type": "ENA_EXPERIMENT",
+            "unit": null
+        }
+    },
+    {
+        "pk": 3054,
+        "model": "refinery_repository.assaybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "protocol": null,
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "value": "none",
+            "node_index": 18,
+            "unit_term_source_ref": null,
+            "date": null,
+            "assay": 205,
+            "node_name": "Derived Data File",
+            "type": "factor_value",
+            "sub_type": "CHIP_ANTIBODY",
+            "unit": null
+        }
+    },
+    {
+        "pk": 3055,
+        "model": "refinery_repository.assaybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "protocol": "GSM462292 LE 1",
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "value": "1",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "assay": 205,
+            "node_name": "Sample Name",
+            "type": "parameter_value",
+            "sub_type": "LIBRARY_LAYOUT",
+            "unit": null
+        }
+    },
+    {
+        "pk": 3056,
+        "model": "refinery_repository.assaybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "protocol": "GSM462292 LE 1",
+            "performer": null,
+            "term_accession_number": null,
+            "term_source_ref": null,
+            "value": "assay",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "assay": 205,
+            "node_name": "Sample Name",
+            "type": "parameter_value",
+            "sub_type": "MID",
+            "unit": null
+        }
+    },
+    {
+        "pk": 3057,
+        "model": "refinery_repository.assaybracketedfield",
+        "fields": {
+            "unit_term_accession_number": null,
+            "protocol": "GSM462292 LE 1",
+            "performer": null,
+            "term_accession_number": "http://purl.org/obo/owl/NCBITaxon#NCBITaxon_10090",
+            "term_source_ref": "EFO",
+            "value": "Illumina Genome Analyzer II (Mus musculus)",
+            "node_index": 0,
+            "unit_term_source_ref": null,
+            "date": null,
+            "assay": 205,
             "node_name": "Sample Name",
             "type": "parameter_value",
             "sub_type": "SEQUENCING_INSTRUMENT",
