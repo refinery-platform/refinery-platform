@@ -1,5 +1,95 @@
 [
     {
+        "pk": 718,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "http://www.ebi.ac.uk/arrayexpress/files/E-GEOD-18588/E-GEOD-18588.idf.txt",
+            "datafile": "",
+            "uuid": "34cb630c-9464-11e1-b9ce-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 719,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "http://www.ebi.ac.uk/arrayexpress/files/E-GEOD-18588/E-GEOD-18588.sdrf.txt",
+            "datafile": "",
+            "uuid": "351ccc0f-9464-11e1-950d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 720,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-18588/E-GEOD-18588.processed.1.zip",
+            "datafile": "",
+            "uuid": "3633d421-9464-11e1-8971-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 721,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "http://www.ebi.ac.uk/arrayexpress/files/E-GEOD-18588/E-GEOD-18588.idf.txt",
+            "datafile": "",
+            "uuid": "a3f6e378-9464-11e1-94d9-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 722,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "http://www.ebi.ac.uk/arrayexpress/files/E-GEOD-18588/E-GEOD-18588.sdrf.txt",
+            "datafile": "",
+            "uuid": "a42d73fd-9464-11e1-aab3-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 723,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-18588/E-GEOD-18588.processed.1.zip",
+            "datafile": "",
+            "uuid": "a53fcd11-9464-11e1-8e61-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 724,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "http://www.ebi.ac.uk/arrayexpress/files/E-GEOD-18588/E-GEOD-18588.sdrf.txt",
+            "datafile": "",
+            "uuid": "a573fba1-9464-11e1-a507-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 725,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-18588/E-GEOD-18588.processed.1.zip",
+            "datafile": "",
+            "uuid": "a668f880-9464-11e1-9fa1-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 726,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "http://www.ebi.ac.uk/arrayexpress/files/E-GEOD-18588/E-GEOD-18588.sdrf.txt",
+            "datafile": "",
+            "uuid": "a69cf751-9464-11e1-88f0-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
         "pk": 1,
         "model": "file_store.filestoreitem",
         "fields": {
@@ -2326,6 +2416,3426 @@
             "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-16013/E-GEOD-16013.processed.2.zip",
             "datafile": "",
             "uuid": "348dea8c-8f1b-11e1-9168-002332b1159e",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 382,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9d8ec675-8f1f-11e1-bfa2-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 383,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9d8f51c2-8f1f-11e1-bcf6-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 384,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9d8fd987-8f1f-11e1-b5a8-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 385,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9d905deb-8f1f-11e1-b6cd-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 386,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9d90ec45-8f1f-11e1-aad2-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 387,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9d917057-8f1f-11e1-9ecf-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 388,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9d91f60c-8f1f-11e1-b9a1-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 389,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9d928340-8f1f-11e1-9352-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 390,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9d930b6e-8f1f-11e1-beee-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 391,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9d939247-8f1f-11e1-bb08-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 392,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9d9428c7-8f1f-11e1-b0cb-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 393,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9d94a7bd-8f1f-11e1-bb62-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 394,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9d9533a8-8f1f-11e1-847e-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 395,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9d95becc-8f1f-11e1-b7b4-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 396,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9d96419e-8f1f-11e1-8d9b-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 397,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9d96bd19-8f1f-11e1-b833-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 398,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9d9746c0-8f1f-11e1-9306-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 399,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9d97da0c-8f1f-11e1-b25d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 400,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9d98600a-8f1f-11e1-bd7a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 401,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9d98ec14-8f1f-11e1-a7e3-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 402,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9d996d19-8f1f-11e1-8821-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 403,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9d99f000-8f1f-11e1-bfbe-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 404,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9d9a7407-8f1f-11e1-a9de-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 405,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9d9af5e1-8f1f-11e1-89a3-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 406,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577123.CEL",
+            "datafile": "",
+            "uuid": "9dd7bde1-8f1f-11e1-90eb-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 407,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577124.CEL",
+            "datafile": "",
+            "uuid": "9dd84b2b-8f1f-11e1-a114-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 408,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577125.CEL",
+            "datafile": "",
+            "uuid": "9dd8d6dc-8f1f-11e1-b32c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 409,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577126.CEL",
+            "datafile": "",
+            "uuid": "9ddccf4c-8f1f-11e1-93cc-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 410,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577127.CEL",
+            "datafile": "",
+            "uuid": "9ddd99cc-8f1f-11e1-b6cb-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 411,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577128.CEL",
+            "datafile": "",
+            "uuid": "9dde3c61-8f1f-11e1-9b41-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 412,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "9ddeb8e8-8f1f-11e1-8b72-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 413,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "9ddf457d-8f1f-11e1-a897-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 414,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "9ddffb5e-8f1f-11e1-a836-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 415,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "9de091b8-8f1f-11e1-8389-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 416,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "9de123ee-8f1f-11e1-8822-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 417,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "9de1ad63-8f1f-11e1-9f18-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 418,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "6ce1f785-8f20-11e1-83d3-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 419,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "6ce2e3ba-8f20-11e1-8b61-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 420,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "6ce381d1-8f20-11e1-8291-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 421,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "6ce45f9e-8f20-11e1-beee-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 422,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575228_HNF4_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "6ced0966-8f20-11e1-bd8c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 423,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575229_HNF4_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "6cedaa35-8f20-11e1-9725-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 424,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575226_GATA6_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "6cee31b5-8f20-11e1-a5df-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 425,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575227_GATA6_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "6ceeafba-8f20-11e1-a78d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 426,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575224_CDX2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "6cef316b-8f20-11e1-9603-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 427,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575225_CDX2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "6cefc863-8f20-11e1-872e-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 428,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575230_Input.bed.gz",
+            "datafile": "",
+            "uuid": "6cf04a5c-8f20-11e1-897c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 429,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575228_HNF4_cycling_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "6cf0e835-8f20-11e1-bc28-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 430,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575229_HNF4_confluent_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "6cf173c7-8f20-11e1-838d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 431,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575226_GATA6_cycling_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "6cf20068-8f20-11e1-bf5d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 432,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575227_GATA6_confluent_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "6cf293b5-8f20-11e1-8f00-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 433,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575224_CDX2_cycling_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "6cf324b5-8f20-11e1-9071-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 434,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575225_CDX2_confluent_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "6cf3b233-8f20-11e1-8fea-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 435,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "6d0ce9fa-8f20-11e1-a336-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 436,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "6d0d7d2b-8f20-11e1-b044-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 437,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "6d0e048c-8f20-11e1-a886-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 438,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "6d0e804f-8f20-11e1-a7be-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 439,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "6d0f076b-8f20-11e1-9903-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 440,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "6d0f89d1-8f20-11e1-81a7-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 441,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "6d102638-8f20-11e1-945e-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 442,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "6d10b1de-8f20-11e1-84b0-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 443,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "6d11419c-8f20-11e1-96c9-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 444,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "6d11d0c7-8f20-11e1-827d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 445,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "6d125bba-8f20-11e1-ba47-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 446,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "6d12e03a-8f20-11e1-b262-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 447,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "6d138378-8f20-11e1-aec9-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 448,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "6d141459-8f20-11e1-acab-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 449,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "6d14a673-8f20-11e1-82e1-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 450,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "6d1534f3-8f20-11e1-ae18-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 451,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "6d15b92e-8f20-11e1-af4c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 452,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "6d1631e1-8f20-11e1-a79d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 453,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "6d16af57-8f20-11e1-895b-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 454,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "6d1734dc-8f20-11e1-bd76-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 455,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "6d17c619-8f20-11e1-9c7e-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 456,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "6d18493a-8f20-11e1-bac5-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 457,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "6d18d4ae-8f20-11e1-bc0b-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 458,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "6d195c11-8f20-11e1-8af1-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 459,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "6d19ee02-8f20-11e1-81c9-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 460,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "6d1a7199-8f20-11e1-8666-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 461,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "6d1afac2-8f20-11e1-97b0-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 462,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "6d1b87e3-8f20-11e1-93db-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 463,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "6d1c1240-8f20-11e1-91c5-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 464,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "6d1ca085-8f20-11e1-aa11-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 465,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "6d1d25d7-8f20-11e1-ade4-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 466,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "6d1db442-8f20-11e1-a445-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 467,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "6d1e3b9c-8f20-11e1-a308-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 468,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "6d1ebbcf-8f20-11e1-9bf5-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 469,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "6d1f3eb5-8f20-11e1-b2fa-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 470,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "6d1fc907-8f20-11e1-a71a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 471,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577123.CEL",
+            "datafile": "",
+            "uuid": "6d5902de-8f20-11e1-9da9-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 472,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577124.CEL",
+            "datafile": "",
+            "uuid": "6d599597-8f20-11e1-bc9d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 473,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577125.CEL",
+            "datafile": "",
+            "uuid": "6d5a0f59-8f20-11e1-9e20-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 474,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577126.CEL",
+            "datafile": "",
+            "uuid": "6d5a87a8-8f20-11e1-973c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 475,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577127.CEL",
+            "datafile": "",
+            "uuid": "6d5b0d5e-8f20-11e1-b7fa-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 476,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577128.CEL",
+            "datafile": "",
+            "uuid": "6d5b893d-8f20-11e1-ae6a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 477,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "6d5c0a1c-8f20-11e1-a293-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 478,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "6d5c907d-8f20-11e1-bac8-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 479,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "6d5d17f5-8f20-11e1-a3f5-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 480,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "6d5db3cf-8f20-11e1-8851-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 481,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "6d5e3591-8f20-11e1-9968-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 482,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "6d5ee3d4-8f20-11e1-ac17-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 483,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "9f92da54-8f20-11e1-8174-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 484,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "9f93cf9c-8f20-11e1-b1f4-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 485,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "9f946a91-8f20-11e1-bf75-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 486,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "9f952f02-8f20-11e1-a268-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 487,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575228_HNF4_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "9f9ebfcf-8f20-11e1-b3a4-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 488,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575229_HNF4_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "9f9f653d-8f20-11e1-97f9-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 489,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575226_GATA6_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "9f9ff45c-8f20-11e1-97b0-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 490,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575227_GATA6_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "9fa0824f-8f20-11e1-ba1c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 491,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575224_CDX2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "9fa10e6e-8f20-11e1-9b11-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 492,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575225_CDX2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "9fa1b1b5-8f20-11e1-baa8-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 493,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575230_Input.bed.gz",
+            "datafile": "",
+            "uuid": "9fa25257-8f20-11e1-b1ab-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 494,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575228_HNF4_cycling_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "9fa2d321-8f20-11e1-9671-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 495,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575229_HNF4_confluent_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "9fa35907-8f20-11e1-b5bf-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 496,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575226_GATA6_cycling_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "9fa3e09e-8f20-11e1-937b-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 497,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575227_GATA6_confluent_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "9fa46545-8f20-11e1-8824-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 498,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575224_CDX2_cycling_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "9fa50c8a-8f20-11e1-9fd9-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 499,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575225_CDX2_confluent_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "9fa58cf0-8f20-11e1-a4d4-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 500,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "9fbd5bc7-8f20-11e1-ad38-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 501,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "9fbdea3d-8f20-11e1-bbdd-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 502,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "9fbe7075-8f20-11e1-89ea-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 503,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "9fbef851-8f20-11e1-8f08-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 504,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "9fbf8400-8f20-11e1-a58c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 505,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "9fc009f5-8f20-11e1-b337-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 506,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "9fc0a1d4-8f20-11e1-9df3-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 507,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "9fc12c1c-8f20-11e1-8a32-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 508,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "9fc1bcae-8f20-11e1-8b15-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 509,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "9fc243a3-8f20-11e1-91f5-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 510,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "9fc2cfb8-8f20-11e1-b612-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 511,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "9fc378f0-8f20-11e1-b8f1-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 512,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9fc400f3-8f20-11e1-a21d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 513,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9fc49275-8f20-11e1-b23e-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 514,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9fc51e1c-8f20-11e1-beb8-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 515,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9fc5aff8-8f20-11e1-88ac-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 516,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9fc63f40-8f20-11e1-a548-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 517,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9fc6d070-8f20-11e1-b6b4-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 518,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9fc75c05-8f20-11e1-aa85-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 519,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9fc7def3-8f20-11e1-83e5-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 520,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9fc86bc5-8f20-11e1-9fda-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 521,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9fc8fb5e-8f20-11e1-b798-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 522,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9fc991cc-8f20-11e1-995c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 523,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9fca2633-8f20-11e1-8ae9-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 524,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9fcac414-8f20-11e1-be64-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 525,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9fcb3d73-8f20-11e1-9101-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 526,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9fcbc699-8f20-11e1-9c66-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 527,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9fcc4930-8f20-11e1-bc5b-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 528,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9fccd1c0-8f20-11e1-8ef0-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 529,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9fcd5e38-8f20-11e1-9292-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 530,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9fcde9ae-8f20-11e1-a7e0-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 531,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9fce7700-8f20-11e1-b451-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 532,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9fcefbc5-8f20-11e1-bcbb-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 533,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9fcf80b3-8f20-11e1-920b-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 534,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "9fd004c5-8f20-11e1-b1fc-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 535,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "9fd08770-8f20-11e1-898a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 536,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577123.CEL",
+            "datafile": "",
+            "uuid": "a00b3ad1-8f20-11e1-a566-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 537,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577124.CEL",
+            "datafile": "",
+            "uuid": "a00bd6fd-8f20-11e1-bd12-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 538,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577125.CEL",
+            "datafile": "",
+            "uuid": "a00c6997-8f20-11e1-9488-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 539,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577126.CEL",
+            "datafile": "",
+            "uuid": "a00cf730-8f20-11e1-9153-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 540,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577127.CEL",
+            "datafile": "",
+            "uuid": "a00d8c0f-8f20-11e1-9e1c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 541,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577128.CEL",
+            "datafile": "",
+            "uuid": "a00e0e05-8f20-11e1-8e6f-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 542,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "a00e9a4c-8f20-11e1-8d17-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 543,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "a00f205c-8f20-11e1-9d59-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 544,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "a00fc8c2-8f20-11e1-82b6-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 545,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "a0105875-8f20-11e1-a7c9-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 546,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "a010e323-8f20-11e1-af7a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 547,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "a0116c99-8f20-11e1-be6a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 548,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "311e6f11-8f21-11e1-867a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 549,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "311f4bcf-8f21-11e1-8cf5-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 550,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "311fd5dc-8f21-11e1-b673-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 551,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "31214566-8f21-11e1-a437-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 552,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575228_HNF4_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "31296c45-8f21-11e1-8c7a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 553,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575229_HNF4_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "3129fa80-8f21-11e1-a9fe-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 554,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575226_GATA6_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "312a7a78-8f21-11e1-b790-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 555,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575227_GATA6_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "312b174c-8f21-11e1-a0e2-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 556,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575224_CDX2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "312b966b-8f21-11e1-a29e-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 557,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575225_CDX2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "312c12ca-8f21-11e1-9804-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 558,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575230_Input.bed.gz",
+            "datafile": "",
+            "uuid": "312c9240-8f21-11e1-9017-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 559,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575228_HNF4_cycling_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "312d1d59-8f21-11e1-a468-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 560,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575229_HNF4_confluent_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "312d995e-8f21-11e1-a0ac-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 561,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575226_GATA6_cycling_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "312e106e-8f21-11e1-b173-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 562,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575227_GATA6_confluent_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "312ea1a3-8f21-11e1-bfcf-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 563,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575224_CDX2_cycling_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "312f20bd-8f21-11e1-b5f4-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 564,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575225_CDX2_confluent_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "312f9c23-8f21-11e1-a19d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 565,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "314b1ccc-8f21-11e1-bba6-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 566,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "314ba807-8f21-11e1-9789-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 567,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "314c3fb3-8f21-11e1-bbcc-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 568,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "314ccf23-8f21-11e1-8fee-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 569,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "314d51c5-8f21-11e1-946d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 570,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "314dcc07-8f21-11e1-a13e-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 571,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "314e4c28-8f21-11e1-b6f8-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 572,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "314edaf8-8f21-11e1-9c8a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 573,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "314f6202-8f21-11e1-bf38-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 574,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "314fe3c7-8f21-11e1-9a7c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 575,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "3150601c-8f21-11e1-b914-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 576,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "3150ddb3-8f21-11e1-bfb7-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 577,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "31515b85-8f21-11e1-881d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 578,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "3151e021-8f21-11e1-8098-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 579,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "31525e11-8f21-11e1-bfcb-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 580,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "3152d82e-8f21-11e1-b381-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 581,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "315355ba-8f21-11e1-b3a7-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 582,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "3153d057-8f21-11e1-933a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 583,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "315454ba-8f21-11e1-b387-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 584,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "3154d0fa-8f21-11e1-9313-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 585,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "31555607-8f21-11e1-bce8-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 586,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "3155daba-8f21-11e1-a35f-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 587,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "31565e35-8f21-11e1-988e-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 588,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "3156e87d-8f21-11e1-9f79-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 589,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "31576b78-8f21-11e1-8f92-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 590,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "3157eefd-8f21-11e1-b97d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 591,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "31587857-8f21-11e1-b16d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 592,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "3158ec28-8f21-11e1-9ee9-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 593,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "315960eb-8f21-11e1-a785-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 594,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "3159dcbd-8f21-11e1-9879-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 595,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "315a5a73-8f21-11e1-8b68-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 596,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "315add57-8f21-11e1-ab60-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 597,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "315b5b5c-8f21-11e1-8fdf-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 598,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "315bd780-8f21-11e1-93ab-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 599,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "315c5a0c-8f21-11e1-a485-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 600,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "315ce4cc-8f21-11e1-a552-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 601,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577123.CEL",
+            "datafile": "",
+            "uuid": "3198eb8f-8f21-11e1-b150-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 602,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577124.CEL",
+            "datafile": "",
+            "uuid": "31997b75-8f21-11e1-88f5-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 603,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577125.CEL",
+            "datafile": "",
+            "uuid": "319a05ee-8f21-11e1-b10f-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 604,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577126.CEL",
+            "datafile": "",
+            "uuid": "319a913a-8f21-11e1-80b4-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 605,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577127.CEL",
+            "datafile": "",
+            "uuid": "319b1eca-8f21-11e1-bbc1-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 606,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577128.CEL",
+            "datafile": "",
+            "uuid": "319bb45c-8f21-11e1-b74d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 607,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "319c4368-8f21-11e1-a86c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 608,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "319cd102-8f21-11e1-8029-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 609,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "319d585e-8f21-11e1-81f5-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 610,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "319dd7fa-8f21-11e1-8b38-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 611,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "319e5466-8f21-11e1-9024-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 612,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "319edd6e-8f21-11e1-a512-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 613,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "5289de9e-8fa2-11e1-bd2d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 614,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "528ac74f-8fa2-11e1-a7f6-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 615,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "528b73c5-8fa2-11e1-a70e-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 616,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "528c3f5e-8fa2-11e1-853f-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 617,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "69b27035-8fa2-11e1-9aaa-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 618,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "69b3dcfa-8fa2-11e1-94d6-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 619,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "69b4a02b-8fa2-11e1-9d28-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 620,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "69b5688f-8fa2-11e1-8f3b-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 621,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "48249a87-8fa3-11e1-8855-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 622,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "48256b66-8fa3-11e1-8bba-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 623,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "4825f017-8fa3-11e1-a521-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 624,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "48269cd4-8fa3-11e1-b95b-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 625,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "969fb6ca-8fa3-11e1-a591-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 626,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "96a09fc2-8fa3-11e1-9ea7-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 627,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "96a13ce8-8fa3-11e1-8525-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 628,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "96a205d7-8fa3-11e1-b1fd-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 629,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "b301dac7-8fa3-11e1-a52a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 630,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "b302a263-8fa3-11e1-a767-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 631,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "b3032b38-8fa3-11e1-a494-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 632,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "b303fde3-8fa3-11e1-ba4c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 633,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "d85e76f8-8fa3-11e1-96a5-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 634,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "d85f400a-8fa3-11e1-a18d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 635,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "d85fc5a8-8fa3-11e1-b35a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 636,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "d860746e-8fa3-11e1-a1e8-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 637,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "fdeacd42-8fa3-11e1-99c5-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 638,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "fdeb8ed9-8fa3-11e1-acc0-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 639,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "fdec1454-8fa3-11e1-a4c6-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 640,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "fdecb7ba-8fa3-11e1-8d90-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 641,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575228_HNF4_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "fdf4097a-8fa3-11e1-8605-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 642,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575229_HNF4_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "fdf4a22e-8fa3-11e1-8b9e-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 643,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575226_GATA6_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "fdf536a6-8fa3-11e1-ad6a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 644,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575227_GATA6_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "fdf5c0e3-8fa3-11e1-a4de-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 645,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575224_CDX2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "fdf64dab-8fa3-11e1-ad0c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 646,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575225_CDX2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "fdf6d128-8fa3-11e1-b67b-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 647,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575230_Input.bed.gz",
+            "datafile": "",
+            "uuid": "fdf758c7-8fa3-11e1-9b63-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 648,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575228_HNF4_cycling_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "fdf7eb11-8fa3-11e1-adc1-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 649,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575229_HNF4_confluent_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "fdf86b6e-8fa3-11e1-a253-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 650,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575226_GATA6_cycling_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "fdf8e473-8fa3-11e1-954c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 651,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575227_GATA6_confluent_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "fdf960c7-8fa3-11e1-928f-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 652,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575224_CDX2_cycling_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "fdf9dcc5-8fa3-11e1-8c21-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 653,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575225_CDX2_confluent_pval1e-2_peaks.txt.gz",
+            "datafile": "",
+            "uuid": "fdfa64fa-8fa3-11e1-b50a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 654,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "fe12cc00-8fa3-11e1-82ec-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 655,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "fe134da6-8fa3-11e1-8432-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 656,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "fe13cd0a-8fa3-11e1-a1a7-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 657,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "fe144b54-8fa3-11e1-b893-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 658,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "fe14d663-8fa3-11e1-a2ef-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 659,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "fe156e94-8fa3-11e1-9894-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 660,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "fe15f5ee-8fa3-11e1-bfee-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 661,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "fe169628-8fa3-11e1-a262-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 662,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "fe172a40-8fa3-11e1-8c5d-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 663,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "fe17b82b-8fa3-11e1-ab8c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 664,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "fe184880-8fa3-11e1-b170-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 665,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSE1614_RAW.tar.gz",
+            "datafile": "",
+            "uuid": "fe18d1a6-8fa3-11e1-a024-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 666,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "fe1953e3-8fa3-11e1-ba91-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 667,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "fe19e9c2-8fa3-11e1-be53-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 668,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "fe1a7538-8fa3-11e1-974e-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 669,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "fe1af640-8fa3-11e1-bf69-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 670,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "fe1b750a-8fa3-11e1-8085-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 671,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "fe1bf138-8fa3-11e1-b117-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 672,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "fe1c6ee1-8fa3-11e1-8a3f-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 673,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "fe1d04d7-8fa3-11e1-9765-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 674,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "fe1d93a6-8fa3-11e1-a591-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 675,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "fe1e1f1c-8fa3-11e1-a783-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 676,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "fe1eb5b0-8fa3-11e1-8663-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 677,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "fe1f496e-8fa3-11e1-9f06-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 678,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "fe1fccf3-8fa3-11e1-aa00-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 679,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "fe204be8-8fa3-11e1-85ea-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 680,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "fe20d100-8fa3-11e1-b3bc-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 681,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "fe214c63-8fa3-11e1-8cd9-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 682,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "fe21cb26-8fa3-11e1-8510-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 683,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "fe2250a1-8fa3-11e1-b33f-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 684,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "fe22d819-8fa3-11e1-98c6-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 685,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "fe235f99-8fa3-11e1-a14a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 686,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "fe23ebae-8fa3-11e1-b9c1-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 687,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "fe247645-8fa3-11e1-8e82-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 688,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "E-GEOD-1614-processed-data-1463791736.txt",
+            "datafile": "",
+            "uuid": "fe250c28-8fa3-11e1-b31c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 689,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "12644633_Table2.txt",
+            "datafile": "",
+            "uuid": "fe259621-8fa3-11e1-9a80-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 690,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577123.CEL",
+            "datafile": "",
+            "uuid": "fe5ed1c5-8fa3-11e1-b8f7-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 691,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577124.CEL",
+            "datafile": "",
+            "uuid": "fe5f5be3-8fa3-11e1-9daf-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 692,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577125.CEL",
+            "datafile": "",
+            "uuid": "fe5fe5c0-8fa3-11e1-bc42-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 693,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577126.CEL",
+            "datafile": "",
+            "uuid": "fe606b9c-8fa3-11e1-a196-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 694,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577127.CEL",
+            "datafile": "",
+            "uuid": "fe60f47a-8fa3-11e1-a2a3-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 695,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM577128.CEL",
+            "datafile": "",
+            "uuid": "fe6182c0-8fa3-11e1-acc7-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 696,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "fe620645-8fa3-11e1-99db-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 697,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "fe62858a-8fa3-11e1-a4a7-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 698,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "fe6306d4-8fa3-11e1-b822-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 699,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "fe63823a-8fa3-11e1-94ad-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 700,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "fe63fffa-8fa3-11e1-be3e-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 701,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "21074721-TableS3.txt",
+            "datafile": "",
+            "uuid": "fe64861e-8fa3-11e1-8379-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 702,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "0ad65bca-8fa4-11e1-813a-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 703,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "0ad72d5c-8fa4-11e1-a591-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 704,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "0ad7b038-8fa4-11e1-97f1-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 705,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "0ad85ae1-8fa4-11e1-be41-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 706,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "188fae42-8fa4-11e1-ad9e-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 707,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "18908785-8fa4-11e1-b6dc-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 708,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "18911f02-8fa4-11e1-9cfa-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 709,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "1891fbde-8fa4-11e1-b22c-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 710,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent.bed.gz",
+            "datafile": "",
+            "uuid": "291d82c0-8fa4-11e1-9d91-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 711,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling.bed.gz",
+            "datafile": "",
+            "uuid": "291e5d9e-8fa4-11e1-93d8-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 712,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575223_H3K4me2_confluent_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "291f01ca-8fa4-11e1-b99e-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 713,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "GSM575222_H3K4me2_cycling_NPS.txt.gz",
+            "datafile": "",
+            "uuid": "291fd38f-8fa4-11e1-8611-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 714,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR036/SRR036789/SRR036789.fastq.gz",
+            "datafile": "",
+            "uuid": "e3ede154-8fa6-11e1-b924-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 715,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR036/SRR036790/SRR036790.fastq.gz",
+            "datafile": "",
+            "uuid": "e3ef32de-8fa6-11e1-ae90-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 716,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-18588/E-GEOD-18588.processed.1.zip",
+            "datafile": "",
+            "uuid": "e3f00594-8fa6-11e1-b970-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 717,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-18588/E-GEOD-18588.processed.1.zip",
+            "datafile": "",
+            "uuid": "e3f0d2ee-8fa6-11e1-9de1-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 727,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "http://www.ebi.ac.uk/arrayexpress/files/E-GEOD-18588/E-GEOD-18588.idf.txt",
+            "datafile": "",
+            "uuid": "030ec3c0-9466-11e1-8506-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 728,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "http://www.ebi.ac.uk/arrayexpress/files/E-GEOD-18588/E-GEOD-18588.sdrf.txt",
+            "datafile": "",
+            "uuid": "033f7807-9466-11e1-8aa9-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 729,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-18588/E-GEOD-18588.processed.1.zip",
+            "datafile": "",
+            "uuid": "0468dd82-9466-11e1-b9c2-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 730,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "http://www.ebi.ac.uk/arrayexpress/files/E-GEOD-18588/E-GEOD-18588.sdrf.txt",
+            "datafile": "",
+            "uuid": "0499ce9c-9466-11e1-8394-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 731,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/GEOD/E-GEOD-18588/E-GEOD-18588.processed.1.zip",
+            "datafile": "",
+            "uuid": "05a89dcc-9466-11e1-a81b-70cd60f26e14",
+            "sharename": ""
+        }
+    },
+    {
+        "pk": 732,
+        "model": "file_store.filestoreitem",
+        "fields": {
+            "source": "http://www.ebi.ac.uk/arrayexpress/files/E-GEOD-18588/E-GEOD-18588.sdrf.txt",
+            "datafile": "",
+            "uuid": "05d9f907-9466-11e1-923f-70cd60f26e14",
             "sharename": ""
         }
     },
