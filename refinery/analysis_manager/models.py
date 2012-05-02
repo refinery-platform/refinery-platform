@@ -122,17 +122,17 @@ def getPayload(ts_id):
             #print ts.result
             #print "&&&&&&&&"
             if type(ts.result) ==type(dict()):
-                print "ts.state is dict"
-                print "ts.state"
-                print ts.state
-                print "ts.result"
-                print ts.result
+                #print "ts.state is dict"
+                #print "ts.state"
+                #print ts.state
+                #print "ts.result"
+                #print ts.result
                 if type(ts.result['message']) ==type(dict()):
                     temp_ret = ts.result['message']
                 else:
                     temp_ret = ts.result
-                print "temp_ret"
-                print temp_ret
+                #print "temp_ret"
+                #print temp_ret
                 temp_ret['state'] = ts.state
                 temp_ret['task_id'] = ts.task_id
                 payload.append(temp_ret)
@@ -185,7 +185,7 @@ def getPayload(ts_id):
                 #    print "00000 tasks"
                 #    print ts.result
             else:
-                print " ))))))))))) \t \ tDIFFERENT TYPE"
+                #print " ))))))))))) \t \ tDIFFERENT TYPE"
                 temp_ret = {'state':ts.state, 'info':str(ts.result), 'task_id':ts.task_id}
                 payload.append(temp_ret)
                 #print ts.result
@@ -195,17 +195,16 @@ def getPayload(ts_id):
             temp_ret = {'state':ts.state, 'task_id':ts.task_id}
             payload.append(temp_ret)
     else:
-        print "!!!!nottstststststst"
-        print ts
+        #print "!!!!nottstststststst"
+        #print ts
         temp_ret = {'state':"### WAITING ###"}
         payload.append(temp_ret)
     
     #print "payload called"
-    print "################################"
-    print payload 
+    #print "################################"
+    #print payload 
     #print len(payload)
-    print "################################"
-    
+    #print "################################"
             
     return payload
 
