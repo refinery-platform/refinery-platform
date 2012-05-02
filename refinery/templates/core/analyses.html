@@ -2,6 +2,9 @@
 
 {% block content %}
 	{% for analysis in analyses %}
-		<a href="/projects/{{project.uuid}}/analyses/{{analysis.uuid}}/">{{analysis.name}}</a>
+		<p>{{analysis.name}}</p>
+		<p>{{analysis.uuid}}</p>
+		<p>{{analysis.summary}}</p>
+		<a href="/projects/{{project.uuid}}/analyses/{{analysis.uuid}}/">{{analysis.uuid}}</a>
 	{% endfor %}
 {% endblock %}

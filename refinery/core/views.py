@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from guardian.shortcuts import get_objects_for_user
 from guardian.shortcuts import get_objects_for_group
 from guardian.shortcuts import get_perms
+from django.core.urlresolvers import resolve
 
 def index(request):
     
@@ -467,8 +468,7 @@ def analyses(request, project_uuid ):
     
     return render_to_response('core/analyses.html', 
                               {"project": project, "analyses": analyses},
-                              context_instance=RequestContext(request)
-                              )
+                              context_instance=RequestContext(request))
 
 def analysis(request, project_uuid, analysis_uuid ):
     analysis = Analysis.objects.get(uuid=analysis_uuid)
@@ -489,5 +489,10 @@ def analysis(request, project_uuid, analysis_uuid ):
                                "project": project,
                                "workflow": workflow
                                },
-                              context_instance=RequestContext(request)
-                              )
+                              context_instance=RequestContext(request))
+
+"""
+def analysis_redirect(request, project_uuid, analysis_uuid):
+    statuses = AnalysisStatus.objects.get(analysis_uuid=analysis_uuid)
+    return HttpResponseRedirect(reverse('analysis_manager.views.analysis', args=(analysis_uuid,)))
+"""
