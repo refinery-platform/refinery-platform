@@ -247,19 +247,15 @@ def update_workflows(request):
 def analysis_run(request):
     print "refinery_repository.analysis_run called";
     
-    #values = request.POST.getlist('csrfmiddlewaretoken')
-    
     # gets workflow_uuid
     workflow_uuid = request.POST.getlist('workflow_choice')[0]
     
     # list of selected assays
     selected_data = [];
     
+    # finds all selected assays (assay_uuid, and associated workflow input type for selected samples) 
     for i, val in request.POST.iteritems():
         if (val and val != ""):
-            #print "i"
-            #print i
-            #print val
             if (i.startswith('assay_')):
                 selected_data.append({"assay_uuid":i.lstrip('assay_'), 'workflow_input_type':val})
     
@@ -287,12 +283,8 @@ def analysis_run(request):
             break
         
         for k, v in ret_item.iteritems():
-            #print "#######"
-            #print "k"
-            #print k
-            #print "v"
-            #print ret_item[k]
             for index, sd in enumerate(selected_data):
+                # dealing w/ cases where their are more than input for a galaxy workflow
                 if len_inputs > 1:
                     if k == sd["workflow_input_type"] and ret_item[k] is None:
                         ret_item[k] = {};
@@ -305,10 +297,8 @@ def analysis_run(request):
                         ret_item = copy.deepcopy(annot_inputs)
                         pair_count = 0
                         pair += 1
+                # deals w/ the case where there is a single input for a galaxy workflow
                 elif len_inputs == 1:            
-                    #print "--------"
-                    #print index
-                    #print sd
                     ret_item[k] = {};
                     ret_item[k]["assay_uuid"] = sd['assay_uuid']
                     ret_item[k]["pair_id"] = pair
@@ -316,8 +306,6 @@ def analysis_run(request):
                     selected_data.remove(sd)
                     pair += 1;
     
-    #print 'ret_list'
-    #print ret_list
     
     # retrieving workflow based on input workflow_uuid
     curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
