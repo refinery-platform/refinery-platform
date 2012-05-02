@@ -27,7 +27,8 @@
 {% for result in analysis_results.all %}
 	<li>
 		<p>
-			{{result.file_name}} 
+			{{result.file_name}} <br />
+			{{result.file_type}}
 			{% if result.file_type|lower == 'tdf' %}
 				: <a href="/file_server/profile_viewer/{{result.file_store_uuid}}/chr4/1/1000000/">Visualize</a>
 			{% endif %}
