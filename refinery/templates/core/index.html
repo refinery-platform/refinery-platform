@@ -48,7 +48,7 @@
 	{% if unassigned_analyses.all|length > 0 %}
     <tr>
     	<td>
-        	<i class="icon-exclamation-sign"></i> <a href="projects/{{ project.uuid }}">Unassigned Analyses</a>
+        	<i class="icon-exclamation-sign"></i> Unassigned Analyses
         </td>
     	<td>
         	{{unassigned_analyses.all|length}}
@@ -84,6 +84,10 @@
 	</tbody>
 </table>
 {% else %}
+
+	<div class="alert alert-info">
+		No projects available.  
+	</div>
 {% endif %}
 
 <a class="btn" href={% url project_new %}>New Project</a> 
@@ -92,8 +96,8 @@
 </div>
 <div class="span4">
 
-{% if workflow_engines %}
 	<h2>Workflows</h2> 
+{% if workflow_engines %}
 
 	<table class="table table-striped table-condensed">
 		<thead>
@@ -128,9 +132,14 @@
     {% endfor %}
 		</tbody>		
 	</table>
+{% else %}
+	<div class="alert alert-info">
+		No workflows available.  
+	</div>
 {% endif %}
 
 </div>
+
 <div class="span4">
 
 <h2>Data Sets</h2>
