@@ -10,7 +10,7 @@ from guardian.shortcuts import get_perms
 from django.core.urlresolvers import resolve
 from file_store.models import FileStoreItem
 
-def index(request):
+def home(request):
     
     if request.user.is_superuser:
         users = User.objects.all()
@@ -41,7 +41,7 @@ def index(request):
         workflows = get_objects_for_user( request.user, "core.read_workflow" )
         data_sets = get_objects_for_user( request.user, "core.read_dataset" )
             
-    return render_to_response('core/index.html', {'users': users, 'projects': projects, 'unassigned_analyses': unassigned_analyses, 'workflow_engines': workflow_engines, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext( request ) )
+    return render_to_response('core/home.html', {'users': users, 'projects': projects, 'unassigned_analyses': unassigned_analyses, 'workflow_engines': workflow_engines, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext( request ) )
 
 
 def about(request):
