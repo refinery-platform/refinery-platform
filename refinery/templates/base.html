@@ -48,17 +48,17 @@
           <a class="brand" href="/">Refinery</a>
           <div class="nav-collapse">
             <ul class="nav">
-              <li class="active"><a>Home</a></li>
-              <li><a href="{% url about %}">About</a></li>
-              <li><a href="{% url contact %}">Contact</a></li>
-              <li><a href="{% url statistics %}">Statistics</a></li>
+              <li class="{{ navbar_class_home }}"><a href="{% url home %}">Home</a></li>
+              <li class="{{ navbar_class_about }}"><a href="{% url about %}">About</a></li>
+              <li class="{{ navbar_class_contact }}"><a href="{% url contact %}">Contact</a></li>
+              <li class="{{ navbar_class_statistics }}"><a href="{% url statistics %}">Statistics</a></li>
             </ul>
               <div id="auth_area">
               <p class="navbar-text pull-right">
               	<!-- <Logged in as <a href="#">username</a> -->
               		{% block authentication %}        
 					{% if user.is_authenticated %}       
-        				<i class="icon-user icon-white"></i> {{ user.get_full_name }} | <a href="/users/{{user.username}}">Profile</a> | <a href="{% url django.contrib.auth.views.logout %}">Logout</a>
+        				<i class="icon-user icon-white"></i> <a href="{% url user user.get_profile.uuid %}">{{ user.get_full_name }}</a> | <a href="{% url django.contrib.auth.views.logout %}">Logout</a>
         			{% else %}
 						<a href="{% url django.contrib.auth.views.login %}?next={% firstof request.path '/' %}">Login</a>
         			{% endif %}		
@@ -96,6 +96,7 @@
        </div>
     
     <div id="footer">
+    	{{request}}
     	<hr>
         <small>Copyright &copy; 2012 Park Lab | Center for Biomedical Informatics at Harvard Medical School. All rights reserved.</small>
     </div>

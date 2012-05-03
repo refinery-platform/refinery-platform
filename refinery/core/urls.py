@@ -7,7 +7,7 @@ Created on Feb 20, 2012
 from django.conf.urls.defaults import patterns, url
 
 urlpatterns = patterns('core.views',
-    url(r'^$', 'index'),
+    url(r'^$', 'home', name="home" ),
     url(r'^about/$', 'about', name="about" ),
     url(r'^contact/$', 'contact', name="contact" ),
     url(r'^statistics/$', 'statistics', name="statistics" ),
