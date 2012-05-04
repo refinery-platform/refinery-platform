@@ -15,6 +15,8 @@ from core.models import WorkflowDataInput
 from core.models import WorkflowDataInputMap
 from core.models import Analysis
 from core.models import DiskQuota
+from tastypie.models import ApiKey
+
 from guardian.admin import GuardedModelAdmin
 
 class ProjectAdmin(GuardedModelAdmin):
@@ -37,6 +39,7 @@ class DiskQuotaAdmin(GuardedModelAdmin):
 
 
 admin.site.register(UserProfile)
+admin.site.register(ApiKey)
 admin.site.register(ExtendedGroup)
 admin.site.register(Project,ProjectAdmin)
 admin.site.register(DataSet,DataSetAdmin)

@@ -147,6 +147,8 @@ INSTALLED_APPS = (
     # NG: added for that human touch ...
     'django.contrib.humanize', 
     'djcelery', #django-celery
+    # NG: added for API
+    "tastypie",
     'guardian',
     'galaxy_connector',
     'refinery_repository',
