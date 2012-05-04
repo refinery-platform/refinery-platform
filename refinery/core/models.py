@@ -102,8 +102,32 @@ class SharableResource ( OwnableResource ):
         assign( "read_%s" % self._meta.verbose_name, group, self )
         
         if not readonly:
-            assign( "change_%s" % self._meta.verbose_name, group, self )
+            assign( "change_%s" % self._meta.verbose_name, group, self )        
+    
+    # TODO: clean this up    
+    def get_groups(self, changeonly=False, readonly=False ):                
+        permissions = get_groups_with_perms( self, attach_perms=True )
         
+        groups = []
+        
+        for group_object, permission_list in permissions.items():            
+            group = {}
+            group["group"] = ExtendedGroup.objects.get( id=group_object.id )
+            group["change"] = False
+            group["read"] = False
+            for permission in permission_list:  
+                if permission.startswith( "change" ):
+                    group["change"] = True
+                if permission.startswith( "read" ):
+                    group["read"] = True            
+            if group["change"] and readonly:
+                continue                
+            if group["read"] and changeonly:
+                continue            
+            groups.append( group )
+        
+        return groups        
+
         
     class Meta:
         verbose_name = "sharableresource"
@@ -273,6 +297,7 @@ class Analysis ( OwnableResource ):
 class ExtendedGroup ( Group ):
     ''' Extends the default Django Group in auth with a group of users that own and manage manageable resources for the group.'''    
     manager_group = models.ForeignKey( "self", blank=True, null=True )
+    uuid = UUIDField( unique=True, auto=True )
     
     def delete(self):
                 
