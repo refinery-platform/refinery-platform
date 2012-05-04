@@ -87,9 +87,6 @@ def group(request, query):
     group = get_object_or_404( ExtendedGroup, uuid=query )
 
     # only group members are allowed to see group pages
-    print request.user.groups.values_list('id', flat=True)
-    print group.id
-            
     if not group.id in request.user.groups.values_list('id', flat=True):
         return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view group " + group.name + ".</h1>" )
                         
