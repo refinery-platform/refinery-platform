@@ -22,8 +22,11 @@ User: <i>{{ user.username }}</i>
 
     <div class="label">Groups</div>
     <ul>    
-	{% for group in user.groups.all %}	    		    	
-        <li>{{ group.name }}</li>
+	{% for group in groups %}
+        <li><a href="{% url group group.uuid %}">{{ group.name }}</a></li>
+    {% endfor %}
+	{% for group in user.groups.all %}
+        <li><a href="">{{ group.name }}</a></li>
     {% endfor %}
    	</ul>
 	

@@ -16,8 +16,8 @@
 	<div class="label">Permissions</div>	
 	{% if permissions|length > 0 %}
 		<ul>
-		{% for user, permission in permissions.items %}
-		    <li>{{ user }}: {{ permission|join:" | " }}</li>
+		{% for perm in data_set.get_groups %}
+			<li><a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a> - Read: {{ perm.read }} | Change: {{ perm.change }}</li>
 		{% endfor %}
 		</ul>
 	{% else %}

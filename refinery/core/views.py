@@ -74,8 +74,26 @@ def user(request, query):
         
     if not request.user.id == user.id:
         return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view the profile of user " + user.username + ".</h1>" )
+
+    # TODO: get list of ExtendedGroups for this user
+    groups = []
+                            
+    return render_to_response('core/user.html', {'user': user, "groups": groups }, context_instance=RequestContext( request ) )
+
+
+@login_required()
+def group(request, query):
+    
+    group = get_object_or_404( ExtendedGroup, uuid=query )
+
+    # only group members are allowed to see group pages
+    print request.user.groups.values_list('id', flat=True)
+    print group.id
+            
+    if not group.id in request.user.groups.values_list('id', flat=True):
+        return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view group " + group.name + ".</h1>" )
                         
-    return render_to_response('core/user.html', {'user': user }, context_instance=RequestContext( request ) )
+    return render_to_response('core/group.html', {'group': group }, context_instance=RequestContext( request ) )
 
 
 def project(request, uuid):
@@ -89,6 +107,9 @@ def project(request, uuid):
             return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this project.</h1>" )
             
     permissions = get_users_with_perms( project, attach_perms=True )
+    
+    accessors = project.get_groups()
+    print accessors
     
     analyses = project.analyses.all()
     
