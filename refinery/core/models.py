@@ -164,6 +164,8 @@ class ManageableResource:
 
         
 class DataSet(SharableResource):
+    # TODO: add function to restore earlier version
+    # TODO: add collections (of assays in the investigation) and associate those with the versions
 
     _investigations = models.ManyToManyField( Investigation, through="InvestigationLink" )
     
