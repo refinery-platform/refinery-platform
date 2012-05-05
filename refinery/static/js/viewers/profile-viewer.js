@@ -373,7 +373,8 @@ ProfileViewer.prototype.redraw = function() {
     
     // limit zooming and panning: http://stackoverflow.com/questions/10422738/limiting-domain-when-zooming-or-panning-in-d3-js
     // TODO: set correct maximum value
-	self.x.domain([Math.max(self.x.domain()[0], 1 ), Math.min(self.x.domain()[1], 10000000)]);
+	self.x.domain([ Math.max(self.x.domain()[0], 1 ), self.x.domain()[1] ] );
+	//self.x.domain([Math.max(self.x.domain()[0], 1 ), Math.min(self.x.domain()[1], 10000000)]);
     //self.y.domain([Math.max(self.y.domain()[0], self.options.ymin), Math.min(self.y.domain()[1], self.options.ymax)]);
     
         
