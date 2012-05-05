@@ -1,12 +1,24 @@
+{% load humanize %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
     <!-- Le styles -->
     <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/jquery-1.7.js"></script>
+    <link href="{{ STATIC_URL }}js/datatables/css/DT_bootstrap.css" rel="stylesheet">
     
     <link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+    </style>
     <link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
-    <link href="{{ STATIC_URL }}js/datatables/css/DT_bootstrap.css" rel="stylesheet">
     
     
     <!-- <link rel="stylesheet" href="{{ STATIC_URL }}js/bootstrap/css/style.css"> -->
@@ -15,7 +27,7 @@
     <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap.js"></script>
     <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/jquery.dataTables.js"></script>		
     <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/DT_bootstrap.js"></script>		
-    <script language="javascript" type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+    <!-- <script language="javascript" type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script> -->
 	
 	
     
@@ -38,16 +50,17 @@
           <a class="brand" href="/">Refinery</a>
           <div class="nav-collapse">
             <ul class="nav">
-              <li class="active"><a>Home</a></li>
-              <li><a >About</a></li>
-              <li><a>Contact</a></li>
+              <li class="{{ navbar_class_home }}"><a href="{% url home %}">Home</a></li>
+              <li class="{{ navbar_class_about }}"><a href="{% url about %}">About</a></li>
+              <li class="{{ navbar_class_contact }}"><a href="{% url contact %}">Contact</a></li>
+              <li class="{{ navbar_class_statistics }}"><a href="{% url statistics %}">Statistics</a></li>
             </ul>
               <div id="auth_area">
               <p class="navbar-text pull-right">
               	<!-- <Logged in as <a href="#">username</a> -->
               		{% block authentication %}        
 					{% if user.is_authenticated %}       
-        				<i class="icon-user icon-white"></i> {{ user.get_full_name }} | <a href="/users/{{user.username}}">Profile</a> | <a href="{% url django.contrib.auth.views.logout %}">Logout</a>
+        				<i class="icon-user icon-white"></i> <a href="{% url user user.get_profile.uuid %}">{{ user.get_full_name }}</a> | <a href="{% url django.contrib.auth.views.logout %}">Logout</a>
         			{% else %}
 						<a href="{% url django.contrib.auth.views.login %}?next={% firstof request.path '/' %}">Login</a>
         			{% endif %}		
@@ -85,6 +98,8 @@
        </div>
     
     <div id="footer">
+    	{{request}}
+    	<hr>
         <small>Copyright &copy; 2012 Park Lab | Center for Biomedical Informatics at Harvard Medical School. All rights reserved.</small>
     </div>
     

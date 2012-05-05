@@ -8,8 +8,9 @@ from guardian.shortcuts import get_objects_for_user
 from guardian.shortcuts import get_objects_for_group
 from guardian.shortcuts import get_perms
 from django.core.urlresolvers import resolve
+from file_store.models import FileStoreItem
 
-def index(request):
+def home(request):
     
     if request.user.is_superuser:
         users = User.objects.all()
@@ -40,7 +41,28 @@ def index(request):
         workflows = get_objects_for_user( request.user, "core.read_workflow" )
         data_sets = get_objects_for_user( request.user, "core.read_dataset" )
             
-    return render_to_response('core/index.html', {'users': users, 'projects': projects, 'unassigned_analyses': unassigned_analyses, 'workflow_engines': workflow_engines, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext( request ) )
+    return render_to_response('core/home.html', {'users': users, 'projects': projects, 'unassigned_analyses': unassigned_analyses, 'workflow_engines': workflow_engines, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext( request ) )
+
+
+def about(request):
+    return render_to_response('core/about.html', {}, context_instance=RequestContext( request ) )
+
+def contact(request):
+    return render_to_response('core/contact.html', {}, context_instance=RequestContext( request ) )
+
+def statistics(request):
+    users = User.objects.count()
+    groups = Group.objects.count()
+    projects = Project.objects.count()
+    data_sets = DataSet.objects.count()
+    workflows = Workflow.objects.count()
+    files = FileStoreItem.objects.count()
+
+    uri = request.build_absolute_uri()
+    base_url = uri.split( request.get_full_path() )[0]
+    
+    return render_to_response('core/statistics.html', { "users": users, "groups": groups, "projects": projects, "workflows": workflows, "data_sets": data_sets, "files": files, "base_url": base_url }, context_instance=RequestContext( request ) )
+
 
 @login_required()
 def user(request, query):
@@ -52,8 +74,23 @@ def user(request, query):
         
     if not request.user.id == user.id:
         return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view the profile of user " + user.username + ".</h1>" )
+
+    # TODO: get list of ExtendedGroups for this user
+    groups = []
+                            
+    return render_to_response('core/user.html', {'user': user, "groups": groups }, context_instance=RequestContext( request ) )
+
+
+@login_required()
+def group(request, query):
+    
+    group = get_object_or_404( ExtendedGroup, uuid=query )
+
+    # only group members are allowed to see group pages
+    if not group.id in request.user.groups.values_list('id', flat=True):
+        return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view group " + group.name + ".</h1>" )
                         
-    return render_to_response('core/user.html', {'user': user }, context_instance=RequestContext( request ) )
+    return render_to_response('core/group.html', {'group': group }, context_instance=RequestContext( request ) )
 
 
 def project(request, uuid):
@@ -67,6 +104,9 @@ def project(request, uuid):
             return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this project.</h1>" )
             
     permissions = get_users_with_perms( project, attach_perms=True )
+    
+    accessors = project.get_groups()
+    print accessors
     
     analyses = project.analyses.all()
     

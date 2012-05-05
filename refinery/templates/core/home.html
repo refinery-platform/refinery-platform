@@ -45,22 +45,24 @@
 	</thead>
 	<tbody>
 		
-	{% if unassigned_analyses.all|length > 0 %}
-    <tr>
-    	<td>
-        	<i class="icon-exclamation-sign"></i> Unassigned Analyses
-        </td>
-    	<td>
-        	{{unassigned_analyses.all|length}}
-        </td>
-    </tr>
-	{% for analysis in unassigned_analyses.all %}
-	    <tr>
-	    	<td colspan="2">
-	    		<i class="icon-empty"></i> <a href="projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }} - {{analysis.summary}}</a>
-	    	</td>
-	    </tr>
-	{% endfor %}	
+	{% if unassigned_analyses %}
+		{% if unassigned_analyses.all|length > 0 %}
+		    <tr>
+		    	<td>
+		        	<i class="icon-exclamation-sign"></i> Unassigned Analyses
+		        </td>
+		    	<td>
+		        	{{unassigned_analyses.all|length}}
+		        </td>
+		    </tr>
+			{% for analysis in unassigned_analyses.all %}
+			    <tr>
+			    	<td colspan="2">
+			    		<i class="icon-empty"></i> <a href="projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }} - {{analysis.summary}}</a>
+			    	</td>
+			    </tr>
+			{% endfor %}	
+		{% endif %}
 	{% endif %}
 
     {% for project in projects %}

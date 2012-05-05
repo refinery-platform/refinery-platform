@@ -35,8 +35,8 @@ class AnalysisStatus( models.Model ):
     def execution_status(self):
         total_steps = Analysis.objects.get(uuid=self.analysis_uuid).workflow_steps_num        
         test = getPayload(self.execution_monitor_task_id)
-        print "test lgneth"
-        print len(test)
+        #print "test lgneth"
+        #print len(test)
             
         test[0]['total_steps'] = total_steps
         if 'ok' in test[0].keys():
