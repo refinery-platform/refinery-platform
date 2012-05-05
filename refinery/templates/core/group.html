@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - Group {{ group.name }}
+{% endblock %}
+
+{% block subheader %}
+Group: <i>{{ group.name }}</i>
+{% endblock %}
+
+
+{% block content %}
+<div class="label">Name</div>    
+<p>{{ group.name }}</p>
+
+<div class="label">Members</div>    
+<ul>
+{% for member in group.user_set.all %}
+<li><a href="{% url user member.get_profile.uuid %}">{{ member.get_full_name }}</a></li>
+{% endfor %}
+</ul>
+
+<div class="label">UUID</div>    
+<p>{{ group.uuid }}</p>
+
+{% endblock %}

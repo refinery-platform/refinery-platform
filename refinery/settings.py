@@ -144,7 +144,11 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
+    # NG: added for that human touch ...
+    'django.contrib.humanize', 
     'djcelery', #django-celery
+    # NG: added for API
+    "tastypie",
     'guardian',
     'galaxy_connector',
     'refinery_repository',
