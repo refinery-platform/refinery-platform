@@ -9,8 +9,10 @@ from django_extensions.db.fields import UUIDField
 from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save
 from django.forms import ModelForm
+from refinery_repository.models import Investigation
 from galaxy_connector.models import Instance
 from guardian.shortcuts import assign, get_users_with_perms, get_groups_with_perms
+from django.db.models import Max
 
 
 class UserProfile ( models.Model ):
@@ -161,8 +163,54 @@ class ManageableResource:
         abstract = True
 
         
-class DataSet ( SharableResource ):
+class DataSet(SharableResource):
+    # TODO: add function to restore earlier version
+    # TODO: add collections (of assays in the investigation) and associate those with the versions
 
+    _investigations = models.ManyToManyField( Investigation, through="InvestigationLink" )
+    
+    def set_investigation(self,investigation,message=""):
+        '''
+        Associate this data set with an investigation. If this data set has an association with an investigation this 
+        association will be cleared first. Use update_investigation() to add a new version of the current investigation.
+        ''' 
+        self._investigations.clear()        
+        link = InvestigationLink(data_set=self, investigation=investigation, version=1, message=message)
+        link.save()
+        return 1
+        
+        
+    def update_investigation(self, investigation, message):
+        max_version = InvestigationLink.objects.filter( data_set=self ).aggregate( Max("version" ) )["version__max"]        
+        if max_version is None:
+            return self.set_investigation(investigation, message)            
+        link = InvestigationLink(data_set=self, investigation=investigation, version=max_version+1, message=message)
+        link.save()
+        return max_version+1       
+
+
+    def get_version(self):
+        try:
+            return InvestigationLink.objects.filter( data_set=self ).aggregate( Max("version" ) )["version__max"]
+        except:
+            return None
+
+    
+    def get_investigation(self, version=None):
+        if version is None:
+            try:
+                max_version = InvestigationLink.objects.filter( data_set=self ).aggregate( Max("version" ) )["version__max"]
+            except:
+                return None
+        else:
+            max_version = version
+        try:
+            return InvestigationLink.objects.filter( data_set=self, version=max_version ).get()
+        except:
+            return None
+        
+            
+    
     def __unicode__(self):
         return self.name + " - " + self.summary
 
@@ -172,6 +220,13 @@ class DataSet ( SharableResource ):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
+
+
+class InvestigationLink(models.Model):
+    data_set = models.ForeignKey(DataSet)
+    investigation = models.ForeignKey(Investigation)
+    version = models.IntegerField(default=1) 
+    message = models.CharField(max_length=500, blank=True, null=True) 
 
 
 class WorkflowDataInput ( models.Model ):
