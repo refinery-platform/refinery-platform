@@ -370,6 +370,13 @@ ProfileViewer.prototype.redraw = function() {
     },
     fx = self.x.tickFormat(10),
     fy = self.y.tickFormat(10);
+    
+    // limit zooming and panning: http://stackoverflow.com/questions/10422738/limiting-domain-when-zooming-or-panning-in-d3-js
+    // TODO: set correct maximum value
+	self.x.domain([ Math.max(self.x.domain()[0], 1 ), self.x.domain()[1] ] );
+	//self.x.domain([Math.max(self.x.domain()[0], 1 ), Math.min(self.x.domain()[1], 10000000)]);
+    //self.y.domain([Math.max(self.y.domain()[0], self.options.ymin), Math.min(self.y.domain()[1], self.options.ymax)]);
+    
         
     // update y-axis range
 
@@ -435,7 +442,6 @@ ProfileViewer.prototype.redraw = function() {
         .on("touchstart.drag", self.yaxis_drag());
 
     gy.exit().remove();
-    
 
     // check if there are enough data points in the buffer
     if ( ( ( self.x.domain()[0] < self.options.xmin ) || ( self.x.domain()[1] > self.options.xmax ) ) )
