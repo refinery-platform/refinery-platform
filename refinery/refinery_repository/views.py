@@ -1,6 +1,8 @@
 import copy
 import simplejson
 import re
+import os
+from zipfile import ZipFile
 from datetime import datetime
 from django.http import Http404, HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
@@ -10,6 +12,8 @@ from django.template import RequestContext
 from django.conf import settings
 from django.db import connection
 from django.core import serializers
+from django.core.management import call_command
+from django import forms
 from celery import states
 from celery.result import AsyncResult
 from celery.task.control import revoke
@@ -444,11 +448,35 @@ def getColumnNames(cursor):
         field_names.append(fn[0]);
     return field_names
 
+class ImportISATabFileForm(forms.Form):
+    ''' ISA-Tab file upload form '''
+    isatabfile = forms.FileField(required=False, label='')
+    isataburl = forms.URLField(required=False, label='ISA-Tab URL')
+
+#TODO: check if the incoming ISA-Tab file is already in the system
+def process_isa_tab(inputfile):
+    ''' Unzip and parse uploaded ISA-Tab file '''
+    accession = os.path.splitext(inputfile.name)[0]
+    extractiondir = os.path.join(settings.ISA_TAB_DIR, accession)
+    os.mkdir(extractiondir)
+    with ZipFile(inputfile, 'r') as zf:
+        zf.extractall(extractiondir)
+    # call the parser on that folder
+    call_command('parser', accession)
+
 def import_isa_tab(request):
-    ''' Parse a zipped ISA-Tab file sent by POST request '''
-    #from django.template.loader import get_template
-    #from django.template import Context
-    #t = get_template()
-    #html = t.render(Context())
-    #return HttpResponse(t)
-    return render_to_response('refinery_repository/import.html')
+    ''' Process imported ISA-Tab file sent via POST request '''
+    errors = []
+    if request.method == 'POST':
+        form = ImportISATabFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            process_isa_tab(request.FILES['isatabfile'])
+            return HttpResponseRedirect(request.path + 'success/')
+    else:
+        form = ImportISATabFileForm()
+    return render_to_response('refinery_repository/import.html',
+                              {'form': form},
+                              context_instance=RequestContext(request))
+
+def import_isa_tab_success():
+    return render_to_response('refinery_repository/import_success.html')
