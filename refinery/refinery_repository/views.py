@@ -2,6 +2,7 @@ import copy
 import simplejson
 import re
 import os
+import shutil
 from zipfile import ZipFile
 from datetime import datetime
 from django.http import Http404, HttpResponseRedirect, HttpResponse
@@ -478,8 +479,12 @@ class ImportISATabFileForm(forms.Form):
 #TODO: check if the incoming ISA-Tab file is already in the system
 def process_isa_tab(inputfile):
     ''' Unzip and parse uploaded ISA-Tab file '''
+    # create folder for storing unzipped ISA-Tab contents
     accession = os.path.splitext(inputfile.name)[0]
     extractiondir = os.path.join(settings.ISA_TAB_DIR, accession)
+    # delete folder if it already exists
+    if os.path.isdir(extractiondir):
+        shutil.rmtree(extractiondir)
     os.mkdir(extractiondir)
     with ZipFile(inputfile, 'r') as zf:
         zf.extractall(extractiondir)
@@ -500,5 +505,6 @@ def import_isa_tab(request):
                               {'form': form},
                               context_instance=RequestContext(request))
 
-def import_isa_tab_success():
-    return render_to_response('refinery_repository/import_success.html')
+def import_isa_tab_success(request):
+    return render_to_response('refinery_repository/import_success.html',
+                              context_instance=RequestContext(request))

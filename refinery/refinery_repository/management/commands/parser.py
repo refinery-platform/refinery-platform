@@ -729,10 +729,11 @@ class Command(LabelCommand):
                             del tion_dict[k]
                             
                 #add in pre_isatab_file and isatab_file
-                tion_dict['isatab_file'] = isatab
-                tion_dict['pre_isatab_file'] = pre_isatab
+                #tion_dict['isatab_file'] = isatab
+                #tion_dict['pre_isatab_file'] = pre_isatab
     
                 investigation = Investigation(**tion_dict)
+                print tion_dict
                 investigation.save()
     
                 for tor_dict in tor_list:
