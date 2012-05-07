@@ -4,7 +4,7 @@ from django.core.management.base import LabelCommand
 from django.db import transaction
 from django.db.utils import IntegrityError
 from datetime import datetime
-from refinery.refinery_repository.models import *
+from refinery_repository.models import *
 import csv, sys, re, string, os, glob, traceback
 from collections import defaultdict
 from django.db import connection

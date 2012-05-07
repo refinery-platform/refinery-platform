@@ -1,32 +1,30 @@
-# Create your views here.
-from refinery_repository.models import Investigation, Assay, RawData
-from django.shortcuts import render_to_response, get_object_or_404
-from django.http import HttpResponseRedirect, HttpResponse
-from django.template import RequestContext
+import copy
+import simplejson
+import re
+from datetime import datetime
+from django.http import Http404, HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
-from refinery_repository.tasks import call_download, download_ftp_file
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.shortcuts import render_to_response, get_object_or_404
+from django.template import RequestContext
 from django.conf import settings
-from celery.task.control import revoke
-from celery import states
-from celery.result import AsyncResult
-import simplejson, re
-from core.models import *
-from core.tasks import grab_workflows
 from django.db import connection
 from django.core import serializers
-import os, errno, copy
-from galaxy_connector.tasks import run_workflow_ui
-from galaxy_connector.views import checkActiveInstance, obtain_instance
-from analysis_manager.tasks import download_history_files, run_analysis
-from workflow_manager.tasks import get_workflow_inputs, get_workflows
-from datetime import datetime
-from django.http import Http404
-from django.core.urlresolvers import resolve
+from celery import states
+from celery.result import AsyncResult
+from celery.task.control import revoke
+from celery.utils import get_full_cls_name
+from celery.utils.encoding import safe_repr
+from core.models import *
 from analysis_manager.models import AnalysisStatus
+from analysis_manager.tasks import run_analysis
+from refinery_repository.models import Investigation
+from refinery_repository.tasks import call_download, download_ftp_file
+from workflow_manager.tasks import get_workflow_inputs, get_workflows
 
-
-
+"""
+Helper function for returning rawsql as a dictionary object
+"""
 def dictfetchall(cursor):
     "Returns all rows from a cursor as a dict"
     desc = cursor.description
@@ -121,8 +119,6 @@ def get_available_files(request):
     """
     Returns all available files to use in workflows
     """
-    from django.db import connection
-    
     cursor = connection.cursor()
     
     cursor.execute(""" SELECT distinct a.uuid, a.id as assay_id, a.investigation_id, a.assay_name, o.species, d.description, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.file, r.raw_data_file FROM
@@ -429,17 +425,6 @@ def getWorkflowDataInputMap(request, workflow_uuid):
         return HttpResponse(data, mimetype='application/javascript')
     else:
         return HttpResponse(data,mimetype='application/json')
-    
-"""
-Helper function for returning rawsql as a dictionary object
-"""
-def dictfetchall(cursor):
-    "Returns all rows from a cursor as a dict"
-    desc = cursor.description
-    return [
-        dict(zip([col[0] for col in desc], row))
-        for row in cursor.fetchall()
-    ]
 
 """
 Returns column names for a given raw sql call
@@ -458,3 +443,12 @@ def getColumnNames(cursor):
     for fn in cursor.description:
         field_names.append(fn[0]);
     return field_names
+
+def import_isa_tab(request):
+    ''' Parse a zipped ISA-Tab file sent by POST request '''
+    #from django.template.loader import get_template
+    #from django.template import Context
+    #t = get_template()
+    #html = t.render(Context())
+    #return HttpResponse(t)
+    return render_to_response('refinery_repository/import.html')
