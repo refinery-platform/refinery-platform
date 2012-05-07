@@ -7,8 +7,10 @@ from django.contrib.auth.decorators import login_required
 from guardian.shortcuts import get_objects_for_user
 from guardian.shortcuts import get_objects_for_group
 from guardian.shortcuts import get_perms
+from django.core.urlresolvers import resolve
+from file_store.models import FileStoreItem
 
-def index(request):
+def home(request):
     
     if request.user.is_superuser:
         users = User.objects.all()
@@ -21,25 +23,49 @@ def index(request):
         
         if len( groups ) == 1:
             group = groups[0]        
-            projects = get_objects_for_group( group, "core.read_project" )
+            projects = get_objects_for_group( group, "core.read_project" ).filter( is_catch_all=False )
             workflow_engines = get_objects_for_group( group, "core.read_workflowengine" )
             data_sets = get_objects_for_group( group, "core.read_dataset" )
             workflows = get_objects_for_group( group, "core.read_workflow" )
+            unassigned_analyses = []
         else:
             projects = []
             workflow_engines = []
             data_sets = []
             workflows = []
+            unassigned_analyses = []
     else:
-        projects = get_objects_for_user( request.user, "core.read_project" )
+        projects = get_objects_for_user( request.user, "core.read_project" ).filter( is_catch_all=False )
+        unassigned_analyses = request.user.get_profile().catch_all_project.analyses
         workflow_engines = get_objects_for_user( request.user, "core.read_workflowengine" )
         workflows = get_objects_for_user( request.user, "core.read_workflow" )
         data_sets = get_objects_for_user( request.user, "core.read_dataset" )
             
-    return render_to_response('core/index.html', {'users': users, 'projects': projects, 'workflow_engines': workflow_engines, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext( request ) )
+    return render_to_response('core/home.html', {'users': users, 'projects': projects, 'unassigned_analyses': unassigned_analyses, 'workflow_engines': workflow_engines, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext( request ) )
+
+
+def about(request):
+    return render_to_response('core/about.html', {}, context_instance=RequestContext( request ) )
+
+def contact(request):
+    return render_to_response('core/contact.html', {}, context_instance=RequestContext( request ) )
+
+def statistics(request):
+    users = User.objects.count()
+    groups = Group.objects.count()
+    projects = Project.objects.count()
+    data_sets = DataSet.objects.count()
+    workflows = Workflow.objects.count()
+    files = FileStoreItem.objects.count()
+
+    uri = request.build_absolute_uri()
+    base_url = uri.split( request.get_full_path() )[0]
+    
+    return render_to_response('core/statistics.html', { "users": users, "groups": groups, "projects": projects, "workflows": workflows, "data_sets": data_sets, "files": files, "base_url": base_url }, context_instance=RequestContext( request ) )
+
 
 @login_required()
-def user(request,query):
+def user(request, query):
     
     try:
         user = User.objects.get( username=query )
@@ -48,11 +74,26 @@ def user(request,query):
         
     if not request.user.id == user.id:
         return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view the profile of user " + user.username + ".</h1>" )
+
+    # TODO: get list of ExtendedGroups for this user
+    groups = []
+                            
+    return render_to_response('core/user.html', {'user': user, "groups": groups }, context_instance=RequestContext( request ) )
+
+
+@login_required()
+def group(request, query):
+    
+    group = get_object_or_404( ExtendedGroup, uuid=query )
+
+    # only group members are allowed to see group pages
+    if not group.id in request.user.groups.values_list('id', flat=True):
+        return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view group " + group.name + ".</h1>" )
                         
-    return render_to_response('core/user.html', {'user': user }, context_instance=RequestContext( request ) )
+    return render_to_response('core/group.html', {'group': group }, context_instance=RequestContext( request ) )
 
 
-def project(request,uuid):
+def project(request, uuid):
     project = get_object_or_404( Project, uuid=uuid )
     public_group = ExtendedGroup.objects.get( name__exact="Public")
     
@@ -64,7 +105,12 @@ def project(request,uuid):
             
     permissions = get_users_with_perms( project, attach_perms=True )
     
-    return render_to_response('core/project.html', { 'project': project, "permissions": permissions }, context_instance=RequestContext( request ) )
+    accessors = project.get_groups()
+    print accessors
+    
+    analyses = project.analyses.all()
+    
+    return render_to_response('core/project.html', { 'project': project, "permissions": permissions, "analyses": analyses }, context_instance=RequestContext( request ) )
 
 
 @login_required()
@@ -242,9 +288,9 @@ def admin_test_data( request ):
         # delete if exists
         try:
             group_object = ExtendedGroup.objects.get( group["name"] )            
-            if group_object.is_managed():
-                print( group_object.manager_group )
-                group_object.manager_group.delete()
+            #if group_object.is_managed():
+            #    print( group_object.manager_group )
+            #    group_object.manager_group.delete()
             group_object.delete()
         except:
             pass
@@ -454,3 +500,39 @@ def admin_test_data( request ):
     
     return render_to_response( template, { "users": user_objects, "groups": group_objects, "projects": project_objects, "data_sets": data_set_objects, "workflow_engines": workflow_engine_objects }, context_instance=RequestContext( request ) )
 
+
+def analyses(request, project_uuid ):
+    project = Project.objects.get(uuid=project_uuid)
+    
+    analyses = project.analyses.all()
+    
+    return render_to_response('core/analyses.html', 
+                              {"project": project, "analyses": analyses},
+                              context_instance=RequestContext(request))
+
+def analysis(request, project_uuid, analysis_uuid ):
+    analysis = Analysis.objects.get(uuid=analysis_uuid)
+    
+    project = analysis.project
+    """Project associated with this Analysis"""
+    data_inputs = analysis.workflow_data_input_maps.order_by('pair_id')
+    """List of analysis inputs"""
+    analysis_results = analysis.results
+    """List of analysis results"""
+    workflow = analysis.workflow
+    
+    return render_to_response('core/analysis.html',
+                              {
+                               "analysis": analysis,
+                               "analysis_results": analysis_results,
+                               "inputs": data_inputs,
+                               "project": project,
+                               "workflow": workflow
+                               },
+                              context_instance=RequestContext(request))
+
+"""
+def analysis_redirect(request, project_uuid, analysis_uuid):
+    statuses = AnalysisStatus.objects.get(analysis_uuid=analysis_uuid)
+    return HttpResponseRedirect(reverse('analysis_manager.views.analysis', args=(analysis_uuid,)))
+"""

@@ -9,8 +9,10 @@ from django_extensions.db.fields import UUIDField
 from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save
 from django.forms import ModelForm
+from refinery_repository.models import Investigation
 from galaxy_connector.models import Instance
 from guardian.shortcuts import assign, get_users_with_perms, get_groups_with_perms
+from django.db.models import Max
 
 
 class UserProfile ( models.Model ):
@@ -21,6 +23,7 @@ class UserProfile ( models.Model ):
 
     user = models.OneToOneField( User )
     affiliation = models.CharField( max_length=100, blank=True )
+    catch_all_project = models.ForeignKey( 'Project' )
 
     def __unicode__(self):
         return self.user.first_name + " " + self.user.last_name + " (" + self.affiliation + "): " + self.user.email
@@ -29,8 +32,10 @@ class UserProfile ( models.Model ):
 # automatic creation of a user profile when a user is created: 
 def create_user_profile( sender, instance, created, **kwargs ):
     if created:
-        UserProfile.objects.create( user=instance )
-
+        project = Project.objects.create( name="Catch-All Project", is_catch_all=True )
+        project.set_owner( instance )
+        UserProfile.objects.create( user=instance, catch_all_project=project )
+        
 post_save.connect( create_user_profile, sender=User )            
 
 
@@ -99,8 +104,32 @@ class SharableResource ( OwnableResource ):
         assign( "read_%s" % self._meta.verbose_name, group, self )
         
         if not readonly:
-            assign( "change_%s" % self._meta.verbose_name, group, self )
+            assign( "change_%s" % self._meta.verbose_name, group, self )        
+    
+    # TODO: clean this up    
+    def get_groups(self, changeonly=False, readonly=False ):                
+        permissions = get_groups_with_perms( self, attach_perms=True )
         
+        groups = []
+        
+        for group_object, permission_list in permissions.items():            
+            group = {}
+            group["group"] = ExtendedGroup.objects.get( id=group_object.id )
+            group["change"] = False
+            group["read"] = False
+            for permission in permission_list:  
+                if permission.startswith( "change" ):
+                    group["change"] = True
+                if permission.startswith( "read" ):
+                    group["read"] = True            
+            if group["change"] and readonly:
+                continue                
+            if group["read"] and changeonly:
+                continue            
+            groups.append( group )
+        
+        return groups        
+
         
     class Meta:
         verbose_name = "sharableresource"
@@ -134,8 +163,54 @@ class ManageableResource:
         abstract = True
 
         
-class DataSet ( SharableResource ):
+class DataSet(SharableResource):
+    # TODO: add function to restore earlier version
+    # TODO: add collections (of assays in the investigation) and associate those with the versions
 
+    _investigations = models.ManyToManyField( Investigation, through="InvestigationLink" )
+    
+    def set_investigation(self,investigation,message=""):
+        '''
+        Associate this data set with an investigation. If this data set has an association with an investigation this 
+        association will be cleared first. Use update_investigation() to add a new version of the current investigation.
+        ''' 
+        self._investigations.clear()        
+        link = InvestigationLink(data_set=self, investigation=investigation, version=1, message=message)
+        link.save()
+        return 1
+        
+        
+    def update_investigation(self, investigation, message):
+        max_version = InvestigationLink.objects.filter( data_set=self ).aggregate( Max("version" ) )["version__max"]        
+        if max_version is None:
+            return self.set_investigation(investigation, message)            
+        link = InvestigationLink(data_set=self, investigation=investigation, version=max_version+1, message=message)
+        link.save()
+        return max_version+1       
+
+
+    def get_version(self):
+        try:
+            return InvestigationLink.objects.filter( data_set=self ).aggregate( Max("version" ) )["version__max"]
+        except:
+            return None
+
+    
+    def get_investigation(self, version=None):
+        if version is None:
+            try:
+                max_version = InvestigationLink.objects.filter( data_set=self ).aggregate( Max("version" ) )["version__max"]
+            except:
+                return None
+        else:
+            max_version = version
+        try:
+            return InvestigationLink.objects.filter( data_set=self, version=max_version ).get()
+        except:
+            return None
+        
+            
+    
     def __unicode__(self):
         return self.name + " - " + self.summary
 
@@ -145,6 +220,13 @@ class DataSet ( SharableResource ):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
+
+
+class InvestigationLink(models.Model):
+    data_set = models.ForeignKey(DataSet)
+    investigation = models.ForeignKey(Investigation)
+    version = models.IntegerField(default=1) 
+    message = models.CharField(max_length=500, blank=True, null=True) 
 
 
 class WorkflowDataInput ( models.Model ):
@@ -205,7 +287,8 @@ class Workflow ( SharableResource, ManageableResource ):
 
     
 class Project( SharableResource ):
-    description = models.CharField( max_length=5000, blank=True )    
+    description = models.CharField( max_length=5000, blank=True )
+    is_catch_all = models.BooleanField( default=False )
 
     def __unicode__(self):
         return self.name + " - " + self.summary
@@ -228,7 +311,7 @@ class WorkflowDataInputMap( models.Model ):
     def __unicode__(self):
         return str( self.workflow_data_input_name ) + " <-> " + self.data_uuid
 
-class AnalysisResults (models.Model):
+class AnalysisResult (models.Model):
     analysis_uuid = UUIDField( auto=False )
     file_store_uuid = UUIDField( auto=False )
     file_name = models.TextField()
@@ -254,7 +337,7 @@ class Analysis ( OwnableResource ):
     history_id = models.TextField(blank=True, null=True)
     workflow_galaxy_id = models.TextField(blank=True, null=True)
     library_id = models.TextField(blank=True, null=True)
-    results = models.ManyToManyField(AnalysisResults, blank=True)    
+    results = models.ManyToManyField(AnalysisResult, blank=True)    
     
     def __unicode__(self):
         return self.name + " - " + self.summary
@@ -269,6 +352,7 @@ class Analysis ( OwnableResource ):
 class ExtendedGroup ( Group ):
     ''' Extends the default Django Group in auth with a group of users that own and manage manageable resources for the group.'''    
     manager_group = models.ForeignKey( "self", blank=True, null=True )
+    uuid = UUIDField( unique=True, auto=True )
     
     def delete(self):
                 

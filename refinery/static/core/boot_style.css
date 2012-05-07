@@ -1,3 +1,4 @@
+/*
 .header_bkgd {
   background-color: #739D00;
   background-image: -moz-linear-gradient(top, #739D00, #222222);
@@ -8,8 +9,25 @@
   background-image: linear-gradient(top, #739D00, #222222);
 }
 
+
+.header_bkgd {
+  background-color: #369;
+  background-image: -moz-linear-gradient(top, #369, #222222);
+  background-image: -ms-linear-gradient(top, #369, #222222);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#369), to(#222222));
+  background-image: -webkit-linear-gradient(top, #369, #222222);
+  background-image: -o-linear-gradient(top, #369, #222222);
+  background-image: linear-gradient(top, #369, #222222);
+}
+*/
+
 body {
-	padding-top: 50px; 
+	/* padding-top: 50px; */
+	/*
+	background-image: url(../js/bootstrap/img/grid-18px-masked.png);
+  	background-repeat: repeat-x repeat-y;
+  	background-position: 0 40px;
+  	*/
 	/* background: -webkit-gradient(radial, 45 45, 50, 50 10, 640, from(#ffffff), to(#EEE)) !important; */
 /*
 background:
