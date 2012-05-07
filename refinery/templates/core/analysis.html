@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - Analysis {{ analysis.name }}
+{% endblock %}
+
+{% block subheader %}
+ Analysis: <i>{{ analysis.name }}</i>
+{% endblock %}
+
+{% block content %}
+<div class="label">Summary</div>
+<p>{{analysis.summary}}</p>
+
+<div class="label">Workflow</div>
+<p>{{workflow.name}}</p>
+
+<div class="label">Analysis Inputs</div>
+<ul>
+{% for input in inputs.all %}
+	<li><p>Workflow Input Name: {{input.workflow_data_input_name}}</p></li>
+{% endfor %}
+</ul>
+
+<div class="label">Analysis Outputs</div>
+<ul>
+{% for result in analysis_results.all %}
+	<li>
+		<p>
+			{{result.file_name}}
+			{% if result.file_type|lower == 'igv.tdf' %}
+				: <a href="/file_server/profile_viewer/{{result.file_store_uuid}}/chr4/1/1000000/">Visualize</a>
+			{% endif %}
+		</p>
+	</li>
+	
+{% endfor %}
+</ul>
+{% endblock %}

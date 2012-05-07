@@ -1,16 +1,24 @@
 from django.conf.urls.defaults import patterns, include, url
 from core.views import admin_test_data
 from workflow_manager.views import import_workflows
+from tastypie.api import Api
+from core.api import ProjectResource
+
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
+
+# NG: added for tastypie URL
+v1_api = Api(api_name='v1')
+v1_api.register(ProjectResource())
 
 #patterns for all of the different applications
 urlpatterns = patterns('',    
     #links in core urls
     url(r'^', include('core.urls')),
 
+    url(r'^annotation_server/', include('annotation_server.urls')),
     url(r'^workflow_manager/', include('workflow_manager.urls')),
     url(r'^analysis_manager/', include('analysis_manager.urls')),
     url(r'^file_server/', include('file_server.urls')),
@@ -37,7 +45,10 @@ urlpatterns = patterns('',
     
     url(r'^login/$', 'django.contrib.auth.views.login' ),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login' ),
-    url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page":"/" } )            
+    url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page":"/" } ),
+    
+    # NG: tastypie API urls
+    (r'^api/', include(v1_api.urls)),
 )
 
 

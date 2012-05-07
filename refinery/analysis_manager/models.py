@@ -35,8 +35,8 @@ class AnalysisStatus( models.Model ):
     def execution_status(self):
         total_steps = Analysis.objects.get(uuid=self.analysis_uuid).workflow_steps_num        
         test = getPayload(self.execution_monitor_task_id)
-        print "test lgneth"
-        print len(test)
+        #print "test lgneth"
+        #print len(test)
             
         test[0]['total_steps'] = total_steps
         if 'ok' in test[0].keys():
@@ -122,17 +122,17 @@ def getPayload(ts_id):
             #print ts.result
             #print "&&&&&&&&"
             if type(ts.result) ==type(dict()):
-                print "ts.state is dict"
-                print "ts.state"
-                print ts.state
-                print "ts.result"
-                print ts.result
+                #print "ts.state is dict"
+                #print "ts.state"
+                #print ts.state
+                #print "ts.result"
+                #print ts.result
                 if type(ts.result['message']) ==type(dict()):
                     temp_ret = ts.result['message']
                 else:
                     temp_ret = ts.result
-                print "temp_ret"
-                print temp_ret
+                #print "temp_ret"
+                #print temp_ret
                 temp_ret['state'] = ts.state
                 temp_ret['task_id'] = ts.task_id
                 payload.append(temp_ret)
@@ -152,19 +152,16 @@ def getPayload(ts_id):
                         #print "\t \t jjjjjjj:" + str(j)
                         temp_ret = {};
                         if ts.result.results[j].result:
-                            print "error_perm"
-                            print ts.result.results[j]
-                            print ts.result.results[j].state
-                            print ts.result.results[j].status
-                            print ts.result.results[j].info
-                            
-                            
-                            print type(ts.result.results[j])
-                            
+                            #print "error_perm"
+                            #print ts.result.results[j]
                             #print ts.result.results[j].state
-                            print type(ts.result.results[j].result)
-                          #  u'SUCCESS
-                            print ts.result.results[j].result.__class__.__name__
+                            #print ts.result.results[j].status
+                            #print ts.result.results[j].info
+                            #print type(ts.result.results[j])
+                            #print ts.result.results[j].state
+                            #print type(ts.result.results[j].result)
+                            #  u'SUCCESS
+                            #print ts.result.results[j].result.__class__.__name__
                             if ts.result.results[j].result.__class__.__name__ == 'FileStoreItem':
                                 temp_ret['state'] = ts.result.results[j].state
                                 temp_ret['task_id'] = ts.result.results[j].task_id
@@ -188,7 +185,7 @@ def getPayload(ts_id):
                 #    print "00000 tasks"
                 #    print ts.result
             else:
-                print " ))))))))))) \t \ tDIFFERENT TYPE"
+                #print " ))))))))))) \t \ tDIFFERENT TYPE"
                 temp_ret = {'state':ts.state, 'info':str(ts.result), 'task_id':ts.task_id}
                 payload.append(temp_ret)
                 #print ts.result
@@ -198,17 +195,16 @@ def getPayload(ts_id):
             temp_ret = {'state':ts.state, 'task_id':ts.task_id}
             payload.append(temp_ret)
     else:
-        print "!!!!nottstststststst"
-        print ts
+        #print "!!!!nottstststststst"
+        #print ts
         temp_ret = {'state':"### WAITING ###"}
         payload.append(temp_ret)
     
     #print "payload called"
-    print "################################"
-    print payload 
+    #print "################################"
+    #print payload 
     #print len(payload)
-    print "################################"
-    
+    #print "################################"
             
     return payload
 
