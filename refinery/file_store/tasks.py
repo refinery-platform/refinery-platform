@@ -1,7 +1,7 @@
 import os
 import urllib2
+import tempfile
 from django.core.files import File
-from django.core.files.temp import TemporaryFile
 from celery.task import task
 from file_store.models import FileStoreItem, is_local
 
@@ -93,7 +93,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=None):
             return None
 
         # download and save the file
-        tmpfile = TemporaryFile()
+        tmpfile = tempfile.TemporaryFile()
         if (file_size is None):
             remotefilesize = int(response.info().getheaders("Content-Length")[0])
         else:

@@ -14,7 +14,6 @@ from refinery_repository.models import *
 from refinery_repository.parser import Parser
 import csv, errno, ftplib, glob, os, os.path, re, shutil, socket, string
 import subprocess, sys, tempfile, time, traceback, urllib2
-from django.core.files.temp import TemporaryFile
 
 """
 Name: create_dir
@@ -331,7 +330,7 @@ def convert_to_isatab(accession):
         shutil.move("%s.zip" % dir_to_zip, isatab_file_location)
 
     #clean up the temporary directory and other files
-    shutil.rmtree(tmp_dir)
+    shutil.rmtree(temp_dir)
 
     return retval
 
@@ -462,7 +461,7 @@ def download_file(url):
         return None
 
     # download and save the file
-    tmpfile = TemporaryFile()
+    tmpfile = tempfile.TemporaryFile()
     remotefilesize = int(response.info().getheaders("Content-Length")[0])
 
     localfilesize = 0       # bytes
