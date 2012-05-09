@@ -481,8 +481,10 @@ def download_history_files(analysis) :
                 analysis.save() 
                 
                 # downloading analysis results into file_store
-                task_id = import_file.subtask((filestore_uuid, False, file_size,))
-                task_list.append(task_id)
+                # only download files if size is greater than 1
+                if file_size > 0:
+                    task_id = import_file.subtask((filestore_uuid, False, file_size,))
+                    task_list.append(task_id)
             
     return task_list
         
