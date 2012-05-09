@@ -10,14 +10,24 @@ ISA-Tab import
 {% endblock %}
 
 {% block content %}
-<p>Upload an ISA-Tab file as a Zip archive</p>
+<p>Upload from local disk or download from a URL:</p>
 {% if form.errors %}
 	<p style="color:red;">
 		Please correct the error {{ form.errors|pluralize }} below.
 	</p>
 {% endif %}
 <form id="isaTabImportForm" enctype="multipart/form-data" action="" method="post">{% csrf_token %}
-	{{ form.as_p }}
+	<p>{{ form.non_field_errors }}</p>
+	<div>
+		<p>
+			{{ form.isa_tab_file.errors}}
+			{{ form.isa_tab_file }}
+		</p>
+		<p>
+			{{ form.isa_tab_url.errors }}
+			{{ form.isa_tab_url }}
+		</p>
+	</div>
 	<input type="submit" value="Import" />
 </form>
 {% endblock %}
