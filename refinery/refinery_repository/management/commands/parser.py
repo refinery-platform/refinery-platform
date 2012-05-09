@@ -9,7 +9,8 @@ import csv, sys, re, string, os, glob, traceback
 from collections import defaultdict
 from django.db import connection
 from django.conf import settings
-from file_store.tasks import create
+from file_store.tasks import create, delete
+from core.models import DataSet
 
 
 class Command(LabelCommand):
@@ -55,7 +56,9 @@ class Command(LabelCommand):
                  'Hybridization Assay Name': 'Assay Name',
                  'Derived Array Data Matrix File': 'Derived Data File',
                  'Comment [Derived ArrayExpress FTP file]': 'Derived ArrayExpress FTP file',
+                 'Comment [ArrayExpress FTP file]': 'Raw Data File',
                  'Comment[ArrayExpress FTP file]': 'Raw Data File',
+                 'Comment [FASTQ_URI]': 'Raw Data File',
                  'Comment[FASTQ_URI]': 'Raw Data File',
                  'Array Data File': 'Raw Data File',
                  'Derived Array Data File': 'Derived Data File',
@@ -520,8 +523,20 @@ class Command(LabelCommand):
                         temp_dict['raw_data_file'] = field
                         #raw.x.zip file
                         if re.search(r'^http', field) or re.search(r'^ftp', field):
-                            index = string.rindex(field, '/')
-                            temp_dict['file_name'] = field[index+1:]
+                            if not re.search(r'\.zip$', field):
+                                index = string.rindex(field, '/')
+                                temp_dict['file_name'] = field[index+1:]
+                            else:
+                                #the file name is likely in the column before
+                                #or after
+                                #if before
+                                if re.search(r'^Raw Data', header[j-1]):
+                                    #assign the value of the field before
+                                    temp_dict['file_name'] = row[j-1]
+                                    #get rid of the file name by itself
+                                    self.dictionary['r'].pop()
+                                #elif re.search(r'^Raw Data', header[j+1]):
+                                #    temp_dict['file_name'] = row[j+1]
                         else: #anything else, file name & raw the same
                             temp_dict['file_name'] = field
 
@@ -558,11 +573,13 @@ class Command(LabelCommand):
                             key_parts = [x.lower().strip() for x in string.split(header[j], ' ')]
                             key = string.join(key_parts, '_')
 
+                            #if related to processed data
                             if re.search(r'^Derived', header[j]):
                                 try:
                                     temp_dict = self.dictionary['p'].pop()
                                 except:
                                     temp_dict = dict()
+
                                 if key in temp_dict:
                                     self.dictionary['p'].append(temp_dict)
                                     temp_dict = dict()
@@ -573,10 +590,12 @@ class Command(LabelCommand):
                                     temp_dict['file_name'] = temp_field
                                 else:
                                     temp_dict[key] = field
+
                                 self.dictionary['p'].append(temp_dict)
+                            #if a protocol
                             elif re.search(r'^Protocol REF', header[j]):
                                 protocols.append(field)
-                            else:
+                            else: #everything else goes into Assay model
                                 self.dictionary['a'][key] = field
 
             assay_info['protocol'].append(protocols)
@@ -598,6 +617,11 @@ class Command(LabelCommand):
                 for p in self.dictionary['p']:
                     #assign row number to dict so we know what's together
                     p['row_num'] = i
+                    
+                    if 'file_name' not in p:
+                        url = p['derived_data_file']
+                        index = string.rindex(url, '/')
+                        temp_dict['file_name'] = url[index+1:]
 
                 assay_info['processed_data'].append(self.dictionary['p'])
 
@@ -729,8 +753,8 @@ class Command(LabelCommand):
                             del tion_dict[k]
                             
                 #add in pre_isatab_file and isatab_file
-                tion_dict['isatab_file'] = isatab
-                tion_dict['pre_isatab_file'] = pre_isatab
+                #tion_dict['isatab_file'] = isatab
+                #tion_dict['pre_isatab_file'] = pre_isatab
     
                 investigation = Investigation(**tion_dict)
                 investigation.save()
@@ -989,6 +1013,8 @@ class Command(LabelCommand):
                                 raw_data.save()
                             except IntegrityError:
                                 connection._rollback()
+                                delete(r['rawdata_uuid'])
+                                del r['rawdata_uuid']
                                 raw_data = RawData.objects.get(**r)
                             """
                             Try saving; if already exists, grab the record from the database. 
@@ -1016,6 +1042,8 @@ class Command(LabelCommand):
                                 processed_data.save()
                             except IntegrityError: #if already exists, grab
                                 connection._rollback()
+                                delete(p['processeddata_uuid'])
+                                del p['processeddata_uuid']
                                 processed_data = ProcessedData.objects.get(**p)
                     
                             #associate the assay
@@ -1035,6 +1063,7 @@ class Command(LabelCommand):
                                 #add to hash for future look up 
                                 protocols[prot] = protocol
                     
+                    """Foreign Key Fields that need Protocols"""
                     #print '\n assay bracketed field \n'
                     for abf in abf_list:
                         row_num = abf['row_num']
@@ -1091,7 +1120,7 @@ class Command(LabelCommand):
             for pub in publications_master_list:
                 pub.delete()
             
-     
+        return investigation
 
     """
     Name: handle_label
@@ -1166,4 +1195,11 @@ class Command(LabelCommand):
                 #print assay_dict
                 assay_dictionary[inv_accession].append(assay_dict)
 
-        self.insert_isatab(investigation_list, isatab_file, pre_isatab_file, study_list, assay_dictionary)
+        investigation = self.insert_isatab(investigation_list, isatab_file, pre_isatab_file, study_list, assay_dictionary)
+        #return investigation.investigation_uuid
+
+        #create DataSet object and link in the Investigation
+        #dataset_name = investigation.study_title
+        #dataset_summary = investigation.study_description
+        #dataset = DataSet.objects.create(name=dataset_name)
+        #dataset.update_investigation(investigation, message='message?')
