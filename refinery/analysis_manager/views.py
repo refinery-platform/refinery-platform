@@ -35,8 +35,3 @@ def analysis(request, uuid):
 
     else:
         return render_to_response( 'analysis_manager/analysis_status.html', { 'uuid':uuid, 'statuses': statuses }, context_instance=RequestContext( request ) )
-
-def analysis_results(request, uuid):
-    statuses = AnalysisStatus.objects.all()
-    
-    return render_to_response( 'refinery_repository/base.html', { 'statuses': statuses, 'uuid':uuid }, context_instance=RequestContext( request ) )

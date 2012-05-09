@@ -1,25 +1,21 @@
-import errno
-import subprocess
-import shutil
-import tempfile
-import os.path
-import time
-import re
-import ftplib
-import socket
-import string
-import sys
-import urllib2
-from datetime import date, datetime, timedelta
 from StringIO import StringIO
+from celery.schedules import crontab
+from celery.task import task, periodic_task, Task
+from celery.task.sets import TaskSet
+from collections import defaultdict
+from core.models import DataSet
+from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.core.management import call_command
+from django.db import connection
+from django.db.utils import IntegrityError
+from file_store.tasks import create, delete
+from refinery_repository.models import *
+from refinery_repository.parser import Parser
+import csv, errno, ftplib, glob, os, os.path, re, shutil, socket, string
+import subprocess, sys, tempfile, time, traceback, urllib2
 from django.core.files.temp import TemporaryFile
-from celery.task import task, periodic_task
-from celery.schedules import crontab
-from celery.task.sets import TaskSet
-from refinery_repository.models import Investigation
-        
+
 """
 Name: create_dir
 Description:
@@ -294,9 +290,9 @@ def convert_to_isatab(accession):
         shutil.move("%s.zip" % isatab_file_location, isatab_file_location)
         
         #Get and zip up the MAGE-TAB and put in the ISA-Tab folder
-		#make file name for ArrayExpress information to download into
+        #make file name for ArrayExpress information to download into
         ae_name = tempfile.NamedTemporaryFile(dir=temp_dir, prefix='ae_').name
-		#make url to fetch the experiment
+        #make url to fetch the experiment
         url = "%s/%s" % (settings.AE_BASE_URL, accession)
         
         #get ArrayExpress information to get URLs to download
@@ -305,20 +301,20 @@ def convert_to_isatab(accession):
         f.write(u.read()) #small file, so just grab whole thing in one go
         f.close()
         
-		#open and read in the last line (the HTML) that has the info we want
+        #open and read in the last line (the HTML) that has the info we want
         f = open(ae_name, 'rb')
         lines = f.readlines()
         f.close()
         last_line = lines[-1]
-		
-		#isolate the links by splitting on '<a href="'
+        
+        #isolate the links by splitting on '<a href="'
         a_hrefs = string.split(last_line, '<a href="')
-		#get the links we want
+        #get the links we want
         for a_href in a_hrefs:
             if re.search('sdrf.txt', a_href) or re.search('idf.txt', a_href):
                 link = string.split(a_href, '"').pop(0) #grab the link
                 file_name = link.split('/')[-1] #get the file name
-				
+                
                 #download and zip up locally because needs to be sequential
                 dir_to_zip = os.path.join(temp_dir, accession)
                 create_dir(dir_to_zip)
@@ -328,8 +324,8 @@ def convert_to_isatab(accession):
                 f = open(file, 'wb')
                 f.write(u.read()) #again, shouldn't be a large file
                 f.close()
-		
-		#zip up and move the MAGE-TAB files
+        
+        #zip up and move the MAGE-TAB files
         shutil.make_archive(dir_to_zip, 'zip', temp_dir, 
                                                 "MAGE-TAB_%s" % accession)
         shutil.move("%s.zip" % dir_to_zip, isatab_file_location)
@@ -436,16 +432,22 @@ def get_arrayexpress_studies():
     stderr = content.read().strip()
     if stderr:
         print stderr
-        """
-        msg = MIMEText(stderr)
-        msg['Subject'] = 'Refinery Parser Error'
-        msg['From'] = settings.FROM_EMAIL
-        msg['To'] = settings.TO_EMAIL
+        
+def delete_investigation(uuid):
+    investigation = Investigation.objects.get(investigation_uuid=uuid)
+    
+    #if this is part of a larger investigation
+    investigation_list = list()
+    i_id = investigation.investigation_identifier
+    if i_id:
+        for i in Investigation.objects.filter(investigation_identifier=i_id):
+            investigation_list.append(i)    
             
-        s = smtplib.SMTP('localhost')
-        s.sendmail(settings.FROM_EMAIL, [settings.TO_EMAIL], msg.as_string())
-        s.quit()
-        """
+@task()
+def parse_isatab(folder_name):
+    p = Parser()
+    investigation_uuid = p.main(folder_name)
+    return investigation_uuid
 
 @task
 def download_file(url):

@@ -447,6 +447,12 @@ class RawData(models.Model):
     file_name = models.TextField()
     """Name of the raw data file"""
     
+    class Meta:
+        #even though pk is an auto-incremented number, ensures every row has a
+        #unique combination of these three fields
+        unique_together = ('raw_data_file', 'file_name')
+
+    
 class ProcessedData(models.Model):
     """
     `ProcessedData`: represents processed data files
@@ -463,6 +469,11 @@ class ProcessedData(models.Model):
     """
     Name (or URI) of files resulting from data transformation or processing
     """
+    
+    class Meta:
+        #even though pk is an auto-incremented number, ensures every row has a
+        #unique combination of these three fields
+        unique_together = ('derived_data_file', 'file_name')
     
 class Assay(models.Model):
     def __unicode__(self):
