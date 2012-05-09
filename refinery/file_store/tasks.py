@@ -93,7 +93,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=None):
             return None
 
         # download and save the file
-        tmpfile = tempfile.TemporaryFile()
+        tmpfile = tempfile.NamedTemporaryFile()
         if (file_size is None):
             remotefilesize = int(response.info().getheaders("Content-Length")[0])
         else:

@@ -354,7 +354,8 @@ def analysis_run(request):
             analysis.save() 
     
     # keeping new reference to analysis_status
-    analysis_status = AnalysisStatus.objects.create(analysis_uuid=analysis.uuid)
+    #analysis_status = AnalysisStatus.objects.create(analysis_uuid=analysis.uuid)
+    analysis_status = AnalysisStatus.objects.create(analysis=analysis)
     analysis_status.save()
     
     # call function via analysis_manager
