@@ -45,7 +45,7 @@ def create(source, sharename='', permanent=False, file_size=None):
     return item.uuid
 
 @task()
-def import_file(uuid, permanent=False, file_size=None, refresh=False):
+def import_file(uuid, permanent=False, refresh=False, file_size=None):
     '''
     Download or copy file specified by UUID
     If permanent=False then add to cache
@@ -59,7 +59,11 @@ def import_file(uuid, permanent=False, file_size=None, refresh=False):
     # if file exists locally, either return it or delete before re-import
     if is_local(uuid):
         if refresh:
-            item.datafile.delete()
+            try:
+                item.datafile.delete()
+            except OSError as e:
+                #TODO: write error msg to log
+                print e.errno, e.filename, e.strerror
         else:
             return item
     # import file
@@ -113,7 +117,7 @@ def import_file(uuid, permanent=False, file_size=None, refresh=False):
         
         tmpfile.flush()
         
-        #TODO: move tmpfile to file store dir to avoid copying large files
+        #TODO: move tmpfile to file store dir to avoid copying large files (if tmpfile is on the same file system)
         item.datafile.save(filename, File(tmpfile))
 
         tmpfile.close()
@@ -127,16 +131,8 @@ def import_file(uuid, permanent=False, file_size=None, refresh=False):
 
 @task()
 def read(uuid):
-    '''
-    Return a FileStoreItem given UUID
-    If file is not local then import the file and add to cache
-    '''
-    try:
-        item = FileStoreItem.objects.get(uuid=uuid)
-    except FileStoreItem.DoesNotExist:
-        #TODO: write msg to log
-        item = import_file(uuid, permanent=False)
-    return item
+    ''' Return a FileStoreItem given UUID '''
+    return import_file(uuid)
 
 @task()
 def delete(uuid):
@@ -153,13 +149,8 @@ def delete(uuid):
 @task()
 def update(uuid, source):
     ''' Replace the file while keeping the same UUID '''
-#    olditem = FileStoreItem.objects.get(uuid=uuid)
-#    oldsource = olditem.source
-#    oldsharename = olditem.sharename
-    # save source and sharename of the old FileStoreItem
-    # delete FileStoreItem
+    item = FileStoreItem.objects.get(uuid=uuid)
+    item.source = source
+    item.save()
     # import new file from source
-    # create new FileStoreItem
-    # update UUID, source and sharename of the new FileStoreItem
-
-    return True
+    return import_file(uuid, refresh=True)
