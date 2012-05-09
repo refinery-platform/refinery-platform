@@ -20,7 +20,8 @@ def analysis(request, uuid):
     #import pdb; pdb.set_trace()
     
     analysis = Analysis.objects.get(uuid=uuid)
-    statuses = AnalysisStatus.objects.get(analysis_uuid=uuid)
+    statuses = AnalysisStatus.objects.get(analysis=analysis)
+    #statuses = AnalysisStatus.objects.get(analysis_uuid=uuid)
     
     if request.is_ajax():
         print "is ajax"

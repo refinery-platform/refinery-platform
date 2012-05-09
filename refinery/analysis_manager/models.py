@@ -1,11 +1,13 @@
+from celery.result import AsyncResult, TaskSetResult
+from core.models import Analysis
 from django.db import models
 from django_extensions.db.fields import UUIDField
-from celery.result import TaskSetResult 
-from celery.result import AsyncResult
-from core.models import Analysis
 import math
 
+
 '''
+shift+command+o // cleans up imports 
+
 http://permalink.gmane.org/gmane.comp.python.amqp.celery.user/2036
 
 from celery.task import TaskSet
@@ -21,7 +23,8 @@ xrange(10)).apply_async()
 '''
 
 class AnalysisStatus( models.Model ):
-    analysis_uuid = UUIDField( unique=True, auto=False )
+    analysis = models.ForeignKey(Analysis)
+    #analysis_uuid = UUIDField( unique=True, auto=False )
     
     preprocessing_taskset_id = UUIDField( blank=True, null=True, auto=False )
     execution_taskset_id = UUIDField( blank=True, null=True, auto=False )
@@ -33,7 +36,7 @@ class AnalysisStatus( models.Model ):
         return getPayload(self.preprocessing_taskset_id)
     
     def execution_status(self):
-        total_steps = Analysis.objects.get(uuid=self.analysis_uuid).workflow_steps_num        
+        total_steps = Analysis.objects.get(uuid=self.analysis.uuid).workflow_steps_num        
         test = getPayload(self.execution_monitor_task_id)
         #print "test lgneth"
         #print len(test)
