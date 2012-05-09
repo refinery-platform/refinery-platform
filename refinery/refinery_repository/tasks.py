@@ -461,7 +461,7 @@ def download_file(url):
         return None
 
     # download and save the file
-    tmpfile = tempfile.TemporaryFile()
+    tmpfile = tempfile.NamedTemporaryFile()
     remotefilesize = int(response.info().getheaders("Content-Length")[0])
 
     localfilesize = 0       # bytes
