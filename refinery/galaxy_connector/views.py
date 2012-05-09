@@ -143,7 +143,5 @@ def workflow_content(request, workflow_id):
     instance, connection = checkActiveInstance(request);
 
     result = connection.get_workflow_dict(workflow_id);
-    #import pdb; pdb.set_trace()
-    
-    #return HttpResponse( 'Workflow Content called' ) 
+
     return HttpResponse( simplejson.dumps(result) ) 

@@ -1,19 +1,16 @@
 __docformat__ = 'restructuredtext'
 
-from django.core.management.base import LabelCommand
-from django.db import transaction
-from django.db.utils import IntegrityError
-from datetime import datetime
-from refinery_repository.models import *
-import csv, sys, re, string, os, glob, traceback
 from collections import defaultdict
-from django.db import connection
-from django.conf import settings
-from file_store.tasks import create, delete
 from core.models import DataSet
+from datetime import datetime
+from django.conf import settings
+from django.db import connection, transaction
+from django.db.utils import IntegrityError
+from file_store.tasks import create, delete
+from refinery_repository.models import *
+import csv, glob, os, re, string, sys, traceback
 
-
-class Command(LabelCommand):
+class Parser:
     
     help = "Takes the directory of an ISA-Tab file as input, parses, and"
     help = "%s inputs it into the database" % help
@@ -757,7 +754,7 @@ class Command(LabelCommand):
                 #tion_dict['pre_isatab_file'] = pre_isatab
     
                 investigation = Investigation(**tion_dict)
-                print tion_dict
+                #print tion_dict
                 investigation.save()
     
                 for tor_dict in tor_list:
@@ -1122,13 +1119,13 @@ class Command(LabelCommand):
                 pub.delete()
             
         return investigation
-
-    """
-    Name: handle_label
-    Description:
-        main program; calls the parsing and insertion functions
-    """   
-    def handle_label(self, label, **options):
+   
+    def main(self, label, **options):
+        """
+        Name: handle_label
+        Description:
+            main program; calls the parsing and insertion functions
+        """
         """ main program """
         base_dir = settings.ISA_TAB_DIR
 
@@ -1197,7 +1194,7 @@ class Command(LabelCommand):
                 assay_dictionary[inv_accession].append(assay_dict)
 
         investigation = self.insert_isatab(investigation_list, isatab_file, pre_isatab_file, study_list, assay_dictionary)
-        #return investigation.investigation_uuid
+        return investigation.investigation_uuid
 
         #create DataSet object and link in the Investigation
         #dataset_name = investigation.study_title
