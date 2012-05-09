@@ -4,7 +4,7 @@ from django.core.management.base import LabelCommand
 from django.db import transaction
 from django.db.utils import IntegrityError
 from datetime import datetime
-from refinery.refinery_repository.models import *
+from refinery_repository.models import *
 import csv, sys, re, string, os, glob, traceback
 from collections import defaultdict
 from django.db import connection
@@ -757,6 +757,7 @@ class Command(LabelCommand):
                 #tion_dict['pre_isatab_file'] = pre_isatab
     
                 investigation = Investigation(**tion_dict)
+                print tion_dict
                 investigation.save()
     
                 for tor_dict in tor_list:

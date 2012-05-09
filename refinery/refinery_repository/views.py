@@ -1,32 +1,35 @@
-# Create your views here.
-from refinery_repository.models import Investigation, Assay, RawData
-from django.shortcuts import render_to_response, get_object_or_404
-from django.http import HttpResponseRedirect, HttpResponse
-from django.template import RequestContext
+import copy
+import simplejson
+import re
+import os
+import shutil
+from zipfile import ZipFile
+from datetime import datetime
+from django.http import Http404, HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
-from refinery_repository.tasks import call_download, download_ftp_file
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.shortcuts import render_to_response, get_object_or_404
+from django.template import RequestContext
 from django.conf import settings
-from celery.task.control import revoke
-from celery import states
-from celery.result import AsyncResult
-import simplejson, re
-from core.models import *
-from core.tasks import grab_workflows
 from django.db import connection
 from django.core import serializers
-import os, errno, copy
-from galaxy_connector.tasks import run_workflow_ui
-from galaxy_connector.views import checkActiveInstance, obtain_instance
-from analysis_manager.tasks import download_history_files, run_analysis
-from workflow_manager.tasks import get_workflow_inputs, get_workflows
-from datetime import datetime
-from django.http import Http404
-from django.core.urlresolvers import resolve
+from django.core.management import call_command
+from django import forms
+from celery import states
+from celery.result import AsyncResult
+from celery.task.control import revoke
+from celery.utils import get_full_cls_name
+from celery.utils.encoding import safe_repr
+from core.models import *
 from analysis_manager.models import AnalysisStatus
+from analysis_manager.tasks import run_analysis
+from refinery_repository.models import Investigation
+from refinery_repository.tasks import call_download, download_ftp_file
+from workflow_manager.tasks import get_workflow_inputs, get_workflows
 
-
-
+"""
+Helper function for returning rawsql as a dictionary object
+"""
 def dictfetchall(cursor):
     "Returns all rows from a cursor as a dict"
     desc = cursor.description
@@ -121,8 +124,6 @@ def get_available_files(request):
     """
     Returns all available files to use in workflows
     """
-    from django.db import connection
-    
     cursor = connection.cursor()
     
     cursor.execute(""" SELECT distinct a.uuid, a.id as assay_id, a.investigation_id, a.assay_name, o.species, d.description, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.file, r.raw_data_file FROM
@@ -451,17 +452,6 @@ def getWorkflowDataInputMap(request, workflow_uuid):
         return HttpResponse(data, mimetype='application/javascript')
     else:
         return HttpResponse(data,mimetype='application/json')
-    
-"""
-Helper function for returning rawsql as a dictionary object
-"""
-def dictfetchall(cursor):
-    "Returns all rows from a cursor as a dict"
-    desc = cursor.description
-    return [
-        dict(zip([col[0] for col in desc], row))
-        for row in cursor.fetchall()
-    ]
 
 """
 Returns column names for a given raw sql call
@@ -480,3 +470,41 @@ def getColumnNames(cursor):
     for fn in cursor.description:
         field_names.append(fn[0]);
     return field_names
+
+class ImportISATabFileForm(forms.Form):
+    ''' ISA-Tab file upload form '''
+    isatabfile = forms.FileField(required=False, label='')
+    isataburl = forms.URLField(required=False, label='ISA-Tab URL')
+
+#TODO: check if the incoming ISA-Tab file is already in the system
+def process_isa_tab(inputfile):
+    ''' Unzip and parse uploaded ISA-Tab file '''
+    # create folder for storing unzipped ISA-Tab contents
+    accession = os.path.splitext(inputfile.name)[0]
+    extractiondir = os.path.join(settings.ISA_TAB_DIR, accession)
+    # delete folder if it already exists
+    if os.path.isdir(extractiondir):
+        shutil.rmtree(extractiondir)
+    os.mkdir(extractiondir)
+    with ZipFile(inputfile, 'r') as zf:
+        zf.extractall(extractiondir)
+    # call the parser on that folder
+    call_command('parser', accession)
+
+def import_isa_tab(request):
+    ''' Process imported ISA-Tab file sent via POST request '''
+    errors = []
+    if request.method == 'POST':
+        form = ImportISATabFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            process_isa_tab(request.FILES['isatabfile'])
+            return HttpResponseRedirect(request.path + 'success/')
+    else:
+        form = ImportISATabFileForm()
+    return render_to_response('refinery_repository/import.html',
+                              {'form': form},
+                              context_instance=RequestContext(request))
+
+def import_isa_tab_success(request):
+    return render_to_response('refinery_repository/import_success.html',
+                              context_instance=RequestContext(request))

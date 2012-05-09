@@ -20,6 +20,8 @@ urlpatterns = patterns('refinery_repository.views',
     url(r'^(?P<accession>.*\d+)/$', 'detail'),
     url(r'^(?P<accession>.*\d+)/results/$', 'results'),
     url(r'^(?P<accession>.*\d+)/download/$', 'download'),
+    url(r'^import/isa-tab/$', 'import_isa_tab'),
+    url(r'^import/isa-tab/success/$', 'import_isa_tab_success')
 )
 
 urlpatterns += patterns('',
