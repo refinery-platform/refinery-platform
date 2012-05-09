@@ -1,13 +1,24 @@
-import os, errno, subprocess, shutil, tempfile, os.path, urllib2, time, re
-import ftplib, socket, string, sys
+import errno
+import subprocess
+import shutil
+import tempfile
+import os.path
+import time
+import re
+import ftplib
+import socket
+import string
+import sys
+import urllib2
+from datetime import date, datetime, timedelta
+from StringIO import StringIO
+from django.conf import settings
+from django.core.management import call_command
+from django.core.files.temp import TemporaryFile
 from celery.task import task, periodic_task
 from celery.schedules import crontab
 from celery.task.sets import TaskSet
-from django.core.management import call_command
 from refinery_repository.models import Investigation
-from django.conf import settings
-from StringIO import StringIO
-from datetime import date, datetime, timedelta
         
 """
 Name: create_dir
@@ -435,3 +446,38 @@ def get_arrayexpress_studies():
         s.sendmail(settings.FROM_EMAIL, [settings.TO_EMAIL], msg.as_string())
         s.quit()
         """
+
+@task
+def download_file(url):
+    ''' Download file from URL to disk and return a file object'''
+    req = urllib2.Request(url)
+    # check if source file can be opened
+    try:
+        response = urllib2.urlopen(req)
+    except urllib2.URLError as e:
+        #TODO: write error msg to log
+        print e.reason
+        return None
+
+    # download and save the file
+    tmpfile = TemporaryFile()
+    remotefilesize = int(response.info().getheaders("Content-Length")[0])
+
+    localfilesize = 0       # bytes
+    blocksize = 8 * 1024    # bytes
+    while True:
+        buf = response.read(blocksize)
+        if not buf:
+            break
+
+        localfilesize += len(buf)
+        tmpfile.write(buf)
+        downloaded = localfilesize * 100. / remotefilesize
+        download_file.update_state(
+            state="PROGRESS",
+            meta={"percent_done": "%3.2f%%" % (downloaded), 'current': localfilesize, 'total': remotefilesize}
+            )
+    
+    tmpfile.flush()
+    response.close()
+    return tmpfile

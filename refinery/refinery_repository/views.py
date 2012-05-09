@@ -3,7 +3,7 @@ import simplejson
 import re
 import os
 import shutil
-from zipfile import ZipFile
+from zipfile import ZipFile, BadZipfile
 from datetime import datetime
 from django.http import Http404, HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
@@ -24,7 +24,7 @@ from core.models import *
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import run_analysis
 from refinery_repository.models import Investigation
-from refinery_repository.tasks import call_download, download_ftp_file
+from refinery_repository.tasks import call_download, download_ftp_file, download_file
 from workflow_manager.tasks import get_workflow_inputs, get_workflows
 
 """
@@ -471,23 +471,41 @@ def getColumnNames(cursor):
         field_names.append(fn[0]);
     return field_names
 
+#===============================================================================
+# ISA-Tab import
+#===============================================================================
 class ImportISATabFileForm(forms.Form):
     ''' ISA-Tab file upload form '''
-    isatabfile = forms.FileField(required=False, label='')
-    isataburl = forms.URLField(required=False, label='ISA-Tab URL')
+    isa_tab_file = forms.FileField(label='ISA-Tab file', required=False)
+    isa_tab_url = forms.URLField(label='ISA-Tab URL', required=False)
+
+    def clean(self):
+        cleaned_data = super(ImportISATabFileForm, self).clean()
+        f = cleaned_data.get("isa_tab_file")
+        url = cleaned_data.get("isa_tab_url")
+        # either a file or a URL must be provided
+        if f or url:
+            return cleaned_data
+        else:
+            raise forms.ValidationError("Either a file or URL must be provided") 
 
 #TODO: check if the incoming ISA-Tab file is already in the system
-def process_isa_tab(inputfile):
+def process_isa_tab(input_file):
     ''' Unzip and parse uploaded ISA-Tab file '''
     # create folder for storing unzipped ISA-Tab contents
-    accession = os.path.splitext(inputfile.name)[0]
-    extractiondir = os.path.join(settings.ISA_TAB_DIR, accession)
+    accession = os.path.splitext(input_file.name)[0]
+    out_dir = os.path.join(settings.ISA_TAB_DIR, accession)
     # delete folder if it already exists
-    if os.path.isdir(extractiondir):
-        shutil.rmtree(extractiondir)
-    os.mkdir(extractiondir)
-    with ZipFile(inputfile, 'r') as zf:
-        zf.extractall(extractiondir)
+    if os.path.isdir(out_dir):
+        shutil.rmtree(out_dir)
+    os.mkdir(out_dir)
+    try:
+        with ZipFile(input_file, 'r') as zf:
+            zf.extractall(out_dir)
+    except BadZipfile as e:
+        #TODO: write error msg to log
+        print "Bad zip file"
+        return None
     # call the parser on that folder
     call_command('parser', accession)
 
@@ -497,14 +515,18 @@ def import_isa_tab(request):
     if request.method == 'POST':
         form = ImportISATabFileForm(request.POST, request.FILES)
         if form.is_valid():
-            process_isa_tab(request.FILES['isatabfile'])
-            return HttpResponseRedirect(request.path + 'success/')
+            f = form.cleaned_data['isa_tab_file']
+            url = form.cleaned_data['isa_tab_url']
+            if not f:
+                f = download_file.delay(url)
+            process_isa_tab(f)
+            return HttpResponseRedirect(request.path + 'result/')
     else:
         form = ImportISATabFileForm()
     return render_to_response('refinery_repository/import.html',
                               {'form': form},
                               context_instance=RequestContext(request))
 
-def import_isa_tab_success(request):
-    return render_to_response('refinery_repository/import_success.html',
+def import_isa_tab_result(request):
+    return render_to_response('refinery_repository/import_result.html',
                               context_instance=RequestContext(request))
