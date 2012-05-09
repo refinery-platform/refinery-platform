@@ -17,6 +17,7 @@ def create(source, sharename='', permanent=False, file_size=None):
     if not source: return None
     
     # check if source file is available
+    """
     if os.path.isabs(source):
         try:
             srcfo = open(source)
@@ -34,6 +35,7 @@ def create(source, sharename='', permanent=False, file_size=None):
             #TODO: write error msg to log
             print e.reason
             return None
+    """
 
     item = FileStoreItem(source=source, sharename=sharename)
     item.save()
