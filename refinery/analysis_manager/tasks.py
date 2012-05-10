@@ -38,7 +38,7 @@ class progress_chord(object):
 def chord_execution(ret_val, analysis):
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-    analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
+    analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
     
     execution_taskset = []; 
     execution_taskset.append(monitor_analysis_execution.subtask((analysis,)) )
@@ -66,7 +66,7 @@ def chord_postprocessing (ret_val, analysis):
     print "analysis_manager.chord_postprocessing called"
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-    analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
+    analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
     
     # getting list of tasks for download history files
     postprocessing_taskset = download_history_files(analysis)
@@ -105,7 +105,7 @@ def chord_cleanup(ret_val, analysis):
     print "analysis_manager.chord_cleanup called"
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-    analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
+    analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
     
     cleanup_taskset = TaskSet(task=[run_analysis_cleanup.subtask((analysis,)) ])          
     result_chord, result_set = progress_chord(cleanup_taskset)(emptyTask.subtask())
@@ -123,7 +123,7 @@ def run_analysis(analysis, interval=5.0):
     
     print "analysis_manager.tasks run_analysis called"
     
-    analysis_status = AnalysisStatus.objects.get(analysis_uuid=analysis.uuid)
+    analysis_status = AnalysisStatus.objects.get(analysis=analysis)
     
     # DOWNLOADING
     # GETTING LIST OF DOWNLOADED REMOTE FILES 
@@ -204,7 +204,7 @@ def monitor_analysis_execution(analysis, interval=5.0, task_id=None):
 
     # required to get updated state (move out of this function) 
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-    analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
+    analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
     
     # start monitoring task
     if analysis_status.execution_monitor_task_id is None:
@@ -303,7 +303,7 @@ def run_analysis_postprocessing(analysis):
     # 4. delete specified library
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-    analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
+    analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
     
     # kill monitoring task
     #celery.control.revoke(analysis_status.execution_monitor_task_id, terminate=True)
@@ -481,8 +481,10 @@ def download_history_files(analysis) :
                 analysis.save() 
                 
                 # downloading analysis results into file_store
-                task_id = import_file.subtask((filestore_uuid, False, file_size,))
-                task_list.append(task_id)
+                # only download files if size is greater than 1
+                if file_size > 0:
+                    task_id = import_file.subtask((filestore_uuid, False, False, file_size,))
+                    task_list.append(task_id)
             
     return task_list
         
