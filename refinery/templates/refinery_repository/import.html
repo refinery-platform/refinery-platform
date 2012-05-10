@@ -11,12 +11,8 @@ ISA-Tab import
 
 {% block content %}
 <p>Upload from local disk or download from a URL:</p>
-{% if form.errors %}
-	<p style="color:red;">
-		Please correct the error {{ form.errors|pluralize }} below.
-	</p>
-{% endif %}
 <form id="isaTabImportForm" enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+	<p>{{ error }}</p>
 	<p>{{ form.non_field_errors }}</p>
 	<div>
 		<p>

@@ -448,9 +448,9 @@ def parse_isatab(folder_name):
     investigation_uuid = p.main(folder_name)
     return investigation_uuid
 
-@task
+#@task
 def download_file(url):
-    ''' Download file from URL to disk and return a file object'''
+    ''' Download from URL to a temporary file on disk and return its object'''
     req = urllib2.Request(url)
     # check if source file can be opened
     try:
@@ -462,7 +462,7 @@ def download_file(url):
 
     # download and save the file
     tmpfile = tempfile.TemporaryFile()
-    remotefilesize = int(response.info().getheaders("Content-Length")[0])
+#    remotefilesize = int(response.info().getheader("Content-Length"))
 
     localfilesize = 0       # bytes
     blocksize = 8 * 1024    # bytes
@@ -473,11 +473,11 @@ def download_file(url):
 
         localfilesize += len(buf)
         tmpfile.write(buf)
-        downloaded = localfilesize * 100. / remotefilesize
-        download_file.update_state(
-            state="PROGRESS",
-            meta={"percent_done": "%3.2f%%" % (downloaded), 'current': localfilesize, 'total': remotefilesize}
-            )
+#        downloaded = localfilesize * 100. / remotefilesize
+#        download_file.update_state(
+#            state="PROGRESS",
+#            meta={"percent_done": "%3.2f%%" % (downloaded), 'current': localfilesize, 'total': remotefilesize}
+#            )
     
     tmpfile.flush()
     response.close()
