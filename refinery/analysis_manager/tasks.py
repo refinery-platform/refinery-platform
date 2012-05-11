@@ -480,6 +480,11 @@ def download_history_files(analysis) :
                 analysis.results.add(temp_file) 
                 analysis.save() 
                 
+                print "result_name"
+                print result_name
+                print file_type
+                print results
+                
                 # downloading analysis results into file_store
                 # only download files if size is greater than 1
                 if file_size > 0:
