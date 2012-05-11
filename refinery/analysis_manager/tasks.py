@@ -78,7 +78,7 @@ def chord_postprocessing (ret_val, analysis):
     
     #result_chord, result_set = progress_chord(postprocessing_taskset)(syncTask.subtask(params))
     if len(postprocessing_taskset) < 1:
-        print "---------- less than 1 -----------"
+        #print "---------- less than 1 -----------"
         #temp_task = emptyTask.subtask(("ret_val",))
         temp_task = emptyTask.subtask(("ret_val",))
         result_chord, result_set = progress_chord([temp_task])(chord_cleanup.subtask(analysis=analysis,))
@@ -88,7 +88,7 @@ def chord_postprocessing (ret_val, analysis):
         #result_chord, result_set = progress_chord([temp_task])
         
     else:
-        print "---------- greater than 1 -----------"
+        #print "---------- greater than 1 -----------"
         result_chord, result_set = progress_chord(postprocessing_taskset)(chord_cleanup.subtask(analysis=analysis,))
     
     analysis_status.postprocessing_taskset_id = result_set.task_id 
