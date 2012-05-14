@@ -14,6 +14,13 @@ import logging
 from data_set_manager.isa_tab_parser import IsaTabParser
 p = IsaTabParser()
 p.run( "dfdf" )
+p._parse_study_file( "/Users/nils/Data/Refinery/ISA-Tab/ae_hsci_imports/E-GEOD-16375/s_E-GEOD-16375_studysample.txt" )
+p._parse_study_file( "/Users/nils/Data/Refinery/ISA-Tab/ae_hsci_imports/E-GEOD-16375/a_E-GEOD-16375_assay.txt" )
+
+p._parse_study_file( "/Users/nils/Data/Refinery/ISA-Tab/ae_hsci_imports/E-GEOD-16013/s_E-GEOD-16013_studysample.txt" )
+p._parse_study_file( "/Users/nils/Data/Refinery/ISA-Tab/ae_hsci_imports/E-GEOD-16013/a_E-GEOD-16013_assay.txt" )
+
+
 p._parse_study_file( "/Users/nils/Data/Refinery/ISA-Tab/s_Expression Study in CDX2 knock-out mice.txt" )
 p._parse_study_file( "/Users/nils/Data/Refinery/ISA-Tab/a_transcriptomic.txt" )
 '''
@@ -51,19 +58,32 @@ class IsaTabParser:
         header_components = self._split_header( headers[-len(row)] )
         
         # TODO: for a node the number of header components must be 1
-        # assert( len( header_components ) ) == 1 
+        # assert( len( header_components ) ) == 1
         
-        node = Node.objects.create( study=self._current_study, type=header_components[0], name=row[0] )
+        # try to retrieve this node from the database (unless it is a normalization or data transformation)
+        is_new = True
+        
+        if ( header_components[0] in Node.ASSAYS | { Node.SAMPLE, Node.SOURCE, Node.EXTRACT, Node.LABELED_EXTRACT } ) or ( header_components[0] in Node.FILES and row[0].strip() is not "" ):
+            node, is_new = Node.objects.get_or_create( study=self._current_study, type=header_components[0], name=row[0].strip() )
+        else:
+            node = Node.objects.create( study=self._current_study, type=header_components[0], name=row[0].strip() )
+            
+        
+        if is_new:
+            self._logger.info( "New node " + str( node ) + " created." )
+        else:
+            self._logger.info( "Node " + str( node ) + " retrieved." )
         
         self._current_node = node
         
         if self._previous_node is not None:
-            self._previous_node.children.add( node )
-            node.parents.add( self._previous_node )
-            node.save()
-            self._previous_node.save()
-        
-        print "Parsing node " + str( node )
+            try: 
+                node.parents.get( to_node_id=self._previous_node.id )
+            except:                
+                self._previous_node.children.add( node )
+                node.parents.add( self._previous_node )
+                node.save()
+                self._previous_node.save()        
                 
         # remove the node from the row
         row.popleft()
@@ -131,9 +151,7 @@ class IsaTabParser:
     def _parse_protocol_reference(self, headers, row ):
         
         if self.is_protocol_reference( headers[-len(row)] ):
-            
-            print "Parsing protocol ref " + row[0]
-            
+                    
             # TODO: turn this into a get once protocols are parsed from the investigation file
             protocol, created = Protocol.objects.get_or_create( name=row[0], study=self._current_study )            
             if protocol is None:
@@ -267,7 +285,14 @@ class IsaTabParser:
         self._current_reader = csv.reader( open( file_name, "rb" ), dialect="excel-tab" )
                         
         # read column headers
+        headers = []
         headers = self._current_reader.next()
+        
+        try:
+            headers.remove( "" )
+        except:
+            pass
+        
         print( ", ".join( headers ) )
         
         # TODO: create a list of header "types" from this

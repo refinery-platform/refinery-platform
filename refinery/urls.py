@@ -21,6 +21,7 @@ urlpatterns = patterns('',
     url(r'^annotation_server/', include('annotation_server.urls')),
     url(r'^workflow_manager/', include('workflow_manager.urls')),
     url(r'^analysis_manager/', include('analysis_manager.urls')),
+    url(r'^data_set_manager/', include('data_set_manager.urls')),
     url(r'^file_server/', include('file_server.urls')),
 
     #links in galaxy_connector urls 

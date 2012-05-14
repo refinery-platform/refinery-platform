@@ -23,7 +23,7 @@ class NodeCollection(models.Model):
     title = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     submission_date = models.DateField(blank=True, null=True)
-    release_date = models.TextField(blank=True, null=True)    
+    release_date = models.DateField(blank=True, null=True)    
             
     class Meta:
         # this cannot be abstract due to the foreign keys from publications, investigators, etc.
@@ -85,6 +85,9 @@ class Study(NodeCollection):
     investigation = models.ForeignKey(Investigation)
     # TODO: should we support an archive file here? (see ISA-Tab Spec 4.1.3.2)
     file_name = models.TextField(blank=True, null=True)
+    
+    def assay_set(self):
+        self.node_set( type=Node.ASSAY )
     
         
 class Design(models.Model):
@@ -228,8 +231,9 @@ class Attribute(models.Model):
     CHARACTERISTICS = "Characteristics"
     FACTOR_VALUE = "Factor Value"
     LABEL = "Label"
+    COMMENT = "Comment"
     
-    TYPES = { MATERIAL_TYPE, CHARACTERISTICS, FACTOR_VALUE, LABEL }
+    TYPES = { MATERIAL_TYPE, CHARACTERISTICS, FACTOR_VALUE, LABEL, COMMENT }
     
     def is_attribute(self, string):
         return string.split( "[" )[0].strip() in self.TYPES     
