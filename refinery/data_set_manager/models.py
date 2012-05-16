@@ -70,7 +70,7 @@ class Investigation(NodeCollection):
     pass
 
 
-class OntologyDeclaration(models.Model):
+class Ontology(models.Model):
     '''
     Ontology Source Reference (ISA-Tab Spec 4.1.1)
     '''
@@ -100,7 +100,7 @@ class Design(models.Model):
     type_source = models.TextField(blank=True, null=True)
 
     
-class FactorDeclaration(models.Model):
+class Factor(models.Model):
     '''
     Study Factor (ISA-Tab Spec 4.1.3.4)
     '''
@@ -111,7 +111,7 @@ class FactorDeclaration(models.Model):
     type_source = models.TextField(blank=True, null=True)
 
 
-class AssayDeclaration(models.Model):
+class Assay(models.Model):
     '''
     Study Assay (ISA-Tab Spec 4.1.3.5)
     '''
@@ -141,12 +141,29 @@ class Protocol(models.Model):
     type_source = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     uri = models.TextField(blank=True, null=True)
-    # TODO: add protocol parameters
-    # TODO: add protocol components
+    # protocol parameters: via FK
+    # protocol components: via FK
     
     def __unicode__(self):
         return self.name
 
+
+class ProtocolParameter(models.Model):
+    study = models.ForeignKey(Study)
+    protocol = models.ForeignKey(Protocol)
+    name = models.TextField(blank=True, null=True)
+    name_accession = models.TextField(blank=True, null=True)
+    name_source = models.TextField(blank=True, null=True)
+    
+
+class ProtocolComponent(models.Model):
+    study = models.ForeignKey(Study)
+    protocol = models.ForeignKey(Protocol)    
+    name = models.TextField(blank=True, null=True)
+    type = models.TextField(blank=True, null=True)    
+    type_accession = models.TextField(blank=True, null=True)
+    type_source = models.TextField(blank=True, null=True)
+    
 
 class Node(models.Model):
     # allowed node types
@@ -215,11 +232,12 @@ class Node(models.Model):
     TYPES = ASSAYS | FILES | { SOURCE, SAMPLE, EXTRACT, LABELED_EXTRACT, SCAN, NORMALIZATION, DATA_TRANSFORMATION } 
         
     uuid = UUIDField(unique=True, auto=True)
-    study = models.ForeignKey(Study)
+    study = models.ForeignKey(Study, db_index=True)
+    assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
     children = models.ManyToManyField("self", symmetrical=False, related_name="parents_set")
     parents = models.ManyToManyField("self", symmetrical=False, related_name="children_set")
-    type = models.TextField()
-    name = models.TextField()
+    type = models.TextField(db_index=True)
+    name = models.TextField(db_index=True)
     
     def __unicode__(self):
         return self.type + ": " + self.name + " (" + str( self.parents.count() ) + " parents, " + str( self.children.count() ) + " children)" 
@@ -238,11 +256,11 @@ class Attribute(models.Model):
     def is_attribute(self, string):
         return string.split( "[" )[0].strip() in self.TYPES     
         
-    node = models.ForeignKey(Node)
-    type = models.TextField()
+    node = models.ForeignKey(Node, db_index=True)
+    type = models.TextField(db_index=True)
     # subtype further qualifies the attribute type, e.g. type = factor value and subtype = age
-    subtype = models.TextField(blank=True, null=True)
-    value = models.TextField(blank=True, null=True)
+    subtype = models.TextField(blank=True, null=True, db_index=True)
+    value = models.TextField(blank=True, null=True, db_index=True)
     value_unit = models.TextField(blank=True, null=True)
     # if value_unit is not null value is numeric and value_accession and value_source refer to value_unit (rather than value)
     value_accession = models.TextField(blank=True, null=True)
