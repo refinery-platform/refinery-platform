@@ -23,7 +23,22 @@ class NodeCollection(models.Model):
     title = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     submission_date = models.DateField(blank=True, null=True)
-    release_date = models.DateField(blank=True, null=True)    
+    release_date = models.DateField(blank=True, null=True)
+    
+    def __init__(self, *args, **kwargs ):
+        # change dates from empty string to None (to pass validation)
+        if "submission_date" in kwargs:
+            if kwargs["submission_date"] == "":
+                kwargs["submission_date"] = None    
+        if "release_date" in kwargs:
+            if kwargs["release_date"] == "":
+                kwargs["release_date"] = None
+                    
+        super(NodeCollection, self).__init__( *args, **kwargs )
+
+    def __unicode__(self):
+        return str( self.identifier ) + ( ": " + str( self.title ) if self.title != "" else "" ) + ": " + str( self.id )
+
             
     class Meta:
         # this cannot be abstract due to the foreign keys from publications, investigators, etc.
@@ -44,6 +59,9 @@ class Publication(models.Model):
     # TODO: do we really want to store ontology information for this?
     status_accession = models.TextField(blank=True, null=True)
     status_source = models.TextField(blank=True, null=True)
+
+    def __unicode__(self):
+        return str( self.authors ) + ": " + str( self.title )
     
     
 class Contact(models.Model):
@@ -65,6 +83,9 @@ class Contact(models.Model):
     roles_accession = models.TextField(blank=True, null=True)
     roles_source = models.TextField(blank=True, null=True)
 
+    def __unicode__(self):
+        return str( self.first_name ) + " " + str( self.last_name ) + " (" + str( self.email ) + ")"
+
 
 class Investigation(NodeCollection):    
     pass
@@ -80,14 +101,21 @@ class Ontology(models.Model):
     version = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
 
+    def __unicode__(self):
+        return str( self.name ) + " (" + str( self.file_name ) + ")"
+
 
 class Study(NodeCollection):
     investigation = models.ForeignKey(Investigation)
     # TODO: should we support an archive file here? (see ISA-Tab Spec 4.1.3.2)
-    file_name = models.TextField(blank=True, null=True)
+    file_name = models.TextField()
     
-    def assay_set(self):
+    def assay_nodes(self):
         self.node_set( type=Node.ASSAY )
+
+
+    def __unicode__(self):
+        return str( self.identifier ) + ": " + str( self.title )
     
         
 class Design(models.Model):
@@ -99,6 +127,9 @@ class Design(models.Model):
     type_accession = models.TextField(blank=True, null=True)
     type_source = models.TextField(blank=True, null=True)
 
+    def __unicode__(self):
+        return str( self.type )
+
     
 class Factor(models.Model):
     '''
@@ -109,6 +140,9 @@ class Factor(models.Model):
     type = models.TextField(blank=True, null=True)
     type_accession = models.TextField(blank=True, null=True)
     type_source = models.TextField(blank=True, null=True)
+
+    def __unicode__(self):
+        return str( self.name ) + ": " + str( self.type )
 
 
 class Assay(models.Model):
@@ -123,7 +157,10 @@ class Assay(models.Model):
     technology_accession = models.TextField(blank=True, null=True)    
     technology_source = models.TextField(blank=True, null=True)
     platform = models.TextField(blank=True, null=True)
-    file_name = models.TextField(blank=True, null=True)    
+    file_name = models.TextField()    
+
+    def __unicode__(self):
+        return str(self.measurement) + ": " + str(self.technology) + " (" + str(self.platform) + ")"
 
 
 class Protocol(models.Model):
@@ -135,7 +172,10 @@ class Protocol(models.Model):
     # workflow_uuid can be used to associate the protocol with a workflow
     # TODO: should this be the analysis uuid? (problem: technically an analysis is the execution of a protocol)
     workflow_uuid = UUIDField(unique=True, auto=True)
+    version = models.TextField(blank=True, null=True) 
     name = models.TextField(blank=True, null=True)
+    name_accession = models.TextField(blank=True, null=True)
+    name_source = models.TextField(blank=True, null=True)
     type = models.TextField(blank=True, null=True)
     type_accession = models.TextField(blank=True, null=True)
     type_source = models.TextField(blank=True, null=True)
@@ -145,7 +185,8 @@ class Protocol(models.Model):
     # protocol components: via FK
     
     def __unicode__(self):
-        return self.name
+        return str( self.name ) + ": " + str( self.type )
+
 
 
 class ProtocolParameter(models.Model):
@@ -229,7 +270,7 @@ class Node(models.Model):
         ACQUISITION_PARAMETER_DATA_FILE
     }
     
-    TYPES = ASSAYS | FILES | { SOURCE, SAMPLE, EXTRACT, LABELED_EXTRACT, SCAN, NORMALIZATION, DATA_TRANSFORMATION } 
+    TYPES = ASSAYS | FILES | { SOURCE, SAMPLE, EXTRACT, LABELED_EXTRACT, SCAN, NORMALIZATION, DATA_TRANSFORMATION }     
         
     uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study, db_index=True)
@@ -252,6 +293,9 @@ class Attribute(models.Model):
     COMMENT = "Comment"
     
     TYPES = { MATERIAL_TYPE, CHARACTERISTICS, FACTOR_VALUE, LABEL, COMMENT }
+    
+    ALL_FIELDS = ["id", "type", "subtype", "value", "value_unit", "value_accession", "value_source", "node"] 
+    NON_ONTOLOGY_FIELDS = ["id", "type", "subtype", "value", "value_unit", "node"]     
     
     def is_attribute(self, string):
         return string.split( "[" )[0].strip() in self.TYPES     
