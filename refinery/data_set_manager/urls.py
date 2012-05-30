@@ -8,5 +8,4 @@ from django.conf.urls.defaults import patterns, url
 
 urlpatterns = patterns('data_set_manager.views',
     url(r'^$', 'index', name="data_set_manager_base" ),
-    url(r'^sql/$', 'sqlindex' ),
 )
