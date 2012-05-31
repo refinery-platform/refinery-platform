@@ -188,7 +188,6 @@ class Protocol(models.Model):
         return str( self.name ) + ": " + str( self.type )
 
 
-
 class ProtocolParameter(models.Model):
     study = models.ForeignKey(Study)
     protocol = models.ForeignKey(Protocol)
