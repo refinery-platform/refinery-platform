@@ -46,7 +46,7 @@ def _delete_file_on_disk(sender, **kwargs):
     ''' Delete the file that belongs to this FileStoreItem instance from the file system '''
     item = kwargs.get('instance')
     # delete files that are located within the file store directory only
-    #TODO: expand inline to avoid extra DB query when looking up by UUID
+    #TODO: expand is_local inline to avoid extra DB query when looking up by UUID?
     if is_local(item.uuid):
         try:
             item.datafile.delete()

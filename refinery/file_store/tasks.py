@@ -37,8 +37,8 @@ def create(source, sharename='', permanent=False, file_size=None):
             return None
     """
 
-    item = FileStoreItem(source=source, sharename=sharename)
-    item.save()
+    item = FileStoreItem.objects.create(source=source, sharename=sharename)
+    #TODO: call import_file as subtask?
     if permanent:
         if not import_file(item.uuid, permanent=True, file_size=file_size):    # download/copy but don't add to cache
             return None
@@ -132,25 +132,23 @@ def import_file(uuid, permanent=False, refresh=False, file_size=None):
 @task()
 def read(uuid):
     ''' Return a FileStoreItem given UUID '''
+    #TODO: call import_file as subtask?
     return import_file(uuid)
 
 @task()
 def delete(uuid):
     ''' Delete the FileStoreItem given UUID '''
     try:
-        item = FileStoreItem.objects.get(uuid=uuid)
+        FileStoreItem.objects.get(uuid=uuid).delete()
     except FileStoreItem.DoesNotExist:
         #TODO: write error msg to log
         return False
-    item.delete()
-    #TODO: check if deletion was successful
     return True
 
 @task()
 def update(uuid, source):
     ''' Replace the file while keeping the same UUID '''
-    item = FileStoreItem.objects.get(uuid=uuid)
-    item.source = source
-    item.save()
+    FileStoreItem.objects.filter(uuid=uuid).update(source=source)
     # import new file from source
+    #TODO: call import_file as task
     return import_file(uuid, refresh=True)
