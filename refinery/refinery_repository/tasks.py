@@ -1,7 +1,7 @@
 from StringIO import StringIO
 from celery.schedules import crontab
-from celery.task import task, periodic_task, Task
-from celery.task.sets import TaskSet
+from celery.task import task, periodic_task
+from celery.task.sets import TaskSet, subtask
 from collections import defaultdict
 from core.models import DataSet
 from datetime import date, datetime, timedelta
@@ -9,11 +9,12 @@ from django.conf import settings
 from django.core.management import call_command
 from django.db import connection
 from django.db.utils import IntegrityError
-from file_store.tasks import create, delete
+from file_store.tasks import create, delete, read
 from refinery_repository.models import *
 from refinery_repository.parser import Parser
 import csv, errno, ftplib, glob, os, os.path, re, shutil, socket, string
 import subprocess, sys, tempfile, time, traceback, urllib2
+from zipfile import ZipFile, BadZipfile
 
 """
 Name: create_dir
@@ -448,37 +449,31 @@ def parse_isatab(folder_name):
     investigation_uuid = p.main(folder_name)
     return investigation_uuid
 
-#@task
-def download_file(url):
-    ''' Download from URL to a temporary file on disk and return its object'''
-    req = urllib2.Request(url)
-    # check if source file can be opened
+#TODO: check if the incoming ISA-Tab file is already in the system
+@task()
+def process_isa_tab(uuid):
+    ''' Unzip and parse uploaded ISA-Tab file object, return investigation UUID '''
+    #TODO: convert to subtask?
+    result = read.delay(uuid)
+    item = result.get()
+    input_file = item.datafile
+    # create folder for storing unzipped ISA-Tab contents (delete if it already exists)
+    accession = os.path.splitext(os.path.basename(input_file.name))[0]
+    out_dir = os.path.join(settings.ISA_TAB_DIR, accession)
+    if os.path.isdir(out_dir):
+        shutil.rmtree(out_dir)
+    os.mkdir(out_dir)
+
+    # unzip the ISA-Tab file
     try:
-        response = urllib2.urlopen(req)
-    except urllib2.URLError as e:
+        with ZipFile(input_file, 'r') as zf:
+            zf.extractall(out_dir)
+    except BadZipfile as e:
         #TODO: write error msg to log
-        print e.reason
+        print "Bad zipfile:", e
         return None
 
-    # download and save the file
-    tmpfile = tempfile.NamedTemporaryFile()
-#    remotefilesize = int(response.info().getheader("Content-Length"))
-
-    localfilesize = 0       # bytes
-    blocksize = 8 * 1024    # bytes
-    while True:
-        buf = response.read(blocksize)
-        if not buf:
-            break
-
-        localfilesize += len(buf)
-        tmpfile.write(buf)
-#        downloaded = localfilesize * 100. / remotefilesize
-#        download_file.update_state(
-#            state="PROGRESS",
-#            meta={"percent_done": "%3.2f%%" % (downloaded), 'current': localfilesize, 'total': remotefilesize}
-#            )
-    
-    tmpfile.flush()
-    response.close()
-    return tmpfile
+    # parse the ISA-Tab file
+    p = Parser()
+    investigation_uuid = p.main(accession)
+    return investigation_uuid
