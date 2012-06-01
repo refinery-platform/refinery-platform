@@ -100,8 +100,8 @@ def import_file(uuid, permanent=False, refresh=False, file_size=None):
             remotefilesize = file_size 
         filename = response.geturl().split('/')[-1]    # get file name from its URL
     
-        localfilesize = 0       # bytes
-        blocksize = 8 * 1024    # bytes
+        localfilesize = 0
+        blocksize = 8 * 2 ** 10    # 8 Kbytes
         while True:
             buf = response.read(blocksize)
             if not buf:
