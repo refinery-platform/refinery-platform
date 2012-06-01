@@ -3,7 +3,7 @@ from django.db import models
 from django_extensions.db.fields import UUIDField
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-from settings_local import MEDIA_ROOT, FILE_STORE_BASE_DIR
+from settings import MEDIA_ROOT, FILE_STORE_BASE_DIR
 
 # provide a default location for file store
 if not FILE_STORE_BASE_DIR:
