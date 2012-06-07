@@ -11,7 +11,7 @@ from django.db import connection
 from django.db.utils import IntegrityError
 from file_store.tasks import create, delete, read
 from refinery_repository.models import *
-from refinery_repository.parser import Parser
+from data_set_manager.isa_tab_parser import IsaTabParser
 import csv, errno, ftplib, glob, os, os.path, re, shutil, socket, string
 import subprocess, sys, tempfile, time, traceback, urllib2
 from zipfile import ZipFile, BadZipfile
@@ -442,38 +442,35 @@ def delete_investigation(uuid):
     if i_id:
         for i in Investigation.objects.filter(investigation_identifier=i_id):
             investigation_list.append(i)    
-            
-@task()
-def parse_isatab(folder_name):
-    p = Parser()
-    investigation_uuid = p.main(folder_name)
-    return investigation_uuid
 
-#TODO: check if the incoming ISA-Tab file is already in the system
 @task()
 def process_isa_tab(uuid):
-    ''' Unzip and parse uploaded ISA-Tab file object, return investigation UUID '''
-    #TODO: convert to subtask?
-    result = read.delay(uuid)
+    ''' Unzip and parse ISA-Tab archive file object specified by UUID, return investigation UUID '''
+    #TODO: check if the incoming ISA-Tab is already in the system
+    result = read.delay(uuid)    #TODO: convert to subtask?
     item = result.get()
     input_file = item.datafile
-    # create folder for storing unzipped ISA-Tab contents (delete if it already exists)
-    accession = os.path.splitext(os.path.basename(input_file.name))[0]
-    out_dir = os.path.join(settings.ISA_TAB_DIR, accession)
-    if os.path.isdir(out_dir):
-        shutil.rmtree(out_dir)
-    os.mkdir(out_dir)
 
-    # unzip the ISA-Tab file
-    try:
-        with ZipFile(input_file, 'r') as zf:
-            zf.extractall(out_dir)
-    except BadZipfile as e:
-        #TODO: write error msg to log
-        print "Bad zipfile:", e
+    if input_file:
+        # create folder for storing unzipped ISA-Tab contents (delete if it already exists)
+        accession = os.path.splitext(os.path.basename(input_file.name))[0]
+        extract_dir = os.path.join(settings.ISA_TAB_DIR, accession)
+        if os.path.isdir(extract_dir):
+            shutil.rmtree(extract_dir)
+        os.mkdir(extract_dir)
+    
+        # unzip the ISA-Tab file (assumes there are no subfolders inside ISA-Tab archive)
+        try:
+            with ZipFile(input_file, 'r') as zf:
+                zf.extractall(extract_dir)
+        except BadZipfile as e:
+            #TODO: write error msg to log
+            print "Bad zipfile:", e
+            return None
+
+        # parse ISA-Tab
+        p = IsaTabParser()
+        investigation = p.run(extract_dir)  # takes "/full/path/to/isatab/zipfile/or/directory"
+        return investigation.uuid
+    else:
         return None
-
-    # parse the ISA-Tab file
-    p = Parser()
-    investigation_uuid = p.main(accession)
-    return investigation_uuid
