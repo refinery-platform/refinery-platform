@@ -22,12 +22,11 @@ from celery.utils.encoding import safe_repr
 from core.models import *
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import run_analysis
-from refinery_repository.models import Investigation
 from refinery_repository.tasks import call_download, download_ftp_file, process_isa_tab
 from workflow_manager.tasks import get_workflow_inputs, get_workflows
-from refinery_repository.parser import Parser
 from file_store.tasks import create, import_file
 from file_store.models import FileStoreItem
+from data_set_manager.models import Node
 
 """
 Helper function for returning rawsql as a dictionary object
@@ -221,6 +220,33 @@ LEFT OUTER JOIN
         sample_pages = paginator.page(paginator.num_pages)
         
     return render_to_response('refinery_repository/analysis_samples.html', {'workflows':workflows, 'order':field_order, 'results': sample_pages}, context_instance=RequestContext(request)) 
+
+def get_investigation_files(request, investigation_uuid):
+    ''' Display all data files that belong to an investigation '''
+
+    print "refinery_repository.get_available_files2"
+    
+    workflows = Workflow.objects.all()
+
+    results = Node.objects.filter(type=Node.RAW_DATA_FILE,
+                                  assay__study__investigation__uuid=investigation_uuid)
+    field_order = ['Name']
+
+    paginator = Paginator(results, 25) # show 25 samples per page
+
+    page = request.GET.get('page', 1)
+    try:
+        sample_pages = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        sample_pages = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        sample_pages = paginator.page(paginator.num_pages)
+
+    return render_to_response('refinery_repository/investigation_samples.html',
+                              {'workflows': workflows, 'order': field_order, 'results': sample_pages},
+                              context_instance=RequestContext(request))
 
 def update_workflows(request):
     """ 
@@ -518,14 +544,13 @@ def import_isa_tab(request):
             # parse ISA-Tab
             investigation_uuid = process_isa_tab(item.uuid)
             if investigation_uuid:
-                # create a dataset
-                investigation = Investigation.objects.get(investigation_uuid=investigation_uuid)
-                #TODO: add file to Investigation.isatab_file: UUID
-                dataset = DataSet.objects.create(name="Test dataset")
-                dataset.set_investigation(investigation)
-                dataset.set_owner(request.user)
+                #TODO create a dataset
+#                investigation = Investigation.objects.get(investigation_uuid=investigation_uuid)
+#                dataset = DataSet.objects.create(name="Test dataset")
+#                dataset.set_investigation(investigation)
+#                dataset.set_owner(request.user)
                 #TODO: redirect to the list of analysis samples for the given UUID
-                return HttpResponseRedirect('/refinery_repository/analysis_samples/')
+                return HttpResponseRedirect('/refinery_repository/analysis_samples/' + investigation_uuid + '/')
             else:
                     error = 'Problem parsing ISA-Tab file' + item.datafile.name
                     context = RequestContext(request, {'form': form, 'error': error})
