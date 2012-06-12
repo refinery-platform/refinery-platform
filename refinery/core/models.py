@@ -207,12 +207,11 @@ class DataSet(SharableResource):
         try:
             return InvestigationLink.objects.filter( data_set=self, version=max_version ).get()
         except:
-            return None
-        
-            
+            return None            
     
     def __unicode__(self):
         return self.name + " - " + self.summary
+
 
     class Meta:
         verbose_name = "dataset"
