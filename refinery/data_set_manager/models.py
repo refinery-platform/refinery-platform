@@ -10,6 +10,7 @@ General:
 - xyz_source = reference to the ontology where xyz_term originates (defined in the investigation)
 '''
 
+
 from django.db import models
 from django_extensions.db.fields import UUIDField
 
@@ -37,13 +38,7 @@ class NodeCollection(models.Model):
         super(NodeCollection, self).__init__( *args, **kwargs )
 
     def __unicode__(self):
-        return str( self.identifier ) + ( ": " + str( self.title ) if self.title != "" else "" ) + ": " + str( self.id )
-
-            
-    class Meta:
-        # this cannot be abstract due to the foreign keys from publications, investigators, etc.
-        #abstract = True
-        pass
+        return unicode(self.identifier) + ( ": " + unicode(self.title) if unicode(self.title) != "" else "" ) + ": " + unicode(self.id)
 
 
 class Publication(models.Model):
@@ -61,7 +56,7 @@ class Publication(models.Model):
     status_source = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return str( self.authors ) + ": " + str( self.title )
+        return unicode(self.authors) + ": " + unicode(self.title)
     
     
 class Contact(models.Model):
@@ -84,11 +79,12 @@ class Contact(models.Model):
     roles_source = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return str( self.first_name ) + " " + str( self.last_name ) + " (" + str( self.email ) + ")"
+        return unicode(self.first_name) + " " + unicode(self.last_name) + " (" + unicode( self.email ) + ")"
 
 
-class Investigation(NodeCollection):    
-    pass
+class Investigation(NodeCollection):
+    isarchive_file = UUIDField(blank=True, null=True)    
+    pre_isarchive_file = UUIDField(blank=True, null=True)    
 
 
 class Ontology(models.Model):
@@ -102,7 +98,7 @@ class Ontology(models.Model):
     description = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return str( self.name ) + " (" + str( self.file_name ) + ")"
+        return unicode(self.name) + " (" + unicode(self.file_name) + ")"
 
 
 class Study(NodeCollection):
@@ -115,7 +111,7 @@ class Study(NodeCollection):
 
 
     def __unicode__(self):
-        return str( self.identifier ) + ": " + str( self.title )
+        return unicode(self.identifier) + ": " + unicode(self.title)
     
         
 class Design(models.Model):
@@ -128,7 +124,7 @@ class Design(models.Model):
     type_source = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return str( self.type )
+        return unicode(self.type)
 
     
 class Factor(models.Model):
@@ -142,7 +138,7 @@ class Factor(models.Model):
     type_source = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return str( self.name ) + ": " + str( self.type )
+        return unicode(self.name) + ": " + unicode(self.type)
 
 
 class Assay(models.Model):
@@ -160,7 +156,7 @@ class Assay(models.Model):
     file_name = models.TextField()    
 
     def __unicode__(self):
-        return str(self.measurement) + ": " + str(self.technology) + " (" + str(self.platform) + ")"
+        return unicode(self.measurement) + ": " + unicode(self.technology) + " (" + unicode(self.platform) + ")"
 
 
 class Protocol(models.Model):
@@ -185,7 +181,7 @@ class Protocol(models.Model):
     # protocol components: via FK
     
     def __unicode__(self):
-        return str( self.name ) + ": " + str( self.type )
+        return unicode(self.name) + ": " + unicode(self.type)
 
 
 class ProtocolParameter(models.Model):
@@ -274,13 +270,14 @@ class Node(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study, db_index=True)
     assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
+    file = UUIDField(blank=True, null=True)
     children = models.ManyToManyField("self", symmetrical=False, related_name="parents_set")
     parents = models.ManyToManyField("self", symmetrical=False, related_name="children_set")
     type = models.TextField(db_index=True)
     name = models.TextField(db_index=True)
     
     def __unicode__(self):
-        return self.type + ": " + self.name + " (" + str( self.parents.count() ) + " parents, " + str( self.children.count() ) + " children)" 
+        return unicode(self.type) + ": " + unicode(self.name) + " (" + unicode( self.parents.count() ) + " parents, " + unicode( self.children.count() ) + " children)" 
     
     
 class Attribute(models.Model):
@@ -310,9 +307,8 @@ class Attribute(models.Model):
     value_source = models.TextField(blank=True, null=True)
     
     def __unicode__(self):
-        return self.type + ( "" if self.subtype is None else " (" + self.subtype + ")" ) + " = " +  self.value 
-
-    
+        return unicode(self.type) + ( "" if self.subtype is None else " (" + unicode(self.subtype) + ")" ) + " = " + unicode(self.value)
+        
         
 class ProtocolReference(models.Model):
     node = models.ForeignKey(Node)
@@ -324,7 +320,7 @@ class ProtocolReference(models.Model):
     comment = models.TextField(blank=True, null=True)         
 
     def __unicode__(self):
-        return str( self.protocol ) + " (reference)" 
+        return unicode( self.protocol ) + " (reference)" 
     
             
 class ProtocolReferenceParameter(models.Model):
@@ -337,6 +333,6 @@ class ProtocolReferenceParameter(models.Model):
     value_source = models.TextField(blank=True, null=True)
     
     def __unicode__(self):
-        return self.name + " = " +  self.value 
+        return unicode(self.name) + " = " +  unicode(self.value) 
     
 

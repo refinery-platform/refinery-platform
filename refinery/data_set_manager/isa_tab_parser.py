@@ -18,6 +18,7 @@ import itertools
 import logging
 import os
 import simplejson
+from file_store.tasks import create
 
 '''
 from data_set_manager.isa_tab_parser import IsaTabParser
@@ -295,8 +296,17 @@ class IsaTabParser:
             node, is_new = Node.objects.get_or_create( study=self._current_study, assay=self._current_assay, type=header_components[0], name=row[0].strip() )
         else:
             node = Node.objects.create( study=self._current_study, assay=self._current_assay, type=header_components[0], name=row[0].strip() )
+         
+        # this node represents a file - add the file to the file store and store the file UUID in the node
+        if header_components[0] in Node.FILES and row[0].strip() is not "":
+            uuid = create( row[0].strip() )
             
-        
+            if uuid is not None:
+                node.file_uuid = uuid
+                node.save()
+            else:
+                self._logger.exception( "Unable to add " + row[0].strip() + " to file store as a temporary file." )
+                                            
         if is_new:
             self._logger.info( "New node " + str( node ) + " created." )
         else:
