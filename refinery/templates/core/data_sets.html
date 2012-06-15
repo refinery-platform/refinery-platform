@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - Data Sets
+{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+	<h1>
+  		Data Sets
+	</h1>
+</div>
+{% endblock %}
+
+{% block content %}
+{#% if datasets %#}
+    <table>
+    {% for dataset in datasets %}
+    	<tr>
+        	<td style="vertical-align: top">
+        		<a href="/data_sets/{{ dataset.0.uuid }}/">
+        			{{dataset.0.name}}
+        		</a>
+        	</td>
+        	<td style="vertical-align: top">
+        		<p>{{dataset.1}}</p>
+        	</td>
+        	<td>
+        		<p>{{dataset.2}}</p>
+        	</td>
+        	<td>
+        		<p>{{dataset.3}}</p>
+        	</td>
+        </tr>
+    {% endfor %}
+    </table>
+    <div class="pagination">
+    	<span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page={{page_obj.previous_page_number}}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{page_obj.number}} of {{page_obj.paginator.num_pages}}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{page_obj.next_page_number}}">next</a>
+        {% endif %}
+    	</span>
+	</div>
+{#% else %#}
+    <p>No data sets are available.</p>
+{#% endif %#}
+{% endblock %}
