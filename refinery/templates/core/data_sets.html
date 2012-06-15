@@ -13,23 +13,43 @@
 {% endblock %}
 
 {% block content %}
-{#% if datasets %#}
+{% if datasets %}
     <table>
     {% for dataset in datasets %}
     	<tr>
         	<td style="vertical-align: top">
-        		<a href="/data_sets/{{ dataset.0.uuid }}/">
-        			{{dataset.0.name}}
+        		<a href="/data_sets/{{ dataset.uuid }}/">
+        			{{dataset.name}}
         		</a>
         	</td>
         	<td style="vertical-align: top">
-        		<p>{{dataset.1}}</p>
+        	{% if dataset.get_investigation.get_title %}
+        		<p>{{dataset.get_investigation.get_title}}</p>
+        	{% else %}
+        		<p>--</p>
+        	{% endif %}
         	</td>
         	<td>
-        		<p>{{dataset.2}}</p>
+        	{% if dataset.get_investigation.get_study_count > 1 %}
+        		<p>{{dataset.get_investigation.get_study_count}} studies</p>
+        	{% else %}
+        		{% if dataset.get_investigation.get_study_count == 1 %}
+        		<p>1 study</p>
+        		{% else %}
+        			<p>--</p>
+        		{% endif %}
+        	{% endif %}
         	</td>
         	<td>
-        		<p>{{dataset.3}}</p>
+        	{% if dataset.get_investigation.get_assay_count > 1 %}
+        		<p>{{dataset.get_investigation.get_assay_count}} assays</p>
+        	{% else %}
+        		{% if dataset.get_investigation.get_assay_count == 1 %}
+        		<p>1 assay</p>
+        		{% else %}
+        		<p>--</p>
+        		{% endif %}
+        	{% endif %}
         	</td>
         </tr>
     {% endfor %}
@@ -49,7 +69,7 @@
         {% endif %}
     	</span>
 	</div>
-{#% else %#}
+{% else %}
     <p>No data sets are available.</p>
-{#% endif %#}
+{% endif %}
 {% endblock %}
