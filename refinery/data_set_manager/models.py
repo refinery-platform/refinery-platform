@@ -105,7 +105,17 @@ class Investigation(NodeCollection):
             study = self.study_set.all()[0]
             return study.description
         return self.description
+    
+    def get_study_count(self):
+        return self.study_set.count()
+    
+    def get_assay_count(self):
+        studies = self.study_set.all()
+        assay_count = 0
+        for study in studies:
+            assay_count += study.assay_set.count()
 
+        return assay_count
 
 class Ontology(models.Model):
     '''
