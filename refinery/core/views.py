@@ -9,6 +9,8 @@ from guardian.shortcuts import get_objects_for_group
 from guardian.shortcuts import get_perms
 from django.core.urlresolvers import resolve
 from file_store.models import FileStoreItem
+from data_set_manager.models import *
+from collections import defaultdict
 
 def home(request):
     
@@ -158,10 +160,62 @@ def project_edit(request,uuid):
         context_instance=RequestContext( request )
     )    
 
+def valid_dataset(data_set, request):
+    public_group = ExtendedGroup.objects.get(name__exact="Public")
+    if not request.user.has_perm('core.read_dataset', data_set):
+        if not 'read_dataset' in get_perms(public_group, data_set):
+            return False
+    return True
+        
+
+def data_sets(request):
+    all_datasets = DataSet.objects.all()
+    data_sets = list()
+    investigations = list()
+    studies = list()
+    assays = list()
+
+    for data_set in all_datasets:
+        #add data_set to the data_sets list if the user has explicit  
+        #permission to read data_set or if data_set is public
+        if valid_dataset(data_set, request):
+            data_sets.append(data_set)
+            investigationlink = data_set.get_investigation()
+            if investigationlink:
+                investigation = investigationlink.investigation
+                study_set = investigation.study_set.all()
+                num_assays = 0
+                for study in study_set:
+                    num_assays += len(study.assay_set.all())
+                #assign values to proper lists
+                investigations.append(investigation.get_title())
+                
+                num_studies = len(study_set)
+                if num_studies > 1:
+                    studies.append("%d studies" % num_studies)
+                else:
+                    studies.append("1 study")
+                    
+                if num_assays > 1:
+                    assays.append("%d assays" % num_assays)
+                else:
+                    assays.append("1 assay")
+            else:
+                investigations.append("--")
+                studies.append("0 studies")
+                assays.append("0 assays")
+            
+    
+    #zip everything together
+    datasets = zip(data_sets, investigations, studies, assays)
+    print datasets
+
+    return render_to_response('core/data_sets.html', {'datasets': datasets},
+                              context_instance=RequestContext(request))
 
 def data_set(request,uuid):    
     data_set = get_object_or_404( DataSet, uuid=uuid )
-    public_group = ExtendedGroup.objects.get( name__exact="Public")
+    public_group = ExtendedGroup.objects.get(name__exact="Public")
         
     if not request.user.has_perm( 'core.read_dataset', data_set ):
         if not 'read_dataset' in get_perms( public_group, data_set ):
