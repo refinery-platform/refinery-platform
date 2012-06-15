@@ -205,7 +205,8 @@ class DataSet(SharableResource):
         else:
             max_version = version
         try:
-            return InvestigationLink.objects.filter( data_set=self, version=max_version ).get()
+            il = InvestigationLink.objects.filter( data_set=self, version=max_version ).get()
+            return il.investigation
         except:
             return None            
     
