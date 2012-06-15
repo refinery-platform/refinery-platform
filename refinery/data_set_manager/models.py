@@ -84,7 +84,27 @@ class Contact(models.Model):
 
 class Investigation(NodeCollection):
     isarchive_file = UUIDField(blank=True, null=True)    
-    pre_isarchive_file = UUIDField(blank=True, null=True)    
+    pre_isarchive_file = UUIDField(blank=True, null=True) 
+    
+    """easily retrieves the proper NodeCollection fields"""
+    def get_identifier(self):
+        if self.identifier == None:
+            #if there's no investigation identifier, then there's only 1 study
+            study = self.study_set.all()[0]
+            return study.identifier
+        return self.identifier
+    
+    def get_title(self):
+        if self.title == None:
+            study = self.study_set.all()[0]
+            return study.title
+        return self.title
+    
+    def get_description(self):
+        if self.description == None:
+            study = self.study_set.all()[0]
+            return study.description
+        return self.description
 
 
 class Ontology(models.Model):
