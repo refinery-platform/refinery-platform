@@ -292,8 +292,11 @@ class IsaTabParser:
         # try to retrieve this node from the database (unless it is a normalization or data transformation)
         is_new = True
         
-        if ( header_components[0] in Node.ASSAYS | { Node.SAMPLE, Node.SOURCE, Node.EXTRACT, Node.LABELED_EXTRACT } ) or ( header_components[0] in Node.FILES and row[0].strip() is not "" ):            
-            node, is_new = Node.objects.get_or_create( study=self._current_study, assay=self._current_assay, type=header_components[0], name=row[0].strip() )
+        if ( header_components[0] in Node.ASSAYS | { Node.SAMPLE, Node.SOURCE, Node.EXTRACT, Node.LABELED_EXTRACT } ) or ( header_components[0] in Node.FILES and row[0].strip() is not "" ):
+            if header_components[0] in { Node.SAMPLE, Node.SOURCE }:
+                node, is_new = Node.objects.get_or_create( study=self._current_study, type=header_components[0], name=row[0].strip() )                
+            else:     
+                node, is_new = Node.objects.get_or_create( study=self._current_study, assay=self._current_assay, type=header_components[0], name=row[0].strip() )
         else:
             node = Node.objects.create( study=self._current_study, assay=self._current_assay, type=header_components[0], name=row[0].strip() )
          
@@ -322,7 +325,10 @@ class IsaTabParser:
                 node.parents.add( self._previous_node )
                 node.save()
                 self._previous_node.save()        
-                
+        else:
+            # TODO: look up parent nodes in DB
+            pass 
+        
         # remove the node from the row
         row.popleft()
         
@@ -823,6 +829,7 @@ class IsaTabParser:
                 self._parse_study_file( study, os.path.join( path, study.file_name ) )                
                 for assay in study.assay_set.all():
                     # parse assay file                
+                    self._previous_node = None
                     self._parse_assay_file( study, assay, os.path.join( path, assay.file_name ) )                                
         else:
             self._logger.exception( "No investigation was identified when parsing investigation file \"" + investigation_file_name + "\"" )
