@@ -9,7 +9,7 @@ from django_extensions.db.fields import UUIDField
 from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save
 from django.forms import ModelForm
-from refinery_repository.models import Investigation
+from data_set_manager.models import Investigation
 from galaxy_connector.models import Instance
 from guardian.shortcuts import assign, get_users_with_perms, get_groups_with_perms
 from django.db.models import Max
