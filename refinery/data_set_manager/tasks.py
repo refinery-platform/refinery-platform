@@ -15,6 +15,21 @@ import csv, errno, ftplib, glob, os, os.path, re, shutil, socket, string
 import subprocess, sys, tempfile, time, traceback, urllib2
 from zipfile import ZipFile, BadZipfile
 
+
+def create_dir(file_path):
+    """
+    Name: create_dir
+    Description:
+        creates a directory if it needs to be created
+    Parameters:
+        file_path: directory to create if necessary
+    """
+    try:
+        os.makedirs(file_path)
+    except OSError, e:
+        if e.errno != errno.EEXIST:
+            raise
+
 @task()
 def convert_to_isatab(accession):
     """
@@ -266,3 +281,35 @@ def parse_isatab(folder_name, isa_archive=None, pre_isa_archive=None):
     except:
         pass
     return None
+
+@task()
+def process_isa_tab(uuid):
+    ''' Unzip and parse ISA-Tab archive file object specified by UUID, return investigation UUID '''
+    #TODO: check if the incoming ISA-Tab is already in the system
+    result = read.delay(uuid)    #TODO: convert to subtask?
+    item = result.get()
+    input_file = item.datafile
+
+    if input_file:
+        # create folder for storing unzipped ISA-Tab contents (delete if it already exists)
+        accession = os.path.splitext(os.path.basename(input_file.name))[0]
+        extract_dir = os.path.join(settings.ISA_TAB_DIR, accession)
+        if os.path.isdir(extract_dir):
+            shutil.rmtree(extract_dir)
+        os.mkdir(extract_dir)
+    
+        # unzip the ISA-Tab file (assumes there are no subfolders inside ISA-Tab archive)
+        try:
+            with ZipFile(input_file, 'r') as zf:
+                zf.extractall(extract_dir)
+        except BadZipfile as e:
+            #TODO: write error msg to log
+            print "Bad zipfile:", e
+            return None
+
+        # parse ISA-Tab
+        p = IsaTabParser()
+        investigation = p.run(extract_dir)  # takes "/full/path/to/isatab/zipfile/or/directory"
+        return investigation.uuid
+    else:
+        return None
