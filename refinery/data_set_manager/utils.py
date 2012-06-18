@@ -5,7 +5,7 @@ Created on May 29, 2012
 '''
 from data_set_manager.models import Node, Attribute
 from django.utils.datetime_safe import datetime
-
+from django.db.models import Q
     
 
 def uniquify(seq):
@@ -26,7 +26,7 @@ def get_node_attributes(study_id, assay_id, node=None, node_type=None):
     '''
     if node is None:
         try:
-            node = Node.objects.filter(study=study_id, assay_id=assay_id, type=node_type)[0]
+            node = Node.objects.filter( Q( study=study_id, assay__isnull=True ) | Q( study=study_id, assay=assay_id ), type=node_type)[0]
         except:
             return None
     
@@ -38,7 +38,7 @@ def _get_node_attributes_recursion( node ):
     attributes = []
     
     for attribute in node.attribute_set.all():
-        attributes.append( { "type": attribute.type, "subtype": attribute.subtype } )
+        attributes.append( { "type": attribute.type, "subtype": attribute.subtype, "node_type": node.type } )
     
     try:
         parent = node.parents.all()[0]
@@ -59,10 +59,15 @@ def get_node_types(study_id, assay_id, filter_set=None):
     The order of the returned list is the order of the node types in the experiment graph.
     '''
     try:
-        # 1. pick a source node
-        node = Node.objects.filter(study=study_id, assay=assay_id, type=Node.SOURCE )[0]                
+        # 1. find a node without children
+        nodes = Node.objects.filter( study=study_id, assay=assay_id )
         
-        # 2. recursively follow until reaching a leaf
+        for n in nodes:
+            if n.children_set.count() == 0:
+                node = n
+                break                 
+        
+        # 2. recursively follow until reaching a source node
         sequence = _get_node_types_recursion(node)
         if filter_set is None:  
             return sequence
@@ -77,8 +82,8 @@ def _get_node_types_recursion( node ):
     
     # 1. get the first child (the assumption is that all node type sequences are the same)
     try:
-        child = node.children.all()[0]
-        sequence.extend( _get_node_types_recursion( child ) )
+        parent = node.parents.all()[0]
+        sequence.extend( _get_node_types_recursion( parent ) )
     except:
         pass
     
@@ -101,23 +106,21 @@ def _get_parent_attributes(result,node):
 
 def get_nodes(study_id, assay_id, ontology_attribute_fields=False):
             
-    #print( "Node Type Sequence: " + " -> ".join( get_node_types(study_id, assay_id) ) )
+    print( "Node Type Sequence: " + " -> ".join( get_node_types(study_id, assay_id) ) )
     #file_types = get_node_types(filter_set=Node.FILES)
-    #print( "File Type Sequence: " + " -> ".join( get_node_types(study_id, assay_id, filter_set=Node.FILES) ) )
-    #print( "Assay Type Sequence: " + " -> ".join( get_node_types(study_id, assay_id, filter_set=Node.ASSAYS) ) )
+    print( "File Type Sequence: " + " -> ".join( get_node_types( study_id, assay_id, filter_set=Node.FILES) ) )
+    print( "Assay Type Sequence: " + " -> ".join( get_node_types(study_id, assay_id, filter_set=Node.ASSAYS) ) )
 
-    #attributes = get_node_attributes(study_id=study_id, assay_id=assay_id, node_type=Node.SOURCE)
-    #print( "Attributes: " + ", ".join( [ item["type"] + " (" + item["subtype"] + ")" if item["subtype"] is not None else item["type"] for item in attributes ] ) )
+    attributes = get_node_attributes(study_id=study_id, assay_id=assay_id, node_type=Node.HYBRIDIZATION_ASSAY)
+    print( "Attributes:\n" + "\n".join( [ item["node_type"] + " -- " + item["type"] + " (" + item["subtype"] + ")" if item["subtype"] is not None else item["type"] for item in attributes ] ) )
         
 
     #start = datetime.now()    
     node_fields = [ "id", "uuid", "type", "name", "parents", "attribute" ]
     
-    # query nodes
-    node_list = Node.objects.filter( study=study_id, assay_id=assay_id ).prefetch_related( "attribute_set" ).order_by( "id" ).values( *node_fields )
-    
-    #node_list = Node.objects.filter( study=2 ).prefetch_related( "attribute_set" ).order_by( "id" ).values( *node_fields )
-    
+    # query nodes (both from assay and from study only)
+    node_list = Node.objects.filter( Q( study=study_id, assay__isnull=True ) | Q( study=study_id, assay=assay_id ) ).prefetch_related( "attribute_set" ).order_by( "id" ).values( *node_fields )
+            
     if ontology_attribute_fields:
         attribute_fields = Attribute.ALL_FIELDS
     else:
