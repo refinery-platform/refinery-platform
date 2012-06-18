@@ -10,5 +10,5 @@ from django.utils import simplejson
 
 
 def index(request):
-    return HttpResponse( simplejson.dumps( get_nodes(study_id=8, assay_id=6), indent=2 ), mimetype='application/json' )
+    return HttpResponse( simplejson.dumps( get_nodes(study_id=2, assay_id=3), indent=2 ), mimetype='application/json' )
 
