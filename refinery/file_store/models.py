@@ -3,11 +3,14 @@ from django.db import models
 from django_extensions.db.fields import UUIDField
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-from settings import MEDIA_ROOT, FILE_STORE_BASE_DIR
+from django.conf import settings
 
 # provide a default location for file store
-if not FILE_STORE_BASE_DIR:
-    FILE_STORE_BASE_DIR = "files"
+if not settings.FILE_STORE_BASE_DIR:
+    settings.FILE_STORE_BASE_DIR = 'files'
+
+if not settings.FILE_STORE_TEMP_DIR:
+    settings.FILE_STORE_TEMP_DIR = os.path.join(settings.FILE_STORE_BASE_DIR, 'temp')
 
 def file_path(modelinstance, filename):
     '''
@@ -21,7 +24,7 @@ def file_path(modelinstance, filename):
     # provides 256 * 256 = 65536 of possible directory combinations
     dir1 = "{:0>2x}".format(hashcode & mask)
     dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
-    return os.path.join(FILE_STORE_BASE_DIR, modelinstance.sharename, dir1, dir2, filename)
+    return os.path.join(settings.FILE_STORE_BASE_DIR, modelinstance.sharename, dir1, dir2, filename)
 
 class FileStoreItem(models.Model):
     ''' Represents data files on disk '''
@@ -36,7 +39,7 @@ class FileStoreItem(models.Model):
     def get_absolute_path(self):
         ''' Return absolute path of the file '''
         if self.datafile:
-            return os.path.join(MEDIA_ROOT, self.datafile.name)
+            return os.path.join(settings.MEDIA_ROOT, self.datafile.name)
         if os.path.isabs(self.source):
             return self.source
         return None
@@ -70,7 +73,7 @@ def is_local(uuid):
         print "File with UUID ", uuid, "does not exist"
         return False
     # local files are stored with relative path names that begin with FILE_STORE_BASE_DIR
-    if f and f.name.startswith(FILE_STORE_BASE_DIR):
+    if f and f.name.startswith(settings.FILE_STORE_BASE_DIR):
         return True
     else:
         return False
@@ -78,3 +81,7 @@ def is_local(uuid):
 def is_permanent(uuid):
     ''' Check if FileStoreItem instance is referenced in the cache '''
     return True
+
+def get_temp_dir():
+    ''' Return the absolute path to the file store temp dir '''
+    return os.path.join(settings.MEDIA_ROOT, settings.FILE_STORE_TEMP_DIR)
