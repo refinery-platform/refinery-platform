@@ -11,6 +11,7 @@ from django.db import connection
 from django.db.utils import IntegrityError
 from file_store.tasks import create, delete, read
 from refinery_repository.models import *
+from refinery_repository.parser import Parser
 from data_set_manager.isa_tab_parser import IsaTabParser
 import csv, errno, ftplib, glob, os, os.path, re, shutil, socket, string
 import subprocess, sys, tempfile, time, traceback, urllib2
@@ -472,5 +473,8 @@ def process_isa_tab(uuid):
         p = IsaTabParser()
         investigation = p.run(extract_dir)  # takes "/full/path/to/isatab/zipfile/or/directory"
         return investigation.uuid
+#        p = Parser()
+#        investigation_uuid = p.main(accession)
+#        return investigation_uuid
     else:
         return None

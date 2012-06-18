@@ -1,27 +1,25 @@
 import copy
 import simplejson
 import re
-import os
-import shutil
-from zipfile import ZipFile, BadZipfile
 from datetime import datetime
+from django import forms
+from django.db import connection
+from django.conf import settings
+from django.core import serializers
 from django.http import Http404, HttpResponseRedirect, HttpResponse
-from django.core.urlresolvers import reverse
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-from django.conf import settings
-from django.db import connection
-from django.core import serializers
-from django import forms
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.urlresolvers import reverse
+from django.contrib.auth.decorators import login_required
 from celery import states
 from celery.result import AsyncResult
-from celery.task.control import revoke
 from celery.utils import get_full_cls_name
+from celery.task.control import revoke
 from celery.utils.encoding import safe_repr
-from core.models import *
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import run_analysis
+from core.models import *
 from refinery_repository.tasks import call_download, download_ftp_file, process_isa_tab
 from workflow_manager.tasks import get_workflow_inputs, get_workflows
 from file_store.tasks import create, import_file
@@ -518,6 +516,7 @@ class ImportISATabFileForm(forms.Form):
         else:
             raise forms.ValidationError("Please provide either a file or a URL") 
 
+@login_required()
 def import_isa_tab(request):
     ''' Process imported ISA-Tab file sent via POST request '''
     error = '' 

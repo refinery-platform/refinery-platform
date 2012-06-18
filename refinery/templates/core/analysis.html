@@ -29,7 +29,8 @@
 		<p>
 			{{result.file_name}}
 			{% if result.file_type|lower == 'igv.tdf' %}
-				: <a href="/file_server/profile_viewer/{{result.file_store_uuid}}/chr4/1/1000000/">Visualize</a>
+				{#: <a href="/file_server/profile_viewer/{{result.file_store_uuid}}/chr4/1/1000000/">Visualize</a>#}
+				: <a href="/file_server/profile_viewer/{{result.file_store_uuid}}/chr19/3000000/10000000/">Visualize</a>
 			{% endif %}
 		</p>
 	</li>
