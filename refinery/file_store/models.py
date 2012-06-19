@@ -1,4 +1,5 @@
 import os
+from urlparse import urlparse
 from django.db import models
 from django_extensions.db.fields import UUIDField
 from django.db.models.signals import pre_delete
@@ -85,3 +86,19 @@ def is_permanent(uuid):
 def get_temp_dir():
     ''' Return the absolute path to the file store temp dir '''
     return os.path.join(settings.MEDIA_ROOT, settings.FILE_STORE_TEMP_DIR)
+
+def get_file_extension(uuid):
+    ''' Return file extension of the file specified by UUID '''
+    try:
+        f = FileStoreItem.objects.get(uuid=uuid)
+    except FileStoreItem.DoesNotExist:
+        #TODO: write error msg to log
+        print "File with UUID ", uuid, "does not exist"
+        return None
+    if f.datafile:
+        return os.path.splitext(f.datafile.name)[1]
+    else:
+        # this is a remote file that has not been copied to file store, so get extension from the source URL
+        u = urlparse(f.source)
+        name = u.path.split('/')[-1]
+        return os.path.splitext(name)[1]
