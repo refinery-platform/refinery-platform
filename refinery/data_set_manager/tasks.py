@@ -1,251 +1,45 @@
-from StringIO import StringIO
 from celery.schedules import crontab
 from celery.task import task, periodic_task
 from celery.task.sets import TaskSet, subtask
 from collections import defaultdict
-from core.models import DataSet
+from core.models import *
 from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.core.management import call_command
 from django.db import connection
 from django.db.utils import IntegrityError
 from file_store.tasks import create, delete, read
-from refinery_repository.models import *
-from refinery_repository.parser import Parser
+from data_set_manager.models import Investigation, Study
 from data_set_manager.isa_tab_parser import IsaTabParser
 import csv, errno, ftplib, glob, os, os.path, re, shutil, socket, string
 import subprocess, sys, tempfile, time, traceback, urllib2
 from zipfile import ZipFile, BadZipfile
 
-"""
-Name: create_dir
-Description:
-    creates a directory if it needs to be created
-Parameters:
-    file_path: directory to create if necessary
-"""
+
 def create_dir(file_path):
+    """
+    Name: create_dir
+    Description:
+        creates a directory if it needs to be created
+    Parameters:
+        file_path: directory to create if necessary
+    """
     try:
         os.makedirs(file_path)
     except OSError, e:
         if e.errno != errno.EEXIST:
             raise
 
-"""
-Name: download_ftp_file
-Description:
-    downloads a file from an FTP server
-Parameters:
-    ftp: URL for the file being downloaded
-    out_dir: base directory where file is being downloaded
-    accession: name of directory that will house the downloaded file, in this
-               case, the investigation accession
-"""
-@task()
-def download_ftp_file(ftp, out_dir, accession):
-    file_name = ftp.split('/')[-1] #get the file name
-    out_dir = os.path.join(out_dir, accession) #directory where file downloads
-    
-    #make super-directory (out_dir/accession) if it doesn't exist
-    create_dir(out_dir)
-
-    file_path = os.path.join(out_dir, file_name) # path where file downloads
-    if(not os.path.exists(file_path)): #if file exists already don't download
-        ftp = ftp[6:] #remove the ftp:// part from the front
-    
-        #get the ftp host
-        ind = string.index(ftp, '/')
-        host = ftp[:ind]
-    
-        #get the directory to change to once connected to the FTP server
-        rind = string.rindex(ftp, '/')
-        new_dir = ftp[ind+1:rind]
-
-        #connect to host
-        try:
-            f = ftplib.FTP(host)
-        except (socket.error, socket.gaierror), e:
-            print 'ERROR: Cannot read "%s"' % host
-            sys.exit()
-
-        #login to server
-        try:
-            f.login()
-        except ftplib.error_perm:
-            print 'ERROR: Cannot login anonymously'
-            f.quit()
-            sys.exit()
-
-        #change to the proper directory the file lives in
-        try:
-            f.cwd(new_dir)
-        except ftplib.error_perm:
-            print 'ERROR: cannot CD to "%s"' % new_dir
-            f.quit()
-        
-        #get size of the file, open local file to write to
-        size = int(f.size(file_name))
-        downloaded = [0] #can't change non-local vars until Py3, so hack
-        file = open(file_path, 'wb')
-        
-        #defined here because those 3 vars needed to be defined first
-        #calculates the amount of download completed and tells Celery
-        def handleDownload(block):
-            downloaded[0] += len(block)
-            file.write(block)
-            
-            percent_dl = downloaded[0] * 100. / size
-            download_ftp_file.update_state(state="PROGRESS",
-                            meta={
-                                  "percent_done": "%3.2f%%" % (percent_dl),
-                                  'current': downloaded[0],
-                                  'total': size,
-                                  'download_location': file_path,
-                                  'download_url': "ftp://%s" % ftp
-                            })
-            #status = r"%3.2f%% downloaded" % (percent_dl)
-            #status = status + chr(8)*(len(status)+1)
-            #print status,
-            
-        try:
-            f.retrbinary('RETR %s' % file_name, handleDownload)
-        except ftplib.error_perm:
-            print 'ERROR: cannot read file "%s"' % file_path
-            os.unlink(file_path)
-        f.quit()
-
-"""
-Name: download_http_file
-Description:
-    downloads a file from a given URL
-Parameters:
-    url: URL for the file being downloaded
-    out_dir: base directory where file is being downloaded
-    accession: name of directory that will house the downloaded file, in this
-               case, the investigation accession
-"""
-@task()
-def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=None):
-    out_dir = os.path.join(out_dir, accession) #directory where file downloads
-    
-    print "refinery_repository.download_http_file called"
-    
-    #make super-directory (out_dir/accession) if it doesn't exist
-    create_dir(out_dir)
-    
-    if (new_name is None):
-        file_name = url.split('/')[-1] #get the file name
-        file_path = os.path.join(out_dir, file_name) # path where file downloads
-    else:
-        file_name = new_name
-        file_path = os.path.join(out_dir, new_name) 
-        
-    print "file_path"
-    print file_path
-    print "file_name"
-    print file_name
-    print "out_dir"
-    print out_dir
-    print "url"
-    print url
-    
-    if(not os.path.exists(file_path)):
-        u = urllib2.urlopen(url)
-        f = open(file_path, 'wb')
-        
-        if (galaxy_file_size is None):
-            meta = u.info()
-            print "meta"
-            print meta
-            file_size = int(meta.getheaders("Content-Length")[0])
-        else:
-            file_size = galaxy_file_size
-            
-        print "Downloading: %s Bytes: %s" % (file_name, file_size)
-        file_size_dl = 0
-        block_sz = 8192
-        while True:
-            buffer = u.read(block_sz)
-            if not buffer:
-                break
-
-            file_size_dl += len(buffer)
-            f.write(buffer)
-            
-            downloaded = file_size_dl * 100. / file_size
-            download_http_file.update_state(state="PROGRESS",
-                        meta={
-                              "percent_done": "%3.2f%%" % (downloaded),
-                              'current': file_size_dl,
-                              'total': file_size
-                        })
-            
-            status = r"%10d  [%3.2f%%]" % (file_size_dl, downloaded)
-            status = status + chr(8)*(len(status)+1)
-            print status,
-
-        f.close()
-
-"""
-Name: call_download
-Description:
-    downloads a file from an FTP server
-Parameters:
-    ftp: URL for the file being downloaded
-    out_dir: base directory where file is being downloaded
-    accession: name of directory that will house the downloaded file, in this
-               case, the investigation accession
-"""
-@task()
-def call_download(file_url):
-    """args = (file_url)
-    orig_stdout = sys.stdout
-    sys.stdout = content = StringIO()
-    call_command('download_files', *args)
-    sys.stdout = orig_stdout
-    content.seek(0)
-    
-    task_ids = content.read()
-    print "call_download"
-    print task_ids
-    return task_ids"""
-    #isolate accession number
-    file_name = file_url.split('/')[-1] #get the file name
-    accession = file_name.split('.')[0]
-    
-    try:
-        #get investigation with primary key
-        i = Investigation.objects.get(pk=accession)
-    except Investigation.DoesNotExist:
-        raise "Investigation %s is not available" % accession
-            
-    assays = i.assay_set.all() #get assays via fk
-
-    #object to return, set of urls to download
-    file_list = set()
-    
-    for a in assays:
-        processed = a.processed_data.all() #associated processed data
-        for p in processed:
-            file_list.add(p.derived_arrayexpress_ftp_file)
-
-    task_ids = list()
-    for f in file_list:
-        id = download_http_file.delay(f, settings.DOWNLOAD_BASE_DIR, accession)
-        task_ids.append(id)
-
-    return task_ids
-
-"""
-Name: convert_to_isatab
-Description:
-    converts MAGE-Tab file from ArrayExpress into ISA-Tab, zips up the 
-    ISA-Tab, and zips up the MAGE-Tab
-Parameters:
-    accession: ArrayExpress study to convert
-"""
 @task()
 def convert_to_isatab(accession):
+    """
+    Name: convert_to_isatab
+    Description:
+        converts MAGE-Tab file from ArrayExpress into ISA-Tab, zips up the 
+        ISA-Tab, and zips up the MAGE-Tab
+    Parameters:
+        accession: ArrayExpress study to convert
+    """
     retval = 1 #successful conversion
     command = "./convert.sh %s" % accession
     
@@ -312,7 +106,7 @@ def convert_to_isatab(accession):
         a_hrefs = string.split(last_line, '<a href="')
         #get the links we want
         for a_href in a_hrefs:
-            if re.search('sdrf.txt', a_href) or re.search('idf.txt', a_href):
+            if re.search(r'http://.+sdrf.txt', a_href) or re.search(r'http://.+idf.txt', a_href):
                 link = string.split(a_href, '"').pop(0) #grab the link
                 file_name = link.split('/')[-1] #get the file name
                 
@@ -326,10 +120,10 @@ def convert_to_isatab(accession):
                 f.write(u.read()) #again, shouldn't be a large file
                 f.close()
         
-        #zip up and move the MAGE-TAB files
-        shutil.make_archive(dir_to_zip, 'zip', temp_dir, 
+                #zip up and move the MAGE-TAB files
+                shutil.make_archive(dir_to_zip, 'zip', temp_dir, 
                                                 "MAGE-TAB_%s" % accession)
-        shutil.move("%s.zip" % dir_to_zip, isatab_file_location)
+                shutil.move("%s.zip" % dir_to_zip, isatab_file_location)
 
     #clean up the temporary directory and other files
     shutil.rmtree(temp_dir)
@@ -384,7 +178,7 @@ def get_arrayexpress_studies():
                     a = a[:-2] #take off the </ connected to the accession
                     isatab_dir = os.path.join(settings.ISA_TAB_DIR, a)
                     #will only convert new studies
-                    if not os.path.isdir(isatab_dir): #hasn't been done before
+                    if not Study.objects.filter(identifier=a):
                         ae_accessions.append(a)
                     else: #if updated recently, then convert also
                         #convert string to datetime.date object for comparison
@@ -423,26 +217,70 @@ def get_arrayexpress_studies():
     #print success_list
 
     #grab the stderr instead of having it go to console
-    orig_stderr = sys.stderr
-    sys.stderr = content = StringIO()
-    call_command('parser', *success_list, stderr=content)
-    sys.stderr = orig_stderr
-    content.seek(0)
+    #orig_stderr = sys.stderr
+    #sys.stderr = content = StringIO()
+    #call_command('parser', *success_list, stderr=content)
+    #sys.stderr = orig_stderr
+    #content.seek(0)
     
-    #if there was a problem, have it email you
-    stderr = content.read().strip()
-    if stderr:
-        print stderr
+    print success_list
+    #success_list = ['E-GEOD-18588', 'E-GEOD-35573', 'E-MTAB-805', 'E-GEOD-33887', 'E-GEOD-33546', 'E-GEOD-35791', 'E-GEOD-34962', 'E-GEOD-34261']
+    s_tasks = list()
+    for ae in success_list:
+        isatab_archive = os.path.join(settings.ISA_TAB_DIR, ae, "%s.zip" % ae)
+        pre_isatab = os.path.join(settings.ISA_TAB_DIR, ae, "MAGE-TAB_%s.zip" % ae)
+        sub_task = parse_isatab.subtask(args=(ae, isatab_archive, pre_isatab))
+        s_tasks.append(sub_task)
+    
+    job = TaskSet(tasks=s_tasks)
+    result = job.apply_async()
+    while result.waiting():
+        print 'sleeping'
+        time.sleep(3)
+    results = result.join()
+    print "RESULTS:",
+    print results
+    
+    #get public group and ArrayExpress User for assigning DataSets
+    public_group = ExtendedGroup.objects.get(name__exact="Public")
+    ae_user = User.objects.get(username__exact="ArrayExpress")
+    for r in results:
+        if r != None:
+            investigation = Investigation.objects.get(uuid=r)
+            identifier = investigation.get_identifier()
+    
+            datasets = DataSet.objects.filter(name=identifier)
+            if len(datasets): #if not 0, update dataset with new investigation
+                #go through datasets until you find one with the correct owner
+                for ds in datasets:
+                    own = ds.get_owner()
+                    if own == ae_user:
+                        d = ds
+                        break
+                d.update_investigation(investigation, "updated")
+            else: #create a new dataset
+                d = DataSet.objects.create(name=identifier)
+                d.set_investigation(investigation)
+                d.set_owner(ae_user)
+                d.share(public_group)
         
-def delete_investigation(uuid):
-    investigation = Investigation.objects.get(investigation_uuid=uuid)
-    
-    #if this is part of a larger investigation
-    investigation_list = list()
-    i_id = investigation.investigation_identifier
-    if i_id:
-        for i in Investigation.objects.filter(investigation_identifier=i_id):
-            investigation_list.append(i)    
+
+    #if there was a problem, have it email you
+    #stderr = content.read().strip()
+    #if stderr:
+    #    print stderr   
+
+@task()
+def parse_isatab(folder_name, isa_archive=None, pre_isa_archive=None):
+    path = os.path.join(settings.ISA_TAB_DIR, folder_name)
+    print path
+    p = IsaTabParser()
+    try:
+        investigation = p.run(path, isa_archive, pre_isa_archive)
+        return investigation.uuid
+    except:
+        pass
+    return None
 
 @task()
 def process_isa_tab(uuid):
@@ -473,8 +311,5 @@ def process_isa_tab(uuid):
         p = IsaTabParser()
         investigation = p.run(extract_dir)  # takes "/full/path/to/isatab/zipfile/or/directory"
         return investigation.uuid
-#        p = Parser()
-#        investigation_uuid = p.main(accession)
-#        return investigation_uuid
     else:
         return None
