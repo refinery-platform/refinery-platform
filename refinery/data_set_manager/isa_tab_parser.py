@@ -806,7 +806,7 @@ class IsaTabParser:
                 return 
             
     
-    def run(self, path):
+    def run(self, path, isa_archive=None, preisa_archive=None):
         '''
         If path is a file it will be treated as an ISArchive, if it is a directory it will be treated
         as an extracted ISArchive. Assumes that the archive extracts into a subdirectory named <archive> if the
@@ -827,6 +827,8 @@ class IsaTabParser:
         
         # 1. test if archive needs to be extracted and extract if necessary
         if not os.path.isdir( path ):
+            #assign to isa_archive if it's an archive anyway
+            isa_archive = path
             self._logger.info( "Supplied path \"" + path + "\" is not a directory. Assuming ISArchive file." )
             try:
                 # TODO: inspect file content before extraction (http://docs.python.org/library/zipfile.html)
@@ -863,6 +865,17 @@ class IsaTabParser:
         else:
             self._logger.exception( "No investigation was identified when parsing investigation file \"" + investigation_file_name + "\"" )
             raise Exception()
+        
+        #assign ISA-Tab archive and pre-ISA-Tab archive if present
+        try:
+            _current_investigation.isarchive_file = create(isa_archive)
+        except:
+            pass
+        
+        try:
+            _current_investigation.pre_isarchive_file = create(preisa_archive)
+        except:
+            pass
         
         return self._current_investigation
         
