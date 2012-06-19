@@ -175,6 +175,7 @@ class Assay(models.Model):
     '''
     Study Assay (ISA-Tab Spec 4.1.3.5)
     '''
+    uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study)
     measurement = models.TextField(blank=True, null=True)
     measurement_accession = models.TextField(blank=True, null=True)    
