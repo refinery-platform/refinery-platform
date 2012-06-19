@@ -10,5 +10,13 @@ from django.utils import simplejson
 
 
 def index(request):
-    return HttpResponse( simplejson.dumps( get_nodes(study_id=2, assay_id=3), indent=2 ), mimetype='application/json' )
+    return HttpResponse( simplejson.dumps( get_nodes(study_id=2, assay_id=2), indent=2 ), mimetype='application/json' )
 
+def nodes(request, type, study_uuid, assay_uuid=None ):
+    return HttpResponse( simplejson.dumps( get_matrix(study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type ), indent=2 ), mimetype='application/json' )
+
+def node_attributes(request, type, study_uuid, assay_uuid=None ):
+    return HttpResponse( simplejson.dumps( get_node_attributes( study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type ), indent=2 ), mimetype='application/json' )
+
+def node_types(request, study_uuid, assay_uuid=None ):
+    return HttpResponse( simplejson.dumps( get_node_types( study_uuid=study_uuid, assay_uuid=assay_uuid ), indent=2 ), mimetype='application/json' )
