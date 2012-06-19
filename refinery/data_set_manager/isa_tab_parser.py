@@ -280,8 +280,7 @@ class IsaTabParser:
     def _parse_node(self, headers, row ):
         '''
         row is a deque, column header is at position len( headers ) - len( row )
-        ''' 
-
+        '''        
         # TODO: test if this is really a node
 
         header_components = self._split_header( headers[-len(row)] )
@@ -294,14 +293,17 @@ class IsaTabParser:
         
         if ( header_components[0] in Node.ASSAYS | { Node.SAMPLE, Node.SOURCE, Node.EXTRACT, Node.LABELED_EXTRACT } ) or ( header_components[0] in Node.FILES and row[0].strip() is not "" ):
             if header_components[0] in { Node.SAMPLE, Node.SOURCE }:
+                #print "1  --looking up type " + header_components[0] + " =  " +  row[0].strip() + " in study only (" + str( self._current_study ) + ")"
                 node, is_new = Node.objects.get_or_create( study=self._current_study, type=header_components[0], name=row[0].strip() )                
             else:     
+                #print "2    -- looking up type " + header_components[0] + " =  " +  row[0].strip() + "in study AND assay (" + str( self._current_study ) + ", " +  str( self._current_assay ) + ")"
                 node, is_new = Node.objects.get_or_create( study=self._current_study, assay=self._current_assay, type=header_components[0], name=row[0].strip() )
         else:
+            #print "3      -- looking up type " + header_components[0] + " =  " +  row[0].strip() + "in study AND assay (" + str( self._current_study ) + ", " +  str( self._current_assay ) + ")"
             node = Node.objects.create( study=self._current_study, assay=self._current_assay, type=header_components[0], name=row[0].strip() )
          
         # this node represents a file - add the file to the file store and store the file UUID in the node
-        if header_components[0] in Node.FILES and row[0].strip() is not "":
+        if is_new and header_components[0] in Node.FILES and row[0].strip() is not "":
             uuid = create( row[0].strip() )
             
             if uuid is not None:
@@ -364,33 +366,60 @@ class IsaTabParser:
         
         # TODO: do we need to test if this attribute type + subtype combination exists already for this study?
         
-        attribute = Attribute.objects.create( node = self._current_node )
-        attribute.study = self._current_study
-        attribute.type = header_components[0]
-        attribute.value = row[0]
+        # test if the current node already has an attribute with these properties
+        has_attribute = False
         
         if len( header_components ) > 1:
-            attribute.subtype = header_components[1]
-        
-        # TODO: deal with the "order" case (see ISA-Tab Spec 5.4.2)
+            if self._current_node.attribute_set.filter( type=header_components[0], value=row[0], subtype=header_components[1] ).count() > 0:            
+                has_attribute = True
+        else:
+            if self._current_node.attribute_set.filter( type=header_components[0], value=row[0] ).count() > 0:
+                has_attribute = True
          
+        # add attribute if it does not exist yet
+        if not has_attribute:                    
+            attribute = Attribute.objects.create( node = self._current_node )
+            attribute.study = self._current_study
+            attribute.type = header_components[0]
+            attribute.value = row[0]
+            
+            if len( header_components ) > 1:
+                attribute.subtype = header_components[1]
+            
+            # TODO: deal with the "order" case (see ISA-Tab Spec 5.4.2)
+             
         # remove the attribute from the row
-        row.popleft()
+        row.popleft()        
         
         if self.is_term_information( headers[-len(row)] ):
-            term_information = self._parse_term_information( headers, row )
-            attribute.value_accession = term_information["accession"]
-            attribute.value_source = term_information["source"]                        
-        
+            if not has_attribute:
+                term_information = self._parse_term_information( headers, row )
+                attribute.value_accession = term_information["accession"]
+                attribute.value_source = term_information["source"]                
+            else:
+                row.popleft()
+                row.popleft()
+                
+            
         if self.is_unit( headers[-len(row)] ):
-            unit_information = self._parse_unit_information( headers, row )
-            attribute.value_unit = unit_information["unit"]
-            attribute.value_accession = unit_information["accession"]
-            attribute.value_source = unit_information["source"]
-                                    
-        # done        
-        attribute.save()        
-        return attribute
+            if not has_attribute:
+                unit_information = self._parse_unit_information( headers, row )
+                attribute.value_unit = unit_information["unit"]
+                attribute.value_accession = unit_information["accession"]
+                attribute.value_source = unit_information["source"]
+            else:
+                row.popleft()
+                row.popleft()
+                row.popleft()
+                
+                                        
+        if not has_attribute:
+            # done        
+            attribute.save()        
+            return attribute
+        
+        # remove the attribute from the row
+        return None
 
     
     def _parse_protocol_reference(self, headers, row ):
