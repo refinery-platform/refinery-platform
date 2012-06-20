@@ -307,6 +307,17 @@ class Node(models.Model):
     type = models.TextField(db_index=True)
     name = models.TextField(db_index=True)
     
+    def add_child(self, node):
+        if node is None:
+            return None
+        
+        self.children.add( node )
+        self.save()
+        node.parents.add( self )
+        node.save()
+        return self
+            
+    
     def __unicode__(self):
         return unicode(self.type) + ": " + unicode(self.name) + " (" + unicode( self.parents.count() ) + " parents, " + unicode( self.children.count() ) + " children)" 
     

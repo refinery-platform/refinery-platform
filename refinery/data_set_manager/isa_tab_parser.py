@@ -321,6 +321,7 @@ class IsaTabParser:
         
         if self._previous_node is not None:
             try: 
+                # test if the node has already been created (??? why not use an if statement ???)
                 node.parents.get( to_node_id=self._previous_node.id )
             except:                
                 self._previous_node.children.add( node )
