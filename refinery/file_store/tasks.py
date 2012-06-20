@@ -1,6 +1,7 @@
 import os
 import urllib2
 import tempfile
+from urlparse import urlparse
 from django.core.files import File
 from celery.task import task
 from file_store.models import FileStoreItem, is_local
@@ -45,7 +46,7 @@ def create(source, sharename='', permanent=False, file_size=None):
     return item.uuid
 
 @task()
-def import_file(uuid, permanent=False, refresh=False, file_size=None):
+def import_file(uuid, permanent=False, refresh=False, file_size=1):
     '''
     Download or copy file specified by UUID
     If permanent=False then add to cache
@@ -82,7 +83,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=None):
         item.datafile.save(srcfilename, srcfile)  # model is saved by default after file has been altered
         srcfile.close()
         srcfo.close()
-    else:   # if source is a URL 
+    else:   # otherwise assume source is a URL 
         req = urllib2.Request(src)
         # check if source file can be opened
         try:
@@ -94,12 +95,12 @@ def import_file(uuid, permanent=False, refresh=False, file_size=None):
 
         # download and save the file
         tmpfile = tempfile.NamedTemporaryFile()
-        if (file_size is None):
-            remotefilesize = int(response.info().getheaders("Content-Length")[0])
-        else:
-            remotefilesize = file_size 
-        filename = response.geturl().split('/')[-1]    # get file name from its URL
-    
+        remotefilesize = int(response.info().getheader("Content-Length", file_size))  # provide a default value in case Content-Length is missing
+
+        # get file name from the URL
+        u = urlparse(response.geturl())
+        filename = u.path.split('/')[-1]
+
         localfilesize = 0
         blocksize = 8 * 2 ** 10    # 8 Kbytes
         while True:
