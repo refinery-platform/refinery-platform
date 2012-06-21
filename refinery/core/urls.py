@@ -29,23 +29,8 @@ urlpatterns = patterns('core.views',
 )
 
 class DataSetList(ListView):
-    def valid_dataset(self, data_set, public_group):
-        if not self.request.user.has_perm('core.read_dataset', data_set):
-            if not 'read_dataset' in get_perms(public_group, data_set):
-                return False
-        return True
-
     def get_queryset(self):
-        all_datasets = DataSet.objects.all()
-        datasets_list = list()
-        public_group = ExtendedGroup.objects.get(name__exact="Public")
-
-        for data_set in all_datasets:
-            #add data_set to the data_sets list if the user has explicit  
-            #permission to read data_set or if data_set is public
-            if self.valid_dataset(data_set, public_group):
-                datasets_list.append(data_set)
-        return datasets_list
+        return get_objects_for_user(self.request.user, "core.read_dataset")
 
 urlpatterns += patterns('',
     url(r'^data_sets/$',
