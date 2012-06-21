@@ -4,10 +4,10 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
+from core.models import *
 from django.conf.urls.defaults import patterns, url
 from django.views.generic.list import ListView
-from core.models import *
-from guardian.shortcuts import get_perms
+from guardian.shortcuts import get_objects_for_user
 
 urlpatterns = patterns('core.views',
     url(r'^$', 'home', name="home" ),
