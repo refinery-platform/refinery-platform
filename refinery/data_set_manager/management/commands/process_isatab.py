@@ -14,16 +14,10 @@ class Command(BaseCommand):
         main program; calls the parsing and insertion functions
     """   
     def handle(self, username, base_isa_dir, base_pre_isa_dir=None, **options):
-        print "base_isa_dir:",
-        print base_isa_dir
-        print "pre_isa_dir:",
-        print base_pre_isa_dir
         isatab_files = list()
         for dirname, dirnames, filenames in os.walk(base_isa_dir):
             for filename in filenames:
                 isatab_files.append(os.path.join(dirname, filename))
-                
-        print isatab_files
         
         pre_isatab_files = list()
         try:
@@ -32,11 +26,7 @@ class Command(BaseCommand):
                     pre_isatab_files.append(os.path.join(dirname, filename))
         except:
             pass
-        
-        print pre_isatab_files
-        
-        print isatab_files
-        print pre_isatab_files
+
         s_tasks = list()
         if pre_isatab_files:
             for i, p in zip(isatab_files, pre_isatab_files):
