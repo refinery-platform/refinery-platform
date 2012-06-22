@@ -1,6 +1,12 @@
-from django.core.management.base import BaseCommand, CommandError
 from celery.task.sets import TaskSet, subtask
+from celery.task import task
+from data_set_manager.tasks import convert_to_isatab
 from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
+import os, sys, urllib2, errno, string, re, time, os.path
+from datetime import date, datetime, timedelta
+from data_set_manager.models import Study
+from django.core.management import call_command
 
 class Command(BaseCommand):
     help = "Takes the directory of an ISA-Tab file as input, parses, and"
@@ -12,6 +18,7 @@ class Command(BaseCommand):
         main program; calls the parsing and insertion functions
     """   
     def handle(self, *args, **options):
+        """
         try:
             os.makedirs(settings.WGET_DIR)
         except OSError, e:
@@ -67,19 +74,25 @@ class Command(BaseCommand):
                 pass                    
         f.close()
 
+        """
+        ae_accessions = ['E-MTAB-1085', 'E-MTAB-1084', 'E-GEOD-37235']
         s_tasks = list()
-    for ae_accession in ae_accessions:
-        #print ae_accession        
-        #task = convert_to_isatab.delay(ae_accession)
-        s_task = convert_to_isatab.subtask(args=(ae_accession,))
-        s_tasks.append(s_task)
+        for ae_accession in ae_accessions:
+            #print ae_accession        
+            #task = convert_to_isatab.delay(ae_accession)
+            s_task = convert_to_isatab.subtask(args=(ae_accession,))
+            s_tasks.append(s_task)
+    
+        job = TaskSet(tasks=s_tasks)
+        result = job.apply_async()
+    
+        #go to sleep for 3 seconds at a time until all tasks are finished
+        while result.waiting():
+            print 'sleeping'
+            time.sleep(3)
 
-    job = TaskSet(tasks=s_tasks)
-    result = job.apply_async()
+        results = result.join() #list of the results in dispatch order
 
-    #go to sleep for 3 seconds at a time until all tasks are finished
-    while result.waiting():
-        print 'sleeping'
-        time.sleep(3)
-
-    results = result.join() #list of the results in dispatch order
+        base_isa_dir = os.path.join(settings.ISA_TAB_DIR, 'isa')
+        base_preisa_dir = os.path.join(settings.ISA_TAB_DIR, 'pre_isa')
+        call_command('process_isatab', 'ArrayExpress', base_isa_dir, base_preisa_dir)
