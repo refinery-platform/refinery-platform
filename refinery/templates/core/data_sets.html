@@ -14,58 +14,48 @@
 
 {% block content %}
 {% if datasets %}
-    <table>
-    {% for dataset in datasets %}
-    	<tr>
-        	<td style="vertical-align: top">
-        		<a href="/data_sets/{{ dataset.uuid }}/">
-        			{{dataset.name}}
-        		</a>
-        	</td>
-        	<td style="vertical-align: top">
-        	{% if dataset.get_investigation.get_title %}
-        		<p>{{dataset.get_investigation.get_title}}</p>
-        	{% else %}
-        		<p>--</p>
-        	{% endif %}
-        	</td>
-        	<td>
-        	{% if dataset.get_investigation.get_study_count > 1 %}
-        		<p>{{dataset.get_investigation.get_study_count}} studies</p>
-        	{% else %}
-        		{% if dataset.get_investigation.get_study_count == 1 %}
-        		<p>1 study</p>
-        		{% else %}
-        			<p>--</p>
-        		{% endif %}
-        	{% endif %}
-        	</td>
-        	<td>
-        	{% if dataset.get_investigation.get_assay_count > 1 %}
-        		<p>{{dataset.get_investigation.get_assay_count}} assays</p>
-        	{% else %}
-        		{% if dataset.get_investigation.get_assay_count == 1 %}
-        		<p>1 assay</p>
-        		{% else %}
-        		<p>--</p>
-        		{% endif %}
-        	{% endif %}
-        	</td>
-        </tr>
-    {% endfor %}
+    <table class="table table-striped table-condensed table-bordered">
+    	<thead>
+    		<tr>
+    			<th>Name</th>
+    			<th>Title</th>
+    			<th>Studies</th>
+    			<th>Assays</th>
+    		</tr>
+    	</thead>
+    	<tbody>
+    	{% for dataset in datasets.object_list %}
+    		<tr>
+        		<td style="vertical-align: top">
+        			<a href="/data_sets/{{ dataset.0.uuid }}/">
+        				{{dataset.0.name}}
+        			</a>
+        		</td>
+        		<td style="vertical-align: top">
+        			<p>{{dataset.1}}</p>
+        		</td>
+        		<td>
+        			<p>{{dataset.2}}</p>
+        		</td>
+        		<td>
+        			<p>{{dataset.3}}</p>
+        		</td>
+        	</tr>
+    	{% endfor %}
+    	</tbody>
     </table>
     <div class="pagination">
     	<span class="step-links">
-        {% if page_obj.has_previous %}
-            <a href="?page={{page_obj.previous_page_number}}">previous</a>
+        {% if datasets.has_previous %}
+            <a href="?page={{datasets.previous_page_number}}">previous</a>
         {% endif %}
 
         <span class="current">
-            Page {{page_obj.number}} of {{page_obj.paginator.num_pages}}
+            Page {{datasets.number}} of {{datasets.paginator.num_pages}}
         </span>
 
-        {% if page_obj.has_next %}
-            <a href="?page={{page_obj.next_page_number}}">next</a>
+        {% if datasets.has_next %}
+            <a href="?page={{datasets.next_page_number}}">next</a>
         {% endif %}
     	</span>
 	</div>

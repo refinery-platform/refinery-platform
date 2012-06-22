@@ -162,6 +162,61 @@ def project_edit(request,uuid):
     )    
 
 
+
+def data_sets(request):
+    if not request.user.is_authenticated():
+        groups = ExtendedGroup.objects.filter( name__exact="Public" )
+        
+        if len(groups) == 1:
+            group = groups[0]        
+            dataset_list = get_objects_for_group( group, "core.read_dataset" )
+        else:
+            dataset_list = []
+    else:
+        dataset_list = get_objects_for_user(request.user, 'core.read_dataset')
+
+    investigation_titles = list()
+    studies = list()
+    assays = list()
+    for dataset in dataset_list:
+        try:
+            investigation = dataset.get_investigation()
+            investigation_titles.append(investigation.get_title())
+            
+            study_count = investigation.get_study_count()
+            if study_count > 1:
+                studies.append("%d studies")
+            else:
+                studies.append("1 study")
+
+            assay_count = investigation.get_assay_count()
+            if assay_count > 1:
+                assays.append("%d assays")
+            else:
+                assays.append("1 assay")
+        except:
+            investigation_titles.append("--")
+            studies.append("0 studies")
+            assays.append("0 assays")
+        
+    datasets_info = zip(dataset_list, investigation_titles, studies, assays)
+    
+    #pagination
+    paginator = Paginator(datasets_info, 15)
+    
+    page = request.GET.get('page')
+    try:
+        datasets = paginator.page(page)
+    except TypeError:
+        datasets = paginator.page(1)
+    except EmptyPage:
+        datasets = paginator.page(paginator.num_pages)
+        
+    return render_to_response("core/data_sets.html", 
+                                  {'datasets': datasets},
+                                  context_instance=RequestContext(request))
+    
+
 def data_set(request,uuid):    
     data_set = get_object_or_404( DataSet, uuid=uuid )
     public_group = ExtendedGroup.objects.get(name__exact="Public")
