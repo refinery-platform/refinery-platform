@@ -6,8 +6,6 @@ Created on Feb 20, 2012
 
 from core.models import *
 from django.conf.urls.defaults import patterns, url
-from django.views.generic.list import ListView
-from guardian.shortcuts import get_objects_for_user
 
 urlpatterns = patterns('core.views',
     url(r'^$', 'home', name="home" ),
@@ -21,6 +19,7 @@ urlpatterns = patterns('core.views',
     url(r'^projects/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'project', name="project"),
     url(r'^projects/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/edit/$', 'project_edit', name="project_edit"),
     url(r'^projects/new/$', 'project_new', name="project_new"),
+    url(r'^data_sets/$', 'data_sets'),
     url(r'^data_sets/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'data_set', name="data_set"),
     url(r'^workflows/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'workflow', name="workflow"),
     url(r'^workflow_engines/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'workflow_engine', name="workflow_engine"),
@@ -28,6 +27,7 @@ urlpatterns = patterns('core.views',
     url(r'^projects/(?P<project_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/analyses/(?P<analysis_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'analysis', name="analysis"),
 )
 
+"""
 class DataSetList(ListView):
     def get_queryset(self):
         return get_objects_for_user(self.request.user, "core.read_dataset")
@@ -40,3 +40,4 @@ urlpatterns += patterns('',
             template_name='core/data_sets.html'
         ))              
 )
+"""
