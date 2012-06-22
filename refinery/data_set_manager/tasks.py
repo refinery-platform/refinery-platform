@@ -163,10 +163,10 @@ def create_dataset(investigation_uuid, username, public=False):
             """go through datasets until you find one with the correct owner"""
             for ds in datasets:
                 own = ds.get_owner()
-                if own == ae_user:
-                    d = ds
+                if own == user:
+                    ds.update_investigation(investigation, "updated %s" % date.today())
                     break
-            d.update_investigation(investigation, "updated %s" % date.today())
+            
         else: #create a new dataset
             d = DataSet.objects.create(name=identifier)
             d.set_investigation(investigation)
