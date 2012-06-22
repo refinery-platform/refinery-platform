@@ -206,10 +206,12 @@ def data_sets(request):
     page = request.GET.get('page')
     try:
         datasets = paginator.page(page)
-    except TypeError:
+    except PageNotAnInteger:
         datasets = paginator.page(1)
     except EmptyPage:
         datasets = paginator.page(paginator.num_pages)
+    except TypeError:
+        datasets = paginator.page(1)
         
     return render_to_response("core/data_sets.html", 
                                   {'datasets': datasets},
