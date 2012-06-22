@@ -12,7 +12,7 @@ from file_store.tasks import create, delete, read
 from data_set_manager.models import Investigation, Study
 from data_set_manager.isa_tab_parser import IsaTabParser
 import csv, errno, ftplib, glob, os, os.path, re, shutil, socket, string
-import subprocess, sys, tempfile, time, traceback, urllib2, traceback
+import subprocess, sys, tempfile, time, traceback, urllib2
 from zipfile import ZipFile, BadZipfile
 
 
@@ -58,19 +58,20 @@ def convert_to_isatab(accession):
     #process stderr
     stderr = open(stderr_n).read().strip()
     if stderr:
-        #unsuccessful conversion, so remove the investigation file and dir
         shutil.rmtree(os.path.join(settings.ISA_TAB_DIR, accession))
-        
         if exit_code != 0: #something bad happened
             shutil.rmtree(temp_dir)
             raise Exception, "Error Converting to ISA-Tab: %s" % stderr
         else:
+            shutil.rmtree(temp_dir)
             #print stderr
             retval = 0 #unsuccessful conversion, but clean exit
     else: #successfully converted
         #zip up ISA-Tab files 
         isatab_file_location = os.path.join(settings.ISA_TAB_DIR, 'isa', accession)
-        preisatab_file_location = os.path.join(settings.ISA_TAB_DIR, 'preisa')
+        print isatab_file_location
+        preisatab_file_location = os.path.join(settings.ISA_TAB_DIR, 'pre_isa')
+        print preisatab_file_location
         """
         shutil makes a zip, tar, tar.gz, etc file out of files in given dir 
         Params:
@@ -82,11 +83,10 @@ def convert_to_isatab(accession):
         shutil.make_archive(isatab_file_location, 'zip',  
                                         settings.ISA_TAB_DIR, accession)
         
-        shutil.rmtree(temp_dir)
-        
         #Get and zip up the MAGE-TAB and put in the ISA-Tab folder
         #make file name for ArrayExpress information to download into
         ae_name = tempfile.NamedTemporaryFile(dir=temp_dir, prefix='ae_').name
+        print ae_name
         #make url to fetch the experiment
         url = "%s/%s" % (settings.AE_BASE_URL, accession)
         
@@ -102,31 +102,39 @@ def convert_to_isatab(accession):
         f.close()
         last_line = lines[-1]
         
+        dir_to_zip = os.path.join(temp_dir, "magetab")
+        create_dir(dir_to_zip)
+
         #isolate the links by splitting on '<a href="'
         a_hrefs = string.split(last_line, '<a href="')
+        print a_hrefs
         #get the links we want
         for a_href in a_hrefs:
-            if re.search(r'http://.+sdrf.txt', a_href) or re.search(r'http://.+idf.txt', a_href):
+            if re.search(r'sdrf.txt', a_href) or re.search(r'idf.txt', a_href):
                 link = string.split(a_href, '"').pop(0) #grab the link
                 file_name = link.split('/')[-1] #get the file name
-                
-                #download and zip up locally because needs to be sequential
-                dir_to_zip = os.path.join(temp_dir, accession)
-                create_dir(dir_to_zip)
+                if not re.search(r'^http://', link):
+                    link = "http://www.ebi.ac.uk%s" % link
                 
                 u = urllib2.urlopen(link)
                 file = os.path.join(dir_to_zip, file_name)
                 f = open(file, 'wb')
                 f.write(u.read()) #again, shouldn't be a large file
                 f.close()
+                print link
         
-                #zip up and move the MAGE-TAB files
-                shutil.make_archive(dir_to_zip, 'zip', temp_dir, 
-                                                "MAGE-TAB_%s" % accession)
-                shutil.move("%s.zip" % dir_to_zip, pre_isatab_file_location)
+        files_to_zip = 0
+        for dirname, dirnames, filenames in os.walk(dir_to_zip):
+            for filename in filenames:
+                files_to_zip += 1
+        if files_to_zip > 1:
+            #zip up and move the MAGE-TAB files
+            shutil.make_archive("%s/MAGE-TAB_%s" % (preisatab_file_location, accession), 
+                                'zip', temp_dir, "magetab")
+            #shutil.move("%s/MAGE-TAB_%s.zip" % (temp_dir, accession), pre_isatab_file_location)
 
     #clean up the temporary directory and other files
-    shutil.rmtree(temp_dir)
+    #shutil.rmtree(temp_dir)
 
     return retval
 
@@ -173,7 +181,7 @@ def parse_isatab(folder_name, isa_archive=None, pre_isa_archive=None):
     print path
     p = IsaTabParser()
     try:
-        investigation = p.run(path, isa_archive, pre_isa_archive)
+        investigation = p.run(path, isa_archive=isa_archive, preisa_archive=pre_isa_archive)
         return investigation.uuid
     except: #prints the error message without breaking things
         print "error: "
