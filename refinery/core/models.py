@@ -4,15 +4,17 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
-from django.db import models
-from django_extensions.db.fields import UUIDField
-from django.contrib.auth.models import User, Group
-from django.db.models.signals import post_save
-from django.forms import ModelForm
 from data_set_manager.models import Investigation
-from galaxy_connector.models import Instance
-from guardian.shortcuts import assign, get_users_with_perms, get_groups_with_perms
+from django.contrib.auth.models import User, Group
+from django.db import models
 from django.db.models import Max
+from django.db.models.signals import post_save
+from django.contrib.auth.signals import user_logged_in
+from django.forms import ModelForm
+from django_extensions.db.fields import UUIDField
+from galaxy_connector.models import Instance
+from guardian.shortcuts import assign, get_users_with_perms, \
+    get_groups_with_perms
 
 
 class UserProfile ( models.Model ):
@@ -23,7 +25,7 @@ class UserProfile ( models.Model ):
 
     user = models.OneToOneField( User )
     affiliation = models.CharField( max_length=100, blank=True )
-    catch_all_project = models.ForeignKey( 'Project' )
+    catch_all_project = models.ForeignKey( 'Project', blank=True, null=True )
 
     def __unicode__(self):
         return self.user.first_name + " " + self.user.last_name + " (" + self.affiliation + "): " + self.user.email
@@ -32,11 +34,20 @@ class UserProfile ( models.Model ):
 # automatic creation of a user profile when a user is created: 
 def create_user_profile( sender, instance, created, **kwargs ):
     if created:
-        project = Project.objects.create( name="Catch-All Project", is_catch_all=True )
-        project.set_owner( instance )
-        UserProfile.objects.create( user=instance, catch_all_project=project )
+        UserProfile.objects.create( user=instance )
         
-post_save.connect( create_user_profile, sender=User )            
+post_save.connect(create_user_profile, sender=User)
+
+# check if user has a catch all project and create one if not
+def create_catch_all_project( sender, user, request, **kwargs ):
+    if user.get_profile().catch_all_project is None:
+        project = Project.objects.create( name="Catch-All Project", is_catch_all=True )
+        project.set_owner( user )
+        user.get_profile().catch_all_project = project
+        user.get_profile().save()
+    
+# create catch all project for user if none exists
+user_logged_in.connect(create_catch_all_project)            
 
 
 

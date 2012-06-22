@@ -1,20 +1,19 @@
-from core.models import *
-from core.forms import ProjectForm
-from django.template import RequestContext
-from django.shortcuts import render_to_response, get_object_or_404
-from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
-from django.contrib.auth.decorators import login_required
-from guardian.shortcuts import get_objects_for_user
-from guardian.shortcuts import get_objects_for_group
-from guardian.shortcuts import get_perms
-from django.core.urlresolvers import resolve
-from file_store.models import FileStoreItem
-from data_set_manager.models import *
 from collections import defaultdict
+from core.forms import ProjectForm
+from core.models import *
+from data_set_manager.models import *
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.urlresolvers import resolve
+from django.http import HttpResponse, HttpResponseForbidden, \
+    HttpResponseRedirect
+from django.shortcuts import render_to_response, get_object_or_404
+from django.template import RequestContext
+from file_store.models import FileStoreItem
+from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
+    get_perms
 
 def home(request):
-    
     if request.user.is_superuser:
         users = User.objects.all()
     else:
