@@ -214,8 +214,8 @@ def data_sets(request):
         datasets = paginator.page(1)
         
     return render_to_response("core/data_sets.html", 
-                                  {'datasets': datasets},
-                                  context_instance=RequestContext(request))
+                              {'datasets': datasets},
+                              context_instance=RequestContext(request))
     
 
 def data_set(request,uuid):    
@@ -228,10 +228,24 @@ def data_set(request,uuid):
         
     permissions = get_users_with_perms( data_set, attach_perms=True )
     
-    return render_to_response('core/data_set.html', { 'data_set': data_set, "permissions": permissions }, context_instance=RequestContext( request ) )
+    #get studies
+    investigation = data_set.get_investigation()
+    studies = investigation.study_set.all()
+    
+    return render_to_response('core/data_set.html', { 'data_set': data_set, "permissions": permissions, "studies": studies }, context_instance=RequestContext( request ) )
 
 
-def workflow(request,uuid):
+def samples(request, study_uuid, assay_uuid):
+    node_matrix = data_set_manager.utils.get_matrix(node_type="Raw Data File", 
+                                                  study_uuid=study_uuid, 
+                                                  assay_uuid=assay_uuid
+                                                  )
+    
+    return render_to_response('', {"matrix": node_matrix}, 
+                              context_instance=RequestContext(request))
+
+
+def workflow(request, uuid):
     workflow = get_object_or_404( Workflow, uuid=uuid )
     public_group = ExtendedGroup.objects.get( name__exact="Public")
     

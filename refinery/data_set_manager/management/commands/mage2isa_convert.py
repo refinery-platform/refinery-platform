@@ -24,7 +24,6 @@ class Command(BaseCommand):
         main program; calls the parsing and insertion functions
     """   
     def handle(self, *args, **options):
-        """
         try:
             os.makedirs(settings.WGET_DIR)
         except OSError, e:
@@ -79,8 +78,8 @@ class Command(BaseCommand):
             except IndexError: #looking at line without interesting information
                 pass                    
         f.close()
-        """
-        ae_accessions = ["E-GEOD-37235", "E-MTAB-1084", "E-MTAB-1085"]
+        
+        
         s_tasks = list()
         for ae_accession in ae_accessions:
             #print ae_accession        
@@ -93,12 +92,12 @@ class Command(BaseCommand):
     
         #go to sleep for 3 seconds at a time until all tasks are finished
         while result.waiting():
-            print 'sleeping'
-            time.sleep(3)
+            print "processing..."
+            time.sleep(5)
 
         results = result.join() #list of the results in dispatch order
 
         base_isa_dir = os.path.join(settings.ISA_TAB_DIR, 'isa')
         base_preisa_dir = os.path.join(settings.ISA_TAB_DIR, 'pre_isa')
-        print "call_command('process_isatab', 'ArrayExpress', %s, %s, is_public=%s)" % (base_isa_dir, base_preisa_dir, True)
+
         call_command('process_isatab', 'ArrayExpress', base_isa_dir, base_preisa_dir, is_public=True)

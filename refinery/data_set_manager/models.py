@@ -187,7 +187,18 @@ class Assay(models.Model):
     file_name = models.TextField()    
 
     def __unicode__(self):
-        return unicode(self.measurement) + ": " + unicode(self.technology) + " (" + unicode(self.platform) + ")"
+        retstr = ""
+        if self.measurement:
+            retstr += "Measurement: %s; " % unicode(self.measurement)
+        
+        if self.technology:
+            retstr += "Technology: %s; " % unicode(self.technology) 
+        
+        if self.platform:
+            retstr += "Platform: %s; " % unicode(self.platform)
+
+        retstr += "File: %s" % unicode(self.file_name)
+        return retstr
 
 
 class Protocol(models.Model):
