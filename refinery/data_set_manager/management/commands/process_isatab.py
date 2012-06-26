@@ -43,7 +43,7 @@ class Command(BaseCommand):
         job = TaskSet(tasks=s_tasks)
         result = job.apply_async()
         while result.waiting():
-            print 'sleeping'
+            print "processing..."
             time.sleep(3)
         results = result.join()
         
