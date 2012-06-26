@@ -20,3 +20,6 @@ def node_attributes(request, type, study_uuid, assay_uuid=None ):
 
 def node_types(request, study_uuid, assay_uuid=None ):
     return HttpResponse( simplejson.dumps( get_node_types( study_uuid=study_uuid, assay_uuid=assay_uuid ), indent=2 ), mimetype='application/json' )
+
+def node_types_files(request, study_uuid, assay_uuid=None ):
+    return HttpResponse( simplejson.dumps( get_node_types( study_uuid=study_uuid, assay_uuid=assay_uuid, files_only=True, filter_set=Node.FILES ), indent=2 ), mimetype='application/json' )
