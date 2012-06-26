@@ -28,7 +28,17 @@
 	<p>Created: {{ data_set.creation_date }} | Last Modified: {{ data_set.modification_date }}</p>
 	
 	<div class="label">UUID</div>
-	<p class="fixed">{{ data_set.uuid }}</p>	
+	<p class="fixed">{{ data_set.uuid }}</p>
+	
+	<div class="label">Studies</div>
+	{% for study in studies %}
+	<p><strong>{{study.identifier}}</strong>: {{study.title}}</p>
+	<ul>
+	{% for assay in study.assay_set.all %}
+		<li>Assay - <a href="samples/{{study.uuid}}/{{assay.uuid}}/">{{assay}}</a></li>
+	{% endfor %}
+	</ul>
+	{% endfor %}
 	
 {% else %}
     <p>No valid data set.</p>
