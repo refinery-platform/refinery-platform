@@ -21,6 +21,8 @@ p.run( "/Users/nils/Data/Refinery/modENCODe/modENCODE_refinery_example.txt" )
 
 class SingleFileColumnParser:
     '''
+    Creates a source -> sample -> assay -> raw data file sequences. Attaches all attributes to the sample node. 
+    
     Assumptions:
     1. Each line corresponds to a data file that will be treated as a "raw data file".
     2. Each data file occurs only once in the file.
@@ -53,6 +55,7 @@ class SingleFileColumnParser:
     assay_column_index = None    
     column_index_separator = " "
     
+    # non-public variables
     _logger = None
     _current_file = None
     _current_reader = None    
