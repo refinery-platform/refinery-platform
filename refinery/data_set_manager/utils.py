@@ -56,7 +56,7 @@ def _get_node_attributes_recursion( node ):
     
 # for an assay declaration (= assay file in a study)
 # this method is based on the assumption that all paths through the experiment graph follow the same sequence of node types
-def get_node_types(study_uuid, assay_uuid=None, filter_set=None):
+def get_node_types(study_uuid, assay_uuid=None, files_only=False, filter_set=None):
     '''
     filter_set is a set of node types, e.g. [ "Sample Name", "Source Name" ]. Sets defined in Node (e.g. Node.ASSAYS, Node.FILES) can 
     be applied. The method will only return node types included in filter_set unless filter_set is "None".
@@ -127,7 +127,6 @@ def _retrieve_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_
 
     #attr = get_node_attributes(study_id=study_id, assay_id=assay_id, node_type=Node.RAW_DATA_FILE )
     #print( "Attributes:\n" + "\n".join( [ str( item["id"] ) + " -- " + str( item["node_type"] ) + " -- " + item["type"] + " (" + item["subtype"] + ")" if item["subtype"] is not None else item["type"] for item in attr ] ) )
-        
 
     node_fields = [ "id", "uuid", "file", "type", "name", "parents", "attribute" ]
     
