@@ -200,6 +200,9 @@ LOGGING = {
     }
 }
 
+AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
+AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
+
 
 # import local settings
 from settings_local import *
