@@ -184,13 +184,13 @@ def data_sets(request):
             
             study_count = investigation.get_study_count()
             if study_count > 1:
-                studies.append("%d studies") % study_count
+                studies.append("%d studies" % study_count)
             else:
                 studies.append("1 study")
 
             assay_count = investigation.get_assay_count()
             if assay_count > 1:
-                assays.append("%d assays") % assay_count
+                assays.append("%d assays" % assay_count)
             else:
                 assays.append("1 assay")
         except:
