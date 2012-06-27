@@ -15,8 +15,39 @@ import time
 import os.path
 
 class Command(BaseCommand):
-    help = "Takes the directory of an ISA-Tab file as input, parses, and"
-    help = "%s inputs it into the database" % help
+    help = "Fetches a list of ArrayExpress experiments and converts their"
+    help = "%s MAGE-TAB to \nISA-Tab based on the keywords entered.\n" % help
+    help = "%s\nKeyword Options:\n\t" % help
+    help = "%s\"array\": array design, accession, or name;" % help
+    help = "%s e.g. array=A-AFFY-33\n\t\"ef\": experimental factor," % help
+    help = "%s name of the main variable in an experiment;\n\t\t" % help
+    help = "%se.g. ef=CellType\n\t\"evf\": experimental factor value;" % help
+    help = "%s e.g. evf=HeLa\n\t\"expdesign\": experiment design type;" % help
+    help = "%s e.g. expdesign='dose response'\n\t\"exptype\":" % help
+    help = "%s experiment type; e.g. exptype='RNA-seq OR ChIP-seq'\n" % help
+    help = "%s\t\"gxa\": presence in the Gene Expression Atalas. Only" % help
+    help = "%s value is gxa=true;\n\t\te.g. gxa=true\n\t\"keywords\": " % help
+    help = "%s free-text search; e.g. keywords='prostate NOT breast'\n" % help
+    help = "%s\t\"pmid\": PubMed identifier; e.g. pmid=16553887\n" % help
+    help = "%s\t\"sa\": sample attribute values; e.g. sa=fibroblast\n" % help
+    help = "%s\t\"species\": species of the samples; e.g." % help
+    help = "%s species='homo sapiens AND mouse'\n\n" % help
+
+    def _make_query(self, args):
+        query_string = ""
+        if args:
+            query_list = list()
+            for arg in args:
+                query_list.append(arg)
+            
+            print query_list
+        
+            query_string = string.join(query_list, "&")
+            query_string = "%s%s" % (settings.AE_BASE_QUERY, query_string)
+        else:
+            query_string = "%sexptype=" % settings.AE_BASE_QUERY
+        
+        return query_string
 
     """
     Name: handle
@@ -24,6 +55,8 @@ class Command(BaseCommand):
         main program; calls the parsing and insertion functions
     """   
     def handle(self, *args, **options):
+        ae_query = self._make_query(args)
+
         try:
             os.makedirs(settings.WGET_DIR)
         except OSError, e:
@@ -37,9 +70,9 @@ class Command(BaseCommand):
             last_date_run = datetime.fromtimestamp(t).date()
         except: #if file doesn't exist yet, then just make last_date_run today
             last_date_run = date.today()
-            
-        print "getting %s" % settings.WGET_URL
-        u = urllib2.urlopen(settings.WGET_URL)
+        
+        print "getting %s" % ae_query
+        u = urllib2.urlopen(ae_query)
 
         print "writing to file %s" % ae_file
         f = open(ae_file, 'w')
