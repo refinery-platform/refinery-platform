@@ -163,8 +163,8 @@ def create_dataset(investigation_uuid, username, public=False):
         #user doesn't exist
         user = User.objects.create_user(username, "", "test")
 
-    dataset = ""
     if investigation_uuid != None:
+        dataset = ""
         investigation = Investigation.objects.get(uuid=investigation_uuid)
         identifier = investigation.get_identifier()
     
@@ -182,7 +182,7 @@ def create_dataset(investigation_uuid, username, public=False):
             d = DataSet.objects.create(name=identifier)
             d.set_investigation(investigation)
             d.set_owner(user)
-            datasets = d
+            dataset = d
 
         if public:
             public_group = ExtendedGroup.objects.get(name__exact="Public")
