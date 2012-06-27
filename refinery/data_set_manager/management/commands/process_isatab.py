@@ -5,8 +5,11 @@ from celery.task.sets import TaskSet, subtask
 
 class Command(BaseCommand):
     help = "Takes the directory of an ISA-Tab file as input, parses, and"
-    help = "%s inputs it into the database" % help
-
+    help = "%s inputs it into the database\n" % help
+    help = "%s\nUsage: python manage.py process_isatab <username>" % help
+    help = "%s <base_isatab_directory> [base_pre_isa_dir=" % help
+    help = "%s<base_pre_isatab_directory> is_public=True]\n\n" % help
+    
 
     """
     Name: handle
