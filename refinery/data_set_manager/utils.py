@@ -4,8 +4,9 @@ Created on May 29, 2012
 @author: nils
 '''
 from data_set_manager.models import Node, Attribute
-from django.utils.datetime_safe import datetime
 from django.db.models import Q
+from django.utils.datetime_safe import datetime
+import simplejson
     
 
 def uniquify(seq):
@@ -104,8 +105,8 @@ def _get_parent_attributes(result,node):
     
     for parent in result[node]["parents"]:
         attributes.extend( _get_parent_attributes( result, parent ) ) 
-    
-    attributes.extend( result[node]["attributes"] )
+
+    attributes.extend( result[node]["attributes"] )    
     return attributes
 
 
@@ -121,21 +122,13 @@ def _get_assay_name(result,node):
 
 def _retrieve_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_fields=False ):
             
-    #print( "Node Type Sequence: " + " -> ".join( get_node_types(study_id, assay_id) ) )
-    #print( "File Type Sequence: " + " -> ".join( get_node_types( study_id, assay_id, filter_set=Node.FILES) ) )
-    #print( "Assay Type Sequence: " + " -> ".join( get_node_types(study_id, assay_id, filter_set=Node.ASSAYS) ) )
-
-    #attr = get_node_attributes(study_id=study_id, assay_id=assay_id, node_type=Node.RAW_DATA_FILE )
-    #print( "Attributes:\n" + "\n".join( [ str( item["id"] ) + " -- " + str( item["node_type"] ) + " -- " + item["type"] + " (" + item["subtype"] + ")" if item["subtype"] is not None else item["type"] for item in attr ] ) )
-
     node_fields = [ "id", "uuid", "file", "type", "name", "parents", "attribute" ]
     
     # query nodes (both from assay and from study only)
     if assay_uuid is None:
-        node_list = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) ).prefetch_related( "attribute_set" ).order_by( "id" ).values( *node_fields )
+        node_list = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) ).prefetch_related( "attribute_set" ).order_by( "id", "attribute" ).values( *node_fields )
     else:
-        node_list = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ) ).prefetch_related( "attribute_set" ).order_by( "id" ).values( *node_fields )
-        
+        node_list = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ) ).prefetch_related( "attribute_set" ).order_by( "id", "attribute" ).values( *node_fields )
             
     if ontology_attribute_fields:
         attribute_fields = Attribute.ALL_FIELDS
@@ -143,7 +136,7 @@ def _retrieve_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_
         attribute_fields = Attribute.NON_ONTOLOGY_FIELDS
          
     attribute_list = Attribute.objects.filter().order_by( "id" ).values_list( *attribute_fields )
-
+    
     attributes = {}
     current_id = None
     current_node = None
@@ -181,6 +174,7 @@ def _retrieve_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_
         nodes[current_id] = current_node
     
     return nodes
+
 
 
 def get_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_fields=False ):
@@ -226,16 +220,15 @@ def get_matrix( node_type, study_uuid, assay_uuid=None, ontology_attribute_field
 
             # get the name of the nearest assay node predecessor
             results["data"][nodes[key]["uuid"]]["assay"] = _get_assay_name( nodes, key )
-
             
             # initialize attribute list
             results["data"][nodes[key]["uuid"]]["attributes"] = []            
 
             # save attributes (attribute[1], etc. are based on Attribute.ALL_FIELDS 
             for attribute in _get_parent_attributes( nodes, key ):
-                results["data"][nodes[key]["uuid"]]["attributes"].append( attribute[3] )
+                results["data"][nodes[key]["uuid"]]["attributes"].append( attribute[3] ) # 3 = value
                 if attribute[4] is not None:
-                    results["data"][nodes[key]["uuid"]]["attributes"][-1] += " " + attribute[4]
+                    results["data"][nodes[key]["uuid"]]["attributes"][-1] += " " + attribute[4] # 4 = value unit
                     
             # store attribute labels in meta section (only for the first node -> for all further nodes the assumption is that they have the same attribute list)
             if results["meta"]["attributes"] is None:
