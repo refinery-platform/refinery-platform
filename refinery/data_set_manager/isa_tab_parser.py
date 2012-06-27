@@ -291,7 +291,7 @@ class IsaTabParser:
         # try to retrieve this node from the database (unless it is a normalization or data transformation)
         is_new = True
         
-        if ( header_components[0] in Node.ASSAYS | { Node.SAMPLE, Node.SOURCE, Node.EXTRACT, Node.LABELED_EXTRACT } ) or ( header_components[0] in Node.FILES and row[0].strip() is not "" ):
+        if ( header_components[0] in Node.ASSAYS | { Node.SAMPLE, Node.SOURCE, Node.EXTRACT, Node.LABELED_EXTRACT, Node.DATA_TRANSFORMATION, Node.NORMALIZATION } ) or ( header_components[0] in Node.FILES and row[0].strip() is not "" ):
             if header_components[0] in { Node.SAMPLE, Node.SOURCE }:
                 #print "1  --looking up type " + header_components[0] + " =  " +  row[0].strip() + " in study only (" + str( self._current_study ) + ")"
                 node, is_new = Node.objects.get_or_create( study=self._current_study, type=header_components[0], name=row[0].strip() )                
