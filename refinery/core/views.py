@@ -360,19 +360,19 @@ def admin_test_data( request ):
         
         # delete if exists
         try:
-            group_object = ExtendedGroup.objects.get( group["name"] )            
-            #if group_object.is_managed():
-            #    print( group_object.manager_group )
-            #    group_object.manager_group.delete()
-            group_object.delete()
+            group_object = ExtendedGroup.objects.get( name__exact=group["name"] )            
+            if group_object.is_managed():
+                print( group_object.manager_group )
+                group_object.manager_group.delete()
+            else:
+                group_object.delete()
         except:
             pass
 
         group_object = ExtendedGroup.objects.create( name=group["name"] )
-        manager_group_object = ExtendedGroup.objects.create( name=str( group["name"] + " Managers" ) )
-        
-        group_object.manager_group = manager_group_object
-        group_object.save()
+        #manager_group_object = ExtendedGroup.objects.create( name=str( group["name"] + " Managers" ) )        
+        #group_object.manager_group = manager_group_object
+        #group_object.save()
 
         # Add users to group
         for username in group["members"]:
@@ -380,8 +380,8 @@ def admin_test_data( request ):
             user_object.groups.add( group_object )
         
         # Add first two members of each group to the manager group    
-        User.objects.get( username__exact=group["members"][0] ).groups.add( manager_group_object )
-        User.objects.get( username__exact=group["members"][1] ).groups.add( manager_group_object )
+        User.objects.get( username__exact=group["members"][0] ).groups.add( group_object.manager_group )
+        User.objects.get( username__exact=group["members"][1] ).groups.add( group_object.manager_group )
                     
         group_objects.append( group_object )
         
