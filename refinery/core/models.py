@@ -6,15 +6,16 @@ Created on Feb 20, 2012
 
 from data_set_manager.models import Investigation
 from django.contrib.auth.models import User, Group
-from django.db import models
-from django.db.models import Max
-from django.db.models.signals import post_save
 from django.contrib.auth.signals import user_logged_in
+from django.db import models
+from django.db.models import Max, signals
+from django.db.models.signals import post_save, post_init
 from django.forms import ModelForm
 from django_extensions.db.fields import UUIDField
 from galaxy_connector.models import Instance
 from guardian.shortcuts import assign, get_users_with_perms, \
     get_groups_with_perms
+from django.conf import settings
 
 
 class UserProfile ( models.Model ):
@@ -359,15 +360,35 @@ class Analysis ( OwnableResource ):
             ('read_%s' % verbose_name, 'Can read %s' %  verbose_name ),
         )
     
+    
+class ExtendedGroupManager(models.Manager):
+    def public_group(self):
+        try:
+            return ExtendedGroup.objects.get( id=settings.REFINERY_PUBLIC_GROUP_ID )
+        except:
+            return None
 
 class ExtendedGroup ( Group ):
     ''' Extends the default Django Group in auth with a group of users that own and manage manageable resources for the group.'''    
     manager_group = models.ForeignKey( "self", blank=True, null=True )
-    uuid = UUIDField( unique=True, auto=True )
+    uuid = UUIDField(unique=True, auto=True)
+    objects = ExtendedGroupManager()
     
-    def delete(self):
-                
-        super( ExtendedGroup, self).delete()
-    
+    def delete(self):                
+        super(ExtendedGroup, self).delete()
+        
     def is_managed(self):
-        return ( self.manager_group is not None ); 
+        return ( self.manager_group is not None )
+
+# automatic creation of a managed group when an extended group is created: 
+def create_manager_group( sender, instance, created, **kwargs ):
+    if created and instance.manager_group is None and not instance.name.startswith( ".Managers " ):
+        # create the manager group for the newly created group (but don't create manager groups for manager groups ...)
+        post_save.disconnect(create_manager_group, sender=ExtendedGroup)        
+        instance.manager_group = ExtendedGroup.objects.create( name=unicode( ".Managers " + instance.uuid ) )
+        instance.save()
+        instance.manager_group.save()
+        post_save.connect(create_manager_group, sender=ExtendedGroup)        
+        
+post_save.connect(create_manager_group, sender=ExtendedGroup)
+
