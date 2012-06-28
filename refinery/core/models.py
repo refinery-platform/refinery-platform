@@ -316,6 +316,7 @@ class WorkflowDataInputMap( models.Model ):
     #workflow_data_input_internal_id = models.IntegerField()
     workflow_data_input_name = models.CharField( max_length=200 )    
     data_uuid = UUIDField( auto=False )
+    fileurl = models.TextField()
     
     pair_id = models.IntegerField(blank=True, null=True)
     
