@@ -26,6 +26,8 @@ class IsaTabParser:
     
     ignore_case = True
     ignore_missing_protocols = True
+    # TODO: remove this temporary fix to deal with ISA-Tab from ArrayExpression (see also _parse_node)
+    additional_raw_data_file_extension = None
     
     _current_investigation = None
     _current_study = None
@@ -272,26 +274,33 @@ class IsaTabParser:
         # try to retrieve this node from the database (unless it is a normalization or data transformation)
         is_new = True
         
-        if ( header_components[0] in Node.ASSAYS | { Node.SAMPLE, Node.SOURCE, Node.EXTRACT, Node.LABELED_EXTRACT, Node.DATA_TRANSFORMATION, Node.NORMALIZATION } ) or ( header_components[0] in Node.FILES and row[0].strip() is not "" ):
+        # name of the node
+        node_name = row[0].strip()
+        
+        # TODO: remove this once it has been implemented in the preprocessing
+        if header_components[0] == Node.RAW_DATA_FILE and self.additional_raw_data_file_extension is not None and len( node_name ) > 0:
+            node_name += self.additional_raw_data_file_extension
+        
+        if ( header_components[0] in Node.ASSAYS | { Node.SAMPLE, Node.SOURCE, Node.EXTRACT, Node.LABELED_EXTRACT, Node.DATA_TRANSFORMATION, Node.NORMALIZATION } ) or ( header_components[0] in Node.FILES and len( node_name ) > 0 ):
             if header_components[0] in { Node.SAMPLE, Node.SOURCE }:
                 #print "1  --looking up type " + header_components[0] + " =  " +  row[0].strip() + " in study only (" + str( self._current_study ) + ")"
-                node, is_new = Node.objects.get_or_create( study=self._current_study, type=header_components[0], name=row[0].strip() )                
+                node, is_new = Node.objects.get_or_create( study=self._current_study, type=header_components[0], name=node_name )                
             else:     
                 #print "2    -- looking up type " + header_components[0] + " =  " +  row[0].strip() + "in study AND assay (" + str( self._current_study ) + ", " +  str( self._current_assay ) + ")"
-                node, is_new = Node.objects.get_or_create( study=self._current_study, assay=self._current_assay, type=header_components[0], name=row[0].strip() )
+                node, is_new = Node.objects.get_or_create( study=self._current_study, assay=self._current_assay, type=header_components[0], name=node_name )
         else:
             #print "3      -- looking up type " + header_components[0] + " =  " +  row[0].strip() + "in study AND assay (" + str( self._current_study ) + ", " +  str( self._current_assay ) + ")"
-            node = Node.objects.create( study=self._current_study, assay=self._current_assay, type=header_components[0], name=row[0].strip() )
+            node = Node.objects.create( study=self._current_study, assay=self._current_assay, type=header_components[0], name=node_name )
          
         # this node represents a file - add the file to the file store and store the file UUID in the node
-        if is_new and header_components[0] in Node.FILES and row[0].strip() is not "":
-            uuid = create( row[0].strip() )
+        if is_new and header_components[0] in Node.FILES and node_name is not "":
+            uuid = create( node_name )
             
             if uuid is not None:
                 node.file_uuid = uuid
                 node.save()
             else:
-                self._logger.exception( "Unable to add " + row[0].strip() + " to file store as a temporary file." )
+                self._logger.exception( "Unable to add " + node_name + " to file store as a temporary file." )
                                             
         if is_new:
             self._logger.info( "New node " + str( node ) + " created." )

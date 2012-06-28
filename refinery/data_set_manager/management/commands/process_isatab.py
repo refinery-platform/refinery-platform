@@ -16,7 +16,7 @@ class Command(BaseCommand):
     Description:
         main program; calls the parsing and insertion functions
     """   
-    def handle(self, username, base_isa_dir, base_pre_isa_dir=None, is_public=False, **options):
+    def handle(self, username, is_public, base_isa_dir, base_pre_isa_dir=None, **options):
         print is_public
         isatab_files = list()
         for dirname, dirnames, filenames in os.walk(base_isa_dir):
