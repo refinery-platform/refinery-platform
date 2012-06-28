@@ -14,6 +14,7 @@ from data_set_manager.isa_tab_parser import IsaTabParser
 import csv, errno, ftplib, glob, os, os.path, re, shutil, socket, string
 import subprocess, sys, tempfile, time, traceback, urllib2
 from zipfile import ZipFile, BadZipfile
+from django.contrib.auth.models import User
 
 
 def create_dir(file_path):
@@ -147,14 +148,23 @@ Description:
 """
 @periodic_task(run_every=crontab(hour="12", day_of_week="friday"))
 def get_arrayexpress_studies():
-    create_dir(settings.WGET_DIR) #make the directory if it's not there
-
+    """
+    If you don't want to fetch all studies, edit in this fashion:
+        call_command('mage2isa_convert', 'exptype=chip-seq', species='human')
+    """
+    call_command('mage2isa_convert', 'exptype=ChIP-seq')
 
 @task() 
 def create_dataset(investigation_uuid, username, public=False): 
     """get User for assigning DataSets"""
-    user = User.objects.get(username__exact=username)
+    try:
+        user = User.objects.get(username__exact=username)
+    except:
+        #user doesn't exist
+        user = User.objects.create_user(username, "", "test")
+
     if investigation_uuid != None:
+        dataset = ""
         investigation = Investigation.objects.get(uuid=investigation_uuid)
         identifier = investigation.get_identifier()
     
@@ -165,24 +175,28 @@ def create_dataset(investigation_uuid, username, public=False):
                 own = ds.get_owner()
                 if own == user:
                     ds.update_investigation(investigation, "updated %s" % date.today())
+                    dataset = ds
                     break
             
         else: #create a new dataset
             d = DataSet.objects.create(name=identifier)
             d.set_investigation(investigation)
             d.set_owner(user)
-            if public:
-                public_group = ExtendedGroup.objects.get(name__exact="Public")
-                d.share(public_group)  
+            dataset = d
+
+        if public:
+            public_group = ExtendedGroup.objects.get(name__exact="Public")
+            dataset.share(public_group)  
 
 @task()
-def parse_isatab(folder_name, isa_archive=None, pre_isa_archive=None):
-    path = os.path.join(settings.ISA_TAB_DIR, folder_name)
-    print path
+def parse_isatab(username, public, path, isa_archive=None, pre_isa_archive=None):
+    """
+    parse_isatab(username, is_public, folder_name, isa_archive=<path> pre_isa_archive=<path>
+    """
     p = IsaTabParser()
     try:
         investigation = p.run(path, isa_archive=isa_archive, preisa_archive=pre_isa_archive)
-        return investigation.uuid
+        create_dataset(investigation.uuid, username, public=public)
     except: #prints the error message without breaking things
         print "error: "
         exc_type, exc_value, exc_traceback = sys.exc_info()

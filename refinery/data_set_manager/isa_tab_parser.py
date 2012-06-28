@@ -9,6 +9,7 @@ from data_set_manager.models import Node, Attribute, Investigation, Study, \
     ProtocolReference, Protocol, ProtocolReferenceParameter, NodeCollection, \
     Ontology, Publication, Contact, Design, Factor, Assay
 from django.conf import Settings
+from file_store.tasks import create
 from refinery import settings
 from sets import Set
 from zipfile import ZipFile
@@ -18,27 +19,7 @@ import itertools
 import logging
 import os
 import simplejson
-from file_store.tasks import create
 
-'''
-from data_set_manager.isa_tab_parser import IsaTabParser
-p = IsaTabParser()
-p.run( "dfdf" )
-p._parse_investigation_file( "/Users/nils/Data/Refinery/ISA-Tab/i_investigation.txt" )
-
-
-p._parse_study_file( "/Users/nils/Data/Refinery/ISA-Tab/s_Expression Study in CDX2 knock-out mice.txt" )
-p._parse_assay_file( "/Users/nils/Data/Refinery/ISA-Tab/a_transcriptomic.txt" )
-
-
-p._parse_study_file( "/Users/nils/Data/Refinery/ISA-Tab/ae_hsci_imports/E-GEOD-16375/s_E-GEOD-16375_studysample.txt" )
-p._parse_assay_file( "/Users/nils/Data/Refinery/ISA-Tab/ae_hsci_imports/E-GEOD-16375/a_E-GEOD-16375_assay.txt" )
-
-p._parse_study_file( "/Users/nils/Data/Refinery/ISA-Tab/ae_hsci_imports/E-GEOD-16013/s_E-GEOD-16013_studysample.txt" )
-p._parse_assay_file( "/Users/nils/Data/Refinery/ISA-Tab/ae_hsci_imports/E-GEOD-16013/a_E-GEOD-16013_assay.txt" )
-
-
-'''
 
 
 class IsaTabParser:
@@ -369,7 +350,7 @@ class IsaTabParser:
         
         # test if the current node already has an attribute with these properties
         has_attribute = False
-        
+                
         if len( header_components ) > 1:
             if self._current_node.attribute_set.filter( type=header_components[0], value=row[0], subtype=header_components[1] ).count() > 0:            
                 has_attribute = True
@@ -409,9 +390,10 @@ class IsaTabParser:
                 attribute.value_accession = unit_information["accession"]
                 attribute.value_source = unit_information["source"]
             else:
-                row.popleft()
-                row.popleft()
-                row.popleft()
+                row.popleft()                
+                if len( row ) > 1 and self.is_term_information( headers[-len(row)+1] ):
+                    row.popleft()
+                    row.popleft()
                 
                                         
         if not has_attribute:
@@ -551,7 +533,7 @@ class IsaTabParser:
         Parses a term_accession, term_source pair. Currently does not enforce any specific order.
         ''' 
                 
-        # parse the first component (if strict, this should be the accession number)
+        # parse the first component (unit name)
         if self.is_unit( headers[-len(row)] ):
             unit = row[0]
             row.popleft()
@@ -563,6 +545,10 @@ class IsaTabParser:
         # parse term information if available
         if self.is_term_information( headers[-len(row)] ):
             term_information = self._parse_term_information(headers, row)
+        else:
+            term_information = {}
+            term_information["accession"] = None
+            term_information["source"] = None
             
         return { "unit": unit, "accession": term_information["accession"], "source": term_information["source"] }                    
 
@@ -572,11 +558,10 @@ class IsaTabParser:
         self._current_assay = assay        
         self._parse_study_file( study, file_name )
                             
-        
     def _parse_study_file(self, study, file_name):
         self._current_file_name = file_name
         self._current_study = study        
-        self._current_file =  open( file_name, "rb" )
+        self._current_file =  open( file_name, "rU" )
         self._current_reader = csv.reader( self._current_file, dialect="excel-tab" )
 
         # read column headers
@@ -632,8 +617,10 @@ class IsaTabParser:
                 
             # test if any field has a non-empty string in it
             if len( [ fields[key][column] for key in fields if fields[key][column].strip() != "" ] ) == 0:
-                self._logger.info( "Column " + str( column ) + " in section " + section_title + " has no non-empty cells and was ignored." )  
-                continue
+                self._logger.info( "Column " + str( column ) + " in section " + section_title + " has no non-empty cells and was ignored." )
+                # for all section but INVESTIGATION and STUDY continue)
+                if not ( ( section_title == "INVESTIGATION" and self._current_investigation is None ) or ( section_title == "STUDY" and self._current_study is None ) ): 
+                    continue
             
             # if necessary enrich model parameters with required foreign key references
             if "references" in section:
@@ -647,9 +634,6 @@ class IsaTabParser:
                         pass
                         # TODO: log error referring to unknown reference_name            
                                     
-            # TODO: remove this debug output
-            #print simplejson.dumps( model_parameters, indent=3 )
-            
             # create model
             if section_title != "ONTOLOGY SOURCE REFERENCE":
                 model_instance = model_class.objects.create( **model_parameters )
@@ -763,7 +747,7 @@ class IsaTabParser:
     def _parse_investigation_file(self, file_name):
         
         self._current_file_name = file_name
-        self._current_file = open( file_name, "rb" )
+        self._current_file = open( file_name, "rU" )
         
         section_title = None
         
@@ -897,7 +881,7 @@ class IsaTabParser:
             end_quote = True
             
         # line that only contains a quote
-        if len( string ) == 1 and ( start_quote or end_quote ):
+        if len( string.strip() ) == 1 and ( start_quote or end_quote ):
             return True
         
         return start_quote and ( start_quote and not end_quote )
