@@ -3,8 +3,10 @@
 # splitting ideas taken from https://code.djangoproject.com/wiki/SplitSettings (solution by Steven Armstrong)
 
 import os
-
+import djcelery
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+djcelery.setup_loader()
 
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
@@ -197,6 +199,9 @@ LOGGING = {
         },
     }
 }
+
+AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
+AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 
 
 # import local settings
