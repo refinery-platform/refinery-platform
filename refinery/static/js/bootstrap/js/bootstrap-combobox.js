@@ -1,5 +1,5 @@
 /* =============================================================
- * bootstrap-combobox.js v0.9.0
+ * bootstrap-combobox.js v0.9.5
  * =============================================================
  * Copyright 2012 Daniel Farrell
  *
@@ -30,9 +30,11 @@
     this.sorter = this.options.sorter || this.sorter
     this.highlighter = this.options.highlighter || this.highlighter
     this.$menu = $(this.options.menu).appendTo('body')
-    this.source = this.parse()
-    this.options.items = this.source.length
+    this.placeholder = this.options.placeholder || this.$target.attr('data-placeholder')
+    this.$element.attr('placeholder', this.placeholder)
     this.shown = false
+    this.selected = false
+    this.refresh()
     this.listen()
   }
 
@@ -48,7 +50,7 @@
         , combobox = $(this.options.template)
       select.before(combobox)
       select.detach()
-      combobox.prepend(select)
+      combobox.append(select)
       return combobox
     }
 
@@ -56,25 +58,25 @@
       var map = {}
         , source = []
         , selected = false
-      this.$element.siblings('select').find('option').each(function() {
+      this.$target.find('option').each(function() {
         var option = $(this)
-        map[option.html()] = option.val()
-        source.push(option.html())
+        map[option.text()] = option.val()
+        source.push(option.text())
         if(option.attr('selected')) selected = option.html()
       })
       this.map = map
       if (selected) {
         this.$element.val(selected)
         this.$container.addClass('combobox-selected')
+        this.selected = true
       }
       return source
     }
 
   , toggle: function () {
     if (this.$container.hasClass('combobox-selected')) {
-      this.$target.val('')
-      this.$element.val('')
-      this.$container.removeClass('combobox-selected')
+      this.$element.val('').focus()
+      this.clearTarget()
     } else {
       if (this.shown) {
         this.hide()
@@ -84,6 +86,17 @@
     }
   }
 
+  , clearTarget: function () {
+    this.$target.val('')
+    this.$container.removeClass('combobox-selected')
+    this.selected = false
+  }
+
+  , refresh: function () {
+    this.source = this.parse()
+    this.options.items = this.source.length
+  }
+
   // modified typeahead function adding container and target handling
   , select: function () {
       var val = this.$menu.find('.active').attr('data-value')
@@ -91,6 +104,7 @@
       this.$container.addClass('combobox-selected')
       this.$target.val(this.map[val])
       this.$target.trigger('change')
+      this.selected = true
       return this.hide()
     }
 
@@ -134,6 +148,52 @@
         .on('click', $.proxy(this.toggle, this))
     }
 
+  // modified typeahead function to clear on type and prevent on moving around
+  , keyup: function (e) {
+      switch(e.keyCode) {
+        case 40: // down arrow
+        case 39: // right arrow
+        case 38: // up arrow
+        case 37: // left arrow
+        case 36: // home
+        case 35: // end
+        case 16: // shift
+          break
+
+        case 9: // tab
+        case 13: // enter
+          if (!this.shown) return
+          this.select()
+          break
+
+        case 27: // escape
+          if (!this.shown) return
+          this.hide()
+          break
+
+        default:
+          this.clearTarget()
+          this.lookup()
+      }
+
+      e.stopPropagation()
+      e.preventDefault()
+  }
+
+  // modified typeahead function to only hide menu if it is visible
+  , blur: function (e) {
+      var that = this
+      e.stopPropagation()
+      e.preventDefault()
+      var val = this.$element.val()
+      if (!this.selected && val != "" ) {
+        this.$element.val("")
+        this.$target.val("").trigger('change')
+      }
+      if (this.shown) {
+        setTimeout(function () { that.hide() }, 150)
+      }
+    }
   })
 
   /* COMBOBOX PLUGIN DEFINITION
@@ -150,9 +210,10 @@
   }
 
   $.fn.combobox.defaults = {
-  template: '<div class="combobox-container"><input type="text" /><a class="add-on btn dropdown-toggle" data-dropdown="dropdown"><span class="caret"/><span class="combobox-clear"><i class="icon-remove"/></span></a></div>'
+  template: '<div class="combobox-container"><input type="text" /><span class="add-on btn dropdown-toggle" data-dropdown="dropdown"><span class="caret"/><span class="combobox-clear"><i class="icon-remove"/></span></span></div>'
   , menu: '<ul class="typeahead typeahead-long dropdown-menu"></ul>'
   , item: '<li><a href="#"></a></li>'
+  , placeholder: null
   }
 
   $.fn.combobox.Constructor = Combobox
