@@ -1,7 +1,11 @@
-from django.core.management.base import BaseCommand, CommandError
-import os, re, time, sys, string
-from data_set_manager.tasks import parse_isatab, create_dataset 
 from celery.task.sets import TaskSet, subtask
+from data_set_manager.tasks import parse_isatab, create_dataset
+from django.core.management.base import BaseCommand, CommandError
+import os
+import re
+import time
+import sys
+import string
 
 class Command(BaseCommand):
     help = "Takes the directory of an ISA-Tab file as input, parses, and"
