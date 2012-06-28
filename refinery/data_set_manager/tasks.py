@@ -31,8 +31,10 @@ def create_dir(file_path):
         if e.errno != errno.EEXIST:
             raise
 
-def fix_raw_files(directory):
-    pass
+def fix_raw_files(acc):
+    filename = os.path.join(settings.ISA_TAB_DIR, acc, "a_%s_assay.txt" % acc)
+    file_reader = csv.reader(open(filename, 'rb'), dialect='excel-tab')
+    header_row = file_reader.next()
 
 @task()
 def convert_to_isatab(accession):
@@ -188,7 +190,7 @@ def create_dataset(investigation_uuid, username, public=False):
             dataset = d
 
         if public:
-            public_group = ExtendedGroup.objects.get(name__exact="Public")
+            public_group = ExtendedGroup.objects.public_group()
             dataset.share(public_group)  
 
 @task()
