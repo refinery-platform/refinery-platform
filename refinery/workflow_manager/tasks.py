@@ -72,9 +72,9 @@ def configure_workflow( workflow_uuid, ret_list, connection_galaxy=None ):
     new_workflow = createBaseWorkflow( (workflow_dict["name"]) )
     
     # Updating steps in imported workflow X number of times
-    new_workflow["steps"] = createStepsAnnot(ret_list, workflow_dict);
+    new_workflow["steps"], history_download = createStepsAnnot(ret_list, workflow_dict);
           
-    return new_workflow
+    return new_workflow, history_download
 
 @task()
 def get_workflow_inputs(workflow_uuid):
