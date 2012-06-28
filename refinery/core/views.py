@@ -12,6 +12,7 @@ from django.template import RequestContext
 from file_store.models import FileStoreItem
 from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
     get_perms
+from data_set_manager.utils import get_matrix
 
 def home(request):
     if request.user.is_superuser:
@@ -235,13 +236,21 @@ def data_set(request,uuid):
     return render_to_response('core/data_set.html', { 'data_set': data_set, "permissions": permissions, "studies": studies }, context_instance=RequestContext( request ) )
 
 
-def samples(request, study_uuid, assay_uuid):
-    node_matrix = data_set_manager.utils.get_matrix(node_type="Raw Data File", 
+def samples(request, ds_uuid, study_uuid, assay_uuid):
+    print "core.views.samples called"
+    data_set = get_object_or_404( DataSet, uuid=ds_uuid )
+    
+    # getting current workflows
+    workflows = Workflow.objects.all();
+    
+    node_matrix = get_matrix(node_type="Raw Data File", 
                                                   study_uuid=study_uuid, 
                                                   assay_uuid=assay_uuid
                                                   )
     
-    return render_to_response('', {"matrix": node_matrix}, 
+    #print node_matrix
+    
+    return render_to_response('core/samples.html', {'workflows': workflows, 'data_set': data_set, "matrix": node_matrix}, 
                               context_instance=RequestContext(request))
 
 
@@ -360,19 +369,19 @@ def admin_test_data( request ):
         
         # delete if exists
         try:
-            group_object = ExtendedGroup.objects.get( group["name"] )            
-            #if group_object.is_managed():
-            #    print( group_object.manager_group )
-            #    group_object.manager_group.delete()
-            group_object.delete()
+            group_object = ExtendedGroup.objects.get( name__exact=group["name"] )            
+            if group_object.is_managed():
+                print( group_object.manager_group )
+                group_object.manager_group.delete()
+            else:
+                group_object.delete()
         except:
             pass
 
         group_object = ExtendedGroup.objects.create( name=group["name"] )
-        manager_group_object = ExtendedGroup.objects.create( name=str( group["name"] + " Managers" ) )
-        
-        group_object.manager_group = manager_group_object
-        group_object.save()
+        #manager_group_object = ExtendedGroup.objects.create( name=str( group["name"] + " Managers" ) )        
+        #group_object.manager_group = manager_group_object
+        #group_object.save()
 
         # Add users to group
         for username in group["members"]:
@@ -380,8 +389,8 @@ def admin_test_data( request ):
             user_object.groups.add( group_object )
         
         # Add first two members of each group to the manager group    
-        User.objects.get( username__exact=group["members"][0] ).groups.add( manager_group_object )
-        User.objects.get( username__exact=group["members"][1] ).groups.add( manager_group_object )
+        User.objects.get( username__exact=group["members"][0] ).groups.add( group_object.manager_group )
+        User.objects.get( username__exact=group["members"][1] ).groups.add( group_object.manager_group )
                     
         group_objects.append( group_object )
         

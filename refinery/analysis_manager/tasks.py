@@ -86,7 +86,6 @@ def chord_postprocessing (ret_val, analysis):
         #temp_task = []
         #temp_task.append(chord_cleanup.subtask(analysis=analysis,))
         #result_chord, result_set = progress_chord([temp_task])
-        
     else:
         #print "---------- greater than 1 -----------"
         result_chord, result_set = progress_chord(postprocessing_taskset)(chord_cleanup.subtask(analysis=analysis,))
@@ -129,23 +128,45 @@ def run_analysis(analysis, interval=5.0):
     # GETTING LIST OF DOWNLOADED REMOTE FILES 
     datainputs = analysis.workflow_data_input_maps.all()
     download_tasks = []
+    """
     for files in datainputs:
         curr_assay = Assay.objects.get(assay_uuid=files.data_uuid)
         curr_raw = curr_assay.raw_data.all()
         investigation_id = curr_assay.investigation.study_identifier
         for cur_file in curr_raw:
             # calling filestore on remote file
-            #print "calling filestore"
-            #print cur_file.rawdata_uuid
+            print "calling filestore"
+            print cur_file.rawdata_uuid
             if not is_local(cur_file.rawdata_uuid):
                 print "not_local"
                 task_id = import_file.subtask((cur_file.rawdata_uuid, False,))
                 download_tasks.append(task_id)
-            
+    """
+    print "len datainputs"
+    print len(datainputs)
+    for files in datainputs:
+        print "files"
+        print files
+        #curr_assay = Assay.objects.get(assay_uuid=files.data_uuid)
+        #curr_raw = curr_assay.raw_data.all()
+        #investigation_id = curr_assay.investigation.study_identifier
+        #for cur_file in curr_raw:
+        # calling filestore on remote file
+        print "calling filestore"
+        cur_fs_uuid = files.data_uuid
+        print cur_fs_uuid
+        if not is_local(cur_fs_uuid):
+            print "not_local"
+            task_id = import_file.subtask((cur_fs_uuid, False,))
+            download_tasks.append(task_id)
+
+    
     # PREPROCESSING            
     task_id = run_analysis_preprocessing.subtask( (analysis,) ) 
     download_tasks.append(task_id)
     result_chord, result_set = progress_chord(download_tasks)(chord_execution.subtask(analysis=analysis,))
+    # DEBUG
+    #result_chord, result_set = progress_chord(download_tasks)(emptyTask.subtask())
     
     # saving preprocessing taskset
     analysis_status.preprocessing_taskset_id = result_set.task_id 
@@ -169,7 +190,14 @@ def run_analysis_preprocessing(analysis):
     ret_list = get_analysis_config(analysis)
 
     # getting expanded workflow configured based on input: ret_list
-    new_workflow = configure_workflow(analysis.workflow.uuid, ret_list, connection)
+    new_workflow, history_download = configure_workflow(analysis.workflow.uuid, ret_list, connection)
+    
+    print "history_download"
+    print history_download
+    
+    # saving ouputs of workflow to download 
+    
+    
     
     # import newly generated workflow 
     new_workflow_info = connection.import_workflow(new_workflow);
@@ -187,14 +215,6 @@ def run_analysis_preprocessing(analysis):
     analysis.library_id = library_id
     analysis.history_id = history_id
     analysis.save()
-    
-    # start monitoring task
-    # execution_monitor_task_id = monitor_analysis_execution.subtask((analysis,)).apply_async().task_id
-    
-    # save execution monitoring task to analysis_status object
-    # analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
-    # analysis_status.execution_monitor_task_id = execution_monitor_task_id
-    # analysis_status.save()
     
     return
 
@@ -214,12 +234,6 @@ def monitor_analysis_execution(analysis, interval=5.0, task_id=None):
         analysis_status.save()
     
     connection = get_analysis_connection(analysis)
-    #print "analysis.history_id "
-    #print analysis.history_id 
-    #print "connection"
-    #print connection.make_url("histories")
-    #print "Get history"
-    #print connection.get_history(analysis.history_id)
     revoke_task = False
     
     while not revoke_task:
@@ -233,42 +247,24 @@ def monitor_analysis_execution(analysis, interval=5.0, task_id=None):
         #print  "Workflow State: " + progress["workflow_state"] + "\n"
         
         if progress["workflow_state"] == "error":
-            #print "Workflow failed. Stopping monitor ..."
             revoke_task = True
-            #break
         elif progress["workflow_state"] == "ok":
-            #print "Analysis Execution Task task finished successfully."
             revoke_task = True
-            #break   
         #elif progress["workflow_state"] == "queued":
         #    print "Workflow running."
         #elif progress["workflow_state"] == "new":
         #    print "Workflow being prepared."
             
-        # stop celery task if workflow run is in error or finished
-        #if revoke_task:
-            #analysis_status = AnalysisStatus.objects.filter(analysis_uuid=analysis.uuid)[0]
-            # kill monitoring task
-            #celery.control.revoke(analysis_status.execution_monitor_task_id, terminate=True)
-            #return
-            #break
-        #else:
-        #    time.sleep( interval );
-        
         if not revoke_task:
             time.sleep( interval );
         
-        #if analysis_execution_task.state == "SUCCESS":
-        #if analysis_execution_task.state == "FAILURE":
-        #    print "Analysis Execution Task failed . Stopping monitor ..."
-        #    break    
-    
-    #return
     print "revoking/KILLING task finished monitoring task"
 
 # task: perform execution (innermost task, does the actual work)
 @task()
 def run_analysis_execution(analysis):
+    
+    print "analysis_manager.run_analysis_execution called"
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     
@@ -305,9 +301,6 @@ def run_analysis_postprocessing(analysis):
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
     
-    # kill monitoring task
-    #celery.control.revoke(analysis_status.execution_monitor_task_id, terminate=True)
-    
     ### ----------------------------------------------------------------#
     # Downloading results from history
     task_list = download_history_files(analysis)
@@ -323,7 +316,6 @@ def run_analysis_cleanup(analysis):
     print "analysis_manager.run_analysis_cleanup called"
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-    #analysis_status = AnalysisStatus.objects.filter( analysis_uuid=analysis.uuid )[0]
     
     # gets current galaxy connection
     connection = get_analysis_connection(analysis)
@@ -355,43 +347,28 @@ def get_analysis_config(analysis):
     ret_list = [];
     ret_item = copy.deepcopy(annot_inputs)
     
-    print "ret_item"
-    print ret_item
+    #print "ret_item"
+    #print ret_item
     
     temp_count = 0
     temp_len = len(annot_inputs)
     t2 = analysis.workflow_data_input_maps.all().order_by('pair_id')
-    print "T2"
-    print t2
     for wd in t2:
-        print "wd"
-        print wd
         if ret_item[wd.workflow_data_input_name] is None:
             ret_item[wd.workflow_data_input_name] = {}
             ret_item[wd.workflow_data_input_name]['pair_id'] = wd.pair_id
             ret_item[wd.workflow_data_input_name]['assay_uuid'] = wd.data_uuid
+            ret_item[wd.workflow_data_input_name]['filename'] = wd.fileurl
             temp_count += 1
        
         if temp_count == temp_len:
             ret_list.append(ret_item)
             ret_item = copy.deepcopy(annot_inputs)
             temp_count = 0
+            
+    #print "ret_list"
+    #print ret_list
     
-    # get filepath, filename, and associated galaxy_id
-    for file_set in ret_list:
-        for k, v in file_set.iteritems():
-            curr_set = file_set[k]
-            curr_assay = Assay.objects.filter(assay_uuid=curr_set['assay_uuid'])[0];
-            curr_rawdata = curr_assay.raw_data.values()[0];
-            curr_filename = curr_rawdata['file_name'];
-            
-            # TODO: update for case where there are many files per assay
-            
-            # current filepath
-            #curr_set['filepath'] = os.path.join(settings.DOWNLOAD_BASE_DIR, curr_assay.investigation_id, curr_filename)
-            # Short file name description
-            curr_set['filename'] = curr_filename.split('.')[0]
-      
     return ret_list
 
 @task()
@@ -405,20 +382,13 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
     for fileset in ret_list:
         for k, v in fileset.iteritems():
             cur_item = fileset[k]
-            #file_path = cur_item['filepath']
-            
-            curr_assay_uuid = cur_item['assay_uuid']
-            #print "cur_item"
-            #print cur_item
             
             # getting current filestoreitem
-            curr_assay = Assay.objects.get(assay_uuid=curr_assay_uuid)
-            curr_raw = curr_assay.raw_data.all()[0]
-            #for cur_file in curr_raw:
-            
-            # changing to use filestore
-            curr_filestore = FileStoreItem.objects.get(uuid=curr_raw.rawdata_uuid)
-            #print curr_filestore.get_absolute_path
+            curr_filestore = FileStoreItem.objects.get(uuid=cur_item['assay_uuid'])
+            #curr_filestore = FileStoreItem.objects.get(uuid=curr_raw.rawdata_uuid)
+            #print "rawdata_uuid"
+            #print curr_raw.rawdata_uuid
+            #print curr_filestore.get_absolute_path()
             #file_path = str(curr_filestore.get_absolute_path)
             #print "got curr_filestore item"
             #print curr_filestore.datafile.path
@@ -480,10 +450,10 @@ def download_history_files(analysis) :
                 analysis.results.add(temp_file) 
                 analysis.save() 
                 
-                print "result_name"
-                print result_name
-                print file_type
-                print results
+                #print "result_name"
+                #print result_name
+                #print file_type
+                #print results
                 
                 # downloading analysis results into file_store
                 # only download files if size is greater than 1

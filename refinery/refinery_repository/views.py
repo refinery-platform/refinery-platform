@@ -178,7 +178,8 @@ def get_available_files2(request):
     
     cursor = connection.cursor()
     
-    cursor.execute(""" SELECT distinct a.uuid, a.id as assay_id, a.investigation_id, a.assay_name, o.species, d.description, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.file, r.raw_data_file FROM
+    cursor.execute("""
+    SELECT distinct a.id as assay_id, a.investigation_id, a.assay_name, o.species, d.description, ca.chip_antibody, ab.antibody, t.tissue, g.genotype, r.file, r.raw_data_file, r.rawdata_uuid  as uuid FROM
 (SELECT distinct on (assay_name) id, assay_uuid as uuid, sample_name, assay_name, investigation_id, study_id from refinery_repository_assay) a
 LEFT OUTER JOIN
 (SELECT value as species, study_id from refinery_repository_studybracketedfield where sub_type ='ORGANISM') o
@@ -187,7 +188,7 @@ LEFT OUTER JOIN
 (SELECT value as description, study_id from refinery_repository_studybracketedfield where sub_type = 'SAMPLE_DESCRIPTION') d
 ON (a.study_id = d.study_id)
 LEFT OUTER JOIN 
-(SELECT assay_id, raw_data_file, file_name as file from refinery_repository_assay_raw_data a JOIN refinery_repository_rawdata b ON a.rawdata_id = b.id) r ON a.id = r.assay_id
+(SELECT assay_id, raw_data_file, file_name as file, rawdata_uuid from refinery_repository_assay_raw_data a JOIN refinery_repository_rawdata b ON a.rawdata_id = b.id) r ON a.id = r.assay_id
 LEFT OUTER JOIN
 (SELECT value as chip_antibody, assay_id from refinery_repository_assaybracketedfield where sub_type = 'CHIP_ANTIBODY') ca ON a.id = ca.assay_id
 LEFT OUTER JOIN
@@ -274,17 +275,30 @@ def update_workflows(request):
 def analysis_run(request):
     print "refinery_repository.analysis_run called";
     
+    #print request.POST
+
     # gets workflow_uuid
     workflow_uuid = request.POST.getlist('workflow_choice')[0]
     
     # list of selected assays
-    selected_data = [];
+    selected_uuids = {};
+    selected_fileurls = {};    
     
     # finds all selected assays (assay_uuid, and associated workflow input type for selected samples) 
     for i, val in request.POST.iteritems():
         if (val and val != ""):
             if (i.startswith('assay_')):
-                selected_data.append({"assay_uuid":i.lstrip('assay_'), 'workflow_input_type':val})
+                temp_uuid = i.lstrip('assay_')
+                selected_uuids[temp_uuid] = val
+                #selected_data.append({"assay_uuid":i.lstrip('assay_'), 'workflow_input_type':val})
+            elif (i.startswith('fileurl_')):
+                temp_uuid = i.lstrip('fileurl_')
+                
+                #if str(temp_uuid) in selected_uuids:
+                #    print "FOUFOUFODNDs"
+                selected_fileurls[temp_uuid] = val
+                #else:
+                #    print "not found"
     
     #### DEBUG CODE ####
     # Turn input from POST into ingestable data/exp format 
@@ -292,10 +306,15 @@ def analysis_run(request):
     annot_inputs = get_workflow_inputs(workflow_uuid)
     len_inputs = len(set(annot_inputs))
     
-    print "annot_inputs"
-    print annot_inputs
-    print "len_inputs"
-    print len_inputs
+    #print "annot_inputs"
+    #print annot_inputs
+    #print "len_inputs"
+    #print len_inputs
+    #print "selected_uuids"
+    #print selected_uuids
+    #print "selected_fileurls"
+    #print selected_fileurls
+    
     
     #------------ CONFIGURE INPUT FILES -------------------------- #   
     ret_list = [];
@@ -304,21 +323,24 @@ def analysis_run(request):
     pair = 1;
     tcount = 0
     #for sd in selected_data:
-    while len(selected_data) != 0:
+    while len(selected_uuids) != 0:
         tcount += 1
         if tcount > 5000:
             break
         
         for k, v in ret_item.iteritems():
-            for index, sd in enumerate(selected_data):
+            #for index, sd in enumerate(selected_data):
+            for index, sd in selected_uuids.items():
                 # dealing w/ cases where their are more than input for a galaxy workflow
                 if len_inputs > 1:
-                    if k == sd["workflow_input_type"] and ret_item[k] is None:
+                    if k == sd and ret_item[k] is None:
                         ret_item[k] = {};
-                        ret_item[k]["assay_uuid"] = sd['assay_uuid']
+                        ret_item[k]["assay_uuid"] = index
                         ret_item[k]["pair_id"] = pair
+                        ret_item[k]["fileurl"] = selected_fileurls[index]
                         pair_count += 1
-                        selected_data.remove(sd)
+                        #selected_uuids.remove(sd)
+                        del selected_uuids[index]
                     if pair_count == 2:
                         ret_list.append(ret_item)
                         ret_item = copy.deepcopy(annot_inputs)
@@ -327,10 +349,12 @@ def analysis_run(request):
                 # deals w/ the case where there is a single input for a galaxy workflow
                 elif len_inputs == 1:            
                     ret_item[k] = {};
-                    ret_item[k]["assay_uuid"] = sd['assay_uuid']
+                    ret_item[k]["assay_uuid"] = index
                     ret_item[k]["pair_id"] = pair
+                    ret_item[k]["fileurl"] = selected_fileurls[index]
                     ret_list.append(ret_item)
-                    selected_data.remove(sd)
+                    #selected_uuids.remove(sd)
+                    del selected_uuids[index]
                     pair += 1;
     
     
@@ -374,7 +398,7 @@ def analysis_run(request):
     for samp in ret_list:
         count += 1
         for k,v in samp.items():
-            temp_input =  WorkflowDataInputMap( workflow_data_input_name=k, data_uuid=samp[k]["assay_uuid"], pair_id=count)
+            temp_input =  WorkflowDataInputMap( workflow_data_input_name=k, data_uuid=samp[k]["assay_uuid"], pair_id=count, fileurl=samp[k]["fileurl"])
             temp_input.save() 
             analysis.workflow_data_input_maps.add( temp_input ) 
             analysis.save() 

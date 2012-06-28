@@ -1095,7 +1095,8 @@
 			}
 			
 			/* ARIA role for the rows */	
-			$(oSettings.nTHead).children('tr').attr('role', 'row');
+			//<!-- $(oSettings.nTHead).children('tr').attr('role', 'row'); -->
+			$(oSettings.nTHead).children('tr').attr('role', 'row-fluid');
 			
 			/* Add the extra markup needed by jQuery UI's themes */
 			if ( oSettings.bJUI )
