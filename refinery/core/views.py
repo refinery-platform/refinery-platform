@@ -21,22 +21,13 @@ def home(request):
         users = []
 
     if not request.user.is_authenticated():
-        # TODO: formalize "Public" group
-        groups = ExtendedGroup.objects.filter( name__exact="Public" )
+        group = ExtendedGroup.objects.public_group()
         
-        if len( groups ) == 1:
-            group = groups[0]        
-            projects = get_objects_for_group( group, "core.read_project" ).filter( is_catch_all=False )
-            workflow_engines = get_objects_for_group( group, "core.read_workflowengine" )
-            data_sets = get_objects_for_group( group, "core.read_dataset" )
-            workflows = get_objects_for_group( group, "core.read_workflow" )
-            unassigned_analyses = []
-        else:
-            projects = []
-            workflow_engines = []
-            data_sets = []
-            workflows = []
-            unassigned_analyses = []
+        projects = get_objects_for_group( group, "core.read_project" ).filter( is_catch_all=False )
+        workflow_engines = get_objects_for_group( group, "core.read_workflowengine" )
+        data_sets = get_objects_for_group( group, "core.read_dataset" )
+        workflows = get_objects_for_group( group, "core.read_workflow" )
+        unassigned_analyses = []
     else:
         projects = get_objects_for_user( request.user, "core.read_project" ).filter( is_catch_all=False )
         unassigned_analyses = request.user.get_profile().catch_all_project.analyses
@@ -98,7 +89,7 @@ def group(request, query):
 
 def project(request, uuid):
     project = get_object_or_404( Project, uuid=uuid )
-    public_group = ExtendedGroup.objects.get( name__exact="Public")
+    public_group = ExtendedGroup.objects.public_group()
     
     print get_perms( public_group, project )
     
@@ -165,13 +156,8 @@ def project_edit(request,uuid):
 
 def data_sets(request):
     if not request.user.is_authenticated():
-        groups = ExtendedGroup.objects.filter( name__exact="Public" )
-        
-        if len(groups) == 1:
-            group = groups[0]        
-            dataset_list = get_objects_for_group( group, "core.read_dataset" )
-        else:
-            dataset_list = []
+        group = ExtendedGroup.objects.public_group()
+        dataset_list = get_objects_for_group( group, "core.read_dataset" )
     else:
         dataset_list = get_objects_for_user(request.user, 'core.read_dataset')
 
@@ -221,7 +207,7 @@ def data_sets(request):
 
 def data_set(request,uuid):    
     data_set = get_object_or_404( DataSet, uuid=uuid )
-    public_group = ExtendedGroup.objects.get(name__exact="Public")
+    public_group = ExtendedGroup.objects.public_group()
         
     if not request.user.has_perm( 'core.read_dataset', data_set ):
         if not 'read_dataset' in get_perms( public_group, data_set ):
@@ -256,7 +242,7 @@ def samples(request, ds_uuid, study_uuid, assay_uuid):
 
 def workflow(request, uuid):
     workflow = get_object_or_404( Workflow, uuid=uuid )
-    public_group = ExtendedGroup.objects.get( name__exact="Public")
+    public_group = ExtendedGroup.objects.public_group()
     
     if not request.user.has_perm('core.read_workflow', workflow ):
         if not 'read_workflow' in get_perms( public_group, workflow ):
@@ -269,7 +255,7 @@ def workflow(request, uuid):
 
 def workflow_engine(request,uuid):  
     workflow_engine = get_object_or_404( WorkflowEngine, uuid=uuid )
-    public_group = ExtendedGroup.objects.get( name__exact="Public")
+    public_group = ExtendedGroup.objects.public_group()
     
     if not request.user.has_perm('core.read_workflowengine', workflow_engine ):
         if not 'read_workflowengine' in get_perms( public_group, workflow_engine ):
@@ -357,9 +343,6 @@ def admin_test_data( request ):
                 { "name": ".Refinery Project",
                   "members": [ ".nils", ".shannan", ".richard", ".psalm", ".ilya" ]
                 },
-                { "name": "Public",
-                  "members": [ ".nils", ".richard", ".psalm", ".ilya", ".shannan" ]
-                },
              ]
     
     group_objects = []
@@ -393,6 +376,12 @@ def admin_test_data( request ):
         User.objects.get( username__exact=group["members"][1] ).groups.add( group_object.manager_group )
                     
         group_objects.append( group_object )
+        
+        
+    public_members = [ ".nils", ".richard", ".psalm", ".ilya", ".shannan" ]    
+    for username in public_members:
+        user_object = User.objects.get( username__exact=username )
+        user_object.groups.add( ExtendedGroup.objects.public_group() )
         
     """
     # disk quotas (for each user) 
@@ -460,7 +449,7 @@ def admin_test_data( request ):
     
         project_object = Project.objects.create( name=project_name, summary=project_summary )
         project_object.set_owner( user_object )
-        group_object = ExtendedGroup.objects.get( name__exact="Public" )
+        group_object = ExtendedGroup.objects.public_group()
         project_object.share( group_object )
     
         project_objects.append( project_object )
@@ -529,7 +518,7 @@ def admin_test_data( request ):
 
         data_set_object = DataSet.objects.create( name=data_set_name, summary=data_set_summary )
         data_set_object.set_owner( user_object )
-        group_object = ExtendedGroup.objects.get( name__exact="Public" )
+        group_object = ExtendedGroup.objects.public_group()
         data_set_object.share( group_object )
         data_set_objects.append( data_set_object )
             
@@ -572,11 +561,10 @@ def admin_test_data( request ):
     for instance in Instance.objects.all():
         workflow_engine_object = WorkflowEngine.objects.create( instance=instance, name=instance.description, summary=instance.base_url + " " + instance.api_key )
         # TODO: introduce group managers and assign ownership to them        
-        workflow_engine_object.set_manager_group( ExtendedGroup.objects.get( name__exact="Public Managers" ) )
+        workflow_engine_object.set_manager_group( ExtendedGroup.objects.public_group().manager_group )
                 
         workflow_engine_objects.append( workflow_engine_object )
         
-
         
     template = "admin/core/test_data.html"    
     
