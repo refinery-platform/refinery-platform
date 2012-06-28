@@ -127,7 +127,7 @@ function getUpdate() {
   			clearTimeout ( timerId );
   			// GOING TO ANALYSIS RESULTS PAGE
   			//var url = "/analysis_manager/{{uuid}}/results"
-  			var url = "/projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ statuses.analysis_uuid }}";
+  			var url = "/projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ statuses.analysis.uuid }}";
   			//<i class="icon-empty"></i> <a href="projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }} - {{analysis.summary}}</a>
   			console.log(url);
   			window.location = url;
