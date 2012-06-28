@@ -189,13 +189,14 @@ def create_dataset(investigation_uuid, username, public=False):
             dataset.share(public_group)  
 
 @task()
-def parse_isatab(folder_name, isa_archive=None, pre_isa_archive=None):
-    path = os.path.join(settings.ISA_TAB_DIR, folder_name)
-    print path
+def parse_isatab(username, public, path, isa_archive=None, pre_isa_archive=None):
+    """
+    parse_isatab(username, is_public, folder_name, isa_archive=<path> pre_isa_archive=<path>
+    """
     p = IsaTabParser()
     try:
         investigation = p.run(path, isa_archive=isa_archive, preisa_archive=pre_isa_archive)
-        return investigation.uuid
+        create_dataset(investigation.uuid, username, public=public)
     except: #prints the error message without breaking things
         print "error: "
         exc_type, exc_value, exc_traceback = sys.exc_info()

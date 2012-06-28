@@ -131,7 +131,7 @@ def removeFileExt(file_name):
 
 
 def createStepsAnnot(file_list, workflow):
-    #print "createStepsAnnot called"
+    print "\ncreateStepsAnnot called"
     """
     Replicates an input dictionary : "X" number of times depending on value of repeat_num 
     """
@@ -139,8 +139,13 @@ def createStepsAnnot(file_list, workflow):
     updated_dict = {};
     temp_steps = workflow["steps"];
     repeat_num = len(file_list);
-    
+    history_download = []
     map = workflowMap(workflow);
+    
+    print "map"
+    print map
+    print "file_list"
+    print file_list
     
     for i in range(0, repeat_num):
         for j in range(0, len(temp_steps)):
@@ -176,39 +181,84 @@ def createStepsAnnot(file_list, workflow):
                 input_type = map[int(curr_step)];
                 
                 # getting current filename for workflow
-                curr_filename = '';
+                curr_filename = ''
                 
                 if input_type in file_list[i].keys():
                     curr_filename = removeFileExt(file_list[i][input_type]['assay_uuid'])
-                elif input_type == 'all':
+                #elif input_type == 'all':
+                else:
                     curr_filename = ''
                     for itypes in file_list[i].keys():
                         if curr_filename == '':
                             curr_filename += removeFileExt(file_list[i][itypes]['assay_uuid'])
                         else:
                             curr_filename += ','+removeFileExt(file_list[i][itypes]['assay_uuid'])
-                    #print "curr_filename"
-                    #print curr_filename
-                        #curr_filename = removeFileExt(file_list[i]['exp_file']['assay_uuid']) + ',' + removeFileExt(file_list[i]['input_file']['assay_uuid']);
-                #### TODO ###
-                # deal with over input_types from various workflows
-                #else:
+               
+                #### TODO #### deal with over input_types from various workflows
+                
+                # getting "keep" flag to keep track of files to be saved from workflow
+                # parsing annotation field in galaxy workflows to parse output files to keep: "keep=output_file, keep=output_file2" etc..
+                step_annot = curr_workflow_step['annotation']
+                keep_files = []
+                if (step_annot):
+                    keep_all = step_annot.strip().split(',')
+                    for keep_file in keep_all:
+                        keep = keep_file.split('=')
+                        if len(keep) > 1:
+                            keep = keep[1]
+                            keep_files.append(keep);   
                 
                 # creates list of output names from specified tool to rename
                 output_names = [];
                 output_list = curr_workflow_step['outputs']
                 if (len(output_list) > 0):
                     for ofiles in output_list:
-                        output_names.append(ofiles['name']);
+                        output_names.append(ofiles['name'])
                 
                 # uses renamedataset action to rename output of specified tool
                 if "post_job_actions" in curr_workflow_step:
-                    pja_dict = curr_workflow_step["post_job_actions"];
+                    pja_dict = curr_workflow_step["post_job_actions"]
                     
                     for oname in output_names:
-                        temp_key = 'RenameDatasetAction' + str(oname);
+                        oname = str(oname)
+                        temp_key = 'RenameDatasetAction' + oname
                         #new_output_name = tool_name + ',' + input_type + ',' + str(oname) + ',' + curr_filename
-                        new_output_name =  curr_filename + ","  + tool_name + ',' + input_type + ',' + str(oname)
+                        new_output_name =  curr_filename + ","  + tool_name + ',' + input_type + ',' + oname
+                        
+                        # if the output name is being tracked and downloaded for Refinery
+                        if str(oname) in keep_files:
+                            #print "INDISE DICT INSIDE DICT INSIDE DICT"
+                            #print new_output_name
+                            #print oname
+                            #print keep_files
+                            #print "input_type"
+                            #print input_type
+                            #print "file_list[i][input_type]['pair_id']"
+                            if input_type in file_list[i].keys():
+                                curr_pair_id = file_list[i][input_type]['pair_id']
+                                #print str(i*curr_pair_id)
+                                #print curr_pair_id
+                                curr_pair_id = str((i)-1+int(curr_pair_id)) 
+                                #curr_pair_id = repeat_num*i + int(curr_pair_id)
+                            
+                            else:
+                                curr_pair_id = ''
+                                for itypes in file_list[i].keys():
+                                    if curr_pair_id == '':
+                                        curr_pair_id += str(file_list[i][itypes]['pair_id'])
+                                    else:
+                                        curr_pair_id += "," + str(file_list[i][itypes]['pair_id'])
+                            #print "======="
+                            #print curr_pair_id       
+                            
+            
+                            curr_result = {}
+                            curr_result["pair_id"] = curr_pair_id
+                            curr_result["name"] = new_output_name;
+                            
+                            #print curr_pair_id 
+                            history_download.append(curr_result)
+                        
                         
                         # if rename dataset action already exists for this tool output
                         if temp_key in pja_dict:
@@ -221,8 +271,8 @@ def createStepsAnnot(file_list, workflow):
 
             # Adds updated module 
             updated_dict[curr_id] = curr_workflow_step;
-            
-    return updated_dict;
+    
+    return updated_dict, history_download;
 
 def createSteps(repeat_num, workflow):
     #print "createSteps called"
