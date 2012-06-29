@@ -300,7 +300,7 @@ class IsaTabParser:
                 node.file_uuid = uuid
                 node.save()
             else:
-                self._logger.exception( "Unable to add " + node_name + " to file store as a temporary file." )
+                self._logger.exception( "Unable to add " + node_name + " to file store as a temporary file." )        
                                             
         if is_new:
             self._logger.info( "New node " + str( node ) + " created." )
