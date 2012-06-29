@@ -30,7 +30,7 @@ class Command(BaseCommand):
         investigation.save()
         
         # TODO: make sure this is used everywhere 
-        annotate_nodes(investigation.uuid, files_only=True)
+        annotate_nodes(investigation.uuid)
         
         user = User.objects.get(username__exact=username)
         data_set = DataSet.objects.create(name=title)

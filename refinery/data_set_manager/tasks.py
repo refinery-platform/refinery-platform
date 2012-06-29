@@ -4,7 +4,7 @@ from celery.task.sets import TaskSet, subtask
 from collections import defaultdict
 from core.models import *
 from data_set_manager.isa_tab_parser import IsaTabParser
-from data_set_manager.models import Investigation, Study
+from data_set_manager.models import Investigation, Study, Node
 from data_set_manager.utils import get_node_types, update_annotated_nodes
 from datetime import date, datetime, timedelta
 from django.conf import settings
@@ -186,7 +186,7 @@ def create_dataset(investigation_uuid, username, public=False):
     if investigation_uuid != None:
         
         # TODO: make sure this is used everywhere 
-        annotate_nodes(investigation_uuid, files_only=True)
+        annotate_nodes(investigation_uuid)
         
         dataset = ""
         investigation = Investigation.objects.get(uuid=investigation_uuid)
@@ -213,17 +213,17 @@ def create_dataset(investigation_uuid, username, public=False):
             dataset.share(public_group)  
 
 @task()
-def annotate_nodes(investigation_uuid, files_only=True):
+def annotate_nodes(investigation_uuid):
     """
     Adds all nodes in this investigation to the annotated nodes table for faster lookup. 
     """
-    investigation = Investigation.objects.get( uuid=investigation_uuid )
+    investigation = Investigation.objects.get(uuid=investigation_uuid)
     
     studies = investigation.study_set.all()
     for study in studies:
         assays = study.assay_set.all()
         for assay in assays:
-            node_types = get_node_types(study.uuid, assay.uuid, files_only=files_only)            
+            node_types = get_node_types(study.uuid, assay.uuid, files_only=True, filter_set=Node.FILES)            
             for node_type in node_types:
                 update_annotated_nodes( node_type, study.uuid, assay.uuid, update=True )
                     
