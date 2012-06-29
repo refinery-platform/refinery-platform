@@ -3,7 +3,7 @@ Created on May 29, 2012
 
 @author: nils
 '''
-from data_set_manager.models import Node, Attribute
+from data_set_manager.models import Node, Attribute, AnnotatedNode, Study, Assay
 from django.db.models import Q
 from django.utils.datetime_safe import datetime
 import simplejson
@@ -241,3 +241,64 @@ def get_matrix( node_type, study_uuid, assay_uuid=None, ontology_attribute_field
     #print( "Nodes: " + str( len(results["data"]) ) + "   attributes: " + str( attribute_count ) )
     
     return results
+
+
+def update_annotated_nodes( node_type, study_uuid, assay_uuid=None ):
+    
+    # 1. remove existing annotated node objects for this node_type in this study/assay
+    if assay_uuid is None:
+        counter = AnnotatedNode.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ), node_type=node_type ).count()
+        AnnotatedNode.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ), node_type=node_type ).delete()
+    else:
+        counter = AnnotatedNode.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ), node_type=node_type ).count()                
+        AnnotatedNode.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ), node_type=node_type ).delete()
+    
+    print str( counter ) + " annotated nodes deleted."                
+    
+    # 2. retrieve annotated nodes
+    nodes = _retrieve_nodes( node_type, study_uuid, assay_uuid, True )
+    
+    # 3. retrieve study and assay ids
+    study = Study.objects.filter( uuid=study_uuid )[0]
+    if assay_uuid is not None:
+        assay = Assay.objects.filter( uuid=assay_uuid )[0]
+    else:
+        assay = None    
+    
+    # 4. insert node and attribute information
+    #  NON_ONTOLOGY_FIELDS = ["id", "type", "subtype", "value", "value_unit", "node"]
+    counter = 0    
+    for node_id, node in nodes.iteritems():
+        if node["type"] == node_type:
+            # save attributes (attribute[1], etc. are based on Attribute.ALL_FIELDS 
+            for attribute in _get_parent_attributes( nodes, node_id ):
+                counter += 1                                
+                AnnotatedNode.objects.create( 
+                    #node=Node.objects.filter( id=node["id"] )[0],
+                    node_id=node["id"],
+                    #attribute=Attribute.objects.filter( id=attribute[0] )[0],
+                    attribute_id=attribute[0],
+                    study=study,
+                    assay=assay,
+                    node_uuid=node["uuid"],
+                    node_file=node["file"],
+                    node_type=node["type"],
+                    node_name=node["name"],
+                    attribute_type=attribute[1],
+                    attribute_subtype=attribute[2],
+                    attribute_value=attribute[3],
+                    attribute_value_unit=attribute[4]
+                )
+                    
+                 
+    print str( counter ) + " annotated nodes generated."
+    
+    from django.core import serializers
+    
+    if assay_uuid is None:
+        result = AnnotatedNode.objects.filter( Q( study_id=study.id, assay__isnull=True ), node_type=node_type )
+    else:
+        result = AnnotatedNode.objects.filter( Q( study_id=study.id, assay__isnull=True ) | Q( study_id=study.id, assay_id=assay.id ), node_type=node_type)
+    
+    return ( serializers.serialize("python", result, ensure_ascii=False ) )
+    

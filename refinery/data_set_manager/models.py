@@ -361,8 +361,31 @@ class Attribute(models.Model):
     
     def __unicode__(self):
         return unicode(self.type) + ( "" if self.subtype is None else " (" + unicode(self.subtype) + ")" ) + " = " + unicode(self.value)
-        
-        
+ 
+
+class AnnotatedNodeRegistry(models.Model):
+    study = models.ForeignKey(Study, db_index=True)
+    assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
+    node_type = models.TextField(db_index=True)
+    creation_date = models.DateTimeField( auto_now_add=True )
+    modification_date = models.DateTimeField( auto_now=True )    
+
+class AnnotatedNode(models.Model):
+    node = models.ForeignKey(Node, db_index=True)
+    attribute = models.ForeignKey(Attribute, db_index=True)
+    study = models.ForeignKey(Study, db_index=True)
+    assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
+    node_uuid = UUIDField()
+    node_file = UUIDField(blank=True, null=True)
+    node_type = models.TextField(db_index=True)
+    node_name = models.TextField(db_index=True)
+    attribute_type = models.TextField(db_index=True)
+    # subtype further qualifies the attribute type, e.g. type = factor value and subtype = age
+    attribute_subtype = models.TextField(blank=True, null=True, db_index=True)
+    attribute_value = models.TextField(blank=True, null=True, db_index=True)
+    attribute_value_unit = models.TextField(blank=True, null=True)
+     
+                
 class ProtocolReference(models.Model):
     node = models.ForeignKey(Node)
     protocol = models.ForeignKey(Protocol)
@@ -387,5 +410,7 @@ class ProtocolReferenceParameter(models.Model):
     
     def __unicode__(self):
         return unicode(self.name) + " = " +  unicode(self.value) 
-    
+
+
+
 
