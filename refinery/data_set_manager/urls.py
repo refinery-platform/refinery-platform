@@ -15,4 +15,6 @@ urlpatterns = patterns('data_set_manager.views',
     url(r'^nodes/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/attributes/(?P<type>[\w ]+)/$', "node_attributes", name="data_set_manager_node_attributes" ),
     url(r'^nodes/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/attributes/(?P<type>[\w ]+)/$', "node_attributes", name="data_set_manager_node_attributes" ),
     url(r'^nodes/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<type>[\w ]+)/$', "nodes", name="data_set_manager_nodes" ),
+
+    url(r'^nodes/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<type>[\w ]+)/annotate$', "node_annotate", name="data_set_manager_update_annotated_nodes" ),
 )
