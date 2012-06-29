@@ -36,6 +36,7 @@ Thumbs.db
 
 # machine/user specific files #
 ###############################
+setup_refinery.sh
 settings_local.py
 .project
 .DS_Store
