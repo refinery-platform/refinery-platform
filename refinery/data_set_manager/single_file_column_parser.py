@@ -155,7 +155,7 @@ class SingleFileColumnParser:
                 study=study,
                 assay=assay,
                 name=row[internal_file_column_index].strip(),
-                file=file_uuid,
+                file_uuid=file_uuid,
                 type=Node.RAW_DATA_FILE )
             assay_node.add_child( file_node )
                          

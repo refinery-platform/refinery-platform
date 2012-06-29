@@ -127,7 +127,7 @@ def _get_assay_name(result,node):
 
 def _retrieve_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_fields=False ):
             
-    node_fields = [ "id", "uuid", "file", "type", "name", "parents", "attribute" ]
+    node_fields = [ "id", "uuid", "file_uuid", "type", "name", "parents", "attribute" ]
     
     # query nodes (both from assay and from study only)
     if assay_uuid is None:
@@ -162,7 +162,7 @@ def _retrieve_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_
             
             # new node, start merging
             current_id = node["id"]
-            current_node = { "id": node["id"], "uuid": node["uuid"], "attributes": [], "parents": [], "name": node["name"], "type": node["type"], "file": node["file"] }
+            current_node = { "id": node["id"], "uuid": node["uuid"], "attributes": [], "parents": [], "name": node["name"], "type": node["type"], "file_uuid": node["file_uuid"] }
             
         if node["parents"] is not None:
             current_node["parents"].append( node["parents"] )    
@@ -221,7 +221,7 @@ def get_matrix( node_type, study_uuid, assay_uuid=None, ontology_attribute_field
         if nodes[key]["type"] == node_type:
             
             # copy a subset of the node model attributes
-            results["data"][nodes[key]["uuid"]] = { k: nodes[key].copy()[k] for k in ( "name", "file" ) }
+            results["data"][nodes[key]["uuid"]] = { k: nodes[key].copy()[k] for k in ( "name", "file_uuid" ) }
 
             # get the name of the nearest assay node predecessor
             results["data"][nodes[key]["uuid"]]["assay"] = _get_assay_name( nodes, key )
@@ -299,7 +299,7 @@ def update_annotated_nodes( node_type, study_uuid, assay_uuid=None, update=False
                         study=study,
                         assay=assay,
                         node_uuid=node["uuid"],
-                        node_file=node["file"],
+                        node_file_uuid=node["file_uuid"],
                         node_type=node["type"],
                         node_name=node["name"],
                         attribute_type=attribute[1],
