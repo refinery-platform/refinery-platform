@@ -168,7 +168,7 @@ class ManageableResource:
         
         for group, permission in group_permissions.iteritems():
             if "add_%s" % self._meta.verbose_name in permission:
-                return group
+                return group.extendedgroup
     
     class Meta:
         verbose_name = "manageableresource"
@@ -282,15 +282,15 @@ class DiskQuota ( SharableResource, ManageableResource ):
 class Workflow ( SharableResource, ManageableResource ):
 
     data_inputs = models.ManyToManyField( WorkflowDataInput, blank=True )
-    internal_id = models.CharField( max_length=50, unique=True, blank=True )
+    internal_id = models.CharField( max_length=50 )
     
-    # TODO: require this information
-    workflow_engine = models.ForeignKey( WorkflowEngine, blank=True, null=True )    
+    workflow_engine = models.ForeignKey( WorkflowEngine )    
 
     def __unicode__(self):
         return self.name + " - " + self.summary
 
     class Meta:
+        unique_together = ('internal_id', 'workflow_engine')
         verbose_name = "workflow"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
@@ -371,7 +371,7 @@ class ExtendedGroupManager(models.Manager):
 
 class ExtendedGroup ( Group ):
     ''' Extends the default Django Group in auth with a group of users that own and manage manageable resources for the group.'''    
-    manager_group = models.ForeignKey( "self", blank=True, null=True )
+    manager_group = models.ForeignKey( "self", related_name="managed_group", blank=True, null=True )
     uuid = UUIDField(unique=True, auto=True)
     objects = ExtendedGroupManager()
     
@@ -380,6 +380,13 @@ class ExtendedGroup ( Group ):
         
     def is_managed(self):
         return ( self.manager_group is not None )
+    
+    def get_managed_group(self):
+        try:
+            return (self.managed_group.all()[0])
+        except:
+            return None
+
 
 # automatic creation of a managed group when an extended group is created: 
 def create_manager_group( sender, instance, created, **kwargs ):
