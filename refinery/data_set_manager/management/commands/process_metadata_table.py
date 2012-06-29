@@ -1,7 +1,7 @@
 
 from core.models import DataSet, ExtendedGroup
 from data_set_manager.single_file_column_parser import SingleFileColumnParser
-from data_set_manager.tasks import create_dataset
+from data_set_manager.tasks import create_dataset, annotate_nodes
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 import os
@@ -28,6 +28,9 @@ class Command(BaseCommand):
         investigation = parser.run(file_name)
         investigation.title = title
         investigation.save()
+        
+        # TODO: make sure this is used everywhere 
+        annotate_nodes(investigation.uuid, files_only=True)
         
         user = User.objects.get(username__exact=username)
         data_set = DataSet.objects.create(name=title)

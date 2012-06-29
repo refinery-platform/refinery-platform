@@ -360,8 +360,7 @@ class Attribute(models.Model):
     value_source = models.TextField(blank=True, null=True)
     
     def __unicode__(self):
-        return unicode(self.type) + ( "" if self.subtype is None else " (" + unicode(self.subtype) + ")" ) + " = " + unicode(self.value)
- 
+        return unicode(self.type) + ( "" if self.subtype is None else " (" + unicode(self.subtype) + ")" ) + " = " + unicode(self.value) 
 
 class AnnotatedNodeRegistry(models.Model):
     study = models.ForeignKey(Study, db_index=True)

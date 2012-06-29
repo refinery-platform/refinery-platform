@@ -3,18 +3,33 @@ from celery.task import task, periodic_task
 from celery.task.sets import TaskSet, subtask
 from collections import defaultdict
 from core.models import *
+from data_set_manager.isa_tab_parser import IsaTabParser
+from data_set_manager.models import Investigation, Study
+from data_set_manager.utils import get_node_types, update_annotated_nodes
 from datetime import date, datetime, timedelta
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.db import connection
 from django.db.utils import IntegrityError
 from file_store.tasks import create, delete, read
-from data_set_manager.models import Investigation, Study
-from data_set_manager.isa_tab_parser import IsaTabParser
-import csv, errno, ftplib, glob, os, os.path, re, shutil, socket, string
-import subprocess, sys, tempfile, time, traceback, urllib2
 from zipfile import ZipFile, BadZipfile
-from django.contrib.auth.models import User
+import csv
+import errno
+import ftplib
+import glob
+import os
+import os.path
+import re
+import shutil
+import socket
+import string
+import subprocess
+import sys
+import tempfile
+import time
+import traceback
+import urllib2
 
 
 def create_dir(file_path):
@@ -169,6 +184,10 @@ def create_dataset(investigation_uuid, username, public=False):
         user = User.objects.create_user(username, "", "test")
 
     if investigation_uuid != None:
+        
+        # TODO: make sure this is used everywhere 
+        annotate_nodes(investigation_uuid, files_only=True)
+        
         dataset = ""
         investigation = Investigation.objects.get(uuid=investigation_uuid)
         identifier = investigation.get_identifier()
@@ -192,6 +211,22 @@ def create_dataset(investigation_uuid, username, public=False):
         if public:
             public_group = ExtendedGroup.objects.public_group()
             dataset.share(public_group)  
+
+@task()
+def annotate_nodes(investigation_uuid, files_only=True):
+    """
+    Adds all nodes in this investigation to the annotated nodes table for faster lookup. 
+    """
+    investigation = Investigation.objects.get( uuid=investigation_uuid )
+    
+    studies = investigation.study_set.all()
+    for study in studies:
+        assays = study.assay_set.all()
+        for assay in assays:
+            node_types = get_node_types(study.uuid, assay.uuid, files_only=files_only)            
+            for node_type in node_types:
+                update_annotated_nodes( node_type, study.uuid, assay.uuid, update=True )
+                    
 
 @task()
 def parse_isatab(username, public, path, isa_archive=None, pre_isa_archive=None):
