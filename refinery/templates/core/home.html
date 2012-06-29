@@ -98,7 +98,34 @@
 </div>
 <div class="span4">
 
-	<h2>Workflows</h2> 
+	<h2>Workflows</h2>
+	
+{% if workflows %}
+	<table class="table table-striped table-condensed table-bordered">
+		<thead>
+			<tr>
+				<th>
+					Name
+				</th>    
+			</tr>
+		</thead>
+		<tbody>
+		{% for workflow in workflows %}
+        <tr>
+        	<td>
+        		<i class="icon-cog"></i> <a href="workflows/{{ workflow.uuid }}">{{ workflow.name }}</a>
+        	</td>
+        </tr>
+    	{% endfor %}
+		</tbody>		
+	</table>
+{% else %}
+	<div class="alert alert-info">
+		No workflows available.  
+	</div>
+{% endif %}
+	
+	 <!--
 {% if workflow_engines %}
 
 	<table class="table table-striped table-condensed table-bordered">
@@ -139,6 +166,7 @@
 		No workflows available.  
 	</div>
 {% endif %}
+	-->
 
 </div>
 

@@ -35,9 +35,7 @@ def get_workflows( workflow_engine ):
         workflow_object = Workflow.objects.create( name=workflow.name, internal_id=workflow.identifier, workflow_engine=workflow_engine )        
         workflow_object.set_manager_group( workflow_engine.get_manager_group() )
                 
-        # TODO: fix these assignments!!!
-        group_object = Group.objects.get( name__exact="Public" )
-        workflow_object.share( group_object )
+        workflow_object.share( workflow_engine.get_manager_group().get_managed_group() )
 
         inputs = workflow.inputs
         
