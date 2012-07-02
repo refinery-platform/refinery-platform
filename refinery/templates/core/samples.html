@@ -67,10 +67,10 @@
 		{% for k,v in matrix.data.items %}
 		<tr>
 			<td>
-				<select name="assay_{{ v.file }}" id="webmenu" class="OGcombobox">
+				<select name="assay_{{ v.file_uuid }}" id="webmenu" class="OGcombobox">
     				<option></option>
   				</select>
-  				<input type="hidden" name="fileurl_{{v.file}}" value="{{v.name}}">
+  				<input type="hidden" name="fileurl_{{v.file_uuid}}" value="{{v.name}}">
   			</td>
 			
 			<td>{{v.assay}}</td>
