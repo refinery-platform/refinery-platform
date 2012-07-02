@@ -142,10 +142,10 @@ def createStepsAnnot(file_list, workflow):
     history_download = []
     map = workflowMap(workflow);
     
-    print "map"
-    print map
-    print "file_list"
-    print file_list
+    #print "map"
+    #print map
+    #print "file_list"
+    #print file_list
     
     for i in range(0, repeat_num):
         for j in range(0, len(temp_steps)):
@@ -228,19 +228,10 @@ def createStepsAnnot(file_list, workflow):
                         # if the output name is being tracked and downloaded for Refinery
                         if str(oname) in keep_files:
                             #print "INDISE DICT INSIDE DICT INSIDE DICT"
-                            #print new_output_name
-                            #print oname
                             #print keep_files
-                            #print "input_type"
-                            #print input_type
-                            #print "file_list[i][input_type]['pair_id']"
                             if input_type in file_list[i].keys():
                                 curr_pair_id = file_list[i][input_type]['pair_id']
-                                #print str(i*curr_pair_id)
-                                #print curr_pair_id
                                 curr_pair_id = str((i)-1+int(curr_pair_id)) 
-                                #curr_pair_id = repeat_num*i + int(curr_pair_id)
-                            
                             else:
                                 curr_pair_id = ''
                                 for itypes in file_list[i].keys():
@@ -248,24 +239,27 @@ def createStepsAnnot(file_list, workflow):
                                         curr_pair_id += str(file_list[i][itypes]['pair_id'])
                                     else:
                                         curr_pair_id += "," + str(file_list[i][itypes]['pair_id'])
-                            #print "======="
-                            #print curr_pair_id       
-                            
-            
+                           
                             curr_result = {}
                             curr_result["pair_id"] = curr_pair_id
                             curr_result["name"] = new_output_name;
+                            curr_result["step_id"] = curr_id;
                             
-                            #print curr_pair_id 
                             history_download.append(curr_result)
                         
                         
                         # if rename dataset action already exists for this tool output
                         if temp_key in pja_dict:
-                            pja_dict[temp_key]['action_arguments']['newname'] = new_output_name;
+                            # renaming output files according with step_id of workflow
+                            #pja_dict[temp_key]['action_arguments']['newname'] = new_output_name;
+                            pja_dict[temp_key]['action_arguments']['newname'] = curr_id;
+                        
                         # whether post_job_action,RenameDatasetAction exists or not
                         else:
-                            new_rename_action =  '{ "action_arguments": { "newname": "%s" }, "action_type": "RenameDatasetAction", "output_name": "%s"}' % (new_output_name, oname);
+                            # renaming output files according with step_id of workflow  
+                            #new_rename_action =  '{ "action_arguments": { "newname": "%s" }, "action_type": "RenameDatasetAction", "output_name": "%s"}' % (new_output_name, oname);
+                            new_rename_action =  '{ "action_arguments": { "newname": "%s" }, "action_type": "RenameDatasetAction", "output_name": "%s"}' % (curr_id, oname);
+                            
                             new_rename_dict = ast.literal_eval(new_rename_action);
                             pja_dict[temp_key] = new_rename_dict;
 
