@@ -4,7 +4,7 @@ Created on Apr 5, 2012
 @author: nils
 '''
 
-from core.models import Analysis, AnalysisResult
+from core.models import Analysis, AnalysisResult, WorkflowFilesDL
 from analysis_manager.models import AnalysisStatus
 from refinery_repository.models import Assay, RawData
 from celery.task import task
@@ -71,21 +71,12 @@ def chord_postprocessing (ret_val, analysis):
     # getting list of tasks for download history files
     postprocessing_taskset = download_history_files(analysis)
     
-    #print "downloading history task_list"
-    #print postprocessing_taskset
-    #print "#### length"
-    #print len(postprocessing_taskset)
-    
-    #result_chord, result_set = progress_chord(postprocessing_taskset)(syncTask.subtask(params))
     if len(postprocessing_taskset) < 1:
         #print "---------- less than 1 -----------"
         #temp_task = emptyTask.subtask(("ret_val",))
         temp_task = emptyTask.subtask(("ret_val",))
         result_chord, result_set = progress_chord([temp_task])(chord_cleanup.subtask(analysis=analysis,))
         
-        #temp_task = []
-        #temp_task.append(chord_cleanup.subtask(analysis=analysis,))
-        #result_chord, result_set = progress_chord([temp_task])
     else:
         #print "---------- greater than 1 -----------"
         result_chord, result_set = progress_chord(postprocessing_taskset)(chord_cleanup.subtask(analysis=analysis,))
@@ -128,35 +119,15 @@ def run_analysis(analysis, interval=5.0):
     # GETTING LIST OF DOWNLOADED REMOTE FILES 
     datainputs = analysis.workflow_data_input_maps.all()
     download_tasks = []
-    """
+  
     for files in datainputs:
-        curr_assay = Assay.objects.get(assay_uuid=files.data_uuid)
-        curr_raw = curr_assay.raw_data.all()
-        investigation_id = curr_assay.investigation.study_identifier
-        for cur_file in curr_raw:
-            # calling filestore on remote file
-            print "calling filestore"
-            print cur_file.rawdata_uuid
-            if not is_local(cur_file.rawdata_uuid):
-                print "not_local"
-                task_id = import_file.subtask((cur_file.rawdata_uuid, False,))
-                download_tasks.append(task_id)
-    """
-    print "len datainputs"
-    print len(datainputs)
-    for files in datainputs:
-        print "files"
-        print files
-        #curr_assay = Assay.objects.get(assay_uuid=files.data_uuid)
-        #curr_raw = curr_assay.raw_data.all()
-        #investigation_id = curr_assay.investigation.study_identifier
         #for cur_file in curr_raw:
         # calling filestore on remote file
-        print "calling filestore"
+        #print "calling filestore"
         cur_fs_uuid = files.data_uuid
-        print cur_fs_uuid
+        #print cur_fs_uuid
         if not is_local(cur_fs_uuid):
-            print "not_local"
+            #print "not_local"
             task_id = import_file.subtask((cur_fs_uuid, False,))
             download_tasks.append(task_id)
 
@@ -192,13 +163,16 @@ def run_analysis_preprocessing(analysis):
     # getting expanded workflow configured based on input: ret_list
     new_workflow, history_download = configure_workflow(analysis.workflow.uuid, ret_list, connection)
     
-    print "history_download"
-    print history_download
+    #print "history_download"
+    #print history_download
     
     # saving ouputs of workflow to download 
-    
-    
-    
+    for file_dl in history_download:
+        temp_dl = WorkflowFilesDL(step_id=file_dl['step_id'], pair_id=file_dl['pair_id'], filename=file_dl['name'])
+        temp_dl.save()
+        analysis.workflow_dl_files.add( temp_dl ) 
+        analysis.save()
+            
     # import newly generated workflow 
     new_workflow_info = connection.import_workflow(new_workflow);
     
@@ -347,9 +321,6 @@ def get_analysis_config(analysis):
     ret_list = [];
     ret_item = copy.deepcopy(annot_inputs)
     
-    #print "ret_item"
-    #print ret_item
-    
     temp_count = 0
     temp_len = len(annot_inputs)
     t2 = analysis.workflow_data_input_maps.all().order_by('pair_id')
@@ -385,11 +356,6 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
             
             # getting current filestoreitem
             curr_filestore = FileStoreItem.objects.get(uuid=cur_item['assay_uuid'])
-            #curr_filestore = FileStoreItem.objects.get(uuid=curr_raw.rawdata_uuid)
-            #print "rawdata_uuid"
-            #print curr_raw.rawdata_uuid
-            #print curr_filestore.get_absolute_path()
-            #file_path = str(curr_filestore.get_absolute_path)
             #print "got curr_filestore item"
             #print curr_filestore.datafile.path
             #print curr_filestore.datafile.url
@@ -409,33 +375,56 @@ def download_history_files(analysis) :
     
     print "analysis_manger.download_history_files called"
     
+    # retrieving list of files to download for workflow
+    analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+    dl_files = analysis.workflow_dl_files
+    
+    ### creating dicionary based on files to download predetermined by workflow w/ keep operators
+    dl_dict = {}
+    
+    for dl in dl_files.all():
+        temp_dict = {}
+        temp_dict['filename'] = dl.filename
+        temp_dict['pair_id'] = dl.pair_id
+        dl_dict[str(dl.step_id)] = temp_dict
+    
     # gets current galaxy connection
     connection = get_analysis_connection(analysis)
     
     download_list = connection.get_history_file_list(analysis.history_id)
     task_list = []
     
+    # Iterating through files in current galaxy history
     for results in download_list:
-        #print "#######results"
-        #print results
         
         # download file if result state is "ok"
         if results['state'] == 'ok':
             file_type = results["type"]
             
-            # checks to see if history file is raw fastq file, excluding from download
-            check_fastq = file_type.lower().find('fastq')
-            check_sam = file_type.lower().find('sam')
+            curr_file_id = results['name'] 
             
+            if curr_file_id in dl_dict:
+                curr_dl_dict = dl_dict[curr_file_id]
+                
+                #print "#######results"
+                #print "found in dict"
+                #print results
+                
+                result_name = curr_dl_dict['filename'] + '.' + file_type
+            
+            # checks to see if history file is raw fastq file, excluding from download
+            #check_fastq = file_type.lower().find('fastq')
+            #check_sam = file_type.lower().find('sam')
             #print "checking file types:"
             #print "check_fastq"
             #print check_fastq
             #print "check_sam"
             #print check_sam
             
-            if (check_fastq < 0 and check_sam < 0):
+            
+            #if (check_fastq < 0 and check_sam < 0):
                 # name of file
-                result_name = results['name'] + '.' + file_type
+                #result_name = results['name'] + '.' + file_type
                 # size of file defined by galaxy
                 file_size = results['file_size']
                 # URL to download
@@ -449,11 +438,6 @@ def download_history_files(analysis) :
                 temp_file.save() 
                 analysis.results.add(temp_file) 
                 analysis.save() 
-                
-                #print "result_name"
-                #print result_name
-                #print file_type
-                #print results
                 
                 # downloading analysis results into file_store
                 # only download files if size is greater than 1

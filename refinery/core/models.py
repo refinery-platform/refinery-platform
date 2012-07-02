@@ -312,6 +312,14 @@ class Project( SharableResource ):
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
 
+class WorkflowFilesDL( models.Model ):
+    step_id = models.IntegerField()
+    pair_id = models.IntegerField(blank=True, null=True)
+    filename = models.TextField()
+    #[{'step_id': '1', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '2', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '4', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '6', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '12', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '19', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}]
+    
+    def __unicode__(self):
+        return str( self.step_id) + " <-> " + str(self.pair_id) + "<->" + self.filename
 
 class WorkflowDataInputMap( models.Model ):
     #workflow_data_input_internal_id = models.IntegerField()
@@ -350,7 +358,8 @@ class Analysis ( OwnableResource ):
     history_id = models.TextField(blank=True, null=True)
     workflow_galaxy_id = models.TextField(blank=True, null=True)
     library_id = models.TextField(blank=True, null=True)
-    results = models.ManyToManyField(AnalysisResult, blank=True)    
+    results = models.ManyToManyField(AnalysisResult, blank=True)   
+    workflow_dl_files = models.ManyToManyField(WorkflowFilesDL, blank=True) 
     
     def __unicode__(self):
         return self.name + " - " + self.summary
