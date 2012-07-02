@@ -233,8 +233,8 @@ def samples(request, ds_uuid, study_uuid, assay_uuid):
                                                   study_uuid=study_uuid, 
                                                   assay_uuid=assay_uuid
                                                   )
-    
-    #print node_matrix
+    import json
+    print json.dumps(node_matrix, indent=4)
     
     return render_to_response('core/samples.html', {'workflows': workflows, 'data_set': data_set, "matrix": node_matrix}, 
                               context_instance=RequestContext(request))
@@ -381,6 +381,9 @@ def admin_test_data( request ):
     public_members = [ ".nils", ".richard", ".psalm", ".ilya", ".shannan" ]    
     for username in public_members:
         user_object = User.objects.get( username__exact=username )
+        print "username"
+        print username
+        print ExtendedGroup.objects.public_group()
         user_object.groups.add( ExtendedGroup.objects.public_group() )
         
     """
