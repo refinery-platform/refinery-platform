@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - Search
+{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+  <h1>Search</h1>
+</div>
+{% endblock %}
+
+{% block content %}
+    <form method="get" action=".">
+        <table>
+            {{ form.as_table }}
+            <tr>
+                <td>&nbsp;</td>
+                <td>
+                    <input type="submit" value="Search">
+                </td>
+            </tr>
+        </table>
+
+        {% if query %}
+            <h3>Results</h3>
+
+	<table class="table table-striped table-condensed table-bordered">
+		<thead>
+			<tr>
+				<th>
+					Name
+				</th>    
+				<!--
+				<th>
+					Owner
+				</th>
+				-->    
+			</tr>
+		</thead>
+		<tbody>
+            {% for result in page.object_list %}
+        <tr>
+        	<td>
+				<i class="icon-file"></i> <a href="../data_sets/{{ result.object.uuid }}">{{ result.object.name }}</a>        		
+        	</td>
+        </tr>
+    {% empty %}
+		No data sets available.  
+
+    {% endfor %}
+		</tbody>		
+	</table>
+	 
+</div>
+
+            {% if page.has_previous or page.has_next %}
+                <div>
+                    {% if page.has_previous %}<a href="?q={{ query }}&amp;page={{ page.previous_page_number }}">{% endif %}&laquo; Previous{% if page.has_previous %}</a>{% endif %}
+                    |
+                    {% if page.has_next %}<a href="?q={{ query }}&amp;page={{ page.next_page_number }}">{% endif %}Next &raquo;{% if page.has_next %}</a>{% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            {# Show some example queries to run, maybe query syntax, something else? #}
+        {% endif %}
+    </form>
+{% endblock %}
