@@ -147,7 +147,10 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
     # NG: added for that human touch ...
-    'django.contrib.humanize', 
+    'django.contrib.humanize',
+    # NG: added for search and faceting (Solr support)
+    'haystack', 
+    # NG: added for celery (task queue)
     'djcelery', #django-celery
     # NG: added for API
     "tastypie",
@@ -167,6 +170,7 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend', # default
     'guardian.backends.ObjectPermissionBackend',
 )
+
 
 # NG: added to support sessions
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -200,8 +204,15 @@ LOGGING = {
     }
 }
 
-AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
-AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
+# NG: added for search and faceting
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
+        'URL': 'http://127.0.0.1:8983/solr'
+        # ...or for multicore...
+        # 'URL': 'http://127.0.0.1:8983/solr/mysite',
+    },
+}
 
 
 # === Refinery Settings ===
@@ -209,6 +220,10 @@ AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 # set the name of the group that is used to share data with all users (= "the public")
 REFINERY_PUBLIC_GROUP_NAME = "Public" 
 REFINERY_PUBLIC_GROUP_ID = 1  # DO NOT CHANGE THIS after initialization of your Refinery instance
+
+AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
+AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
+
 
 # import local settings
 from settings_local import *

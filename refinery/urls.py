@@ -50,6 +50,9 @@ urlpatterns = patterns('',
     
     # NG: tastypie API urls
     (r'^api/', include(v1_api.urls)),
+    
+    # NG: Haystack (searching and querying) urls
+    (r'^search/', include('haystack.urls')),
 )
 
 
