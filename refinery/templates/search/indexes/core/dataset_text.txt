@@ -1,17 +1,13 @@
-{{ object.name }}
+{{ object.name }} - 
 {{ object.summary }}
-{{ object.modification_date }}
-{{ object.creation_date }}
-{{ object.submitter }}
-{{ object.measurement }}
-{{ object.technology }}
+{{ object.modification_date }} -
+{{ object.creation_date }} -
+{{ object.submitter }} -
+{{ object.measurement }} -
+{{ object.technology }}<br>
 
 {% if nodes %}
 {% for node in nodes %}
-	{{ node.node_name }}
-	{{ node.attribute_type }}
-	{{ node.attribute_subtype }}
-	{{ node.attribute_value }}
-	{{ node.attribute_unit }}
+	<b>{{ node.node_name }}</b>: <i>{{ node.attribute_type }} {{ node.attribute_subtype }}</i>: {{ node.attribute_value }} {{ node.attribute_unit }}<br>
 {% endfor %}
 {% endif %}
