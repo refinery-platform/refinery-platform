@@ -16,10 +16,13 @@ import datetime
 
 class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
-    name = indexes.CharField(model_attr='name')
+    name = indexes.CharField(model_attr='name', null=True, faceted=True )
+    submitter = indexes.MultiValueField(null=True, faceted=True )
+    measurement = indexes.MultiValueField(null=True, faceted=True )
+    technology = indexes.MultiValueField(null=True, faceted=True )
     summary = indexes.CharField(model_attr='summary')    
-    creation_date = indexes.DateTimeField(model_attr='creation_date')
-    modification_date = indexes.DateTimeField(model_attr='modification_date')
+    creation_date = indexes.DateTimeField(model_attr='creation_date' )
+    modification_date = indexes.DateTimeField(model_attr='modification_date' )
 
     def get_model(self):
         return DataSet
@@ -27,6 +30,61 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     def index_queryset(self):
         """Used when the entire index for model is updated."""
         return self.get_model().objects.filter(modification_date__lte=datetime.datetime.now())
+    
+    def prepare_submitter(self,object):        
+        investigation = object.get_investigation()
+        
+        if investigation is None:
+            return []
+        
+        submitters = []
+        
+        for contact in investigation.contact_set.all():
+            submitters.append( contact.last_name + ", " + contact.first_name )  
+        
+        studies = investigation.study_set.all()
+        for study in studies:
+            for contact in study.contact_set.all():
+                submitters.append( contact.last_name + ", " + contact.first_name )  
+                                
+        return submitters 
+
+
+    def prepare_measurement(self,object):        
+        investigation = object.get_investigation()
+        
+        if investigation is None:
+            return []
+        
+        measurements = []
+        
+        studies = investigation.study_set.all()
+        for study in studies:
+            for assay in study.assay_set.all():
+                measurements.append( assay.measurement )  
+                
+        return measurements
+
+
+    def prepare_technology(self,object):        
+        investigation = object.get_investigation()
+        
+        if investigation is None:
+            return []
+        
+        technologies = []
+        
+        studies = investigation.study_set.all()
+        for study in studies:
+            for assay in study.assay_set.all():
+                technologies.append( assay.technology )  
+                
+        print technologies
+        return technologies
+    
+    
+    def prepare_name(self, object):
+        return object.name
     
     # from: http://django-haystack.readthedocs.org/en/latest/rich_content_extraction.html
     # also: http://django-haystack.readthedocs.org/en/latest/searchindex_api.html
@@ -37,6 +95,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
         
         nodes = []
         
+        # TODO: optimize this query
         if investigation is not None:
             studies = investigation.study_set.all()
             for study in studies:
@@ -46,11 +105,11 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
                     for node_type in node_types:
                         nodes = nodes + list( AnnotatedNode.objects.filter( node_type=node_type, study=study, assay=assay ).values() )
             
-            for node in nodes:
-                print node["node_name"] + " " + node["attribute_type"] + " " + node["attribute_value"]
+            #for node in nodes:
+            #    print node["node_name"] + " " + node["attribute_type"] + " " + node["attribute_value"]
         
-            # Now we'll finally perform the template processing to render the
-            # text field with *all* of our metadata visible for templating:
+            # perform the template processing to render the
+            # text field with *all* of our node data visible for indexing
             t = loader.select_template(('search/indexes/core/dataset_text.txt', ))
             data['text'] = t.render(Context({'object': data_set,
                                              'nodes': nodes}))

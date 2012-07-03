@@ -146,15 +146,29 @@
     <dynamicField name="*_coordinate"  type="tdouble" indexed="true"  stored="false"/>
 
 
-    <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="summary" type="text_en" indexed="true" stored="true" multiValued="false" />
+    <field name="submitter_exact" type="string" indexed="true" stored="true" multiValued="true" />
 
     <field name="name" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="modification_date" type="date" indexed="true" stored="true" multiValued="false" />
 
+    <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="name_exact" type="string" indexed="true" stored="true" multiValued="false" />
+
+    <field name="technology_exact" type="string" indexed="true" stored="true" multiValued="true" />
+
+    <field name="summary" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="measurement" type="text_en" indexed="true" stored="true" multiValued="true" />
+
+    <field name="submitter" type="text_en" indexed="true" stored="true" multiValued="true" />
+
+    <field name="measurement_exact" type="string" indexed="true" stored="true" multiValued="true" />
+
     <field name="creation_date" type="date" indexed="true" stored="true" multiValued="false" />
+
+    <field name="technology" type="text_en" indexed="true" stored="true" multiValued="true" />
 
   </fields>
 

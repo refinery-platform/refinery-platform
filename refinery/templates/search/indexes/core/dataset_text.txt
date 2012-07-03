@@ -2,6 +2,9 @@
 {{ object.summary }}
 {{ object.modification_date }}
 {{ object.creation_date }}
+{{ object.submitter }}
+{{ object.measurement }}
+{{ object.technology }}
 
 {% if nodes %}
 {% for node in nodes %}

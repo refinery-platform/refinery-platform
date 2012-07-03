@@ -1,12 +1,19 @@
-from django.conf.urls.defaults import patterns, include, url
-from core.views import admin_test_data
-from workflow_manager.views import import_workflows
-from tastypie.api import Api
 from core.api import ProjectResource
+from core.views import admin_test_data
+from django.conf.urls.defaults import patterns, include, url
+from django.contrib import admin
+from haystack.forms import FacetedSearchForm
+from haystack.query import SearchQuerySet
+from haystack.views import FacetedSearchView
+from tastypie.api import Api
+from workflow_manager.views import import_workflows
+
+
+# NG: facets for Haystack
+sqs = SearchQuerySet().facet('submitter').facet('measurement').facet('technology').highlight()
 
 
 # Uncomment the next two lines to enable the admin:
-from django.contrib import admin
 admin.autodiscover()
 
 # NG: added for tastypie URL
@@ -49,10 +56,9 @@ urlpatterns = patterns('',
     url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page":"/" } ),
     
     # NG: tastypie API urls
-    (r'^api/', include(v1_api.urls)),
+    url(r'^api/', include(v1_api.urls)),
     
     # NG: Haystack (searching and querying) urls
-    (r'^search/', include('haystack.urls')),
+    #url(r'^search/', include('haystack.urls')),
+    url(r'^search/', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=sqs), name='haystack_search'),
 )
-
-
