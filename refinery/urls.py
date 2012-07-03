@@ -60,5 +60,5 @@ urlpatterns = patterns('',
     
     # NG: Haystack (searching and querying) urls
     #url(r'^search/', include('haystack.urls')),
-    url(r'^search/', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=sqs), name='haystack_search'),
+    url(r'^search/', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=sqs), name='search'),
 )

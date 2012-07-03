@@ -16,7 +16,7 @@ import datetime
 
 class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
-    name = indexes.CharField(model_attr='name', null=True, faceted=True )
+    name = indexes.CharField(model_attr='name', null=True )
     submitter = indexes.MultiValueField(null=True, faceted=True )
     measurement = indexes.MultiValueField(null=True, faceted=True )
     technology = indexes.MultiValueField(null=True, faceted=True )
@@ -46,8 +46,8 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
         for study in studies:
             for contact in study.contact_set.all():
                 submitters.append( contact.last_name + ", " + contact.first_name )  
-                                
-        return submitters 
+                   
+        return set(submitters) 
 
 
     def prepare_measurement(self,object):        
@@ -63,7 +63,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
             for assay in study.assay_set.all():
                 measurements.append( assay.measurement )  
                 
-        return measurements
+        return set(measurements)
 
 
     def prepare_technology(self,object):        
@@ -79,8 +79,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
             for assay in study.assay_set.all():
                 technologies.append( assay.technology )  
                 
-        print technologies
-        return technologies
+        return set(technologies)
     
     
     def prepare_name(self, object):
