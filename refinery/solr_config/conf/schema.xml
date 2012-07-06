@@ -105,7 +105,7 @@
       <analyzer type="index">
         <tokenizer class="solr.KeywordTokenizerFactory"/>
         <filter class="solr.LowerCaseFilterFactory"/>
-        <filter class="solr.NGramFilterFactory" minGramSize="3" maxGramSize="15" />
+        <filter class="solr.NGramFilterFactory" minGramSize="1" maxGramSize="15" />
       </analyzer>
       <analyzer type="query">
         <tokenizer class="solr.KeywordTokenizerFactory"/>
@@ -154,7 +154,7 @@
 
     <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
 
-    <field name="name_exact" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="content_auto" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
 
     <field name="technology_exact" type="string" indexed="true" stored="true" multiValued="true" />
 

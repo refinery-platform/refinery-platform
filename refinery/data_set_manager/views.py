@@ -7,7 +7,7 @@ Created on May 11, 2012
 from data_set_manager.utils import *
 from django.http import HttpResponse
 from django.utils import simplejson
-
+from haystack.query import SearchQuerySet
 
 def index(request):
     return HttpResponse( simplejson.dumps( get_nodes(study_id=2, assay_id=2), indent=2 ), mimetype='application/json' )
@@ -27,3 +27,24 @@ def node_types_files(request, study_uuid, assay_uuid=None ):
 def node_annotate(request, type, study_uuid, assay_uuid=None ):
     return HttpResponse( simplejson.dumps( update_annotated_nodes(study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type ), indent=2 ), mimetype='application/json' )
     #return HttpResponse( update_annotated_nodes(study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type ), mimetype='application/json' )
+
+# ajax function for returning typeahead queries
+def search_typeahead(request):
+    
+    if (request.is_ajax()):
+        #print "RETURNING AJAX"
+        
+        search_value = request.POST.getlist('search')
+        
+        results = SearchQuerySet().autocomplete(content_auto=search_value[0])
+        #results = SearchQuerySet().auto_query(search_value[0])
+        
+        ret_list = []
+        for res in results:
+            ret_list.append(res.name)
+        return HttpResponse( simplejson.dumps( ret_list, indent=2 ), mimetype='application/json' )
+    
+    #else:
+        #print "NOT AJAX"
+        #return HttpResponse("not ajax")
+    

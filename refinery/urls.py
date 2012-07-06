@@ -7,6 +7,7 @@ from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
 from tastypie.api import Api
 from workflow_manager.views import import_workflows
+from data_set_manager.views import search_typeahead
 
 
 # NG: facets for Haystack
@@ -61,4 +62,5 @@ urlpatterns = patterns('',
     # NG: Haystack (searching and querying) urls
     #url(r'^search/', include('haystack.urls')),
     url(r'^search/', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=sqs), name='search'),
+    url(r'^typeahead/$', search_typeahead),
 )

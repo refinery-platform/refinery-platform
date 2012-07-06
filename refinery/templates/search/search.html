@@ -10,9 +10,15 @@
 </div>
 {% endblock %}
 
+{% block head_html %}
+<script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/typeahead.js"></script>
+
+
+{% endblock %}
+
 {% block content %}
-    <form method="get" action=".">
-        <table>
+    <form method="GET" action=".">
+    	<table>
             {{ form.as_table }}
             <tr>
                 <td>&nbsp;</td>
@@ -21,7 +27,6 @@
                 </td>
             </tr>
         </table>
-
 
 <div class="row-fluid">
  <div class="span2">
@@ -118,4 +123,35 @@
     
 </div>
 </div>    
+
+<script>
+
+// typeahead based investigation id
+$(document).ready(function() {
+    $("#id_q").typeahead({
+		ajax: {
+			url: "/typeahead/",
+			//displayField: "name",
+			triggerLength: 1,
+			preDispatch: function (query) {
+				//showLoadingMask(true);
+	        	return {
+	        		csrfmiddlewaretoken: "{{ csrf_token }}",
+	            	search: query,
+	            }
+	   		},
+	   		preProcess: function (data) {
+	   			//showLoadingMask(false);
+            	if (data.success === false) {
+                	// Hide the list, there was some error
+                	//console.log("false");
+                	return false;
+            	}
+            	return data;
+        	}
+       	}
+    });
+});
+
+</script>
 {% endblock %}
