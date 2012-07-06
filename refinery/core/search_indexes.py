@@ -23,6 +23,9 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     summary = indexes.CharField(model_attr='summary')    
     creation_date = indexes.DateTimeField(model_attr='creation_date' )
     modification_date = indexes.DateTimeField(model_attr='modification_date' )
+    # We add this for autocomplete.
+    content_auto = indexes.EdgeNgramField(model_attr='name')
+    #content_auto = indexes.EdgeNgramField(model_attr='summary')
 
     def get_model(self):
         return DataSet
