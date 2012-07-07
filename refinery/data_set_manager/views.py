@@ -13,7 +13,11 @@ def index(request):
     return HttpResponse( simplejson.dumps( get_nodes(study_id=2, assay_id=2), indent=2 ), mimetype='application/json' )
 
 def nodes(request, type, study_uuid, assay_uuid=None ):
-    return HttpResponse( simplejson.dumps( get_matrix(study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type ), indent=2 ), mimetype='application/json' )
+    start = datetime.now()
+    matrix = get_matrix(study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type )
+    end = datetime.now()
+    print( "Time to retrieve node matrix: " + str(end - start))
+    return HttpResponse( simplejson.dumps( matrix, indent=2 ), mimetype='application/json' )
 
 def node_attributes(request, type, study_uuid, assay_uuid=None ):
     return HttpResponse( simplejson.dumps( get_node_attributes( study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type ), indent=2 ), mimetype='application/json' )
