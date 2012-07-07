@@ -2,6 +2,8 @@ from collections import defaultdict
 from core.forms import ProjectForm
 from core.models import *
 from data_set_manager.models import *
+from data_set_manager.utils import get_matrix, get_annotated_node_matrix
+from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.urlresolvers import resolve
@@ -12,7 +14,6 @@ from django.template import RequestContext
 from file_store.models import FileStoreItem
 from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
     get_perms
-from data_set_manager.utils import get_matrix
 
 def home(request):
     if request.user.is_superuser:
@@ -228,13 +229,17 @@ def samples(request, ds_uuid, study_uuid, assay_uuid):
     
     # getting current workflows
     workflows = Workflow.objects.all();
-    
+
+    start = datetime.now()    
     node_matrix = get_matrix(node_type="Raw Data File", 
                                                   study_uuid=study_uuid, 
                                                   assay_uuid=assay_uuid
                                                   )
-    import json
-    print json.dumps(node_matrix, indent=4)
+    end = datetime.now()
+    print( "Time to retrieve node matrix: " + str(end - start))
+
+    #import json
+    #print json.dumps(node_matrix, indent=4)
     
     return render_to_response('core/samples.html', {'workflows': workflows, 'data_set': data_set, "matrix": node_matrix}, 
                               context_instance=RequestContext(request))

@@ -105,7 +105,7 @@
       <analyzer type="index">
         <tokenizer class="solr.KeywordTokenizerFactory"/>
         <filter class="solr.LowerCaseFilterFactory"/>
-        <filter class="solr.NGramFilterFactory" minGramSize="1" maxGramSize="15" />
+        <filter class="solr.NGramFilterFactory" minGramSize="3" maxGramSize="15" />
       </analyzer>
       <analyzer type="query">
         <tokenizer class="solr.KeywordTokenizerFactory"/>
@@ -169,6 +169,16 @@
     <field name="creation_date" type="date" indexed="true" stored="true" multiValued="false" />
 
     <field name="technology" type="text_en" indexed="true" stored="true" multiValued="true" />
+
+    <field name="uuid" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="assay_uuid" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="file_uuid" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="study_uuid" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="type" type="text_en" indexed="true" stored="true" multiValued="false" />
 
   </fields>
 
