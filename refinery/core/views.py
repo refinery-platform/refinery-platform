@@ -2,7 +2,7 @@ from collections import defaultdict
 from core.forms import ProjectForm
 from core.models import *
 from data_set_manager.models import *
-from data_set_manager.utils import get_matrix, get_annotated_node_matrix
+from data_set_manager.utils import get_matrix
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
