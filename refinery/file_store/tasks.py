@@ -65,7 +65,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         try:
             srcfo = open(item.source)
         except IOError:
-            #TODO: write error msg to log
+            logger.exception("Could not open fileL %s", item.source)
             return None
         srcfilename = os.path.basename(item.source)
         srcfile = File(srcfo)
@@ -79,8 +79,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         try:
             response = urllib2.urlopen(req)
         except urllib2.URLError as e:
-            #TODO: write error msg to log
-            print e.reason
+            logger.exception("Could not open URL: %s. Reason: %s", item.source, e.reason)
             return None
 
         tmpfile = tempfile.NamedTemporaryFile(dir=get_temp_dir(), delete=False)
@@ -155,6 +154,7 @@ def delete(uuid):
 def update(uuid, source):
     ''' Replace the file while keeping the same UUID '''
     # update file source
+    #TODO: check that only one record was updated, handle other cases
     FileStoreItem.objects.filter(uuid=uuid).update(source=source)
     # import new file from updated source
     #TODO: call import_file as subtask?

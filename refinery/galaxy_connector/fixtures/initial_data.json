@@ -48,39 +48,15 @@
         }
     },
     {
-        "pk": 4,
-        "model": "galaxy_connector.datafile",
+        "pk": 5,
+        "model": "galaxy_connector.instance",
         "fields": {
-            "path": "test_small/test_elate7_input.fastq",
-            "kind": "input",
-            "description": "chip-seq input"
-        }
-    },
-    {
-        "pk": 3,
-        "model": "galaxy_connector.datafile",
-        "fields": {
-            "path": "test_small/test_elate7_hp2.fastq ",
-            "kind": "hp2 chip-seq file",
-            "description": "hp2 modification"
-        }
-    },
-    {
-        "pk": 2,
-        "model": "galaxy_connector.datafile",
-        "fields": {
-            "path": "test_small/small_input.fastq",
-            "kind": "fastq experiment fil",
-            "description": "input"
-        }
-    },
-    {
-        "pk": 1,
-        "model": "galaxy_connector.datafile",
-        "fields": {
-            "path": "test_small/small_hp1a.fastq",
-            "kind": "fastq experiment fil",
-            "description": "test file, modification"
+            "data_url": "datasets",
+            "description": "isytchev@hsph on localhost",
+            "base_url": "http://localhost:8080",
+            "staging_path": "/Users/isytchev/Downloads/refinery/galaxy",
+            "api_key": "dcd0af348cc5400d74024f9261c97126",
+            "api_url": "api"
         }
     }
 ]
