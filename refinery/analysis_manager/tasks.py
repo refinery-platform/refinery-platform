@@ -43,6 +43,8 @@ def chord_execution(ret_val, analysis):
     execution_taskset = []; 
     execution_taskset.append(monitor_analysis_execution.subtask((analysis,)) )
     execution_taskset.append(run_analysis_execution.subtask((analysis,)) )
+    
+    # DEBUGGING NOT CLEANING UP
     result_chord, result_set = progress_chord(execution_taskset)(chord_postprocessing.subtask((analysis,)))
      
     # EXECUTION
@@ -163,8 +165,11 @@ def run_analysis_preprocessing(analysis):
     # getting expanded workflow configured based on input: ret_list
     new_workflow, history_download = configure_workflow(analysis.workflow.uuid, ret_list, connection)
     
-    #print "history_download"
-    #print history_download
+    print "history_download"
+    print history_download
+    
+    #print "new_workflow"
+    #print new_workflow
     
     # saving ouputs of workflow to download 
     for file_dl in history_download:
@@ -254,7 +259,7 @@ def run_analysis_execution(analysis):
     ret_list = import_analysis_in_galaxy(ret_list, analysis.library_id, connection)
           
     # Running workflow 
-    result = connection.run_workflow2(analysis.workflow_galaxy_id, ret_list, analysis.history_id)  
+    result = connection.run_workflow(analysis.workflow_galaxy_id, ret_list, analysis.history_id, analysis.workflow.uuid)  
     
     return
 
@@ -429,6 +434,9 @@ def download_history_files(analysis) :
                 file_size = results['file_size']
                 # URL to download
                 download_url = connection.make_url(str(results['dataset_id']), is_data=True)
+                
+                #print "download url"
+                #print download_url
                 
                 # getting file_store_uuid
                 filestore_uuid = create(download_url)

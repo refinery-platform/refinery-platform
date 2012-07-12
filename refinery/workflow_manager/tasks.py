@@ -10,7 +10,7 @@ from galaxy_connector.models import Instance
 from galaxy_connector.connection import Connection
 from core.models import Workflow, WorkflowDataInput, WorkflowEngine
 from django.contrib.auth.models import Group 
-from galaxy_connector.galaxy_workflow import createBaseWorkflow, createStepsAnnot
+from galaxy_connector.galaxy_workflow import createBaseWorkflow, createStepsAnnot, createStepsCompact
     
 @task()
 def get_workflows( workflow_engine ):
@@ -69,8 +69,19 @@ def configure_workflow( workflow_uuid, ret_list, connection_galaxy=None ):
     # creating base workflow to replicate input workflow
     new_workflow = createBaseWorkflow( (workflow_dict["name"]) )
     
-    # Updating steps in imported workflow X number of times
-    new_workflow["steps"], history_download = createStepsAnnot(ret_list, workflow_dict);
+    # checking to see what kind of workflow exists: i.e. does it have  "annotation": "type=COMPACT",  in the workflow annotation field
+    work_type = ((workflow_dict["annotation"]).split('='))
+    if len(work_type) > 1:
+        work_type = work_type[1].upper()
+    
+    # if workflow is tagged w/ type=COMPACT tag, 
+    if work_type == 'COMPACT':
+        print "workflow processing: COMPACT"
+        new_workflow["steps"], history_download = createStepsCompact(ret_list, workflow_dict)
+    else:
+        print "workflow processing: EXPANSION"
+        # Updating steps in imported workflow X number of times
+        new_workflow["steps"], history_download = createStepsAnnot(ret_list, workflow_dict);
           
     return new_workflow, history_download
 
