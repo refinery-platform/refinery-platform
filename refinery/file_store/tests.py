@@ -1,25 +1,42 @@
 """
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
+This file contains tests for file_store.models and file_store.tasks
 
-Replace this with more appropriate tests for your application.
 """
 
-#from django.test import TestCase
-#
-#
-#class SimpleTest(TestCase):
-#    def test_basic_addition(self):
-#        """
-#        Tests that 1 + 1 always equals 2.
-#        """
-#        self.assertEqual(1 + 1, 2)
+import os
+from django.test import TestCase
+import settings
+import file_store.models as models
+import file_store.tasks as tasks
 
-from django.utils import unittest
+class FileStoreUnitTest(TestCase):
 
-class MyFuncTestCase(unittest.TestCase):
-    def test_basic_addition(self):
+    filename = 'test_file.dat'
+    source = os.path.join('/some/path', filename)
+    sharename = 'labname'
+    item = models.FileStoreItem(source=source, sharename=sharename)
+
+    def test_file_path(self):
         """
-        Tests that 1 + 1 always equals 2.
+        Tests that the file store path contains sharename and filename
         """
-        self.assertEqual(1 + 1, 2)
+        path = models.file_path(self.item, self.filename)
+        #TODO: replace with assertRegexpMatches()
+        self.assertIn(self.sharename, path)
+        self.assertIn(self.filename, path)
+
+    def test_get_temp_dir(self):
+        """
+        Tests that the file store temp dir is equal to file_store.models.FILE_STORE_TEMP_DIR
+        """
+        self.assertEqual(models.get_temp_dir(), models.FILE_STORE_TEMP_DIR)
+    
+    def test_get_file_extension(self):
+        """
+        Tests that the correct file extension is returned
+        """
+
+    def test_is_permanent(self):
+        """
+        Tests that the file is not in the file store cache
+        """
