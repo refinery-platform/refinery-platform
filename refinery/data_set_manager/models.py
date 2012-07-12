@@ -95,7 +95,7 @@ class Investigation(NodeCollection):
         return self.identifier
     
     def get_title(self):
-        if self.title == None:
+        if self.title == '':
             study = self.study_set.all()[0]
             return study.title
         return self.title
