@@ -231,6 +231,8 @@ REFINERY_PUBLIC_GROUP_ID = 1  # DO NOT CHANGE THIS after initialization of your 
 AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
 AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 
+# relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
+FILE_STORE_DIR = 'files'
 
 # import local settings
 from settings_local import *

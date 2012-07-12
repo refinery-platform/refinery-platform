@@ -72,7 +72,7 @@ class FileStoreItem(models.Model):
 def _symlink_file_on_disk(sender, **kwargs):
     ''' Create a symlink to the file if source is an absolute file system path '''
     item = kwargs.get('instance')
-    logger.debug("Entering _symlink_file_on_disk(), source = %s, datafile.name = %s", item.source, item.datafile.name)
+    #logger.debug("Entering _symlink_file_on_disk(), source = %s, datafile.name = %s", item.source, item.datafile.name)
 
     if os.path.isabs(item.source) and item.datafile.name == '':
         src_file_name = os.path.basename(item.source)
@@ -97,7 +97,7 @@ def _symlink_file_on_disk(sender, **kwargs):
             return None
         # assign symlink path to FileField
         item.datafile.name = rel_dst_path
-    logger.debug("Leaving _symlink_file_on_disk(): item.datafile.name = %s", item.datafile.name)
+    #logger.debug("Leaving _symlink_file_on_disk(): item.datafile.name = %s", item.datafile.name)
 
 @receiver(pre_delete, sender=FileStoreItem)
 def _delete_file_on_disk(sender, **kwargs):
