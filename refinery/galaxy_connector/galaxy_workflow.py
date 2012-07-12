@@ -194,20 +194,15 @@ def createStepsAnnot(file_list, workflow):
                         else:
                             curr_filename += ','+removeFileExt(file_list[i][itypes]['assay_uuid'])
                
-                #### TODO #### deal with over input_types from various workflows
-                
                 # getting "keep" flag to keep track of files to be saved from workflow
                 # parsing annotation field in galaxy workflows to parse output files to keep: "keep=output_file, keep=output_file2" etc..
                 step_annot = curr_workflow_step['annotation']
-                keep_files = []
-                if (step_annot):
-                    keep_all = step_annot.strip().split(',')
-                    for keep_file in keep_all:
-                        keep = keep_file.split('=')
-                        if len(keep) > 1:
-                            keep = keep[1]
-                            keep_files.append(keep);   
                 
+                step_annot2 = getStepOptions(curr_workflow_step['annotation'])
+                keep_files = []
+                if 'keep' in step_annot2:
+                    keep_files = step_annot2['keep']
+
                 # creates list of output names from specified tool to rename
                 output_names = [];
                 output_list = curr_workflow_step['outputs']
@@ -268,6 +263,165 @@ def createStepsAnnot(file_list, workflow):
     
     return updated_dict, history_download;
 
+def createStepsCompact(file_list, workflow):
+    # Deals with the case where we want multiple inputs to propogate into a single tool i.e. bulk downloader
+    print "galaxy_worklow createStepsCompact called"
+    updated_dict = {};
+    temp_steps = workflow["steps"];
+    repeat_num = len(file_list);
+    history_download = []
+    map = workflowMap(workflow);
+    
+    #print "file_list"
+    #print file_list
+    
+    counter = 0
+    edge_ids = []
+    check_step = ''
+    for j in range(0, len(temp_steps)):
+        curr_step = str(j);
+        curr_workflow_step = copy.deepcopy(temp_steps[curr_step])
+        curr_step_name = curr_workflow_step['name']
+        
+        # Looking for workflow_tags in galaxy i.e "repeat_for=\"Bulk Download Zipper\"",
+        curr_step_annot = curr_workflow_step['annotation']
+        step_opt = getStepOptions(curr_workflow_step['annotation'])
+        
+        keep_files = []
+        if 'keep' in step_opt:
+            keep_files = step_opt['keep']
+        
+        #print "keep_files"
+        #print keep_files
+        
+        # creates list of output names from specified tool to rename
+        output_names = [];
+        output_list = curr_workflow_step['outputs']
+        if (len(output_list) > 0):
+            for ofiles in output_list:
+                output_names.append(ofiles['name'])
+        
+        
+        # uses renamedataset action to rename output of specified tool
+        if "post_job_actions" in curr_workflow_step:
+            pja_dict = curr_workflow_step["post_job_actions"]
+            
+            for oname in output_names:
+                oname = str(oname)
+                temp_key = 'RenameDatasetAction' + oname
+                #new_output_name = tool_name + ',' + input_type + ',' + str(oname) + ',' + curr_filename
+                #new_output_name =  curr_filename + ","  + tool_name + ',' + input_type + ',' + oname
+                
+                # if the output name is being tracked and downloaded for Refinery
+                if str(oname) in keep_files:
+                    curr_result = {}
+                    curr_result["pair_id"] = str(counter)
+                    curr_result["name"] = oname;
+                    curr_result["step_id"] = str(counter)    
+                    history_download.append(curr_result)
+                
+                # if rename dataset action already exists for this tool output
+                if temp_key in pja_dict:
+                    # renaming output files according with step_id of workflow
+                    #pja_dict[temp_key]['action_arguments']['newname'] = new_output_name;
+                    pja_dict[temp_key]['action_arguments']['newname'] = str(counter);
+                
+                # whether post_job_action,RenameDatasetAction exists or not
+                else:
+                    # renaming output files according with step_id of workflow  
+                    #new_rename_action =  '{ "action_arguments": { "newname": "%s" }, "action_type": "RenameDatasetAction", "output_name": "%s"}' % (new_output_name, oname);
+                    new_rename_action =  '{ "action_arguments": { "newname": "%s" }, "action_type": "RenameDatasetAction", "output_name": "%s"}' % (str(counter), oname);
+                    
+                    new_rename_dict = ast.literal_eval(new_rename_action);
+                    pja_dict[temp_key] = new_rename_dict;
+        
+        # checking to see if repeat_for tag exists for current tool            
+        if "repeat_for" in step_opt:
+            check_step = step_opt["repeat_for"][0]
+            
+            for i in range(0, len(file_list)):
+                new_step = copy.deepcopy(temp_steps[curr_step])
+                
+                # updating step_id for new workflow step
+                new_step['id'] = counter
+                
+                # keeping track of which ids to enter into connecting step
+                edge_ids.append(counter)
+                
+                updated_dict[str(counter)] = new_step
+                counter += 1
+        elif (check_step != '' and check_step == curr_step_name ):
+            #print ">>>>>>>> in creating edges to bulk tool"
+            curr_connections = curr_workflow_step['input_connections']
+            new_connections = {}
+            tcount = 0
+            key_tool_state = ''
+            key_tool_val = ''
+            for k,v in curr_connections.iteritems():
+                if tcount < 1:
+                    tindex = 0
+                    for ei in edge_ids:
+                        k2 = k.split("|")
+                        new_edge = copy.deepcopy(v)
+
+                        # file type
+                        k_type = k2[1]
+                        
+                        # new key for dictionary i.e. files_to_zip_0|file to files_to_zip_
+                        k3 = k2[0].split("_")
+                        k_key = k3[len(k3)-1]
+                        k_key = k2[0].rstrip(k_key)
+                        
+                        # new key
+                        new_key = k_key + str(ei) + '|' + k_type
+                        new_edge['id'] = ei
+                        
+                        # updated key for reinserting funcky index value back into galaxy workflow tool_state
+                        key_tool_state = k_key.rstrip('_')
+                        
+                        
+                        new_connections[new_key] = new_edge
+                        
+                        temp_tool_val = '{"__index__": %s, "%s": null}' % (str(tindex),k_type)
+                        #temp_tool_val = '{\"__index__\": %s, \"%s\": null}' %  (str(tindex),k_type)
+                        #temp_tool_val = '{\\\"__index__\\\": %s, \\\"%s\\\": null}' %  (str(tindex),k_type)
+                        if (key_tool_val):
+                            key_tool_val += ',' + temp_tool_val
+                        else:
+                            key_tool_val = temp_tool_val
+                        
+                        #'[{"__index__": 0, "file": null}]'
+                        #"tool_state": "{\"__page__\": 0, \"files_to_zip\": \"[{\\\"__index__\\\": 0, \\\"file\\\": null}, {\\\"__index__\\\": 1, \\\"file\\\": null}, {\\\"__index__\\\": 2, \\\"file\\\": null}]\"}", 
+                        tindex += 1
+                
+                tcount += 1 
+            
+            # convert tool_state into python dictionary
+            temp = ast.literal_eval(curr_workflow_step['tool_state'])
+            key_tool_val = '[' + key_tool_val + ']'
+            temp[key_tool_state] = key_tool_val
+            
+            # dump the dicinoary as string before putting it back into workflow
+            curr_workflow_step['tool_state'] = simplejson.dumps(temp)
+                                    
+            # add updated connections back to galaxy workflow step
+            curr_workflow_step['input_connections'] = new_connections
+            
+            
+            
+            curr_workflow_step['id'] = counter
+            updated_dict[str(counter)] = curr_workflow_step
+            counter += 1
+        else:
+            #print "eleleleles"
+            curr_workflow_step['id'] = counter
+            updated_dict[str(counter)] = curr_workflow_step
+            counter += 1
+
+    #print "updated_dict"
+    #print simplejson.dumps(updated_dict, indent=4);
+    return updated_dict, history_download;
+    
 def createSteps(repeat_num, workflow):
     #print "createSteps called"
     """
@@ -307,3 +461,24 @@ def createSteps(repeat_num, workflow):
             updated_dict[curr_id] = curr_workflow_step;
             
     return updated_dict;
+
+def getStepOptions(step_annot):
+    "Helper function: convert galaxy workflow step annotations into lookup dictionary"
+    #print "galaxy_workflow. getStepOptions: " + step_annot
+    ret_dict = {}
+        
+    if (step_annot):
+        # splitting multiple options based on ','
+        step_split = step_annot.strip().split(',')
+        for st in step_split:
+            st_opts = st.strip().split('=')
+            if len(st_opts) > 1:
+                temp_key = st_opts[0]
+                temp_val = str(st_opts[1]).strip('"')
+                # if key already exists in return dictionary
+                if temp_key in ret_dict:
+                    ret_dict[temp_key].append(temp_val)
+                else:
+                    ret_dict[temp_key] = [temp_val]
+                
+    return ret_dict
