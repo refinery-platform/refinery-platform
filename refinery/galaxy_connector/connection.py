@@ -16,6 +16,7 @@ from galaxy_connector.galaxy_history import GalaxyHistory
 from galaxy_connector.galaxy_history import GalaxyHistoryItem
 from galaxy_connector.galaxy_library import GalaxyLibrary
 from galaxy_connector.galaxy_library import GalaxyLibraryItem
+from core.models import Analysis, WorkflowDataInputMap, Workflow
 
 
 class Connection( object ):
@@ -375,50 +376,36 @@ class Connection( object ):
             workflows.append(workflow)
         
         return workflows
-    
-    # TODO: implement the inputs as a dictionary that maps input_identifiers (defined by workflow) to file_ids (in the library)
-    def run_workflow( self, workflow_id, input_map, history_id ):
-        workflow = self.get_workflow( workflow_id )
         
-        data = {}
-        data["workflow_id"] = workflow_id
-        data["history"] = "hist_id=%s" % ( history_id )
-        data["ds_map"] = {}
-        
-        for input_identifier, input_details in workflow["inputs"].iteritems():
-            data["ds_map"][input_identifier] = { "src": "ld", "id": input_map[0] }
-        
-        try:            
-            return self.post( "workflows", data )
-        except urllib2.HTTPError, e:
-            print str( e.read( 1024 ) )
-            return "Error. " + str( e.read( 1024 ) )
-
-    
-    def run_workflow2( self, workflow_id, input_map, history_id ):
+    def run_workflow( self, workflow_id, input_map, history_id, workflow_uuid ):
         workflow = self.get_workflow( workflow_id )
         data = {}
         data["workflow_id"] = workflow_id
         data["history"] = "hist_id=%s" % ( history_id )
         data["ds_map"] = {}
         
-        # TODO: NEED A MUCH BETTER WAY OF MAPPING INPUT TO EXPERIMENT #
+        # retrieving workflow based on input workflow_uuid
+        curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+    
+        # getting distinct workflow inputs
+        workflow_data_inputs = curr_workflow.data_inputs.all()
+        annot_inputs = {}
+        annot_counts = {}
+        for data_input in workflow_data_inputs:
+            input_type = data_input.name
+            annot_inputs[input_type] = []
+            annot_counts[input_type] = 0
         
         #------------ CONFIGURE INPUT FILES -------------------------- #   
-        exp_count = 0;
-        input_count = 0;
-        
         for in_key, input_details in workflow["inputs"].iteritems():
             inType = workflow['inputs'][in_key]['label'];
-            if inType == 'input_file':
-                winput_id = input_map[input_count]['input_file']['id'];
-                input_count += 1;
-            else:
-                winput_id = input_map[exp_count]['exp_file']['id'];
-                exp_count += 1;
             
-            data["ds_map"][in_key] = { "src": "ld", "id": winput_id }
+            if inType in annot_inputs:
+                temp_count = annot_counts[inType]
+                winput_id = input_map[temp_count][inType]['id']
+                annot_counts[inType] = temp_count + 1
             
+            data["ds_map"][in_key] = { "src": "ld", "id": winput_id }    
         
         try:            
             return self.post( "workflows", data )
