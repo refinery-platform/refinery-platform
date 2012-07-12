@@ -108,7 +108,7 @@ def import_isa_tab(request):
             if investigation_uuid:
                 #TODO create a dataset
                 investigation = Investigation.objects.get(uuid=investigation_uuid)
-                dataset = DataSet.objects.create(name="Test dataset")
+                dataset = DataSet.objects.create(name=investigation.get_title())
                 dataset.set_investigation(investigation)
                 dataset.set_owner(request.user)
                 #TODO: redirect to the list of analysis samples for the given UUID
