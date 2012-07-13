@@ -95,13 +95,13 @@ class Investigation(NodeCollection):
         return self.identifier
     
     def get_title(self):
-        if self.title == '':
+        if self.title == '' or self.title == None:
             study = self.study_set.all()[0]
             return study.title
         return self.title
     
     def get_description(self):
-        if self.description == None:
+        if self.description == None or self.description == '':
             study = self.study_set.all()[0]
             return study.description
         return self.description
