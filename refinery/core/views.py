@@ -599,13 +599,21 @@ def analysis(request, project_uuid, analysis_uuid ):
     """List of analysis results"""
     workflow = analysis.workflow
     
+    # getting file_store references
+    file_all = []
+    for i in analysis_results.all():
+      file_store_uuid = i.file_store_uuid
+      fs = FileStoreItem.objects.get(uuid=file_store_uuid)
+      file_all.append(fs)
+    
     return render_to_response('core/analysis.html',
                               {
                                "analysis": analysis,
                                "analysis_results": analysis_results,
                                "inputs": data_inputs,
                                "project": project,
-                               "workflow": workflow
+                               "workflow": workflow, 
+                               "fs_files" : file_all
                                },
                               context_instance=RequestContext(request))
 
