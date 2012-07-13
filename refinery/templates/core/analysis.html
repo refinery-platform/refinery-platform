@@ -27,7 +27,15 @@
 {% for result in analysis_results.all %}
 	<li>
 		<p>
-			{{result.file_name}}
+			{% for fs in fs_files %}
+				{% ifequal result.file_store_uuid fs.uuid %}
+					<!-- {{result.file_name}}
+					"{{STATIC_URL}}{{fs.datafile.url}}" -->
+					<a href="{{STATIC_URL}}{{fs.datafile.url}}">{{result.file_name}}</a>
+				{% endifequal %}
+			{% endfor %}
+			
+			
 			{% if result.file_type|lower == 'igv.tdf' %}
 				{#: <a href="/file_server/profile_viewer/{{result.file_store_uuid}}/chr4/1/1000000/">Visualize</a>#}
 				: <a href="/file_server/profile_viewer/{{result.file_store_uuid}}/chr19/3000000/10000000/">Visualize</a>
