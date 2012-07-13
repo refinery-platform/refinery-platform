@@ -35,7 +35,9 @@
 	<p><strong>{{study.identifier}}</strong>: {{study.title}}</p>
 	<ul>
 	{% for assay in study.assay_set.all %}
-		<li>Assay - <a href="samples/{{study.uuid}}/{{assay.uuid}}/">{{assay}}</a></li>
+		<li>Assay - <a href="samples/{{study.uuid}}/{{assay.uuid}}/">{{assay}}</a>
+			[<a href="http://127.0.0.1:8983/solr/select?indent=on&version=2.2&q=django_ct:data_set_manager.node&facet=true&facet.field=pi_Characteristics_s&facet.field=target_Characteristics_s&facet.field=species_Characteristics_s&fq=assay_uuid:{{assay.uuid}}&fq=study_uuid:{{study.uuid}}&fq=target_Characteristics_s:(H3K27ac OR H3K9ac)&wt=json&sort=pi_Characteristics_s asc&start=0&rows=100&fl=name,species_Characteristics_s,pi_Characteristics_s,target_Characteristics_s,score">Solr</a>]			
+</li>
 	{% endfor %}
 	</ul>
 	{% endfor %}
