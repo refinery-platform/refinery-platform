@@ -825,13 +825,27 @@ class IsaTabParser:
             isa_archive = path
             self._logger.info( "Supplied path \"" + path + "\" is not a directory. Assuming ISArchive file." )
             try:
-                # TODO: inspect file content before extraction (http://docs.python.org/library/zipfile.html)
+                # TODO: do we need a random subdirectory here?
                 extract_path = settings.ISA_TAB_TEMP_DIR
                 with ZipFile(path, 'r') as zip:
+                    # test if any paths are relative or absolute and outside the extract path
+                    for name in zip.namelist():
+                        if name.startswith( ".." ) or name.startswith( "/" ):
+                            self._logger.exception( "Unable to extract assumed ISArchive file \"" + path + "\" due to illegal file path: " + name )
+                    
+                    # extract archive
                     zip.extractall( extract_path )
-                    extract_path = os.path.join( extract_path, os.path.basename( os.path.splitext( path )[0] ) )
-                self._logger.info( "ISArchive extracted to \"" + extract_path + "\"." )                
-                path = extract_path
+                    
+                    # test if first entry in zip file is a path
+                    if zip.namelist()[0].endswith( "/" ):                        
+                        # add archive subdirectory to path 
+                        extract_path = os.path.join( extract_path, zip.namelist()[0] )
+                    else:                        
+                        pass
+                                                        
+                    self._logger.info( "ISArchive extracted to \"" + extract_path + "\"." )                
+                    print( "ISArchive extracted to \"" + extract_path + "\"." )                
+                    path = extract_path
             except:
                 self._logger.exception( "Unable to extract assumed ISArchive file \"" + path + "\"." )
                     
@@ -862,12 +876,12 @@ class IsaTabParser:
         
         #assign ISA-Tab archive and pre-ISA-Tab archive if present
         try:
-            _current_investigation.isarchive_file = create(isa_archive)
+            self._current_investigation.isarchive_file = create(isa_archive)
         except:
             pass
         
         try:
-            _current_investigation.pre_isarchive_file = create(preisa_archive)
+            self._current_investigation.pre_isarchive_file = create(preisa_archive)
         except:
             pass
         

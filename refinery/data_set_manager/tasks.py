@@ -254,28 +254,11 @@ def process_isa_tab(uuid):
     #TODO: check if the incoming ISA-Tab is already in the system
     result = read.delay(uuid)    #TODO: convert to subtask?
     item = result.get()
-    input_file = item.datafile
-
-    if input_file:
-        # create folder for storing unzipped ISA-Tab contents (delete if it already exists)
-        accession = os.path.splitext(os.path.basename(input_file.name))[0]
-        extract_dir = os.path.join(settings.ISA_TAB_DIR, accession)
-        if os.path.isdir(extract_dir):
-            shutil.rmtree(extract_dir)
-        os.mkdir(extract_dir)
+    input_file = item.get_absolute_path()
     
-        # unzip the ISA-Tab file (assumes there are no subfolders inside ISA-Tab archive)
-        try:
-            with ZipFile(input_file, 'r') as zf:
-                zf.extractall(extract_dir)
-        except BadZipfile as e:
-            #TODO: write error msg to log
-            print "Bad zipfile:", e
-            return None
-
-        # parse ISA-Tab
+    if input_file:
         p = IsaTabParser()
-        investigation = p.run(extract_dir)  # takes "/full/path/to/isatab/zipfile/or/directory"
+        investigation = p.run(input_file)  # takes "/full/path/to/isatab/zipfile/or/directory"
         return investigation.uuid
     else:
         return None
