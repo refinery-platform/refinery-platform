@@ -115,13 +115,19 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
         # create intermediate directories if they don't exist
         dst_dir_name = os.path.split(abs_dst_path)[0]
+        #TODO: replace this with os.renames()
         if not os.path.isdir(dst_dir_name):
             try:
                 os.makedirs(dst_dir_name)
             except OSError as e:
                 logger.exception("Error creating file store directory. OSError: %s, file name: %s, error: %s",
                                  e.errno, e.filename, e.strerror)
-        shutil.move(tmpfile.name, abs_dst_path) #TODO: check for errors
+                return None
+        try:
+            shutil.move(tmpfile.name, abs_dst_path)
+        except:
+            logger.exception("Error moving file from temp dir to file store dir")
+            return None
         # assign new path to FileField
         item.datafile.name = rel_dst_path
         # save the model instance
@@ -159,3 +165,30 @@ def update(uuid, source):
     # import new file from updated source
     #TODO: call import_file as subtask?
     return import_file(uuid, refresh=True)
+
+@task()
+def rename(uuid, name):
+    ''' Change name of the file on disk.  Return the name that was assigned by the file storage system. '''
+    try:
+        item = FileStoreItem.objects.get(uuid=uuid)
+    except FileStoreItem.DoesNotExist:
+        logger.exception("FileStoreItem with UUID %s does not exist", uuid)
+        return None
+    
+    # get available name based on the provided name
+    new_rel_path = item.datafile.storage.get_available_name(file_path(item, name))
+    new_abs_path = os.path.join(FILE_STORE_BASE_DIR, new_rel_path)
+
+    # rename file on disk
+    try:
+        os.renames(item.datafile.path, new_abs_path)
+    except OSError as e:
+        logger.exception("Error renaming file on disk. OSError: %s, file name: %s, error: %s. Current file name: %s. New file name: %s",
+                        e.errno, e.filename, e.strerror, item.datafile.path, new_abs_path)
+        return None
+
+    # change the name of the DataFile
+    item.datafile.name = new_rel_path
+    item.save()
+
+    return os.path.basename(item.datafile.name)
