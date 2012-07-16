@@ -314,7 +314,7 @@ class Project( SharableResource ):
 
 class WorkflowFilesDL( models.Model ):
     step_id = models.IntegerField()
-    pair_id = models.IntegerField(blank=True, null=True)
+    pair_id = models.TextField()
     filename = models.TextField()
     #[{'step_id': '1', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '2', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '4', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '6', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '12', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '19', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}]
     
