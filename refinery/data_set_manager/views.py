@@ -67,7 +67,7 @@ def search_typeahead(request):
 class ImportISATabFileForm(forms.Form):
     ''' ISA-Tab file upload form '''
     isa_tab_file = forms.FileField(label='ISA-Tab file', required=False)
-    isa_tab_url = forms.URLField(label='ISA-Tab URL', required=False)
+    isa_tab_url = forms.URLField(label='ISA-Tab URL', required=False, widget=forms.TextInput(attrs={'size':'37'}))
 
     def clean(self):
         cleaned_data = super(ImportISATabFileForm, self).clean()
@@ -94,11 +94,9 @@ def import_isa_tab(request):
                 file_uuid = result.get()
                 result = import_file.delay(file_uuid)
                 item = result.get()
-                if not item.datafile:
-                    error = 'Problem downloading file from ' + url
+                if not item:
+                    error = 'Problem downloading file from: ' + url
                     context = RequestContext(request, {'form': form, 'error': error})
-                    return render_to_response('refinery_repository/import.html',
-                                              context_instance=context)
             else:
                 #FIXME: add file-like objects to the file store
                 item = FileStoreItem(source=f.name)
@@ -114,13 +112,12 @@ def import_isa_tab(request):
                 #TODO: redirect to the list of analysis samples for the given UUID
                 return HttpResponseRedirect('/data_sets/' + dataset.uuid + '/')
             else:
-                    error = 'Problem parsing ISA-Tab file' + item.datafile.name
-                    context = RequestContext(request, {'form': form, 'error': error})
-                    return render_to_response('refinery_repository/import.html',
-                                              context_instance=context)
-    else:
+                error = 'Problem parsing ISA-Tab file: ' + item.datafile.name
+                context = RequestContext(request, {'form': form, 'error': error})
+        else:   # submitted form is not valid
+            context = RequestContext(request, {'form': form, 'error': error})
+    else:   # this was not a POST request
         form = ImportISATabFileForm()
+        context = RequestContext(request, {'form': form})
 
-    context = RequestContext(request, {'form': form})
-    return render_to_response('refinery_repository/import.html',
-                              context_instance=context)
+    return render_to_response('refinery_repository/import.html', context_instance=context)
