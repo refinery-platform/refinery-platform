@@ -107,7 +107,8 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         tmpfile.flush()
         tmpfile.close()
         
-        # move temp file to file store dir to avoid spending time on copying large files 
+        # move temp file to file store dir to avoid spending time on copying large files
+        #TODO: remove query string from source file name
         src_file_name = os.path.basename(item.source)
         # create symlink destination path and check if there's a name conflict
         rel_dst_path = item.datafile.storage.get_available_name(file_path(item, src_file_name))

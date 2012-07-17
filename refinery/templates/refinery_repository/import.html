@@ -10,15 +10,16 @@ ISA-Tab import
 {% endblock %}
 
 {% block content %}
-<p>Upload from local disk or download from a URL:</p>
 <form id="isaTabImportForm" enctype="multipart/form-data" action="" method="post">{% csrf_token %}
 	<p>{{ error }}</p>
 	<p>{{ form.non_field_errors }}</p>
 	<div>
+		<p>Upload file from disk:</p>
 		<p>
 			{{ form.isa_tab_file.errors}}
 			{{ form.isa_tab_file }}
 		</p>
+		<p>Or download from a URL:</p>
 		<p>
 			{{ form.isa_tab_url.errors }}
 			{{ form.isa_tab_url }}

@@ -29,6 +29,9 @@ FILE_STORE_BASE_DIR = os.path.join(settings.MEDIA_ROOT, settings.FILE_STORE_DIR)
 FILE_STORE_TEMP_DIR = os.path.join(FILE_STORE_BASE_DIR, 'temp')
 #TODO: create this directory if it doesn't exist?
 
+# To make sure we can move uploaded files into file store quickly by using os.rename()
+#settings.FILE_UPLOAD_TEMP_DIR = FILE_STORE_TEMP_DIR
+
 logger = logging.getLogger('file_store')
 
 def file_path(modelinstance, filename):
@@ -60,8 +63,6 @@ class FileStoreItem(models.Model):
     
     def get_absolute_path(self):
         ''' Return absolute path of the data file '''
-        if self.datafile.name == '': return None
-
         try:
             return self.datafile.path
         except ValueError:  # file hasn't been imported yet?
