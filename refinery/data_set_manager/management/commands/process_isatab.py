@@ -18,7 +18,14 @@ class Command(BaseCommand):
     Name: handle
     Description:
         main program; calls the parsing and insertion functions
-    """   
+    """
+    _username = None
+    _additional_raw_data_file_extension = None    
+    
+    def __init__(self, filename=None):
+        super( Command, self ).__init__()
+    
+       
     def handle(self, *args, **options):
         """parse arguments"""
         if len(args) < 2:
@@ -27,8 +34,10 @@ class Command(BaseCommand):
             print self.help
             sys.exit()
         
-        username = args[0]
+        self._username = args[0]
         base_isa_dir = args[1]
+        
+        print base_isa_dir
         
         opt = {'base_pre_isa_dir': None, 'is_public': False}
         for arg in args:
@@ -54,15 +63,15 @@ class Command(BaseCommand):
         s_tasks = list()
         if pre_isatab_files:
             for i, p in zip(isatab_files, pre_isatab_files):
-                sub_task = parse_isatab.subtask(args=(username,
+                sub_task = parse_isatab.subtask(args=(self._username,
                                                       opt['is_public'],
-                                                      i, i, p))
+                                                      i, self._additional_raw_data_file_extension, i, p))
                 s_tasks.append(sub_task)
         else:
             for i in isatab_files:
-                sub_task = parse_isatab.subtask(args=(username, 
+                sub_task = parse_isatab.subtask(args=(self._username, 
                                                       opt['is_public'], 
-                                                      i))
+                                                      i, self._additional_raw_data_file_extension))
                 s_tasks.append(sub_task)
 
         job = TaskSet(tasks=s_tasks)

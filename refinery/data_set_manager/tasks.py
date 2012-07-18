@@ -229,12 +229,12 @@ def annotate_nodes(investigation_uuid):
                     
 
 @task()
-def parse_isatab(username, public, path, isa_archive=None, pre_isa_archive=None):
+def parse_isatab(username, public, path, additional_raw_data_file_extension=None, isa_archive=None, pre_isa_archive=None ):
     """
-    parse_isatab(username, is_public, folder_name, isa_archive=<path> pre_isa_archive=<path>
+    parse_isatab(username, is_public, folder_name, additional_raw_data_file_extension, isa_archive=<path> pre_isa_archive=<path>
     """
     p = IsaTabParser()
-    p.additional_raw_data_file_extension = ".gz"
+    p.additional_raw_data_file_extension = additional_raw_data_file_extension
     try:
         investigation = p.run(path, isa_archive=isa_archive, preisa_archive=pre_isa_archive)
         create_dataset(investigation.uuid, username, public=public)
