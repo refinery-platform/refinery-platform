@@ -235,7 +235,7 @@ def monitor_analysis_execution(analysis, interval=5.0, task_id=None):
             revoke_task = True
         elif progress["workflow_state"] == "ok":
             logger.debug("workflow message OK:  %s", progress["message"]["ok"] )
-            if progress["message"]["ok"] > analysis_steps:
+            if progress["message"]["ok"] >= analysis_steps:
                 revoke_task = True
             
         if not revoke_task:
