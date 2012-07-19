@@ -19,7 +19,10 @@ from celery.utils import uuid
 from celery.task.chords import Chord
 from celery import current_app as celery
 from file_store.models import FileStoreItem, is_local
-from file_store.tasks import import_file, create
+from file_store.tasks import import_file, create, rename
+import logging
+
+logger = logging.getLogger('analysis_manager')
 
 # example from: http://www.manasupo.com/2012/03/chord-progress-in-celery.html
 class progress_chord(object):
@@ -65,7 +68,8 @@ def emptyTask(ret_val):
 @task
 def chord_postprocessing (ret_val, analysis):
     
-    print "analysis_manager.chord_postprocessing called"
+    logger.debug("analysis_manager.chord_postprocessing called")
+    
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
@@ -86,7 +90,7 @@ def chord_postprocessing (ret_val, analysis):
     analysis_status.postprocessing_taskset_id = result_set.task_id 
     analysis_status.save()
     
-    print "after chord_postprocessing"   
+    #print "after chord_postprocessing"   
     return 
 
 @task
@@ -94,7 +98,8 @@ def chord_cleanup(ret_val, analysis):
     """
     Code to cleanup galaxy after downloading of results from history
     """
-    print "analysis_manager.chord_cleanup called"
+    logger.debug("analysis_manager.chord_cleanup called")
+    
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
@@ -106,14 +111,15 @@ def chord_cleanup(ret_val, analysis):
     analysis_status.cleanup_taskset_id = result_set.task_id 
     analysis_status.save()
     
-    print "after chord_cleanup"   
+    #print "after chord_cleanup"   
     return
 
 # task: run analysis (outermost task, calls subtasks that monitor and run preprocessing, execution, postprocessing)
 @task()
 def run_analysis(analysis, interval=5.0):
     
-    print "analysis_manager.tasks run_analysis called"
+    logger.debug("analysis_manager.tasks run_analysis called")
+    
     
     analysis_status = AnalysisStatus.objects.get(analysis=analysis)
     
@@ -151,7 +157,8 @@ def run_analysis(analysis, interval=5.0):
 @task()
 def run_analysis_preprocessing(analysis):
     
-    print "analysis_manager.run_analysis_preprocessing called"
+    logger.debug("analysis_manager.run_analysis_preprocessing called")
+    
     
     # obtain expanded workflow
     connection = get_analysis_connection(analysis)
@@ -165,14 +172,15 @@ def run_analysis_preprocessing(analysis):
     # getting expanded workflow configured based on input: ret_list
     new_workflow, history_download = configure_workflow(analysis.workflow.uuid, ret_list, connection)
     
-    print "history_download"
-    print history_download
+    #print "history_download"
+    #print history_download
     
     #print "new_workflow"
     #print new_workflow
     
     # saving ouputs of workflow to download 
     for file_dl in history_download:
+        #print file_dl
         temp_dl = WorkflowFilesDL(step_id=file_dl['step_id'], pair_id=file_dl['pair_id'], filename=file_dl['name'])
         temp_dl.save()
         analysis.workflow_dl_files.add( temp_dl ) 
@@ -204,11 +212,10 @@ def monitor_analysis_execution(analysis, interval=5.0, task_id=None):
     # required to get updated state (move out of this function) 
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
+    analysis_steps = analysis.workflow_steps_num
     
     # start monitoring task
     if analysis_status.execution_monitor_task_id is None:
-        #print "TASKTASKTASKTASK :::: "
-        #print monitor_analysis_execution.request.id
         analysis_status.execution_monitor_task_id = monitor_analysis_execution.request.id
         analysis_status.save()
     
@@ -216,34 +223,31 @@ def monitor_analysis_execution(analysis, interval=5.0, task_id=None):
     revoke_task = False
     
     while not revoke_task:
-        #print  "Sleeping ..."
+        logger.debug("Sleeping ... in monitor_analysis_execution")
+        
         progress = connection.get_progress(analysis.history_id)
         monitor_analysis_execution.update_state(state="PROGRESS", meta=progress)
-        #print progress
         
-        #print  "Awake ..."
-        #print  "Analysis Execution Task State: " + analysis_execution_task.state + "\n"
-        #print  "Workflow State: " + progress["workflow_state"] + "\n"
+        logger.debug("monitor_analysis_execution progress[workflow_state] = %s", progress["workflow_state"])
+        logger.debug("Progress:  %s", progress )
         
         if progress["workflow_state"] == "error":
             revoke_task = True
         elif progress["workflow_state"] == "ok":
-            revoke_task = True
-        #elif progress["workflow_state"] == "queued":
-        #    print "Workflow running."
-        #elif progress["workflow_state"] == "new":
-        #    print "Workflow being prepared."
+            logger.debug("workflow message OK:  %s", progress["message"]["ok"] )
+            if progress["message"]["ok"] > analysis_steps:
+                revoke_task = True
             
         if not revoke_task:
             time.sleep( interval );
         
-    print "revoking/KILLING task finished monitoring task"
+    logger.debug("revoking/KILLING task finished monitoring task")
 
 # task: perform execution (innermost task, does the actual work)
 @task()
 def run_analysis_execution(analysis):
     
-    print "analysis_manager.run_analysis_execution called"
+    logger.debug("analysis_manager.run_analysis_execution called")
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     
@@ -267,7 +271,8 @@ def run_analysis_execution(analysis):
 @task()
 def run_analysis_postprocessing(analysis):
     
-    print "analysis_manager.run_analysis_postprocessing called"
+    logger.debug("analysis_manager.run_analysis_postprocessing called")
+    
     
     ######################
     ### POSTPROCESSING ###
@@ -292,7 +297,7 @@ def run_analysis_postprocessing(analysis):
 # task: perform cleanup, after download of results cleanup galaxy run
 @task()
 def run_analysis_cleanup(analysis):
-    print "analysis_manager.run_analysis_cleanup called"
+    logger.debug("analysis_manager.run_analysis_cleanup called")
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     
@@ -353,7 +358,8 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
     Take workflow configuration and import files into galaxy
     assign galaxy_ids to ret_list
     """
-    print "analysis_manager.tasks import_analysis_in_galaxy called"
+    logger.debug("analysis_manager.tasks import_analysis_in_galaxy called")
+    
     
     for fileset in ret_list:
         for k, v in fileset.iteritems():
@@ -378,7 +384,8 @@ def download_history_files(analysis) :
     Download entire histories from galaxy. Getting files out of history to file store
     """
     
-    print "analysis_manger.download_history_files called"
+    logger.debug("analysis_manger.download_history_files called")
+    
     
     # retrieving list of files to download for workflow
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
@@ -388,6 +395,7 @@ def download_history_files(analysis) :
     dl_dict = {}
     
     for dl in dl_files.all():
+        print dl
         temp_dict = {}
         temp_dict['filename'] = dl.filename
         temp_dict['pair_id'] = dl.pair_id
@@ -417,19 +425,6 @@ def download_history_files(analysis) :
                 
                 result_name = curr_dl_dict['filename'] + '.' + file_type
             
-            # checks to see if history file is raw fastq file, excluding from download
-            #check_fastq = file_type.lower().find('fastq')
-            #check_sam = file_type.lower().find('sam')
-            #print "checking file types:"
-            #print "check_fastq"
-            #print check_fastq
-            #print "check_sam"
-            #print check_sam
-            
-            
-            #if (check_fastq < 0 and check_sam < 0):
-                # name of file
-                #result_name = results['name'] + '.' + file_type
                 # size of file defined by galaxy
                 file_size = results['file_size']
                 # URL to download
@@ -440,6 +435,10 @@ def download_history_files(analysis) :
                 
                 # getting file_store_uuid
                 filestore_uuid = create(download_url)
+                
+                # rename using filestore function rename
+                #result_name = rename(filestore_uuid, result_name)
+                logger.debug("file_store rename called: new name = %s", result_name)
                 
                 # adding history files to django model 
                 temp_file = AnalysisResult(analysis_uuid=analysis.uuid, file_store_uuid=filestore_uuid, file_name=result_name, file_type=file_type)

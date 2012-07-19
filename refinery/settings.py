@@ -207,6 +207,10 @@ LOGGING = {
         'file_store': {
             'handlers': ['console'],
             'level': 'DEBUG'
+        },
+        'analysis_manager': {
+            'handlers': ['console'],
+            'level': 'DEBUG'
         }
     }
 }

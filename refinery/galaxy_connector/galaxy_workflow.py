@@ -219,6 +219,7 @@ def createStepsAnnot(file_list, workflow):
                         temp_key = 'RenameDatasetAction' + oname
                         #new_output_name = tool_name + ',' + input_type + ',' + str(oname) + ',' + curr_filename
                         new_output_name =  curr_filename + ","  + tool_name + ',' + input_type + ',' + oname
+                        new_tool_name = str(curr_id) + "_" + oname
                         
                         # if the output name is being tracked and downloaded for Refinery
                         if str(oname) in keep_files:
@@ -230,6 +231,7 @@ def createStepsAnnot(file_list, workflow):
                             else:
                                 curr_pair_id = ''
                                 for itypes in file_list[i].keys():
+                                    
                                     if curr_pair_id == '':
                                         curr_pair_id += str(file_list[i][itypes]['pair_id'])
                                     else:
@@ -238,7 +240,10 @@ def createStepsAnnot(file_list, workflow):
                             curr_result = {}
                             curr_result["pair_id"] = curr_pair_id
                             curr_result["name"] = new_output_name;
-                            curr_result["step_id"] = curr_id;
+                            curr_result["step_id"] = new_tool_name;
+                            
+                            #print "curr_result"
+                            #print curr_result
                             
                             history_download.append(curr_result)
                         
@@ -253,7 +258,7 @@ def createStepsAnnot(file_list, workflow):
                         else:
                             # renaming output files according with step_id of workflow  
                             #new_rename_action =  '{ "action_arguments": { "newname": "%s" }, "action_type": "RenameDatasetAction", "output_name": "%s"}' % (new_output_name, oname);
-                            new_rename_action =  '{ "action_arguments": { "newname": "%s" }, "action_type": "RenameDatasetAction", "output_name": "%s"}' % (curr_id, oname);
+                            new_rename_action =  '{ "action_arguments": { "newname": "%s" }, "action_type": "RenameDatasetAction", "output_name": "%s"}' % (new_tool_name, oname);
                             
                             new_rename_dict = ast.literal_eval(new_rename_action);
                             pja_dict[temp_key] = new_rename_dict;
