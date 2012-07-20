@@ -6,9 +6,12 @@ Created on Jun 20, 2012
 from data_set_manager.models import Investigation, Study, Node, Attribute, Assay
 from file_store.tasks import create
 import csv
-import logging
 import operator
 import os
+import logging
+
+# get module logger
+logger = logging.getLogger(__name__)
 
 
 '''
@@ -61,9 +64,9 @@ class SingleFileColumnParser:
     _current_reader = None    
 
     def __init__(self):
-        self._logger = logging.getLogger(__name__)
+        logger = logging.getLogger(__name__)
         # create console handler with a higher log level
-        self._logger.addHandler( logging.StreamHandler() )
+        logger.addHandler( logging.StreamHandler() )
         
     def _create_investigation(self):
         return Investigation.objects.create()
@@ -86,7 +89,7 @@ class SingleFileColumnParser:
             self._current_file =  open( file_name, "rU" )
             self._current_reader = csv.reader( self._current_file, dialect="excel-tab", delimiter=self.delimiter )
         except:
-            self._logger.exception( "Unable to read file " + str( self._current_file ) + "." )
+            logger.exception( "Unable to read file " + str( self._current_file ) + "." )
         
         # create investigation, study and assay objects
         investigation = self._create_investigation()
@@ -120,9 +123,9 @@ class SingleFileColumnParser:
             file_uuid = create( file_path, self.file_permanent )
                                     
             if file_uuid is not None:
-                self._logger.info( "Added " + file_path + " to file store." )
+                logger.info( "Added " + file_path + " to file store." )
             else:
-                self._logger.exception( "Unable to add " + file_path + " to file store." )
+                logger.exception( "Unable to add " + file_path + " to file store." )
 
             # create nodes if file was successfully created
             
@@ -180,7 +183,7 @@ class SingleFileColumnParser:
     def run(self, file_name, archive=None):
         
         if self.file_column_index is None:
-            self._logger.exception( "The index of the column containing the data file paths cannot be None." )
+            logger.exception( "The index of the column containing the data file paths cannot be None." )
             
         return self._parse_file( file_name )        
 
