@@ -22,7 +22,7 @@ from file_store.models import FileStoreItem, is_local
 from file_store.tasks import import_file, create, rename
 import logging
 
-logger = logging.getLogger('analysis_manager')
+logger = logging.getLogger(__name__)
 
 # example from: http://www.manasupo.com/2012/03/chord-progress-in-celery.html
 class progress_chord(object):
