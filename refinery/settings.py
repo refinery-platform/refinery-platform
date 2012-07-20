@@ -156,7 +156,6 @@ INSTALLED_APPS = (
     "tastypie",
     'guardian',
     'galaxy_connector',
-    'refinery_repository',
     'core',
     'analysis_manager',
     'workflow_manager',
