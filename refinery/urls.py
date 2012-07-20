@@ -34,10 +34,7 @@ urlpatterns = patterns('',
 
     #links in galaxy_connector urls 
     url(r'^galaxy_connector/', include('galaxy_connector.urls')),
-    
-    #links in refinery_repository urls
-    url(r'^refinery_repository/', include('refinery_repository.urls')),
-    
+
     # Examples:
     # url(r'^$', 'refinery.views.home', name='home'),
     # url(r'^refinery/', include('refinery.foo.urls')),
