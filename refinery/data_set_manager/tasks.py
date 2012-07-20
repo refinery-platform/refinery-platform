@@ -30,7 +30,10 @@ import tempfile
 import time
 import traceback
 import urllib2
+import logging
 
+"""get logger for all tasks"""
+logger = logging.getLogger(__name__)
 
 def create_dir(file_path):
     """
@@ -46,10 +49,73 @@ def create_dir(file_path):
         if e.errno != errno.EEXIST:
             raise
 
-def fix_raw_files(acc):
-    filename = os.path.join(settings.ISA_TAB_DIR, acc, "a_%s_assay.txt" % acc)
-    file_reader = csv.reader(open(filename, 'rb'), dialect='excel-tab')
-    header_row = file_reader.next()
+
+@task()
+def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=None):
+    """
+    Name: download_http_file
+    Description:
+        downloads a file from a given URL
+    Parameters:
+        url: URL for the file being downloaded
+        out_dir: base directory where file is being downloaded
+        accession: name of directory that will house the downloaded 
+                   file, in this case, the investigation accession
+    """
+    out_dir = os.path.join(out_dir, accession) #directory where file downloads
+    
+    logger.info("refinery_repository.download_http_file called")
+    
+    #make super-directory (out_dir/accession) if it doesn't exist
+    create_dir(out_dir)
+    
+    if (new_name is None):
+        file_name = url.split('/')[-1] #get the file name
+        file_path = os.path.join(out_dir, file_name) # path where file downloads
+    else:
+        file_name = new_name
+        file_path = os.path.join(out_dir, new_name) 
+
+    logger.info("file_path: %s\n" % file_path)
+    logger.info("file_name: %s\n" % file_name)
+    logger.info("out_dir: %s\n" % out_dir)
+    logger.info("url: %s\n" % url)
+    
+    if(not os.path.exists(file_path)):
+        u = urllib2.urlopen(url)
+        f = open(file_path, 'wb')
+        
+        if (galaxy_file_size is None):
+            meta = u.info()
+            logger.info("meta: %s\n" % meta)
+            file_size = int(meta.getheaders("Content-Length")[0])
+        else:
+            file_size = galaxy_file_size
+            
+        logger.info("Downloading: %s Bytes: %s" % (file_name, file_size))
+        file_size_dl = 0
+        block_sz = 8192
+        while True:
+            buffer = u.read(block_sz)
+            if not buffer:
+                break
+
+            file_size_dl += len(buffer)
+            f.write(buffer)
+            
+            downloaded = file_size_dl * 100. / file_size
+            download_http_file.update_state(state="PROGRESS",
+                        meta={
+                              "percent_done": "%3.2f%%" % (downloaded),
+                              'current': file_size_dl,
+                              'total': file_size
+                        })
+            
+            #status = r"%10d  [%3.2f%%]" % (file_size_dl, downloaded)
+            #status = status + chr(8)*(len(status)+1)
+            #print status,
+
+        f.close()
 
 @task()
 def convert_to_isatab(accession):
@@ -61,6 +127,8 @@ def convert_to_isatab(accession):
     Parameters:
         accession: ArrayExpress study to convert
     """
+    logger = convert_to_isatab.get_logger()
+    logger.info("loging from convert_to_isatab")
     retval = 1 #successful conversion
     command = "./convert.sh %s" % accession
     
@@ -80,19 +148,16 @@ def convert_to_isatab(accession):
     stderr = open(stderr_n).read().strip()
     if stderr:
         shutil.rmtree(os.path.join(settings.ISA_TAB_DIR, accession))
+        logger.error(stderr)
         if exit_code != 0: #something bad happened
             shutil.rmtree(temp_dir)
             raise Exception, "Error Converting to ISA-Tab: %s" % stderr
         else:
-            shutil.rmtree(temp_dir)
-            #print stderr
             retval = 0 #unsuccessful conversion, but clean exit
     else: #successfully converted
         #zip up ISA-Tab files 
         isatab_file_location = os.path.join(settings.ISA_TAB_DIR, 'isa', accession)
-        print isatab_file_location
         preisatab_file_location = os.path.join(settings.ISA_TAB_DIR, 'pre_isa')
-        print preisatab_file_location
         """
         shutil makes a zip, tar, tar.gz, etc file out of files in given dir 
         Params:
@@ -107,7 +172,6 @@ def convert_to_isatab(accession):
         #Get and zip up the MAGE-TAB and put in the ISA-Tab folder
         #make file name for ArrayExpress information to download into
         ae_name = tempfile.NamedTemporaryFile(dir=temp_dir, prefix='ae_').name
-        print ae_name
         #make url to fetch the experiment
         url = "%s/%s" % (settings.AE_BASE_URL, accession)
         
@@ -128,7 +192,6 @@ def convert_to_isatab(accession):
 
         #isolate the links by splitting on '<a href="'
         a_hrefs = string.split(last_line, '<a href="')
-        print a_hrefs
         #get the links we want
         for a_href in a_hrefs:
             if re.search(r'sdrf.txt', a_href) or re.search(r'idf.txt', a_href):
@@ -142,7 +205,6 @@ def convert_to_isatab(accession):
                 f = open(file, 'wb')
                 f.write(u.read()) #again, shouldn't be a large file
                 f.close()
-                print link
         
         files_to_zip = 0
         for dirname, dirnames, filenames in os.walk(dir_to_zip):
@@ -175,13 +237,17 @@ def get_arrayexpress_studies():
     call_command('mage2isa_convert', 'exptype=ChIP-seq')
 
 @task() 
-def create_dataset(investigation_uuid, username, public=False): 
+def create_dataset(investigation_uuid, username, public=False):
+    logger = create_dataset.get_logger()
+    logger.info("logging from create_dataset") 
     """get User for assigning DataSets"""
     try:
         user = User.objects.get(username__exact=username)
     except:
+        logger.info("User %s doesn't exist, so creating with password 'test'" % username)
         #user doesn't exist
         user = User.objects.create_user(username, "", "test")
+
 
     if investigation_uuid != None:
         
@@ -233,19 +299,19 @@ def parse_isatab(username, public, path, additional_raw_data_file_extension=None
     """
     parse_isatab(username, is_public, folder_name, additional_raw_data_file_extension, isa_archive=<path> pre_isa_archive=<path>
     """
+    logger.info("logging from parse_isatab")
     p = IsaTabParser()
     p.additional_raw_data_file_extension = additional_raw_data_file_extension
     try:
         investigation = p.run(path, isa_archive=isa_archive, preisa_archive=pre_isa_archive)
         create_dataset(investigation.uuid, username, public=public)
     except: #prints the error message without breaking things
-        print "error: "
+        logger.error("*** print_tb:\n")
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        print "*** print_tb:"
-        traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
-        print "*** print_exception:"
-        traceback.print_exception(exc_type, exc_value, exc_traceback,
-                          limit=2, file=sys.stdout)
+        logger.error(traceback.print_tb(exc_traceback, limit=1, file=sys.stdout))
+        logger.error("*** print_exception:\n")
+        logger.error(traceback.print_exception(exc_type, exc_value, exc_traceback,
+                          limit=2, file=sys.stdout))
     return None
 
 @task()
