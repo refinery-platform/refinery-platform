@@ -19,7 +19,10 @@ import itertools
 import logging
 import os
 import simplejson
+import logging
 
+# get module logger
+logger = logging.getLogger(__name__)
 
 
 class IsaTabParser:
@@ -248,13 +251,9 @@ class IsaTabParser:
         }
     }
     
-    _logger = None
     
     def __init__(self):
-        self._logger = logging.getLogger(__name__)
-        # create console handler with a higher log level
-        self._logger.addHandler( logging.StreamHandler() )
-
+        pass
     
     def _split_header(self, header):
         return [ x.strip() for x in header.replace( "]", "" ).strip().split( "[" ) ]        
@@ -300,12 +299,12 @@ class IsaTabParser:
                 node.file_uuid = uuid
                 node.save()
             else:
-                self._logger.exception( "Unable to add " + node_name + " to file store as a temporary file." )        
+                logger.exception( "Unable to add " + node_name + " to file store as a temporary file." )        
                                             
         if is_new:
-            self._logger.info( "New node " + str( node ) + " created." )
+            logger.info( "New node " + str( node ) + " created." )
         else:
-            self._logger.info( "Node " + str( node ) + " retrieved." )
+            logger.info( "Node " + str( node ) + " retrieved." )
         
         self._current_node = node
         
@@ -332,7 +331,7 @@ class IsaTabParser:
             elif self.is_protocol_reference( headers[-len(row)] ):
                 self._parse_protocol_reference( headers, row )
             else:                
-                self._logger.error( "Unexpected element " + headers[-len(row)] +
+                logger.error( "Unexpected element " + headers[-len(row)] +
                                         " when parsing node in line " + str( self._current_reader.line_num ) +
                                         ", column " + str( len(headers) - len(row) ) + "." )
                 row.popleft()
@@ -424,18 +423,18 @@ class IsaTabParser:
             except:
                 if self.ignore_missing_protocols:
                     protocol, is_created = Protocol.objects.get_or_create( name=row[0], study=self._current_study )
-                    self._logger.info( "Undeclared protocol " + row[0] +
+                    logger.info( "Undeclared protocol " + row[0] +
                                        " when parsing term protocol in line " + str( self._current_reader.line_num ) +
                                        ", column " + str( len(headers) - len(row) ) + "." +
                                        " This protocol was created since the parser is being run with ignore_missing_protocols = True." )                        
                 else:
-                    self._logger.exception( "Undeclared protocol " + row[0] +
+                    logger.exception( "Undeclared protocol " + row[0] +
                                        " when parsing term protocol in line " + str( self._current_reader.line_num ) +
                                        ", column " + str( len(headers) - len(row) ) + "." +
                                        " An attempt to create this protocol failed." )                                                
                     raise Exception
 
-                #self._logger.exception( "Undeclared protocol " + row[0] +
+                #logger.exception( "Undeclared protocol " + row[0] +
                 #                       " when parsing term protocol in line " + str( self._current_reader.line_num ) +
                 #                       ", column " + str( len(headers) - len(row) ) + "." )
                                     
@@ -512,7 +511,7 @@ class IsaTabParser:
                 return { "accession": accession, "source": source }
                         
             else:
-                self._logger.exception( "Unexpected element " + headers[-len(row)] +
+                logger.exception( "Unexpected element " + headers[-len(row)] +
                                        " when parsing term information in line " + str( self._current_reader.line_num ) +
                                        ", column " + str( len(headers) - len(row) ) + "." )
         
@@ -528,11 +527,11 @@ class IsaTabParser:
                 return { "accession": accession, "source": source }
                         
             else:
-                self._logger.exception( "Unexpected element " + headers[-len(row)] +
+                logger.exception( "Unexpected element " + headers[-len(row)] +
                                        " when parsing term information in line " + str( self._current_reader.line_num ) +
                                        ", column " + str( len(headers) - len(row) ) + "." )
         else:
-            self._logger.exception( "Unexpected element " + headers[-len(row)] +
+            logger.exception( "Unexpected element " + headers[-len(row)] +
                                    " when parsing term information in line " + str( self._current_reader.line_num ) +
                                    ", column " + str( len(headers) - len(row) ) + "." )
         
@@ -547,7 +546,7 @@ class IsaTabParser:
             unit = row[0]
             row.popleft()
         else:
-            self._logger.exception( "Unexpected element " + headers[-len(row)] +
+            logger.exception( "Unexpected element " + headers[-len(row)] +
                        " when parsing unit information in line " + str( self._current_reader.line_num ) +
                        ", column " + str( len(headers) - len(row) ) + "." )
             
@@ -598,7 +597,7 @@ class IsaTabParser:
         try:
             section = self.SECTIONS[section_title]
         except:
-            self._logger.warning( "Trying to obtain details for undefined section " + str( section_title ) + " when parsing " + self._current_file_name + "." )
+            logger.warning( "Trying to obtain details for undefined section " + str( section_title ) + " when parsing " + self._current_file_name + "." )
             return None
         
         # 1. determine length of field with most number of columns
@@ -626,7 +625,7 @@ class IsaTabParser:
                 
             # test if any field has a non-empty string in it
             if len( [ fields[key][column] for key in fields if fields[key][column].strip() != "" ] ) == 0:
-                self._logger.info( "Column " + str( column ) + " in section " + section_title + " has no non-empty cells and was ignored." )
+                logger.info( "Column " + str( column ) + " in section " + section_title + " has no non-empty cells and was ignored." )
                 # for all section but INVESTIGATION and STUDY continue)
                 if not ( ( section_title == "INVESTIGATION" and self._current_investigation is None ) or ( section_title == "STUDY" and self._current_study is None ) ): 
                     continue
@@ -668,7 +667,7 @@ class IsaTabParser:
             section = self.SECTIONS[section_title]
             fields = {}
         except:
-            self._logger.warning( "Trying to obtain details for undefined section " + str( section_title ) + " when parsing " + self._current_file_name + "." )
+            logger.warning( "Trying to obtain details for undefined section " + str( section_title ) + " when parsing " + self._current_file_name + "." )
             return None
         
         while True:
@@ -725,7 +724,7 @@ class IsaTabParser:
                                 fields[field_name].append( columns[-1].strip().strip( "\"" ).replace( "\"\"\"", "\"" ) )
             else:
                 # undefined field, ignore
-                self._logger.warning( "Undefined field " + str( columns[0] ) + " found in column 1 when parsing \"" + section_title + "\" from " + self._current_file_name + "." )
+                logger.warning( "Undefined field " + str( columns[0] ) + " found in column 1 when parsing \"" + section_title + "\" from " + self._current_file_name + "." )
 
 
     # returns lines 2-n of the multiline field (concatenated) and the remaining columns in line n  
@@ -742,7 +741,7 @@ class IsaTabParser:
                     # EOF reached
                     return None                
             except:
-                self._logger.exception( "End of file reached in multiline field in " + self._current_file_name + "." )
+                logger.exception( "End of file reached in multiline field in " + self._current_file_name + "." )
                 
             multiline_columns = line.split( "\t" )
             if not self.is_multiline_end( multiline_columns[0] ):
@@ -790,7 +789,7 @@ class IsaTabParser:
                 break 
             else:
                 # undefined field, ignore
-                self._logger.warning( "Field " + str( columns[0].strip() ) + " found in column 1 before section when parsing " + self._current_file_name + "." )
+                logger.warning( "Field " + str( columns[0].strip() ) + " found in column 1 before section when parsing " + self._current_file_name + "." )
         
         # parse the sections
         while True:
@@ -823,7 +822,7 @@ class IsaTabParser:
         if not os.path.isdir( path ):
             #assign to isa_archive if it's an archive anyway
             isa_archive = path
-            self._logger.info( "Supplied path \"" + path + "\" is not a directory. Assuming ISArchive file." )
+            logger.info( "Supplied path \"" + path + "\" is not a directory. Assuming ISArchive file." )
             try:
                 # TODO: do we need a random subdirectory here?
                 extract_path = settings.ISA_TAB_TEMP_DIR
@@ -831,7 +830,7 @@ class IsaTabParser:
                     # test if any paths are relative or absolute and outside the extract path
                     for name in zip.namelist():
                         if name.startswith( ".." ) or name.startswith( "/" ):
-                            self._logger.exception( "Unable to extract assumed ISArchive file \"" + path + "\" due to illegal file path: " + name )
+                            logger.exception( "Unable to extract assumed ISArchive file \"" + path + "\" due to illegal file path: " + name )
                     
                     # extract archive
                     zip.extractall( extract_path )
@@ -843,17 +842,17 @@ class IsaTabParser:
                     else:                        
                         pass
                                                         
-                    self._logger.info( "ISArchive extracted to \"" + extract_path + "\"." )                
+                    logger.info( "ISArchive extracted to \"" + extract_path + "\"." )                
                     print( "ISArchive extracted to \"" + extract_path + "\"." )                
                     path = extract_path
             except:
-                self._logger.exception( "Unable to extract assumed ISArchive file \"" + path + "\"." )
+                logger.exception( "Unable to extract assumed ISArchive file \"" + path + "\"." )
                     
         # 2. identify investigation file
         try:
             investigation_file_name = glob.glob( "%s/i*.txt" % path ).pop()
         except IndexError as exception:
-            self._logger.exception( "Unable to identify ISArchive file in \"" + path + "\"." )
+            logger.exception( "Unable to identify ISArchive file in \"" + path + "\"." )
             raise exception
         
         # 3. parse investigation file and identify study files and corresponding assay files
@@ -871,7 +870,7 @@ class IsaTabParser:
                     self._previous_node = None
                     self._parse_assay_file( study, assay, os.path.join( path, assay.file_name ) )                                
         else:
-            self._logger.exception( "No investigation was identified when parsing investigation file \"" + investigation_file_name + "\"" )
+            logger.exception( "No investigation was identified when parsing investigation file \"" + investigation_file_name + "\"" )
             raise Exception()
         
         #assign ISA-Tab archive and pre-ISA-Tab archive if present
