@@ -487,3 +487,52 @@ def getStepOptions(step_annot):
                     ret_dict[temp_key] = [temp_val]
                 
     return ret_dict
+
+def countWorkflowSteps(workflow):
+    """
+    Helper function for counting number of workflow steps from a galaxy workflow. Number of steps in workflow is not reflective of the actual number of workflows created by galaxy when run
+    """
+    print "galaxy_connector.galaxy_workflow called"
+    
+    workflow_steps = workflow["steps"]
+    total_steps = 0
+    
+    for j in range(0, len(workflow["steps"])):
+        curr_step_id = str(j);
+        curr_step = workflow_steps[curr_step_id]
+        
+        # count number of output files
+        output_num = len(curr_step['outputs'])
+        #print "output_num: " + str(output_num)
+        
+        if (output_num > 0):
+            # check to see if HideDatasetActionoutput_ keys exist in current step
+            if 'post_job_actions' in curr_step.keys():
+                pja_step = curr_step['post_job_actions']
+                pja_hide_count = 0
+                for k,v in pja_step.iteritems():
+                    if (k.find('HideDatasetActionoutput_') > -1):
+                        pja_hide_count += 1
+                #print "pja_hide_count"
+                #print pja_hide_count
+                
+                diff_count = output_num - pja_hide_count
+                #print "diff_count"
+                #print diff_count
+                
+                # add one step if HideDatasetActionoutput_ = outputs for file
+                if diff_count == 0:
+                    total_steps += 1
+                # add total number of steps for this defined step in galaxy workflow    
+                else:
+                    total_steps += diff_count
+                
+        # case where their are no outputs associated with step
+        else:
+            total_steps += 1
+    
+    #print "workflow_steps: " + str(len(workflow["steps"]))
+    #print "total_steps: " + str(total_steps)
+    
+    return total_steps
+
