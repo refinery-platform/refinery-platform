@@ -3,8 +3,7 @@ from celery.task.sets import subtask
 from galaxy_connector.models import DataFile
 from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps, createStepsAnnot, combineInputExp
 from datetime import datetime
-from refinery_repository.models import Investigation, Assay, RawData
-from refinery_repository.tasks import download_http_file
+from data_set_manager.tasks import download_http_file
 from core.models import *
 import os
 from celery import Celery
