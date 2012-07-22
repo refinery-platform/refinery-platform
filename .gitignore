@@ -44,4 +44,4 @@ settings_local.py
 refinery/celeryev.pid
 .settings/*
 *.conflict
-refinery/solr_config/data
+refinery/*/data
