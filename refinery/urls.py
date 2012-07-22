@@ -1,4 +1,5 @@
 from core.api import ProjectResource
+from core.models import DataSet
 from core.views import admin_test_data
 from data_set_manager.views import search_typeahead
 from django.conf.urls.defaults import patterns, include, url
@@ -11,7 +12,7 @@ from workflow_manager.views import import_workflows
 
 
 # NG: facets for Haystack
-sqs = SearchQuerySet().facet('submitter').facet('measurement').facet('technology').highlight()
+sqs = SearchQuerySet().using( "core" ).models( DataSet ).facet('measurement').facet('technology').highlight()
 
 
 # Uncomment the next two lines to enable the admin:
