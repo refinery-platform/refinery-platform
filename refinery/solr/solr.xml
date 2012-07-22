@@ -33,12 +33,16 @@
   sharedLib: path to a lib directory that will be shared across all cores
 -->
 <solr persistent="false">
+ <cores adminPath="/admin/cores">
+  <!--
+  	The default core is required but not used.
+  -->
+  <core name="default" instanceDir="default" />
 
   <!--
-  adminPath: RequestHandler path to manage cores.  
-    If 'null' (or absent), cores will not be manageable via request handler
+  	The cores used by Refinery.
   -->
-  <cores adminPath="/admin/cores" defaultCoreName="collection1">
-    <core name="collection1" instanceDir="." />
-  </cores>
+  <core name="core" instanceDir="core" />
+  <core name="data_set_manager" instanceDir="data_set_manager" />
+ </cores>
 </solr>

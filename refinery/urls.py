@@ -1,5 +1,6 @@
 from core.api import ProjectResource
 from core.views import admin_test_data
+from data_set_manager.views import search_typeahead
 from django.conf.urls.defaults import patterns, include, url
 from django.contrib import admin
 from haystack.forms import FacetedSearchForm
@@ -7,7 +8,6 @@ from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
 from tastypie.api import Api
 from workflow_manager.views import import_workflows
-from data_set_manager.views import search_typeahead
 
 
 # NG: facets for Haystack
@@ -58,6 +58,6 @@ urlpatterns = patterns('',
     
     # NG: Haystack (searching and querying) urls
     #url(r'^search/', include('haystack.urls')),
-    url(r'^search/', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=sqs), name='search'),
+    url(r'^search/', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=sqs), name='search' ),
     url(r'^typeahead/$', search_typeahead),
 )
