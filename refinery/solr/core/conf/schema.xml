@@ -170,16 +170,6 @@
 
     <field name="technology" type="text_en" indexed="true" stored="true" multiValued="true" />
 
-    <field name="uuid" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="assay_uuid" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="file_uuid" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="study_uuid" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="type" type="text_en" indexed="true" stored="true" multiValued="false" />
-
   </fields>
 
   <!-- field to use to determine and enforce document uniqueness. -->
