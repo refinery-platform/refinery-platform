@@ -173,7 +173,7 @@
     						{% for p in a.processed_data.all %}
     							<td>
     								<input type="checkbox" name="{{p}}" id="{{p}}" />
-									<label for="{{p}}">{{p.derived_data_file}}</label>
+									<label for="{{p}}">{{p.file_name}}</label>
 	    						</td>
 	    					{% endfor %}
     						</tr>

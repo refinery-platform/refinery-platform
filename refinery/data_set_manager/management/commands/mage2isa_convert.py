@@ -13,6 +13,10 @@ import string
 import re
 import time
 import os.path
+import logging
+
+# get module logger
+logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = "Fetches a list of ArrayExpress experiments and converts their"
@@ -39,8 +43,6 @@ class Command(BaseCommand):
             query_list = list()
             for arg in args:
                 query_list.append(arg)
-            
-            print query_list
         
             query_string = string.join(query_list, "&")
             query_string = "%s%s" % (settings.AE_BASE_QUERY, query_string)
@@ -55,6 +57,7 @@ class Command(BaseCommand):
         main program; calls the parsing and insertion functions
     """   
     def handle(self, *args, **options):
+        logger.info("Logging from mage2isa_convert")
         ae_query = self._make_query(args)
 
         try:
@@ -71,10 +74,10 @@ class Command(BaseCommand):
         except: #if file doesn't exist yet, then just make last_date_run today
             last_date_run = date.today()
         
-        print "getting %s" % ae_query
-        u = urllib2.urlopen(ae_query)
+        logger.info("getting %s" % ae_query)
+        u = urllib2.urlopen(ae_query)    
 
-        print "writing to file %s" % ae_file
+        logger.info("writing to file %s" % ae_file)
         f = open(ae_file, 'w')
         #download in pieces to make sure you're never biting off too much
         block_sz = 8192
@@ -86,7 +89,7 @@ class Command(BaseCommand):
             f.write(buffer) #write what you read from url to file
 
         f.close()
-        
+
         ae_accessions = list()
         f = open(ae_file, 'r')
         for line in f:
@@ -125,7 +128,6 @@ class Command(BaseCommand):
     
         #go to sleep for 3 seconds at a time until all tasks are finished
         while result.waiting():
-            print "processing..."
             time.sleep(5)
 
         results = result.join() #list of the results in dispatch order
