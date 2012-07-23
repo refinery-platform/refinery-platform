@@ -44,18 +44,4 @@ settings_local.py
 refinery/celeryev.pid
 .settings/*
 *.conflict
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> b0e6e6caa22ab33b1174560d6ac86c2a913be5bf
-<<<<<<< HEAD:.gitignore
-refinery/solr_config/data
-=======
 refinery/solr/*/data
->>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9:.gitignore
-<<<<<<< HEAD
-=======
-=======
-refinery/solr/*/data
->>>>>>> 032de07d51d014b55dbbbc2a49c5015994a38fe9
->>>>>>> b0e6e6caa22ab33b1174560d6ac86c2a913be5bf

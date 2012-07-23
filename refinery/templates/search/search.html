@@ -32,27 +32,6 @@
  <div class="span2">
 
     <!-- Begin faceting. -->
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <h4>By Submitter</h4>
-    <div>
-        <dl>
-            {% if facets.fields.submitter %}
-                {# Provide only the top 5 individual_sets #}
-                {# {% for submitter in facets.fields.submitter|slice:":5" %} #}
-                {% for submitter in facets.fields.submitter %}
-                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=submitter_exact:{{ submitter.0|urlencode }}">{{ submitter.0 }}</a> ({{ submitter.1 }})</dd>
-                {% endfor %}
-            {% else %}
-                <p>No submitter facets.</p>
-            {% endif %}
-        </dl>
-    </div>
-
-=======
->>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
-=======
->>>>>>> b0e6e6caa22ab33b1174560d6ac86c2a913be5bf
     <h4>By Measurement</h4>
     <div>
         <dl>
@@ -103,29 +82,12 @@
             {% for result in page.object_list %}
         <tr>
         	<td>
-<<<<<<< HEAD
-<<<<<<< HEAD
-				<i class="icon-file"></i> <a href="../data_sets/{{ result.object.uuid }}">{{ result.object.name }}</a><br>... {{ result.highlighted.text.0|safe }} ...        		
-=======
 				<i class="icon-file"></i> <a href="{% url data_set uuid=result.object.uuid %}">{{ result.object.name }}</a><br>... {{ result.highlighted.text.0|safe }} ...        		
->>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
-=======
-				<i class="icon-file"></i> <a href="{% url data_set uuid=result.object.uuid %}">{{ result.object.name }}</a><br>... {{ result.highlighted.text.0|safe }} ...        		
->>>>>>> b0e6e6caa22ab33b1174560d6ac86c2a913be5bf
         	</td>
         </tr>
     {% empty %}
 		No data sets available.  
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-    {% endfor %}
-=======
     {% endfor %}s
->>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
-=======
-    {% endfor %}s
->>>>>>> b0e6e6caa22ab33b1174560d6ac86c2a913be5bf
 		</tbody>		
 	</table>
 	 
