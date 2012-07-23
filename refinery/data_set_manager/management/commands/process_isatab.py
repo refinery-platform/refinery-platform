@@ -6,6 +6,10 @@ import re
 import time
 import sys
 import string
+import logging
+
+# get module logger
+logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = "Takes the directory of an ISA-Tab file as input, parses, and"
@@ -29,29 +33,38 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """parse arguments"""
         if len(args) < 2:
-            print "ERROR: Insufficient arguments; see description and usage",
-            print "below."
-            print self.help
+            self.logger.info("ERROR: Insufficient arguments; see description and usage")
+            self.logger.info(" below.\n")
+            self.logger.info(self.help)
             sys.exit()
         
         self._username = args[0]
         base_isa_dir = args[1]
         
-        print base_isa_dir
-        
         opt = {'base_pre_isa_dir': None, 'is_public': False}
+        """assign base_pre_isa_dir and is_public values"""
         for arg in args:
+            """split on "="s or ignore it"""
             try:
                 split_arg = string.split(arg, '=')
                 opt[split_arg[0]] = split_arg[1]
             except:
                 pass
 
+        """get a list of all the isatab files in base_isa_dir"""
         isatab_files = list()
         for dirname, dirnames, filenames in os.walk(base_isa_dir):
             for filename in filenames:
                 isatab_files.append(os.path.join(dirname, filename))
         
+        """
+        If isatab_files() is empty, then base_isa_dir is a file, not a
+        directory
+        """
+        if isatab_files:
+            isatab_files.append(base_isa_dir)
+        
+        """get a list of all the isatab files in base_pre_isa_dir"""
         pre_isatab_files = list()
         try:
             for dirname, dirnames, filenames in os.walk(opt['base_pre_isa_dir']):
@@ -59,24 +72,35 @@ class Command(BaseCommand):
                     pre_isatab_files.append(os.path.join(dirname, filename))
         except:
             pass
+        
+        """
+        If base_pre_isa_dir is defined but pre_isatab_files is empty,
+        then base_pre_isa_dir is a pre-ISA-Tab archive, not a directory
+        """
+        if opt['base_pre_isa_dir'] and not pre_isatab_files:
+            pre_isatab_files.append(opt['base_pre_isa_dir'])
 
         s_tasks = list()
-        if pre_isatab_files:
+        """add subtasks to list"""
+        if pre_isatab_files: #have both isatab and pre-isatab files
             for i, p in zip(isatab_files, pre_isatab_files):
                 sub_task = parse_isatab.subtask(args=(self._username,
                                                       opt['is_public'],
-                                                      i, self._additional_raw_data_file_extension, i, p))
+                                                      i, 
+                                                      self._additional_raw_data_file_extension, 
+                                                      i, p))
                 s_tasks.append(sub_task)
-        else:
+        else: #have only isatab files
             for i in isatab_files:
                 sub_task = parse_isatab.subtask(args=(self._username, 
                                                       opt['is_public'], 
-                                                      i, self._additional_raw_data_file_extension))
+                                                      i, 
+                                                      self._additional_raw_data_file_extension))
                 s_tasks.append(sub_task)
 
         job = TaskSet(tasks=s_tasks)
         result = job.apply_async()
         while result.waiting():
-            print "processing..."
+            print "parsing..."
             time.sleep(3)
         results = result.join()

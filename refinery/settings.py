@@ -214,15 +214,6 @@ LOGGING = {
     }
 }
 
-<<<<<<< HEAD
-# NG: added for search and faceting
-HAYSTACK_CONNECTIONS = {
-    'default': {
-        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
-        'URL': 'http://127.0.0.1:8983/solr'
-        # ...or for multicore...
-        # 'URL': 'http://127.0.0.1:8983/solr/mysite',
-=======
 # NG: added for search and faceting (for Solr multicore)
 HAYSTACK_CONNECTIONS = {
     'default': {
@@ -239,7 +230,6 @@ HAYSTACK_CONNECTIONS = {
         'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
         'URL': 'http://127.0.0.1:8983/solr/data_set_manager',
         'EXCLUDED_INDEXES': ['core.search_indexes.DataSetIndex', 'core.search_indexes.ProjectIndex'],
->>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
     },
 }
 

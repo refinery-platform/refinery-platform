@@ -148,14 +148,25 @@
 
     <field name="technology_exact" type="string" indexed="true" stored="true" multiValued="true" />
 
+<<<<<<< HEAD
+    <field name="name" type="text_en" indexed="true" stored="true" multiValued="false" />
+=======
     <field name="group_ids" type="text_en" indexed="true" stored="true" multiValued="true" />
 
     <field name="uuid" type="text_en" indexed="true" stored="true" multiValued="false" />
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 
     <field name="modification_date" type="date" indexed="true" stored="true" multiValued="false" />
 
     <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
 
+<<<<<<< HEAD
+    <field name="content_auto" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
+
+    <field name="summary" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="measurement" type="text_en" indexed="true" stored="true" multiValued="true" />
+=======
     <field name="measurement" type="text_en" indexed="true" stored="true" multiValued="true" />
 
     <field name="name" type="text_en" indexed="true" stored="true" multiValued="false" />
@@ -163,15 +174,27 @@
     <field name="creation_date" type="date" indexed="true" stored="true" multiValued="false" />
 
     <field name="content_auto" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 
     <field name="submitter" type="text_en" indexed="true" stored="true" multiValued="true" />
 
     <field name="measurement_exact" type="string" indexed="true" stored="true" multiValued="true" />
 
+<<<<<<< HEAD
+    <field name="creation_date" type="date" indexed="true" stored="true" multiValued="false" />
+
+    <field name="technology" type="text_en" indexed="true" stored="true" multiValued="true" />
+
+    <field name="uuid" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="group_ids" type="text_en" indexed="true" stored="true" multiValued="true" />
+
+=======
     <field name="summary" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="technology" type="text_en" indexed="true" stored="true" multiValued="true" />
 
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
     <field name="owner_id" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="description" type="text_en" indexed="true" stored="true" multiValued="false" />
@@ -187,4 +210,3 @@
   <!-- SolrQueryParser configuration: defaultOperator="AND|OR" -->
   <solrQueryParser defaultOperator="AND"/>
 </schema>
-

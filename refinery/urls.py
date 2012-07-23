@@ -1,12 +1,8 @@
 from core.api import ProjectResource
-<<<<<<< HEAD
-from core.views import admin_test_data
-=======
 from core.models import DataSet
 from core.views import admin_test_data
 from data_set_manager.views import search_typeahead
 from core.views import solr
->>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 from django.conf.urls.defaults import patterns, include, url
 from django.contrib import admin
 from haystack.forms import FacetedSearchForm
@@ -14,18 +10,10 @@ from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
 from tastypie.api import Api
 from workflow_manager.views import import_workflows
-<<<<<<< HEAD
-from data_set_manager.views import search_typeahead
-
-
-# NG: facets for Haystack
-sqs = SearchQuerySet().facet('submitter').facet('measurement').facet('technology').highlight()
-=======
 
 
 # NG: facets for Haystack
 sqs = SearchQuerySet().using( "core" ).models( DataSet ).facet('measurement').facet('technology').highlight()
->>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 
 
 # Uncomment the next two lines to enable the admin:
@@ -72,13 +60,8 @@ urlpatterns = patterns('',
     
     # NG: Haystack (searching and querying) urls
     #url(r'^search/', include('haystack.urls')),
-<<<<<<< HEAD
-    url(r'^search/', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=sqs), name='search'),
-    url(r'^typeahead/$', search_typeahead),
-=======
     url(r'^search/', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=sqs), name='search' ),
     url(r'^typeahead/$', search_typeahead),
     #url(r'^solr/(?P<query>.+/$)', solr ),
     url(r'^solr/$', solr ),
->>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 )

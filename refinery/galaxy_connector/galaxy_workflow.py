@@ -535,4 +535,3 @@ def countWorkflowSteps(workflow):
     #print "total_steps: " + str(total_steps)
     
     return total_steps
-

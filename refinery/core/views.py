@@ -1,30 +1,21 @@
 from collections import defaultdict
 from core.forms import ProjectForm
-<<<<<<< HEAD
-from core.models import *
-=======
 from core.models import ExtendedGroup, Project, DataSet, Workflow, UserProfile, \
     WorkflowEngine, Analysis
->>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 from data_set_manager.models import *
 from data_set_manager.utils import get_matrix
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
-<<<<<<< HEAD
-=======
 from django.contrib.auth.models import User, Group
->>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.urlresolvers import resolve
 from django.http import HttpResponse, HttpResponseForbidden, \
     HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-<<<<<<< HEAD
 from file_store.models import FileStoreItem
 from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
     get_perms
-=======
 from django.utils import simplejson
 from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
@@ -35,8 +26,6 @@ import logging
 import urllib2
 
 logger = logging.getLogger(__name__)
-
->>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 
 def home(request):
     if request.user.is_superuser:
@@ -644,9 +633,6 @@ def analysis(request, project_uuid, analysis_uuid ):
 def analysis_redirect(request, project_uuid, analysis_uuid):
     statuses = AnalysisStatus.objects.get(analysis_uuid=analysis_uuid)
     return HttpResponseRedirect(reverse('analysis_manager.views.analysis', args=(analysis_uuid,)))
-<<<<<<< HEAD
-"""
-=======
 """
 
 def solr(request):
@@ -665,4 +651,3 @@ def solr(request):
         query.update( { "fq": "group_ids:" + str( ExtendedGroup.objects.public_group().id ) } )    
         
     return HttpResponse( urllib2.urlopen( "http://127.0.0.1:8983/solr/core/select?" + query.urlencode() ).read(), mimetype='application/json' )
->>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
