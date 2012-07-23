@@ -6,7 +6,6 @@ Created on Apr 5, 2012
 
 from core.models import Analysis, AnalysisResult, WorkflowFilesDL
 from analysis_manager.models import AnalysisStatus
-from refinery_repository.models import Assay, RawData
 from celery.task import task
 from celery.task.sets import subtask, TaskSet
 import time, os, copy, urllib2
@@ -21,6 +20,7 @@ from celery import current_app as celery
 from file_store.models import FileStoreItem, is_local
 from file_store.tasks import import_file, create, rename
 import logging
+from galaxy_connector.galaxy_workflow import countWorkflowSteps
 
 logger = logging.getLogger(__name__)
 
@@ -190,7 +190,9 @@ def run_analysis_preprocessing(analysis):
     new_workflow_info = connection.import_workflow(new_workflow);
     
     ######### ANALYSIS MODEL 
-    new_workflow_steps = len(new_workflow["steps"])
+    # getting number of steps for current workflow
+    #new_workflow_steps = len(new_workflow["steps"])
+    new_workflow_steps = countWorkflowSteps(new_workflow)
     
     # creates new history in galaxy
     history_id = connection.create_history("Refinery Analysis - " + str(analysis.uuid) + " (" + str(datetime.now()) + ")")
@@ -212,6 +214,7 @@ def monitor_analysis_execution(analysis, interval=5.0, task_id=None):
     # required to get updated state (move out of this function) 
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
+    # number of galaxy steps associated with this analysis
     analysis_steps = analysis.workflow_steps_num
     
     # start monitoring task
@@ -223,13 +226,13 @@ def monitor_analysis_execution(analysis, interval=5.0, task_id=None):
     revoke_task = False
     
     while not revoke_task:
-        logger.debug("Sleeping ... in monitor_analysis_execution")
+        #logger.debug("Sleeping ... in monitor_analysis_execution")
         
         progress = connection.get_progress(analysis.history_id)
         monitor_analysis_execution.update_state(state="PROGRESS", meta=progress)
         
-        logger.debug("monitor_analysis_execution progress[workflow_state] = %s", progress["workflow_state"])
-        logger.debug("Progress:  %s", progress )
+        #logger.debug("monitor_analysis_execution progress[workflow_state] = %s", progress["workflow_state"])
+        #logger.debug("Progress:  %s", progress )
         
         if progress["workflow_state"] == "error":
             revoke_task = True

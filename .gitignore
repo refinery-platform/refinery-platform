@@ -44,4 +44,8 @@ settings_local.py
 refinery/celeryev.pid
 .settings/*
 *.conflict
+<<<<<<< HEAD:.gitignore
 refinery/solr_config/data
+=======
+refinery/solr/*/data
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9:.gitignore

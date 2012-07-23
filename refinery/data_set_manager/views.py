@@ -14,7 +14,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-from refinery_repository.tasks import call_download, download_ftp_file, process_isa_tab
+from data_set_manager.tasks import process_isa_tab
 from core.models import *
 from django import forms
 
@@ -97,6 +97,7 @@ def import_isa_tab(request):
                 if not item:
                     error = 'Problem downloading file from: ' + url
                     context = RequestContext(request, {'form': form, 'error': error})
+                    return render_to_response('data_set_manager/import.html', context_instance=context)
             else:
                 #FIXME: add file-like objects to the file store
                 item = FileStoreItem(source=f.name)
@@ -114,10 +115,11 @@ def import_isa_tab(request):
             else:
                 error = 'Problem parsing ISA-Tab file: ' + item.datafile.name
                 context = RequestContext(request, {'form': form, 'error': error})
+                return render_to_response('data_set_manager/import.html', context_instance=context)
         else:   # submitted form is not valid
             context = RequestContext(request, {'form': form, 'error': error})
     else:   # this was not a POST request
         form = ImportISATabFileForm()
         context = RequestContext(request, {'form': form})
 
-    return render_to_response('refinery_repository/import.html', context_instance=context)
+    return render_to_response('data_set_manager/import.html', context_instance=context)

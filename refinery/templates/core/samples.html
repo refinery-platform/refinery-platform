@@ -101,7 +101,13 @@
 
 	// function for updating available workflows
 	$("#workflow_choice").change(function(  ) {
+<<<<<<< HEAD
 		var temp_url = "/refinery_repository/workflow_inputs/" + $("#workflow_choice").val() + "/";
+=======
+		//var temp_url = "/refinery_repository/workflow_inputs/" + $("#workflow_choice").val() + "/";
+		var temp_url = "/analysis_manager/workflow_inputs/" + $("#workflow_choice").val() + "/";
+		
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 		 $.ajax({
 		     url:temp_url,
 		     type:"POST",
@@ -122,7 +128,11 @@
 	// Button to update available workflows from galaxy
 	$("#update_workflow_btn").click(function() {
 		$.ajax({
+<<<<<<< HEAD
 			url : "/refinery_repository/update_workflows/",
+=======
+			url : "/analysis_manager/update_workflows/",
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 			type : "POST",
 			dataType : "json",
 			data : {
@@ -154,7 +164,11 @@
 		// getting currently selected workflow
 		var temp_value = $("#workflow_choice").val();
 		if (temp_value != "") {
+<<<<<<< HEAD
 			document.getElementById('sampleForm').action='/refinery_repository/analysis_run/'; // Where to go
+=======
+			document.getElementById('sampleForm').action='/analysis_manager/analysis_run/'; // Where to go
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 			document.getElementById('sampleForm').submit(); // Send POST data and go there
 		}
 		else { 

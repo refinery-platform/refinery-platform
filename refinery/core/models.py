@@ -127,6 +127,11 @@ class SharableResource ( OwnableResource ):
         for group_object, permission_list in permissions.items():            
             group = {}
             group["group"] = ExtendedGroup.objects.get( id=group_object.id )
+<<<<<<< HEAD
+=======
+            group["uuid"] = group["group"].uuid
+            group["id"] = group["group"].id
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
             group["change"] = False
             group["read"] = False
             for permission in permission_list:  
