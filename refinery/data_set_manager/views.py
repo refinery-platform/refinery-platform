@@ -40,6 +40,14 @@ def node_types_files(request, study_uuid, assay_uuid=None ):
 def node_annotate(request, type, study_uuid, assay_uuid=None ):
     return HttpResponse( simplejson.dumps( update_annotated_nodes(study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type ), indent=2 ), mimetype='application/json' )
     #return HttpResponse( update_annotated_nodes(study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type ), mimetype='application/json' )
+    
+def contents(request, study_uuid, assay_uuid ):
+    return render_to_response('data_set_manager/contents.html', {
+                               "study_uuid": study_uuid,
+                               "assay_uuid": assay_uuid,
+                               },
+                              context_instance=RequestContext(request) )
+    
 
 # ajax function for returning typeahead queries
 def search_typeahead(request):

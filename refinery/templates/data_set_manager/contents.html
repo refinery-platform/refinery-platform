@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block head_html %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v2.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/viewers/profile-viewer.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}js/json2.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-1.7.1.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/underscore.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/backbone/backbone.js"></script>
+    <style type="text/css">
+ 
+    </style>
+{% endblock %}
+
+{% block title %}
+
+{{ block.super }} - Contents
+{% endblock %}
+
+{% block subheader %}
+	Contents
+{% endblock %}
+
+{% block content %}
+Content goes here!
+{% endblock %}

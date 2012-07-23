@@ -13,5 +13,3 @@ class ProjectResource(ModelResource):
     class Meta:
         authentication = ApiKeyAuthentication()
         queryset = Project.objects.all()
-        
-    
