@@ -219,7 +219,11 @@ HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
         'URL': 'http://127.0.0.1:8983/solr/default',
+<<<<<<< HEAD
         'EXCLUDED_INDEXES': ['data_set_manager.search_indexes.NodeIndex','core.search_indexes.DataSetIndex'],
+=======
+        'EXCLUDED_INDEXES': ['data_set_manager.search_indexes.NodeIndex','core.search_indexes.DataSetIndex', 'core.search_indexes.ProjectIndex'],
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
     },
     'core': {
         'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
@@ -229,7 +233,11 @@ HAYSTACK_CONNECTIONS = {
     'data_set_manager': {
         'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
         'URL': 'http://127.0.0.1:8983/solr/data_set_manager',
+<<<<<<< HEAD
         'EXCLUDED_INDEXES': ['core.search_indexes.DataSetIndex'],
+=======
+        'EXCLUDED_INDEXES': ['core.search_indexes.DataSetIndex', 'core.search_indexes.ProjectIndex'],
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
     },
 }
 

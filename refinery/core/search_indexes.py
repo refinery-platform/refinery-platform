@@ -16,6 +16,11 @@ import datetime
 
 class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
+<<<<<<< HEAD
+=======
+    owner_id = indexes.CharField() # id of the user who owns this project
+    group_ids = indexes.MultiValueField(null=True) # ids of the groups who have read permission for this data set    
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
     name = indexes.CharField(model_attr='name', null=True )
     uuid = indexes.CharField(model_attr='uuid')
     summary = indexes.CharField(model_attr='summary')        
@@ -31,6 +36,15 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     def get_model(self):
         return DataSet
 
+<<<<<<< HEAD
+=======
+    def prepare_owner_id(self, object):
+        return object.get_owner().id
+
+    def prepare_group_ids(self, object):
+        return [ g["id"] for g in object.get_groups() ]
+
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
     def index_queryset(self):
         """Used when the entire index for model is updated."""
         return self.get_model().objects.all()
@@ -143,7 +157,11 @@ class ProjectIndex(indexes.SearchIndex, indexes.Indexable):
         return object.get_owner().id
 
     def prepare_group_ids(self, object):
+<<<<<<< HEAD
         return [ g["group"] for g in object.get_groups() ]
+=======
+        return [ g["id"] for g in object.get_groups() ]
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 
     def index_queryset(self):
         """Used when the entire index for model is updated."""

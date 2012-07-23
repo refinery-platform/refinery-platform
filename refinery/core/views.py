@@ -1,19 +1,42 @@
 from collections import defaultdict
 from core.forms import ProjectForm
+<<<<<<< HEAD
 from core.models import *
+=======
+from core.models import ExtendedGroup, Project, DataSet, Workflow, UserProfile, \
+    WorkflowEngine, Analysis
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 from data_set_manager.models import *
 from data_set_manager.utils import get_matrix
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
+<<<<<<< HEAD
+=======
+from django.contrib.auth.models import User, Group
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.urlresolvers import resolve
 from django.http import HttpResponse, HttpResponseForbidden, \
     HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
+<<<<<<< HEAD
 from file_store.models import FileStoreItem
 from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
     get_perms
+=======
+from django.utils import simplejson
+from file_store.models import FileStoreItem
+from galaxy_connector.models import Instance
+from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
+    get_perms, get_users_with_perms
+from haystack.query import SearchQuerySet
+import logging
+import urllib2
+
+logger = logging.getLogger(__name__)
+
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 
 def home(request):
     if request.user.is_superuser:
@@ -621,4 +644,25 @@ def analysis(request, project_uuid, analysis_uuid ):
 def analysis_redirect(request, project_uuid, analysis_uuid):
     statuses = AnalysisStatus.objects.get(analysis_uuid=analysis_uuid)
     return HttpResponseRedirect(reverse('analysis_manager.views.analysis', args=(analysis_uuid,)))
+<<<<<<< HEAD
 """
+=======
+"""
+
+def solr(request):
+    # copy querydict to make it editable
+    query = request.GET.copy()
+    
+    if request.user.is_authenticated():        
+        # limit query to objects owned by the current user and to
+        # objects shared with groups that the user is part of who
+        # have at least read permissions for this model instance 
+        user_id = request.user.id
+        group_ids = request.user.groups.all().values_list( "id", flat=True )    
+        query.update( { "fq": "owner_id:" + str( user_id ) + " OR "  + "(group_ids:" + " OR ".join( [ str( g ) for g in group_ids ]) + ")" } )        
+    else:
+        # limit results to anything shared with the public group
+        query.update( { "fq": "group_ids:" + str( ExtendedGroup.objects.public_group().id ) } )    
+        
+    return HttpResponse( urllib2.urlopen( "http://127.0.0.1:8983/solr/core/select?" + query.urlencode() ).read(), mimetype='application/json' )
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9

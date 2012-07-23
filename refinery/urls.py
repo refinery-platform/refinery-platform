@@ -2,6 +2,10 @@ from core.api import ProjectResource
 from core.models import DataSet
 from core.views import admin_test_data
 from data_set_manager.views import search_typeahead
+<<<<<<< HEAD
+=======
+from core.views import solr
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 from django.conf.urls.defaults import patterns, include, url
 from django.contrib import admin
 from haystack.forms import FacetedSearchForm
@@ -61,4 +65,9 @@ urlpatterns = patterns('',
     #url(r'^search/', include('haystack.urls')),
     url(r'^search/', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=sqs), name='search' ),
     url(r'^typeahead/$', search_typeahead),
+<<<<<<< HEAD
+=======
+    #url(r'^solr/(?P<query>.+/$)', solr ),
+    url(r'^solr/$', solr ),
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 )
