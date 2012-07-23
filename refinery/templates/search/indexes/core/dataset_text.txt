@@ -11,7 +11,11 @@
 	<b>{{ node.node_name }}</b>: <i>{{ node.attribute_type }} {{ node.attribute_subtype }}</i>: {{ node.attribute_value }} {{ node.attribute_unit }}<br>
 {% endfor %}
 <<<<<<< HEAD
+<<<<<<< HEAD
 {% endif %}
 =======
 {% endif %}
 >>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
+=======
+{% endif %}
+>>>>>>> 032de07d51d014b55dbbbc2a49c5015994a38fe9

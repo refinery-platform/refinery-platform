@@ -122,4 +122,8 @@ def import_isa_tab(request):
         form = ImportISATabFileForm()
         context = RequestContext(request, {'form': form})
 
+<<<<<<< HEAD
     return render_to_response('data_set_manager/import.html', context_instance=context)
+=======
+    return render_to_response('data_set_manager/import.html', context_instance=context)
+>>>>>>> 032de07d51d014b55dbbbc2a49c5015994a38fe9
