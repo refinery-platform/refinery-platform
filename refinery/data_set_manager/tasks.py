@@ -64,7 +64,11 @@ def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=
     """
     out_dir = os.path.join(out_dir, accession) #directory where file downloads
     
+<<<<<<< HEAD
     logger.info("refinery_repository.download_http_file called")
+=======
+    logger.info("data_set_manager.download_http_file called")
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
     
     #make super-directory (out_dir/accession) if it doesn't exist
     create_dir(out_dir)

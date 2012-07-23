@@ -32,6 +32,7 @@
  <div class="span2">
 
     <!-- Begin faceting. -->
+<<<<<<< HEAD
     <h4>By Submitter</h4>
     <div>
         <dl>
@@ -47,6 +48,8 @@
         </dl>
     </div>
 
+=======
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
     <h4>By Measurement</h4>
     <div>
         <dl>
@@ -97,13 +100,21 @@
             {% for result in page.object_list %}
         <tr>
         	<td>
+<<<<<<< HEAD
 				<i class="icon-file"></i> <a href="../data_sets/{{ result.object.uuid }}">{{ result.object.name }}</a><br>... {{ result.highlighted.text.0|safe }} ...        		
+=======
+				<i class="icon-file"></i> <a href="{% url data_set uuid=result.object.uuid %}">{{ result.object.name }}</a><br>... {{ result.highlighted.text.0|safe }} ...        		
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
         	</td>
         </tr>
     {% empty %}
 		No data sets available.  
 
+<<<<<<< HEAD
     {% endfor %}
+=======
+    {% endfor %}s
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 		</tbody>		
 	</table>
 	 

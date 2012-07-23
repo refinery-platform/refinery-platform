@@ -408,4 +408,3 @@ def create_manager_group( sender, instance, created, **kwargs ):
         post_save.connect(create_manager_group, sender=ExtendedGroup)        
         
 post_save.connect(create_manager_group, sender=ExtendedGroup)
-

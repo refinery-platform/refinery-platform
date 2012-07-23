@@ -5,7 +5,11 @@ Created on Jul 2, 2012
 '''
 
 
+<<<<<<< HEAD
 from core.models import DataSet
+=======
+from core.models import DataSet, Project
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 from data_set_manager.models import Node, AnnotatedNode
 from data_set_manager.utils import get_node_types
 from django.template import loader
@@ -16,6 +20,7 @@ import datetime
 
 class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
+<<<<<<< HEAD
     name = indexes.CharField(model_attr='name', null=True )
     submitter = indexes.MultiValueField(null=True, faceted=True )
     measurement = indexes.MultiValueField(null=True, faceted=True )
@@ -26,13 +31,40 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     # We add this for autocomplete.
     content_auto = indexes.EdgeNgramField(model_attr='name')
     #content_auto = indexes.EdgeNgramField(model_attr='summary')
+=======
+    owner_id = indexes.CharField() # id of the user who owns this project
+    group_ids = indexes.MultiValueField(null=True) # ids of the groups who have read permission for this data set    
+    name = indexes.CharField(model_attr='name', null=True )
+    uuid = indexes.CharField(model_attr='uuid')
+    summary = indexes.CharField(model_attr='summary')        
+    creation_date = indexes.DateTimeField(model_attr='creation_date' )
+    modification_date = indexes.DateTimeField(model_attr='modification_date' )
+
+    submitter = indexes.MultiValueField(null=True)
+    measurement = indexes.MultiValueField(null=True, faceted=True )
+    technology = indexes.MultiValueField(null=True, faceted=True )
+    # We add this for autocomplete.
+    content_auto = indexes.EdgeNgramField(model_attr='name')
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
 
     def get_model(self):
         return DataSet
 
+<<<<<<< HEAD
     def index_queryset(self):
         """Used when the entire index for model is updated."""
         return self.get_model().objects.filter(modification_date__lte=datetime.datetime.now())
+=======
+    def prepare_owner_id(self, object):
+        return object.get_owner().id
+
+    def prepare_group_ids(self, object):
+        return [ g["id"] for g in object.get_groups() ]
+
+    def index_queryset(self):
+        """Used when the entire index for model is updated."""
+        return self.get_model().objects.all()
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
     
     def prepare_submitter(self,object):        
         investigation = object.get_investigation()
@@ -118,3 +150,37 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     
         return data
 
+<<<<<<< HEAD
+=======
+
+
+class ProjectIndex(indexes.SearchIndex, indexes.Indexable):
+    text = indexes.CharField(document=True, use_template=True)
+    owner_id = indexes.CharField() # id of the user who owns this project
+    group_ids = indexes.MultiValueField(null=True) # ids of the groups who have read permission for this data set
+    name = indexes.CharField(model_attr='name', null=True )
+    uuid = indexes.CharField(model_attr='uuid')
+    summary = indexes.CharField(model_attr='summary')    
+    description = indexes.CharField(model_attr='description', null=True)    
+    creation_date = indexes.DateTimeField(model_attr='creation_date' )
+    modification_date = indexes.DateTimeField(model_attr='modification_date' )
+
+    # We add this for autocomplete.
+    content_auto = indexes.EdgeNgramField(model_attr='name')
+    #content_auto = indexes.EdgeNgramField(model_attr='summary')
+
+    def get_model(self):
+        return Project
+
+    def prepare_owner_id(self, object):
+        return object.get_owner().id
+
+    def prepare_group_ids(self, object):
+        return [ g["id"] for g in object.get_groups() ]
+
+    def index_queryset(self):
+        """Used when the entire index for model is updated."""
+        return self.get_model().objects.all().exclude( is_catch_all=True )
+    
+    
+>>>>>>> 364d16d401b820e8c71632a16caab1f1d62e90b9
