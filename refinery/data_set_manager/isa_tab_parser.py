@@ -21,6 +21,8 @@ import os
 import simplejson
 import logging
 import re
+import string
+import tempfile
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -578,6 +580,8 @@ class IsaTabParser:
         headers = []
         headers = self._current_reader.next()
         
+        #clean up the header
+        headers = [x.strip() for x in headers]
         try:
             headers.remove( "" )
         except:
@@ -585,7 +589,14 @@ class IsaTabParser:
         
         # TODO: check if all factor values used in this file have been declared
         
-        for row in self._current_reader:            
+        for row in self._current_reader:
+            #clean up the row
+            row = [x.strip() for x in row]
+            try:
+                row.remove("")
+            except:
+                pass
+
             row = deque( row )
             #print( ", ".join( row ) )
             self._previous_node = None
@@ -827,7 +838,7 @@ class IsaTabParser:
             logger.info( "Supplied path \"" + path + "\" is not a directory. Assuming ISArchive file." )
             try:
                 # TODO: do we need a random subdirectory here?
-                extract_path = settings.ISA_TAB_TEMP_DIR
+                extract_path = tempfile.mkdtemp(dir=settings.ISA_TAB_TEMP_DIR)
                 with ZipFile(path, 'r') as zip:
                     # test if any paths are relative or absolute and outside the extract path
                     for name in zip.namelist():
@@ -837,12 +848,14 @@ class IsaTabParser:
                     # extract archive
                     zip.extractall( extract_path )
                     
+                    first_file = zip.namelist()[0]
                     # test if first entry in zip file is a path
-                    if zip.namelist()[0].endswith( "/" ):                        
+                    if first_file.endswith( "/" ):
                         # add archive subdirectory to path 
-                        extract_path = os.path.join( extract_path, zip.namelist()[0] )
-                    else:                        
-                        pass
+                        extract_path = os.path.join( extract_path, first_file )
+                    elif re.search(r'/', first_file):
+                        ind = string.find(first_file, '/')
+                        extract_path = os.path.join(extract_path, first_file[:ind])
                                                         
                     logger.info( "ISArchive extracted to \"" + extract_path + "\"." )                
                     print( "ISArchive extracted to \"" + extract_path + "\"." )                
