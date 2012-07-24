@@ -37,19 +37,42 @@ class Command(BaseCommand):
     help = "%s\t\"species\": species of the samples; e.g." % help
     help = "%s species='homo sapiens AND mouse'\n\n" % help
 
+    def create_dir(file_path):
+        """
+        Name: create_dir
+        Description:
+            creates a directory if it needs to be created
+        Parameters:
+            file_path: directory to create if necessary
+        """
+        try:
+            os.makedirs(file_path)
+        except OSError, e:
+            if e.errno != errno.EEXIST:
+                raise
+        
+
     def _make_query(self, args):
+        """
+        Name: make_query
+        Description:
+            creates an ArrayExpress query string from the command line arguments
+        Parameters:
+            args: the command line arguments
+        """
         query_string = ""
         if args:
             query_list = list()
             for arg in args:
                 query_list.append(arg)
-        
+
             query_string = string.join(query_list, "&")
             query_string = "%s%s" % (settings.AE_BASE_QUERY, query_string)
         else:
             query_string = "%sexptype=" % settings.AE_BASE_QUERY
-        
+
         return query_string
+
 
     """
     Name: handle
@@ -115,24 +138,28 @@ class Command(BaseCommand):
                 pass                    
         f.close()
         
+        """create directories that zip archives will reside in"""
+        base_isa_dir = os.path.join(settings.ISA_TAB_DIR, 'isa')
+        base_preisa_dir = os.path.join(settings.ISA_TAB_DIR, 'pre_isa')
         
+        _create_dir(base_isa_dir)
+        _create_dir(base_preisa_dir)
+
+        """create subtasks for converting now that you know what to convert"""
         s_tasks = list()
         for ae_accession in ae_accessions:
-            #print ae_accession        
-            #task = convert_to_isatab.delay(ae_accession)
+            #print ae_accession
             s_task = convert_to_isatab.subtask(args=(ae_accession,))
             s_tasks.append(s_task)
-    
+
+        """dispatch the tasks and wait for everything to return"""
         job = TaskSet(tasks=s_tasks)
         result = job.apply_async()
     
-        #go to sleep for 3 seconds at a time until all tasks are finished
+        #go to sleep for 5 seconds at a time until all tasks are finished
         while result.waiting():
             time.sleep(5)
 
         results = result.join() #list of the results in dispatch order
-
-        base_isa_dir = os.path.join(settings.ISA_TAB_DIR, 'isa')
-        base_preisa_dir = os.path.join(settings.ISA_TAB_DIR, 'pre_isa')
 
         call_command('process_isatab', 'ArrayExpress', base_isa_dir, base_preisa_dir, is_public=True)
