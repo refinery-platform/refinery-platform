@@ -240,7 +240,11 @@ class InvestigationLink(models.Model):
     data_set = models.ForeignKey(DataSet)
     investigation = models.ForeignKey(Investigation)
     version = models.IntegerField(default=1) 
-    message = models.CharField(max_length=500, blank=True, null=True) 
+    message = models.CharField(max_length=500, blank=True, null=True)
+    
+    def __unicode__(self):
+        retstr = "%s: ver=%s, %s" % (self.investigation.get_identifier(), self.version, self.message)
+        return retstr
 
 
 class WorkflowDataInput ( models.Model ):
