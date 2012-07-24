@@ -20,6 +20,7 @@ import logging
 import os
 import simplejson
 import logging
+import re
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -278,7 +279,8 @@ class IsaTabParser:
         
         # TODO: remove this once it has been implemented in the preprocessing
         if header_components[0] == Node.RAW_DATA_FILE and self.additional_raw_data_file_extension is not None and len( node_name ) > 0:
-            node_name += self.additional_raw_data_file_extension
+            if not re.search(r'%s$' % self.additional_raw_data_file_extension, node_name):
+                node_name += self.additional_raw_data_file_extension
         
         if ( header_components[0] in Node.ASSAYS | { Node.SAMPLE, Node.SOURCE, Node.EXTRACT, Node.LABELED_EXTRACT, Node.DATA_TRANSFORMATION, Node.NORMALIZATION } ) or ( header_components[0] in Node.FILES and len( node_name ) > 0 ):
             if header_components[0] in { Node.SAMPLE, Node.SOURCE }:
