@@ -8,7 +8,7 @@ var urlComponents = document.location.href.split("/");
 	
 var solrRoot = "http://127.0.0.1:8983/solr/data_set_manager/select";
 var solrQuery = "q=django_ct:data_set_manager.node";
-var solrSettings = "wt=json&facet=true";
+var solrSettings = "wt=json&json.wrf=?&facet=true";
 var testStudyUuid = urlComponents[urlComponents.length-2];
 var testAssayUuid = urlComponents[urlComponents.length-3]; 
  
@@ -85,10 +85,18 @@ function prettifyFacetName( name )
 	if ( position != -1 ) {
 		return name.substr( 0, position );
 	}	
+
+	/*
+	var position = name.indexOf( "_Comment_s" );
+	if ( position != -1 ) {
+		return name.substr( 0, position );
+	}
+	*/	
+
 }
 
 function initializeData( studyUuid, assayUuid, nodeType ) {
-	$.getJSON( buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 1, {}, {} ), function(data) {
+	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 1, {}, {} ), success: function(data) {
 		console.log( data );
 		
 		var doc = data.response.docs[0];		
@@ -101,18 +109,23 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 				if ( attribute.indexOf( "Factor_s" ) != -1 ) {
 					facets[attribute] = [];
 				}
+				/*
+				if ( attribute.indexOf( "Comment_s" ) != -1 ) {
+					facets[attribute] = [];
+				}
+				*/
 			}		
 		}
 		
 		getData( studyUuid, assayUuid, nodeType )				
-	});	
+	} });	
 }
 
 function getData( studyUuid, assayUuid, nodeType ) {
-	$.getJSON( buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 25, facets, {} ), function(data) {
+	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 25, facets, {} ), success: function(data) {
 		processFacets( data );
 		processDocs( data );
-	});	
+	}});	
 }
 
 
