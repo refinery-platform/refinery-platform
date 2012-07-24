@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block head_html %}
+	<!-- 3rd party libraries -->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v2.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}js/json2/json2.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery/jquery-1.7.2.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/underscore/underscore.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/backbone/backbone.js"></script>
+
+	<!-- Refinery libraries -->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>
+
+    <style type="text/css">
+ 
+    </style>
+{% endblock %}
+
+{% block title %}
+
+{{ block.super }} - Contents
+{% endblock %}
+
+{% block subheader %}
+	Contents
+{% endblock %}
+
+{% block content %}
+
+  <div id="facetview">
+
+    <section id="main">
+      <ul id="facet"></ul>
+    </section>
+
+    <footer>
+      <a id="clear-completed">Clear completed</a>
+      <div id="todo-count"></div>
+    </footer>
+
+ </div>
+ 
+   <!-- Templates -->
+
+  <script type="text/template" id="facet-template">
+    <div class="view">
+      <input class="toggle" type="checkbox" />
+      <label><%= name %> <%= count %></label>
+    </div>
+  </script>
+
+{% endblock %}

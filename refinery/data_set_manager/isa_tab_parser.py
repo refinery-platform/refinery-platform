@@ -20,6 +20,9 @@ import logging
 import os
 import simplejson
 import logging
+import re
+import string
+import tempfile
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -278,7 +281,8 @@ class IsaTabParser:
         
         # TODO: remove this once it has been implemented in the preprocessing
         if header_components[0] == Node.RAW_DATA_FILE and self.additional_raw_data_file_extension is not None and len( node_name ) > 0:
-            node_name += self.additional_raw_data_file_extension
+            if not re.search(r'%s$' % self.additional_raw_data_file_extension, node_name):
+                node_name += self.additional_raw_data_file_extension
         
         if ( header_components[0] in Node.ASSAYS | { Node.SAMPLE, Node.SOURCE, Node.EXTRACT, Node.LABELED_EXTRACT, Node.DATA_TRANSFORMATION, Node.NORMALIZATION } ) or ( header_components[0] in Node.FILES and len( node_name ) > 0 ):
             if header_components[0] in { Node.SAMPLE, Node.SOURCE }:
@@ -576,6 +580,8 @@ class IsaTabParser:
         headers = []
         headers = self._current_reader.next()
         
+        #clean up the header
+        headers = [x.strip() for x in headers]
         try:
             headers.remove( "" )
         except:
@@ -583,7 +589,14 @@ class IsaTabParser:
         
         # TODO: check if all factor values used in this file have been declared
         
-        for row in self._current_reader:            
+        for row in self._current_reader:
+            #clean up the row
+            row = [x.strip() for x in row]
+            try:
+                row.remove("")
+            except:
+                pass
+
             row = deque( row )
             #print( ", ".join( row ) )
             self._previous_node = None
@@ -825,7 +838,7 @@ class IsaTabParser:
             logger.info( "Supplied path \"" + path + "\" is not a directory. Assuming ISArchive file." )
             try:
                 # TODO: do we need a random subdirectory here?
-                extract_path = settings.ISA_TAB_TEMP_DIR
+                extract_path = tempfile.mkdtemp(dir=settings.ISA_TAB_TEMP_DIR)
                 with ZipFile(path, 'r') as zip:
                     # test if any paths are relative or absolute and outside the extract path
                     for name in zip.namelist():
@@ -835,12 +848,14 @@ class IsaTabParser:
                     # extract archive
                     zip.extractall( extract_path )
                     
+                    first_file = zip.namelist()[0]
                     # test if first entry in zip file is a path
-                    if zip.namelist()[0].endswith( "/" ):                        
+                    if first_file.endswith( "/" ):
                         # add archive subdirectory to path 
-                        extract_path = os.path.join( extract_path, zip.namelist()[0] )
-                    else:                        
-                        pass
+                        extract_path = os.path.join( extract_path, first_file )
+                    elif re.search(r'/', first_file):
+                        ind = string.find(first_file, '/')
+                        extract_path = os.path.join(extract_path, first_file[:ind])
                                                         
                     logger.info( "ISArchive extracted to \"" + extract_path + "\"." )                
                     print( "ISArchive extracted to \"" + extract_path + "\"." )                

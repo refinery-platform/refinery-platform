@@ -187,14 +187,30 @@ AUTH_PROFILE_MODULE = 'core.UserProfile'
 # more details on how to customize your logging configuration.
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
+    'root': {
+        'level': 'DEBUG',
+        'handlers': ['sentry'],
+    },
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+    },
     'handlers': {
+        'sentry': {
+            'level': 'DEBUG',
+            'class': 'raven.contrib.django.handlers.SentryHandler',
+            'formatter': 'verbose'
+        },
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'console': {
-            'class': 'logging.StreamHandler'
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
         }
     },
     'loggers': {
@@ -203,15 +219,37 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'django.db.backends': {
+            'level': 'ERROR',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'raven': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'sentry.errors': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'isa_tab_parser': {
+            'level': 'DEBUG',
+            'handlers': ['sentry'],
+            'propagate': False,
+        },
         'file_store': {
             'handlers': ['console'],
-            'level': 'DEBUG'
+            'level': 'DEBUG',
+            'propagate': False,
         },
         'analysis_manager': {
             'handlers': ['console'],
-            'level': 'DEBUG'
-        }
-    }
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
 }
 
 # NG: added for search and faceting (for Solr multicore)
