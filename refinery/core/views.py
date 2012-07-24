@@ -651,3 +651,16 @@ def solr(request):
         query.update( { "fq": "group_ids:" + str( ExtendedGroup.objects.public_group().id ) } )    
         
     return HttpResponse( urllib2.urlopen( "http://127.0.0.1:8983/solr/core/select?" + query.urlencode() ).read(), mimetype='application/json' )
+
+def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
+    print "core.views.samples_solr called"
+    data_set = get_object_or_404( DataSet, uuid=ds_uuid )
+    
+    # getting current workflows
+    workflows = Workflow.objects.all();
+    
+    # TODO: replace from settings.py or settings_local.py
+    solr_url = 'http://127.0.0.1:8983'
+
+    return render_to_response('core/samples_solr.html', {'workflows': workflows, 'data_set': data_set, 'study_uuid':study_uuid, 'assay_uuid':assay_uuid, 'solr_url':solr_url}, 
+                              context_instance=RequestContext(request))
