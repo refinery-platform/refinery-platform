@@ -1,14 +1,32 @@
 {% extends "base.html" %}
 
 {% block head_html %}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v2.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/viewers/profile-viewer.js"></script>
-	<script type="text/javascript" src="{{ STATIC_URL }}js/json2.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-1.7.1.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/underscore.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/backbone/backbone.js"></script>
+	<!-- 3rd party libraries -->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/bootstrap-collapse.js"></script>
+
+	<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/jquery.dataTables.js"></script>		
+    <script type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/DT_bootstrap.js"></script>		
+    
+	<!-- Refinery libraries -->
+	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>
+    
     <style type="text/css">
- 
+ 	.facet-title {
+ 		cursor:pointer; 		
+ 	} 	
+
+ 	.facet-value {
+ 		cursor:pointer; 		
+ 	}
+ 	 	
+ 	.active {
+ 		cursor:pointer; 
+ 		background-color: #3A87AD;
+ 		color: #fff;
+ 		font-weight: bold;
+ 	} 	
     </style>
 {% endblock %}
 
@@ -22,5 +40,44 @@
 {% endblock %}
 
 {% block content %}
-Content goes here!
+
+<div id="url-view"></div>
+<div id="statistics-view"></div>
+
+<div class="row-fluid">
+ 	<div class="span2">
+		<div id="facet-view"></div>
+ 	</div>	
+ 	<div class="span10">
+ 			
+ 		<div class="row-fluid">
+	
+ 			<div class="btn-group">
+
+    		<button class="btn btn-primary pull-right" id="submitSamplesBtn">
+    				<i class="icon-road"></i>Run Workflow
+    			</button>
+				<div class="btn">
+					Choose Workflow
+				</div>
+	
+				<select class="combobox" name="workflow_choice" id="workflow_choice">
+					<option></option>
+					{% for work in workflows %}
+						<option value="{{work.uuid}}">{{work.name}}</option>
+					{% endfor %}
+				</select>
+
+			</div>
+ 			 	
+    		
+    	</div>
+    	<div class="row-fluid">
+			<div id="field-view"></div>
+		</div>
+		<div class="row-fluid">
+			<div id="table-view"></div>
+		</div>
+ 	</div>	
+
 {% endblock %}

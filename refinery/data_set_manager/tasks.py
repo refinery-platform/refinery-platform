@@ -128,24 +128,28 @@ def convert_to_isatab(accession):
         accession: ArrayExpress study to convert
     """
     logger = convert_to_isatab.get_logger()
-    logger.info("loging from convert_to_isatab")
+    logger.info("logging from convert_to_isatab")
     retval = 1 #successful conversion
-    command = "./convert.sh %s" % accession
     
     #send stdout and stderr to a unique temp directory to avoid console
     temp_dir = tempfile.mkdtemp()
-    stderr_n = tempfile.NamedTemporaryFile(dir=temp_dir, prefix='ae_stderr').name
-    stdout_n = tempfile.NamedTemporaryFile(dir=temp_dir, prefix='ae_stdout').name
+    #stderr_n = tempfile.NamedTemporaryFile(dir=temp_dir, prefix='ae_stderr').name
+    #stdout_n = tempfile.NamedTemporaryFile(dir=temp_dir, prefix='ae_stdout').name
 
     #create the subprocess
-    process = subprocess.Popen(args=command, shell=True, 
-                               cwd=settings.CONVERSION_DIR, 
-                               stderr=open(stderr_n, 'wb'),
-                               stdout=open(stdout_n, 'wb'))
+    process = subprocess.Popen(args="./convert.sh", shell=True, 
+                               cwd=settings.CONVERSION_DIR,
+                               stdin=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               stdout=subprocess.PIPE)
+                               #stderr=open(stderr_n, 'wb'),
+                               #stdout=open(stdout_n, 'wb'))
     #run the subprocess and grab the exit code
-    exit_code = process.wait()
-    #process stderr
-    stderr = open(stderr_n).read().strip()
+    #exit_code = process.wait()
+    (stdout, stderr) = process.communicate(input=accession)
+    exit_code = process.returncode
+    """process stderr"""
+    #stderr = open(stderr_n).read().strip()
     if stderr:
         shutil.rmtree(os.path.join(settings.ISA_TAB_DIR, accession))
         logger.error(stderr)
@@ -168,25 +172,25 @@ def convert_to_isatab(accession):
         """ 
         shutil.make_archive(isatab_file_location, 'zip',  
                                         settings.ISA_TAB_DIR, accession)
-        
+
         #Get and zip up the MAGE-TAB and put in the ISA-Tab folder
         #make file name for ArrayExpress information to download into
         ae_name = tempfile.NamedTemporaryFile(dir=temp_dir, prefix='ae_').name
         #make url to fetch the experiment
         url = "%s/%s" % (settings.AE_BASE_URL, accession)
-        
+
         #get ArrayExpress information to get URLs to download
         u = urllib2.urlopen(url)
         f = open(ae_name, 'wb')
         f.write(u.read()) #small file, so just grab whole thing in one go
         f.close()
-        
+
         #open and read in the last line (the HTML) that has the info we want
         f = open(ae_name, 'rb')
         lines = f.readlines()
         f.close()
         last_line = lines[-1]
-        
+
         dir_to_zip = os.path.join(temp_dir, "magetab")
         create_dir(dir_to_zip)
 
@@ -248,7 +252,6 @@ def create_dataset(investigation_uuid, username, public=False):
         #user doesn't exist
         user = User.objects.create_user(username, "", "test")
 
-
     if investigation_uuid != None:
         
         # TODO: make sure this is used everywhere 
@@ -295,7 +298,7 @@ def annotate_nodes(investigation_uuid):
                     
 
 @task()
-def parse_isatab(username, public, path, additional_raw_data_file_extension=None, isa_archive=None, pre_isa_archive=None ):
+def parse_isatab(username, public, path, additional_raw_data_file_extension=None, isa_archive=None, pre_isa_archive=None):
     """
     parse_isatab(username, is_public, folder_name, additional_raw_data_file_extension, isa_archive=<path> pre_isa_archive=<path>
     """
@@ -306,12 +309,12 @@ def parse_isatab(username, public, path, additional_raw_data_file_extension=None
         investigation = p.run(path, isa_archive=isa_archive, preisa_archive=pre_isa_archive)
         create_dataset(investigation.uuid, username, public=public)
     except: #prints the error message without breaking things
-        logger.error("*** print_tb:\n")
+        logger.error("*** print_tb:")
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        logger.error(traceback.print_tb(exc_traceback, limit=1, file=sys.stdout))
-        logger.error("*** print_exception:\n")
-        logger.error(traceback.print_exception(exc_type, exc_value, exc_traceback,
-                          limit=2, file=sys.stdout))
+        logger.error(traceback.print_tb(exc_traceback, file=sys.stdout))
+        logger.error("*** print_exception:")
+        logger.error(traceback.print_exception(exc_type, exc_value,
+                          exc_traceback, file=sys.stdout))
     return None
 
 @task()

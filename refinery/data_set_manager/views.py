@@ -17,6 +17,8 @@ from django.template import RequestContext
 from data_set_manager.tasks import process_isa_tab
 from core.models import *
 from django import forms
+from core.models import Workflow
+
 
 def index(request):
     return HttpResponse( simplejson.dumps( get_nodes(study_id=2, assay_id=2), indent=2 ), mimetype='application/json' )
@@ -42,9 +44,13 @@ def node_annotate(request, type, study_uuid, assay_uuid=None ):
     #return HttpResponse( update_annotated_nodes(study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type ), mimetype='application/json' )
     
 def contents(request, study_uuid, assay_uuid ):
+    # getting current workflows
+    workflows = Workflow.objects.all();
+    
     return render_to_response('data_set_manager/contents.html', {
                                "study_uuid": study_uuid,
                                "assay_uuid": assay_uuid,
+                               "workflows": workflows,
                                },
                               context_instance=RequestContext(request) )
     
