@@ -138,6 +138,7 @@ function decomposeFacetValueId( facetValueId ) {
 }
 
 function processFacets( data ) {
+	// hello wolrd, this is a test!
 	$( "#facet-view" ).html("");
 
 	for ( var facet in data.facet_counts.facet_fields ) {
