@@ -152,7 +152,8 @@ function processFacets( data ) {
 
 	for ( var facet in data.facet_counts.facet_fields ) {
 		if ( data.facet_counts.facet_fields.hasOwnProperty( facet ) ) {
-			items = [];
+			var unselectedItems = [];
+			var selectedItems = [];
 
 			for ( var j = 0; j < data.facet_counts.facet_fields[facet].length; j += 2 ) {
 				var facetValue = data.facet_counts.facet_fields[facet][j];
@@ -170,17 +171,17 @@ function processFacets( data ) {
 				}
 				
 				if ( facets[facet][facetValue].selected ) {
-		    		items.unshift("<li class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "&nbsp;<i class=\"icon-remove\"/>" + "</li>");					
+		    		selectedItems.push("<li class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "&nbsp;<i class=\"icon-remove\"/>" + "</li>");					
 				}
 				else {
-	    			items.push("<li class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "</li>");					
+	    			unselectedItems.push("<li class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "</li>");					
 				}
 				
 								
 			}
 			
 			$('<h3/>', { 'class': 'facet-title', html: prettifyFacetName( facet ) }).appendTo('#facet-view');
-			$('<ul/>', { 'class': 'facet-value-list', html: items.join('') }).appendTo('#facet-view');
+			$('<ul/>', { 'class': 'facet-value-list', html: selectedItems.join('') + "" + unselectedItems.join('') }).appendTo('#facet-view');
 			
 		}		
     }
