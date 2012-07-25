@@ -46,7 +46,13 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 				if ( facetValues.hasOwnProperty( facetValue ) )
 				{
 					if ( facetValues[facetValue].selected ) {
-						filterValues.push( facetValue.replace( /\ /g, "\\ " ) );
+						// escape or encode special characters
+						facetValue = facetValue.replace( /\ /g, "\\ " );
+						facetValue = facetValue.replace( /\(/g, "\\(" );
+						facetValue = facetValue.replace( /\)/g, "\\)" );
+						facetValue = facetValue.replace( /\+/g, "%2B" );
+						facetValue = facetValue.replace( /\:/g, "%3A" );
+						filterValues.push( facetValue );
 					}
 				}				
 			}
@@ -164,7 +170,7 @@ function processFacets( data ) {
 				}
 				
 				if ( facets[facet][facetValue].selected ) {
-		    		items.push("<li class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "&nbsp;<i class=\"icon-remove\"/>" + "</li>");					
+		    		items.unshift("<li class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "&nbsp;<i class=\"icon-remove\"/>" + "</li>");					
 				}
 				else {
 	    			items.push("<li class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "</li>");					
