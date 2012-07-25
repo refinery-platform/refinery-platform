@@ -196,20 +196,19 @@
   	});
   	
 	function getSearch(face1) { 
-		//var facet_query = "{{solr_url}}/solr/data_set_manager/select?indent=on&version=2.2&q=django_ct:data_set_manager.node&facet=true&fq=assay_uuid:{{assay_uuid}}&fq=study_uuid:{{study_uuid}}&fq=type:Raw&Data%File&wt=json&json.wrf=?&start=0&rows=100";
-		var facet_query = "{{solr_url}}/solr/data_set_manager/select?indent=on&version=2.2&q=django_ct:data_set_manager.node&facet=true&fq=assay_uuid:{{assay_uuid}}&fq=study_uuid:{{study_uuid}}&fq=type:Raw&Data%File&wt=json&json.wrf=?&start=0&rows=1000";
+		var facet_query = "{{solr_url}}/solr/data_set_manager/select?indent=on&version=2.2&q=django_ct:data_set_manager.node&facet=true&fq=assay_uuid:{{assay_uuid}}&fq=study_uuid:{{study_uuid}}&fq=type:Raw&Data%File&wt=json&json.wrf=?&start=0&rows=25";
 		
 		// adding found facets to query string
 		for (var j in face1) {
 			facet_query += "&facet.field=" + face1[j];
 		}
-		//console.log(facet_query);
 		
 		// retrieves first set of results
 		$.ajax({
 			url : facet_query,
-			type : "POST",
+			type : "GET",
 			dataType : "jsonp",
+			
 			success : function(data) {
 				var iter_facets = data;
 				var temp_facets = data.facet_counts.facet_fields;
@@ -228,23 +227,17 @@
 						if (val%2 == 0) {
 							curr_val = curr_facets[val].trim();
 							if (curr_val) {
-								//console.log(curr_facets[val]);
 								var val_next = parseInt(val) + 1;
-								//<input type="checkbox" id="xxx" name="xxx" onclick="calc();"/>
 								var checkbox_string = '<input type="checkbox" id="'+ curr_val + '" name="' + curr_val + '"/>';
-								//$('#facets ').append('\t <li>' + checkbox_string + "\t" + curr_val + '\t (' + curr_facets[val_next] + ')' + '</li>');
-								
 								facet_html += '\t <li>' + checkbox_string + "\t" + curr_val + '\t (' + curr_facets[val_next] + ')' + '</li>';
 							}
 						}
 					}
-					//$('#facets ').append('</div>');
 					facet_html += '</div><br>';	
 					$('#facets ').append(facet_html);	
 				}
 				var docs = data.response.docs;
-	            //console.log(col_head);
-	        
+	            
 	            $.each(docs, function(i, item) {
 	               var temp_item = new Array();
 
@@ -256,8 +249,7 @@
 	               $('#samples1').dataTable().fnAddData(temp_item);
               	});
 	
-				//console.log(data.response.numFound);
-	            var total = 'Found ' + data.response.numFound + ' results';
+				var total = 'Found ' + data.response.numFound + ' results';
 	            $('#results').prepend('<div>' + total + '</div>');
 			}
 		});
