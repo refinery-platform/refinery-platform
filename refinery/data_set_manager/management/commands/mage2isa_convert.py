@@ -37,7 +37,7 @@ class Command(BaseCommand):
     help = "%s\t\"species\": species of the samples; e.g." % help
     help = "%s species='homo sapiens AND mouse'\n\n" % help
 
-    def create_dir(file_path):
+    def _create_dir(self, file_path):
         """
         Name: create_dir
         Description:
@@ -142,8 +142,8 @@ class Command(BaseCommand):
         base_isa_dir = os.path.join(settings.ISA_TAB_DIR, 'isa')
         base_preisa_dir = os.path.join(settings.ISA_TAB_DIR, 'pre_isa')
         
-        _create_dir(base_isa_dir)
-        _create_dir(base_preisa_dir)
+        self._create_dir(base_isa_dir)
+        self._create_dir(base_preisa_dir)
 
         """create subtasks for converting now that you know what to convert"""
         s_tasks = list()
