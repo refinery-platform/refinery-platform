@@ -45,7 +45,7 @@ def analysis(request, uuid):
 def analysis_run(request):
     print "analysis_manager.analysis_run called";
     
-    #print request.POST
+    print simplejson.dumps(request.POST, indent=4);
 
     # gets workflow_uuid
     workflow_uuid = request.POST.getlist('workflow_choice')[0]

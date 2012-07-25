@@ -2,7 +2,7 @@
 
 {% block head_html %}
 	<!-- 3rd party libraries -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/bootstrap-collapse.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap-collapse.js"></script>
 
 	<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/jquery.dataTables.js"></script>		
@@ -51,23 +51,46 @@
 		<div id="url-view"></div>
  	</div>	
  	<div class="span8">
- 			<div class="btn-group">
+ 			<div class="row-fluid">
+			
+			<table class="table table-condensed"><tr>
+				<td class="">
+ 				<form class="form-search form-inline" id="search_form">
+  					<input type="text" class="input-medium search-query" placeholder="Search">
+ 		 			<button type="submit" class="btn" onclick="AddSearchTerm(); return false;">Search</button>
+				</form>
+				</td>
 
-    		<button class="btn btn-primary pull-right" id="submitSamplesBtn">
-    				<i class="icon-road"></i>Run Workflow
-    			</button>
-				<div class="btn">
+				<td class="">
+			<div class="btn-group pull-right">
+ 			
+				<form id="sampleForm" method="post" class="form-inline">
+    			{% csrf_token %}
+ 				Select Workflow
+ 				<!--
+ 				<div class="btn">
 					Choose Workflow
 				</div>
-	
-				<select class="combobox" name="workflow_choice" id="workflow_choice">
+				-->
+				
+				<select class="btn combobox" name="workflow_choice" id="workflow_choice">
 					<option></option>
 					{% for work in workflows %}
 						<option value="{{work.uuid}}">{{work.name}}</option>
 					{% endfor %}
 				</select>
+				
+				 <button class="btn btn-primary" id="submitSamplesBtn">
+    				<i class="icon-road"></i>Run Workflow
+    			</button>
 
-			</div> 		
+			</div>
+			</td>
+ 			 </tr></table>
+			
+
+    			    		
+    	</div>	
  	</div>	
  	<div class="span2">
 		<div id="statistics-view"></div> 		
