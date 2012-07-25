@@ -13,7 +13,7 @@ var testAssayUuid = urlComponents[urlComponents.length-3];
 var testNodeType = "\"Raw Data File\"";
 
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
-var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid" ]; // TODO: make these regexes
+var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type" ]; // TODO: make these regexes
 
 var addFieldNames = ["Options"];
 
@@ -83,7 +83,6 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 
 		if ( filterValues.length > 0 ) {
 			filter = facet.replace( /\ /g, "_" );								
-			console.log( filterValues );
 			url += "&fq={!tag=" + filter + "}" + facet.replace( /\ /g, "\\ " ) + ":(" + filterValues.join( " OR " ) + ")";													
 		}
 		
@@ -108,7 +107,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 	for ( var field in fields ) {
 		if ( fields.hasOwnProperty( field ) )
 		{			
-			if ( fields[field].isVisible ) {				
+			if ( ( fields[field].isVisible ) || ( hiddenFieldNames.indexOf( field ) >= 0 ) ) {				
 				// escape or encode special characters
 				field = field.replace( /\ /g, "\\ " );
 				field = field.replace( /\(/g, "\\(" );
@@ -202,14 +201,12 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 
 				   	$("#" + composeFacetId( attribute + "___inactive" ) ).on( "show", function( attribute ) {
 				   		attribute = decomposeFacetId( this.id ).facet;
-				   		console.log( attribute );
 				   		$( "#" + composeFacetId( attribute + "___active" ) ).slideUp( "slow" );
 				   	});						
 		
 				   	$("#" + composeFacetId( attribute + "___inactive" ) ).on( "hide", function() {
 				   		attribute = decomposeFacetId( this.id ).facet;
 				   		$( "#" + composeFacetId( attribute + "___active" ) ).slideDown( "slow");
-				   		console.log( attribute );
 				   	});																							
 				}
 								
@@ -327,7 +324,9 @@ function processFields() {
 				items.push("<span class=\"field-name\" id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-minus-sign\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );				
 			}
 			else {
-				items.push("<span class=\"field-name\" id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-plus-sign\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );								
+				if ( hiddenFieldNames.indexOf( field ) < 0 ) {
+					items.push("<span class=\"field-name\" id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-plus-sign\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );
+				}
 			}
 		}
 	}
@@ -345,9 +344,40 @@ function processFields() {
 	
 }
 
+function makeTableHeader( leadingExtra, trailingExtra ) {
+	leadingExtra = leadingExtra | 0;
+	trailingExtra = trailingExtra | 0;
+	
+	var items = [];
+
+	for ( var i = 0; i < leadingExtra; ++i ) {
+		items.push("<th></th>" );	
+	}
+		
+	for ( field in fields ) {
+		if ( fields.hasOwnProperty( field ) ) {
+			if ( fields[field].isVisible ) {
+				if ( fields[field].direction === "asc" ) {
+					items.push("<th id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "&nbsp;<i class=\"icon-arrow-down\"></th>" );				
+				} else if ( fields[field].direction === "desc" ) {
+					items.push("<th id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "&nbsp;<i class=\"icon-arrow-up\"></th>" );				
+				} else {
+					items.push("<th id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "</th>" );									
+				}
+			}
+		}
+	}
+
+	for ( var i = 0; i < trailingExtra; ++i ) {
+		items.push("<th></th>" );	
+	}
+	
+	return "<thead><tr>" + items.join("") + "</tr></thead>";
+}
+
 
 function processDocs( data ) {
-	items = []
+	var items = []
 	documents = []
 	for ( var i = 0; i < data.response.docs.length; ++i ) {
 		documents.push( data.response.docs[i] );
@@ -357,12 +387,12 @@ function processDocs( data ) {
 		
 		//adding galaxy comboboxes 
 		var file_uuid = document.file_uuid;
-		var check_temp = '<select name="assay_'+ file_uuid +'" id="webmenu" class="OGcombobox"> <option></option> </select> <input type="hidden" name="fileurl_' + file_uuid +'" value="' + document.name + '">';
+		var check_temp = '<select name="assay_'+ file_uuid +'" id="webmenu" class="btn-mini OGcombobox"> <option></option> </select> <input type="hidden" name="fileurl_' + file_uuid +'" value="' + document.name + '">';
 		
 		s += '<td>' + check_temp + '</td>'
 		for ( entry in document )
 		{
-			if ( document.hasOwnProperty( entry ) )
+			if ( document.hasOwnProperty( entry ) && !( hiddenFieldNames.indexOf( entry ) >= 0 ) )
 			{
 				s += "<td>";
 				s += document[entry];
@@ -373,19 +403,55 @@ function processDocs( data ) {
 		items.push( s );
     }	
     // RPARK getting headers
-    var colhead = getColumnNames(document, addFieldNames);
+    var tableHeader = makeTableHeader( 1 ); 
     
     $( "#statistics-view" ).html("");
     $( "<h1/>", { html: data.response.numFound } ).appendTo( "#statistics-view" );
     $( "#table-view" ).html("");
-	$('<table/>', { 'class': "table table-striped table-condensed table-bordered", 'id':'table_matrix',html: colhead + "<tbody>" + items.join('\n') + "</tbody>" }).appendTo('#table-view');	
+	$('<table/>', { 'class': "table table-striped table-condensed", 'id':'table_matrix',html: tableHeader + "<tbody>" + items.join('\n') + "</tbody>" }).appendTo('#table-view');
+	
+	// attach events to column headers
+	for ( field in fields ) {
+		if ( fields.hasOwnProperty( field ) ) {
+			if ( fields[field].isVisible ) {
+				$( "#" + composeFieldNameId( field + "___header" ) ).on( "click", function() {
+					newDirection = toggleFieldDirection( fields[decomposeFieldNameId( this.id ).fieldName].direction );
+					clearFieldDirections();
+					fields[decomposeFieldNameId( this.id ).fieldName].direction = newDirection;					
+					getData( testAssayUuid, testStudyUuid, testNodeType ); 					
+				});
+			}
+		}
+	}
+
 	
     //initialize data table
-    initDataTable('table_matrix');
-    workflowActions();
+    //initDataTable('table_matrix');
+    //workflowActions();
 
 	
 }
+
+function toggleFieldDirection( direction ) {
+	if ( direction === "asc" ) {
+		return ( "desc" );
+	}
+	
+	if ( direction === "desc" ) {
+		return ( "asc" );
+	}
+	
+	return ( "asc" );
+}
+
+function clearFieldDirections() {
+	for ( field in fields ) {
+		if ( fields.hasOwnProperty( field ) ) {
+			fields[field].direction = "";
+		}
+	}
+}
+
 
 initializeData( testAssayUuid, testStudyUuid, testNodeType );
 

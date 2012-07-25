@@ -41,17 +41,12 @@
 
 {% block content %}
 
-<div id="url-view"></div>
-<div id="statistics-view"></div>
 
 <div class="row-fluid">
  	<div class="span2">
-		<div id="facet-view"></div>
+		<div id="url-view"></div>
  	</div>	
- 	<div class="span10">
- 			
- 		<div class="row-fluid">
-	
+ 	<div class="span8">
  			<div class="btn-group">
 
     		<button class="btn btn-primary pull-right" id="submitSamplesBtn">
@@ -68,9 +63,22 @@
 					{% endfor %}
 				</select>
 
-			</div>
- 			 	
-    		
+			</div> 		
+ 	</div>	
+ 	<div class="span2">
+		<div id="statistics-view"></div> 		
+ 	</div>	
+</div>
+
+<hr>
+
+<div class="row-fluid">
+ 	<div class="span2">
+		<div id="facet-view"></div>
+ 	</div>	
+ 	<div class="span10">
+ 			
+ 		<div class="row-fluid">	 			 	    		
     	</div>
     	<div class="row-fluid">
 			<div id="field-view"></div>
