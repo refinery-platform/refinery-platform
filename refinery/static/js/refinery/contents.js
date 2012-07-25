@@ -1,9 +1,7 @@
 // Nils Gehlenborg, July 2012
-
 // start scope
 (function() {
 // ---------------------------------
-
 
 var urlComponents = document.location.href.split("/");	
 	
@@ -15,7 +13,9 @@ var testAssayUuid = urlComponents[urlComponents.length-3];
 var testNodeType = "\"Raw Data File\"";
 
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
-var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid" ]; // TODO: make these regexes
+var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid" ]; // TODO: make these regexes
+
+var addFieldNames = ["Options"];
 
 var facets = {};
 /*
@@ -165,13 +165,13 @@ function prettifyFieldName( name, isTitle )
 
 	var position = name.indexOf( "_Factor_s" );
 	if ( position != -1 ) {
-		name.substr( 0, position );
+		name = name.substr( 0, position );
 	}
 	
 
 	var position = name.indexOf( "_Comment_s" );
 	if ( position != -1 ) {
-		name.substr( 0, position );
+		name = name.substr( 0, position );
 	}
 
 	name = name.replace( /\_/g, " " );
@@ -343,6 +343,12 @@ function processDocs( data ) {
 		
 		var document = documents[i];
 		var s = "<tr>";
+		
+		//adding galaxy comboboxes 
+		var file_uuid = document.file_uuid;
+		var check_temp = '<select name="assay_'+ file_uuid +'" id="webmenu" class="OGcombobox"> <option></option> </select> <input type="hidden" name="fileurl_' + file_uuid +'" value="' + document.name + '">';
+		
+		s += '<td>' + check_temp + '</td>'
 		for ( entry in document )
 		{
 			if ( document.hasOwnProperty( entry ) )
@@ -356,15 +362,19 @@ function processDocs( data ) {
 		items.push( s );
     }	
     // RPARK getting headers
-    var colhead = getColumnNames(document);
+    var colhead = getColumnNames(document, addFieldNames);
     
     $( "#statistics-view" ).html("");
     $( "<h1/>", { html: data.response.numFound } ).appendTo( "#statistics-view" );
     $( "#table-view" ).html("");
-	$('<table/>', { 'class': "table table-striped table-condensed table-bordered", html: colhead + "<tbody>" + items.join('\n') + "</tbody>" }).appendTo('#table-view');		
+	$('<table/>', { 'class': "table table-striped table-condensed table-bordered", 'id':'table_matrix',html: colhead + "<tbody>" + items.join('\n') + "</tbody>" }).appendTo('#table-view');	
+	
+    //initialize data table
+    initDataTable('table_matrix');
+    workflowActions();
+
+	
 }
-
-
 
 initializeData( testAssayUuid, testStudyUuid, testNodeType );
 
