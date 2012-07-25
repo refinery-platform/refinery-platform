@@ -52,7 +52,12 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 			+ " AND " + "assay_uuid:" + assayUuid
 			+ " AND " + "type:" + nodeType
 	   	+ ")";
-	   	
+	  
+	  
+	// ------------------------------------------------------------------------------
+	// selecting facets: facet.field, fq 	
+	// ------------------------------------------------------------------------------
+
 	for ( var facet in facets ) {
 		var facetValues = facets[facet];
 		var filter = null; 
@@ -91,12 +96,16 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 		}
 	}
 
+
+	// ------------------------------------------------------------------------------
+	// selecting fields: fl 
+	// ------------------------------------------------------------------------------
+	
 	var fieldNames = [];
 	for ( var field in fields ) {
 		if ( fields.hasOwnProperty( field ) )
 		{			
 			if ( fields[field].isVisible ) {				
-				var fieldName = fields[field];
 				// escape or encode special characters
 				field = field.replace( /\ /g, "\\ " );
 				field = field.replace( /\(/g, "\\(" );
@@ -108,6 +117,34 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 		}				
 	}	
 	url += "&fl=" + fieldNames.join( ",");
+
+	
+	// ------------------------------------------------------------------------------
+	// sorting by field: sort
+	// ------------------------------------------------------------------------------
+ 
+	for ( var field in fields ) {
+		if ( fields.hasOwnProperty( field ) ) {
+			// only sort on visible fields			
+			if ( fields[field].isVisible ) {
+				if ( ( fields[field].direction === "asc" ) || ( fields[field].direction === "desc" ) ) {
+					var direction = fields[field].direction;  				
+					
+					// escape or encode special characters
+					field = field.replace( /\ /g, "\\ " );
+					field = field.replace( /\(/g, "\\(" );
+					field = field.replace( /\)/g, "\\)" );
+					field = field.replace( /\+/g, "%2B" );
+					field = field.replace( /\:/g, "%3A" );
+					
+					url += "&sort=" + field + " " + direction;
+					// only use the first field that has sorting information
+					break;
+				}				
+			}
+		}				
+	}	
+	
 	
 	$( "#url-view" ).html( "" );
 	$( "<a/>", { href: url + "&indent=on", html: "Solr Query" } ).appendTo( "#url-view" );
