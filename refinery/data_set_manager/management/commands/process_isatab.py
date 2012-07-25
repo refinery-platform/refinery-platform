@@ -33,9 +33,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """parse arguments"""
         if len(args) < 2:
-            self.logger.info("ERROR: Insufficient arguments; see description and usage")
-            self.logger.info(" below.\n")
-            self.logger.info(self.help)
+            logger.info("ERROR: Insufficient arguments; see description and usage")
+            logger.info(" below before trying again.\n")
+            logger.info(self.help)
             sys.exit()
         
         self._username = args[0]
@@ -52,55 +52,61 @@ class Command(BaseCommand):
                 pass
 
         """get a list of all the isatab files in base_isa_dir"""
-        isatab_files = list()
+        isatab_dict = dict()
         for dirname, dirnames, filenames in os.walk(base_isa_dir):
             for filename in filenames:
-                isatab_files.append(os.path.join(dirname, filename))
-        
+                isatab_dict[filename] = [os.path.join(dirname, filename)]
+
         """
-        If isatab_files() is empty, then base_isa_dir is a file, not a
-        directory
+        If isatab_dict is empty, then base_isa_dir is a file, not a directory
         """
-        if isatab_files:
-            isatab_files.append(base_isa_dir)
+        if not isatab_dict:
+            isatab_dict[base_isa_dir] = [base_isa_dir]
         
         """get a list of all the isatab files in base_pre_isa_dir"""
-        pre_isatab_files = list()
+        pre_isatab_files = 0
         try:
             for dirname, dirnames, filenames in os.walk(opt['base_pre_isa_dir']):
                 for filename in filenames:
-                    pre_isatab_files.append(os.path.join(dirname, filename))
+                    """associate pre-isatab file with isatab file"""
+                    for key in isatab_dict:
+                        if re.search(r'%s$' % key, filename):
+                            file = os.path.join(dirname, filename)
+                            isatab_dict[key].append(file)
+                            pre_isatab_files += 1
+                            break
         except:
             pass
         
         """
-        If base_pre_isa_dir is defined but pre_isatab_files is empty,
+        If base_pre_isa_dir is defined but pre_isatab_files is 0,
         then base_pre_isa_dir is a pre-ISA-Tab archive, not a directory
         """
         if opt['base_pre_isa_dir'] and not pre_isatab_files:
-            pre_isatab_files.append(opt['base_pre_isa_dir'])
+            isatab_dict[base_isa_dir].append(opt['base_pre_isa_dir'])
 
         s_tasks = list()
         """add subtasks to list"""
-        if pre_isatab_files: #have both isatab and pre-isatab files
-            for i, p in zip(isatab_files, pre_isatab_files):
-                sub_task = parse_isatab.subtask(args=(self._username,
-                                                      opt['is_public'],
-                                                      i, 
-                                                      self._additional_raw_data_file_extension, 
-                                                      i, p))
-                s_tasks.append(sub_task)
-        else: #have only isatab files
-            for i in isatab_files:
-                sub_task = parse_isatab.subtask(args=(self._username, 
-                                                      opt['is_public'], 
-                                                      i, 
-                                                      self._additional_raw_data_file_extension))
-                s_tasks.append(sub_task)
+        for k, v_list in isatab_dict.items():
+            isa_file = v_list.pop(0)
+            try:
+                pre_file = v_list.pop(0)
+            except:
+                pre_file = None
+
+            sub_task = parse_isatab.subtask(args=(
+                                                  self._username,
+                                                  opt['is_public'],
+                                                  isa_file, 
+                                                  self._additional_raw_data_file_extension, 
+                                                  isa_file, pre_file
+                                                  )
+                                            )
+            s_tasks.append(sub_task)
+
 
         job = TaskSet(tasks=s_tasks)
         result = job.apply_async()
         while result.waiting():
-            print "parsing..."
             time.sleep(3)
         results = result.join()
