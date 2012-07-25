@@ -40,8 +40,6 @@ var fields = {};
 var documents = [];
 
 
-
-
 function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents ) {
 	var url = solrRoot
 		+ "?" + solrQuery 
@@ -117,27 +115,34 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 	return ( url );
 }
 
-function prettifyFieldName( name )
-{
+function prettifyFieldName( name, isTitle )
+{	
+	isTitle = isTitle || false;
+	
 	var position = name.indexOf( "_Characteristics_s" );
 	if ( position != -1 ) {
-		return name.substr( 0, position );
+		name = name.substr( 0, position );
 	}	
 
 	var position = name.indexOf( "_Factor_s" );
 	if ( position != -1 ) {
-		return name.substr( 0, position );
+		name.substr( 0, position );
 	}
 	
-	return name;	
 
-	/*
 	var position = name.indexOf( "_Comment_s" );
 	if ( position != -1 ) {
-		return name.substr( 0, position );
+		name.substr( 0, position );
 	}
-	*/	
 
+	name = name.replace( /\_/g, " " );
+	
+	if ( isTitle )
+	{
+		name = name.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+	}
+
+	return name;	
 }
 
 function initializeData( studyUuid, assayUuid, nodeType ) {
@@ -196,6 +201,15 @@ function decomposeFacetValueId( facetValueId ) {
 	return ( { facet: facetValueId.split( "___" )[1], facetValue: facetValueId.split( "___" )[2] } );
 }
 
+function composeFacetId( facet ) {
+	return ( "facet" + "___" + facet );
+}
+
+function decomposeFacetId( facetId ) {
+	return ( { facet: facetId.split( "___" )[1] } );
+}
+
+
 function processFacets( data ) {
 	$( "#facet-view" ).html("");
 
@@ -220,17 +234,19 @@ function processFacets( data ) {
 				}
 				
 				if ( facets[facet][facetValue].isSelected ) {
-		    		selectedItems.push("<li class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "&nbsp;<i class=\"icon-remove\"/>" + "</li>");					
+		    		//selectedItems.push("<li class=\"facet-value\">" + "<span class=\"badge badge-info\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "&nbsp;<i class=\"icon-remove\"/>" + "</span>" +"</li>");
+		    		selectedItems.push("<span class=\"facet-value badge badge-info\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "&nbsp;<i class=\"icon-remove\"/>" + "</span>");					
 				}
 				else {
-	    			unselectedItems.push("<li class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "</li>");					
+	    			unselectedItems.push("<li class=\"facet-value\">" + "<span id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "</span>" + "</li>");					
 				}
 				
 								
 			}
 			
-			$('<h3/>', { 'class': 'facet-title', html: prettifyFieldName( facet ) }).appendTo('#facet-view');
-			$('<ul/>', { 'class': 'facet-value-list', html: selectedItems.join('') + "" + unselectedItems.join('') }).appendTo('#facet-view');
+			$('<div/>', { 'class': 'facet-title', 'id': composeFacetId( facet ), html: "<h3>" + prettifyFieldName( facet, true ) + "</h3>" }).appendTo('#facet-view');
+			$('<div/>', { 'class': 'facet-active', html: selectedItems.join(' ') }).appendTo( "#" + composeFacetId( facet ) );
+			$('<ul/>', { 'class': 'facet-value-list', html: unselectedItems.join('') }).appendTo('#facet-view');
 			
 		}		
     }
@@ -247,23 +263,22 @@ function processFacets( data ) {
 
 
 function processFields() {
-	var visibleItems = []
-	var invisibleItems = []
+	var items = []
 	for ( field in fields ) {
 		if ( fields.hasOwnProperty( field ) ) {
 			if ( fields[field].isVisible ) {
-				visibleItems.push("<span class=\"field-name\" id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-minus-sign\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );				
+				items.push("<span class=\"field-name\" id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-minus-sign\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );				
 			}
 			else {
-				invisibleItems.push("<span class=\"field-name\" id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-plus-sign\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );								
+				items.push("<span class=\"field-name\" id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-plus-sign\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );								
 			}
 		}
 	}
 
 	$("#field-view").html("" );
-	$('<p/>', { 'class': 'field-name-list', html: visibleItems.join(' / ') + "<br>" + invisibleItems.join(' / ') }).appendTo('#field-view');
+	$('<p/>', { 'class': 'field-name-list', html: items.join(' | ') }).appendTo('#field-view');
 	
-   	$(".field-name").click( function() {
+   	$("#field-view").children().click( function() {
    		var fieldNameId = event.target.id;
    		var fieldName = decomposeFieldNameId( fieldNameId ).fieldName;
    	   		

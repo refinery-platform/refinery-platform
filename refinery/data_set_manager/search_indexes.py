@@ -12,6 +12,8 @@ from django.template import loader
 from django.template.context import Context
 from haystack import indexes
 import datetime
+import settings
+import string
 
 
 class NodeIndex(indexes.SearchIndex, indexes.Indexable):
@@ -55,7 +57,9 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             if annotation.attribute_value_unit is None:
                 value = annotation.attribute_value
             else: 
-                value = annotation.attribute_value + " " + annotation.attribute_value_unit 
+                value = annotation.attribute_value + " " + annotation.attribute_value_unit
+                
+            name = string.replace( name, " ", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
 
             key = "%s_s" % name
             data[key] = value
