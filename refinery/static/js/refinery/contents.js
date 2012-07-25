@@ -3,6 +3,7 @@
 // start scope
 (function() {
 // ---------------------------------
+// TESTING RPARK
 
 var urlComponents = document.location.href.split("/");	
 	
@@ -11,7 +12,7 @@ var solrQuery = "q=django_ct:data_set_manager.node";
 var solrSettings = "wt=json&json.wrf=?&facet=true";
 var testStudyUuid = urlComponents[urlComponents.length-2];
 var testAssayUuid = urlComponents[urlComponents.length-3]; 
- 
+
 var testNodeType = "\"Raw Data File\"";
 
 var facets = {};
