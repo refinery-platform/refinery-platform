@@ -8,6 +8,9 @@ var urlComponents = document.location.href.split("/");
 var solrRoot = "http://127.0.0.1:8983/solr/data_set_manager/select";
 var solrQuery = "q=django_ct:data_set_manager.node";
 var solrSettings = "wt=json&json.wrf=?&facet=true";
+
+var query = { total_items: 0, selected_items: 0, items_per_page: 20, page: 0 };
+
 var testStudyUuid = urlComponents[urlComponents.length-2];
 var testAssayUuid = urlComponents[urlComponents.length-3]; 
 var testNodeType = "\"Raw Data File\"";
@@ -154,6 +157,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 	return ( url );
 }
 
+
 function prettifyFieldName( name, isTitle )
 {	
 	isTitle = isTitle || false;
@@ -183,11 +187,15 @@ function prettifyFieldName( name, isTitle )
 	return name;	
 }
 
+
 function initializeData( studyUuid, assayUuid, nodeType ) {
 	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 1, {}, {}, {} ), success: function(data) {
 		console.log( data );
 		
-		var doc = data.response.docs[0];		
+		var doc = data.response.docs[0];
+		
+		query.total_items = data.response.numFound;		
+		query.selected_items = data.response.numFound;		
 	
 		for ( var attribute in doc ) {
 			if ( doc.hasOwnProperty( attribute ) ) {
@@ -227,10 +235,15 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 }
 
 function getData( studyUuid, assayUuid, nodeType ) {
-	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 25, facets, fields, {} ), success: function(data) {
+	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, query.items_per_page * query.page, query.items_per_page, facets, fields, {} ), success: function(data) {		
+		query.selected_items = data.response.numFound;
+	    $( "#statistics-view" ).html("");
+    	$( "<h1/>", { html: query.selected_items + "/" + query.total_items } ).appendTo( "#statistics-view" );				
+
 		processFacets( data );
 		processFields( data );
 		processDocs( data );
+		processPages();
 	}});	
 }
 
@@ -405,8 +418,6 @@ function processDocs( data ) {
     // RPARK getting headers
     var tableHeader = makeTableHeader( 1 ); 
     
-    $( "#statistics-view" ).html("");
-    $( "<h1/>", { html: data.response.numFound } ).appendTo( "#statistics-view" );
     $( "#table-view" ).html("");
 	$('<table/>', { 'class': "table table-striped table-condensed", 'id':'table_matrix',html: tableHeader + "<tbody>" + items.join('\n') + "</tbody>" }).appendTo('#table-view');
 	
@@ -423,13 +434,64 @@ function processDocs( data ) {
 			}
 		}
 	}
-
 	
     //initialize data table
     //initDataTable('table_matrix');
-    //workflowActions();
+    //workflowActions();	
+}
+
+function processPages() {
+	
+	var visiblePages = 5;
+	var padLower = 2;
+	var padUpper = 2;
+	var availablePages = Math.ceil( query.selected_items/query.items_per_page ) - 1
+
+	if ( query.page > availablePages ) {
+		query.page = availablePages;
+	}  
+	
+	if ( query.page < padLower ) {
+		padUpper = padUpper + padLower;  
+		padLower = query.page;
+		padUpper = padUpper - padLower;  		
+	}  
+
+	if ( query.page > availablePages - padLower ) {
+		padLower = padLower + padUpper - ( availablePages - query.page );  
+		padUpper = availablePages - query.page;
+	}  
 
 	
+	var items = [];
+		
+	items.push( "<li><a href=\"#\" id=\"page-first\">&laquo;</a></li>")					
+	for ( var i = query.page - padLower; i <= query.page + padUpper; ++i ) {
+		if ( i == query.page ) {
+			items.push( "<li class=\"active\"><a href=\"#\" id=\"page-" + (i+1) + "\">" + (i+1) + "</a></li>")			
+		} else {
+			items.push( "<li><a href=\"#\" id=\"page-" + (i+1) + "\">"+ (i+1) + "</a></li>")			
+		}
+	}
+	items.push( "<li><a href=\"#\" id=\"page-last\">&raquo;</a></li>")					
+	
+    $( "#pager-view" ).html("");	
+	$('<div/>', { 'class': "pagination", html: "<ul>" + items.join('') + "</ul>" }).appendTo( '#pager-view' );
+
+	$( "[id^=page-]" ).on( "click", function() {
+		
+		page = this.id.split( "-" )[1];
+		
+		if ( page === "first" ) {
+			query.page = 0;			
+		} else if ( page === "last" ) {
+			query.page = availablePages;						
+		} else {
+			query.page = page - 1;			
+		}
+				
+		getData( testAssayUuid, testStudyUuid, testNodeType ); 							  
+	});
 }
 
 function toggleFieldDirection( direction ) {
