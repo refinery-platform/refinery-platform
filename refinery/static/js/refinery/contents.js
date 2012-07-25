@@ -3,7 +3,7 @@
 // start scope
 (function() {
 // ---------------------------------
-// TESTING RPARK
+
 
 var urlComponents = document.location.href.split("/");	
 	
@@ -72,6 +72,9 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 		}
 	
 	console.log( url );
+	$( "#url-view" ).html( "" );
+	$( "<a/>", { href: url + "&indent=on", html: "Solr Query" } ).appendTo( "#url-view" );
+
 	return ( url );
 }
 
@@ -139,7 +142,6 @@ function decomposeFacetValueId( facetValueId ) {
 }
 
 function processFacets( data ) {
-	// hello wolrd, this is a test!
 	$( "#facet-view" ).html("");
 
 	for ( var facet in data.facet_counts.facet_fields ) {
