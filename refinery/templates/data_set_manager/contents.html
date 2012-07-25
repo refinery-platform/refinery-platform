@@ -2,18 +2,26 @@
 
 {% block head_html %}
 	<!-- 3rd party libraries -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery/jquery-1.7.2.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/bootstrap-collapse.js"></script>
 
 	<!-- Refinery libraries -->
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
 
     <style type="text/css">
+ 	.facet-title {
+ 		cursor:pointer; 		
+ 	} 	
+
  	.facet-value {
- 		color: "black";
+ 		cursor:pointer; 		
  	}
- 	.facet-value.selected {
- 		color: "red"; 		
+ 	 	
+ 	.active {
+ 		cursor:pointer; 
+ 		background-color: #3A87AD;
+ 		color: #fff;
+ 		font-weight: bold;
  	} 	
     </style>
 {% endblock %}
