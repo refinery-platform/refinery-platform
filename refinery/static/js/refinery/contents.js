@@ -346,11 +346,13 @@ function processDocs( data ) {
 		s += "</tr>";
 		items.push( s );
     }	
+    // RPARK getting headers
+    var colhead = getColumnNames(document);
     
     $( "#statistics-view" ).html("");
     $( "<h1/>", { html: data.response.numFound } ).appendTo( "#statistics-view" );
     $( "#table-view" ).html("");
-	$('<table/>', { 'class': "table table-striped table-condensed table-bordered", html: "<tbody>" + items.join('\n') + "</tbody>" }).appendTo('#table-view');		
+	$('<table/>', { 'class': "table table-striped table-condensed table-bordered", html: colhead + "<tbody>" + items.join('\n') + "</tbody>" }).appendTo('#table-view');		
 }
 
 
