@@ -284,5 +284,8 @@ AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 # relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
 FILE_STORE_DIR = 'files'
 
+# used to replaces spaces in the names of dynamic fields in Solr indexing
+REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = "_"
+
 # import local settings
 from settings_local import *
