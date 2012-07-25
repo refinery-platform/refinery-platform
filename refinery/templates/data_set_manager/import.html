@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block head_html %}
+<link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap-combobox.css" rel="stylesheet">
+<script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap-combobox.js"></script>
+{% endblock %}
+
+{% block subheader %}
+ISA-Tab import
+{% endblock %}
+
+{% block content %}
+<form id="isaTabImportForm" enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+	<p>{{ error }}</p>
+	<p>{{ form.non_field_errors }}</p>
+	<div>
+		<p>Upload file from disk:</p>
+		<p>
+			{{ form.isa_tab_file.errors}}
+			{{ form.isa_tab_file }}
+		</p>
+		<p>Or download from a URL:</p>
+		<p>
+			{{ form.isa_tab_url.errors }}
+			{{ form.isa_tab_url }}
+		</p>
+	</div>
+	<input type="submit" value="Import" />
+</form>
+{% endblock %}
