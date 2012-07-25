@@ -1,9 +1,7 @@
 // Nils Gehlenborg, July 2012
-
 // start scope
 (function() {
 // ---------------------------------
-
 
 var urlComponents = document.location.href.split("/");	
 	
@@ -15,12 +13,14 @@ var testAssayUuid = urlComponents[urlComponents.length-3];
 var testNodeType = "\"Raw Data File\"";
 
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
-var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid" ]; // TODO: make these regexes
+var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type" ]; // TODO: make these regexes
+
+var addFieldNames = ["Options"];
 
 var facets = {};
 /*
  * facets = 
- * { "facet_name1": [ { value: "value_name", count: "count", isSelected: true }, ... ] },
+ * { "facet_name1": { "value_name": { count: "count", isSelected: true }, ...  },
  *   "facet_name2": [ { value: "value_name", count: "count", isSelected: false }, ... ] },
  * ... } 
  */
@@ -41,6 +41,7 @@ var fields = {};
 
 var documents = [];
 
+$(".collapse").collapse();
 
 function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents ) {
 	var url = solrRoot
@@ -82,7 +83,6 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 
 		if ( filterValues.length > 0 ) {
 			filter = facet.replace( /\ /g, "_" );								
-			console.log( filterValues );
 			url += "&fq={!tag=" + filter + "}" + facet.replace( /\ /g, "\\ " ) + ":(" + filterValues.join( " OR " ) + ")";													
 		}
 		
@@ -107,7 +107,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 	for ( var field in fields ) {
 		if ( fields.hasOwnProperty( field ) )
 		{			
-			if ( fields[field].isVisible ) {				
+			if ( ( fields[field].isVisible ) || ( hiddenFieldNames.indexOf( field ) >= 0 ) ) {				
 				// escape or encode special characters
 				field = field.replace( /\ /g, "\\ " );
 				field = field.replace( /\(/g, "\\(" );
@@ -165,13 +165,12 @@ function prettifyFieldName( name, isTitle )
 
 	var position = name.indexOf( "_Factor_s" );
 	if ( position != -1 ) {
-		name.substr( 0, position );
+		name = name.substr( 0, position );
 	}
 	
-
 	var position = name.indexOf( "_Comment_s" );
 	if ( position != -1 ) {
-		name.substr( 0, position );
+		name = name.substr( 0, position );
 	}
 
 	name = name.replace( /\_/g, " " );
@@ -193,18 +192,24 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 		for ( var attribute in doc ) {
 			if ( doc.hasOwnProperty( attribute ) ) {
 				// facets
-				if ( attribute.indexOf( "Characteristics_s" ) != -1 ) {
+				if ( ( attribute.indexOf( "Characteristics_s" ) != -1 ) || ( attribute.indexOf( "Factor_s" ) != -1 ) ) {
 					facets[attribute] = [];
+					
+					$('<div/>', { 'class': 'facet-title', "data-toggle": "collapse", "data-target": "#" + composeFacetId( attribute + "___inactive" ), 'id': composeFacetId( attribute ), html: "<h2>" + prettifyFieldName( attribute, true ) + "</h2>" }).appendTo('#facet-view');
+					$('<div/>', { 'class': 'facet-value-list', "id": composeFacetId( attribute + "___active" ), html: "" }).appendTo('#facet-view');							
+					$('<div/>', { 'class': 'facet-value-list collapse', "id": composeFacetId( attribute + "___inactive" ), html: "" }).appendTo('#facet-view');
+
+				   	$("#" + composeFacetId( attribute + "___inactive" ) ).on( "show", function( attribute ) {
+				   		attribute = decomposeFacetId( this.id ).facet;
+				   		$( "#" + composeFacetId( attribute + "___active" ) ).slideUp( "slow" );
+				   	});						
+		
+				   	$("#" + composeFacetId( attribute + "___inactive" ) ).on( "hide", function() {
+				   		attribute = decomposeFacetId( this.id ).facet;
+				   		$( "#" + composeFacetId( attribute + "___active" ) ).slideDown( "slow");
+				   	});																							
 				}
-				if ( attribute.indexOf( "Factor_s" ) != -1 ) {
-					facets[attribute] = [];
-				}
-				/*
-				if ( attribute.indexOf( "Comment_s" ) != -1 ) {
-					facets[attribute] = [];
-				}
-				*/
-				
+								
 				// fields
 				if ( ignoredFieldNames.indexOf( attribute ) < 0 ) {
 					if ( hiddenFieldNames.indexOf( attribute ) < 0 ) {
@@ -257,7 +262,7 @@ function decomposeFacetId( facetId ) {
 
 
 function processFacets( data ) {
-	$( "#facet-view" ).html("");
+	//$( "#facet-view" ).html("");
 
 	for ( var facet in data.facet_counts.facet_fields ) {
 		if ( data.facet_counts.facet_fields.hasOwnProperty( facet ) ) {
@@ -281,24 +286,27 @@ function processFacets( data ) {
 				
 				if ( facets[facet][facetValue].isSelected ) {
 		    		//selectedItems.push("<li class=\"facet-value\">" + "<span class=\"badge badge-info\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "&nbsp;<i class=\"icon-remove\"/>" + "</span>" +"</li>");
-		    		selectedItems.push("<span class=\"facet-value badge badge-info\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "&nbsp;<i class=\"icon-remove\"/>" + "</span>");					
+		    		selectedItems.push("<span class=\"facet-value label label-info\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">&times;&nbsp;" + facetValue + " (" + facetValueCount + ")"  + "</span>" );					
+	    			unselectedItems.push("<tr class=\"facet-value label label-info\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td>" + facetValue + "</td><td>" + facetValueCount + "</td><td>&times;</td>"  + "</tr>" );					
 				}
 				else {
-	    			unselectedItems.push("<li class=\"facet-value\">" + "<span id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "</span>" + "</li>");					
-				}
-				
-								
+	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td>" + facetValue + "</td><td>" + facetValueCount + "</td><td></td>"  + "</tr>" );					
+				}												
 			}
 			
-			$('<div/>', { 'class': 'facet-title', 'id': composeFacetId( facet ), html: "<h3>" + prettifyFieldName( facet, true ) + "</h3>" }).appendTo('#facet-view');
-			$('<div/>', { 'class': 'facet-active', html: selectedItems.join(' ') }).appendTo( "#" + composeFacetId( facet ) );
-			$('<ul/>', { 'class': 'facet-value-list', html: unselectedItems.join('') }).appendTo('#facet-view');
-			
+			$( "#" + composeFacetId( facet + "___active" ) ).html( selectedItems.join(' ') ); 
+			$( "#" + composeFacetId( facet + "___inactive" ) ).html( "<table class=\"table table-condensed\"><tbody>" + unselectedItems.join('') + "</tbody></table>" );
 		}		
     }
    	
-   	$(".facet-value").click( function() {
-   		var facetValueId = event.target.id;
+   	/*
+   	$(".facet-title").click( function() {
+   		$( "#" + $( this).attr( "data-target" ) ).toggleClass( "in" );
+   	} );
+   	*/			
+   	
+   	$(".facet-value").on( "click", function() {
+   		var facetValueId = this.id;
    		var facet = decomposeFacetValueId( facetValueId ).facet;
    		var facetValue = decomposeFacetValueId( facetValueId ).facetValue;
    	   		
@@ -316,7 +324,9 @@ function processFields() {
 				items.push("<span class=\"field-name\" id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-minus-sign\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );				
 			}
 			else {
-				items.push("<span class=\"field-name\" id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-plus-sign\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );								
+				if ( hiddenFieldNames.indexOf( field ) < 0 ) {
+					items.push("<span class=\"field-name\" id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-plus-sign\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );
+				}
 			}
 		}
 	}
@@ -334,18 +344,55 @@ function processFields() {
 	
 }
 
+function makeTableHeader( leadingExtra, trailingExtra ) {
+	leadingExtra = leadingExtra | 0;
+	trailingExtra = trailingExtra | 0;
+	
+	var items = [];
+
+	for ( var i = 0; i < leadingExtra; ++i ) {
+		items.push("<th></th>" );	
+	}
+		
+	for ( field in fields ) {
+		if ( fields.hasOwnProperty( field ) ) {
+			if ( fields[field].isVisible ) {
+				if ( fields[field].direction === "asc" ) {
+					items.push("<th id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "&nbsp;<i class=\"icon-arrow-down\"></th>" );				
+				} else if ( fields[field].direction === "desc" ) {
+					items.push("<th id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "&nbsp;<i class=\"icon-arrow-up\"></th>" );				
+				} else {
+					items.push("<th id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "</th>" );									
+				}
+			}
+		}
+	}
+
+	for ( var i = 0; i < trailingExtra; ++i ) {
+		items.push("<th></th>" );	
+	}
+	
+	return "<thead><tr>" + items.join("") + "</tr></thead>";
+}
+
 
 function processDocs( data ) {
-	items = []
+	var items = []
 	documents = []
 	for ( var i = 0; i < data.response.docs.length; ++i ) {
 		documents.push( data.response.docs[i] );
 		
 		var document = documents[i];
 		var s = "<tr>";
+		
+		//adding galaxy comboboxes 
+		var file_uuid = document.file_uuid;
+		var check_temp = '<select name="assay_'+ file_uuid +'" id="webmenu" class="btn-mini OGcombobox"> <option></option> </select> <input type="hidden" name="fileurl_' + file_uuid +'" value="' + document.name + '">';
+		
+		s += '<td>' + check_temp + '</td>'
 		for ( entry in document )
 		{
-			if ( document.hasOwnProperty( entry ) )
+			if ( document.hasOwnProperty( entry ) && !( hiddenFieldNames.indexOf( entry ) >= 0 ) )
 			{
 				s += "<td>";
 				s += document[entry];
@@ -356,14 +403,54 @@ function processDocs( data ) {
 		items.push( s );
     }	
     // RPARK getting headers
-    var colhead = getColumnNames(document);
+    var tableHeader = makeTableHeader( 1 ); 
     
     $( "#statistics-view" ).html("");
     $( "<h1/>", { html: data.response.numFound } ).appendTo( "#statistics-view" );
     $( "#table-view" ).html("");
-	$('<table/>', { 'class': "table table-striped table-condensed table-bordered", html: colhead + "<tbody>" + items.join('\n') + "</tbody>" }).appendTo('#table-view');		
+	$('<table/>', { 'class': "table table-striped table-condensed", 'id':'table_matrix',html: tableHeader + "<tbody>" + items.join('\n') + "</tbody>" }).appendTo('#table-view');
+	
+	// attach events to column headers
+	for ( field in fields ) {
+		if ( fields.hasOwnProperty( field ) ) {
+			if ( fields[field].isVisible ) {
+				$( "#" + composeFieldNameId( field + "___header" ) ).on( "click", function() {
+					newDirection = toggleFieldDirection( fields[decomposeFieldNameId( this.id ).fieldName].direction );
+					clearFieldDirections();
+					fields[decomposeFieldNameId( this.id ).fieldName].direction = newDirection;					
+					getData( testAssayUuid, testStudyUuid, testNodeType ); 					
+				});
+			}
+		}
+	}
+
+	
+    //initialize data table
+    //initDataTable('table_matrix');
+    //workflowActions();
+
+	
 }
 
+function toggleFieldDirection( direction ) {
+	if ( direction === "asc" ) {
+		return ( "desc" );
+	}
+	
+	if ( direction === "desc" ) {
+		return ( "asc" );
+	}
+	
+	return ( "asc" );
+}
+
+function clearFieldDirections() {
+	for ( field in fields ) {
+		if ( fields.hasOwnProperty( field ) ) {
+			fields[field].direction = "";
+		}
+	}
+}
 
 
 initializeData( testAssayUuid, testStudyUuid, testNodeType );
