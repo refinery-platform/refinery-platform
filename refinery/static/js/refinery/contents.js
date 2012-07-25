@@ -12,8 +12,10 @@ var solrQuery = "q=django_ct:data_set_manager.node";
 var solrSettings = "wt=json&json.wrf=?&facet=true";
 var testStudyUuid = urlComponents[urlComponents.length-2];
 var testAssayUuid = urlComponents[urlComponents.length-3]; 
-
 var testNodeType = "\"Raw Data File\"";
+
+var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
+var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid" ]; // TODO: make these regexes
 
 var facets = {};
 /*
@@ -204,7 +206,14 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 				*/
 				
 				// fields
-				fields[attribute] = { isVisible: true, direction: "" };
+				if ( ignoredFieldNames.indexOf( attribute ) < 0 ) {
+					if ( hiddenFieldNames.indexOf( attribute ) < 0 ) {
+						fields[attribute] = { isVisible: true, direction: "" };
+					}
+					else {
+						fields[attribute] = { isVisible: false, direction: "" };
+					}					
+				}
 			}		
 		}
 		
