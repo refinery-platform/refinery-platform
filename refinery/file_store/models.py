@@ -5,6 +5,12 @@ file_store module
 * Downloads files from external repositories (by URL)
 * Manage the import cache/public data space
 
+Requirements:
+
+FILE_STORE_DIR - main file store directory
+* must point to a subdirectory of MEDIA_ROOT
+* must be writeable by the Django server
+Example: FILE_STORE_DIR = 'files'
 """
 
 import os
@@ -17,22 +23,34 @@ from django.db.models.signals import pre_delete, pre_save
 from django_extensions.db.fields import UUIDField
 from django.core.files.storage import FileSystemStorage
 
+logger = logging.getLogger('file_store')
+
 # set file store directories
 if not settings.FILE_STORE_DIR:
     settings.FILE_STORE_DIR = 'files'   # relative to MEDIA_ROOT
 
 # absolute path to the file store root dir
 FILE_STORE_BASE_DIR = os.path.join(settings.MEDIA_ROOT, settings.FILE_STORE_DIR)
-#TODO: create this directory if it doesn't exist?
+# create this directory in case it doesn't exist
+if not os.path.isdir(FILE_STORE_BASE_DIR):
+    try:
+        os.mkdir(FILE_STORE_BASE_DIR)
+    except OSError as e:
+        logger.exception("Error creating FILE_STORE_BASE_DIR. OSError: [Errno %s], error: %s, path: %s",
+                         e.errno, e.strerror, e.filename)
 
 # temp dir should be located on the same file system as the base dir
 FILE_STORE_TEMP_DIR = os.path.join(FILE_STORE_BASE_DIR, 'temp')
-#TODO: create this directory if it doesn't exist?
+# create this directory in case it doesn't exist
+if not os.path.isdir(FILE_STORE_TEMP_DIR):
+    try:
+        os.mkdir(FILE_STORE_TEMP_DIR)
+    except OSError as e:
+        logger.exception("Error creating FILE_STORE_TEMP_DIR. OSError: [Errno %s], error: %s, path: %s",
+                         e.errno, e.strerror, e.filename)
 
 # To make sure we can move uploaded files into file store quickly by using os.rename()
 #settings.FILE_UPLOAD_TEMP_DIR = FILE_STORE_TEMP_DIR
-
-logger = logging.getLogger('file_store')
 
 def file_path(modelinstance, filename):
     '''
@@ -106,11 +124,12 @@ def _delete_file_on_disk(sender, **kwargs):
     # Need a signal handler because QuerySet delete() method does a bulk delete
     # and does not call any delete() methods on the models
     item = kwargs.get('instance')
-    try:
-        item.datafile.delete(save=False)    # save=False to avoid executing pre_save signal handler
-    except OSError as e:
-        logger.exception("Error deleting data file. OSError number: %s, file name: %s, error: %s",
-                         e.errno, e.filename, e.strerror)
+    if item.datafile.name:
+        try:
+            item.datafile.delete(save=False)    # save=False to avoid executing pre_save signal handler
+        except OSError as e:
+            logger.exception("Error deleting data file. OSError: [Errno: %s], file name: %s, error: %s",
+                             e.errno, e.filename, e.strerror)
 
 class FileStoreCache:
     '''
