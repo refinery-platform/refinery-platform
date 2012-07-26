@@ -437,7 +437,7 @@ function processDocs( data ) {
 	
     //initialize data table
     //initDataTable('table_matrix');
-    //workflowActions();	
+    workflowActions();	
 }
 
 function processPages() {
