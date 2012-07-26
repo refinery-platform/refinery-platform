@@ -16,7 +16,7 @@ from galaxy_connector.models import Instance
 from guardian.shortcuts import assign, get_users_with_perms, \
     get_groups_with_perms
 from django.conf import settings
-from datetime import date
+from datetime import datetime
 
 
 class UserProfile ( models.Model ):
@@ -190,7 +190,7 @@ class DataSet(SharableResource):
         association will be cleared first. Use update_investigation() to add a new version of the current investigation.
         ''' 
         self._investigations.clear()        
-        link = InvestigationLink(data_set=self, investigation=investigation, version=1, message=message, date=date.today())
+        link = InvestigationLink(data_set=self, investigation=investigation, version=1, message=message)
         link.save()
         return 1
         
@@ -199,7 +199,7 @@ class DataSet(SharableResource):
         max_version = InvestigationLink.objects.filter( data_set=self ).aggregate( Max("version" ) )["version__max"]        
         if max_version is None:
             return self.set_investigation(investigation, message)            
-        link = InvestigationLink(data_set=self, investigation=investigation, version=max_version+1, message=message, date=date.today())
+        link = InvestigationLink(data_set=self, investigation=investigation, version=max_version+1, message=message)
         link.save()
         return max_version+1       
 
@@ -242,7 +242,7 @@ class InvestigationLink(models.Model):
     investigation = models.ForeignKey(Investigation)
     version = models.IntegerField(default=1) 
     message = models.CharField(max_length=500, blank=True, null=True)
-    date = models.DateField()
+    date = models.DateTimeField(default=datetime.now())
     
     def __unicode__(self):
         retstr = "%s: ver=%s, %s" % (self.investigation.get_identifier(), self.version, self.message)
