@@ -34,6 +34,9 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
         return DataSet
 
     def prepare_owner_id(self, object):
+        if object.get_owner() is None:
+            return None
+        
         return object.get_owner().id
 
     def prepare_group_ids(self, object):

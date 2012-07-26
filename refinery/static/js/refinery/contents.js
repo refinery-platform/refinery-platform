@@ -76,6 +76,8 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 				if ( facetValues[facetValue].isSelected ) {
 					// escape or encode special characters
 					facetValue = facetValue.replace( /\ /g, "\\ " );
+					facetValue = facetValue.replace( /\//g, "%2F" );
+					facetValue = facetValue.replace( /\#/g, "%23" );
 					facetValue = facetValue.replace( /\(/g, "\\(" );
 					facetValue = facetValue.replace( /\)/g, "\\)" );
 					facetValue = facetValue.replace( /\+/g, "%2B" );
@@ -114,6 +116,8 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 			if ( ( fields[field].isVisible ) || ( hiddenFieldNames.indexOf( field ) >= 0 ) ) {				
 				// escape or encode special characters
 				field = field.replace( /\ /g, "\\ " );
+				field = field.replace( /\//g, "%2F" );
+				field = field.replace( /\#/g, "%23" );
 				field = field.replace( /\(/g, "\\(" );
 				field = field.replace( /\)/g, "\\)" );
 				field = field.replace( /\+/g, "%2B" );
@@ -138,6 +142,8 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 					
 					// escape or encode special characters
 					field = field.replace( /\ /g, "\\ " );
+					field = field.replace( /\//g, "%2F" );
+					field = field.replace( /\#/g, "%23" );
 					field = field.replace( /\(/g, "\\(" );
 					field = field.replace( /\)/g, "\\)" );
 					field = field.replace( /\+/g, "%2B" );
@@ -163,22 +169,22 @@ function prettifyFieldName( name, isTitle )
 {	
 	isTitle = isTitle || false;
 	
-	var position = name.indexOf( "_Characteristics_s" );
+	var position = name.indexOf( "_Characteristics_" );
 	if ( position != -1 ) {
 		name = name.substr( 0, position );
 	}	
 
-	var position = name.indexOf( "_Factor_s" );
+	var position = name.indexOf( "_Factor_" );
 	if ( position != -1 ) {
 		name = name.substr( 0, position );
 	}
 	
-	var position = name.indexOf( "_Comment_s" );
+	var position = name.indexOf( "_Comment_" );
 	if ( position != -1 ) {
 		name = name.substr( 0, position );
 	}
 
-	var position = name.indexOf( "Material_Type_s" );
+	var position = name.indexOf( "Material_Type_" );
 	if ( position != -1 ) {
 		name = "Material Type";
 	}
@@ -206,9 +212,9 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 		for ( var attribute in doc ) {
 			if ( doc.hasOwnProperty( attribute ) ) {
 				// facets
-				if ( ( attribute.indexOf( "Characteristics_s" ) != -1 ) ||
-					 ( attribute.indexOf( "Factor_s" ) != -1 ) ||
-					 ( attribute.indexOf( "Material_Type_s" ) != -1 ) ) {
+				if ( ( attribute.indexOf( "_Characteristics_" ) != -1 ) ||
+					 ( attribute.indexOf( "_Factor_" ) != -1 ) ||
+					 ( attribute.indexOf( "_Material_Type_" ) != -1 ) ) {
 					facets[attribute] = [];
 					
 					$('<div/>', { 'class': 'facet-title', "data-toggle": "collapse", "data-target": "#" + composeFacetId( attribute + "___inactive" ), 'id': composeFacetId( attribute ), html: "<h2>" + prettifyFieldName( attribute, true ) + "</h2>" }).appendTo('#facet-view');
@@ -456,8 +462,8 @@ function processDocs( data ) {
     workflowActions();	
 }
 
-function processPages() {
-	
+
+function processPages() {	
 	var visiblePages = 5;
 	var padLower = 2;
 	var padUpper = 2;

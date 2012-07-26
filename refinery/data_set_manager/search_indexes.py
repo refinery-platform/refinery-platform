@@ -14,7 +14,7 @@ from haystack import indexes
 import datetime
 import settings
 import string
-
+import uuid
 
 class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
@@ -44,8 +44,12 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     # and: http://stackoverflow.com/questions/7399871/django-haystack-sort-results-by-title
     def prepare(self, object):
         data = super(NodeIndex, self).prepare(object)
-        
         annotations = AnnotatedNode.objects.filter( node=object )
+        
+        uuid = str( object.study.id )
+        
+        if object.assay is not None:
+            uuid += "_" + str( object.assay.id ) 
 
         # create dynamic fields for each attribute  
         for annotation in annotations:
@@ -61,7 +65,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 
             name = string.replace( name, " ", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
 
-            key = "%s_s" % name
+            key = name + "_" + uuid + "_s"
             data[key] = value
             
         return data
