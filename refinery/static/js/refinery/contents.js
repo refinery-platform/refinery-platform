@@ -9,7 +9,7 @@ var solrRoot = "http://127.0.0.1:8983/solr/data_set_manager/select";
 var solrQuery = "q=django_ct:data_set_manager.node";
 var solrSettings = "wt=json&json.wrf=?&facet=true";
 
-var query = { total_items: 0, selected_items: 0, items_per_page: 20, page: 0 };
+var query = { total_items: 0, selected_items: 0, items_per_page: 10, page: 0 };
 
 var testStudyUuid = urlComponents[urlComponents.length-2];
 var testAssayUuid = urlComponents[urlComponents.length-3]; 
@@ -217,9 +217,9 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 					 ( attribute.indexOf( "_Material_Type_" ) != -1 ) ) {
 					facets[attribute] = [];
 					
-					$('<div/>', { 'class': 'facet-title', "data-toggle": "collapse", "data-target": "#" + composeFacetId( attribute + "___inactive" ), 'id': composeFacetId( attribute ), html: "<h2>" + prettifyFieldName( attribute, true ) + "</h2>" }).appendTo('#facet-view');
+					$('<div/>', { 'class': 'facet-title', "data-toggle": "collapse", "data-target": "#" + composeFacetId( attribute + "___inactive" ), 'id': composeFacetId( attribute ), html: "<h4>" + prettifyFieldName( attribute, true ) + "</h4>" }).appendTo('#facet-view');
 					$('<div/>', { 'class': 'facet-value-list', "id": composeFacetId( attribute + "___active" ), html: "" }).appendTo('#facet-view');							
-					$('<div/>', { 'class': 'facet-value-list collapse', "id": composeFacetId( attribute + "___inactive" ), html: "" }).appendTo('#facet-view');
+					$('<div/>', { 'class': 'facet-value-list collapse', "data-parent":"#facet-view", "id": composeFacetId( attribute + "___inactive" ), html: "" }).appendTo('#facet-view');
 
 				   	$("#" + composeFacetId( attribute + "___inactive" ) ).on( "show", function( attribute ) {
 				   		attribute = decomposeFacetId( this.id ).facet;
@@ -321,15 +321,15 @@ function processFacets( data ) {
 				
 				if ( facets[facet][facetValue].isSelected ) {
 		    		//selectedItems.push("<li class=\"facet-value\">" + "<span class=\"badge badge-info\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "&nbsp;<i class=\"icon-remove\"/>" + "</span>" +"</li>");
-		    		selectedItems.push("<span class=\"facet-value label label-info\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">&times;&nbsp;" + facetValue + " (" + facetValueCount + ")"  + "</span>" );					
-	    			unselectedItems.push("<tr class=\"facet-value label label-info\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td>" + facetValue + "</td><td>" + facetValueCount + "</td><td>&times;</td>"  + "</tr>" );					
+		    		selectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td><td>&times;</td>"  + "</tr>" );					
+	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td><td>&times;</td>"  + "</tr>" );					
 				}
 				else {
 	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td>" + facetValue + "</td><td>" + facetValueCount + "</td><td></td>"  + "</tr>" );					
 				}												
 			}
 			
-			$( "#" + composeFacetId( facet + "___active" ) ).html( selectedItems.join(' ') ); 
+			$( "#" + composeFacetId( facet + "___active" ) ).html( "<table class=\"table table-condensed\"><tbody>" + selectedItems.join('') + "</tbody></table>" ); 
 			$( "#" + composeFacetId( facet + "___inactive" ) ).html( "<table class=\"table table-condensed\"><tbody>" + unselectedItems.join('') + "</tbody></table>" );
 		}		
     }
