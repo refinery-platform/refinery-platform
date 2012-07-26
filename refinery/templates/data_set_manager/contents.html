@@ -54,26 +54,28 @@
 
 {% block content %}
 
-
+				<form id="sampleForm" method="post" class="form-inline">
+    			{% csrf_token %}
+ 
 <div class="row-fluid">
  	<div class="span2">
- 				<form class="form-search form-inline" id="search_form">
+ 				<!-- <form class="form-search form-inline" id="search_form"> -->
   					<input type="text" class="input-medium search-query" placeholder="Search">
  		 			<button type="submit" class="btn" onclick="AddSearchTerm(); return false;">Search</button>
-				</form>
+				<!-- </form> -->
  	</div>	
+ 	
  	<div class="span8">
+ 		
+ 			
+ 	
  			<div class="row-fluid">
 			<div class="btn-group">
  			
-				<form id="sampleForm" method="post" class="form-inline">
-    			{% csrf_token %}
- 				<!--
- 				<div class="btn">
 					Choose Workflow
-				</div>
-				-->
 				
+
+ 				
 				<select class="combobox" name="workflow_choice" id="workflow_choice">
 					<option></option>
 					{% for work in workflows %}
@@ -119,6 +121,6 @@
 	 	<div id="url-view"></div>
  	</div>		 
 </div>
-	
+	<form></form>
 
 {% endblock %}

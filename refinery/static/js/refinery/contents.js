@@ -16,8 +16,9 @@ var testAssayUuid = urlComponents[urlComponents.length-3];
 var testNodeType = "\"Raw Data File\"";
 
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
-var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type" ]; // TODO: make these regexes
-var invisibleFieldNames = [ "name" ];
+var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "name" ]; // TODO: make these regexes
+var invisibleFieldNames = [ ];
+//var invisibleFieldNames = [ "name" ];
 
 var addFieldNames = ["Options"];
 
