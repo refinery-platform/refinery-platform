@@ -580,8 +580,6 @@ class IsaTabParser:
         headers = []
         headers = self._current_reader.next()
         
-        #clean up the header
-        headers = [x.strip() for x in headers]
         try:
             headers.remove( "" )
         except:
@@ -590,15 +588,8 @@ class IsaTabParser:
         # TODO: check if all factor values used in this file have been declared
         
         for row in self._current_reader:
-            #clean up the row
-            row = [x.strip() for x in row]
-            try:
-                row.remove("")
-            except:
-                pass
-
+            
             row = deque( row )
-            #print( ", ".join( row ) )
             self._previous_node = None
             
             while len( row ) > 0:                

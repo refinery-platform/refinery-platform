@@ -16,6 +16,7 @@ from galaxy_connector.models import Instance
 from guardian.shortcuts import assign, get_users_with_perms, \
     get_groups_with_perms
 from django.conf import settings
+from datetime import datetime
 
 
 class UserProfile ( models.Model ):
@@ -241,6 +242,7 @@ class InvestigationLink(models.Model):
     investigation = models.ForeignKey(Investigation)
     version = models.IntegerField(default=1) 
     message = models.CharField(max_length=500, blank=True, null=True)
+    date = models.DateTimeField(default=datetime.now())
     
     def __unicode__(self):
         retstr = "%s: ver=%s, %s" % (self.investigation.get_identifier(), self.version, self.message)

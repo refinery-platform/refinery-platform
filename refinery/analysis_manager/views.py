@@ -45,7 +45,7 @@ def analysis(request, uuid):
 def analysis_run(request):
     print "analysis_manager.analysis_run called";
     
-    #print request.POST
+    print simplejson.dumps(request.POST, indent=4);
 
     # gets workflow_uuid
     workflow_uuid = request.POST.getlist('workflow_choice')[0]
@@ -58,11 +58,13 @@ def analysis_run(request):
     for i, val in request.POST.iteritems():
         if (val and val != ""):
             if (i.startswith('assay_')):
-                temp_uuid = i.lstrip('assay_')
+                #temp_uuid = i.lstrip('assay_')
+                temp_uuid = i.replace('assay_', '')
                 selected_uuids[temp_uuid] = val
                 #selected_data.append({"assay_uuid":i.lstrip('assay_'), 'workflow_input_type':val})
             elif (i.startswith('fileurl_')):
-                temp_uuid = i.lstrip('fileurl_')
+                #temp_uuid = i.lstrip('fileurl_')
+                temp_uuid = i.replace('fileurl_', '')
                 
                 #if str(temp_uuid) in selected_uuids:
                 #    print "FOUFOUFODNDs"
@@ -80,10 +82,10 @@ def analysis_run(request):
     #print annot_inputs
     #print "len_inputs"
     #print len_inputs
-    #print "selected_uuids"
-    #print selected_uuids
-    #print "selected_fileurls"
-    #print selected_fileurls
+    print "selected_uuids"
+    print selected_uuids
+    print "selected_fileurls"
+    print selected_fileurls
     
     
     #------------ CONFIGURE INPUT FILES -------------------------- #   
@@ -117,7 +119,7 @@ def analysis_run(request):
                         pair_count = 0
                         pair += 1
                 # deals w/ the case where there is a single input for a galaxy workflow
-                elif len_inputs == 1:            
+                elif len_inputs == 1:
                     ret_item[k] = {};
                     ret_item[k]["assay_uuid"] = index
                     ret_item[k]["pair_id"] = pair
