@@ -17,6 +17,7 @@ var testNodeType = "\"Raw Data File\"";
 
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
 var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type" ]; // TODO: make these regexes
+var invisibleFieldNames = [ "name" ];
 
 var addFieldNames = ["Options"];
 
@@ -177,6 +178,11 @@ function prettifyFieldName( name, isTitle )
 		name = name.substr( 0, position );
 	}
 
+	var position = name.indexOf( "Material_Type_s" );
+	if ( position != -1 ) {
+		name = "Material Type";
+	}
+
 	name = name.replace( /\_/g, " " );
 	
 	if ( isTitle )
@@ -200,7 +206,9 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 		for ( var attribute in doc ) {
 			if ( doc.hasOwnProperty( attribute ) ) {
 				// facets
-				if ( ( attribute.indexOf( "Characteristics_s" ) != -1 ) || ( attribute.indexOf( "Factor_s" ) != -1 ) ) {
+				if ( ( attribute.indexOf( "Characteristics_s" ) != -1 ) ||
+					 ( attribute.indexOf( "Factor_s" ) != -1 ) ||
+					 ( attribute.indexOf( "Material_Type_s" ) != -1 ) ) {
 					facets[attribute] = [];
 					
 					$('<div/>', { 'class': 'facet-title', "data-toggle": "collapse", "data-target": "#" + composeFacetId( attribute + "___inactive" ), 'id': composeFacetId( attribute ), html: "<h2>" + prettifyFieldName( attribute, true ) + "</h2>" }).appendTo('#facet-view');
@@ -220,7 +228,7 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 								
 				// fields
 				if ( ignoredFieldNames.indexOf( attribute ) < 0 ) {
-					if ( hiddenFieldNames.indexOf( attribute ) < 0 ) {
+					if ( ( hiddenFieldNames.indexOf( attribute ) < 0 ) && ( invisibleFieldNames.indexOf( attribute ) < 0 ) ) {
 						fields[attribute] = { isVisible: true, direction: "" };
 					}
 					else {
@@ -240,10 +248,18 @@ function getData( studyUuid, assayUuid, nodeType ) {
 	    $( "#statistics-view" ).html("");
     	$( "<h1/>", { html: query.selected_items + "/" + query.total_items } ).appendTo( "#statistics-view" );				
 
-		processFacets( data );
-		processFields( data );
-		processDocs( data );
-		processPages();
+		if (  data.response.numFound < data.response.start ) {
+			// requesting data that is not available -> empty results -> rerun query			
+			// determine last available page given items_per_page setting
+			query.page = Math.max( 0, Math.ceil( data.response.numFound/query.items_per_page ) - 1 );
+			getData( testAssayUuid, testStudyUuid, testNodeType );
+		}
+		else {
+			processFacets( data );
+			processFields( data );
+			processDocs( data );
+			processPages();			
+		}
 	}});	
 }
 
@@ -445,19 +461,25 @@ function processPages() {
 	var visiblePages = 5;
 	var padLower = 2;
 	var padUpper = 2;
-	var availablePages = Math.ceil( query.selected_items/query.items_per_page ) - 1
+	var availablePages = Math.ceil( query.selected_items/query.items_per_page ) - 1;
 
 	if ( query.page > availablePages ) {
 		query.page = availablePages;
-	}  
+	}
 	
-	if ( query.page < padLower ) {
+	if ( availablePages < visiblePages ) {
+		if ( query.page < padLower ) {
+			padUpper = padUpper + padLower;  
+			padLower = query.page;
+			padUpper = padUpper - padLower;  		
+		}
+	}  	
+	else if ( query.page < padLower ) {
 		padUpper = padUpper + padLower;  
 		padLower = query.page;
 		padUpper = padUpper - padLower;  		
 	}  
-
-	if ( query.page > availablePages - padLower ) {
+	else if ( query.page > availablePages - padLower ) {
 		padLower = padLower + padUpper - ( availablePages - query.page );  
 		padUpper = availablePages - query.page;
 	}  
@@ -465,15 +487,34 @@ function processPages() {
 	
 	var items = [];
 		
-	items.push( "<li><a href=\"#\" id=\"page-first\">&laquo;</a></li>")					
+	if ( query.page == 0 ) {
+		items.push( "<li class=\"disabled\"><a>&laquo;</a></li>" );						
+	}
+	else {
+		items.push( "<li><a href=\"#\" id=\"page-first\">&laquo;</a></li>" );		
+	}
+	
 	for ( var i = query.page - padLower; i <= query.page + padUpper; ++i ) {
 		if ( i == query.page ) {
 			items.push( "<li class=\"active\"><a href=\"#\" id=\"page-" + (i+1) + "\">" + (i+1) + "</a></li>")			
-		} else {
-			items.push( "<li><a href=\"#\" id=\"page-" + (i+1) + "\">"+ (i+1) + "</a></li>")			
+		} 
+		else {
+			if ( i > availablePages ) {
+				items.push( "<li class=\"disabled\"><a>"+ (i+1) + "</a></li>")							
+			}
+			else {
+				items.push( "<li><a href=\"#\" id=\"page-" + (i+1) + "\">"+ (i+1) + "</a></li>")				
+			}			 
 		}
 	}
-	items.push( "<li><a href=\"#\" id=\"page-last\">&raquo;</a></li>")					
+	
+	if ( query.page == availablePages ) {
+		items.push( "<li class=\"disabled\"><a>&raquo;</a></li>" );						
+	} 
+	else {
+		items.push( "<li><a href=\"#\" id=\"page-last\">&raquo;</a></li>")					
+	}
+	
 	
     $( "#pager-view" ).html("");	
 	$('<div/>', { 'class': "pagination", html: "<ul>" + items.join('') + "</ul>" }).appendTo( '#pager-view' );
