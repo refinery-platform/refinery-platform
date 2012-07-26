@@ -218,17 +218,17 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 					facets[attribute] = [];
 					
 					$('<div/>', { 'class': 'facet-title', "data-toggle": "collapse", "data-target": "#" + composeFacetId( attribute + "___inactive" ), 'id': composeFacetId( attribute ), html: "<h4>" + prettifyFieldName( attribute, true ) + "</h4>" }).appendTo('#facet-view');
-					$('<div/>', { 'class': 'facet-value-list', "id": composeFacetId( attribute + "___active" ), html: "" }).appendTo('#facet-view');							
+					$('<div/>', { 'class': 'facet-value-list selected', "id": composeFacetId( attribute + "___active" ), html: "" }).appendTo('#facet-view');							
 					$('<div/>', { 'class': 'facet-value-list collapse', "data-parent":"#facet-view", "id": composeFacetId( attribute + "___inactive" ), html: "" }).appendTo('#facet-view');
 
 				   	$("#" + composeFacetId( attribute + "___inactive" ) ).on( "show", function( attribute ) {
 				   		attribute = decomposeFacetId( this.id ).facet;
-				   		$( "#" + composeFacetId( attribute + "___active" ) ).slideUp( "slow" );
+				   		$( "#" + composeFacetId( attribute + "___active" ) ).hide(); //slideUp( "slow" );
 				   	});						
 		
 				   	$("#" + composeFacetId( attribute + "___inactive" ) ).on( "hide", function() {
 				   		attribute = decomposeFacetId( this.id ).facet;
-				   		$( "#" + composeFacetId( attribute + "___active" ) ).slideDown( "slow");
+				   		$( "#" + composeFacetId( attribute + "___active" ) ).fadeIn( "slow" ); //slideDown( "slow");
 				   	});																							
 				}
 								
@@ -321,16 +321,16 @@ function processFacets( data ) {
 				
 				if ( facets[facet][facetValue].isSelected ) {
 		    		//selectedItems.push("<li class=\"facet-value\">" + "<span class=\"badge badge-info\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "&nbsp;<i class=\"icon-remove\"/>" + "</span>" +"</li>");
-		    		selectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td><td>&times;</td>"  + "</tr>" );					
-	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td><td>&times;</td>"  + "</tr>" );					
+		    		selectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-remove\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
+	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-remove\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
 				}
 				else {
-	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td>" + facetValue + "</td><td>" + facetValueCount + "</td><td></td>"  + "</tr>" );					
+	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-remove icon-white\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td><td></td>"  + "</tr>" );					
 				}												
 			}
 			
-			$( "#" + composeFacetId( facet + "___active" ) ).html( "<table class=\"table table-condensed\"><tbody>" + selectedItems.join('') + "</tbody></table>" ); 
-			$( "#" + composeFacetId( facet + "___inactive" ) ).html( "<table class=\"table table-condensed\"><tbody>" + unselectedItems.join('') + "</tbody></table>" );
+			$( "#" + composeFacetId( facet + "___active" ) ).html( "<table class=\"\"><tbody>" + selectedItems.join('') + "</tbody></table>" ); 
+			$( "#" + composeFacetId( facet + "___inactive" ) ).html( "<table class=\"\"><tbody>" + unselectedItems.join('') + "</tbody></table>" );
 		}		
     }
    	
@@ -352,22 +352,32 @@ function processFacets( data ) {
 
 
 function processFields() {
-	var items = []
+	var visibleItems = []
+	var invisibleItems = []
 	for ( field in fields ) {
 		if ( fields.hasOwnProperty( field ) ) {
 			if ( fields[field].isVisible ) {
-				items.push("<span class=\"field-name\" id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-minus-sign\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );				
+				visibleItems.push("<span class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-remove\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );				
 			}
 			else {
 				if ( hiddenFieldNames.indexOf( field ) < 0 ) {
-					items.push("<span class=\"field-name\" id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-plus-sign\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );
+					invisibleItems.push("<span class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-plus\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );
 				}
 			}
 		}
 	}
 
 	$("#field-view").html("" );
-	$('<p/>', { 'class': 'field-name-list', html: items.join(' | ') }).appendTo('#field-view');
+
+	if ( visibleItems.length > 0 ) {
+		$('<h4/>', { html: "Remove Columns" }).appendTo('#field-view');
+		$('<p/>', { 'class': 'field-name-list', html: visibleItems.join(' | ') }).appendTo('#field-view');
+	}
+	
+	if ( invisibleItems.length > 0 ) {
+		$('<h4/>', { html: "Add Columns" }).appendTo('#field-view');
+		$('<p/>', { 'class': 'field-name-list', html: invisibleItems.join(' | ') }).appendTo('#field-view');		
+	}
 	
    	$("#field-view").children().click( function() {
    		var fieldNameId = event.target.id;
@@ -386,18 +396,18 @@ function makeTableHeader( leadingExtra, trailingExtra ) {
 	var items = [];
 
 	for ( var i = 0; i < leadingExtra; ++i ) {
-		items.push("<th></th>" );	
+		items.push("<th align=left width=0></th>" );	
 	}
 		
 	for ( field in fields ) {
 		if ( fields.hasOwnProperty( field ) ) {
 			if ( fields[field].isVisible ) {
 				if ( fields[field].direction === "asc" ) {
-					items.push("<th id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "&nbsp;<i class=\"icon-arrow-down\"></th>" );				
+					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "&nbsp;<i class=\"icon-arrow-down\"></th>" );				
 				} else if ( fields[field].direction === "desc" ) {
-					items.push("<th id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "&nbsp;<i class=\"icon-arrow-up\"></th>" );				
+					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "&nbsp;<i class=\"icon-arrow-up\"></th>" );				
 				} else {
-					items.push("<th id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "</th>" );									
+					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "</th>" );									
 				}
 			}
 		}
@@ -467,7 +477,7 @@ function processPages() {
 	var visiblePages = 5;
 	var padLower = 2;
 	var padUpper = 2;
-	var availablePages = Math.ceil( query.selected_items/query.items_per_page ) - 1;
+	var availablePages = Math.max( 0, Math.ceil( data.response.numFound/query.items_per_page ) - 1 );
 
 	if ( query.page > availablePages ) {
 		query.page = availablePages;
