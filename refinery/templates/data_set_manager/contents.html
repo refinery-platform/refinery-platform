@@ -88,26 +88,18 @@
  	</div>	
  	
  	<div class="span8">
- 		
- 			
  	
  			<div class="row-fluid">
-			<div class="btn-group">
- 			
-					Choose Workflow
-				
-
- 				
+			<div class="btn-group"> 				
 				<select class="combobox" name="workflow_choice" id="workflow_choice">
 					<option></option>
 					{% for work in workflows %}
 						<option value="{{work.uuid}}">{{work.name}}</option>
 					{% endfor %}
-				</select>
-				
+				</select>			
+					
 				<!-- <button class="btn btn-primary" id="submitSamplesBtn"><i class="icon-road"></i>Run</button> -->
 				<button class="btn" id="submitSamplesBtn">Apply</button>
-
 			</div>
 			
 

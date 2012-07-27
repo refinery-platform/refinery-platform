@@ -1,47 +1,73 @@
 {% extends "base.html" %}
+{% load humanize %}
+
+{% block head_html %}
+	<!-- 3rd party libraries -->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap-tooltip.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap.js"></script>
+    
+    <style type="text/css">
+    </style>
+{% endblock %}
+
 
 {% block title %}
 {{ block.super }} - Data Set {{ data_set.name }}
 {% endblock %}
 
 {% block subheader %}
- Data Set: <i>{{ data_set.name }}</i>
+ <div class="page-header">
+  	<h1>Data Set <small>{{ data_set.name }}</small></h1>
+</div>
+
 {% endblock %}
 
 {% block content %}
+<script type="application/javascript">
+	$(document).ready(function () {
+    	$("[rel=tooltip]").tooltip();
+  	});
+</script>
+
 {% if data_set %}
-	<div class="label">Summary</div>	
-	<p>{{ data_set.summary }}</p>
+	<h3>Summary</h3>	
+	<p>{% if data_set.summary %} {{ data_set.summary }} {% else %} <i>None provided.</i>{% endif %}</p>
 	
-	<div class="label">Permissions</div>	
-	{% if permissions|length > 0 %}
-		<ul>
-		{% for perm in data_set.get_groups %}
-			<li><a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a> - Read: {{ perm.read }} | Change: {{ perm.change }}</li>
-		{% endfor %}
-		</ul>
-	{% else %}
-		No permissions.
-	{% endif %}
-	
-	<div class="label">History</div>	
-	<p>Created: {{ data_set.creation_date }} | Last Modified: {{ data_set.modification_date }}</p>
-	
-	<div class="label">UUID</div>
-	<p class="fixed">{{ data_set.uuid }}</p>
-	
-	<div class="label">Studies</div>
+	<h3>Studies</h3>
 	{% for study in studies %}
 	<p><strong>{{study.identifier}}</strong>: {{study.title}}</p>
 	<ul>
 	{% for assay in study.assay_set.all %}
-		<li>Assay - <a href="samples/{{study.uuid}}/{{assay.uuid}}/">{{assay}}</a>						
-			[<a href="{% url data_set_manager_contents study.uuid assay.uuid %}">Content</a>]			
-</li>
+		<li>Assay - <a href="{% url data_set_manager_contents study.uuid assay.uuid %}">{{assay}}</a></li>
 	{% endfor %}
 	</ul>
 	{% endfor %}
 	
+	
+	<h3>Sharing</h3>
+	<h4>Owner</h4>
+	<p><a href="{% url user data_set.get_owner.get_profile.uuid %}">{% if data_set.get_owner.get_full_name %}{{ data_set.get_owner.get_full_name }}{% else %}{{ data_set.get_owner }}{%endif%}</a></p>
+
+	{% if data_set.get_groups|length > 0 %}
+	<h4>Groups</h4>
+		<p>
+		{% for perm in data_set.get_groups %}
+				<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
+				{% if perm.read %}
+					<i class="icon-eye-open"></i>
+				{% endif %}
+				{% if perm.change %}
+					<i class="icon-pencil"></i>
+				{% endif %}
+		{% endfor %}
+		</p>
+	{% endif %}
+	
+	<h3>History</h3>
+	<p>Current version <i>{{ data_set.get_version_details.version }}</i> created <i>{{ data_set.get_version_details.date }}</i>.
+	Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{ data_set.modification_date }}</i>.</p>
+	<!-- Data set created <a href="#" rel="tooltip" title="{{ data_set.creation_date }}">{{ data_set.creation_date|naturaltime }}</a>. Last modified <a href="#" rel="tooltip" title="{{ data_set.modification_date }}">{{ data_set.modification_date|naturaltime }}</a>.</p> -->
+		
 {% else %}
     <p>No valid data set.</p>
 {% endif %}

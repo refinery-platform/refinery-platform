@@ -196,21 +196,32 @@ class DataSet(SharableResource):
         
         
     def update_investigation(self, investigation, message):
-        max_version = InvestigationLink.objects.filter( data_set=self ).aggregate( Max("version" ) )["version__max"]        
-        if max_version is None:
+        version = self.get_version()        
+        if version is None:
             return self.set_investigation(investigation, message)            
-        link = InvestigationLink(data_set=self, investigation=investigation, version=max_version+1, message=message)
+        link = InvestigationLink(data_set=self, investigation=investigation, version=version+1, message=message)
         link.save()
-        return max_version+1       
+        return version+1       
 
 
     def get_version(self):
         try:
-            return InvestigationLink.objects.filter( data_set=self ).aggregate( Max("version" ) )["version__max"]
+            version = InvestigationLink.objects.filter( data_set=self ).aggregate( Max("version" ) )["version__max"]
+            return version
         except:
             return None
 
-    
+
+    def get_version_details(self, version=None ):
+        try:
+            if version is None:
+                version = InvestigationLink.objects.filter( data_set=self ).aggregate( Max("version" ) )["version__max"]
+            
+            return InvestigationLink.objects.filter( data_set=self, version=version ).get()            
+        except:
+            return None
+
+
     def get_investigation(self, version=None):
         if version is None:
             try:
@@ -242,7 +253,7 @@ class InvestigationLink(models.Model):
     investigation = models.ForeignKey(Investigation)
     version = models.IntegerField(default=1) 
     message = models.CharField(max_length=500, blank=True, null=True)
-    date = models.DateTimeField(default=datetime.now())
+    date = models.DateTimeField( auto_now_add=True )
     
     def __unicode__(self):
         retstr = "%s: ver=%s, %s" % (self.investigation.get_identifier(), self.version, self.message)
@@ -377,7 +388,19 @@ class Analysis ( OwnableResource ):
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' %  verbose_name ),
         )
+
+
+def get_shared_groups( user1, user2, include_public_group=False ):
+    '''
+    returns a list of extended groups of which both users are a member
+    '''
+    shared_groups = list( set(user1.groups.all()) & set(user2.groups.all()) )
     
+    if not include_public_group:        
+        return filter( lambda eg: eg != ExtendedGroup.objects.public_group(), [g.extendedgroup for g in shared_groups] )
+    
+    return [g.extendedgroup for g in shared_groups]
+
     
 class ExtendedGroupManager(models.Manager):
     def public_group(self):

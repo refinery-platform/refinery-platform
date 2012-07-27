@@ -1,37 +1,34 @@
 {% extends "base.html" %}
 
 {% block title %}
-{{ block.super }} - User {{ user.username }}
+{{ block.super }} - User {{ profile_user.username }}
 {% endblock %}
 
 {% block subheader %}
-User: <i>{{ user.username }}</i>
+User: <i>{{ profile_user.username }}</i>
 {% endblock %}
 
 
 {% block content %}
 {% if user %}	
     <div class="label">Name</div>    
-	<p>{{ user.get_full_name }}</p>
+	<p>{{ profile_user.get_full_name }}</p>
 
     <div class="label">Email</div>    
-	<p>{{ user.email }}</p>
+	<p>{{ profile_user.email }}</p>
 
     <div class="label">Affiliation</div>    
-	<p>{{ user.get_profile.affiliation }}</p>
+	<p>{{ profile_user.get_profile.affiliation }}</p>
 
     <div class="label">Groups</div>
-    <ul>    
-	{% for group in groups %}
-        <li><a href="{% url group group.uuid %}">{{ group.name }}</a></li>
-    {% endfor %}
-	{% for group in user.groups.all %}
-        <li><a href="">{{ group.name }}</a></li>
+    <ul>   
+	{% for group in profile_user.groups.all %}
+        <li><a href="{% url group group.extendedgroup.uuid %}">{{ group.name }}</a></li>
     {% endfor %}
    	</ul>
 	
 	<div class="label">History</div>	
-	<p>Joined: {{ user.date_joined }} | Last Login: {{ user.last_login }}</p>	
+	<p>Joined: {{ profile_user.date_joined }} | Last Login: {{ profile_user.last_login }}</p>	
 {% else %}
     <p>No valid user.</p>
 {% endif %}

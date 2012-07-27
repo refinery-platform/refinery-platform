@@ -1,7 +1,7 @@
 from collections import defaultdict
 from core.forms import ProjectForm
 from core.models import ExtendedGroup, Project, DataSet, Workflow, UserProfile, \
-    WorkflowEngine, Analysis
+    WorkflowEngine, Analysis, get_shared_groups
 from data_set_manager.models import *
 from data_set_manager.utils import get_matrix
 from datetime import datetime
@@ -13,14 +13,12 @@ from django.http import HttpResponse, HttpResponseForbidden, \
     HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-from file_store.models import FileStoreItem
-from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
-    get_perms
 from django.utils import simplejson
-from file_store.models import FileStoreItem
+from file_store.models import FileStoreItem, FileStoreItem
 from galaxy_connector.models import Instance
 from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
-    get_perms, get_users_with_perms
+    get_perms, get_objects_for_group, get_objects_for_user, get_perms, \
+    get_users_with_perms
 from haystack.query import SearchQuerySet
 import logging
 import urllib2
@@ -79,13 +77,10 @@ def user(request, query):
     except User.DoesNotExist:
         user = get_object_or_404( UserProfile, uuid=query ).user
         
-    if not request.user.id == user.id:
+    if len( get_shared_groups( request.user, user ) ) == 0:
         return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view the profile of user " + user.username + ".</h1>" )
 
-    # TODO: get list of ExtendedGroups for this user
-    groups = []
-                            
-    return render_to_response('core/user.html', {'user': user, "groups": groups }, context_instance=RequestContext( request ) )
+    return render_to_response('core/user.html', {'profile_user': user }, context_instance=RequestContext( request ) )
 
 
 @login_required()
