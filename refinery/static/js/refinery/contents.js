@@ -16,9 +16,8 @@ var testAssayUuid = urlComponents[urlComponents.length-3];
 var testNodeType = "\"Raw Data File\"";
 
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
-var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "name" ]; // TODO: make these regexes
-var invisibleFieldNames = [ ];
-//var invisibleFieldNames = [ "name" ];
+var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type" ]; // TODO: make these regexes
+var invisibleFieldNames = [ "name" ];
 
 var addFieldNames = ["Options"];
 
@@ -46,7 +45,9 @@ var fields = {};
 
 var documents = [];
 
-$(".collapse").collapse();
+
+$(".collapse").collapse("show");
+		
 
 function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents ) {
 	var url = solrRoot
@@ -218,9 +219,9 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 					 ( attribute.indexOf( "_Material_Type_" ) != -1 ) ) {
 					facets[attribute] = [];
 					
-					$('<div/>', { 'class': 'facet-title', "data-toggle": "collapse", "data-target": "#" + composeFacetId( attribute + "___inactive" ), 'id': composeFacetId( attribute ), html: "<h4>" + prettifyFieldName( attribute, true ) + "</h4>" }).appendTo('#facet-view');
+					$('<div/>', { 'href': '#' + composeFacetId( attribute + "___inactive" ), 'class': 'facet-title', "data-toggle": "collapse", "data-parent": "#facet-view", "data-target": "#" + composeFacetId( attribute + "___inactive" ), 'id': composeFacetId( attribute ), html: "<h4>" + prettifyFieldName( attribute, true ) + "</h4>" }).appendTo('#facet-view');
 					$('<div/>', { 'class': 'facet-value-list selected', "id": composeFacetId( attribute + "___active" ), html: "" }).appendTo('#facet-view');							
-					$('<div/>', { 'class': 'facet-value-list collapse', "data-parent":"#facet-view", "id": composeFacetId( attribute + "___inactive" ), html: "" }).appendTo('#facet-view');
+					$('<div/>', { 'class': 'facet-value-list collapse', "id": composeFacetId( attribute + "___inactive" ), html: "" }).appendTo('#facet-view');
 
 				   	$("#" + composeFacetId( attribute + "___inactive" ) ).on( "show", function( attribute ) {
 				   		attribute = decomposeFacetId( this.id ).facet;
@@ -231,8 +232,8 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 				   		attribute = decomposeFacetId( this.id ).facet;
 				   		$( "#" + composeFacetId( attribute + "___active" ) ).fadeIn( "slow" ); //slideDown( "slow");
 				   	});																							
-				}
-								
+				}								
+												
 				// fields
 				if ( ignoredFieldNames.indexOf( attribute ) < 0 ) {
 					if ( ( hiddenFieldNames.indexOf( attribute ) < 0 ) && ( invisibleFieldNames.indexOf( attribute ) < 0 ) ) {
@@ -263,10 +264,10 @@ function getData( studyUuid, assayUuid, nodeType ) {
 		}
 		else {
 			processFacets( data );
-			processFields( data );
+			processFields();
 			processDocs( data );
-			processPages();			
-		}
+			processPages( data );			
+		} 
 	}});	
 }
 
@@ -474,7 +475,7 @@ function processDocs( data ) {
 }
 
 
-function processPages() {	
+function processPages( data ) {	
 	var visiblePages = 5;
 	var padLower = 2;
 	var padUpper = 2;
