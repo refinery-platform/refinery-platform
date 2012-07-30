@@ -155,6 +155,7 @@ INSTALLED_APPS = (
     # NG: added for API
     "tastypie",
     'guardian',
+    'raven.contrib.django',
     'galaxy_connector',
     'core',
     'analysis_manager',
@@ -234,9 +235,14 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': False,
         },
+        'data_set_manager': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
         'isa_tab_parser': {
             'level': 'DEBUG',
-            'handlers': ['sentry'],
+            'handlers': ['console'],
             'propagate': False,
         },
         'file_store': {
