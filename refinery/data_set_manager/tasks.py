@@ -31,6 +31,7 @@ import time
 import traceback
 import urllib2
 import logging
+import shutil
 
 """get logger for all tasks"""
 logger = logging.getLogger(__name__)
@@ -117,8 +118,117 @@ def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=
 
         f.close()
 
+
+def fix_last_col(file):
+    logger.info("trying to fix the last column if necessary")
+    reader = csv.reader(open(file, 'rb'), dialect='excel-tab')
+    tempfilename = tempfile.NamedTemporaryFile().name
+    writer = csv.writer(open(tempfilename, 'wb'), dialect='excel-tab')
+
+    """check that all rows have the same length"""
+    header = reader.next()
+    header_length = len(header)
+    num_empty_cols = 0 #number of empty header columns
+
+    for item in header:
+        if not item.strip():
+            num_empty_cols += 1
+
+    if num_empty_cols: #if there are empty header columns
+        logger.info("Empty columns in header present, attempting to fix...")
+        #check that all the rows are the same length
+        for row in reader:
+            if len(row) != header_length:
+                logger.error("All rows in the file were not the same length.")
+                return 0
+
+            #check that all the end columns that are supposed to be empty are
+            i = 0
+            while i < num_empty_cols:
+                i += 1
+                check_item = row[-i].strip()
+                if check_item: #item not empty
+                    logger.error("Found a value where an empty column was expected.")
+                    return 0
+
+        #write the file
+        writer.writerow(header[:-num_empty_cols])
+        #need to reset the reader
+        reader = csv.reader(open(file, 'rb'), dialect='excel-tab')
+        reader.next() #skip header row because we already wrote it
+        for row in reader:
+            writer.writerow(row[:-num_empty_cols])
+
+        shutil.move(tempfilename, file)
+
+    return 1
+
+
+def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):
+    logger.info("zipping up ISA-Tab files")
+
+    #send stdout and stderr to a unique temp directory to avoid console
+    temp_dir = tempfile.mkdtemp()
+    """
+    shutil makes a zip, tar, tar.gz, etc file out of files in given dir 
+    Params:
+    zip file prefix
+    type of archive (e.g. zip, tar)
+    superdirectory of the directory you want to archive
+    name of directory that's being archived
+    """ 
+    shutil.make_archive(isatab_zip_loc, 'zip', settings.ISA_TAB_DIR, accession)
+
+    #Get and zip up the MAGE-TAB and put in the ISA-Tab folder
+    #make file name for ArrayExpress information to download into
+    ae_name = tempfile.NamedTemporaryFile(dir=temp_dir, prefix='ae_').name
+    #make url to fetch the experiment
+    url = "%s/%s" % (settings.AE_BASE_URL, accession)
+
+    #get ArrayExpress information to get URLs to download
+    u = urllib2.urlopen(url)
+    f = open(ae_name, 'wb')
+    f.write(u.read()) #small file, so just grab whole thing in one go
+    f.close()
+
+    #open and read in the last line (the HTML) that has the info we want
+    f = open(ae_name, 'rb')
+    lines = f.readlines()
+    f.close()
+    last_line = lines[-1]
+
+    dir_to_zip = os.path.join(temp_dir, "magetab")
+    create_dir(dir_to_zip)
+
+    #isolate the links by splitting on '<a href="'
+    a_hrefs = string.split(last_line, '<a href="')
+    #get the links we want
+    for a_href in a_hrefs:
+        if re.search(r'sdrf.txt', a_href) or re.search(r'idf.txt', a_href):
+            link = string.split(a_href, '"').pop(0) #grab the link
+            file_name = link.split('/')[-1] #get the file name
+            if not re.search(r'^http://', link):
+                link = "http://www.ebi.ac.uk%s" % link
+            
+            u = urllib2.urlopen(link)
+            file = os.path.join(dir_to_zip, file_name)
+            f = open(file, 'wb')
+            f.write(u.read()) #again, shouldn't be a large file
+            f.close()
+    
+    files_to_zip = 0
+    for dirname, dirnames, filenames in os.walk(dir_to_zip):
+        for filename in filenames:
+            files_to_zip += 1
+    if files_to_zip > 1:
+        #zip up and move the MAGE-TAB files
+        shutil.make_archive("%s/MAGE-TAB_%s" % (preisatab_zip_loc, accession), 
+                            'zip', temp_dir, "magetab")
+        #shutil.move("%s/MAGE-TAB_%s.zip" % (temp_dir, accession), pre_isatab_zip_loc)
+
+
 @task()
-def convert_to_isatab(accession):
+def convert_to_isatab(accession, isatab_zip_loc, preisatab_zip_loc):
     """
     Name: convert_to_isatab
     Description:
@@ -129,7 +239,6 @@ def convert_to_isatab(accession):
     """
     logger = convert_to_isatab.get_logger()
     logger.info("logging from convert_to_isatab")
-    retval = 1 #successful conversion
     
     #send stdout and stderr to a unique temp directory to avoid console
     temp_dir = tempfile.mkdtemp()
@@ -146,6 +255,7 @@ def convert_to_isatab(accession):
                                #stdout=open(stdout_n, 'wb'))
     #run the subprocess and grab the exit code
     #exit_code = process.wait()
+    logger.info("converting to ISA-Tab")
     (stdout, stderr) = process.communicate(input=accession)
     exit_code = process.returncode
     """process stderr"""
@@ -157,88 +267,39 @@ def convert_to_isatab(accession):
             shutil.rmtree(temp_dir)
             raise Exception, "Error Converting to ISA-Tab: %s" % stderr
         else:
-            retval = 0 #unsuccessful conversion, but clean exit
+            return 0 #unsuccessful conversion, but clean exit
     else: #successfully converted
-        #zip up ISA-Tab files 
-        isatab_file_location = os.path.join(settings.ISA_TAB_DIR, 'isa', accession)
-        preisatab_file_location = os.path.join(settings.ISA_TAB_DIR, 'pre_isa')
-        """
-        shutil makes a zip, tar, tar.gz, etc file out of files in given dir 
-        Params:
-        zip file prefix
-        type of archive (e.g. zip, tar)
-        superdirectory of the directory you want to archive
-        name of directory that's being archived
-        """ 
-        shutil.make_archive(isatab_file_location, 'zip',  
-                                        settings.ISA_TAB_DIR, accession)
+        base_dir = os.path.join(settings.ISA_TAB_DIR, accession)
+        study_file = glob.glob("%s/s_*.txt" % base_dir)[0]
+        assay_file = glob.glob("%s/a_*.txt" % base_dir)[0]
 
-        #Get and zip up the MAGE-TAB and put in the ISA-Tab folder
-        #make file name for ArrayExpress information to download into
-        ae_name = tempfile.NamedTemporaryFile(dir=temp_dir, prefix='ae_').name
-        #make url to fetch the experiment
-        url = "%s/%s" % (settings.AE_BASE_URL, accession)
+        logging.info("fixing last columns in study file if needed")
+        if not fix_last_col(study_file):
+            return 0  
+        logging.info("fixing last columns in assay file if needed")
+        if not fix_last_col(assay_file):
+            return 0
 
-        #get ArrayExpress information to get URLs to download
-        u = urllib2.urlopen(url)
-        f = open(ae_name, 'wb')
-        f.write(u.read()) #small file, so just grab whole thing in one go
-        f.close()
+        zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc)
 
-        #open and read in the last line (the HTML) that has the info we want
-        f = open(ae_name, 'rb')
-        lines = f.readlines()
-        f.close()
-        last_line = lines[-1]
+    return 1 #successful everything
 
-        dir_to_zip = os.path.join(temp_dir, "magetab")
-        create_dir(dir_to_zip)
 
-        #isolate the links by splitting on '<a href="'
-        a_hrefs = string.split(last_line, '<a href="')
-        #get the links we want
-        for a_href in a_hrefs:
-            if re.search(r'sdrf.txt', a_href) or re.search(r'idf.txt', a_href):
-                link = string.split(a_href, '"').pop(0) #grab the link
-                file_name = link.split('/')[-1] #get the file name
-                if not re.search(r'^http://', link):
-                    link = "http://www.ebi.ac.uk%s" % link
-                
-                u = urllib2.urlopen(link)
-                file = os.path.join(dir_to_zip, file_name)
-                f = open(file, 'wb')
-                f.write(u.read()) #again, shouldn't be a large file
-                f.close()
-        
-        files_to_zip = 0
-        for dirname, dirnames, filenames in os.walk(dir_to_zip):
-            for filename in filenames:
-                files_to_zip += 1
-        if files_to_zip > 1:
-            #zip up and move the MAGE-TAB files
-            shutil.make_archive("%s/MAGE-TAB_%s" % (preisatab_file_location, accession), 
-                                'zip', temp_dir, "magetab")
-            #shutil.move("%s/MAGE-TAB_%s.zip" % (temp_dir, accession), pre_isatab_file_location)
-
-    #clean up the temporary directory and other files
-    #shutil.rmtree(temp_dir)
-
-    return retval
-
-"""
-Name: get_arrayexpress_studies
-Description:
-    task that runs every Friday at 9:00PM that checks ArrayExpress for new
-    and updated studies, then pulls down their metadata, converts it to
-    ISA-Tab, and parses it into the Django database
-"""
 @periodic_task(run_every=crontab(hour="12", day_of_week="friday"))
 def get_arrayexpress_studies():
+    """
+    Name: get_arrayexpress_studies
+    Description:
+        task that runs every Friday at 9:00PM that checks ArrayExpress for new
+        and updated studies, then pulls down their metadata, converts it to
+        ISA-Tab, and parses it into the Django database
+    """
     """
     If you don't want to fetch all studies, edit in this fashion:
         call_command('mage2isa_convert', 'exptype=chip-seq', species='human')
     """
     call_command('mage2isa_convert', 'exptype=ChIP-seq')
+
 
 @task() 
 def create_dataset(investigation_uuid, username, public=False):
@@ -281,6 +342,7 @@ def create_dataset(investigation_uuid, username, public=False):
             public_group = ExtendedGroup.objects.public_group()
             dataset.share(public_group)  
 
+
 @task()
 def annotate_nodes(investigation_uuid):
     """
@@ -316,6 +378,7 @@ def parse_isatab(username, public, path, additional_raw_data_file_extension=None
         logger.error(traceback.print_exception(exc_type, exc_value,
                           exc_traceback, file=sys.stdout))
     return None
+
 
 @task()
 def process_isa_tab(uuid):
