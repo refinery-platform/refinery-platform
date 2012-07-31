@@ -160,8 +160,8 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 	}	
 	
 	
-	//$( "#url-view" ).html( "" );
-	//$( "<a/>", { href: url + "&indent=on", html: "Solr Query" } ).appendTo( "#url-view" );
+	$( "#url-view" ).html( "" );
+	$( "<a/>", { href: url + "&indent=on", html: "Solr Query" } ).appendTo( "#url-view" );
 
 	return ( url );
 }
