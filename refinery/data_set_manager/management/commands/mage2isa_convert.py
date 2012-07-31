@@ -149,7 +149,9 @@ class Command(BaseCommand):
         s_tasks = list()
         for ae_accession in ae_accessions:
             #print ae_accession
-            s_task = convert_to_isatab.subtask(args=(ae_accession,))
+            s_task = convert_to_isatab.subtask(args=(ae_accession,
+                                                     "%s/%s" % (base_isa_dir, ae_accession),
+                                                     base_preisa_dir))
             s_tasks.append(s_task)
 
         """dispatch the tasks and wait for everything to return"""
@@ -162,4 +164,4 @@ class Command(BaseCommand):
 
         results = result.join() #list of the results in dispatch order
 
-        call_command('process_isatab', 'ArrayExpress', base_isa_dir, base_preisa_dir, is_public=True)
+        call_command('process_arrayexpress_isatab', base_isa_dir, "base_pre_isa_dir=%s" % base_preisa_dir, "is_public=True")
