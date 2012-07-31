@@ -374,7 +374,7 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
             #print curr_filestore.datafile.path
             #print curr_filestore.datafile.url
             
-            file_path = curr_filestore.datafile.path
+            file_path = curr_filestore.get_absolute_path()
             cur_item["filepath"] = file_path
             file_id = connection.put_into_library(library_id, file_path)
             cur_item["id"] = file_id

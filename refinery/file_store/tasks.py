@@ -3,10 +3,9 @@ import shutil
 import tempfile
 import urllib2
 import logging
-from django.conf import settings
-from django.core.files import File
 from celery.task import task
-from file_store.models import FileStoreItem, file_path, is_local, get_temp_dir, FILE_STORE_BASE_DIR
+from django.core.files import File
+from file_store.models import FileStoreItem, file_path, is_local, get_temp_dir, FILE_STORE_BASE_DIR, _symlink_file_on_disk
 
 logger = logging.getLogger('file_store')
 
@@ -19,20 +18,29 @@ def create(source, sharename='', permanent=False, file_size=1):
     logger.debug("Entering file_store.create(), source = %s", source)
 
     if not source:
-        logger.error("Source is required but it was not provided")
+        logger.error("Source is required but was not provided")
         return None
 
     item = FileStoreItem.objects.create(source=source, sharename=sharename)
     logger.debug("New FileStoreItem created, item.datafile.name: %s", item.datafile.name)
 
-    #TODO: call import_file as subtask?
+    # Create a symlink to the file if source is an absolute file system path
+    if os.path.isabs(item.source):
+        # construct absolute destination path
+        rel_dst_path = item.datafile.storage.get_available_name(file_path(item, os.path.basename(item.source)))
+        abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
+        if _symlink_file_on_disk(item.source, abs_dst_path):
+            # assign symlink path to FileField
+            item.datafile.name = rel_dst_path
+            item.save()
+
+    #TODO: provide progress update, call import_file as subtask?
     if permanent:
         # copy to file store now but don't add to cache
         if not import_file(item.uuid, permanent=True, file_size=file_size):
             logger.error("Could not import file from %s", item.source)
             return None
 
-    logger.debug("Leaving file_store.create()")
     return item.uuid
 
 @task()
@@ -52,7 +60,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
     if is_local(uuid):
         if refresh:
             try:
-                item.datafile.delete(save=False)
+                item.datafile.delete()
             except OSError as e:
                 logger.exception("Error deleting data file. OSError number: %s, file name: %s, error: %s",
                          e.errno, e.filename, e.strerror)
@@ -63,16 +71,15 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
     if os.path.isabs(item.source):
         # check if source file can be opened
         try:
-            srcfo = open(item.source)
+            srcfile = File(open(item.source))
         except IOError:
-            logger.exception("Could not open fileL %s", item.source)
+            logger.exception("Could not open file: %s", item.source)
             return None
         srcfilename = os.path.basename(item.source)
-        srcfile = File(srcfo)
+        
         #TODO: copy file in chunks to display progress report (override Storage.save?)
-        item.datafile.save(srcfilename, srcfile)  # model is saved by default if FileField is altered
+        item.datafile.save(srcfilename, srcfile)  # model is saved by default if FileField.save() is called
         srcfile.close()
-        srcfo.close()
     else:
         req = urllib2.Request(item.source)
         # check if source file can be downloaded
@@ -175,7 +182,9 @@ def rename(uuid, name):
     except FileStoreItem.DoesNotExist:
         logger.exception("FileStoreItem with UUID %s does not exist", uuid)
         return None
-    
+
+    if not is_local(uuid): return None
+
     # get available name based on the provided name
     new_rel_path = item.datafile.storage.get_available_name(file_path(item, name))
     new_abs_path = os.path.join(FILE_STORE_BASE_DIR, new_rel_path)
