@@ -4,20 +4,19 @@ Created on May 11, 2012
 @author: nils
 '''
 
+from core.models import *
+from data_set_manager.tasks import process_isa_tab, annotate_nodes
 from data_set_manager.utils import *
-from django.http import HttpResponse
-from django.utils import simplejson
-from haystack.query import SearchQuerySet
-from file_store.tasks import create, import_file
-from file_store.models import FileStoreItem
+from django import forms
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpResponseRedirect, HttpResponse
+from django.http import Http404, HttpResponseRedirect, HttpResponse, \
+    HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-from data_set_manager.tasks import process_isa_tab
-from core.models import *
-from django import forms
-from core.models import Workflow
+from django.utils import simplejson
+from file_store.models import FileStoreItem
+from file_store.tasks import create, import_file
+from haystack.query import SearchQuerySet
 
 
 def index(request):
@@ -119,7 +118,8 @@ def import_isa_tab(request):
             # parse ISA-Tab
             investigation_uuid = process_isa_tab(item.uuid)
             if investigation_uuid:
-                #TODO create a dataset
+                # create annotated node table entries for this investigation for solr indexing
+                annotate_nodes( investigation_uuid )
                 investigation = Investigation.objects.get(uuid=investigation_uuid)
                 dataset = DataSet.objects.create(name=investigation.get_title())
                 dataset.set_investigation(investigation)
