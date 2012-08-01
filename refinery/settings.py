@@ -282,7 +282,7 @@ HAYSTACK_CONNECTIONS = {
 
 # set the name of the group that is used to share data with all users (= "the public")
 REFINERY_PUBLIC_GROUP_NAME = "Public" 
-REFINERY_PUBLIC_GROUP_ID = 1  # DO NOT CHANGE THIS after initialization of your Refinery instance
+REFINERY_PUBLIC_GROUP_ID = 100  # DO NOT CHANGE THIS after initialization of your Refinery instance
 
 AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
 AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
