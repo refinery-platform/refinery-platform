@@ -1,17 +1,7 @@
 {% extends "base.html" %}
 
 {% block head_html %}
-	<!-- 3rd party libraries -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap-collapse.js"></script>
 
-	<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/jquery.dataTables.js"></script>		
-    <script type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/DT_bootstrap.js"></script>		
-    
-	<!-- Refinery libraries -->
-	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>
-    
     <style type="text/css">
  	.facet-title {
  		cursor:pointer; 		
@@ -29,7 +19,7 @@
  		cursor:pointer;
  	} 
  	 	
- 	.active {
+ 	#facet-view .active {
  		cursor:pointer; 
  		background-color: #3A87AD;
  		color: #fff;
@@ -112,22 +102,36 @@
 </div>
 
 <div class="row-fluid">
+ 	
  	<div class="span2">
 		<div id="facet-view" class="accordion"></div>
  	</div>	
+ 	
  	<div class="span10"> 			
- 		<div class="row-fluid">	 			 	    		
-    	</div>
-    	<div class="row-fluid">
-		</div>
+		
 		<div class="row-fluid">
-			<div id="table-view"></div>
+		<div class="tabbable">
+			<ul class="nav nav-tabs" id="navigation-tabs">
+			  <li><a href="#table-view-tab" data-toggle="tab">List</a></li>
+			  <li class="active"><a href="#pivot-view-tab" data-toggle="tab">Matrix</a></li>
+			</ul>
+
+			<div class="tab-content">
+			  <div class="tab-pane fade in" id="table-view-tab">
+				<div id="table-view"></div>
+				<div id="pager-view"></div>
+				<div id="field-view"></div>  	
+			  </div>
+			  <div class="tab-pane active fade in" id="pivot-view-tab">
+			  	<div id="pivot-view">
+			  	</div>			  	
+			  </div>
+			</div>
+		</div>			
 		</div>
-		<div class="row-fluid">
-			<div id="pager-view"></div>
-			<div id="field-view"></div>
-		</div>
-	 </div>
+		
+	</div>
+	
 </div>
 
 <div class="row-fluid">
@@ -135,6 +139,13 @@
 	 	<div id="url-view"></div>
  	</div>		 
 </div>
-	<form></form>
+<form></form>
 
 {% endblock %}
+
+{% block script %}
+	<!-- Refinery libraries -->
+	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>
+{% endblock %}    
+
