@@ -5,7 +5,7 @@ import urllib2
 import logging
 from celery.task import task
 from django.core.files import File
-from file_store.models import FileStoreItem, file_path, is_local, get_temp_dir, FILE_STORE_BASE_DIR, _symlink_file_on_disk
+from file_store.models import FileStoreItem, file_path, get_temp_dir, FILE_STORE_BASE_DIR
 
 logger = logging.getLogger('file_store')
 
@@ -13,33 +13,28 @@ logger = logging.getLogger('file_store')
 def create(source, sharename='', permanent=False, file_size=1):
     '''
     Create a FileStoreItem instance and return its UUID
-    source is either an absolute file system path or a URL
+    Important: source must be either an absolute file system path or a URL
     '''
-    logger.debug("Entering file_store.create(), source = %s", source)
+    logger.debug("Creating FileStoreItem using source %s", source)
 
     if not source:
         logger.error("Source is required but was not provided")
         return None
 
     item = FileStoreItem.objects.create(source=source, sharename=sharename)
-    logger.debug("New FileStoreItem created, item.datafile.name: %s", item.datafile.name)
+    logger.debug("New FileStoreItem created with UUID: %s", item.uuid)
 
-    # Create a symlink to the file if source is an absolute file system path
-    if os.path.isabs(item.source):
-        # construct absolute destination path
-        rel_dst_path = item.datafile.storage.get_available_name(file_path(item, os.path.basename(item.source)))
-        abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
-        if _symlink_file_on_disk(item.source, abs_dst_path):
-            # assign symlink path to FileField
-            item.datafile.name = rel_dst_path
-            item.save()
-
-    #TODO: provide progress update, call import_file as subtask?
     if permanent:
-        # copy to file store now but don't add to cache
+        # copy to file store now and don't add to cache
+        #TODO: provide progress update, call import_file as subtask?
         if not import_file(item.uuid, permanent=True, file_size=file_size):
             logger.error("Could not import file from %s", item.source)
             return None
+    else:
+        if os.path.isabs(item.source):
+            if not item.symlink_datafile():
+                # if the source is an absolute file system path but symlinking it failed
+                return None
 
     return item.uuid
 
@@ -48,6 +43,8 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
     '''
     Download or copy file specified by UUID
     If permanent=False then add to cache
+    Make sure source is either an absolute file system path or a URL before importing
+    Return FileStoreItem instance
     '''
     # check if there's a FileStoreItem with this UUID
     try:
@@ -56,14 +53,10 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         logger.exception("FileStoreItem with UUID %s does not exist", uuid)
         return None
 
-    # if file is available then return it, else delete if update is requested
-    if is_local(uuid):
+    # if file is ready to be used then return it, otherwise delete it if update is requested
+    if item.is_local():
         if refresh:
-            try:
-                item.datafile.delete()
-            except OSError as e:
-                logger.exception("Error deleting data file. OSError number: %s, file name: %s, error: %s",
-                         e.errno, e.filename, e.strerror)
+            item.delete_datafile()
         else:
             return item
 
@@ -157,11 +150,18 @@ def read(uuid):
 def delete(uuid):
     ''' Delete FileStoreItem given UUID '''
     #TODO: remove from cache
+    logger.debug("Deleting FileStoreItem UUID %s", uuid)
+
     try:
         FileStoreItem.objects.get(uuid=uuid).delete()
     except FileStoreItem.DoesNotExist:
-        logger.exception("FileStoreItem with UUID %s does not exist", uuid)
+        logger.exception("FileStoreItem UUID %s does not exist", uuid)
         return False
+    except FileStoreItem.MultipleObjectsReturned:
+        logger.exception("More than one FileStoreItem matched UUID %s", uuid)
+        return False
+
+    logger.info("FileStoreItem UUID %s deleted", uuid)
     return True
 
 @task()
@@ -176,29 +176,11 @@ def update(uuid, source):
 
 @task()
 def rename(uuid, name):
-    ''' Change name of the file on disk.  Return the name that was assigned by the file storage system. '''
+    ''' Change name of the file on disk and return the new name '''
     try:
         item = FileStoreItem.objects.get(uuid=uuid)
     except FileStoreItem.DoesNotExist:
         logger.exception("FileStoreItem with UUID %s does not exist", uuid)
         return None
 
-    if not is_local(uuid): return None
-
-    # get available name based on the provided name
-    new_rel_path = item.datafile.storage.get_available_name(file_path(item, name))
-    new_abs_path = os.path.join(FILE_STORE_BASE_DIR, new_rel_path)
-
-    # rename file on disk
-    try:
-        os.renames(item.datafile.path, new_abs_path)
-    except OSError as e:
-        logger.exception("Error renaming file on disk. OSError: %s, file name: %s, error: %s. Current file name: %s. New file name: %s",
-                        e.errno, e.filename, e.strerror, item.datafile.path, new_abs_path)
-        return None
-
-    # change the name of the DataFile
-    item.datafile.name = new_rel_path
-    item.save()
-
-    return os.path.basename(item.datafile.name)
+    return item.rename_datafile(name)
