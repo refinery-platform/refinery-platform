@@ -4,7 +4,9 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
-from data_set_manager.models import Investigation
+from data_set_manager.models import Investigation, Node
+from datetime import datetime
+from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.signals import user_logged_in
 from django.db import models
@@ -12,11 +14,10 @@ from django.db.models import Max, signals
 from django.db.models.signals import post_save, post_init
 from django.forms import ModelForm
 from django_extensions.db.fields import UUIDField
+from file_store.tasks import read
 from galaxy_connector.models import Instance
 from guardian.shortcuts import assign, get_users_with_perms, \
     get_groups_with_perms
-from django.conf import settings
-from datetime import datetime
 
 
 class UserProfile ( models.Model ):
@@ -234,7 +235,40 @@ class DataSet(SharableResource):
             il = InvestigationLink.objects.filter( data_set=self, version=max_version ).get()
             return il.investigation
         except:
-            return None            
+            return None
+        
+        
+    def get_file_count(self):
+        '''
+        Returns the number of files in the data set.
+        '''
+        investigation = self.get_investigation()
+        file_count = 0
+        
+        for study in investigation.study_set.all():
+            file_count += Node.objects.filter( study=study.id, file_uuid__isnull=False ).count();
+            
+        return file_count
+
+
+    def get_file_size(self):
+        '''
+        Returns the disk space in bytes used by all files in the data set.
+        '''
+        investigation = self.get_investigation()
+        file_size = 0
+        include_symlinks = True
+        
+        for study in investigation.study_set.all():
+            
+            files = Node.objects.filter( study=study.id, file_uuid__isnull=False ).values( "file_uuid" )
+
+            for file in files:
+                # TODO: fix when FileStore has been updated  
+                file_size += 0 # read( file["file_uuid"] ).get_file_size( report_symlinks=include_symlinks )
+                            
+        return file_size
+                    
     
     def __unicode__(self):
         return self.name + " - " + self.summary
