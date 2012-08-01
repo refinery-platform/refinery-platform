@@ -74,12 +74,24 @@ def file_path(instance, filename):
 # set the file store location
 fss = FileSystemStorage(location=FILE_STORE_BASE_DIR)
 
+FILE_TYPES = (
+    ('BAM', 'BAM file'),
+    ('BED', 'BED file'),
+    ('IDF', 'IDF file'),
+    ('FASTA', 'FASTA file'),
+    ('FASTQ', 'FASTQ file'),
+    ('TDF', 'TDF file'),
+    ('VCF', 'VCF file'),
+    ('WIG', 'WIG file'),
+)
+
 class FileStoreItem(models.Model):
     ''' Represents data files on disk '''
     datafile = models.FileField(upload_to=file_path, storage=fss, blank=True)
     uuid = UUIDField(unique=True, auto=True)
     source = models.CharField(max_length=1024)     # URL or absolute file system path
     sharename = models.CharField(max_length=20, blank=True)
+    filetype = models.CharField(max_length=5, choices=FILE_TYPES, blank=True)
 
     def __unicode__(self):
         return self.datafile.name + ' - ' + self.uuid
@@ -116,6 +128,21 @@ class FileStoreItem(models.Model):
             u = urlparse(self.source)
             name = u.path.split('/')[-1]
             return os.path.splitext(name)[-1]
+    
+    def get_filetype(self):
+        ''' Return the type of the datafile '''
+        return self.filetype
+    
+    def set_filetype(self, filetype):
+        '''Assign the type of the datafile.  Only existing types allowed as arguments.
+
+        :param filetype: requested file type.
+        :returns: True if success, False if failure.
+
+        '''
+        
+        self.filetype = filetype
+        self.save()
 
     def is_symlinked(self):
         ''' Return True if the data file is a symlink '''
@@ -167,7 +194,7 @@ class FileStoreItem(models.Model):
             if _rename_file_on_disk(self.datafile.path, new_abs_path):
                 # update the model with new path
                 self.datafile.name = new_rel_path
-                self.save() #TODO: update FileField only
+                self.save() #TODO: update FileField only: update_fields=['name']
                 logger.info("Datafile renamed")
                 return os.path.basename(self.datafile.name)
             else:
@@ -231,14 +258,14 @@ def get_file_extension(uuid):
         return None
     return item.get_file_extension()
 
-def get_file_size(uuid):
+def get_file_size(uuid, report_symlinks=False):
     ''' Return size of the file specified by UUID '''
     try:
         item = FileStoreItem.objects.get(uuid=uuid)
     except FileStoreItem.DoesNotExist:
         logger.exception("FileStoreItem with UUID %s does not exist", uuid)
         return None
-    return item.get_file_size()
+    return item.get_file_size(report_symlinks=report_symlinks)
     
 @receiver(pre_delete, sender=FileStoreItem)
 def _delete_datafile(sender, **kwargs):
@@ -291,6 +318,15 @@ def _rename_file_on_disk(current_path, new_path):
 
     logger.debug("Renamed %s to %s", current_path, new_path)
     return True
+
+def get_available_filetypes():
+    '''Return a list of file type names that are allowed as values for FileStoreItem.filetype field.
+    
+    :returns: list -- list of available file type names.
+    
+    '''
+    
+    pass
 
 class FileStoreCache:
     '''
