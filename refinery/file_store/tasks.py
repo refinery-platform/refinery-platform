@@ -22,7 +22,7 @@ def create(source, sharename='', permanent=False, file_size=1):
         return None
 
     item = FileStoreItem.objects.create(source=source, sharename=sharename)
-    logger.debug("New FileStoreItem created with UUID: %s", item.uuid)
+    logger.debug("FileStoreItem created with UUID: %s", item.uuid)
 
     if permanent:
         # copy to file store now and don't add to cache

@@ -75,14 +75,14 @@ def file_path(instance, filename):
 fss = FileSystemStorage(location=FILE_STORE_BASE_DIR)
 
 FILE_TYPES = (
-    ('BAM', 'BAM file'),
-    ('BED', 'BED file'),
-    ('IDF', 'IDF file'),
-    ('FASTA', 'FASTA file'),
-    ('FASTQ', 'FASTQ file'),
-    ('TDF', 'TDF file'),
-    ('VCF', 'VCF file'),
-    ('WIG', 'WIG file'),
+    ('bam', 'BAM file'),
+    ('bed', 'BED file'),
+    ('idf', 'IDF file'),
+    ('fasta', 'FASTA file'),
+    ('fastq', 'FASTQ file'),
+    ('tdf', 'TDF file'),
+    ('vcf', 'VCF file'),
+    ('wig', 'WIG file'),
 )
 
 class FileStoreItem(models.Model):
@@ -130,7 +130,11 @@ class FileStoreItem(models.Model):
             return os.path.splitext(name)[-1]
     
     def get_filetype(self):
-        ''' Return the type of the datafile '''
+        '''Retrieve the type of the datafile.
+        
+        :returns: type of the datafile.
+
+        '''
         return self.filetype
     
     def set_filetype(self, filetype):
@@ -140,12 +144,21 @@ class FileStoreItem(models.Model):
         :returns: True if success, False if failure.
 
         '''
-        
-        self.filetype = filetype
-        self.save()
+        if filetype in dict(FILE_TYPES).keys():  # make sure the type is valid 
+            self.filetype = filetype
+            self.save()
+            logger.debug("File type is set to %s", filetype)
+            return True
+        else:
+            logger.debug("%s is an invalid file type", filetype)
+            return False
 
     def is_symlinked(self):
-        ''' Return True if the data file is a symlink '''
+        '''Check if the data file is a symlink.
+        
+        :returns: True is the datafile is a symlink, False if not.
+
+        '''
         path = self.get_absolute_path()
         if path:
             return os.path.islink(path)
