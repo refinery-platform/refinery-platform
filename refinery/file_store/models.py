@@ -101,7 +101,7 @@ class FileStoreItem(models.Model):
         try:
             return self.datafile.path
         except ValueError:  # file hasn't been imported yet?
-            logger.exception("Datafile doesn't exist, UUID = %s", self.uuid)
+            logger.exception("Datafile doesn't exist in FileStoreItem %s", self.uuid)
             return None
 
     def get_file_size(self, report_symlinks=False):
@@ -146,7 +146,11 @@ class FileStoreItem(models.Model):
 
     def is_symlinked(self):
         ''' Return True if the data file is a symlink '''
-        return os.path.islink(self.get_absolute_path())
+        path = self.get_absolute_path()
+        if path:
+            return os.path.islink(path)
+        else:
+            return False
 
     def is_local(self):
         ''' Check if the datafile can be used as a file object '''
