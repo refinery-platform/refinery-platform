@@ -43,6 +43,10 @@ var fields = {};
  *  - invisible fields can not be used for sorting (even if direction is given correctly)  
  */
 
+// a list of facet names for the pivot view
+var pivots = [];
+
+
 var documents = [];
 
 
@@ -159,6 +163,16 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 		}				
 	}	
 	
+	// ------------------------------------------------------------------------------
+	// pivot fields: facet.pivot 
+	// ------------------------------------------------------------------------------
+	
+	var pivotQuery = pivots.join( "," );
+	
+	if ( pivotQuery.length > 0 )
+	{
+		url += "&facet.pivot=" + pivotQuery;
+	}		
 	
 	$( "#url-view" ).html( "" );
 	$( "<a/>", { href: url + "&indent=on", html: "Solr Query" } ).appendTo( "#url-view" );
@@ -266,6 +280,7 @@ function getData( studyUuid, assayUuid, nodeType ) {
 			processFacets( data );
 			processFields();
 			processDocs( data );
+			processPivots( data );
 			processPages( data );			
 		} 
 	}});	
@@ -350,6 +365,148 @@ function processFacets( data ) {
    		facets[facet][facetValue].isSelected = !facets[facet][facetValue].isSelected;   		
    		getData( testAssayUuid, testStudyUuid, testNodeType );
    	} );				
+}
+
+function getFacetValueLookupTable( facet ) {
+	// make lookup table mapping from facet values to facet value indices
+	var lookup = {};
+	var index = 0;
+			
+	for ( facetValue in facets[facet] ) {
+		if ( facets[facet].hasOwnProperty( facetValue ) ) {
+			lookup[facetValue] = index++;
+		}
+	}	
+	
+	return lookup;
+}
+	
+
+function processPivots( data ) {
+	// make dropdown lists	
+	var pivot1List = [];
+	var pivot2List = [];
+	
+	pivot1List.push( "<option value=\"\"></option>" );
+	pivot2List.push( "<option value=\"\"></option>" );
+	
+	for ( facet in facets ) {
+		if ( facets.hasOwnProperty( facet ) ) {
+			if ( pivots.length > 0 && pivots[0] === facet ) {
+				pivot1List.push( "<option selected value=\"" + facet + "\">" + prettifyFieldName( facet ) + "</option>" );
+			}
+			else {
+				pivot1List.push( "<option value=\"" + facet + "\">" + prettifyFieldName( facet ) + "</option>" );				
+			}
+			
+			if ( pivots.length > 1 && pivots[1] === facet ) {
+				pivot2List.push( "<option selected value=\"" + facet + "\">" + prettifyFieldName( facet ) + "</option>" );
+			}
+			else {
+				pivot2List.push( "<option value=\"" + facet + "\">" + prettifyFieldName( facet ) + "</option>" );				
+			}
+		}
+	}
+	
+	$( "#pivot-view" ).html( "" );
+	$( "<select/>", { "class": "combobox", "id": "pivot_x1_choice", html: pivot1List.join("") } ).appendTo( "#pivot-view" );	
+	$( "<select/>", { "class": "combobox", "id": "pivot_y1_choice", html: pivot2List.join("") } ).appendTo( "#pivot-view" );
+	
+	if ( data.facet_counts.facet_pivot ) {
+		
+		// get lookup table for facets (mapping from facet value to facet value index)
+		var facetValue1Lookup = getFacetValueLookupTable( pivots[0] );		
+		var facetValue2Lookup = getFacetValueLookupTable( pivots[1] );		
+		
+		var rows = [];
+		
+		// make empty 2D array of the expected dimensions
+		var table = new Array( Object.keys( facetValue1Lookup ).length );
+		
+		for ( var i = 0; i < table.length; ++i ) {
+			table[i] = new Array( Object.keys( facetValue2Lookup ).length );
+			
+			for ( var j = 0; j < table[i].length; ++j ) {
+				table[i][j] = 0;
+			}
+		}
+				
+		// fill 2D array
+		if ( data.facet_counts.facet_pivot[pivots.join(",")] ) {			
+			var tableData = data.facet_counts.facet_pivot[pivots.join(",")];
+			var tableRows = [];
+			
+			for ( var r = 0; r < tableData.length; ++r ) {
+				var facetValue1 = tableData[r].value;								 
+				var facetValue1Index = facetValue1Lookup[facetValue1];
+				
+				for ( var c = 0; c < tableData[r].pivot.length; ++c ) {
+					var facetValue2 = tableData[r].pivot[c].value;
+					var facetValue2Index = facetValue2Lookup[facetValue2];
+					
+					table[facetValue1Index][facetValue2Index] = tableData[r].pivot[c].count; 					
+				}
+			}
+		}
+		
+		// convert 2D array into table
+		for ( var r = 0; r < table.length; ++r ) {
+			// start row
+			var row = "<tr>";
+			
+			// row name
+			row += "<td>" + Object.keys( facetValue1Lookup )[r] + "</td>";
+			
+			// row content
+			row += "<td>" + table[r].join( "</td><td>" ) + "</td>";
+			
+			// end row
+			row += "</tr>";
+			
+			rows.push( row );
+		}
+
+		// build table header
+		var header = "<thead><tr><th></th><th>" + Object.keys( facetValue2Lookup ).join( "</th><th>" ) + "</th></tr></thead>"; 
+		
+		$( "<table/>", { 'class': "table table-striped table-condensed", html: header + "<tbody>" + rows.join("") + "</tbody>" } ).appendTo( "#pivot-view" );			
+	}
+	
+	$( "#pivot_x1_choice" ).change( function( ) {
+		pivots = []
+		var pivot_x1 = this.value;
+		var pivot_y1 = $( "#pivot_y1_choice option:selected" ).attr( "value" );
+		
+		if ( pivot_x1 !== "" )
+		{
+			pivots.push( pivot_x1 );
+		}
+				
+		if ( pivot_y1 !== "" )
+		{
+			pivots.push( pivot_y1 );
+		}
+				
+   		getData( testAssayUuid, testStudyUuid, testNodeType );
+   	} );		
+
+	$( "#pivot_y1_choice" ).change( function( ) {
+		pivots = []
+		var pivot_x1 = $( "#pivot_x1_choice option:selected" ).attr( "value" );
+		var pivot_y1 = this.value;
+		
+		if ( pivot_x1 !== "" )
+		{
+			pivots.push( pivot_x1 );
+		}
+				
+		if ( pivot_y1 !== "" )
+		{
+			pivots.push( pivot_y1 );
+		}
+		
+   		getData( testAssayUuid, testStudyUuid, testNodeType );
+   	} );		
 }
 
 
