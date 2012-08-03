@@ -23,6 +23,7 @@ import logging
 import re
 import string
 import tempfile
+import data_set_manager.tasks
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -869,12 +870,16 @@ class IsaTabParser:
             # identify studies associated with this investigation
             for study in self._current_investigation.study_set.all():
                 # parse study file
-                self._current_assay = None        
-                self._parse_study_file( study, os.path.join( path, study.file_name ) )                
-                for assay in study.assay_set.all():
-                    # parse assay file                
-                    self._previous_node = None
-                    self._parse_assay_file( study, assay, os.path.join( path, assay.file_name ) )                                
+                self._current_assay = None
+                study_file_name = os.path.join(path, study.file_name)
+                if data_set_manager.tasks.fix_last_col(study_file_name):
+                    self._parse_study_file( study, study_file_name )                
+                    for assay in study.assay_set.all():
+                        # parse assay file                
+                        self._previous_node = None
+                        assay_file_name = os.path.join(path, assay.file_name)
+                        if data_set_manager.tasks.fix_last_col(assay_file_name):
+                            self._parse_assay_file( study, assay, assay_file_name )                                
         else:
             logger.exception( "No investigation was identified when parsing investigation file \"" + investigation_file_name + "\"" )
             raise Exception()
