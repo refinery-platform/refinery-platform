@@ -13,7 +13,8 @@ import simplejson
 # Create your views here.
 def index( request ):    
     
-    tdf_file = TDFFile( "/Users/nils/Sites/tdf/TCGA-AG-4007-01A-01D-1115-02_101122_SN177_0123_B20APUABXX_s_5.rg.sorted.chr21.bam.tdf" )        
+    #tdf_file = TDFFile("/Users/nils/Sites/tdf/TCGA-AG-4007-01A-01D-1115-02_101122_SN177_0123_B20APUABXX_s_5.rg.sorted.chr21.bam.tdf")
+    tdf_file = TDFFile( "/Users/isytchev/Sites/tdf/TCGA-AG-4007-01A-01D-1115-02_101122_SN177_0123_B20APUABXX_s_5.rg.sorted.chr21.bam.tdf" )
     tdf_file.cache()
     
     
