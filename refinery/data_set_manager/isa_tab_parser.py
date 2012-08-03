@@ -23,6 +23,7 @@ import logging
 import re
 import string
 import tempfile
+import shutil
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -869,12 +870,16 @@ class IsaTabParser:
             # identify studies associated with this investigation
             for study in self._current_investigation.study_set.all():
                 # parse study file
-                self._current_assay = None        
-                self._parse_study_file( study, os.path.join( path, study.file_name ) )                
-                for assay in study.assay_set.all():
-                    # parse assay file                
-                    self._previous_node = None
-                    self._parse_assay_file( study, assay, os.path.join( path, assay.file_name ) )                                
+                self._current_assay = None
+                study_file_name = os.path.join(path, study.file_name)
+                if self._fix_last_col(study_file_name):
+                    self._parse_study_file( study, study_file_name )                
+                    for assay in study.assay_set.all():
+                        # parse assay file                
+                        self._previous_node = None
+                        assay_file_name = os.path.join(path, assay.file_name)
+                        if self._fix_last_col(assay_file_name):
+                            self._parse_assay_file( study, assay, assay_file_name )                                
         else:
             logger.exception( "No investigation was identified when parsing investigation file \"" + investigation_file_name + "\"" )
             raise Exception()
@@ -1001,3 +1006,57 @@ class IsaTabParser:
         if self.ignore_case:
             return { k.lower() : dict[k] for k in dict }
         return dict
+
+
+    def _fix_last_col(self, filename):
+        """
+        Name: fix_last_col
+        Description:
+            If the header has empty columns in it, then it will delete this 
+            and corresponding columns in the rows; returns 0 or 1 based on 
+            whether it failed or was successful, respectively
+        Parameters:
+            file: name of file to fix
+        """
+        logger.info("trying to fix the last column if necessary")
+        reader = csv.reader(open(filename, 'rb'), dialect='excel-tab')
+        tempfilename = tempfile.NamedTemporaryFile().name
+        writer = csv.writer(open(tempfilename, 'wb'), dialect='excel-tab')
+    
+        """check that all rows have the same length"""
+        header = reader.next()
+        header_length = len(header)
+        num_empty_cols = 0 #number of empty header columns
+    
+        for item in header:
+            if not item.strip():
+                num_empty_cols += 1
+    
+        if num_empty_cols: #if there are empty header columns
+            logger.info("Empty columns in header present, attempting to fix...")
+            #check that all the rows are the same length
+            for row in reader:
+                if len(row) != header_length:
+                    logger.error("All rows in the file were not the same length.")
+                    return 0
+    
+                #check that all the end columns that are supposed to be empty are
+                i = 0
+                while i < num_empty_cols:
+                    i += 1
+                    check_item = row[-i].strip()
+                    if check_item: #item not empty
+                        logger.error("Found a value where an empty column was expected.")
+                        return 0
+    
+            #write the file
+            writer.writerow(header[:-num_empty_cols])
+            #need to reset the reader
+            reader = csv.reader(open(filename, 'rb'), dialect='excel-tab')
+            reader.next() #skip header row because we already wrote it
+            for row in reader:
+                writer.writerow(row[:-num_empty_cols])
+    
+            shutil.move(tempfilename, filename)
+    
+        return 1
