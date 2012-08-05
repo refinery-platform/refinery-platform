@@ -10,31 +10,25 @@ from file_store.models import FileStoreItem, file_path, get_temp_dir, FILE_STORE
 logger = logging.getLogger('file_store')
 
 @task()
-def create(source, sharename='', permanent=False, file_size=1):
+def create(source, sharename='', filetype='', permanent=False, file_size=1):
     '''
     Create a FileStoreItem instance and return its UUID
     Important: source must be either an absolute file system path or a URL
     '''
-    logger.debug("Creating FileStoreItem using source %s", source)
+    logger.debug("Creating FileStoreItem using source '%s'", source)
 
-    if not source:
-        logger.error("Source is required but was not provided")
+    item = FileStoreItem.objects.create_item(source=source, sharename=sharename, filetype=filetype)
+    if not item:
+        logger.error("Failed to create FileStoreItem")
         return None
 
-    item = FileStoreItem.objects.create(source=source, sharename=sharename)
-    logger.debug("New FileStoreItem created with UUID: %s", item.uuid)
+    logger.debug("FileStoreItem created with UUID %s", item.uuid)
 
     if permanent:
         # copy to file store now and don't add to cache
         #TODO: provide progress update, call import_file as subtask?
         if not import_file(item.uuid, permanent=True, file_size=file_size):
-            logger.error("Could not import file from %s", item.source)
-            return None
-    else:
-        if os.path.isabs(item.source):
-            if not item.symlink_datafile():
-                # if the source is an absolute file system path but symlinking it failed
-                return None
+            logger.error("Could not import file from '%s'", item.source)
 
     return item.uuid
 

@@ -75,16 +75,43 @@ def file_path(instance, filename):
 fss = FileSystemStorage(location=FILE_STORE_BASE_DIR)
 
 FILE_TYPES = (
-    ('BAM', 'BAM file'),
-    ('BED', 'BED file'),
-    ('IDF', 'IDF file'),
-    ('FASTA', 'FASTA file'),
-    ('FASTQ', 'FASTQ file'),
-    ('TDF', 'TDF file'),
-    ('VCF', 'VCF file'),
-    ('WIG', 'WIG file'),
+    ('bam', 'BAM file'),
+    ('bed', 'BED file'),
+    ('gz', 'Gzip compressed archive'),
+    ('idf', 'IDF file'),
+    ('fasta', 'FASTA file'),
+    ('fastq', 'FASTQ file'),
+    ('tdf', 'TDF file'),
+    ('vcf', 'VCF file'),
+    ('wig', 'WIG file'),
+    ('zip', 'Zip compressed archive'),
 )
 
+class FileStoreItemManager(models.Manager):
+    ''' '''
+    def create_item(self, source, sharename='', filetype=''):
+        '''A "constructor" for FileStoreItem.
+        
+        :param source: URL or absolute file system path to a file.
+        :param type: str.
+        :returns: FileStoreItem is success, None if failure.
+
+        '''
+        if not source:  # it doesn't make sense to create a FileStoreItem without a file source
+            logger.error("Source is required but was not provided")
+            return None
+
+        item = self.create(source=source, sharename=sharename)
+
+        # assign a file type
+        item.set_filetype(filetype)
+
+        # try symlinking
+        if os.path.isabs(item.source):
+            item.symlink_datafile()
+
+        return item
+        
 class FileStoreItem(models.Model):
     ''' Represents data files on disk '''
     datafile = models.FileField(upload_to=file_path, storage=fss, blank=True)
@@ -92,6 +119,8 @@ class FileStoreItem(models.Model):
     source = models.CharField(max_length=1024)     # URL or absolute file system path
     sharename = models.CharField(max_length=20, blank=True)
     filetype = models.CharField(max_length=5, choices=FILE_TYPES, blank=True)
+
+    objects = FileStoreItemManager()
 
     def __unicode__(self):
         return self.datafile.name + ' - ' + self.uuid
@@ -120,17 +149,28 @@ class FileStoreItem(models.Model):
             return 0
 
     def get_file_extension(self):
-        ''' Return extension of the file on disk or of the file in source URL '''
-        if self.datafile.name:
-            return os.path.splitext(self.datafile.name)[-1]
-        else:
-            # this is a remote file that has not been copied to file store, so get extension from the source URL
-            u = urlparse(self.source)
-            name = u.path.split('/')[-1]
-            return os.path.splitext(name)[-1]
+        '''Retrieve extension of the file on disk or from the source.
+        
+        :returns: string -- file extension that begins with a period.
+        
+        '''
+        if self.datafile.name:  # try to get extension from file on disk if exists
+            return get_extension_from_path(self.datafile.name)
+        else:   # otherwise get it from file source
+            if os.path.isabs(self.source):  # in case the file has not been symlinked yet
+                return get_extension_from_path(self.source)
+            else:
+                # this is a remote file that has not been copied to file store, so get extension from the source URL
+                u = urlparse(self.source)
+                name = u.path.split('/')[-1]
+                return os.path.splitext(name)[-1]
     
     def get_filetype(self):
-        ''' Return the type of the datafile '''
+        '''Retrieve the type of the datafile.
+        
+        :returns: string -- type of the datafile.
+
+        '''
         return self.filetype
     
     def set_filetype(self, filetype):
@@ -140,16 +180,31 @@ class FileStoreItem(models.Model):
         :returns: True if success, False if failure.
 
         '''
-        
-        self.filetype = filetype
-        self.save()
+        # guess the file type if it wasn't provided
+        if not filetype:
+            filetype = self.get_file_extension().lstrip('.')
+
+        # make sure the file type is valid
+        if filetype in get_available_filetypes(): 
+            self.filetype = filetype
+            self.save()
+            logger.info("File type is set to '%s'", filetype)
+            return True
+        else:
+            logger.error("'%s' is an invalid file type", filetype)
+            return False
 
     def is_symlinked(self):
-        ''' Return True if the data file is a symlink '''
+        '''Check if the data file is a symlink.
+        
+        :returns: True is the datafile is a symlink, False if not.
+
+        '''
         path = self.get_absolute_path()
         if path:
             return os.path.islink(path)
         else:
+            logger.error("Path cannot be empty")
             return False
 
     def is_local(self):
@@ -158,7 +213,7 @@ class FileStoreItem(models.Model):
         try:
             return os.path.isfile(self.datafile.path)
         except ValueError:
-            logger.exception("%s is not a file", self.datafile.path)
+            logger.exception("'%s' is not a file", self.datafile.path)
             return False
 
     def delete_datafile(self):
@@ -166,7 +221,7 @@ class FileStoreItem(models.Model):
         Delete datafile if it exists on disk
         Return True if deletion succeeded, return False otherwise
         '''
-        logger.debug("Deleting datafile %s", self.datafile.name)
+        logger.debug("Deleting datafile '%s'", self.datafile.name)
         
         if self.datafile.name:
             try:
@@ -263,7 +318,15 @@ def get_file_extension(uuid):
     return item.get_file_extension()
 
 def get_file_size(uuid, report_symlinks=False):
-    ''' Return size of the file specified by UUID '''
+    '''Return size of the file specified by UUID.
+    
+    :param uuid: UUID of a FileStoreItem.
+    :type uuid: UUID.
+    :param report_symlinks: report the size of symlinked files or not.
+    :type report_symlink: bool.
+    :returns: int -- size of the file on disk.
+
+    '''
     try:
         item = FileStoreItem.objects.get(uuid=uuid)
     except FileStoreItem.DoesNotExist:
@@ -273,10 +336,10 @@ def get_file_size(uuid, report_symlinks=False):
     
 @receiver(pre_delete, sender=FileStoreItem)
 def _delete_datafile(sender, **kwargs):
-    '''
-    Delete the FileStoreItem datafile when model is deleted
+    '''Delete the FileStoreItem datafile when model is deleted
     Need a signal handler because QuerySet delete() method does a bulk delete
     and does not call any delete() methods on the models
+    
     '''
     item = kwargs.get('instance')
     item.delete_datafile()
@@ -329,8 +392,10 @@ def get_available_filetypes():
     :returns: list -- list of available file type names.
     
     '''
-    
-    pass
+    return dict(FILE_TYPES).keys()
+
+def get_extension_from_path(path):
+    return os.path.splitext(path)[-1]
 
 class FileStoreCache:
     '''
