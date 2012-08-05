@@ -3,6 +3,38 @@
 {% block head_html %}
 
     <style type="text/css">
+
+svg {
+	background-color: #fdfdfd;
+	padding: 5px;
+	margin-top: 15px;
+	margin-bottom: 15px;
+}    
+.background {
+  fill: #777;
+}
+
+line {
+  stroke: #eee;
+}
+
+text.active {
+  fill: red;
+}
+
+rect.frame {
+  stroke: #f0f0f0;
+}
+
+rect.active {
+  fill: red;
+}
+
+	.pivot-matrix {
+		background-color: #f00;
+	}
+
+    
  	.facet-title {
  		cursor:pointer; 		
  	} 	
@@ -104,16 +136,19 @@
 <div class="row-fluid">
  	
  	<div class="span2">
-		<div id="facet-view" class="accordion"></div>
+			<ul class="nav nav-pills" id="navigation-tabs">
+			  <li class="active"><a href="#facet-view" data-toggle="pill">Facets</a></li>
+			</ul> 		
+			<div id="facet-view" class="accordion"></div>
  	</div>	
  	
  	<div class="span10"> 			
 		
 		<div class="row-fluid">
 		<div class="tabbable">
-			<ul class="nav nav-tabs" id="navigation-tabs">
-			  <li><a href="#table-view-tab" data-toggle="tab">List</a></li>
-			  <li class="active"><a href="#pivot-view-tab" data-toggle="tab">Matrix</a></li>
+			<ul class="nav nav-pills" id="navigation-tabs">
+			  <li><a href="#table-view-tab" data-toggle="pill">List</a></li>
+			  <li class="active"><a href="#pivot-view-tab" data-toggle="pill">Matrix</a></li>
 			</ul>
 
 			<div class="tab-content">
@@ -123,8 +158,11 @@
 				<div id="field-view"></div>  	
 			  </div>
 			  <div class="tab-pane active fade in" id="pivot-view-tab">
-			  	<div id="pivot-view">
+			  	<div id="pivot-view">			  		
 			  	</div>			  	
+			  	<div id="pivot-matrix">
+			  		<!-- the matrix -->
+			  	</div>
 			  </div>
 			</div>
 		</div>			
@@ -144,7 +182,11 @@
 {% endblock %}
 
 {% block script %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v2.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/d3/fisheye.js"></script>
+
 	<!-- Refinery libraries -->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/viewers/pivot-matrix.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>
 {% endblock %}    

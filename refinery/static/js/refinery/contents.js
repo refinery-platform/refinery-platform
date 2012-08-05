@@ -64,7 +64,9 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 			+ "study_uuid:" + studyUuid
 			+ " AND " + "assay_uuid:" + assayUuid
 			+ " AND " + "type:" + nodeType
-	   	+ ")";
+	   	+ ")"
+	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
+	   	+ "&" + "facet.limit=-1"; // unlimited number of facet values (otherwise some values will be missing)	   	
 	  
 	  
 	// ------------------------------------------------------------------------------
@@ -218,7 +220,6 @@ function prettifyFieldName( name, isTitle )
 
 function initializeData( studyUuid, assayUuid, nodeType ) {
 	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 1, {}, {}, {} ), success: function(data) {
-		console.log( data );
 		
 		var doc = data.response.docs[0];
 		
@@ -259,6 +260,9 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 				}
 			}		
 		}
+		
+		pivots.push( Object.keys( facets )[0] );
+		pivots.push( Object.keys( facets )[1] );
 		
 		getData( studyUuid, assayUuid, nodeType )				
 	} });	
@@ -427,7 +431,7 @@ function processPivots( data ) {
 			table[i] = new Array( Object.keys( facetValue2Lookup ).length );
 			
 			for ( var j = 0; j < table[i].length; ++j ) {
-				table[i][j] = 0;
+				table[i][j] = { x: j, y: i, xlab: Object.keys( facetValue2Lookup )[j], ylab: Object.keys( facetValue1Lookup )[i], count: 0 };
 			}
 		}
 				
@@ -444,7 +448,7 @@ function processPivots( data ) {
 					var facetValue2 = tableData[r].pivot[c].value;
 					var facetValue2Index = facetValue2Lookup[facetValue2];
 					
-					table[facetValue1Index][facetValue2Index] = tableData[r].pivot[c].count; 					
+					table[facetValue1Index][facetValue2Index].count = tableData[r].pivot[c].count; 					
 				}
 			}
 		}
@@ -458,7 +462,7 @@ function processPivots( data ) {
 			row += "<td>" + Object.keys( facetValue1Lookup )[r] + "</td>";
 			
 			// row content
-			row += "<td>" + table[r].join( "</td><td>" ) + "</td>";
+			row += "<td>" + $.map( table[r], function(entry) { return( entry.count )} ).join( "</td><td>" ) + "</td>";
 			
 			// end row
 			row += "</tr>";
@@ -469,7 +473,10 @@ function processPivots( data ) {
 		// build table header
 		var header = "<thead><tr><th></th><th>" + Object.keys( facetValue2Lookup ).join( "</th><th>" ) + "</th></tr></thead>"; 
 		
-		$( "<table/>", { 'class': "table table-striped table-condensed", html: header + "<tbody>" + rows.join("") + "</tbody>" } ).appendTo( "#pivot-view" );			
+		//$( "<table/>", { 'class': "table table-striped table-condensed", html: header + "<tbody>" + rows.join("") + "</tbody>" } ).appendTo( "#pivot-view" );
+
+		$( "#pivot-matrix" ).html( "" );		
+		graph = new PivotMatrix( "pivot-matrix", {}, table );					
 	}
 	
 	$( "#pivot_x1_choice" ).change( function( ) {
@@ -506,7 +513,7 @@ function processPivots( data ) {
 		}
 		
    		getData( testAssayUuid, testStudyUuid, testNodeType );
-   	} );		
+   	} );   	
 }
 
 

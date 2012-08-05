@@ -14,10 +14,15 @@ from django.db.models import Max, signals
 from django.db.models.signals import post_save, post_init
 from django.forms import ModelForm
 from django_extensions.db.fields import UUIDField
+from file_store.models import get_file_size
 from file_store.tasks import read
 from galaxy_connector.models import Instance
 from guardian.shortcuts import assign, get_users_with_perms, \
     get_groups_with_perms
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class UserProfile ( models.Model ):
@@ -263,9 +268,9 @@ class DataSet(SharableResource):
             
             files = Node.objects.filter( study=study.id, file_uuid__isnull=False ).values( "file_uuid" )
 
-            for file in files:
-                # TODO: fix when FileStore has been updated  
-                file_size += 0 # read( file["file_uuid"] ).get_file_size( report_symlinks=include_symlinks )
+            for file in files:                
+                size = get_file_size( file["file_uuid"], report_symlinks=include_symlinks )
+                file_size += size
                             
         return file_size
                     
