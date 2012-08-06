@@ -139,38 +139,46 @@ def fix_last_col(file):
     header_length = len(header)
     num_empty_cols = 0 #number of empty header columns
 
+    # TODO: throw exception if there is an empty field in the header between two non-empty fields
     for item in header:
         if not item.strip():
             num_empty_cols += 1
 
-    if num_empty_cols: #if there are empty header columns
+    #write the file
+    writer.writerow(header[:-num_empty_cols])
+
+    if num_empty_cols > 0: #if there are empty header columns
         logger.info("Empty columns in header present, attempting to fix...")
         #check that all the rows are the same length
+        line = 0
         for row in reader:
-            if len(row) != header_length:
-                logger.error("All rows in the file were not the same length.")
-                return 0
+            line += 1
+            if len(row) < header_length - num_empty_cols:
+                logger.error("Line " + str( line ) + " in the file had fewer fields than the header.")
+                return False
 
             #check that all the end columns that are supposed to be empty are
             i = 0
-            while i < num_empty_cols:
-                i += 1
-                check_item = row[-i].strip()
-                if check_item: #item not empty
-                    logger.error("Found a value where an empty column was expected.")
-                    return 0
+            if len( row ) > len( header ) - num_empty_cols:
+                while i < num_empty_cols:
+                    i += 1
+                    check_item = row[-i].strip()
+                    if check_item: #item not empty
+                        logger.error("Found a value in " + str(line) + " where an empty column was expected.")
+                        return False
+                writer.writerow(row[:-num_empty_cols])
+            else:
+                writer.writerow(row)                
 
-        #write the file
-        writer.writerow(header[:-num_empty_cols])
         #need to reset the reader
-        reader = csv.reader(open(file, 'rb'), dialect='excel-tab')
-        reader.next() #skip header row because we already wrote it
-        for row in reader:
-            writer.writerow(row[:-num_empty_cols])
+        #reader = csv.reader(open(file, 'rb'), dialect='excel-tab')
+        #reader.next() #skip header row because we already wrote it
+        #for row in reader:
+        #writer.writerow(row[:-num_empty_cols])
 
         shutil.move(tempfilename, file)
 
-    return 1
+    return True
 
 
 def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):

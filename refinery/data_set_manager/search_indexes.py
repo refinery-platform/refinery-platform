@@ -68,5 +68,8 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             key = name + "_" + uuid + "_s"
             data[key] = value
             
+        # add type as dynamic field to get proper facet values
+        data["type_" + uuid + "_s"] = object.type
+            
         return data
 
