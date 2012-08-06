@@ -236,11 +236,13 @@ class FileStoreItem(models.Model):
             return False
 
     def rename_datafile(self, name):
-        '''
-        Change name of the datafile
-        Return the name that was assigned by the file storage system if renaming succeeded
-        (may not be the same as the requested name in case of conflict)
-        Return None otherwise
+        '''Change name of the data file.
+        
+        :param name: new data file name.
+        :type name: str.
+        :returns: str -- the name that was assigned by the file storage system if renaming succeeded
+        (may not be the same as the requested name in case of conflict), None otherwise.
+
         '''
         logger.debug("Renaming datafile %s to %s", self.datafile.name, name)
 
@@ -264,11 +266,13 @@ class FileStoreItem(models.Model):
             return None
 
     def symlink_datafile(self):
-        '''
-        Create a symlink to the file
+        '''Create a symlink to the file pointed by source.
         Does not check that:
-        - the source is an absolute file system path
-        - the datafile already exists
+        - the source is an absolute file system path.
+        - the datafile already exists.
+
+        :returns: bool -- True if success, False if failure.
+
         '''
         logger.debug("Symlinking datafile to %s", self.source)
 
@@ -292,7 +296,13 @@ class FileStoreItem(models.Model):
             return False
 
 def is_local(uuid):
-    ''' Check if this FileStoreItem can be used as a file object '''
+    '''Check if this FileStoreItem can be used as a file object
+    
+    :param uuid: UUID of a FileStoreItem
+    :type uuid: str.
+    :returns: bool -- True if yes, False if no.
+    
+    '''
     try:
         item = FileStoreItem.objects.get(uuid=uuid)
     except FileStoreItem.DoesNotExist:
@@ -309,7 +319,13 @@ def get_temp_dir():
     return FILE_STORE_TEMP_DIR
 
 def get_file_extension(uuid):
-    ''' Return file extension of the file specified by UUID '''
+    '''Return file extension of the file specified by UUID.
+    
+    :param uuid: UUID of a FileStoreItem.
+    :type uuid: str.
+    :returns: str -- extension of the data file.
+    
+    '''
     try:
         item = FileStoreItem.objects.get(uuid=uuid)
     except FileStoreItem.DoesNotExist:
@@ -332,6 +348,7 @@ def get_file_size(uuid, report_symlinks=False):
     except FileStoreItem.DoesNotExist:
         logger.exception("FileStoreItem with UUID %s does not exist", uuid)
         return None
+
     return item.get_file_size(report_symlinks=report_symlinks)
     
 @receiver(pre_delete, sender=FileStoreItem)
