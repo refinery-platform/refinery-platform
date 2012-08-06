@@ -44,7 +44,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
     try:
         item = FileStoreItem.objects.get(uuid=uuid)
     except FileStoreItem.DoesNotExist:
-        logger.exception("FileStoreItem with UUID %s does not exist", uuid)
+        logger.error("FileStoreItem with UUID %s does not exist", uuid)
         return None
 
     # if file is ready to be used then return it, otherwise delete it if update is requested
@@ -54,13 +54,13 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         else:
             return item
 
-    # if source is an absolute file system path then copy, otherwise assume it is URL and download
+    # if source is an absolute file system path then copy, otherwise assume it is a URL and download
     if os.path.isabs(item.source):
         # check if source file can be opened
         try:
             srcfile = File(open(item.source))
         except IOError:
-            logger.exception("Could not open file: %s", item.source)
+            logger.error("Could not open file: %s", item.source)
             return None
         srcfilename = os.path.basename(item.source)
         
@@ -73,7 +73,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         try:
             response = urllib2.urlopen(req)
         except urllib2.URLError as e:
-            logger.exception("Could not open URL: %s. Reason: %s", item.source, e.reason)
+            logger.error("Could not open URL: %s. Reason: %s", item.source, e.reason)
             return None
 
         tmpfile = tempfile.NamedTemporaryFile(dir=get_temp_dir(), delete=False)
@@ -115,13 +115,13 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
             try:
                 os.makedirs(dst_dir_name)
             except OSError as e:
-                logger.exception("Error creating file store directory. OSError: %s, file name: %s, error: %s",
+                logger.error("Error creating file store directory. OSError: %s, file name: %s, error: %s",
                                  e.errno, e.filename, e.strerror)
                 return None
         try:
             shutil.move(tmpfile.name, abs_dst_path)
         except:
-            logger.exception("Error moving file from temp dir to file store dir")
+            logger.error("Error moving file from temp dir to file store dir")
             return None
         # assign new path to FileField
         item.datafile.name = rel_dst_path
@@ -149,10 +149,10 @@ def delete(uuid):
     try:
         FileStoreItem.objects.get(uuid=uuid).delete()
     except FileStoreItem.DoesNotExist:
-        logger.exception("FileStoreItem UUID %s does not exist", uuid)
+        logger.error("FileStoreItem UUID %s does not exist", uuid)
         return False
     except FileStoreItem.MultipleObjectsReturned:
-        logger.exception("More than one FileStoreItem matched UUID %s", uuid)
+        logger.error("More than one FileStoreItem matched UUID %s", uuid)
         return False
 
     logger.info("FileStoreItem UUID %s deleted", uuid)
@@ -174,7 +174,7 @@ def rename(uuid, name):
     try:
         item = FileStoreItem.objects.get(uuid=uuid)
     except FileStoreItem.DoesNotExist:
-        logger.exception("FileStoreItem with UUID %s does not exist", uuid)
+        logger.error("FileStoreItem with UUID %s does not exist", uuid)
         return None
 
     return item.rename_datafile(name)
