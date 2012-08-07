@@ -18,7 +18,7 @@ def index( request ):
     tdf_file.cache()
     
     
-    ''' 
+    
     for track_name in tdf_file.get_track_names():
         print( track_name )
 
@@ -60,7 +60,7 @@ def index( request ):
 
     tile = data_set.get_tile( 7 )
     print(tile)
-    '''
+    
         
     profile = tdf_file.get_profile("chr21", "z0", ["mean"], start_location=13591070, end_location=14845362 )
     

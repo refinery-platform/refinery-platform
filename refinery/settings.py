@@ -250,6 +250,11 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
+        'file_server': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
         'analysis_manager': {
             'handlers': ['console'],
             'level': 'DEBUG',

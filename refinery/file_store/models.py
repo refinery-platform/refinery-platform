@@ -102,7 +102,9 @@ FILE_TYPES = (
 
 
 class FileStoreItemManager(models.Manager):
-    ''' '''
+    '''Custom model manager to handle creation and retrieval of FileStoreItems.
+
+    '''
     def create_item(self, source, sharename='', filetype=''):
         '''A "constructor" for FileStoreItem.
         
@@ -125,7 +127,27 @@ class FileStoreItemManager(models.Manager):
             item.symlink_datafile()
 
         return item
-        
+
+
+    def get_item(self, uuid):
+        '''Handles potential exceptions when retrieving a FileStoreItem.
+
+        :param uuid: UUID of a FileStoreItem.
+        :type uuid: str.
+        :returns: FileStoreItem -- model instance if a match is found, None otherwise.
+
+        '''
+        try:
+            item = FileStoreItem.objects.get(uuid=uuid)
+        except FileStoreItem.DoesNotExist:
+            logger.error("FileStoreItem with UUID '%s' does not exist", uuid)
+            return None
+        except FileStoreItem.MultipleObjectsReturned:
+            logger.error("More than one FileStoreItem matched UUID '%s'", uuid)
+            return None
+
+        return item
+
 
 class FileStoreItem(models.Model):
     ''' Represents data files on disk '''
@@ -143,7 +165,11 @@ class FileStoreItem(models.Model):
     
 
     def get_absolute_path(self):
-        ''' Return absolute path of the data file or None if the file does not exist on disk '''
+        '''Return the absolute path to the data file.
+        
+        :returns: str -- the absolute path to the data file or None if the file does not exist on disk.
+        
+        '''
         try:
             return self.datafile.path
         except ValueError:  # file is not local
@@ -222,14 +248,13 @@ class FileStoreItem(models.Model):
     def is_symlinked(self):
         '''Check if the data file is a symlink.
         
-        :returns: True is the datafile is a symlink, False if not.
+        :returns: True if the datafile is a symlink, False if not.
 
         '''
-        path = self.get_absolute_path()
-        if path:
-            return os.path.islink(path)
-        else:
-            logger.error("Path cannot be empty")
+        try:
+            return os.path.islink(self.get_absolute_path())
+        except TypeError:
+            logger.error("Path cannot be None")
             return False
 
 
@@ -239,12 +264,14 @@ class FileStoreItem(models.Model):
         :returns: bool -- True if the datafile can be used as a file object, False otherwise.
 
         '''
-        if not self.datafile.name: return False
-
+        path = self.get_absolute_path()
         try:
-            return os.path.isfile(self.datafile.path)
+            return os.path.isfile(path)
         except ValueError:
-            logger.error("'%s' is not a file", self.datafile.path)
+            logger.error("'%s' is not a file", path)
+            return False
+        except TypeError:
+            logger.error("Path cannot be None")
             return False
 
 
