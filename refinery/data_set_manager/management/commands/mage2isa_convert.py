@@ -162,6 +162,4 @@ class Command(BaseCommand):
         while result.waiting():
             time.sleep(5)
 
-        results = result.join() #list of the results in dispatch order
-
         call_command('process_arrayexpress_isatab', base_isa_dir, "base_pre_isa_dir=%s" % base_preisa_dir, "is_public=True")
