@@ -1,11 +1,12 @@
 '''
 Created on Apr 21, 2012
 
-@author: nils
+@author: Ilya Sytchev
 '''
 
 import logging
-from django.db import models
+from django.db import models, transaction
+from django.db.utils import IntegrityError
 from file_store.models import FileStoreItem
 
 
@@ -16,8 +17,11 @@ class FileServerItem(models.Model):
     '''Abstract base class representing pairs of files required for visualization.
     
     '''
-    viz_file = models.ForeignKey(FileStoreItem, related_name="%(class)s_vizfile_related")
-    data_file = models.ForeignKey(FileStoreItem, blank=True, null=True, related_name="%(class)s_datafile_related")
+    vis_file = models.ForeignKey(FileStoreItem, unique=True,
+                                 related_name="%(app_label)s_%(class)s_visfile_related",
+                                 verbose_name="visualization file")
+    data_file = models.ForeignKey(FileStoreItem, blank=True, null=True,
+                                  related_name="%(app_label)s_%(class)s_datafile_related")
     # related_name argument is required and must be unique; see below for more details:
     # http://stackoverflow.com/questions/1142378/django-why-some-fields-clashes-with-other
     # https://docs.djangoproject.com/en/dev/ref/models/fields/#foreignkey
@@ -27,11 +31,16 @@ class FileServerItem(models.Model):
         abstract = True
 
 
-
 class TDFItem(FileServerItem):
-    '''Represents TDF file and links it to the data file from which it was created.
+    '''Represents TDF file and optionally links it to the data file from which it was created.
 
     '''
+    def __unicode__(self):
+        if self.data_file:
+            return self.vis_file.uuid + ' - ' + self.data_file.uuid
+        else:
+            return self.vis_file.uuid
+
     def update(self, uuid):
         '''Associate a data file with a visualization file.
         
@@ -40,23 +49,32 @@ class TDFItem(FileServerItem):
         :returns: bool -- True if update succeeded, False if failed.
         
         '''
-        logger.debug("Updating TDFItem")
+        logger.debug("Updating TDFItem using UUID '%s'", uuid)
 
         item = FileStoreItem.objects.get_item(uuid=uuid)
-        
+
         if item:
             self.data_file = item
-            logger.debug("TDFItem updated")
-            return True
+            try:
+                self.save()
+            except IntegrityError:
+                logger.error("Failed updating TDFItem")
+                return False
         else:
-            logger.debug("Failed updating TDFItem")
+            logger.error("Failed updating TDFItem")
             return False
 
+        logger.info("TDFItem updated")
+        return True
 
-def add_tdf(viz_file_uuid, data_file_uuid=None, index=False):
-    '''Create a new FileServerItem instance.
 
-    :param viz_file_uuid: UUID of the visualization file.
+@transaction.commit_manually
+def add_tdf(vis_file_uuid, data_file_uuid=None, index=False):
+    '''Create a new TDFItem instance.
+    Manual transaction control is required when using PostgreSQL and save() or create() raise an exception.
+    See: https://docs.djangoproject.com/en/dev/topics/db/transactions/#handling-exceptions-within-postgresql-transactions
+
+    :param vis_file_uuid: UUID of the visualization file.
     :param type: str.
     :param data_file_uuid: UUID of the data file.
     :param type: str.
@@ -65,26 +83,48 @@ def add_tdf(viz_file_uuid, data_file_uuid=None, index=False):
     :returns: TDFItem -- newly created TDFItem model instance or None if there was an error.
     
     '''
-    logger.debug("Creating a TDFItem")
+    logger.debug("Creating TDFItem")
 
-    #TODO: check if there is already a TDFItem associated with a FileStoreItem with viz_file_uuid
+    vis_file = FileStoreItem.objects.get_item(vis_file_uuid)
+    if not vis_file:
+        logger.error("Failed to create TDFItem: visualization file must exist")
+        return None
 
-    viz_file = FileStoreItem.objects.get_item(viz_file_uuid)
-    data_file = FileStoreItem.objects.get_item(data_file_uuid)
-    #TODO: error checking
-    item = TDFItem.objects.create(viz_file=viz_file, data_file=data_file)
+    if data_file_uuid:
+        data_file = FileStoreItem.objects.get_item(data_file_uuid)
+    else:
+        data_file = None
+        logger.debug("Data file UUID was not provided")
+
+    try:
+        item = TDFItem.objects.create(vis_file=vis_file, data_file=data_file)
+    except (IntegrityError, ValueError) as e:
+        transaction.rollback()
+        logger.error("Failed to create TDFItem\n%s", e.message)
+        return None
 
     #TODO: indexing and caching
 
+    transaction.commit()
     logger.info("TDFItem created")
     return item
 
 
 def get_tdf(uuid):
-    '''Return TDFItem given UUID of a data file.
+    '''Return TDFItem given UUID of a visualization file.
 
     :param uuid: UUID of a data file.
     :type uuid: str.
-    :returns: TDFItem or None if not found
+    :returns: TDFItem or None if there was an error.
 
     '''
+    try:
+        item = TDFItem.objects.get(vis_file__uuid=uuid)
+    except TDFItem.DoesNotExist:
+        logger.error("TDFItem with UUID '%s' does not exist", uuid)
+        return None
+    except TDFItem.MultipleObjectsReturned:
+        logger.error("More than one TDFItem matched UUID '%s'", uuid)
+        return None
+
+    return item

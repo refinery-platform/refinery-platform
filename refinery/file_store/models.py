@@ -42,7 +42,7 @@ def _mkdir(path):
     try:
         os.mkdir(path)
     except OSError as e:
-        logger.error("Error creating directory. OSError: [Errno %s], error: %s, path: %s",
+        logger.error("Error creating directory\nOSError: [Errno %s], error: %s, path: %s",
                      e.errno, e.strerror, e.filename)
         return False
     logger.info("Directory %s created", path)
@@ -87,15 +87,16 @@ def file_path(instance, filename):
 fss = FileSystemStorage(location=FILE_STORE_BASE_DIR)
 
 
+#TODO: expand the list of file types: http://en.wikipedia.org/wiki/List_of_file_formats#Biology
 FILE_TYPES = (
-    ('bam', 'BAM file'),
+    ('bam', 'Binary compressed SAM'),
     ('bed', 'BED file'),
     ('gz', 'Gzip compressed archive'),
     ('idf', 'IDF file'),
     ('fasta', 'FASTA file'),
     ('fastq', 'FASTQ file'),
     ('tdf', 'TDF file'),
-    ('vcf', 'VCF file'),
+    ('vcf', 'Variant Call Format'),
     ('wig', 'WIG file'),
     ('zip', 'Zip compressed archive'),
 )
@@ -128,22 +129,21 @@ class FileStoreItemManager(models.Manager):
 
         return item
 
-
     def get_item(self, uuid):
         '''Handles potential exceptions when retrieving a FileStoreItem.
 
         :param uuid: UUID of a FileStoreItem.
         :type uuid: str.
-        :returns: FileStoreItem -- model instance if a match is found, None otherwise.
+        :returns: FileStoreItem -- model instance if exactly one match is found, None otherwise.
 
         '''
         try:
             item = FileStoreItem.objects.get(uuid=uuid)
         except FileStoreItem.DoesNotExist:
-            logger.error("FileStoreItem with UUID '%s' does not exist", uuid)
+            logger.warn("FileStoreItem with UUID '%s' does not exist", uuid)
             return None
         except FileStoreItem.MultipleObjectsReturned:
-            logger.error("More than one FileStoreItem matched UUID '%s'", uuid)
+            logger.warn("More than one FileStoreItem matched UUID '%s'", uuid)
             return None
 
         return item
@@ -159,10 +159,8 @@ class FileStoreItem(models.Model):
 
     objects = FileStoreItemManager()
 
-
     def __unicode__(self):
         return self.datafile.name + ' - ' + self.uuid
-    
 
     def get_absolute_path(self):
         '''Return the absolute path to the data file.
@@ -175,7 +173,6 @@ class FileStoreItem(models.Model):
         except ValueError:  # file is not local
             logger.error("Datafile doesn't exist in FileStoreItem %s", self.uuid)
             return None
-
 
     def get_file_size(self, report_symlinks=False):
         '''Return the size of the file in bytes.
@@ -195,7 +192,6 @@ class FileStoreItem(models.Model):
             logger.error("Datafile doesn't exist in FileStoreItem %s", self.uuid)
             return 0
 
-
     def get_file_extension(self):
         '''Return extension of the file on disk or from the source.
         
@@ -213,7 +209,6 @@ class FileStoreItem(models.Model):
                 name = u.path.split('/')[-1]
                 return os.path.splitext(name)[-1]
 
-
     def get_filetype(self):
         '''Retrieve the type of the datafile.
         
@@ -221,7 +216,6 @@ class FileStoreItem(models.Model):
 
         '''
         return self.filetype
-
 
     def set_filetype(self, filetype):
         '''Assign the type of the datafile.  Only existing types allowed as arguments.
@@ -244,7 +238,6 @@ class FileStoreItem(models.Model):
             logger.error("'%s' is an invalid file type", filetype)
             return False
 
-
     def is_symlinked(self):
         '''Check if the data file is a symlink.
         
@@ -256,7 +249,6 @@ class FileStoreItem(models.Model):
         except TypeError:
             logger.error("Path cannot be None")
             return False
-
 
     def is_local(self):
         '''Check if the datafile can be used as a file object.
@@ -274,7 +266,6 @@ class FileStoreItem(models.Model):
             logger.error("Path cannot be None")
             return False
 
-
     def delete_datafile(self):
         '''Delete datafile if it exists on disk.
         
@@ -287,14 +278,13 @@ class FileStoreItem(models.Model):
             try:
                 self.datafile.delete()
             except OSError as e:
-                logger.error("Error deleting file. OSError: [Errno: %s], file name: %s, error: %s",
+                logger.error("Error deleting file\nOSError: [Errno: %s], file name: %s, error: %s",
                                  e.errno, e.filename, e.strerror)
                 return False
             logger.info("Datafile deleted")
             return True
         else:   # datafile doesn't exist
             return False
-
 
     def rename_datafile(self, name):
         '''Change name of the data file.
@@ -325,7 +315,6 @@ class FileStoreItem(models.Model):
         else:
             logger.error("Datafile does not exist")
             return None
-
 
     def symlink_datafile(self):
         '''Create a symlink to the file pointed by source.
@@ -438,6 +427,7 @@ def _delete_datafile(sender, **kwargs):
     
     '''
     item = kwargs.get('instance')
+    logger.info("Deleting FileStoreItem with UUID '%s'", item.uuid)
     item.delete_datafile()
 
 
@@ -458,7 +448,7 @@ def _symlink_file_on_disk(source, target):
         try:
             os.makedirs(target_dir)
         except OSError as e:
-            logger.error("Error creating file store directory %s. OSError: [Errno %s], file name: %s, error: %s",
+            logger.error("Error creating file store directory\nOSError: [Errno %s], file name: %s, error: %s",
                          target_dir, e.errno, e.filename, e.strerror)
             return False
 
@@ -466,7 +456,7 @@ def _symlink_file_on_disk(source, target):
     try:
         os.symlink(source, target)
     except OSError as e:
-        logger.error("Error creating file store symlink. OSError: [Errno %s], file name: %s, error: %s",
+        logger.error("Error creating file store symlink\nOSError: [Errno %s], file name: %s, error: %s",
                      e.errno, e.filename, e.strerror)
         return False
 
@@ -487,7 +477,7 @@ def _rename_file_on_disk(current_path, new_path):
     try:
         os.renames(current_path, new_path)
     except OSError as e:
-        logger.error("Error renaming file on disk. OSError: [Errno %s], file name: %s, error: %s. Current file name: %s. New file name: %s",
+        logger.error("Error renaming file on disk\nOSError: [Errno %s], file name: %s, error: %s. Current file name: %s. New file name: %s",
                      e.errno, e.filename, e.strerror, current_path, new_path)
         return False
 
@@ -498,7 +488,7 @@ def _rename_file_on_disk(current_path, new_path):
 def get_available_filetypes():
     '''Return a list of file type names that are allowed as values for FileStoreItem.filetype field.
     
-    :returns: list -- list of available file type names.
+    :returns: list -- available file type names.
     
     '''
     return dict(FILE_TYPES).keys()
