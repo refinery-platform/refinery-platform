@@ -5,7 +5,7 @@ Created on May 11, 2012
 '''
 
 from core.models import *
-from data_set_manager.tasks import process_isa_tab, annotate_nodes
+from data_set_manager.tasks import parse_isatab
 from data_set_manager.utils import *
 from django import forms
 from django.contrib.auth.decorators import login_required
@@ -116,14 +116,8 @@ def import_isa_tab(request):
                 item = FileStoreItem(source=f.name)
                 item.datafile.save(f.name, f)
             # parse ISA-Tab
-            investigation_uuid = process_isa_tab(item.uuid)
-            if investigation_uuid:
-                # create annotated node table entries for this investigation for solr indexing
-                annotate_nodes( investigation_uuid )
-                investigation = Investigation.objects.get(uuid=investigation_uuid)
-                dataset = DataSet.objects.create(name=investigation.get_title())
-                dataset.set_investigation(investigation)
-                dataset.set_owner(request.user)
+            dataset_uuid = parse_isatab(request.user.username, True, item.get_absolute_path())
+            if dataset_uuid:
                 #TODO: redirect to the list of analysis samples for the given UUID
                 return HttpResponseRedirect('/data_sets/' + dataset.uuid + '/')
             else:
