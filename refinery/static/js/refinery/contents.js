@@ -758,7 +758,23 @@ initializeData( testAssayUuid, testStudyUuid, testNodeType );
 
 $( "#igv-session-link" ).on( "click", function() {
 	getField( testAssayUuid, testStudyUuid, testNodeType, "file_uuid", function( uuids ) {
-		window.location = "http://127.0.0.1:8000/visualization_manager/igv_session?uuids=" + uuids.join( "," );	
+		
+		var limit = 20;
+		var newUrl = "http://127.0.0.1:8000/visualization_manager/igv_session?uuids=" + uuids.join( "," );
+		
+		if ( uuids.length > limit ) {
+			var result = confirm( "Do you really want to open IGV with " + uuids.length + " tracks?" );
+			if ( result )
+		  	{
+		  		window.location = newUrl;
+		  	}
+			else {
+		  		// do nothing
+		  	}				
+		}
+		else {
+			window.location = newUrl;			
+		}
 	});
 });
 
