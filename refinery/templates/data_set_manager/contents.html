@@ -112,7 +112,7 @@ rect.active {
  	<div class="span6">
  	
  			<div class="row-fluid">
-			<div class="btn-group"> 				
+			<div> 				
 				<select class="combobox" name="workflow_choice" id="workflow_choice">
 					<option></option>
 					{% for work in workflows %}
@@ -121,10 +121,12 @@ rect.active {
 				</select>			
 					
 				<!-- <button class="btn btn-primary" id="submitSamplesBtn"><i class="icon-road"></i>Run</button> -->
-				<button class="btn" id="submitSamplesBtn">Apply</button>
+				<a href="#" class="btn" id="submitSamplesBtn">Apply</a> &nbsp;
+				
+				<!-- <a href="{% url igv_session %}">IGV</a> -->
+				<a class="btn" id="igv-session-link" href="#">Open IGV</a>
 			</div>
 			
-
     			    		
     	</div>	
  	</div>	
@@ -182,6 +184,7 @@ rect.active {
 {% endblock %}
 
 {% block script %}
+	<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap-collapse.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v2.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/fisheye.js"></script>
 
