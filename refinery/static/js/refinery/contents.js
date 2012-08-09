@@ -183,6 +183,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 }
 
 
+
 function prettifyFieldName( name, isTitle )
 {	
 	isTitle = isTitle || false;
@@ -287,6 +288,21 @@ function getData( studyUuid, assayUuid, nodeType ) {
 			processPivots( data );
 			processPages( data );			
 		} 
+	}});	
+}
+
+
+function getField( studyUuid, assayUuid, nodeType, field, callback ) {
+	var query = buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 10000, facets, { field: { "isVisible": false },  }, {} );
+	console.log( query );
+	$.ajax( { type: "GET", dataType: "jsonp", url: query, success: function(data) {		
+		var fieldValues = [] 
+				
+		for ( var i = 0; i < data.response.docs.length; ++i ) {
+			fieldValues.push( data.response.docs[i][field] );
+	    }
+	    
+	    callback( fieldValues );					
 	}});	
 }
 
@@ -739,6 +755,12 @@ function clearFieldDirections() {
 
 
 initializeData( testAssayUuid, testStudyUuid, testNodeType );
+
+$( "#igv-session-link" ).on( "click", function() {
+	getField( testAssayUuid, testStudyUuid, testNodeType, "file_uuid", function( uuids ) {
+		window.location = "http://127.0.0.1:8000/visualization_manager/igv_session?uuids=" + uuids.join( "," );	
+	});
+});
 
 // ---------------------------------
 })();

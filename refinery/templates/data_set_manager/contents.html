@@ -112,7 +112,7 @@ rect.active {
  	<div class="span6">
  	
  			<div class="row-fluid">
-			<div class="btn-group"> 				
+			<div> 				
 				<select class="combobox" name="workflow_choice" id="workflow_choice">
 					<option></option>
 					{% for work in workflows %}
@@ -121,9 +121,10 @@ rect.active {
 				</select>			
 					
 				<!-- <button class="btn btn-primary" id="submitSamplesBtn"><i class="icon-road"></i>Run</button> -->
-				<button class="btn" id="submitSamplesBtn">Apply</button>
+				<a href="#" class="btn" id="submitSamplesBtn">Apply</a> &nbsp;
 				
-				<a href="{% url igv_session %}">IGV</a>
+				<!-- <a href="{% url igv_session %}">IGV</a> -->
+				<a class="btn" id="igv-session-link" href="#">Open IGV</a>
 			</div>
 			
     			    		
