@@ -112,14 +112,14 @@ def import_isa_tab(request):
                     context = RequestContext(request, {'form': form, 'error': error})
                     return render_to_response('data_set_manager/import.html', context_instance=context)
             else:
-                #FIXME: add file-like objects to the file store
+                #TODO: add file-like objects to the file store
                 item = FileStoreItem(source=f.name)
                 item.datafile.save(f.name, f)
             # parse ISA-Tab
             dataset_uuid = parse_isatab(request.user.username, True, item.get_absolute_path())
             if dataset_uuid:
                 #TODO: redirect to the list of analysis samples for the given UUID
-                return HttpResponseRedirect('/data_sets/' + dataset.uuid + '/')
+                return HttpResponseRedirect('/data_sets/' + dataset_uuid + '/')
             else:
                 error = 'Problem parsing ISA-Tab file: ' + item.datafile.name
                 context = RequestContext(request, {'form': form, 'error': error})
