@@ -87,14 +87,27 @@ def file_path(instance, filename):
 fss = FileSystemStorage(location=FILE_STORE_BASE_DIR)
 
 
-#TODO: expand the list of file types: http://en.wikipedia.org/wiki/List_of_file_formats#Biology
+#TODO: expand the list of file types. Reference:
+# http://wiki.g2.bx.psu.edu/Admin/Datatypes/Adding%20Datatypes
+# http://en.wikipedia.org/wiki/List_of_file_formats#Biology
 FILE_TYPES = (
+    # (extension, description) 
     ('bam', 'Binary compressed SAM'),
     ('bed', 'BED file'),
+    ('bigbed', 'Big BED'),
+    ('bigwig', 'Big WIG'),
+    ('csv', 'Comma Separated Values'),
+    ('eland', 'Eland file'),
+    ('gff', 'GFF file'),
     ('gz', 'Gzip compressed archive'),
     ('idf', 'IDF file'),
     ('fasta', 'FASTA file'),
     ('fastq', 'FASTQ file'),
+    ('fastqcsanger', 'FASTQC Sanger'),
+    ('fastqillumina', 'FASTQ Illumina'),
+    ('fastqsanger', 'FASTQ Sanger'),
+    ('fastqsolexa', 'FASTQ Solexa'),
+    ('sam', 'Sequence Alignment/Map'),
     ('tdf', 'TDF file'),
     ('vcf', 'Variant Call Format'),
     ('wig', 'WIG file'),
@@ -155,7 +168,7 @@ class FileStoreItem(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     source = models.CharField(max_length=1024)     # URL or absolute file system path
     sharename = models.CharField(max_length=20, blank=True)
-    filetype = models.CharField(max_length=5, choices=FILE_TYPES, blank=True)
+    filetype = models.CharField(max_length=15, choices=FILE_TYPES, blank=True)
 
     objects = FileStoreItemManager()
 
@@ -272,9 +285,8 @@ class FileStoreItem(models.Model):
         :returns: bool -- True if deletion succeeded, False otherwise.
 
         '''
-        logger.debug("Deleting datafile '%s'", self.datafile.name)
-        
         if self.datafile.name:
+            logger.debug("Deleting datafile '%s'", self.datafile.name)
             try:
                 self.datafile.delete()
             except OSError as e:

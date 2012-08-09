@@ -435,19 +435,3 @@ def parse_isatab(username, public, path, additional_raw_data_file_extension=None
         logger.error(traceback.print_exception(exc_type, exc_value,
                           exc_traceback, file=sys.stdout))
     return None
-
-
-@task()
-def process_isa_tab(uuid):
-    ''' Unzip and parse ISA-Tab archive file object specified by UUID, return investigation UUID '''
-    #TODO: check if the incoming ISA-Tab is already in the system
-    result = read.delay(uuid)    #TODO: convert to subtask?
-    item = result.get()
-    input_file = item.get_absolute_path()
-    
-    if input_file:
-        p = IsaTabParser()
-        investigation = p.run(input_file)  # takes "/full/path/to/isatab/zipfile/or/directory"
-        return investigation.uuid
-    else:
-        return None
