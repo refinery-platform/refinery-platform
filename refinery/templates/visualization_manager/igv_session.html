@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-{{ block.super }} - Statistics
+{{ block.super }} - IGV Session
 {% endblock %}
 
 {% block subheader %}
@@ -15,7 +15,7 @@
 {% block content %}
 <div class="row-fluid">
 	<h2>UUIDs</h2>
-	<div class="span4 well">
+	<div class="span4">
 		<ul>
 			{% for uuid in uuids %}
 				<li>{{ uuid }}</li>
