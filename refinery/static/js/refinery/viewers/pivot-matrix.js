@@ -40,8 +40,8 @@ var matrix2 = [
 //var matrix = matrix2;
 
 var margin = {top: 80, right: 20, bottom: 0, left: 80},
-    width = matrix[0].length * 12;
-    height = matrix.length * 12;
+    width = Math.max( matrix[0].length * 12, 800 );
+    height = Math.max( matrix.length * 12, 500 );
 
 var x = d3.scale.ordinal().rangeBands([0, width]);
 var y = d3.scale.ordinal().rangeBands([0, height]);

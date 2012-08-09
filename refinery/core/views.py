@@ -647,6 +647,7 @@ def solr(request):
         
     return HttpResponse( urllib2.urlopen( "http://127.0.0.1:8983/solr/core/select?" + query.urlencode() ).read(), mimetype='application/json' )
 
+
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
     print "core.views.samples_solr called"
     data_set = get_object_or_404( DataSet, uuid=ds_uuid )
