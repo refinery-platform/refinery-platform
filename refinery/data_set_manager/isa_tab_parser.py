@@ -298,7 +298,7 @@ class IsaTabParser:
          
         # this node represents a file - add the file to the file store and store the file UUID in the node
         if is_new and header_components[0] in Node.FILES and node_name is not "":
-            uuid = create( node_name )
+            uuid = create( source=node_name )
             
             if uuid is not None:
                 node.file_uuid = uuid
