@@ -120,7 +120,7 @@ class SingleFileColumnParser:
             else:
                 file_path = os.path.join( self.file_base_path, row[internal_file_column_index].strip() )
                 
-            file_uuid = create( file_path, self.file_permanent )
+            file_uuid = create( source=file_path, permanent=self.file_permanent )
                                     
             if file_uuid is not None:
                 logger.info( "Added " + file_path + " to file store." )
