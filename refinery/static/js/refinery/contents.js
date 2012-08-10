@@ -778,6 +778,18 @@ $( "#igv-session-link" ).on( "click", function() {
 	});
 });
 
+$( "#profile-viewer-session-link" ).on( "click", function() {
+	getField( testAssayUuid, testStudyUuid, testNodeType, "file_uuid", function( uuids ) {
+		
+		var limit = 1;
+		var newUrl = "http://127.0.0.1:8000/visualization_manager/profile_viewer_session?uuid=" + uuids[0];
+		
+		console.log( newUrl );
+		window.location = newUrl;			
+	});
+});
+
+
 // ---------------------------------
 })();
 // end scope  
