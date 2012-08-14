@@ -296,6 +296,9 @@ AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 # relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
 FILE_STORE_DIR = 'files'
 
+# To keep uploaded files always on disk
+FILE_UPLOAD_MAX_MEMORY_SIZE = 0
+
 # used to replaces spaces in the names of dynamic fields in Solr indexing
 REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = "_"
 

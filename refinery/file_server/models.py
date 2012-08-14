@@ -29,7 +29,7 @@ class FileServerItem(models.Model):
 
 
 class TDFItem(FileServerItem):
-    '''Represents a TDF file that is not linked to any data file.
+    '''Represents a TDF file that is not linked to a data file.
     
     '''
     def __unicode__(self):
@@ -46,7 +46,7 @@ class BAMFileItem(FileServerItem):
         if self.tdf_file:
             return self.data_file.uuid + ' - ' + self.tdf_file.uuid
         else:
-            return self.tdf_file.uuid
+            return self.data_file.uuid
 
     def update(self, tdf_uuid):
         '''Associate BAM file with a TDF file.
@@ -64,11 +64,11 @@ class BAMFileItem(FileServerItem):
             self.tdf_file = item
             try:
                 self.save()
-            except IntegrityError:
-                logger.error("Failed updating BAMFileItem")
+            except IntegrityError as e:
+                logger.error("Failed updating BAMFileItem\n%s", e.message)
                 return False
         else:
-            logger.error("Failed updating BAMFileItem")
+            logger.error("Failed updating BAMFileItem: specified UUID does not belong to any file.")
             return False
 
         logger.info("BAMFileItem updated")
@@ -87,7 +87,7 @@ def add(data_file_uuid, aux_file_uuid=None, index=False, update=False):
     :returns: a child of the FileStoreItem -- new model instance or None if there was an error.
     
     '''
-    #TODO: check if there is already a FileStoreItem with the same data_file UUID
+    #TODO: check if there is already a FileStoreItem with this data_file UUID
 
 
 def get(uuid):
@@ -111,7 +111,7 @@ def delete(uuid):
 
 
 def index(uuid, update=bool):
-    '''Create the auxiliary file index.
+    '''Create indices for data and auxiliary files as appropriate.
 
     :param uuid: UUID of a data file.
     :type uuid: str.
@@ -123,7 +123,7 @@ def index(uuid, update=bool):
 
 
 @transaction.commit_manually
-def add_bam(data_file_uuid, tdf_file_uuid=None, index=False):
+def _add_bam(data_file_uuid, tdf_file_uuid=None, index=False):
     '''Create a new BAMFileItem instance.
     Manual transaction control is required when using PostgreSQL and save() or create() raise an exception.
     See: https://docs.djangoproject.com/en/dev/topics/db/transactions/#handling-exceptions-within-postgresql-transactions
@@ -163,7 +163,7 @@ def add_bam(data_file_uuid, tdf_file_uuid=None, index=False):
     return item
 
 
-def get_bam(uuid):
+def _get_bam(uuid):
     '''Return BAMFileItem given UUID of a BAM file.
 
     :param uuid: UUID of a BAM file.
