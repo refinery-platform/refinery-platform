@@ -18,9 +18,6 @@ Example: FILE_STORE_DIR = 'files'
 
 import os
 import logging
-import shutil
-import urllib2
-from tempfile import NamedTemporaryFile
 from urlparse import urlparse
 from django.conf import settings
 from django.dispatch import receiver
@@ -120,6 +117,7 @@ FILE_TYPES = (
     ('tdf', 'TDF file'),
     ('vcf', 'Variant Call Format'),
     ('wig', 'WIG file'),
+    ('xml', 'XML file'),
     ('zip', 'Zip compressed archive'),
 )
 
@@ -132,8 +130,8 @@ class FileStoreItemManager(models.Manager):
         '''A "constructor" for FileStoreItem.
         
         :param source: URL or absolute file system path to a file.
-        :param type: str.
-        :returns: FileStoreItem is success, None if failure.
+        :type source: str.
+        :returns: FileStoreItem if success, None if failure.
 
         '''
         if not source:  # it doesn't make sense to create a FileStoreItem without a file source
@@ -309,7 +307,7 @@ class FileStoreItem(models.Model):
 
     def rename_datafile(self, name):
         '''Change name of the data file.
-        
+
         :param name: new data file name.
         :type name: str.
         :returns: str -- the name that was assigned by the file storage system if renaming succeeded
@@ -356,7 +354,7 @@ class FileStoreItem(models.Model):
                 # update the model with the symlink path
                 self.datafile.name = rel_dst_path
                 self.save()
-                logger.info("Datafile symlinked")
+                logger.debug("Datafile symlinked")
                 return True
             else:
                 logger.error("Symlinking failed")
@@ -365,68 +363,72 @@ class FileStoreItem(models.Model):
             logger.error("Symlinking failed: source is not a file")
             return False
 
-    def copy_datafile(self):
-        '''Copy file from source.
-        Assumes datafile does not exist.
-        Does not check that the source is an absolute file system path.
+#===============================================================================
+#    def copy_datafile(self):
+#        '''Copy file from source.
+#        Assumes datafile does not exist.
+#        Does not check that the source is an absolute file system path.
+# 
+#        :returns: bool -- True if success, False if failure.
+# 
+#        '''
+#        #TODO: handle out of disk space condition
+#        if os.path.isfile(self.source):
+#            # check if source file can be opened
+#            try:
+#                srcfile = File(open(self.source))
+#            except IOError:
+#                logger.error("Could not open file: %s", self.source)
+#                return False
+#            srcfilename = os.path.basename(self.source)
+# 
+#            #TODO: copy file in chunks to display progress report
+#            self.datafile.save(srcfilename, srcfile)  # model is saved by default if FileField.save() is called
+#            srcfile.close()
+#            logger.info("File copied")
+#            return True
+#        else:
+#            logger.error("Copying failed: source is not a file")
+#            return False
+#===============================================================================
 
-        :returns: bool -- True if success, False if failure.
-
-        '''
-        #TODO: handle out of disk space condition
-        if os.path.isfile(self.source):
-            # check if source file can be opened
-            try:
-                srcfile = File(open(self.source))
-            except IOError:
-                logger.error("Could not open file: %s", self.source)
-                return False
-            srcfilename = os.path.basename(self.source)
-
-            #TODO: copy file in chunks to display progress report
-            self.datafile.save(srcfilename, srcfile)  # model is saved by default if FileField.save() is called
-            srcfile.close()
-            logger.info("File copied")
-            return True
-        else:
-            logger.error("Copying failed: source is not a file")
-            return False
-
-    def download_datafile(self, file_size=1):
-        '''Download file from source.
-        Assumes datafile does not exist.
-
-        :param file_size: Size of the external files.
-        :type file_size: int.
-        :returns: bool -- True if success, False if failure.
-
-        '''
-        # download the file from source URL to a temp location on disk
-        tmpfile = download_file(self.source, file_size)
-        if not tmpfile:
-            logger.error("Downloading from '%s' failed", self.source)
-            return False
-    
-        # get the file name from URL (remove query string)
-        u = urlparse(self.source)
-        src_file_name = os.path.basename(u.path)
-        # construct destination path based on source file name
-        rel_dst_path = self.datafile.storage.get_available_name(file_path(self, src_file_name))
-        abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
-
-        # move the temp file into the file store
-        try:
-            os.renames(tmpfile.name, abs_dst_path)
-        except OSError as e:
-            logger.error("Error moving temp file into the file store\nOSError: %s, file name: %s, error: %s",
-                         e.errno, e.filename, e.strerror)
-            return False
-
-        # assign new path to datafile
-        self.datafile.name = rel_dst_path
-        # save the model instance
-        self.save()
-        return True
+#===============================================================================
+#    def download_datafile(self, file_size=1):
+#        '''Download file from source.
+#        Assumes datafile does not exist.
+# 
+#        :param file_size: Size of the external files.
+#        :type file_size: int.
+#        :returns: bool -- True if success, False if failure.
+# 
+#        '''
+#        # download the file from source URL to a temp location on disk
+#        tmpfile = tasks.download_file.delay(self.source, file_size).get()
+#        if not tmpfile:
+#            logger.error("Downloading from '%s' failed", self.source)
+#            return False
+#    
+#        # get the file name from URL (remove query string)
+#        u = urlparse(self.source)
+#        src_file_name = os.path.basename(u.path)
+#        # construct destination path based on source file name
+#        rel_dst_path = self.datafile.storage.get_available_name(file_path(self, src_file_name))
+#        abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
+# 
+#        # move the temp file into the file store
+#        try:
+#            os.renames(tmpfile.name, abs_dst_path)
+#        except OSError as e:
+#            logger.error("Error moving temp file into the file store\nOSError: %s, file name: %s, error: %s",
+#                         e.errno, e.filename, e.strerror)
+#            return False
+# 
+#        # assign new path to datafile
+#        self.datafile.name = rel_dst_path
+#        # save the model instance
+#        self.save()
+#        return True
+#===============================================================================
 
 
 def is_local(uuid):
@@ -567,59 +569,6 @@ def _rename_file_on_disk(current_path, new_path):
     return True
 
 
-def download_file(url, file_size=1):
-    '''Download file to FILE_STORE_TEMP_DIR from specified URL.
-
-    :param url: Source URL.
-    :type url: str.
-    :param file_size: Size of the remote file.
-    :type file_size: int.
-    :returns: file -- Downloaded file or None if downloading failed.
-
-    '''
-    #TODO: handle out of disk space condition
-    logger.debug("Downloading file from '%s'", url)
-
-    req = urllib2.Request(url)
-    # check if source file can be downloaded
-    try:
-        response = urllib2.urlopen(req)
-    except urllib2.URLError as e:
-        logger.error("Could not open URL '%s'. Reason: '%s'", url, e.reason)
-        return None
-    except ValueError as e:
-        logger.error("Could not open URL '%s'. Reason: '%s'", url, e.message)
-        return None
-
-    tmpfile = NamedTemporaryFile(dir=get_temp_dir(), delete=False)
-    # get remote file size, provide a default value in case Content-Length is missing
-    remotefilesize = int(response.info().getheader("Content-Length", file_size))
-
-    # download and save the file
-    localfilesize = 0
-    blocksize = 8 * 2 ** 10    # 8 Kbytes
-    for buf in iter(lambda: response.read(blocksize), ''):
-        localfilesize += len(buf)
-        tmpfile.write(buf)
-        # check if we have a sane value for file size
-        if remotefilesize > 0:
-            percent_done = localfilesize * 100. / remotefilesize
-        else:
-            percent_done = 0
-#            import_file.update_state(
-#                state="PROGRESS",
-#                meta={"percent_done": "%3.2f%%" % (percent_done), 'current': localfilesize, 'total': remotefilesize}
-#                )
-
-    # cleanup
-    response.close()
-    tmpfile.flush()
-    tmpfile.close()
-
-    logger.debug("Finished downloading")
-    return tmpfile
-
-
 def get_available_filetypes():
     '''Return a list of file type names that are allowed as values for FileStoreItem.filetype field.
     
@@ -644,3 +593,5 @@ class FileStoreCache:
     '''
     # doubly-linked list or heapq
     pass
+
+
