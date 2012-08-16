@@ -5,19 +5,18 @@ Created on May 11, 2012
 '''
 
 import os
-from core.models import *
-from data_set_manager.tasks import parse_isatab
-from data_set_manager.utils import *
+from urlparse import urlparse
 from django import forms
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpResponseRedirect, HttpResponse, \
-    HttpResponse
+from django.http import Http404, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson
-from file_store.tasks import download_file
 from haystack.query import SearchQuerySet
-from urlparse import urlparse
+from core.models import *
+from data_set_manager.tasks import parse_isatab
+from data_set_manager.utils import *
+from file_store.tasks import download_file
 
 
 def index(request):
@@ -108,7 +107,6 @@ def import_isa_tab(request):
             # add ISA-Tab file to the file store
             if url:
                 #TODO: replace with chain (http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks)
-                #FIXME: task cannot return a file object, so need to modify download_file accordingly
                 temp_file_name = download_file.delay(url).get()
                 if not temp_file_name:
                     error = 'Problem downloading file from: ' + url
@@ -137,19 +135,19 @@ def import_isa_tab(request):
                 #       and raises OSError exception if file is not found
                 # solutions:
                 # create a copy of the uploaded file and pass it to parse_isatab() 
-                # modify parse_isatab() to accept a FileStoreItem
+                # modify parse_isatab() to accept a FileStoreItem or a UUID
                 # modify parse_isatab() to accept new file name as an additional arg
-                temp_dir = os.path.dirname(f.temporary_file_path())
-                new_temp_file_name = os.path.join(temp_dir, f.name)
-                try:
-                    os.rename(f.temporary_file_path(), new_temp_file_name)
-                except OSError as e:
-                    logger.error("Error renaming uploaded ISA-Tab file\nOSError: %s, file name: %s, error: %s",
-                                 e.errno, e.filename, e.strerror)
-                    error = 'Problem renaming uploaded ISA-Tab file'
-                    context = RequestContext(request, {'form': form, 'error': error})
-                    return render_to_response('data_set_manager/import.html', context_instance=context)
-                dataset_uuid = parse_isatab(request.user.username, True, new_temp_file_name)
+#                temp_dir = os.path.dirname(f.temporary_file_path())
+#                new_temp_file_name = os.path.join(temp_dir, f.name)
+#                try:
+#                    os.rename(f.temporary_file_path(), new_temp_file_name)
+#                except OSError as e:
+#                    logger.error("Error renaming uploaded ISA-Tab file\nOSError: %s, file name: %s, error: %s",
+#                                 e.errno, e.filename, e.strerror)
+#                    error = 'Problem renaming uploaded ISA-Tab file'
+#                    context = RequestContext(request, {'form': form, 'error': error})
+#                    return render_to_response('data_set_manager/import.html', context_instance=context)
+                dataset_uuid = parse_isatab(request.user.username, True, f.temporary_file_path())
 
             if dataset_uuid:
                 #TODO: redirect to the list of analysis samples for the given UUID

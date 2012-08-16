@@ -36,7 +36,7 @@ class TDFItem(FileServerItem):
         return self.data_file.uuid
 
 
-class BAMFileItem(FileServerItem):
+class BAMItem(FileServerItem):
     '''Represents a BAM file and optionally links it to a TDF file.
 
     '''
@@ -76,7 +76,7 @@ class BAMFileItem(FileServerItem):
 
 
 def add(data_file_uuid, aux_file_uuid=None, index=False, update=False):
-    '''Create a file store item of an appropriate type.
+    '''Create a file server item of an appropriate type.
 
     :param data_file_uuid: UUID of a data file.
     :type data_file_uuid: str.
@@ -87,7 +87,8 @@ def add(data_file_uuid, aux_file_uuid=None, index=False, update=False):
     :returns: a child of the FileStoreItem -- new model instance or None if there was an error.
     
     '''
-    #TODO: check if there is already a FileStoreItem with this data_file UUID
+    #TODO: check if there is already a FileServerItem with this data_file UUID
+    
 
 
 def get(uuid):
