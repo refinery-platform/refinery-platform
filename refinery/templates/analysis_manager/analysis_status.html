@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 
 {% block head_html %}
+    
+	<!-- TODO: NEED TO FIX: -->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery/jquery-1.7.2.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap.js"></script>
+    
 <script>
 
 var counter = 0;
@@ -51,9 +56,10 @@ function updateProgress(result, section) {
 	  		if (result[i].state == 'SUCCESS') {
 	  			$(temp_bar).css({ 'width': '100%'});
 	  			var temp_bar_class = '#bar_class_'+result[i].task_id;
+	  			//$(temp_bar_class).fadeOut('slow');
 	  			$(temp_bar_class).removeClass('active');
-	  			$(temp_bar_class).fadeOut('slow');
-	  			//$("#"+section).collapse("hide");
+	  			$("#"+section).collapse("hide");
+	  			//$(temp_bar_class).collapse('hide');
 	  			//$("#"+section).collapse("show");
 	  		}
   		}
@@ -63,8 +69,8 @@ function updateProgress(result, section) {
 	  			var template = 	"<li><div id=" + result[i].task_id+ "> <div id=text_" + result[i].task_id + ">" + result[i] + "</div>";
 	  			//if (result[i].percent_download != null) {
 	  			//if (result[i].percent_done != null) {
-	  				 template += "<div id='bar_class_"+ result[i].task_id + "' class='progress progress-striped active'>";
-	  				 template += "<div class='bar' id='bar_"+ result[i].task_id + "' style='width:{{stat.percent_done}};'></div></div>";
+	  			template += "<div id='bar_class_"+ result[i].task_id + "' class='progress progress-striped active'>";
+	  			template += "<div class='bar' id='bar_"+ result[i].task_id + "' style='width:{{stat.percent_done}};'></div></div>";
 	  			//} 
 			    template += "</div></li>";
 			    console.log(template);      
@@ -72,17 +78,12 @@ function updateProgress(result, section) {
 			    var cur_text = $.trim($("#"+section + " > div").text());
 			    if (cur_text == 'Pending') {
 			    	$("#"+section + " > div").html(template);
-			    //	$('#collapseOne').text(template);
 			    }
 			    else { 
 			    	$("#"+section + " > div").append(template);
 			    }
 	
-			    //.accordion-inner)
-			    
-			    $("#"+section).collapse("show");	
-		    	//$("#collapseOne").collapse("hide");	
-		    	//$("#collapseOne").collapse("show");		
+			    $("#"+section).collapse("show");			
 		   }
             				
   		}
@@ -130,11 +131,11 @@ function getUpdate() {
   			var url = "/projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ statuses.analysis.uuid }}";
   			//<i class="icon-empty"></i> <a href="projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }} - {{analysis.summary}}</a>
   			console.log(url);
-  			window.location = url;
+  			//window.location = url;
   		}
   		
   		if (counter == 1000) {
-  			console.loge("HIT 1000")
+  			console.log("HIT 1000")
   			clearTimeout ( timerId );
   		}
   		
@@ -157,19 +158,6 @@ $(document).ready(function() {
 
 {% endblock %}
 
-<!-- 
-{% block title %}
-{{ block.super }} - Home : 
-{% endblock %}
-
-{% block subheader %}
-	{% if user.is_authenticated  %}
-		ANALYSIS STATUS
-	{% else %}
-		ANALYSIS STATUS
-	{% endif %}
-{% endblock %}
--->
 
 {% block content %}
 	
@@ -274,7 +262,7 @@ $(document).ready(function() {
           
     <script>
 	
-	$(".collapse").collapse("show");
+	$(".collapse").collapse("show").height('auto');
 
 </script>
 {% endif %}
