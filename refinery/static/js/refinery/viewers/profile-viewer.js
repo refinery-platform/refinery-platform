@@ -519,7 +519,7 @@ ProfileViewer.prototype.browser_resize = function(options) {
  
   // resizes d3 container svg element 
   d3.select(this.chart).select("svg")
-  	  .attr("width",  this.cx)
+  	  .attr("width",  this.cx - this.padding.right)
       .attr("height", this.cy)
   
   // resizes plot
