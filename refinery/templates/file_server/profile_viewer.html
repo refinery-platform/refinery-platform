@@ -18,7 +18,7 @@
     */
       .axis { font-size: 9pt; }
       .chart {
-        width: 1000px;
+        width: 1000px; 
         height: 200px; }
       circle, .line {
         fill: none;
@@ -55,6 +55,9 @@
     <p>
     	Sequence: {{ sequence_name  }}
     </p>
+{% endblock %}
+
+{% block script %}
 
     <script type="text/javascript">
       graph = new ProfileViewer("viewer", {
@@ -69,5 +72,18 @@
           "xlabel": "Coordinate",
           "ylabel": "Signal"  
         });
+    
+    // calls automatic resize of profile viewer
+  	var chart = $("#viewer"),
+	    aspect = chart.width() / chart.height(),
+	    container = chart.parent();
+		$(window).on("resize", function() {
+			var targetWidth = container.width();
+			graph.browser_resize({
+				"width" : targetWidth,	
+				"height": Math.round(targetWidth / aspect)
+ 			});
+ 		}).trigger("resize");
     </script>
+
 {% endblock %}
