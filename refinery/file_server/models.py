@@ -12,23 +12,44 @@ from file_store.models import FileStoreItem
 
 logger = logging.getLogger('file_server')
 
+# list of the available file server models; update if new models are added
+FILE_SERVER_MODELS = ('bamitem', 'tdfitem',)
 
-class FileServerItem(models.Model):
-    '''Abstract base class representing pairs of files required for visualization.
-    
+
+class _FileServerItemManager(models.Manager):
+    '''Custom model manager to handle retrieval of _FileServerItems.
+
     '''
-    data_file = models.ForeignKey(FileStoreItem, unique=True,
-                                 related_name="%(app_label)s_%(class)s_data_file_related")
-    # related_name argument is required and must be unique; see below for details:
-    # http://stackoverflow.com/questions/1142378/django-why-some-fields-clashes-with-other
-    # https://docs.djangoproject.com/en/dev/ref/models/fields/#foreignkey
-    # https://docs.djangoproject.com/en/dev/topics/db/models/#abstract-related-name
+    def get_item(self, uuid):
+        '''Handles potential exceptions when retrieving a _FileServerItem.
 
-    class Meta:
-        abstract = True
+        :param uuid: UUID of the data_file of a _FileServerItem.
+        :type uuid: str.
+        :returns: _FileServerItem -- model instance if exactly one match is found, None otherwise.
+
+        '''
+        try:
+            item = _FileServerItem.objects.get(data_file__uuid=uuid)
+        except _FileServerItem.DoesNotExist:
+            logger.warn("_FileServerItem with data_file UUID '%s' does not exist", uuid)
+            return None
+        except _FileServerItem.MultipleObjectsReturned:
+            logger.warn("More than one _FileServerItem matched UUID '%s'", uuid)
+            return None
+
+        return item
 
 
-class TDFItem(FileServerItem):
+class _FileServerItem(models.Model):
+    '''Private base class representing files required for visualization.
+
+    '''
+    data_file = models.ForeignKey(FileStoreItem, unique=True)
+
+    objects = _FileServerItemManager()
+
+
+class TDFItem(_FileServerItem):
     '''Represents a TDF file that is not linked to a data file.
     
     '''
@@ -36,7 +57,7 @@ class TDFItem(FileServerItem):
         return self.data_file.uuid
 
 
-class BAMItem(FileServerItem):
+class BAMItem(_FileServerItem):
     '''Represents a BAM file and optionally links it to a TDF file.
 
     '''
@@ -84,11 +105,24 @@ def add(data_file_uuid, aux_file_uuid=None, index=False, update=False):
     :type aux_file_uuid: str.
     :param index: Flag indicating whether to create and load auxiliary file index into the cache.
     :type index: bool.
+    :param update: ?
+    :type update: bool. 
     :returns: a child of the FileStoreItem -- new model instance or None if there was an error.
-    
+
     '''
-    #TODO: check if there is already a FileServerItem with this data_file UUID
-    
+    data_file = FileStoreItem.objects.get_item(uuid=data_file_uuid)
+    if not data_file:
+        logger.error("Could not create _FileServerItem: data_file_uuid doesn't exist")
+        return None
+
+    file_type = data_file.get_filetype()
+    if file_type == 'bam':
+        return _add_bam(data_file=data_file, tdf_file_uuid=aux_file_uuid, index=index) 
+    elif file_type == 'tdf':
+        return _add_tdf(data_file=data_file, index=index)
+    else:
+        logger.error("Could not create _FileStoreItem: unknown file type")
+        return None
 
 
 def get(uuid):
@@ -96,9 +130,17 @@ def get(uuid):
 
     :param uuid: UUID of a data file.
     :type uuid: str.
-    :returns: a child of the FileServerItem.
+    :returns: a child of the FileServerItem or None if not found. 
 
     '''
+    item = _FileServerItem.objects.get_item(uuid=uuid)
+
+    # return appropriate model instance by iterating over list of available model names
+    if item:
+        for model in FILE_SERVER_MODELS:
+            if hasattr(item, model):
+                return getattr(item, model)
+    return None
 
 
 def delete(uuid):
@@ -109,7 +151,7 @@ def delete(uuid):
     :returns: bool -- True if success, False if failure.
 
     '''
-
+    
 
 def index(uuid, update=bool):
     '''Create indices for data and auxiliary files as appropriate.
@@ -124,8 +166,8 @@ def index(uuid, update=bool):
 
 
 @transaction.commit_manually
-def _add_bam(data_file_uuid, tdf_file_uuid=None, index=False):
-    '''Create a new BAMFileItem instance.
+def _add_bam(data_file, tdf_file_uuid=None, index=False):
+    '''Create a new BAMItem instance.
     Manual transaction control is required when using PostgreSQL and save() or create() raise an exception.
     See: https://docs.djangoproject.com/en/dev/topics/db/transactions/#handling-exceptions-within-postgresql-transactions
 
@@ -135,14 +177,9 @@ def _add_bam(data_file_uuid, tdf_file_uuid=None, index=False):
     :type tdf_file_uuid: str.
     :param index: Flag indicating whether to create and load TDF index into the cache.
     :type index: bool.
-    :returns: BAMFileItem -- newly created BAMFileItem model instance or None if there was an error.
+    :returns: BAMItem -- newly created BAMItem model instance or None if there was an error.
     
     '''
-
-    data_file = FileStoreItem.objects.get_item(data_file_uuid)
-    if not data_file:
-        logger.error("Failed to create BAMFileItem: BAM file must exist")
-        return None
 
     if tdf_file_uuid:
         tdf_file = FileStoreItem.objects.get_item(tdf_file_uuid)
@@ -151,34 +188,39 @@ def _add_bam(data_file_uuid, tdf_file_uuid=None, index=False):
         logger.debug("TDF file UUID was not provided")
 
     try:
-        item = BAMFileItem.objects.create(data_file=data_file, tdf_file=tdf_file)
+        item = BAMItem.objects.create(data_file=data_file, tdf_file=tdf_file)
     except (IntegrityError, ValueError) as e:
         transaction.rollback()
-        logger.error("Failed to create BAMFileItem\n%s", e.message)
+        logger.error("Failed to create BAMItem\n%s", e.message)
         return None
 
     #TODO: indexing and caching
 
     transaction.commit()
-    logger.info("BAMFileItem created")
+    logger.info("BAMItem created")
     return item
 
 
-def _get_bam(uuid):
-    '''Return BAMFileItem given UUID of a BAM file.
+@transaction.commit_manually()
+def _add_tdf(data_file, index=False):
+    '''Create a new TDFItem instance.
 
-    :param uuid: UUID of a BAM file.
-    :type uuid: str.
-    :returns: BAMFileItem or None if there was an error.
+    :param data_file_uuid: UUID of the TDF file.
+    :type data_file_uuid: str.
+    :param index: Flag indicating whether to create and load TDF index into the cache.
+    :type index: bool.
+    :returns: TDFItem -- newly created TDFItem model instance or None if there was an error.
 
     '''
     try:
-        item = BAMFileItem.objects.get(data_file__uuid=uuid)
-    except BAMFileItem.DoesNotExist:
-        logger.error("BAMFileItem with UUID '%s' does not exist", uuid)
-        return None
-    except BAMFileItem.MultipleObjectsReturned:
-        logger.error("More than one BAMFileItem matched UUID '%s'", uuid)
+        item = TDFItem.objects.create(data_file=data_file)
+    except (IntegrityError, ValueError) as e:
+        transaction.rollback()
+        logger.error("Failed to create TDFItem\n%s", e.message)
         return None
 
+    #TODO: indexing and caching
+
+    transaction.commit()
+    logger.info("TDFItem created")
     return item

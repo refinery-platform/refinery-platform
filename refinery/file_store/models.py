@@ -122,7 +122,7 @@ FILE_TYPES = (
 )
 
 
-class FileStoreItemManager(models.Manager):
+class _FileStoreItemManager(models.Manager):
     '''Custom model manager to handle creation and retrieval of FileStoreItems.
 
     '''
@@ -177,7 +177,7 @@ class FileStoreItem(models.Model):
     sharename = models.CharField(max_length=20, blank=True)
     filetype = models.CharField(max_length=15, choices=FILE_TYPES, blank=True)
 
-    objects = FileStoreItemManager()
+    objects = _FileStoreItemManager()
 
     def __unicode__(self):
         return self.uuid + ' - ' + self.datafile.name

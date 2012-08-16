@@ -185,16 +185,8 @@ def delete(uuid):
     '''
     logger.debug("Deleting FileStoreItem with UUID '%s'", uuid)
 
-    item = FileStoreItem.objects.get_item(uuid=uuid)
-
-    if item:
-        #TODO: remove from cache
-        item.delete()
-        logger.info("FileStoreItem UUID '%s' deleted", uuid)
-        return True
-    else:
-        logger.error("Failed to delete FileStoreItem with UUID '%s'", uuid)
-        return False
+    #TODO: check for errors
+    FileStoreItem.objects.filter(uuid=uuid).delete()
 
 
 @task()
@@ -208,7 +200,6 @@ def update(uuid, source):
     :returns: FileStoreItem -- model instance if update succeeded, None if failed. 
 
     '''
-    # update file source
     #TODO: check for number of affected rows to determine if there was an error
     # https://docs.djangoproject.com/en/dev/ref/models/querysets/#django.db.models.query.QuerySet.update
     FileStoreItem.objects.filter(uuid=uuid).update(source=source)
