@@ -185,8 +185,14 @@ def delete(uuid):
     '''
     logger.debug("Deleting FileStoreItem with UUID '%s'", uuid)
 
-    #TODO: check for errors
-    FileStoreItem.objects.filter(uuid=uuid).delete()
+    item = FileStoreItem.objects.get_item(uuid)
+    if item:
+        item.delete()
+        logger.info("FileStoreItem deleted")
+        return True
+    else:
+        logger.error("Could not delete FileStoreItem with UUID '%s'", uuid)
+        return False
 
 
 @task()

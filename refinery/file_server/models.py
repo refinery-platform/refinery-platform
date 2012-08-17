@@ -151,7 +151,17 @@ def delete(uuid):
     :returns: bool -- True if success, False if failure.
 
     '''
-    
+    logger.debug("Deleting _FileServerItem with data file UUID '%s'", uuid)
+
+    item = _FileServerItem.objects.get_item(uuid)
+    if item:
+        item.delete()
+        logger.info("_FileServerItem deleted")
+        return True
+    else:
+        logger.error("Could not delete _FileServerItem with data file UUID '%s'", uuid)
+        return False
+
 
 def index(uuid, update=bool):
     '''Create indices for data and auxiliary files as appropriate.
