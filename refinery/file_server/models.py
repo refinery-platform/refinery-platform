@@ -84,7 +84,7 @@ class TDFItem(_FileServerItem):
     def profile(self, seq, start, end, zoom):
         '''Calculates and returns a profile.
 
-        :param seq: Sequence.
+        :param seq: Sequence name.
         :type seq: str.
         :param start: Start position.
         :type start: int.
@@ -124,7 +124,7 @@ class BAMItem(_FileServerItem):
     def profile(self, seq, start, end, zoom):
         '''Calculates and returns a profile.
         
-        :param seq: Sequence.
+        :param seq: Sequence name.
         :type seq: str.
         :param start: Start position.
         :type start: int.
