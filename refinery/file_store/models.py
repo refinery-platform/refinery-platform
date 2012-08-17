@@ -237,7 +237,7 @@ class FileStoreItem(models.Model):
         '''
         return self.filetype
 
-    def set_filetype(self, filetype):
+    def set_filetype(self, filetype=''):
         '''Assign the type of the datafile.  Only existing types allowed as arguments.
 
         :param filetype: requested file type.
@@ -277,14 +277,14 @@ class FileStoreItem(models.Model):
 
         '''
         path = self.get_absolute_path()
-        try:
-            return os.path.isfile(path)
-        except ValueError:
-            logger.error("'%s' is not a file", path)
-            return False
-        except TypeError:
-            logger.warn("Path cannot be None")
-            return False
+        if path:
+            try:
+                return os.path.isfile(path)
+            except ValueError:
+                logger.error("'%s' is not a file", path)
+            except TypeError:
+                logger.error("Path must be a string")
+        return False
 
     def delete_datafile(self):
         '''Delete datafile if it exists on disk.

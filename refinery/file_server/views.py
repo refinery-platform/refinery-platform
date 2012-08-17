@@ -3,12 +3,19 @@ Created on Apr 21, 2012
 
 @author: nils
 '''
+
+import logging
+import simplejson
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
-from file_server.tdf_file import TDFFile, get_profile_from_file
 import file_store
-import simplejson
+from file_server.tdf_file import TDFFile, get_profile_from_file
+from file_server.models import get, TDFItem
+
+
+logger = logging.getLogger('file_server')
+
 
 # Create your views here.
 def index( request ):    
@@ -64,7 +71,7 @@ def index( request ):
         
     profile = tdf_file.get_profile("chr21", "z0", ["mean"], start_location=13591070, end_location=14845362 )
     
-    print( profile )
+    #print( profile )
 
 
     #data_set = tdf_file.get_data_set( "chr21", "raw" )    
@@ -266,3 +273,56 @@ def profile_viewer( request, uuid, sequence_name, start_location, end_location )
     hostname = uri.split( request.get_full_path() )[0]
 
     return render_to_response( 'file_server/profile_viewer.html', { "hostname": hostname, "uuid": uuid, "sequence_name": sequence_name, "start_location": start_location, "end_location": end_location } , context_instance=RequestContext( request ) )
+
+
+def profile(request):
+    '''Calculates and returns a profile.
+
+    :returns: JSON -- profile representation
+
+    '''
+    # test URL params: chr21, 13591070, 14845362, z0
+
+    if 'uuid' in request.GET:
+        uuid = request.GET['uuid']
+    else:
+        msg = "Please provide a UUID"
+        logger.error(msg)
+        return HttpResponse(msg)
+
+    if 'seq' in request.GET:
+        seq = request.GET['seq']
+    else:
+        msg = "Please provide a sequence name"
+        logger.error(msg)
+        return HttpResponse(msg)
+
+    if 'start' in request.GET:
+        start = int(request.GET['start'])
+    else:
+        msg = "Please provide a start position"
+        logger.error(msg)
+        return HttpResponse(msg)
+
+    if 'end' in request.GET:
+        end = int(request.GET['end'])
+    else:
+        msg = "Please provide an end position"
+        logger.error(msg)
+        return HttpResponse(msg)
+
+    if 'zoom' in request.GET:
+        zoom = request.GET['zoom']
+    else:
+        msg = "Please provide zoom level"
+        logger.error(msg)
+        return HttpResponse(msg)
+
+    item = get(uuid)
+
+    tdf_file = TDFFile(item.data_file.get_absolute_path())
+    tdf_file.cache()
+
+    profile = tdf_file.get_profile(seq, zoom, ["mean"], start_location=start, end_location=end )
+
+    return HttpResponse( simplejson.dumps( profile ), mimetype='application/json' )     
