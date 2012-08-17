@@ -48,6 +48,20 @@ class _FileServerItem(models.Model):
 
     objects = _FileServerItemManager()
 
+    def index(self, **kwargs):
+        '''A placeholder method to be overridden by subclasses
+        
+        '''
+        logger.error("_FileServerItem with data file UUID '%s' does not support indexing", self.data_file.uuid)
+        return False
+
+    def profile(self, **kwargs):
+        '''A placeholder method to be overridden by subclasses
+        
+        '''
+        logger.error("_FileServerItem with data file UUID '%s' does not return profiles", self.data_file.uuid)
+        return False
+
 
 class TDFItem(_FileServerItem):
     '''Represents a TDF file that is not linked to a data file.
@@ -55,6 +69,33 @@ class TDFItem(_FileServerItem):
     '''
     def __unicode__(self):
         return self.data_file.uuid
+
+    def index(self, update=False):
+        '''Create index for the TDF file.
+    
+        :param update: Flag indicating whether to update existing index.
+        :type update: bool.
+        :returns: bool -- True if success, False if failure.
+
+        '''
+        logger.info("Indexing TDFItem")
+        return True
+
+    def profile(self, seq, start, end, zoom):
+        '''Calculates and returns a profile.
+
+        :param seq: Sequence.
+        :type seq: str.
+        :param start: Start position.
+        :type start: int.
+        :param end: End position.
+        :type end: int.
+        :param zoom: Zoom level.
+        :type zoom: int.
+        :returns: JSON?
+        
+        '''
+        pass
 
 
 class BAMItem(_FileServerItem):
@@ -69,8 +110,35 @@ class BAMItem(_FileServerItem):
         else:
             return self.data_file.uuid
 
+    def index(self, update=False):
+        '''Create indices for data and TDF files as appropriate.
+    
+        :param update: Flag indicating whether to update an existing index.
+        :type update: bool.
+        :returns: BAMItem instance or None if there was an error.
+
+        '''
+        logger.info("Indexing BAMItem")
+        return True
+
+    def profile(self, seq, start, end, zoom):
+        '''Calculates and returns a profile.
+        
+        :param seq: Sequence.
+        :type seq: str.
+        :param start: Start position.
+        :type start: int.
+        :param end: End position.
+        :type end: int.
+        :param zoom: Zoom level.
+        :type zoom: int.
+        :returns: JSON?
+        
+        '''
+        pass
+
     def update(self, tdf_uuid):
-        '''Associate BAM file with a TDF file.
+        '''Associate the BAM file with a new TDF file.
 
         :param tdf_uuid: UUID of the TDF file.
         :type tdf_uuid: str.
@@ -89,7 +157,7 @@ class BAMItem(_FileServerItem):
                 logger.error("Failed updating BAMFileItem\n%s", e.message)
                 return False
         else:
-            logger.error("Failed updating BAMFileItem: specified UUID does not belong to any file.")
+            logger.error("Failed updating BAMFileItem")
             return False
 
         logger.info("BAMFileItem updated")
@@ -107,7 +175,7 @@ def add(data_file_uuid, aux_file_uuid=None, index=False, update=False):
     :type index: bool.
     :param update: ?
     :type update: bool. 
-    :returns: a child of the FileStoreItem -- new model instance or None if there was an error.
+    :returns: instance of a _FileServerItem subclass or None if there was an error.
 
     '''
     data_file = FileStoreItem.objects.get_item(uuid=data_file_uuid)
@@ -126,11 +194,11 @@ def add(data_file_uuid, aux_file_uuid=None, index=False, update=False):
 
 
 def get(uuid):
-    '''Returns an instance of a child of the FileServerItem that has a data_file with the specified UUID.
+    '''Returns an instance of a _FileServerItem subclass that has a data_file with the specified UUID.
 
     :param uuid: UUID of a data file.
     :type uuid: str.
-    :returns: a child of the FileServerItem or None if not found. 
+    :returns: instance of a _FileServerItem subclass or None if not found. 
 
     '''
     item = _FileServerItem.objects.get_item(uuid=uuid)
@@ -144,7 +212,7 @@ def get(uuid):
 
 
 def delete(uuid):
-    '''Deletes an instance of a child of the FileServerItem that has a data_file with the specified UUID.
+    '''Deletes an instance of a FileServerItem subclass that has a data_file with the specified UUID.
 
     :param uuid: UUID of a data file.
     :type uuid: str.
@@ -163,16 +231,26 @@ def delete(uuid):
         return False
 
 
-def index(uuid, update=bool):
+def index(uuid, update=False):
     '''Create indices for data and auxiliary files as appropriate.
 
     :param uuid: UUID of a data file.
     :type uuid: str.
     :param update: Flag indicating whether to update an existing index.
     :type update: bool.
-    :returns: a child of the FileServerItem or None if there was an error.
+    :returns: instance of _FileServerItem subclass or None if there was an error.
 
     '''
+    item = get(uuid)
+    if item:
+        if item.index(update=update):
+            return item
+        else:
+            logger.error("Indexing failed")
+            return None
+    else:
+        logger.error("_FileServerItem with data file UUID '%s' does not exist", uuid)
+        return None
 
 
 @transaction.commit_manually
@@ -191,12 +269,14 @@ def _add_bam(data_file, tdf_file_uuid=None, index=False):
     
     '''
 
+    # check if we can get the TDF file
     if tdf_file_uuid:
         tdf_file = FileStoreItem.objects.get_item(tdf_file_uuid)
     else:
         tdf_file = None
         logger.debug("TDF file UUID was not provided")
 
+    # create BAMItem instance
     try:
         item = BAMItem.objects.create(data_file=data_file, tdf_file=tdf_file)
     except (IntegrityError, ValueError) as e:
@@ -204,7 +284,9 @@ def _add_bam(data_file, tdf_file_uuid=None, index=False):
         logger.error("Failed to create BAMItem\n%s", e.message)
         return None
 
-    #TODO: indexing and caching
+    # create index
+    if index:
+        item.index()
 
     transaction.commit()
     logger.info("BAMItem created")
@@ -222,6 +304,7 @@ def _add_tdf(data_file, index=False):
     :returns: TDFItem -- newly created TDFItem model instance or None if there was an error.
 
     '''
+    # create TDFItem instance
     try:
         item = TDFItem.objects.create(data_file=data_file)
     except (IntegrityError, ValueError) as e:
@@ -229,7 +312,9 @@ def _add_tdf(data_file, index=False):
         logger.error("Failed to create TDFItem\n%s", e.message)
         return None
 
-    #TODO: indexing and caching
+    # create index
+    if index:
+        item.index()
 
     transaction.commit()
     logger.info("TDFItem created")
