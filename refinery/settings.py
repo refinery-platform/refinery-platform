@@ -198,6 +198,11 @@ LOGGING = {
         'verbose': {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
+        'default': {
+            'format': '%(asctime)s %(levelname)-8s %(name)s %(funcName)s: %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
+
     },
     'handlers': {
         'sentry': {

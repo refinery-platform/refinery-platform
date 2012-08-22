@@ -325,4 +325,4 @@ def profile(request):
 
     profile = tdf_file.get_profile(seq, zoom, ["mean"], start_location=start, end_location=end )
 
-    return HttpResponse( simplejson.dumps( profile ), mimetype='application/json' )     
+    return HttpResponse(simplejson.dumps(profile), mimetype='application/json')     
