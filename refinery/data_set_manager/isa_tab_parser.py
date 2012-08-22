@@ -891,11 +891,9 @@ class IsaTabParser:
         except:
             pass
         
-        try:
+        if preisa_archive:
             self._current_investigation.pre_isarchive_file = create(preisa_archive, permanent=True)
             import_file(self._current_investigation.pre_isarchive_file)
-        except:
-            pass
         
         return self._current_investigation
         
