@@ -264,9 +264,10 @@ class FileStoreItem(models.Model):
         :returns: True if the datafile is a symlink, False if not.
 
         '''
-        try:
-            return os.path.islink(self.get_absolute_path())
-        except TypeError:
+        path = self.get_absolute_path()
+        if path:
+            return os.path.islink(path)
+        else:
             logger.error("Path cannot be None")
             return False
 

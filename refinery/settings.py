@@ -109,6 +109,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.static',
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
+    "core.context_processors.extra_context",
 )
 
 MIDDLEWARE_CLASSES = (
@@ -201,6 +202,11 @@ LOGGING = {
         'verbose': {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
+        'default': {
+            'format': '%(asctime)s %(levelname)-8s %(name)s %(funcName)s: %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
+
     },
     'handlers': {
         'sentry': {
@@ -304,6 +310,9 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
 # used to replaces spaces in the names of dynamic fields in Solr indexing
 REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = "_"
+
+# path to CSS used to style Bootstrap (relative to STATIC_URL)
+REFINERY_BOOTSTRAP_CSS = "js/bootstrap/css/bootstrap.css"
 
 # import local settings
 from settings_local import *
