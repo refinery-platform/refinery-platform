@@ -137,7 +137,7 @@ ProfileViewer = function(elemid, options) {
       .on("mouseup.drag",   self.mouseup())
       .on("touchend.drag",  self.mouseup());
 
-  this.redraw()();
+  //this.redraw()();
 };
   
 //
@@ -427,7 +427,7 @@ ProfileViewer.prototype.redraw = function() {
     gye.append("line")
         .attr("stroke", stroke)
         .attr("x1", 0)
-        .attr("x2", self.size.width);
+        .attr("x2", self.size.width);        
 
     gye.append("text")
         .attr("class", "axis")
@@ -488,3 +488,54 @@ ProfileViewer.prototype.yaxis_drag = function(d) {
     self.downy = self.y.invert(p[1]);
   }
 };
+
+
+// Resizes profile viewer depending on browser width
+ProfileViewer.prototype.browser_resize = function(options) {
+  var self = this;
+  
+  this.cx = options.width || this.cx;
+  //this.cy = options.height || this.cy;
+  
+  this.size = {
+    "width":  this.cx - this.padding.left - this.padding.right,
+    "height": this.cy - this.padding.top  - this.padding.bottom
+  };
+  
+  // x-scale
+  this.x = d3.scale.linear()
+      .domain([this.options.xmin, this.options.xmax])
+      .range([0, this.size.width]);
+
+  // drag x-axis logic
+  this.downx = Math.NaN;
+
+  // y-scale (inverted domain)
+  this.y = d3.scale.linear()
+      .domain([this.options.ymax, this.options.ymin])
+      .nice()
+      .range([0, this.size.height])
+      .nice();
+ 
+  // resizes d3 container svg element 
+  d3.select(this.chart).select("svg")
+  	  .attr("width",  this.cx - this.padding.right)
+      .attr("height", this.cy)
+  
+  // resizes plot
+  this.plot 
+      .attr("width", this.size.width)
+      .attr("height", this.size.height)
+ 
+  // resizes svg window and viewBox    
+  this.vis.select("svg")
+      .attr("top", 0)
+      .attr("left", 0)
+      .attr("width", this.size.width)
+      .attr("height", this.size.height)
+      .attr("viewBox", "0 0 "+this.size.width+" "+this.size.height)
+      .attr("class", "line")
+ 
+  this.redraw()();
+  };
+

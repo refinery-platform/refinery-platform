@@ -88,7 +88,7 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    #'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # Overwritten in settings_local.py
@@ -199,6 +199,11 @@ LOGGING = {
         'verbose': {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
+        'default': {
+            'format': '%(asctime)s %(levelname)-8s %(name)s %(funcName)s: %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
+
     },
     'handlers': {
         'sentry': {
@@ -296,6 +301,9 @@ AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 
 # relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
 FILE_STORE_DIR = 'files'
+
+# To keep uploaded files always on disk
+FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
 # used to replaces spaces in the names of dynamic fields in Solr indexing
 REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = "_"
