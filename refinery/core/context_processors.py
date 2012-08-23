@@ -11,4 +11,4 @@ from django.conf import settings
 
 def extra_context(context):
     # return the value you want as a dictionnary. you may add multiple values in there.
-    return { 'REFINERY_BOOTSTRAP_CSS': settings.REFINERY_BOOTSTRAP_CSS }
+    return { "REFINERY_CSS": settings.REFINERY_CSS, "REFINERY_MAIN_LOGO": settings.REFINERY_MAIN_LOGO, "REFINERY_INNER_NAVBAR_HEIGHT": settings.REFINERY_INNER_NAVBAR_HEIGHT }
