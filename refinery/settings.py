@@ -311,8 +311,15 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 # used to replaces spaces in the names of dynamic fields in Solr indexing
 REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = "_"
 
-# path to CSS used to style Bootstrap (relative to STATIC_URL)
-REFINERY_BOOTSTRAP_CSS = "js/bootstrap/css/bootstrap.css"
+# list of paths to CSS files used to style Refinery pages (relative to STATIC_URL)
+REFINERY_CSS = [ "js/bootstrap/css/bootstrap.css" ]
+
+# set height of navigation bar (e.g. to fit a logo)
+REFINERY_INNER_NAVBAR_HEIGHT = 20
+
+# supply a path to a logo that will become part of the branding (see navbar height correctly!)
+REFINERY_MAIN_LOGO = ""
+
 
 # import local settings
 from settings_local import *
