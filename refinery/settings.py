@@ -109,6 +109,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.static',
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
+    "core.context_processors.extra_context",
 )
 
 MIDDLEWARE_CLASSES = (
@@ -298,6 +299,9 @@ FILE_STORE_DIR = 'files'
 
 # used to replaces spaces in the names of dynamic fields in Solr indexing
 REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = "_"
+
+# path to CSS used to style Bootstrap (relative to STATIC_URL)
+REFINERY_BOOTSTRAP_CSS = "js/bootstrap/css/bootstrap.css"
 
 # import local settings
 from settings_local import *
