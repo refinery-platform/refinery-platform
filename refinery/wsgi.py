@@ -9,9 +9,9 @@ import sys
 #if path not in sys.path:
 #    sys.path.append(path)
 
-sys.path.append('/srv/refinery/Refinery')
+sys.path.append('/srv/refinery/Refinery/refinery', '/srv/refinery/Refinery')
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "refinery.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
 
 # This application object is used by the development server
 # as well as any WSGI server configured to use this file.
