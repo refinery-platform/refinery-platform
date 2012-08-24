@@ -163,8 +163,8 @@ INSTALLED_APPS = (
     'workflow_manager',
     'file_store',
     'file_server',   
+    'visualization_manager',
     'data_set_manager', 
-    'visualization_manager'
 )
 
 # NG: added for django-guardian
