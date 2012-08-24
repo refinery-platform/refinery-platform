@@ -268,7 +268,6 @@ class FileStoreItem(models.Model):
         if path:
             return os.path.islink(path)
         else:
-            logger.error("Path cannot be None")
             return False
 
     def is_local(self):
