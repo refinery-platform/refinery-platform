@@ -190,6 +190,9 @@ rect.active {
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/fisheye.js"></script>
 
 	<!-- Refinery libraries -->
+	<script type="text/javascript">
+		var SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}"
+	</script>	
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/viewers/pivot-matrix.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>
