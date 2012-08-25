@@ -666,6 +666,7 @@ h6 {
   line-height: 1;
   color: inherit;
   text-rendering: optimizelegibility;
+  font-family: "Open Sans", "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;  
 }
 h1 small,
 h2 small,
@@ -675,7 +676,7 @@ h5 small,
 h6 small {
   font-weight: normal;
   line-height: 1;
-  color: #999999;
+  color: rgba( 0, 0, 0, 0.4);
 }
 h1 {
   font-size: 36px;
@@ -714,9 +715,9 @@ h4 small {
   font-size: 14px;
 }
 .page-header {
-  padding-bottom: 9px;
-  margin: 20px 0 30px;
-  border-bottom: 1px solid #eeeeee;
+  padding-bottom: 5px;
+  margin: 20px 0 20px;
+  border-bottom: 1px solid rgba( 0, 0, 0, 0.25);
 }
 ul,
 ol {
@@ -763,10 +764,10 @@ dd {
   margin-left: 130px;
 }
 hr {
-  margin: 20px 0;
+  margin: 10px 0;
   border: 0;
-  border-top: 1px solid #eeeeee;
-  border-bottom: 1px solid #ffffff;
+  border-top: 1px solid #333;
+  border-bottom: 1px solid #222;
 }
 abbr[title] {
   cursor: help;
@@ -2897,24 +2898,25 @@ input[type="submit"].btn.btn-mini {
   margin-left: -20px;
   font-size: 20px;
   font-weight: 600;
-  color: #555555;
-  color: #fff;
+  color: #bbb;
   text-shadow: 1px 1px 4px #000;
   font: italic bold large "Arvo", "Lucida Grande", Lucida, Verdana, sans-serif;
   letter-spacing: 0.1em;
 }
 .navbar .brand:hover {
   text-decoration: none;
+  color: #fff;
 }
 .navbar-text {
   margin-bottom: 0;
   line-height: 40px;
+  color: #bbb;
 }
 .navbar-link {
   color: #555555;
 }
 .navbar-link:hover {
-  color: #333333;
+  color: #fff;
 }
 .navbar .divider-vertical {
   height: 40px;
@@ -3057,7 +3059,7 @@ input[type="submit"].btn.btn-mini {
 .navbar .nav > li > a {
   float: none;
   padding: 10px 15px 10px;
-  color: #ffffff;
+  color: #bbb;
   font-weight: 600;
   text-decoration: none;
   text-shadow: 1px 1px 4px #000;
@@ -3068,7 +3070,7 @@ input[type="submit"].btn.btn-mini {
 .navbar .nav > li > a:focus,
 .navbar .nav > li > a:hover {
   background-color: transparent;
-  color: #333333;
+  color: #fff;
   text-decoration: none;
 }
 .navbar .nav > .active > a,
@@ -4388,7 +4390,7 @@ a.thumbnail:hover {
   min-height: 20px;
   padding: 19px;
   margin-bottom: 20px;
-  background-color: #f5f5f5;
+  background-color: rgba( 20, 20, 20, 0.1);
   border: 1px solid #e3e3e3;
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;

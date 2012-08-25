@@ -57,10 +57,8 @@
             <ul class="nav">
               <li class="{{ navbar_class_home }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url home %}">Home</a></li>
               <li class="{{ navbar_class_search }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url search %}">Search</a></li>
-              <li class="{{ navbar_class_about }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url about %}">About</a></li>
-              <li class="{{ navbar_class_contact }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url contact %}">Contact</a></li>
-              <li class="{{ navbar_class_statistics }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url statistics %}">Statistics</a></li>
             </ul>
+          </div><!--/.nav-collapse -->
               <div id="auth_area">
               <p class="navbar-text pull-right" style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;">
               	<!-- <Logged in as <a href="#">username</a> -->
@@ -73,7 +71,6 @@
         			{% endblock %}
               </p>
             </div>
-          </div><!--/.nav-collapse -->
         </div>
       </div>
     </div>
@@ -101,24 +98,27 @@
         			
         		</div>
         	</div>
-       </div>
-    
-    <div id="footer">
-    	<hr>
-        <small>Copyright &copy; 2012 <a href="http://compbio.med.harvard.edu">Park Lab</a> | <a href="http://cbmi.med.harvard.edu">Center for Biomedical Informatics</a> at <a href="http://hms.harvard.edu">Harvard Medical School</a>. All rights reserved.</small>
-    </div>
-        
+       </div>    
     </div>
 
-	<!--
 	<div class="navbar navbar-fixed-bottom">
       <div class="navbar-inner header_bkgd">
         <div class="container-fluid">
-          <a class="brand" href="/"><img src={{ STATIC_URL }}{{ REFINERY_MAIN_LOGO }}/>&nbsp;Refinery</a>
+			<div id="footer">
+            	<p class="navbar-text pull-left">
+	          		Refinery is a project of the <a href="http://compbio.med.harvard.edu">Park Lab</a> | <a href="http://cbmi.med.harvard.edu">Center for Biomedical Informatics</a> at <a href="http://hms.harvard.edu">Harvard Medical School</a>.</small>
+				</p>		    
+		    </div>		    
+          <div class="nav-collapse pull-right">
+            <ul class="nav">
+              <li class="{{ navbar_class_contact }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url contact %}">Contact</a></li>
+              <li class="{{ navbar_class_statistics }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url statistics %}">Statistics</a></li>
+              <li class="{{ navbar_class_about }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url about %}">About</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->        
         </div>
       </div>
     </div>
-	-->
 
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery/jquery-1.7.2.js"></script>
     
