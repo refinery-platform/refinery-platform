@@ -320,6 +320,9 @@ REFINERY_INNER_NAVBAR_HEIGHT = 20
 # supply a path to a logo that will become part of the branding (see navbar height correctly!)
 REFINERY_MAIN_LOGO = ""
 
+# supply a Google analytics id "UA-..." (if set to "" tracking will be deactivated)
+REFINERY_GOOGLE_ANALYTICS_ID = ""
+
 
 # import local settings
 from settings_local import *
