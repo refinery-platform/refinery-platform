@@ -21,24 +21,13 @@
       }
     </style>
     
+    <link href="{{ STATIC_URL }}core/boot_style.css" rel="stylesheet">
+
     <link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
-    
-    <!-- <link rel="stylesheet" href="{{ STATIC_URL }}js/bootstrap/css/style.css"> -->
-    <link rel="stylesheet" href="{{ STATIC_URL }}core/boot_style.css">
-    
-    <!--
-    <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/jquery.dataTables.js"></script>		
-    <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/DT_bootstrap.js"></script>
-    -->
-    		
-    <!-- <script language="javascript" type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script> -->
-	
-	
-    
+	    
     {% block head_html %}{% endblock %}
     <title>Refinery {% block title %}{% endblock %}</title>
-    
-    
+        
     {% block tracking %}
     
     {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}    
@@ -77,7 +66,6 @@
               <li class="{{ navbar_class_home }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url home %}">Home</a></li>
               <li class="{{ navbar_class_search }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url search %}">Search</a></li>
             </ul>
-          </div><!--/.nav-collapse -->
               <div id="auth_area">
               <p class="navbar-text pull-right" style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;">
               	<!-- <Logged in as <a href="#">username</a> -->
@@ -90,6 +78,7 @@
         			{% endblock %}
               </p>
             </div>
+          </div><!--/.nav-collapse -->
         </div>
       </div>
     </div>

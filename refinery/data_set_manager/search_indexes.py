@@ -62,6 +62,12 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 value = annotation.attribute_value
             else: 
                 value = annotation.attribute_value + " " + annotation.attribute_value_unit
+            
+            # replace problematic characters in field names
+            name = string.replace( name, "/", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
+            name = string.replace( name, "(", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
+            name = string.replace( name, ")", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
+            name = string.replace( name, "#", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
                 
             name = string.replace( name, " ", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
 
