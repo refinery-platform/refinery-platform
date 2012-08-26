@@ -323,18 +323,4 @@ class Command(BaseCommand):
         for data_set in data_set_objects:
             print(str(data_set))
             
-        workflow_engine_objects = []
-        
-        WorkflowEngine.objects.all().delete()
-        
-        for instance in Instance.objects.all():
-            workflow_engine_object = WorkflowEngine.objects.create( instance=instance, name=instance.description, summary=instance.base_url + " " + instance.api_key )
-            # TODO: introduce group managers and assign ownership to them        
-            workflow_engine_object.set_manager_group( ExtendedGroup.objects.public_group().manager_group )
-            #workflow_engine_object.share( ExtendedGroup.objects.public_group() )
-                    
-            workflow_engine_objects.append( workflow_engine_object )
-        
-        for workflow_engine in workflow_engine_objects:
-            print(str(workflow_engine))
         

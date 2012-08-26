@@ -64,7 +64,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 		+ "("
 			+ "study_uuid:" + studyUuid
 			+ " AND " + "assay_uuid:" + assayUuid
-			+ " AND " + "type:" + nodeType
+			+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + ")"
 	   	+ ")"
 	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
 	   	+ "&" + "facet.limit=-1"; // unlimited number of facet values (otherwise some values will be missing)	   	
@@ -78,7 +78,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 		var facetValues = facets[facet];
 		var filter = null; 
 		var filterValues = [];
-		
+						
 		for ( var facetValue in facetValues ) {
 			if ( facetValues.hasOwnProperty( facetValue ) )
 			{
@@ -94,10 +94,22 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 					filterValues.push( facetValue );
 				}
 			}				
-		}
+		}		
+		
+		/*
+		facet = facet.replace( /\ /g, "\\ " );
+		facet = facet.replace( /\//g, "\/" );
+		facet = facet.replace( /\#/g, "%23" );
+		facet = facet.replace( /\&/g, "%26" );
+		facet = facet.replace( /\(/g, "\\(" );
+		facet = facet.replace( /\)/g, "\\)" );
+		facet = facet.replace( /\+/g, "%2B" );
+		facet = facet.replace( /\:/g, "%3A" );													
+		*/
 
 		if ( filterValues.length > 0 ) {
-			filter = facet.replace( /\ /g, "_" );								
+			filter = facet.replace( /\ /g, "_" );
+			
 			url += "&fq={!tag=" + filter + "}" + facet.replace( /\ /g, "\\ " ) + ":(" + filterValues.join( " OR " ) + ")";													
 		}
 		
@@ -127,12 +139,13 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 				field = field.replace( /\ /g, "\\ " );
 				field = field.replace( /\//g, "%2F" );
 				field = field.replace( /\#/g, "%23" );
+				field = field.replace( /\&/g, "%26" );
 				field = field.replace( /\(/g, "\\(" );
 				field = field.replace( /\)/g, "\\)" );
 				field = field.replace( /\+/g, "%2B" );
 				field = field.replace( /\:/g, "%3A" );
 				fieldNames.push( field );
-			}
+			}			
 		}				
 	}	
 	url += "&fl=" + fieldNames.join( ",");
@@ -153,6 +166,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 					field = field.replace( /\ /g, "\\ " );
 					field = field.replace( /\//g, "%2F" );
 					field = field.replace( /\#/g, "%23" );
+					field = field.replace( /\&/g, "%26" );
 					field = field.replace( /\(/g, "\\(" );
 					field = field.replace( /\)/g, "\\)" );
 					field = field.replace( /\+/g, "%2B" );
@@ -170,12 +184,13 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 	// pivot fields: facet.pivot 
 	// ------------------------------------------------------------------------------
 	
-	var pivotQuery = pivots.join( "," );
-	
-	if ( pivotQuery.length > 0 )
-	{
-		url += "&facet.pivot=" + pivotQuery;
-	}		
+	if ( pivots.length > 1 ) {
+		var pivotQuery = pivots.join( "," );
+
+		if ( pivotQuery.length > 0 ) {
+			url += "&facet.pivot=" + pivotQuery;
+		}		
+	}
 	
 	$( "#url-view" ).html( "" );
 	$( "<a/>", { href: url + "&indent=on", html: "Solr Query" } ).appendTo( "#url-view" );
@@ -209,6 +224,12 @@ function prettifyFieldName( name, isTitle )
 		name = "Material Type";
 	}
 
+	var position = name.indexOf( "type_" );
+	if ( position == 0 ) {
+		name = "Type";
+	}
+
+
 	name = name.replace( /\_/g, " " );
 	
 	if ( isTitle )
@@ -233,6 +254,7 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 				// facets
 				if ( ( attribute.indexOf( "_Characteristics_" ) != -1 ) ||
 					 ( attribute.indexOf( "_Factor_" ) != -1 ) ||
+					 ( attribute.indexOf( "type_" ) == 0 ) ||
 					 ( attribute.indexOf( "_Material_Type_" ) != -1 ) ) {
 					facets[attribute] = [];
 					
