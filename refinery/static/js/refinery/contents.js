@@ -5,7 +5,8 @@
 
 var urlComponents = document.location.href.split("/");	
 	
-var solrRoot = "http://127.0.0.1:8983/solr/data_set_manager/select";
+//var solrRoot = "http://127.0.0.1:8983/solr/data_set_manager/select";
+var solrRoot = SOLR_BASE_URL + "/data_set_manager/select";
 var solrQuery = "q=django_ct:data_set_manager.node";
 var solrSettings = "wt=json&json.wrf=?&facet=true";
 
@@ -760,7 +761,7 @@ $( "#igv-session-link" ).on( "click", function() {
 	getField( testAssayUuid, testStudyUuid, testNodeType, "file_uuid", function( uuids ) {
 		
 		var limit = 20;
-		var newUrl = "http://127.0.0.1:8000/visualization_manager/igv_session?uuids=" + uuids.join( "," );
+		var newUrl = "/visualization_manager/igv_session?uuids=" + uuids.join( "," );
 		
 		if ( uuids.length > limit ) {
 			var result = confirm( "Do you really want to open IGV with " + uuids.length + " tracks?" );
@@ -782,7 +783,7 @@ $( "#profile-viewer-session-link" ).on( "click", function() {
 	getField( testAssayUuid, testStudyUuid, testNodeType, "file_uuid", function( uuids ) {
 		
 		var limit = 1;
-		var newUrl = "http://127.0.0.1:8000/visualization_manager/profile_viewer_session?uuid=" + uuids[0];
+		var newUrl = "/visualization_manager/profile_viewer_session?uuid=" + uuids[0];
 		
 		console.log( newUrl );
 		window.location = newUrl;			

@@ -45,3 +45,4 @@ refinery/celeryev.pid
 .settings/*
 *.conflict
 refinery/solr/*/data
+refinery/refinery/*
