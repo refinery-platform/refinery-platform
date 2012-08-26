@@ -41,11 +41,11 @@
     
     {% block tracking %}
     
-    {% if REFINERY_MAIN_LOGO != "" %}    
+    {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}    
 	<script type="text/javascript">
 	
 	  var _gaq = _gaq || [];
-	  _gaq.push(['_setAccount', '{{ REFINERY_GOOLGE_ANALYTICS_ID }}']);
+	  _gaq.push(['_setAccount', '{{ REFINERY_GOOGLE_ANALYTICS_ID }}']);
 	  _gaq.push(['_trackPageview']);
 	
 	  (function() {
