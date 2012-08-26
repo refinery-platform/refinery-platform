@@ -58,5 +58,53 @@
             "api_key": "dcd0af348cc5400d74024f9261c97126",
             "api_url": "api"
         }
+    },
+    {
+        "pk": 6,
+        "model": "galaxy_connector.instance",
+        "fields": {
+            "data_url": "datasets",
+            "description": "refinery on Orchestra VM",
+            "base_url": "http://refinery.med.harvard.edu:8080/",
+            "staging_path": "/srv/refinery-galaxy/Galaxy/galaxy-central",
+            "api_key": "66c32263c260f3150d373635c81d5645",
+            "api_url": "api"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "galaxy_connector.datafile",
+        "fields": {
+            "path": "test_small/test_elate7_input.fastq",
+            "kind": "input",
+            "description": "chip-seq input"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "galaxy_connector.datafile",
+        "fields": {
+            "path": "test_small/test_elate7_hp2.fastq ",
+            "kind": "hp2 chip-seq file",
+            "description": "hp2 modification"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "galaxy_connector.datafile",
+        "fields": {
+            "path": "test_small/small_input.fastq",
+            "kind": "fastq experiment fil",
+            "description": "input"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "galaxy_connector.datafile",
+        "fields": {
+            "path": "test_small/small_hp1a.fastq",
+            "kind": "fastq experiment fil",
+            "description": "test file, modification"
+        }
     }
 ]
