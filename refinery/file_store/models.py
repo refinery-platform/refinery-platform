@@ -18,7 +18,7 @@ Example: FILE_STORE_DIR = 'files'
 
 import os
 import logging
-from urlparse import urlparse
+from urlparse import urlparse, urljoin
 from django.conf import settings
 from django.dispatch import receiver
 from django.db import models
@@ -365,15 +365,19 @@ class FileStoreItem(models.Model):
         
     def get_url(self):
         '''
-        Return URL of the FileStoreItem.
+        Return absolute URL of the FileStoreItem.
 
-        :returns: str -- URL of the FileStoreItem: local URL or source if there's no local copy
+        :returns: str -- local URL (None if file doesn't exist) or source if it's a remote file
 
         '''
         if self.is_local():
-            return self.datafile.url
+            return urljoin(settings.MEDIA_HOST, self.datafile.url)
         else:
-            return self.source
+            if os.path.abspath(self.source):
+                # in case source is a file system path but file doesn't exist on disk
+                return None
+            else:
+                return self.source
 
 #===============================================================================
 #    def copy_datafile(self):
