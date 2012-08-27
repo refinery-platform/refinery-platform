@@ -73,6 +73,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             name = string.replace( name, "(", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
             name = string.replace( name, ")", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
             name = string.replace( name, "#", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
+            name = string.replace( name, ",", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
                 
             name = string.replace( name, " ", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
 
