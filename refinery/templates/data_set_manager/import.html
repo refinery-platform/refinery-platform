@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
 {% block head_html %}
-<link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap-combobox.css" rel="stylesheet">
-<script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap-combobox.js"></script>
+<!-- <link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap-combobox.css" rel="stylesheet"> -->
+<!-- <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap-combobox.js"></script> -->
 <script language="javascript" type="text/javascript" src="http://fgnass.github.com/spin.js/dist/spin.min.js"></script>
 <script language="javascript" type="text/javascript">
     var opts = {
     lines: 13, // The number of lines to draw
-    length: 7, // The length of each line
-    width: 4, // The line thickness
+    length: 5, // The length of each line
+    width: 3, // The line thickness
     radius: 10, // The radius of the inner circle
     corners: 1, // Corner roundness (0..1)
     rotate: 0, // The rotation offset
@@ -26,13 +26,17 @@
 {% endblock %}
 
 {% block subheader %}
-ISA-Tab import
+<div class="page-header">
+  	<h1>ISA-Tab Importer <small id="import-message"></small></h1>
+</div>
 {% endblock %}
 
 {% block content %}
 <form id="isaTabImportForm" enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+	<div id="import-errors" class="alert alert-error">
 	<p>{{ error }}</p>
 	<p>{{ form.non_field_errors }}</p>
+	</div>
 	<div>
 		<p>Upload file from disk:</p>
 		<p>
@@ -44,12 +48,19 @@ ISA-Tab import
 			{{ form.isa_tab_url.errors }}
 			{{ form.isa_tab_url }}
 		</p>
-		<p id="spinner"></p>
 	</div>
-	<input type="submit" value="Import" />
+	<input id="import-button" type="submit" value="Import"/>
+	<span style="display: inline;" id="spinner"></span>
 </form>
-<script language="javascript" type="text/javascript">
-    var target = document.getElementById('spinner');
-    var spinner = new Spinner(opts).spin(target);
-</script>
+{% endblock %}
+
+{% block script %}
+	<script language="javascript" type="text/javascript">    	
+    	$("#import-button").on( "click", function() {
+    		$("#import-errors").html( "")
+    		var target = document.getElementById('spinner');    
+    		var spinner = new Spinner(opts).spin(target);
+    		$("#import-message").html( "Running ...")
+    	});
+	</script>
 {% endblock %}

@@ -66,6 +66,6 @@ urlpatterns = patterns('',
     url(r'^typeahead/$', search_typeahead),
     #url(r'^solr/(?P<query>.+/$)', solr ),
     url(r'^solr/$', solr ),
-) + static( "/", document_root=MEDIA_ROOT)
+) + static( MEDIA_URL, document_root=MEDIA_ROOT)
 # for "static" see https://docs.djangoproject.com/en/dev/howto/static-files/#serving-other-directories
 

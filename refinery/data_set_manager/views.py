@@ -92,6 +92,7 @@ class ImportISATabFileForm(forms.Form):
         else:
             raise forms.ValidationError("Please provide either a file or a URL") 
 
+
 @login_required()
 def import_isa_tab(request):
     '''Process imported ISA-Tab file sent via POST request
