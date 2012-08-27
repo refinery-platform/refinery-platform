@@ -29,7 +29,7 @@
 		<p>
 			{% for fs in fs_files %}
 				{% ifequal result.file_store_uuid fs.uuid %}
-					<a href="{{fs.datafile.url}}">{{result.file_name}}</a>
+					<a href="{{fs.get_url}}">{{result.file_name}}</a>
 				{% endifequal %}
 			{% endfor %}
 			
