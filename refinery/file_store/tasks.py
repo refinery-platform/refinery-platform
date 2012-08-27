@@ -122,10 +122,10 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
                 percent_done = localfilesize * 100. / remotefilesize
             else:
                 percent_done = 0
-                import_file.update_state(
-                    state="PROGRESS",
-                    meta={"percent_done": "%3.2f%%" % (percent_done), 'current': localfilesize, 'total': remotefilesize}
-                    )
+            import_file.update_state(
+                state="PROGRESS",
+                meta={"percent_done": "%3.2f%%" % (percent_done), 'current': localfilesize, 'total': remotefilesize}
+                )
     
         # cleanup
         #TODO: delete temp file if download failed 

@@ -65,9 +65,9 @@
         "fields": {
             "data_url": "datasets",
             "description": "refinery on Orchestra VM",
-            "base_url": "http://refinery.med.harvard.edu:8080/",
+            "base_url": "http://refinery.med.harvard.edu:8080",
             "staging_path": "/srv/refinery-galaxy/Galaxy/galaxy-central",
-            "api_key": "66c32263c260f3150d373635c81d5645",
+            "api_key": "628e121e280e022056c62e2bbf83d7fe",
             "api_url": "api"
         }
     },
