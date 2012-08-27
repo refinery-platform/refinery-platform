@@ -285,35 +285,41 @@ class IsaTabParser:
             if not re.search(r'%s$' % self.additional_raw_data_file_extension, node_name):
                 node_name += self.additional_raw_data_file_extension
         
-        if ( header_components[0] in Node.ASSAYS | { Node.SAMPLE, Node.SOURCE, Node.EXTRACT, Node.LABELED_EXTRACT, Node.DATA_TRANSFORMATION, Node.NORMALIZATION } ) or ( header_components[0] in Node.FILES and len( node_name ) > 0 ):
+        if ( header_components[0] in Node.ASSAYS | { Node.SAMPLE, Node.SOURCE, Node.EXTRACT, Node.LABELED_EXTRACT, Node.DATA_TRANSFORMATION, Node.NORMALIZATION } and len( node_name ) > 0 ) or ( header_components[0] in Node.FILES and len( node_name ) > 0 ):
             if header_components[0] in { Node.SAMPLE, Node.SOURCE }:
                 #print "1  --looking up type " + header_components[0] + " =  " +  row[0].strip() + " in study only (" + str( self._current_study ) + ")"
                 node, is_new = Node.objects.get_or_create( study=self._current_study, type=header_components[0], name=node_name )                
             else:     
                 #print "2    -- looking up type " + header_components[0] + " =  " +  row[0].strip() + "in study AND assay (" + str( self._current_study ) + ", " +  str( self._current_assay ) + ")"
                 node, is_new = Node.objects.get_or_create( study=self._current_study, assay=self._current_assay, type=header_components[0], name=node_name )
-        else:
-            #print "3      -- looking up type " + header_components[0] + " =  " +  row[0].strip() + "in study AND assay (" + str( self._current_study ) + ", " +  str( self._current_assay ) + ")"
-            node = Node.objects.create( study=self._current_study, assay=self._current_assay, type=header_components[0], name=node_name )
-         
-        # this node represents a file - add the file to the file store and store the file UUID in the node
-        if is_new and header_components[0] in Node.FILES and node_name is not "":
-            uuid = create( source=node_name )
-            
-            if uuid is not None:
-                node.file_uuid = uuid
-                node.save()
+
+            # this node represents a file - add the file to the file store and store the file UUID in the node
+            if is_new and header_components[0] in Node.FILES and node_name is not "":
+                uuid = create( source=node_name )
+                
+                if uuid is not None:
+                    node.file_uuid = uuid
+                    node.save()
+                else:
+                    logger.exception( "Unable to add " + node_name + " to file store as a temporary file." )        
+                                                
+            if is_new:
+                logger.info( "New node " + str( node ) + " created." )
             else:
-                logger.exception( "Unable to add " + node_name + " to file store as a temporary file." )        
-                                            
-        if is_new:
-            logger.info( "New node " + str( node ) + " created." )
+                logger.info( "Node " + str( node ) + " retrieved." )
+        
         else:
-            logger.info( "Node " + str( node ) + " retrieved." )
+            if len( node_name ) > 0: 
+                #print "3      -- looking up type " + header_components[0] + " =  " +  row[0].strip() + "in study AND assay (" + str( self._current_study ) + ", " +  str( self._current_assay ) + ")"
+                node = Node.objects.create( study=self._current_study, assay=self._current_assay, type=header_components[0], name=node_name )
+            else:
+                # do not create empty nodes!
+                node = None
+         
         
         self._current_node = node
         
-        if self._previous_node is not None:
+        if self._previous_node is not None and self._current_node is not None:
             try: 
                 # test if the node has already been created (??? why not use an if statement ???)
                 node.parents.get( to_node_id=self._previous_node.id )
@@ -331,19 +337,24 @@ class IsaTabParser:
         
         # read until we hit the next node
         while not self.is_node( headers[-len(row)] ):
-            if self.is_attribute( headers[-len(row)] ):
-                self._parse_attribute( headers, row )
-            elif self.is_protocol_reference( headers[-len(row)] ):
-                self._parse_protocol_reference( headers, row )
-            else:                
-                logger.error( "Unexpected element " + headers[-len(row)] +
-                                        " when parsing node in line " + str( self._current_reader.line_num ) +
-                                        ", column " + str( len(headers) - len(row) ) + "." )
+            if self._current_node is not None:
+                if self.is_attribute( headers[-len(row)] ):
+                    self._parse_attribute( headers, row )
+                elif self.is_protocol_reference( headers[-len(row)] ):
+                    self._parse_protocol_reference( headers, row )
+                else:                
+                    logger.error( "Unexpected element " + headers[-len(row)] +
+                                            " when parsing node in line " + str( self._current_reader.line_num ) +
+                                            ", column " + str( len(headers) - len(row) ) + "." )
+                    row.popleft()
+            else: # node is none, pop until the next node because attributes can't be attached to anything
                 row.popleft()
-                
-        node.save()
-        self._previous_node = node
-        self._current_node = None
+                                
+        if self._current_node is not None:
+            node.save()
+            self._previous_node = node
+            self._current_node = None
+            
         return node
          
         

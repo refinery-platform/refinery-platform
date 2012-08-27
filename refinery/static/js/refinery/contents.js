@@ -640,13 +640,21 @@ function processDocs( data ) {
 		var check_temp = '<select name="assay_'+ file_uuid +'" id="webmenu" class="btn-mini OGcombobox"> <option></option> </select> <input type="hidden" name="fileurl_' + file_uuid +'" value="' + document.name + '">';
 		
 		s += '<td>' + check_temp + '</td>'
-		for ( entry in document )
+		for ( entry in fields )
 		{
-			if ( document.hasOwnProperty( entry ) && !( hiddenFieldNames.indexOf( entry ) >= 0 ) )
-			{
-				s += "<td>";
-				s += document[entry];
-				s += "</td>";				
+			if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible ) {
+				if ( document.hasOwnProperty( entry ) && !( hiddenFieldNames.indexOf( entry ) >= 0 ) )
+				{
+					s += "<td>";
+					s += document[entry];
+					s += "</td>";				
+				}
+				else // this field does not exist in this result
+				{
+					s += "<td>";
+					s += ""
+					s += "</td>";								
+				}				
 			}
 		}
 		s += "</tr>";

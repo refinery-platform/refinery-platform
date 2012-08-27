@@ -131,7 +131,7 @@ def fix_last_col(file):
         file: name of file to fix
     """
     logger.info("trying to fix the last column if necessary")
-    reader = csv.reader(open(file, 'rb'), dialect='excel-tab')
+    reader = csv.reader(open(file, 'rU'), dialect='excel-tab')
     tempfilename = tempfile.NamedTemporaryFile().name
     writer = csv.writer(open(tempfilename, 'wb'), dialect='excel-tab')
 
@@ -398,7 +398,7 @@ def annotate_nodes(investigation_uuid):
             node_types = get_node_types(study.uuid, assay.uuid, files_only=True, filter_set=Node.FILES)            
             for node_type in node_types:
                 update_annotated_nodes( node_type, study.uuid, assay.uuid, update=True )
-                index_annotated_nodes( node_type, study.uuid, assay.uuid, update=True )
+                index_annotated_nodes( node_type, study.uuid, assay.uuid )
                     
 
 @task()

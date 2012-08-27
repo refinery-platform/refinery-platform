@@ -339,7 +339,7 @@ def update_annotated_nodes( node_type, study_uuid, assay_uuid=None, update=False
     #return ( serializers.serialize("python", result, ensure_ascii=False ) )
 
 
-def index_annotated_nodes( node_type, study_uuid, assay_uuid=None, update=False ):
+def index_annotated_nodes( node_type, study_uuid, assay_uuid=None ):
         
     # retrieve study and assay ids
     study = Study.objects.filter( uuid=study_uuid )[0]
