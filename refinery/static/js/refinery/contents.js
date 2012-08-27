@@ -613,9 +613,9 @@ function makeTableHeader( leadingExtra, trailingExtra ) {
 		if ( fields.hasOwnProperty( field ) ) {
 			if ( fields[field].isVisible ) {
 				if ( fields[field].direction === "asc" ) {
-					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "&nbsp;<i class=\"icon-arrow-down\"></th>" );				
+					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\"><i class=\"icon-arrow-down\">&nbsp;" + prettifyFieldName( field, true ) + "</th>" );				
 				} else if ( fields[field].direction === "desc" ) {
-					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "&nbsp;<i class=\"icon-arrow-up\"></th>" );				
+					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\"><i class=\"icon-arrow-up\">&nbsp;" + prettifyFieldName( field, true ) + "</th>" );				
 				} else {
 					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "</th>" );									
 				}
