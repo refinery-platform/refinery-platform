@@ -35,7 +35,7 @@ def igv_session( request ):
     fs_item = createIGVsession("hg18", uuids, request.get_host())
     
     # Url for session file 
-    fs_url = "http://" + request.get_host() + "/" + MEDIA_URL + "/" + FILE_STORE_DIR + "/" + fs_item.datafile.url
+    fs_url = fs_item.get_url()
     
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php?sessionURL=" + fs_url
@@ -105,7 +105,7 @@ def createIGVsession(genome, uuids, host_url):
             curr_name = curr_name[len(curr_name)-1]
             
             # full path to selected UUID File
-            curr_url = "http://" + host_url + "/" + MEDIA_URL + "/" + FILE_STORE_DIR + "/" + curr_fs.datafile.url            
+            curr_url = curr_fs.get_url()            
             
             # creates Resource element 
             res = doc.createElement("Resource")
