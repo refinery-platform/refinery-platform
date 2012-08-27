@@ -44,7 +44,7 @@
 	{% endfor %}
 
 	<h3>Files</h3>
-	<p>{{ data_set.get_file_count }} files using {{ data_set.get_file_size }} bytes</p>
+	<p>{{ data_set.get_file_count }} files using {{ data_set.get_file_size|filesizeformat }}</p>
 	
 	
 	<h3>Sharing</h3>
@@ -53,8 +53,8 @@
 
 	{% if data_set.get_groups|length > 0 %}
 	<h4>Groups</h4>
-		<p>
 		{% for perm in data_set.get_groups %}
+		<p>
 				<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
 				{% if perm.read %}
 					<i class="icon-eye-open"></i>
@@ -62,8 +62,8 @@
 				{% if perm.change %}
 					<i class="icon-pencil"></i>
 				{% endif %}
-		{% endfor %}
 		</p>
+		{% endfor %}
 	{% endif %}
 	
 	<h3>History</h3>

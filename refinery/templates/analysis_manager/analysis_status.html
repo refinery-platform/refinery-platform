@@ -31,7 +31,9 @@ function isFinished(result) {
 }
 
 function updateProgress(result, section) { 
-	console.log("updateProgress");
+	console.log("------------- updateProgress");
+	console.log($("#"+section));
+				
 	
 	//console.log(result);
 	//console.log("TEXTTTT")
@@ -48,24 +50,39 @@ function updateProgress(result, section) {
 			var temp_id = '#text_'+result[i].task_id;
 	  		$(temp_id).text(JSON.stringify(result[i]));
 	  		
+	  		console.log(result[i]);
+	  		
 			if (result[i].state == 'PROGRESS') {
+				console.log("PROGRESS ");
+	  			
 				var temp_percent = result[i].percent_done;
 				$(temp_bar).css({ 'width': temp_percent });
+				
+				console.log($("#"+section));
+				
+				//var cur_text = $.trim($("#"+section + " > div").text());
+			    //if (cur_text == 'Pending') {
+			    //	$("#"+section).collapse("show");
+			    //}
+				
 			}
 			// REMOVING ACTIVE CLASS STATUS
 	  		if (result[i].state == 'SUCCESS') {
+	  			console.log("SUCCESS ");
+	  			
 	  			$(temp_bar).css({ 'width': '100%'});
 	  			var temp_bar_class = '#bar_class_'+result[i].task_id;
-	  			//$(temp_bar_class).fadeOut('slow');
+	  			$(temp_bar_class).fadeOut('slow');
 	  			$(temp_bar_class).removeClass('active');
-	  			$("#"+section).collapse("hide");
+	  			//$("#"+section).collapse("hide");
 	  			//$(temp_bar_class).collapse('hide');
 	  			//$("#"+section).collapse("show");
 	  		}
   		}
   		else { 
-	  		console.log("ELEMENT DOES NOT EXIST \n NEED TO CREATE AND APPEND")
 	  		if (result[i].task_id != null) {
+	  			console.log("ELEMENT DOES NOT EXIST \n NEED TO CREATE AND APPEND")
+	  		
 	  			var template = 	"<li><div id=" + result[i].task_id+ "> <div id=text_" + result[i].task_id + ">" + result[i] + "</div>";
 	  			//if (result[i].percent_download != null) {
 	  			//if (result[i].percent_done != null) {
@@ -73,7 +90,7 @@ function updateProgress(result, section) {
 	  			template += "<div class='bar' id='bar_"+ result[i].task_id + "' style='width:{{stat.percent_done}};'></div></div>";
 	  			//} 
 			    template += "</div></li>";
-			    console.log(template);      
+			    //console.log(template);      
 			    
 			    var cur_text = $.trim($("#"+section + " > div").text());
 			    if (cur_text == 'Pending') {
@@ -83,7 +100,7 @@ function updateProgress(result, section) {
 			    	$("#"+section + " > div").append(template);
 			    }
 	
-			    $("#"+section).collapse("show");			
+			    //$("#"+section).collapse("show");			
 		   }
             				
   		}
@@ -104,10 +121,6 @@ function getUpdate() {
      data: {csrfmiddlewaretoken: "{{ csrf_token }}" },
      success: function(result){
      	console.log("ajaxed returned something")
-     	//console.log(result.preprocessing)
-     	//console.log(result.execution)
-     	//console.log(result.postprocessing)
-     	
      	console.log(counter)
      	
      	updateProgress(result.preprocessing, "collapseOne");
@@ -130,8 +143,9 @@ function getUpdate() {
   			//var url = "/analysis_manager/{{uuid}}/results"
   			var url = "/projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ statuses.analysis.uuid }}";
   			//<i class="icon-empty"></i> <a href="projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }} - {{analysis.summary}}</a>
-  			console.log(url);
-  			//window.location = url;
+  			
+  			//DEBUG
+  			window.location = url;
   		}
   		
   		if (counter == 1000) {
@@ -180,7 +194,7 @@ $(document).ready(function() {
                   Preprocessing
                 </a>
               </div>
-              <div id="collapseOne" class="accordion-body collapse in" style="height: auto; ">
+              <div id="collapseOne" class="accordion-body collapse" style="height: auto; ">
                 <div class="accordion-inner">
                 	{% for stat in statuses.preprocessing_status %}
             			<li>
@@ -262,7 +276,8 @@ $(document).ready(function() {
           
     <script>
 	
-	$(".collapse").collapse("show").height('auto');
+	//$(".collapse").collapse("show").height('auto');
+	$(".collapse").collapse("show");
 
 </script>
 {% endif %}

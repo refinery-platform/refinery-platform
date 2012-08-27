@@ -5,9 +5,15 @@ Created on May 29, 2012
 '''
 from data_set_manager.models import Node, Attribute, AnnotatedNode, Study, Assay, \
     AnnotatedNodeRegistry
+from data_set_manager.search_indexes import NodeIndex
 from django.db.models import Q
 from django.utils.datetime_safe import datetime
 import simplejson
+import logging
+
+
+# get module logger
+logger = logging.getLogger(__name__)
     
     
 # number of AnnotatedNode objects that can be inserted with bulk insert (limitation of sqlite)
@@ -275,7 +281,7 @@ def update_annotated_nodes( node_type, study_uuid, assay_uuid=None, update=False
         counter = AnnotatedNode.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ), node_type=node_type ).count()                
         AnnotatedNode.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ), node_type=node_type ).delete()
     
-    print str( counter ) + " annotated nodes deleted."                
+    logger.info( str( counter ) + " annotated nodes deleted." )                
     
     # retrieve annotated nodes
     nodes = _retrieve_nodes( node_type, study_uuid, assay_uuid, True )    
@@ -318,7 +324,7 @@ def update_annotated_nodes( node_type, study_uuid, assay_uuid=None, update=False
     
     end = time.time()
                  
-    print str( counter ) + " annotated nodes generated in " + str( end - start )
+    logger.info( str( counter ) + " annotated nodes generated in " + str( end - start ) )
     
     # update registry entry
     registry.save()
@@ -331,4 +337,37 @@ def update_annotated_nodes( node_type, study_uuid, assay_uuid=None, update=False
     #    result = AnnotatedNode.objects.filter( Q( study_id=study.id, assay__isnull=True ) | Q( study_id=study.id, assay_id=assay.id ), node_type=node_type)
     
     #return ( serializers.serialize("python", result, ensure_ascii=False ) )
+
+
+def index_annotated_nodes( node_type, study_uuid, assay_uuid=None ):
+        
+    # retrieve study and assay ids
+    study = Study.objects.filter( uuid=study_uuid )[0]
+    if assay_uuid is not None:
+        assay = Assay.objects.filter( uuid=assay_uuid )[0]
+    else:
+        assay = None
+        
+    # remove existing annotated node objects for this node_type in this study/assay
+    if assay_uuid is None:
+        nodes = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ), type=node_type )
+    else:
+        nodes = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ), type=node_type )                
+    
+    logger.info( str( nodes.count() ) + " nodes for indexing." )                
+    
+    # index nodes    
+    import time
+    start = time.time()
+    
+    node_index = NodeIndex()
+    counter = 0    
+    for node in nodes:
+        node_index.update_object(node,using="data_set_manager")
+        counter = counter + 1
+    
+    end = time.time()
+                 
+    logger.info( str( counter ) + " nodes indexed in " + str( end - start ) )
+    
     

@@ -5,7 +5,8 @@
 
 var urlComponents = document.location.href.split("/");	
 	
-var solrRoot = "http://127.0.0.1:8983/solr/data_set_manager/select";
+//var solrRoot = "http://127.0.0.1:8983/solr/data_set_manager/select";
+var solrRoot = SOLR_BASE_URL + "/data_set_manager/select";
 var solrQuery = "q=django_ct:data_set_manager.node";
 var solrSettings = "wt=json&json.wrf=?&facet=true";
 
@@ -63,7 +64,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 		+ "("
 			+ "study_uuid:" + studyUuid
 			+ " AND " + "assay_uuid:" + assayUuid
-			+ " AND " + "type:" + nodeType
+			+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + ")"
 	   	+ ")"
 	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
 	   	+ "&" + "facet.limit=-1"; // unlimited number of facet values (otherwise some values will be missing)	   	
@@ -77,7 +78,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 		var facetValues = facets[facet];
 		var filter = null; 
 		var filterValues = [];
-		
+						
 		for ( var facetValue in facetValues ) {
 			if ( facetValues.hasOwnProperty( facetValue ) )
 			{
@@ -93,10 +94,22 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 					filterValues.push( facetValue );
 				}
 			}				
-		}
+		}		
+		
+		/*
+		facet = facet.replace( /\ /g, "\\ " );
+		facet = facet.replace( /\//g, "\/" );
+		facet = facet.replace( /\#/g, "%23" );
+		facet = facet.replace( /\&/g, "%26" );
+		facet = facet.replace( /\(/g, "\\(" );
+		facet = facet.replace( /\)/g, "\\)" );
+		facet = facet.replace( /\+/g, "%2B" );
+		facet = facet.replace( /\:/g, "%3A" );													
+		*/
 
 		if ( filterValues.length > 0 ) {
-			filter = facet.replace( /\ /g, "_" );								
+			filter = facet.replace( /\ /g, "_" );
+			
 			url += "&fq={!tag=" + filter + "}" + facet.replace( /\ /g, "\\ " ) + ":(" + filterValues.join( " OR " ) + ")";													
 		}
 		
@@ -126,12 +139,13 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 				field = field.replace( /\ /g, "\\ " );
 				field = field.replace( /\//g, "%2F" );
 				field = field.replace( /\#/g, "%23" );
+				field = field.replace( /\&/g, "%26" );
 				field = field.replace( /\(/g, "\\(" );
 				field = field.replace( /\)/g, "\\)" );
 				field = field.replace( /\+/g, "%2B" );
 				field = field.replace( /\:/g, "%3A" );
 				fieldNames.push( field );
-			}
+			}			
 		}				
 	}	
 	url += "&fl=" + fieldNames.join( ",");
@@ -152,6 +166,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 					field = field.replace( /\ /g, "\\ " );
 					field = field.replace( /\//g, "%2F" );
 					field = field.replace( /\#/g, "%23" );
+					field = field.replace( /\&/g, "%26" );
 					field = field.replace( /\(/g, "\\(" );
 					field = field.replace( /\)/g, "\\)" );
 					field = field.replace( /\+/g, "%2B" );
@@ -169,12 +184,13 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 	// pivot fields: facet.pivot 
 	// ------------------------------------------------------------------------------
 	
-	var pivotQuery = pivots.join( "," );
-	
-	if ( pivotQuery.length > 0 )
-	{
-		url += "&facet.pivot=" + pivotQuery;
-	}		
+	if ( pivots.length > 1 ) {
+		var pivotQuery = pivots.join( "," );
+
+		if ( pivotQuery.length > 0 ) {
+			url += "&facet.pivot=" + pivotQuery;
+		}		
+	}
 	
 	$( "#url-view" ).html( "" );
 	$( "<a/>", { href: url + "&indent=on", html: "Solr Query" } ).appendTo( "#url-view" );
@@ -208,6 +224,12 @@ function prettifyFieldName( name, isTitle )
 		name = "Material Type";
 	}
 
+	var position = name.indexOf( "type_" );
+	if ( position == 0 ) {
+		name = "Type";
+	}
+
+
 	name = name.replace( /\_/g, " " );
 	
 	if ( isTitle )
@@ -232,6 +254,7 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 				// facets
 				if ( ( attribute.indexOf( "_Characteristics_" ) != -1 ) ||
 					 ( attribute.indexOf( "_Factor_" ) != -1 ) ||
+					 ( attribute.indexOf( "type_" ) == 0 ) ||
 					 ( attribute.indexOf( "_Material_Type_" ) != -1 ) ) {
 					facets[attribute] = [];
 					
@@ -617,13 +640,21 @@ function processDocs( data ) {
 		var check_temp = '<select name="assay_'+ file_uuid +'" id="webmenu" class="btn-mini OGcombobox"> <option></option> </select> <input type="hidden" name="fileurl_' + file_uuid +'" value="' + document.name + '">';
 		
 		s += '<td>' + check_temp + '</td>'
-		for ( entry in document )
+		for ( entry in fields )
 		{
-			if ( document.hasOwnProperty( entry ) && !( hiddenFieldNames.indexOf( entry ) >= 0 ) )
-			{
-				s += "<td>";
-				s += document[entry];
-				s += "</td>";				
+			if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible ) {
+				if ( document.hasOwnProperty( entry ) && !( hiddenFieldNames.indexOf( entry ) >= 0 ) )
+				{
+					s += "<td>";
+					s += document[entry];
+					s += "</td>";				
+				}
+				else // this field does not exist in this result
+				{
+					s += "<td>";
+					s += ""
+					s += "</td>";								
+				}				
 			}
 		}
 		s += "</tr>";
@@ -760,7 +791,7 @@ $( "#igv-session-link" ).on( "click", function() {
 	getField( testAssayUuid, testStudyUuid, testNodeType, "file_uuid", function( uuids ) {
 		
 		var limit = 20;
-		var newUrl = "http://127.0.0.1:8000/visualization_manager/igv_session?uuids=" + uuids.join( "," );
+		var newUrl = "/visualization_manager/igv_session?uuids=" + uuids.join( "," );
 		
 		if ( uuids.length > limit ) {
 			var result = confirm( "Do you really want to open IGV with " + uuids.length + " tracks?" );
@@ -782,7 +813,7 @@ $( "#profile-viewer-session-link" ).on( "click", function() {
 	getField( testAssayUuid, testStudyUuid, testNodeType, "file_uuid", function( uuids ) {
 		
 		var limit = 1;
-		var newUrl = "http://127.0.0.1:8000/visualization_manager/profile_viewer_session?uuid=" + uuids[0];
+		var newUrl = "/visualization_manager/profile_viewer_session?uuid=" + uuids[0];
 		
 		console.log( newUrl );
 		window.location = newUrl;			

@@ -10,57 +10,64 @@
     <meta name="author" content="">
 
     <!-- Le styles -->
-    <!-- <link href="{{ STATIC_URL }}js/datatables/css/DT_bootstrap.css" rel="stylesheet"> -->    
-    <link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap.css" rel="stylesheet">
+    {% for css_file in REFINERY_CSS %}
+    <link href="{{ STATIC_URL }}{{ css_file }}" rel="stylesheet">
+   	{% endfor %}
     
     <style type="text/css">
       body {
-        padding-top: 60px;
+        padding-top: {{ REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;
         padding-bottom: 40px;
       }
     </style>
     
+    <link href="{{ STATIC_URL }}core/boot_style.css" rel="stylesheet">
+
     <link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
-    
-    <!-- <link rel="stylesheet" href="{{ STATIC_URL }}js/bootstrap/css/style.css"> -->
-    <link rel="stylesheet" href="{{ STATIC_URL }}core/boot_style.css">
-    
-    <!--
-    <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/jquery.dataTables.js"></script>		
-    <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/datatables/js/DT_bootstrap.js"></script>
-    -->
-    		
-    <!-- <script language="javascript" type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script> -->
-	
-	
-    
+	    
     {% block head_html %}{% endblock %}
     <title>Refinery {% block title %}{% endblock %}</title>
+        
+    {% block tracking %}
     
+    {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}    
+	<script type="text/javascript">
+	
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', '{{ REFINERY_GOOGLE_ANALYTICS_ID }}']);
+	  _gaq.push(['_trackPageview']);
+	
+	  (function() {
+	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
+	</script>
+	{% endif %}    
+    
+    {% endblock %}
 </head>
 
 <body>
+	<div>
+	</div>
 	
 	<!-- header navigation bar -->
 	<div class="navbar navbar-fixed-top">
-      <div class="navbar-inner header_bkgd">
+      <div class="navbar-inner">
         <div class="container-fluid">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="/">Refinery</a>
+          <a class="brand" href="/">
+          {% if REFINERY_MAIN_LOGO != "" %}
+          	<img style="height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px" src="{{ STATIC_URL }}{{ REFINERY_MAIN_LOGO }}"/>&nbsp;&nbsp;
+          {% endif %}
+          Refinery</a>          	          
           <div class="nav-collapse">
             <ul class="nav">
-              <li class="{{ navbar_class_home }}"><a href="{% url home %}">Home</a></li>
-              <li class="{{ navbar_class_search }}"><a href="{% url search %}">Search</a></li>
-              <li class="{{ navbar_class_about }}"><a href="{% url about %}">About</a></li>
-              <li class="{{ navbar_class_contact }}"><a href="{% url contact %}">Contact</a></li>
-              <li class="{{ navbar_class_statistics }}"><a href="{% url statistics %}">Statistics</a></li>
+              <li class="{{ navbar_class_home }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url home %}">Home</a></li>
+              <li class="{{ navbar_class_search }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url search %}">Search</a></li>
             </ul>
               <div id="auth_area">
-              <p class="navbar-text pull-right">
+              <p class="navbar-text pull-right" style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;">
               	<!-- <Logged in as <a href="#">username</a> -->
               		{% block authentication %}        
 					{% if user.is_authenticated %}       
@@ -99,13 +106,26 @@
         			
         		</div>
         	</div>
-       </div>
-    
-    <div id="footer">
-    	<hr>
-        <small>Copyright &copy; 2012 <a href="http://compbio.med.harvard.edu">Park Lab</a> | <a href="http://cbmi.med.harvard.edu">Center for Biomedical Informatics</a> at <a href="http://hms.harvard.edu">Harvard Medical School</a>. All rights reserved.</small>
+       </div>    
     </div>
-    
+
+	<div class="navbar navbar-fixed-bottom">
+      <div class="navbar-inner header_bkgd">
+        <div class="container-fluid">
+			<div id="footer">
+            	<p class="navbar-text pull-left">
+	          		Refinery is a project of the <a href="http://compbio.med.harvard.edu">Park Lab</a> | <a href="http://cbmi.med.harvard.edu">Center for Biomedical Informatics</a> at <a href="http://hms.harvard.edu">Harvard Medical School</a>.</small>
+				</p>		    
+		    </div>		    
+          <div class="nav-collapse pull-right">
+            <ul class="nav">
+              <li class="{{ navbar_class_contact }}"><a href="{% url contact %}">Contact</a></li>
+              <li class="{{ navbar_class_statistics }}"><a href="{% url statistics %}">Statistics</a></li>
+              <li class="{{ navbar_class_about }}"><a href="{% url about %}">About</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->        
+        </div>
+      </div>
     </div>
 
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery/jquery-1.7.2.js"></script>

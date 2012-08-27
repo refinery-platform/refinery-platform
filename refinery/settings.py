@@ -58,7 +58,7 @@ MEDIA_ROOT = ''
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = ''
+MEDIA_URL = 'media'
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -109,6 +109,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.static',
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
+    "core.context_processors.extra_context",
 )
 
 MIDDLEWARE_CLASSES = (
@@ -117,6 +118,9 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    #'django.middleware.cache.UpdateCacheMiddleware',
+    #'django.middleware.common.CommonMiddleware',
+    #'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
 ROOT_URLCONF = 'refinery.urls'
@@ -162,8 +166,8 @@ INSTALLED_APPS = (
     'workflow_manager',
     'file_store',
     'file_server',   
+    'visualization_manager',
     'data_set_manager', 
-    'visualization_manager'
 )
 
 # NG: added for django-guardian
@@ -304,8 +308,24 @@ FILE_STORE_DIR = 'files'
 # To keep uploaded files always on disk
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
+# location of the solr server
+REFINERY_SOLR_BASE_URL = "http://127.0.0.1:8983/solr"
+
 # used to replaces spaces in the names of dynamic fields in Solr indexing
 REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = "_"
+
+# list of paths to CSS files used to style Refinery pages (relative to STATIC_URL)
+REFINERY_CSS = [ "js/bootstrap/css/bootstrap.css" ]
+
+# set height of navigation bar (e.g. to fit a logo)
+REFINERY_INNER_NAVBAR_HEIGHT = 20
+
+# supply a path to a logo that will become part of the branding (see navbar height correctly!)
+REFINERY_MAIN_LOGO = ""
+
+# supply a Google analytics id "UA-..." (if set to "" tracking will be deactivated)
+REFINERY_GOOGLE_ANALYTICS_ID = ""
+
 
 # import local settings
 from settings_local import *

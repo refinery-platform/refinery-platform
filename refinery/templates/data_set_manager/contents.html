@@ -5,7 +5,7 @@
     <style type="text/css">
 
 svg {
-	background-color: #fdfdfd;
+	background-color: none;
 	padding: 5px;
 	margin-top: 15px;
 	margin-bottom: 15px;
@@ -185,11 +185,13 @@ rect.active {
 {% endblock %}
 
 {% block script %}
-	<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap-collapse.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v2.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/fisheye.js"></script>
 
 	<!-- Refinery libraries -->
+	<script type="text/javascript">
+		var SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}"
+	</script>	
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/viewers/pivot-matrix.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>

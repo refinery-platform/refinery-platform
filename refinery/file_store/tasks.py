@@ -6,6 +6,7 @@ from tempfile import NamedTemporaryFile
 from celery.task import task
 from django.core.files import File
 from file_store.models import FileStoreItem, get_temp_dir, file_path, FILE_STORE_BASE_DIR
+from urllib2 import HTTPError
 
 
 logger = logging.getLogger('file_store')
@@ -101,6 +102,9 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         except urllib2.URLError as e:
             logger.error("Could not open URL '%s'. Reason: '%s'", item.source, e.reason)
             return None
+        except HTTPError as e:
+            logger.error("Could not open URL '%s'.", item.source)
+            return None
         except ValueError as e:
             logger.error("Could not open URL '%s'. Reason: '%s'", item.source, e.message)
             return None
@@ -122,10 +126,10 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
                 percent_done = localfilesize * 100. / remotefilesize
             else:
                 percent_done = 0
-                import_file.update_state(
-                    state="PROGRESS",
-                    meta={"percent_done": "%3.2f%%" % (percent_done), 'current': localfilesize, 'total': remotefilesize}
-                    )
+            import_file.update_state(
+                state="PROGRESS",
+                meta={"percent_done": "%3.2f%%" % (percent_done), 'current': localfilesize, 'total': remotefilesize}
+                )
     
         # cleanup
         #TODO: delete temp file if download failed 

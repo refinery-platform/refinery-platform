@@ -268,7 +268,6 @@ class FileStoreItem(models.Model):
         if path:
             return os.path.islink(path)
         else:
-            logger.error("Path cannot be None")
             return False
 
     def is_local(self):
@@ -363,6 +362,18 @@ class FileStoreItem(models.Model):
         else:
             logger.error("Symlinking failed: source is not a file")
             return False
+        
+    def get_url(self):
+        '''
+        Return URL of the FileStoreItem.
+
+        :returns: str -- URL of the FileStoreItem: local URL or source if there's no local copy
+
+        '''
+        if self.is_local():
+            return self.datafile.url
+        else:
+            return self.source
 
 #===============================================================================
 #    def copy_datafile(self):
