@@ -386,11 +386,11 @@ function processFacets( data ) {
 				
 				if ( facets[facet][facetValue].isSelected ) {
 		    		//selectedItems.push("<li class=\"facet-value\">" + "<span class=\"badge badge-info\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "&nbsp;<i class=\"icon-remove\"/>" + "</span>" +"</li>");
-		    		selectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-remove\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
-	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-remove\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
+		    		selectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-check\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
+	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-check\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
 				}
 				else {
-	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-remove icon-white\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td><td></td>"  + "</tr>" );					
+	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-check-empty\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td><td></td>"  + "</tr>" );					
 				}												
 			}
 			
@@ -567,11 +567,11 @@ function processFields() {
 	for ( field in fields ) {
 		if ( fields.hasOwnProperty( field ) ) {
 			if ( fields[field].isVisible ) {
-				visibleItems.push("<span class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-remove\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );				
+				visibleItems.push("<span class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-check\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );				
 			}
 			else {
 				if ( hiddenFieldNames.indexOf( field ) < 0 ) {
-					invisibleItems.push("<span class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-plus\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );
+					visibleItems.push("<span class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-check-empty\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );
 				}
 			}
 		}
@@ -580,7 +580,7 @@ function processFields() {
 	$("#field-view").html("" );
 
 	if ( visibleItems.length > 0 ) {
-		$('<h4/>', { html: "Remove Columns" }).appendTo('#field-view');
+		$('<h4/>', { html: "Columns" }).appendTo('#field-view');
 		$('<p/>', { 'class': 'field-name-list', html: visibleItems.join(' | ') }).appendTo('#field-view');
 	}
 	
