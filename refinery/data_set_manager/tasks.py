@@ -5,7 +5,8 @@ from collections import defaultdict
 from core.models import *
 from data_set_manager.isa_tab_parser import IsaTabParser
 from data_set_manager.models import Investigation, Study, Node
-from data_set_manager.utils import get_node_types, update_annotated_nodes
+from data_set_manager.utils import get_node_types, update_annotated_nodes, \
+    index_annotated_nodes
 from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -18,9 +19,11 @@ import csv
 import errno
 import ftplib
 import glob
+import logging
 import os
 import os.path
 import re
+import shutil
 import shutil
 import socket
 import string
@@ -30,8 +33,6 @@ import tempfile
 import time
 import traceback
 import urllib2
-import logging
-import shutil
 
 """get logger for all tasks"""
 logger = logging.getLogger(__name__)
@@ -397,6 +398,7 @@ def annotate_nodes(investigation_uuid):
             node_types = get_node_types(study.uuid, assay.uuid, files_only=True, filter_set=Node.FILES)            
             for node_type in node_types:
                 update_annotated_nodes( node_type, study.uuid, assay.uuid, update=True )
+                index_annotated_nodes( node_type, study.uuid, assay.uuid, update=True )
                     
 
 @task()

@@ -5,16 +5,17 @@ Created on Jul 2, 2012
 '''
 
 
-from core.models import DataSet
 from data_set_manager.models import Node, AnnotatedNode
-from data_set_manager.utils import get_node_types
 from django.template import loader
 from django.template.context import Context
 from haystack import indexes
-import datetime
 import settings
 import string
-import uuid
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 
 class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
@@ -43,6 +44,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     # dynamic fields: https://groups.google.com/forum/?fromgroups#!topic/django-haystack/g39QjTkN-Yg
     # and: http://stackoverflow.com/questions/7399871/django-haystack-sort-results-by-title
     def prepare(self, object):
+        logger.info( "In prepare for " + str( object ) )
         data = super(NodeIndex, self).prepare(object)
         annotations = AnnotatedNode.objects.filter( node=object )
         
@@ -50,6 +52,9 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         
         if object.assay is not None:
             uuid += "_" + str( object.assay.id ) 
+
+        logger.info( "In prepare for " + str( object ) + " uuid = " + uuid )
+
 
         # create dynamic fields for each attribute  
         for annotation in annotations:
@@ -76,6 +81,10 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             
         # add type as dynamic field to get proper facet values
         data["type_" + uuid + "_s"] = object.type
+
+        logger.info( "Done with prepare for " + str( object ) )
             
         return data
+
+
 

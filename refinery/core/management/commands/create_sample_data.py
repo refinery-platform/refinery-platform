@@ -10,8 +10,6 @@ from galaxy_connector.models import Instance
 import simplejson
 
 
-
-
 class Command(BaseCommand):
     help = "Creates some sample data for a Refinery installation:"
     help = "%s - users \n" % help
@@ -181,7 +179,7 @@ class Command(BaseCommand):
             quota_object.share( group_object, readonly=False )
         """
     
-    
+        """
         project_objects = []
     
         # create projects (for each user: private, lab shared read/write, project group shared read-only, public shared) 
@@ -322,5 +320,5 @@ class Command(BaseCommand):
         
         for data_set in data_set_objects:
             print(str(data_set))
-            
+        """
         

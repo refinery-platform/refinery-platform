@@ -11,6 +11,11 @@ from galaxy_connector.connection import Connection
 from core.models import Workflow, WorkflowDataInput, WorkflowEngine
 from django.contrib.auth.models import Group 
 from galaxy_connector.galaxy_workflow import createBaseWorkflow, createStepsAnnot, createStepsCompact
+import logging
+
+# get module logger
+logger = logging.getLogger(__name__)
+
     
 @task()
 def get_workflows( workflow_engine ):
@@ -23,7 +28,7 @@ def get_workflows( workflow_engine ):
         #get all workflows
         workflows = connection.get_complete_workflows()
     except:
-        print "Unable to connect to " + workflow_engine.instance.base_url
+        logger.exception( "Unable to connect to " + workflow_engine.instance.base_url )
         return
             
     

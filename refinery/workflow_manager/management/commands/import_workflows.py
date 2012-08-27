@@ -11,7 +11,6 @@ from workflow_manager.tasks import get_workflows
 
 
 
-
 class Command(BaseCommand):
     help = "Imports workflows from all registered workflow engines and makes them public."
 
@@ -21,7 +20,6 @@ class Command(BaseCommand):
     main program; run the command
     """   
     def handle(self, **options):
-
         
         workflow_engine_objects = []
         
@@ -43,6 +41,7 @@ class Command(BaseCommand):
         workflows = 0
         
         print str( workflow_engines.count() ) + " workflow engines found"
+        
         for engine in workflow_engines:
             print "Importing from workflow engine \"" + engine.name + "\" ..."
             get_workflows( engine );
@@ -51,3 +50,4 @@ class Command(BaseCommand):
             workflows += new_workflow_count
         
         print str( workflows ) + " workflows imported from " + str( workflow_engines.count() ) + " workflow engines"
+        
