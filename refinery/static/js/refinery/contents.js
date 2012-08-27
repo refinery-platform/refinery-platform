@@ -224,9 +224,14 @@ function prettifyFieldName( name, isTitle )
 		name = "Material Type";
 	}
 
-	var position = name.indexOf( "type_" );
+	var position = name.indexOf( "REFINERY_TYPE_" );
 	if ( position == 0 ) {
 		name = "Type";
+	}
+
+	var position = name.indexOf( "REFINERY_FILETYPE_" );
+	if ( position == 0 ) {
+		name = "File Type";
 	}
 
 
@@ -254,7 +259,7 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 				// facets
 				if ( ( attribute.indexOf( "_Characteristics_" ) != -1 ) ||
 					 ( attribute.indexOf( "_Factor_" ) != -1 ) ||
-					 ( attribute.indexOf( "type_" ) == 0 ) ||
+					 ( attribute.indexOf( "REFINERY_" ) != -1 ) ||
 					 ( attribute.indexOf( "_Material_Type_" ) != -1 ) ) {
 					facets[attribute] = [];
 					

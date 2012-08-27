@@ -12,7 +12,7 @@ from haystack import indexes
 import settings
 import string
 import logging
-
+import file_store.tasks as file_store_tasks
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,6 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     # dynamic fields: https://groups.google.com/forum/?fromgroups#!topic/django-haystack/g39QjTkN-Yg
     # and: http://stackoverflow.com/questions/7399871/django-haystack-sort-results-by-title
     def prepare(self, object):
-        logger.info( "In prepare for " + str( object ) )
         data = super(NodeIndex, self).prepare(object)
         annotations = AnnotatedNode.objects.filter( node=object )
         
@@ -52,9 +51,6 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         
         if object.assay is not None:
             uuid += "_" + str( object.assay.id ) 
-
-        logger.info( "In prepare for " + str( object ) + " uuid = " + uuid )
-
 
         # create dynamic fields for each attribute  
         for annotation in annotations:
@@ -73,6 +69,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             name = string.replace( name, "(", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
             name = string.replace( name, ")", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
             name = string.replace( name, "#", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
+            name = string.replace( name, ",", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
                 
             name = string.replace( name, " ", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
 
@@ -80,10 +77,17 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             data[key] = value
             
         # add type as dynamic field to get proper facet values
-        data["type_" + uuid + "_s"] = object.type
-
-        logger.info( "Done with prepare for " + str( object ) )
-            
+        data["REFINERY_TYPE_" + uuid + "_s"] = object.type
+        
+        # add file type as facet value        
+        file_store_item = file_store_tasks.read( object.file_uuid );
+        
+        if file_store_item:
+            data["REFINERY_FILETYPE_" + uuid + "_s"] = file_store_item.get_filetype()
+        else:
+            logger.warning( "Unable to get file store item " + object.file_uuid + ". No file type available." )
+            data["REFINERY_FILETYPE_" + uuid + "_s"] = ""
+                    
         return data
 
 

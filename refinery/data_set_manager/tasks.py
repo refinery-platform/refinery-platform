@@ -51,6 +51,19 @@ def create_dir(file_path):
         if e.errno != errno.EEXIST:
             raise
 
+def delete_external_file(file_path):
+    """
+    Name: delete_external_file
+    Description:
+        removes a file with the given path (that is outside the file_store)
+    Parameters:
+        file_path: location of the file to delete
+    """
+    try:
+        os.remove(file_path)
+    except OSError:
+        raise
+
 
 @task()
 def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=None):
@@ -294,7 +307,7 @@ def convert_to_isatab(accession, isatab_zip_loc, preisatab_zip_loc):
             shutil.rmtree(temp_dir)
             raise Exception, "Error Converting to ISA-Tab: %s" % stderr
         else:
-            return 0 #unsuccessful conversion, but clean exit
+            return "Could not convert %s" % accession #unsuccessful conversion, but clean exit
     else: #successfully converted
         base_dir = os.path.join(settings.ISA_TAB_DIR, accession)
         study_file = glob.glob("%s/s_*.txt" % base_dir)[0]
@@ -302,14 +315,15 @@ def convert_to_isatab(accession, isatab_zip_loc, preisatab_zip_loc):
 
         logging.info("fixing last columns in study file if needed")
         if not fix_last_col(study_file):
-            return 0  
+            return "Could not fix study file for %s"  % accession
         logging.info("fixing last columns in assay file if needed")
         if not fix_last_col(assay_file):
-            return 0
+            return "Could not fix assay file for %s" % accession
 
         zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc)
-
-    return 1 #successful everything
+    
+    shutil.rmtree(base_dir)
+    return "Successfully converted %s" % accession #successful everything
 
 
 @periodic_task(run_every=crontab(hour="12", day_of_week="friday"))
@@ -361,6 +375,7 @@ def create_dataset(investigation_uuid, username, public=False):
         identifier = investigation.get_identifier()
     
         datasets = DataSet.objects.filter(name=identifier)
+        #check if the investigation already exists
         if len(datasets): #if not 0, update dataset with new investigation
             """go through datasets until you find one with the correct owner"""
             for ds in datasets:
@@ -369,8 +384,9 @@ def create_dataset(investigation_uuid, username, public=False):
                     ds.update_investigation(investigation, "updated %s" % date.today())
                     dataset = ds
                     break
-            
-        else: #create a new dataset
+
+        #create a new dataset if doesn't exist already for this user
+        if not dataset: 
             d = DataSet.objects.create(name=identifier)
             d.set_investigation(investigation)
             d.set_owner(user)

@@ -56,7 +56,8 @@ class Command(BaseCommand):
         """
         Name: make_query
         Description:
-            creates an ArrayExpress query string from the command line arguments
+            creates an ArrayExpress query string from the command line 
+            arguments
         Parameters:
             args: the command line arguments
         """
@@ -158,8 +159,7 @@ class Command(BaseCommand):
         job = TaskSet(tasks=s_tasks)
         result = job.apply_async()
     
-        #go to sleep for 5 seconds at a time until all tasks are finished
-        while result.waiting():
-            time.sleep(5)
+        for i in result.iterate():
+            print i
 
         call_command('process_arrayexpress_isatab', base_isa_dir, "base_pre_isa_dir=%s" % base_preisa_dir, "is_public=True")

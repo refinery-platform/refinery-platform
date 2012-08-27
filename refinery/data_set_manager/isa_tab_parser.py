@@ -31,11 +31,16 @@ logger = logging.getLogger(__name__)
 
 class IsaTabParser:
     
+    # parser flags/settings
     ignore_case = True
     ignore_missing_protocols = True
     # TODO: remove this temporary fix to deal with ISA-Tab from ArrayExpression (see also _parse_node)
     additional_raw_data_file_extension = None
+    # absolute path used prefix data file names and paths encountered in the input file 
+    file_base_path = None
     
+    
+    # internals
     _current_investigation = None
     _current_study = None
     _current_assay = None
@@ -295,13 +300,20 @@ class IsaTabParser:
 
             # this node represents a file - add the file to the file store and store the file UUID in the node
             if is_new and header_components[0] in Node.FILES and node_name is not "":
-                uuid = create( source=node_name )
+                
+                # create the nodes for the data file in this row
+                if self.file_base_path is None:
+                    file_path = node_name
+                else:
+                    file_path = os.path.join( self.file_base_path, node_name )
+                
+                uuid = create( source=file_path )
                 
                 if uuid is not None:
                     node.file_uuid = uuid
                     node.save()
                 else:
-                    logger.exception( "Unable to add " + node_name + " to file store as a temporary file." )        
+                    logger.exception( "Unable to add " + file_path + " to file store as a temporary file." )        
                                                 
             if is_new:
                 logger.info( "New node " + str( node ) + " created." )
