@@ -6,7 +6,6 @@ from tempfile import NamedTemporaryFile
 from celery.task import task
 from django.core.files import File
 from file_store.models import FileStoreItem, get_temp_dir, file_path, FILE_STORE_BASE_DIR
-from urllib2 import HTTPError
 
 
 logger = logging.getLogger('file_store')
@@ -99,11 +98,11 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         # check if source file can be downloaded
         try:
             response = urllib2.urlopen(req)
+        except urllib2.HTTPError as e:
+            logger.error("Could not open URL '%s'", item.source)
+            return None
         except urllib2.URLError as e:
             logger.error("Could not open URL '%s'. Reason: '%s'", item.source, e.reason)
-            return None
-        except HTTPError as e:
-            logger.error("Could not open URL '%s'.", item.source)
             return None
         except ValueError as e:
             logger.error("Could not open URL '%s'. Reason: '%s'", item.source, e.message)

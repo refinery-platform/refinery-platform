@@ -3,6 +3,26 @@
 {% block head_html %}
 <link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap-combobox.css" rel="stylesheet">
 <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap-combobox.js"></script>
+<script language="javascript" type="text/javascript" src="http://fgnass.github.com/spin.js/dist/spin.min.js"></script>
+<script language="javascript" type="text/javascript">
+    var opts = {
+    lines: 13, // The number of lines to draw
+    length: 7, // The length of each line
+    width: 4, // The line thickness
+    radius: 10, // The radius of the inner circle
+    corners: 1, // Corner roundness (0..1)
+    rotate: 0, // The rotation offset
+    color: '#000', // #rgb or #rrggbb
+    speed: 1, // Rounds per second
+    trail: 60, // Afterglow percentage
+    shadow: false, // Whether to render a shadow
+    hwaccel: false, // Whether to use hardware acceleration
+    className: 'spinner', // The CSS class to assign to the spinner
+    zIndex: 2e9, // The z-index (defaults to 2000000000)
+    top: 'auto', // Top position relative to parent in px
+    left: 'auto' // Left position relative to parent in px
+    };
+</script>
 {% endblock %}
 
 {% block subheader %}
@@ -24,7 +44,12 @@ ISA-Tab import
 			{{ form.isa_tab_url.errors }}
 			{{ form.isa_tab_url }}
 		</p>
+		<p id="spinner"></p>
 	</div>
 	<input type="submit" value="Import" />
 </form>
+<script language="javascript" type="text/javascript">
+    var target = document.getElementById('spinner');
+    var spinner = new Spinner(opts).spin(target);
+</script>
 {% endblock %}
