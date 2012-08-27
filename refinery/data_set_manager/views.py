@@ -147,7 +147,7 @@ def import_isa_tab(request):
 #                    error = 'Problem renaming uploaded ISA-Tab file'
 #                    context = RequestContext(request, {'form': form, 'error': error})
 #                    return render_to_response('data_set_manager/import.html', context_instance=context)
-                dataset_uuid = parse_isatab(request.user.username, True, f.temporary_file_path())
+                dataset_uuid = parse_isatab(request.user.username, False, f.temporary_file_path())
 
             if dataset_uuid:
                 #TODO: redirect to the list of analysis samples for the given UUID
