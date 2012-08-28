@@ -8,6 +8,7 @@ import os
 from urlparse import urlparse
 from django import forms
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 from django.http import Http404, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
@@ -93,7 +94,8 @@ class ImportISATabFileForm(forms.Form):
             raise forms.ValidationError("Please provide either a file or a URL") 
 
 
-@login_required()
+@login_required
+@csrf_exempt
 def import_isa_tab(request):
     '''Process imported ISA-Tab file sent via POST request
     
