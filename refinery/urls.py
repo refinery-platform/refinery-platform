@@ -11,7 +11,7 @@ from haystack.views import FacetedSearchView
 from tastypie.api import Api
 from workflow_manager.views import import_workflows
 from django.conf.urls.static import static
-from settings import MEDIA_ROOT, MEDIA_URL
+from settings import MEDIA_ROOT, MEDIA_URL, FILE_STORE_DIR
 
 # NG: facets for Haystack
 sqs = SearchQuerySet().using( "core" ).models( DataSet ).facet('measurement').facet('technology').highlight()
@@ -66,6 +66,6 @@ urlpatterns = patterns('',
     url(r'^typeahead/$', search_typeahead),
     #url(r'^solr/(?P<query>.+/$)', solr ),
     url(r'^solr/$', solr ),
-) + static( MEDIA_URL, document_root=MEDIA_ROOT)
+) + static( MEDIA_URL, document_root=MEDIA_ROOT + "/" + FILE_STORE_DIR )
 # for "static" see https://docs.djangoproject.com/en/dev/howto/static-files/#serving-other-directories
 

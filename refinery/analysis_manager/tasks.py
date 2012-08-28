@@ -304,6 +304,15 @@ def run_analysis_cleanup(analysis):
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     
+    # rename file_store items to new name updated from galaxy file_ids 
+    analysis_results = AnalysisResult.objects.filter(analysis_uuid=analysis.uuid)
+    for result in analysis_results:
+        # new name to load
+        new_file_name = result.file_name + "." + result.file_type
+        
+        # rename file by way of file_store
+        filestore_item = rename(result.file_store_uuid, new_file_name)
+    
     # gets current galaxy connection
     connection = get_analysis_connection(analysis)
     
@@ -311,7 +320,8 @@ def run_analysis_cleanup(analysis):
     del_workflow_id = connection.delete_workflow(analysis.workflow_galaxy_id);
     
     # delete history
-    connection.delete_history(analysis.history_id)
+    ## DEBUG CURRENTLY NOT DELETING HISTORY
+    #connection.delete_history(analysis.history_id)
     
     # delete_library
     connection.delete_library(analysis.library_id)
@@ -412,11 +422,12 @@ def download_history_files(analysis) :
     
     # Iterating through files in current galaxy history
     for results in download_list:
+        print "results"
+        print results
         
         # download file if result state is "ok"
         if results['state'] == 'ok':
             file_type = results["type"]
-            
             curr_file_id = results['name'] 
             
             if curr_file_id in dl_dict:
@@ -433,11 +444,13 @@ def download_history_files(analysis) :
                 # URL to download
                 download_url = connection.make_url(str(results['dataset_id']), is_data=True)
                 
-                #print "download url"
-                #print download_url
+                print "download url"
+                print download_url
+                print file_type
+                print download_url
                 
                 # getting file_store_uuid
-                filestore_uuid = create(download_url)
+                filestore_uuid = create(download_url, file_type)
                 
                 # rename using filestore function rename
                 #result_name = rename(filestore_uuid, result_name)
