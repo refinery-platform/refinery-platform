@@ -13,6 +13,9 @@ from xml.dom.minidom import Document
 from file_store.models import FileStoreItem
 from file_store.tasks import import_file, create, rename
 from settings import MEDIA_URL, FILE_STORE_DIR
+from django.http import HttpResponse
+from django.utils import simplejson
+from django.core import serializers
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +35,7 @@ def igv_session( request ):
     # TODO: How to tell which genome? 
     
     # Create IGV session file 
-    fs_item = createIGVsession("hg18", uuids, request.get_host())
+    fs_item = createIGVsession("mm8", uuids, request.get_host())
     
     # Url for session file 
     fs_url = fs_item.get_url()
@@ -105,7 +108,9 @@ def createIGVsession(genome, uuids, host_url):
             curr_name = curr_name[len(curr_name)-1]
             
             # full path to selected UUID File
-            curr_url = curr_fs.get_url()            
+            curr_url = curr_fs.get_url()
+            print "curr_url"
+            print curr_url            
             
             # creates Resource element 
             res = doc.createElement("Resource")
@@ -138,5 +143,15 @@ def createIGVsession(genome, uuids, host_url):
     #print filestore_item.datafile.url
     
     return filestore_item
+
+def results_igv(request):
+    print "called results_igv"
+    #import pdb; pdb.set_trace()
+    ret_json = {"OK": "True"}
+    print simplejson.dumps(request.POST, indent=4);
     
+    if request.is_ajax():
+        print "is ajax"
+    
+        return HttpResponse(simplejson.dumps(ret_json),mimetype='application/javascript')
     
