@@ -366,15 +366,16 @@ def create_dataset(investigation_uuid, username, public=False):
         user = User.objects.create_user(username, "", "test")
 
     if investigation_uuid != None:
-        
         # TODO: make sure this is used everywhere 
         annotate_nodes(investigation_uuid)
-        
+
         dataset = ""
         investigation = Investigation.objects.get(uuid=investigation_uuid)
         identifier = investigation.get_identifier()
-    
-        datasets = DataSet.objects.filter(name=identifier)
+        title = investigation.get_title()
+        dataset_title = "%s: %s" % (identifier, title)
+
+        datasets = DataSet.objects.filter(name=dataset_title)
         #check if the investigation already exists
         if len(datasets): #if not 0, update dataset with new investigation
             """go through datasets until you find one with the correct owner"""
@@ -418,13 +419,16 @@ def annotate_nodes(investigation_uuid):
                     
 
 @task()
-def parse_isatab(username, public, path, additional_raw_data_file_extension=None, isa_archive=None, pre_isa_archive=None):
+def parse_isatab(username, public, path, additional_raw_data_file_extension=None, isa_archive=None, pre_isa_archive=None, file_base_path=None):
     """
     Name: parse_isatab
     Description:
         parses in an ISA-TAB file to create database entries and creates
         or updates a dataset for the investigation to belong to; returns 
         the dataset UUID or None if something went wrong
+        Use like this: parse_isatab(username, is_public, folder_name, 
+        additional_raw_data_file_extension, isa_archive=<path>, 
+        pre_isa_archive=<path>, file_base_path=<path>
     Parameters:
         username: username of the person the dataset will belong to
         public: boolean that determines if the dataset is public or not
@@ -434,13 +438,13 @@ def parse_isatab(username, public, path, additional_raw_data_file_extension=None
         isa_archive: if you're passing a directory, a zipped version of the 
                     directory for storage and legacy purposes
         pre_isa_archive: optional copy of files that were converted to ISA-Tab
-    """
-    """
-    parse_isatab(username, is_public, folder_name, additional_raw_data_file_extension, isa_archive=<path> pre_isa_archive=<path>
+        file_base_path: if your file locations are relative paths, this is the base
     """
     logger.info("logging from parse_isatab")
     p = IsaTabParser()
     p.additional_raw_data_file_extension = additional_raw_data_file_extension
+    p.file_base_path = file_base_path
+    print file_base_path
     try:
         investigation = p.run(path, isa_archive=isa_archive, preisa_archive=pre_isa_archive)
         data_uuid = create_dataset(investigation.uuid, username, public=public)

@@ -833,7 +833,7 @@ class IsaTabParser:
         as an extracted ISArchive. Assumes that the archive extracts into a subdirectory named <archive> if the
         ISArchive is called <archive>.zip.
         '''
-        
+
         # reset all variables
         self._current_investigation = None
         self._current_study = None
@@ -872,8 +872,7 @@ class IsaTabParser:
                         ind = string.find(first_file, '/')
                         extract_path = os.path.join(extract_path, first_file[:ind])
                                                         
-                    logger.info( "ISArchive extracted to \"" + extract_path + "\"." )                
-                    print( "ISArchive extracted to \"" + extract_path + "\"." )                
+                    logger.info( "ISArchive extracted to \"" + extract_path + "\"." )                                
                     path = extract_path
             except:
                 logger.exception( "Unable to extract assumed ISArchive file \"" + path + "\"." )

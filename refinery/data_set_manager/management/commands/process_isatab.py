@@ -1,5 +1,6 @@
 from celery.task.sets import TaskSet, subtask
 from data_set_manager.tasks import parse_isatab, create_dataset
+from core.models import DataSet
 from django.core.management.base import BaseCommand, CommandError
 import os
 import re
@@ -16,7 +17,9 @@ class Command(BaseCommand):
     help = "%s inputs it into the database\n" % help
     help = "%s\nUsage: python manage.py process_isatab <username>" % help
     help = "%s <base_isatab_directory> [base_pre_isa_dir=" % help
-    help = "%s<base_pre_isatab_directory> is_public=True]\n" % help
+    help = "%s<base_pre_isatab_directory> is_public=True " % help
+    help = "%sfile_base_path=<base path if file locations are " % help
+    help = "%srelative>]\n" % help
 
     """
     Name: handle
@@ -24,7 +27,7 @@ class Command(BaseCommand):
         main program; calls the parsing and insertion functions
     """
     _username = None
-    _additional_raw_data_file_extension = None    
+    _additional_raw_data_file_extension = None   
     
     def __init__(self, filename=None):
         super( Command, self ).__init__()
@@ -41,7 +44,11 @@ class Command(BaseCommand):
         self._username = args[0]
         base_isa_dir = args[1]
         
-        opt = {'base_pre_isa_dir': None, 'is_public': False}
+        opt = {'base_pre_isa_dir': None,
+               'is_public': False,
+               'file_base_path': None
+              }
+
         """assign base_pre_isa_dir and is_public values"""
         for arg in args:
             """split on "="s or ignore it"""
@@ -99,7 +106,8 @@ class Command(BaseCommand):
                                                   opt['is_public'],
                                                   isa_file, 
                                                   self._additional_raw_data_file_extension, 
-                                                  isa_file, pre_file
+                                                  isa_file, pre_file,
+                                                  opt['file_base_path']
                                                   )
                                             )
             s_tasks.append(sub_task)
@@ -107,6 +115,12 @@ class Command(BaseCommand):
 
         job = TaskSet(tasks=s_tasks)
         result = job.apply_async()
-        while result.waiting():
-            time.sleep(3)
-        results = result.join()
+        
+        for i in result.iterate():
+            if i:
+                ds = DataSet.objects.get(uuid=i)
+                inv = ds.get_investigation()
+                print "Successfully parsed %s into DataSet" % inv.get_identifier(),
+                print "with UUID %s" % i
+            else:
+                print "Unsuccessful parse and DataSet Creation of %s" % inv.get_identifier() 
