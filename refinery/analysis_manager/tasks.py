@@ -292,17 +292,18 @@ def run_analysis_postprocessing(analysis):
     # Downloading results from history
     task_list = download_history_files(analysis)
     
+    # Adding task to rename files after downloading results from history
+    task_id = rename_analysis_results.subtask( (analysis,) ) 
+    task_list.append(task_id)
+    
     print "downloading history task_list"
     #print task_list
     
     return
 
-# task: perform cleanup, after download of results cleanup galaxy run
 @task()
-def run_analysis_cleanup(analysis):
-    logger.debug("analysis_manager.run_analysis_cleanup called")
-    
-    analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+def rename_analysis_results(analysis):
+    """ Task for renaming files in file_store after download""" 
     
     # rename file_store items to new name updated from galaxy file_ids 
     analysis_results = AnalysisResult.objects.filter(analysis_uuid=analysis.uuid)
@@ -313,6 +314,16 @@ def run_analysis_cleanup(analysis):
         
         # rename file by way of file_store
         filestore_item = rename(result.file_store_uuid, new_file_name)
+    
+
+# task: perform cleanup, after download of results cleanup galaxy run
+@task()
+def run_analysis_cleanup(analysis):
+    logger.debug("analysis_manager.run_analysis_cleanup called")
+    
+    analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+    
+
     
     # gets current galaxy connection
     connection = get_analysis_connection(analysis)
