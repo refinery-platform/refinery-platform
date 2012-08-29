@@ -308,7 +308,8 @@ def run_analysis_cleanup(analysis):
     analysis_results = AnalysisResult.objects.filter(analysis_uuid=analysis.uuid)
     for result in analysis_results:
         # new name to load
-        new_file_name = result.file_name + "." + result.file_type
+        #new_file_name = result.file_name + "." + result.file_type
+        new_file_name = result.file_name
         
         # rename file by way of file_store
         filestore_item = rename(result.file_store_uuid, new_file_name)

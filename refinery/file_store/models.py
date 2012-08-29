@@ -171,7 +171,7 @@ class _FileStoreItemManager(models.Manager):
 
 class FileStoreItem(models.Model):
     ''' Represents data files on disk '''
-    datafile = models.FileField(upload_to=file_path, storage=fss, blank=True)
+    datafile = models.FileField(upload_to=file_path, storage=fss, blank=True, max_length=1024)
     uuid = UUIDField(unique=True, auto=True)
     source = models.CharField(max_length=1024)     # URL or absolute file system path
     sharename = models.CharField(max_length=20, blank=True)
