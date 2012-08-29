@@ -45,7 +45,7 @@ class Connection( object ):
             if key:
                 return self.base_url + '/' + self.data_url + '/' + command + argsep + '&'.join( [ '='.join( t ) for t in args ] )
             else:
-                return self.base_url + '/' + self.data_url + '/' + command
+                return self.base_url + '/' + self.data_url + '/' + command  + argsep + "to_ext=txt"
         else:
             return self.base_url + '/' + self.api_url + '/' + command + argsep + '&'.join( [ '='.join( t ) for t in args ] )
         
