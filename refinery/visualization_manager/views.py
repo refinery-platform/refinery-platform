@@ -125,7 +125,7 @@ def createIGVsession(genome, uuids, host_url):
     tempfilename.close()
     
     # getting file_store_uuid
-    filestore_uuid = create(tempfilename.name, permanent=True, filetype="xml")
+    filestore_uuid = create(tempfilename.name, filetype="xml")
     filestore_item = import_file(filestore_uuid, permanent=True, refresh=True)
     
     # file to rename
@@ -136,8 +136,7 @@ def createIGVsession(genome, uuids, host_url):
     filestore_item = rename(filestore_uuid, temp_name)
     
     # delete temp file
-    # NG: potentially deletes before renaming is finished, commented out
-    # os.unlink(tempfilename.name)
+    os.unlink(tempfilename.name)
     
     # Print our newly created XML
     #print doc.toprettyxml(indent="  ")
