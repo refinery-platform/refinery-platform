@@ -13,6 +13,7 @@ from file_store.tasks import create, import_file
 from refinery import settings
 from sets import Set
 from zipfile import ZipFile
+from urlparse import urlparse
 import csv
 import glob
 import itertools
@@ -305,7 +306,12 @@ class IsaTabParser:
                 if self.file_base_path is None:
                     file_path = node_name
                 else:
-                    file_path = os.path.join( self.file_base_path, node_name )
+                    # test if this node is refering to a remote url
+                    components = urlparse( node_name )
+                    if components.scheme == "" or components.netloc == "":
+                        # not a remote url
+                        file_path = os.path.join( self.file_base_path, node_name )
+                    
                 
                 uuid = create( source=file_path )
                 
