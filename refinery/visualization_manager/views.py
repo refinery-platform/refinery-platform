@@ -35,13 +35,7 @@ def igv_session( request ):
     # TODO: How to tell which genome? 
     
     # Create IGV session file 
-    fs_item = createIGVsession("mm8", uuids, request.get_host())
-    
-    # Url for session file 
-    fs_url = fs_item.get_url()
-    
-    # IGV url for automatic launch of Java Webstart
-    igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php?sessionURL=" + fs_url
+    igv_url = createIGVsession("mm8", uuids)
     
     logger.info("Starting IGV: " + igv_url)
     
@@ -56,7 +50,7 @@ def profile_viewer_session( request ):
     return profile_viewer( request, uuid=uuid, start_location=1, end_location=200000000, sequence_name="chr1" );
 
 
-def createIGVsession(genome, uuids, host_url):
+def createIGVsession(genome, uuids):
     """ Creates session file for selected file uuids, returns newly created filestore uuid 
     
     :param genome: Genome to be used in session file i.e. hg18, dm3
@@ -80,6 +74,7 @@ def createIGVsession(genome, uuids, host_url):
         </Resources>
     </Global>
     """
+    logger.info("visualization_manager.createIGVsession called")
     
     # Create the minidom document
     doc = Document()
@@ -109,8 +104,6 @@ def createIGVsession(genome, uuids, host_url):
             
             # full path to selected UUID File
             curr_url = curr_fs.get_url()
-            print "curr_url"
-            print curr_url            
             
             # creates Resource element 
             res = doc.createElement("Resource")
@@ -125,7 +118,7 @@ def createIGVsession(genome, uuids, host_url):
     tempfilename.close()
     
     # getting file_store_uuid
-    filestore_uuid = create(tempfilename.name, filetype="xml")
+    filestore_uuid = create(tempfilename.name, permanent=True, filetype="xml")
     filestore_item = import_file(filestore_uuid, permanent=True, refresh=True)
     
     # file to rename
@@ -142,16 +135,27 @@ def createIGVsession(genome, uuids, host_url):
     #print doc.toprettyxml(indent="  ")
     #print filestore_item.datafile.url
     
-    return filestore_item
+    # Url for session file 
+    fs_url = filestore_item.get_url()
+    
+    # IGV url for automatic launch of Java Webstart
+    igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php?sessionURL=" + fs_url
+    
+    return igv_url
 
 def results_igv(request):
-    print "called results_igv"
-    #import pdb; pdb.set_trace()
-    ret_json = {"OK": "True"}
-    print simplejson.dumps(request.POST, indent=4);
+    logger.info("visualization_manager results_igv called")
     
-    if request.is_ajax():
-        print "is ajax"
+    uuids = []
     
-        return HttpResponse(simplejson.dumps(ret_json),mimetype='application/javascript')
+    # finds all selected file_uuids to view in igv
+    for i, val in request.POST.iteritems():
+        if (val and val != ""):
+            if (i.startswith('igv_')):
+                temp_uuid = i.replace('igv_', '')
+                uuids.append(temp_uuid)
+                
+    ### NEED SPECIES ###          
+    igv_url = createIGVsession("mm9", uuids)
     
+    return redirect(igv_url)  
