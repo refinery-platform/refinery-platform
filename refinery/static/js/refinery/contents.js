@@ -85,7 +85,8 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 				if ( facetValues[facetValue].isSelected ) {
 					// escape or encode special characters
 					facetValue = facetValue.replace( /\ /g, "\\ " );
-					facetValue = facetValue.replace( /\//g, "%2F" );
+					facetValue = facetValue.replace( /\//g, "\\/" );
+					facetValue = facetValue.replace( /\,/g, "\\," );									
 					facetValue = facetValue.replace( /\#/g, "%23" );
 					facetValue = facetValue.replace( /\(/g, "\\(" );
 					facetValue = facetValue.replace( /\)/g, "\\)" );
@@ -96,17 +97,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 			}				
 		}		
 		
-		/*
-		facet = facet.replace( /\ /g, "\\ " );
-		facet = facet.replace( /\//g, "\/" );
-		facet = facet.replace( /\#/g, "%23" );
-		facet = facet.replace( /\&/g, "%26" );
-		facet = facet.replace( /\(/g, "\\(" );
-		facet = facet.replace( /\)/g, "\\)" );
-		facet = facet.replace( /\+/g, "%2B" );
-		facet = facet.replace( /\:/g, "%3A" );													
-		*/
-
+		
 		if ( filterValues.length > 0 ) {
 			filter = facet.replace( /\ /g, "_" );
 			
