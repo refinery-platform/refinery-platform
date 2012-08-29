@@ -443,7 +443,7 @@ def download_history_files(analysis) :
                 # size of file defined by galaxy
                 file_size = results['file_size']
                 # URL to download
-                download_url = connection.make_url(str(results['dataset_id']), is_data=True)
+                download_url = connection.make_url(str(results['dataset_id']), is_data=True, key=False)
                 
                 print "download url"
                 print download_url

@@ -35,14 +35,17 @@ class Connection( object ):
 
     # =========================================================================================================
                 
-    def make_url( self, command, args=None, is_data=False ):
+    def make_url( self, command, args=None, is_data=False, key=True ):
         # Adds the API Key to the URL if it's not already there.
         if args is None:
             args = []
         argsep = '?'
         args.insert( 0, ( 'key', self.api_key ) )
         if (is_data):
-            return self.base_url + '/' + self.data_url + '/' + command + argsep + '&'.join( [ '='.join( t ) for t in args ] )
+            if key:
+                return self.base_url + '/' + self.data_url + '/' + command + argsep + '&'.join( [ '='.join( t ) for t in args ] )
+            else:
+                return self.base_url + '/' + self.data_url + '/' + command
         else:
             return self.base_url + '/' + self.api_url + '/' + command + argsep + '&'.join( [ '='.join( t ) for t in args ] )
         
