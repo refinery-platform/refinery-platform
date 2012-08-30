@@ -22,7 +22,7 @@ AnalysisMonitor = function( uuid, redirectUrl, crsfMiddlewareToken ) {
 };	
 	
 	
-AnalysisMonitor.prototype.isFinished = function ( result ) {
+AnalysisMonitor.prototype.isStageFinished = function ( result ) {
 	var self = this;
 	 
 	if ( !result ) {
@@ -48,7 +48,7 @@ AnalysisMonitor.prototype.isFinished = function ( result ) {
 };
 	
 	
-AnalysisMonitor.prototype.isWaiting = function ( result ) {
+AnalysisMonitor.prototype.isStageWaiting = function ( result ) {
 	var self = this;
 	
 	if ( !result ) {
@@ -65,25 +65,25 @@ AnalysisMonitor.prototype.isWaiting = function ( result ) {
 };
 	
 	
-AnalysisMonitor.prototype.isRunning = function ( result ) {
+AnalysisMonitor.prototype.isStageRunning = function ( result ) {
 	var self = this;
 	
-	return !self.isWaiting( result ) && !self.isFinished( result )
+	return !self.isStageWaiting( result ) && !self.isStageFinished( result )
 };
 	
 	
 AnalysisMonitor.prototype.getStageStatus = function ( result ) {
 	var self = this;
 
-	if ( self.isWaiting( result ) ) {
+	if ( self.isStageWaiting( result ) ) {
 		return self.STAGE_WAITING;
 	}
 		
-	if ( self.isFinished( result ) ) {
+	if ( self.isStageFinished( result ) ) {
 		return self.STAGE_FINISHED;
 	}
 
-	if ( self.isRunning( result ) ) {
+	if ( self.isStageRunning( result ) ) {
 		return self.STAGE_RUNNING;
 	}
 	
@@ -194,7 +194,6 @@ AnalysisMonitor.prototype.updateStageProgress = function ( result, stageElementI
 AnalysisMonitor.prototype.getUpdate = function() {
 	var self = this;
 
-	console.log( self.uuid, self.redirectUrl )	
 	$.ajax({
      url:"/analysis_manager/" + self.uuid + "/",
      type:"POST",
@@ -202,7 +201,7 @@ AnalysisMonitor.prototype.getUpdate = function() {
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
      success: function( result ) {
      	
-		if ( self.isFinished( result.postprocessing ) ) {
+		if ( self.isStageFinished( result.postprocessing ) ) {
   			//clearTimeout ( timerId );
   			//var url = "/projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ statuses.analysis.uuid }}";
   			window.location = self.redirectUrl;
@@ -213,5 +212,25 @@ AnalysisMonitor.prototype.getUpdate = function() {
      		self.updateStageProgress( result.postprocessing, "#postprocessing-status", "File download");     	     		
      	}
      }
+	});
+};
+
+
+AnalysisMonitor.prototype.isAnalysisRunning = function( callbackRunning, callbackFinished ) {
+	var self = this;
+
+	$.ajax({
+     url:"/analysis_manager/" + self.uuid + "/",
+     type:"POST",
+     dataType: "json",
+     data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
+     success: function( result ) {     	
+			if ( !self.isStageFinished( result.postprocessing ) ) {
+				callbackRunning();
+			}
+			else {
+				callbackFinished();
+			}
+    	}
 	});
 };

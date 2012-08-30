@@ -58,10 +58,11 @@
 			{% for analysis in unassigned_analyses.all %}
 			    <tr>
 			    	<td>
-			    		<i class="icon-empty"></i> <a href="projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a>
+			    		<!-- <i class="icon-empty"></i> <a href="projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> -->
+			    		<i class="icon-empty"></i> <a href="analysis_manager/{{ analysis.uuid }}">{{ analysis.name }}</a>
 			    	</td>
 			    	<td>
-			    		<a href="analysis_manager/{{ analysis.uuid }}">Status</a>
+			    		<span id="analysis-{{ analysis.uuid }}-status"></span>
 			    	</td>
 			    </tr>
 			{% endfor %}	
@@ -83,7 +84,7 @@
 		    		<i class="icon-empty"></i> <a href="projects/{{ project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> - {{analysis.summary}}
 		    	</td>
 			    <td>
-			    		<a href="">Status</a>
+					<span id="status-{{ analysis.uuid }}"></span>
 			    </td>
 		    </tr>
 		{% endfor %}
@@ -217,3 +218,31 @@
 
 </div>
 {% endblock %}
+
+{% block script %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/analysis_manager/analysis_monitor.js"></script>
+	
+	<script>
+	    	
+		$(document).ready(function() {		
+			var monitors = [];
+			var callbacks = [];
+			{% for analysis in unassigned_analyses.all %}
+				monitors["{{ analysis.uuid }}"] = new AnalysisMonitor( "{{ analysis.uuid }}", "", "{{ csrf_token }}" );
+				
+				callbacks["{{ analysis.uuid }}"] = function(){ monitors["{{ analysis.uuid }}"].isAnalysisRunning( function() {
+					$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"label label-info\">Running</span>" );
+				}, function() {
+					$( "#analysis-{{ analysis.uuid }}-status" ).html( "" );
+				} )};
+				
+				//monitors["{{ analysis.uuid }}"].isAnalysisRunning( callbacks["{{ analysis.uuid }}"]() );
+				callbacks["{{ analysis.uuid }}"]();			
+				
+				setInterval( callbacks["{{ analysis.uuid }}"], 5000 );
+			{% endfor %}
+		});    		
+	</script>
+{% endblock %}
+
+
