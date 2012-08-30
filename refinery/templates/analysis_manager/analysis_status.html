@@ -7,306 +7,261 @@
 	<!-- 3rd party libraries -->
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap.js"></script>
 
+<!--
+	1. test which analysis is running 
+		if none then redirect
+		if one is running then show progress and status for the others
+	2. 
+-->
+
 <script>
 
 var counter = 0;
 var timerId = 0;
 
-function isFinished(result) { 
-	var retStatus = false;
-	if (result.length) 
-	var arLen=result.length;
-	if (arLen == 1) {
+var STAGE_WAITING = 1;
+var STAGE_RUNNING = 2;
+var STAGE_FINISHED = 3;
+
+var MODE_PREPEND = 1;
+var MODE_APPEND = 2;
+var MODE_OVERWRITE = 3;
+
+
+function isFinished( result ) { 
+	if ( !result ) {
+		return false;
+	}	
+	
+	var status = false;
+	
+	if ( result.length == 1) {
 		if ((result[0].state == 'SUCCESS') || (result[0].state == 'FAILURE')) { 
-			retStatus = true;
+			status = true;
 		}
 	}
 	else { 
-		for ( var i=0, len=arLen; i<len; ++i ){ 
+		for ( var i=0; i < result.length; ++i ) { 
 			if ((result[i].state == 'SUCCESS') || (result[i].state == 'FAILURE')) { 
-				retStatus = true;
+				status = true;
 			}
 		}	
 	}
-	return retStatus;	
+	
+	return status;	
 }
 
-function updateProgress(result, section) { 
-	console.log("------------- updateProgress");
-	console.log($("#"+section));
-				
-	
-	//console.log(result);
-	//console.log("TEXTTTT")
-	//console.log($.trim($("#collapseOne").text()));
-	//console.log($.trim($("#collapseOne > div").text()));
-	
-	var allFinished = true;
-	var arLen=result.length;
-	for ( var i=0, len=arLen; i<len; ++i ){
-		var temp_id = '#'+result[i].task_id;
-		
-		if ($(temp_id).length > 0) { // no element found
-			var temp_bar = '#bar_' +result[i].task_id;
-			var temp_id = '#text_'+result[i].task_id;
-			var temp_progress = '#progress_' +result[i].task_id;
-	  		$(temp_id).text(JSON.stringify(result[i]));
-	  		
-	  		console.log(result[i]);
-	  		
-			if (result[i].state == 'PROGRESS') {
-				console.log("PROGRESS ");
-	  			
-				var temp_percent = result[i].percent_done;
-				$(temp_bar).css({ 'width': temp_percent });
-				$(temp_progress).html( Math.floor( temp_percent.replace("%","") ) + "%" );
-				
-				console.log($("#"+section));
-				
-				//var cur_text = $.trim($("#"+section + " > div").text());
-			    //if (cur_text == 'Pending') {
-			    //	$("#"+section).collapse("show");
-			    //}
-				
-			}
-			// REMOVING ACTIVE CLASS STATUS
-	  		if (result[i].state == 'SUCCESS') {
-	  			console.log("SUCCESS ");
-	  			
-	  			$(temp_bar).css({ 'width': '100%'});
-				$(temp_progress).html( "100%");
 
-
-	  			var indicator_id = '#indicator_'+result[i].task_id;
-	  			$(indicator_id).fadeOut('slow');
-	  			$(indicator_id).removeClass('active');
-				
-				/*
-	  			var temp_bar_class = '#bar_class_'+result[i].task_id;
-	  			$(temp_bar_class).fadeOut('slow');
-	  			$(temp_bar_class).removeClass('active');
-	  			*/
-	  			
-	  			//$("#"+section).collapse("hide");
-	  			//$(temp_bar_class).collapse('hide');
-	  			//$("#"+section).collapse("show");
-	  		}
-  		}
-  		else { 
-	  		if (result[i].task_id != null) {
-	  			console.log("ELEMENT DOES NOT EXIST \n NEED TO CREATE AND APPEND")
-	  		
-	  			var template = 	"<li><div id=" + result[i].task_id+ "> <div id=text_" + result[i].task_id + ">" + result[i] + "</div>";
-	  			//if (result[i].percent_download != null) {
-	  			//if (result[i].percent_done != null) {
-	  			template += "<div id='bar_class_"+ result[i].task_id + "' class='progress progress-striped active'>";
-	  			template += "<div class='bar' id='bar_"+ result[i].task_id + "' style='width:{{stat.percent_done}};'></div></div>";
-	  			//} 
-			    template += "</div></li>";
-			    //console.log(template);      
-			    
-			    var cur_text = $.trim($("#"+section + " > div").text());
-			    if (cur_text == 'Pending') {
-			    	$("#"+section + " > div").html(template);
-			    }
-			    else { 
-			    	$("#"+section + " > div").append(template);
-			    }
+function isWaiting( result ) {
+	if ( !result ) {
+		return true;
+	}	
 	
-			    //$("#"+section).collapse("show");			
-		   }
-            				
-  		}
+	if ( result.length > 0 ) {
+		for ( var i = 0; i < result.length; ++i )
+			if ( result[i].state == "PROGRESS" || result[i].state == "SUCCESS" || result[i].state == "FAILURE" )
+				return false;
 	}
 	
+	return true;
 }
- 
-function getUpdate() {
+
+
+function isRunning( result  ) {
+	return !isWaiting( result ) && !isFinished( result )
+}
+
+
+function getStageStatus( result )
+{
+	if ( isWaiting( result ) ) {
+		return STAGE_WAITING;
+	}
+		
+	if ( isFinished( result ) ) {
+		return STAGE_FINISHED;
+	}
+
+	if ( isRunning( result ) ) {
+		return STAGE_RUNNING;
+	}
 	
-	console.log("counter");
-	counter += 1;
+	return STAGE_WAITING;
+}
+
+
+function printStatus( parentElementId, status, title, message, mode ) {
+	var mode = mode || MODE_OVERWRITE;
+	var bootstrapClass = "alert-warning";
 	
+	if ( status == STAGE_RUNNING ) {
+		bootstrapClass = "alert-info";
+	}
+
+	if ( status == STAGE_FINISHED ) {
+		bootstrapClass = "alert-success";
+	}
 	
+	var code = "";
+	code += "<div class=\"row-fluid\">";		                 			
+	code += "<div class=\"span12\">";		                 			
+	code += "<div class=\"alert " + bootstrapClass + "\"><strong>" + title + "</strong>&nbsp;" + message + "</div>";
+	code += "</div>";	
+	code += "</div>";
+	
+	writeElement( parentElementId, mode, code );	
+}
+
+
+function writeElement( parentElementId, mode, code ) {
+	if ( mode == MODE_APPEND ) {
+		$( code ).appendTo( parentElementId  );	
+	} else if ( mode == MODE_PREPEND ) {
+		$( code ).prependTo( parentElementId );	
+	} else {
+		$( parentElementId ).html( code );	
+	}	
+}
+
+
+function clearElement( parentElementId ) {
+	writeElement( parentElementId, MODE_OVERWRITE, "" );
+}
+
+
+function printProgressBars( parentElementId, mode, result ) {
+	
+	if ( !result )
+	{
+		return;
+	}
+
+	var code = "";
+	code += "<div class=\"well well-large\">";
+	
+	for ( var i = 0; i < result.length; ++i ) {
+		var taskId = result[i].task_id;
+		var percentDone = Math.floor( result[i].percent_done.replace("%","") ) + "%";
+		
+		code += "<div class=\"row-fluid\" id=\"indicator_" + taskId + "\">";		                 			
+		code += "	<div class=\"span10\">";
+		code += "		<div id=\"bar_wrapper_" + taskId + "\" class=\"progress progress-striped active\">";
+		code += "			<div class=\"bar\" id=\"bar_" + taskId + "\" style=\"width:" + percentDone + ";\"></div>";
+		code += "		</div>";
+		code += "	</div>";
+		code += "	<div class=\"span2\">";
+		code += "		<strong id=\"progress_" + taskId + "\">" + percentDone + "</strong>";
+		code += "	</div>";
+		code += "	</div>";
+	}	
+
+	code += "</div>";		
+	
+	writeElement( parentElementId, mode, code );	
+}
+
+
+function updateStageProgress( result, stageElementId, stageName ) {
+	// 1. determine stage (preprocessing, execution, postprocessing) status (pending, running, finished)
+	var stageStatus = getStageStatus( result );
+	
+	// 2. print status
+	if ( stageStatus == STAGE_WAITING ) {
+		printStatus( stageElementId, stageStatus, "Waiting", stageName + " is pending." );
+	}
+	
+	if ( stageStatus == STAGE_RUNNING ) {
+		//printStatus( stageElementId, stageStatus, "Running", stageName + " is in progress." );
+		printProgressBars( stageElementId, MODE_OVERWRITE, result );				
+	}
+		
+	if ( stageStatus == STAGE_FINISHED ) {
+		printStatus( stageElementId, stageStatus, "Finished", stageName + " is complete." );
+	}
+
+}
+
+
+function getUpdate() {	
 	$.ajax({
      url:"/analysis_manager/{{uuid}}/",
      type:"POST",
      dataType: "json",
      data: {csrfmiddlewaretoken: "{{ csrf_token }}" },
-     success: function(result){
-     	console.log("ajaxed returned something")
-     	console.log(counter)
+     success: function(result) {
      	
-     	updateProgress(result.preprocessing, "collapseOne");
-     	updateProgress(result.execution, "collapseTwo");
-     	updateProgress(result.postprocessing, "collapseThree");
-     	
-     	var allFinished = false;
-		
-		//if (isFinished(result.preprocessing) && isFinished(result.execution) && isFinished(result.postprocessing)) {
-		if (isFinished(result.postprocessing)) {
-			allFinished = true;
-			console.log("allfinished");
-			console.log(allFinished);
-		}
-		
-  		// if all files have been downloaded
-  		if (allFinished == true) { 
+		if ( isFinished( result.postprocessing ) ) {
   			clearTimeout ( timerId );
-  			// GOING TO ANALYSIS RESULTS PAGE
-  			//var url = "/analysis_manager/{{uuid}}/results"
   			var url = "/projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ statuses.analysis.uuid }}";
-  			//<i class="icon-empty"></i> <a href="projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }} - {{analysis.summary}}</a>
-  			
-  			//DEBUG
   			window.location = url;
-  		}
-  		
-  		if (counter == 1000) {
-  			console.log("HIT 1000")
-  			clearTimeout ( timerId );
-  		}
-  		
-  		console.log("allfinished");
-		console.log(allFinished);
-  		
-  		
+		}
+     	else {
+	     	updateStageProgress( result.preprocessing, "#preprocessing-status", "File upload" );
+    	 	updateStageProgress( result.execution, "#execution-status", "Workflow execution" );
+     		updateStageProgress( result.postprocessing, "#postprocessing-status", "File download");     	     		
+     	}
      }
 	});
 }
 
 
 $(document).ready(function() {
-	timerId = setInterval(getUpdate, 2800);
-
+	getUpdate()
+	timerId = setInterval( getUpdate, 3000 );
 });
-
 </script>
-
-
 {% endblock %}
 
 {% block subheader %}
 <h1 class="page-header">Analysis <small>{{ statuses.analysis.name }}</small></h1>
 {% endblock %}
 
-
 {% block content %}
 	
 	{% if statuses %}
+	
+		<div class="row-fluid">
+			<div class="span12">
+				<h3>
+					Status
+				</h3>
+				<p>
+					<i class="icon-cog"></i>&nbsp;<a href="{% url workflow statuses.analysis.workflow.uuid %}">{{ statuses.analysis.workflow.name }}</a> started on {{ statuses.analysis.modification_date }}.
+					(<a href="{{ statuses.analysis.workflow.workflow_engine.instance.base_url }}/history/list?f-sharing=All&sort=-update_time&f-name=All&f-tags=All&f-deleted=False&operation=Switch&use_panels=False&id={{ statuses.analysis.history_id }}">View in Galaxy</a>)
+					
+					<!-- <i class="icon-file"></i>&nbsp;<a href="{% url data_set statuses.analysis.data_set.uuid %}">{{ statuses.analysis.data_set.name }}</a> -->
+				</p>
+			</div> <!-- column -->
+		</div> <!-- row -->
+		
 		<div class="row-fluid">
 			<div class="span4">
 
-	          <h3>Preprocessing</h3>
-	
-	        	{% for stat in statuses.preprocessing_status %}
-	    			<div>
-	    			{% if preprocessing_status|length > 1 and stat.task_id == null %}
-						<div class="alert alert-info"><strong>Waiting</strong> Preprocessing pending.</div>
-					{% else %}
-						<div id="{{stat.task_id}}">
-	            			{% if stat.percent_done %}
-		             			<div class="row-fluid" id="indicator_{{stat.task_id}}">	                 				
-		             				<div class="span10">
-		            					<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
-		            						<div class="bar" id="bar_{{stat.task_id}}" style="width:{{stat.percent_done}};"></div>
-		             					</div>
-		             				</div>
-		             				<div class="span2">
-		             					<strong id="progress_{{stat.task_id}}">{{stat.percent_done}}</strong>
-		             				</div>
-		                		</div>
-	            			{% else %}
-	            				{% if stat.state == "SUCCESS" %}
-		   							<div class="alert alert-success"><strong>Success</strong> Preprocessing completed.</div>		            				
-		            			{% endif %}
-	            				{% if stat.state == "FAILURE" %}
-		   							<div class="alert alert-error"><strong>Error</strong> Preprocessing failed.</div>		            				
-		            			{% endif %}
-	            			{% endif %}
-	            		</div>
-	    			{% endif %}
-	    			</div>
-	    		{% endfor %}
-            		
-            
+	        	<h4>Preprocessing</h4>
+	        	
+	        	<div id="preprocessing-status" class="">						        		
+	        	</div>
+			            
  			</div> <!-- column -->
  			<div class="span4">
  
-              <h3>Execution</h3>
-              
-             	{% for stat in statuses.execution_status %}
-             		<div>
-             		{% if execution_status|length > 1 and stat.task_id == null %}
-						<div class="alert alert-info"><strong>Waiting</strong> Workflow pending.</div>
-					{% else %}
-						<div id="{{stat.task_id}}">
-	            			{% if stat.percent_done %}							
-		             			<!-- <div id="text_{{stat.task_id}}">{{stat}}</div> -->
-		             			<div class="row-fluid" id="indicator_{{stat.task_id}}">	                 				
-		             				<div class="span10">
-		            					<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
-		            						<div class="bar" id="bar_{{stat.task_id}}" style="width:{{stat.percent_done}};"></div>
-		             					</div>
-		             				</div>
-		             				<div class="span2">
-		             					<strong id="progress_{{stat.task_id}}">{{stat.percent_done}}</strong>
-		             				</div>
-		                		</div>
-		                	{% else %}
-	            				{% if stat.state == "SUCCESS" %}
-		   							<div class="alert alert-success"><strong>Success</strong> Execution completed.</div>		            				
-		            			{% endif %}
-	            				{% if stat.state == "FAILURE" %}
-		   							<div class="alert alert-error"><strong>Error</strong> Execution failed.</div>		            				
-		            			{% endif %}			                	
-		                	{% endif %}
-						</div>
-            		{% endif %}
-            	</div>
-            	{% endfor %}                  
+              <h4>Execution</h4>
+
+	        	<div id="execution-status" class="">						        		
+	        	</div>
             
 			 </div> <!-- column -->
 			 <div class="span4">
 			            
-              <h3>Postprocessing</h3>
+              <h4>Postprocessing</h4>
 
-              {% for stat in statuses.postprocessing_status %}
-              	<div>
-              		{% if postprocessing_status|length > 1 and stat.task_id == null %}
-						<div class="alert alert-info"><strong>Waiting</strong> Postprocessing pending.</div>
-					{% else %}
-						<div id="{{stat.task_id}}">
-	            			{% if stat.percent_done %}							
-		             			<!-- <div id="text_{{stat.task_id}}">{{stat}}</div> -->
-		             			<div class="row-fluid" id="indicator_{{stat.task_id}}">	                 				
-		             				<div class="span10">
-		            					<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
-		            						<div class="bar" id="bar_{{stat.task_id}}" style="width:{{stat.percent_done}};"></div>
-		             					</div>
-		             				</div>
-		             				<div class="span2">
-		             					<strong id="progress_{{stat.task_id}}">{{stat.percent_done}}</strong>
-		             				</div>
-		                		</div>
-		                	{% else %}
-	            				{% if stat.state == "SUCCESS" %}
-		   							<div class="alert alert-success"><strong>Success</strong> Execution completed.</div>		            				
-		            			{% endif %}
-	            				{% if stat.state == "FAILURE" %}
-		   							<div class="alert alert-error"><strong>Error</strong> Execution failed.</div>		            				
-		            			{% endif %}			                	
-		                	{% endif %}
-						</div>							
-                	{% endif %}
-            	</div>
-            	{% endfor %}
-                
-                {{ statuses.cleanup }}
+	        	<div id="postprocessing-status" class="">						        		
+	        	</div>
             
 			</div> <!-- column --> 
-			</div>
+		</div> <!-- row -->
                   
-{% endif %}
+	{% endif %}
 
 {% endblock %}
 
