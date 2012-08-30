@@ -537,5 +537,5 @@ ProfileViewer.prototype.browser_resize = function(options) {
       .attr("class", "line")
  
   this.redraw()();
-  };
+};
 

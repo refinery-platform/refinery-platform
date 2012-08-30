@@ -1,217 +1,5 @@
 {% extends "base.html" %}
 
-{% block head_html %}
-    
-        <script type="text/javascript" src="{{ STATIC_URL }}js/jquery/jquery-1.7.2.js"></script>
-    
-	<!-- 3rd party libraries -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap.js"></script>
-
-<!--
-	1. test which analysis is running 
-		if none then redirect
-		if one is running then show progress and status for the others
-	2. 
--->
-
-<script>
-
-var counter = 0;
-var timerId = 0;
-
-var STAGE_WAITING = 1;
-var STAGE_RUNNING = 2;
-var STAGE_FINISHED = 3;
-
-var MODE_PREPEND = 1;
-var MODE_APPEND = 2;
-var MODE_OVERWRITE = 3;
-
-
-function isFinished( result ) { 
-	if ( !result ) {
-		return false;
-	}	
-	
-	var status = false;
-	
-	if ( result.length == 1) {
-		if ((result[0].state == 'SUCCESS') || (result[0].state == 'FAILURE')) { 
-			status = true;
-		}
-	}
-	else { 
-		for ( var i=0; i < result.length; ++i ) { 
-			if ((result[i].state == 'SUCCESS') || (result[i].state == 'FAILURE')) { 
-				status = true;
-			}
-		}	
-	}
-	
-	return status;	
-}
-
-
-function isWaiting( result ) {
-	if ( !result ) {
-		return true;
-	}	
-	
-	if ( result.length > 0 ) {
-		for ( var i = 0; i < result.length; ++i )
-			if ( result[i].state == "PROGRESS" || result[i].state == "SUCCESS" || result[i].state == "FAILURE" )
-				return false;
-	}
-	
-	return true;
-}
-
-
-function isRunning( result  ) {
-	return !isWaiting( result ) && !isFinished( result )
-}
-
-
-function getStageStatus( result )
-{
-	if ( isWaiting( result ) ) {
-		return STAGE_WAITING;
-	}
-		
-	if ( isFinished( result ) ) {
-		return STAGE_FINISHED;
-	}
-
-	if ( isRunning( result ) ) {
-		return STAGE_RUNNING;
-	}
-	
-	return STAGE_WAITING;
-}
-
-
-function printStatus( parentElementId, status, title, message, mode ) {
-	var mode = mode || MODE_OVERWRITE;
-	var bootstrapClass = "alert-warning";
-	
-	if ( status == STAGE_RUNNING ) {
-		bootstrapClass = "alert-info";
-	}
-
-	if ( status == STAGE_FINISHED ) {
-		bootstrapClass = "alert-success";
-	}
-	
-	var code = "";
-	code += "<div class=\"row-fluid\">";		                 			
-	code += "<div class=\"span12\">";		                 			
-	code += "<div class=\"alert " + bootstrapClass + "\"><strong>" + title + "</strong>&nbsp;" + message + "</div>";
-	code += "</div>";	
-	code += "</div>";
-	
-	writeElement( parentElementId, mode, code );	
-}
-
-
-function writeElement( parentElementId, mode, code ) {
-	if ( mode == MODE_APPEND ) {
-		$( code ).appendTo( parentElementId  );	
-	} else if ( mode == MODE_PREPEND ) {
-		$( code ).prependTo( parentElementId );	
-	} else {
-		$( parentElementId ).html( code );	
-	}	
-}
-
-
-function clearElement( parentElementId ) {
-	writeElement( parentElementId, MODE_OVERWRITE, "" );
-}
-
-
-function printProgressBars( parentElementId, mode, result ) {
-	
-	if ( !result )
-	{
-		return;
-	}
-
-	var code = "";
-	code += "<div class=\"well well-large\">";
-	
-	for ( var i = 0; i < result.length; ++i ) {
-		var taskId = result[i].task_id;
-		var percentDone = Math.floor( result[i].percent_done.replace("%","") ) + "%";
-		
-		code += "<div class=\"row-fluid\" id=\"indicator_" + taskId + "\">";		                 			
-		code += "	<div class=\"span10\">";
-		code += "		<div id=\"bar_wrapper_" + taskId + "\" class=\"progress progress-striped active\">";
-		code += "			<div class=\"bar\" id=\"bar_" + taskId + "\" style=\"width:" + percentDone + ";\"></div>";
-		code += "		</div>";
-		code += "	</div>";
-		code += "	<div class=\"span2\">";
-		code += "		<strong id=\"progress_" + taskId + "\">" + percentDone + "</strong>";
-		code += "	</div>";
-		code += "	</div>";
-	}	
-
-	code += "</div>";		
-	
-	writeElement( parentElementId, mode, code );	
-}
-
-
-function updateStageProgress( result, stageElementId, stageName ) {
-	// 1. determine stage (preprocessing, execution, postprocessing) status (pending, running, finished)
-	var stageStatus = getStageStatus( result );
-	
-	// 2. print status
-	if ( stageStatus == STAGE_WAITING ) {
-		printStatus( stageElementId, stageStatus, "Waiting", stageName + " is pending." );
-	}
-	
-	if ( stageStatus == STAGE_RUNNING ) {
-		//printStatus( stageElementId, stageStatus, "Running", stageName + " is in progress." );
-		printProgressBars( stageElementId, MODE_OVERWRITE, result );				
-	}
-		
-	if ( stageStatus == STAGE_FINISHED ) {
-		printStatus( stageElementId, stageStatus, "Finished", stageName + " is complete." );
-	}
-
-}
-
-
-function getUpdate() {	
-	$.ajax({
-     url:"/analysis_manager/{{uuid}}/",
-     type:"POST",
-     dataType: "json",
-     data: {csrfmiddlewaretoken: "{{ csrf_token }}" },
-     success: function(result) {
-     	
-		if ( isFinished( result.postprocessing ) ) {
-  			clearTimeout ( timerId );
-  			var url = "/projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ statuses.analysis.uuid }}";
-  			window.location = url;
-		}
-     	else {
-	     	updateStageProgress( result.preprocessing, "#preprocessing-status", "File upload" );
-    	 	updateStageProgress( result.execution, "#execution-status", "Workflow execution" );
-     		updateStageProgress( result.postprocessing, "#postprocessing-status", "File download");     	     		
-     	}
-     }
-	});
-}
-
-
-$(document).ready(function() {
-	getUpdate()
-	timerId = setInterval( getUpdate, 3000 );
-});
-</script>
-{% endblock %}
-
 {% block subheader %}
 <h1 class="page-header">Analysis <small>{{ statuses.analysis.name }}</small></h1>
 {% endblock %}
@@ -263,5 +51,18 @@ $(document).ready(function() {
                   
 	{% endif %}
 
+{% endblock %}
+
+{% block script %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/analysis_manager/analysis_monitor.js"></script>
+	
+	<script>
+	monitor = new AnalysisMonitor( "{{ uuid }}", "/projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ statuses.analysis.uuid }}", "{{ csrf_token }}" );
+	
+	$(document).ready(function() {		
+		//var that = this;
+		var timerId = setInterval( function(){ console.log( monitor ); monitor.getUpdate(); }, 3000 );
+	});    		
+	</script>
 {% endblock %}
 
