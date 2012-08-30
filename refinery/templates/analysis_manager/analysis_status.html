@@ -49,6 +49,7 @@ function updateProgress(result, section) {
 		if ($(temp_id).length > 0) { // no element found
 			var temp_bar = '#bar_' +result[i].task_id;
 			var temp_id = '#text_'+result[i].task_id;
+			var temp_progress = '#progress_' +result[i].task_id;
 	  		$(temp_id).text(JSON.stringify(result[i]));
 	  		
 	  		console.log(result[i]);
@@ -58,6 +59,7 @@ function updateProgress(result, section) {
 	  			
 				var temp_percent = result[i].percent_done;
 				$(temp_bar).css({ 'width': temp_percent });
+				$(temp_progress).html( temp_percent );
 				
 				console.log($("#"+section));
 				
@@ -72,6 +74,8 @@ function updateProgress(result, section) {
 	  			console.log("SUCCESS ");
 	  			
 	  			$(temp_bar).css({ 'width': '100%'});
+				$(temp_progress).html( "100%");
+				
 	  			var temp_bar_class = '#bar_class_'+result[i].task_id;
 	  			$(temp_bar_class).fadeOut('slow');
 	  			$(temp_bar_class).removeClass('active');
@@ -200,7 +204,7 @@ $(document).ready(function() {
 		             					</div>
 		             				</div>
 		             				<div class="span2">
-		             					<strong>{{stat.percent_done}}</strong>
+		             					<strong id="progress_{{stat.task_id}}">{{stat.percent_done}}</strong>
 		             				</div>
 		                		</div>
 	            			{% else %}
@@ -229,7 +233,7 @@ $(document).ready(function() {
 					{% else %}
 						<div id="{{stat.task_id}}">
 	            			{% if stat.percent_done %}							
-		             			<!-- <div id="text_{{stat.task_id}}">{{stat}}</div> -->
+		             			<div id="text_{{stat.task_id}}">{{stat}}</div>
 		             			<div class="row-fluid">	                 				
 		             				<div class="span10">
 		            					<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
@@ -237,7 +241,7 @@ $(document).ready(function() {
 		             					</div>
 		             				</div>
 		             				<div class="span2">
-		             					<strong>{{stat.percent_done}}</strong>
+		             					<strong id="progress_{{stat.task_id}}">{{stat.percent_done}}</strong>
 		             				</div>
 		                		</div>
 		                	{% else %}
@@ -273,7 +277,7 @@ $(document).ready(function() {
 		             					</div>
 		             				</div>
 		             				<div class="span2">
-		             					<strong>{{stat.percent_done}}</strong>
+		             					<strong id="progress_{{stat.task_id}}">{{stat.percent_done}}</strong>
 		             				</div>
 		                		</div>
 		                	{% else %}
