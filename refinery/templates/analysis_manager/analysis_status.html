@@ -59,7 +59,7 @@ function updateProgress(result, section) {
 	  			
 				var temp_percent = result[i].percent_done;
 				$(temp_bar).css({ 'width': temp_percent });
-				$(temp_progress).html( temp_percent );
+				$(temp_progress).html( Math.floor( temp_percent ) );
 				
 				console.log($("#"+section));
 				
@@ -75,10 +75,18 @@ function updateProgress(result, section) {
 	  			
 	  			$(temp_bar).css({ 'width': '100%'});
 				$(temp_progress).html( "100%");
+
+
+	  			var indicator_id = '#indicator_'+result[i].task_id;
+	  			$(indicator_id).fadeOut('slow');
+	  			$(indicator_id).removeClass('active');
 				
+				/*
 	  			var temp_bar_class = '#bar_class_'+result[i].task_id;
 	  			$(temp_bar_class).fadeOut('slow');
 	  			$(temp_bar_class).removeClass('active');
+	  			*/
+	  			
 	  			//$("#"+section).collapse("hide");
 	  			//$(temp_bar_class).collapse('hide');
 	  			//$("#"+section).collapse("show");
@@ -197,7 +205,7 @@ $(document).ready(function() {
 					{% else %}
 						<div id="{{stat.task_id}}">
 	            			{% if stat.percent_done %}
-		             			<div class="row-fluid">	                 				
+		             			<div class="row-fluid" id="indicator_{{stat.task_id}}">	                 				
 		             				<div class="span10">
 		            					<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
 		            						<div class="bar" id="bar_{{stat.task_id}}" style="width:{{stat.percent_done}};"></div>
@@ -233,8 +241,8 @@ $(document).ready(function() {
 					{% else %}
 						<div id="{{stat.task_id}}">
 	            			{% if stat.percent_done %}							
-		             			<div id="text_{{stat.task_id}}">{{stat}}</div>
-		             			<div class="row-fluid">	                 				
+		             			<!-- <div id="text_{{stat.task_id}}">{{stat}}</div> -->
+		             			<div class="row-fluid" id="indicator_{{stat.task_id}}">	                 				
 		             				<div class="span10">
 		            					<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
 		            						<div class="bar" id="bar_{{stat.task_id}}" style="width:{{stat.percent_done}};"></div>
@@ -270,7 +278,7 @@ $(document).ready(function() {
 						<div id="{{stat.task_id}}">
 	            			{% if stat.percent_done %}							
 		             			<!-- <div id="text_{{stat.task_id}}">{{stat}}</div> -->
-		             			<div class="row-fluid">	                 				
+		             			<div class="row-fluid" id="indicator_{{stat.task_id}}">	                 				
 		             				<div class="span10">
 		            					<div id="bar_class_{{stat.task_id}}" class="progress progress-striped active">
 		            						<div class="bar" id="bar_{{stat.task_id}}" style="width:{{stat.percent_done}};"></div>
@@ -301,3 +309,4 @@ $(document).ready(function() {
 {% endif %}
 
 {% endblock %}
+
