@@ -17,7 +17,7 @@
 	<h2>Analysis</h2> 
     <ul>
     {% for status in statuses %}
-        <li> Analysis: {{ status.analysis_uuid }}<br>
+        <li> Analysis: {{ status.analysis.uuid }}<br>
         	{{ status.preprocessing_taskset_id }} | {{ status.execution_taskset_id }} | {{ status.postprocessing_taskset_id }}<br>
         	{{ status.current }}
         </li>

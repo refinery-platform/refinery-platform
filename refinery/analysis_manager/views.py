@@ -152,8 +152,8 @@ def analysis_run(request):
     
     ######### ANALYSIS MODEL ########
     # How to create a simple analysis object
-    temp_name = str( "Analysis:" + datetime.now())
-    summary_name = "None provided"
+    temp_name = "Unnamed " + str( datetime.now())
+    summary_name = "None provided."
     analysis = Analysis( summary=summary_name, name=temp_name, project=request.user.get_profile().catch_all_project, data_set=data_set, workflow=curr_workflow )
     analysis.save()   
     

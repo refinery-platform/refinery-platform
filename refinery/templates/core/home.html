@@ -57,8 +57,11 @@
 		    </tr>
 			{% for analysis in unassigned_analyses.all %}
 			    <tr>
-			    	<td colspan="2">
-			    		<i class="icon-empty"></i> <a href="projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }} - {{analysis.summary}}</a>
+			    	<td>
+			    		<i class="icon-empty"></i> <a href="projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a>
+			    	</td>
+			    	<td>
+			    		<a href="analysis_manager/{{ analysis.uuid }}">Status</a>
 			    	</td>
 			    </tr>
 			{% endfor %}	
@@ -76,9 +79,12 @@
     </tr>
 		{% for analysis in project.analyses.all %}
 		    <tr>
-		    	<td colspan="2">
+		    	<td>
 		    		<i class="icon-empty"></i> <a href="projects/{{ project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> - {{analysis.summary}}
 		    	</td>
+			    <td>
+			    		<a href="">Status</a>
+			    </td>
 		    </tr>
 		{% endfor %}
     {% endfor %}
