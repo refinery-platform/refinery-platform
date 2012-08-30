@@ -234,3 +234,27 @@ AnalysisMonitor.prototype.isAnalysisRunning = function( callbackRunning, callbac
     	}
 	});
 };
+
+AnalysisMonitor.prototype.getAnalysisProgress = function( callbackRunning, callbackFinished ) {
+	var self = this;
+
+	$.ajax({
+     url:"/analysis_manager/" + self.uuid + "/",
+     type:"POST",
+     dataType: "json",
+     data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
+     success: function( result ) {     	
+			if ( !self.isStageFinished( result.postprocessing ) ) {
+				if ( self.isStageRunning( result.execution ) ) {
+					callbackRunning( Math.floor( result.execution[0].percent_done.replace("%","") ) + "%" );					
+				}
+				else {
+					callbackRunning( "0%" );										
+				}
+			}
+			else {
+				callbackFinished();
+			}
+    	}
+	});
+};

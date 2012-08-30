@@ -230,10 +230,10 @@
 			{% for analysis in unassigned_analyses.all %}
 				monitors["{{ analysis.uuid }}"] = new AnalysisMonitor( "{{ analysis.uuid }}", "", "{{ csrf_token }}" );
 				
-				callbacks["{{ analysis.uuid }}"] = function(){ monitors["{{ analysis.uuid }}"].isAnalysisRunning( function() {
-					$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"label label-info\">Running</span>" );
+				callbacks["{{ analysis.uuid }}"] = function(){ monitors["{{ analysis.uuid }}"].getAnalysisProgress( function( percentDone ) {
+					$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge\">" + percentDone + "</span>" );
 				}, function() {
-					$( "#analysis-{{ analysis.uuid }}-status" ).html( "" );
+					$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge badge-info\"><i class=\"icon-ok\"></i></span>" );
 				} )};
 				
 				//monitors["{{ analysis.uuid }}"].isAnalysisRunning( callbacks["{{ analysis.uuid }}"]() );
