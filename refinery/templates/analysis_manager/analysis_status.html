@@ -57,9 +57,10 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/analysis_manager/analysis_monitor.js"></script>
 	
 	<script>
-	monitor = new AnalysisMonitor( "{{ uuid }}", "/projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ statuses.analysis.uuid }}", "{{ csrf_token }}" );
-	
 	$(document).ready(function() {		
+	monitor = new AnalysisMonitor( "{{ uuid }}", "/projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ statuses.analysis.uuid }}", "{{ csrf_token }}" );
+	monitor.getUpdate();
+	
 		//var that = this;
 		var timerId = setInterval( function(){ console.log( monitor ); monitor.getUpdate(); }, 3000 );
 	});    		
