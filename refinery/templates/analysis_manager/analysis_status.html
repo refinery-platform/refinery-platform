@@ -59,7 +59,7 @@ function updateProgress(result, section) {
 	  			
 				var temp_percent = result[i].percent_done;
 				$(temp_bar).css({ 'width': temp_percent });
-				$(temp_progress).html( Math.floor( temp_percent.replace("%","") ) );
+				$(temp_progress).html( Math.floor( temp_percent.replace("%","") ) + "%" );
 				
 				console.log($("#"+section));
 				
