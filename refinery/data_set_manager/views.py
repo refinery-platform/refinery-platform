@@ -130,7 +130,7 @@ def import_isa_tab(request):
                     context = RequestContext(request, {'form': form, 'error': error})
                     return render_to_response('data_set_manager/import.html', context_instance=context)
                 logger.debug("New temp file name: '%s'", new_temp_file_name)
-                dataset_uuid = parse_isatab(request.user.username, True, new_temp_file_name)
+                dataset_uuid = parse_isatab(request.user.username, False, new_temp_file_name)
                 #os.unlink(new_temp_file_name)
             else:
                 # rename uploaded file to its original name
