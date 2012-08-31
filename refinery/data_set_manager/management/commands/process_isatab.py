@@ -123,4 +123,4 @@ class Command(BaseCommand):
                 print "Successfully parsed %s into DataSet" % inv.get_identifier(),
                 print "with UUID %s" % i
             else:
-                print "Unsuccessful parse and DataSet Creation of %s" % inv.get_identifier() 
+                print "Unsuccessful parse and DataSet Creation." 

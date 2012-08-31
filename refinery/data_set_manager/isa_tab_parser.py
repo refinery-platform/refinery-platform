@@ -311,6 +311,9 @@ class IsaTabParser:
                     if components.scheme == "" or components.netloc == "":
                         # not a remote url
                         file_path = os.path.join( self.file_base_path, node_name )
+                    else:
+                        file_path = node_name
+                        
                     
                 
                 uuid = create( source=file_path )
