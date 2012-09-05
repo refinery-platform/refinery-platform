@@ -38,8 +38,8 @@ AnalysisMonitor.prototype.isStageFinished = function ( result ) {
 	}
 	else { 
 		for ( var i=0; i < result.length; ++i ) { 
-			if ((result[i].state == 'SUCCESS') || (result[i].state == 'FAILURE')) { 
-				status = true;
+			if ((result[i].state == 'PROGRESS')) { 
+				status = false;
 			}
 		}	
 	}
