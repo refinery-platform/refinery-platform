@@ -270,6 +270,11 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
+        'galaxy_connector': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     },
 }
 
