@@ -29,7 +29,10 @@ AnalysisMonitor.prototype.isStageFinished = function ( result ) {
 		return false;
 	}	
 	
-	var status = true;
+	console.log( "STAGE FINISHED?" );
+	console.log( result );
+	
+	var status = false;
 	
 	if ( result.length == 1) {
 		if ((result[0].state == 'SUCCESS') || (result[0].state == 'FAILURE')) { 
@@ -41,10 +44,10 @@ AnalysisMonitor.prototype.isStageFinished = function ( result ) {
 			if ((result[i].state == 'PROGRESS')) { 
 				status = false;
 			}
-		}	
+		}		
 	}
 	
-	return status;	
+	return false;	
 };
 	
 	
