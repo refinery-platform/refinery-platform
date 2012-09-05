@@ -201,6 +201,11 @@ AnalysisMonitor.prototype.getUpdate = function() {
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
      success: function( result ) {
      	
+     	if ( $.isEmptyObject( result ) ) {
+     		// do nothing
+     		return;
+     	}     	
+     	
 		if ( self.isStageFinished( result.postprocessing ) ) {
   			//clearTimeout ( timerId );
   			//var url = "/projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ statuses.analysis.uuid }}";
@@ -224,7 +229,12 @@ AnalysisMonitor.prototype.isAnalysisRunning = function( callbackRunning, callbac
      type:"POST",
      dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
-     success: function( result ) {     	
+     success: function( result ) {     	     	
+	     	if ( $.isEmptyObject( result ) ) {
+	     		// do nothing
+	     		return;
+	     	}     	
+	     	
 			if ( !self.isStageFinished( result.postprocessing ) ) {
 				callbackRunning();
 			}
@@ -244,6 +254,11 @@ AnalysisMonitor.prototype.getAnalysisProgress = function( callbackRunning, callb
      dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
      success: function( result ) {     	
+	     	if ( $.isEmptyObject( result ) ) {
+	     		// do nothing
+	     		return;
+	     	}     	
+     	     	
 			if ( !self.isStageFinished( result.postprocessing ) ) {
 				if ( self.isStageRunning( result.execution ) ) {
 					callbackRunning( Math.floor( result.execution[0].percent_done.replace("%","") ) + "%" );					
