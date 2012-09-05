@@ -40,14 +40,16 @@ AnalysisMonitor.prototype.isStageFinished = function ( result ) {
 		}
 	}
 	else { 
+		status = true;
+			
 		for ( var i=0; i < result.length; ++i ) { 
-			if ((result[i].state == 'PROGRESS')) { 
+			if ((result[i].state == 'PROGRESS') || (result[i].state == 'PENDING') ) { 
 				status = false;
 			}
 		}		
 	}
 	
-	return false;	
+	return status;	
 };
 	
 	
