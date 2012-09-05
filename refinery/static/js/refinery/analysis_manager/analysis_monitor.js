@@ -29,9 +29,6 @@ AnalysisMonitor.prototype.isStageFinished = function ( result ) {
 		return false;
 	}	
 	
-	console.log( "STAGE FINISHED?" );
-	console.log( result );
-	
 	var status = false;
 	
 	if ( result.length == 1) {
