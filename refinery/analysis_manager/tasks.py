@@ -209,7 +209,7 @@ def run_analysis_preprocessing(analysis):
 
 # task: monitor workflow execution (calls subtask that does the actual work)
 @task()
-def monitor_analysis_execution(analysis, interval=5.0, task_id=None):    
+def monitor_analysis_execution(analysis, interval=30.0, task_id=None):    
 
     # required to get updated state (move out of this function) 
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
