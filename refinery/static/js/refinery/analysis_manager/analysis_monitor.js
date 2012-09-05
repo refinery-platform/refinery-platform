@@ -29,7 +29,7 @@ AnalysisMonitor.prototype.isStageFinished = function ( result ) {
 		return false;
 	}	
 	
-	var status = false;
+	var status = true;
 	
 	if ( result.length == 1) {
 		if ((result[0].state == 'SUCCESS') || (result[0].state == 'FAILURE')) { 
