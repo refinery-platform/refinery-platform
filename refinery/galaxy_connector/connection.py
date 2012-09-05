@@ -17,7 +17,10 @@ from galaxy_connector.galaxy_history import GalaxyHistoryItem
 from galaxy_connector.galaxy_library import GalaxyLibrary
 from galaxy_connector.galaxy_library import GalaxyLibraryItem
 from core.models import Analysis, WorkflowDataInputMap, Workflow
+import logging
+from httplib import BadStatusLine
 
+logger = logging.getLogger(__name__)
 
 class Connection( object ):
     '''
@@ -53,10 +56,16 @@ class Connection( object ):
     def get( self, command ):
         url = self.make_url( command )
         try:
-            return simplejson.loads( urllib2.urlopen( url ).read() )
-        except simplejson.decoder.JSONDecodeError:
+            url_read = urllib2.urlopen( url ).read()
+            try:
+                ret_json = simplejson.loads(url_read)
+                return ret_json
+            except simplejson.decoder.JSONDecodeError:
+                return simplejson.loads( "{}" )
+        except BadStatusLine:
+            logger.debug("Galaxy_Connector.get: Could not fetch %s" % url)
             return simplejson.loads( "{}" )
-
+        
     def post( self, command, data ):
         url = self.make_url( command )
         request = urllib2.Request( url, headers = { 'Content-Type': 'application/json' }, data = simplejson.dumps( data ) )
