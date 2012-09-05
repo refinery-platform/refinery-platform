@@ -154,6 +154,12 @@ AnalysisMonitor.prototype.printProgressBars = function ( parentElementId, mode, 
 	
 	for ( var i = 0; i < result.length; ++i ) {
 		var taskId = result[i].task_id;
+		
+		if ( !result[i].percent_done )
+		{
+			continue;
+		}
+		
 		var percentDone = Math.floor( result[i].percent_done.replace("%","") ) + "%";
 		
 		code += "<div class=\"row-fluid\" id=\"indicator_" + taskId + "\">";		                 			
