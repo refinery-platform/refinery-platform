@@ -208,13 +208,12 @@ AnalysisMonitor.prototype.getUpdate = function() {
      dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
      success: function( result ) {
-     	
      	if ( $.isEmptyObject( result ) ) {
      		// do nothing
      		return;
      	}     	
      	
-		if ( self.isStageFinished( result.postprocessing ) ) {
+		if ( self.isStageFinished( result.cleanup ) ) {
   			//clearTimeout ( timerId );
   			//var url = "/projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ statuses.analysis.uuid }}";
   			window.location = self.redirectUrl;

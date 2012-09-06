@@ -67,16 +67,14 @@ def emptyTask(ret_val):
 
 @task
 def chord_postprocessing (ret_val, analysis):
-    
     logger.debug("analysis_manager.chord_postprocessing called")
-    
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
     
     # getting list of tasks for download history files
     postprocessing_taskset = download_history_files(analysis)
-    
+        
     if len(postprocessing_taskset) < 1:
         #print "---------- less than 1 -----------"
         #temp_task = emptyTask.subtask(("ret_val",))
@@ -90,7 +88,6 @@ def chord_postprocessing (ret_val, analysis):
     analysis_status.postprocessing_taskset_id = result_set.task_id 
     analysis_status.save()
     
-    #print "after chord_postprocessing"   
     return 
 
 @task
@@ -100,18 +97,17 @@ def chord_cleanup(ret_val, analysis):
     """
     logger.debug("analysis_manager.chord_cleanup called")
     
-    
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
     
-    cleanup_taskset = TaskSet(task=[run_analysis_cleanup.subtask((analysis,)) ])          
+    cleanup_taskset = TaskSet(task=[run_analysis_cleanup.subtask((analysis,)) ])
+                  
     result_chord, result_set = progress_chord(cleanup_taskset)(emptyTask.subtask())
     
     ### TODO ###  UPDATE CLEANUP TASKID FOR ANALYSIS_STATUS
     analysis_status.cleanup_taskset_id = result_set.task_id 
     analysis_status.save()
     
-    #print "after chord_cleanup"   
     return
 
 # task: run analysis (outermost task, calls subtasks that monitor and run preprocessing, execution, postprocessing)
@@ -119,7 +115,6 @@ def chord_cleanup(ret_val, analysis):
 def run_analysis(analysis, interval=5.0):
     
     logger.debug("analysis_manager.tasks run_analysis called")
-    
     
     analysis_status = AnalysisStatus.objects.get(analysis=analysis)
     
@@ -129,16 +124,13 @@ def run_analysis(analysis, interval=5.0):
     download_tasks = []
   
     for files in datainputs:
-        #for cur_file in curr_raw:
-        # calling filestore on remote file
-        #print "calling filestore"
         cur_fs_uuid = files.data_uuid
-        #print cur_fs_uuid
+        
+        # Adding downloading task if file is not remote
         if not is_local(cur_fs_uuid):
             #print "not_local"
             task_id = import_file.subtask((cur_fs_uuid, False,))
             download_tasks.append(task_id)
-
     
     # PREPROCESSING            
     task_id = run_analysis_preprocessing.subtask( (analysis,) ) 
@@ -156,9 +148,7 @@ def run_analysis(analysis, interval=5.0):
 # task: perform postprocessing (innermost task, does the actual work)
 @task()
 def run_analysis_preprocessing(analysis):
-    
     logger.debug("analysis_manager.run_analysis_preprocessing called")
-    
     
     # obtain expanded workflow
     connection = get_analysis_connection(analysis)
@@ -175,9 +165,6 @@ def run_analysis_preprocessing(analysis):
     #print "history_download"
     #print history_download
     
-    #print "new_workflow"
-    #print new_workflow
-    
     # saving ouputs of workflow to download 
     for file_dl in history_download:
         #print file_dl
@@ -191,7 +178,6 @@ def run_analysis_preprocessing(analysis):
     
     ######### ANALYSIS MODEL 
     # getting number of steps for current workflow
-    #new_workflow_steps = len(new_workflow["steps"])
     new_workflow_steps = countWorkflowSteps(new_workflow)
     
     # creates new history in galaxy
@@ -209,7 +195,7 @@ def run_analysis_preprocessing(analysis):
 
 # task: monitor workflow execution (calls subtask that does the actual work)
 @task()
-def monitor_analysis_execution(analysis, interval=10.0, task_id=None):    
+def monitor_analysis_execution(analysis, interval=5.0, task_id=None):    
 
     # required to get updated state (move out of this function) 
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
@@ -270,51 +256,19 @@ def run_analysis_execution(analysis):
     
     return
 
-# task: perform postprocessing (innermost task, does the actual work)
-@task()
-def run_analysis_postprocessing(analysis):
-    
-    logger.debug("analysis_manager.run_analysis_postprocessing called")
-    
-    
-    ######################
-    ### POSTPROCESSING ###
-    ######################      
-    # 1. dowloads results from history
-    # 2. delete dynamic workflow in galaxy
-    # 3. delete history 
-    # 4. delete specified library
-    
-    analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-    analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
-    
-    ### ----------------------------------------------------------------#
-    # Downloading results from history
-    task_list = download_history_files(analysis)
-    
-    # Adding task to rename files after downloading results from history
-    task_id = rename_analysis_results.subtask( (analysis,) ) 
-    task_list.append(task_id)
-    
-    print "downloading history task_list"
-    #print task_list
-    
-    return
-
 @task()
 def rename_analysis_results(analysis):
     """ Task for renaming files in file_store after download""" 
+    logger.debug("analysis_manager.rename_analysis_results called")
     
     # rename file_store items to new name updated from galaxy file_ids 
     analysis_results = AnalysisResult.objects.filter(analysis_uuid=analysis.uuid)
     for result in analysis_results:
         # new name to load
-        #new_file_name = result.file_name + "." + result.file_type
         new_file_name = result.file_name
         
         # rename file by way of file_store
         filestore_item = rename(result.file_store_uuid, new_file_name)
-    
 
 # task: perform cleanup, after download of results cleanup galaxy run
 @task()
@@ -323,7 +277,12 @@ def run_analysis_cleanup(analysis):
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     
-
+    # Adding task to rename files after downloading results from history
+    logger.debug("before rename_analysis_results called");
+    #task_id = rename_analysis_results.subtask( (analysis,) ) 
+    #cleanup_taskset.append(task_id)
+    rename_analysis_results(analysis)
+    logger.debug("after rename_analysis_results called")
     
     # gets current galaxy connection
     connection = get_analysis_connection(analysis)
@@ -392,9 +351,6 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
             
             # getting current filestoreitem
             curr_filestore = FileStoreItem.objects.get(uuid=cur_item['assay_uuid'])
-            #print "got curr_filestore item"
-            #print curr_filestore.datafile.path
-            #print curr_filestore.datafile.url
             
             file_path = curr_filestore.get_absolute_path()
             cur_item["filepath"] = file_path
@@ -411,7 +367,6 @@ def download_history_files(analysis) :
     
     logger.debug("analysis_manger.download_history_files called")
     
-    
     # retrieving list of files to download for workflow
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     dl_files = analysis.workflow_dl_files
@@ -420,7 +375,7 @@ def download_history_files(analysis) :
     dl_dict = {}
     
     for dl in dl_files.all():
-        print dl
+        #print dl
         temp_dict = {}
         temp_dict['filename'] = dl.filename
         temp_dict['pair_id'] = dl.pair_id
@@ -434,8 +389,8 @@ def download_history_files(analysis) :
     
     # Iterating through files in current galaxy history
     for results in download_list:
-        print "results"
-        print results
+        #print "results"
+        #print results
         
         # download file if result state is "ok"
         if results['state'] == 'ok':
@@ -456,17 +411,13 @@ def download_history_files(analysis) :
                 # URL to download
                 download_url = connection.make_url(str(results['dataset_id']), is_data=True, key=False)
                 
-                print "download url"
-                print download_url
-                print file_type
-                print download_url
+                #print "download url"
+                #print download_url
+                #print file_type
+                #print download_url
                 
                 # getting file_store_uuid
                 filestore_uuid = create(download_url, file_type)
-                
-                # rename using filestore function rename
-                #result_name = rename(filestore_uuid, result_name)
-                logger.debug("file_store rename called: new name = %s", result_name)
                 
                 # adding history files to django model 
                 temp_file = AnalysisResult(analysis_uuid=analysis.uuid, file_store_uuid=filestore_uuid, file_name=result_name, file_type=file_type)

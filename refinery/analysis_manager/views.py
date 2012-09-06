@@ -26,15 +26,15 @@ def analysis(request, uuid):
     
     analysis = Analysis.objects.get(uuid=uuid)
     statuses = AnalysisStatus.objects.get(analysis=analysis)
-    #statuses = AnalysisStatus.objects.get(analysis_uuid=uuid)
     
     if request.is_ajax():
-        print "is ajax"
+        #print "is ajax"
         #answers.values_list('id', flat=True)
         ret_json = {}
         ret_json['preprocessing'] = statuses.preprocessing_status()
         ret_json['execution'] = statuses.execution_status()
         ret_json['postprocessing'] = statuses.postprocessing_status()
+        ret_json['cleanup'] = statuses.cleanup_status()
         
         #json_serializer = serializers.get_serializer("json")()
         return HttpResponse(simplejson.dumps(ret_json), mimetype='application/javascript')
@@ -192,7 +192,7 @@ def update_workflows(request):
     print "analysis_manager.views.update_workflows"
     
     if request.is_ajax():
-        print "is ajax"
+        #print "is ajax"
         workflow_engines = WorkflowEngine.objects.all()
         workflows = 0
         
