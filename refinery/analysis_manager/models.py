@@ -56,58 +56,54 @@ class AnalysisStatus( models.Model ):
   
 
 def getPayload(ts_id):
-    
     #print "getPayload \n"
     
     payload = []
     ts = AsyncResult( ts_id )
     if ts:
-        #print "*******"
-        #print ts
         if ts.result:
-            #print ">>>>>>"
-            #print ts.result
-            #print "&&&&&&&&"
             if type(ts.result) ==type(dict()):
-                #print "ts.state is dict"
-                #print "ts.state"
                 if type(ts.result['message']) ==type(dict()):
                     temp_ret = ts.result['message']
                 else:
                     temp_ret = ts.result
-                #print "temp_ret"
-                #print temp_ret
                 temp_ret['state'] = ts.state
                 temp_ret['task_id'] = ts.task_id
                 payload.append(temp_ret)
             elif (ts.result.__class__.__name__ == 'TaskSetResult'):
-                #print "ts.state is TaskSetResult"
-                #print "        $$$$$$$$"
-                #print ts.result.results
                 n_tasks = len(ts.result.results)
                 if n_tasks > 0:
-                    #print "Greater than 0 tas"
-                    #print n_tasks
- 
                     for j in range(0,n_tasks):
-                        #print "\t \t jjjjjjj:" + str(j)
                         temp_ret = {};
                         if ts.result.results[j].result:
-                            #print "error_perm"
-                            #print ts.result.results[j]
-                            #print ts.result.results[j].state
                             if ts.result.results[j].result.__class__.__name__ == 'FileStoreItem':
                                 temp_ret['state'] = ts.result.results[j].state
                                 temp_ret['task_id'] = ts.result.results[j].task_id
                                 payload.append(temp_ret)
-                            
                             else:
-                                temp_ret = ts.result.results[j].result
+                                # if result returns as dictionary
+                                if type(ts.result.results[j].result) ==type(dict()):
+                                    temp_ret = ts.result.results[j].result
+                                    
+                                # if result is just a string
+                                else: 
+                                    #print "-------------"
+                                    #print "PAYLOAD TEST"
+                                    #print "j"
+                                    #print j
+                                    #print "results all"
+                                    #print ts.result.results[j]
+                                    #print "result"
+                                    #print ts.result.results[j].result
+                                    #print "state"
+                                    #print ts.result.results[j].state
+                                    
+                                    temp_ret = {}
+                                    
                                 temp_ret['state'] = str(ts.result.results[j].state)
                                 temp_ret['task_id'] = str(ts.result.results[j].task_id)
                                 payload.append(temp_ret)
-                            #payload.append(ts.result.results[j].result)
-                            #print ts.result.results[j].state
+                                
                         else:
                             temp_ret['state'] = ts.result.results[j].state
                             temp_ret['task_id'] = ts.result.results[j].task_id
@@ -116,18 +112,12 @@ def getPayload(ts_id):
                 #    print "00000 tasks"
                 #    print ts.result
             else:
-                #print " ))))))))))) \t \ tDIFFERENT TYPE"
                 temp_ret = {'state':ts.state, 'info':str(ts.result), 'task_id':ts.task_id}
                 payload.append(temp_ret)
-                #print ts.result
         else:
-            #print "<<<<<<<<<<<<<<<<<< "
-            #temp_ret
             temp_ret = {'state':ts.state, 'task_id':ts.task_id}
             payload.append(temp_ret)
     else:
-        #print "!!!!nottstststststst"
-        #print ts
         temp_ret = {'state':"### WAITING ###"}
         payload.append(temp_ret)
     
