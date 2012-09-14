@@ -11,7 +11,7 @@ from django.http import Http404
 from django.core.urlresolvers import resolve
 from decimal import *
 
-def search_genes(request, search_string):
+def search_genes(request, genome, search_string):
     print "annotation_server.search_genes"
     cursor = connection.cursor() 
     query = """Select a.name, a.symbol, a.synonyms,
@@ -25,27 +25,42 @@ def search_genes(request, search_string):
     
     return HttpResponse(cursor_to_json(cursor), 'application/javascript')
 
-def get_sequence(request, chrom, start, end):
+def get_sequence(request, genome, chrom, start, end):
     """ 
     returns sequence for a specified chromosome start and end
     """
     offset = int(end) - int(start)
     cursor = connection.cursor() 
-    query = """select name as chrom, substr(seq, %s, %s) as seq from dm3.sequence where name = '%s'""" % (start, offset, chrom)
+    query = """select name as chrom, substr(seq, %s, %s) as seq from %s.sequence where name = '%s'""" % (start, offset, genome, chrom)
     cursor.execute(query)
     #ret_json = cursor_to_json(cursor)
     return HttpResponse(cursor_to_json(cursor), 'application/javascript')
 
-def get_chrom_length(request, chrom):
+def get_length(request, genome):
     """
-    returns the length of a specified chromosome
+    Returns all chromosome lengths depending on genome i.e. dm3, hg18, etc.
     """
     cursor = connection.cursor() 
-    query = """SELECT chrom, length from dm3.chrom_info where chrom ilike '%s'""" % (chrom)
+    query = """SELECT chrom, size from %s.chrominfo where chrom !~* '_' order by size desc""" % (genome)
+        
     cursor.execute(query)
     return HttpResponse(cursor_to_json(cursor), 'application/javascript')
 
-def get_cytoband(request, chrom):
+
+def get_chrom_length(request, genome, chrom):
+    """
+    returns the length of a specified chromosome
+    """
+    
+    # TODO: return genome lengths according to chrom order i.e. 1,2,3 etc. 
+    cursor = connection.cursor() 
+    if (chrom):
+        query = """SELECT chrom, size from %s.chrominfo where chrom ilike '%s'""" % (genome, chrom)
+    
+    cursor.execute(query)
+    return HttpResponse(cursor_to_json(cursor), 'application/javascript')
+
+def get_cytoband(request, genome, chrom):
     """
     returns the length of a specified chromosome
     """
@@ -54,7 +69,7 @@ def get_cytoband(request, chrom):
     cursor.execute(query)
     return HttpResponse(cursor_to_json(cursor), 'application/javascript')
 
-def get_genes(request, chrom, start, end):
+def get_genes(request, genome, chrom, start, end):
     """
     gets a list of genes within a range i.e. gene start, cds, gene symbol
     """
@@ -65,7 +80,7 @@ def get_genes(request, chrom, start, end):
     
     return HttpResponse(cursor_to_json(cursor), 'application/javascript')
 
-def get_exons(request, chrom, start, end):
+def get_exons(request, genome, chrom, start, end):
     """
     Get list of all gene exons within a specified range
     """
