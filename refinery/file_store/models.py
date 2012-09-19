@@ -76,9 +76,15 @@ if not settings.FILE_UPLOAD_MAX_MEMORY_SIZE:
 
 
 def file_path(instance, filename):
-    '''
-    Return local file system path for uploaded files relative to FILE_STORE_BASE_DIR
+    '''Construct relative file system path for new file store files relative to FILE_STORE_BASE_DIR.
     Based on http://michaelandrews.typepad.com/the_technical_times/2009/10/creating-a-hashed-directory-structure.html
+
+    :param instance: FileStoreItem instance.
+    :type instance: FileStoreItem.
+    :param filename: requested filename.
+    :type filename: str.
+    :returns: str -- if success, None if failure.
+
     '''
     hashcode = hash(filename)
     mask = 255  # bitmask
@@ -131,7 +137,7 @@ class _FileStoreItemManager(models.Manager):
         
         :param source: URL or absolute file system path to a file.
         :type source: str.
-        :returns: FileStoreItem if success, None if failure.
+        :returns: FileStoreItem -- if success, None if failure.
 
         '''
         if not source:  # it doesn't make sense to create a FileStoreItem without a file source
@@ -170,11 +176,18 @@ class _FileStoreItemManager(models.Manager):
 
 
 class FileStoreItem(models.Model):
-    ''' Represents data files on disk '''
+    '''Represents data files on disk.
+    
+    '''
+    #: file on disk
     datafile = models.FileField(upload_to=file_path, storage=fss, blank=True, max_length=1024)
+    #: unique ID
     uuid = UUIDField(unique=True, auto=True)
-    source = models.CharField(max_length=1024)     # URL or absolute file system path
+    #: source URL or absolute file system path
+    source = models.CharField(max_length=1024)
+    #: optional subdirectory inside the file store that contains the files of a particular group
     sharename = models.CharField(max_length=20, blank=True)
+    #: type of the file
     filetype = models.CharField(max_length=15, choices=FILE_TYPES, blank=True)
 
     objects = _FileStoreItemManager()
@@ -183,7 +196,7 @@ class FileStoreItem(models.Model):
         return self.uuid + ' - ' + self.datafile.name
 
     def get_absolute_path(self):
-        '''Return the absolute path to the data file.
+        '''Compute the absolute path to the data file.
         
         :returns: str -- the absolute path to the data file or None if the file does not exist on disk.
         
@@ -244,11 +257,11 @@ class FileStoreItem(models.Model):
         :returns: True if success, False if failure.
 
         '''
-        # guess the file type if it wasn't provided
+        # if type wasn't provided guess it from extension
         if not filetype:
             filetype = self.get_file_extension().lstrip('.')
 
-        # make sure the file type is valid
+        # make sure the file type is valid before assigning
         if filetype in get_available_filetypes(): 
             self.filetype = filetype
             self.save()
@@ -307,11 +320,11 @@ class FileStoreItem(models.Model):
 
     def rename_datafile(self, name):
         '''Change name of the data file.
+        New name may not be the same as the requested name in case of conflict with an existing file.
 
         :param name: new data file name.
         :type name: str.
-        :returns: str -- the name that was assigned by the file storage system if renaming succeeded
-        (may not be the same as the requested name in case of conflict), None otherwise.
+        :returns: str -- new name if renaming succeeded, None otherwise.
 
         '''
         logger.debug("Renaming datafile %s to %s", self.datafile.name, name)
@@ -524,7 +537,7 @@ def _delete_datafile(sender, **kwargs):
     '''Delete the FileStoreItem datafile when model is deleted.
     Signal handler is required because QuerySet delete() method does a bulk delete
     and does not call any delete() methods on the models.
-    
+
     '''
     item = kwargs.get('instance')
     logger.info("Deleting FileStoreItem with UUID '%s'", item.uuid)

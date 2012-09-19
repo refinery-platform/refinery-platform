@@ -46,3 +46,4 @@ refinery/celeryev.pid
 *.conflict
 refinery/solr/*/data
 refinery/refinery/*
+refinery/docs/*

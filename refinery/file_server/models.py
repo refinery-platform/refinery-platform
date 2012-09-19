@@ -12,7 +12,7 @@ from file_store.models import FileStoreItem
 
 logger = logging.getLogger('file_server')
 
-# list of the available file server models; update if new models are added
+# list of the available file server models - update if new models are added
 FILE_SERVER_MODELS = ('bamitem', 'tdfitem',)
 
 
@@ -118,7 +118,7 @@ class BAMItem(_FileServerItem):
         :returns: BAMItem instance or None if there was an error.
 
         '''
-        logger.info("Indexing BAMItem")
+        logger.debug("Indexing BAMItem")
         return True
 
     def profile(self, seq, start, end, zoom):
@@ -189,7 +189,7 @@ def add(data_file_uuid, aux_file_uuid=None, index=False, update=False):
     elif file_type == 'tdf':
         return _add_tdf(data_file=data_file, index=index)
     else:
-        logger.error("Could not create _FileStoreItem: unknown file type")
+        logger.error("Could not create _FileStoreItem: unknown file type '%s'", file_type)
         return None
 
 
