@@ -236,8 +236,10 @@ class Command(LabelCommand):
         '''
         Helper function to return UCSC url to download file and current path for file to download
         '''
+        logger.debug("annotation_server.create_genome_annotation getUrlFile called build: %s file: %s" % (self.GENOME_BUILD, file_to_download) )
+        
         if sequence:
-            url = self.BASE_DOWNLOAD_URL + self.SEQUENCE_FILES;
+            url = self.BASE_DOWNLOAD_URL + self.SEQUENCE_FILES + file_to_download;
         else:
             url = self.BASE_DOWNLOAD_URL + self.OTHER_FILES + file_to_download
         

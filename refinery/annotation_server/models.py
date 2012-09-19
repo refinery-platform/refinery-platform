@@ -37,7 +37,7 @@ class CytoBand ( models.Model ):
     
     class Meta:
         abstract = True
-
+        ordering = ['chrom', 'chromStart']
 
 class ChromInfo ( models.Model ):   
     '''
@@ -49,6 +49,7 @@ class ChromInfo ( models.Model ):
     
     class Meta:
         abstract = True
+        ordering = ['-size']
 
 
 class Gene ( models.Model ):   
@@ -77,6 +78,7 @@ class Gene ( models.Model ):
     
     class Meta:
         abstract = True
+        ordering = ['chrom', 'txStart']
         
 class BedFile (models.Model):
     '''
@@ -101,6 +103,7 @@ class BedFile (models.Model):
     
     class Meta:
         abstract = True
+        ordering = ['chrom', 'chromStart']
         
 class GffFile (models.Model):
     '''
@@ -122,6 +125,7 @@ class GffFile (models.Model):
     
     class Meta:
         abstract = True
+        ordering = ['chrom', 'start']
  
 class GtfFile (GffFile):
     '''
@@ -158,14 +162,62 @@ class GapRegionFile (models.Model):
     
     class Meta:
         abstract = True
+        ordering = ['chrom', 'chromStart']
+        
+class WigFile(models.Model):
+    '''
+    Abstract Base class for storing Wiggle file format data i.e. GC and Phastcon data
+    Following format description on http://genome.ucsc.edu/goldenPath/help/wiggle.html
+    Currently only supporting FixedStep
+    '''
+    chrom = models.CharField( max_length=255, db_index=True ) 
+    position = models.IntegerField(db_index=True)  
+    value = models.FloatField()
+    
+    def __unicode__(self):
+        return self.chrom + ":" + self.position + " = " + self.value
+    
+    class Meta:
+        abstract = True
+        ordering = ['chrom', 'position']
 
-#TODO: 
-#Gene annotation (GTF or GFF)
-#GC content (WIG files)
-#Gap regions (BED files)
-#PhastCon conservation score (WIG files)
-#Empirial mappability (BED files)
-#Theoretical mappability (BED files)
+
+##################################################
+### General organizational models
+##################################################
+
+#class AvailableAnnotations(models.Model):
+    '''
+    Model for keep tracking of which annotation files are currently available
+    i.e. sequence, chrominfo, gc, conservation, gene tracks, extended gene tracks
+    '''
+    #genome_build = models.CharField( max_length=255 )
+    #annotation_type = models.CharField( max_length=255 )
+    #table_name = models.CharField( max_length=255 )
+    #description = models.CharField( max_length=255 )
+    #file_store_uuid = 
+    
+    ## TODO: file_store uuid?       
+
+
+class WigDescription(models.Model):
+    '''
+    Model for storing description of WigFiles for GC and PhastCon models
+    '''
+    genome_build = models.CharField( max_length=255 ) 
+    annotation_type = models.CharField( max_length=255 )
+    name = models.CharField( max_length=1024 )
+    altColor = models.CharField( max_length=255 )  
+    color = models.CharField( max_length=255 )    
+    visibility  = models.CharField( max_length=255 )  
+    priority = models.IntegerField()  
+    type = models.CharField( max_length=255 )  
+    description = models.TextField()
+    
+    def __unicode__(self):
+        return self.name + "=" + self.description + ", " + self.type
+    
+
     
 ##################################################
 ### CLASSES FOR Human, hg19 
@@ -236,6 +288,23 @@ class hg19_GenCode ( GtfFile ):
     transcript_status = models.CharField( max_length=100, db_index=True )
     transcript_name = models.CharField( max_length=100, db_index=True )
 
+class hg19_GC (WigFile):
+    '''
+    GC Content annotation track for modEncode project
+    /data/home/hojwk/sharedData/modENCODE/human/GC/GC.wig
+    '''
+    annot = models.ForeignKey(WigDescription)
+    pass
+
+class hg19_Conservation (WigFile):
+    '''
+    GC Content annotation track for modEncode project
+    /data/home/hojwk/sharedData/modENCODE/human/GC/GC.wig
+    '''
+    annot = models.ForeignKey(WigDescription)
+    pass
+
+
 ##################################################
 ### CLASSES FOR Worm, ce10 
 ##################################################
@@ -287,6 +356,22 @@ class ce10_WormBase ( GffFile ):
     cds = models.CharField( max_length=100 )
     clone = models.CharField( max_length=100 )
     gene = models.CharField( max_length=100 )
+    
+class ce10_GC (WigFile):
+    '''
+    GC Content annotation track for modEncode project
+    /data/home/hojwk/sharedData/modENCODE/worm/GC/GC.wig
+    '''
+    annot = models.ForeignKey(WigDescription)
+    pass
+
+class ce10_Conservation (WigFile):
+    '''
+    GC Content annotation track for modEncode project
+    /data/home/hojwk/sharedData/modENCODE/worm/GC/GC.wig
+    '''
+    annot = models.ForeignKey(WigDescription)
+    pass
     
 ##################################################
 ### CLASSES FOR Fly, dm3 
@@ -347,8 +432,20 @@ class dm3_FlyBase ( GffFile ):
     description = models.CharField( max_length=255 )
     fullname = models.CharField( max_length=100 )
     symbol = models.CharField( max_length=100 )
+    
+class dm3_GC (WigFile):
+    '''
+    GC Content annotation track for modEncode project
+    /data/home/hojwk/sharedData/modENCODE/fly/GC/GC.wig
+    '''
+    annot = models.ForeignKey(WigDescription)
+    pass
 
-### TODO ###
-# OTHER GENES 
-# Mappability
-# GC content
+class dm3_Conservation (WigFile):
+    '''
+    GC Content annotation track for modEncode project
+    /data/home/hojwk/sharedData/modENCODE/fly/GC/GC.wig
+    '''
+    annot = models.ForeignKey(WigDescription)
+    pass
+

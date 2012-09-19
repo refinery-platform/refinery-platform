@@ -10,6 +10,7 @@ from datetime import datetime
 from django.http import Http404
 from django.core.urlresolvers import resolve
 from decimal import *
+from annotation_server.models import *
 
 def search_genes(request, genome, search_string):
     print "annotation_server.search_genes"
@@ -30,11 +31,14 @@ def get_sequence(request, genome, chrom, start, end):
     returns sequence for a specified chromosome start and end
     """
     offset = int(end) - int(start)
-    cursor = connection.cursor() 
-    query = """select name as chrom, substr(seq, %s, %s) as seq from %s.sequence where name = '%s'""" % (start, offset, genome, chrom)
-    cursor.execute(query)
-    #ret_json = cursor_to_json(cursor)
-    return HttpResponse(cursor_to_json(cursor), 'application/javascript')
+    
+    
+    
+    # POSTBIO QUERY
+    #cursor = connection.cursor() 
+    #query = """select name as chrom, substr(seq, %s, %s) as seq from %s.sequence where name = '%s'""" % (start, offset, genome, chrom)
+    #cursor.execute(query)
+    #return HttpResponse(cursor_to_json(cursor), 'application/javascript')
 
 def get_length(request, genome):
     """
