@@ -86,13 +86,13 @@ class BedFile (models.Model):
     chrom = models.CharField( max_length=255, db_index=True )
     chromStart = models.IntegerField(db_index=True)
     chromEnd = models.IntegerField(db_index=True)
-    name = models.CharField( max_length=255, db_index=True )
-    score = models.CharField( max_length=255, db_index=True )
+    name = models.CharField( max_length=255 )
+    score = models.CharField( max_length=255 )
     strand = models.CharField( max_length=1 )
-    thickStart = models.IntegerField(db_index=True)
-    thickEnd = models.IntegerField(db_index=True)
+    thickStart = models.IntegerField(null=True)
+    thickEnd = models.IntegerField(null=True)
     itemRgb = models.CharField( max_length=255 )
-    blockCount = models.IntegerField()
+    blockCount = models.IntegerField(null=True)
     blockSizes = models.CommaSeparatedIntegerField(max_length=3700)
     blockStarts = models.CommaSeparatedIntegerField(max_length=3700)
     
@@ -102,6 +102,63 @@ class BedFile (models.Model):
     class Meta:
         abstract = True
         
+class GffFile (models.Model):
+    '''
+    Generic Model for GFF
+    http://genome.ucsc.edu/FAQ/FAQformat.html#format2
+    '''      
+    chrom = models.CharField( max_length=255, db_index=True )
+    source = models.CharField( max_length=100 )
+    feature = models.CharField( max_length=100 )
+    start = models.IntegerField(db_index=True)
+    end = models.IntegerField(db_index=True)
+    score = models.CharField( max_length=100 )
+    strand = models.CharField( max_length=1 )
+    frame = models.CharField( max_length=100 )
+    attribute = models.TextField()
+    
+    def __unicode__(self):
+        return self.feature + " - " + self.chrom + ":" + self.start + "-" + self.end
+    
+    class Meta:
+        abstract = True
+ 
+class GtfFile (GffFile):
+    '''
+    Generic Model for GTF Files
+    http://genome.ucsc.edu/FAQ/FAQformat.html#format3
+    '''     
+    gene_id = models.CharField( max_length=255, db_index=True )
+    transcript_id = models.CharField( max_length=255, db_index=True )
+    
+    def __unicode__(self):
+        return self.gene_id + " - " + self.chrom + ":" + self.start + "-" + self.end
+    
+    class Meta:
+        abstract = True
+
+
+class GapRegionFile (models.Model):
+    '''
+    Annotation files for gap regions
+    #bin    chrom   chromStart      chromEnd        ix      n       size    type    bridge
+    ''' 
+    bin = models.IntegerField()    
+    chrom = models.CharField( max_length=255, db_index=True )   
+    chromStart = models.IntegerField(db_index=True)     
+    chromEnd = models.IntegerField(db_index=True)        
+    ix = models.IntegerField(db_index=True)      
+    n = models.CharField( max_length=255 )       
+    size = models.IntegerField(db_index=True)    
+    type = models.CharField( max_length=255)    
+    bridge = models.CharField( max_length=255 )
+
+    def __unicode__(self):
+        return self.chrom + ":" + self.chromStart + "-" + self.chromEnd
+    
+    class Meta:
+        abstract = True
+
 #TODO: 
 #Gene annotation (GTF or GFF)
 #GC content (WIG files)
@@ -142,14 +199,10 @@ class hg19_EnsGene( Gene ):
     Based on http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/ensGene.sql
     Database: hg19    Primary Table: refGene    Row Count: 43,699
     Format description: A gene prediction with some additional info.
-    
-      KEY `chrom` (`chrom`,`bin`),
-      KEY `name` (`name`),
-      KEY `name2` (`name2`)
     '''
     pass
 
-class hg19_GapRegions ( BedFile ):
+class hg19_GapRegions ( GapRegionFile ):
     '''
     Gap Regions track
     /data/home/hojwk/sharedData/modENCODE/Others/gap/human.hg19.gap.txt
@@ -169,6 +222,19 @@ class hg19_MappabilityTheoretical ( BedFile ):
     /data/home/hojwk/sharedData/modENCODE/annotation/mappable/mappable.hg19.anshul.25.bed
     '''
     pass
+
+class hg19_GenCode ( GtfFile ):
+    '''
+    Gencode gene annotation track
+    ftp://ftp.sanger.ac.uk/pub/gencode/release_10/gencode.v10.annotation.gtf.gz
+    ['gene_id', 'transcript_id', 'gene_type', 'gene_status', 'gene_name', 'transcript_type', 'transcript_status', 'transcript_name', 'level', 'havana_gene', 'havana_transcript', 'ont', 'tag', 'ccdsid']
+    '''
+    gene_type = models.CharField( max_length=100, db_index=True )
+    gene_status = models.CharField( max_length=100, db_index=True )
+    gene_name = models.CharField( max_length=100, db_index=True )
+    transcript_type = models.CharField( max_length=100, db_index=True )
+    transcript_status = models.CharField( max_length=100, db_index=True )
+    transcript_name = models.CharField( max_length=100, db_index=True )
 
 ##################################################
 ### CLASSES FOR Worm, ce10 
@@ -213,6 +279,15 @@ class ce10_MappabilityEmpirial ( BedFile ):
     '''
     pass
 
+class ce10_WormBase ( GffFile ):
+    '''
+    Wormbase gene annotation track
+    ftp://ftp.wormbase.org/pub/wormbase/releases/WS220/species/c_elegans/c_elegans.WS220.annotations.gff3.gz['cds', 'clone', 'gene', 'ID', 'Name']
+    '''
+    cds = models.CharField( max_length=100 )
+    clone = models.CharField( max_length=100 )
+    gene = models.CharField( max_length=100 )
+    
 ##################################################
 ### CLASSES FOR Fly, dm3 
 ##################################################
@@ -248,7 +323,7 @@ class dm3_EnsGene( Gene ):
     '''
     pass
 
-class dm3_GapRegions ( BedFile ):
+class dm3_GapRegions ( GapRegionFile ):
     '''
     Gap Regions track
     /data/home/hojwk/sharedData/modENCODE/Others/gap/human.dm3.gap.txt
@@ -261,6 +336,17 @@ class dm3_MappabilityEmpirial ( BedFile ):
     /data/home/hojwk/sharedData/modENCODE/annotation/mappable/mappable.dm3.lucy.bed
     '''
     pass
+
+class dm3_FlyBase ( GffFile ):
+    '''
+    Flybase gene annotation track
+    ftp://ftp.flybase.net/genomes/Drosophila_melanogaster/dmel_r5.45_FB2012_03/gff/dmel-all-r5.45.gff.gz
+    '''
+    name = models.CharField( max_length=100 )
+    Alias = models.TextField()
+    description = models.CharField( max_length=255 )
+    fullname = models.CharField( max_length=100 )
+    symbol = models.CharField( max_length=100 )
 
 ### TODO ###
 # OTHER GENES 

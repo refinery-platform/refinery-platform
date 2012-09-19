@@ -13,7 +13,8 @@ from django.db import connection, transaction
 
 '''
 Management command for creating basic annotation server 
-for a specific species and genome build 
+for a specific species and genome build i.e. dm3, ce10, hg19
+
 '''
 
 def extract_file(path, to_directory='.'):
@@ -54,7 +55,7 @@ class Command(LabelCommand):
     #SEQUENCE_FILES = 'bigZips/chromFa.tar.gz'
     SEQUENCE_FILES = 'chromosomes/'
     OTHER_FILES = 'database/'
-    SUPPORTED_GENOMES = ['hg19']
+    SUPPORTED_GENOMES = ['hg19', 'dm3', 'ce10']
     GENOME_BUILD = None
     ANNOTATION_DIR = 'annotation_server'   # relative to MEDIA_ROOT
 
