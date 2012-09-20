@@ -189,7 +189,7 @@ def add(data_file_uuid, aux_file_uuid=None, index=False, update=False):
     elif file_type == 'tdf':
         return _add_tdf(data_file=data_file, index=index)
     else:
-        logger.error("Could not create _FileStoreItem: unknown file type '%s'", file_type)
+        logger.error("Could not create _FileServerItem: unknown file type '%s'", file_type)
         return None
 
 
