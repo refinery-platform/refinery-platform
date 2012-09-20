@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from file_store.models import _mkdir
 from annotation_server.models import *
-
+from annotation_server.utils import *
 
 """
 Helper command to deal with additional annotation tracks not available from UCSC genome browser
@@ -105,7 +105,6 @@ class Command(BaseCommand):
         )
 
     can_import_settings = True
-    SUPPORTED_GENOMES = ['hg19', 'dm3', 'ce10']
     GENOME_BUILD = None
     ANNOTATION_DIR = 'annotation_server'   # relative to MEDIA_ROOT    
     
@@ -120,7 +119,7 @@ class Command(BaseCommand):
         if options['genome']:
             self.GENOME_BUILD = options['genome'].strip()
             
-            if self.GENOME_BUILD in self.SUPPORTED_GENOMES:   
+            if self.GENOME_BUILD in SUPPORTED_GENOMES:   
                 # temp dir should be located on the same file system as the base dir
                 self.ANNOTATION_TEMP_DIR = os.path.join(self.ANNOTATION_BASE_DIR, self.GENOME_BUILD)
                 # create this directory in case it doesn't exist
@@ -293,6 +292,13 @@ class Command(BaseCommand):
                 attrib = parse_gff_attribute(t1[8])
                 
                 db_string = 'current_table(chrom=t1[0], source=t1[1], feature=t1[2], start=t1[3], end=t1[4], score=t1[5], strand=t1[6], frame=t1[7], attribute=t1[8], %s)'
+                
+                parse_attrib = parse_db_string(attrib, table_vals)
+                
+                #print attrib
+                #if parse_attrib:
+                #    print "--------"
+                #    print parse_attrib
                 db_string = db_string % (parse_db_string(attrib, table_vals))
                 
                 item = eval(db_string)
@@ -303,7 +309,7 @@ class Command(BaseCommand):
         Function for adding additional annotation files giving in BED format
         encode project i.e. gap_regions
         '''
-        logger.debug("annotation_server.addGapRegions called for genome: %s, file: %s table: " % (self.GENOME_BUILD, bed_file, db_model))
+        logger.debug("annotation_server.addGapRegions called for genome: %s, file: %s table: %s" % (self.GENOME_BUILD, bed_file, db_model))
         
         current_table = eval(db_model)
             
