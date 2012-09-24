@@ -103,7 +103,7 @@ FILE_TYPES = (
     ('bigbed', 'Big BED'),
     ('bigwig', 'Big WIG'),
     ('csv', 'Comma Separated Values'),
-    ('cel', 'Affymetrix file'),
+    ('cel', 'Affymetrix Probe Results file'),
     ('eland', 'Eland file'),
     ('gff', 'GFF file'),
     ('gz', 'Gzip compressed archive'),
