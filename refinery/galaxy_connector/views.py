@@ -7,7 +7,6 @@ from galaxy_connector.connection import Connection
 from galaxy_connector.models import Instance
 from galaxy_connector.models import DataFile
 from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps, createStepsAnnot
-from galaxy_connector.tasks import run_workflow
 from galaxy_connector.tasks import monitor_workflow
 import simplejson
 from celery.result import AsyncResult
@@ -127,9 +126,6 @@ def run2(request):
     """
     instance, connection = checkActiveInstance(request)
     
-    #workflow_task = run_workflow.delay( instance, connection ) #, monitor_progress.subtask( (connection, ) ) )
-    #workflow_task.track_started = True
-
     workflow_task = monitor_workflow.delay( instance, connection, 5.0 ) #, monitor_progress.subtask( (connection, ) ) )
      
     return HttpResponseRedirect( reverse( 'task_progress', args=(workflow_task.task_id,) ) )
