@@ -17,5 +17,4 @@ class Command(process_isatab.Command):
         list_args = list( args )
         list_args.insert( 0, self._username )
         args = tuple( list_args )    
-        super( Command, self ).handle( *args, **options )             
-        
+        super( Command, self ).handle( *args, **options )

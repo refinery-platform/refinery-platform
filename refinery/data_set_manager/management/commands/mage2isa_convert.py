@@ -14,6 +14,7 @@ import re
 import time
 import os.path
 import logging
+import tempfile
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -85,18 +86,19 @@ class Command(BaseCommand):
         ae_query = self._make_query(args)
 
         try:
-            os.makedirs(settings.WGET_DIR)
+            os.makedirs(settings.CONVERSION_DIR)
         except OSError, e:
             if e.errno != errno.EEXIST:
                 raise
 
         #find out when the last pull from ArrayExpress was
-        ae_file = os.path.join(settings.WGET_DIR, 'arrayexpress_studies')
+        ae_file = os.path.join(settings.CONVERSION_DIR, 'arrayexpress_studies')
         try:
             t = os.path.getmtime(ae_file)
             last_date_run = datetime.fromtimestamp(t).date()
         except: #if file doesn't exist yet, then just make last_date_run today
             last_date_run = date.today()
+        
         
         logger.info("getting %s" % ae_query)
         u = urllib2.urlopen(ae_query)    
@@ -139,6 +141,7 @@ class Command(BaseCommand):
                 pass                    
         f.close()
         
+
         """create directories that zip archives will reside in"""
         base_isa_dir = os.path.join(settings.ISA_TAB_DIR, 'isa')
         base_preisa_dir = os.path.join(settings.ISA_TAB_DIR, 'pre_isa')
@@ -158,8 +161,14 @@ class Command(BaseCommand):
         """dispatch the tasks and wait for everything to return"""
         job = TaskSet(tasks=s_tasks)
         result = job.apply_async()
-    
+
         for i in result.iterate():
             print i
+            sys.stdout.flush()
+
+        #space-saving measure
+        os.remove(ae_file)
+        touch = open(ae_file, 'w')
+        touch.close()
 
         call_command('process_arrayexpress_isatab', base_isa_dir, "base_pre_isa_dir=%s" % base_preisa_dir, "is_public=True")
