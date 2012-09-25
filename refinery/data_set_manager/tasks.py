@@ -66,7 +66,7 @@ def delete_external_file(file_path):
 
 
 @task()
-def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=None):
+def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=None, as_task=True):
     """
     Name: download_http_file
     Description:
@@ -117,18 +117,19 @@ def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=
 
             file_size_dl += len(buffer)
             f.write(buffer)
-            
             downloaded = file_size_dl * 100. / file_size
-            download_http_file.update_state(state="PROGRESS",
-                        meta={
-                              "percent_done": "%3.2f%%" % (downloaded),
-                              'current': file_size_dl,
-                              'total': file_size
-                        })
-            
-            #status = r"%10d  [%3.2f%%]" % (file_size_dl, downloaded)
-            #status = status + chr(8)*(len(status)+1)
-            #print status,
+                
+            if as_task:
+                download_http_file.update_state(state="PROGRESS",
+                            meta={
+                                  "percent_done": "%3.2f%%" % (downloaded),
+                                  'current': file_size_dl,
+                                  'total': file_size
+                            })
+            else:
+                status = r"%10d  [%3.2f%%]" % (file_size_dl, downloaded)
+                status = status + chr(8)*(len(status)+1)
+                print status,
 
         f.close()
 
