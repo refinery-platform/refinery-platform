@@ -38,6 +38,7 @@ Thumbs.db
 ###############################
 setup_refinery.sh
 settings_local.py
+docs/_*
 .project
 .DS_Store
 .pydevproject
@@ -46,4 +47,4 @@ refinery/celeryev.pid
 *.conflict
 refinery/solr/*/data
 refinery/refinery/*
-refinery/docs/*
+refinery/middleware.py
