@@ -1,21 +1,36 @@
+from django.core.exceptions import ObjectDoesNotExist
 from optparse import make_option
 import logging, os, gzip
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from file_store.models import _mkdir
 from annotation_server.models import *
-
+from annotation_server.utils import *
 
 """
 Helper command to deal with additional annotation tracks not available from UCSC genome browser
 ./manage.py add_genome_annotation --genome hg19 --gene_annotation /Users/richardpark/Desktop/refinery_downloads/annotation_server_test/refinery_annotation/human/gencode.v10.annotation.gtf.gz
 
 TODO: Should we import annotation files into file_server?
+how to cleanup directories used to store and download files
 """
+
+def parse_wig_attribute(wig):
+    """
+    Helper function for dealing w/ wig tracks
+    """
+    ret_dict = {}
+    t2 = wig.strip().split(" ")
+    for item in t2:
+        t3 = item.split("=")
+        if len(t3) == 2:
+            ret_dict[t3[0]] = t3[1].strip('"')
+    return ret_dict
+    
 
 def parse_gff_attribute(attr):
     """
-    Helper function for dealing w/ parse_gff_attributes
+    Helper function for dealing w/ parse_gff_attributes, converts " " or ";" string into a dictionary
     """
     t2 = attr.strip().split(";")
     ret_dict = {}
@@ -40,10 +55,26 @@ def parse_db_string(attr, sym):
     for var in sym:
         if var in attr:
             #ret_string += ", %s=%s['%s']" % (var, attr_name, var)
-            ret_string += ', %s="%s"' % (var, attr[var])
-    #print ret_string
+            if ret_string:
+                ret_string += ', %s="%s"' % (var, attr[var])
+            else:
+                ret_string += '%s="%s"' % (var, attr[var])
     return ret_string
     
+def getFileHandle(file_in):
+    '''
+    Helper function for returning a file handler
+    :param file_in: Path for file
+    :type file_in: str.
+    :returns: file handler
+    '''
+    # reading gz file
+    if file_in.endswith('.gz'):
+        handle = gzip.open(file_in)
+    # else reading unzipped file 
+    else:
+        handle = open(file_in, 'r')
+    return handle
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -64,11 +95,16 @@ class Command(BaseCommand):
             help='Adding Annotation for Empirical Mappability information'),
         make_option('--gap_regions',
             dest='gap_regions',
-            help='Adding Annotation for Gap Regions information'),                                                             
+            help='Adding Annotation for Gap Regions information'),  
+        make_option('--gc',
+            dest='gc',
+            help='Adding Annotation for GC content'),  
+        make_option('--conservation',
+            dest='conservation',
+            help='Adding Annotation for Conservation scores'),                                                                                           
         )
 
     can_import_settings = True
-    SUPPORTED_GENOMES = ['hg19', 'dm3', 'ce10']
     GENOME_BUILD = None
     ANNOTATION_DIR = 'annotation_server'   # relative to MEDIA_ROOT    
     
@@ -83,7 +119,7 @@ class Command(BaseCommand):
         if options['genome']:
             self.GENOME_BUILD = options['genome'].strip()
             
-            if self.GENOME_BUILD in self.SUPPORTED_GENOMES:   
+            if self.GENOME_BUILD in SUPPORTED_GENOMES:   
                 # temp dir should be located on the same file system as the base dir
                 self.ANNOTATION_TEMP_DIR = os.path.join(self.ANNOTATION_BASE_DIR, self.GENOME_BUILD)
                 # create this directory in case it doesn't exist
@@ -99,12 +135,80 @@ class Command(BaseCommand):
                     self.mappabilityTheoretical(options['map_theoretical'])
                 elif options['gap_regions']:
                     self.gapRegions(options['gap_regions'])
+                elif options['gc']:
+                    self.gcContent(options['gc'])
+                elif options['conservation']:
+                    self.conservation(options['conservation'])
             else:
                 raise CommandError('Selected genome build currently not supported')
         
         else:
             raise CommandError('Please specify which genome to build i.e. hg19, dm3')
+    
+    def gcContent(self, wig_file):  
+        '''
+        Function for dealing w/ gc content annotation tracks
+        '''
+        logger.debug("annotation_server.gcContent called for genome: %s, file: %s" % (self.GENOME_BUILD, wig_file))
         
+        db_table = self.GENOME_BUILD + "_GC"
+        
+        self.addWigAnnotation(wig_file, db_table, "GC")
+    
+    def conservation(self, wig_file):  
+        '''
+        Function for dealing conservation annotation tracks 
+        '''
+        logger.debug("annotation_server.conservation called for genome: %s, file: %s" % (self.GENOME_BUILD, wig_file))
+        db_table = self.GENOME_BUILD + "_Conservation"
+        self.addWigAnnotation(wig_file, db_table, "conservation")
+                    
+    def addWigAnnotation(self, wig_file, db_model, annot_type):
+        '''
+        General function for adding Wig files into the annotation_server specifically for Conservation and GC content
+        '''
+        current_table = eval(db_model)
+        
+        # deletes all objects from table
+        current_table.objects.all().delete()
+        
+        handle = getFileHandle(wig_file)
+        for line in handle:
+            # TODO: what to do with additional description fields
+            if line[0] != '#':
+                t1 = line.strip().split(' ')
+                
+                # first descriptive line of 
+                if t1[0] == 'track':
+                    # overwrite if already entered into db
+                    try:
+                        item = WigDescription.objects.get(genome_build=self.GENOME_BUILD, annotation_type=annot_type)
+                        item.delete()
+                    except ObjectDoesNotExist:
+                        logger.debug("WigDescription does not exist for genome: %s, annotation_type: %s" % (self.GENOME_BUILD, annot_type))
+        
+                    
+                    ret_attr = parse_wig_attribute(line)
+                    table_vals = ['name', 'altColor', 'color', 'visibility', 'priority', 'type', 'description']
+                    db_string = "WigDescription(genome_build='%s', annotation_type='%s', %s)"
+                    db_string = db_string % (self.GENOME_BUILD, annot_type, parse_db_string(ret_attr, table_vals))
+                    
+                    # saving to wigDescription model
+                    item = eval(db_string)
+                    item.save()
+                    
+                elif t1[0] == 'fixedStep':
+                    attr = parse_wig_attribute(line)
+                    chrom = attr['chrom']
+                    start = int(attr['start'])
+                    step = int(attr['step'])
+                    curr_pos = start
+                else:
+                    curr_pos += step
+                    
+                    # adding to django model
+                    wigItem = current_table(annot=item, chrom=chrom, position=curr_pos, value=t1[0])
+                    wigItem.save()
     
     def mappabilityTheoretical(self, bed_file):
         '''
@@ -178,12 +282,8 @@ class Command(BaseCommand):
         # deletes all objects from table
         current_table.objects.all().delete()
         
-        # reading gz file
-        if gff_file.endswith('.gz'):
-            handle = gzip.open(gff_file)
-        # else reading unzipped file 
-        else:
-            handle = open(gff_file, 'r')
+        handle = getFileHandle(gff_file)
+ 
         for line in handle:
             # TODO: what to do with additional description fields
             if line[0] != '#':
@@ -191,7 +291,14 @@ class Command(BaseCommand):
                       
                 attrib = parse_gff_attribute(t1[8])
                 
-                db_string = 'current_table(chrom=t1[0], source=t1[1], feature=t1[2], start=t1[3], end=t1[4], score=t1[5], strand=t1[6], frame=t1[7], attribute=t1[8]%s)'
+                db_string = 'current_table(chrom=t1[0], source=t1[1], feature=t1[2], start=t1[3], end=t1[4], score=t1[5], strand=t1[6], frame=t1[7], attribute=t1[8], %s)'
+                
+                parse_attrib = parse_db_string(attrib, table_vals)
+                
+                #print attrib
+                #if parse_attrib:
+                #    print "--------"
+                #    print parse_attrib
                 db_string = db_string % (parse_db_string(attrib, table_vals))
                 
                 item = eval(db_string)
@@ -202,25 +309,17 @@ class Command(BaseCommand):
         Function for adding additional annotation files giving in BED format
         encode project i.e. gap_regions
         '''
-        logger.debug("annotation_server.addGapRegions called for genome: %s, file: %s table: " % (self.GENOME_BUILD, bed_file, db_model))
+        logger.debug("annotation_server.addGapRegions called for genome: %s, file: %s table: %s" % (self.GENOME_BUILD, bed_file, db_model))
         
         current_table = eval(db_model)
             
         # deletes all objects from table
         current_table.objects.all().delete()
         
-        # reading gz file
-        if bed_file.endswith('.gz'):
-            handle = gzip.open(bed_file)
-        # else reading unzipped file 
-        else:
-            handle = open(bed_file, 'r')
+        handle = getFileHandle(bed_file)
         for line in handle:
             if line[0] != '#':
-                t1 = line.strip().split('\t')
-                #print t1
-                #print len(t1)
-                
+                t1 = line.strip().split('\t')                
                 item = current_table(bin=t1[0], chrom=t1[1], chromStart=t1[2], chromEnd=t1[3], ix=t1[4], n=t1[5], size=t1[6], type=t1[7], bridge=t1[8])
                 item.save()
 
@@ -236,12 +335,7 @@ class Command(BaseCommand):
         # deletes all objects from table
         current_table.objects.all().delete()
         
-        # reading gz file
-        if bed_file.endswith('.gz'):
-            handle = gzip.open(bed_file)
-        # else reading unzipped file 
-        else:
-            handle = open(bed_file, 'r')
+        handle = getFileHandle(bed_file)
         for line in handle:
             if line[0] != '#':
                 t1 = line.strip().split('\t')

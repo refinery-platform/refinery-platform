@@ -66,7 +66,7 @@ def delete_external_file(file_path):
 
 
 @task()
-def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=None):
+def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=None, as_task=True):
     """
     Name: download_http_file
     Description:
@@ -117,18 +117,19 @@ def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=
 
             file_size_dl += len(buffer)
             f.write(buffer)
-            
             downloaded = file_size_dl * 100. / file_size
-            download_http_file.update_state(state="PROGRESS",
-                        meta={
-                              "percent_done": "%3.2f%%" % (downloaded),
-                              'current': file_size_dl,
-                              'total': file_size
-                        })
-            
-            #status = r"%10d  [%3.2f%%]" % (file_size_dl, downloaded)
-            #status = status + chr(8)*(len(status)+1)
-            #print status,
+                
+            if as_task:
+                download_http_file.update_state(state="PROGRESS",
+                            meta={
+                                  "percent_done": "%3.2f%%" % (downloaded),
+                                  'current': file_size_dl,
+                                  'total': file_size
+                            })
+            else:
+                status = r"%10d  [%3.2f%%]" % (file_size_dl, downloaded)
+                status = status + chr(8)*(len(status)+1)
+                print status,
 
         f.close()
 
@@ -307,18 +308,20 @@ def convert_to_isatab(accession, isatab_zip_loc, preisatab_zip_loc):
             shutil.rmtree(temp_dir)
             raise Exception, "Error Converting to ISA-Tab: %s" % stderr
         else:
-            return "Could not convert %s" % accession #unsuccessful conversion, but clean exit
+            return "Could not convert %s: %s" % (accession, stderr) #unsuccessful conversion, but clean exit
     else: #successfully converted
         base_dir = os.path.join(settings.ISA_TAB_DIR, accession)
-        study_file = glob.glob("%s/s_*.txt" % base_dir)[0]
-        assay_file = glob.glob("%s/a_*.txt" % base_dir)[0]
+        study_files = glob.glob("%s/s_*.txt" % base_dir)
+        assay_files = glob.glob("%s/a_*.txt" % base_dir)
 
-        logging.info("fixing last columns in study file if needed")
-        if not fix_last_col(study_file):
-            return "Could not fix study file for %s"  % accession
-        logging.info("fixing last columns in assay file if needed")
-        if not fix_last_col(assay_file):
-            return "Could not fix assay file for %s" % accession
+        for study_file in study_files:
+            logging.info("fixing last columns in study file if needed")
+            if not fix_last_col(study_file):
+                return "Could not fix study file for %s"  % accession
+        for assay_file in assay_files:
+            logging.info("fixing last columns in assay file if needed")
+            if not fix_last_col(assay_file):
+                return "Could not fix assay file for %s" % accession
 
         zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc)
     
@@ -361,7 +364,7 @@ def create_dataset(investigation_uuid, username, public=False):
     try:
         user = User.objects.get(username__exact=username)
     except:
-        logger.info("User %s doesn't exist, so creating with password 'test'" % username)
+        logger.info("User %s doesn't exist, so creating User %s with password 'test'" % (username, username))
         #user doesn't exist
         user = User.objects.create_user(username, "", "test")
 
@@ -444,7 +447,7 @@ def parse_isatab(username, public, path, additional_raw_data_file_extension=None
     p = IsaTabParser()
     p.additional_raw_data_file_extension = additional_raw_data_file_extension
     p.file_base_path = file_base_path
-    print file_base_path
+
     try:
         investigation = p.run(path, isa_archive=isa_archive, preisa_archive=pre_isa_archive)
         data_uuid = create_dataset(investigation.uuid, username, public=public)
@@ -456,4 +459,4 @@ def parse_isatab(username, public, path, additional_raw_data_file_extension=None
         logger.error("*** print_exception:")
         logger.error(traceback.print_exception(exc_type, exc_value,
                           exc_traceback, file=sys.stdout))
-    return None
+    return os.path.basename(path)

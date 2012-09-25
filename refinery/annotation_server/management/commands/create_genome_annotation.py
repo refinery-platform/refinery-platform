@@ -10,6 +10,7 @@ import tarfile
 from data_set_manager.tasks import download_http_file
 from django.core.management.color import no_style
 from django.db import connection, transaction
+from annotation_server.utils import *
 
 '''
 Management command for creating basic annotation server 
@@ -55,7 +56,6 @@ class Command(LabelCommand):
     #SEQUENCE_FILES = 'bigZips/chromFa.tar.gz'
     SEQUENCE_FILES = 'chromosomes/'
     OTHER_FILES = 'database/'
-    SUPPORTED_GENOMES = ['hg19', 'dm3', 'ce10']
     GENOME_BUILD = None
     ANNOTATION_DIR = 'annotation_server'   # relative to MEDIA_ROOT
 
@@ -77,7 +77,7 @@ class Command(LabelCommand):
         '''
         if label:
             self.GENOME_BUILD = label
-            if self.GENOME_BUILD in self.SUPPORTED_GENOMES:
+            if self.GENOME_BUILD in SUPPORTED_GENOMES:
                 self.BASE_DOWNLOAD_URL = self.BASE_DOWNLOAD_URL % self.GENOME_BUILD
                 
                 # temp dir should be located on the same file system as the base dir
@@ -236,8 +236,10 @@ class Command(LabelCommand):
         '''
         Helper function to return UCSC url to download file and current path for file to download
         '''
+        logger.debug("annotation_server.create_genome_annotation getUrlFile called build: %s file: %s" % (self.GENOME_BUILD, file_to_download) )
+        
         if sequence:
-            url = self.BASE_DOWNLOAD_URL + self.SEQUENCE_FILES;
+            url = self.BASE_DOWNLOAD_URL + self.SEQUENCE_FILES + file_to_download;
         else:
             url = self.BASE_DOWNLOAD_URL + self.OTHER_FILES + file_to_download
         
