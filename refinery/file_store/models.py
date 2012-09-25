@@ -103,13 +103,13 @@ fss = FileSystemStorage(location=FILE_STORE_BASE_DIR)
 # http://wiki.g2.bx.psu.edu/Admin/Datatypes/Adding%20Datatypes
 # http://en.wikipedia.org/wiki/List_of_file_formats#Biology
 FILE_TYPES = (
-    # (extension, description) 
+    # (extension, description) in alphabetical order for convenience
     ('bam', 'Binary compressed SAM'),
     ('bed', 'BED file'),
     ('bigbed', 'Big BED'),
     ('bigwig', 'Big WIG'),
-    ('csv', 'Comma Separated Values'),
     ('cel', 'Affymetrix Probe Results file'),
+    ('csv', 'Comma Separated Values'),
     ('eland', 'Eland file'),
     ('gff', 'GFF file'),
     ('gz', 'Gzip compressed archive'),
