@@ -9,7 +9,7 @@ import math
 import zlib
 import logging
 import struct
-from StringIO import StringIO
+import cStringIO
 
 
 logger = logging.getLogger('file_server')
@@ -58,33 +58,37 @@ class TDFByteStream(object):
 
     '''
     #: File handle
-    tdf_stream = None
+    _stream = None
     #: Byte order for binary data interpretation
-    endianness = '<'    # little-endian is assumed by default
+    _endianness = '<'    # little-endian is assumed by default
+    #: Objects for reading different types of data (more efficient than calling struct functions)
+    _int = struct.Struct(_endianness + 'i')
+    _long = struct.Struct(_endianness + 'q')
+    _float = struct.Struct(_endianness + 'f')
 
     def __init__(self, filename=None, bytes=None):
         '''Initialize the binary file handle.
 
         :param file_name: path to a TDF file.
         :type file_name: str.
-        :param bytes: byte array.
+        :param bytes: byte array/buffer.
         :type bytes: array.
 
         '''
         # open a disk file or a memory file
         if filename:
             try:
-                self.tdf_stream = open(filename, 'rb')
+                self._stream = open(filename, 'rb')
             except IOError as e:
                 logger.error("Error creating a TDFByteStream object.  Could not open file: %s - error(%s): %s", filename, e.errno, e.strerror)
         elif bytes:
-            self.tdf_stream = StringIO(bytes)
+            self._stream = cStringIO.StringIO(bytes) # cStringIO is faster than StringIO
         else:
             logger.error("Error creating a TDFByteStream object.  Must provide either a file name or a byte array.")
 
     def __str__(self, *args, **kwargs):
-        if self.tdf_stream:
-            return "TDF file name: " + self.tdf_stream.name
+        if self._stream:
+            return "TDF file name: " + self._stream.name
         else:
             return object.__str__(self, *args, **kwargs)
 
@@ -97,60 +101,57 @@ class TDFByteStream(object):
 
         '''
         if offset is not None:
-            self.tdf_stream.seek(offset)
-        return self.tdf_stream.tell()
+            self._stream.seek(offset)
+        return self._stream.tell()
+
+    def read_integer(self):
+        '''Read a four byte integer from the current position in the file.
+
+        :returns: int or None if not enough bytes were read.
+
+        '''
+        data = self._stream.read(4)
+        # check if we were able to read enough data to convert to an integer
+        try:
+            return self._int.unpack(data)[0]
+        except struct.error:
+            return None
 
     def read_long(self):
-        '''Read eight bytes from the current position in file and return them as a long integer.
+        '''Read an eight byte integer from the current position in the file.
 
         :returns: long or None if not enough bytes were read.
 
         '''
-        data = self.tdf_stream.read(8)
-        fmt = self.endianness + 'q'
+        data = self._stream.read(8)
         # check if we were able to read enough data to convert to a long integer
-        if len(data) == struct.calcsize(fmt): 
-            return struct.unpack(fmt, data)[0]
-        else:
-            return None
-
-    def read_integer(self):
-        '''Read four bytes from the current position in file and return them as an integer.
-        
-        :returns: int or None if not enough bytes were read.
-
-        '''
-        data = self.tdf_stream.read(4)
-        fmt = self.endianness + 'i'
-        # check if we were able to read enough data to convert to an integer
-        if len(data) == struct.calcsize(fmt):
-            return struct.unpack(fmt, data)[0]
-        else:
+        try: 
+            return self._long.unpack(data)[0]
+        except struct.error:
             return None
 
     def read_float(self):
-        '''Read four bytes from the current position in file and return them as a float.
-        
+        '''Read a four byte floating point number from the current position in the file.
+
         :returns: float or None if not enough bytes were read.
 
         '''
-        data = self.tdf_stream.read(4)
-        fmt = self.endianness + 'f'
+        data = self._stream.read(4)
         # check if we were able to read enough data to convert to a float
-        if len(data) == struct.calcsize(fmt):
-            return struct.unpack(fmt, data)[0]
-        else:
+        try:
+            return self._float.unpack(data)[0]
+        except struct.error:
             return None
 
     def read_bytes(self, length):
-        '''Read a number of bytes from file.
+        '''Read length number of bytes from file.
 
         :param length: number of bytes to read.
         :type length: int.
         :returns: str -- raw binary data.
 
         '''
-        return self.tdf_stream.read(length)
+        return self._stream.read(length)
 
     def read_string(self, length=None):
         '''Read number of bytes from file and convert them to string.
@@ -162,10 +163,10 @@ class TDFByteStream(object):
 
         '''
         if length is not None:
-            return self.tdf_stream.read(length)
+            return self._stream.read(length)
         else:
             string = ''
-            for character in iter(lambda: self.tdf_stream.read(1), '\x00'):
+            for character in iter(lambda: self._stream.read(1), '\x00'):
                 string += character
             return string
 
