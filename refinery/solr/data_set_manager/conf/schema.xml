@@ -154,9 +154,13 @@
 
     <field name="file_uuid" type="text_en" indexed="true" stored="true" multiValued="false" />
 
+    <field name="genome_build" type="text_en" indexed="true" stored="true" multiValued="false" />
+
     <field name="study_uuid" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="type" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="species" type="long" indexed="true" stored="true" multiValued="false" />
 
     <field name="name" type="text_en" indexed="true" stored="true" multiValued="false" />
 

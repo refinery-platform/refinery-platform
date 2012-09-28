@@ -25,6 +25,8 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     type = indexes.CharField(model_attr='type')
     name = indexes.CharField(model_attr='name',null=True)
     file_uuid = indexes.CharField(model_attr='file_uuid',null=True)
+    species = indexes.IntegerField(model_attr='species',null=True)
+    genome_build = indexes.CharField(model_attr='genome_build',null=True)
     
     #TODO: add modification date (based on registry)
         
@@ -85,7 +87,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         if file_store_item:
             data["REFINERY_FILETYPE_" + uuid + "_s"] = file_store_item.get_filetype()
         else:
-            logger.warning( "Unable to get file store item " + object.file_uuid + ". No file type available." )
+            logger.warning( "Unable to get file store item " + str( object.file_uuid ) + ". No file type available." )
             data["REFINERY_FILETYPE_" + uuid + "_s"] = ""
                     
         return data

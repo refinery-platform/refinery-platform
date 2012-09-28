@@ -4,6 +4,7 @@ Created on Jun 20, 2012
 @author: nils
 '''
 from data_set_manager.models import Investigation, Study, Node, Attribute, Assay
+from data_set_manager.genomes import map_species_name_to_id
 from file_store.tasks import create
 import csv
 import operator
@@ -51,6 +52,12 @@ class SingleFileColumnParser:
     # May not be None. Negative values are allowed and are counted from the last column of the file (-1 = last column)
     file_column_index = -1
     
+    # column containing species names or ids, if set to None the parser will not set this information
+    species_column_index = None
+
+    # column containing genome build ids, if set to None the parser will not set this information
+    genome_build_column_index = None    
+    
     # list of column indices to be used for source, sample and assay grouping (may be None)
     # values in these columns will be combined using the value in column_index_separator  
     source_column_index = None
@@ -77,12 +84,21 @@ class SingleFileColumnParser:
     def _create_assay(self, study, file_name ):
         return Assay.objects.create( study=study, file_name=file_name )
     
+    def _get_species( self, row ):
+        if self.species_column_index is not None:
+            return map_species_name_to_id( row[self.species_column_index].strip() )        
+        return None        
+
+    def _get_genome_build( self, row ):
+        if self.genome_build_column_index is not None:
+            return map_species_name_to_id( row[self.genome_build_column_index].strip() )        
+        return None        
+    
     def _create_name(self, row, internal_column_index, internal_file_column_index ):        
         if internal_column_index is None:
             return row[internal_file_column_index].strip()
         else:
-            return self.column_index_separator.join( operator.itemgetter(*internal_column_index)(row) )
-            
+            return self.column_index_separator.join( operator.itemgetter(*internal_column_index)(row) )            
 
     def _parse_file(self, file_name ):
         try:
@@ -152,16 +168,17 @@ class SingleFileColumnParser:
                 name=assay_name,
                 type=Node.ASSAY )            
             sample_node.add_child( assay_node )
-
             
             file_node = Node.objects.create(
                 study=study,
                 assay=assay,
                 name=row[internal_file_column_index].strip(),
                 file_uuid=file_uuid,
-                type=Node.RAW_DATA_FILE )
+                type=Node.RAW_DATA_FILE,
+                species=self._get_species( row ),
+                genome_build=self._get_genome_build( row ) )
             assay_node.add_child( file_node )
-                         
+            
             # iterate over columns to create attributes to attach to the sample node
             for column_index in range( 0, len( row ) ):
                 # skip data file column
