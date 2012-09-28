@@ -9,7 +9,7 @@ import simplejson
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
-import file_store
+import file_store.tasks
 from file_server.tdf_file import TDFFile, get_profile_from_file
 from file_server.models import get, TDFItem
 

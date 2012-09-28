@@ -117,10 +117,13 @@ class Command(BaseCommand):
         result = job.apply_async()
         
         for i in result.iterate():
-            if i:
+            try:
                 ds = DataSet.objects.get(uuid=i)
                 inv = ds.get_investigation()
                 print "Successfully parsed %s into DataSet" % inv.get_identifier(),
                 print "with UUID %s" % i
-            else:
-                print "Unsuccessful parse and DataSet Creation." 
+                sys.stdout.flush()
+            except:
+                print "Unsuccessful parse and DataSet Creation of %s." % i
+                sys.stdout.flush()
+            

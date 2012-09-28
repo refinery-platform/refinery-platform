@@ -17,26 +17,28 @@ class FileStoreUnitTest(TestCase):
     item = models.FileStoreItem(source=source, sharename=sharename)
 
     def test_file_path(self):
-        """
-        Tests that the file store path contains sharename and filename
-        """
+        '''Tests that the file store path contains sharename and filename
+
+        '''
         path = models.file_path(self.item, self.filename)
         #TODO: replace with assertRegexpMatches()
         self.assertIn(self.sharename, path)
         self.assertIn(self.filename, path)
 
     def test_get_temp_dir(self):
-        """
-        Tests that the file store temp dir is equal to file_store.models.FILE_STORE_TEMP_DIR
-        """
+        '''Tests that the file store temp dir is equal to file_store.models.FILE_STORE_TEMP_DIR
+
+        '''
         self.assertEqual(models.get_temp_dir(), models.FILE_STORE_TEMP_DIR)
     
     def test_get_file_extension(self):
-        """
-        Tests that the correct file extension is returned
-        """
+        '''Tests that the correct file extension is returned
+
+        '''
+        pass
 
     def test_is_permanent(self):
-        """
-        Tests that the file is not in the file store cache
-        """
+        '''Tests that the file is not in the file store cache
+
+        '''
+        pass
