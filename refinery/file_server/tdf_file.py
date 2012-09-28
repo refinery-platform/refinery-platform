@@ -167,6 +167,9 @@ class TDFByteStream(object):
         else:
             string = ''
             for character in iter(lambda: self._stream.read(1), '\x00'):
+                # terminate if we reached EOF
+                if character == '':
+                    return string
                 string += character
             return string
 
