@@ -1,21 +1,22 @@
 # Create your views here.
 
-from django.shortcuts import render_to_response, redirect
-from django.template.context import RequestContext
-from file_server.views import profile_viewer
-import logging
-import uuid
-from file_store.models import FileStoreItem
 from django.conf import settings
 from django.contrib.sites.models import Site
-import tempfile, os
-from xml.dom.minidom import Document
-from file_store.models import FileStoreItem
-from file_store.tasks import import_file, create, rename
-from settings import MEDIA_URL, FILE_STORE_DIR
-from django.http import HttpResponse
-from django.utils import simplejson
 from django.core import serializers
+from django.http import HttpResponse
+from django.shortcuts import render_to_response, redirect
+from django.template.context import RequestContext
+from django.utils import simplejson
+from file_server.views import profile_viewer
+from file_store.models import FileStoreItem, FileStoreItem
+from file_store.tasks import import_file, create, rename
+from refinery.data_set_manager.models import Node
+from settings import MEDIA_URL, FILE_STORE_DIR
+from xml.dom.minidom import Document
+import logging
+import tempfile
+import os
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -28,20 +29,29 @@ def igv_session( request ):
         uuids = query["uuids"].split( "," );
     except:
         uuids = []
-        
+            
+    logger.info( str( len(uuids) ) + " file uuids received: " + ", ".join( uuids ) )
     
-    logger.info( "Uuids received: " + ", ".join( uuids ) )
+    # Create IGV session file         
+    #igv_url = createIGVsession( "mm8", uuids)
     
-    # TODO: How to tell which genome? 
+    # create IGV session files for each genome build associated with the file uuids 
+    igv_urls = []    
+    genome_builds = Node.objects.genome_builds_for_files( uuids, True )
     
-    # Create IGV session file 
-    igv_url = createIGVsession("mm8", uuids)
+    for genome_build, file_uuids in genome_builds.iteritems():
+        if genome_build is not None:
+            igv_urls.append( createIGVsession( genome_build, file_uuids ) )
     
-    logger.info("Starting IGV: " + igv_url)
+    if len( igv_urls ) == 0 and len( uuids ) > 0:
+        logger.warning( "None of " + str( len( uuids ) ) + " files could be associated with a genome build." )                      
+    
+    logger.info( "IGV sessions: " + "; ".join( igv_urls ) )
     
     # redirects to java webstart application 
-    return redirect(igv_url)         
+    return redirect(igv_urls[0])         
     #return render_to_response( "visualization_manager/igv_session.html", { "uuids": uuids } , context_instance=RequestContext( request ) )
+
 
 def profile_viewer_session( request ):
 
@@ -142,6 +152,7 @@ def createIGVsession(genome, uuids):
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php?sessionURL=" + fs_url
     
     return igv_url
+
 
 def results_igv(request):
     logger.info("visualization_manager results_igv called")

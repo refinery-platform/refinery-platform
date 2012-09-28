@@ -7,6 +7,12 @@ Created on Apr 21, 2012
 from bitstring import ConstBitStream
 import math
 import zlib
+import logging
+import struct
+import cStringIO
+
+
+logger = logging.getLogger('file_server')
 
 
 class TDFBitStream(ConstBitStream):
@@ -47,6 +53,126 @@ class TDFBitStream(ConstBitStream):
             return string        
     
 
+class TDFByteStream(object):
+    '''Reads TDF files from disk one byte at a time.
+
+    '''
+    #: File handle
+    _stream = None
+    #: Byte order for binary data interpretation
+    _endianness = '<'    # little-endian is assumed by default
+    #: Objects for reading different types of data (more efficient than calling struct functions)
+    _int = struct.Struct(_endianness + 'i')
+    _long = struct.Struct(_endianness + 'q')
+    _float = struct.Struct(_endianness + 'f')
+
+    def __init__(self, filename=None, bytes=None):
+        '''Initialize the binary file handle.
+
+        :param file_name: path to a TDF file.
+        :type file_name: str.
+        :param bytes: byte array/buffer.
+        :type bytes: array.
+
+        '''
+        # open a disk file or a memory file
+        if filename:
+            try:
+                self._stream = open(filename, 'rb')
+            except IOError as e:
+                logger.error("Error creating a TDFByteStream object.  Could not open file: %s - error(%s): %s", filename, e.errno, e.strerror)
+        elif bytes:
+            self._stream = cStringIO.StringIO(bytes) # cStringIO is faster than StringIO
+        else:
+            logger.error("Error creating a TDFByteStream object.  Must provide either a file name or a byte array.")
+
+    def __str__(self, *args, **kwargs):
+        if self._stream:
+            return "TDF file name: " + self._stream.name
+        else:
+            return object.__str__(self, *args, **kwargs)
+
+    def update_offset(self, offset):
+        '''Set the file's current position.
+
+        :param offset: number of bytes from the beginning of the file.
+        :type offset: int.
+        :returns: int -- new current position.
+
+        '''
+        if offset is not None:
+            self._stream.seek(offset)
+        return self._stream.tell()
+
+    def read_integer(self):
+        '''Read a four byte integer from the current position in the file.
+
+        :returns: int or None if not enough bytes were read.
+
+        '''
+        data = self._stream.read(4)
+        # check if we were able to read enough data to convert to an integer
+        try:
+            return self._int.unpack(data)[0]
+        except struct.error:
+            return None
+
+    def read_long(self):
+        '''Read an eight byte integer from the current position in the file.
+
+        :returns: long or None if not enough bytes were read.
+
+        '''
+        data = self._stream.read(8)
+        # check if we were able to read enough data to convert to a long integer
+        try: 
+            return self._long.unpack(data)[0]
+        except struct.error:
+            return None
+
+    def read_float(self):
+        '''Read a four byte floating point number from the current position in the file.
+
+        :returns: float or None if not enough bytes were read.
+
+        '''
+        data = self._stream.read(4)
+        # check if we were able to read enough data to convert to a float
+        try:
+            return self._float.unpack(data)[0]
+        except struct.error:
+            return None
+
+    def read_bytes(self, length):
+        '''Read length number of bytes from file.
+
+        :param length: number of bytes to read.
+        :type length: int.
+        :returns: str -- raw binary data.
+
+        '''
+        return self._stream.read(length)
+
+    def read_string(self, length=None):
+        '''Read number of bytes from file and convert them to string.
+        If length is not provided, read until the null character or EOF are reached.
+
+        :param length: number of bytes to read
+        :type length: int.
+        :returns: str -- binary data.
+
+        '''
+        if length is not None:
+            return self._stream.read(length)
+        else:
+            string = ''
+            for character in iter(lambda: self._stream.read(1), '\x00'):
+                # terminate if we reached EOF
+                if character == '':
+                    return string
+                string += character
+            return string
+
 
 class TDFFile(object):
     '''
@@ -58,7 +184,7 @@ class TDFFile(object):
         Constructor
         '''
         self.filename = filename
-        self.bitstream = TDFBitStream(filename=self.filename)
+        self.bitstream = TDFByteStream(filename=self.filename)
         self.preamble = None
         self.header = None
         self.index = None
@@ -76,7 +202,7 @@ class TDFFile(object):
     
     # prepare object for unpickling (the bitstream needs to be restored)    
     def __setstate__(self, dict):
-        bitstream = TDFBitStream(filename=dict['filename']) # reopen file bistream
+        bitstream = TDFByteStream(filename=dict['filename']) # reopen file bistream
         self.__dict__.update(dict) # update attributes
         self.bitstream = bitstream  # save the bitstream    
 
@@ -559,7 +685,7 @@ class TDFTile( TDFElement ):
             track_names = self.tdf_file.get_track_names()
             
         # create a new BitStream for the tile
-        tile_stream = TDFBitStream( bytes=tile_data )
+        tile_stream = TDFByteStream( bytes=tile_data )
 
         self.type = self.get_type( tile_stream.read_string() )
         

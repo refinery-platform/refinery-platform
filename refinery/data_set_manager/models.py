@@ -14,6 +14,8 @@ General:
 from django.db import models
 from django_extensions.db.fields import UUIDField
 
+from data_set_manager.genomes import map_species_id_to_default_genome_build
+
 
 class NodeCollection(models.Model):
     '''
@@ -242,7 +244,29 @@ class ProtocolComponent(models.Model):
     type = models.TextField(blank=True, null=True)    
     type_accession = models.TextField(blank=True, null=True)
     type_source = models.TextField(blank=True, null=True)
-    
+
+
+
+class NodeManager(models.Manager):            
+    def genome_builds_for_files(self, file_uuids, default_fallback=True):
+        '''
+        Returns a dictionary that groups file nodes based on their genome build information.
+        '''
+        file_list = Node.objects.filter( file_uuid__in=file_uuids ).values( "species", "genome_build", "file_uuid" )
+        
+        result = {}
+        
+        for item in file_list:
+            if item["genome_build"] is None and item["species"] is not None and default_fallback == True:
+                item["genome_build"] = map_species_id_to_default_genome_build( item["species"] )
+            
+            if item["genome_build"] not in result:
+                result[item["genome_build"]] = []
+                
+            result[item["genome_build"]].append( item["file_uuid"] )
+        
+        return result
+            
 
 class Node(models.Model):
     # allowed node types
@@ -309,15 +333,23 @@ class Node(models.Model):
     }
     
     TYPES = ASSAYS | FILES | { SOURCE, SAMPLE, EXTRACT, LABELED_EXTRACT, SCAN, NORMALIZATION, DATA_TRANSFORMATION }     
-        
+    
+    # replace default manager
+    objects = NodeManager()
+    
     uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study, db_index=True)
     assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
-    file_uuid = UUIDField(default=None,blank=True, null=True,auto=False)
     children = models.ManyToManyField("self", symmetrical=False, related_name="parents_set")
     parents = models.ManyToManyField("self", symmetrical=False, related_name="children_set")
     type = models.TextField(db_index=True)
     name = models.TextField(db_index=True)
+    
+    # only used for nodes representing files
+    file_uuid = UUIDField(default=None,blank=True, null=True,auto=False)
+    genome_build = models.TextField(db_index=True,null=True)
+    species =  models.IntegerField(db_index=True,null=True)
+    
     
     def add_child(self, node):
         if node is None:
@@ -383,7 +415,10 @@ class AnnotatedNode(models.Model):
     # subtype further qualifies the attribute type, e.g. type = factor value and subtype = age
     attribute_subtype = models.TextField(blank=True, null=True, db_index=True)
     attribute_value = models.TextField(blank=True, null=True, db_index=True)
-    attribute_value_unit = models.TextField(blank=True, null=True)
+    attribute_value_unit = models.TextField(blank=True, null=True)    
+    # genome information
+    node_species = models.IntegerField(db_index=True, null=True)
+    node_genome_build = models.TextField(db_index=True, null=True)
      
                 
 class ProtocolReference(models.Model):

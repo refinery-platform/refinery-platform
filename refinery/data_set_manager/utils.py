@@ -3,8 +3,7 @@ Created on May 29, 2012
 
 @author: nils
 '''
-from data_set_manager.models import Node, Attribute, AnnotatedNode, Study, Assay, \
-    AnnotatedNodeRegistry
+from data_set_manager.models import Node, Attribute, AnnotatedNode, Study, Assay, AnnotatedNodeRegistry
 from data_set_manager.search_indexes import NodeIndex
 from django.db.models import Q
 from django.utils.datetime_safe import datetime
@@ -369,5 +368,3 @@ def index_annotated_nodes( node_type, study_uuid, assay_uuid=None ):
     end = time.time()
                  
     logger.info( str( counter ) + " nodes indexed in " + str( end - start ) )
-    
-    
