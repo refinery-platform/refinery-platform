@@ -59,7 +59,7 @@ def configure_workflow( workflow_uuid, ret_list, connection_galaxy=None ):
     Takes a workflow_uuid and associated data input map to return an expanded workflow 
     from core.models.workflow and workflow_data_input_map    
     """
-    #print "workflow.manager configure_workflow called"
+    logger.debug("workflow.manager configure_workflow called")
     
     curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
     # gets galaxy internal id for specified workflow
@@ -81,10 +81,10 @@ def configure_workflow( workflow_uuid, ret_list, connection_galaxy=None ):
     
     # if workflow is tagged w/ type=COMPACT tag, 
     if work_type == 'COMPACT':
-        print "workflow processing: COMPACT"
+        logger.debug("workflow_manager.tasks.configure_workflow workflow processing: COMPACT")
         new_workflow["steps"], history_download = createStepsCompact(ret_list, workflow_dict)
     else:
-        print "workflow processing: EXPANSION"
+        logger.debug("workflow_manager.tasks.configure_workflow workflow processing: EXPANSION")
         # Updating steps in imported workflow X number of times
         new_workflow["steps"], history_download = createStepsAnnot(ret_list, workflow_dict);
           

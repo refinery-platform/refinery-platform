@@ -274,6 +274,16 @@ def profile_viewer( request, uuid, sequence_name, start_location, end_location )
 
     return render_to_response( 'file_server/profile_viewer.html', { "hostname": hostname, "uuid": uuid, "sequence_name": sequence_name, "start_location": start_location, "end_location": end_location } , context_instance=RequestContext( request ) )
 
+def profile_viewer2( request, uuid, sequence_name, start_location, end_location ):
+    """
+    Rpark test viewer for viewing multiple profiles
+    """
+    uri = request.build_absolute_uri()
+    hostname = uri.split( request.get_full_path() )[0]
+
+    return render_to_response( 'file_server/profile_viewer2.html', { "hostname": hostname, "uuid": uuid, "sequence_name": sequence_name, "start_location": start_location, "end_location": end_location } , context_instance=RequestContext( request ) )
+
+
 
 def profile(request):
     '''Calculates and returns a profile.

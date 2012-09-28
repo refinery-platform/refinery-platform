@@ -8,7 +8,10 @@ import simplejson
 import copy
 import ast
 from datetime import datetime
+import logging
 
+# get module logger
+logger = logging.getLogger(__name__)
 
 class GalaxyWorkflow( object ):
     '''
@@ -131,7 +134,8 @@ def removeFileExt(file_name):
 
 
 def createStepsAnnot(file_list, workflow):
-    print "\ncreateStepsAnnot called"
+    logger.debug("galaxy_workflow.createStepsAnnot called")
+    
     """
     Replicates an input dictionary : "X" number of times depending on value of repeat_num 
     """
@@ -270,7 +274,8 @@ def createStepsAnnot(file_list, workflow):
 
 def createStepsCompact(file_list, workflow):
     # Deals with the case where we want multiple inputs to propogate into a single tool i.e. bulk downloader
-    print "galaxy_worklow createStepsCompact called"
+    logger.debug("galaxy_workflow.createStepsCompact called")
+    
     updated_dict = {};
     temp_steps = workflow["steps"];
     repeat_num = len(file_list);
