@@ -198,7 +198,7 @@ class TDFFile(object):
         Constructor
         '''
         self.filename = filename
-        self.bitstream = TDFByteStream(filename=self.filename)
+        self.bytestream = TDFByteStream(filename=self.filename)
         self.preamble = None
         self.header = None
         self.index = None
@@ -207,18 +207,18 @@ class TDFFile(object):
         return ( "TDF File (" + self.filename + ")" )
 
 
-    # prepare object for pickling (the bitstream cannot be serialized ... doh!)
+    # prepare object for pickling (the bytestream cannot be serialized ... doh!)
     # see example here: http://docs.python.org/library/pickle.html
     def __getstate__(self):
         odict = self.__dict__.copy() # copy the dict since we change it
-        del odict['bitstream'] # remove bitstream
+        del odict['bytestream'] # remove bytestream
         return odict
     
-    # prepare object for unpickling (the bitstream needs to be restored)    
+    # prepare object for unpickling (the bytestream needs to be restored)    
     def __setstate__(self, dict):
-        bitstream = TDFByteStream(filename=dict['filename']) # reopen file bistream
+        bytestream = TDFByteStream(filename=dict['filename']) # reopen file bistream
         self.__dict__.update(dict) # update attributes
-        self.bitstream = bitstream  # save the bitstream    
+        self.bytestream = bytestream  # save the bytestream    
 
 
     def create_data_set_name(self, sequence_name, zoom_level, window_function ):
@@ -297,27 +297,27 @@ class TDFFile(object):
 
 
     def update_offset(self,offset):
-        return self.bitstream.update_offset(offset)
+        return self.bytestream.update_offset(offset)
                     
             
     def read_long(self):
-        return self.bitstream.read_long()
+        return self.bytestream.read_long()
 
 
     def read_integer(self):
-        return self.bitstream.read_integer()
+        return self.bytestream.read_integer()
 
 
     def read_float(self):
-        return self.bitstream.read_float()
+        return self.bytestream.read_float()
 
 
     def read_bytes(self, length):
-        return self.bitstream.read_bytes( length )
+        return self.bytestream.read_bytes( length )
 
     
     def read_string( self, length=None ):
-        return self.bitstream.read_string(length)        
+        return self.bytestream.read_string(length)        
                 
                         
     def cache(self):
@@ -698,7 +698,7 @@ class TDFTile( TDFElement ):
         if track_names is None:
             track_names = self.tdf_file.get_track_names()
             
-        # create a new BitStream for the tile
+        # create a new byte stream for the tile
         tile_stream = TDFByteStream( bytes=tile_data )
 
         self.type = self.get_type( tile_stream.read_string() )
