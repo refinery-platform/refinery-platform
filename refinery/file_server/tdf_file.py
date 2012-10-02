@@ -53,6 +53,17 @@ class TDFBitStream(ConstBitStream):
             return string        
     
 
+class InsufficientBytes(Exception):
+    '''Insufficient number of bytes read for conversion from stream.
+
+    '''
+    def __init__(self, bytes_requested, bytes_read):
+        self.message = "Only " + str(bytes_read) + " bytes out of " + str(bytes_requested) + \
+                        " were read from binary stream"
+    def __str__(self, *args, **kwargs):
+        return self.message
+
+
 class TDFByteStream(object):
     '''Reads TDF files from disk one byte at a time.
 
@@ -110,12 +121,13 @@ class TDFByteStream(object):
         :returns: int or None if not enough bytes were read.
 
         '''
-        data = self._stream.read(4)
+        length = 4
+        data = self._stream.read(length)
         # check if we were able to read enough data to convert to an integer
         try:
             return self._int.unpack(data)[0]
         except struct.error:
-            return None
+            raise InsufficientBytes(length, len(data))
 
     def read_long(self):
         '''Read an eight byte integer from the current position in the file.
@@ -123,12 +135,13 @@ class TDFByteStream(object):
         :returns: long or None if not enough bytes were read.
 
         '''
-        data = self._stream.read(8)
+        length = 8
+        data = self._stream.read(length)
         # check if we were able to read enough data to convert to a long integer
         try: 
             return self._long.unpack(data)[0]
         except struct.error:
-            return None
+            raise InsufficientBytes(length, len(data))
 
     def read_float(self):
         '''Read a four byte floating point number from the current position in the file.
@@ -136,12 +149,13 @@ class TDFByteStream(object):
         :returns: float or None if not enough bytes were read.
 
         '''
-        data = self._stream.read(4)
+        length = 4
+        data = self._stream.read(length)
         # check if we were able to read enough data to convert to a float
         try:
             return self._float.unpack(data)[0]
         except struct.error:
-            return None
+            raise InsufficientBytes(length, len(data))
 
     def read_bytes(self, length):
         '''Read length number of bytes from file.
