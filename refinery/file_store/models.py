@@ -244,6 +244,18 @@ class FileStoreItem(models.Model):
                 name = u.path.split('/')[-1]
                 return os.path.splitext(name)[-1]
 
+    def get_file_object(self):
+        '''Open data file.
+
+        :returns: file object -- or None if failed to open data file.
+
+        '''
+        try:
+            return self.datafile.open()
+        except ValueError as e:
+            logger.error("%s [%s]", e.message, self.uuid)
+            return None
+
     def get_filetype(self):
         '''Retrieve the type of the datafile.
         
@@ -534,6 +546,21 @@ def get_file_size(uuid, report_symlinks=False):
     return item.get_file_size(report_symlinks=report_symlinks)
 
 
+def get_file_object(uuid):
+    '''Open file that belongs to the FileStoreItem specified by UUID.
+
+    :param uuid: UUID of a FileStoreItem
+    :type uuid: UUID.
+    :returns: file object -- or None if failed to open file.
+
+    '''
+    item = FileStoreItem.objects.get_item(uuid)
+    if item:
+        return item.get_file_object()
+    else:
+        return None
+
+
 @receiver(pre_delete, sender=FileStoreItem)
 def _delete_datafile(sender, **kwargs):
     '''Delete the FileStoreItem datafile when model is deleted.
@@ -542,7 +569,7 @@ def _delete_datafile(sender, **kwargs):
 
     '''
     item = kwargs.get('instance')
-    logger.info("Deleting FileStoreItem with UUID '%s'", item.uuid)
+    logger.debug("Deleting FileStoreItem with UUID '%s'", item.uuid)
     item.delete_datafile()
 
 
