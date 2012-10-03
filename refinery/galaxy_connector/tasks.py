@@ -1,6 +1,5 @@
 from celery.task import task
 from celery.task.sets import subtask
-from galaxy_connector.models import DataFile
 from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps, createStepsAnnot, combineInputExp
 from datetime import datetime
 from data_set_manager.tasks import download_http_file

@@ -5,7 +5,6 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from galaxy_connector.connection import Connection
 from galaxy_connector.models import Instance
-from galaxy_connector.models import DataFile
 from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps, createStepsAnnot
 from galaxy_connector.tasks import monitor_workflow
 import simplejson
@@ -84,28 +83,6 @@ def history_content(request, history_id, content_id ):
 def workflows(request):    
     instance, connection = checkActiveInstance(request);
     return render_to_response( "galaxy_connector/workflows.html", { "workflows": connection.get_complete_workflows(), "instance": instance.description }, context_instance=RequestContext( request ) )
-
-def run(request):    
-
-    instance, connection = checkActiveInstance(request);
-
-    # get all data file entries from the database
-    all_data_files = DataFile.objects.all()
-    
-    if len( all_data_files ) < 1:
-        return HttpResponse( 'No data files available in database. Create at least one data file object using the admin interface.' )
-    
-    library_id = connection.create_library( "ABC" );
-    history_id = connection.create_history( "ABC" );
-    workflow_id = connection.get_workflow_id( "Simple Input Test Workflow" )[0];
-    file_id = connection.put_into_library( library_id, instance.staging_path + "/" + all_data_files[0].path )
-    
-    # TO DEBUG PYTHON WEBAPPS ##
-    #import pdb; pdb.set_trace()
-        
-    result = connection.run_workflow(workflow_id, [file_id], history_id )    
-    
-    return ( history( request, result["history"] ) )
 
 
 def task_progress(request, task_id ):

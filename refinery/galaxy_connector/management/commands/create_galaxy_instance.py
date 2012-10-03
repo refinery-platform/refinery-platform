@@ -11,14 +11,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
-    help = "Takes the directory of an ISA-Tab file as input, parses, and"
-    help = "%s inputs it into the database" % help
-
+    help = "Creates a new Galaxy instance."
 
     """
     Name: handle
     Description:
-        main program; calls the parsing and insertion functions
+        main program; creates a new Galaxy instance. At least a base url and an API key are required.
     """   
     def handle(self, base_url, api_key, description="", api_url="api", data_url="datasets", **options):
         instance = Instance.objects.create( base_url=base_url, api_key=api_key, data_url=data_url, api_url=api_url, description=description )
