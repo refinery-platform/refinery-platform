@@ -19,16 +19,12 @@ class FileStoreModuleTest(SimpleTestCase):
         self.sharename = 'labname'
 
         self.path_source = os.path.join('/example/path', self.filename)
+        # create a FileStoreItem instance without symlinking it
         self.item_from_url = models.FileStoreItem.objects.create(source=self.path_source,
                                                                  sharename=self.sharename)
         self.url_source = urljoin('http://example.org/', self.filename)
         self.item_from_path = models.FileStoreItem.objects.create(source=self.url_source,
                                                                   sharename=self.sharename)
-
-    def tearDown(self):
-        # to delete the files from disk if they were created
-        self.item_from_path.delete()
-        self.item_from_url.delete()
 
     def test_file_path(self):
         '''Check that the file store path contains share name and file name.
@@ -41,7 +37,6 @@ class FileStoreModuleTest(SimpleTestCase):
         path = models.file_path(self.item_from_path, self.filename)
         self.assertIn(self.sharename, path)
         self.assertIn(self.filename, path)
-
 
     def test_get_temp_dir(self):
         '''Check that the file store temp dir is reported correctly.
@@ -72,16 +67,12 @@ class FileStoreItemTest(SimpleTestCase):
         self.sharename = 'labname'
 
         self.path_source = os.path.join('/example/path', self.filename)
+        # create a FileStoreItem instance without symlinking it
         self.item_from_url = models.FileStoreItem.objects.create(source=self.path_source,
                                                                  sharename=self.sharename)
         self.url_source = urljoin('http://example.org/', self.filename)
         self.item_from_path = models.FileStoreItem.objects.create(source=self.url_source,
                                                                   sharename=self.sharename)
-
-    def tearDown(self):
-        # to delete the files from disk if they were created
-        self.item_from_path.delete()
-        self.item_from_url.delete()
 
     def test_get_file_extension(self):
         '''Check that the correct file extension is returned.
