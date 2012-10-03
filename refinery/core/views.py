@@ -95,6 +95,11 @@ def group(request, query):
     return render_to_response('core/group.html', {'group': group }, context_instance=RequestContext( request ) )
 
 
+def project_slug(request,slug):
+    p = get_object_or_404( Project, slug=slug )    
+    return project(request,p.uuid)
+
+
 def project(request, uuid):
     project = get_object_or_404( Project, uuid=uuid )
     public_group = ExtendedGroup.objects.public_group()
@@ -213,6 +218,11 @@ def data_sets(request):
                               context_instance=RequestContext(request))
     
 
+def data_set_slug(request,slug):
+    d = get_object_or_404( DataSet, slug=slug )    
+    return data_set(request,d.uuid)
+
+
 def data_set(request,uuid):    
     data_set = get_object_or_404( DataSet, uuid=uuid )
     public_group = ExtendedGroup.objects.public_group()
@@ -250,6 +260,11 @@ def samples(request, ds_uuid, study_uuid, assay_uuid):
     
     return render_to_response('core/samples.html', {'workflows': workflows, 'data_set': data_set, "matrix": node_matrix}, 
                               context_instance=RequestContext(request))
+
+
+def workflow_slug(request,slug):
+    w = get_object_or_404( Workflow, slug=slug )    
+    return workflow(request,w.uuid)
 
 
 def workflow(request, uuid):
