@@ -18,7 +18,7 @@ class Command(BaseCommand):
     Description:
         main program; calls the parsing and insertion functions
     """   
-    def handle(self, username, title, file_name, source_column_index, data_file_column, base_path="", species_column=None, genome_build_column=None, data_file_permanent=False, is_public=False, **options):    
+    def handle(self, username, title, file_name, source_column_index, data_file_column, base_path="", slug=None, species_column=None, genome_build_column=None, data_file_permanent=False, is_public=False, **options):    
         parser = SingleFileColumnParser()
         parser.file_permanent = data_file_permanent
         parser.file_column_index = int( data_file_column )
@@ -39,7 +39,7 @@ class Command(BaseCommand):
         annotate_nodes(investigation.uuid)
         
         user = User.objects.get(username__exact=username)
-        data_set = DataSet.objects.create(name=title)
+        data_set = DataSet.objects.create(name=title,slug=slug)
         data_set.set_investigation(investigation)
         data_set.set_owner(user)
         
