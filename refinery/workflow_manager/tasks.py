@@ -83,7 +83,7 @@ def configure_workflow( workflow_uuid, ret_list, connection_galaxy=None ):
         work_type = work_type[1].upper()
     
     # if workflow is tagged w/ type=COMPACT tag, 
-    if work_type == 'COMPACT':
+    if work_type.upper() == 'COMPACT':
         logger.debug("workflow_manager.tasks.configure_workflow workflow processing: COMPACT")
         new_workflow["steps"], history_download = createStepsCompact(ret_list, workflow_dict)
     else:
