@@ -150,13 +150,13 @@ class TDFByteTestInvalidValues(TDFByteStreamTest):
         self.tdf = tdf_file.TDFByteStream(bytes=self.binary_data)
 
     def test_read_int(self):
-        self.assertRaises(tdf_file.InsufficientBytes, self.tdf.read_integer)
+        self.assertRaises(tdf_file.InsufficientBytesError, self.tdf.read_integer)
 
     def test_read_long(self):
-        self.assertRaises(tdf_file.InsufficientBytes, self.tdf.read_long)
+        self.assertRaises(tdf_file.InsufficientBytesError, self.tdf.read_long)
 
     def test_read_float(self):
-        self.assertRaises(tdf_file.InsufficientBytes, self.tdf.read_float)
+        self.assertRaises(tdf_file.InsufficientBytesError, self.tdf.read_float)
 
 
 class TDFByteStreamRegressionTest(unittest.TestCase):

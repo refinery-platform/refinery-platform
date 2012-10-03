@@ -53,7 +53,7 @@ class TDFBitStream(ConstBitStream):
             return string        
     
 
-class InsufficientBytes(Exception):
+class InsufficientBytesError(BufferError):
     '''Insufficient number of bytes read for conversion from stream.
 
     '''
@@ -127,7 +127,7 @@ class TDFByteStream(object):
         try:
             return self._int.unpack(data)[0]
         except struct.error:
-            raise InsufficientBytes(length, len(data))
+            raise InsufficientBytesError(length, len(data))
 
     def read_long(self):
         '''Read an eight byte integer from the current position in the file.
@@ -141,7 +141,7 @@ class TDFByteStream(object):
         try: 
             return self._long.unpack(data)[0]
         except struct.error:
-            raise InsufficientBytes(length, len(data))
+            raise InsufficientBytesError(length, len(data))
 
     def read_float(self):
         '''Read a four byte floating point number from the current position in the file.
@@ -155,7 +155,7 @@ class TDFByteStream(object):
         try:
             return self._float.unpack(data)[0]
         except struct.error:
-            raise InsufficientBytes(length, len(data))
+            raise InsufficientBytesError(length, len(data))
 
     def read_bytes(self, length):
         '''Read length number of bytes from file.
