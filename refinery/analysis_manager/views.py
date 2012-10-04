@@ -35,6 +35,8 @@ def analysis(request, uuid):
         ret_json['execution'] = statuses.execution_status()
         ret_json['postprocessing'] = statuses.postprocessing_status()
         ret_json['cleanup'] = statuses.cleanup_status()
+        #print "is ajax"
+        #print ret_json
         
         #json_serializer = serializers.get_serializer("json")()
         return HttpResponse(simplejson.dumps(ret_json), mimetype='application/javascript')
@@ -94,6 +96,7 @@ def analysis_run(request):
     pair_count = 0
     pair = 1;
     tcount = 0
+    
     #for sd in selected_data:
     while len(selected_uuids) != 0:
         tcount += 1
@@ -103,9 +106,11 @@ def analysis_run(request):
         for k, v in ret_item.iteritems():
             #for index, sd in enumerate(selected_data):
             for index, sd in selected_uuids.items():
+                
                 # dealing w/ cases where their are more than input for a galaxy workflow
                 if len_inputs > 1:
                     if k == sd and ret_item[k] is None:
+                        ret_item = copy.deepcopy(annot_inputs)
                         ret_item[k] = {};
                         ret_item[k]["assay_uuid"] = index
                         ret_item[k]["pair_id"] = pair
@@ -120,11 +125,13 @@ def analysis_run(request):
                         pair += 1
                 # deals w/ the case where there is a single input for a galaxy workflow
                 elif len_inputs == 1:
+                    ret_item = copy.deepcopy(annot_inputs)
                     ret_item[k] = {};
                     ret_item[k]["assay_uuid"] = index
                     ret_item[k]["pair_id"] = pair
                     ret_item[k]["fileurl"] = selected_fileurls[index]
                     ret_list.append(ret_item)
+                    
                     #selected_uuids.remove(sd)
                     del selected_uuids[index]
                     pair += 1;

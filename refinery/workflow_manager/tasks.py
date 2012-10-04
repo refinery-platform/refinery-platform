@@ -10,12 +10,11 @@ from galaxy_connector.models import Instance
 from galaxy_connector.connection import Connection
 from core.models import Workflow, WorkflowDataInput, WorkflowEngine
 from django.contrib.auth.models import Group 
-from galaxy_connector.galaxy_workflow import createBaseWorkflow, createStepsAnnot, createStepsCompact
+from galaxy_connector.galaxy_workflow import createBaseWorkflow, createStepsAnnot, createStepsCompact, getStepOptions
 import logging
 
 # get module logger
 logger = logging.getLogger(__name__)
-
     
 @task()
 def get_workflows( workflow_engine ):
@@ -37,22 +36,26 @@ def get_workflows( workflow_engine ):
     
     #for each workflow, create a core Workflow object and its associated WorkflowDataInput objects
     for workflow in workflows:
-        workflow_object = Workflow.objects.create( name=workflow.name, internal_id=workflow.identifier, workflow_engine=workflow_engine )        
-        workflow_object.set_manager_group( workflow_engine.get_manager_group() )
-                
-        workflow_object.share( workflow_engine.get_manager_group().get_managed_group() )
-
-        inputs = workflow.inputs
-        
-        for input in inputs:
-            input_dict = {
-                          'name': input.name,
-                          'internal_id': input.identifier
-                          }
-            i = WorkflowDataInput(**input_dict)
-            i.save()
-            workflow_object.data_inputs.add(i)
+        #logger.debug("Checking workflow for import: %s", workflow.name)
+        if check_workflow(connection, workflow.identifier): # if workflow is meant for refinery 
+            logger.debug("Importing workflow into refinery: %s", workflow.name)
+            
+            workflow_object = Workflow.objects.create( name=workflow.name, internal_id=workflow.identifier, workflow_engine=workflow_engine )        
+            workflow_object.set_manager_group( workflow_engine.get_manager_group() )
+                    
+            workflow_object.share( workflow_engine.get_manager_group().get_managed_group() )
     
+            inputs = workflow.inputs
+            
+            for input in inputs:
+                input_dict = {
+                              'name': input.name,
+                              'internal_id': input.identifier
+                              }
+                i = WorkflowDataInput(**input_dict)
+                i.save()
+                workflow_object.data_inputs.add(i)
+        
 @task()                 
 def configure_workflow( workflow_uuid, ret_list, connection_galaxy=None ):
     """
@@ -75,12 +78,20 @@ def configure_workflow( workflow_uuid, ret_list, connection_galaxy=None ):
     new_workflow = createBaseWorkflow( (workflow_dict["name"]) )
     
     # checking to see what kind of workflow exists: i.e. does it have  "annotation": "type=COMPACT",  in the workflow annotation field
-    work_type = ((workflow_dict["annotation"]).split('='))
-    if len(work_type) > 1:
-        work_type = work_type[1].upper()
+    work_type = getStepOptions(workflow_dict["annotation"])
+    COMPACT_WORKFLOW = False
     
+    for k,v in work_type.iteritems():
+        if k.upper() == 'TYPE':
+            try:
+                if v[0].upper() == 'COMPACT':
+                    COMPACT_WORKFLOW = True
+            except:
+                logger.exception( "Malformed Workflow tag, cannot parse: %s" % (work_type) )
+                return
+        
     # if workflow is tagged w/ type=COMPACT tag, 
-    if work_type == 'COMPACT':
+    if COMPACT_WORKFLOW:
         logger.debug("workflow_manager.tasks.configure_workflow workflow processing: COMPACT")
         new_workflow["steps"], history_download = createStepsCompact(ret_list, workflow_dict)
     else:
@@ -105,4 +116,38 @@ def get_workflow_inputs(workflow_uuid):
         annot_inputs[input_type] = None
     
     return annot_inputs
+
+def check_workflow(connection, workflow_uuid):
+    """
+    Checks to see if a galaxy workflow is meant for input into refinery. Assumes annotation tag in workflow 
+    specifically checking for "refinery_workflow=True"  
+    Returns True of false depending on the workflow tag
+    
+    :param connection: connection to active galaxy instance
+    :type connection: galaxy_connector.Connection Model object 
+    :param workflow_uuid: uuid for a specific workflow in galaxy
+    :type workflow_uuid: string 
+    """
+    
+    # gets dictionary version of workflow
+    workflow_dict = connection.get_workflow_dict(workflow_uuid)
+    
+    # converting annotation tags to dictionary 
+    annotation_tag = getStepOptions(workflow_dict["annotation"])
+    
+    keep_workflow = False
+    
+    for k,v in annotation_tag.iteritems(): 
+        if k.lower() == str('refinery_workflow').lower():
+            try:
+                if len(v) > 0:
+                    tag_value = v[0]
+                    if tag_value == True:
+                        keep_workflow = True
+                    elif tag_value.lower() == 'true':
+                        keep_workflow = True      
+            except:
+                logger.exception( "Galaxy workflow: Base tag for determining to keep a workflow is malformed: " +  annotation_tag)
+    
+    return keep_workflow
     
