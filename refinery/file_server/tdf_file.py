@@ -5,12 +5,12 @@ Created on Apr 21, 2012
 '''
 
 from bitstring import ConstBitStream
-import math
-import zlib
-import logging
-import struct
 import cStringIO
-
+import logging
+import math
+import struct
+import zlib
+import file_store.models
 
 logger = logging.getLogger('file_server')
 
@@ -77,25 +77,16 @@ class TDFByteStream(object):
     _long = struct.Struct(_endianness + 'q')
     _float = struct.Struct(_endianness + 'f')
 
-    def __init__(self, filename=None, bytes=None):
+    def __init__(self, file_object):
         '''Initialize the binary file handle.
 
-        :param file_name: path to a TDF file.
-        :type file_name: str.
-        :param bytes: byte array/buffer.
-        :type bytes: array.
+        :param file_object: binary data file.
+        :type file_name: file or file-like object.
 
         '''
-        # open a disk file or a memory file
-        if filename:
-            try:
-                self._stream = open(filename, 'rb')
-            except IOError as e:
-                logger.error("Error creating a TDFByteStream object.  Could not open file: %s - error(%s): %s", filename, e.errno, e.strerror)
-        elif bytes:
-            self._stream = cStringIO.StringIO(bytes) # cStringIO is faster than StringIO
-        else:
-            logger.error("Error creating a TDFByteStream object.  Must provide either a file name or a byte array.")
+        # get ready the file object for reading
+        self._stream = file_object
+        self.update_offset(0)
 
     def __str__(self, *args, **kwargs):
         if self._stream:
@@ -194,18 +185,15 @@ class TDFFile(object):
     '''
 
     def __init__(self, filename):
-        '''
-        Constructor
-        '''
         self.filename = filename
-        self.bytestream = TDFByteStream(filename=self.filename)
+        file_object = file_store.models.get_file_object(self.filename)
+        self.bytestream = TDFByteStream(file_object)
         self.preamble = None
         self.header = None
         self.index = None
         
     def __str__(self):
         return ( "TDF File (" + self.filename + ")" )
-
 
     # prepare object for pickling (the bytestream cannot be serialized ... doh!)
     # see example here: http://docs.python.org/library/pickle.html
@@ -216,13 +204,13 @@ class TDFFile(object):
     
     # prepare object for unpickling (the bytestream needs to be restored)    
     def __setstate__(self, dict):
-        bytestream = TDFByteStream(filename=dict['filename']) # reopen file bistream
+        # reopen file bytestream
+        file_object = file_store.models.get_file_object(dict['filename'])
+        bytestream = TDFByteStream(file_object)
         self.__dict__.update(dict) # update attributes
         self.bytestream = bytestream  # save the bytestream    
 
-
     def create_data_set_name(self, sequence_name, zoom_level, window_function ):
-        
         if self.preamble is None:
             return None
 
@@ -232,7 +220,6 @@ class TDFFile(object):
                 data_set_name += "/" + window_function
         
         return data_set_name
-
 
     def get_data_set(self, sequence_name, zoom_level, window_function="" ):
         # TODO: implement caching
@@ -699,7 +686,7 @@ class TDFTile( TDFElement ):
             track_names = self.tdf_file.get_track_names()
             
         # create a new byte stream for the tile
-        tile_stream = TDFByteStream( bytes=tile_data )
+        tile_stream = TDFByteStream(cStringIO.StringIO(tile_data))
 
         self.type = self.get_type( tile_stream.read_string() )
         

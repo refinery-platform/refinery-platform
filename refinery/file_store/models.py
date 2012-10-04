@@ -546,18 +546,19 @@ def get_file_size(uuid, report_symlinks=False):
     return item.get_file_size(report_symlinks=report_symlinks)
 
 
-def get_file_object(uuid):
-    '''Open file that belongs to the FileStoreItem specified by UUID.
+def get_file_object(file_name):
+    '''Open file given its name.
 
-    :param uuid: UUID of a FileStoreItem
-    :type uuid: UUID.
+    :param file_name: name of the file.
+    :type file_name: str.
     :returns: file object -- or None if failed to open file.
 
     '''
-    item = FileStoreItem.objects.get_item(uuid)
-    if item:
-        return item.get_file_object()
-    else:
+    try:
+        file_object = open(file_name, 'rb')
+        return file_object
+    except IOError as e:
+        logger.error("Could not open file: %s - error(%s): %s", file_name, e.errno, e.strerror)
         return None
 
 

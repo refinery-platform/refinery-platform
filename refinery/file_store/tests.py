@@ -45,22 +45,14 @@ class FileStoreModuleTest(SimpleTestCase):
         '''
         self.assertEqual(models.get_temp_dir(), models.FILE_STORE_TEMP_DIR)
 
-    @mock.patch.object(models.FileStoreItem, 'get_file_object')
-    def test_get_file_object_with_existing_uuid(self, mock_get_file_object):
-        '''Check that a file object is returned if a valid UUID is provided.
-
-        '''
-        mock_get_file_object.return_value = mock.sentinel.file_object 
-        file_object = models.get_file_object(self.item_from_path.uuid)
-        mock_get_file_object.assert_called_once_with()
+    def test_get_file_object(self):
+        # check if the correct file is opened
+        m = mock.MagicMock(return_value=mock.sentinel.file_object)
+        with mock.patch('__builtin__.open', m):
+            file_object = models.get_file_object(self.path_source)
+        m.assert_called_once_with(self.path_source, 'rb')
+        # check if an expected object is returned
         self.assertEqual(file_object, mock.sentinel.file_object)
-
-    def test_get_file_object_with_nonexisting_uuid(self):
-        '''Check that None is returned if a UUID that doesn't exist is provided.
-
-        '''
-        file_object = models.get_file_object('non-existing-uuid')
-        self.assertIsNone(file_object)
 
 
 class FileStoreItemTest(SimpleTestCase):
