@@ -4,10 +4,11 @@ This file contains tests for file_store.models and file_store.tasks
 """
 
 import os
-import StringIO
+import mock
 from urlparse import urljoin
 from django.test import SimpleTestCase
 import file_store.models as models
+from django.core.files.base import File, ContentFile
 
 
 class FileStoreModuleTest(SimpleTestCase):
@@ -18,17 +19,13 @@ class FileStoreModuleTest(SimpleTestCase):
         self.filename = 'test_file.dat'
         self.sharename = 'labname'
 
+        # create FileStoreItem instances without any disk operations
         self.path_source = os.path.join('/example/path', self.filename)
-        self.item_from_url = models.FileStoreItem.objects.create(source=self.path_source,
-                                                                 sharename=self.sharename)
-        self.url_source = urljoin('http://example.org/', self.filename)
-        self.item_from_path = models.FileStoreItem.objects.create(source=self.url_source,
+        self.item_from_path = models.FileStoreItem.objects.create(source=self.path_source,
                                                                   sharename=self.sharename)
-
-    def tearDown(self):
-        # to delete the files from disk if they were created
-        self.item_from_path.delete()
-        self.item_from_url.delete()
+        self.url_source = urljoin('http://example.org/', self.filename)
+        self.item_from_url = models.FileStoreItem.objects.create(source=self.url_source,
+                                                                     sharename=self.sharename)
 
     def test_file_path(self):
         '''Check that the file store path contains share name and file name.
@@ -42,7 +39,6 @@ class FileStoreModuleTest(SimpleTestCase):
         self.assertIn(self.sharename, path)
         self.assertIn(self.filename, path)
 
-
     def test_get_temp_dir(self):
         '''Check that the file store temp dir is reported correctly.
 
@@ -50,17 +46,13 @@ class FileStoreModuleTest(SimpleTestCase):
         self.assertEqual(models.get_temp_dir(), models.FILE_STORE_TEMP_DIR)
 
     def test_get_file_object(self):
-        '''Check that a file object is returned if a valid UUID is provided.
-
-        '''
-        content = 'test'
-        models.FileStoreItem.get_file_object = lambda self: StringIO.StringIO(content)
-        # test with an existing UUID
-        fh = models.get_file_object(self.item_from_path.uuid)
-        self.assertEqual(fh.read(), content)
-        # test with an invalid UUID
-        fh = models.get_file_object('invalid-uuid')
-        self.assertIsNone(fh)
+        # check if the correct file is opened
+        m = mock.MagicMock(return_value=mock.sentinel.file_object)
+        with mock.patch('__builtin__.open', m):
+            file_object = models.get_file_object(self.path_source)
+        m.assert_called_once_with(self.path_source, 'rb')
+        # check if an expected object is returned
+        self.assertEqual(file_object, mock.sentinel.file_object)
 
 
 class FileStoreItemTest(SimpleTestCase):
@@ -71,17 +63,13 @@ class FileStoreItemTest(SimpleTestCase):
         self.filename = 'test_file.dat'
         self.sharename = 'labname'
 
+        # create FileStoreItem instances without any disk operations
         self.path_source = os.path.join('/example/path', self.filename)
         self.item_from_url = models.FileStoreItem.objects.create(source=self.path_source,
                                                                  sharename=self.sharename)
         self.url_source = urljoin('http://example.org/', self.filename)
         self.item_from_path = models.FileStoreItem.objects.create(source=self.url_source,
                                                                   sharename=self.sharename)
-
-    def tearDown(self):
-        # to delete the files from disk if they were created
-        self.item_from_path.delete()
-        self.item_from_url.delete()
 
     def test_get_file_extension(self):
         '''Check that the correct file extension is returned.

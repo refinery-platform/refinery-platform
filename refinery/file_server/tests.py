@@ -7,6 +7,7 @@ Created on Apr 21, 2012
 from django.utils import unittest
 import struct
 from file_server import tdf_file
+import cStringIO
 
 
 class TDFByteStreamTest(unittest.TestCase):
@@ -24,7 +25,8 @@ class TDFByteStreamTestUpdateOffset(TDFByteStreamTest):
         self.data = [1, 2, 3]
         self.fmt = self.endianness + 'iii'  # three ints
         self.binary_data = struct.pack(self.fmt, *self.data)
-        self.tdf = tdf_file.TDFByteStream(bytes=self.binary_data)
+        self.file_object = cStringIO.StringIO(self.binary_data)
+        self.tdf = tdf_file.TDFByteStream(self.file_object)
 
     def test_initial_position(self):
         # check if the initial position is set to the beginning of the file
@@ -52,7 +54,8 @@ class TDFByteStreamTestReadInteger(TDFByteStreamTest):
         self.data = [1, 2, 3]
         self.fmt = self.endianness + 'iii'  # three ints
         self.binary_data = struct.pack(self.fmt, *self.data)
-        self.tdf = tdf_file.TDFByteStream(bytes=self.binary_data)
+        self.file_object = cStringIO.StringIO(self.binary_data)
+        self.tdf = tdf_file.TDFByteStream(self.file_object)
 
     def test_read_values(self):
         # test automatic advancing to the next integer
@@ -68,7 +71,8 @@ class TDFByteStreamTestReadLong(TDFByteStreamTest):
         self.data = [1, 2, 3]
         self.fmt = self.endianness + 'qqq'   # three longs
         self.binary_data = struct.pack(self.fmt, *self.data)
-        self.tdf = tdf_file.TDFByteStream(bytes=self.binary_data)
+        self.file_object = cStringIO.StringIO(self.binary_data)
+        self.tdf = tdf_file.TDFByteStream(self.file_object)
 
     def test_read_values(self):
         # test automatic advancing to the next integer
@@ -84,7 +88,8 @@ class TDFByteStreamTestReadFloat(TDFByteStreamTest):
         self.data = [1.1, 2.2, 3.3]
         self.fmt = self.endianness + 'fff'   # three floats
         self.binary_data = struct.pack(self.fmt, *self.data)
-        self.tdf = tdf_file.TDFByteStream(bytes=self.binary_data)
+        self.file_object = cStringIO.StringIO(self.binary_data)
+        self.tdf = tdf_file.TDFByteStream(self.file_object)
 
     def test_read_values(self):
         # test automatic advancing to the next float
@@ -100,7 +105,8 @@ class TDFByteStreamTestReadBytes(TDFByteStreamTest):
         self.data = ['a', 'b', 'c']
         self.fmt = self.endianness + 'ccc'  # three one-byte characters
         self.binary_data = struct.pack(self.fmt, *self.data)
-        self.tdf = tdf_file.TDFByteStream(bytes=self.binary_data)
+        self.file_object = cStringIO.StringIO(self.binary_data)
+        self.tdf = tdf_file.TDFByteStream(self.file_object)
         self.length = struct.calcsize(self.fmt)  # total number of bytes used to encode the data
 
     def test_read_zero_bytes(self):
@@ -135,7 +141,8 @@ class TDFByteStreamTestReadBytes(TDFByteStreamTest):
         self.data += ['\x00', 'd']
         self.fmt += 'cc'   # additional four one-byte characters
         self.binary_data = struct.pack(self.fmt, *self.data)
-        self.tdf = tdf_file.TDFByteStream(bytes=self.binary_data)
+        self.file_object = cStringIO.StringIO(self.binary_data)
+        self.tdf = tdf_file.TDFByteStream(self.file_object)
         self.assertEqual(self.tdf.read_string(), ''.join(self.data[0:3]))
 
 
@@ -147,16 +154,17 @@ class TDFByteTestInvalidValues(TDFByteStreamTest):
         self.data = 'a'
         self.fmt = self.endianness + 'c'  # char - one byte long
         self.binary_data = struct.pack(self.fmt, *self.data)
-        self.tdf = tdf_file.TDFByteStream(bytes=self.binary_data)
+        self.file_object = cStringIO.StringIO(self.binary_data)
+        self.tdf = tdf_file.TDFByteStream(self.file_object)
 
     def test_read_int(self):
-        self.assertRaises(tdf_file.InsufficientBytes, self.tdf.read_integer)
+        self.assertRaises(tdf_file.InsufficientBytesError, self.tdf.read_integer)
 
     def test_read_long(self):
-        self.assertRaises(tdf_file.InsufficientBytes, self.tdf.read_long)
+        self.assertRaises(tdf_file.InsufficientBytesError, self.tdf.read_long)
 
     def test_read_float(self):
-        self.assertRaises(tdf_file.InsufficientBytes, self.tdf.read_float)
+        self.assertRaises(tdf_file.InsufficientBytesError, self.tdf.read_float)
 
 
 class TDFByteStreamRegressionTest(unittest.TestCase):
@@ -173,7 +181,7 @@ class TDFByteStreamRegressionTest(unittest.TestCase):
         data = [1, 2, 3]
         fmt = self.endianness + 'iii'
         binary_data = struct.pack(fmt, *data)
-        bytestr = tdf_file.TDFByteStream(bytes=binary_data)
+        bytestr = tdf_file.TDFByteStream(cStringIO.StringIO(binary_data))
         bitstr = tdf_file.TDFBitStream(bytes=binary_data)
 
         # check if the initial position is set to the beginning of the file
@@ -191,7 +199,7 @@ class TDFByteStreamRegressionTest(unittest.TestCase):
         data = [1, 2, 3]
         fmt = self.endianness + 'iih'   # two ints and a short
         binary_data = struct.pack(fmt, *data)
-        bytestr = tdf_file.TDFByteStream(bytes=binary_data)
+        bytestr = tdf_file.TDFByteStream(cStringIO.StringIO(binary_data))
         bitstr = tdf_file.TDFBitStream(bytes=binary_data)
 
         self.assertEqual(bytestr.read_integer(), bitstr.read_integer())
@@ -205,7 +213,7 @@ class TDFByteStreamRegressionTest(unittest.TestCase):
         data = [1, 2, 3]
         fmt = self.endianness + 'qqh'   # two long ints and a short
         binary_data = struct.pack(fmt, *data)
-        bytestr = tdf_file.TDFByteStream(bytes=binary_data)
+        bytestr = tdf_file.TDFByteStream(cStringIO.StringIO(binary_data))
         bitstr = tdf_file.TDFBitStream(bytes=binary_data)
 
         self.assertEqual(bytestr.read_long(), bitstr.read_long())
@@ -216,7 +224,7 @@ class TDFByteStreamRegressionTest(unittest.TestCase):
         data = ['a', 'b', 'c', '\x00', 1, 2, 3, 'x', 'y', 'z', '\x00']
         fmt = self.endianness + '4c iqf 4c'
         binary_data = struct.pack(fmt, *data)
-        bytestr = tdf_file.TDFByteStream(bytes=binary_data)
+        bytestr = tdf_file.TDFByteStream(cStringIO.StringIO(binary_data))
         bitstr = tdf_file.TDFBitStream(bytes=binary_data)
 
         # test reading a two character string
@@ -230,11 +238,11 @@ class TDFByteStreamRegressionTest(unittest.TestCase):
         # test reading until the EOF
         self.assertEqual(bytestr.read_string(), bitstr.read_string())
         # read bytes (first reset the offset to the beginning of the binary data stream)
-        bytestr = tdf_file.TDFByteStream(bytes=binary_data)
+        bytestr = tdf_file.TDFByteStream(cStringIO.StringIO(binary_data))
         bitstr = tdf_file.TDFBitStream(bytes=binary_data)
         self.assertEqual(bytestr.read_bytes(3), bitstr.read_bytes(3))
         # test update offset (
-        bytestr = tdf_file.TDFByteStream(bytes=binary_data)
+        bytestr = tdf_file.TDFByteStream(cStringIO.StringIO(binary_data))
         bitstr = tdf_file.TDFBitStream(bytes=binary_data)
         self.assertEqual(bytestr.update_offset(None), bitstr.update_offset(None))
         self.assertEqual(bytestr.update_offset(5), bitstr.update_offset(5))

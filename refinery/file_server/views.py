@@ -330,7 +330,7 @@ def profile(request):
 
     item = get(uuid)
 
-    tdf_file = TDFFile(item.data_file.get_absolute_path())
+    tdf_file = TDFFile(item.get_file_object())
     tdf_file.cache()
 
     profile = tdf_file.get_profile(seq, zoom, ["mean"], start_location=start, end_location=end )

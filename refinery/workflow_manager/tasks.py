@@ -78,12 +78,20 @@ def configure_workflow( workflow_uuid, ret_list, connection_galaxy=None ):
     new_workflow = createBaseWorkflow( (workflow_dict["name"]) )
     
     # checking to see what kind of workflow exists: i.e. does it have  "annotation": "type=COMPACT",  in the workflow annotation field
-    work_type = ((workflow_dict["annotation"]).split('='))
-    if len(work_type) > 1:
-        work_type = work_type[1].upper()
+    work_type = getStepOptions(workflow_dict["annotation"])
+    COMPACT_WORKFLOW = False
     
+    for k,v in work_type.iteritems():
+        if k.upper() == 'TYPE':
+            try:
+                if v[0].upper() == 'COMPACT':
+                    COMPACT_WORKFLOW = True
+            except:
+                logger.exception( "Malformed Workflow tag, cannot parse: %s" % (work_type) )
+                return
+        
     # if workflow is tagged w/ type=COMPACT tag, 
-    if work_type.upper() == 'COMPACT':
+    if COMPACT_WORKFLOW:
         logger.debug("workflow_manager.tasks.configure_workflow workflow processing: COMPACT")
         new_workflow["steps"], history_download = createStepsCompact(ret_list, workflow_dict)
     else:

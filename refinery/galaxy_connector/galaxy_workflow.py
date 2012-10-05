@@ -483,8 +483,8 @@ def getStepOptions(step_annot):
         for st in step_split:
             st_opts = st.strip().split('=')
             if len(st_opts) > 1:
-                temp_key = st_opts[0]
-                temp_val = str(st_opts[1]).strip('"')
+                temp_key = st_opts[0].lstrip('\n').strip()
+                temp_val = str(st_opts[1]).lstrip('\n').strip('"')
                 # if key already exists in return dictionary
                 if temp_key in ret_dict:
                     ret_dict[temp_key].append(temp_val)
