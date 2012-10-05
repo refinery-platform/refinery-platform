@@ -72,7 +72,7 @@ class TDFByteStream(object):
     _stream = None
     #: Byte order for binary data interpretation
     _endianness = '<'    # little-endian is assumed by default
-    #: Objects for reading different types of data (more efficient than calling struct functions)
+    #: Objects for reading different data types (more efficient than calling struct functions)
     _int = struct.Struct(_endianness + 'i')
     _long = struct.Struct(_endianness + 'q')
     _float = struct.Struct(_endianness + 'f')
@@ -106,6 +106,16 @@ class TDFByteStream(object):
             self._stream.seek(offset)
         return self._stream.tell()
 
+    def read_bytes(self, length):
+        '''Read length number of bytes from file.
+
+        :param length: number of bytes to read.
+        :type length: int.
+        :returns: str -- raw binary data.
+
+        '''
+        return self._stream.read(length)
+
     def read_integer(self):
         '''Read a four byte integer from the current position in the file.
 
@@ -113,7 +123,7 @@ class TDFByteStream(object):
 
         '''
         length = 4
-        data = self._stream.read(length)
+        data = self.read_bytes(length)
         # check if we were able to read enough data to convert to an integer
         try:
             return self._int.unpack(data)[0]
@@ -127,7 +137,7 @@ class TDFByteStream(object):
 
         '''
         length = 8
-        data = self._stream.read(length)
+        data = self.read_bytes(length)
         # check if we were able to read enough data to convert to a long integer
         try: 
             return self._long.unpack(data)[0]
@@ -141,22 +151,12 @@ class TDFByteStream(object):
 
         '''
         length = 4
-        data = self._stream.read(length)
+        data = self.read_bytes(length)
         # check if we were able to read enough data to convert to a float
         try:
             return self._float.unpack(data)[0]
         except struct.error:
             raise InsufficientBytesError(length, len(data))
-
-    def read_bytes(self, length):
-        '''Read length number of bytes from file.
-
-        :param length: number of bytes to read.
-        :type length: int.
-        :returns: str -- raw binary data.
-
-        '''
-        return self._stream.read(length)
 
     def read_string(self, length=None):
         '''Read number of bytes from file and convert them to string.
@@ -168,10 +168,10 @@ class TDFByteStream(object):
 
         '''
         if length is not None:
-            return self._stream.read(length)
+            return self.read_bytes(length)
         else:
             string = ''
-            for character in iter(lambda: self._stream.read(1), '\x00'):
+            for character in iter(lambda: self.read_bytes(1), '\x00'):
                 # terminate if we reached EOF
                 if character == '':
                     return string
@@ -184,9 +184,8 @@ class TDFFile(object):
     classdocs
     '''
 
-    def __init__(self, filename):
-        self.filename = filename
-        file_object = file_store.models.get_file_object(self.filename)
+    def __init__(self, file_object):
+        self.filename = file_object.name
         self.bytestream = TDFByteStream(file_object)
         self.preamble = None
         self.header = None
@@ -195,20 +194,20 @@ class TDFFile(object):
     def __str__(self):
         return ( "TDF File (" + self.filename + ")" )
 
-    # prepare object for pickling (the bytestream cannot be serialized ... doh!)
+    # prepare object for pickling (file objects cannot be serialized)
     # see example here: http://docs.python.org/library/pickle.html
     def __getstate__(self):
         odict = self.__dict__.copy() # copy the dict since we change it
-        del odict['bytestream'] # remove bytestream
+        del odict['bytestream'] # remove the byte stream
         return odict
-    
-    # prepare object for unpickling (the bytestream needs to be restored)    
-    def __setstate__(self, dict):
-        # reopen file bytestream
-        file_object = file_store.models.get_file_object(dict['filename'])
+
+    # prepare object for unpickling (byte stream needs to be restored)    
+    def __setstate__(self, dictionary):
+        # reopen file byte stream
+        file_object = file_store.models.get_file_object(dictionary['filename'])
         bytestream = TDFByteStream(file_object)
-        self.__dict__.update(dict) # update attributes
-        self.bytestream = bytestream  # save the bytestream    
+        self.__dict__.update(dictionary)  # reload attributes
+        self.bytestream = bytestream    # re-attach the byte stream
 
     def create_data_set_name(self, sequence_name, zoom_level, window_function ):
         if self.preamble is None:
@@ -257,56 +256,45 @@ class TDFFile(object):
             return ( { "sequence_name": components[1], "zoom_level": components[2], "window_function": components[3] } )
         
         return None
-    
-    
+
     def get_version(self):
         if self.preamble is None:
             return None;
         return self.preamble.version
-
 
     def get_track_names(self):
         if self.header is None:
             return None;
         return self.header.tracks
 
-
     def get_data_set_names(self):
         if self.index is None:
             return None;
         return self.index.data_set_index
-
 
     def is_compressed(self):
         if self.header is None:
             return None;
         return self.header.is_compressed
 
-
-    def update_offset(self,offset):
+    def update_offset(self, offset):
         return self.bytestream.update_offset(offset)
-                    
             
     def read_long(self):
         return self.bytestream.read_long()
 
-
     def read_integer(self):
         return self.bytestream.read_integer()
-
 
     def read_float(self):
         return self.bytestream.read_float()
 
-
     def read_bytes(self, length):
         return self.bytestream.read_bytes( length )
-
     
     def read_string( self, length=None ):
-        return self.bytestream.read_string(length)        
-                
-                        
+        return self.bytestream.read_string(length)
+
     def cache(self):
         self.preamble = TDFPreamble(self)
         self.preamble.read()
@@ -314,10 +302,8 @@ class TDFFile(object):
         self.header.read()
         self.index = TDFIndex(self, self.preamble.index_position)
         self.index.read()
-        
         return self
 
-    
     def get_profile(self, sequence_name, zoom_level, window_functions, start_location, end_location):
         '''
         window_functions = array of window function names (e.g. "mean", "max", "min", etc.)
@@ -328,7 +314,7 @@ class TDFFile(object):
         data_sets = {}
         for window_function in window_functions:
             data_sets[window_function] = self.get_data_set(sequence_name, zoom_level, window_function)
-            
+
         tiles = {}
         for window_function in window_functions:
             tiles[window_function] = data_sets[window_function].get_tiles(start_location,end_location) 
@@ -387,8 +373,7 @@ class TDFFile(object):
                         location = {}
                     
         return profile
- 
- 
+
 
 class TDFElement(object):
 
@@ -398,8 +383,6 @@ class TDFElement(object):
         '''
         self.tdf_file = tdf_file
         self.offset = offset
-
-
 
     
 class TDFPreamble(TDFElement):
@@ -417,7 +400,6 @@ class TDFPreamble(TDFElement):
         self.index_length = None
         self.header_length = None
         
-        
     def read(self):
         self.offset = self.tdf_file.update_offset(self.offset)
                 
@@ -432,10 +414,8 @@ class TDFPreamble(TDFElement):
 
         return self
 
-
-
 class TDFHeader(TDFElement):
-    
+
     GZIP_FLAG = 0x1
 
     def __init__(self, tdf_file, offset=None ):
@@ -451,8 +431,7 @@ class TDFHeader(TDFElement):
         self.genome_id = None
         self.flags = None
         self.is_compressed = None
-        
-        
+
     def read(self):        
         self.offset = self.tdf_file.update_offset(self.offset)
         
@@ -483,7 +462,6 @@ class TDFHeader(TDFElement):
         return self
 
 
-
 class TDFIndex( TDFElement ):
     
     def __init__(self, tdf_file, offset=None ):
@@ -497,10 +475,9 @@ class TDFIndex( TDFElement ):
         self.track_line = None
         self.tracks = None
         
-        
     def read(self):        
         self.offset = self.tdf_file.update_offset(self.offset)
-            
+
         self.data_set_index = {}
         data_set_count = self.tdf_file.read_integer()
         for i in range( data_set_count ):
@@ -516,7 +493,6 @@ class TDFIndex( TDFElement ):
             self.group_index[group.name] = group                        
 
         return self
-
 
 
 class TDFIndexedElement( TDFElement ):
@@ -539,11 +515,9 @@ class TDFIndexedElement( TDFElement ):
         self.index_length = self.tdf_file.read_integer()
 
         return self
-
         
     def read(self):
         return self
-
 
 
 class TDFDataSet( TDFIndexedElement ):    
@@ -560,7 +534,6 @@ class TDFDataSet( TDFIndexedElement ):
         self.data_type = None
         self.tile_width = None
         self.tile_index = None
-
 
     def read(self):
         self.offset = self.tdf_file.update_offset(self.index_position)
@@ -585,38 +558,33 @@ class TDFDataSet( TDFIndexedElement ):
             self.tile_index.append( tile )
         
         return self
-    
 
-    def get_tile(self, tile_number, filename=None):
+    def get_tile(self, tile_number, file_object=None):
         # TODO: implement caching
-        if tile_number < 0 or tile_number >= len( self.tile_index ): 
+        if tile_number < 0 or tile_number >= len(self.tile_index): 
             return None        
         
         if self.tile_index[tile_number] is None:
             return None
         
-        return self.tile_index[tile_number].read(filename, self.is_compressed, self.track_names )
-            
-                    
-    def get_tiles(self, start_location, end_location, filename=None):
+        return self.tile_index[tile_number].read(file_object, self.is_compressed, self.track_names)
+
+    def get_tiles(self, start_location, end_location, file_object=None):
         # TODO: implement caching
-        start_tile = int( math.floor(start_location/self.tile_width) )
-        end_tile = int( math.floor(end_location/self.tile_width) )
-     
+        start_tile = int(math.floor(start_location/self.tile_width))
+        end_tile = int(math.floor(end_location/self.tile_width))
+
         tiles = []
         for i in range(start_tile, end_tile+1):
-            
-            tile = self.get_tile(i,filename)                
-            
+            tile = self.get_tile(i, file_object)
             if tile is not None:
-                tiles.append( tile )
-        
+                tiles.append(tile)
+
         return tiles
-    
+
     
 class TDFGroup( TDFIndexedElement ):
     pass
-
 
 
 class TDFTile( TDFElement ):
@@ -628,7 +596,6 @@ class TDFTile( TDFElement ):
         BED_WITH_NAME = 2
         VARIABLE_STEP = 3
         FIXED_STEP = 4
-            
                     
     def __init__(self, tdf_file, offset=None, type=None, index_position=None, index_length=None ):
         '''
@@ -641,7 +608,6 @@ class TDFTile( TDFElement ):
         self.index_length = index_length
         self.data = None
 
-
     def get_type(self,type_string):
         types = { "bed": self.Type.BED, 
                   "bedWithName": self.Type.BED_WITH_NAME,
@@ -652,7 +618,6 @@ class TDFTile( TDFElement ):
             return types[type_string]
         
         return self.types.UNKNOWN
-                 
     
     def read_index(self):        
         self.offset = self.tdf_file.update_offset(self.offset)
@@ -660,36 +625,35 @@ class TDFTile( TDFElement ):
         self.index_position = self.tdf_file.read_long()
         self.index_length = self.tdf_file.read_integer()
         
-        return self        
-    
-    
-    def read(self,filename=None,is_compressed=False,track_names=None):                        
+        return self
+
+    def read(self, file_object=None, is_compressed=False, track_names=None):                        
         if self.index_position < 0 and self.index_length == 0:
             # don't read anything
             self.type = self.Type.EMPTY
             return self
-        
-        if filename is not None:
-            self.tdf_file = TDFFile( filename )
-        
-        self.tdf_file.update_offset( self.index_position )
-        tile_data = self.tdf_file.read_bytes( self.index_length )
-        
-        if filename is None:                     
+
+        if file_object is not None:
+            self.tdf_file = TDFFile(file_object)
+
+        self.tdf_file.update_offset(self.index_position)
+        tile_data = self.tdf_file.read_bytes(self.index_length)
+
+        if file_object is None:                 
             if self.tdf_file.is_compressed():
-                tile_data = zlib.decompress( tile_data )
+                tile_data = zlib.decompress(tile_data)
         else:
             if is_compressed:
-                tile_data = zlib.decompress( tile_data )
-                
+                tile_data = zlib.decompress(tile_data)
+
         if track_names is None:
             track_names = self.tdf_file.get_track_names()
-            
+
         # create a new byte stream for the tile
         tile_stream = TDFByteStream(cStringIO.StringIO(tile_data))
 
-        self.type = self.get_type( tile_stream.read_string() )
-        
+        self.type = self.get_type(tile_stream.read_string())
+
         if self.type == self.Type.BED or self.type == self.Type.BED_WITH_NAME:
             bedTile = TDFBedTile(self)
             self = bedTile.read(tile_stream,track_names)
@@ -703,9 +667,8 @@ class TDFTile( TDFElement ):
             return self; 
         
         return self
-    
-    
-    
+
+
 class TDFFixedTile(TDFTile):
     
     def __init__(self,other):                        
@@ -714,7 +677,6 @@ class TDFFixedTile(TDFTile):
         self.span = None
         self.start_location = None
 
-        
     def read(self,tile_stream,track_names=None):
         
         location_count = tile_stream.read_integer()
@@ -729,8 +691,8 @@ class TDFFixedTile(TDFTile):
                 self.data[track].append( tile_stream.read_float() )
         
         return self
-    
-    
+
+
 class TDFVariableTile(TDFTile):
     
     def __init__(self,other):                        
@@ -740,9 +702,7 @@ class TDFVariableTile(TDFTile):
         self.start_locations = None
         self.start_location = None
 
-        
     def read(self,tile_stream,track_names):
-        
         self.start_location = tile_stream.read_integer()
         self.span = tile_stream.read_float()
 
@@ -765,17 +725,13 @@ class TDFVariableTile(TDFTile):
 
 
 class TDFBedTile(TDFTile):
-    
     def __init__(self,other):                        
         super( TDFBedTile, self ).__init__(other.tdf_file, other.offset, other.type, other.index_position, other.index_length)
-
         self.start_locations = None
         self.end_locations = None
         self.names = None
-        
-        
+
     def read(self,tile_stream,track_names):
-                
         location_count = tile_stream.read_integer()
         self.start_locations = []
         self.end_locations = []
@@ -783,7 +739,7 @@ class TDFBedTile(TDFTile):
             self.start_locations.append( tile_stream.read_integer() )
         for i in range( location_count ):
             self.end_locations.append( tile_stream.read_integer() )
-            
+
         # read track count: this is not stored because the information is available in the TDF file header
         track_count = tile_stream.read_integer()        
         # assert( track_count = len( self.tdf_file.get_track_names() ) )
@@ -803,16 +759,14 @@ class TDFBedTile(TDFTile):
                     self.names[track].append( tile_stream.read_string() )
         
         return self    
-    
 
-def get_profile_from_file(data_set, start_location, end_location, filename ):
+def get_profile_from_file(data_set, start_location, end_location, file_object):
     '''
     window_functions = array of window function names (e.g. "mean", "max", "min", etc.)
     '''
-    
     profile = []
             
-    tiles = data_set.get_tiles(start_location,end_location,filename) 
+    tiles = data_set.get_tiles(start_location, end_location, file_object) 
     
     # assumes that the number of tiles is equal across all window functions
     for tile_index in range(len(tiles)):

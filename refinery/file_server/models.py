@@ -62,6 +62,13 @@ class _FileServerItem(models.Model):
         logger.error("_FileServerItem with data file UUID '%s' does not return profiles", self.data_file.uuid)
         return False
 
+    def get_file_object(self):
+        '''Return visualization file object appropriate for this file type.
+
+        '''
+        logger.error("_FileServerItem with data file UUID '%s' does not return file objects", self.data_file.uuid)
+        return False
+
 
 class TDFItem(_FileServerItem):
     '''Represents a TDF file that is not linked to a data file.
@@ -96,6 +103,14 @@ class TDFItem(_FileServerItem):
         
         '''
         pass
+
+    def get_file_object(self):
+        '''Return the TDF file object.
+
+        :returns: file object or None if it's not available.
+
+        '''
+        return self.data_file.get_file_object()
 
 
 class BAMItem(_FileServerItem):

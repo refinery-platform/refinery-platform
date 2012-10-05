@@ -251,7 +251,8 @@ class FileStoreItem(models.Model):
 
         '''
         try:
-            return self.datafile.open()
+            # FieldFile.open() and File.open() don't return file objects, so accessing it directly
+            return self.datafile.file.file  # FileStoreItem.FieldFile.File.file
         except ValueError as e:
             logger.error("%s [%s]", e.message, self.uuid)
             return None
@@ -555,8 +556,7 @@ def get_file_object(file_name):
 
     '''
     try:
-        file_object = open(file_name, 'rb')
-        return file_object
+        return open(file_name, 'rb')
     except IOError as e:
         logger.error("Could not open file: %s - error(%s): %s", file_name, e.errno, e.strerror)
         return None
