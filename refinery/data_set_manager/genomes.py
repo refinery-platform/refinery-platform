@@ -24,7 +24,7 @@ def map_species_id_to_default_genome_build( id ):
         return "hg19"
 
     if id == 6239:
-        return "ce10"
+        return "WS220"
     
     if id == 7227:
         return "dm3"
