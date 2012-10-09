@@ -24,7 +24,6 @@ from django.dispatch import receiver
 from django.db import models
 from django.db.models.signals import pre_delete
 from django_extensions.db.fields import UUIDField
-from django.core.files import File
 from django.core.files.storage import FileSystemStorage
 
 

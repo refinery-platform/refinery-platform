@@ -57,7 +57,7 @@ class TDFByteStreamTestReadInteger(TDFByteStreamTest):
         self.file_object = cStringIO.StringIO(self.binary_data)
         self.tdf = tdf_file.TDFByteStream(self.file_object)
 
-    def test_read_values(self):
+    def test_read_integer(self):
         # test automatic advancing to the next integer
         for i in range(len(self.data)):
             self.assertEqual(self.tdf.read_integer(), self.data[i])
@@ -74,7 +74,7 @@ class TDFByteStreamTestReadLong(TDFByteStreamTest):
         self.file_object = cStringIO.StringIO(self.binary_data)
         self.tdf = tdf_file.TDFByteStream(self.file_object)
 
-    def test_read_values(self):
+    def test_read_long(self):
         # test automatic advancing to the next integer
         for i in range(len(self.data)):
             self.assertEqual(self.tdf.read_long(), self.data[i])
@@ -91,7 +91,7 @@ class TDFByteStreamTestReadFloat(TDFByteStreamTest):
         self.file_object = cStringIO.StringIO(self.binary_data)
         self.tdf = tdf_file.TDFByteStream(self.file_object)
 
-    def test_read_values(self):
+    def test_read_float(self):
         # test automatic advancing to the next float
         for i in range(len(self.data)):
             self.assertAlmostEqual(self.tdf.read_float(), self.data[i])
