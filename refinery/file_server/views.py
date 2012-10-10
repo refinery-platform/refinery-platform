@@ -10,7 +10,7 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 import file_store.tasks
-from file_server.tdf_file import TDFFile, get_profile_from_file
+import file_server.tdf_file as tdf_module
 import file_server.models as models
 
 
@@ -21,7 +21,7 @@ logger = logging.getLogger('file_server')
 def index( request ):    
     file_object = file_store.models.get_file_object("/Users/isytchev/Sites/tdf/TCGA-AG-4007-01A-01D-1115-02_101122_SN177_0123_B20APUABXX_s_5.rg.sorted.chr21.bam.tdf")
     #file_object = file_store.models.get_file_object("/Users/nils/Sites/tdf/TCGA-AG-4007-01A-01D-1115-02_101122_SN177_0123_B20APUABXX_s_5.rg.sorted.chr21.bam.tdf")
-    tdf_file = TDFFile(file_object)
+    tdf_file = tdf_module.TDFFile(file_object)
     tdf_file.cache()
 
     for track_name in tdf_file.get_track_names():
@@ -67,7 +67,7 @@ def index( request ):
 
     #print( profile )
 
-    #data_set = tdf_file.get_data_set( "chr21", "raw" )    
+    #data_set = tdf.get_data_set( "chr21", "raw" )    
     #print( data_set )
 
     #tile = data_set.get_tile( 156 )
@@ -147,13 +147,13 @@ def _is_cached_tdf_file(session,uuid):
     return "file" in cache 
         
 
-def _cache_tdf_file(session,uuid,tdf_file):
+def _cache_tdf_file(session, uuid, tdf):
     cache = _get_cache(session, uuid)
 
     if not _is_cached_tdf_file(session,uuid):
         cache["file"] = {}    
         
-    cache["file"] = tdf_file
+    cache["file"] = tdf
         
     
 def _get_tdf_file_from_cache(session,uuid):
@@ -168,21 +168,21 @@ def cache_tdf(request,uuid,refresh=False):
     
     if not _is_cached_tdf_file(request.session, uuid):
         print( "Caching file " + str(uuid) + " ..." )
-        tdf_file = TDFFile(file_store_item.get_file_object())
-        tdf_file.cache()
-        _cache_tdf_file(request.session,uuid,tdf_file)
+        tdf = tdf_module.TDFFile(file_store_item.get_file_object())
+        tdf.cache()
+        _cache_tdf_file(request.session,uuid,tdf)
     else:
         print( "Retrieved file " + str(uuid) + " ..." )
-        tdf_file = _get_tdf_file_from_cache(request.session, uuid) 
+        tdf = _get_tdf_file_from_cache(request.session, uuid) 
     
     if not _is_cached_tdf_data_set_information(request.session, uuid) or refresh:                
         print( "Caching data set information " + str(uuid) + " ..." )
                     
-        for data_set_name in tdf_file.get_data_set_names():
+        for data_set_name in tdf.get_data_set_names():
             
             # decompose data set name
-            components = tdf_file.decompose_data_set_name(data_set_name)
-            data_set = tdf_file.get_data_set( components["sequence_name"], components["zoom_level"], components["window_function"] )
+            components = tdf.decompose_data_set_name(data_set_name)
+            data_set = tdf.get_data_set( components["sequence_name"], components["zoom_level"], components["window_function"] )
             data_set_information = { "data_set_name": data_set_name, "tile_width": data_set.tile_width, "tile_count": str(len(data_set.tile_index)) } 
             
             _cache_tdf_data_set_information(request.session, uuid, components, data_set_information )            
@@ -220,7 +220,7 @@ def get_tdf_profile(request, uuid, sequence_name, zoom_level, start_location, en
         _cache_tdf_data_set(request.session, uuid, data_set_name, data_set)
 
     with file_store_item.get_file_object() as file_object:
-        profile = get_profile_from_file(data_set, int(start_location), int(end_location), file_object)
+        profile = tdf_file.get_profile_from_file(data_set, int(start_location), int(end_location), file_object)
 
     print("Profile Length: " + str(len(profile)))
         
@@ -297,6 +297,13 @@ def profile(request):
         logger.error(msg)
         return HttpResponse(msg)
 
+    if 'zoom' in request.GET:
+        zoom = request.GET['zoom']
+    else:
+        msg = "Please provide zoom level"
+        logger.error(msg)
+        return HttpResponse(msg)
+
     if 'start' in request.GET:
         start = int(request.GET['start'])
     else:
@@ -311,18 +318,12 @@ def profile(request):
         logger.error(msg)
         return HttpResponse(msg)
 
-    if 'zoom' in request.GET:
-        zoom = request.GET['zoom']
-    else:
-        msg = "Please provide zoom level"
-        logger.error(msg)
-        return HttpResponse(msg)
-
     item = models.get(uuid)
 
-    with item.get_file_object() as file_object:
-        tdf_file = TDFFile(file_object)
-        tdf_file.cache()
-        profile = tdf_file.get_profile(seq, zoom, ["mean"], start_location=start, end_location=end)
+    try:
+        profile = item.get_profile(seq, zoom, ["mean"], start, end)
+    except AttributeError as e:
+        #return HttpResponse("_FileServerItem with UUID [" + uuid + "] was not found")
+        return HttpResponse(e.message)
 
-    return HttpResponse(simplejson.dumps(profile), mimetype='application/json')     
+    return HttpResponse(profile, mimetype='application/json')     

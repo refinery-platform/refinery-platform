@@ -123,7 +123,7 @@ FILE_TYPES = (
     ('tdf', 'TDF file'),
     ('txt', 'Text file'),
     ('vcf', 'Variant Call Format'),
-    ('wig', 'WIG file'),
+    ('wig', 'Wiggle Track Format'),
     ('xml', 'XML file'),
     ('zip', 'Zip compressed archive'),
 )
