@@ -24,7 +24,6 @@ from django.dispatch import receiver
 from django.db import models
 from django.db.models.signals import pre_delete
 from django_extensions.db.fields import UUIDField
-from django.core.files import File
 from django.core.files.storage import FileSystemStorage
 
 
@@ -124,7 +123,7 @@ FILE_TYPES = (
     ('tdf', 'TDF file'),
     ('txt', 'Text file'),
     ('vcf', 'Variant Call Format'),
-    ('wig', 'WIG file'),
+    ('wig', 'Wiggle Track Format'),
     ('xml', 'XML file'),
     ('zip', 'Zip compressed archive'),
 )
@@ -251,7 +250,8 @@ class FileStoreItem(models.Model):
 
         '''
         try:
-            return self.datafile.open()
+            # FieldFile.open() and File.open() don't return file objects, so accessing it directly
+            return self.datafile.file.file  # FileStoreItem.FieldFile.File.file
         except ValueError as e:
             logger.error("%s [%s]", e.message, self.uuid)
             return None
@@ -555,8 +555,7 @@ def get_file_object(file_name):
 
     '''
     try:
-        file_object = open(file_name, 'rb')
-        return file_object
+        return open(file_name, 'rb')
     except IOError as e:
         logger.error("Could not open file: %s - error(%s): %s", file_name, e.errno, e.strerror)
         return None
