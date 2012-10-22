@@ -12,9 +12,9 @@ var solrSettings = "wt=json&json.wrf=?&facet=true";
 
 var query = { total_items: 0, selected_items: 0, items_per_page: 10, page: 0 };
 
-var testStudyUuid = urlComponents[urlComponents.length-2];
-var testAssayUuid = urlComponents[urlComponents.length-3]; 
-var testNodeType = "\"Raw Data File\"";
+var currentStudyUuid = urlComponents[urlComponents.length-2];
+var currentAssayUuid = urlComponents[urlComponents.length-3]; 
+var currentNodeType = "\"Raw Data File\"";
 
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
 var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type" ]; // TODO: make these regexes
@@ -298,7 +298,7 @@ function getData( studyUuid, assayUuid, nodeType ) {
 			// requesting data that is not available -> empty results -> rerun query			
 			// determine last available page given items_per_page setting
 			query.page = Math.max( 0, Math.ceil( data.response.numFound/query.items_per_page ) - 1 );
-			getData( testAssayUuid, testStudyUuid, testNodeType );
+			getData( currentAssayUuid, currentStudyUuid, currentNodeType );
 		}
 		else {
 			processFacets( data );
@@ -402,7 +402,7 @@ function processFacets( data ) {
    		var facetValue = decomposeFacetValueId( facetValueId ).facetValue;
    	   		
    		facets[facet][facetValue].isSelected = !facets[facet][facetValue].isSelected;   		
-   		getData( testAssayUuid, testStudyUuid, testNodeType );
+   		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
    	} );				
 }
 
@@ -529,7 +529,7 @@ function processPivots( data ) {
 			pivots.push( pivot_y1 );
 		}
 				
-   		getData( testAssayUuid, testStudyUuid, testNodeType );
+   		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
    	} );		
 
 	$( "#pivot_y1_choice" ).change( function( ) {
@@ -547,7 +547,7 @@ function processPivots( data ) {
 			pivots.push( pivot_y1 );
 		}
 		
-   		getData( testAssayUuid, testStudyUuid, testNodeType );
+   		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
    	} );   	
 }
 
@@ -585,7 +585,7 @@ function processFields() {
    		var fieldName = decomposeFieldNameId( fieldNameId ).fieldName;
    	   		
    		fields[fieldName].isVisible = !fields[fieldName].isVisible;   		
-   		getData( testAssayUuid, testStudyUuid, testNodeType );
+   		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
    	} );				
 	
 }
@@ -670,7 +670,7 @@ function processDocs( data ) {
 					newDirection = toggleFieldDirection( fields[decomposeFieldNameId( this.id ).fieldName].direction );
 					clearFieldDirections();
 					fields[decomposeFieldNameId( this.id ).fieldName].direction = newDirection;					
-					getData( testAssayUuid, testStudyUuid, testNodeType ); 					
+					getData( currentAssayUuid, currentStudyUuid, currentNodeType ); 					
 				});
 			}
 		}
@@ -756,7 +756,7 @@ function processPages( data ) {
 			query.page = page - 1;			
 		}
 				
-		getData( testAssayUuid, testStudyUuid, testNodeType ); 							  
+		getData( currentAssayUuid, currentStudyUuid, currentNodeType ); 							  
 	});
 }
 
@@ -781,10 +781,10 @@ function clearFieldDirections() {
 }
 
 
-initializeData( testAssayUuid, testStudyUuid, testNodeType );
+initializeData( currentAssayUuid, currentStudyUuid, currentNodeType );
 
 $( "#igv-session-link" ).on( "click", function() {
-	getField( testAssayUuid, testStudyUuid, testNodeType, "file_uuid", function( uuids ) {
+	getField( currentAssayUuid, currentStudyUuid, currentNodeType, "file_uuid", function( uuids ) {
 		
 		var limit = 20;
 		var newUrl = "/visualization_manager/igv_session?uuids=" + uuids.join( "," );
@@ -806,7 +806,7 @@ $( "#igv-session-link" ).on( "click", function() {
 });
 
 $( "#profile-viewer-session-link" ).on( "click", function() {
-	getField( testAssayUuid, testStudyUuid, testNodeType, "file_uuid", function( uuids ) {
+	getField( currentAssayUuid, currentStudyUuid, currentNodeType, "file_uuid", function( uuids ) {
 		
 		var limit = 1;
 		var newUrl = "/visualization_manager/profile_viewer_session?uuid=" + uuids[0];
