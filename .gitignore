@@ -48,3 +48,4 @@ refinery/celeryev.pid
 refinery/solr/*/data
 refinery/refinery/*
 refinery/middleware.py
+refinery/fabfile.py
