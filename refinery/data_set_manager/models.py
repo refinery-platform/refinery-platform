@@ -15,7 +15,7 @@ from django.db import models
 from django_extensions.db.fields import UUIDField
 
 from data_set_manager.genomes import map_species_id_to_default_genome_build
-
+    
 
 class NodeCollection(models.Model):
     '''
@@ -395,12 +395,42 @@ class Attribute(models.Model):
     def __unicode__(self):
         return unicode(self.type) + ( "" if self.subtype is None else " (" + unicode(self.subtype) + ")" ) + " = " + unicode(self.value) 
 
+
+# non-ISA Tab
+class AttributeDefinition(models.Model):
+    study = models.ForeignKey(Study, db_index=True)
+    assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
+    
+    definition = models.TextField(blank=True, null=True, db_index=True)
+
+    type = models.TextField(db_index=True)
+    subtype = models.TextField(blank=True, null=True, db_index=True)
+
+    value = models.TextField(blank=True, null=True, db_index=True)
+    value_accession = models.TextField(blank=True, null=True)
+    value_source = models.TextField(blank=True, null=True)
+
+
+# non-ISA Tab
+class AttributeOrder(models.Model):
+    study = models.ForeignKey(Study, db_index=True)
+    assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
+
+    type = models.TextField(db_index=True)
+    subtype = models.TextField(blank=True, null=True, db_index=True)
+    
+    rank = models.IntegerField(blank=True, null=True, unique=True)
+    is_facet = models.BooleanField(default=True)
+    is_hidden = models.BooleanField(default=False)
+
+    
 class AnnotatedNodeRegistry(models.Model):
     study = models.ForeignKey(Study, db_index=True)
     assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
     node_type = models.TextField(db_index=True)
     creation_date = models.DateTimeField( auto_now_add=True )
     modification_date = models.DateTimeField( auto_now=True )    
+
 
 class AnnotatedNode(models.Model):
     node = models.ForeignKey(Node, db_index=True)

@@ -8,7 +8,6 @@ import mock
 from urlparse import urljoin
 from django.test import SimpleTestCase
 import file_store.models as models
-from django.core.files.base import File, ContentFile
 
 
 class FileStoreModuleTest(SimpleTestCase):
@@ -47,9 +46,19 @@ class FileStoreModuleTest(SimpleTestCase):
 
     def test_get_file_object(self):
         # check if the correct file is opened
-        m = mock.MagicMock(return_value=mock.sentinel.file_object)
+        m = mock.MagicMock(spec=file, return_value=mock.sentinel.file_object)
         with mock.patch('__builtin__.open', m):
             file_object = models.get_file_object(self.path_source)
+        m.assert_called_once_with(self.path_source, 'rb')
+        # check if an expected object is returned
+        self.assertEqual(file_object, mock.sentinel.file_object)
+
+    @mock.patch('__builtin__.open', spec=file)
+    def test_get_file_object_2(self, m):
+        '''Decorator version of the test_get_file_obejct()'''
+        m.return_value = mock.sentinel.file_object
+        # check if the correct file is opened
+        file_object = models.get_file_object(self.path_source)
         m.assert_called_once_with(self.path_source, 'rb')
         # check if an expected object is returned
         self.assertEqual(file_object, mock.sentinel.file_object)

@@ -24,7 +24,6 @@ from django.dispatch import receiver
 from django.db import models
 from django.db.models.signals import pre_delete
 from django_extensions.db.fields import UUIDField
-from django.core.files import File
 from django.core.files.storage import FileSystemStorage
 
 
@@ -124,7 +123,7 @@ FILE_TYPES = (
     ('tdf', 'TDF file'),
     ('txt', 'Text file'),
     ('vcf', 'Variant Call Format'),
-    ('wig', 'WIG file'),
+    ('wig', 'Wiggle Track Format'),
     ('xml', 'XML file'),
     ('zip', 'Zip compressed archive'),
 )
