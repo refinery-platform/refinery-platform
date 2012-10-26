@@ -260,7 +260,8 @@ def organism_to_id(organism_name):
 
     :param organism_name: organism whose taxon ID is unknown
     :type organism_name: str
-    :returns: list of (scientific_name, id) tuples -- returns the UCSC equivalent
+    :returns: list -- list of (scientific_name, id) tuples -- returns the UCSC equivalent
+    :raises: Taxon.DoesNotExist -- raised if there's no match in db
     '''
     ret_list = list()
     query_list = Taxon.objects.filter(name__iexact=organism_name)
@@ -285,7 +286,8 @@ def organism_to_genome_build(organism_name):
 
     :param alt_genome_build: non-UCSC genome build name
     :type alt_genome_build: str
-    :returns: list of (organism_scientific_name, default_genome_build) tuples -- raises a Genome_Build.DoesNotExist otherwise
+    :returns: list -- list of (organism_scientific_name, default_genome_build) tuples
+    :raises: Taxon.DoesNotExist, Genome_Build.DoesNotExist
     '''
     ret_list = list()
     query_list = Taxon.objects.filter(name__iexact=organism_name)
@@ -317,7 +319,8 @@ def resolve_to_ucsc_genome_build(alt_genome_build):
 
     :param alt_genome_build: non-UCSC genome build name
     :type alt_genome_build: str
-    :returns: str -- returns the UCSC equivalent genome build name or the original string if an equivalent doesn't exist.
+    :returns: str -- returns the UCSC equivalent genome build name
+    :raises: Genome_Build.DoesNotExist
     '''
     try:
         genome_build = Genome_Build.objects.exclude(affiliation='UCSC').get(name__icontains=alt_genome_build)

@@ -1,11 +1,27 @@
 from django.conf import settings
-from django.core.management.base import NoArgsCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction, IntegrityError
 from annotation_server.models import Taxon
 import tempfile, urllib2, os.path, tarfile, string, shutil, re
 
-class Command(NoArgsCommand):
-    def handle_noargs(self, **options):
+class Command(BaseCommand):
+    def handle(self, *args, **options):
+        taxon_file = "" #optional file of taxon IDs that we want
+        try:
+            taxon_file = args[0]
+        except:
+            pass
+        
+        #if you passed in a file of taxon IDs for filtering, create dict
+        taxon_filter = dict()
+        try:
+            tf = open(taxon_file, 'rb')
+            for line in tf:
+                taxon_filter[string.strip(line)] = 1
+        except:
+            print "no taxon_file"
+
+
         #setup
         temp_dir = tempfile.mkdtemp()
         taxonomy_archive = os.path.join(temp_dir, "taxdump.tar.gz")
@@ -31,8 +47,17 @@ class Command(NoArgsCommand):
             if re.search(r"\sspecies", line):
                 split_string = string.split(line, "|", 1)
                 node_id = string.strip(split_string[0])
-                species_node_ids[node_id] = list()
+                if taxon_filter:
+                    try:
+                        taxon_filter[node_id]
+                        species_node_ids[node_id] = list()
+                    except KeyError:
+                        pass
+                        
+                else:
+                    species_node_ids[node_id] = list()
         f.close()
+
 
         print "Associating species taxon IDs and names"
         #go through names file to get the names
@@ -65,7 +90,7 @@ class Command(NoArgsCommand):
 
         #cleanup
         shutil.rmtree(temp_dir)
-        
+
         #import taxon_names
         for taxon_id, val_list in species_node_ids.items():
             for entry in val_list:
