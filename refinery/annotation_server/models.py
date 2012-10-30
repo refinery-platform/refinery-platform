@@ -217,8 +217,136 @@ class WigDescription(models.Model):
     def __unicode__(self):
         return self.name + "=" + self.description + ", " + self.type
     
+##################################################
+### CLASSES FOR Taxonomy Names 
+##################################################
+class Taxon(models.Model):
+    '''
+    Model for storing names and NCBI Taxon IDs for organisms
+    '''
+    taxon_id = models.IntegerField(db_index=True)
+    name = models.CharField(max_length=1024)
+    unique_name = models.CharField(max_length=1024, blank=True, null=True)
+    type = models.CharField(max_length=255, db_index=True)
 
+    class Meta:
+        unique_together = ("taxon_id", "name")
+
+    def __unicode__(self):
+        return "%s: %s" % (self.taxon_id, self.name)
+
+
+class Genome_Build(models.Model):
+    '''
+    Model that stores UCSC Genome Build Information
+    '''
+    name = models.CharField(max_length=255, unique=True)
+    affiliation = models.CharField(max_length=255, default='UCSC')
+    description = models.CharField(max_length=255)
+    organism = models.ForeignKey(Taxon)
+    html_path = models.CharField(max_length=1024, blank=True, null=True)
+    source_name = models.CharField(max_length=1024, blank=True, null=True)
+    available = models.BooleanField(default=True)
+    default_build = models.BooleanField(default=False)
+    ucsc_equivalent = models.ForeignKey('Genome_Build', blank=True, null=True)
     
+    def __unicode__(self):
+        return "%s: %s" % (self.name, self.description)
+
+
+def organism_to_id(organism_name):
+    '''
+    return list of (scientific_name, id) tuples for every taxon ID
+
+    :param organism_name: organism whose taxon ID is unknown
+    :type organism_name: str
+    :returns: list -- list of (scientific_name, id) tuples -- returns the UCSC equivalent
+    :raises: Taxon.DoesNotExist -- raised if there's no match in db
+    '''
+    ret_list = list()
+    query_list = Taxon.objects.filter(name__iexact=organism_name)
+    
+    if not query_list.count(): #if nothing came back
+        raise Taxon.DoesNotExist
+    
+    #get unique list of taxon IDs
+    query_set = set()
+    for item in query_list:
+        query_set.add(item.taxon_id)
+    
+    for id in query_set:
+        item = Taxon.objects.get(taxon_id=id, type='scientific name')
+        ret_list.append((item.name, item.taxon_id))
+
+    return ret_list
+
+def organism_to_genome_build(organism_name):
+    '''
+    Finds the default genome build for this organism given the name.
+
+    :param alt_genome_build: non-UCSC genome build name
+    :type alt_genome_build: str
+    :returns: list -- list of (organism_scientific_name, default_genome_build) tuples
+    :raises: Taxon.DoesNotExist, Genome_Build.DoesNotExist
+    '''
+    ret_list = list()
+    query_list = Taxon.objects.filter(name__iexact=organism_name)
+    
+    if not query_list.count(): #if no organism matches the given name
+        raise Taxon.DoesNotExist
+    
+    #get unique list of taxon IDs
+    query_set = set()
+    for item in query_list:
+        query_set.add(item.taxon_id)
+    
+    for id in query_set:
+        try:
+            org = Taxon.objects.get(taxon_id=id, type='scientific name')
+            default_gb = Genome_Build.objects.get(default_build=True, organism=org).name
+            ret_list.append((org.name, default_gb))
+        except Genome_Build.DoesNotExist:
+            pass
+    
+    if not len(ret_list): #if no genome build matches to organism
+        raise Genome_Build.DoesNotExist
+    
+    return ret_list
+
+def resolve_to_ucsc_genome_build(alt_genome_build):
+    '''
+    returns the UCSC equivalent of a non-UCSC genome build name if an equivalent exists
+
+    :param alt_genome_build: non-UCSC genome build name
+    :type alt_genome_build: str
+    :returns: str -- returns the UCSC equivalent genome build name
+    :raises: Genome_Build.DoesNotExist
+    '''
+    try:
+        genome_build = Genome_Build.objects.exclude(affiliation='UCSC').get(name__icontains=alt_genome_build)
+    except:
+        raise
+
+    try:
+        return genome_build.ucsc_equivalent.name
+    except:
+        raise Genome_Build.DoesNotExist
+
+def genome_build_to_species_id(genome_build):
+    '''
+    Returns the NCBI taxon ID of the organism associated with the genome build provided
+
+    :param genome_build: genome build whose associated organism is not known
+    :type genome_build: str
+    :returns: integer -- returns the taxon ID of the organism or raises an error  
+    '''
+    try:
+        gb = Genome_Build.objects.get(name=genome_build)
+    except:
+        #something went very wrong, so just re-raise whatever the problem was
+        raise
+    return gb.organism.taxon_id
+
 ##################################################
 ### CLASSES FOR Human, hg19 
 ##################################################
