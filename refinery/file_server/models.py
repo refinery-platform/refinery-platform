@@ -318,7 +318,7 @@ def add(data_file_uuid, aux_file_uuid=None):
         return None
 
 
-def get(uuid):
+def get(data_file_uuid):
     '''Returns an instance of a _FileServerItem subclass that has a data_file with the specified UUID.
 
     :param uuid: UUID of a data file.
@@ -326,7 +326,7 @@ def get(uuid):
     :returns: instance of a _FileServerItem subclass or None if not found. 
 
     '''
-    item = _FileServerItem.objects.get_item(uuid=uuid)
+    item = _FileServerItem.objects.get_item(uuid=data_file_uuid)
 
     # return appropriate model instance by iterating over list of available model names
     if item:
@@ -336,7 +336,7 @@ def get(uuid):
     return None
 
 
-def delete(uuid):
+def delete(data_file_uuid):
     '''Deletes an instance of a FileServerItem subclass that has a data_file with the specified UUID.
 
     :param uuid: UUID of a data file.
@@ -344,19 +344,19 @@ def delete(uuid):
     :returns: bool -- True if success, False if failure.
 
     '''
-    logger.debug("Deleting _FileServerItem with data file UUID '%s'", uuid)
+    logger.debug("Deleting _FileServerItem with data file UUID '%s'", data_file_uuid)
 
-    item = _FileServerItem.objects.get_item(uuid)
+    item = _FileServerItem.objects.get_item(data_file_uuid)
     if item:
         item.delete()
         logger.info("_FileServerItem deleted")
         return True
     else:
-        logger.error("Could not delete _FileServerItem with data file UUID '%s'", uuid)
+        logger.error("Could not delete _FileServerItem with data file UUID '%s'", data_file_uuid)
         return False
 
 
-def initialize(uuid):
+def initialize(data_file_uuid):
     '''Prepare the model instance to be used for visualization.
 
     :param uuid: UUID of a data file.
@@ -364,7 +364,7 @@ def initialize(uuid):
     :returns: instance of _FileServerItem subclass or None if there was an error.
 
     '''
-    item = get(uuid)
+    item = get(data_file_uuid)
     if item:
         if item.initialize():
             return item
@@ -372,7 +372,7 @@ def initialize(uuid):
             logger.error("Initialization failed")
             return None
     else:
-        logger.error("_FileServerItem with data file UUID '%s' does not exist", uuid)
+        logger.error("_FileServerItem with data file UUID '%s' does not exist", data_file_uuid)
         return None
 
 
