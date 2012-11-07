@@ -55,8 +55,12 @@ def create_catch_all_project( sender, user, request, **kwargs ):
         user.get_profile().save()
     
 # create catch all project for user if none exists
-user_logged_in.connect(create_catch_all_project)            
+user_logged_in.connect(create_catch_all_project)
 
+def send_email(sender, user, request, **kwargs):
+    user.email_user('test', 'testing email')
+
+user_logged_in.connect(send_email)
 
 
 class BaseResource ( models.Model ):
