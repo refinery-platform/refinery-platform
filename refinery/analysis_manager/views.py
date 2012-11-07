@@ -162,7 +162,9 @@ def analysis_run(request):
     temp_name = "Unnamed " + str( datetime.now())
     summary_name = "None provided."
     analysis = Analysis( summary=summary_name, name=temp_name, project=request.user.get_profile().catch_all_project, data_set=data_set, workflow=curr_workflow )
-    analysis.save()   
+    analysis.save()
+    #setting the owner
+    analysis.set_owner(request.user)
     
     # gets galaxy internal id for specified workflow
     workflow_galaxy_id = curr_workflow.internal_id

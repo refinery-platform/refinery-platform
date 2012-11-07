@@ -300,7 +300,8 @@ def run_analysis_cleanup(analysis):
     connection.delete_library(analysis.library_id)
     
     #Psalm edit - add in email notification upon analysis completion #
-    user = analysis.get_owner()
+    logger.debug('sending an email now that analysis cleanup is finished')
+    user = analysis.get_owner()    
     email_message = "Analysis message"
     user.email_user('Finished Analysis', email_message)
     
