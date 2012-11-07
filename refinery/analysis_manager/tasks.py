@@ -108,6 +108,13 @@ def chord_cleanup(ret_val, analysis):
     analysis_status.cleanup_taskset_id = result_set.task_id 
     analysis_status.save()
     
+    #Psalm edit - add in email notification upon analysis completion #
+    user = analysis.get_owner()
+    email_message = "Analysis message"
+    user.email_user('Finished Analysis', email_message)
+    
+    
+    
     return
 
 # task: run analysis (outermost task, calls subtasks that monitor and run preprocessing, execution, postprocessing)
