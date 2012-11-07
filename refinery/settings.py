@@ -332,6 +332,9 @@ REFINERY_MAIN_LOGO = ""
 # supply a Google analytics id "UA-..." (if set to "" tracking will be deactivated)
 REFINERY_GOOGLE_ANALYTICS_ID = ""
 
+# so managers and admins know Refinery is emailing them
+EMAIL_SUBJECT_PREFIX = '[Refinery] '
+
 TAXONOMY_URL = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"
 UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 
