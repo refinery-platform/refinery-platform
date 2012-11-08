@@ -424,6 +424,12 @@ class Analysis ( OwnableResource ):
     time_end = models.DateTimeField(blank=True, null=True)
     status = models.TextField(default="CREATED", blank=True, null=True)
     
+    # total number of files in this data set
+    file_count = models.IntegerField(blank=True, null=True)
+    # total number of bytes of all files in this data set
+    file_size = models.IntegerField(blank=True, null=True)
+    
+    
     def __unicode__(self):
         return self.name + " - " + self.summary
     
