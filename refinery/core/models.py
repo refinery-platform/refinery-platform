@@ -190,6 +190,12 @@ class DataSet(SharableResource):
     # TODO: add function to restore earlier version
     # TODO: add collections (of assays in the investigation) and associate those with the versions
 
+    # total number of files in this data set
+    file_count = models.IntegerField(blank=True, null=True)
+    # total number of bytes of all files in this data set
+    file_size = models.IntegerField(blank=True, null=True)
+
+
     _investigations = models.ManyToManyField( Investigation, through="InvestigationLink" )
     
     def set_investigation(self,investigation,message=""):
@@ -423,13 +429,7 @@ class Analysis ( OwnableResource ):
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
     status = models.TextField(default="CREATED", blank=True, null=True)
-    
-    # total number of files in this data set
-    file_count = models.IntegerField(blank=True, null=True)
-    # total number of bytes of all files in this data set
-    file_size = models.IntegerField(blank=True, null=True)
-    
-    
+        
     def __unicode__(self):
         return self.name + " - " + self.summary
     
