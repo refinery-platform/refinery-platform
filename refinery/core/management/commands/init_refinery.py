@@ -27,14 +27,10 @@ class Command(BaseCommand):
         # 2. set up the site name
         if Group.objects.filter(domain__exact=settings.REFINERY_BASE_URL).count() > 0:
             raise CommandError("This URL already exists in the database")
-        s = Site(name=settings.REFINERY_INSTANCE_NAME, domain=settings.REFINERY_BASE_URL)
+        s = Site.objects.get(id=settings.SITE_ID)
+        s.name = settings.REFINERY_INSTANCE_NAME
+        s.domain = settings.REFINERY_BASE_URL
         s.save()
-        #remove dummy site if it exists
-        try:
-            s = Site.objects.get(domain="example.com")
-            s.delete()
-        except:
-            pass
          
         # 3. create public group
         print( "Creating public group \"%s\" for Refinery. Edit \"REFINERY_PUBLIC_GROUP_NAME\" in your settings to choose another name or \"REFINERY_PUBLIC_GROUP_ID\" to choose another id." % settings.REFINERY_PUBLIC_GROUP_NAME, settings.REFINERY_PUBLIC_GROUP_ID ) 
