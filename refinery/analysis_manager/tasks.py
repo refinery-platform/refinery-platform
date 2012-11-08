@@ -118,6 +118,11 @@ def run_analysis(analysis, interval=5.0):
     
     analysis_status = AnalysisStatus.objects.get(analysis=analysis)
     
+    # updating status of analysis to running
+    analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+    analysis.status = "RUNNING"
+    analysis.save()
+    
     # DOWNLOADING
     # GETTING LIST OF DOWNLOADED REMOTE FILES 
     datainputs = analysis.workflow_data_input_maps.all()
@@ -158,6 +163,9 @@ def run_analysis_preprocessing(analysis):
     
     ### generates same ret_list purely based on analysis object ###
     ret_list = get_analysis_config(analysis)
+    
+    print "ret_list"
+    print ret_list
 
     # getting expanded workflow configured based on input: ret_list
     new_workflow, history_download = configure_workflow(analysis.workflow.uuid, ret_list, connection)
@@ -222,6 +230,11 @@ def monitor_analysis_execution(analysis, interval=5.0, task_id=None):
         
         if progress["workflow_state"] == "error":
             revoke_task = True
+            
+            # Setting state of analysis to failure
+            analysis.status = "FAILURE"
+            analysis.save()
+            
         elif progress["workflow_state"] == "ok":
             logger.debug("workflow message OK:  %s", progress["message"]["ok"] )
             if progress["message"]["ok"] >= analysis_steps:
@@ -276,6 +289,11 @@ def run_analysis_cleanup(analysis):
     logger.debug("analysis_manager.run_analysis_cleanup called")
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+    
+    # saving when analysis is finished
+    analysis.time_end = datetime.now()
+    analysis.status = "SUCCESS"
+    analysis.save()
     
     # Adding task to rename files after downloading results from history
     logger.debug("before rename_analysis_results called");
