@@ -25,7 +25,7 @@ class Command(BaseCommand):
         # 1. test if admin user exists
          
         # 2. set up the site name
-        if Group.objects.filter(domain__exact=settings.REFINERY_BASE_URL).count() > 0:
+        if Site.objects.filter(domain__exact=settings.REFINERY_BASE_URL).count() > 0:
             raise CommandError("This URL already exists in the database")
         s = Site(name=settings.REFINERY_INSTANCE_NAME, domain=settings.REFINERY_BASE_URL)
         s.save()
