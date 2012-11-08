@@ -37,7 +37,7 @@ def send_analysis_email(analysis):
     user = analysis.get_owner()
     name = analysis.name
     workflow = analysis.workflow.name
-    email_subj = "[Refinery] %s: %s (%s)" % (analysis.status, name, workflow)
+    email_subj = "[%s] %s: %s (%s)" % (settings.REFINERY_INSTANCE_NAME, analysis.status, name, workflow)
     msg_list = ["Project: %s" % analysis.project.name]
     msg_list.append("Analysis: %s" % name)
     msg_list.append("Dataset used: %s" % analysis.data_set.name)
@@ -260,6 +260,7 @@ def monitor_analysis_execution(analysis, interval=5.0, task_id=None):
             
             # Setting state of analysis to failure
             analysis.status = "FAILURE"
+            analysis.time_end = datetime.now()
             analysis.save()
             send_analysis_email(analysis)
             
