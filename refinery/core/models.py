@@ -420,9 +420,9 @@ class Analysis ( OwnableResource ):
     library_id = models.TextField(blank=True, null=True)
     results = models.ManyToManyField(AnalysisResult, blank=True)   
     workflow_dl_files = models.ManyToManyField(WorkflowFilesDL, blank=True) 
-    time_start = models.DateTimeField()
-    time_end = models.DateTimeField()
-    status = models.TextField(default="CREATED")
+    time_start = models.DateTimeField(blank=True, null=True)
+    time_end = models.DateTimeField(blank=True, null=True)
+    status = models.TextField(default="CREATED", blank=True, null=True)
     
     def __unicode__(self):
         return self.name + " - " + self.summary
