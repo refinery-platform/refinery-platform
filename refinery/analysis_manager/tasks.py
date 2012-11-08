@@ -108,6 +108,8 @@ def chord_cleanup(ret_val, analysis):
     analysis_status.cleanup_taskset_id = result_set.task_id 
     analysis_status.save()
     
+    
+    
     return
 
 # task: run analysis (outermost task, calls subtasks that monitor and run preprocessing, execution, postprocessing)
@@ -296,6 +298,12 @@ def run_analysis_cleanup(analysis):
     
     # delete_library
     connection.delete_library(analysis.library_id)
+    
+    #Psalm edit - add in email notification upon analysis completion #
+    logger.debug('sending an email now that analysis cleanup is finished')
+    user = analysis.get_owner()    
+    email_message = "Analysis message"
+    user.email_user('Finished Analysis', email_message)
     
     return
 

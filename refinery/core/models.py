@@ -53,10 +53,10 @@ def create_catch_all_project( sender, user, request, **kwargs ):
         project.set_owner( user )
         user.get_profile().catch_all_project = project
         user.get_profile().save()
+        
     
 # create catch all project for user if none exists
-user_logged_in.connect(create_catch_all_project)            
-
+user_logged_in.connect(create_catch_all_project)
 
 
 class BaseResource ( models.Model ):
