@@ -376,7 +376,7 @@ def create_dataset(investigation_uuid, username, public=False):
         investigation = Investigation.objects.get(uuid=investigation_uuid)
         identifier = investigation.get_identifier()
         title = investigation.get_title()
-        dataset_title = "%s: %s" % (identifier, title)
+        dataset_title = "%s: %s" % (identifier, title)        
 
         datasets = DataSet.objects.filter(name=dataset_title)
         #check if the investigation already exists
@@ -391,14 +391,16 @@ def create_dataset(investigation_uuid, username, public=False):
 
         #create a new dataset if doesn't exist already for this user
         if not dataset: 
-            d = DataSet.objects.create(name=identifier)
-            d.set_investigation(investigation)
-            d.set_owner(user)
-            dataset = d
+            dataset = DataSet.objects.create(name=identifier)
+            dataset.set_investigation(investigation)
+            dataset.set_owner(user)
 
         if public:
             public_group = ExtendedGroup.objects.public_group()
             dataset.share(public_group)
+        
+        dataset.file_size = dataset.get_file_size()
+        dataset.file_count = dataset.get_file_count()
         
         return dataset.uuid
     return None
