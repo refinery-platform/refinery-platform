@@ -1,0 +1,15 @@
+Dear {{first_name}} {{last_name}} ({{username}}),
+
+Your analysis {{logic}}.  View your results here: {{url}}
+
+Project: {{project}}
+Analysis: {{name}}
+Dataset used: {{dataset}}
+Workflow used: {{workflow}}
+Start time: {{start}} 
+End time: {{end}}
+Duration: {{duration}}
+
+We are looking forward to your next visit.
+
+{{site_name}} - {{site_domain}}

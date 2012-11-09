@@ -442,7 +442,6 @@ def init_refinery():
     '''Initialize Refinery
     (create public group "Public", etc)
     '''
-    #TODO: check for idempotence
     with prefix("workon refinery"):
         run("./manage.py init_refinery")
 
