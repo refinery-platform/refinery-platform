@@ -191,9 +191,9 @@ class DataSet(SharableResource):
     # TODO: add collections (of assays in the investigation) and associate those with the versions
 
     # total number of files in this data set
-    file_count = models.IntegerField(blank=True, null=True)
+    file_count = models.IntegerField(blank=True, null=True, default=0)
     # total number of bytes of all files in this data set
-    file_size = models.IntegerField(blank=True, null=True)
+    file_size = models.IntegerField(blank=True, null=True, default=0)
 
 
     _investigations = models.ManyToManyField( Investigation, through="InvestigationLink" )
@@ -415,6 +415,19 @@ class AnalysisResult (models.Model):
        
                 
 class Analysis ( OwnableResource ):
+    
+    SUCCESS_STATUS = "SUCCESS"
+    FAILURE_STATUS = "FAILURE"
+    RUNNING_STATUS = "RUNNING"
+    INITIALIZED_STATUS = "INITIALIZED"
+    
+    STATUS_CHOICES = ( 
+                     ( SUCCESS_STATUS, "Analysis finished successfully"),
+                     ( FAILURE_STATUS, "Analysis terminated after errors"),
+                     ( RUNNING_STATUS, "Analysis is running" ),
+                     ( INITIALIZED_STATUS, "Analysis was initialized" ),
+                    ) 
+    
     project = models.ForeignKey( Project, related_name="analyses" )
     data_set = models.ForeignKey( DataSet, blank=True )
     workflow = models.ForeignKey( Workflow, blank=True )
@@ -428,7 +441,7 @@ class Analysis ( OwnableResource ):
     workflow_dl_files = models.ManyToManyField(WorkflowFilesDL, blank=True) 
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
-    status = models.TextField(default="CREATED", blank=True, null=True)
+    status = models.TextField(default=INITIALIZED_STATUS, choices=STATUS_CHOICES, blank=True, null=True)
         
     def __unicode__(self):
         return self.name + " - " + self.summary

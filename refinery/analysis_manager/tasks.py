@@ -148,7 +148,7 @@ def run_analysis(analysis, interval=5.0):
     
     # updating status of analysis to running
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-    analysis.status = "RUNNING"
+    analysis.status = Analysis.RUNNING_STATUS
     analysis.save()
     
     # DOWNLOADING
@@ -260,7 +260,7 @@ def monitor_analysis_execution(analysis, interval=5.0, task_id=None):
             revoke_task = True
             
             # Setting state of analysis to failure
-            analysis.status = "FAILURE"
+            analysis.status = Analysis.FAILURE_STATUS
             analysis.time_end = datetime.now()
             analysis.save()
             send_analysis_email(analysis)
@@ -322,7 +322,7 @@ def run_analysis_cleanup(analysis):
     
     # saving when analysis is finished
     analysis.time_end = datetime.now()
-    analysis.status = "SUCCESS"
+    analysis.status = Analysis.SUCCESS_STATUS
     analysis.save()
     
     # Adding task to rename files after downloading results from history
