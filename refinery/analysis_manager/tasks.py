@@ -12,7 +12,7 @@ import time, os, copy, urllib2
 from django.conf import settings
 from galaxy_connector.connection import Connection
 from workflow_manager.tasks import configure_workflow
-from datetime import datetime
+from datetime import datetime, timedelta
 from celery.task import chord
 from celery.utils import uuid
 from celery.task.chords import Chord
@@ -23,6 +23,7 @@ import logging
 from galaxy_connector.galaxy_workflow import countWorkflowSteps
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
+from django.template import loader, Context
 
 logger = logging.getLogger(__name__)
 
@@ -32,21 +33,45 @@ def send_analysis_email(analysis):
 
     :param analysis: Analysis object
     '''
-    #Psalm edit - add in email notification upon analysis completion #
     user = analysis.get_owner()
     name = analysis.name
     workflow = analysis.workflow.name
+    site_name = Site.objects.get_current().name
+    site_domain = Site.objects.get_current().domain
+    status = analysis.status
+    project = analysis.project
+    start = analysis.start_time
+    end = analysis.end_time
+    duration = start - end
+    hours, remainder = divmod(duration.total_seconds(), 3600)
+    minutes, seconds = divmod(remainder, 60)
+    
+    if status == Analysis.SUCCESS_STATUS:
+        logic = 'finished successfully'
+    else:
+        logic = 'failed'
+
+    email_subj = "[%s] %s: %s (%s)" % (site_name, status, name, workflow)
+
+    temp_loader = loader.get_template('analysis_manager/analysis_email.txt')
+    context = Context({
+                 'project': '',
+                 'name': name,
+                 'first_name': user.first_name,
+                 'last_name': user.last_name,
+                 'username': user.username,
+                 'dataset': analysis.data_set.name,
+                 'workflow': analysis.workflow.name,
+                 'site_name': site_name,
+                 'site_domain': site_domain,
+                 'start': datetime.strftime(start, '%A, %d %B %G %r'),
+                 'end': datetime.strftime(end, '%A, %d %B %G %r'),
+                 'duration': "%s:%s hours" % (int(hours), int(minutes)),
+                 'logic': logic,
+                 'url': "http://%s%s" % (site_domain, reverse('core.views.analysis', args=(analysis.project.uuid, analysis.uuid,)))                 
+                 })
         
-    email_subj = "[%s] %s: %s (%s)" % (Site.objects.get_current().name, analysis.status, name, workflow)
-    msg_list = ["Project: %s" % analysis.project.name]
-    msg_list.append("Analysis: %s" % name)
-    msg_list.append("Dataset used: %s" % analysis.data_set.name)
-    msg_list.append("Workflow used: %s" % workflow)
-    msg_list.append("Start time: %s End time: %s" % (analysis.time_start, analysis.time_end))
-    msg_list.append("Results:\nhttp://%s%s" % (Site.objects.get_current().domain, reverse('core.views.analysis', args=(analysis.project.uuid, analysis.uuid,))))
-    email_msg = "\n".join(msg_list)
-        
-    user.email_user(email_subj, email_msg)
+    user.email_user(email_subj, temp_loader.render(context))
     
     logger.info('Emailed completion message with status \"%s\" to %s for analysis %s with UUID %s.' % (analysis.status, user.email, name, analysis.uuid))    
 
