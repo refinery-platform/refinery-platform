@@ -43,7 +43,7 @@ def send_analysis_email(analysis):
     msg_list.append("Dataset used: %s" % analysis.data_set.name)
     msg_list.append("Workflow used: %s" % workflow)
     msg_list.append("Start time: %s End time: %s" % (analysis.time_start, analysis.time_end))
-    msg_list.append("Results:\nhttp://%s%s" % (Site.objects.get_current().domain, reverse('analysis_manager.views.analysis', args=(analysis.uuid,))))
+    msg_list.append("Results:\nhttp://%s%s" % (Site.objects.get_current().domain, reverse('core.views.analysis', args=(analysis.project.uuid, analysis.uuid,))))
     email_msg = "\n".join(msg_list)
         
     user.email_user(email_subj, email_msg)
