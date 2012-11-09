@@ -14,8 +14,8 @@ Requirements:
 ** settings_local_*.py
 * deployment_base_dir must be:
 ** owned by project_user and project_group
-** group writeable and guid bit must be set
-* deployment_base_dir/'source' directory with Apache Solr package
+** group writeable and have setgid attribute
+* deployment_base_dir/'bootstrap' directory with Apache Solr package
 * local user account running this script must be able:
 ** to run commands as root on target hosts using sudo
 ** SSH in to the target hosts as project_user
@@ -185,6 +185,21 @@ def install_postgresql_devel():
 
 
 @task
+def start_postgresql_server():
+    '''Start PostgreSQL server
+
+    '''
+    # need to check if the server is running because
+    # service command exits with non-zero status if it is
+    with settings(hide('everything'), warn_only=True):
+        result = sudo("/sbin/service postgresql status")
+    if result.failed:
+        sudo("/sbin/service postgres start")
+    else:
+        puts("PostrgreSQL server is already running")
+
+
+@task
 def install_git():
     '''Install Git from the CentOS repository
 
@@ -289,20 +304,21 @@ def clone_refinery(branch):
             run("git clone -b {} git@github.com:parklab/Refinery.git".format(branch))
 
     # associate the new project with its virtual environment
+    refinery_home = os.path.join(project_home, "Refinery", "refinery")  # for ./manage.py commands
     with prefix("workon refinery"):
         run("setvirtualenvproject $VIRTUAL_ENV {}".format(refinery_home))
 
 
 @task
 @with_settings(user=env.project_user)
-def init_refinery():
+def upload_refinery_settings():
     '''Upload appropriate settings_local file
 
     '''
     with prefix("workon refinery"), hide('commands'):
         refinery_home = run("pwd")
     django_settings_path = os.path.join(env.local_django_root, env.dev_settings_file)
-    upload_template(django_settings_path, os.path.join(refinery_home, "refinery/settings_local.py"))
+    upload_template(django_settings_path, os.path.join(refinery_home, "settings_local.py"))
 
 
 @task
@@ -359,32 +375,124 @@ def create_refinery_db():
 
 @task
 @with_settings(user=env.project_user)
-def create_refinery_media_root():
-    '''Create Refinery MEDIA_ROOT directory if doesn't exist
+def create_refinery_data_dirs():
+    '''Create Refinery data storage directories
 
     '''
-    puts("Creating MEDIA_ROOT directory '{}'".format(django_settings.MEDIA_ROOT))
+    puts("Creating Refinery MEDIA_ROOT directory '{}'".format(django_settings.MEDIA_ROOT))
     if not exists(django_settings.MEDIA_ROOT):
         run("mkdir '{}'".format(django_settings.MEDIA_ROOT))
     else:
         puts("'{}' already exists".format(django_settings.MEDIA_ROOT))
 
-
-@task
-@with_settings(user=env.project_user)
-def create_refinery_file_store():
-    '''Create Refinery file store directory if doesn't exist
-
-    '''
     file_store_dir = os.path.join(django_settings.MEDIA_ROOT, django_settings.FILE_STORE_DIR)
-    puts("Creating file store directory at '{}'".format(file_store_dir))
+    puts("Creating Refinery FILE_STORE_DIR at '{}'".format(file_store_dir))
     if not exists(file_store_dir):
         run("mkdir '{}'".format(file_store_dir))
     else:
         puts("'{}' already exists".format(file_store_dir))
 
+    puts("Creating Refinery DOWNLOAD_BASE_DIR directory '{}'".format(django_settings.DOWNLOAD_BASE_DIR))
+    if not exists(django_settings.DOWNLOAD_BASE_DIR):
+        run("mkdir '{}'".format(django_settings.DOWNLOAD_BASE_DIR))
+    else:
+        puts("'{}' already exists".format(django_settings.DOWNLOAD_BASE_DIR))
+
+    puts("Creating Refinery ISA_TAB_DIR directory '{}'".format(django_settings.ISA_TAB_DIR))
+    if not exists(django_settings.ISA_TAB_DIR):
+        run("mkdir '{}'".format(django_settings.ISA_TAB_DIR))
+    else:
+        puts("'{}' already exists".format(django_settings.ISA_TAB_DIR))
+
+    puts("Creating Refinery ISA_TAB_TEMP_DIR directory '{}'".format(django_settings.ISA_TAB_TEMP_DIR))
+    if not exists(django_settings.ISA_TAB_TEMP_DIR):
+        run("mkdir '{}'".format(django_settings.ISA_TAB_TEMP_DIR))
+    else:
+        puts("'{}' already exists".format(django_settings.ISA_TAB_TEMP_DIR))
+
 
 @task
+@with_settings(user=env.project_user)
+def setup_refinery():
+    '''Refinery setup
+
+    '''
+    refinery_syncdb()
+    init_refinery()
+    create_user(username, password, email, firstname, lastname, affiliation)
+    create_galaxy_instance(base_url, api_key, description)
+    import_workflows()
+    rebuild_solr_index("core")
+    rebuild_solr_index("data_set_manager")
+
+
+@task
+@with_settings(user=env.project_user)
+def refinery_syncdb():
+    '''Create database tables for all Django apps in Refinery
+    (also, create a superuser)
+    '''
+    with prefix("workon refinery"):
+        run("./manage.py syncdb")
+
+
+@task
+@with_settings(user=env.project_user)
+def init_refinery():
+    '''Initialize Refinery
+    (create public group "Public", etc)
+    '''
+    #TODO: check for idempotence
+    with prefix("workon refinery"):
+        run("./manage.py init_refinery")
+
+
+@task
+@with_settings(user=env.project_user)
+def create_user(username, password, email, firstname, lastname , affiliation):
+    '''Create a user account in Refinery
+
+    '''
+    #TODO: check for idempotence
+    with prefix("workon refinery"):
+        run("./manage.py create_user '{}', '{}', '{}', '{}', '{}', '{}'"
+            .format(username, password, email, firstname, lastname , affiliation))
+
+
+@task
+@with_settings(user=env.project_user)
+def create_galaxy_instance(base_url, api_key, description):
+    '''Create a Galaxy instance in Refinery
+
+    '''
+    #TODO: check for idempotence
+    with prefix("workon refinery"):
+        run("./manage.py create_galaxy_instance '{}', '{}', '{}'"
+            .format(base_url, api_key, description))
+
+
+@task
+@with_settings(user=env.project_user)
+def import_workflows():
+    '''Import all available workflows from all aavilable Galaxy instances into Refinery
+
+    '''
+    #TODO: check for idempotence
+    with prefix("workon refinery"):
+        run("./manage.py import_workflows")
+
+
+@task
+@with_settings(user=env.project_user)
+def rebuild_solr_index(module):
+    '''Rebuild Solr index for the specified module
+
+    '''
+    #TODO: check for idempotence
+    with prefix("workon refinery"):
+        run("./manage.py rebuild_index --noinput --using={}".format(module))
+
+
 def deploy_refinery():
     '''Install Refinery application from scratch
 
@@ -392,11 +500,10 @@ def deploy_refinery():
     create_virtualenv("refinery")
     clone_refinery("develop")
     init_virtualenv("refinery")
-    init_refinery()
     create_refinery_db_user()
     create_refinery_db()
-    create_refinery_media_root()
-    create_refinery_file_store()
+    create_refinery_data_dirs()
+    setup_refinery()
 
 
 @task

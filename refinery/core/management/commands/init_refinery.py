@@ -26,7 +26,8 @@ class Command(BaseCommand):
          
         # 2. set up the site name
         if Site.objects.filter(domain__exact=settings.REFINERY_BASE_URL).count() > 0:
-            raise CommandError("This URL already exists in the database")
+            print("This URL already exists in the database")
+#            raise CommandError("This URL already exists in the database")
         s = Site.objects.get(id=settings.SITE_ID)
         s.name = settings.REFINERY_INSTANCE_NAME
         s.domain = settings.REFINERY_BASE_URL
@@ -36,13 +37,17 @@ class Command(BaseCommand):
         print( "Creating public group \"%s\" for Refinery. Edit \"REFINERY_PUBLIC_GROUP_NAME\" in your settings to choose another name or \"REFINERY_PUBLIC_GROUP_ID\" to choose another id." % settings.REFINERY_PUBLIC_GROUP_NAME, settings.REFINERY_PUBLIC_GROUP_ID ) 
         # a. test if there is already a "group" of the same name
         if Group.objects.filter( name__exact=settings.REFINERY_PUBLIC_GROUP_NAME ).count() > 0:
-            raise CommandError( "A (standard) Django group named \"%s\" already exists. Remove this group and re-run this command." % settings.REFINERY_PUBLIC_GROUP_NAME )
+            print("A (standard) Django group named \"%s\" already exists. Remove this group and re-run this command." % settings.REFINERY_PUBLIC_GROUP_NAME)
+#            raise CommandError( "A (standard) Django group named \"%s\" already exists. Remove this group and re-run this command." % settings.REFINERY_PUBLIC_GROUP_NAME )
         if Group.objects.filter( id=settings.REFINERY_PUBLIC_GROUP_ID ).count() > 0:
-            raise CommandError( "A (standard) Django group with id \"%s\" already exists. Remove this group and re-run this command." % settings.REFINERY_PUBLIC_GROUP_ID )
+            print("A (standard) Django group with id \"%s\" already exists. Remove this group and re-run this command." % settings.REFINERY_PUBLIC_GROUP_ID)
+#            raise CommandError( "A (standard) Django group with id \"%s\" already exists. Remove this group and re-run this command." % settings.REFINERY_PUBLIC_GROUP_ID )
         if ExtendedGroup.objects.filter( name__exact=settings.REFINERY_PUBLIC_GROUP_NAME ).count() > 0:
-            raise CommandError( "A Refinery group named \"%s\" already exists. Remove this group and re-run this command." % settings.REFINERY_PUBLIC_GROUP_NAME )
+            print("A Refinery group named \"%s\" already exists. Remove this group and re-run this command." % settings.REFINERY_PUBLIC_GROUP_NAME)
+#            raise CommandError( "A Refinery group named \"%s\" already exists. Remove this group and re-run this command." % settings.REFINERY_PUBLIC_GROUP_NAME )
         if ExtendedGroup.objects.filter( name__exact=settings.REFINERY_PUBLIC_GROUP_ID ).count() > 0:
-            raise CommandError( "A Refinery group with id \"%s\" already exists. Remove this group and re-run this command." % settings.REFINERY_PUBLIC_GROUP_ID )
+            print("A Refinery group with id \"%s\" already exists. Remove this group and re-run this command." % settings.REFINERY_PUBLIC_GROUP_ID)
+#            raise CommandError( "A Refinery group with id \"%s\" already exists. Remove this group and re-run this command." % settings.REFINERY_PUBLIC_GROUP_ID )
 
         ExtendedGroup.objects.create( id=settings.REFINERY_PUBLIC_GROUP_ID, name=settings.REFINERY_PUBLIC_GROUP_NAME )
         print( "Successfully created group \"%s\"." % settings.REFINERY_PUBLIC_GROUP_NAME ) 
