@@ -33,10 +33,12 @@ def send_analysis_email(analysis):
     :param analysis: Analysis object
     '''
     #Psalm edit - add in email notification upon analysis completion #
-    logger.debug('sending an email now that analysis cleanup is finished')
     user = analysis.get_owner()
     name = analysis.name
     workflow = analysis.workflow.name
+    
+    logger.debug('sending an email to %s for analysis %s with UUID %s' % (user.email, name, analysis.uuid))
+    
     email_subj = "[%s] %s: %s (%s)" % (settings.REFINERY_INSTANCE_NAME, analysis.status, name, workflow)
     msg_list = ["Project: %s" % analysis.project.name]
     msg_list.append("Analysis: %s" % name)
