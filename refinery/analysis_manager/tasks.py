@@ -33,21 +33,22 @@ def send_analysis_email(analysis):
     :param analysis: Analysis object
     '''
     #Psalm edit - add in email notification upon analysis completion #
-    logger.debug('sending an email now that analysis cleanup is finished')
     user = analysis.get_owner()
     name = analysis.name
     workflow = analysis.workflow.name
-    email_subj = "[%s] %s: %s (%s)" % (settings.REFINERY_INSTANCE_NAME, analysis.status, name, workflow)
+        
+    email_subj = "[%s] %s: %s (%s)" % (Site.objects.get_current().name, analysis.status, name, workflow)
     msg_list = ["Project: %s" % analysis.project.name]
     msg_list.append("Analysis: %s" % name)
     msg_list.append("Dataset used: %s" % analysis.data_set.name)
     msg_list.append("Workflow used: %s" % workflow)
     msg_list.append("Start time: %s End time: %s" % (analysis.time_start, analysis.time_end))
-    msg_list.append("Results:\nhttp://%s%s" % (Site.objects.get_current().domain, reverse('analysis_manager.views.analysis', args=(analysis.uuid,))))
-    email_msg = string.join(msg_list, '\n')
-    
+    msg_list.append("Results:\nhttp://%s%s" % (Site.objects.get_current().domain, reverse('core.views.analysis', args=(analysis.project.uuid, analysis.uuid,))))
+    email_msg = "\n".join(msg_list)
+        
     user.email_user(email_subj, email_msg)
-
+    
+    logger.info('Emailed completion message with status \"%s\" to %s for analysis %s with UUID %s.' % (analysis.status, user.email, name, analysis.uuid))    
 
 # example from: http://www.manasupo.com/2012/03/chord-progress-in-celery.html
 class progress_chord(object):
@@ -147,7 +148,7 @@ def run_analysis(analysis, interval=5.0):
     
     # updating status of analysis to running
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-    analysis.status = "RUNNING"
+    analysis.status = Analysis.RUNNING_STATUS
     analysis.save()
     
     # DOWNLOADING
@@ -259,7 +260,7 @@ def monitor_analysis_execution(analysis, interval=5.0, task_id=None):
             revoke_task = True
             
             # Setting state of analysis to failure
-            analysis.status = "FAILURE"
+            analysis.status = Analysis.FAILURE_STATUS
             analysis.time_end = datetime.now()
             analysis.save()
             send_analysis_email(analysis)
@@ -321,7 +322,7 @@ def run_analysis_cleanup(analysis):
     
     # saving when analysis is finished
     analysis.time_end = datetime.now()
-    analysis.status = "SUCCESS"
+    analysis.status = Analysis.SUCCESS_STATUS
     analysis.save()
     
     # Adding task to rename files after downloading results from history
