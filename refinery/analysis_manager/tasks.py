@@ -60,12 +60,17 @@ def send_analysis_email(analysis):
         logic = 'finished successfully'
     else:
         logic = 'failed'
+        
+    #get project name
+    project_name = project.name
+    if project.is_catch_all:
+        project_name = '-'
 
     email_subj = "[%s] %s: %s (%s)" % (site_name, status, name, workflow)
 
     temp_loader = loader.get_template('analysis_manager/analysis_email.txt')
     context = Context({
-                 'project': '',
+                 'project': proj_name,
                  'name': name,
                  'first_name': user.first_name,
                  'last_name': user.last_name,
