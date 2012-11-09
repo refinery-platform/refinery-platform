@@ -40,8 +40,8 @@ def send_analysis_email(analysis):
     site_domain = Site.objects.get_current().domain
     status = analysis.status
     project = analysis.project
-    start = analysis.start_time
-    end = analysis.end_time
+    start = analysis.time_start
+    end = analysis.time_end
     duration = start - end
     hours, remainder = divmod(duration.total_seconds(), 3600)
     minutes, seconds = divmod(remainder, 60)
