@@ -36,20 +36,19 @@ def send_analysis_email(analysis):
     user = analysis.get_owner()
     name = analysis.name
     workflow = analysis.workflow.name
-    
-    logger.debug('sending an email to %s for analysis %s with UUID %s' % (user.email, name, analysis.uuid))
-    
-    email_subj = "[%s] %s: %s (%s)" % (settings.REFINERY_INSTANCE_NAME, analysis.status, name, workflow)
+        
+    email_subj = "[%s] %s: %s (%s)" % (Site.objects.get_current().name, analysis.status, name, workflow)
     msg_list = ["Project: %s" % analysis.project.name]
     msg_list.append("Analysis: %s" % name)
     msg_list.append("Dataset used: %s" % analysis.data_set.name)
     msg_list.append("Workflow used: %s" % workflow)
     msg_list.append("Start time: %s End time: %s" % (analysis.time_start, analysis.time_end))
     msg_list.append("Results:\nhttp://%s%s" % (Site.objects.get_current().domain, reverse('analysis_manager.views.analysis', args=(analysis.uuid,))))
-    email_msg = string.join(msg_list, '\n')
-    
+    email_msg = "\n".join(msg_list)
+        
     user.email_user(email_subj, email_msg)
-
+    
+    logger.info('Emailed completion message with status \"%s\" to %s for analysis %s with UUID %s.' % (analysis.status, user.email, name, analysis.uuid))    
 
 # example from: http://www.manasupo.com/2012/03/chord-progress-in-celery.html
 class progress_chord(object):
