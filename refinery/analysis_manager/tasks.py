@@ -42,10 +42,20 @@ def send_analysis_email(analysis):
     project = analysis.project
     start = analysis.time_start
     end = analysis.time_end
-    duration = start - end
+    duration = end - start
     hours, remainder = divmod(duration.total_seconds(), 3600)
     minutes, seconds = divmod(remainder, 60)
     
+    #formatting the duration string 
+    hours = int(hours)
+    minutes = int(minutes)
+    if hours < 10:
+        hours = '0%s' % hours
+    if minutes < 10:
+        minutes = '0%s' % minutes
+    duration = "%s:%s hours" % (hours, minutes)
+
+    #check status and change text slightly based on that
     if status == Analysis.SUCCESS_STATUS:
         logic = 'finished successfully'
     else:
@@ -66,7 +76,7 @@ def send_analysis_email(analysis):
                  'site_domain': site_domain,
                  'start': datetime.strftime(start, '%A, %d %B %G %r'),
                  'end': datetime.strftime(end, '%A, %d %B %G %r'),
-                 'duration': "%s:%s hours" % (int(hours), int(minutes)),
+                 'duration': duration,
                  'logic': logic,
                  'url': "http://%s%s" % (site_domain, reverse('core.views.analysis', args=(analysis.project.uuid, analysis.uuid,)))                 
                  })
