@@ -40,22 +40,37 @@ def send_analysis_email(analysis):
     site_domain = Site.objects.get_current().domain
     status = analysis.status
     project = analysis.project
-    start = analysis.start_time
-    end = analysis.end_time
-    duration = start - end
+    start = analysis.time_start
+    end = analysis.time_end
+    duration = end - start
     hours, remainder = divmod(duration.total_seconds(), 3600)
     minutes, seconds = divmod(remainder, 60)
     
+    #formatting the duration string 
+    hours = int(hours)
+    minutes = int(minutes)
+    if hours < 10:
+        hours = '0%s' % hours
+    if minutes < 10:
+        minutes = '0%s' % minutes
+    duration = "%s:%s hours" % (hours, minutes)
+
+    #check status and change text slightly based on that
     if status == Analysis.SUCCESS_STATUS:
         logic = 'finished successfully'
     else:
         logic = 'failed'
+        
+    #get project name
+    project_name = project.name
+    if project.is_catch_all:
+        project_name = '-'
 
     email_subj = "[%s] %s: %s (%s)" % (site_name, status, name, workflow)
 
     temp_loader = loader.get_template('analysis_manager/analysis_email.txt')
     context = Context({
-                 'project': '',
+                 'project': proj_name,
                  'name': name,
                  'first_name': user.first_name,
                  'last_name': user.last_name,
@@ -66,7 +81,7 @@ def send_analysis_email(analysis):
                  'site_domain': site_domain,
                  'start': datetime.strftime(start, '%A, %d %B %G %r'),
                  'end': datetime.strftime(end, '%A, %d %B %G %r'),
-                 'duration': "%s:%s hours" % (int(hours), int(minutes)),
+                 'duration': duration,
                  'logic': logic,
                  'url': "http://%s%s" % (site_domain, reverse('core.views.analysis', args=(analysis.project.uuid, analysis.uuid,)))                 
                  })
