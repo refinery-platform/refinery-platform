@@ -24,6 +24,7 @@ from galaxy_connector.galaxy_workflow import countWorkflowSteps
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
 from django.template import loader, Context
+import socket 
 
 logger = logging.getLogger(__name__)
 
@@ -85,11 +86,13 @@ def send_analysis_email(analysis):
                  'logic': logic,
                  'url': "http://%s%s" % (site_domain, reverse('core.views.analysis', args=(analysis.project.uuid, analysis.uuid,)))                 
                  })
-        
-    user.email_user(email_subj, temp_loader.render(context))
+    try:    
+        user.email_user(email_subj, temp_loader.render(context))
+        logger.info('Emailed completion message with status \"%s\" to %s for analysis %s with UUID %s.' % (analysis.status, user.email, name, analysis.uuid))    
+    except socket.error:
+        logger.error('Email server error: status \"%s\" to %s for analysis %s with UUID %s.' % (analysis.status, user.email, name, analysis.uuid))
     
-    logger.info('Emailed completion message with status \"%s\" to %s for analysis %s with UUID %s.' % (analysis.status, user.email, name, analysis.uuid))    
-
+    
 # example from: http://www.manasupo.com/2012/03/chord-progress-in-celery.html
 class progress_chord(object):
     Chord = Chord
