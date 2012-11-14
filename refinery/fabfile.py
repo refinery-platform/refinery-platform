@@ -31,6 +31,7 @@ from fabric.contrib.console import confirm
 from fabric.context_managers import hide, cd, prefix
 from fabric.contrib.files import exists, upload_template
 from fabric.decorators import task, with_settings
+from fabric.operations import require
 from fabric.utils import puts
 
 
@@ -47,12 +48,19 @@ env.bashrc_path = os.path.join(env.local_django_root, "bashrc_template")
 env.forward_agent = True    # for Github operations
 
 
+def check_env_vars():
+    '''Check if the required variable were initialized in ~/.fabricrc
+
+    '''
+    require("project_user", "project_group", "deployment_base_dir")
+
+
 @task
 def dev():
     '''Set config to development
 
     '''
-    #TODO: check that scc_* vars contain reasonable values
+    check_env_vars()
     env.hosts = ["scc-dev.rc.fas.harvard.edu"]
     env.dev_settings_file = "settings_local_dev.py"
     django.settings_module(os.path.splitext(env.dev_settings_file)[0])
@@ -419,8 +427,8 @@ def setup_refinery():
     '''
     refinery_syncdb()
     init_refinery()
-    create_user(username, password, email, firstname, lastname, affiliation)
-    create_galaxy_instance(base_url, api_key, description)
+    create_user(0)
+    create_galaxy_instance(0)
     import_workflows()
     rebuild_solr_index("core")
     rebuild_solr_index("data_set_manager")
@@ -448,26 +456,28 @@ def init_refinery():
 
 @task
 @with_settings(user=env.project_user)
-def create_user(username, password, email, firstname, lastname , affiliation):
+def create_user(user_id):
     '''Create a user account in Refinery
 
     '''
-    #TODO: check for idempotence
+    user = django_settings.REFINERY_USERS[user_id]
     with prefix("workon refinery"):
-        run("./manage.py create_user '{}', '{}', '{}', '{}', '{}', '{}'"
-            .format(username, password, email, firstname, lastname , affiliation))
+        run("./manage.py create_user "
+            "'{username}' '{password}' '{email}' '{firstname}' '{lastname}' '{affiliation}'"
+            .format(**user))
 
 
 @task
 @with_settings(user=env.project_user)
-def create_galaxy_instance(base_url, api_key, description):
+def create_galaxy_instance(instance_id):
     '''Create a Galaxy instance in Refinery
 
     '''
     #TODO: check for idempotence
+    user = django_settings.GALAXY_INSTANCES[instance_id]
     with prefix("workon refinery"):
-        run("./manage.py create_galaxy_instance '{}', '{}', '{}'"
-            .format(base_url, api_key, description))
+        run("./manage.py create_galaxy_instance '{base_url}' '{api_key}' '{description}'"
+            .format(**user))
 
 
 @task
