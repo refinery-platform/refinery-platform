@@ -70,7 +70,7 @@ def send_analysis_email(analysis):
 
     temp_loader = loader.get_template('analysis_manager/analysis_email.txt')
     context = Context({
-                 'project': proj_name,
+                 'project': project_name,
                  'name': name,
                  'first_name': user.first_name,
                  'last_name': user.last_name,
