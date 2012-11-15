@@ -28,21 +28,12 @@ class Command(BaseCommand):
         parser.species_column_index = int( species_column )
         
         if genome_build_column is not None:
-            parser.genome_build_column_index = int( genome_build_column )
-                
+            parser.genome_build_column_index = int( genome_build_column )                
         
         investigation = parser.run(file_name)
         investigation.title = title
         investigation.save()
         
-        # TODO: make sure this is used everywhere 
-        annotate_nodes(investigation.uuid)
-        
-        user = User.objects.get(username__exact=username)
-        data_set = DataSet.objects.create(name=title,slug=slug)
-        data_set.set_investigation(investigation)
-        data_set.set_owner(user)
-        
-        if is_public:
-            public_group = ExtendedGroup.objects.get(name__exact="Public")
-            data_set.share( public_group )  
+        print( "Running create_dataset" )
+        x = create_dataset( investigation.uuid, username, dataset_title=title, slug=slug, public=False )
+        print( "done: %s", x )
