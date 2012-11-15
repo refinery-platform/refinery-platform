@@ -197,7 +197,7 @@ LOGGING = {
     'disable_existing_loggers': True,
     'root': {
         'level': 'DEBUG',
-        'handlers': ['sentry'],
+        'handlers': ['file'],
     },
     'formatters': {
         'verbose': {
@@ -223,7 +223,14 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join( BASE_DIR, "refinery.log" ),
+            'formatter': 'verbose'
         }
+                 
     },
     'loggers': {
         'django.request': {
