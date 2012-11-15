@@ -40,9 +40,8 @@ env.local_django_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(env.local_django_root)
 from django.conf import settings as django_settings  # to avoid conflict with fabric.api.settings
 
-# Bash config
-env.bash_profile_path = os.path.join(env.local_django_root, "bash_profile_template")
-env.bashrc_path = os.path.join(env.local_django_root, "bashrc_template")
+# config files and templates
+env.local_conf = os.path.join(env.local_django_root, "fabric")
 
 # Fabric settings
 env.forward_agent = True    # for Github operations
@@ -61,11 +60,11 @@ def dev():
 
     '''
     check_env_vars()
-    env.hosts = ["scc-dev.rc.fas.harvard.edu"]
+    env.hosts = env.dev_hosts.split(',') # variables in .fabricrc can only be strings
     env.dev_settings_file = "settings_local_dev.py"
     django.settings_module(os.path.splitext(env.dev_settings_file)[0])
     env.deployment_target_dir = os.path.join(env.deployment_base_dir, "dev")
-
+    env.galaxy_root = env.galaxy_dev
 
 @task
 def stage():
@@ -157,9 +156,12 @@ def init_project_user_home_dir():
     '''Create .bashrc and .bash_profile using templates and upload to $HOME of project_user
 
     '''
-    upload_template(env.bash_profile_path, "~/.bash_profile")
+    bash_profile_path = os.path.join(env.local_conf, "bash_profile_template")
+    upload_template(bash_profile_path, "~/.bash_profile")
+
+    bashrc_path = os.path.join(env.local_conf, "bashrc_template")
     bashrc_context = {'deployment_target_dir': env.deployment_target_dir}
-    upload_template(env.bashrc_path, "~/.bashrc", bashrc_context)
+    upload_template(bashrc_path, "~/.bashrc", bashrc_context)
 
 
 @task
@@ -473,22 +475,55 @@ def create_galaxy_instance(instance_id):
     '''Create a Galaxy instance in Refinery
 
     '''
-    #TODO: check for idempotence
-    user = django_settings.GALAXY_INSTANCES[instance_id]
+    instance = django_settings.GALAXY_INSTANCES[instance_id]
     with prefix("workon refinery"):
         run("./manage.py create_galaxy_instance '{base_url}' '{api_key}' '{description}'"
-            .format(**user))
+            .format(**instance))
 
 
 @task
 @with_settings(user=env.project_user)
 def import_workflows():
-    '''Import all available workflows from all aavilable Galaxy instances into Refinery
+    '''Import all available workflows from all available Galaxy instances into Refinery
 
     '''
     #TODO: check for idempotence
     with prefix("workon refinery"):
         run("./manage.py import_workflows")
+
+
+@task
+@with_settings(user=env.project_user)
+def install_solr():
+    '''Install Solr
+
+    '''
+    run("unzip -uq {deployment_base_dir}/bootstrap/apache-solr-4.0.0.zip -d {deployment_target_dir}/apps"
+        .format(**env))
+
+@task
+@with_settings(user=env.project_user)
+def build_solr_schema():
+    '''Generate Solr schema
+
+    '''
+    #TODO: build schema for a specific core
+    solr_conf_dir = "./solr/conf"
+    with prefix("workon refinery"):
+        if not exists(solr_conf_dir):
+            run("mkdir {}".format(solr_conf_dir))
+        run("./manage.py build_solr_schema > {}/schema.xml".format(solr_conf_dir))
+
+
+@task
+@with_settings(user=env.project_user)
+def build_solr_index():
+    '''Build Solr indices
+
+    '''
+    #TODO: build index for a specific core
+    with prefix("workon refinery"):
+        run("./manage.py --noinput rebuild_index")
 
 
 @task
@@ -544,3 +579,32 @@ def prepare_deploy():
     test()
     commit()
     push()
+
+@task
+@with_settings(user=env.project_user)
+def upload_galaxy_tool_data():
+    '''Upload Galaxy tool data files to the current Galaxy instance
+
+    '''
+    #TODO: change settings to env.galaxy_user
+    tool_data_path = os.path.join(env.galaxy_root, "tool-data")
+
+    local_path = os.path.join(env.local_conf, "bowtie_indices_template")
+    remote_path = os.path.join(tool_data_path, "bowtie_indices.loc")
+    upload_template(local_path, remote_path)
+
+    local_path = os.path.join(env.local_conf, "sam_fa_indices_template")
+    remote_path = os.path.join(tool_data_path, "sam_fa_indices.loc")
+    upload_template(local_path, remote_path)
+
+@task
+def update_galaxy_user_home_dir():
+    '''Upload .bashrc.customizations to $HOME of the Galaxy user
+
+    '''
+    #TODO: change settings to env.galaxy_user
+    with hide('commands'):
+        home_dir = run("echo ~{}".format(env.galaxy_user))
+    local_path = os.path.join(env.local_conf, "bashrc_galaxy_template")
+    remote_path = os.path.join(home_dir, ".bashrc.customizations")
+    upload_template(local_path, remote_path)
