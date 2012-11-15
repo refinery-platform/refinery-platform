@@ -307,7 +307,11 @@ HAYSTACK_CONNECTIONS = {
 }
 
 
+
 # === Refinery Settings ===
+
+# for registration module
+ACCOUNT_ACTIVATION_DAYS = 7
 
 # set the name of the group that is used to share data with all users (= "the public")
 REFINERY_PUBLIC_GROUP_NAME = "Public" 
