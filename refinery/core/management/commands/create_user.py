@@ -39,9 +39,7 @@ class Command(BaseCommand):
         user_object.get_profile().affiliation = affiliation
         user_object.save()
         user_object.get_profile().save()
-        
-        user_object.groups.add( ExtendedGroup.objects.public_group() )
-        
+                
         print "User " + username + " created."
         logger.info( "User " + username + " created." )
          
