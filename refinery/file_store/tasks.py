@@ -108,7 +108,8 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
             logger.error("Could not open URL '%s'. Reason: '%s'", item.source, e.message)
             return None
 
-        tmpfile = NamedTemporaryFile(dir=get_temp_dir(), delete=False)
+        tmpfile = NamedTemporaryFile(delete=False)
+        
         # get remote file size, provide a default value in case Content-Length is missing
         remotefilesize = int(response.info().getheader("Content-Length", file_size))
 
