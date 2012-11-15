@@ -24,6 +24,7 @@ from galaxy_connector.galaxy_workflow import countWorkflowSteps
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
 from django.template import loader, Context
+import socket 
 
 logger = logging.getLogger(__name__)
 
@@ -42,20 +43,35 @@ def send_analysis_email(analysis):
     project = analysis.project
     start = analysis.time_start
     end = analysis.time_end
-    duration = start - end
+    duration = end - start
     hours, remainder = divmod(duration.total_seconds(), 3600)
     minutes, seconds = divmod(remainder, 60)
     
+    #formatting the duration string 
+    hours = int(hours)
+    minutes = int(minutes)
+    if hours < 10:
+        hours = '0%s' % hours
+    if minutes < 10:
+        minutes = '0%s' % minutes
+    duration = "%s:%s hours" % (hours, minutes)
+
+    #check status and change text slightly based on that
     if status == Analysis.SUCCESS_STATUS:
         logic = 'finished successfully'
     else:
         logic = 'failed'
+        
+    #get project name
+    project_name = project.name
+    if project.is_catch_all:
+        project_name = '-'
 
     email_subj = "[%s] %s: %s (%s)" % (site_name, status, name, workflow)
 
     temp_loader = loader.get_template('analysis_manager/analysis_email.txt')
     context = Context({
-                 'project': '',
+                 'project': project_name,
                  'name': name,
                  'first_name': user.first_name,
                  'last_name': user.last_name,
@@ -66,15 +82,17 @@ def send_analysis_email(analysis):
                  'site_domain': site_domain,
                  'start': datetime.strftime(start, '%A, %d %B %G %r'),
                  'end': datetime.strftime(end, '%A, %d %B %G %r'),
-                 'duration': "%s:%s hours" % (int(hours), int(minutes)),
+                 'duration': duration,
                  'logic': logic,
                  'url': "http://%s%s" % (site_domain, reverse('core.views.analysis', args=(analysis.project.uuid, analysis.uuid,)))                 
                  })
-        
-    user.email_user(email_subj, temp_loader.render(context))
+    try:    
+        user.email_user(email_subj, temp_loader.render(context))
+        logger.info('Emailed completion message with status \"%s\" to %s for analysis %s with UUID %s.' % (analysis.status, user.email, name, analysis.uuid))    
+    except socket.error:
+        logger.error('Email server error: status \"%s\" to %s for analysis %s with UUID %s.' % (analysis.status, user.email, name, analysis.uuid))
     
-    logger.info('Emailed completion message with status \"%s\" to %s for analysis %s with UUID %s.' % (analysis.status, user.email, name, analysis.uuid))    
-
+    
 # example from: http://www.manasupo.com/2012/03/chord-progress-in-celery.html
 class progress_chord(object):
     Chord = Chord
