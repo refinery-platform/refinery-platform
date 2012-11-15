@@ -35,7 +35,7 @@ DATABASES = {
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'America/New_York'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -169,6 +169,7 @@ INSTALLED_APPS = (
     'visualization_manager',
     'data_set_manager', 
     'annotation_server',
+    'registration',
 )
 
 # NG: added for django-guardian
@@ -197,7 +198,7 @@ LOGGING = {
     'disable_existing_loggers': True,
     'root': {
         'level': 'DEBUG',
-        'handlers': ['sentry'],
+        'handlers': ['file'],
     },
     'formatters': {
         'verbose': {
@@ -223,7 +224,14 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join( BASE_DIR, "refinery.log" ),
+            'formatter': 'verbose'
         }
+                 
     },
     'loggers': {
         'django.request': {
@@ -299,7 +307,17 @@ HAYSTACK_CONNECTIONS = {
 }
 
 
+# send email via SMTP, can be replaced with "django.core.mail.backends.console.EmailBackend" to send emails to the console
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+#DEFAULT_FROM_EMAIL = "refinery@hms.harvard.edu"
+#EMAIL_HOST = 'smtp.orchestra'
+#EMAIL_PORT = 25
+
+
 # === Refinery Settings ===
+
+# for registration module
+ACCOUNT_ACTIVATION_DAYS = 7
 
 # set the name of the group that is used to share data with all users (= "the public")
 REFINERY_PUBLIC_GROUP_NAME = "Public" 

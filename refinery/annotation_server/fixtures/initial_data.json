@@ -271,7 +271,7 @@
    },
    {
       "pk": 1,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -280,13 +280,13 @@
          "default_build": true,
          "html_path": "/gbdb/hg19/html/description.html",
          "affiliation": "UCSC",
-         "organism": 23,
+         "species": 23,
          "description": "Feb. 2009 (GRCh37/hg19)"
       }
    },
    {
       "pk": 2,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 1,
@@ -295,13 +295,13 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "Genome Reference Consortium",
-         "organism": 23,
+         "species": 23,
          "description": "Feb. 2009"
       }
    },
    {
       "pk": 3,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -310,13 +310,13 @@
          "default_build": false,
          "html_path": "/gbdb/hg18/html/description.html",
          "affiliation": "UCSC",
-         "organism": 23,
+         "species": 23,
          "description": "Mar. 2006 (NCBI36/hg18)"
       }
    },
    {
       "pk": 4,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 3,
@@ -325,13 +325,13 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "NCBI",
-         "organism": 23,
+         "species": 23,
          "description": "Mar. 2006"
       }
    },
    {
       "pk": 5,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -340,13 +340,13 @@
          "default_build": false,
          "html_path": "/gbdb/mm8/html/description.html",
          "affiliation": "UCSC",
-         "organism": 3,
+         "species": 3,
          "description": "Feb. 2006 (NCBI36/mm8)"
       }
    },
    {
       "pk": 6,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 5,
@@ -355,13 +355,13 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "NCBI",
-         "organism": 3,
+         "species": 3,
          "description": "Feb. 2006"
       }
    },
    {
       "pk": 7,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -370,13 +370,13 @@
          "default_build": true,
          "html_path": "/gbdb/mm9/html/description.html",
          "affiliation": "UCSC",
-         "organism": 3,
+         "species": 3,
          "description": "July 2007 (NCBI37/mm9)"
       }
    },
    {
       "pk": 8,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 7,
@@ -385,13 +385,13 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "NCBI",
-         "organism": 3,
+         "species": 3,
          "description": "Jul. 2007"
       }
    },
    {
       "pk": 9,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -400,13 +400,13 @@
          "default_build": false,
          "html_path": "/gbdb/mm10/html/description.html",
          "affiliation": "UCSC",
-         "organism": 3,
+         "species": 3,
          "description": "Dec. 2011 (GRCm38/mm10)"
       }
    },
    {
       "pk": 10,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 9,
@@ -415,13 +415,13 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "Genome Reference Consortium",
-         "organism": 3,
+         "species": 3,
          "description": "Dec. 2011"
       }
    },
    {
       "pk": 11,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -430,13 +430,13 @@
          "default_build": true,
          "html_path": "/gbdb/dm3/html/description.html",
          "affiliation": "UCSC",
-         "organism": 19,
+         "species": 19,
          "description": "Apr. 2006 (BDGP R5/dm3)"
       }
    },
    {
       "pk": 12,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 11,
@@ -445,13 +445,13 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "BDGP",
-         "organism": 19,
+         "species": 19,
          "description": "Apr. 2006"
       }
    },
    {
       "pk": 13,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -460,13 +460,13 @@
          "default_build": false,
          "html_path": "/gbdb/dm2/html/description.html",
          "affiliation": "UCSC",
-         "organism": 19,
+         "species": 19,
          "description": "Apr. 2004 (BDGP R4/dm2)"
       }
    },
    {
       "pk": 14,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 13,
@@ -475,13 +475,13 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "BDGP",
-         "organism": 19,
+         "species": 19,
          "description": "Apr. 2004"
       }
    },
    {
       "pk": 15,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -490,13 +490,13 @@
          "default_build": false,
          "html_path": "/gbdb/dm1/html/description.html",
          "affiliation": "UCSC",
-         "organism": 19,
+         "species": 19,
          "description": "Jan. 2003 (BDGP R3/dm1)"
       }
    },
    {
       "pk": 16,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 15,
@@ -505,13 +505,13 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "BDGP",
-         "organism": 19,
+         "species": 19,
          "description": "Jan. 2003"
       }
    },
    {
       "pk": 17,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -520,13 +520,13 @@
          "default_build": false,
          "html_path": "/gbdb/ce10/html/description.html",
          "affiliation": "UCSC",
-         "organism": 12,
+         "species": 12,
          "description": "Oct. 2010 (WS220/ce10)"
       }
    },
    {
       "pk": 18,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 17,
@@ -535,13 +535,13 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "WormBase",
-         "organism": 12,
+         "species": 12,
          "description": "Oct. 2010"
       }
    },
    {
       "pk": 19,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -550,13 +550,13 @@
          "default_build": true,
          "html_path": "/gbdb/ce6/html/description.html",
          "affiliation": "UCSC",
-         "organism": 12,
+         "species": 12,
          "description": "May 2008 (WS190/ce6)"
       }
    },
    {
       "pk": 20,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 19,
@@ -565,7 +565,7 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "WormBase",
-         "organism": 12,
+         "species": 12,
          "description": "May 2008"
       }
    }

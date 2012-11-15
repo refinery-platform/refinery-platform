@@ -26,3 +26,4 @@ simplejson==2.4.0
 uuid==1.30
 wsgiref==0.1.2
 yolk==0.4.1
+django-registration

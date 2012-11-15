@@ -16,8 +16,10 @@ var currentStudyUuid = urlComponents[urlComponents.length-2];
 var currentAssayUuid = urlComponents[urlComponents.length-3]; 
 var currentNodeType = "\"Raw Data File\"";
 
+var showAnnotation = false;
+
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
-var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type" ]; // TODO: make these regexes
+var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation" ]; // TODO: make these regexes
 var invisibleFieldNames = [ "name" ];
 
 var addFieldNames = ["Options"];
@@ -52,6 +54,17 @@ var documents = [];
 
 
 $(".collapse").collapse("show");
+
+$(".annotation-buttons button").click(function () {
+    if ( $(this).attr("id") == "annotation-button" ) {
+    	showAnnotation = true;
+    }
+    else {
+    	showAnnotation = false;
+    }    
+
+	initializeData( currentAssayUuid, currentStudyUuid, currentNodeType );
+});	
 		
 
 function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents ) {
@@ -64,6 +77,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 		+ "("
 			+ "study_uuid:" + studyUuid
 			+ " AND " + "assay_uuid:" + assayUuid
+			+ " AND " + "is_annotation:" + showAnnotation			
 			+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + ")"
 	   	+ ")"
 	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
@@ -243,7 +257,10 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 		var doc = data.response.docs[0];
 		
 		query.total_items = data.response.numFound;		
-		query.selected_items = data.response.numFound;		
+		query.selected_items = data.response.numFound;
+		
+		// clear facet view
+		$( "#facet-view" ).html("");		
 	
 		for ( var attribute in doc ) {
 			if ( doc.hasOwnProperty( attribute ) ) {
@@ -280,7 +297,7 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 				}
 			}		
 		}
-		
+				
 		pivots.push( Object.keys( facets )[0] );
 		pivots.push( Object.keys( facets )[1] );
 		
@@ -814,6 +831,71 @@ $( "#profile-viewer-session-link" ).on( "click", function() {
 		console.log( newUrl );
 		window.location = newUrl;			
 	});
+});
+
+// FUNCTION FOR enabling the IGV test button to work
+$( "#igv-test" ).on( "click", function(e) {
+	console.log("IGV-TEST button called");
+	
+	// function for getting current solr query 
+	var solr_url = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, facets, fields, {} );
+	
+	// url to point ajax function too 
+	var temp_url = "/solr/";
+		
+	console.log(solr_url);
+	console.log(facets);
+	console.log(fields);
+	
+	// function for adding csrf cookie for django
+	$.ajaxSetup({ 
+     beforeSend: function(xhr, settings) {
+         function getCookie(name) {
+             var cookieValue = null;
+             if (document.cookie && document.cookie != '') {
+                 var cookies = document.cookie.split(';');
+                 for (var i = 0; i < cookies.length; i++) {
+                     var cookie = jQuery.trim(cookies[i]);
+                     // Does this cookie string begin with the name we want?
+                 if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                     break;
+                 }
+             }
+         }
+         return cookieValue;
+         }
+         if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+             // Only send the token to relative URLs i.e. locally.
+             xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+         }
+     } 
+	});
+
+ 	$.ajax({
+	     url:temp_url,
+	     type:"POST",
+	     dataType: "json",
+	     data: {'query': solr_url },
+	     success: function(result){
+	     	//console.log("success");
+	     	//console.log(result);
+	     	
+		}
+	});
+	
+	// BOOTBOX DYNAMIC EXAMPLE
+	e.preventDefault();
+    var str = $("<p>This content is actually a jQuery object, which will change in 3 seconds...</p>");
+    bootbox.alert(str);
+    setTimeout(function() {
+    	str.html("See?");
+    }, 3000);
+	
+	//&indent=on
+	
+	// need to call core.views.solr and pass back current solr query 
+	
 });
 
 

@@ -346,7 +346,7 @@ def get_arrayexpress_studies():
 
 
 @task() 
-def create_dataset(investigation_uuid, username, public=False):
+def create_dataset(investigation_uuid, username, identifier=None, title=None, dataset_title=None, slug=None, public=False):
     """
     Name: create_dataset
     Description:
@@ -356,15 +356,17 @@ def create_dataset(investigation_uuid, username, public=False):
         investigation_uuid: UUID of the investigation that's being assigned
                             to the dataset
         username: username of the user this dataset will belong to
+        identifier: If not None, this will be used as the identifier of the data set.
+        title: If not None, this will be  
         public: boolean value that determines if the dataset is public or not
     """
-    logger = create_dataset.get_logger()
-    logger.info("logging from create_dataset") 
+    #logger = create_dataset.get_logger()
+
     """get User for assigning DataSets"""
     try:
         user = User.objects.get(username__exact=username)
     except:
-        logger.info("User %s doesn't exist, so creating User %s with password 'test'" % (username, username))
+        logger.info("create_dataset: User %s doesn't exist, so creating User %s with password 'test'" % (username, username))
         #user doesn't exist
         user = User.objects.create_user(username, "", "test")
 
@@ -372,37 +374,54 @@ def create_dataset(investigation_uuid, username, public=False):
         # TODO: make sure this is used everywhere 
         annotate_nodes(investigation_uuid)
 
-        dataset = ""
+        dataset = None
         investigation = Investigation.objects.get(uuid=investigation_uuid)
-        identifier = investigation.get_identifier()
-        title = investigation.get_title()
-        dataset_title = "%s: %s" % (identifier, title)        
+        
+        if identifier is None: 
+            identifier = investigation.get_identifier()
+        
+        if title is None:
+            title = investigation.get_title()
+        
+        if dataset_title is None:
+            dataset_title = "%s: %s" % (identifier, title)        
+
+        logger.info("create_dataset: title = %s, identifer = %s, dataset_title = %s" % (title,identifier,dataset_title))
 
         datasets = DataSet.objects.filter(name=dataset_title)
         #check if the investigation already exists
         if len(datasets): #if not 0, update dataset with new investigation
             """go through datasets until you find one with the correct owner"""
             for ds in datasets:
-                own = ds.get_owner()
+                own = ds.get_owner()    
                 if own == user:
                     ds.update_investigation(investigation, "updated %s" % date.today())
+                    logger.info("create_dataset: Updated data set %s" % ds.name)
                     dataset = ds
                     break
 
         #create a new dataset if doesn't exist already for this user
-        if not dataset: 
-            dataset = DataSet.objects.create(name=identifier)
+        if not dataset:
+            dataset = DataSet.objects.create(name=dataset_title)                
             dataset.set_investigation(investigation)
-            dataset.set_owner(user)
+            dataset.set_owner(user)            
+            logger.info("create_dataset: Created data set %s" % dataset_title)            
 
         if public:
             public_group = ExtendedGroup.objects.public_group()
             dataset.share(public_group)
         
+        # set dataset slug            
+        dataset.slug = slug 
+                
+        # calculate total number of files and total number of bytes
         dataset.file_size = dataset.get_file_size()
         dataset.file_count = dataset.get_file_count()
         
+        dataset.save();
+        
         return dataset.uuid
+    
     return None
 
 

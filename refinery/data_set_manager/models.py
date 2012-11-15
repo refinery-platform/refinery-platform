@@ -349,7 +349,7 @@ class Node(models.Model):
     file_uuid = UUIDField(default=None,blank=True, null=True,auto=False)
     genome_build = models.TextField(db_index=True,null=True)
     species =  models.IntegerField(db_index=True,null=True)
-    
+    is_annotation = models.BooleanField(default=False)
     
     def add_child(self, node):
         if node is None:
@@ -449,7 +449,8 @@ class AnnotatedNode(models.Model):
     # genome information
     node_species = models.IntegerField(db_index=True, null=True)
     node_genome_build = models.TextField(db_index=True, null=True)
-     
+    # other information
+    is_annotation = models.BooleanField(default=False) 
                 
 class ProtocolReference(models.Model):
     node = models.ForeignKey(Node)

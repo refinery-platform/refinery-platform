@@ -27,6 +27,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     file_uuid = indexes.CharField(model_attr='file_uuid',null=True)
     species = indexes.IntegerField(model_attr='species',null=True)
     genome_build = indexes.CharField(model_attr='genome_build',null=True)
+    is_annotation = indexes.BooleanField(model_attr='is_annotation')
     
     #TODO: add modification date (based on registry)
         

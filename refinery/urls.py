@@ -12,6 +12,7 @@ from tastypie.api import Api
 from workflow_manager.views import import_workflows
 from django.conf.urls.static import static
 from settings import MEDIA_ROOT, MEDIA_URL, FILE_STORE_DIR
+from registration.forms import RegistrationFormUniqueEmail
 
 # NG: facets for Haystack
 sqs = SearchQuerySet().using( "core" ).models( DataSet ).facet('measurement').facet('technology').highlight()
@@ -49,10 +50,13 @@ urlpatterns = patterns('',
     url(r'^tasks/', include('djcelery.urls')),
 
     # NG: added to include additional views for admin (this is not the recommended way but the only one I got to work)
-    url(r"^admin/core/test_workflows/$", admin.site.admin_view( import_workflows ) ),    
-    url(r"^admin/core/test_data/$", admin.site.admin_view( admin_test_data ) ),    
+    #url(r"^admin/core/test_workflows/$", admin.site.admin_view( import_workflows ) ),    
+    #url(r"^admin/core/test_data/$", admin.site.admin_view( admin_test_data ) ),    
     url(r'^admin/', include(admin.site.urls)),
     
+    
+    (r'^accounts/register/$', 'registration.views.register', {'form_class': RegistrationFormUniqueEmail, 'backend': 'registration.backends.default.DefaultBackend'}),
+    (r'^accounts/', include('registration.urls')),
     url(r'^login/$', 'django.contrib.auth.views.login' ),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login' ),
     url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page":"/" } ),

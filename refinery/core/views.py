@@ -77,7 +77,7 @@ def user(request, query):
     except User.DoesNotExist:
         user = get_object_or_404( UserProfile, uuid=query ).user
         
-    if len( get_shared_groups( request.user, user ) ) == 0:
+    if len( get_shared_groups( request.user, user ) ) == 0 and user != request.user:
         return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view the profile of user " + user.username + ".</h1>" )
 
     return render_to_response('core/user.html', {'profile_user': user }, context_instance=RequestContext( request ) )
@@ -661,6 +661,37 @@ def solr(request):
         query.update( { "fq": "group_ids:" + str( ExtendedGroup.objects.public_group().id ) } )    
         
     return HttpResponse( urllib2.urlopen( "http://127.0.0.1:8983/solr/core/select?" + query.urlencode() ).read(), mimetype='application/json' )
+
+def solr_igv(request):
+    '''
+    Function for taking solr request url. Removes pagination, facets from input query to create multiple 
+    
+    :param request: Django HttpRequest object including solr query 
+    :type source: HttpRequest object.
+    :returns: 
+    '''
+    
+    # copy querydict to make it editable
+    if request.is_ajax():
+        query = request.GET.copy()
+        logger.debug("solr_igv called: request is ajax")
+        
+        # extracting solr query from request 
+        for i, val in request.POST.iteritems():
+            if i == 'query':
+                solr_query = val
+                # replacing facets w/ false 
+                solr_query = solr_query.replace('facet=true', 'facet=false')
+                  
+        print solr_query
+        
+        solr_results =  urllib2.urlopen( solr_query ).read()
+        print solr_results 
+    
+        return HttpResponse("ok solr_igv is happy")
+            
+    #return HttpResponse( urllib2.urlopen( "http://127.0.0.1:8983/solr/core/select?" + query.urlencode() ).read(), mimetype='application/json' )
+
 
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
