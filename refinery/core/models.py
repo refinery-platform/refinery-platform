@@ -78,7 +78,7 @@ class BaseResource ( models.Model ):
     creation_date = models.DateTimeField( auto_now_add=True )
     modification_date = models.DateTimeField( auto_now=True )    
 
-    slug = models.CharField( max_length=250, blank=True )
+    slug = models.CharField( max_length=250, blank=True, null=True )
 
     def __unicode__(self):
         return self.name + " (" + self.uuid + ")"
