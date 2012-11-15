@@ -16,8 +16,10 @@ var currentStudyUuid = urlComponents[urlComponents.length-2];
 var currentAssayUuid = urlComponents[urlComponents.length-3]; 
 var currentNodeType = "\"Raw Data File\"";
 
+var showAnnotation = false;
+
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
-var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type" ]; // TODO: make these regexes
+var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation" ]; // TODO: make these regexes
 var invisibleFieldNames = [ "name" ];
 
 var addFieldNames = ["Options"];
@@ -52,6 +54,17 @@ var documents = [];
 
 
 $(".collapse").collapse("show");
+
+$(".annotation-buttons button").click(function () {
+    if ( $(this).attr("id") == "annotation-button" ) {
+    	showAnnotation = true;
+    }
+    else {
+    	showAnnotation = false;
+    }    
+
+	initializeData( currentAssayUuid, currentStudyUuid, currentNodeType );
+});	
 		
 
 function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents ) {
@@ -64,6 +77,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 		+ "("
 			+ "study_uuid:" + studyUuid
 			+ " AND " + "assay_uuid:" + assayUuid
+			+ " AND " + "is_annotation:" + showAnnotation			
 			+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + ")"
 	   	+ ")"
 	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
@@ -243,7 +257,10 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 		var doc = data.response.docs[0];
 		
 		query.total_items = data.response.numFound;		
-		query.selected_items = data.response.numFound;		
+		query.selected_items = data.response.numFound;
+		
+		// clear facet view
+		$( "#facet-view" ).html("");		
 	
 		for ( var attribute in doc ) {
 			if ( doc.hasOwnProperty( attribute ) ) {
@@ -280,7 +297,7 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 				}
 			}		
 		}
-		
+				
 		pivots.push( Object.keys( facets )[0] );
 		pivots.push( Object.keys( facets )[1] );
 		
