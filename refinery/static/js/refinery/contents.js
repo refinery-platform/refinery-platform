@@ -19,7 +19,7 @@ var currentNodeType = "\"Raw Data File\"";
 var showAnnotation = false;
 
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
-var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation" ]; // TODO: make these regexes
+var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation", "species", "genome_build" ]; // TODO: make these regexes
 var invisibleFieldNames = [ "name" ];
 
 var addFieldNames = ["Options"];
