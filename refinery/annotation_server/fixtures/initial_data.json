@@ -271,7 +271,7 @@
    },
    {
       "pk": 1,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -286,7 +286,7 @@
    },
    {
       "pk": 2,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 1,
@@ -301,7 +301,7 @@
    },
    {
       "pk": 3,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -316,7 +316,7 @@
    },
    {
       "pk": 4,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 3,
@@ -331,7 +331,7 @@
    },
    {
       "pk": 5,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -346,7 +346,7 @@
    },
    {
       "pk": 6,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 5,
@@ -361,7 +361,7 @@
    },
    {
       "pk": 7,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -376,7 +376,7 @@
    },
    {
       "pk": 8,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 7,
@@ -391,7 +391,7 @@
    },
    {
       "pk": 9,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -406,7 +406,7 @@
    },
    {
       "pk": 10,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 9,
@@ -421,7 +421,7 @@
    },
    {
       "pk": 11,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -436,7 +436,7 @@
    },
    {
       "pk": 12,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 11,
@@ -451,7 +451,7 @@
    },
    {
       "pk": 13,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -466,7 +466,7 @@
    },
    {
       "pk": 14,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 13,
@@ -481,7 +481,7 @@
    },
    {
       "pk": 15,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -496,7 +496,7 @@
    },
    {
       "pk": 16,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 15,
@@ -511,7 +511,7 @@
    },
    {
       "pk": 17,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -526,7 +526,7 @@
    },
    {
       "pk": 18,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 17,
@@ -541,7 +541,7 @@
    },
    {
       "pk": 19,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": null,
@@ -556,7 +556,7 @@
    },
    {
       "pk": 20,
-      "model": "annotation_server.genome_build",
+      "model": "annotation_server.genomebuild",
       "fields": {
          "available": true,
          "ucsc_equivalent": 19,

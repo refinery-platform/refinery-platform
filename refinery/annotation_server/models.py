@@ -236,7 +236,7 @@ class Taxon(models.Model):
         return "%s: %s" % (self.taxon_id, self.name)
 
 
-class Genome_Build(models.Model):
+class GenomeBuild(models.Model):
     '''
     Model that stores UCSC Genome Build Information
     '''
@@ -248,7 +248,7 @@ class Genome_Build(models.Model):
     source_name = models.CharField(max_length=1024, blank=True, null=True)
     available = models.BooleanField(default=True)
     default_build = models.BooleanField(default=False)
-    ucsc_equivalent = models.ForeignKey('Genome_Build', blank=True, null=True)
+    ucsc_equivalent = models.ForeignKey('GenomeBuild', blank=True, null=True)
     
     def __unicode__(self):
         return "%s: %s" % (self.name, self.description)
@@ -289,7 +289,7 @@ def taxon_id_to_genome_build(taxon_id):
     :returns: str -- default_genome_build
     '''
     org = Taxon.objects.get(taxon_id=taxon_id, type='scientific name')
-    default_gb = Genome_Build.objects.get(default_build=True, organism=org).name
+    default_gb = GenomeBuild.objects.get(default_build=True, organism=org).name
     return default_gb
 
 def organism_to_genome_build(organism_name):
@@ -299,7 +299,7 @@ def organism_to_genome_build(organism_name):
     :param organism_name: organism whose taxon ID is unknown
     :type organism_name: str
     :returns: list -- list of (organism_scientific_name, default_genome_build) tuples
-    :raises: Taxon.DoesNotExist, Genome_Build.DoesNotExist
+    :raises: Taxon.DoesNotExist, GenomeBuild.DoesNotExist
     '''
     ret_list = list()
     query_list = Taxon.objects.filter(name__iexact=organism_name)
@@ -315,13 +315,13 @@ def organism_to_genome_build(organism_name):
     for id in query_set:
         try:
             org = Taxon.objects.get(taxon_id=id, type='scientific name')
-            default_gb = Genome_Build.objects.get(default_build=True, organism=org).name
+            default_gb = GenomeBuild.objects.get(default_build=True, organism=org).name
             ret_list.append((org.name, default_gb))
-        except Genome_Build.DoesNotExist:
+        except GenomeBuild.DoesNotExist:
             pass
     
     if not len(ret_list): #if no genome build matches to organism
-        raise Genome_Build.DoesNotExist
+        raise GenomeBuild.DoesNotExist
     
     return ret_list
 
@@ -332,17 +332,17 @@ def resolve_to_ucsc_genome_build(alt_genome_build):
     :param alt_genome_build: non-UCSC genome build name
     :type alt_genome_build: str
     :returns: str -- returns the UCSC equivalent genome build name
-    :raises: Genome_Build.DoesNotExist
+    :raises: GenomeBuild.DoesNotExist
     '''
     try:
-        genome_build = Genome_Build.objects.exclude(affiliation='UCSC').get(name__icontains=alt_genome_build)
+        genome_build = GenomeBuild.objects.exclude(affiliation='UCSC').get(name__icontains=alt_genome_build)
     except:
         raise
 
     try:
         return genome_build.ucsc_equivalent.name
     except:
-        raise Genome_Build.DoesNotExist
+        raise GenomeBuild.DoesNotExist
 
 def genome_build_to_species_id(genome_build):
     '''
@@ -353,7 +353,7 @@ def genome_build_to_species_id(genome_build):
     :returns: integer -- returns the taxon ID of the organism or raises an error  
     '''
     try:
-        gb = Genome_Build.objects.get(name=genome_build)
+        gb = GenomeBuild.objects.get(name=genome_build)
     except:
         #something went very wrong, so just re-raise whatever the problem was
         raise
