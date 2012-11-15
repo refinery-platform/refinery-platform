@@ -279,10 +279,13 @@ class Connection( object ):
 
 
     def create_library( self, name ):
+        print "galaxy_connector: create_library called"
         data = {}
         data['name'] = name
-        try:            
-            return self.post( "libraries", data )[0]["id"]
+        try:    
+            # OLD GALAXY 
+            #return self.post( "libraries", data )[0]["id"]
+            return self.post( "libraries", data )["id"]
         except urllib2.HTTPError, e:
             print str( e.read( 1024 ) )
             return 'Error. '+ str( e.read( 1024 ) )

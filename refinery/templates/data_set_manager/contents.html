@@ -127,12 +127,18 @@ rect.active {
 				<a href="#" class="btn" id="submitSamplesBtn">Apply</a> &nbsp;
 				
 				<!-- <a href="{% url igv_session %}">IGV</a> -->
+				<span class="label" style="margin-left: 50px;">View in</span>
 				<a class="btn" id="igv-session-link" href="#">IGV</a>
 				<a class="btn" id="profile-viewer-session-link" href="#">Profile</a>
 				<a class="btn btn-info" id="igv-test" href="#">IGV Test</a>
+
+				<span class="label" style="margin-left: 50px;">Show</span>
+				<div class="btn-group annotation-buttons" data-toggle="buttons-radio">
+				  	<button type="button" id="data-button" data-toggle="button" class="btn active">Data</button>
+				  	<button type="button" id="annotation-button" data-toggle="button" class="btn">Annotation</button>
+				</div>				
 			</div>
-			
-    			    		
+
     	</div>	
  	</div>	
  	<div class="span2">
@@ -200,5 +206,5 @@ rect.active {
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
+			    			        
 {% endblock %}    
-

@@ -56,13 +56,18 @@ class SingleFileColumnParser:
     species_column_index = None
 
     # column containing genome build ids, if set to None the parser will not set this information
-    genome_build_column_index = None    
+    genome_build_column_index = None
+    
+    # column containing boolean flag to indicate whether the data file in this row should be treated as an annotation file
+    # only those rows where this flag is "True"/"true"/"TRUE"/etc. will be treated a annotation files
+    # all others (most notably those where the field is empty) will be treated as regular files  
+    annotation_column_index = None        
     
     # list of column indices to be used for source, sample and assay grouping (may be None)
     # values in these columns will be combined using the value in column_index_separator  
     source_column_index = None
     sample_column_index = None
-    assay_column_index = None    
+    assay_column_index = None
     column_index_separator = " "
     
     # non-public variables
@@ -93,6 +98,12 @@ class SingleFileColumnParser:
         if self.genome_build_column_index is not None:
             return map_species_name_to_id( row[self.genome_build_column_index].strip() )        
         return None        
+
+    def _is_annotation( self, row ):
+        if self.annotation_column_index is not None:
+            return bool( "true" == row[self.annotation_column_index].lower().strip() )        
+        return False        
+
     
     def _create_name(self, row, internal_column_index, internal_file_column_index ):        
         if internal_column_index is None:
@@ -176,13 +187,14 @@ class SingleFileColumnParser:
                 file_uuid=file_uuid,
                 type=Node.RAW_DATA_FILE,
                 species=self._get_species( row ),
-                genome_build=self._get_genome_build( row ) )
+                genome_build=self._get_genome_build( row ),
+                is_annotation=self._is_annotation( row ) )
             assay_node.add_child( file_node )
             
             # iterate over columns to create attributes to attach to the sample node
             for column_index in range( 0, len( row ) ):
                 # skip data file column
-                if internal_file_column_index == column_index:                    
+                if ( internal_file_column_index == column_index ) or ( self.annotation_column_index == column_index ):
                     continue
                 
                 # create attribute as characteristic and attach to sample node if the sample node was newly created
