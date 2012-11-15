@@ -44,12 +44,18 @@ class UserProfile ( models.Model ):
 def create_user_profile( sender, instance, created, **kwargs ):
     if created:
         UserProfile.objects.get_or_create( user=instance )
+        # add user to public group
+        instance.groups.add( ExtendedGroup.objects.public_group() )
         
 post_save.connect(create_user_profile, sender=User)
 
 def create_user_profile_registered(sender, user, request, **kwargs):
-    logger.info('user has been created after registration %s' % datetime.now())
     UserProfile.objects.get_or_create(user=user)
+    
+    # add user to public group
+    user.groups.add( ExtendedGroup.objects.public_group() )
+    
+    logger.info('user profile for user %s has been created after registration %s' % (user.username, datetime.now()))
 
 user_registered.connect(create_user_profile_registered)
 
