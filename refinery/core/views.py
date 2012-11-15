@@ -77,7 +77,7 @@ def user(request, query):
     except User.DoesNotExist:
         user = get_object_or_404( UserProfile, uuid=query ).user
         
-    if len( get_shared_groups( request.user, user ) ) == 0:
+    if len( get_shared_groups( request.user, user ) ) == 0 and user != request.user:
         return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view the profile of user " + user.username + ".</h1>" )
 
     return render_to_response('core/user.html', {'profile_user': user }, context_instance=RequestContext( request ) )
