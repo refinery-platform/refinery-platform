@@ -307,6 +307,12 @@ HAYSTACK_CONNECTIONS = {
 }
 
 
+# send email via SMTP, can be replaced with "django.core.mail.backends.console.EmailBackend" to send emails to the console
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+#DEFAULT_FROM_EMAIL = "refinery@hms.harvard.edu"
+#EMAIL_HOST = 'smtp.orchestra'
+#EMAIL_PORT = 25
+
 
 # === Refinery Settings ===
 
