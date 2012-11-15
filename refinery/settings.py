@@ -169,6 +169,7 @@ INSTALLED_APPS = (
     'visualization_manager',
     'data_set_manager', 
     'annotation_server',
+    'registration',
 )
 
 # NG: added for django-guardian

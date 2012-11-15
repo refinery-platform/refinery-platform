@@ -19,6 +19,7 @@ from file_store.tasks import read
 from galaxy_connector.models import Instance
 from guardian.shortcuts import assign, get_users_with_perms, \
     get_groups_with_perms
+from registration.signals import user_registered
 import logging
 
 
@@ -42,9 +43,15 @@ class UserProfile ( models.Model ):
 # automatic creation of a user profile when a user is created: 
 def create_user_profile( sender, instance, created, **kwargs ):
     if created:
-        UserProfile.objects.create( user=instance )
+        UserProfile.objects.get_or_create( user=instance )
         
 post_save.connect(create_user_profile, sender=User)
+
+def create_user_profile_registered(sender, user, request, **kwargs):
+    logger.info('user has been created after registration %s' % datetime.now())
+    UserProfile.objects.get_or_create(user=user)
+
+user_registered.connect(create_user_profile_registered)
 
 # check if user has a catch all project and create one if not
 def create_catch_all_project( sender, user, request, **kwargs ):

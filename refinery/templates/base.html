@@ -73,7 +73,7 @@
 					{% if user.is_authenticated %}       
         				<i class="icon-user icon-white"></i> <a href="{% url user user.get_profile.uuid %}">{{ user.get_full_name }}</a> | <a href="{% url django.contrib.auth.views.logout %}">Logout</a>
         			{% else %}
-						<a href="{% url django.contrib.auth.views.login %}?next={% firstof request.path '/' %}">Login</a>
+						<a href="{% url django.contrib.auth.views.login %}?next={% firstof request.path '/' %}">Login</a> | <a href="accounts/register">Register</a>
         			{% endif %}		
         			{% endblock %}
               </p>
