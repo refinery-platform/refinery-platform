@@ -280,7 +280,7 @@ def organism_to_id(organism_name):
 
     return ret_list
 
-def organism_to_genome_build(taxon_id):
+def taxon_id_to_genome_build(taxon_id):
     '''
     Finds the default genome build for this organism given the name.
 
