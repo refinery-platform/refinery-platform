@@ -280,12 +280,24 @@ def organism_to_id(organism_name):
 
     return ret_list
 
+def organism_to_genome_build(taxon_id):
+    '''
+    Finds the default genome build for this organism given the name.
+
+    :param taxon_id: NCBI taxonomy ID
+    :type taxon_id: integer
+    :returns: str -- default_genome_build
+    '''
+    org = Taxon.objects.get(taxon_id=taxon_id, type='scientific name')
+    default_gb = Genome_Build.objects.get(default_build=True, organism=org).name
+    return default_gb
+
 def organism_to_genome_build(organism_name):
     '''
     Finds the default genome build for this organism given the name.
 
-    :param alt_genome_build: non-UCSC genome build name
-    :type alt_genome_build: str
+    :param organism_name: organism whose taxon ID is unknown
+    :type organism_name: str
     :returns: list -- list of (organism_scientific_name, default_genome_build) tuples
     :raises: Taxon.DoesNotExist, Genome_Build.DoesNotExist
     '''
