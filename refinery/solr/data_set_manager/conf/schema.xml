@@ -156,6 +156,8 @@
 
     <field name="genome_build" type="text_en" indexed="true" stored="true" multiValued="false" />
 
+    <field name="is_annotation" type="boolean" indexed="true" stored="true" multiValued="false" />
+
     <field name="study_uuid" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="type" type="text_en" indexed="true" stored="true" multiValued="false" />

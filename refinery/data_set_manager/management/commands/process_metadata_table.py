@@ -18,7 +18,7 @@ class Command(BaseCommand):
     Description:
         main program; calls the parsing and insertion functions
     """   
-    def handle(self, username, title, file_name, source_column_index, data_file_column, base_path="", slug=None, species_column=None, genome_build_column=None, data_file_permanent=False, is_public=False, **options):    
+    def handle(self, username, title, file_name, source_column_index, data_file_column, base_path="", slug=None, species_column=None, annotation_column=None, genome_build_column=None, data_file_permanent=False, is_public=False, **options):    
         parser = SingleFileColumnParser()
         parser.file_permanent = data_file_permanent
         parser.file_column_index = int( data_file_column )
@@ -30,10 +30,11 @@ class Command(BaseCommand):
         if genome_build_column is not None:
             parser.genome_build_column_index = int( genome_build_column )                
         
+        if annotation_column is not None:
+            parser.annotation_column_index = int( annotation_column )                
+        
         investigation = parser.run(file_name)
         investigation.title = title
         investigation.save()
         
-        print( "Running create_dataset" )
-        x = create_dataset( investigation.uuid, username, dataset_title=title, slug=slug, public=False )
-        print( "done: %s", x )
+        create_dataset( investigation.uuid, username, dataset_title=title, slug=slug, public=False )
