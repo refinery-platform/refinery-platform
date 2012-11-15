@@ -96,7 +96,7 @@ class SingleFileColumnParser:
 
     def _get_genome_build( self, row ):
         if self.genome_build_column_index is not None:
-            return map_species_name_to_id( row[self.genome_build_column_index].strip() )        
+            return row[self.genome_build_column_index].strip()        
         return None        
 
     def _is_annotation( self, row ):
