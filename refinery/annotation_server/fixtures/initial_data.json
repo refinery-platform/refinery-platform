@@ -280,7 +280,7 @@
          "default_build": true,
          "html_path": "/gbdb/hg19/html/description.html",
          "affiliation": "UCSC",
-         "organism": 23,
+         "species": 23,
          "description": "Feb. 2009 (GRCh37/hg19)"
       }
    },
@@ -295,7 +295,7 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "Genome Reference Consortium",
-         "organism": 23,
+         "species": 23,
          "description": "Feb. 2009"
       }
    },
@@ -310,7 +310,7 @@
          "default_build": false,
          "html_path": "/gbdb/hg18/html/description.html",
          "affiliation": "UCSC",
-         "organism": 23,
+         "species": 23,
          "description": "Mar. 2006 (NCBI36/hg18)"
       }
    },
@@ -325,7 +325,7 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "NCBI",
-         "organism": 23,
+         "species": 23,
          "description": "Mar. 2006"
       }
    },
@@ -340,7 +340,7 @@
          "default_build": false,
          "html_path": "/gbdb/mm8/html/description.html",
          "affiliation": "UCSC",
-         "organism": 3,
+         "species": 3,
          "description": "Feb. 2006 (NCBI36/mm8)"
       }
    },
@@ -355,7 +355,7 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "NCBI",
-         "organism": 3,
+         "species": 3,
          "description": "Feb. 2006"
       }
    },
@@ -370,7 +370,7 @@
          "default_build": true,
          "html_path": "/gbdb/mm9/html/description.html",
          "affiliation": "UCSC",
-         "organism": 3,
+         "species": 3,
          "description": "July 2007 (NCBI37/mm9)"
       }
    },
@@ -385,7 +385,7 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "NCBI",
-         "organism": 3,
+         "species": 3,
          "description": "Jul. 2007"
       }
    },
@@ -400,7 +400,7 @@
          "default_build": false,
          "html_path": "/gbdb/mm10/html/description.html",
          "affiliation": "UCSC",
-         "organism": 3,
+         "species": 3,
          "description": "Dec. 2011 (GRCm38/mm10)"
       }
    },
@@ -415,7 +415,7 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "Genome Reference Consortium",
-         "organism": 3,
+         "species": 3,
          "description": "Dec. 2011"
       }
    },
@@ -430,7 +430,7 @@
          "default_build": true,
          "html_path": "/gbdb/dm3/html/description.html",
          "affiliation": "UCSC",
-         "organism": 19,
+         "species": 19,
          "description": "Apr. 2006 (BDGP R5/dm3)"
       }
    },
@@ -445,7 +445,7 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "BDGP",
-         "organism": 19,
+         "species": 19,
          "description": "Apr. 2006"
       }
    },
@@ -460,7 +460,7 @@
          "default_build": false,
          "html_path": "/gbdb/dm2/html/description.html",
          "affiliation": "UCSC",
-         "organism": 19,
+         "species": 19,
          "description": "Apr. 2004 (BDGP R4/dm2)"
       }
    },
@@ -475,7 +475,7 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "BDGP",
-         "organism": 19,
+         "species": 19,
          "description": "Apr. 2004"
       }
    },
@@ -490,7 +490,7 @@
          "default_build": false,
          "html_path": "/gbdb/dm1/html/description.html",
          "affiliation": "UCSC",
-         "organism": 19,
+         "species": 19,
          "description": "Jan. 2003 (BDGP R3/dm1)"
       }
    },
@@ -505,7 +505,7 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "BDGP",
-         "organism": 19,
+         "species": 19,
          "description": "Jan. 2003"
       }
    },
@@ -520,7 +520,7 @@
          "default_build": false,
          "html_path": "/gbdb/ce10/html/description.html",
          "affiliation": "UCSC",
-         "organism": 12,
+         "species": 12,
          "description": "Oct. 2010 (WS220/ce10)"
       }
    },
@@ -535,7 +535,7 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "WormBase",
-         "organism": 12,
+         "species": 12,
          "description": "Oct. 2010"
       }
    },
@@ -550,7 +550,7 @@
          "default_build": true,
          "html_path": "/gbdb/ce6/html/description.html",
          "affiliation": "UCSC",
-         "organism": 12,
+         "species": 12,
          "description": "May 2008 (WS190/ce6)"
       }
    },
@@ -565,7 +565,7 @@
          "default_build": false,
          "html_path": null,
          "affiliation": "WormBase",
-         "organism": 12,
+         "species": 12,
          "description": "May 2008"
       }
    }
