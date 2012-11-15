@@ -1,5 +1,5 @@
 
-console.log("contents.workflow called");
+//console.log("contents.workflow called");
 //document.write("<script src='moreStuff.js' type='text/javascript'></script>");
 var oTable;
 
@@ -36,7 +36,7 @@ function workflowActions() {
 	// function for updating available workflows
 	$("#workflow_choice").change(function(  ) {
 		var temp_url = "/analysis_manager/workflow_inputs/" + $("#workflow_choice").val() + "/";
-		console.log(temp_url);
+		//console.log(temp_url);
 		
 		$.ajaxSetup({ 
 		     beforeSend: function(xhr, settings) {
@@ -68,8 +68,9 @@ function workflowActions() {
 		     dataType: "json",
 		     //data: {csrfmiddlewaretoken: crsf_token },
 		     success: function(result){
-		     	console.log("success");
-		     	console.log(result);
+		     	//console.log("success");
+		     	//console.log(result);
+		     	
 		     	// emptys all dropdown menus with current inputs
 		     	$(".OGcombobox").empty();
 		     	$('.OGcombobox').append('<option></option>');

@@ -816,6 +816,71 @@ $( "#profile-viewer-session-link" ).on( "click", function() {
 	});
 });
 
+// FUNCTION FOR enabling the IGV test button to work
+$( "#igv-test" ).on( "click", function(e) {
+	console.log("IGV-TEST button called");
+	
+	// function for getting current solr query 
+	var solr_url = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, facets, fields, {} );
+	
+	// url to point ajax function too 
+	var temp_url = "/solr/";
+		
+	console.log(solr_url);
+	console.log(facets);
+	console.log(fields);
+	
+	// function for adding csrf cookie for django
+	$.ajaxSetup({ 
+     beforeSend: function(xhr, settings) {
+         function getCookie(name) {
+             var cookieValue = null;
+             if (document.cookie && document.cookie != '') {
+                 var cookies = document.cookie.split(';');
+                 for (var i = 0; i < cookies.length; i++) {
+                     var cookie = jQuery.trim(cookies[i]);
+                     // Does this cookie string begin with the name we want?
+                 if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                     break;
+                 }
+             }
+         }
+         return cookieValue;
+         }
+         if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+             // Only send the token to relative URLs i.e. locally.
+             xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+         }
+     } 
+	});
+
+ 	$.ajax({
+	     url:temp_url,
+	     type:"POST",
+	     dataType: "json",
+	     data: {'query': solr_url },
+	     success: function(result){
+	     	//console.log("success");
+	     	//console.log(result);
+	     	
+		}
+	});
+	
+	// BOOTBOX DYNAMIC EXAMPLE
+	e.preventDefault();
+    var str = $("<p>This content is actually a jQuery object, which will change in 3 seconds...</p>");
+    bootbox.alert(str);
+    setTimeout(function() {
+    	str.html("See?");
+    }, 3000);
+	
+	//&indent=on
+	
+	// need to call core.views.solr and pass back current solr query 
+	
+});
+
 
 // ---------------------------------
 })();
