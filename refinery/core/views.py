@@ -662,6 +662,37 @@ def solr(request):
         
     return HttpResponse( urllib2.urlopen( "http://127.0.0.1:8983/solr/core/select?" + query.urlencode() ).read(), mimetype='application/json' )
 
+def solr_igv(request):
+    '''
+    Function for taking solr request url. Removes pagination, facets from input query to create multiple 
+    
+    :param request: Django HttpRequest object including solr query 
+    :type source: HttpRequest object.
+    :returns: 
+    '''
+    
+    # copy querydict to make it editable
+    if request.is_ajax():
+        query = request.GET.copy()
+        logger.debug("solr_igv called: request is ajax")
+        
+        # extracting solr query from request 
+        for i, val in request.POST.iteritems():
+            if i == 'query':
+                solr_query = val
+                # replacing facets w/ false 
+                solr_query = solr_query.replace('facet=true', 'facet=false')
+                  
+        print solr_query
+        
+        solr_results =  urllib2.urlopen( solr_query ).read()
+        print solr_results 
+    
+        return HttpResponse("ok solr_igv is happy")
+            
+    #return HttpResponse( urllib2.urlopen( "http://127.0.0.1:8983/solr/core/select?" + query.urlencode() ).read(), mimetype='application/json' )
+
+
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
     print "core.views.samples_solr called"

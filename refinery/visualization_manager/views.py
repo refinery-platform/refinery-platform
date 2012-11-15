@@ -20,6 +20,8 @@ import uuid
 
 logger = logging.getLogger(__name__)
 
+# create json response to return genome_builds + file_uuids for javascript to use 
+
 
 def igv_session( request ):
     
