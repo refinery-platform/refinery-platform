@@ -3,13 +3,14 @@ Created on Jun 20, 2012
 
 @author: nils
 '''
-from data_set_manager.models import Investigation, Study, Node, Attribute, Assay
+from annotation_server.models import species_to_taxon_id, Taxon
 from data_set_manager.genomes import map_species_name_to_id
+from data_set_manager.models import Investigation, Study, Node, Attribute, Assay
 from file_store.tasks import create
 import csv
+import logging
 import operator
 import os
-import logging
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -90,8 +91,18 @@ class SingleFileColumnParser:
         return Assay.objects.create( study=study, file_name=file_name )
     
     def _get_species( self, row ):
-        if self.species_column_index is not None:
-            return map_species_name_to_id( row[self.species_column_index].strip() )        
+        if self.species_column_index is not None:            
+            try:                
+                species_name = row[self.species_column_index].strip()
+                taxon_id_options = species_to_taxon_id( species_name )
+                
+                if len( taxon_id_options ) > 1:
+                    logger.warn( "Using first out of multiple taxon ids found for %s: %s" % ( species_name, taxon_id_options ) )
+                
+                return taxon_id_options[0][1];  
+            except Taxon.DoesNotExist:
+                return None;
+                            
         return None        
 
     def _get_genome_build( self, row ):
