@@ -284,8 +284,8 @@ class Connection( object ):
         data['name'] = name
         try:    
             # OLD GALAXY 
-            #return self.post( "libraries", data )[0]["id"]
-            return self.post( "libraries", data )["id"]
+            return self.post( "libraries", data )[0]["id"]
+            #return self.post( "libraries", data )["id"]
         except urllib2.HTTPError, e:
             print str( e.read( 1024 ) )
             return 'Error. '+ str( e.read( 1024 ) )
