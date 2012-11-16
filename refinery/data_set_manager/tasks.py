@@ -480,4 +480,4 @@ def parse_isatab(username, public, path, additional_raw_data_file_extension=None
         logger.error("*** print_exception:")
         logger.error(traceback.print_exception(exc_type, exc_value,
                           exc_traceback, file=sys.stdout))
-    return os.path.basename(path)
+    return None

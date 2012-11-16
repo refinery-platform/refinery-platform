@@ -19,7 +19,7 @@ from file_store.tasks import read
 from galaxy_connector.models import Instance
 from guardian.shortcuts import assign, get_users_with_perms, \
     get_groups_with_perms
-from registration.signals import user_registered
+from registration.signals import user_registered, user_activated
 import logging
 
 
@@ -57,6 +57,12 @@ def create_user_profile_registered(sender, user, request, **kwargs):
     logger.info('user profile for user %s has been created after registration %s' % ( user, datetime.now()))
 
 user_registered.connect(create_user_profile_registered)
+
+from django.contrib import messages
+def register_handler(request, sender, user, **kwargs):
+    messages.success(request, 'Thank you!  Your account has been activated.')
+    
+user_activated.connect(register_handler, dispatch_uid='activated')
 
 # check if user has a catch all project and create one if not
 def create_catch_all_project( sender, user, request, **kwargs ):
@@ -205,7 +211,7 @@ class DataSet(SharableResource):
     # total number of files in this data set
     file_count = models.IntegerField(blank=True, null=True, default=0)
     # total number of bytes of all files in this data set
-    file_size = models.IntegerField(blank=True, null=True, default=0)
+    file_size = models.BigIntegerField(blank=True, null=True, default=0)
 
 
     _investigations = models.ManyToManyField( Investigation, through="InvestigationLink" )
