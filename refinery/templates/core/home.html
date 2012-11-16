@@ -17,12 +17,14 @@
 {% block content %}
 {% if users %}
 	<!-- only super users get to see this -->
+	<!--
 	<h2>Users ({{ users|length}})</h2> 
     <ul>
     {% for user in users %}
         <li><a href="users/{{ user.username }}">{{ user.username }}</a>: {{ user.first_name }} {{ user.last_name }} ({{ user.get_profile.affiliation }}): {{ user.email }}</li>
     {% endfor %}
     </ul>
+   -->
 {% endif %}
 
 <div class="row-fluid">
@@ -100,7 +102,10 @@
 	</div>
 {% endif %}
 
-<a class="btn" href={% url project_new %}>New Project</a> 
+{% if user.is_authenticated %}       
+	<a class="btn" href={% url project_new %}>New Project</a> 
+{% endif %}		
+
 </div> 		
 
 
@@ -217,7 +222,10 @@
 	</div>
 {% endif %}
 
-<a class="btn" href={% url import_isa_tab %}>New Data Set</a> 
+{% if user.is_authenticated %}       
+	<a class="btn" href={% url import_isa_tab %}>New Data Set</a> 
+{% endif %}		
+
 </div>
 
 	
