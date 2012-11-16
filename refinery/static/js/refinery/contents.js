@@ -19,7 +19,7 @@ var currentNodeType = "\"Raw Data File\"";
 var showAnnotation = false;
 
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
-var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation" ]; // TODO: make these regexes
+var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation", "species", "genome_build" ]; // TODO: make these regexes
 var invisibleFieldNames = [ "name" ];
 
 var addFieldNames = ["Options"];
@@ -843,9 +843,17 @@ $( "#igv-test" ).on( "click", function(e) {
 	// url to point ajax function too 
 	var temp_url = "/solr/";
 		
-	console.log(solr_url);
-	console.log(facets);
-	console.log(fields);
+	//console.log(solr_url);
+	//console.log(facets);
+	//console.log(fields);
+	
+	// BOOTBOX DYNAMIC EXAMPLE
+	e.preventDefault();
+    var str = $("<p>Please Choose Which Species to view in IGV</p>");
+    bootbox.alert(str);
+    //setTimeout(function() {
+    //	str.html("See?");
+    //}, 3000);
 	
 	// function for adding csrf cookie for django
 	$.ajaxSetup({ 
@@ -878,19 +886,14 @@ $( "#igv-test" ).on( "click", function(e) {
 	     dataType: "json",
 	     data: {'query': solr_url },
 	     success: function(result){
-	     	//console.log("success");
-	     	//console.log(result);
+	     	console.log("success");
+	     	console.log(result);
+	     	str.html("JSON RESPONDED");
 	     	
 		}
 	});
 	
-	// BOOTBOX DYNAMIC EXAMPLE
-	e.preventDefault();
-    var str = $("<p>This content is actually a jQuery object, which will change in 3 seconds...</p>");
-    bootbox.alert(str);
-    setTimeout(function() {
-    	str.html("See?");
-    }, 3000);
+
 	
 	//&indent=on
 	

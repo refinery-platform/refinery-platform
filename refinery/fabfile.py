@@ -35,13 +35,16 @@ from fabric.operations import require
 from fabric.utils import puts
 
 
-# get Django settings for Refinery
+# local settings
+# Django
 env.local_django_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(env.local_django_root)
 from django.conf import settings as django_settings  # to avoid conflict with fabric.api.settings
-
 # config files and templates
 env.local_conf = os.path.join(env.local_django_root, "fabric")
+
+# remote settings
+env.bootstrap_dir = os.path.join(env.deployment_base_dir, "bootstrap")
 
 # Fabric settings
 env.forward_agent = True    # for Github operations
@@ -498,7 +501,7 @@ def install_solr():
     '''Install Solr
 
     '''
-    run("unzip -uq {deployment_base_dir}/bootstrap/apache-solr-4.0.0.zip -d {deployment_target_dir}/apps"
+    run("unzip -uq {bootstrap_dir}/apache-solr-4.0.0.zip -d {deployment_target_dir}/apps"
         .format(**env))
 
 @task
@@ -597,6 +600,7 @@ def upload_galaxy_tool_data():
     remote_path = os.path.join(tool_data_path, "sam_fa_indices.loc")
     upload_template(local_path, remote_path)
 
+
 @task
 def update_galaxy_user_home_dir():
     '''Upload .bashrc.customizations to $HOME of the Galaxy user
@@ -608,3 +612,89 @@ def update_galaxy_user_home_dir():
     local_path = os.path.join(env.local_conf, "bashrc_galaxy_template")
     remote_path = os.path.join(home_dir, ".bashrc.customizations")
     upload_template(local_path, remote_path)
+
+    if not exists("~/R"):
+        run("mkdir ~/R")
+    if not exists("~/R/library"):
+        run("mkdir ~/R/library")
+
+    #TODO: upload .Renviron and .Rprofile
+
+
+@task
+@with_settings(user=env.project_user)
+def install_spp():
+    '''Install SPP R library
+
+    '''
+    #TODO: change settings to env.galaxy_user
+    run("R -e \"install.packages('caTools')\"")
+    run("R -e \"install.packages('{bootstrap_dir}/spp_1.11.tar.gz')\"".format(**env))
+
+
+@task
+@with_settings(user=env.project_user)
+def install_spp_galaxy_tool():
+    '''Add SPP tool to the current Galaxy instance
+
+    '''
+    #TODO: change settings to env.galaxy_user
+    run("cp {bootstrap_dir}/spp_peak_caller.xml {galaxy_root}/tools/peak_calling".format(**env))
+    with prefix("cd {galaxy_root}/tools/peak_calling".format(**env)):
+        run("ln -s ../plotting/r_wrapper.sh")
+
+
+@task
+@with_settings(user=env.project_user)
+def install_igvtools():
+    '''Add IGV tools to the current Galaxy instance
+
+    '''
+    #TODO: change settings to env.galaxy_user
+
+    #$ cd $GALAXYROOT/tools
+    #$ hg clone http://toolshed.g2.bx.psu.edu/repos/jjohnson/igvtools
+    #move files to appropriate directories
+    #$ cp igvtools/lib/galaxy/datatypes/igv.py $GALAXYROOT/lib/galaxy/datatypes
+    #$ cp igvtools/tool-data/datatypes_conf.xml $GALAXYROOT/tool-data
+    #$ cp igvtools/tool-data/igv_indices.loc.sample $GALAXYROOT/tool-data/igv_indices.loc (replace with a template?)
+    #
+    #install .genome files
+    #e.g., to /n/hsphS10/hsphfs1/chb/biodata/genomes/igv
+    #
+    #edit $GALAXYROOT/tool-data/igv_indices.loc
+
+
+@task
+@with_settings(user=env.project_user)
+def install_tabular_to_bed():
+    '''Add tabular-to-bed tool to the current Galaxy instance
+
+    '''
+    #TODO: change settings to env.galaxy_user
+    # /n/hsphS10/hsphfs1/stemcellcommons/bootstrap
+#    $ cp tabular_to_bed.py $GALAXYROOT/tools/next_gen_conversion
+#    $ cp tabular_to_bed.xml $GALAXYROOT/tools/next_gen_conversion
+    # edit tool_conf.xml
+
+
+@task
+@with_settings(user=env.project_user)
+def upload_galaxy_tool_conf():
+    '''Update tool_conf.xml in the current Galaxy instance
+
+    '''
+    #TODO: change settings to env.galaxy_user
+    local_path = os.path.join(env.local_conf, "tool_conf_xml_template")
+    remote_path = os.path.join(env.galaxy_root, "tool_conf.xml")
+    upload_template(local_path, remote_path)
+
+
+@task
+def restart_galaxy():
+    '''Restart Galaxy using service command
+
+    '''
+    #TODO: change settings to env.galaxy_user
+    sudo("/sbin/service galaxy restart")
+
