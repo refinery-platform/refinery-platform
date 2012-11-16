@@ -46,6 +46,7 @@ refinery/celeryev.pid
 .settings/*
 *.conflict
 refinery/solr/*/data
+refinery/solr/conf/*
 refinery/refinery/*
 refinery/middleware.py
 refinery/fabric/*

@@ -84,6 +84,12 @@ class _FileServerItem(models.Model):
         logger.error("_FileServerItem with data file UUID '%s' does not return file objects", self.data_file.uuid)
         return False
 
+    def get_aux_file_item(self):
+        '''Get aux file item if exists
+        A placeholder method to be overridden by subclasses.
+
+        '''
+
 
 class TDFItem(_FileServerItem):
     '''Represents a TDF file that is not linked to a data file.
@@ -208,6 +214,12 @@ class BAMItem(_FileServerItem):
         logger.info("BAMItem updated")
         return True
 
+    def get_aux_file_item(self):
+        '''Get aux file item
+
+        '''
+        return self.tdf_file
+
 
 class WIGItem(_FileServerItem):
     '''Represents a WIG file and optionally links it to a TDF file.
@@ -290,6 +302,12 @@ class WIGItem(_FileServerItem):
         logger.info("WIGItem updated")
         return True
 
+    def get_aux_file_item(self):
+        '''Get aux file item
+
+        '''
+        return self.tdf_file
+
 
 def add(data_file_uuid, aux_file_uuid=None):
     '''Create a file server item of an appropriate type.
@@ -359,8 +377,8 @@ def delete(data_file_uuid):
 def initialize(data_file_uuid):
     '''Prepare the model instance to be used for visualization.
 
-    :param uuid: UUID of a data file.
-    :type uuid: str.
+    :param data_file_uuid: UUID of a data file.
+    :type data_file_uuid: str.
     :returns: instance of _FileServerItem subclass or None if there was an error.
 
     '''
@@ -373,6 +391,21 @@ def initialize(data_file_uuid):
             return None
     else:
         logger.error("_FileServerItem with data file UUID '%s' does not exist", data_file_uuid)
+        return None
+
+
+def get_aux_file_item(data_file_uuid):
+    '''Get auxiliary file item given primary file item UUID
+
+    :param data_file_uuid: UUID of a data file
+    :type data_file_uuid: str.
+    :returns: instance of FileStoreItem or None.
+
+    '''
+    item = get(data_file_uuid)
+    if item:
+        return item.get_aux_file_item()
+    else:
         return None
 
 
