@@ -213,6 +213,25 @@ def start_postgresql_server():
 
 
 @task
+def upload_httpd_settings():
+    '''Upload Apache settings
+
+    '''
+    upload_template("{local_conf}/httpd_refinery_conf_template".format(**env),
+                    "/etc/httpd/conf.d/refinery.conf",
+                    backup=False, use_sudo=True)
+
+
+@task
+def install_mod_wsgi():
+    '''Install WSGI interface for Python web applications in Apache from the CentOS repository
+
+    '''
+    puts("Installing mod_wsgi")
+    sudo("yum -q -y install mod_wsgi")
+
+
+@task
 def install_git():
     '''Install Git from the CentOS repository
 
@@ -352,7 +371,7 @@ def init_virtualenv(env_name):
 
     '''
     with prefix("workon {}".format(env_name)):
-        run("pip install -U -r requirements.txt")
+        run("pip install -U -r ../requirements.txt")
 
 
 @task
@@ -445,8 +464,17 @@ def refinery_syncdb():
     '''Create database tables for all Django apps in Refinery
     (also, create a superuser)
     '''
+    #TODO: make non-interactive
     with prefix("workon refinery"):
         run("./manage.py syncdb")
+
+
+@task
+@with_settings(user=env.project_user)
+def create_refinery_admin_user():
+    '''
+
+    '''
 
 
 @task
@@ -638,7 +666,7 @@ def install_spp_galaxy_tool():
     '''Add SPP tool to the current Galaxy instance
 
     '''
-    #TODO: change settings to env.galaxy_user
+    #TODO: change settings to env.galaxy_user or add to private toolshed
     run("cp {bootstrap_dir}/spp_peak_caller.xml {galaxy_root}/tools/peak_calling".format(**env))
     with prefix("cd {galaxy_root}/tools/peak_calling".format(**env)):
         run("ln -s ../plotting/r_wrapper.sh")
@@ -650,7 +678,7 @@ def install_igvtools():
     '''Add IGV tools to the current Galaxy instance
 
     '''
-    #TODO: change settings to env.galaxy_user
+    #TODO: change settings to env.galaxy_user or install using main toolshed
 
     #$ cd $GALAXYROOT/tools
     #$ hg clone http://toolshed.g2.bx.psu.edu/repos/jjohnson/igvtools
@@ -671,7 +699,7 @@ def install_tabular_to_bed():
     '''Add tabular-to-bed tool to the current Galaxy instance
 
     '''
-    #TODO: change settings to env.galaxy_user
+    #TODO: change settings to env.galaxy_user or add this tool to private toolshed
     # /n/hsphS10/hsphfs1/stemcellcommons/bootstrap
 #    $ cp tabular_to_bed.py $GALAXYROOT/tools/next_gen_conversion
 #    $ cp tabular_to_bed.xml $GALAXYROOT/tools/next_gen_conversion

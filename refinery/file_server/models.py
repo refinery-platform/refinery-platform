@@ -68,7 +68,7 @@ class _FileServerItem(models.Model):
         logger.error("_FileServerItem with data file UUID '%s' does not report contents", self.data_file.uuid)
         return False
 
-    def get_profile(self, **kwargs):
+    def get_profile(self, *args, **kwargs):
         '''Report information about internal structure.
         A placeholder method to be overridden by subclasses.
 
