@@ -205,7 +205,7 @@ class DataSet(SharableResource):
     # total number of files in this data set
     file_count = models.IntegerField(blank=True, null=True, default=0)
     # total number of bytes of all files in this data set
-    file_size = models.IntegerField(blank=True, null=True, default=0)
+    file_size = models.BigIntegerField(blank=True, null=True, default=0)
 
 
     _investigations = models.ManyToManyField( Investigation, through="InvestigationLink" )
