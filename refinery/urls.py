@@ -55,9 +55,10 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     
     
-    (r'^accounts/register/$', 'registration.views.register', {'form_class': RegistrationFormUniqueEmail, 'backend': 'registration.backends.default.DefaultBackend'}),
+    url(r'^accounts/register/$', 'registration.views.register', {'form_class': RegistrationFormUniqueEmail, 'backend': 'registration.backends.default.DefaultBackend'}),
+    url(r'^accounts/activate/(?P<activation_key>\w+)/$', 'registration.views.activate', {'success_url': '/login?next=/', 'backend': 'registration.backends.default.DefaultBackend'}),
     (r'^accounts/', include('registration.urls')),
-    url(r'^login/$', 'django.contrib.auth.views.login' ),
+    url(r'^login/$', 'django.contrib.auth.views.login', name="login" ),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login' ),
     url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page":"/" } ),
     
