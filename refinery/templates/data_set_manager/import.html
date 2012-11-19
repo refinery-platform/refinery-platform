@@ -5,31 +5,46 @@
 
 {% block subheader %}
 <div class="page-header">
-  	<h1>ISA-Tab Importer <small id="import-message"></small></h1>
+  	<h1>Create New Data Set<small id="import-message"></small></h1>
 </div>
 {% endblock %}
 
 {% block content %}
-<form id="isaTabImportForm" enctype="multipart/form-data" action="" method="post">{% csrf_token %}
-	
-	<p>{{ form.non_field_errors }}</p>
-	<p>{{ error }}</p>	
-	
-	<div>
-		<p>Upload file from disk:</p>
-		<p>
-			{{ form.isa_tab_file.errors}}
-			{{ form.isa_tab_file }}
-		</p>
-		<p>Or download from a URL:</p>
-		<p>
-			{{ form.isa_tab_url.errors }}
-			{{ form.isa_tab_url }}
-		</p>
-	</div>	
-	<input style="float: left;" class="btn" id="import-button" type="submit" value="Import"/>
-	<div style="margin-left: 15px; padding: 15px; float: left; display: block; height: 22px; width: 22px;" id="spinner"></div>	
-</form>
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">		
+
+	<div class="refinery-header">
+		<span class="refinery-header-left">
+			<h2>ISA-Tab Import</h2>
+		</span>
+	</div>
+
+		<form id="isaTabImportForm" enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+			
+			<p>{{ form.non_field_errors }}</p>
+			<p>{{ error }}</p>	
+
+	<div class="refinery-subheader">
+		<h4>From Disk</h4>
+	</div>
+			
+				<p>
+					{{ form.isa_tab_file.errors}}
+					{{ form.isa_tab_file }}
+				</p>
+				
+	<div class="refinery-subheader">
+		<h4>From URL</h4>
+	</div>
+				<p>
+					{{ form.isa_tab_url.errors }}
+					{{ form.isa_tab_url }}
+				</p>
+			<input style="float: left;" class="btn" id="import-button" type="submit" value="Import"/>
+			<div style="margin-left: 15px; padding: 15px; float: left; display: block; height: 22px; width: 22px;" id="spinner"></div>	
+		</form>
+	</div>
+</div>
 {% endblock %}
 
 {% block script %}

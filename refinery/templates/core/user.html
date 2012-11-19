@@ -5,32 +5,42 @@
 {% endblock %}
 
 {% block subheader %}
-User: <i>{{ profile_user.username }}</i>
+<div class="page-header">
+<h1>User&nbsp;<small>{{ profile_user.username }}</small></h1>	
+</div>
 {% endblock %}
 
 
 {% block content %}
-{% if user %}	
-    <div class="label">Name</div>    
-	<p>{{ profile_user.get_full_name }}</p>
-
-    <div class="label">Email</div>    
-	<p>{{ profile_user.email }}</p>
-
-    <div class="label">Affiliation</div>    
-	<p>{{ profile_user.get_profile.affiliation }}</p>
-
-    <div class="label">Groups</div>
-    <ul>   
-	{% for group in profile_user.groups.all %}
-        <li><a href="{% url group group.extendedgroup.uuid %}">{{ group.name }}</a></li>
-    {% endfor %}
-   	</ul>
+<div class="refinery-panel refinery-panel-content">
+	{% if user %}
+	<div class="row-fluid">
+		    <div class="label label-edit">First Name</div>    
+			<p>{{ profile_user.firstname }}</p>
 	
-	<div class="label">History</div>	
-	<p>Joined: {{ profile_user.date_joined }} | Last Login: {{ profile_user.last_login }}</p>	
-{% else %}
-    <p>No valid user.</p>
-{% endif %}
-
+		    <div class="label">Last Name</div>    
+			<p>{{ profile_user.lastname }}</p>
+		
+		    <div class="label">Email</div>    
+			<p>{{ profile_user.email }}</p>
+		
+		    <div class="label">Affiliation</div>    
+			<p>{{ profile_user.get_profile.affiliation }}</p>
+		
+		    <div class="label">Groups</div>
+		    <ul>   
+			{% for group in profile_user.groups.all %}
+		        <li><a href="{% url group group.extendedgroup.uuid %}">{{ group.name }}</a></li>
+		    {% endfor %}
+		   	</ul>
+			
+			<div class="label">History</div>	
+			<p>Joined: {{ profile_user.date_joined }} | Last Login: {{ profile_user.last_login }}</p>	
+		{% else %}
+		    <p>No valid user.</p>
+		{% endif %}	
+		
+	</div>	
+</div>
 {% endblock %}
+

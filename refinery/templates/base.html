@@ -16,14 +16,15 @@
     
     <style type="text/css">
       body {
-        padding-top: {{ REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;
-        padding-bottom: 40px;
+        /*padding-top: {{ REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;*/
+        /*padding-bottom: 40px;*/
+         /*position: relative;*/
       }
     </style>
     
-    <link href="{{ STATIC_URL }}core/boot_style.css" rel="stylesheet">
+    <!-- <link href="{{ STATIC_URL }}core/boot_style.css" rel="stylesheet">
 
-    <link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}js/bootstrap/css/bootstrap-responsive.css" rel="stylesheet"> -->
 	    
     {% block head_html %}{% endblock %}
     <title>Refinery {% block title %}{% endblock %}</title>
@@ -48,67 +49,68 @@
     {% endblock %}
 </head>
 
-<body>
-	<div>
-	</div>
-	
+<body>	
 	<!-- header navigation bar -->
 	<div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
-        <div class="container-fluid">
+        <!-- <div class="container-fluid" style="box-shadow: 0 0 5px black;"> -->
+        <div class="container-fluid"">
+        	
+		 <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+	      <a class="btn btn-navbar" style="margin-left: 5px; margin-right: 5px;" data-toggle="collapse" data-target=".nav-collapse">
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	      </a>
+	              	
           <a class="brand" href="/">
           {% if REFINERY_MAIN_LOGO != "" %}
           	<img style="height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px" src="{{ STATIC_URL }}{{ REFINERY_MAIN_LOGO }}"/>&nbsp;&nbsp;
           {% endif %}
-          Refinery</a>          	          
-          <div class="nav-collapse">
+          Refinery</a>
+
+			<p class="navbar-text pull-right">
+		{% if user.is_authenticated %}       
+				<i class="icon-user icon-white"></i> <a href="{% url user user.get_profile.uuid %}">{{ user.username }}</a>&nbsp;&nbsp; 				
+    			<a href="{% url django.contrib.auth.views.logout %}"><i class="icon-signout"></i></a>
+    	{% else %}
+			<a href="{% url home %}accounts/register">Register</a>&nbsp;&nbsp;
+			<a href="{% url django.contrib.auth.views.login %}?next={% firstof request.path '/' %}"><i class="icon-signin"></i></a>
+		{% endif %}		
+    		</p>
+                           	          
+          <div class="nav-collapse collapse">
             <ul class="nav">
               <li class="{{ navbar_class_home }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url home %}">Home</a></li>
+              <!--
               <li class="{{ navbar_class_search }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url search %}">Search</a></li>
+              <li class="{{ navbar_class_contact }}"><a href="{% url contact %}">Contact</a></li>
+              -->
+              <li class="{{ navbar_class_statistics }}"><a href="{% url statistics %}">Statistics</a></li>
+              <li class="{{ navbar_class_about }}"><a href="{% url about %}">About</a></li>              
             </ul>
-              <div id="auth_area">
-              <p class="navbar-text pull-right" style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;">
-              	<!-- <Logged in as <a href="#">username</a> -->
-              		{% block authentication %}        
-					{% if user.is_authenticated %}       
-        				<i class="icon-user icon-white"></i> <a href="{% url user user.get_profile.uuid %}">{{ user.username }}</a> | <a href="{% url django.contrib.auth.views.logout %}">Logout</a>
-        			{% else %}
-						<a href="{% url django.contrib.auth.views.login %}?next={% firstof request.path '/' %}">Login</a> | <a href="{% url home %}accounts/register">Register</a>
-        			{% endif %}		
-        			{% endblock %}
-              </p>
-            </div>
-          </div><!--/.nav-collapse -->
+          </div>                   
+
         </div>
+
+		<div class="navbar-header">
+			<div class="row-fluid">
+				<div class="container-fluid">
+					<div style="clear: left; display:block;">
+						{% block subheader %}{% endblock %}
+					</div>
+				</div>
+			</div>			
+		</div>		                
       </div>
     </div>
+        
+	<div class="container-fluid">	
+		{% block content %}
+		{% endblock %}							
+	</div>
 	
-	
-	<div class="container-fluid"> 
-		<div class="row-fluid">
-   		<div id="subheader well">
-	        <h2>{% block subheader %}{% endblock %}</h2>
-	    </div>
-    </div>
-		{% block content %}{% endblock %}
-    
-
-    
-    <!--
-    <div id="navigation">
-        {% block navigation %}        
-        {% endblock %}
-    </div>
--->
-    	<div class="row-fluid">
-    		<div class="span12">
-    			<div id="content">	
-        			
-        		</div>
-        	</div>
-       </div>    
-    </div>
-
+	<!--
 	<div class="navbar navbar-fixed-bottom">
       <div class="navbar-inner header_bkgd">
         <div class="container-fluid">
@@ -119,22 +121,38 @@
 		    </div>		    
           <div class="nav-collapse pull-right">
             <ul class="nav">
-              <li class="{{ navbar_class_contact }}"><a href="{% url contact %}">Contact</a></li>
-              <li class="{{ navbar_class_statistics }}"><a href="{% url statistics %}">Statistics</a></li>
-              <li class="{{ navbar_class_about }}"><a href="{% url about %}">About</a></li>
             </ul>
-          </div><!--/.nav-collapse -->        
+          </div>        
         </div>
       </div>
-    </div>
-
+   </div>
+  -->
+ 
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery/jquery-1.7.2.js"></script>
     
-	<!-- 3rd party libraries -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/js/bootstrap.js"></script>
+	<!-- 3rd party libraries -->                       
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/docs/assets/js/bootstrap.js"></script>
     
 	{% block script %}
 	{% endblock %}
-    
+
+<script type="text/javascript">
+function sizing() {
+    var windowwidth=$(window).width();
+    if(windowwidth<=767) {
+    	$('.scrollable').css('height', 'inherit' );      
+    }
+    else {
+	    $('.scrollable').map( function() {
+	    	var targetHeight = ( $(window).height() - $(this).offset().top - 40 );
+	    	var minHeight = parseInt( $('.scrollable').css( "min-height" ) );
+	    	var newHeight = Math.max( targetHeight, minHeight );
+	    	$(this).css('height', newHeight + 'px');  
+    });
+    }
+}
+$(document).ready(sizing);
+$(window).resize(sizing);
+</script>    
 </body>
 </html>

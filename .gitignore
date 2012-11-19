@@ -49,3 +49,5 @@ refinery/solr/*/data
 refinery/refinery/*
 refinery/middleware.py
 refinery/fabric/*
+
+codekit-config.json

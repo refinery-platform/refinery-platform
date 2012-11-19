@@ -5,13 +5,20 @@
 {% endblock %}
 
 {% block subheader %}
-<div class="page-header">
-  <h1>Launch Pad
-	{% if user.is_authenticated  %}
-		<small>{{ user.first_name }} {{ user.last_name }}</small>
-	{% endif %} 
-	</h1>
-</div>
+  <div class="page-header">
+  	<h1>
+  		Launch Pad
+		{% if user.is_authenticated %}
+			<small>
+				{% if user.first_name != "" or user.last_name != "" %}
+					{{ user.first_name }} {{ user.last_name }}
+				{% else %}
+					{{ user.username }}				
+				{% endif %}
+			</small>
+		{% endif %} 
+	</h1>  	  	
+  </div>
 {% endblock %}
 
 {% block content %}
@@ -30,8 +37,19 @@
 <div class="row-fluid">
  <div class="span4">
 
-<div class="refinery-panel">
-<h2><i class="icon-folder-open"></i>&nbsp;Projects</h2>
+<div class="refinery-panel refinery-panel-content scrollable">
+<div class="refinery-header">
+	<span class="refinery-header-left">
+		<h3><i class="icon-folder-open"></i>&nbsp;&nbsp;Projects</h3>
+	</span>
+
+	{% if user.is_authenticated %}       
+		<span class="refinery-header-right">
+			<h4><a href={% url project_new %}><i class="icon-plus-sign"></i></a></h4> 
+		</span>	
+	{% endif %}		
+</div>
+
 
 {% if projects or unassigned_analyses %}
 
@@ -98,22 +116,26 @@
 {% else %}
 
 	<div class="alert alert-info">
-		No projects available.  
+		{% if user.is_authenticated %}       
+			No projects available.
+		{% else %}
+			No public projects available.
+		{% endif %}		  
 	</div>
 {% endif %}
-
-{% if user.is_authenticated %}       
-	<a class="btn" href={% url project_new %}>New Project</a> 
-{% endif %}		
-
 </div> 		
 
 
 </div>
 <div class="span4">
 
-<div class="refinery-panel">
-	<h2><i class="icon-cog"></i>&nbsp;Workflows</h2>
+<div class="refinery-panel refinery-panel-content scrollable">
+	
+<div class="refinery-header">
+	<span class="refinery-header-left">
+		<h3><i class="icon-cog"></i>&nbsp;&nbsp;Workflows</h3>
+	</span>
+</div>
 	
 {% if workflows %}
 	<table class="table table-striped table-condensed">
@@ -136,61 +158,31 @@
 	</table>
 {% else %}
 	<div class="alert alert-info">
-		No workflows available.  
+		{% if user.is_authenticated %}       
+			No workflows available.
+		{% else %}
+			No public workflows available.
+		{% endif %}		  
 	</div>
 {% endif %}
 	
 </div>
-	
-	 <!--
-{% if workflow_engines %}
-
-	<table class="table table-striped table-condensed table-bordered">
-		<thead>
-			<tr>
-				<th>
-					Name
-				</th>    
-				<th>
-					Workflows
-				</th>    
-			</tr>
-		</thead>
-		<tbody>
-    {% for workflow_engine in workflow_engines %}
-        <tr>
-        	<td>
-				<i class="icon-cog"></i> Engine <a href="workflow_engines/{{ workflow_engine.uuid }}">{{ workflow_engine.name }}</a>        		
-        	</td>
-        	<td>
-        		{{workflow_engine.workflow_set.all|length}}
-        	</td>
-        </tr>
-
-		{% for workflow in workflow_engine.workflow_set.all %}
-        <tr>
-        	<td colspan="2">
-        		<i class="icon-empty"></i> <a href="workflows/{{ workflow.uuid }}">{{ workflow.name }}</a>
-        	</td>
-        </tr>
-    	{% endfor %}
-
-    {% endfor %}
-		</tbody>		
-	</table>
-{% else %}
-	<div class="alert alert-info">
-		No workflows available.  
-	</div>
-{% endif %}
-	-->
-
 </div>
 
 <div class="span4">
 
-<div class="refinery-panel">
-<h2><i class="icon-file"></i>&nbsp;<a href="data_sets/">Data Sets</a></h2>
+<div class="refinery-panel refinery-panel-content scrollable">
+<div class="refinery-header">
+	<span class="refinery-header-left">
+		<h3><i class="icon-file"></i>&nbsp;&nbsp;Data Sets</h3>
+	</span>
+	{% if user.is_authenticated %}       
+		<span class="refinery-header-right">
+			<h4><a href={% url import_isa_tab %}><i class="icon-plus-sign"></i></a></h4>
+		</span> 
+	{% endif %}				
+</div>
+
 {% if data_sets %}	
 	<table class="table table-striped table-condensed">
 		<thead>
@@ -218,13 +210,13 @@
 	 
 {% else %}
 	<div class="alert alert-info">
-		No data sets available.  
+		{% if user.is_authenticated %}       
+			No data sets available.
+		{% else %}
+			No public data sets available.
+		{% endif %}		  
 	</div>
 {% endif %}
-
-{% if user.is_authenticated %}       
-	<a class="btn" href={% url import_isa_tab %}>New Data Set</a> 
-{% endif %}		
 
 </div>
 

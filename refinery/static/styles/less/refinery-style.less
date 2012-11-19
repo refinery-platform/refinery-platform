@@ -1,0 +1,228 @@
+/*!
+ * For Bootstrap v2.2.1
+ *
+ * Based on https://github.com/twitter/bootstrap/issues/1451#issuecomment-3737384
+ */
+
+
+// refinery-style.less
+// Refinery-specific styles
+// -------------------------------------------------------------
+
+@import "../../js/bootstrap/less/variables.less"; // Modify this for custom colors, font-sizes, etc
+@import "variables.less";
+
+@import "../../js/bootstrap/less/mixins.less";
+
+
+
+p {
+  //font-family: @serifFontFamily;
+  //font-size: @baseFontSize * 1.1;
+}
+
+
+@backgroundImageUrl: "../img/bgnoise.png"; //'../img/debut_light.png';
+@backgroundGradient: rgba( 255, 0, 0, 0.5 );
+@backgroundGradientHighlight: lighter(red, 10%);
+
+body {
+  background-image:url(@backgroundImageUrl);
+  margin-top: @navbarHeight * 2.2;
+}
+
+.page-header {
+  border-bottom: none;
+  padding: 0px;
+  margin: 0px;  
+}
+
+.page-header h1 {
+  font-size: @fontSizeLarge;
+  line-height: @baseLineHeight;
+  padding: 0px;
+  margin: 5px 0px;
+  color: @white; 
+}
+
+.page-header small {
+  font-size: 85%;
+  color: darken( @grayLighter, 5% ); 
+}
+
+      
+@media (max-width: 979px) {
+body {
+    margin-top: 0;
+}   
+}
+
+
+.navbar .navbar-inner {
+  border-bottom-width: 0px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.navbar .navbar-inner {
+}
+
+.navbar .brand {
+  font-family: "Arvo";
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 0.05em;
+  color: @white;  
+} 
+
+.navbar li a {
+  font-weight: 600;
+}
+
+.navbar a {
+  color: @grayLighter;
+}
+
+// new class for fixed header as part of the navigation bar
+@navbarHeaderBackground:          fade( lighten( @navbarBackgroundHighlight, 30% ), 25% );
+@navbarHeaderBorder:              fade( @grayLight, 70% );
+
+.navbar-header {
+  background-color: @navbarHeaderBackground;
+  border-top: 1px dotted @navbarHeaderBorder;
+  border-bottom: 1px solid @navbarHeaderBorder;
+}
+
+
+@media (max-width: @navbarCollapseWidth) {
+  .navbar-fixed-top .navbar-inner,
+  .navbar-fixed-bottom .navbar-inner {
+    padding: 0px;
+  }
+  
+  .navbar .page-header {
+    padding: 0px 5px;
+  }
+}
+
+
+
+.refinery-panel {
+
+  background-color: white;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-bottom: 5px;
+  padding-top: 10px;
+  margin-top: 0px;
+  margin-bottom: 10px;
+  border-top: 5px solid @gray;
+}
+
+.scrollable{overflow-y: scroll; height: 100px; min-height: 200px }    
+
+.refinery-panel {
+  &-header {
+    border-top: none;
+    border-radius: 5px;
+    padding-top: 5px;
+    padding-bottom: 1px;
+    margin-bottom: 5px;
+    background-color: @grayLighter;
+     //#gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+
+  }
+
+  &-content {
+  }
+
+  &-error {
+    background-color: @btnDangerBackground;
+    border-top-color: @btnDangerBackgroundHighlight;    
+  }
+
+  &-header h2 {
+  text-shadow: 0 2px 0 @navbarBackgroundHighlight;
+  }
+
+}
+
+
+
+.refinery-header {
+  display: block;
+  border-bottom: 1px solid @grayLighter;
+  padding-bottom: -10px;
+  margin-bottom: 10px;  
+}
+
+
+.refinery-header h2 {
+  display: inline;
+  line-height: 1;
+}
+
+.refinery-header h3 {
+  display: inline;
+  line-height: 1;
+}
+
+.refinery-header h4 {
+  display: inline;
+}
+
+.refinery-header {
+  &-left {
+    border-bottom: none;
+    display: inline;
+    padding: 0px;
+    margin: 0px;
+    padding-bottom: -10px;
+  }
+
+  &-right {
+    //display: inline;
+    float: right;
+    border-bottom: none;
+    padding: 0px;
+    margin: 0px;
+  }
+}
+
+.refinery-subheader {
+  display: block;
+  border-bottom: 1px dotted @grayLight;
+  padding-bottom: -10px;
+  margin-bottom: 5px;
+  text-transform: uppercase;  
+}
+
+.refinery-subheader h2 {
+  display: inline;
+  font-size: @baseFontSize * 1.15;
+  color: @grayLight;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.refinery-subheader h3 {
+  display: inline;
+  font-size: @baseFontSize * 1;
+  color: @grayLight;
+  font-weight: 700;
+  display: inline;
+  line-height: 1;
+}
+
+.refinery-subheader h4 {
+  display: inline;
+  font-size: @baseFontSize * 0.85;
+  color: @grayLight;
+  font-weight: 700;
+  display: inline;
+  line-height: 1;
+}

@@ -97,22 +97,14 @@ rect.active {
 {% endblock %}
 
 {% block content %}
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">		
 
 				<form id="sampleForm" method="post" class="form-inline">
     			{% csrf_token %}
  
 <div class="row-fluid">
- 	<div class="span2">
- 		
- 				<!-- <form class="form-search form-inline" id="search_form"> -->
- 					<!--
-  					<input type="text" class="input-medium search-query" placeholder="Search">
- 		 			<button type="submit" class="btn" onclick="AddSearchTerm(); return false;">Search</button>
- 		 		-->
-				<!-- </form> -->
- 	</div>	
- 	
- 	<div class="span8">
+ 	<div class="span10">
  	
  			<div class="row-fluid">
 			<div> 				
@@ -191,7 +183,8 @@ rect.active {
  	</div>		 
 </div>
 </form>
-
+</div>
+</div>
 {% endblock %}
 
 {% block script %}
