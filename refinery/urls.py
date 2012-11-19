@@ -12,7 +12,7 @@ from tastypie.api import Api
 from workflow_manager.views import import_workflows
 from django.conf.urls.static import static
 from settings import MEDIA_ROOT, MEDIA_URL, FILE_STORE_DIR
-from registration.forms import RegistrationFormUniqueEmail
+from core.forms import RegistrationFormTermsOfServiceUniqueEmail
 
 # NG: facets for Haystack
 sqs = SearchQuerySet().using( "core" ).models( DataSet ).facet('measurement').facet('technology').highlight()
@@ -54,8 +54,7 @@ urlpatterns = patterns('',
     #url(r"^admin/core/test_data/$", admin.site.admin_view( admin_test_data ) ),    
     url(r'^admin/', include(admin.site.urls)),
     
-    
-    url(r'^accounts/register/$', 'registration.views.register', {'form_class': RegistrationFormUniqueEmail, 'backend': 'registration.backends.default.DefaultBackend'}),
+url(r'^accounts/register/$', 'registration.views.register', {'form_class': RegistrationFormTermsOfServiceUniqueEmail, 'backend': 'registration.backends.default.DefaultBackend'}),
     url(r'^accounts/activate/(?P<activation_key>\w+)/$', 'registration.views.activate', {'success_url': '/login?next=/', 'backend': 'registration.backends.default.DefaultBackend'}),
     (r'^accounts/', include('registration.urls')),
     url(r'^login/$', 'django.contrib.auth.views.login', name="login" ),

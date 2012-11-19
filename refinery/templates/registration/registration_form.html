@@ -13,7 +13,7 @@
 {% block content %}
   
 	<div class="row-fluid">
-		<div class="span4 offset4">
+		<div class="span12">
 			<div class="refinery-panel refinery-panel-content">
   {% if form.errors %}
   <div class="alert alert-error">Please correct the errors below.{{ form.non_field_errors }}</div>
@@ -47,14 +47,14 @@
 			      {% endif %}
 			      {{ form.password2 }}
 			    </p>
+			    <p>
+    			  {% if form.tos.errors %}
+    				<p class="errors">{{form.tos.errors.as_text}}</p>
+    			  {% endif %}
+    			  <label for="tos">{{form.tos}}&nbsp;I have read and agree to the Terms of Service.</label>
+    			</p>
 			    <p class="submit"><input class="btn" type="submit" value="Register"></p>
 			  </form>
-			  
-				<!--
-				<div class="alert alert-info">
-					Please note that by creating an account you agree to our terms of use.
-				</div>
-				-->
 			</div>		
 			
 		</div>

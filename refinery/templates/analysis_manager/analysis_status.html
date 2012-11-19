@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 
 {% block subheader %}
-<h1 class="page-header">Analysis <small>{{ statuses.analysis.name }}</small></h1>
+<div class="page-header">
+	<h1>Analysis&nbsp;<small>{{ analysis.name }}</small></h1>
+</div>
 {% endblock %}
 
 {% block content %}
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">		
 	
 	{% if statuses %}
 	
@@ -50,7 +54,8 @@
 		</div> <!-- row -->
                   
 	{% endif %}
-
+</div>
+</div>
 {% endblock %}
 
 {% block script %}
