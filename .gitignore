@@ -42,11 +42,10 @@ docs/_*
 .project
 .DS_Store
 .pydevproject
-refinery/celeryev.pid
 .settings/*
 *.conflict
+refinery/celeryev.pid
 refinery/solr/*/data
-refinery/solr/conf/*
 refinery/refinery/*
 refinery/middleware.py
 refinery/fabric/*

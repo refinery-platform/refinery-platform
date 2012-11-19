@@ -33,6 +33,7 @@ from fabric.contrib.files import exists, upload_template
 from fabric.decorators import task, with_settings
 from fabric.operations import require
 from fabric.utils import puts
+import core
 
 
 # local settings
@@ -532,35 +533,26 @@ def install_solr():
     run("unzip -uq {bootstrap_dir}/apache-solr-4.0.0.zip -d {deployment_target_dir}/apps"
         .format(**env))
 
+
 @task
 @with_settings(user=env.project_user)
-def build_solr_schema():
-    '''Generate Solr schema
+def build_solr_schema(core):
+    '''Generate Solr schema for a specific core
 
     '''
     #TODO: build schema for a specific core
-    solr_conf_dir = "./solr/conf"
+    core_conf_dir = "./solr/{}/conf".format(core)
     with prefix("workon refinery"):
-        if not exists(solr_conf_dir):
-            run("mkdir {}".format(solr_conf_dir))
-        run("./manage.py build_solr_schema > {}/schema.xml".format(solr_conf_dir))
-
-
-@task
-@with_settings(user=env.project_user)
-def build_solr_index():
-    '''Build Solr indices
-
-    '''
-    #TODO: build index for a specific core
-    with prefix("workon refinery"):
-        run("./manage.py --noinput rebuild_index")
+        if not exists(core_conf_dir):
+            run("mkdir {}".format(core_conf_dir))
+        run("./manage.py build_solr_schema --using={} > {}/schema.xml"
+            .format(core, core_conf_dir))
 
 
 @task
 @with_settings(user=env.project_user)
 def rebuild_solr_index(module):
-    '''Rebuild Solr index for the specified module
+    '''Rebuild Solr index for the specific core
 
     '''
     #TODO: check for idempotence
@@ -637,17 +629,20 @@ def update_galaxy_user_home_dir():
     #TODO: change settings to env.galaxy_user
     with hide('commands'):
         home_dir = run("echo ~{}".format(env.galaxy_user))
+
     local_path = os.path.join(env.local_conf, "bashrc_galaxy_template")
     remote_path = os.path.join(home_dir, ".bashrc.customizations")
-    upload_template(local_path, remote_path)
+    bashrc_context = {'deployment_target_dir': env.deployment_target_dir}
+    upload_template(local_path, remote_path, bashrc_context, backup=False)
+
+    local_path = os.path.join(env.local_conf, "Rprofile_template")
+    remote_path = os.path.join(home_dir, ".Rprofile")
+    upload_template(local_path, remote_path, backup=False)
 
     if not exists("~/R"):
         run("mkdir ~/R")
     if not exists("~/R/library"):
         run("mkdir ~/R/library")
-
-    #TODO: upload .Renviron and .Rprofile
-
 
 @task
 @with_settings(user=env.project_user)
@@ -655,7 +650,7 @@ def install_spp():
     '''Install SPP R library
 
     '''
-    #TODO: change settings to env.galaxy_user
+    #TODO: change settings to env.galaxy_user before using
     run("R -e \"install.packages('caTools')\"")
     run("R -e \"install.packages('{bootstrap_dir}/spp_1.11.tar.gz')\"".format(**env))
 
