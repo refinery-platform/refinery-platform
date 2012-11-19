@@ -67,17 +67,10 @@ function workflowActions() {
 		     type:"POST",
 		     dataType: "json",
 		     //data: {csrfmiddlewaretoken: crsf_token },
-		     success: function(result){
-		     	//console.log("success");
-		     	//console.log(result);
-		     	
+		     success: function(result){		     	
 		     	// emptys all dropdown menus with current inputs
 		     	$(".OGcombobox").empty();
 		     	$('.OGcombobox').append('<option></option>');
-		     	// adds options for the specified workflow
-		     	for (var i = 0; i < result.length; i++) { 
-              		$('.OGcombobox').append('<option value="'+ result[i].fields["name"] + '">' + result[i].fields["name"] + '</option>');
-          		}
 			}
 			});
 	});
