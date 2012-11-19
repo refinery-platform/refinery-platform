@@ -282,10 +282,14 @@ class Connection( object ):
         print "galaxy_connector: create_library called"
         data = {}
         data['name'] = name
-        try:    
-            # OLD GALAXY 
-            #return self.post( "libraries", data )[0]["id"]
-            return self.post( "libraries", data )["id"]
+        try:
+            ret_val = self.post( "libraries", data )
+            # Older galaxy versions return an array, newer galaxy api's return a single dictionary
+            if type(ret_val) == dict:
+                return ret_val["id"]
+            else:
+                return ret_val[0]["id"]
+            
         except urllib2.HTTPError, e:
             print str( e.read( 1024 ) )
             return 'Error. '+ str( e.read( 1024 ) )

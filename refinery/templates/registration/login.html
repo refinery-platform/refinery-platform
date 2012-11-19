@@ -15,6 +15,12 @@
 
 {% block content %}
 
+{% if messages %}
+    {% for message in messages %}
+    <p>{{message}}</p>
+    {% endfor %}
+{% endif %}
+
 {% if form.errors %}
 <p>Your username and password didn't match. Please try again.</p>
 {% endif %}
