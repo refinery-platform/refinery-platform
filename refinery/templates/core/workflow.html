@@ -5,31 +5,81 @@
 {% endblock %}
 
 {% block subheader %}
-Workflow: <i>{{ workflow.name }}</i>
+<div class="page-header">
+	<h1>Workflow&nbsp;<small>{{ workflow.name }}</small></h1>
+</div>
 {% endblock %}
 
 {% block content %}
 {% if workflow %}	
-	<div class="label">Summary</div>
-	<p>{{ workflow.summary }}</p>
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">		
+		
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Summary</h3>				
+			</span>			
+		</div>		
+		<p>{% if workflow.summary %} {{ workflow.summary }} {% else %} <i>None provided.</i>{% endif %}</p>
+	
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Workflow Engine</h3>				
+			</span>			
+		</div>		
+		<div class="refinery-subheader">
+			<h4>Name</h4>
+		</div>		
+		{{ workflow.workflow_engine.name }}
+		
+		<div class="refinery-subheader">
+			<h4>Workflow Id</h4>
+		</div>		
+		<p>{{ workflow.internal_id }} (<a href="/workflow_manager/{{workflow.uuid}}/download">Download</a>)</p>
+		
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Sharing</h3>				
+			</span>			
+		</div>		
 
-	<div class="label">Internal Id</div>
-	<p>{{ workflow.internal_id }} (<a href="/workflow_manager/{{workflow.uuid}}/download">Download</a>)</p>
+		<!--
+		<div class="refinery-subheader">
+			<h4>Owner</h4>
+		</div>
+		-->		
 	
-	<div class="label">Permissions</div>
-	<ul>
-	{% for perm in workflow.get_groups %}
-		<li><a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a> - Read: {{ perm.read }} | Change: {{ perm.change }}</li>
-	{% endfor %}
-	</ul>
-	
-	<div class="label">History</div>	
-	<p>Created: {{ workflow.creation_date }} | Last Modified: {{ workflow.modification_date }}</p>
-	
-	<div class="label">UUID</div>
-	<p class="fixed">{{ workflow.uuid }}</p>	
-{% else %}
-    <p>No valid workflow.</p>
-{% endif %}
+		{% if workflow.get_groups|length > 0 %}
+		<div class="refinery-subheader">
+			<h4>Groups</h4>
+		</div>
+			<p>
+			{% for perm in workflow.get_groups %}
+				{% if perm.group.is_managed %}					
+					<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
+					{% if perm.read %}
+						<i class="icon-eye-open"></i>
+					{% endif %}
+					{% if perm.change %}
+						<i class="icon-pencil"></i>
+					{% endif %}
+				</br>
+				{% endif %}
+			{% endfor %}
+			</p>
+		{% endif %}
+
+		
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>History</h3>				
+			</span>			
+		</div>		
+		<p>Created: {{ workflow.creation_date }} | Last Modified: {{ workflow.modification_date }}</p>
+	{% else %}
+	    <p>No valid workflow.</p>
+	{% endif %}
+	</div>
+</div>
 
 {% endblock %}

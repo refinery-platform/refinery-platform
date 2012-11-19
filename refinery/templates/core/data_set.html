@@ -74,8 +74,8 @@
 
 	{% if data_set.get_groups|length > 0 %}
 	<h4>Groups</h4>
-		{% for perm in data_set.get_groups %}
 		<p>
+		{% for perm in data_set.get_groups %}
 				<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
 				{% if perm.read %}
 					<i class="icon-eye-open"></i>
@@ -83,8 +83,8 @@
 				{% if perm.change %}
 					<i class="icon-pencil"></i>
 				{% endif %}
-		</p>
 		{% endfor %}
+		</p>
 	{% endif %}
 	
 	<div class="refinery-header">
@@ -94,7 +94,6 @@
 	</div>
 	<p>Current version <i>{{ data_set.get_version_details.version }}</i> created <i>{{ data_set.get_version_details.date }}</i>.
 	Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{ data_set.modification_date }}</i>.</p>
-	<!-- Data set created <a href="#" rel="tooltip" title="{{ data_set.creation_date }}">{{ data_set.creation_date|naturaltime }}</a>. Last modified <a href="#" rel="tooltip" title="{{ data_set.modification_date }}">{{ data_set.modification_date|naturaltime }}</a>.</p> -->
 		
 {% else %}
     <p>No valid data set.</p>
