@@ -71,6 +71,11 @@ function workflowActions() {
 		     	// emptys all dropdown menus with current inputs
 		     	$(".OGcombobox").empty();
 		     	$('.OGcombobox').append('<option></option>');
+		     	
+		     	// adds options for the specified workflow
+		     	for (var i = 0; i < result.length; i++) {  	
+		     		$('.OGcombobox').append('<option value="'+ result[i].fields["name"] + '">' + result[i].fields["name"] + '</option>');
+		     		}
 			}
 			});
 	});
