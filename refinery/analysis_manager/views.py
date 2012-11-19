@@ -15,6 +15,7 @@ from datetime import datetime
 from analysis_manager.tasks import run_analysis
 from django.core.urlresolvers import reverse
 
+
 def index(request):
     statuses = AnalysisStatus.objects.all()
     
@@ -28,17 +29,12 @@ def analysis(request, uuid):
     statuses = AnalysisStatus.objects.get(analysis=analysis)
     
     if request.is_ajax():
-        #print "is ajax"
-        #answers.values_list('id', flat=True)
         ret_json = {}
         ret_json['preprocessing'] = statuses.preprocessing_status()
         ret_json['execution'] = statuses.execution_status()
         ret_json['postprocessing'] = statuses.postprocessing_status()
         ret_json['cleanup'] = statuses.cleanup_status()
-        #print "is ajax"
-        #print ret_json
         
-        #json_serializer = serializers.get_serializer("json")()
         return HttpResponse(simplejson.dumps(ret_json), mimetype='application/javascript')
 
     else:
@@ -54,26 +50,14 @@ def analysis_run(request):
     
     # list of selected assays
     selected_uuids = {};
-    selected_fileurls = {};    
     
     # finds all selected assays (assay_uuid, and associated workflow input type for selected samples) 
     for i, val in request.POST.iteritems():
         if (val and val != ""):
             if (i.startswith('assay_')):
-                #temp_uuid = i.lstrip('assay_')
                 temp_uuid = i.replace('assay_', '')
                 selected_uuids[temp_uuid] = val
-                #selected_data.append({"assay_uuid":i.lstrip('assay_'), 'workflow_input_type':val})
-            elif (i.startswith('fileurl_')):
-                #temp_uuid = i.lstrip('fileurl_')
-                temp_uuid = i.replace('fileurl_', '')
                 
-                #if str(temp_uuid) in selected_uuids:
-                #    print "FOUFOUFODNDs"
-                selected_fileurls[temp_uuid] = val
-                #else:
-                #    print "not found"
-    
     #### DEBUG CODE ####
     # Turn input from POST into ingestable data/exp format 
     # retrieving workflow based on input workflow_uuid
@@ -82,19 +66,14 @@ def analysis_run(request):
     
     #print "annot_inputs"
     #print annot_inputs
-    #print "len_inputs"
-    #print len_inputs
     print "selected_uuids"
     print selected_uuids
-    print "selected_fileurls"
-    print selected_fileurls
-    
     
     #------------ CONFIGURE INPUT FILES -------------------------- #   
     ret_list = [];
     ret_item = copy.deepcopy(annot_inputs)
     pair_count = 0
-    pair = 1;
+    pair = 1
     tcount = 0
     
     #for sd in selected_data:
@@ -104,35 +83,30 @@ def analysis_run(request):
             break
         
         for k, v in ret_item.iteritems():
-            #for index, sd in enumerate(selected_data):
             for index, sd in selected_uuids.items():
                 
                 # dealing w/ cases where their are more than input for a galaxy workflow
-                if len_inputs > 1:
-                    if k == sd and ret_item[k] is None:
-                        ret_item = copy.deepcopy(annot_inputs)
-                        ret_item[k] = {};
+                if len_inputs > 1:   
+                    if k == sd and ret_item[k] is None:       
+                        ret_item[k] = {}
                         ret_item[k]["assay_uuid"] = index
                         ret_item[k]["pair_id"] = pair
-                        ret_item[k]["fileurl"] = selected_fileurls[index]
                         pair_count += 1
-                        #selected_uuids.remove(sd)
                         del selected_uuids[index]
+                        
                     if pair_count == 2:
                         ret_list.append(ret_item)
                         ret_item = copy.deepcopy(annot_inputs)
                         pair_count = 0
                         pair += 1
+                        
                 # deals w/ the case where there is a single input for a galaxy workflow
                 elif len_inputs == 1:
                     ret_item = copy.deepcopy(annot_inputs)
                     ret_item[k] = {};
                     ret_item[k]["assay_uuid"] = index
                     ret_item[k]["pair_id"] = pair
-                    ret_item[k]["fileurl"] = selected_fileurls[index]
                     ret_list.append(ret_item)
-                    
-                    #selected_uuids.remove(sd)
                     del selected_uuids[index]
                     pair += 1;
     
@@ -179,7 +153,8 @@ def analysis_run(request):
     for samp in ret_list:
         count += 1
         for k,v in samp.items():
-            temp_input =  WorkflowDataInputMap( workflow_data_input_name=k, data_uuid=samp[k]["assay_uuid"], pair_id=count, fileurl=samp[k]["fileurl"])
+            temp_input = WorkflowDataInputMap( workflow_data_input_name=k, data_uuid=samp[k]["assay_uuid"], pair_id=count)
+            
             temp_input.save() 
             analysis.workflow_data_input_maps.add( temp_input ) 
             analysis.save() 
