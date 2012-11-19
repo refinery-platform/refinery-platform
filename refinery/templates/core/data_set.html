@@ -29,11 +29,23 @@
   	});
 </script>
 
-{% if data_set %}
-	<h3>Summary</h3>	
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">
+
+	{% if data_set %}
+
+	<div class="refinery-header">
+		<span class="refinery-header-left">
+			<h3>Summary</h3>				
+		</span>
+	</div>
 	<p>{% if data_set.summary %} {{ data_set.summary }} {% else %} <i>None provided.</i>{% endif %}</p>
 	
-	<h3>Studies</h3>
+	<div class="refinery-header">
+		<span class="refinery-header-left">
+			<h3>Studies</h3>
+		</span>
+	</div>
 	{% for study in studies %}
 	<p><strong>{{study.identifier}}</strong>: {{study.title}}</p>
 	<ul>
@@ -43,12 +55,21 @@
 	</ul>
 	{% endfor %}
 
-	<h3>Files</h3>
+	<div class="refinery-header">
+		<span class="refinery-header-left">
+			<h3>Files</h3>
+		</span>
+	</div>
 	<p>{{ data_set.file_count }} files using {{ data_set.file_size|filesizeformat }}</p>
 	
-	
-	<h3>Sharing</h3>
-	<h4>Owner</h4>
+	<div class="refinery-header">
+		<span class="refinery-header-left">	
+			<h3>Sharing</h3>
+		</span>
+	</div>
+	<div class="refinery-subheader">
+		<h4>Owner</h4>
+	</div>
 	<p><a href="{% url user data_set.get_owner.get_profile.uuid %}">{% if data_set.get_owner.get_full_name %}{{ data_set.get_owner.get_full_name }}{% else %}{{ data_set.get_owner }}{%endif%}</a></p>
 
 	{% if data_set.get_groups|length > 0 %}
@@ -66,7 +87,11 @@
 		{% endfor %}
 	{% endif %}
 	
-	<h3>History</h3>
+	<div class="refinery-header">
+		<span class="refinery-header-left">
+			<h3>History</h3>
+		</span>
+	</div>
 	<p>Current version <i>{{ data_set.get_version_details.version }}</i> created <i>{{ data_set.get_version_details.date }}</i>.
 	Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{ data_set.modification_date }}</i>.</p>
 	<!-- Data set created <a href="#" rel="tooltip" title="{{ data_set.creation_date }}">{{ data_set.creation_date|naturaltime }}</a>. Last modified <a href="#" rel="tooltip" title="{{ data_set.modification_date }}">{{ data_set.modification_date|naturaltime }}</a>.</p> -->
@@ -74,5 +99,7 @@
 {% else %}
     <p>No valid data set.</p>
 {% endif %}
+	</div>
+</div>
 
 {% endblock %}
