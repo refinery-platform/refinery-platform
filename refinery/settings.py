@@ -339,7 +339,7 @@ REFINERY_SOLR_BASE_URL = "http://127.0.0.1:8983/solr"
 REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = "_"
 
 # list of paths to CSS files used to style Refinery pages (relative to STATIC_URL)
-REFINERY_CSS = [ "js/bootstrap/css/bootstrap.css" ]
+REFINERY_CSS = [ "styles/css/refinery-style-bootstrap.css", "styles/css/refinery-style-bootstrap-responsive.css", "styles/css/refinery-style.css" ]
 
 # set height of navigation bar (e.g. to fit a logo)
 REFINERY_INNER_NAVBAR_HEIGHT = 20
