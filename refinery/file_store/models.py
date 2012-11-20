@@ -31,7 +31,8 @@ logger = logging.getLogger('file_store')
 
 
 def _mkdir(path):
-    '''Create directory given absolute file system path.  Does not create intermediate dirs if they don't exist.
+    '''Create directory given absolute file system path.
+    Does not create intermediate dirs if they don't exist.
 
     :param path: Absolute file system path.
     :type path: str.
@@ -101,32 +102,88 @@ fss = FileSystemStorage(location=FILE_STORE_BASE_DIR)
 #TODO: expand the list of file types. Reference:
 # http://wiki.g2.bx.psu.edu/Admin/Datatypes/Adding%20Datatypes
 # http://en.wikipedia.org/wiki/List_of_file_formats#Biology
+
+# list of file types in alphabetical order for convenience
+BAM = 'bam'
+BED = 'bed'
+BIGBED = 'bigbed'
+BIGWIG = 'bigwig'
+CEL = 'cel'
+CSV = 'csv'
+ELAND = 'eland'
+GFF = 'gff'
+GZ = 'gz'
+IDF = 'idf'
+FASTA = 'fasta'
+FASTQ = 'fastq'
+FASTQCSANGER = 'fastqcsanger'
+FASTQILLUMINA = 'fastqillumina'
+FASTQSANGER = 'fastqsanger'
+FASTQSOLEXA = 'fastqsolexa'
+SAM = 'sam'
+TDF = 'tdf'
+TXT = 'txt'
+VCF = 'vcf'
+WIG = 'wig'
+XML = 'xml'
+ZIP = 'zip'
+
+# file types with descriptions used by FileStoreItem.filetype choice field
 FILE_TYPES = (
-    # (extension, description) in alphabetical order for convenience
-    ('bam', 'Binary compressed SAM'),
-    ('bed', 'BED file'),
-    ('bigbed', 'Big BED'),
-    ('bigwig', 'Big WIG'),
-    ('cel', 'Affymetrix Probe Results file'),
-    ('csv', 'Comma Separated Values'),
-    ('eland', 'Eland file'),
-    ('gff', 'GFF file'),
-    ('gz', 'Gzip compressed archive'),
-    ('idf', 'IDF file'),
-    ('fasta', 'FASTA file'),
-    ('fastq', 'FASTQ file'),
-    ('fastqcsanger', 'FASTQC Sanger'),
-    ('fastqillumina', 'FASTQ Illumina'),
-    ('fastqsanger', 'FASTQ Sanger'),
-    ('fastqsolexa', 'FASTQ Solexa'),
-    ('sam', 'Sequence Alignment/Map'),
-    ('tdf', 'TDF file'),
-    ('txt', 'Text file'),
-    ('vcf', 'Variant Call Format'),
-    ('wig', 'Wiggle Track Format'),
-    ('xml', 'XML file'),
-    ('zip', 'Zip compressed archive'),
+    # (type, description) in alphabetical order for convenience
+    (BAM, 'Binary compressed SAM'),
+    (BED, 'BED file'),
+    (BIGBED, 'Big BED'),
+    (BIGWIG, 'Big WIG'),
+    (CEL, 'Affymetrix Probe Results file'),
+    (CSV, 'Comma Separated Values'),
+    (ELAND, 'Eland file'),
+    (GFF, 'GFF file'),
+    (GZ, 'Gzip compressed archive'),
+    (IDF, 'IDF file'),
+    (FASTA, 'FASTA file'),
+    (FASTQ, 'FASTQ file'),
+    (FASTQCSANGER, 'FASTQC Sanger'),
+    (FASTQILLUMINA, 'FASTQ Illumina'),
+    (FASTQSANGER, 'FASTQ Sanger'),
+    (FASTQSOLEXA, 'FASTQ Solexa'),
+    (SAM, 'Sequence Alignment/Map'),
+    (TDF, 'TDF file'),
+    (TXT, 'Text file'),
+    (VCF, 'Variant Call Format'),
+    (WIG, 'Wiggle Track Format'),
+    (XML, 'XML file'),
+    (ZIP, 'Zip compressed archive'),
 )
+
+# mapping of file extensions to file types
+# in alphabetical order by type with extensions of the same type
+# located on the same line for convenience
+FILE_EXTENSIONS = {
+    'bam': BAM,
+    'bed': BED,
+    'bb': BIGBED, 'bigbed': BIGBED,
+    'bigwig': BIGWIG,
+    'cel': CEL,
+    'csv': CSV,
+    'eland': ELAND,
+    'gff': GFF,
+    'gz': GZ,
+    'idf': IDF,
+    'fasta': FASTA,
+    'fastq': FASTQ,
+    'fastqcsanger': FASTQCSANGER,
+    'fastqillumina': FASTQILLUMINA,
+    'fastqsanger': FASTQSANGER,
+    'fastqsolexa': FASTQSOLEXA,
+    'sam': SAM,
+    'tdf': TDF,
+    'txt': TXT,
+    'vcf': VCF,
+    'wig': WIG,
+    'xml': XML,
+    'zip': ZIP,
+}
 
 
 class _FileStoreItemManager(models.Manager):
@@ -265,7 +322,8 @@ class FileStoreItem(models.Model):
         return self.filetype
 
     def set_filetype(self, filetype=''):
-        '''Assign the type of the datafile.  Only existing types allowed as arguments.
+        '''Assign the type of the datafile.
+        Only existing types allowed as arguments.
 
         :param filetype: requested file type.
         :returns: True if success, False if failure.
@@ -275,15 +333,17 @@ class FileStoreItem(models.Model):
         if not filetype:
             filetype = self.get_file_extension().lstrip('.')
 
-        # make sure the file type is valid before assigning
-        if filetype in get_available_filetypes(): 
-            self.filetype = filetype
-            self.save()
-            logger.info("File type is set to '%s'", filetype)
-            return True
-        else:
+        filetype = filetype.lower()
+        # make sure the file type is valid before assigning it to model field
+        try:
+            self.filetype = FILE_EXTENSIONS[filetype]
+        except KeyError:
             logger.error("'%s' is an invalid file type", filetype)
             return False
+
+        self.save()
+        logger.info("File type is set to '%s'", filetype)
+        return True
 
     def is_symlinked(self):
         '''Check if the data file is a symlink.
@@ -625,15 +685,6 @@ def _rename_file_on_disk(current_path, new_path):
 
     logger.debug("Renamed %s to %s", current_path, new_path)
     return True
-
-
-def get_available_filetypes():
-    '''Return a list of file type names that are allowed as values for FileStoreItem.filetype field.
-    
-    :returns: list -- Available file type names.
-    
-    '''
-    return dict(FILE_TYPES).keys()
 
 
 def get_extension_from_path(path):
