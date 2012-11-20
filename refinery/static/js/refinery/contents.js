@@ -265,7 +265,7 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 		for ( var attribute in doc ) {
 			if ( doc.hasOwnProperty( attribute ) ) {
 				// facets
-				if ( ( ( attribute.indexOf( "_Characteristics_" ) != -1 ) && ( attribute.indexOf( "sample_name" ) == -1 ) )
+				if ( ( ( attribute.indexOf( "_Characteristics_" ) != -1 ) && ( attribute.indexOf( "sample_name" ) == -1 ) ) ||
 					 ( attribute.indexOf( "_Factor_" ) != -1 ) ||
 					 ( attribute.indexOf( "REFINERY_" ) != -1 ) ||
 					 ( attribute.indexOf( "_Material_Type_" ) != -1 ) ) {
