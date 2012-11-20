@@ -5,8 +5,9 @@ Created on Apr 15, 2012
 '''
 
 from django.forms import ModelForm, Textarea
+from django.contrib.auth.models import User
 from registration.forms import RegistrationFormUniqueEmail, RegistrationFormTermsOfService
-from core.models import Project
+from core.models import Project, UserProfile
 
 class ProjectForm(ModelForm):
     class Meta:
@@ -17,4 +18,14 @@ class ProjectForm(ModelForm):
         }   
         
 class RegistrationFormTermsOfServiceUniqueEmail(RegistrationFormTermsOfService, RegistrationFormUniqueEmail):
-    pass 
+    pass
+
+class UserForm(ModelForm):
+    class Meta:
+        model = User
+        fields = ["email", "first_name", "last_name"]
+
+class UserProfileForm(ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ["affiliation", "is_public"]

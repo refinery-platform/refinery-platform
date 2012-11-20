@@ -1,57 +1,61 @@
 {% extends "base.html" %}
 
+{% load url from future %}
 
 {% block title %}
-{{ block.super }} - User {{ profile_user.username }}
+{{ block.super }} - Edit
 {% endblock %}
 
 {% block subheader %}
 <div class="page-header">
-<h1>User&nbsp;<small>{{ profile_user.username }}</small></h1>	
+	<h1>Edit Your User Information</h1>	
 </div>
 {% endblock %}
 
-
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable">
-	<div class="row-fluid">		
-	{% if user %}
+	<div class="row-fluid">
+		<form method="post" action="" class="wide" id="user-edit-form">
+		{% csrf_token %}
 		<div class="refinery-header">
 			<span class="refinery-header-left">
 				<h3>Profile for {{profile_user.username}}</h3>				
-			</span>			
+			</span>
 			<span class="refinery-header-right">
-				<h3><a href="{% url user_edit profile_user.get_profile.uuid %}"><i class="icon-pencil"></i></a></h3>				
-			</span>			
+				<!-- <input type="submit"> -->
+				<h3><a href="#" id="submit-link"><i class="icon-ok"></i></a></h3>
+				<h3><a href="{% url 'user' profile_user.get_profile.uuid %}"><i class="icon-remove"></i></a></h3>
+				
+							
+			</span>		
 		</div>		
-		
+		{% if form.errors %}
+  		<div class="alert alert-error">Please correct the errors below.{{ form.non_field_errors }}</div>
+  		{% endif %}
 		<div class="refinery-subheader">
 			<h4>First Name</h4>
 		</div>		
-		<p>{{ profile_user.first_name }}</p>
+		<p>{{ uform.first_name }}</p>
 	
 		<div class="refinery-subheader">
 			<h4>Last Name</h4>
 		</div>		
-		<p>{{ profile_user.last_name }}</p>
+		<p>{{ uform.last_name }}</p>
 		
 		<div class="refinery-subheader">
 			<h4>Email</h4>
 		</div>		
-		<p>{{ profile_user.email }}</p>
+		<p>{{ uform.email }}</p>
 		
 		<div class="refinery-subheader">
 			<h4>Affiliation</h4>
 		</div>		
-		<p>{{ profile_user.get_profile.affiliation }}</p>
+		<p>{{ pform.affiliation }}</p>
+		
 		<div class="refinery-subheader">
 			<h4>Profile Visibility</h4>
 		</div>		
-		{% if profile_user.get_profile.is_public %}
-			<p><i class="icon-eye-open"></i>&nbsp;Profile is visible to the public.</p>
-		{% else %}
-			<p><i class="icon-eye-close"></i>&nbsp;Profile is not visible to the public.</p>
-		{% endif %}
+		<p>{{pform.is_public}}&nbsp;Make my profile visible to the public.</p>
 		
 		<div class="refinery-header">
 			<span class="refinery-header-left">
@@ -60,7 +64,7 @@
 		</div>		
 		    <p>   
 			{% for group in profile_user.groups.all %}
-		        <a href="{% url group group.extendedgroup.uuid %}">{{ group.name }}</a></br>
+		        <a href="{% url 'group' group.extendedgroup.uuid %}">{{ group.name }}</a></br>
 		    {% endfor %}
 		    </p>
 
@@ -70,13 +74,13 @@
 			</span>			
 		</div>		
 		<p>Joined on {{ profile_user.date_joined }} Last login on {{ profile_user.last_login }}</p>
-			
-	{% else %}
-	    <p>No valid user.</p>
-	{% endif %}	
-			
-	</div>	
-</div>
-
+		</form>		
+	</div>
+</div>  
 {% endblock %}
 
+{% block script %}
+	<script>
+		$( "#submit-link" ).click( function() { $( "#user-edit-form" ).submit();});					
+	</script>
+{% endblock %}
