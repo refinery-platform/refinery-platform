@@ -159,7 +159,7 @@ body {
   padding-bottom: 0px;
   padding-left: 0px;
   border: none;
-  margin-bottom: -5px;
+  margin-bottom: 0px;
 }
 .refinery-panel-tabs .nav-tabs li {
   background-color: #eeeeee;
@@ -172,6 +172,7 @@ body {
   z-index: 0;
   position: relative;
   border-bottom: 5px solid #555555;
+  margin-bottom: -5px;
   -webkit-box-shadow: 0 -2px 2px rgba(0, 0, 0, 0.3);
   -moz-box-shadow: 0 -2px 2px rgba(0, 0, 0, 0.3);
   box-shadow: 0 -2px 2px rgba(0, 0, 0, 0.3);
@@ -182,6 +183,8 @@ body {
   margin-right: 0px;
   padding-top: 2px;
   padding-bottom: 4px;
+  margin-left: 10px;
+  margin-right: 10px;
   font-size: 16.099999999999998px;
 }
 .refinery-panel-tabs .nav-tabs li.active {
