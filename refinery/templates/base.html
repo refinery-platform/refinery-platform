@@ -71,7 +71,14 @@
 
 			<p class="navbar-text pull-right">
 		{% if user.is_authenticated %}       
-				<i class="icon-user icon-white"></i> <a href="{% url user user.get_profile.uuid %}">{{ user.username }}</a>&nbsp;&nbsp; 				
+				<i class="icon-user icon-white"></i>
+				<a href="{% url user user.get_profile.uuid %}">
+				{% if user.first_name != "" or user.last_name != "" %}
+					{{ user.first_name }} {{ user.last_name }}
+				{% else %}
+					{{ user.username }}				
+				{% endif %}
+				</a>&nbsp;&nbsp; 				
     			<a href="{% url django.contrib.auth.views.logout %}"><i class="icon-signout"></i></a>
     	{% else %}
 			<a href="{% url home %}accounts/register">Register</a>&nbsp;&nbsp;

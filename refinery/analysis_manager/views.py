@@ -1,19 +1,25 @@
 # Create your views here.
 
 from analysis_manager.models import AnalysisStatus
-from core.models import Analysis, Workflow, WorkflowEngine, WorkflowDataInputMap
-from django.template import RequestContext
-from django.shortcuts import render_to_response, get_object_or_404
-from django.http import HttpResponse, HttpResponseForbidden, Http404, HttpResponseRedirect
-from django.utils import simplejson
+from analysis_manager.tasks import run_analysis
+from core.models import Analysis, Workflow, WorkflowEngine, WorkflowDataInputMap, \
+    Project, DataSet, InvestigationLink
+from data_set_manager.models import Study
+from datetime import datetime
+from django.contrib.auth.models import User, Group
 from django.core import serializers
+from django.core.urlresolvers import reverse
+from django.http import HttpResponse, HttpResponseForbidden, Http404, \
+    HttpResponseRedirect
+from django.shortcuts import render_to_response, get_object_or_404
+from django.template import RequestContext
+from django.utils import simplejson
 from workflow_manager.tasks import get_workflow_inputs, get_workflows
 import copy
-from django.contrib.auth.models import User, Group
-from core.models import Project, DataSet
-from datetime import datetime
-from analysis_manager.tasks import run_analysis
-from django.core.urlresolvers import reverse
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def index(request):
@@ -47,6 +53,10 @@ def analysis_run(request):
 
     # gets workflow_uuid
     workflow_uuid = request.POST.getlist('workflow_choice')[0]
+    
+    # get study uuid
+    study_uuid = request.POST.getlist('study_uuid')[0]
+    
     
     # list of selected assays
     selected_uuids = {};
@@ -116,28 +126,21 @@ def analysis_run(request):
     
     ### ----------------------------------------------------------------#
     ### REFINERY MODEL UPDATES ###
-    users = User.objects.all()
-    projects = Project.objects.all()
-    data_sets = DataSet.objects.all()
     
-    # gets user from url request
-    #cur_user = request.user
-    #cur_user.get_profile().catch_all_project
-    #project = 
-    #project = Project(name="Test Project: " + str( datetime.now() )) 
-    #project.save()
+    # TODO: catch if study or data set don't exist
+    study = Study.objects.get( uuid=study_uuid );
+    data_set = InvestigationLink.objects.filter( investigation__uuid=study.investigation.uuid ).order_by( "version" ).reverse()[0].data_set;
     
-    data_set = DataSet(name="Project: " + str( datetime.now() )) 
-    data_set.save()
+    logger.info( "Associating analysis with data set %s (%s)" % ( data_set, data_set.uuid ) )
     
     ######### ANALYSIS MODEL ########
     # How to create a simple analysis object
-    temp_name = "Unnamed " + str( datetime.now())
+    temp_name = "Unnamed " + str( datetime.now() )
     summary_name = "None provided."
     
-    #analysis = Analysis( summary=summary_name, name=temp_name, project=request.user.get_profile().catch_all_project, data_set=data_set, workflow=curr_workflow )
     analysis = Analysis( summary=summary_name, name=temp_name, project=request.user.get_profile().catch_all_project, data_set=data_set, workflow=curr_workflow, time_start=datetime.now() )
     analysis.save()   
+
     #setting the owner
     analysis.set_owner(request.user)
     

@@ -74,8 +74,8 @@
 
 	{% if data_set.get_groups|length > 0 %}
 	<h4>Groups</h4>
-		{% for perm in data_set.get_groups %}
 		<p>
+		{% for perm in data_set.get_groups %}
 				<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
 				{% if perm.read %}
 					<i class="icon-eye-open"></i>
@@ -83,9 +83,31 @@
 				{% if perm.change %}
 					<i class="icon-pencil"></i>
 				{% endif %}
-		</p>
 		{% endfor %}
+		</p>
 	{% endif %}
+
+	<div class="refinery-header">
+		<span class="refinery-header-left">
+			<h3>Analyses</h3>
+		</span>
+	</div>
+	<p>
+	{% if data_set.analysis_set.all|length > 0 %}	
+		{% for analysis in data_set.analysis_set.all %}
+				<a href="{% url analysis analysis.uuid %}">{{ analysis.name }}</a>
+				{% if analysis.project.is_catch_all %}
+					(unassigned)
+				{% else %}
+					(Project <a href="{% url project analysis.project.uuid %}">{{ analysis.project.name }}</a>)
+				{% endif %}  
+				<br/>
+		{% endfor %}
+	{% else %}
+		<i>None.</i>
+	{% endif %}
+	</p>
+	
 	
 	<div class="refinery-header">
 		<span class="refinery-header-left">
@@ -94,7 +116,6 @@
 	</div>
 	<p>Current version <i>{{ data_set.get_version_details.version }}</i> created <i>{{ data_set.get_version_details.date }}</i>.
 	Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{ data_set.modification_date }}</i>.</p>
-	<!-- Data set created <a href="#" rel="tooltip" title="{{ data_set.creation_date }}">{{ data_set.creation_date|naturaltime }}</a>. Last modified <a href="#" rel="tooltip" title="{{ data_set.modification_date }}">{{ data_set.modification_date|naturaltime }}</a>.</p> -->
 		
 {% else %}
     <p>No valid data set.</p>

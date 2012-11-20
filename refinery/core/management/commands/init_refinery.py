@@ -46,5 +46,5 @@ class Command(BaseCommand):
         elif ExtendedGroup.objects.filter( name__exact=settings.REFINERY_PUBLIC_GROUP_ID ).count() > 0:
             print("A Refinery group with id '%s' already exists." % settings.REFINERY_PUBLIC_GROUP_ID)
         else:
-            ExtendedGroup.objects.create( id=settings.REFINERY_PUBLIC_GROUP_ID, name=settings.REFINERY_PUBLIC_GROUP_NAME )
+            ExtendedGroup.objects.create( id=settings.REFINERY_PUBLIC_GROUP_ID, name=settings.REFINERY_PUBLIC_GROUP_NAME, is_public=True )
             print( "Successfully created group '%s'." % settings.REFINERY_PUBLIC_GROUP_NAME ) 

@@ -416,7 +416,6 @@ def get_analysis_config(analysis):
             ret_item[wd.workflow_data_input_name] = {}
             ret_item[wd.workflow_data_input_name]['pair_id'] = wd.pair_id
             ret_item[wd.workflow_data_input_name]['assay_uuid'] = wd.data_uuid
-            ret_item[wd.workflow_data_input_name]['filename'] = wd.fileurl
             temp_count += 1
        
         if temp_count == temp_len:
@@ -510,7 +509,7 @@ def download_history_files(analysis) :
                 #print download_url
                 
                 # getting file_store_uuid
-                filestore_uuid = create(download_url, file_type)
+                filestore_uuid = create(source=download_url, filetype=file_type, permanent=True)
                 
                 # adding history files to django model 
                 temp_file = AnalysisResult(analysis_uuid=analysis.uuid, file_store_uuid=filestore_uuid, file_name=result_name, file_type=file_type)

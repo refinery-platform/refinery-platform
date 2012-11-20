@@ -102,6 +102,9 @@ rect.active {
 
 				<form id="sampleForm" method="post" class="form-inline">
     			{% csrf_token %}
+    			
+    			<!-- pass study information into the receiving view when posting -->
+    			<input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
  
 <div class="row-fluid">
  	<div class="span10">
