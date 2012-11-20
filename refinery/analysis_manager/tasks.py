@@ -509,7 +509,7 @@ def download_history_files(analysis) :
                 #print download_url
                 
                 # getting file_store_uuid
-                filestore_uuid = create(download_url, file_type)
+                filestore_uuid = create(source=download_url, filetype=file_type, permanent=True)
                 
                 # adding history files to django model 
                 temp_file = AnalysisResult(analysis_uuid=analysis.uuid, file_store_uuid=filestore_uuid, file_name=result_name, file_type=file_type)
