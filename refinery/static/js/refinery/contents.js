@@ -12,8 +12,8 @@ var solrSettings = "wt=json&json.wrf=?&facet=true";
 
 var query = { total_items: 0, selected_items: 0, items_per_page: 10, page: 0 };
 
-var currentStudyUuid = urlComponents[urlComponents.length-2];
-var currentAssayUuid = urlComponents[urlComponents.length-3]; 
+var currentStudyUuid = externalStudyUuid; //urlComponents[urlComponents.length-2];
+var currentAssayUuid = externalAssayUuid; //urlComponents[urlComponents.length-3]; 
 var currentNodeType = "\"Raw Data File\"";
 
 var showAnnotation = false;

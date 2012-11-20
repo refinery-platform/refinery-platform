@@ -236,8 +236,39 @@ def data_set(request,uuid):
     #get studies
     investigation = data_set.get_investigation()
     studies = investigation.study_set.all()
+    workflows = Workflow.objects.all()
     
-    return render_to_response('core/data_set.html', { 'data_set': data_set, "permissions": permissions, "studies": studies }, context_instance=RequestContext( request ) )
+    study_uuid = studies[0].uuid
+    assay_uuid = studies[0].assay_set.all()[0].uuid
+    
+    # TODO: catch errors
+    isatab_archive = None
+    pre_isatab_archive = None
+    
+    try:
+        if investigation.isarchive_file is not None:
+            isatab_archive = FileStoreItem.objects.get( uuid=investigation.isarchive_file )
+    except:
+        pass
+
+    try:
+        if investigation.pre_isarchive_file is not None:
+            pre_isatab_archive = FileStoreItem.objects.get( uuid=investigation.pre_isarchive_file )
+    except:
+        pass
+    
+    return render_to_response('core/data_set.html', 
+                              {
+                                'data_set': data_set, 
+                                "permissions": permissions,
+                                "studies": studies,
+                                "study_uuid": study_uuid,
+                                "assay_uuid": assay_uuid,
+                                "workflows": workflows,
+                                "isatab_archive": isatab_archive,
+                                "pre_isatab_archive": pre_isatab_archive,                             
+                              },
+                              context_instance=RequestContext( request ) )
 
 
 def samples(request, ds_uuid, study_uuid, assay_uuid):
