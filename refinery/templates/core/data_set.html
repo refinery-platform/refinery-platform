@@ -86,6 +86,24 @@
 		{% endfor %}
 		</p>
 	{% endif %}
+
+	<div class="refinery-header">
+		<span class="refinery-header-left">
+			<h3>Analyses</h3>
+		</span>
+	</div>
+	<p>
+	{% for analysis in data_set.analysis_set.all %}
+			<a href="{% url analysis analysis.uuid %}">{{ analysis.name }}</a>
+			{% if analysis.project.is_catch_all %}
+				(unassigned)
+			{% else %}
+				(in <a href="{% url project analysis.project.uuid %}">{{ analysis.project.name }}</a>)
+			{% endif %}  
+			<br/>
+	{% endfor %}
+	</p>
+	
 	
 	<div class="refinery-header">
 		<span class="refinery-header-left">
