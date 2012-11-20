@@ -272,21 +272,21 @@
 
 // Form states and alerts
 // -------------------------
-@warningText:             #c09853;
-@warningBackground:       #fcf8e3;
-@warningBorder:           darken(spin(@warningBackground, -10), 3%);
+@warningText:             @yellow;
+@warningBackground:       fade( @yellow, 5% );
+@warningBorder:           @yellow;
 
-@errorText:               rgba( 253, 59, 28, 1 );
-@errorBackground:         rgba( 253, 59, 28, 0.025 );
-@errorBorder:             rgba( 253, 59, 28, 1 );
+@errorText:               @red;
+@errorBackground:         fade( @red, 5% );
+@errorBorder:             @red;
 
-@successText:             #468847;
-@successBackground:       #dff0d8;
-@successBorder:           darken(spin(@successBackground, -10), 5%);
+@successText:             @green;
+@successBackground:       fade( @green, 5% );
+@successBorder:           @green;
 
-@infoText:                rgba( 22, 128, 157, 1 );
-@infoBackground:          rgba( 22, 128, 157, 0.025 );
-@infoBorder:              rgba( 22, 128, 157, 1 );
+@infoText:                @blue;
+@infoBackground:          fade( @blue, 5% );
+@infoBorder:              @blue;
 
 .alert {
   border-width: 2px;
