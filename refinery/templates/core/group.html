@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %} 
 
 {% block title %}
 {{ block.super }} - Group {{ group.name }}
@@ -12,17 +13,25 @@
 
 
 {% block content %}
-<div class="label">Name</div>    
-<p>{{ group.name }}</p>
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">		
+		
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Name</h3>				
+			</span>			
+		</div>		
+		<p>{{ group.name }}</p>
 
-<div class="label">Members</div>    
-<ul>
-{% for member in group.user_set.all %}
-<li><a href="{% url user member.get_profile.uuid %}">{{ member.get_full_name }}</a></li>
-{% endfor %}
-</ul>
-
-<div class="label">UUID</div>    
-<p>{{ group.uuid }}</p>
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Members</h3>				
+			</span>			
+		</div>		
+		<p>
+		{% for member in group.user_set.all %}
+			<a href="{% url user member.get_profile.uuid %}">{{ member.get_full_name }}</a>&nbsp;(Last login: {{ member.last_login|naturaltime }})</br>
+		{% endfor %}
+		</p>
 
 {% endblock %}

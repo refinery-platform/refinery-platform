@@ -1,18 +1,26 @@
 {% extends "base.html" %}
 
 {% block title %}
-{{ block.super }} - New Project
+{{ block.super }} - Create Project
 {% endblock %}
 
 {% block subheader %}
- New Project
+<div class="page-header">
+	<h1>Create Project</h1>	
+</div>
 {% endblock %}
 
 {% block content %}
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">		
+
 	<form action="/projects/new/" method="post">{% csrf_token %}
 		<table>		
-			{{ form.as_table }}
+			{{ form.as_p }}
 		</table>
-		<input type="submit" value="Save" />
-	</form>	
+		<input class="btn" type="submit" value="Save" />
+	</form>
+
+	</div>
+</div>	
 {% endblock %}
