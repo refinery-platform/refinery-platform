@@ -35,6 +35,7 @@ class UserProfile ( models.Model ):
     user = models.OneToOneField( User )
     affiliation = models.CharField( max_length=100, blank=True )
     catch_all_project = models.ForeignKey( 'Project', blank=True, null=True )
+    is_public = models.BooleanField( default=False, blank=False, null=False )
 
     def __unicode__(self):
         return self.user.first_name + " " + self.user.last_name + " (" + self.affiliation + "): " + self.user.email
@@ -493,6 +494,7 @@ class ExtendedGroup ( Group ):
     manager_group = models.ForeignKey( "self", related_name="managed_group", blank=True, null=True )
     uuid = UUIDField(unique=True, auto=True)
     objects = ExtendedGroupManager()
+    is_public = models.BooleanField( default=False, blank=False, null=False )
     
     def delete(self):                
         super(ExtendedGroup, self).delete()
