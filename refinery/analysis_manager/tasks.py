@@ -416,7 +416,6 @@ def get_analysis_config(analysis):
             ret_item[wd.workflow_data_input_name] = {}
             ret_item[wd.workflow_data_input_name]['pair_id'] = wd.pair_id
             ret_item[wd.workflow_data_input_name]['assay_uuid'] = wd.data_uuid
-            ret_item[wd.workflow_data_input_name]['filename'] = wd.fileurl
             temp_count += 1
        
         if temp_count == temp_len:
