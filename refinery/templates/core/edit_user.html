@@ -29,8 +29,8 @@
 							
 			</span>		
 		</div>		
-		{% if form.errors %}
-  		<div class="alert alert-error">Please correct the errors below.{{ form.non_field_errors }}</div>
+		{% if uform.errors %}
+  		<div class="alert alert-error">Please correct the errors below.{{ uform.non_field_errors }}</div>
   		{% endif %}
 		<div class="refinery-subheader">
 			<h4>First Name</h4>
@@ -44,7 +44,10 @@
 		
 		<div class="refinery-subheader">
 			<h4>Email</h4>
-		</div>		
+		</div>
+		{% if uform.email.errors %}
+			<p class="errors">{{ uform.email.errors.as_text }}</p>
+		{% endif %}	
 		<p>{{ uform.email }}</p>
 		
 		<div class="refinery-subheader">
