@@ -156,8 +156,8 @@ def create_deployment_target_dir():
 
 @task
 @with_settings(user=env.project_user)
-def init_project_user_home_dir():
-    '''Create .bashrc and .bash_profile using templates and upload to $HOME of project_user
+def update_project_user_home_dir():
+    '''Upload .bashrc and .bash_profile to $HOME of project_user
 
     '''
     bash_profile_path = os.path.join(env.local_conf, "bash_profile_template")
