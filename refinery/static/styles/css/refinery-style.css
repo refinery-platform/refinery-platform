@@ -103,13 +103,20 @@ body {
     padding: 0px 5px;
   }
 }
+.refinery-panel-shadow {
+  -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.refinery-tab-shadow {
+  -webkit-box-shadow: 0 -2px 2px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0 -2px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 -2px 2px rgba(0, 0, 0, 0.3);
+}
 .refinery-panel {
   background-color: white;
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
-  -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   padding-left: 15px;
   padding-right: 15px;
   padding-bottom: 5px;
@@ -117,6 +124,9 @@ body {
   margin-top: 0px;
   margin-bottom: 10px;
   border-top: 5px solid #555555;
+  -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 .scrollable {
   overflow-y: scroll;
@@ -137,6 +147,61 @@ body {
 }
 .refinery-panel-header h2 {
   text-shadow: 0 2px 0 #555555;
+}
+.refinery-panel-tabs {
+  background-color: none;
+  margin: 0px;
+  padding-bottom: 0px;
+  padding-left: 0px;
+}
+.refinery-panel-tabs ul {
+  background-color: none;
+  padding-bottom: 0px;
+  padding-left: 0px;
+  border: none;
+  margin-bottom: -5px;
+}
+.refinery-panel-tabs .nav-tabs li {
+  background-color: #eeeeee;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-top: 5px solid #eeeeee;
+  padding-bottom: 0px;
+  padding-left: 0px;
+  margin: 0px;
+  z-index: 0;
+  position: relative;
+  border-bottom: 5px solid #555555;
+  -webkit-box-shadow: 0 -2px 2px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0 -2px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 -2px 2px rgba(0, 0, 0, 0.3);
+}
+.refinery-panel-tabs .nav-tabs a {
+  background-color: transparent;
+  border: none;
+  margin-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 4px;
+  font-size: 16.099999999999998px;
+}
+.refinery-panel-tabs .nav-tabs li.active {
+  background-color: #ffffff;
+  border-top: 5px solid #555555;
+  border-bottom: 5px solid #ffffff;
+  z-index: 1;
+  position: relative;
+}
+.refinery-panel-tabs .nav-tabs li.active a:hover {
+  border-radius: 0px;
+}
+.refinery-panel-tabs .nav-tabs li a:hover {
+  border-radius: 0px;
+}
+.refinery-panel-tabs .nav-tabs li.active a {
+  background-color: transparent;
+  border: none;
+  padding-top: 4px;
+  padding-bottom: 2px;
 }
 .refinery-header {
   display: block;

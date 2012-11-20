@@ -99,13 +99,10 @@ rect.active {
 {% endblock %}
 
 {% block content %}
-
-<div class="refinery-panel refinery-panel-content scrollable">
-
-	{% if data_set %}
-	
 	<!-- tab headers -->
 	
+<div class="refinery-panel-tabs">
+
 	<div class="row-fluid">      
 	    <ul class="nav nav-tabs" id="tabs">
   			<li class="active"><a href="#content" data-toggle="tab">Samples</a></li>
@@ -114,7 +111,11 @@ rect.active {
   			<li><a href="#sharing" data-toggle="tab">Sharing</a></li>
   	    </ul>
   	</div>
+  	
+</div>
+<div class="refinery-panel refinery-panel-content scrollable">
 
+	{% if data_set %}	
 	<!-- tabs -->
 
 	<div class="tab-content">
