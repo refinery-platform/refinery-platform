@@ -55,10 +55,12 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     
     url(r'^accounts/register/$', 'registration.views.register', {'form_class': RegistrationFormTermsOfServiceUniqueEmail, 'backend': 'registration.backends.default.DefaultBackend'}),
-    url(r'^accounts/activate/(?P<activation_key>\w+)/$', 'registration.views.activate', {'success_url': '/login?next=/', 'backend': 'registration.backends.default.DefaultBackend'}),
+    url(r'^accounts/activate/(?P<activation_key>\w+)/$', 'registration.views.activate', {'success_url': '/login?next=/accounts/profile/edit', 'backend': 'registration.backends.default.DefaultBackend'}),
     (r'^accounts/', include('registration.urls')),
     url(r'^login/$', 'django.contrib.auth.views.login', name="login" ),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login' ),
+    url(r'^accounts/profile/$', 'core.views.user_profile', name='user_profile'),
+    url(r'^accounts/profile/edit$', 'core.views.user_profile_edit', name='user_profile_edit'),
     url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page":"/" } ),
     
     # NG: tastypie API urls

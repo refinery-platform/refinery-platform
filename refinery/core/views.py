@@ -84,6 +84,33 @@ def user(request, query):
 
 
 @login_required()
+def user_profile(request):
+    return user(request, request.user.get_profile().uuid)
+
+@login_required()
+def user_edit(request, uuid):
+    profile_object = UserProfile.objects.get(uuid=uuid)
+    user_object = profile_object.user
+    if request.method == "POST":
+        uform = UserForm(data=request.POST, instance=user_object)
+        pform = UserProfileForm(data=request.POST, instance=profile_object)
+        if uform.is_valid() and pform.is_valid():
+            user = uform.save()
+            profile = pform.save(commit = False)
+            profile.user = user
+            profile.save()
+            return HttpResponseRedirect(reverse('core.views.user', args=(uuid,)))
+    else:
+        uform = UserForm(instance=user_object)
+        pform = UserProfileForm(instance=profile_object)
+        
+    return render_to_response('core/edit_user.html', {'profile_user': user_object, 'uform': uform, 'pform': pform}, context_instance=RequestContext(request))
+
+@login_required()
+def user_profile_edit(request):
+    return user_edit(request, request.user.get_profile().uuid)
+
+@login_required()
 def group(request, query):
     
     group = get_object_or_404( ExtendedGroup, uuid=query )
@@ -738,21 +765,3 @@ def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
     return render_to_response('core/samples_solr.html', {'workflows': workflows, 'data_set': data_set, 'study_uuid':study_uuid, 'assay_uuid':assay_uuid, 'solr_url':solr_url}, 
                               context_instance=RequestContext(request))
 
-@login_required()
-def user_edit(request, uuid):
-    profile_object = UserProfile.objects.get(uuid=uuid)
-    user_object = profile_object.user
-    if request.method == "POST":
-        uform = UserForm(data=request.POST, instance=user_object)
-        pform = UserProfileForm(data=request.POST, instance=profile_object)
-        if uform.is_valid() and pform.is_valid():
-            user = uform.save()
-            profile = pform.save(commit = False)
-            profile.user = user
-            profile.save()
-            return HttpResponseRedirect(reverse('core.views.user', args=(uuid,)))
-    else:
-        uform = UserForm(instance=user_object)
-        pform = UserProfileForm(instance=profile_object)
-        
-    return render_to_response('core/edit_user.html', {'profile_user': user_object, 'uform': uform, 'pform': pform}, context_instance=RequestContext(request))
