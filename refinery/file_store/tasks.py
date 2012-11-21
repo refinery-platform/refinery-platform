@@ -108,8 +108,8 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
             logger.error("Could not open URL '%s'. Reason: '%s'", item.source, e.message)
             return None
 
-        tmpfile = NamedTemporaryFile(dir=get_temp_dir())
-        
+        tmpfile = NamedTemporaryFile(dir=get_temp_dir(), delete=False)
+
         # get remote file size, provide a default value in case Content-Length is missing
         remotefilesize = int(response.info().getheader("Content-Length", file_size))
 
@@ -133,8 +133,9 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
     
         # cleanup
         #TODO: delete temp file if download failed 
-        response.close()
         tmpfile.flush()
+        tmpfile.close()
+        response.close()
 
         logger.debug("Finished downloading from '%s'", item.source)
 
@@ -144,7 +145,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         # construct destination path based on source file name
         rel_dst_path = item.datafile.storage.get_available_name(file_path(item, src_file_name))
         abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
-    
+
         # move the temp file into the file store
         try:
             os.rename(tmpfile.name, abs_dst_path)
@@ -153,7 +154,6 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
                          e.errno, e.filename, e.strerror)
             return False
 
-        tmpfile.close()
         # assign new path to datafile
         item.datafile.name = rel_dst_path
         # save the model instance
