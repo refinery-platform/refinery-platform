@@ -22,8 +22,9 @@ class RegistrationFormTermsOfServiceUniqueEmail(RegistrationFormTermsOfService, 
 
 class UserForm(ModelForm):
     def clean_email(self):
-        if User.objects.filter(email__iexact=self.cleaned_data['email']):
-            raise ValidationError("This email is already in use. Please supply a different email address.")
+        if not self.instance.email == self.cleaned_data['email']:
+            if User.objects.filter(email__iexact=self.cleaned_data['email']):
+                raise ValidationError("This email is already in use. Please supply a different email address.")
         return self.cleaned_data['email']
 
     class Meta:
