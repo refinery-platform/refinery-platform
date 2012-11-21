@@ -130,7 +130,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
                 state="PROGRESS",
                 meta={"percent_done": "%3.2f%%" % (percent_done), 'current': localfilesize, 'total': remotefilesize}
                 )
-    
+
         # cleanup
         #TODO: delete temp file if download failed 
         tmpfile.flush()
@@ -148,6 +148,8 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
 
         # move the temp file into the file store
         try:
+            if not os.path.exists(os.path.dirname(abs_dst_path)):
+                os.makedirs(os.path.dirname(abs_dst_path))
             os.rename(tmpfile.name, abs_dst_path)
         except OSError as e:
             logger.error("Error moving temp file into the file store\nOSError: %s, file name: %s, error: %s",
