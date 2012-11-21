@@ -145,6 +145,9 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         # construct destination path based on source file name
         rel_dst_path = item.datafile.storage.get_available_name(file_path(item, src_file_name))
         abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
+        
+        
+        logger.debug( "u = " + u + "\nsrc_file_name = " + src_file_name + "\nrel_dst_path = " + rel_dst_path + "abs_dst_path = " + abs_dst_path + "\ntmpfile.name = " + tmpfile.name )
 
         # move the temp file into the file store
         try:
