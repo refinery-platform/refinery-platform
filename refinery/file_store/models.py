@@ -162,7 +162,7 @@ FILE_TYPES = (
 FILE_EXTENSIONS = {
     'bam': BAM,
     'bed': BED,
-    'bb': BIGBED, 'bigbed': BIGBED,
+    'bigbed': BIGBED, 'bb': BIGBED,
     'bigwig': BIGWIG,
     'cel': CEL,
     'csv': CSV,
@@ -326,6 +326,7 @@ class FileStoreItem(models.Model):
         Only existing types allowed as arguments.
 
         :param filetype: requested file type.
+        :type filetype: str.
         :returns: True if success, False if failure.
 
         '''

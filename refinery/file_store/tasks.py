@@ -243,14 +243,17 @@ def rename(uuid, name):
 
 
 @task()
-def download_file(url, file_size=1):
-    '''Download file to FILE_STORE_TEMP_DIR from specified URL.
+def download_file(url, target_path, file_size=1):
+    '''Download file to target_path from specified URL.
+    Raises DonwloadError
 
     :param url: Source URL.
     :type url: str.
+    :param target_path: absolute file system path to a temp file
+    :type target_path: str
     :param file_size: Size of the remote file.
     :type file_size: int.
-    :returns: file -- Downloaded file or None if downloading failed.
+    :returns: bool -- True if success, False if failure.
 
     '''
     #TODO: handle out of disk space condition
@@ -261,37 +264,45 @@ def download_file(url, file_size=1):
     try:
         response = urllib2.urlopen(req)
     except urllib2.URLError as e:
-        logger.error("Could not open URL '%s'. Reason: '%s'", url, e.reason)
-        return None
+        raise DownloadError("Could not open URL '{}'. Reason: '{}'".format(url, e.reason))
     except ValueError as e:
-        logger.error("Could not open URL '%s'. Reason: '%s'", url, e.message)
-        return None
+        raise DownloadError("Could not open URL '{}'. Reason: '{}'".format(url, e.reason))
 
-    tmpfile = NamedTemporaryFile(dir=get_temp_dir(), delete=False)
     # get remote file size, provide a default value in case Content-Length is missing
     remotefilesize = int(response.info().getheader("Content-Length", file_size))
 
-    # download and save the file
-    localfilesize = 0
-    blocksize = 8 * 2 ** 10    # 8 Kbytes
-    for buf in iter(lambda: response.read(blocksize), ''):
-        localfilesize += len(buf)
-        tmpfile.write(buf)
-        # check if we have a sane value for file size
-        if remotefilesize > 0:
-            percent_done = localfilesize * 100. / remotefilesize
-        else:
-            percent_done = 0
-            import_file.update_state(
-                state="PROGRESS",
-                meta={"percent_done": "%3.2f%%" % (percent_done), 'current': localfilesize, 'total': remotefilesize}
-                )
+    with open(target_path, 'wb+') as destination:
+        # download and save the file
+        localfilesize = 0
+        blocksize = 8 * 2 ** 10    # 8 Kbytes
+        for buf in iter(lambda: response.read(blocksize), ''):
+            localfilesize += len(buf)
+            destination.write(buf)
+            # check if we have a sane value for file size
+            if remotefilesize > 0:
+                percent_done = localfilesize * 100. / remotefilesize
+            else:
+                percent_done = 0
+                import_file.update_state(
+                    state="PROGRESS",
+                    meta={"percent_done": "%3.2f%%" % (percent_done),
+                          'current': localfilesize,
+                          'total': remotefilesize}
+                    )
+        # cleanup
+        #TODO: delete temp file if download failed 
+        destination.flush()
 
-    # cleanup
-    #TODO: delete temp file if download failed 
     response.close()
-    tmpfile.flush()
-    tmpfile.close()
-
     logger.debug("Finished downloading")
-    return tmpfile.name
+
+
+class DownloadError(StandardError):
+    '''Exception raised for download errors
+
+    '''
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+#        return StandardError.__str__(self, *args, **kwargs)
+        return repr(self.value)

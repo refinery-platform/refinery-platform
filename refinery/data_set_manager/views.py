@@ -5,6 +5,7 @@ Created on May 11, 2012
 '''
 
 import os
+import shutil
 from urlparse import urlparse
 from django import forms
 from django.contrib.auth.decorators import login_required
@@ -17,7 +18,8 @@ from haystack.query import SearchQuerySet
 from core.models import *
 from data_set_manager.tasks import parse_isatab
 from data_set_manager.utils import *
-from file_store.tasks import download_file
+from file_store.tasks import download_file, DownloadError
+from file_store.models import get_temp_dir
 
 
 def index(request):
@@ -98,60 +100,38 @@ class ImportISATabFileForm(forms.Form):
 @csrf_exempt
 def import_isa_tab(request):
     '''Process imported ISA-Tab file sent via POST request
-    
+
     '''
-    error = '' 
     if request.method == 'POST':
         form = ImportISATabFileForm(request.POST, request.FILES)
         if form.is_valid():
             f = form.cleaned_data['isa_tab_file']
             url = form.cleaned_data['isa_tab_url']
-
-            # add ISA-Tab file to the file store
             if url:
                 #TODO: replace with chain (http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks)
-                temp_file_name = download_file.delay(url).get()
-                if not temp_file_name:
-                    error = 'Problem downloading file from: ' + url
-                    context = RequestContext(request, {'form': form, 'error': error})
-                    return render_to_response('data_set_manager/import.html', context_instance=context)
-                # rename downloaded file to its original name
                 u = urlparse(url)
-                real_name = u.path.split('/')[-1]
-                temp_dir = os.path.dirname(temp_file_name)
-                new_temp_file_name = os.path.join(temp_dir, real_name)
+                file_name = u.path.split('/')[-1]
+                temp_file_name = os.path.join(get_temp_dir(), file_name)
                 try:
-                    os.rename(temp_file_name, new_temp_file_name)
-                except OSError as e:
-                    logger.error("Error renaming downloaded ISA-Tab file\nOSError: %s, file name: %s, error: %s",
-                                 e.errno, e.filename, e.strerror)
-                    #os.unlink(temp_file_name)
-                    error = 'Problem renaming downloaded ISA-Tab file'
+                    download_file.delay(url, temp_file_name).get()
+                except DownloadError as e:
+                    logger.error("Problem downloading ISA-Tab file. %s", e)
+                    error = "Problem downloading ISA-Tab file from: " + url
                     context = RequestContext(request, {'form': form, 'error': error})
                     return render_to_response('data_set_manager/import.html', context_instance=context)
-                logger.debug("New temp file name: '%s'", new_temp_file_name)
-                dataset_uuid = parse_isatab(request.user.username, False, new_temp_file_name)
-                #os.unlink(new_temp_file_name)
             else:
-                # rename uploaded file to its original name
-                #FIXME: the system is trying to remove the uploaded file automatically
-                #       and raises OSError exception if file is not found
-                # solutions:
-                # create a copy of the uploaded file and pass it to parse_isatab() 
-                # modify parse_isatab() to accept a FileStoreItem or a UUID
-                # modify parse_isatab() to accept new file name as an additional arg
-#                temp_dir = os.path.dirname(f.temporary_file_path())
-#                new_temp_file_name = os.path.join(temp_dir, f.name)
-#                try:
-#                    os.rename(f.temporary_file_path(), new_temp_file_name)
-#                except OSError as e:
-#                    logger.error("Error renaming uploaded ISA-Tab file\nOSError: %s, file name: %s, error: %s",
-#                                 e.errno, e.filename, e.strerror)
-#                    error = 'Problem renaming uploaded ISA-Tab file'
-#                    context = RequestContext(request, {'form': form, 'error': error})
-#                    return render_to_response('data_set_manager/import.html', context_instance=context)
-                dataset_uuid = parse_isatab(request.user.username, False, f.temporary_file_path())
-
+                temp_file_name = os.path.join(get_temp_dir(), f.name)
+                try:
+                    handle_uploaded_file(f, temp_file_name)
+                except IOError as e:
+                    logger.error("Error writing ISA-Tab file to disk\nIOError: %s, file name: %s, error: %s",
+                                 e.errno, e.filename, e.strerror)
+                    error = "Error writing ISA-Tab file to disk"
+                    context = RequestContext(request, {'form': form, 'error': error})
+                    return render_to_response('data_set_manager/import.html', context_instance=context)
+            logger.debug("Temp file name: '%s'", temp_file_name)
+            dataset_uuid = parse_isatab.delay(request.user.username, False, temp_file_name).get()
+            os.unlink(temp_file_name)
             if dataset_uuid:
                 #TODO: redirect to the list of analysis samples for the given UUID
                 return HttpResponseRedirect('/data_sets/' + dataset_uuid + '/')
@@ -159,11 +139,24 @@ def import_isa_tab(request):
                 error = 'Problem parsing ISA-Tab file'
                 context = RequestContext(request, {'form': form, 'error': error})
                 return render_to_response('data_set_manager/import.html', context_instance=context)
-
         else:   # submitted form is not valid
-            context = RequestContext(request, {'form': form, 'error': error})
+            context = RequestContext(request, {'form': form})
     else:   # this was not a POST request
         form = ImportISATabFileForm()
         context = RequestContext(request, {'form': form})
-
     return render_to_response('data_set_manager/import.html', context_instance=context)
+
+
+def handle_uploaded_file(source_file, target_path):
+    '''Write contents of an uploaded file object to a file on disk
+    Raises IOError
+
+    :param source_file: uploaded file object
+    :type source_file: file object
+    :param target_path: absolute file system path to a temp file
+    :type target_path: str
+
+    '''
+    with open(target_path, 'wb+') as destination:
+        for chunk in source_file.chunks():
+            destination.write(chunk)

@@ -329,9 +329,6 @@ AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 # relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
 FILE_STORE_DIR = 'files'
 
-# To keep uploaded files always on disk
-FILE_UPLOAD_MAX_MEMORY_SIZE = 0
-
 # location of the solr server
 REFINERY_SOLR_BASE_URL = "http://127.0.0.1:8983/solr"
 
