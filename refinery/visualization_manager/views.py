@@ -349,7 +349,7 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None):
     os.unlink(tempfilename.name)
     
     # Print our newly created XML
-    print doc.toprettyxml(indent="  ")
+    logger.info( doc.toprettyxml(indent="  "))
     #print filestore_item.datafile.url
     
     # Url for session file 
