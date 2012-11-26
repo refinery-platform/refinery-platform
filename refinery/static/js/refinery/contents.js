@@ -67,7 +67,7 @@ $(".annotation-buttons button").click(function () {
 });	
 		
 
-function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents ) {
+function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents, annotationParam ) {
 	var url = solrRoot
 		+ "?" + solrQuery 
 		+ "&" + solrSettings
@@ -77,7 +77,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 		+ "("
 			+ "study_uuid:" + studyUuid
 			+ " AND " + "assay_uuid:" + assayUuid
-			+ " AND " + "is_annotation:" + showAnnotation			
+			+ " AND " + "is_annotation:" + annotationParam			
 			+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + ")"
 	   	+ ")"
 	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
@@ -252,7 +252,7 @@ function prettifyFieldName( name, isTitle )
 
 
 function initializeData( studyUuid, assayUuid, nodeType ) {
-	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 1, {}, {}, {} ), success: function(data) {
+	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 1, {}, {}, {}, showAnnotation ), success: function(data) {
 		
 		var doc = data.response.docs[0];
 		
@@ -306,7 +306,7 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 }
 
 function getData( studyUuid, assayUuid, nodeType ) {
-	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, query.items_per_page * query.page, query.items_per_page, facets, fields, {} ), success: function(data) {		
+	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, query.items_per_page * query.page, query.items_per_page, facets, fields, {}, showAnnotation ), success: function(data) {		
 		query.selected_items = data.response.numFound;
 	    $( "#statistics-view" ).html("");
     	$( "<h1/>", { html: query.selected_items + "/" + query.total_items } ).appendTo( "#statistics-view" );				
@@ -329,7 +329,7 @@ function getData( studyUuid, assayUuid, nodeType ) {
 
 
 function getField( studyUuid, assayUuid, nodeType, field, callback ) {
-	var query = buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 10000, facets, { field: { "isVisible": false },  }, {} );
+	var query = buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 10000, facets, { field: { "isVisible": false },  }, {}, showAnnotation );
 	console.log( query );
 	$.ajax( { type: "GET", dataType: "jsonp", url: query, success: function(data) {		
 		var fieldValues = [] 
@@ -870,7 +870,9 @@ $( "#igv-test" ).on( "click", function(e) {
 	
 	
 	// function for getting current solr query 
-	var solr_url = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, facets, fields, {} );
+	var solr_url = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, facets, fields, {}, false );
+	
+	var solr_annot = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, {}, fields, {}, true );
 	
 	// url to point ajax function too 
 	var temp_url = "/solr/";
@@ -916,7 +918,7 @@ $( "#igv-test" ).on( "click", function(e) {
 	     url:temp_url,
 	     type:"POST",
 	     dataType: "json",
-	     data: {'query': solr_url },
+	     data: {'query': solr_url, 'annot':solr_annot },
 	     success: function(result){
 
 	     	// console.log("success");
