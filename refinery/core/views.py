@@ -741,9 +741,17 @@ def solr_igv(request):
             if i == 'query':
                 solr_query = val
                 solr_results = get_solr_results(solr_query)
-                solr_annot = get_solr_results(solr_query,annotation=True)
-                #print "solr_annot"
-                #print simplejson.dumps(solr_annot, indent=4)
+                #logger.debug("solr_results")
+                #logger.debug(simplejson.dumps(solr_results, indent=4))
+        
+                
+            elif i == 'annot':
+                #print "solr_annot query"
+                #print val
+                solr_annot = get_solr_results(val)
+                solr_annot
+                logger.debug("solr_annot")
+                logger.debug(simplejson.dumps(solr_annot, indent=4))
         
         # if solr query returns results
         if solr_results:
