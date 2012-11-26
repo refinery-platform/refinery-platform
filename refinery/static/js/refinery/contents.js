@@ -875,6 +875,11 @@ $( "#igv-test" ).on( "click", function(e) {
 	// url to point ajax function too 
 	var temp_url = "/solr/";
 	
+	console.log("solr_url");
+	console.log(solr_url);
+	console.log("temp_url");
+	console.log(temp_url);
+	
 	e.preventDefault();
 	
 	// clears modal body
@@ -914,12 +919,12 @@ $( "#igv-test" ).on( "click", function(e) {
 	     data: {'query': solr_url },
 	     success: function(result){
 
-	     	//console.log("success");
-	     	//console.log(result);
-	     	
+	     	// console.log("success");
+	     	// console.log(result);
+// 	     	
 	     	//e.preventDefault();
     		ret_buttons = createSpeciesModal(result);
-	     	//console.log(ret_buttons);
+	     	console.log(ret_buttons);
 
 						
 			var buttonString = "";
