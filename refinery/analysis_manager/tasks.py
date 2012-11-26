@@ -362,10 +362,15 @@ def run_analysis_cleanup(analysis):
     logger.debug("analysis_manager.run_analysis_cleanup called")
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+     
+    # if analysis was declared failure, do not send completion email
+    if analysis.status != Analysis.FAILURE_STATUS:
+        send_analysis_email(analysis)
+    else:
+        analysis.status = Analysis.SUCCESS_STATUS
     
     # saving when analysis is finished
     analysis.time_end = datetime.now()
-    analysis.status = Analysis.SUCCESS_STATUS
     analysis.save()
     
     # Adding task to rename files after downloading results from history
@@ -387,8 +392,6 @@ def run_analysis_cleanup(analysis):
     
     # delete_library
     connection.delete_library(analysis.library_id)
-    
-    send_analysis_email(analysis)
     
     return
 
