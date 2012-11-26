@@ -805,7 +805,7 @@ var createCallback = function(url) {
 };
 
 function createSpeciesModal(aresult) {
-	console.log("contents.js createSpeciesModal called");
+	//console.log("contents.js createSpeciesModal called");
     
     var ret_buttons = [];
     
@@ -822,8 +822,8 @@ function createSpeciesModal(aresult) {
 	   					});
 	}
 	
-	console.log("ret_buttons");
-	console.log(ret_buttons);
+	//console.log("ret_buttons");
+	//console.log(ret_buttons);
 	
 	return ret_buttons;
 }
@@ -866,31 +866,32 @@ $( "#profile-viewer-session-link" ).on( "click", function() {
 
 // FUNCTION FOR enabling the IGV test button to work
 $( "#igv-test" ).on( "click", function(e) {
-	console.log("IGV-TEST button called");
-	
+	//console.log("IGV-TEST button called");
 	
 	// function for getting current solr query 
 	var solr_url = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, facets, fields, {}, false );
-	
+	// annotation files solr query 
 	var solr_annot = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, {}, fields, {}, true );
 	
 	// url to point ajax function too 
 	var temp_url = "/solr/";
 	
-	console.log("solr_url");
-	console.log(solr_url);
-	
-	console.log("solr_annot");
-	console.log(solr_annot);
-	//console.log("temp_url");
-	//console.log(temp_url);
-	
+	//console.log("solr_url");
+	//console.log(solr_url);	
+	//console.log("solr_annot");
+	//console.log(solr_annot);
+	 	
 	e.preventDefault();
 	
 	// clears modal body
-	$("#myModalBody").html("");
-	$('#igvModal').modal()
+	$("#myModalBody").html("");  		
+	$('#igvModal').modal();
 
+	opts["left"] = $("#igvModal").width()/2 - 30;
+	
+	// adding spinner to be removed after ajax callback
+	var target = document.getElementById('myModalBody');
+	var spinner = new Spinner(opts).spin(target);  
 		
 	// function for adding csrf cookie for django
 	$.ajaxSetup({ 
@@ -923,14 +924,13 @@ $( "#igv-test" ).on( "click", function(e) {
 	     dataType: "json",
 	     data: {'query': solr_url, 'annot':solr_annot },
 	     success: function(result){
-
 	     	// console.log("success");
-	     	// console.log(result);
-// 	     	
-	     	//e.preventDefault();
-    		ret_buttons = createSpeciesModal(result);
-	     	console.log(ret_buttons);
-
+	     	
+	     	// stop spinner
+	     	spinner.stop();
+	     	
+	     	ret_buttons = createSpeciesModal(result);
+	     	//console.log(ret_buttons);
 						
 			var buttonString = "";
 			
@@ -940,12 +940,9 @@ $( "#igv-test" ).on( "click", function(e) {
 			    $("#launch-button-group").append( "<button class=\"btn\" id=\"button_" + counter + "\">" + ret_buttons[counter]["label"] + "</button>" );
 			    $("#" + "button_" + counter ).click(createCallback(ret_buttons[counter]["url"]));
 			}
-			//$("#myModalBody").modal("show"); 
 		}
 	});
 	
-	//&indent=on
-	// need to call core.views.solr and pass back current solr query 
 	
 });
 

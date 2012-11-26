@@ -744,14 +744,11 @@ def solr_igv(request):
                 #logger.debug("solr_results")
                 #logger.debug(simplejson.dumps(solr_results, indent=4))
         
-                
             elif i == 'annot':
-                #print "solr_annot query"
-                #print val
                 solr_annot = get_solr_results(val)
                 solr_annot
-                logger.debug("solr_annot")
-                logger.debug(simplejson.dumps(solr_annot, indent=4))
+                #logger.debug("solr_annot")
+                #logger.debug(simplejson.dumps(solr_annot, indent=4))
         
         # if solr query returns results
         if solr_results:
@@ -805,7 +802,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False):
         return results
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
-    print "core.views.samples_solr called"
+    logger.debug("core.views.samples_solr called")
     data_set = get_object_or_404( DataSet, uuid=ds_uuid )
     
     # getting current workflows

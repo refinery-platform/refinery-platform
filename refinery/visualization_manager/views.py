@@ -101,17 +101,10 @@ def createIGVsession(genome, uuids):
     # get paths to url 
     for samp in uuids:
         # gets filestore item 
-        curr_fs = FileStoreItem.objects.filter(uuid=samp)[0]
+        curr_name, curr_url = getFileName(samp)
         
         # What to do if fs does not exist? 
-        if (curr_fs):
-            
-            # gets file name 
-            curr_name = curr_fs.datafile.name.split('/')
-            curr_name = curr_name[len(curr_name)-1]
-            
-            # full path to selected UUID File
-            curr_url = curr_fs.get_url()
+        if (curr_name):
             
             # creates Resource element 
             res = doc.createElement("Resource")
@@ -217,18 +210,12 @@ def igv_multi_species(solr_results, solr_annot=None):
         # if file_uuids generated for given species
         # generate igv session file 
         if "file_uuid" in v:
-            #print "----"
-            #print "k"
-            #print k
-            #print "v"
-            #print v
-            
             # if annotation contains species 
             if solr_annot:
                 if k in unique_annot:
-                    temp_url = createIGVsessionAnnot(k, unique_species[k], unique_annot[k])
+                    temp_url = createIGVsessionAnnot(k, unique_species[k], unique_annot[k], sampleFile)
             else:
-                temp_url = createIGVsessionAnnot(k, unique_species[k])
+                temp_url = createIGVsessionAnnot(k, unique_species[k], sampleFile)
             #unique_species[k]['igv_url'] = temp_url
             ui_results[k] = temp_url
             print temp_url
@@ -282,7 +269,7 @@ def get_unique_species(docs):
     return unique_species
       
 
-def createIGVsessionAnnot(genome, uuids, annot_uuids=None):
+def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     """ Creates session file for selected file uuids, returns newly created filestore uuid 
     
     :param genome: Genome to be used in session file i.e. hg18, dm3
@@ -306,7 +293,7 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None):
         </Resources>
     </Global>
     """
-    logger.info("visualization_manager.createIGVsessionAnnot called")
+    logger.debug("visualization_manager.views createIGVsessionAnnot called")
     
     # Create the minidom document
     doc = Document()
@@ -320,7 +307,7 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None):
     
     # Add Resources
     xml_resources = doc.createElement("Resources")
-    xml.appendChild(xml_resources)
+    xml.appendChild(xml_resources)        
     
     # adding selected samples to xml file
     addIGVResource(uuids["file_uuid"], xml_resources, doc)
@@ -328,6 +315,15 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None):
     if annot_uuids:
         # adding selected samples to xml file
         addIGVResource(annot_uuids["file_uuid"], xml_resources, doc)
+        
+    # adds sample information file to IGV session file 
+    if samp_file:
+        #<Resource name="Sample Information" path="http://igv.broadinstitute.org/data/hg18/tcga/gbm/gbmsubtypes/sampleTable.txt.gz"/>
+        # creates Resource element 
+        res = doc.createElement("Resource")
+        res.setAttribute("name", "Sample Information")
+        res.setAttribute("path", samp_file)
+        xml_resources.appendChild(res)    
     
     # Creating temp file to enter into file_store
     tempfilename = tempfile.NamedTemporaryFile(delete=False)
@@ -374,17 +370,10 @@ def addIGVResource(uuidlist, xml_res, xml_doc):
     # get paths to url 
     for samp in uuidlist:
         # gets filestore item 
-        curr_fs = FileStoreItem.objects.filter(uuid=samp)[0]
+        curr_name, curr_url = getFileName(samp)
         
         # What to do if fs does not exist? 
-        if (curr_fs):
-            
-            # gets file name 
-            curr_name = curr_fs.datafile.name.split('/')
-            curr_name = curr_name[len(curr_name)-1]
-            
-            # full path to selected UUID File
-            curr_url = curr_fs.get_url()
+        if (curr_name):
             
             # creates Resource element 
             res = xml_doc.createElement("Resource")
@@ -393,19 +382,19 @@ def addIGVResource(uuidlist, xml_res, xml_doc):
             xml_res.appendChild(res)
             
 def addIGVSamples(samples, annot_samples=None):
+    """ creates phenotype file for IGV 
     
-    logger.info("visualization_manager.addIGVSamples called")
+    :param samples: Solr results for samples to be included 
+    :type samples: Array.
+    :param annot_samples: includes annotation files included with solr results
+    :type annot_samples: Array
+    """
+    
+    logger.debug("visualization_manager.views addIGVSamples called")
     
     # fields to iterate over
     fields = str(samples["responseHeader"]["params"]["fl"]).split(',')
     results_samp = samples["response"]["docs"]
-    
-    #print "fields"
-    #print simplejson.dumps(fields, indent=4)
-    #print "results_samp"
-    #print simplejson.dumps(results_samp, indent=4)
-    #print "results_annot"
-    #print simplejson.dumps(results_annot, indent=4)
     
     # creates human readable indexes of fields to iterate over
     fields_dict = {}
@@ -415,27 +404,29 @@ def addIGVSamples(samples, annot_samples=None):
             new_key = i.split("_Characteristics_")[0]
             fields_dict[i] = new_key
     
-    print "fields_dict"
-    print simplejson.dumps(fields_dict, indent=4)    
-    
     # Creating temp file to enter into file_store
     tempsampname = tempfile.NamedTemporaryFile(delete=False)
     
     # writing header to sample file 
     tempsampname.write("#sampleTable" + "\n")
     
+    # writing column names to sample file 
+    col_names = "Linking_id"
+    for k,v in fields_dict.iteritems():
+        col_names = col_names + '\t' + v
+    tempsampname.write(col_names + "\n")
+    
     # iterating over sample files 
-    #for a in results_samp:
-    #for k,v in fields_dict.iteritems(:)
-    #getFileName()
-    # iterating over sample annotation files 
-    #getFileName()
+    pheno_results = getSampleLines(fields_dict, results_samp)
+    tempsampname.write(pheno_results)
     
     # if annotations are not null
     if annot_samples:
         results_annot = annot_samples["response"]["docs"]
-        
+        pheno_annot = getSampleLines(fields_dict, results_samp)
+        tempsampname.write(pheno_annot)
     
+    # closing temp file 
     tempsampname.close()
 
 
@@ -470,13 +461,46 @@ def addIGVSamples(samples, annot_samples=None):
     return curr_url
 
 def getFileName(fileuuid):
+    """ Helper function for getting a file_name from a filestore uuid
+    
+    :param fileuuid: Filestore uuid
+    :type fileuuid: String
+    """
+    
     # getting file information based on file_uuids
-    curr_fs = FileStoreItem.objects.filter(uuid=filestore_uuid)[0]
-    curr_name = curr_fs.datafile.name
-    curr_name = curr_fs.datafile.name.split('/')
-    curr_name = curr_name[len(curr_name)-1]
-    return curr_name
+    temp_fs = FileStoreItem.objects.filter(uuid=fileuuid)[0]
+    temp_name = temp_fs.datafile.name
+    temp_name = temp_fs.datafile.name.split('/')
+    temp_name = temp_name[len(temp_name)-1]
+    
+    # full path to selected UUID File
+    temp_url = temp_fs.get_url()
+            
+    return temp_name, temp_url
 
-#def getSampleLine():       
+def getSampleLines(fields, results):
+    """ Helper function for producing a matrix of solr fields and results
+    
+    :param fields: A dictionary containing solr encoded variables and human readable version of the keys
+    :type fields: Dictionary
+    :returns: a string of the matrix to be included in the IGV sample information file 
+    """
+    
+    logger.debug("visualization_manager.views getSampleLines called")
+    
+    output_mat = ""
+    
+    # iterating over samples
+    for row in results:
+        # adding file_name to matrix as linking id
+        line, url = getFileName(row["file_uuid"])
+        
+        # adding fields to sample information matrix
+        for k,v in fields.iteritems():
+            line = line + '\t' + row[k]    
+        output_mat = output_mat + line + '\n'    
+    
+    # returns matrix for given inputs
+    return output_mat      
     
     
