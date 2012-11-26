@@ -798,6 +798,37 @@ function clearFieldDirections() {
 }
 
 
+var createCallback = function(url) {
+    return function() {
+        window.open(url);
+    };
+};
+
+function createSpeciesModal(aresult) {
+	console.log("contents.js createSpeciesModal called");
+    
+    var ret_buttons = [];
+    
+    for (var species in aresult) {
+	   var session_url = aresult[species];
+	   console.log("----");
+	   console.log(species);
+	   console.log(session_url);
+	   
+	   ret_buttons.push({
+	   					"label":species, 
+	   					"class":"btn-primary", 
+	   					"url": session_url
+	   					});
+	}
+	
+	console.log("ret_buttons");
+	console.log(ret_buttons);
+	
+	return ret_buttons;
+}
+
+
 initializeData( currentAssayUuid, currentStudyUuid, currentNodeType );
 
 $( "#igv-session-link" ).on( "click", function() {
@@ -837,24 +868,20 @@ $( "#profile-viewer-session-link" ).on( "click", function() {
 $( "#igv-test" ).on( "click", function(e) {
 	console.log("IGV-TEST button called");
 	
+	
 	// function for getting current solr query 
 	var solr_url = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, facets, fields, {} );
 	
 	// url to point ajax function too 
 	var temp_url = "/solr/";
-		
-	//console.log(solr_url);
-	//console.log(facets);
-	//console.log(fields);
 	
-	// BOOTBOX DYNAMIC EXAMPLE
 	e.preventDefault();
-    var str = $("<p>Please Choose Which Species to view in IGV</p>");
-    bootbox.alert(str);
-    //setTimeout(function() {
-    //	str.html("See?");
-    //}, 3000);
 	
+	// clears modal body
+	$("#myModalBody").html("");
+	$('#igvModal').modal()
+
+		
 	// function for adding csrf cookie for django
 	$.ajaxSetup({ 
      beforeSend: function(xhr, settings) {
@@ -886,17 +913,28 @@ $( "#igv-test" ).on( "click", function(e) {
 	     dataType: "json",
 	     data: {'query': solr_url },
 	     success: function(result){
-	     	console.log("success");
-	     	console.log(result);
-	     	str.html("JSON RESPONDED");
+
+	     	//console.log("success");
+	     	//console.log(result);
 	     	
+	     	//e.preventDefault();
+    		ret_buttons = createSpeciesModal(result);
+	     	//console.log(ret_buttons);
+
+						
+			var buttonString = "";
+			
+			$("#myModalBody").append( "<p>" + "You selected samples from " + ret_buttons.length + " different genome builds. To view the samples, open IGV with the corresponding genome." );
+			$("#myModalBody").append( "<div class=\"btn-group\" style=\"align: center;\" id=\"launch-button-group\">" );
+			for (var counter = 0; counter < ret_buttons.length; ++counter) {
+			    $("#launch-button-group").append( "<button class=\"btn\" id=\"button_" + counter + "\">" + ret_buttons[counter]["label"] + "</button>" );
+			    $("#" + "button_" + counter ).click(createCallback(ret_buttons[counter]["url"]));
+			}
+			//$("#myModalBody").modal("show"); 
 		}
 	});
 	
-
-	
 	//&indent=on
-	
 	// need to call core.views.solr and pass back current solr query 
 	
 });

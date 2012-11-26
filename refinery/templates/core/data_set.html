@@ -144,10 +144,13 @@ rect.active {
 							
 							<!-- <a href="{% url igv_session %}">IGV</a> -->
 							<span class="label" style="margin-left: 50px;">View in</span>
-							<a class="btn" id="igv-session-link" href="#">IGV</a>
+							<!-- <a class="btn" id="igv-session-link" href="#">IGV</a> -->
+							<a id="igv-test" href="#" role="button" class="btn" data-toggle="modal">Launch IGV</a>
+							
 							<a class="btn" id="profile-viewer-session-link" href="#">Profile</a>
 							<!-- <a class="btn btn-info" id="igv-test" href="#">IGV Test</a> -->
-			
+											<!-- Button to trigger modal -->
+							
 							<span class="label" style="margin-left: 50px;">Show</span>
 							<div class="btn-group annotation-buttons" data-toggle="buttons-radio">
 							  	<button type="button" id="data-button" data-toggle="button" class="btn active">Data</button>
@@ -321,6 +324,21 @@ rect.active {
 	    <p>No valid data set.</p>
 	{% endif %}
 	</div>
+	
+<!-- Modal -->
+<div id="igvModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="myModalLabel">Launch IGV</h3>
+  </div>
+  <div class="modal-body" id="myModalBody">      
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+  </div>
+</div>
+
+
 </div>
 
 {% endblock %}
@@ -338,7 +356,7 @@ rect.active {
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/viewers/pivot-matrix.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
+    <!-- <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script> -->
 
 
 <script type="application/javascript">

@@ -22,6 +22,8 @@ from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
 from haystack.query import SearchQuerySet
 import logging
 import urllib2
+from visualization_manager.views import igv_multi_species
+
 
 logger = logging.getLogger(__name__)
 
@@ -738,19 +740,61 @@ def solr_igv(request):
         for i, val in request.POST.iteritems():
             if i == 'query':
                 solr_query = val
-                # replacing facets w/ false 
-                solr_query = solr_query.replace('facet=true', 'facet=false')
-                  
-        print solr_query
+                solr_results = get_solr_results(solr_query)
+                solr_annot = get_solr_results(solr_query,annotation=True)
+                #print "solr_annot"
+                #print simplejson.dumps(solr_annot, indent=4)
         
-        solr_results =  urllib2.urlopen( solr_query ).read()
-        print solr_results 
-    
-        return HttpResponse("ok solr_igv is happy")
+        # if solr query returns results
+        if solr_results:
+            session_urls = igv_multi_species(solr_results, solr_annot)
             
-    #return HttpResponse( urllib2.urlopen( "http://127.0.0.1:8983/solr/core/select?" + query.urlencode() ).read(), mimetype='application/json' )
-
-
+        return HttpResponse(simplejson.dumps(session_urls),mimetype='application/json')
+    
+def get_solr_results(query, facets=False, jsonp=False, annotation=False):
+    '''
+    Helper function for taking solr request url. Removes facet requests, converts to json, from input solr query  
+    
+    :param query: solr http query string
+    :type query: string
+    :param facets: Removes facet query from solr query string
+    :type facets: boolean
+    :param jsonp: Removes JSONP query from solr query string
+    :type jsonp: boolean
+    :returns: dictionary of current solr results
+    '''
+    
+    logger.debug("core.views: get_solr_results")
+    
+    if not facets:
+        # replacing facets w/ false 
+        query = query.replace('facet=true', 'facet=false')
+    
+    if not jsonp:
+        # ensuring json not jsonp response 
+        query = query.replace('&json.wrf=?', '')
+        
+    if annotation:
+        # changing annotation 
+        query = query.replace('is_annotation:false', 'is_annotation:true')
+        
+    # proper url encoding                  
+    query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
+    
+    # opening solr query results
+    results =  urllib2.urlopen( query ).read()
+        
+    # converting results into json for python 
+    results = simplejson.loads(results)
+    
+    # number of results 
+    num_found = int(results["response"]["numFound"])
+    logger.debug("core.views: get_solr_results num_found=%s" % num_found)
+    
+    if num_found == 0:
+        return None
+    else:
+        return results
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
     print "core.views.samples_solr called"
@@ -764,4 +808,3 @@ def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
 
     return render_to_response('core/samples_solr.html', {'workflows': workflows, 'data_set': data_set, 'study_uuid':study_uuid, 'assay_uuid':assay_uuid, 'solr_url':solr_url}, 
                               context_instance=RequestContext(request))
-
