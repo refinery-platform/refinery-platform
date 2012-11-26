@@ -210,7 +210,6 @@ def igv_multi_species(solr_results, solr_annot=None):
     sampleFile = addIGVSamples(solr_results, solr_annot)
         
         
-        
     # 4. generate igv files for each species, including phenotype data + paths generated from uuid's
     ui_results = {}
     for k,v in unique_species.items():
@@ -225,8 +224,9 @@ def igv_multi_species(solr_results, solr_annot=None):
             #print v
             
             # if annotation contains species 
-            if k in unique_annot:
-                temp_url = createIGVsessionAnnot(k, unique_species[k], unique_annot[k])
+            if solr_annot:
+                if k in unique_annot:
+                    temp_url = createIGVsessionAnnot(k, unique_species[k], unique_annot[k])
             else:
                 temp_url = createIGVsessionAnnot(k, unique_species[k])
             #unique_species[k]['igv_url'] = temp_url
@@ -392,14 +392,13 @@ def addIGVResource(uuidlist, xml_res, xml_doc):
             res.setAttribute("path", curr_url)
             xml_res.appendChild(res)
             
-def addIGVSamples(samples, annot_samples):
+def addIGVSamples(samples, annot_samples=None):
     
     logger.info("visualization_manager.addIGVSamples called")
     
     # fields to iterate over
     fields = str(samples["responseHeader"]["params"]["fl"]).split(',')
     results_samp = samples["response"]["docs"]
-    results_annot = annot_samples["response"]["docs"]
     
     #print "fields"
     #print simplejson.dumps(fields, indent=4)
@@ -431,6 +430,11 @@ def addIGVSamples(samples, annot_samples):
     #getFileName()
     # iterating over sample annotation files 
     #getFileName()
+    
+    # if annotations are not null
+    if annot_samples:
+        results_annot = annot_samples["response"]["docs"]
+        
     
     tempsampname.close()
 
