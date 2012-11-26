@@ -741,8 +741,8 @@ def solr_igv(request):
             if i == 'query':
                 solr_query = val
                 solr_results = get_solr_results(solr_query)
-                logger.debug("solr_results")
-                logger.debug(simplejson.dumps(solr_results, indent=4))
+                #logger.debug("solr_results")
+                #logger.debug(simplejson.dumps(solr_results, indent=4))
         
                 
             elif i == 'annot':
