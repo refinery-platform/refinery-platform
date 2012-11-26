@@ -924,22 +924,29 @@ $( "#igv-test" ).on( "click", function(e) {
 	     dataType: "json",
 	     data: {'query': solr_url, 'annot':solr_annot },
 	     success: function(result){
-	     	// console.log("success");
-	     	
 	     	// stop spinner
 	     	spinner.stop();
 	     	
 	     	ret_buttons = createSpeciesModal(result);
-	     	//console.log(ret_buttons);
-						
-			var buttonString = "";
+	     	console.log("success");
+	     	console.log(ret_buttons);
+	     	
+	     	// if only 1 species returned
+			if (ret_buttons.length == 1) {
+	     		window.location = ret_buttons[0].url;
+	     		//$('#igvModal').modal("hide");
+	     	}
+	     	
+	     	var buttonString = "";
 			
 			$("#myModalBody").append( "<p>" + "You selected samples from " + ret_buttons.length + " different genome builds. To view the samples, open IGV with the corresponding genome." );
 			$("#myModalBody").append( "<div class=\"btn-group\" style=\"align: center;\" id=\"launch-button-group\">" );
 			for (var counter = 0; counter < ret_buttons.length; ++counter) {
-			    $("#launch-button-group").append( "<button class=\"btn\" id=\"button_" + counter + "\">" + ret_buttons[counter]["label"] + "</button>" );
+			    $("#launch-button-group").append( "<button class=\"btn btn-primary\" id=\"button_" + counter + "\">" + ret_buttons[counter]["label"] + "</button>" );
 			    $("#" + "button_" + counter ).click(createCallback(ret_buttons[counter]["url"]));
 			}
+		
+			
 		}
 	});
 	
