@@ -879,8 +879,11 @@ $( "#igv-test" ).on( "click", function(e) {
 	
 	console.log("solr_url");
 	console.log(solr_url);
-	console.log("temp_url");
-	console.log(temp_url);
+	
+	console.log("solr_annot");
+	console.log(solr_annot);
+	//console.log("temp_url");
+	//console.log(temp_url);
 	
 	e.preventDefault();
 	
