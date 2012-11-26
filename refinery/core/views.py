@@ -43,7 +43,7 @@ def home(request):
         unassigned_analyses = []
     else:
         projects = get_objects_for_user( request.user, "core.read_project" ).filter( is_catch_all=False )
-        unassigned_analyses = request.user.get_profile().catch_all_project.analyses.all()
+        unassigned_analyses = request.user.get_profile().catch_all_project.analyses.all().order_by( "-time_start" )
         workflow_engines = get_objects_for_user( request.user, "core.read_workflowengine" )
         workflows = get_objects_for_user( request.user, "core.read_workflow" )
         data_sets = get_objects_for_user( request.user, "core.read_dataset" )
