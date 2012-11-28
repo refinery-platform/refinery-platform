@@ -337,7 +337,7 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
         
     # adds sample information file to IGV session file 
     if samp_file:
-        p<Resource name="Sample Information" path="http://igv.broadinstitute.org/data/hg18/tcga/gbm/gbmsubtypes/sampleTable.txt.gz"/>
+        #<Resource name="Sample Information" path="http://igv.broadinstitute.org/data/hg18/tcga/gbm/gbmsubtypes/sampleTable.txt.gz"/>
         # creates Resource element 
         res = doc.createElement("Resource")
         res.setAttribute("name", "Sample Information")
