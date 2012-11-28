@@ -18,7 +18,7 @@ import tempfile
 import os
 import uuid
 from annotation_server.models import taxon_id_to_genome_build, species_to_genome_build
-    
+from annotation_server.utils import SUPPORTED_GENOMES
 
 logger = logging.getLogger(__name__)
 
@@ -202,9 +202,6 @@ def igv_multi_species(solr_results, solr_annot=None):
     # http://igv.broadinstitute.org/data/hg18/tcga/gbm/gbmsubtypes/sampleTable.txt.gz
     sampleFile = addIGVSamples(solr_results, solr_annot)
     
-    print "sampleFile"
-    print sampleFile
-        
     # 4. generate igv files for each species, including phenotype data + paths generated from uuid's
     ui_results = {}
     for k,v in unique_species.items():
@@ -246,6 +243,7 @@ def get_unique_species(docs):
 
     unique_species = {}
     
+    # If results have a defined genome_build or species field
     for res in docs:
         # Defaults to checking for genome_build
         if "genome_build" in res:
@@ -270,12 +268,21 @@ def get_unique_species(docs):
         #else:
         #    logger.error("core.views.solr_igv: Selected Samples do not have genome_build or species associated")
     
+    # CASE: when species is unknown, launch IGV with predefined genomes
+    if not unique_species:
+        temp_species = {'file_uuid':[], 'solr':[]}
+        for res in docs:
+            temp_species['solr'].append(res)
+            temp_species['file_uuid'].append(res['file_uuid'])
+        
+        for genome in SUPPORTED_GENOMES:
+            # TEMP: replacing ce10 to WS220
+            if genome == 'ce10':
+                genome = 'WS220'
+            unique_species[genome] = temp_species
     
-    
-    logger.debug( "unique_species")
-    logger.debug(unique_species)
-    
-    
+    #print "unique_species"
+    #print simplejson.dumps(unique_species, indent=4)
     
     return unique_species
       
@@ -323,7 +330,7 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     # adding selected samples to xml file
     addIGVResource(uuids["file_uuid"], xml_resources, doc)
     
-    if annot_uuids:
+    if type(annot_uuids) is dict:
         # adding selected samples to xml file
         addIGVResource(annot_uuids["file_uuid"], xml_resources, doc)
         
@@ -336,8 +343,6 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
         res.setAttribute("path", samp_file)
         xml_resources.appendChild(res)    
     
-    #    
-    #
     #<HiddenAttributes>
     #    <Attribute name="DATA FILE"/>
     #    <Attribute name="Linking_id"/>

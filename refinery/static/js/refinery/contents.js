@@ -806,14 +806,10 @@ var createCallback = function(url) {
 
 function createSpeciesModal(aresult) {
 	//console.log("contents.js createSpeciesModal called");
-    
     var ret_buttons = [];
     
     for (var species in aresult) {
 	   var session_url = aresult[species];
-	   console.log("----");
-	   console.log(species);
-	   console.log(session_url);
 	   
 	   ret_buttons.push({
 	   					"label":species, 
@@ -866,7 +862,14 @@ $( "#profile-viewer-session-link" ).on( "click", function() {
 
 // FUNCTION FOR enabling the IGV test button to work
 $( "#igv-test" ).on( "click", function(e) {
+	
 	//console.log("IGV-TEST button called");
+	
+	// KILLs AJAX request if already sent
+	if(typeof xhr!='undefined'){
+   		//kill the request
+   		xhr.abort()
+   	}
 	
 	// function for getting current solr query 
 	var solr_url = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, facets, fields, {}, false );
@@ -916,7 +919,7 @@ $( "#igv-test" ).on( "click", function(e) {
      } 
 	});
 
- 	$.ajax({
+ 	var xhr = $.ajax({
 	     url:temp_url,
 	     type:"POST",
 	     dataType: "json",

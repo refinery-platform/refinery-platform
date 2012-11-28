@@ -769,7 +769,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False):
     :returns: dictionary of current solr results
     '''
     
-    logger.debug("core.views: get_solr_results")
+    #logger.debug("core.views: get_solr_results")
     
     if not facets:
         # replacing facets w/ false 
