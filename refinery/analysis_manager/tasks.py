@@ -24,6 +24,7 @@ from galaxy_connector.galaxy_workflow import countWorkflowSteps
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
 from django.template import loader, Context
+from django.contrib.sites.models import Site
 import socket 
 
 logger = logging.getLogger(__name__)
@@ -230,7 +231,7 @@ def run_analysis_preprocessing(analysis):
     connection = get_analysis_connection(analysis)
     
     # creates new library in galaxy
-    library_id = connection.create_library("Refinery Analysis - " + str(analysis.uuid) + " (" + str(datetime.now()) + ")");
+    library_id = connection.create_library(Site.objects.get_current().name + " Analysis - " + str(analysis.uuid) + " (" + str(datetime.now()) + ")");
     
     ### generates same ret_list purely based on analysis object ###
     ret_list = get_analysis_config(analysis)
@@ -260,7 +261,7 @@ def run_analysis_preprocessing(analysis):
     new_workflow_steps = countWorkflowSteps(new_workflow)
     
     # creates new history in galaxy
-    history_id = connection.create_history("Refinery Analysis - " + str(analysis.uuid) + " (" + str(datetime.now()) + ")")
+    history_id = connection.create_history(Site.objects.get_current().name + " Analysis - " + str(analysis.uuid) + " (" + str(datetime.now()) + ")")
     
     # updating analysis object
     analysis.workflow_copy = new_workflow

@@ -7,6 +7,7 @@ from data_set_manager.utils import get_matrix
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
+from django.contrib.sites.models import get_current_site
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.urlresolvers import resolve, reverse
 from django.http import HttpResponse, HttpResponseForbidden, \
@@ -52,7 +53,7 @@ def home(request):
 
 
 def about(request):
-    return render_to_response('core/about.html', {}, context_instance=RequestContext( request ) )
+    return render_to_response('core/about.html', {'site_name': get_current_site(request).name}, context_instance=RequestContext( request ) )
 
 def contact(request):
     return render_to_response('core/contact.html', {}, context_instance=RequestContext( request ) )

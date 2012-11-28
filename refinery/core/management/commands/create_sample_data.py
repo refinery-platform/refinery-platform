@@ -11,7 +11,7 @@ import simplejson
 
 
 class Command(BaseCommand):
-    help = "Creates some sample data for a Refinery installation:"
+    help = "Creates some sample data for a %s installation:" % (Site.objects.get_current().name)
     help = "%s - users \n" % help
     help = "%s - groups\n" % help    
     help = "%s - projects\n" % help    

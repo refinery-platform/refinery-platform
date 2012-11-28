@@ -6,6 +6,7 @@ Created on Oct 3, 2012
 
 from core.models import ExtendedGroup
 from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 import logging
 
@@ -14,7 +15,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
-    help = "Creates a Refinery user account."
+    help = "Creates a %s user account." % (Site.objects.get_current().name)
 
     """
     Name: handle

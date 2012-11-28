@@ -3,6 +3,7 @@ from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.contrib.sites.models import get_current_site
 from galaxy_connector.connection import Connection
 from galaxy_connector.models import Instance
 from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps, createStepsAnnot
@@ -14,10 +15,10 @@ import os
 
 
 def index(request):
-    return HttpResponse("Refinery Galaxy Connector")
+    return HttpResponse("%s Galaxy Connector" % (get_current_site(request).name))
 
 def api(request, api_key):
-    return HttpResponse("Refinery Galaxy Connector<br><br>API Key: %s" % api_key )
+    return HttpResponse("%s Galaxy Connector<br><br>API Key: %s" % (get_current_site(request).name, api_key))
 
 def checkActiveInstance(req):
     if not 'active_galaxy_instance' in req.session:

@@ -28,7 +28,10 @@ class Command(BaseCommand):
         if Site.objects.filter(domain__exact=settings.REFINERY_BASE_URL).count() > 0:
             print("This URL already exists in the database")
         else:
-            s = Site.objects.get(id=settings.SITE_ID)
+            try:
+                s = Site.objects.get(id=settings.SITE_ID)
+            except:
+                s = Site(domain="example.com", name="example")
             s.name = settings.REFINERY_INSTANCE_NAME
             s.domain = settings.REFINERY_BASE_URL
             s.save()

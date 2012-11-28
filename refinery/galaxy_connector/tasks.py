@@ -9,6 +9,7 @@ from celery import Celery
 from celery import states
 import time
 from django.conf import settings
+from django.contrib.sites.models import Site
 from analysis_manager.tasks import run_analysis
 import copy
 
@@ -19,8 +20,8 @@ def monitor_workflow( instance, connection, interval=5.0 ):
     '''
 
     # create library and history
-    library_id = connection.create_library( "Refinery Test Library - " + str( datetime.now() ) )    
-    history_id = connection.create_history( "Refinery Test History - " + str( datetime.now() ) )
+    library_id = connection.create_library(Site.objects.get_current().name + " Test Library - " + str( datetime.now() ) )    
+    history_id = connection.create_history(Site.objects.get_current().name + " Test History - " + str( datetime.now() ) )
     
     workflow_task = subtask( run_workflow ).delay( instance, connection, library_id, history_id )
     
