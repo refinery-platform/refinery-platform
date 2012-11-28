@@ -201,7 +201,9 @@ def igv_multi_species(solr_results, solr_annot=None):
     # i.e. http://www.broadinstitute.org/igvdata/exampleFiles/gbm_session.xml   
     # http://igv.broadinstitute.org/data/hg18/tcga/gbm/gbmsubtypes/sampleTable.txt.gz
     sampleFile = addIGVSamples(solr_results, solr_annot)
-        
+    
+    print "sampleFile"
+    print sampleFile
         
     # 4. generate igv files for each species, including phenotype data + paths generated from uuid's
     ui_results = {}
@@ -238,6 +240,8 @@ def get_unique_species(docs):
     :returns: a dictionary with keys for eachs species and the solr results for each species supplieed in an array 
     '''
     
+    logger.debug("visualization_manager.views get_unique_species called")
+    
     docs = docs["response"]["docs"]
 
     unique_species = {}
@@ -263,8 +267,15 @@ def get_unique_species(docs):
             res["igv_build"] = curr_build
             unique_species[curr_build]['solr'].append(res)
             unique_species[curr_build]['file_uuid'].append(res['file_uuid'])
-        else:
-            logger.error("core.views.solr_igv: Selected Samples do not have genome_build or species associated")
+        #else:
+        #    logger.error("core.views.solr_igv: Selected Samples do not have genome_build or species associated")
+    
+    
+    
+    logger.debug( "unique_species")
+    logger.debug(unique_species)
+    
+    
     
     return unique_species
       
@@ -324,6 +335,30 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
         res.setAttribute("name", "Sample Information")
         res.setAttribute("path", samp_file)
         xml_resources.appendChild(res)    
+    
+    #    
+    #
+    #<HiddenAttributes>
+    #    <Attribute name="DATA FILE"/>
+    #    <Attribute name="Linking_id"/>
+    #    <Attribute name="DATA TYPE"/>
+    #</HiddenAttributes>
+    # Adding parameters to hide basic unnecessary sample info
+    hidden_attr = doc.createElement("HiddenAttributes")
+    xml.appendChild(hidden_attr) 
+    
+    attr = doc.createElement("Attribute")
+    attr.setAttribute("name", "DATA FILE")
+    hidden_attr.appendChild(attr) 
+    
+    attr = doc.createElement("Attribute")
+    attr.setAttribute("name", "Linking_id")
+    hidden_attr.appendChild(attr) 
+    
+    attr = doc.createElement("Attribute")
+    attr.setAttribute("name", "DATA TYPE")
+    hidden_attr.appendChild(attr) 
+    
     
     # Creating temp file to enter into file_store
     tempfilename = tempfile.NamedTemporaryFile(delete=False)
@@ -502,5 +537,5 @@ def getSampleLines(fields, results):
     
     # returns matrix for given inputs
     return output_mat      
-    
+
     
