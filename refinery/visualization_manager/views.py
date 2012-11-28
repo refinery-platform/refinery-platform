@@ -212,9 +212,9 @@ def igv_multi_species(solr_results, solr_annot=None):
             # if annotation contains species 
             if solr_annot:
                 if k in unique_annot:
-                    temp_url = createIGVsessionAnnot(k, unique_species[k], unique_annot[k], sampleFile)
+                    temp_url = createIGVsessionAnnot(k, unique_species[k], unique_annot[k], samp_file=sampleFile)
             else:
-                temp_url = createIGVsessionAnnot(k, unique_species[k], sampleFile)
+                temp_url = createIGVsessionAnnot(k, unique_species[k], samp_file=sampleFile)
             #unique_species[k]['igv_url'] = temp_url
             ui_results[k] = temp_url
             print temp_url
@@ -330,13 +330,14 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     # adding selected samples to xml file
     addIGVResource(uuids["file_uuid"], xml_resources, doc)
     
-    if type(annot_uuids) is dict:
+    if annot_uuids:
         # adding selected samples to xml file
         addIGVResource(annot_uuids["file_uuid"], xml_resources, doc)
         
+        
     # adds sample information file to IGV session file 
     if samp_file:
-        #<Resource name="Sample Information" path="http://igv.broadinstitute.org/data/hg18/tcga/gbm/gbmsubtypes/sampleTable.txt.gz"/>
+        p<Resource name="Sample Information" path="http://igv.broadinstitute.org/data/hg18/tcga/gbm/gbmsubtypes/sampleTable.txt.gz"/>
         # creates Resource element 
         res = doc.createElement("Resource")
         res.setAttribute("name", "Sample Information")
