@@ -180,16 +180,12 @@ def igv_multi_species(solr_results, solr_annot=None):
     results = solr_results["response"]["docs"]
     fields = str(solr_results["responseHeader"]["params"]["fl"]).split(',')
     
-    #print results
-    #print fields
-    #print len(fields)
-    
     #print "solr_annot"
     #print solr_annot
     
-    unique_species = get_unique_species(solr_results)
+    unique_species, unique_species_num = get_unique_species(solr_results)
     if solr_annot:
-        unique_annot = get_unique_species(solr_annot)
+        unique_annot, unique_annot_num = get_unique_species(solr_annot)
     
     # 1. check to see how many species are selected? 
     # move this to visualization_manager.utils 
@@ -203,7 +199,7 @@ def igv_multi_species(solr_results, solr_annot=None):
     sampleFile = addIGVSamples(solr_results, solr_annot)
     
     # 4. generate igv files for each species, including phenotype data + paths generated from uuid's
-    ui_results = {}
+    ui_results = {'species_count':unique_species_num, 'species':{}}
     for k,v in unique_species.items():
         
         # if file_uuids generated for given species
@@ -216,16 +212,16 @@ def igv_multi_species(solr_results, solr_annot=None):
             else:
                 temp_url = createIGVsessionAnnot(k, unique_species[k], samp_file=sampleFile)
             #unique_species[k]['igv_url'] = temp_url
-            ui_results[k] = temp_url
-            print temp_url
+            ui_results['species'][k] = temp_url
+            #print temp_url
+    
         
-    #print "unique_species"
-    #print simplejson.dumps(unique_species, indent=4)    
     #print "unique_annot"
     #print simplejson.dumps(unique_annot, indent=4)    
+    #print "ui_results"
+    #print simplejson.dumps(ui_results, indent=4)
     
     # 5. reflect buttons in the bootbox modal in UI
-    #return {"test":"return from django igv"}
     return ui_results
     
 def get_unique_species(docs):
@@ -242,12 +238,17 @@ def get_unique_species(docs):
     docs = docs["response"]["docs"]
 
     unique_species = {}
+    unique_count = []
     
     # If results have a defined genome_build or species field
     for res in docs:
         # Defaults to checking for genome_build
         if "genome_build" in res:
             curr_build = str(res["genome_build"])
+            
+            # Number of distinct species 
+            if curr_build not in unique_count:
+                unique_count.append(curr_build)
         
             if curr_build not in unique_species:
                 #unique_species.append(res["genome_build"])
@@ -259,6 +260,10 @@ def get_unique_species(docs):
         # checks to see if species exits otherwise
         elif "species" in res:
             curr_build = str(taxon_id_to_genome_build(res["species"]))
+             # Number of distinct species 
+            if curr_build not in unique_count:
+                unique_counta.append(unique_count)
+        
             if curr_build not in unique_species:
                 #unique_species.append(curr_build)
                 unique_species[curr_build] = {'file_uuid':[], 'solr':[]}
@@ -267,6 +272,9 @@ def get_unique_species(docs):
             unique_species[curr_build]['file_uuid'].append(res['file_uuid'])
         #else:
         #    logger.error("core.views.solr_igv: Selected Samples do not have genome_build or species associated")
+    
+    # actual number of unique genome builds
+    unique_count = len(unique_count)
     
     # CASE: when species is unknown, launch IGV with predefined genomes
     if not unique_species:
@@ -284,7 +292,7 @@ def get_unique_species(docs):
     #print "unique_species"
     #print simplejson.dumps(unique_species, indent=4)
     
-    return unique_species
+    return unique_species, unique_count
       
 
 def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
@@ -386,7 +394,7 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     os.unlink(tempfilename.name)
     
     # Print our newly created XML
-    logger.info( doc.toprettyxml(indent="  "))
+    #logger.info( doc.toprettyxml(indent="  "))
     #print filestore_item.datafile.url
     
     # Url for session file 
@@ -412,15 +420,14 @@ def addIGVResource(uuidlist, xml_res, xml_doc):
     for samp in uuidlist:
         # gets filestore item 
         curr_name, curr_url = getFileName(samp)
-        
         # What to do if fs does not exist? 
         if (curr_name):
-            
             # creates Resource element 
             res = xml_doc.createElement("Resource")
             res.setAttribute("name", curr_name)
             res.setAttribute("path", curr_url)
             xml_res.appendChild(res)
+            
             
 def addIGVSamples(samples, annot_samples=None):
     """ creates phenotype file for IGV 
@@ -488,13 +495,6 @@ def addIGVSamples(samples, annot_samples=None):
     
     # full path to selected UUID File
     curr_url = curr_fs.get_url()
-    
-    ##################################################
-    # debugging output
-    print "----- curr_name"
-    print settings.MEDIA_ROOT + "files/" + curr_name
-    print curr_url
-    ##################################################
     
     # delete temp file
     os.unlink(tempsampname.name)
