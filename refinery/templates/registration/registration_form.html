@@ -11,54 +11,56 @@
 {% endblock %}
 
 {% block content %}
-  
+<div class="refinery-panel refinery-panel-content scrollable">
 	<div class="row-fluid">
-		<div class="span12">
-			<div class="refinery-panel refinery-panel-content">
-  {% if form.errors %}
-  <div class="alert alert-error">Please correct the errors below.{{ form.non_field_errors }}</div>
-  {% endif %}
-				
-			  <form method="post" action="" class="wide">
-				{% csrf_token %}
-			      <label for="id_username">Username</label>
-			      {% if form.username.errors %}
-			        <p class="errors">{{ form.username.errors.as_text }}</p>
-			      {% endif %}
-			      {{ form.username }}
-			    <p>
-			      <label for="id_email">Email Address</label>
-			      {% if form.email.errors %}
-			        <p class="errors">{{ form.email.errors.as_text }}</p>
-			      {% endif %}
-			      {{ form.email }}
-			    </p>
-			    <p>
-			      <label for="id_password1">Password</label>
-			      {% if form.password1.errors %}
-			        <p class="errors">{{ form.password1.errors.as_text }}</p>
-			      {% endif %}
-			      {{ form.password1 }}
-			    </p>
-			    <p>
-			      <label for="id_password2">Password (again)</label>
-			      {% if form.password2.errors %}
-			        <p class="errors">{{ form.password2.errors.as_text }}</p>
-			      {% endif %}
-			      {{ form.password2 }}
-			    </p>
-			    <p>
-    			  {% if form.tos.errors %}
-    				<p class="errors">{{form.tos.errors.as_text}}</p>
-    			  {% endif %}
-    			  <label for="tos">{{form.tos}}&nbsp;I have read and agree to the Terms of Service.</label>
-    			</p>
-			    <p class="submit"><input class="btn" type="submit" value="Register"></p>
-			  </form>
-			</div>		
-			
-		</div>
-	</div>  
+		<form method="post" action="" class="wide" id="registration-form">
+			{% csrf_token %}
+  			{% if form.errors %}
+  			<div class="alert alert-error">Please correct the errors below.{{ form.non_field_errors }}</div>
+  			{% endif %}
+  			<div class="refinery-subheader">
+				<h4>Username</h4>
+			</div>
+			{% if form.username.errors %}
+			<p class="errors">{{ form.username.errors.as_text }}</p>
+			{% endif %}		
+			<p>{{ form.username }}</p>
+
+			<div class="refinery-subheader">
+				<h4>Email Address</h4>
+			</div>
+			{% if form.email.errors %}
+			<p class="errors">{{ form.email.errors.as_text }}</p>
+			{% endif %}		
+			<p>{{ form.email }}</p>
+
+			<div class="refinery-subheader">
+				<h4>Password</h4>
+			</div>
+			{% if form.password1.errors %}
+			<p class="errors">{{ form.password1.errors.as_text }}</p>
+			{% endif %}		
+			<p>{{ form.password1 }}</p>
+
+			<div class="refinery-subheader">
+				<h4>Password (again)</h4>
+			</div>
+			{% if form.password2.errors %}
+			<p class="errors">{{ form.password2.errors.as_text }}</p>
+			{% endif %}		
+			<p>{{ form.password2 }}</p>
+
+			<div class="refinery-subheader">
+				<h4>Terms of Service</h4>
+			</div>
+			{% if form.tos.errors %}
+			<p class="errors">{{form.tos.errors.as_text}}</p>
+			{% endif %}		
+			<p>{{form.tos}}&nbsp;I have read and agree to the Terms of Service.</p>
+			<p class="submit"><input class="btn" type="submit" value="Register"></p>
+		</form>
+	</div>
+</div>  
 {% endblock %}
 
 {% block content-related %}

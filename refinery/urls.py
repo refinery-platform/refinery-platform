@@ -56,6 +56,7 @@ urlpatterns = patterns('',
     
     url(r'^accounts/register/$', 'registration.views.register', {'form_class': RegistrationFormTermsOfServiceUniqueEmail, 'backend': 'registration.backends.default.DefaultBackend'}),
     url(r'^accounts/activate/(?P<activation_key>\w+)/$', 'registration.views.activate', {'success_url': '/login?next=/accounts/profile/edit', 'backend': 'registration.backends.default.DefaultBackend'}),
+    url(r'^accounts/password/reset/confirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm', {'post_reset_redirect': '/login?next=/'}),
     (r'^accounts/', include('registration.urls')),
     url(r'^login/$', 'django.contrib.auth.views.login', name="login" ),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login' ),
