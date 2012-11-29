@@ -364,18 +364,18 @@ def run_analysis_cleanup(analysis):
     logger.debug("analysis_manager.run_analysis_cleanup called")
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-     
+    
+    # saving when analysis is finished
+    analysis.time_end = datetime.now()
+    analysis.save()
+    
     # if analysis was declared failure, do not send completion email
     if analysis.status != Analysis.FAILURE_STATUS:
         logger.debug("analysis completion status: %s" % analysis.status)
         send_analysis_email(analysis)
     else:
         analysis.status = Analysis.SUCCESS_STATUS
-    
-    # saving when analysis is finished
-    analysis.time_end = datetime.now()
-    analysis.save()
-    
+        
     # Adding task to rename files after downloading results from history
     logger.debug("before rename_analysis_results called");
     #task_id = rename_analysis_results.subtask( (analysis,) ) 
