@@ -3,18 +3,23 @@ Created on May 10, 2012
 
 @author: nils
 '''
+from data_set_manager.genomes import map_species_id_to_default_genome_build
+from django.db import models
+from django.db.models.query_utils import Q
+from django.db.models.signals import post_save, post_init
+from django.dispatch.dispatcher import receiver
+from django_extensions.db.fields import UUIDField
+import logging
+
+# get module logger
+logger = logging.getLogger(__name__)
+
 
 '''
 General:
 - xyz_term = accession number of an ontology term
 - xyz_source = reference to the ontology where xyz_term originates (defined in the investigation)
 '''
-
-
-from django.db import models
-from django_extensions.db.fields import UUIDField
-
-from data_set_manager.genomes import map_species_id_to_default_genome_build
     
 
 class NodeCollection(models.Model):
@@ -401,12 +406,15 @@ class AttributeDefinition(models.Model):
     study = models.ForeignKey(Study, db_index=True)
     assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
     
-    definition = models.TextField(blank=True, null=True, db_index=True)
-
     type = models.TextField(db_index=True)
     subtype = models.TextField(blank=True, null=True, db_index=True)
 
+    # attribute value to match on
     value = models.TextField(blank=True, null=True, db_index=True)
+
+    # definition of the attribute value
+    definition = models.TextField(blank=True, null=True, db_index=True)
+
     value_accession = models.TextField(blank=True, null=True)
     value_source = models.TextField(blank=True, null=True)
 
@@ -419,10 +427,21 @@ class AttributeOrder(models.Model):
     type = models.TextField(db_index=True)
     subtype = models.TextField(blank=True, null=True, db_index=True)
     
-    rank = models.IntegerField(blank=True, null=True, unique=True)
+    # position of the attribute in the facet list and table
+    rank = models.IntegerField(blank=True, null=True)
+    
+    # should this attribute be exposed to the user? if false the attribute will never be shown to non-owner users
+    is_exposed = models.BooleanField(default=True)
+    
+    # should this attribute be used as a facet?
     is_facet = models.BooleanField(default=True)
-    is_hidden = models.BooleanField(default=False)
 
+    # should this
+    is_active = models.BooleanField(default=True)
+    
+    def __unicode__(self):
+        return unicode( self.type + "[" + self.subtype + "] = " ) + str( self.rank ) 
+    
     
 class AnnotatedNodeRegistry(models.Model):
     study = models.ForeignKey(Study, db_index=True)
@@ -451,6 +470,28 @@ class AnnotatedNode(models.Model):
     node_genome_build = models.TextField(db_index=True, null=True)
     # other information
     is_annotation = models.BooleanField(default=False) 
+
+
+def _initialize_attribute_order(sender, instance, **kwargs):
+    
+    logger.debug( "Created Attribute Order object: instance=%s", ( instance,) )
+    
+    # only necessary if the model was newly created:
+    #if created:
+    # test if there is already an entry for this attribute in this S/A in the database
+    # TODO: subtype could be "null"
+    object, object_created = AttributeOrder.objects.get_or_create( study=instance.study, assay=instance.assay, type=instance.attribute_type, subtype=instance.attribute_subtype )
+    
+    if object_created: 
+        object.rank = 1 + AttributeOrder.objects.filter( study=instance.study, assay=instance.assay ).count()
+        object.save() 
+        return True
+                 
+    return False
+
+post_init.connect(_initialize_attribute_order, sender=AnnotatedNode)
+
+
                 
 class ProtocolReference(models.Model):
     node = models.ForeignKey(Node)
