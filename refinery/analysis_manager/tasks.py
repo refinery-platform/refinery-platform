@@ -372,9 +372,8 @@ def run_analysis_cleanup(analysis):
     # if analysis was declared failure, do not send completion email
     if analysis.status != Analysis.FAILURE_STATUS:
         logger.debug("analysis completion status: %s" % analysis.status)
-        send_analysis_email(analysis)
-    else:
         analysis.status = Analysis.SUCCESS_STATUS
+        send_analysis_email(analysis)
         
     # Adding task to rename files after downloading results from history
     logger.debug("before rename_analysis_results called");
