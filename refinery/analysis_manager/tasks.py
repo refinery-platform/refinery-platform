@@ -365,9 +365,8 @@ def run_analysis_cleanup(analysis):
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     
-    # saving when analysis is finished
+    # log time when analysis is finished
     analysis.time_end = datetime.now()
-    analysis.save()
     
     # if analysis was declared failure, do not send completion email
     if analysis.status != Analysis.FAILURE_STATUS:
@@ -375,6 +374,10 @@ def run_analysis_cleanup(analysis):
         send_analysis_email(analysis)
     else:
         analysis.status = Analysis.SUCCESS_STATUS
+
+    # save state of analysis
+    analysis.save()
+
         
     # Adding task to rename files after downloading results from history
     logger.debug("before rename_analysis_results called");
@@ -469,7 +472,7 @@ def download_history_files(analysis) :
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     dl_files = analysis.workflow_dl_files
     
-    ### creating dicionary based on files to download predetermined by workflow w/ keep operators
+    ### creating dictionary based on files to download predetermined by workflow w/ keep operators
     dl_dict = {}
     
     for dl in dl_files.all():
