@@ -11,5 +11,5 @@ from core.models import Project
 
 class ProjectResource(ModelResource):
     class Meta:
-        authentication = ApiKeyAuthentication()
+        #authentication = ApiKeyAuthentication()
         queryset = Project.objects.all()

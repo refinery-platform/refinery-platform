@@ -1,18 +1,19 @@
 from core.api import ProjectResource
+from core.forms import RegistrationFormTermsOfServiceUniqueEmail
 from core.models import DataSet
-from core.views import admin_test_data
+from core.views import admin_test_data, solr
+from data_set_manager.api import AttributeOrderResource, StudyResource, \
+    AssayResource
 from data_set_manager.views import search_typeahead
-from core.views import solr
 from django.conf.urls.defaults import patterns, include, url
+from django.conf.urls.static import static
 from django.contrib import admin
 from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
+from settings import MEDIA_ROOT, MEDIA_URL, FILE_STORE_DIR
 from tastypie.api import Api
 from workflow_manager.views import import_workflows
-from django.conf.urls.static import static
-from settings import MEDIA_ROOT, MEDIA_URL, FILE_STORE_DIR
-from core.forms import RegistrationFormTermsOfServiceUniqueEmail
 
 # NG: facets for Haystack
 sqs = SearchQuerySet().using( "core" ).models( DataSet ).facet('measurement').facet('technology').highlight()
@@ -24,6 +25,9 @@ admin.autodiscover()
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
 v1_api.register(ProjectResource())
+v1_api.register(StudyResource())
+v1_api.register(AssayResource())
+v1_api.register(AttributeOrderResource())
 
 #patterns for all of the different applications
 urlpatterns = patterns('',    
