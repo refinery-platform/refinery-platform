@@ -18,7 +18,7 @@ function AddSearchTerm() {
 function workflowActions() {
 	
 	// validate form inputs: To ensure a workflow is chosen
-	$("#submitSamplesBtn").click( function() {
+	$("#submitSamplesBtn").click( function(event) {
 		event.preventDefault(); // cancel default behavior
 		
 		// getting currently selected workflow

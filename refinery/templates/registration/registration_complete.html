@@ -1,8 +1,27 @@
 {% extends "base.html" %}
 
-{% block title %}Registration complete{% endblock %}
+{% block title %}
+{{ block.super }} - Registration Complete
+{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+	<h1>Registration complete</h1>	
+</div>
+{% endblock %}
 
 {% block content %}
-<h1>Check your email</h1>
-<p>An activation link has been sent to the email address you supplied, along with instructions for activating your account.</p>
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Check your email</h3>
+			</span>
+		</div>
+		<p>
+			An activation link has been sent to the email address you supplied, along 
+			with instructions for activating your account.
+		</p>
+	</div>
+</div>
 {% endblock %}

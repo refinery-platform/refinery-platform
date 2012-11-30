@@ -307,6 +307,7 @@ def monitor_analysis_execution(analysis, interval=5.0, task_id=None):
             analysis.status = Analysis.FAILURE_STATUS
             analysis.time_end = datetime.now()
             analysis.save()
+            logger.debug("analysis status: %s" % analysis.status)
             send_analysis_email(analysis)
             
         elif progress["workflow_state"] == "ok":
@@ -363,17 +364,18 @@ def run_analysis_cleanup(analysis):
     logger.debug("analysis_manager.run_analysis_cleanup called")
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-     
-    # if analysis was declared failure, do not send completion email
-    if analysis.status != Analysis.FAILURE_STATUS:
-        send_analysis_email(analysis)
-    else:
-        analysis.status = Analysis.SUCCESS_STATUS
     
     # saving when analysis is finished
     analysis.time_end = datetime.now()
     analysis.save()
     
+    # if analysis was declared failure, do not send completion email
+    if analysis.status != Analysis.FAILURE_STATUS:
+        logger.debug("analysis completion status: %s" % analysis.status)
+        send_analysis_email(analysis)
+    else:
+        analysis.status = Analysis.SUCCESS_STATUS
+        
     # Adding task to rename files after downloading results from history
     logger.debug("before rename_analysis_results called");
     #task_id = rename_analysis_results.subtask( (analysis,) ) 
