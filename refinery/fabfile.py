@@ -8,14 +8,23 @@ Deployment script for the Refinery software environment
 OS: CentOS 5.7
 
 Requirements:
-* ~/.fabricrc with project_user, project_group and deployment_base_dir variables
-* local current directory with the following templates:
+* ~/.fabricrc with the following variables:
+** deployment_base_dir=<absolute path to the root of the Refinery deployment tree>
+** project_user=<username of the Refinery user>
+** project_group=<main group of the Refinery user>
+** dev_hosts=<comma-separated list of development hosts>
+** galaxy_root=<absolute path to the root of Galaxy deployment tree>
+** galaxy_user=<username of the Galaxy user>
+** galaxy_r_libs_base_dir=<absolute path to the root of R library tree>
+* local Refinery project directory with the following templates:
 ** bash_profile_template and bashrc_template
 ** settings_local_*.py
-* deployment_base_dir must be:
+* deployment_base_dir on the remote hosts must be:
 ** owned by project_user and project_group
 ** group writeable and have setgid attribute
-* deployment_base_dir/'bootstrap' directory with Apache Solr package
+* deployment_base_dir/'bootstrap' directory containing:
+**Apache Solr package
+**SPP R library package
 * local user account running this script must be able:
 ** to run commands as root on target hosts using sudo
 ** SSH in to the target hosts as project_user
@@ -25,7 +34,7 @@ Requirements:
 
 import os
 import sys
-from fabric.api import local, settings, abort, run, env, sudo
+from fabric.api import local, settings, abort, run, env, sudo, execute
 from fabric.contrib import django
 from fabric.contrib.console import confirm
 from fabric.context_managers import hide, cd, prefix
@@ -33,7 +42,6 @@ from fabric.contrib.files import exists, upload_template
 from fabric.decorators import task, with_settings
 from fabric.operations import require
 from fabric.utils import puts
-import core
 
 
 # local settings
@@ -68,7 +76,9 @@ def dev():
     env.dev_settings_file = "settings_local_dev.py"
     django.settings_module(os.path.splitext(env.dev_settings_file)[0])
     env.deployment_target_dir = os.path.join(env.deployment_base_dir, "dev")
-    env.galaxy_root = env.galaxy_dev
+    galaxy_base_dir = env.galaxy_root + "dev"
+    env.galaxy_root = os.path.join(galaxy_base_dir, "live")
+    env.galaxy_r_libs_target_dir = os.path.join(env.galaxy_r_libs_base_dir, "dev")
 
 @task
 def stage():
@@ -93,7 +103,7 @@ def bootstrap():
     '''
     create_project_user_home_dir()
     create_deployment_target_dir()
-    init_project_user_home_dir()
+    update_project_user_home_dir()
 
     install_postgresql_server()
     init_postgresql_server()
@@ -445,37 +455,41 @@ def create_refinery_data_dirs():
 
 
 @task
-@with_settings(user=env.project_user)
 def setup_refinery():
-    '''Refinery setup
+    '''Re-create refinery setup after dropdb
 
     '''
-    refinery_syncdb()
-    init_refinery()
-    create_user(0)
-    create_galaxy_instance(0)
-    import_workflows()
-    rebuild_solr_index("core")
-    rebuild_solr_index("data_set_manager")
+    execute(upload_refinery_settings)
+    execute(create_refinery_db)
+    execute(refinery_syncdb)
+    execute(init_refinery)
+    execute(create_refinery_users)
+    execute(create_galaxy_instances)
+    execute(refinery_createsuperuser)
 
 
 @task
 @with_settings(user=env.project_user)
 def refinery_syncdb():
     '''Create database tables for all Django apps in Refinery
-    (also, create a superuser)
+    (also, create a superuser - requires user input)
     '''
     #TODO: make non-interactive
     with prefix("workon refinery"):
-        run("./manage.py syncdb")
+        run("./manage.py syncdb --noinput")
 
 
 @task
 @with_settings(user=env.project_user)
-def create_refinery_admin_user():
-    '''
+def refinery_createsuperuser():
+    '''Create the Django superuser
 
     '''
+    with prefix("workon refinery"), settings(hide('commands'), warn_only=True):
+        # createsuperuser returns 1 if username already exists
+        run("./manage.py createsuperuser --noinput --username {} --email {}"
+            .format(django_settings.REFINERY_SUPERUSER['username'],
+                    django_settings.REFINERY_SUPERUSER['email']))
 
 
 @task
@@ -490,15 +504,25 @@ def init_refinery():
 
 @task
 @with_settings(user=env.project_user)
-def create_user(user_id):
+def create_refinery_user(user_id):
     '''Create a user account in Refinery
 
     '''
     user = django_settings.REFINERY_USERS[user_id]
-    with prefix("workon refinery"):
+    with prefix("workon refinery"), settings(warn_only=True):
         run("./manage.py create_user "
             "'{username}' '{password}' '{email}' '{firstname}' '{lastname}' '{affiliation}'"
             .format(**user))
+
+
+@task
+@with_settings(user=env.project_user)
+def create_refinery_users():
+    '''Create all user accounts specified in settings
+
+    '''
+    for user_id in django_settings.REFINERY_USERS.keys():
+        execute(create_refinery_user, user_id)
 
 
 @task
@@ -511,6 +535,16 @@ def create_galaxy_instance(instance_id):
     with prefix("workon refinery"):
         run("./manage.py create_galaxy_instance '{base_url}' '{api_key}' '{description}'"
             .format(**instance))
+
+
+@task
+@with_settings(user=env.project_user)
+def create_galaxy_instances():
+    '''Create all Galaxy instances specified in settings
+
+    '''
+    for instance_id in django_settings.GALAXY_INSTANCES.keys():
+        execute(create_galaxy_instance, instance_id)
 
 
 @task
@@ -622,8 +656,8 @@ def upload_galaxy_tool_data():
 
 
 @task
-def update_galaxy_user_home_dir():
-    '''Upload .bashrc.customizations to $HOME of the Galaxy user
+def update_galaxy_user_home():
+    '''Upload Bash config, R config to $HOME of the Galaxy user and create R library dir
 
     '''
     #TODO: change settings to env.galaxy_user
@@ -632,17 +666,15 @@ def update_galaxy_user_home_dir():
 
     local_path = os.path.join(env.local_conf, "bashrc_galaxy_template")
     remote_path = os.path.join(home_dir, ".bashrc.customizations")
-    bashrc_context = {'deployment_target_dir': env.deployment_target_dir}
+    bashrc_context = {'galaxy_r_libs': env.galaxy_r_libs_base_dir}
     upload_template(local_path, remote_path, bashrc_context, backup=False)
 
     local_path = os.path.join(env.local_conf, "Rprofile_template")
     remote_path = os.path.join(home_dir, ".Rprofile")
     upload_template(local_path, remote_path, backup=False)
 
-    if not exists("~/R"):
-        run("mkdir ~/R")
-    if not exists("~/R/library"):
-        run("mkdir ~/R/library")
+    run("mkdir -pv {}".format(env.galaxy_r_libs_target_dir))
+
 
 @task
 @with_settings(user=env.project_user)
@@ -651,6 +683,7 @@ def install_spp():
 
     '''
     #TODO: change settings to env.galaxy_user before using
+    #TODO: specidy 'lib' to make sure packahes is installed into the correct location
     run("R -e \"install.packages('caTools')\"")
     run("R -e \"install.packages('{bootstrap_dir}/spp_1.11.tar.gz')\"".format(**env))
 
