@@ -365,7 +365,7 @@ def run_analysis_cleanup(analysis):
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     
-    # log time when analysis is finished
+    # saving when analysis is finished
     analysis.time_end = datetime.now()
     
     # if analysis was declared failure, do not send completion email
@@ -472,7 +472,7 @@ def download_history_files(analysis) :
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     dl_files = analysis.workflow_dl_files
     
-    ### creating dictionary based on files to download predetermined by workflow w/ keep operators
+    ### creating dicionary based on files to download predetermined by workflow w/ keep operators
     dl_dict = {}
     
     for dl in dl_files.all():
