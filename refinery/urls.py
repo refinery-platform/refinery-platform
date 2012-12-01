@@ -8,6 +8,7 @@ from data_set_manager.views import search_typeahead
 from django.conf.urls.defaults import patterns, include, url
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.sites.models import Site
 from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
@@ -67,7 +68,7 @@ urlpatterns = patterns('',
     url(r'^accounts/profile/$', 'core.views.user_profile', name='user_profile'),
     url(r'^accounts/profile/edit$', 'core.views.user_profile_edit', name='user_profile_edit'),
     #url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page":"/" } ),
-    url(r'^logout/$', 'django.contrib.auth.views.logout' ),
+    url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page": Site.objects.get_current().domain } ),
     
     # NG: tastypie API urls
     url(r'^api/', include(v1_api.urls)),
