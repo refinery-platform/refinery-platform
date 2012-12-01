@@ -35,7 +35,7 @@
 		<div class="refinery-subheader">
 			<h4>Workflow Id</h4>
 		</div>		
-		<p>{{ workflow.internal_id }} (<a href="{% url download_workflow workflow_uuid %}">Download</a>)</p>
+		<p>{{ workflow.internal_id }} (<a href="{% url download_workflow workflow.uuid %}">Download</a>)</p>
 		
 		<div class="refinery-header">
 			<span class="refinery-header-left">
