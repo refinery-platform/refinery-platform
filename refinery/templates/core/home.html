@@ -45,7 +45,7 @@
 
 	{% if user.is_authenticated %}       
 		<span class="refinery-header-right">
-			<h4><a href={% url project_new %}><i class="icon-plus-sign"></i></a></h4> 
+			<h4><a href="{% url project_new %}"><i class="icon-plus-sign"></i></a></h4> 
 		</span>	
 	{% endif %}		
 </div>
@@ -93,7 +93,7 @@
     {% for project in projects %}
     <tr>
     	<td>
-        	<a href="projects/{{ project.uuid }}">{{ project.name }}</a>
+        	<a href="{% url projects project.uuid %}">{{ project.name }}</a>
         </td>
     	<td>
         {{project.analyses.all|length}}
@@ -102,7 +102,8 @@
 		{% for analysis in project.analyses.all %}
 		    <tr>
 		    	<td>
-		    		<a href="projects/{{ project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> - {{analysis.summary}}
+		    		<!-- <a href="projects/{{ project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> - {{analysis.summary}} -->
+		    		<a href="{% url analysis analysis.uuid %}">{{ analysis.name }}</a> - {{analysis.summary}}
 		    	</td>
 			    <td>
 					<span id="status-{{ analysis.uuid }}"></span>
@@ -150,7 +151,7 @@
 		{% for workflow in workflows %}
         <tr>
         	<td>
-        		<a href="workflows/{{ workflow.uuid }}">{{ workflow.name }}</a>
+        		<a href="{% url workflow workflow.uuid %}">{{ workflow.name }}</a>
         	</td>
         </tr>
     	{% endfor %}
@@ -201,7 +202,7 @@
     {% for data_set in data_sets %}
         <tr>
         	<td>
-				<a href="data_sets/{{ data_set.uuid }}">{{ data_set.name }}</a>        		
+				<a href="{% url data_set data_set.uuid %}">{{ data_set.name }}</a>        		
         	</td>
         </tr>
     {% endfor %}
