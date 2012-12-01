@@ -68,7 +68,7 @@ urlpatterns = patterns('',
     url(r'^accounts/profile/$', 'core.views.user_profile', name='user_profile'),
     url(r'^accounts/profile/edit$', 'core.views.user_profile_edit', name='user_profile_edit'),
     #url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page":"/" } ),
-    url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page": Site.objects.get_current().domain } ),
+    url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page": "http://" + Site.objects.get_current().domain } ),
     
     # NG: tastypie API urls
     url(r'^api/', include(v1_api.urls)),
