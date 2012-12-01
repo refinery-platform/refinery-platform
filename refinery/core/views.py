@@ -160,7 +160,7 @@ def project_new(request):
             project.set_owner( request.user )
             # Process the data in form.cleaned_data
             # ...
-            return HttpResponseRedirect( "/" ) # Redirect after POST
+            return HttpResponseRedirect( request.path ) # Redirect after POST
     else:
         form = ProjectForm() # An unbound form
 
