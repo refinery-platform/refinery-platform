@@ -21,9 +21,9 @@ from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
     get_perms, get_objects_for_group, get_objects_for_user, get_perms, \
     get_users_with_perms
 from haystack.query import SearchQuerySet
+from visualization_manager.views import igv_multi_species
 import logging
 import urllib2
-from visualization_manager.views import igv_multi_species
 
 
 logger = logging.getLogger(__name__)
@@ -160,7 +160,8 @@ def project_new(request):
             project.set_owner( request.user )
             # Process the data in form.cleaned_data
             # ...
-            return HttpResponseRedirect( "/" + reverse('project', args=(project.uuid,)) ) # Redirect after POST
+            
+            return HttpResponseRedirect( reverse('project', args=(project.uuid,)) ) # Redirect after POST
     else:
         form = ProjectForm() # An unbound form
 
