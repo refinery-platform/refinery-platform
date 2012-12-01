@@ -63,7 +63,7 @@
 	        <span class="icon-bar"></span>
 	      </a>
 	              	
-          <a class="brand" href="/">
+          <a class="brand" href="{% url home %}">
           {% if REFINERY_MAIN_LOGO != "" %}
           	<img style="height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px" src="{{ STATIC_URL }}{{ REFINERY_MAIN_LOGO }}"/>&nbsp;&nbsp;
           {% endif %}
@@ -82,7 +82,7 @@
     			<a href="{% url django.contrib.auth.views.logout %}"><i class="icon-signout"></i></a>
     	{% else %}
 			<a href="{% url home %}accounts/register">Register</a>&nbsp;&nbsp;
-			<a href="{% url django.contrib.auth.views.login %}?next={% firstof request.path '/' %}"><i class="icon-signin"></i></a>
+			<a href="{% url django.contrib.auth.views.login %}?next={% if request.path %}{{ request.path|safe }}{% else %}{% url home %}{% endif %}"><i class="icon-signin"></i></a>
 		{% endif %}		
     		</p>
                            	          
