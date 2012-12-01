@@ -93,7 +93,7 @@
     {% for project in projects %}
     <tr>
     	<td>
-        	<a href="{% url projects project.uuid %}">{{ project.name }}</a>
+        	<a href="{% url project project.uuid %}">{{ project.name }}</a>
         </td>
     	<td>
         {{project.analyses.all|length}}
