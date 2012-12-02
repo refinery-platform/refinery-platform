@@ -23,6 +23,7 @@ from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
 from haystack.query import SearchQuerySet
 from visualization_manager.views import igv_multi_species
 import logging
+import settings
 import urllib2
 
 
@@ -724,6 +725,15 @@ def solr(request):
         
     return HttpResponse( urllib2.urlopen( "http://127.0.0.1:8983/solr/core/select?" + query.urlencode() ).read(), mimetype='application/json' )
 
+
+def solr_select(request, core):
+    # core format is <name_of_core>    
+    # query.GET is a querydict containing all parts of the query
+    url = settings.REFINERY_SOLR_BASE_URL + core + "/select?" + request.GET.urlencode()
+    print(url)
+    return HttpResponse( urllib2.urlopen( url ).read(), mimetype='application/json' )
+
+
 def solr_igv(request):
     '''
     Function for taking solr request url. Removes pagination, facets from input query to create multiple 
@@ -733,9 +743,10 @@ def solr_igv(request):
     :returns: 
     '''
     
+    print( "Is AJAX? " + str( request.is_ajax() ) )
+    
     # copy querydict to make it editable
     if request.is_ajax():
-        query = request.GET.copy()
         logger.debug("solr_igv called: request is ajax")
         
         # extracting solr query from request 
@@ -757,6 +768,9 @@ def solr_igv(request):
             session_urls = igv_multi_species(solr_results, solr_annot)
             
         return HttpResponse(simplejson.dumps(session_urls),mimetype='application/json')
+ 
+    logger.debug("solr_igv called: request is not ajax")
+
     
 def get_solr_results(query, facets=False, jsonp=False, annotation=False):
     '''
@@ -787,6 +801,8 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False):
         
     # proper url encoding                  
     query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
+    
+    print( "solr helper: " + query )
     
     # opening solr query results
     results =  urllib2.urlopen( query ).read()
