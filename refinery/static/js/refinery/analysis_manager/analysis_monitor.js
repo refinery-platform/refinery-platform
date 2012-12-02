@@ -161,7 +161,7 @@ AnalysisMonitor.prototype.printProgressBars = function ( parentElementId, mode, 
 		
 		code += "<div class=\"row-fluid\" id=\"indicator_" + taskId + "\">";		                 			
 		code += "	<div class=\"span10\">";
-		code += "		<div id=\"bar_wrapper_" + taskId + "\" class=\"progress progress-striped active\">";
+		code += "		<div id=\"bar_wrapper_" + taskId + "\" class=\"progress active\">";
 		code += "			<div class=\"bar\" id=\"bar_" + taskId + "\" style=\"width:" + percentDone + ";\"></div>";
 		code += "		</div>";
 		code += "	</div>";
@@ -203,7 +203,7 @@ AnalysisMonitor.prototype.getUpdate = function() {
 	var self = this;
 
 	$.ajax({
-     url:"/analysis_manager/" + self.uuid + "/",
+     url: "http://" + REFINERY_BASE_URL + "/analysis_manager/" + self.uuid + "/",
      type:"POST",
      dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
@@ -232,7 +232,7 @@ AnalysisMonitor.prototype.isAnalysisRunning = function( callbackRunning, callbac
 	var self = this;
 
 	$.ajax({
-     url:"/analysis_manager/" + self.uuid + "/",
+     url: "http://" + REFINERY_BASE_URL + "/analysis_manager/" + self.uuid + "/",
      type:"POST",
      dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
@@ -256,7 +256,7 @@ AnalysisMonitor.prototype.getAnalysisProgress = function( callbackRunning, callb
 	var self = this;
 
 	$.ajax({
-     url:"/analysis_manager/" + self.uuid + "/",
+     url: "http://" + REFINERY_BASE_URL + "/analysis_manager/" + self.uuid + "/",
      type:"POST",
      dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
