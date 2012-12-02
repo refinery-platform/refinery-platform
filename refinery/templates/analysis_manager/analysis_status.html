@@ -63,7 +63,7 @@
 	
 	<script>
 	$(document).ready(function() {		
-		monitor = new AnalysisMonitor( "{{ uuid }}", "/projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ statuses.analysis.uuid }}", "{{ csrf_token }}" );
+		monitor = new AnalysisMonitor( "{{ uuid }}", "{{ REFINERY_BASE_URL }}", "{% url analysis statuses.analysis.uuid %}", "{{ csrf_token }}" );
 		monitor.getUpdate();
 		
 		//var that = this;

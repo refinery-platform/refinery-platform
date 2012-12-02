@@ -230,14 +230,12 @@
 {% block script %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/analysis_manager/analysis_monitor.js"></script>
 	
-	<script>
-		var REFINERY_BASE_URL = "{{ REFINERY_BASE_URL }}";
-	    	
+	<script>	    	
 		$(document).ready(function() {		
 			var monitors = [];
 			var callbacks = [];
 			{% for analysis in unassigned_analyses.all %}
-				monitors["{{ analysis.uuid }}"] = new AnalysisMonitor( "{{ analysis.uuid }}", "", "{{ csrf_token }}" );
+				monitors["{{ analysis.uuid }}"] = new AnalysisMonitor( "{{ analysis.uuid }}", "{{ REFINERY_BASE_URL }}", "", "{{ csrf_token }}" );
 				
 				callbacks["{{ analysis.uuid }}"] = function(){ monitors["{{ analysis.uuid }}"].getAnalysisProgress( function( percentDone ) {
 					$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge\">" + percentDone + "</span>" );

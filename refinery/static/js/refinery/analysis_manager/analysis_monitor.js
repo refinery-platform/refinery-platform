@@ -5,12 +5,13 @@
 	2. 
 */
 
-AnalysisMonitor = function( uuid, redirectUrl, crsfMiddlewareToken ) {
+AnalysisMonitor = function( uuid, baseUrl, redirectUrl, crsfMiddlewareToken ) {
   	
   	var self = this;
   	self.uuid = uuid;
   	self.redirectUrl = redirectUrl;
   	self.crsfMiddlewareToken = crsfMiddlewareToken;
+  	self.baseUrl = baseUrl;
   
 	self.STAGE_WAITING = 1;
 	self.STAGE_RUNNING = 2;
@@ -203,7 +204,7 @@ AnalysisMonitor.prototype.getUpdate = function() {
 	var self = this;
 
 	$.ajax({
-     url: "http://" + REFINERY_BASE_URL + "/analysis_manager/" + self.uuid + "/",
+     url: baseUrl + "/analysis_manager/" + self.uuid + "/",
      type:"POST",
      dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
@@ -232,7 +233,7 @@ AnalysisMonitor.prototype.isAnalysisRunning = function( callbackRunning, callbac
 	var self = this;
 
 	$.ajax({
-     url: "http://" + REFINERY_BASE_URL + "/analysis_manager/" + self.uuid + "/",
+     url: baseUrl + "/analysis_manager/" + self.uuid + "/",
      type:"POST",
      dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
@@ -256,7 +257,7 @@ AnalysisMonitor.prototype.getAnalysisProgress = function( callbackRunning, callb
 	var self = this;
 
 	$.ajax({
-     url: "http://" + REFINERY_BASE_URL + "/analysis_manager/" + self.uuid + "/",
+     url: baseUrl + "/analysis_manager/" + self.uuid + "/",
      type:"POST",
      dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
