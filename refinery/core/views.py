@@ -673,7 +673,7 @@ def analyses(request, project_uuid ):
                               {"project": project, "analyses": analyses},
                               context_instance=RequestContext(request))
 
-def analysis(request, project_uuid, analysis_uuid ):
+def analysis(request, analysis_uuid ):
     analysis = Analysis.objects.get(uuid=analysis_uuid)
     
     project = analysis.project
