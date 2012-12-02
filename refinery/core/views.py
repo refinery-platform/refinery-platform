@@ -743,8 +743,6 @@ def solr_igv(request):
     :returns: 
     '''
     
-    print( "Is AJAX? " + str( request.is_ajax() ) )
-    
     # copy querydict to make it editable
     if request.is_ajax():
         logger.debug("solr_igv called: request is ajax")
@@ -768,8 +766,6 @@ def solr_igv(request):
             session_urls = igv_multi_species(solr_results, solr_annot)
             
         return HttpResponse(simplejson.dumps(session_urls),mimetype='application/json')
- 
-    logger.debug("solr_igv called: request is not ajax")
 
     
 def get_solr_results(query, facets=False, jsonp=False, annotation=False):
@@ -801,9 +797,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False):
         
     # proper url encoding                  
     query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
-    
-    print( "solr helper: " + query )
-    
+        
     # opening solr query results
     results =  urllib2.urlopen( query ).read()
         
