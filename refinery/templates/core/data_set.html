@@ -218,7 +218,7 @@ rect.active {
 		<p>
 		{% if data_set.analysis_set.all|length > 0 %}	
 			{% for analysis in data_set.analysis_set.all %}
-					<a href="{% url analysis analysis.uuid %}">{{ analysis.name }}</a>
+					<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }}</a>
 					{% if analysis.project.is_catch_all %}
 						(unassigned)
 					{% else %}

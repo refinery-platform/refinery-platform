@@ -80,7 +80,7 @@
 			    <tr>
 			    	<td>
 			    		<!-- <i class="icon-empty"></i> <a href="projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> -->
-			    		<a href="{% url analysis analysis.uuid %}">{{ analysis.name }}</a>
+			    		<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }}</a>
 			    	</td>
 			    	<td>
 			    		<span id="analysis-{{ analysis.uuid }}-status"></span>
@@ -103,7 +103,7 @@
 		    <tr>
 		    	<td>
 		    		<!-- <a href="projects/{{ project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> - {{analysis.summary}} -->
-		    		<a href="{% url analysis analysis.uuid %}">{{ analysis.name }}</a> - {{analysis.summary}}
+		    		<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }}</a> - {{analysis.summary}}
 		    	</td>
 			    <td>
 					<span id="status-{{ analysis.uuid }}"></span>
