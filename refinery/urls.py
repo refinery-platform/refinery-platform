@@ -1,7 +1,7 @@
 from core.api import ProjectResource
 from core.forms import RegistrationFormTermsOfServiceUniqueEmail
 from core.models import DataSet
-from core.views import admin_test_data, solr
+from core.views import admin_test_data
 from data_set_manager.api import AttributeOrderResource, StudyResource, \
     AssayResource
 from data_set_manager.views import search_typeahead
@@ -77,8 +77,6 @@ urlpatterns = patterns('',
     #url(r'^search/', include('haystack.urls')),
     url(r'^search/', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=sqs), name='search' ),
     url(r'^typeahead/$', search_typeahead),
-    #url(r'^solr/(?P<query>.+/$)', solr ),
-    url(r'^solr/$', solr ),
 ) + static( MEDIA_URL, document_root=MEDIA_ROOT + "/" + FILE_STORE_DIR )
 # for "static" see https://docs.djangoproject.com/en/dev/howto/static-files/#serving-other-directories
 
