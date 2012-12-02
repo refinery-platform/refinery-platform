@@ -204,7 +204,7 @@ AnalysisMonitor.prototype.getUpdate = function() {
 	var self = this;
 
 	$.ajax({
-     url: baseUrl + "/analysis_manager/" + self.uuid + "/",
+     url: self.baseUrl + "/analysis_manager/" + self.uuid + "/",
      type:"POST",
      dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
@@ -233,7 +233,7 @@ AnalysisMonitor.prototype.isAnalysisRunning = function( callbackRunning, callbac
 	var self = this;
 
 	$.ajax({
-     url: baseUrl + "/analysis_manager/" + self.uuid + "/",
+     url: self.baseUrl + "/analysis_manager/" + self.uuid + "/",
      type:"POST",
      dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
@@ -257,7 +257,7 @@ AnalysisMonitor.prototype.getAnalysisProgress = function( callbackRunning, callb
 	var self = this;
 
 	$.ajax({
-     url: baseUrl + "/analysis_manager/" + self.uuid + "/",
+     url: self.baseUrl + "/analysis_manager/" + self.uuid + "/",
      type:"POST",
      dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
