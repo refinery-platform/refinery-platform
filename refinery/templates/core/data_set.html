@@ -106,6 +106,7 @@ rect.active {
 	<div class="row-fluid">      
 	    <ul class="nav nav-tabs" id="tabs">
   			<li class="active"><a href="#content" data-toggle="tab">Samples</a></li>
+  			<li><a href="#configuration" data-toggle="tab">Attributes</a></li>
   			<li><a href="#analyses" data-toggle="tab">Analyses</a></li>
   			<li><a href="#about" data-toggle="tab">About</a></li>
   			<li><a href="#sharing" data-toggle="tab">Sharing</a></li>
@@ -208,6 +209,19 @@ rect.active {
 		</form>
 	</div>
 
+  	<div class="tab-pane" id="configuration">
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Configuration</h3>
+			</span>
+		</div>
+
+		<div class="refinery-subheader">
+			<h4>Attribute Order and Visibility</h4>
+		</div>
+		<div id="configurator-panel">
+		</div>	
+  	</div>	
 
   	<div class="tab-pane" id="analyses">
 		<div class="refinery-header">
@@ -315,9 +329,7 @@ rect.active {
 	  	</div>
 
 	</div>
-	
-	
-		
+			
 	{% else %}
 	    <p>No valid data set.</p>
 	{% endif %}
@@ -367,10 +379,12 @@ rect.active {
 	    
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v2.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/fisheye.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/underscore/underscore.js"></script>
 
 	<!-- Refinery libraries -->
 	<script type="text/javascript">
 		var REFINERY_BASE_URL = "{{ REFINERY_BASE_URL }}";
+		var REFINERY_API_BASE_URL = "http://" + REFINERY_BASE_URL + "/" + "api" + "/" + "v1" + "/";
 		var REFINERY_SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}";
 		var externalStudyUuid = "{{ assay_uuid }}";
 		var externalAssayUuid = "{{ study_uuid }}";
@@ -378,7 +392,19 @@ rect.active {
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/viewers/pivot-matrix.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/data_set_manager/data_set_configurator.js"></script>
+    
     <!-- <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script> -->
+    
+	<script>
+	$(document).ready(function() {		
+		configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
+		configurator.initialize()
+		
+		//var that = this;
+		//var timerId = setInterval( function(){ console.log( monitor ); monitor.getUpdate(); }, 3000 );
+	});    		
+	</script>
 
 
 <script type="application/javascript">

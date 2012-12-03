@@ -6,7 +6,8 @@ Created on Nov 29, 2012
 
 from data_set_manager.models import AttributeOrder, Study, Assay
 from tastypie import fields
-from tastypie.authentication import ApiKeyAuthentication
+from tastypie.authentication import Authentication
+from tastypie.authorization import Authorization
 from tastypie.constants import ALL, ALL_WITH_RELATIONS
 from tastypie.resources import ModelResource
 
@@ -35,6 +36,8 @@ class AttributeOrderResource(ModelResource):
 
     class Meta:
         queryset = AttributeOrder.objects.all()
-        allowed_methods = ["get"]
+        allowed_methods = ["get", "patch", "put", "post" ]
+        authentication = Authentication()
+        authorization = Authorization()
         filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS, "subtype": ALL }
-        excludes = ["id"]
+        excludes = []
