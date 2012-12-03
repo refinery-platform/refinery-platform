@@ -652,9 +652,10 @@ function processDocs( data ) {
 		
 		//adding galaxy comboboxes 
 		var file_uuid = document.file_uuid;
-		var check_temp = '<select name="assay_'+ file_uuid +'" id="webmenu" class="btn-mini OGcombobox"> <option></option> </select> <input type="hidden" name="fileurl_' + file_uuid +'" value="' + document.name + '">';
+		//var check_temp = '<select name="assay_'+ file_uuid +'" id="webmenu" class="btn-mini OGcombobox"> <option></option> </select> <input type="hidden" name="fileurl_' + file_uuid +'" value="' + document.name + '">';
 		
-		s += '<td>' + check_temp + '</td>'
+		//s += '<td>' + check_temp + '</td>'
+		s += '<td><label><input type=\"checkbox\" checked></label>' + '</td>'
 		for ( entry in fields )
 		{
 			if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible ) {
