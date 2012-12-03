@@ -20,4 +20,5 @@ def extra_context(context):
         "REFINERY_SOLR_BASE_URL": settings.REFINERY_SOLR_BASE_URL,
         "REFINERY_GOOGLE_ANALYTICS_ID": settings.REFINERY_GOOGLE_ANALYTICS_ID,
         "REFINERY_INSTANCE_NAME": Site.objects.get_current().name,
+        "REFINERY_REPOSITORY_MODE": settings.REFINERY_REPOSITORY_MODE,
     }

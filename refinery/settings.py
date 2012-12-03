@@ -330,7 +330,7 @@ AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 FILE_STORE_DIR = 'files'
 
 # location of the solr server
-REFINERY_SOLR_BASE_URL = "http://127.0.0.1:8983/solr"
+REFINERY_SOLR_BASE_URL = "http://127.0.0.1:8983/solr/"
 
 # used to replaces spaces in the names of dynamic fields in Solr indexing
 REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = "_"
@@ -356,6 +356,8 @@ EMAIL_SUBJECT_PREFIX = '[%s] ' % REFINERY_INSTANCE_NAME
 TAXONOMY_URL = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"
 UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 
+# Tag for repository mode
+REFINERY_REPOSITORY_MODE = False
 
 # import local settings
 from settings_local import *

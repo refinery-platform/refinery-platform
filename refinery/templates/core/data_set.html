@@ -132,16 +132,19 @@ rect.active {
 			 	<div class="span10">
 			 	
 			 			<div class="row-fluid">
-						<div> 				
+						<div>
+							<!--  				
 							<select class="combobox" name="workflow_choice" id="workflow_choice">
 								<option></option>
 								{% for work in workflows %}
 									<option value="{{work.uuid}}">{{work.name}}</option>
 								{% endfor %}
-							</select>			
-								
-							<!-- <button class="btn btn-primary" id="submitSamplesBtn"><i class="icon-road"></i>Run</button> -->
-							<a href="#" class="btn" id="submitSamplesBtn">Apply</a> &nbsp;
+							</select>
+							<a href="#" class="btn" id="submitSamplesBtn">Apply</a> &nbsp;		
+							-->	
+							<span class="label" style="margin-left: 50px;">Selection</span>
+							<a name="workflow_choice" id="workflow_choice" href="#" role="button" class="btn" >Download Archive</a>
+							
 							
 							<span class="label" style="margin-left: 50px;">View in</span>
 							<a id="igv-multi-species" href="#" role="button" class="btn" data-toggle="modal">Launch IGV</a>
@@ -388,6 +391,7 @@ rect.active {
 		var REFINERY_SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}";
 		var externalStudyUuid = "{{ assay_uuid }}";
 		var externalAssayUuid = "{{ study_uuid }}";
+		var REFINERY_REPOSITORY_MODE = "{{ REFINERY_REPOSITORY_MODE }}"
 	</script>	
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/viewers/pivot-matrix.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
