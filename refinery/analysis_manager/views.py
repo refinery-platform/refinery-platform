@@ -27,7 +27,7 @@ def index(request):
     
     return render_to_response( 'analysis_manager/index.html', { 'statuses': statuses }, context_instance=RequestContext( request ) )
 
-def analysis(request, uuid):
+def analysis_status(request, uuid):
     print "called analysis_status"
     #import pdb; pdb.set_trace()
     

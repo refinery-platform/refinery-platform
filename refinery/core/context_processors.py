@@ -16,6 +16,7 @@ def extra_context(context):
         "REFINERY_CSS": settings.REFINERY_CSS,
         "REFINERY_MAIN_LOGO": settings.REFINERY_MAIN_LOGO,
         "REFINERY_INNER_NAVBAR_HEIGHT": settings.REFINERY_INNER_NAVBAR_HEIGHT, 
+        "REFINERY_BASE_URL": settings.REFINERY_BASE_URL,
         "REFINERY_SOLR_BASE_URL": settings.REFINERY_SOLR_BASE_URL,
         "REFINERY_GOOGLE_ANALYTICS_ID": settings.REFINERY_GOOGLE_ANALYTICS_ID,
         "REFINERY_INSTANCE_NAME": Site.objects.get_current().name,

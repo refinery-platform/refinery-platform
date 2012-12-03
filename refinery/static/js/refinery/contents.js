@@ -5,8 +5,10 @@
 
 var urlComponents = document.location.href.split("/");	
 	
-//var solrRoot = "http://127.0.0.1:8983/solr/data_set_manager/select";
-var solrRoot = SOLR_BASE_URL + "/data_set_manager/select";
+var solrRoot = "http://" + REFINERY_BASE_URL + "/solr/";
+var solrSelectUrl = solrRoot + "data_set_manager/select/";
+var solrIgvUrl = solrRoot + "igv/";
+
 var solrQuery = "q=django_ct:data_set_manager.node";
 var solrSettings = "wt=json&json.wrf=?&facet=true";
 
@@ -68,7 +70,7 @@ $(".annotation-buttons button").click(function () {
 		
 
 function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents, annotationParam ) {
-	var url = solrRoot
+	var url = solrSelectUrl
 		+ "?" + solrQuery 
 		+ "&" + solrSettings
 		+ "&" + "start=" + start
@@ -827,27 +829,6 @@ function createSpeciesModal(aresult) {
 
 initializeData( currentAssayUuid, currentStudyUuid, currentNodeType );
 
-$( "#igv-session-link" ).on( "click", function() {
-	getField( currentAssayUuid, currentStudyUuid, currentNodeType, "file_uuid", function( uuids ) {
-		
-		var limit = 20;
-		var newUrl = "/visualization_manager/igv_session?uuids=" + uuids.join( "," );
-		
-		if ( uuids.length > limit ) {
-			var result = confirm( "Do you really want to open IGV with " + uuids.length + " tracks?" );
-			if ( result )
-		  	{
-		  		window.location = newUrl;
-		  	}
-			else {
-		  		// do nothing
-		  	}				
-		}
-		else {
-			window.location = newUrl;			
-		}
-	});
-});
 
 $( "#profile-viewer-session-link" ).on( "click", function() {
 	getField( currentAssayUuid, currentStudyUuid, currentNodeType, "file_uuid", function( uuids ) {
@@ -860,10 +841,8 @@ $( "#profile-viewer-session-link" ).on( "click", function() {
 	});
 });
 
-// FUNCTION FOR enabling the IGV test button to work
-$( "#igv-test" ).on( "click", function(e) {
-	
-	//console.log("IGV-TEST button called");
+
+$( "#igv-multi-species" ).on( "click", function(e) {
 	
 	// KILLs AJAX request if already sent
 	if(typeof xhr!='undefined'){
@@ -877,7 +856,7 @@ $( "#igv-test" ).on( "click", function(e) {
 	var solr_annot = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, {}, fields, {}, true );
 	
 	// url to point ajax function too 
-	var temp_url = "/solr/";
+	var temp_url = solrIgvUrl;
 	
 	//console.log("solr_url");
 	//console.log(solr_url);	
@@ -894,31 +873,42 @@ $( "#igv-test" ).on( "click", function(e) {
 	//var target = document.getElementById('myModalBody');
 	//var spinner = new Spinner(opts).spin(target);  
 		
-	// function for adding csrf cookie for django
-	$.ajaxSetup({ 
-     beforeSend: function(xhr, settings) {
-         function getCookie(name) {
-             var cookieValue = null;
-             if (document.cookie && document.cookie != '') {
-                 var cookies = document.cookie.split(';');
-                 for (var i = 0; i < cookies.length; i++) {
-                     var cookie = jQuery.trim(cookies[i]);
-                     // Does this cookie string begin with the name we want?
-                 if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                     break;
-                 }
-             }
-         }
-         return cookieValue;
-         }
-         if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
-             // Only send the token to relative URLs i.e. locally.
-             xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
-         }
-     } 
-	});
 
+	// --- START: set correct CSRF token via cookie ---
+	// https://docs.djangoproject.com/en/1.4/ref/contrib/csrf/#ajax
+	function getCookie(name) {
+	    var cookieValue = null;
+	    if (document.cookie && document.cookie != '') {
+	        var cookies = document.cookie.split(';');
+	        for (var i = 0; i < cookies.length; i++) {
+	            var cookie = jQuery.trim(cookies[i]);
+	            // Does this cookie string begin with the name we want?
+	            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+	                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+	                break;
+	            }
+	        }
+	    }
+	    return cookieValue;
+	}
+	var csrftoken = getCookie('csrftoken');
+	
+	function csrfSafeMethod(method) {
+    	// these HTTP methods do not require CSRF protection
+	    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+	}
+	
+	$.ajaxSetup({
+	    crossDomain: false, // obviates need for sameOrigin test
+	    beforeSend: function(xhr, settings) {
+	        if (!csrfSafeMethod(settings.type)) {
+	            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+	        }
+	    }
+	});
+	// --- END: set correct CSRF token via cookie ---
+
+	
  	var xhr = $.ajax({
 	     url:temp_url,
 	     type:"POST",
@@ -929,10 +919,6 @@ $( "#igv-test" ).on( "click", function(e) {
 	     	// stop spinner
 	     	//spinner.stop();
 	     	var ret_buttons = createSpeciesModal(result.species);
-	     	
-	     	//console.log("success");
-	     	//console.log(ret_buttons);
-	     	//console.log(result.species_count);
 	     	
 	     	// if only 1 species returned
 			if (ret_buttons.length == 1) {
