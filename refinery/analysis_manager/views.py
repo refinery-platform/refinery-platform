@@ -170,7 +170,10 @@ def analysis_run(request):
     # call function via analysis_manager
     run_analysis.delay(analysis, 5.0)
     
-    return HttpResponseRedirect(reverse('analysis_manager.views.analysis', args=(analysis.uuid,)))
+    print "argas"
+    print analysis.uuid
+    
+    return HttpResponseRedirect(reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,)))
   
 
 def update_workflows(request):
