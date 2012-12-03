@@ -489,7 +489,7 @@ def _initialize_attribute_order(sender, instance, **kwargs):
                  
     return False
 
-#post_init.connect(_initialize_attribute_order, sender=AnnotatedNode)
+post_init.connect(_initialize_attribute_order, sender=AnnotatedNode)
 
 
                 
