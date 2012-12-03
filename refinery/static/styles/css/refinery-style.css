@@ -264,11 +264,11 @@ body {
   display: inline;
   line-height: 1;
 }
-.refinery-dnd-indicator {
+.refinery-dnd-handle {
   cursor: move;
   display: inline-block;
   color: #136382;
 }
-.refinery-dnd-indicator:hover {
-  text-shadow: 0 0px 15px #3fa0c7;
+.refinery-dnd-handle:hover {
+  text-shadow: 0 0px 10px #3fa0c7;
 }
