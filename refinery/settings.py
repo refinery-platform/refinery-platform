@@ -356,6 +356,8 @@ EMAIL_SUBJECT_PREFIX = '[%s] ' % REFINERY_INSTANCE_NAME
 TAXONOMY_URL = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"
 UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 
+# Tag for repository mode
+REFINERY_REPOSITORY_MODE = False
 
 # import local settings
 from settings_local import *
