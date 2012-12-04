@@ -134,17 +134,25 @@ rect.active {
 			 			<div class="row-fluid">
 						<!-- <div> -->
 							<!--  				
+								
+							-->	
+							
+							{% if REFINERY_REPOSITORY_MODE %}
+							<!-- CHECK BOXES FOR SELECTING SAMPLES --> 
+							<span class="label" style="margin-left: 50px;">Selection</span>
+							<a name="workflow_choice" id="workflow_choice" href="#" role="button" class="btn" >Download Archive</a>
+							
+							{% else %}
+							<!-- DROP DOWN BUTTONS FOR MULTIPLE WORKFLOWS --> 
 							<select class="combobox" name="workflow_choice" id="workflow_choice">
 								<option></option>
 								{% for work in workflows %}
 									<option value="{{work.uuid}}">{{work.name}}</option>
 								{% endfor %}
 							</select>
-							<a href="#" class="btn" id="submitSamplesBtn">Apply</a> &nbsp;		
-							-->	
-							<span class="label" style="margin-left: 50px;">Selection</span>
-							<a name="workflow_choice" id="workflow_choice" href="#" role="button" class="btn" >Download Archive</a>
+							<a href="#" class="btn" id="submitSamplesBtn">Apply</a> &nbsp;	
 							
+							{% endif %}
 							
 							<!-- <span class="label" style="margin-left: 50px;">View in</span> -->
 							<a id="igv-multi-species" href="#" role="button" class="btn" data-toggle="modal">Launch IGV</a>
