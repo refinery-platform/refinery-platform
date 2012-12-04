@@ -134,13 +134,7 @@ DataSetConfigurator.prototype.render = function () {
 		var callback = function() { alert( "done!" ); };
 		
 		flag = "facet";
-		$( "#" + "attributeorder_" + id + "_" + flag ).click( function() {
-			// get data attributes from parent tr
-			var data = $(this).closest('tr').data();
-			var flags = { "id": data.id, "resource_uri": data.resource_uri };
-			flags["is_" + flag] = $(this).prop( "checked" );
-			self.updateState( [ flags ], callback );
-		});	
+		$( "#" + "attributeorder_" + id + "_" + flag ).click( function( event ) { self.makeFlagClickEvent( event, flag, id, callback ); } );	
 
 		flag = "exposed";
 		$( "#" + "attributeorder_" + id + "_" + flag ).click( function() {
@@ -181,14 +175,13 @@ DataSetConfigurator.prototype.render = function () {
 };
 
 
-DataSetConfigurator.prototype.makeFlagClickEvent = function( flag, id, callback ) {
-	$( "#" + "attributeorder_" + id + "_" + flag ).click( function() {
-		// get data attributes from parent tr
-		var data = $(this).closest('tr').data();
-		var flags = { "id": data.id, "resource_uri": data.resource_uri };
-		flags["is_" + flag] = $(this).prop( "checked" );
-		self.updateState( [ flags ], callback );
-	});	
+DataSetConfigurator.prototype.makeFlagClickEvent = function( event, flag, id, callback ) {
+	// get data attributes from parent tr
+	console.log( event );
+	var data = event.target.closest('tr').data();
+	var flags = { "id": data.id, "resource_uri": data.resource_uri };
+	flags["is_" + flag] = event.target.prop( "checked" );
+	self.updateState( [ flags ], callback );
 }
 
 
