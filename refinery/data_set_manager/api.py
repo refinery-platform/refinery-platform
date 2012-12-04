@@ -35,7 +35,7 @@ class AttributeOrderResource(ModelResource):
     assay = fields.ToOneField(AssayResource, "assay")
 
     class Meta:
-        queryset = AttributeOrder.objects.all()
+        queryset = AttributeOrder.objects.all().order_by("rank")
         allowed_methods = ["get", "patch", "put", "post" ]
         authentication = Authentication()
         authorization = Authorization()
