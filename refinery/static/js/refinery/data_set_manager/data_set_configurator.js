@@ -131,29 +131,16 @@ DataSetConfigurator.prototype.render = function () {
 	for ( var i = 0; i < self.state.objects.length; ++i ) {
 		var id = self.state.objects[i].id;
 		var flag;
-		var callback = function() { alert( "done!" ); };
+		var callback = function() { /* TODO: cancel spinner? */ };
 		
 		flag = "facet";
-		$( "#" + "attributeorder_" + id + "_" + flag ).click( function( event ) { self.makeFlagClickEvent( event, flag, id, callback ); } );	
+		self.makeFlagClickEvent( flag, id, callback );	
 
 		flag = "exposed";
-		$( "#" + "attributeorder_" + id + "_" + flag ).click( function() {
-			// get data attributes from parent tr
-			var data = $(this).closest('tr').data();
-			var flags = { "id": data.id, "resource_uri": data.resource_uri };
-			flags["is_" + flag] = $(this).prop( "checked" );
-			self.updateState( [ flags ], callback );
-		});	
+		self.makeFlagClickEvent( flag, id, callback );	
 
 		flag = "active";
-		$( "#" + "attributeorder_" + id + "_" + flag ).click( function() {
-			// get data attributes from parent tr
-			var data = $(this).closest('tr').data();
-			var flags = { "id": data.id, "resource_uri": data.resource_uri };
-			flags["is_" + flag] = $(this).prop( "checked" );
-			self.updateState( [ flags ], callback );
-		});	
-		
+		self.makeFlagClickEvent( flag, id, callback );			
 	}	
 	
 	// implement drag and drop
@@ -175,13 +162,16 @@ DataSetConfigurator.prototype.render = function () {
 };
 
 
-DataSetConfigurator.prototype.makeFlagClickEvent = function( event, flag, id, callback ) {
-	// get data attributes from parent tr
-	console.log( event );
-	var data = event.target.closest('tr').data();
-	var flags = { "id": data.id, "resource_uri": data.resource_uri };
-	flags["is_" + flag] = event.target.prop( "checked" );
-	self.updateState( [ flags ], callback );
+DataSetConfigurator.prototype.makeFlagClickEvent = function( flag, id, callback ) {
+	var self = this; 
+	$( "#" + "attributeorder_" + id + "_" + flag ).click( function() { 
+		// get data attributes from parent tr
+		console.log( event );
+		var data = $(this).closest('tr').data();
+		var flags = { "id": data.id, "resource_uri": data.resource_uri };
+		flags["is_" + flag] = $(this).prop( "checked" );
+		self.updateState( [ flags ], callback );
+	});
 }
 
 
