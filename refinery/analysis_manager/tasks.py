@@ -85,7 +85,7 @@ def send_analysis_email(analysis):
                  'end': datetime.strftime(end, '%A, %d %B %G %r'),
                  'duration': duration,
                  'logic': logic,
-                 'url': "http://%s%s" % (site_domain, reverse('core.views.analysis', args=(analysis.project.uuid, analysis.uuid,)))                 
+                 'url': "http://%s%s" % (site_domain, reverse('core.views.analysis_status', args=(analysis.project.uuid, analysis.uuid,)))                 
                  })
     try:    
         user.email_user(email_subj, temp_loader.render(context))
@@ -367,7 +367,6 @@ def run_analysis_cleanup(analysis):
     
     # saving when analysis is finished
     analysis.time_end = datetime.now()
-    analysis.save()
     
     # if analysis was declared failure, do not send completion email
     if analysis.status != Analysis.FAILURE_STATUS:
@@ -375,6 +374,10 @@ def run_analysis_cleanup(analysis):
         send_analysis_email(analysis)
     else:
         analysis.status = Analysis.SUCCESS_STATUS
+
+    # save state of analysis
+    analysis.save()
+
         
     # Adding task to rename files after downloading results from history
     logger.debug("before rename_analysis_results called");

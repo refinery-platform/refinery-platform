@@ -45,7 +45,7 @@
 
 	{% if user.is_authenticated %}       
 		<span class="refinery-header-right">
-			<h4><a href={% url project_new %}><i class="icon-plus-sign"></i></a></h4> 
+			<h4><a href="{% url project_new %}"><i class="icon-plus-sign"></i></a></h4> 
 		</span>	
 	{% endif %}		
 </div>
@@ -80,7 +80,7 @@
 			    <tr>
 			    	<td>
 			    		<!-- <i class="icon-empty"></i> <a href="projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> -->
-			    		<a href="{% url analysis analysis.uuid %}">{{ analysis.name }}</a>
+			    		<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }}</a>
 			    	</td>
 			    	<td>
 			    		<span id="analysis-{{ analysis.uuid }}-status"></span>
@@ -93,7 +93,7 @@
     {% for project in projects %}
     <tr>
     	<td>
-        	<a href="projects/{{ project.uuid }}">{{ project.name }}</a>
+        	<a href="{% url project project.uuid %}">{{ project.name }}</a>
         </td>
     	<td>
         {{project.analyses.all|length}}
@@ -102,7 +102,8 @@
 		{% for analysis in project.analyses.all %}
 		    <tr>
 		    	<td>
-		    		<a href="projects/{{ project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> - {{analysis.summary}}
+		    		<!-- <a href="projects/{{ project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> - {{analysis.summary}} -->
+		    		<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }}</a> - {{analysis.summary}}
 		    	</td>
 			    <td>
 					<span id="status-{{ analysis.uuid }}"></span>
@@ -150,7 +151,7 @@
 		{% for workflow in workflows %}
         <tr>
         	<td>
-        		<a href="workflows/{{ workflow.uuid }}">{{ workflow.name }}</a>
+        		<a href="{% url workflow workflow.uuid %}">{{ workflow.name }}</a>
         	</td>
         </tr>
     	{% endfor %}
@@ -201,7 +202,7 @@
     {% for data_set in data_sets %}
         <tr>
         	<td>
-				<a href="data_sets/{{ data_set.uuid }}">{{ data_set.name }}</a>        		
+				<a href="{% url data_set data_set.uuid %}">{{ data_set.name }}</a>        		
         	</td>
         </tr>
     {% endfor %}
@@ -229,13 +230,12 @@
 {% block script %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/analysis_manager/analysis_monitor.js"></script>
 	
-	<script>
-	    	
+	<script>	    	
 		$(document).ready(function() {		
 			var monitors = [];
 			var callbacks = [];
 			{% for analysis in unassigned_analyses.all %}
-				monitors["{{ analysis.uuid }}"] = new AnalysisMonitor( "{{ analysis.uuid }}", "", "{{ csrf_token }}" );
+				monitors["{{ analysis.uuid }}"] = new AnalysisMonitor( "{{ analysis.uuid }}", "http://{{ REFINERY_BASE_URL }}", "", "{{ csrf_token }}" );
 				
 				callbacks["{{ analysis.uuid }}"] = function(){ monitors["{{ analysis.uuid }}"].getAnalysisProgress( function( percentDone ) {
 					$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge\">" + percentDone + "</span>" );

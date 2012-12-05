@@ -21,9 +21,10 @@ from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
     get_perms, get_objects_for_group, get_objects_for_user, get_perms, \
     get_users_with_perms
 from haystack.query import SearchQuerySet
-import logging
-import urllib2
 from visualization_manager.views import igv_multi_species
+import logging
+import settings
+import urllib2
 
 
 logger = logging.getLogger(__name__)
@@ -160,7 +161,8 @@ def project_new(request):
             project.set_owner( request.user )
             # Process the data in form.cleaned_data
             # ...
-            return HttpResponseRedirect( "/" ) # Redirect after POST
+            
+            return HttpResponseRedirect( reverse('project', args=(project.uuid,)) ) # Redirect after POST
     else:
         form = ProjectForm() # An unbound form
 
@@ -266,7 +268,12 @@ def data_set(request,uuid):
     #get studies
     investigation = data_set.get_investigation()
     studies = investigation.study_set.all()
-    workflows = Workflow.objects.all()
+    
+    # If repository mode, only return workflows tagged for the repository
+    if (settings.REFINERY_REPOSITORY_MODE):
+        workflows = Workflow.objects.filter(show_in_repository_mode=True)
+    else:
+        workflows = Workflow.objects.all()
     
     study_uuid = studies[0].uuid
     assay_uuid = studies[0].assay_set.all()[0].uuid
@@ -671,7 +678,7 @@ def analyses(request, project_uuid ):
                               {"project": project, "analyses": analyses},
                               context_instance=RequestContext(request))
 
-def analysis(request, project_uuid, analysis_uuid ):
+def analysis(request, analysis_uuid ):
     analysis = Analysis.objects.get(uuid=analysis_uuid)
     
     project = analysis.project
@@ -723,6 +730,15 @@ def solr(request):
         
     return HttpResponse( urllib2.urlopen( "http://127.0.0.1:8983/solr/core/select?" + query.urlencode() ).read(), mimetype='application/json' )
 
+
+def solr_select(request, core):
+    # core format is <name_of_core>    
+    # query.GET is a querydict containing all parts of the query
+    url = settings.REFINERY_SOLR_BASE_URL + core + "/select?" + request.GET.urlencode()
+    print(url)
+    return HttpResponse( urllib2.urlopen( url ).read(), mimetype='application/json' )
+
+
 def solr_igv(request):
     '''
     Function for taking solr request url. Removes pagination, facets from input query to create multiple 
@@ -731,10 +747,10 @@ def solr_igv(request):
     :type source: HttpRequest object.
     :returns: 
     '''
-    
+    logger.debug("solr_igv called: before ajax")
+        
     # copy querydict to make it editable
     if request.is_ajax():
-        query = request.GET.copy()
         logger.debug("solr_igv called: request is ajax")
         
         # extracting solr query from request 
@@ -754,8 +770,12 @@ def solr_igv(request):
         # if solr query returns results
         if solr_results:
             session_urls = igv_multi_species(solr_results, solr_annot)
-            
+        
+        logger.debug("session_urls")
+        logger.debug(simplejson.dumps(session_urls, indent=4))
+        
         return HttpResponse(simplejson.dumps(session_urls),mimetype='application/json')
+
     
 def get_solr_results(query, facets=False, jsonp=False, annotation=False):
     '''
@@ -786,7 +806,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False):
         
     # proper url encoding                  
     query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
-    
+        
     # opening solr query results
     results =  urllib2.urlopen( query ).read()
         

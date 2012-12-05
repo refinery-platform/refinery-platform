@@ -106,6 +106,7 @@ rect.active {
 	<div class="row-fluid">      
 	    <ul class="nav nav-tabs" id="tabs">
   			<li class="active"><a href="#content" data-toggle="tab">Samples</a></li>
+  			<li><a href="#configuration" data-toggle="tab">Attributes</a></li>
   			<li><a href="#analyses" data-toggle="tab">Analyses</a></li>
   			<li><a href="#about" data-toggle="tab">About</a></li>
   			<li><a href="#sharing" data-toggle="tab">Sharing</a></li>
@@ -129,27 +130,31 @@ rect.active {
 			 
 			<div class="row-fluid">
 			 	<div class="span10">
-			 	
-			 			<div class="row-fluid">
-						<div> 				
+			 								
+							{% if REFINERY_REPOSITORY_MODE %}
+							<!-- CHECK BOXES FOR SELECTING SAMPLES --> 
+							<span class="label">Selection</span>
+							{% for work in workflows %}
+								<a id="submitSamplesBtn" data-workflow_id="{{work.uuid}}" role="button" class="btn" >Download Archive</a>
+							{% endfor %}
+							
+							{% else %}
+							<!-- DROP DOWN BUTTONS FOR MULTIPLE WORKFLOWS --> 
 							<select class="combobox" name="workflow_choice" id="workflow_choice">
 								<option></option>
 								{% for work in workflows %}
 									<option value="{{work.uuid}}">{{work.name}}</option>
 								{% endfor %}
-							</select>			
-								
-							<!-- <button class="btn btn-primary" id="submitSamplesBtn"><i class="icon-road"></i>Run</button> -->
-							<a href="#" class="btn" id="submitSamplesBtn">Apply</a> &nbsp;
+							</select>
+							<a class="btn" id="submitSamplesBtn">Apply</a> &nbsp;	
 							
-							<!-- <a href="{% url igv_session %}">IGV</a> -->
-							<span class="label" style="margin-left: 50px;">View in</span>
-							<!-- <a class="btn" id="igv-session-link" href="#">IGV</a> -->
-							<a id="igv-test" href="#" role="button" class="btn" data-toggle="modal">Launch IGV</a>
+							{% endif %}
 							
-							<a class="btn" id="profile-viewer-session-link" href="#">Profile</a>
-							<!-- <a class="btn btn-info" id="igv-test" href="#">IGV Test</a> -->
-											<!-- Button to trigger modal -->
+							<!-- <span class="label" style="margin-left: 50px;">View in</span> -->
+							<a id="igv-multi-species" href="#" role="button" class="btn" data-toggle="modal">Launch IGV</a>
+							
+							<!-- <a class="btn" id="profile-viewer-session-link" href="#">Profile</a> -->
+
 							
 							<span class="label" style="margin-left: 50px;">Show</span>
 							<div class="btn-group annotation-buttons" data-toggle="buttons-radio">
@@ -158,8 +163,6 @@ rect.active {
 							</div>				
 						</div>
 			
-			    	</div>	
-			 	</div>	
 			 	<div class="span2">
 					<div id="statistics-view"></div> 		
 			 	</div>	
@@ -210,6 +213,19 @@ rect.active {
 		</form>
 	</div>
 
+  	<div class="tab-pane" id="configuration">
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Configuration</h3>
+			</span>
+		</div>
+
+		<div class="refinery-subheader">
+			<h4>Attribute Order and Visibility</h4>
+		</div>
+		<div id="configurator-panel">
+		</div>	
+  	</div>	
 
   	<div class="tab-pane" id="analyses">
 		<div class="refinery-header">
@@ -220,7 +236,7 @@ rect.active {
 		<p>
 		{% if data_set.analysis_set.all|length > 0 %}	
 			{% for analysis in data_set.analysis_set.all %}
-					<a href="{% url analysis analysis.uuid %}">{{ analysis.name }}</a>
+					<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }}</a>
 					{% if analysis.project.is_catch_all %}
 						(unassigned)
 					{% else %}
@@ -317,9 +333,7 @@ rect.active {
 	  	</div>
 
 	</div>
-	
-	
-		
+			
 	{% else %}
 	    <p>No valid data set.</p>
 	{% endif %}
@@ -369,17 +383,33 @@ rect.active {
 	    
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v2.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/fisheye.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/underscore/underscore.js"></script>
 
 	<!-- Refinery libraries -->
 	<script type="text/javascript">
-		var SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}";
+		var REFINERY_BASE_URL = "{{ REFINERY_BASE_URL }}";
+		var REFINERY_API_BASE_URL = "http://" + REFINERY_BASE_URL + "/" + "api" + "/" + "v1" + "/";
+		var REFINERY_SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}";
 		var externalStudyUuid = "{{ assay_uuid }}";
 		var externalAssayUuid = "{{ study_uuid }}";
+		var REFINERY_REPOSITORY_MODE = "{{ REFINERY_REPOSITORY_MODE }}"
 	</script>	
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/viewers/pivot-matrix.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/data_set_manager/data_set_configurator.js"></script>
+    
     <!-- <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script> -->
+    
+	<script>
+	$(document).ready(function() {		
+		configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
+		configurator.initialize()
+		
+		//var that = this;
+		//var timerId = setInterval( function(){ console.log( monitor ); monitor.getUpdate(); }, 3000 );
+	});    		
+	</script>
 
 
 <script type="application/javascript">

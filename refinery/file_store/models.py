@@ -108,6 +108,7 @@ BAM = 'bam'
 BED = 'bed'
 BIGBED = 'bigbed'
 BIGWIG = 'bigwig'
+CBS = 'cbs'
 CEL = 'cel'
 CSV = 'csv'
 ELAND = 'eland'
@@ -121,6 +122,7 @@ FASTQILLUMINA = 'fastqillumina'
 FASTQSANGER = 'fastqsanger'
 FASTQSOLEXA = 'fastqsolexa'
 SAM = 'sam'
+SEG = 'seg'
 TDF = 'tdf'
 TXT = 'txt'
 VCF = 'vcf'
@@ -135,6 +137,7 @@ FILE_TYPES = (
     (BED, 'BED file'),
     (BIGBED, 'Big BED'),
     (BIGWIG, 'Big WIG'),
+    (CBS, 'Circular Binary Segmentation File'), # see SEG below
     (CEL, 'Affymetrix Probe Results file'),
     (CSV, 'Comma Separated Values'),
     (ELAND, 'Eland file'),
@@ -148,6 +151,7 @@ FILE_TYPES = (
     (FASTQSANGER, 'FASTQ Sanger'),
     (FASTQSOLEXA, 'FASTQ Solexa'),
     (SAM, 'Sequence Alignment/Map'),
+    (SEG, 'Segmented Data File'), # http://www.broadinstitute.org/software/igv/SEG
     (TDF, 'TDF file'),
     (TXT, 'Text file'),
     (VCF, 'Variant Call Format'),

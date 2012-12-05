@@ -368,8 +368,8 @@ class Workflow ( SharableResource, ManageableResource ):
 
     data_inputs = models.ManyToManyField( WorkflowDataInput, blank=True )
     internal_id = models.CharField( max_length=50 )
-    
     workflow_engine = models.ForeignKey( WorkflowEngine )    
+    show_in_repository_mode = models.BooleanField( default=False )
 
     def __unicode__(self):
         return self.name + " - " + self.summary

@@ -21,5 +21,8 @@ admin.site.register(ProtocolReference)
 admin.site.register(ProtocolReferenceParameter)
 admin.site.register(Node)
 admin.site.register(Attribute)
+admin.site.register(AttributeOrder)
+admin.site.register(AttributeDefinition)
 admin.site.register(AnnotatedNode)
 admin.site.register(AnnotatedNodeRegistry)
+
