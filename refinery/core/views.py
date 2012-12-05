@@ -263,7 +263,7 @@ def data_set(request,uuid):
         if not 'read_dataset' in get_perms( public_group, data_set ):
             return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this data set.</h1>" )
         
-    permissions = get_users_with_perms( data_set, attach_perms=True )
+    #permissions = get_users_with_perms( data_set, attach_perms=True )
     
     #get studies
     investigation = data_set.get_investigation()
@@ -297,7 +297,7 @@ def data_set(request,uuid):
     return render_to_response('core/data_set.html', 
                               {
                                 'data_set': data_set, 
-                                "permissions": permissions,
+                                #"permissions": permissions,
                                 "studies": studies,
                                 "study_uuid": study_uuid,
                                 "assay_uuid": assay_uuid,
