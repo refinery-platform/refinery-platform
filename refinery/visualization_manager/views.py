@@ -460,7 +460,7 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     :type annot_samples: Array
     """
     
-    logger.debug("visualization_manager.views addIGVSamples called")
+    logger.debug("visualization_manager.views addIGVSamples called, fields=%s" % fields)
     
     # fields to iterate over
     #fields = str(samples["responseHeader"]["params"]["fl"]).split(',')
@@ -574,6 +574,8 @@ def getSampleLines(fields, results):
         output_mat = output_mat + line + '\n'    
     
     # returns matrix for given inputs
+    logger.debug("visualization_manager.views getSampleLines : output mat= %s" % output_mat)
+    
     return output_mat      
 
     
