@@ -20,6 +20,7 @@ from galaxy_connector.models import Instance
 from guardian.shortcuts import assign, get_users_with_perms, \
     get_groups_with_perms
 from registration.signals import user_registered, user_activated
+from django.core.mail import mail_admins
 import logging
 
 
@@ -56,6 +57,8 @@ def create_user_profile_registered(sender, user, request, **kwargs):
     user_object.groups.add( ExtendedGroup.objects.public_group() )
 
     logger.info('user profile for user %s has been created after registration %s' % ( user, datetime.now()))
+    mail_admins('New User Registered', 'User %s registered at %s' % (user, datetime.now()))
+    logger.info('email has been sent to admins informing of registration of user %s' % user)
 
 user_registered.connect(create_user_profile_registered)
 
