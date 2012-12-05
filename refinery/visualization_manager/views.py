@@ -183,6 +183,10 @@ def igv_multi_species(solr_results, solr_annot=None):
     unique_species, unique_species_num = get_unique_species(solr_results)
     if solr_annot:
         unique_annot, unique_annot_num = get_unique_species(solr_annot)
+        logger.debug("visualization_manager.views.igv_multi_species unique_annot")
+        logger.debug(simplejson.dumps(unique_annot, indent=4));
+    
+    
     
     logger.debug("visualization_manager.views.igv_multi_species called 2")
     
@@ -202,7 +206,7 @@ def igv_multi_species(solr_results, solr_annot=None):
         logger.debug("key: %s, 11111111" % k)
     
         
-        if solr_annot:
+        if unique_annot:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'], unique_annot[k]['solr'])
         else:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'])
