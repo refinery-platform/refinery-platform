@@ -134,21 +134,14 @@ def project_slug(request,slug):
 def project(request, uuid):
     project = get_object_or_404( Project, uuid=uuid )
     public_group = ExtendedGroup.objects.public_group()
-    
-    print get_perms( public_group, project )
-    
+        
     if not request.user.has_perm('core.read_project', project ):
         if not 'read_project' in get_perms( public_group, project ):
             return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this project.</h1>" )
-            
-    permissions = get_users_with_perms( project, attach_perms=True )
-    
-    accessors = project.get_groups()
-    print accessors
-    
+                
     analyses = project.analyses.all()
     
-    return render_to_response('core/project.html', { 'project': project, "permissions": permissions, "analyses": analyses }, context_instance=RequestContext( request ) )
+    return render_to_response('core/project.html', { 'project': project, "analyses": analyses }, context_instance=RequestContext( request ) )
 
 
 @login_required()
@@ -262,9 +255,7 @@ def data_set(request,uuid):
     if not request.user.has_perm( 'core.read_dataset', data_set ):
         if not 'read_dataset' in get_perms( public_group, data_set ):
             return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this data set.</h1>" )
-        
-    #permissions = get_users_with_perms( data_set, attach_perms=True )
-    
+            
     #get studies
     investigation = data_set.get_investigation()
     studies = investigation.study_set.all()
@@ -297,7 +288,6 @@ def data_set(request,uuid):
     return render_to_response('core/data_set.html', 
                               {
                                 'data_set': data_set, 
-                                #"permissions": permissions,
                                 "studies": studies,
                                 "study_uuid": study_uuid,
                                 "assay_uuid": assay_uuid,
@@ -342,10 +332,8 @@ def workflow(request, uuid):
     if not request.user.has_perm('core.read_workflow', workflow ):
         if not 'read_workflow' in get_perms( public_group, workflow ):
             return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this workflow.</h1>" )
-        
-    permissions = get_users_with_perms( workflow, attach_perms=True )
-    
-    return render_to_response('core/workflow.html', { 'workflow': workflow, "permissions": permissions }, context_instance=RequestContext( request ) )
+            
+    return render_to_response('core/workflow.html', { 'workflow': workflow }, context_instance=RequestContext( request ) )
 
 
 def workflow_engine(request,uuid):  
@@ -355,10 +343,8 @@ def workflow_engine(request,uuid):
     if not request.user.has_perm('core.read_workflowengine', workflow_engine ):
         if not 'read_workflowengine' in get_perms( public_group, workflow_engine ):
             return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this workflow engine.</h1>" )
-        
-    permissions = get_users_with_perms( workflow_engine, attach_perms=True )
-    
-    return render_to_response('core/workflow_engine.html', { 'workflow_engine': workflow_engine, "permissions": permissions }, context_instance=RequestContext( request ) )
+            
+    return render_to_response('core/workflow_engine.html', { 'workflow_engine': workflow_engine }, context_instance=RequestContext( request ) )
 
 
 def admin_test_data( request ):
