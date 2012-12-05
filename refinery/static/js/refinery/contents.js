@@ -655,7 +655,7 @@ function processDocs( data ) {
 		
 		// IF Repository mode 
 		if (REFINERY_REPOSITORY_MODE == 'True') { 
-			s += '<td><label><input type=\"checkbox\" checked></label>' + '</td>'
+			s += '<td><label><input name="assay_' + file_uuid + '" type=\"checkbox\" checked></label>' + '</td>'
 			}
 		else { 
 			var check_temp = '<select name="assay_'+ file_uuid +'" id="webmenu" class="btn-mini OGcombobox"> <option></option> </select>';
