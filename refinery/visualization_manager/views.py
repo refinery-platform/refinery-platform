@@ -505,7 +505,7 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     
     return curr_url
 
-def getFileName(fileuuid):
+def getFileName(fileuuid, sampFile=None):
     """ Helper function for getting a file_name from a filestore uuid
     
     :param fileuuid: Filestore uuid
@@ -520,6 +520,12 @@ def getFileName(fileuuid):
     
     # full path to selected UUID File
     temp_url = temp_fs.get_url()
+    
+    # IGV SEG FILE HACK
+    if (sampFile):
+        if (temp_name.startswith("metaData")):
+            new_name = temp_name.split("_")
+            temp_name = new_name[0]
             
     return temp_name, temp_url
 
@@ -538,7 +544,7 @@ def getSampleLines(fields, results):
     # iterating over samples
     for row in results:
         # adding file_name to matrix as linking id
-        line, url = getFileName(row["file_uuid"])
+        line, url = getFileName(row["file_uuid"], True)
         
         # adding fields to sample information matrix
         for k,v in fields.iteritems():
