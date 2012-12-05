@@ -199,7 +199,7 @@ def igv_multi_species(solr_results, solr_annot=None):
     # 4. generate igv files for each species, including phenotype data + paths generated from uuid's
     ui_results = {'species_count':unique_species_num, 'species':{}}
     for k,v in unique_species.items():
-        logger.debug("visualization_manager.views.igv_multi_species key: %s" % k)
+        logger.debug("key: %s, 11111111" % k)
     
         
         if solr_annot:
@@ -207,6 +207,8 @@ def igv_multi_species(solr_results, solr_annot=None):
         else:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'])
         
+        logger.debug("key: %s, 222222222" % k )
+    
         # if file_uuids generated for given species
         # generate igv session file 
         if "file_uuid" in v:
@@ -219,6 +221,8 @@ def igv_multi_species(solr_results, solr_annot=None):
             #unique_species[k]['igv_url'] = temp_url
             ui_results['species'][k] = temp_url
             #print temp_url
+        
+        logger.debug("END FOR LOOP: %s, 333333333" % k )
     
     logger.debug("visualization_manager.views.igv_multi_species called 3")
     
