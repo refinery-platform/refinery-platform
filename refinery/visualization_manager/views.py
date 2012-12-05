@@ -180,9 +180,6 @@ def igv_multi_species(solr_results, solr_annot=None):
     results = solr_results["response"]["docs"]
     fields = str(solr_results["responseHeader"]["params"]["fl"]).split(',')
     
-    #print "solr_annot"
-    #print solr_annot
-    
     unique_species, unique_species_num = get_unique_species(solr_results)
     if solr_annot:
         unique_annot, unique_annot_num = get_unique_species(solr_annot)
@@ -196,11 +193,15 @@ def igv_multi_species(solr_results, solr_annot=None):
     # 3. Create sample information file 
     # i.e. http://www.broadinstitute.org/igvdata/exampleFiles/gbm_session.xml   
     # http://igv.broadinstitute.org/data/hg18/tcga/gbm/gbmsubtypes/sampleTable.txt.gz
-    sampleFile = addIGVSamples(solr_results, solr_annot)
     
     # 4. generate igv files for each species, including phenotype data + paths generated from uuid's
     ui_results = {'species_count':unique_species_num, 'species':{}}
     for k,v in unique_species.items():
+        
+        if solr_annot:
+            sampleFile = addIGVSamples(fields, unique_species[k]['solr'], unique_annot[k]['solr'])
+        else:
+            sampleFile = addIGVSamples(fields, unique_species[k]['solr'])
         
         # if file_uuids generated for given species
         # generate igv session file 
@@ -429,7 +430,7 @@ def addIGVResource(uuidlist, xml_res, xml_doc):
             xml_res.appendChild(res)
             
             
-def addIGVSamples(samples, annot_samples=None):
+def addIGVSamples(fields, results_samp, annot_samples=None):
     """ creates phenotype file for IGV 
     
     :param samples: Solr results for samples to be included 
@@ -441,8 +442,8 @@ def addIGVSamples(samples, annot_samples=None):
     logger.debug("visualization_manager.views addIGVSamples called")
     
     # fields to iterate over
-    fields = str(samples["responseHeader"]["params"]["fl"]).split(',')
-    results_samp = samples["response"]["docs"]
+    #fields = str(samples["responseHeader"]["params"]["fl"]).split(',')
+    #results_samp = samples["response"]["docs"]
     
     # creates human readable indexes of fields to iterate over
     fields_dict = {}
@@ -470,8 +471,8 @@ def addIGVSamples(samples, annot_samples=None):
     
     # if annotations are not null
     if annot_samples:
-        results_annot = annot_samples["response"]["docs"]
-        pheno_annot = getSampleLines(fields_dict, results_samp)
+        #results_annot = annot_samples["response"]["docs"]
+        pheno_annot = getSampleLines(fields_dict, annot_samples)
         tempsampname.write(pheno_annot)
     
     # closing temp file 
@@ -496,12 +497,15 @@ def addIGVSamples(samples, annot_samples=None):
     # full path to selected UUID File
     curr_url = curr_fs.get_url()
     
+    print "curr_url"
+    print curr_url
+    
     # delete temp file
     os.unlink(tempsampname.name)
     
     return curr_url
 
-def getFileName(fileuuid):
+def getFileName(fileuuid, sampFile=None):
     """ Helper function for getting a file_name from a filestore uuid
     
     :param fileuuid: Filestore uuid
@@ -516,6 +520,13 @@ def getFileName(fileuuid):
     
     # full path to selected UUID File
     temp_url = temp_fs.get_url()
+    
+    # IGV SEG FILE HACK
+    if (sampFile):
+        if (temp_name.startswith("metaData")):
+            new_name = temp_name.split("_")
+            if len(new_name) > 1:
+                temp_name = new_name[0]
             
     return temp_name, temp_url
 
@@ -534,7 +545,7 @@ def getSampleLines(fields, results):
     # iterating over samples
     for row in results:
         # adding file_name to matrix as linking id
-        line, url = getFileName(row["file_uuid"])
+        line, url = getFileName(row["file_uuid"], True)
         
         # adding fields to sample information matrix
         for k,v in fields.iteritems():

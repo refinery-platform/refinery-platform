@@ -27,7 +27,7 @@ def index(request):
     
     return render_to_response( 'analysis_manager/index.html', { 'statuses': statuses }, context_instance=RequestContext( request ) )
 
-def analysis(request, uuid):
+def analysis_status(request, uuid):
     print "called analysis_status"
     #import pdb; pdb.set_trace()
     
@@ -170,7 +170,10 @@ def analysis_run(request):
     # call function via analysis_manager
     run_analysis.delay(analysis, 5.0)
     
-    return HttpResponseRedirect(reverse('analysis_manager.views.analysis', args=(analysis.uuid,)))
+    print "argas"
+    print analysis.uuid
+    
+    return HttpResponseRedirect(reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,)))
   
 
 def update_workflows(request):
