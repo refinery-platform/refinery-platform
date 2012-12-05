@@ -130,17 +130,13 @@ rect.active {
 			 
 			<div class="row-fluid">
 			 	<div class="span10">
-			 	
-			 			<div class="row-fluid">
-						<!-- <div> -->
-							<!--  				
-								
-							-->	
-							
+			 								
 							{% if REFINERY_REPOSITORY_MODE %}
 							<!-- CHECK BOXES FOR SELECTING SAMPLES --> 
-							<span class="label" style="margin-left: 50px;">Selection</span>
-							<a name="workflow_choice" id="workflow_choice" href="#" role="button" class="btn" >Download Archive</a>
+							<span class="label">Selection</span>
+							{% for work in workflows %}
+								<a id="submitSamplesBtn" data-workflow_id="{{work.uuid}}" role="button" class="btn" >Download Archive</a>
+							{% endfor %}
 							
 							{% else %}
 							<!-- DROP DOWN BUTTONS FOR MULTIPLE WORKFLOWS --> 
@@ -150,7 +146,7 @@ rect.active {
 									<option value="{{work.uuid}}">{{work.name}}</option>
 								{% endfor %}
 							</select>
-							<a href="#" class="btn" id="submitSamplesBtn">Apply</a> &nbsp;	
+							<a class="btn" id="submitSamplesBtn">Apply</a> &nbsp;	
 							
 							{% endif %}
 							
@@ -158,8 +154,7 @@ rect.active {
 							<a id="igv-multi-species" href="#" role="button" class="btn" data-toggle="modal">Launch IGV</a>
 							
 							<!-- <a class="btn" id="profile-viewer-session-link" href="#">Profile</a> -->
-							<!-- <a class="btn btn-info" id="igv-test" href="#">IGV Test</a> -->
-											<!-- Button to trigger modal -->
+
 							
 							<span class="label" style="margin-left: 50px;">Show</span>
 							<div class="btn-group annotation-buttons" data-toggle="buttons-radio">
@@ -168,8 +163,6 @@ rect.active {
 							</div>				
 						</div>
 			
-			    	 <!-- </div> -->	
-			 	</div>	
 			 	<div class="span2">
 					<div id="statistics-view"></div> 		
 			 	</div>	

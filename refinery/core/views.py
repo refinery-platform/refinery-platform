@@ -268,7 +268,12 @@ def data_set(request,uuid):
     #get studies
     investigation = data_set.get_investigation()
     studies = investigation.study_set.all()
-    workflows = Workflow.objects.all()
+    
+    # If repository mode, only return workflows tagged for the repository
+    if (settings.REFINERY_REPOSITORY_MODE):
+        workflows = Workflow.objects.filter(show_in_repository_mode=True)
+    else:
+        workflows = Workflow.objects.all()
     
     study_uuid = studies[0].uuid
     assay_uuid = studies[0].assay_set.all()[0].uuid
@@ -742,7 +747,8 @@ def solr_igv(request):
     :type source: HttpRequest object.
     :returns: 
     '''
-    
+    logger.debug("solr_igv called: before ajax")
+        
     # copy querydict to make it editable
     if request.is_ajax():
         logger.debug("solr_igv called: request is ajax")
@@ -764,7 +770,10 @@ def solr_igv(request):
         # if solr query returns results
         if solr_results:
             session_urls = igv_multi_species(solr_results, solr_annot)
-            
+        
+        logger.debug("session_urls")
+        logger.debug(simplejson.dumps(session_urls, indent=4))
+        
         return HttpResponse(simplejson.dumps(session_urls),mimetype='application/json')
 
     
