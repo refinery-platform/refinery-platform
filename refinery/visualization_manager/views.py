@@ -566,14 +566,20 @@ def getSampleLines(fields, results):
     # iterating over samples
     for row in results:
         # adding file_name to matrix as linking id
-        logger.debug("row: %s" % row)
+        #logger.debug("row: %s" % row)
         logger.debug("row_file_uuid: %s" % row["file_uuid"])
     
         line, url = getFileName(row["file_uuid"], True)
         
         # adding fields to sample information matrix
         for k,v in fields.iteritems():
-            line = line + '\t' + row[k]    
+            if k in row:
+                line = line + '\t' + row[k]
+            else:
+                line = line + '\t' + ''
+                
+            logger.debug("----key %s,  line: %s" % (k, line))
+        
         output_mat = output_mat + line + '\n'    
     
     # returns matrix for given inputs
