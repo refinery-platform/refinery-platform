@@ -277,13 +277,15 @@ def get_unique_species(docs):
         #else:
         #    logger.error("core.views.solr_igv: Selected Samples do not have genome_build or species associated")
     
-    logger.debug("visualization_manager.views after for loop")
+    logger.debug("visualization_manager.views unique_species")
+    logger.debug( simplejson.dumps(unique_species, indent=4) )
         
     # actual number of unique genome builds
     unique_count = len(unique_count)
     
     # CASE: when species is unknown, launch IGV with predefined genomes
     if not unique_species:
+        logger.debug("visualization_manager.views INSIDE NOT UNIQUE SPECIES")
         temp_species = {'file_uuid':[], 'solr':[]}
         for res in docs:
             temp_species['solr'].append(res)
@@ -295,8 +297,8 @@ def get_unique_species(docs):
                 genome = 'WS220'
             unique_species[genome] = temp_species
     
-    print "unique_species"
-    print simplejson.dumps(unique_species, indent=4)
+    logger.debug( "unique_species2 " )
+    logger.debug( simplejson.dumps(unique_species, indent=4) )
     
     return unique_species, unique_count
       
