@@ -525,7 +525,8 @@ def getFileName(fileuuid, sampFile=None):
     if (sampFile):
         if (temp_name.startswith("metaData")):
             new_name = temp_name.split("_")
-            temp_name = new_name[0]
+            if len(new_name) > 1:
+                temp_name = new_name[0]
             
     return temp_name, temp_url
 
