@@ -209,9 +209,9 @@ def igv_multi_species(solr_results, solr_annot=None):
             # if annotation contains species 
             if solr_annot:
                 if k in unique_annot:
-                    temp_url = createIGVsessionAnnot(k, unique_species[k], unique_annot[k], samp_file=sampleFile)
+                    temp_url = createIGVsessionAnnot(k, unique_species[k], annot_uuids=unique_annot[k], samp_file=sampleFile)
             else:
-                temp_url = createIGVsessionAnnot(k, unique_species[k], samp_file=sampleFile)
+                temp_url = createIGVsessionAnnot(k, unique_species[k], annot_uuids=None, samp_file=sampleFile)
             #unique_species[k]['igv_url'] = temp_url
             ui_results['species'][k] = temp_url
             #print temp_url
@@ -243,6 +243,9 @@ def get_unique_species(docs):
     
     # If results have a defined genome_build or species field
     for res in docs:
+        logger.debug("visualization_manager.views res")
+        logger.debug(simplejson.dumps(res, indent=4))
+    
         # Defaults to checking for genome_build
         if "genome_build" in res:
             curr_build = str(res["genome_build"])
@@ -274,6 +277,8 @@ def get_unique_species(docs):
         #else:
         #    logger.error("core.views.solr_igv: Selected Samples do not have genome_build or species associated")
     
+    logger.debug("visualization_manager.views after for loop")
+        
     # actual number of unique genome builds
     unique_count = len(unique_count)
     
@@ -290,8 +295,8 @@ def get_unique_species(docs):
                 genome = 'WS220'
             unique_species[genome] = temp_species
     
-    #print "unique_species"
-    #print simplejson.dumps(unique_species, indent=4)
+    print "unique_species"
+    print simplejson.dumps(unique_species, indent=4)
     
     return unique_species, unique_count
       
@@ -525,7 +530,8 @@ def getFileName(fileuuid, sampFile=None):
     if (sampFile):
         if (temp_name.startswith("metaData")):
             new_name = temp_name.split("_")
-            temp_name = new_name[0]
+            if len(new_name) > 1:
+                temp_name = new_name[0]
             
     return temp_name, temp_url
 
