@@ -225,8 +225,8 @@ def igv_multi_species(solr_results, solr_annot=None):
         
     #print "unique_annot"
     #print simplejson.dumps(unique_annot, indent=4)    
-    #print "ui_results"
-    #print simplejson.dumps(ui_results, indent=4)
+    logger.debug( "before return ui_results" );
+    logger.debug(simplejson.dumps(ui_results, indent=4));
     
     # 5. reflect buttons in the bootbox modal in UI
     return ui_results
@@ -284,7 +284,7 @@ def get_unique_species(docs):
         #    logger.error("core.views.solr_igv: Selected Samples do not have genome_build or species associated")
     
     logger.debug("visualization_manager.views unique_species1")
-    logger.debug( simplejson.dumps(unique_species, indent=4) )
+    #logger.debug( simplejson.dumps(unique_species, indent=4) )
         
     # actual number of unique genome builds
     unique_count = len(unique_count)
@@ -304,7 +304,7 @@ def get_unique_species(docs):
             unique_species[genome] = temp_species
     
     logger.debug( "unique_species2 " )
-    logger.debug( simplejson.dumps(unique_species, indent=4) )
+    #logger.debug( simplejson.dumps(unique_species, indent=4) )
     
     return unique_species, unique_count
       
