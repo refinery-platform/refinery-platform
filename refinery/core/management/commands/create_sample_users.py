@@ -6,13 +6,14 @@ Created on November 29, 2012
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand, CommandError
+from core.models import ExtendedGroup
 from optparse import make_option
 
 
 class Command(BaseCommand):
     help = "Creates test users for a %s installation" % (Site.objects.get_current().name)
     help = "%s\nUsage:\npython manage.py create_sample_users <number of users>" % help
-    help = "%s [--prefix <prefix for usernames> --password <sample password>]" % help
+    help = "%s [--prefix <prefix for usernames> --password <sample password> --groups]" % help
     help = "%s\n\nIf --prefix and --password are not provided the default values will be" % help
     help = "%s 'testuser' and 'samplepass,' respectively." % help
     
@@ -26,6 +27,10 @@ class Command(BaseCommand):
                             action='store',
                             type='string',
                             default='samplepass'
+                            ),
+                make_option('--groups',
+                            action='store_true',
+                            default=False
                             ),
                 )
 
@@ -56,11 +61,27 @@ class Command(BaseCommand):
         #create users
         for user in users:
             # delete if exists
-            user_object = User.objects.filter( username__exact=user["username"] )
+            user_object = User.objects.filter(username__exact=user["username"])
             if user_object is not None:
                 user_object.delete()
 
-            user_object = User.objects.create_user( user["username"], email=user["email"], password=user["password"] )
+            user_object = User.objects.create_user(user["username"], email=user["email"], password=user["password"])
             user_object.first_name = user["first_name"]
             user_object.save()
             print 'Created User %s' % user_object
+            #create group if you should
+            if options['groups']:
+                group_name = "group_%s" % user['username']
+                try:
+                    group_object = ExtendedGroup.objects.get(name__exact=group_name)            
+                    if group_object.is_managed():
+                        print(group_object.manager_group)
+                        group_object.manager_group.delete()
+                    else:
+                        group_object.delete()
+                except:
+                    pass
+                group_object = ExtendedGroup.objects.create(name=group_name)
+                user_object.groups.add(group_object)
+                user_object.groups.add(group_object.manager_group)
+                print 'Created Group %s for User %s' % (group_object, user_object)
