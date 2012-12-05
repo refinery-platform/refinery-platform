@@ -69,6 +69,7 @@ class Command(BaseCommand):
             user_object.first_name = user["first_name"]
             user_object.save()
             print 'Created User %s' % user_object
+            user_object.groups.add(ExtendedGroup.objects.public_group())
             #create group if you should
             if options['groups']:
                 group_name = "group_%s" % user['username']
