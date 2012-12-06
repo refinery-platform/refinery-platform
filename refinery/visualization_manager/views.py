@@ -299,8 +299,11 @@ def get_unique_species(docs):
             if genome == 'ce10':
                 genome = 'WS220'
             unique_species[genome] = temp_species
+            
+            logger.debug( "temp_species " )
+            logger.debug( simplejson.dumps(temp_species, indent=4) )
     
-    logger.debug( "unique_species2 " )
+    logger.debug( "unique_species3 " )
     logger.debug( simplejson.dumps(unique_species, indent=4) )
     
     return unique_species, unique_count
