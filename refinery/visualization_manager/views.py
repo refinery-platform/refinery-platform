@@ -185,9 +185,6 @@ def igv_multi_species(solr_results, solr_annot=None):
     if solr_annot:
         unique_annot, unique_annot_num = get_unique_species(solr_annot)
     
-    logger.debug("visualization_manager.views.igv_multi_species called 2")
-    
-    
     # 1. check to see how many species are selected? 
     # move this to visualization_manager.utils 
     
@@ -208,7 +205,7 @@ def igv_multi_species(solr_results, solr_annot=None):
         else:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'])
         
-            # if file_uuids generated for given species
+        # if file_uuids generated for given species
         # generate igv session file 
         if "file_uuid" in v:
             # if annotation contains species 
@@ -217,14 +214,10 @@ def igv_multi_species(solr_results, solr_annot=None):
                     temp_url = createIGVsessionAnnot(k, unique_species[k], annot_uuids=unique_annot[k], samp_file=sampleFile)
             else:
                 temp_url = createIGVsessionAnnot(k, unique_species[k], annot_uuids=None, samp_file=sampleFile)
-            #unique_species[k]['igv_url'] = temp_url
             ui_results['species'][k] = temp_url
-            #print temp_url
         
-    #print "unique_annot"
-    #print simplejson.dumps(unique_annot, indent=4)    
-    logger.debug("visualization_manager.views.igv_multi_species = ui_results")    
-    logger.debug(simplejson.dumps(unique_annot, indent=4) )    
+    #logger.debug("visualization_manager.views.igv_multi_species = ui_results")    
+    #logger.debug(simplejson.dumps(unique_annot, indent=4) )    
     
     # 5. reflect buttons in the bootbox modal in UI
     return ui_results
@@ -247,8 +240,8 @@ def get_unique_species(docs):
     
     # If results have a defined genome_build or species field
     for res in docs:
-        logger.debug("-------------------------")
-        logger.debug(simplejson.dumps(res, indent=4))
+        #logger.debug("-------------------------")
+        #logger.debug(simplejson.dumps(res, indent=4))
     
         # Defaults to checking for genome_build
         if "genome_build" in res:
@@ -281,8 +274,8 @@ def get_unique_species(docs):
         #else:
         #    logger.error("core.views.solr_igv: Selected Samples do not have genome_build or species associated")
     
-    logger.debug( "unique_species2 " )
-    logger.debug( simplejson.dumps(unique_species, indent=4) )
+    #logger.debug( "unique_species2 " )
+    #logger.debug( simplejson.dumps(unique_species, indent=4) )
         
     # actual number of unique genome builds
     unique_count = len(unique_count)
@@ -292,19 +285,20 @@ def get_unique_species(docs):
         temp_species = {'file_uuid':[], 'solr':[]}
         for res in docs:
             temp_species['solr'].append(res)
-            temp_species['file_uuid'].append(res['file_uuid'])
+            try:
+                temp_species['file_uuid'].append(res['file_uuid'])
+            except KeyError as e:
+                 logger.error("Solr results do not have file_uuid. Reason: '%s'", e.message)
+                 return None
         
         for genome in SUPPORTED_GENOMES:
             # TEMP: replacing ce10 to WS220
             if genome == 'ce10':
                 genome = 'WS220'
             unique_species[genome] = temp_species
-            
-            logger.debug( "temp_species " )
-            logger.debug( simplejson.dumps(temp_species, indent=4) )
-    
-    logger.debug( "unique_species3 " )
-    logger.debug( simplejson.dumps(unique_species, indent=4) )
+                
+    #logger.debug( "unique_species3 " )
+    #logger.debug( simplejson.dumps(unique_species, indent=4) )
     
     return unique_species, unique_count
       
