@@ -35,7 +35,62 @@
 {% endif %}
 
 <div class="row-fluid">
- <div class="span4">
+	{% if REFINERY_REPOSITORY_MODE %}
+		<div class="span8">
+	{% else %}
+		<div class="span4">
+	{% endif %}	
+		<div class="refinery-panel refinery-panel-content scrollable">
+			<div class="refinery-header">
+				<span class="refinery-header-left">
+					<h3><i class="icon-file"></i>&nbsp;&nbsp;Data Sets</h3>
+				</span>
+				{% if user.is_authenticated %}       
+					<span class="refinery-header-right">
+						<h4><a href={% url import_isa_tab %}><i class="icon-plus-sign"></i></a></h4>
+					</span> 
+				{% endif %}				
+			</div>
+		
+		{% if data_sets %}	
+			<table class="table table-striped table-condensed">
+				<thead>
+					<tr>
+						<th>
+							Name
+						</th>    
+						<!--
+						<th>
+							Owner
+						</th>
+						-->    
+					</tr>
+				</thead>
+				<tbody>
+		    {% for data_set in data_sets %}
+		        <tr>
+		        	<td>
+						<a href="{% url data_set data_set.uuid %}">{{ data_set.name }}</a>        		
+		        	</td>
+		        </tr>
+		    {% endfor %}
+				</tbody>		
+			</table>
+			 
+		{% else %}
+			<div class="alert alert-info">
+				{% if user.is_authenticated %}       
+					No data sets available.
+				{% else %}
+					No public data sets available.
+				{% endif %}		  
+			</div>
+		{% endif %}
+		
+		</div>	
+	</div>	
+	
+<div class="span4">
 
 <div class="refinery-panel refinery-panel-content scrollable">
 <div class="refinery-header">
@@ -125,13 +180,11 @@
 	</div>
 {% endif %}
 </div> 		
-
-
 </div>
-<div class="span4">
 
-<div class="refinery-panel refinery-panel-content scrollable">
-	
+
+<div class="span4">
+<div class="refinery-panel refinery-panel-content scrollable">	
 <div class="refinery-header">
 	<span class="refinery-header-left">
 		<h3><i class="icon-cog"></i>&nbsp;&nbsp;Workflows</h3>
@@ -170,59 +223,6 @@
 </div>
 </div>
 
-<div class="span4">
-
-<div class="refinery-panel refinery-panel-content scrollable">
-<div class="refinery-header">
-	<span class="refinery-header-left">
-		<h3><i class="icon-file"></i>&nbsp;&nbsp;Data Sets</h3>
-	</span>
-	{% if user.is_authenticated %}       
-		<span class="refinery-header-right">
-			<h4><a href={% url import_isa_tab %}><i class="icon-plus-sign"></i></a></h4>
-		</span> 
-	{% endif %}				
-</div>
-
-{% if data_sets %}	
-	<table class="table table-striped table-condensed">
-		<thead>
-			<tr>
-				<th>
-					Name
-				</th>    
-				<!--
-				<th>
-					Owner
-				</th>
-				-->    
-			</tr>
-		</thead>
-		<tbody>
-    {% for data_set in data_sets %}
-        <tr>
-        	<td>
-				<a href="{% url data_set data_set.uuid %}">{{ data_set.name }}</a>        		
-        	</td>
-        </tr>
-    {% endfor %}
-		</tbody>		
-	</table>
-	 
-{% else %}
-	<div class="alert alert-info">
-		{% if user.is_authenticated %}       
-			No data sets available.
-		{% else %}
-			No public data sets available.
-		{% endif %}		  
-	</div>
-{% endif %}
-
-</div>
-
-	
-</div>
 
 </div>
 {% endblock %}
