@@ -18,13 +18,26 @@ var currentStudyUuid = externalStudyUuid; //urlComponents[urlComponents.length-2
 var currentAssayUuid = externalAssayUuid; //urlComponents[urlComponents.length-3]; 
 var currentNodeType = "\"Raw Data File\"";
 
+
+	$(document).ready(function() {		
+		configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
+		configurator.initialize()
+
+		configurator.getState( function() {
+			initializeDataWithState( currentAssayUuid, currentStudyUuid, currentNodeType );	
+		});
+
+		
+		//var that = this;
+		//var timerId = setInterval( function(){ console.log( monitor ); monitor.getUpdate(); }, 3000 );
+	});    		
+
 var showAnnotation = false;
 
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
 var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation", "species", "genome_build" ]; // TODO: make these regexes
 var invisibleFieldNames = [ "name" ];
 
-var addFieldNames = ["Options"];
 
 var facets = {};
 /*
@@ -65,7 +78,7 @@ $(".annotation-buttons button").click(function () {
     	showAnnotation = false;
     }    
 
-	initializeData( currentAssayUuid, currentStudyUuid, currentNodeType );
+	initializeDataWithState( currentAssayUuid, currentStudyUuid, currentNodeType );
 });	
 		
 
@@ -206,57 +219,8 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 }
 
 
-
-function prettifyFieldName( name, isTitle )
-{	
-	isTitle = isTitle || false;
-	
-	var position = name.indexOf( "_Characteristics_" );
-	if ( position != -1 ) {
-		name = name.substr( 0, position );
-	}	
-
-	var position = name.indexOf( "_Factor_" );
-	if ( position != -1 ) {
-		name = name.substr( 0, position );
-	}
-	
-	var position = name.indexOf( "_Comment_" );
-	if ( position != -1 ) {
-		name = name.substr( 0, position );
-	}
-
-	var position = name.indexOf( "Material_Type_" );
-	if ( position != -1 ) {
-		name = "Material Type";
-	}
-
-	var position = name.indexOf( "REFINERY_TYPE_" );
-	if ( position == 0 ) {
-		name = "Type";
-	}
-
-	var position = name.indexOf( "REFINERY_FILETYPE_" );
-	if ( position == 0 ) {
-		name = "File Type";
-	}
-
-
-	name = name.replace( /\_/g, " " );
-	
-	if ( isTitle )
-	{
-		name = name.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
-	}
-
-	return name;	
-}
-
-
-function initializeData( studyUuid, assayUuid, nodeType ) {
+function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 1, {}, {}, {}, showAnnotation ), success: function(data) {
-		
-		var doc = data.response.docs[0];
 		
 		query.total_items = data.response.numFound;		
 		query.selected_items = data.response.numFound;
@@ -264,44 +228,36 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 		// clear facet view
 		$( "#facet-view" ).html("");		
 	
-		for ( var attribute in doc ) {
-			if ( doc.hasOwnProperty( attribute ) ) {
-				// facets
-				if ( ( ( attribute.indexOf( "_Characteristics_" ) != -1 ) &&
-					   ( attribute.indexOf( "sample_name" ) == -1 ) && 
-					   // TODO: this is temporary!
-					   ( attribute.indexOf( "geo_sample_accession" ) == -1 ) &&
-					   ( attribute.indexOf( "geo_description" ) == -1 )	) ||
-					 ( attribute.indexOf( "_Factor_" ) != -1 ) ||
-					 ( attribute.indexOf( "REFINERY_" ) != -1 ) ||
-					 ( attribute.indexOf( "_Material_Type_" ) != -1 ) ) {
-					facets[attribute] = [];
-					
-					$('<div/>', { 'href': '#' + composeFacetId( attribute + "___inactive" ), 'class': 'facet-title', "data-toggle": "collapse", "data-parent": "#facet-view", "data-target": "#" + composeFacetId( attribute + "___inactive" ), 'id': composeFacetId( attribute ), html: "<h4>" + prettifyFieldName( attribute, true ) + "</h4>" }).appendTo('#facet-view');
-					$('<div/>', { 'class': 'facet-value-list selected', "id": composeFacetId( attribute + "___active" ), html: "" }).appendTo('#facet-view');							
-					$('<div/>', { 'class': 'facet-value-list collapse', "id": composeFacetId( attribute + "___inactive" ), html: "" }).appendTo('#facet-view');
+		for ( var i = 0; i < configurator.state.objects.length; ++i ) {
+			var attribute = configurator.state.objects[i];
+			
+			if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal ) {
+				facets[attribute.solr_field] = [];
+				
+				$('<div/>', { 'href': '#' + composeFacetId( attribute.solr_field + "___inactive" ), 'class': 'facet-title', "data-toggle": "collapse", "data-parent": "#facet-view", "data-target": "#" + composeFacetId( attribute.solr_field + "___inactive" ), 'id': composeFacetId( attribute.solr_field ), html: "<h4>" + prettifySolrFieldName( attribute.solr_field, true ) + "</h4>" }).appendTo('#facet-view');
+				$('<div/>', { 'class': 'facet-value-list selected', "id": composeFacetId( attribute.solr_field + "___active" ), html: "" }).appendTo('#facet-view');							
+				$('<div/>', { 'class': 'facet-value-list collapse', "id": composeFacetId( attribute.solr_field + "___inactive" ), html: "" }).appendTo('#facet-view');
 
-				   	$("#" + composeFacetId( attribute + "___inactive" ) ).on( "show", function( attribute ) {
-				   		attribute = decomposeFacetId( this.id ).facet;
-				   		$( "#" + composeFacetId( attribute + "___active" ) ).hide(); //slideUp( "slow" );
-				   	});						
-		
-				   	$("#" + composeFacetId( attribute + "___inactive" ) ).on( "hide", function() {
-				   		attribute = decomposeFacetId( this.id ).facet;
-				   		$( "#" + composeFacetId( attribute + "___active" ) ).fadeIn( "slow" ); //slideDown( "slow");
-				   	});																							
-				}								
-												
-				// fields
-				if ( ignoredFieldNames.indexOf( attribute ) < 0 ) {
-					if ( ( hiddenFieldNames.indexOf( attribute ) < 0 ) && ( invisibleFieldNames.indexOf( attribute ) < 0 ) ) {
-						fields[attribute] = { isVisible: true, direction: "" };
-					}
-					else {
-						fields[attribute] = { isVisible: false, direction: "" };
-					}					
+			   	$("#" + composeFacetId( attribute.solr_field + "___inactive" ) ).on( "show", function( ) {
+			   		attribute = decomposeFacetId( this.id ).facet;
+			   		$( "#" + composeFacetId( attribute + "___active" ) ).hide(); //slideUp( "slow" );
+			   	});						
+	
+			   	$("#" + composeFacetId( attribute.solr_field + "___inactive" ) ).on( "hide", function() {
+			   		attribute = decomposeFacetId( this.id ).facet;
+			   		$( "#" + composeFacetId( attribute + "___active" ) ).fadeIn( "slow" ); //slideDown( "slow");
+			   	});																							
+			}								
+											
+			// fields
+			if ( ignoredFieldNames.indexOf( attribute.solr_field ) < 0 ) {
+				if ( attribute.is_exposed && attribute.is_active && !attribute.is_internal ) {
+					fields[attribute.solr_field] = { isVisible: true, direction: "" };
 				}
-			}		
+				else {
+					fields[attribute.solr_field] = { isVisible: false, direction: "" };
+				}					
+			}
 		}
 				
 		pivots.push( Object.keys( facets )[0] );
@@ -310,6 +266,7 @@ function initializeData( studyUuid, assayUuid, nodeType ) {
 		getData( studyUuid, assayUuid, nodeType )				
 	} });	
 }
+
 
 function getData( studyUuid, assayUuid, nodeType ) {
 	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, query.items_per_page * query.page, query.items_per_page, facets, fields, {}, showAnnotation ), success: function(data) {		
@@ -455,17 +412,17 @@ function processPivots( data ) {
 	for ( facet in facets ) {
 		if ( facets.hasOwnProperty( facet ) ) {
 			if ( pivots.length > 0 && pivots[0] === facet ) {
-				pivot1List.push( "<option selected value=\"" + facet + "\">" + prettifyFieldName( facet ) + "</option>" );
+				pivot1List.push( "<option selected value=\"" + facet + "\">" + prettifySolrFieldName( facet ) + "</option>" );
 			}
 			else {
-				pivot1List.push( "<option value=\"" + facet + "\">" + prettifyFieldName( facet ) + "</option>" );				
+				pivot1List.push( "<option value=\"" + facet + "\">" + prettifySolrFieldName( facet ) + "</option>" );				
 			}
 			
 			if ( pivots.length > 1 && pivots[1] === facet ) {
-				pivot2List.push( "<option selected value=\"" + facet + "\">" + prettifyFieldName( facet ) + "</option>" );
+				pivot2List.push( "<option selected value=\"" + facet + "\">" + prettifySolrFieldName( facet ) + "</option>" );
 			}
 			else {
-				pivot2List.push( "<option value=\"" + facet + "\">" + prettifyFieldName( facet ) + "</option>" );				
+				pivot2List.push( "<option value=\"" + facet + "\">" + prettifySolrFieldName( facet ) + "</option>" );				
 			}
 		}
 	}
@@ -581,11 +538,11 @@ function processFields() {
 	for ( field in fields ) {
 		if ( fields.hasOwnProperty( field ) ) {
 			if ( fields[field].isVisible ) {
-				visibleItems.push("<span class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-check\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );				
+				visibleItems.push("<span class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-check\"/>&nbsp;" + prettifySolrFieldName( field ) + "</span>" );				
 			}
 			else {
 				if ( hiddenFieldNames.indexOf( field ) < 0 ) {
-					visibleItems.push("<span class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-check-empty\"/>&nbsp;" + prettifyFieldName( field ) + "</span>" );
+					visibleItems.push("<span class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-check-empty\"/>&nbsp;" + prettifySolrFieldName( field ) + "</span>" );
 				}
 			}
 		}
@@ -594,8 +551,8 @@ function processFields() {
 	$("#field-view").html("" );
 
 	if ( visibleItems.length > 0 ) {
-		$('<h4/>', { html: "Columns" }).appendTo('#field-view');
-		$('<p/>', { 'class': 'field-name-list', html: visibleItems.join(' | ') }).appendTo('#field-view');
+		//$('<h4/>', { html: "Columns" }).appendTo('#field-view');
+		$('<li/>', { 'class': 'field-name-list', html: visibleItems }).appendTo('#field-view');
 	}
 	
 	if ( invisibleItems.length > 0 ) {
@@ -627,11 +584,11 @@ function makeTableHeader( leadingExtra, trailingExtra ) {
 		if ( fields.hasOwnProperty( field ) ) {
 			if ( fields[field].isVisible ) {
 				if ( fields[field].direction === "asc" ) {
-					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\"><i class=\"icon-arrow-down\">&nbsp;" + prettifyFieldName( field, true ) + "</th>" );				
+					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\"><i class=\"icon-arrow-down\">&nbsp;" + prettifySolrFieldName( field, true ) + "</th>" );				
 				} else if ( fields[field].direction === "desc" ) {
-					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\"><i class=\"icon-arrow-up\">&nbsp;" + prettifyFieldName( field, true ) + "</th>" );				
+					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\"><i class=\"icon-arrow-up\">&nbsp;" + prettifySolrFieldName( field, true ) + "</th>" );				
 				} else {
-					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifyFieldName( field, true ) + "</th>" );									
+					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifySolrFieldName( field, true ) + "</th>" );									
 				}
 			}
 		}
@@ -839,7 +796,6 @@ function createSpeciesModal(aresult) {
 }
 
 
-initializeData( currentAssayUuid, currentStudyUuid, currentNodeType );
 
 
 $( "#profile-viewer-session-link" ).on( "click", function() {

@@ -4,7 +4,8 @@ from celery.task.sets import TaskSet, subtask
 from collections import defaultdict
 from core.models import *
 from data_set_manager.isa_tab_parser import IsaTabParser
-from data_set_manager.models import Investigation, Study, Node
+from data_set_manager.models import Investigation, Study, Node, \
+    initialize_attribute_order, initialize_attribute_order
 from data_set_manager.utils import get_node_types, update_annotated_nodes, \
     index_annotated_nodes
 from datetime import date, datetime, timedelta
@@ -373,7 +374,7 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None, da
     if investigation_uuid != None:
         # TODO: make sure this is used everywhere 
         annotate_nodes(investigation_uuid)
-
+    
         dataset = None
         investigation = Investigation.objects.get(uuid=investigation_uuid)
         
@@ -440,6 +441,10 @@ def annotate_nodes(investigation_uuid):
             for node_type in node_types:
                 update_annotated_nodes( node_type, study.uuid, assay.uuid, update=True )
                 index_annotated_nodes( node_type, study.uuid, assay.uuid )
+            
+            # initialize attribute order for this assay
+            attribute_count = initialize_attribute_order( study, assay )
+            logger.info( "Initialized attribute order with %d attributes for study = %s and assay = %s" % ( attribute_count, study, assay ) )
                     
 
 @task()
