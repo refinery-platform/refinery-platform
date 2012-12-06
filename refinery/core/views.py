@@ -714,8 +714,7 @@ def solr_igv(request):
     :type source: HttpRequest object.
     :returns: 
     '''
-    logger.debug("solr_igv called: before ajax")
-        
+    
     # copy querydict to make it editable
     if request.is_ajax():
         logger.debug("solr_igv called: request is ajax")

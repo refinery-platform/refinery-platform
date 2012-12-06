@@ -183,7 +183,10 @@ def igv_multi_species(solr_results, solr_annot=None):
     unique_species, unique_species_num = get_unique_species(solr_results)
     if solr_annot:
         unique_annot, unique_annot_num = get_unique_species(solr_annot)
-     
+    
+    logger.debug("visualization_manager.views.igv_multi_species called 2")
+    
+    
     # 1. check to see how many species are selected? 
     # move this to visualization_manager.utils 
     
@@ -197,6 +200,7 @@ def igv_multi_species(solr_results, solr_annot=None):
     # 4. generate igv files for each species, including phenotype data + paths generated from uuid's
     ui_results = {'species_count':unique_species_num, 'species':{}}
     for k,v in unique_species.items():
+        logger.debug("visualization_manager.views.igv_multi_species = k:  %s" % k )
             
         if solr_annot:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'], unique_annot[k]['solr'])
@@ -218,6 +222,8 @@ def igv_multi_species(solr_results, solr_annot=None):
         
     #print "unique_annot"
     #print simplejson.dumps(unique_annot, indent=4)    
+    logger.debug("visualization_manager.views.igv_multi_species = ui_results")    
+    logger.debug(simplejson.dumps(unique_annot, indent=4) )    
     
     # 5. reflect buttons in the bootbox modal in UI
     return ui_results
