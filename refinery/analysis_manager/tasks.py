@@ -394,7 +394,7 @@ def run_analysis_cleanup(analysis):
     
     # delete history
     ## DEBUG CURRENTLY NOT DELETING HISTORY
-    #connection.delete_history(analysis.history_id)
+    connection.delete_history(analysis.history_id)
     
     # delete_library
     connection.delete_library(analysis.library_id)
