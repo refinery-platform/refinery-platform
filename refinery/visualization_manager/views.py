@@ -183,13 +183,7 @@ def igv_multi_species(solr_results, solr_annot=None):
     unique_species, unique_species_num = get_unique_species(solr_results)
     if solr_annot:
         unique_annot, unique_annot_num = get_unique_species(solr_annot)
-        logger.debug("visualization_manager.views.igv_multi_species unique_annot")
-        logger.debug(simplejson.dumps(unique_annot, indent=4));
-    
-    
-    
-    logger.debug("visualization_manager.views.igv_multi_species called 2")
-    
+     
     # 1. check to see how many species are selected? 
     # move this to visualization_manager.utils 
     
@@ -203,17 +197,13 @@ def igv_multi_species(solr_results, solr_annot=None):
     # 4. generate igv files for each species, including phenotype data + paths generated from uuid's
     ui_results = {'species_count':unique_species_num, 'species':{}}
     for k,v in unique_species.items():
-        logger.debug("key: %s, 11111111" % k)
-    
-        
-        if unique_annot:
+            
+        if solr_annot:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'], unique_annot[k]['solr'])
         else:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'])
         
-        logger.debug("key: %s, 222222222" % k )
-    
-        # if file_uuids generated for given species
+            # if file_uuids generated for given species
         # generate igv session file 
         if "file_uuid" in v:
             # if annotation contains species 
@@ -226,15 +216,8 @@ def igv_multi_species(solr_results, solr_annot=None):
             ui_results['species'][k] = temp_url
             #print temp_url
         
-        logger.debug("END FOR LOOP: %s, 333333333" % k )
-    
-    logger.debug("visualization_manager.views.igv_multi_species called 3")
-    
-        
     #print "unique_annot"
     #print simplejson.dumps(unique_annot, indent=4)    
-    logger.debug( "before return ui_results" );
-    logger.debug(simplejson.dumps(ui_results, indent=4));
     
     # 5. reflect buttons in the bootbox modal in UI
     return ui_results
@@ -257,7 +240,6 @@ def get_unique_species(docs):
     
     # If results have a defined genome_build or species field
     for res in docs:
-        logger.debug("visualization_manager.views res")
         #logger.debug(simplejson.dumps(res, indent=4))
     
         # Defaults to checking for genome_build
@@ -291,7 +273,6 @@ def get_unique_species(docs):
         #else:
         #    logger.error("core.views.solr_igv: Selected Samples do not have genome_build or species associated")
     
-    logger.debug("visualization_manager.views unique_species1")
     #logger.debug( simplejson.dumps(unique_species, indent=4) )
         
     # actual number of unique genome builds
@@ -299,7 +280,6 @@ def get_unique_species(docs):
     
     # CASE: when species is unknown, launch IGV with predefined genomes
     if not unique_species:
-        logger.debug("visualization_manager.views INSIDE NOT UNIQUE SPECIES")
         temp_species = {'file_uuid':[], 'solr':[]}
         for res in docs:
             temp_species['solr'].append(res)
@@ -311,7 +291,7 @@ def get_unique_species(docs):
                 genome = 'WS220'
             unique_species[genome] = temp_species
     
-    logger.debug( "unique_species2 " )
+    #logger.debug( "unique_species2 " )
     #logger.debug( simplejson.dumps(unique_species, indent=4) )
     
     return unique_species, unique_count
@@ -566,9 +546,6 @@ def getSampleLines(fields, results):
     # iterating over samples
     for row in results:
         # adding file_name to matrix as linking id
-        #logger.debug("row: %s" % row)
-        logger.debug("row_file_uuid: %s" % row["file_uuid"])
-    
         line, url = getFileName(row["file_uuid"], True)
         
         # adding fields to sample information matrix
@@ -578,13 +555,9 @@ def getSampleLines(fields, results):
             else:
                 line = line + '\t' + ''
                 
-            logger.debug("----key %s,  line: %s" % (k, line))
-        
         output_mat = output_mat + line + '\n'    
     
     # returns matrix for given inputs
-    logger.debug("visualization_manager.views getSampleLines : output mat= %s" % output_mat)
-    
     return output_mat      
 
     
