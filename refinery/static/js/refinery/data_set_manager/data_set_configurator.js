@@ -14,6 +14,7 @@
  * - JQuery
  * - JQueryUI
  * - underscore.js
+ * - Refinery Solr Utilities
  */
 
 
@@ -25,7 +26,6 @@ DataSetConfigurator = function( studyUuid, assayUuid, elementId, apiBaseUrl, crs
   	self.apiEndpoint = "attributeorder";
   	self.apiBaseUrl = apiBaseUrl;
   	self.crsfMiddlewareToken = crsfMiddlewareToken;  
-
   	
   	// data set to configure
   	self.studyUuid = studyUuid;
@@ -40,7 +40,7 @@ DataSetConfigurator = function( studyUuid, assayUuid, elementId, apiBaseUrl, crs
 };	
 	
 	
-DataSetConfigurator.prototype.initialize = function ( result ) {
+DataSetConfigurator.prototype.initialize = function () {
 	var self = this;
 	
 	self.getState( function() { self.render(); } );
@@ -90,7 +90,11 @@ DataSetConfigurator.prototype.render = function () {
 	
 	for ( var i = 0; i < self.state.objects.length; ++i ) {
 		var object = self.state.objects[i];
-
+		
+		if ( object.is_internal ) {
+			continue;
+		}
+		
 		code += "<tr class=\"\" data-id=\"" + object.id + "\" data-resource_uri=\"" + object.resource_uri + "\" id=\"attributeorder_" + object.id + "\">";		                 			
 
 		code += "<td class=\"\">";		                 			
@@ -98,7 +102,7 @@ DataSetConfigurator.prototype.render = function () {
 		code += "</td>";		                 			
 		
 		code += "<td class=\"\">";		                 			
-		code +=  object.subtype; // + " (" + object.type + ")";		                 			
+		code +=  prettifySolrFieldName( object.solr_field, true );		                 			
 		code += "</td>";		                 			
 
 		code += "<td class=\"\">";		                 			
@@ -288,8 +292,7 @@ DataSetConfigurator.prototype.getState = function( callback ) {
 	     	self.state = result;    	
      	     	
 			// callback
-			console.log( result );
-			callback();										
+			callback( result );										
     	}
 	});
 };
