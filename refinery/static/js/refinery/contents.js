@@ -842,9 +842,9 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 	$("#myModalBody").html("");  		
 	
 	// adding spinner to be removed after ajax callback
-	//opts["left"] = $("#igvModal").width()/2 - 30;
-	//var target = document.getElementById('myModalBody');
-	//var spinner = new Spinner(opts).spin(target);  
+	opts["left"] = $("#igvModal").width()/2 - 30;
+	var target = document.getElementById('myModalBody');
+	var spinner = new Spinner(opts).spin(target);  
 		
 
 	// --- START: set correct CSRF token via cookie ---
@@ -890,13 +890,14 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 	     success: function(result){
 	     	
 	     	// stop spinner
-	     	//spinner.stop();
+	     	spinner.stop();
 	     	var ret_buttons = createSpeciesModal(result.species);
 	     	
 	     	// if only 1 species returned
 			if (ret_buttons.length == 1) {
+				$('#igvModal').modal("hide");
 	     		window.location = ret_buttons[0].url;
-	     		//$('#igvModal').modal("hide");
+	     		
 	     	}
 	     	else { 
 	     		$('#igvModal').modal();
