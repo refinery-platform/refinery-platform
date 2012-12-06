@@ -38,7 +38,6 @@ var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
 var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation", "species", "genome_build" ]; // TODO: make these regexes
 var invisibleFieldNames = [ "name" ];
 
-var addFieldNames = ["Options"];
 
 var facets = {};
 /*
@@ -232,11 +231,7 @@ function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 		for ( var i = 0; i < configurator.state.objects.length; ++i ) {
 			var attribute = configurator.state.objects[i];
 			
-			if ( attribute.is_internal ) {
-				continue;
-			}
-				
-			if ( attribute.is_facet && attribute.is_exposed ) {
+			if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal ) {
 				facets[attribute.solr_field] = [];
 				
 				$('<div/>', { 'href': '#' + composeFacetId( attribute.solr_field + "___inactive" ), 'class': 'facet-title', "data-toggle": "collapse", "data-parent": "#facet-view", "data-target": "#" + composeFacetId( attribute.solr_field + "___inactive" ), 'id': composeFacetId( attribute.solr_field ), html: "<h4>" + prettifySolrFieldName( attribute.solr_field, true ) + "</h4>" }).appendTo('#facet-view');
