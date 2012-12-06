@@ -45,7 +45,7 @@
 				<span class="refinery-header-left">
 					<h3><i class="icon-file"></i>&nbsp;&nbsp;Data Sets</h3>
 				</span>
-				{% if user.is_authenticated %}       
+				{% if user.is_authenticated and not REFINERY_REPOSITORY_MODE %}       
 					<span class="refinery-header-right">
 						<h4><a href={% url import_isa_tab %}><i class="icon-plus-sign"></i></a></h4>
 					</span> 
@@ -98,7 +98,7 @@
 		<h3><i class="icon-folder-open"></i>&nbsp;&nbsp;Projects</h3>
 	</span>
 
-	{% if user.is_authenticated %}       
+	{% if user.is_authenticated and not REFINERY_REPOSITORY_MODE %}       
 		<span class="refinery-header-right">
 			<h4><a href="{% url project_new %}"><i class="icon-plus-sign"></i></a></h4> 
 		</span>	
