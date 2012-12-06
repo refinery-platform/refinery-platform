@@ -247,7 +247,8 @@ def get_unique_species(docs):
     
     # If results have a defined genome_build or species field
     for res in docs:
-        #logger.debug(simplejson.dumps(res, indent=4))
+        logger.debug("-------------------------")
+        logger.debug(simplejson.dumps(res, indent=4))
     
         # Defaults to checking for genome_build
         if "genome_build" in res:
@@ -280,7 +281,8 @@ def get_unique_species(docs):
         #else:
         #    logger.error("core.views.solr_igv: Selected Samples do not have genome_build or species associated")
     
-    #logger.debug( simplejson.dumps(unique_species, indent=4) )
+    logger.debug( "unique_species2 " )
+    logger.debug( simplejson.dumps(unique_species, indent=4) )
         
     # actual number of unique genome builds
     unique_count = len(unique_count)
@@ -298,8 +300,8 @@ def get_unique_species(docs):
                 genome = 'WS220'
             unique_species[genome] = temp_species
     
-    #logger.debug( "unique_species2 " )
-    #logger.debug( simplejson.dumps(unique_species, indent=4) )
+    logger.debug( "unique_species2 " )
+    logger.debug( simplejson.dumps(unique_species, indent=4) )
     
     return unique_species, unique_count
       
