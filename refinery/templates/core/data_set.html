@@ -106,8 +106,12 @@ rect.active {
 	<div class="row-fluid">      
 	    <ul class="nav nav-tabs" id="tabs">
   			<li class="active"><a href="#content" data-toggle="tab">Samples</a></li>
+  			{% if has_change_dataset_permission %}
   			<li><a href="#configuration" data-toggle="tab">Attributes</a></li>
+  			{% endif %}	
+  			{% if has_change_dataset_permission %}
   			<li><a href="#analyses" data-toggle="tab">Analyses</a></li>
+  			{% endif %}	
   			<li><a href="#about" data-toggle="tab">About</a></li>
   			<li><a href="#sharing" data-toggle="tab">Sharing</a></li>
   	    </ul>
@@ -185,18 +189,11 @@ rect.active {
 						  <li><a href="#pivot-view-tab" data-toggle="pill">Matrix</a></li>
 						</ul>
 			
-						<!-- <div id="field-view"></div>  -->
-
 						<div class="tab-content">
 						  <div class="tab-pane active fade in" id="table-view-tab">
 						  	<div class="dropdown">
-							  <i class="icon-columns"></i>&nbsp;<a href="#" class="dropdown-toggle" data-toggle="dropdown">Colums</a>
+							  <a href="#" class="dropdown-toggle btn btn-mini btn-default" data-toggle="dropdown"><i class="icon-wrench"></i>&nbsp;Colums&nbsp;<i class="icon-caret-down"></i></a>							   
 							  <ul class="dropdown-menu" id="field-view" role="menu" aria-labelledby="dLabel">
-							    <li><a tabindex="-1" href="#">Action</a></li>
-							    <li><a tabindex="-1" href="#">Another action</a></li>
-							    <li><a tabindex="-1" href="#">Something else here</a></li>
-							    <li class="divider"></li>
-							    <li><a tabindex="-1" href="#">Separated link</a></li>
 							  </ul>
 							</div>
 							<div id="table-view"></div>
@@ -224,6 +221,7 @@ rect.active {
 		</form>
 	</div>
 
+	{% if has_change_dataset_permission %}
   	<div class="tab-pane" id="configuration">
 		<div class="refinery-header">
 			<span class="refinery-header-left">
@@ -236,8 +234,10 @@ rect.active {
 		</div>
 		<div id="configurator-panel">
 		</div>	
-  	</div>	
+  	</div>
+  	{% endif %}	
 
+	{% if has_change_dataset_permission %}
   	<div class="tab-pane" id="analyses">
 		<div class="refinery-header">
 			<span class="refinery-header-left">
@@ -260,6 +260,7 @@ rect.active {
 		{% endif %}
 		</p>		
   	</div>
+  	{% endif %}	
 
 	<div class="tab-pane" id="about">
 			

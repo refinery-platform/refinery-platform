@@ -538,11 +538,11 @@ function processFields() {
 	for ( field in fields ) {
 		if ( fields.hasOwnProperty( field ) ) {
 			if ( fields[field].isVisible ) {
-				visibleItems.push("<span class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-check\"/>&nbsp;" + prettifySolrFieldName( field ) + "</span>" );				
+				visibleItems.push("<a class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-check\"/>&nbsp;" + prettifySolrFieldName( field, true ) + "</a>" );				
 			}
 			else {
 				if ( hiddenFieldNames.indexOf( field ) < 0 ) {
-					visibleItems.push("<span class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-check-empty\"/>&nbsp;" + prettifySolrFieldName( field ) + "</span>" );
+					visibleItems.push("<a class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-check-empty\"/>&nbsp;" + prettifySolrFieldName( field, true ) + "</a>" );
 				}
 			}
 		}
@@ -551,8 +551,13 @@ function processFields() {
 	$("#field-view").html("" );
 
 	if ( visibleItems.length > 0 ) {
+		var listItems = [];
+		for ( var i = 0; i < visibleItems.length; ++i ) {
+			listItems.push( "<li>" + visibleItems[i] + "</li>" );			
+		}
 		//$('<h4/>', { html: "Columns" }).appendTo('#field-view');
-		$('<li/>', { 'class': 'field-name-list', html: visibleItems }).appendTo('#field-view');
+		//$('<li/>', { 'class': 'field-name-list', html: visibleItems }).appendTo('#field-view');
+		$("#field-view").append( listItems.join( ""));
 	}
 	
 	if ( invisibleItems.length > 0 ) {
@@ -560,7 +565,9 @@ function processFields() {
 		$('<p/>', { 'class': 'field-name-list', html: invisibleItems.join(' | ') }).appendTo('#field-view');		
 	}
 	
-   	$("#field-view").children().click( function() {
+   	$("#field-view").children().click( function(event) {
+   		event.stopPropagation();
+   		
    		var fieldNameId = event.target.id;
    		var fieldName = decomposeFieldNameId( fieldNameId ).fieldName;
    	   		

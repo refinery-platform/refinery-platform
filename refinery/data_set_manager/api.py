@@ -37,6 +37,8 @@ class AttributeOrderResource(ModelResource):
     class Meta:
         queryset = AttributeOrder.objects.all().order_by("rank")
         allowed_methods = ["get", "patch", "put", "post" ]
+        
+        # TODO: replace with session or api key authentication and internal authorization 
         authentication = Authentication()
         authorization = Authorization()
         filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS, "subtype": ALL }

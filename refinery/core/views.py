@@ -251,7 +251,7 @@ def data_set_slug(request,slug):
 def data_set(request,uuid):    
     data_set = get_object_or_404( DataSet, uuid=uuid )
     public_group = ExtendedGroup.objects.public_group()
-        
+    
     if not request.user.has_perm( 'core.read_dataset', data_set ):
         if not 'read_dataset' in get_perms( public_group, data_set ):
             return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this data set.</h1>" )
@@ -285,12 +285,15 @@ def data_set(request,uuid):
     except:
         pass
     
+    print( get_perms( request.user, data_set ) )
+    
     return render_to_response('core/data_set.html', 
                               {
                                 'data_set': data_set, 
                                 "studies": studies,
                                 "study_uuid": study_uuid,
                                 "assay_uuid": assay_uuid,
+                                "has_change_dataset_permission": 'change_dataset' in get_perms( request.user, data_set ),
                                 "workflows": workflows,
                                 "isatab_archive": isatab_archive,
                                 "pre_isatab_archive": pre_isatab_archive,                             
