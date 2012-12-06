@@ -17,6 +17,7 @@ from django.utils import simplejson
 from workflow_manager.tasks import get_workflow_inputs, get_workflows
 import copy
 import logging
+from core.views import get_solr_results
 
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,8 @@ def index(request):
     return render_to_response( 'analysis_manager/index.html', { 'statuses': statuses }, context_instance=RequestContext( request ) )
 
 def analysis_status(request, uuid):
-    print "called analysis_status"
+    logger.debug( "analysis_manager.views.analysis_status called")
+    
     #import pdb; pdb.set_trace()
     
     analysis = Analysis.objects.get(uuid=uuid)
@@ -47,10 +49,9 @@ def analysis_status(request, uuid):
         return render_to_response( 'analysis_manager/analysis_status.html', { 'uuid':uuid, 'statuses': statuses }, context_instance=RequestContext( request ) )
 
 def analysis_run(request):
-    print "analysis_manager.analysis_run called";
+    logger.debug( "analysis_manager.views.analysis_run called")
+    logger.debug( simplejson.dumps(request.POST, indent=4) )
     
-    print simplejson.dumps(request.POST, indent=4);
-
     # gets workflow_uuid
     workflow_uuid = request.POST.getlist('workflow_choice')[0]
     
@@ -150,6 +151,9 @@ def analysis_run(request):
     # getting distinct workflow inputs
     workflow_data_inputs = curr_workflow.data_inputs.all()
     
+    logger.debug("ret_list")
+    logger.debug(simplejson.dumps(ret_list, indent=4))
+    
     ######### ANALYSIS MODEL 
     # Updating Refinery Models for updated workflow input (galaxy worfkflow input id & assay_uuid 
     count = 0;
@@ -170,11 +174,72 @@ def analysis_run(request):
     # call function via analysis_manager
     run_analysis.delay(analysis, 5.0)
     
-    print "argas"
-    print analysis.uuid
-    
     return HttpResponseRedirect(reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,)))
-  
+
+def repository_run(request):
+    logger.debug( "analysis_manager.views.repository_run called")
+        
+    if request.method == 'POST':
+        #logger.debug( simplejson.dumps(request.POST, indent=4) )  
+        
+        # solr results
+        solr_query = request.POST["query"]
+        solr_uuids = get_solr_results(solr_query, only_uuids=True)
+        
+        # gets workflow_uuid
+        workflow_uuid = request.POST['workflow_choice']
+    
+        # get study uuid
+        study_uuid = request.POST['study_uuid']
+    
+        # retrieving workflow based on input workflow_uuid
+        curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+        
+        # TODO: catch if study or data set don't exist
+        study = Study.objects.get( uuid=study_uuid );
+        data_set = InvestigationLink.objects.filter( investigation__uuid=study.investigation.uuid ).order_by( "version" ).reverse()[0].data_set;
+        
+        logger.info( "Associating analysis with data set %s (%s)" % ( data_set, data_set.uuid ) )
+        
+        ######### ANALYSIS MODEL ########
+        # How to create a simple analysis object
+        temp_name = curr_workflow.name + " " + str( datetime.now() )
+        summary_name = "None provided."
+        
+        analysis = Analysis( summary=summary_name, name=temp_name, project=request.user.get_profile().catch_all_project, data_set=data_set, workflow=curr_workflow, time_start=datetime.now() )
+        analysis.save()   
+    
+        #setting the owner
+        analysis.set_owner(request.user)
+        
+        # gets galaxy internal id for specified workflow
+        workflow_galaxy_id = curr_workflow.internal_id
+        
+        # getting distinct workflow inputs
+        workflow_data_inputs = curr_workflow.data_inputs.all()[0]
+        
+        # NEED TO GET LIST OF FILE_UUIDS from solr query 
+        count = 0;
+        for file_uuid in solr_uuids:
+            count += 1
+            temp_input = WorkflowDataInputMap( workflow_data_input_name=workflow_data_inputs.name, data_uuid=file_uuid, pair_id=count)   
+            temp_input.save() 
+            analysis.workflow_data_input_maps.add( temp_input ) 
+            analysis.save() 
+        
+        # keeping new reference to analysis_status
+        analysis_status = AnalysisStatus.objects.create(analysis=analysis)
+        analysis_status.save()
+        
+        # call function via analysis_manager
+        run_analysis.delay(analysis, 5.0)
+        
+        #import pdb; pdb.set_trace()
+        logger.debug(request.build_absolute_uri(reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,)) ))
+        
+        ret_url = request.build_absolute_uri(reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,)) )
+        return HttpResponse(simplejson.dumps(ret_url), mimetype='application/json')
+
 
 def update_workflows(request):
     """ 

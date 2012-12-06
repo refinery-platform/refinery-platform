@@ -127,7 +127,7 @@ rect.active {
 			
 				<!-- pass study information into the receiving view when posting -->
 				<input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
-			 
+				
 			<div class="row-fluid">
 			 	<div class="span10">
 			 								
@@ -135,7 +135,7 @@ rect.active {
 							<!-- CHECK BOXES FOR SELECTING SAMPLES --> 
 							<span class="label">Selection</span>
 							{% for work in workflows %}
-								<a id="submitSamplesBtn" data-workflow_id="{{work.uuid}}" role="button" class="btn" >Download Archive</a>
+								<a id="submitReposBtn" data-workflow_id="{{work.uuid}}" role="button" class="btn" >Download Archive</a>
 							{% endfor %}
 							
 							{% else %}
@@ -356,7 +356,7 @@ rect.active {
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
     <h3 id="myModalLabel">Launch IGV</h3>
   </div>
-  <div class="modal-body" id="myModalBody">      
+  <div class="modal-body" id="myModalBody">
   </div>
   <div class="modal-footer">
     <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
