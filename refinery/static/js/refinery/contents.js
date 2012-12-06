@@ -251,13 +251,18 @@ function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 											
 			// fields
 			if ( ignoredFieldNames.indexOf( attribute.solr_field ) < 0 ) {
-				if ( attribute.is_exposed && attribute.is_active && !attribute.is_internal ) {
-					fields[attribute.solr_field] = { isVisible: true, direction: "" };
+				if ( attribute.is_internal ) {
+						fields[attribute.solr_field] = { isVisible: false, isInternal: true, direction: "" };					
 				}
 				else {
-					if ( attribute.is_exposed && !attribute.is_active && !attribute.is_internal ) {
-						fields[attribute.solr_field] = { isVisible: false, direction: "" };						
-					}					
+					if ( attribute.is_exposed && attribute.is_active ) {
+						fields[attribute.solr_field] = { isVisible: true, isInternal: false, direction: "" };
+					}
+					else {
+						if ( attribute.is_exposed && !attribute.is_active ) {
+							fields[attribute.solr_field] = { isVisible: false, isInternal: false, direction: "" };						
+						}					
+					}
 				}					
 			}
 		}
@@ -539,11 +544,11 @@ function processFields() {
 	var invisibleItems = []
 	for ( field in fields ) {
 		if ( fields.hasOwnProperty( field ) ) {
-			if ( fields[field].isVisible ) {
+			if ( fields[field].isVisible && !fields[field].isInternal ) {
 				visibleItems.push("<a class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-check\"/>&nbsp;" + prettifySolrFieldName( field, true ) + "</a>" );				
 			}
 			else {
-				if ( hiddenFieldNames.indexOf( field ) < 0 ) {
+				if ( hiddenFieldNames.indexOf( field ) < 0 && !fields[field].isInternal ) {
 					visibleItems.push("<a class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-check-empty\"/>&nbsp;" + prettifySolrFieldName( field, true ) + "</a>" );
 				}
 			}
@@ -557,15 +562,8 @@ function processFields() {
 		for ( var i = 0; i < visibleItems.length; ++i ) {
 			listItems.push( "<li>" + visibleItems[i] + "</li>" );			
 		}
-		//$('<h4/>', { html: "Columns" }).appendTo('#field-view');
-		//$('<li/>', { 'class': 'field-name-list', html: visibleItems }).appendTo('#field-view');
 		$("#field-view").append( listItems.join( ""));
-	}
-	
-	if ( invisibleItems.length > 0 ) {
-		$('<h4/>', { html: "Add Columns" }).appendTo('#field-view');
-		$('<p/>', { 'class': 'field-name-list', html: invisibleItems.join(' | ') }).appendTo('#field-view');		
-	}
+	}	
 	
    	$("#field-view").children().click( function(event) {
    		event.stopPropagation();
@@ -635,7 +633,7 @@ function processDocs( data ) {
 		
 		for ( entry in fields )
 		{
-			if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible ) {
+			if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible && !fields[entry].isInternal ) {
 				if ( document.hasOwnProperty( entry ) && !( hiddenFieldNames.indexOf( entry ) >= 0 ) )
 				{
 					s += "<td>";
@@ -662,7 +660,7 @@ function processDocs( data ) {
 	// attach events to column headers
 	for ( field in fields ) {
 		if ( fields.hasOwnProperty( field ) ) {
-			if ( fields[field].isVisible ) {
+			if ( fields[field].isVisible && !fields[field].isInternal ) {
 				$( "#" + composeFieldNameId( field + "___header" ) ).on( "click", function() {
 					newDirection = toggleFieldDirection( fields[decomposeFieldNameId( this.id ).fieldName].direction );
 					clearFieldDirections();
