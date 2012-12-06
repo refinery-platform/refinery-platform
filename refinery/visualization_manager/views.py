@@ -173,6 +173,7 @@ def igv_multi_species(solr_results, solr_annot=None):
     '''
     logger.debug("visualization_manager.views.igv_multi_species called")
     
+    unique_annot = None
     #print "solr_results"
     #print simplejson.dumps(solr_results, indent=4)
     
@@ -268,7 +269,7 @@ def get_unique_species(docs):
             curr_build = str(taxon_id_to_genome_build(res["species"]))
              # Number of distinct species 
             if curr_build not in unique_count:
-                unique_counta.append(unique_count)
+                unique_count.append(unique_count)
         
             if curr_build not in unique_species:
                 #unique_species.append(curr_build)
