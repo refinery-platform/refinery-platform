@@ -476,7 +476,6 @@ def download_history_files(analysis) :
     dl_dict = {}
     
     for dl in dl_files.all():
-        #print dl
         temp_dict = {}
         temp_dict['filename'] = dl.filename
         temp_dict['pair_id'] = dl.pair_id
@@ -490,8 +489,6 @@ def download_history_files(analysis) :
     
     # Iterating through files in current galaxy history
     for results in download_list:
-        #print "results"
-        #print results
         
         # download file if result state is "ok"
         if results['state'] == 'ok':
@@ -501,10 +498,6 @@ def download_history_files(analysis) :
             if curr_file_id in dl_dict:
                 curr_dl_dict = dl_dict[curr_file_id]
                 
-                #print "#######results"
-                #print "found in dict"
-                #print results
-                
                 result_name = curr_dl_dict['filename'] + '.' + file_type
             
                 # size of file defined by galaxy
@@ -512,13 +505,9 @@ def download_history_files(analysis) :
                 # URL to download
                 download_url = connection.make_url(str(results['dataset_id']), is_data=True, key=False)
                 
-                #print "download url"
-                #print download_url
-                #print file_type
-                #print download_url
-                
-                # getting file_store_uuid
-                filestore_uuid = create(source=download_url, filetype=file_type, permanent=True)
+                # getting file_store_uuid, 
+                # TODO: when changing permanent=True, fix update of % download of file 
+                filestore_uuid = create(source=download_url, filetype=file_type, permanent=False)
                 
                 # adding history files to django model 
                 temp_file = AnalysisResult(analysis_uuid=analysis.uuid, file_store_uuid=filestore_uuid, file_name=result_name, file_type=file_type)
