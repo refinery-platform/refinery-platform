@@ -255,7 +255,9 @@ function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 					fields[attribute.solr_field] = { isVisible: true, direction: "" };
 				}
 				else {
-					fields[attribute.solr_field] = { isVisible: false, direction: "" };
+					if ( attribute.is_exposed && !attribute.is_active && !attribute.is_internal ) {
+						fields[attribute.solr_field] = { isVisible: false, direction: "" };						
+					}					
 				}					
 			}
 		}
