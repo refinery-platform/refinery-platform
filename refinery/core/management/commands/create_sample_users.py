@@ -15,7 +15,10 @@ class Command(BaseCommand):
     help = "%s\nUsage:\npython manage.py create_sample_users <number of users>" % help
     help = "%s [--prefix <prefix for usernames> --password <sample password> --groups]" % help
     help = "%s\n\nIf --prefix and --password are not provided the default values will be" % help
-    help = "%s 'testuser' and 'samplepass,' respectively." % help
+    help = "%s 'testuser' and 'samplepass,' respectively.\n--groups will create a group" % help
+    help = "%s for each user and add the user to the group as well as making the user a" % help
+    help = "%s manager for that group.  Group names are currently set to be" % help
+    help = "%s 'group_<username>'."
     
     option_list = BaseCommand.option_list + (
                 make_option('--prefix',
