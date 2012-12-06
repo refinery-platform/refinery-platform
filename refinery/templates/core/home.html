@@ -58,22 +58,27 @@
 					<tr>
 						<th>
 							Name
-						</th>    
-						<!--
-						<th>
-							Owner
 						</th>
-						-->    
+						{% if REFINERY_REPOSITORY_MODE %}
+						<th>
+							Description
+						</th>
+						{% endif %}	    
 					</tr>
 				</thead>
 				<tbody>
-		    {% for data_set in data_sets %}
-		        <tr>
-		        	<td>
-						<a href="{% url data_set data_set.uuid %}">{{ data_set.name }}</a>        		
-		        	</td>
-		        </tr>
-		    {% endfor %}
+		    	{% for data_set in data_sets %}
+		        	<tr>
+		    	    	<td>
+							<a href="{% url data_set data_set.uuid %}">{{ data_set.name }}</a>        		
+			        	</td>
+						{% if REFINERY_REPOSITORY_MODE %}
+						<td>
+							{{ data_set.summary }}
+						</td>
+						{% endif %}	    
+			        </tr>
+		    	{% endfor %}
 				</tbody>		
 			</table>
 			 
