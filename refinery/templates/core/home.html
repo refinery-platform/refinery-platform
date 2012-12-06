@@ -188,6 +188,7 @@
 </div>
 
 
+{% if not REFINERY_REPOSITORY_MODE %}
 <div class="span4">
 <div class="refinery-panel refinery-panel-content scrollable">	
 <div class="refinery-header">
@@ -227,7 +228,7 @@
 	
 </div>
 </div>
-
+{% endif %}
 
 </div>
 {% endblock %}
