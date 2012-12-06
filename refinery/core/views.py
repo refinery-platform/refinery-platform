@@ -699,29 +699,10 @@ def analysis_redirect(request, project_uuid, analysis_uuid):
     return HttpResponseRedirect(reverse('analysis_manager.views.analysis', args=(analysis_uuid,)))
 """
 
-def solr(request):
-    # copy querydict to make it editable
-    query = request.GET.copy()
-    
-    if request.user.is_authenticated():        
-        # limit query to objects owned by the current user and to
-        # objects shared with groups that the user is part of who
-        # have at least read permissions for this model instance 
-        user_id = request.user.id
-        group_ids = request.user.groups.all().values_list( "id", flat=True )    
-        query.update( { "fq": "owner_id:" + str( user_id ) + " OR "  + "(group_ids:" + " OR ".join( [ str( g ) for g in group_ids ]) + ")" } )        
-    else:
-        # limit results to anything shared with the public group
-        query.update( { "fq": "group_ids:" + str( ExtendedGroup.objects.public_group().id ) } )    
-        
-    return HttpResponse( urllib2.urlopen( "http://127.0.0.1:8983/solr/core/select?" + query.urlencode() ).read(), mimetype='application/json' )
-
-
 def solr_select(request, core):
     # core format is <name_of_core>    
     # query.GET is a querydict containing all parts of the query
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select?" + request.GET.urlencode()
-    print(url)
     return HttpResponse( urllib2.urlopen( url ).read(), mimetype='application/json' )
 
 
