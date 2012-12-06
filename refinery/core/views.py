@@ -746,7 +746,7 @@ def solr_igv(request):
         return HttpResponse(simplejson.dumps(session_urls),mimetype='application/json')
 
     
-def get_solr_results(query, facets=False, jsonp=False, annotation=False):
+def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uuids=False):
     '''
     Helper function for taking solr request url. Removes facet requests, converts to json, from input solr query  
     
@@ -756,6 +756,8 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False):
     :type facets: boolean
     :param jsonp: Removes JSONP query from solr query string
     :type jsonp: boolean
+    :param only_uuids: Returns list of file_uuids from all solr results
+    :type only_uuids: boolean
     :returns: dictionary of current solr results
     '''
     
@@ -781,15 +783,24 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False):
         
     # converting results into json for python 
     results = simplejson.loads(results)
-    
+        
     # number of results 
     num_found = int(results["response"]["numFound"])
-    logger.debug("core.views: get_solr_results num_found=%s" % num_found)
+    #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
     
+    # Will return only list of file_uuids
+    if only_uuids:
+        ret_file_uuids = []
+        solr_results = results["response"]["docs"]
+        for res in solr_results:
+            ret_file_uuids.append(res["file_uuid"])
+        return ret_file_uuids
+        
     if num_found == 0:
         return None
     else:
         return results
+    
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
     logger.debug("core.views.samples_solr called")

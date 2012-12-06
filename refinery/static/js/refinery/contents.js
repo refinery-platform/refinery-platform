@@ -930,6 +930,69 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 	
 });
 
+	// button for submtting execution of workflows when in REPOSITORY mode
+	$("#submitReposBtn").click( function(event) {
+		event.preventDefault(); // cancel default behavior
+		
+		console.log("workflowActions: REFINERY_REPOSITORY_MODE");
+		console.log(REFINERY_REPOSITORY_MODE);
+		
+		var the_workflow_uuid = $('#submitReposBtn').data().workflow_id;
+		console.log("the_workflow_uuid");
+		console.log(the_workflow_uuid);
+		
+		// function for getting current solr query 
+		var solr_url = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, facets, fields, {}, false );
+		
+		// --- START: set correct CSRF token via cookie ---
+		// https://docs.djangoproject.com/en/1.4/ref/contrib/csrf/#ajax
+		function getCookie(name) {
+		    var cookieValue = null;
+		    if (document.cookie && document.cookie != '') {
+		        var cookies = document.cookie.split(';');
+		        for (var i = 0; i < cookies.length; i++) {
+		            var cookie = jQuery.trim(cookies[i]);
+		            // Does this cookie string begin with the name we want?
+		            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+		                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+		                break;
+		            }
+		        }
+		    }
+		    return cookieValue;
+		}
+		var csrftoken = getCookie('csrftoken');
+		
+		function csrfSafeMethod(method) {
+	    	// these HTTP methods do not require CSRF protection
+		    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+		}
+		
+		$.ajaxSetup({
+		    crossDomain: false, // obviates need for sameOrigin test
+		    beforeSend: function(xhr, settings) {
+		        if (!csrfSafeMethod(settings.type)) {
+		            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+		        }
+		    }
+		});
+		// --- END: set correct CSRF token via cookie ---
+		 	
+		$.ajax({
+		     url:'/analysis_manager/repository_run/',
+		     type:"POST",
+		     dataType: "json",
+		     data: {'query': solr_url, 'workflow_choice':the_workflow_uuid, 'study_uuid':$('input[name=study_uuid]').val() },
+		     success: function(result){		     	
+		     	console.log("SUCCESSSS" ); 
+		     	console.log(result);
+				window.location = result;
+				}
+			});
+	});
+		
+	
+
 
 // ---------------------------------
 })();
