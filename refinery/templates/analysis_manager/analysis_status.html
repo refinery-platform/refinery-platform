@@ -2,7 +2,11 @@
 
 {% block subheader %}
 <div class="page-header">
+	{% if REFINERY_REPOSITORY_MODE %}
+	<h1>Download&nbsp;<small>{{ analysis.name }}</small></h1>
+	{% else %}
 	<h1>Analysis&nbsp;<small>{{ analysis.name }}</small></h1>
+	{% endif %}
 </div>
 {% endblock %}
 
