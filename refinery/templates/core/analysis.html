@@ -42,7 +42,8 @@
 	<div class="refinery-subheader">
 		<h4>Contents</h4>
 	</div>
-	{{ input_filenames|ordered_list }}
+	{{ input_filenames|unordered_list }}
+	
 <!-- end repository mode -->
 {% else %}
 <!-- start default mode -->
