@@ -2,7 +2,11 @@
 
 {% block subheader %}
 <div class="page-header">
+	{% if REFINERY_REPOSITORY_MODE %}
+	<h1>Download&nbsp;<small>{{ analysis.name }}</small></h1>
+	{% else %}
 	<h1>Analysis&nbsp;<small>{{ analysis.name }}</small></h1>
+	{% endif %}
 </div>
 {% endblock %}
 
@@ -17,12 +21,18 @@
 				<h3>
 					Status
 				</h3>
+				{% if REFINERY_REPOSITORY_MODE %}
+				<p>
+					<i class="icon-time"></i>&nbsp;Preparing archive ({{analysis.name}}) for download.
+				</p>
+				{% else %}
 				<p>
 					<i class="icon-cog"></i>&nbsp;<a href="{% url workflow statuses.analysis.workflow.uuid %}">{{ statuses.analysis.workflow.name }}</a> started on {{ statuses.analysis.modification_date }}.
 					(<a href="{{ statuses.analysis.workflow.workflow_engine.instance.base_url }}/history/list?f-sharing=All&sort=-update_time&f-name=All&f-tags=All&f-deleted=False&operation=Switch&use_panels=False&id={{ statuses.analysis.history_id }}">View in Galaxy</a>)
 					
 					<!-- <i class="icon-file"></i>&nbsp;<a href="{% url data_set statuses.analysis.data_set.uuid %}">{{ statuses.analysis.data_set.name }}</a> -->
 				</p>
+				{% endif %}
 			</div> <!-- column -->
 		</div> <!-- row -->
 		

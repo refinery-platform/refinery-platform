@@ -46,7 +46,7 @@ def analysis_status(request, uuid):
         return HttpResponse(simplejson.dumps(ret_json), mimetype='application/javascript')
 
     else:
-        return render_to_response( 'analysis_manager/analysis_status.html', { 'uuid':uuid, 'statuses': statuses }, context_instance=RequestContext( request ) )
+        return render_to_response( 'analysis_manager/analysis_status.html', { 'uuid':uuid, 'statuses': statuses, 'analysis': analysis }, context_instance=RequestContext( request ) )
 
 def analysis_run(request):
     logger.debug( "analysis_manager.views.analysis_run called")

@@ -1,0 +1,16 @@
+Dear {{first_name}} {{last_name}} ({{username}}),
+
+{% if success %}
+Your archive ({{name}}) is now ready for download:
+{{url}}
+
+We are looking forward to your next visit.
+{% else %}
+Unfortunately, we could not prepare the archive you requested ({{name}}) for download.
+
+If this is a recurring problem, please forward this email to {{default_email}}.
+
+We hope the rest of your day will turn out better.
+{% endif %}
+
+{{site_name}} - {{site_domain}}
