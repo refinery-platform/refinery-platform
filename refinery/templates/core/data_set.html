@@ -407,10 +407,20 @@ rect.active {
 		var REFINERY_BASE_URL = "{{ REFINERY_BASE_URL }}";
 		var REFINERY_API_BASE_URL = "http://" + REFINERY_BASE_URL + "/" + "api" + "/" + "v1" + "/";
 		var REFINERY_SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}";
-		var externalStudyUuid = "{{ assay_uuid }}";
+		var externalStudyUuid = "{{ assay_uuid }}";		
 		var externalAssayUuid = "{{ study_uuid }}";
-		var REFINERY_REPOSITORY_MODE = "{{ REFINERY_REPOSITORY_MODE }}";
-		var REFINERY_USER_AUTHENTICATED = "{{ user.is_authenticated }}";
+		
+		{% if REFINERY_REPOSITORY_MODE %}
+		var REFINERY_REPOSITORY_MODE = true;
+		{% else %}
+		var REFINERY_REPOSITORY_MODE = false;
+		{% endif %}
+		
+		{% if user.is_authenticated %}
+		var REFINERY_USER_AUTHENTICATED = true;
+		{% else %}
+		var REFINERY_USER_AUTHENTICATED = false;
+		{% endif %}
 	</script>	
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/utilities.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/viewers/pivot-matrix.js"></script>
