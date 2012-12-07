@@ -271,20 +271,22 @@ rect.active {
 			</div>
 			<p>{% if data_set.summary %} {{ data_set.summary }} {% else %} <i>None provided.</i>{% endif %}</p>
 			
-			<div class="refinery-header">
-				<span class="refinery-header-left">
-					<h3>Studies</h3>
-				</span>
-			</div>
-			{% for study in studies %}
-			<p><strong>{{study.identifier}}</strong>: {{study.title}}</p>
-			<ul>
-			{% for assay in study.assay_set.all %}
-				<!-- <li>Assay - <a href="{% url data_set_manager_contents study.uuid assay.uuid %}">{{assay}}</a></li> -->
-				<li>Assay - {{assay}}</li> 
-			{% endfor %}
-			</ul>
-			{% endfor %}
+			{% if not REFINERY_REPOSITORY_MODE %}
+				<div class="refinery-header">
+					<span class="refinery-header-left">
+						<h3>Studies</h3>
+					</span>
+				</div>
+				{% for study in studies %}
+				<p><strong>{{study.identifier}}</strong>: {{study.title}}</p>
+				<ul>
+				{% for assay in study.assay_set.all %}
+					<!-- <li>Assay - <a href="{% url data_set_manager_contents study.uuid assay.uuid %}">{{assay}}</a></li> -->
+					<li>Assay - {{assay}}</li> 
+				{% endfor %}
+				</ul>
+				{% endfor %}
+			{% endif %}
 		
 			<div class="refinery-header">
 				<span class="refinery-header-left">
@@ -328,7 +330,9 @@ rect.active {
 			<p><a href="{% url user data_set.get_owner.get_profile.uuid %}">{% if data_set.get_owner.get_full_name %}{{ data_set.get_owner.get_full_name }}{% else %}{{ data_set.get_owner }}{%endif%}</a></p>
 		
 			{% if data_set.get_groups|length > 0 %}
-			<h4>Groups</h4>
+			<div class="refinery-subheader">
+				<h4>Groups</h4>
+			</div>
 				<p>
 				{% for perm in data_set.get_groups %}
 						<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
