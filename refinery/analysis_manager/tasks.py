@@ -35,58 +35,75 @@ def send_analysis_email(analysis):
 
     :param analysis: Analysis object
     '''
+    #get basic information
     user = analysis.get_owner()
     name = analysis.name
-    workflow = analysis.workflow.name
     site_name = Site.objects.get_current().name
     site_domain = Site.objects.get_current().domain
     status = analysis.status
-    project = analysis.project
-    start = analysis.time_start
-    end = analysis.time_end
-    duration = end - start
-    hours, remainder = divmod(duration.total_seconds(), 3600)
-    minutes, seconds = divmod(remainder, 60)
-    
-    #formatting the duration string 
-    hours = int(hours)
-    minutes = int(minutes)
-    if hours < 10:
-        hours = '0%s' % hours
-    if minutes < 10:
-        minutes = '0%s' % minutes
-    duration = "%s:%s hours" % (hours, minutes)
 
     #check status and change text slightly based on that
     if status == Analysis.SUCCESS_STATUS:
-        logic = 'finished successfully'
+        success = True
     else:
-        logic = 'failed'
+        success = False
         
-    #get project name
-    project_name = project.name
-    if project.is_catch_all:
-        project_name = '-'
+    #set context for things needed in all emails
+    context_dict = {'name': name,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'username': user.username,
+                    'site_name': site_name,
+                    'site_domain': site_domain,
+                    'success': success
+                    }
+    if success:
+        email_subj = "[%s] Archive ready for download: %s" % (domain_name, name)
+        context_dict['url'] = "http://%s%s" % (site_domain, reverse('core.views.analysis', args=(analysis.uuid,)))
+    else:
+        email_subj = "[%s] Archive creation failed: %s" % (domain_name, name)
+        context_dict['default_email'] = settings.DEFAULT_FROM_EMAIL
 
-    email_subj = "[%s] %s: %s (%s)" % (site_name, status, name, workflow)
+    if not settings.REFINERY_REPOSITORY_MODE:
+        temp_loader = loader.get_template('analysis_manager/analysis_email_repository.txt')
+    else:
+        workflow = analysis.workflow.name
+        project = analysis.project
+        
+        #get project name
+        project_name = project.name
+        if project.is_catch_all:
+            project_name = '-'
 
-    temp_loader = loader.get_template('analysis_manager/analysis_email.txt')
-    context = Context({
-                 'project': project_name,
-                 'name': name,
-                 'first_name': user.first_name,
-                 'last_name': user.last_name,
-                 'username': user.username,
-                 'dataset': analysis.data_set.name,
-                 'workflow': analysis.workflow.name,
-                 'site_name': site_name,
-                 'site_domain': site_domain,
-                 'start': datetime.strftime(start, '%A, %d %B %G %r'),
-                 'end': datetime.strftime(end, '%A, %d %B %G %r'),
-                 'duration': duration,
-                 'logic': logic,
-                 'url': "http://%s%s" % (site_domain, reverse('core.views.analysis', args=(analysis.uuid,)))                 
-                 })
+        #get information needed to calculate the duration
+        start = analysis.time_start
+        end = analysis.time_end
+        duration = end - start
+        hours, remainder = divmod(duration.total_seconds(), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        
+        #formatting the duration string 
+        hours = int(hours)
+        minutes = int(minutes)
+        if hours < 10:
+            hours = '0%s' % hours
+        if minutes < 10:
+            minutes = '0%s' % minutes
+        duration = "%s:%s hours" % (hours, minutes)
+
+        #fill in extra context
+        context_dict['workflow'] = workflow
+        context_dict['project'] = project
+        context_dict['dataset'] = analysis.data_set.name
+        context_dict['start'] = datetime.strftime(start, '%A, %d %B %G %r')
+        context_dict['end'] = datetime.strftime(end, '%A, %d %B %G %r')
+        context_dict['duration'] = duration
+
+        #get email contents ready
+        email_subj = "[%s] %s: %s (%s)" % (domain_name, status, name, workflow)
+        temp_loader = loader.get_template('analysis_manager/analysis_email_full.txt')
+        
+    context = Context(context_dict)
     try:    
         user.email_user(email_subj, temp_loader.render(context))
         logger.info('Emailed completion message with status \"%s\" to %s for analysis %s with UUID %s.' % (analysis.status, user.email, name, analysis.uuid))    
