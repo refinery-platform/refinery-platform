@@ -203,7 +203,7 @@ def repository_run(request):
         
         ######### ANALYSIS MODEL ########
         # How to create a simple analysis object
-        temp_name = curr_workflow.name + " " + str( datetime.now() )
+        temp_name = curr_workflow.name + " " + datetime.now().strftime("%Y-%m-%d @ %H:%M:%S")
         summary_name = "None provided."
         
         analysis = Analysis( summary=summary_name, name=temp_name, project=request.user.get_profile().catch_all_project, data_set=data_set, workflow=curr_workflow, time_start=datetime.now() )
