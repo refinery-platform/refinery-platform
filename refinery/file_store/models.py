@@ -128,6 +128,7 @@ FASTQSOLEXA = 'fastqsolexa'
 SAM = 'sam'
 SEG = 'seg'
 TDF = 'tdf'
+TGZ = 'tgz'
 TXT = 'txt'
 VCF = 'vcf'
 WIG = 'wig'
@@ -157,6 +158,7 @@ FILE_TYPES = (
     (SAM, 'Sequence Alignment/Map'),
     (SEG, 'Segmented Data File'), # http://www.broadinstitute.org/software/igv/SEG
     (TDF, 'TDF file'),
+    (TGZ, 'Gzip compressed tar archive'),
     (TXT, 'Text file'),
     (VCF, 'Variant Call Format'),
     (WIG, 'Wiggle Track Format'),
@@ -186,6 +188,7 @@ FILE_EXTENSIONS = {
     'fastqsolexa': FASTQSOLEXA,
     'sam': SAM,
     'tdf': TDF,
+    'tgz': TGZ,
     'txt': TXT,
     'vcf': VCF,
     'wig': WIG,
