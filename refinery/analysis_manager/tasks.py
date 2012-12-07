@@ -64,7 +64,7 @@ def send_analysis_email(analysis):
         email_subj = "[%s] Archive creation failed: %s" % (domain_name, name)
         context_dict['default_email'] = settings.DEFAULT_FROM_EMAIL
 
-    if not settings.REFINERY_REPOSITORY_MODE:
+    if settings.REFINERY_REPOSITORY_MODE:
         temp_loader = loader.get_template('analysis_manager/analysis_email_repository.txt')
     else:
         workflow = analysis.workflow.name
