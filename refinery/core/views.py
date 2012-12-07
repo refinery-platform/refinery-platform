@@ -23,6 +23,7 @@ from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
 from haystack.query import SearchQuerySet
 from visualization_manager.views import igv_multi_species
 import logging
+import os.path
 import settings
 import urllib2
 
@@ -686,16 +687,16 @@ def analysis(request, analysis_uuid ):
         file_all.append(fs)
     
     # NG: get file_store items for inputs
-    input_file_store_items = []
+    input_filenames = []
     for workflow_input in data_inputs.all():
-        input_file_store_items.append( FileStoreItem.objects.get(uuid=workflow_input.data_uuid) ) 
+        input_filenames.append( os.path.basename( FileStoreItem.objects.get(uuid=workflow_input.data_uuid).get_file_object().name ) ) 
     
     return render_to_response('core/analysis.html',
                               {
                                "analysis": analysis,
                                "analysis_results": analysis_results,
                                "inputs": data_inputs,
-                               "input_file_store_items": input_file_store_items, 
+                               "input_filenames": input_filenames, 
                                "project": project,
                                "workflow": workflow, 
                                "fs_files" : file_all
