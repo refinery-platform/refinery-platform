@@ -292,7 +292,11 @@ function getData( studyUuid, assayUuid, nodeType ) {
 			processFields();
 			processDocs( data );
 			processPivots( data );
-			processPages( data );			
+			processPages( data );
+			
+			if ( REFINERY_REPOSITORY_MODE ) {
+				updateDownloadButton( data, "submitReposBtn" );
+			}			
 		} 
 	}});	
 }
@@ -332,6 +336,16 @@ function decomposeFacetValueId( facetValueId ) {
 
 function composeFacetId( facet ) {
 	return ( "facet" + "___" + facet );
+}
+
+MAX_DOWNLOAD_FILES = 20
+
+function updateDownloadButton( data, button_id ) {
+	if ( data.response.numFound > MAX_DOWNLOAD_FILES ) {
+		$("#" + button_id ).addClass( "disabled" );
+	} else {
+		$("#" + button_id ).removeClass( "disabled" );		
+	}
 }
 
 function decomposeFacetId( facetId ) {
@@ -819,6 +833,9 @@ $( "#profile-viewer-session-link" ).on( "click", function() {
 
 
 $( "#igv-multi-species" ).on( "click", function(e) {
+		if ( $("#igv-multi-species").hasClass( "disabled" ) ) {
+			return;
+		}
 	
 	// KILLs AJAX request if already sent
 	if(typeof xhr!='undefined'){
@@ -933,6 +950,11 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 
 	// button for submtting execution of workflows when in REPOSITORY mode
 	$("#submitReposBtn").click( function(event) {
+		if ( $("#submitReposBtn").hasClass( "disabled" ) ) {
+			return;
+		}
+		
+		
 		event.preventDefault(); // cancel default behavior
 		
 		console.log("workflowActions: REFINERY_REPOSITORY_MODE");
