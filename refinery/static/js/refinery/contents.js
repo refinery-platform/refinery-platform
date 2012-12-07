@@ -640,7 +640,7 @@ function processDocs( data ) {
 		var file_uuid = document.file_uuid;
 		
 		// IF Repository mode 
-		if (REFINERY_REPOSITORY_MODE == 'True') { 
+		if ( REFINERY_REPOSITORY_MODE ) { 
 			//s += '<td><label><input name="assay_' + file_uuid + '" type=\"checkbox\" checked></label>' + '</td>'
 			s += '<td></td>';
 			}
@@ -960,8 +960,8 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 				
 		event.preventDefault(); // cancel default behavior
 		
-		console.log("workflowActions: REFINERY_REPOSITORY_MODE");
-		console.log(REFINERY_REPOSITORY_MODE);
+		console.log( "workflowActions: REFINERY_REPOSITORY_MODE" );
+		console.log( REFINERY_REPOSITORY_MODE );
 		
 		var the_workflow_uuid = $('#submitReposBtn').data().workflow_id;
 		console.log("the_workflow_uuid");
