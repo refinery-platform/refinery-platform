@@ -399,6 +399,7 @@ rect.active {
 	    
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v2.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/fisheye.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.cookie/jquery.cookie.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/underscore/underscore.js"></script>
 
 	<!-- Refinery libraries -->
@@ -408,7 +409,8 @@ rect.active {
 		var REFINERY_SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}";
 		var externalStudyUuid = "{{ assay_uuid }}";
 		var externalAssayUuid = "{{ study_uuid }}";
-		var REFINERY_REPOSITORY_MODE = "{{ REFINERY_REPOSITORY_MODE }}"
+		var REFINERY_REPOSITORY_MODE = "{{ REFINERY_REPOSITORY_MODE }}";
+		var REFINERY_USER_AUTHENTICATED = {{ user.is_authenticated }};
 	</script>	
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/utilities.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/viewers/pivot-matrix.js"></script>
@@ -417,10 +419,10 @@ rect.active {
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/data_set_manager/data_set_configurator.js"></script>
 
 
-<script type="application/javascript">
-	$(document).ready(function () {
-    	$("[rel=tooltip]").tooltip();
-  	});
-</script>
+	<script type="application/javascript">
+		$(document).ready(function () {
+	    	$("[rel=tooltip]").tooltip();	    	
+	  	});
+	</script>
 			    			        
 {% endblock %}  

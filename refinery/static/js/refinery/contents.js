@@ -4,7 +4,7 @@
 // ---------------------------------
 
 var MAX_DOWNLOAD_FILES = 20;
-var MESSAGE_DOWNLOAD_UNAVAILABE = "Please select " + MAX_DOWNLOAD_FILES + "<br>or less files to create<br>an archive for download.";
+var MESSAGE_DOWNLOAD_UNAVAILABE = "You have to be logged in<br> and selected " + MAX_DOWNLOAD_FILES + " files or less<br>to create an archive for download.";
 var MESSAGE_DOWNLOAD_AVAILABLE = "Click to create<br>archive for download<br>of selected files.";
 
 var urlComponents = document.location.href.split("/");	
@@ -343,7 +343,7 @@ function composeFacetId( facet ) {
 }
 
 function updateDownloadButton( data, button_id ) {
-	if ( data.response.numFound > MAX_DOWNLOAD_FILES ) {
+	if ( data.response.numFound > MAX_DOWNLOAD_FILES || !REFINERY_USER_AUTHENTICATED ) {
 		$("#" + button_id ).addClass( "disabled" );
 		$("#" + button_id ).attr( "data-original-title", MESSAGE_DOWNLOAD_UNAVAILABE );
 	} else {
@@ -957,8 +957,7 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 		if ( $("#submitReposBtn").hasClass( "disabled" ) ) {
 			return;
 		}
-		
-		
+				
 		event.preventDefault(); // cancel default behavior
 		
 		console.log("workflowActions: REFINERY_REPOSITORY_MODE");
