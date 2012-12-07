@@ -3,6 +3,10 @@
 (function() {
 // ---------------------------------
 
+var MAX_DOWNLOAD_FILES = 20;
+var MESSAGE_DOWNLOAD_UNAVAILABE = "Please select " + MAX_DOWNLOAD_FILES + "<br>or less files to create<br>an archive for download.";
+var MESSAGE_DOWNLOAD_AVAILABLE = "Click to create<br>archive for download<br>of selected files.";
+
 var urlComponents = document.location.href.split("/");	
 	
 var solrRoot = "http://" + REFINERY_BASE_URL + "/solr/";
@@ -338,13 +342,13 @@ function composeFacetId( facet ) {
 	return ( "facet" + "___" + facet );
 }
 
-MAX_DOWNLOAD_FILES = 20
-
 function updateDownloadButton( data, button_id ) {
 	if ( data.response.numFound > MAX_DOWNLOAD_FILES ) {
 		$("#" + button_id ).addClass( "disabled" );
+		$("#" + button_id ).attr( "title", MESSAGE_DOWNLOAD_UNAVAILABE );
 	} else {
 		$("#" + button_id ).removeClass( "disabled" );		
+		$("#" + button_id ).attr( "title", MESSAGE_DOWNLOAD_AVAILABE );
 	}
 }
 

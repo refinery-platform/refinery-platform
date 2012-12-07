@@ -139,7 +139,7 @@ rect.active {
 							<!-- CHECK BOXES FOR SELECTING SAMPLES --> 
 							<span class="label">Selection</span>
 							{% for work in workflows %}
-								<a id="submitReposBtn" data-workflow_id="{{work.uuid}}" role="button" class="btn" >Download Archive</a>
+								<a id="submitReposBtn" data-workflow_id="{{work.uuid}}" role="button" class="btn disabled" rel="tooltip" data-placement="bottom" data-html="true">Download Archive</a>
 							{% endfor %}
 							
 							{% else %}
@@ -155,7 +155,7 @@ rect.active {
 							{% endif %}
 							
 							<!-- <span class="label" style="margin-left: 50px;">View in</span> -->
-							<a id="igv-multi-species" href="#" role="button" class="btn" data-toggle="modal">Launch IGV</a>
+							<a id="igv-multi-species" href="#" role="button" class="btn" data-toggle="modal" rel="tooltip" data-placement="bottom" data-html="true" title="Launch IGV with<br>current selection.">Launch IGV</a>
 							
 							<!-- <a class="btn" id="profile-viewer-session-link" href="#">Profile</a> -->
 
@@ -314,7 +314,7 @@ rect.active {
 			<p>Current version <i>{{ data_set.get_version_details.version }}</i> created <i>{{ data_set.get_version_details.date }}</i>.
 			Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{ data_set.modification_date }}</i>.</p>
 		</div>
-
+		
 
 	  	<div class="tab-pane" id="sharing">
 			<div class="refinery-header">
