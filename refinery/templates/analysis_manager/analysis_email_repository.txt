@@ -1,8 +1,7 @@
 Dear {{first_name}} {{last_name}} ({{username}}),
 
 {% if success %}
-Your archive ({{name}}) is now ready for download.
-
+Your archive ({{name}}) is now ready for download:
 {{url}}
 
 We are looking forward to your next visit.
