@@ -85,7 +85,7 @@ def send_analysis_email(analysis):
                  'end': datetime.strftime(end, '%A, %d %B %G %r'),
                  'duration': duration,
                  'logic': logic,
-                 'url': "http://%s%s" % (site_domain, reverse('core.views.analysis_status', args=(analysis.project.uuid, analysis.uuid,)))                 
+                 'url': "http://%s%s" % (site_domain, reverse('core.views.analysis', args=(analysis.uuid,)))                 
                  })
     try:    
         user.email_user(email_subj, temp_loader.render(context))
