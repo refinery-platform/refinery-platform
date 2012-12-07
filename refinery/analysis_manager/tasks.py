@@ -58,10 +58,10 @@ def send_analysis_email(analysis):
                     'success': success
                     }
     if success:
-        email_subj = "[%s] Archive ready for download: %s" % (domain_name, name)
+        email_subj = "[%s] Archive ready for download: %s" % (site_name, name)
         context_dict['url'] = "http://%s%s" % (site_domain, reverse('core.views.analysis', args=(analysis.uuid,)))
     else:
-        email_subj = "[%s] Archive creation failed: %s" % (domain_name, name)
+        email_subj = "[%s] Archive creation failed: %s" % (site_name, name)
         context_dict['default_email'] = settings.DEFAULT_FROM_EMAIL
 
     if settings.REFINERY_REPOSITORY_MODE:
@@ -100,7 +100,7 @@ def send_analysis_email(analysis):
         context_dict['duration'] = duration
 
         #get email contents ready
-        email_subj = "[%s] %s: %s (%s)" % (domain_name, status, name, workflow)
+        email_subj = "[%s] %s: %s (%s)" % (site_name, status, name, workflow)
         temp_loader = loader.get_template('analysis_manager/analysis_email_full.txt')
         
     context = Context(context_dict)
