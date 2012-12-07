@@ -345,10 +345,10 @@ function composeFacetId( facet ) {
 function updateDownloadButton( data, button_id ) {
 	if ( data.response.numFound > MAX_DOWNLOAD_FILES ) {
 		$("#" + button_id ).addClass( "disabled" );
-		$("#" + button_id ).attr( "title", MESSAGE_DOWNLOAD_UNAVAILABE );
+		$("#" + button_id ).attr( "data-original-title", MESSAGE_DOWNLOAD_UNAVAILABE );
 	} else {
 		$("#" + button_id ).removeClass( "disabled" );		
-		$("#" + button_id ).attr( "title", MESSAGE_DOWNLOAD_AVAILABE );
+		$("#" + button_id ).attr( "data-original-title", MESSAGE_DOWNLOAD_AVAILABE );
 	}
 }
 
