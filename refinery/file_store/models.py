@@ -17,6 +17,7 @@ Example: FILE_STORE_DIR = 'files'
 """
 
 import os
+import re
 import logging
 from urlparse import urlparse, urljoin
 from django.conf import settings
@@ -92,6 +93,9 @@ def file_path(instance, filename):
     # provides 256 * 256 = 65536 of possible directory combinations
     dir1 = "{:0>2x}".format(hashcode & mask)
     dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
+    # replace parentheses with underscores in the filename since
+    # Galaxy doesn't process names with parentheses in them
+    filename = re.sub('[()]', '_', filename)
     return os.path.join(instance.sharename, dir1, dir2, filename)
 
 
