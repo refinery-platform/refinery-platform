@@ -38,18 +38,11 @@
 			{% endifequal %}
 		{% endfor %}				
 	{% endfor %}	
+	
 	<div class="refinery-subheader">
 		<h4>Contents</h4>
 	</div>
-	<!--	
-	<ul>
-	{% for item in input_file_store_items %}
-		<li><p>{{item.get_file_object.name}}</p></li>
-	{% endfor %}
-	</ul>
-	-->
-	{{ input_filenames|unordered_list }}
-
+	{{ input_filenames|ordered_list }}
 <!-- end repository mode -->
 {% else %}
 <!-- start default mode -->
