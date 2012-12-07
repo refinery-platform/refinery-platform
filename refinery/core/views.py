@@ -681,15 +681,21 @@ def analysis(request, analysis_uuid ):
     # getting file_store references
     file_all = []
     for i in analysis_results.all():
-      file_store_uuid = i.file_store_uuid
-      fs = FileStoreItem.objects.get(uuid=file_store_uuid)
-      file_all.append(fs)
+        file_store_uuid = i.file_store_uuid
+        fs = FileStoreItem.objects.get(uuid=file_store_uuid)
+        file_all.append(fs)
+    
+    # NG: get file_store items for inputs
+    input_file_store_items = []
+    for workflow_input in data_inputs.all():
+        input_file_store_items.append( FileStoreItem.objects.get(uuid=workflow_input.data_uuid) ) 
     
     return render_to_response('core/analysis.html',
                               {
                                "analysis": analysis,
                                "analysis_results": analysis_results,
                                "inputs": data_inputs,
+                               "input_file_store_items": input_file_store_items, 
                                "project": project,
                                "workflow": workflow, 
                                "fs_files" : file_all
