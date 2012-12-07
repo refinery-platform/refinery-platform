@@ -100,7 +100,11 @@
 <div class="refinery-panel refinery-panel-content scrollable">
 <div class="refinery-header">
 	<span class="refinery-header-left">
-		<h3><i class="icon-folder-open"></i>&nbsp;&nbsp;Projects</h3>
+		{% if REFINERY_REPOSITORY_MODE %}
+		<h3><i class="icon-folder-open"></i>&nbsp;&nbsp;Downloads</h3>
+		{% else %}
+		<h3><i class="icon-folder-open"></i>&nbsp;&nbsp;Projects</h3>		
+		{% endif %}
 	</span>
 
 	{% if user.is_authenticated and not REFINERY_REPOSITORY_MODE %}       
@@ -120,7 +124,11 @@
 				Name
 			</th>    
 			<th>
-				Analyses
+				{% if REFINERY_REPOSITORY_MODE %}
+				Archives
+				{% else %}
+				Analyses		
+				{% endif %}
 			</th>    
 		</tr>
 	</thead>
@@ -128,6 +136,7 @@
 		
 	{% if unassigned_analyses %}
 		{% if unassigned_analyses.all|length > 0 %}
+			{% if not REFINERY_REPOSITORY_MODE %}
 		    <tr>
 		    	<td>
 		        	<i class="icon-exclamation-sign"></i> Unassigned Analyses
@@ -136,6 +145,7 @@
 		        	{{unassigned_analyses.all|length}}
 		        </td>
 		    </tr>
+		    {% endif %}
 			{% for analysis in unassigned_analyses.all %}
 			    <tr>
 			    	<td>
@@ -150,38 +160,48 @@
 		{% endif %}
 	{% endif %}
 
-    {% for project in projects %}
-    <tr>
-    	<td>
-        	<a href="{% url project project.uuid %}">{{ project.name }}</a>
-        </td>
-    	<td>
-        {{project.analyses.all|length}}
-        </td>
-    </tr>
-		{% for analysis in project.analyses.all %}
-		    <tr>
-		    	<td>
-		    		<!-- <a href="projects/{{ project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> - {{analysis.summary}} -->
-		    		<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }}</a> - {{analysis.summary}}
-		    	</td>
-			    <td>
-					<span id="status-{{ analysis.uuid }}"></span>
-			    </td>
-		    </tr>
-		{% endfor %}
-    {% endfor %}
+	{% if not REFINERY_REPOSITORY_MODE %}
+	    {% for project in projects %}
+	    <tr>
+	    	<td>
+	        	<a href="{% url project project.uuid %}">{{ project.name }}</a>
+	        </td>
+	    	<td>
+	        {{project.analyses.all|length}}
+	        </td>
+	    </tr>
+			{% for analysis in project.analyses.all %}
+			    <tr>
+			    	<td>
+			    		<!-- <a href="projects/{{ project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> - {{analysis.summary}} -->
+			    		<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }}</a> - {{analysis.summary}}
+			    	</td>
+				    <td>
+						<span id="status-{{ analysis.uuid }}"></span>
+				    </td>
+			    </tr>
+			{% endfor %}
+	    {% endfor %}
+	{% endif %}
 		
 	</tbody>
 </table>
 {% else %}
 
 	<div class="alert alert-info">
-		{% if user.is_authenticated %}       
-			No projects available.
+		{% if REFINERY_REPOSITORY_MODE %}
+			{% if user.is_authenticated %}       
+				No archives available.
+			{% else %}
+				No public archives available.
+			{% endif %}		  
 		{% else %}
-			No public projects available.
-		{% endif %}		  
+			{% if user.is_authenticated %}       
+				No projects available.
+			{% else %}
+				No public projects available.
+			{% endif %}		  
+		{% endif %}	
 	</div>
 {% endif %}
 </div> 		
