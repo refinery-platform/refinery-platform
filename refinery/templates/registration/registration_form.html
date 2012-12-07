@@ -56,7 +56,10 @@
 			{% if form.tos.errors %}
 			<p class="errors">{{form.tos.errors.as_text}}</p>
 			{% endif %}		
-			<p>{{form.tos}}&nbsp;I have read and agree to the Terms of Service.</p>
+			<label class="checkbox">
+			{{form.tos}}
+			I have read and agree to the Terms of Service.				
+			</label>
 			<p class="submit"><input class="btn" type="submit" value="Register"></p>
 		</form>
 	</div>
