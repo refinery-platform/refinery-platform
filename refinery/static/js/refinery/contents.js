@@ -283,7 +283,7 @@ function getData( studyUuid, assayUuid, nodeType ) {
 	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, query.items_per_page * query.page, query.items_per_page, facets, fields, {}, showAnnotation ), success: function(data) {		
 		query.selected_items = data.response.numFound;
 	    $( "#statistics-view" ).html("");
-    	$( "<h1/>", { html: query.selected_items + "/" + query.total_items } ).appendTo( "#statistics-view" );				
+    	$( "<span/>", { style: "font-size: large;", html: "<b>" + query.selected_items + "</b> of <b>" + query.total_items + "</b> selected" } ).appendTo( "#statistics-view" );				
 
 		if (  data.response.numFound < data.response.start ) {
 			// requesting data that is not available -> empty results -> rerun query			
