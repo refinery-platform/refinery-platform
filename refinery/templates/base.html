@@ -81,8 +81,8 @@
 				</a>&nbsp;&nbsp; 				
     			<a href="{% url django.contrib.auth.views.logout %}"><i class="icon-signout"></i></a>
     	{% else %}
-			<a href="{% url home %}accounts/register">Register</a>&nbsp;&nbsp;
-			<a href="{% url django.contrib.auth.views.login %}?next={% if request.path %}{{ request.path|safe }}{% else %}{% url home %}{% endif %}"><i class="icon-signin"></i></a>
+			<a rel="tooltip" data-placement="left" title="Sign Up" href="{% url home %}accounts/register">Register</a>&nbsp;&nbsp;
+			<a rel="tooltip" data-placement="left" title="Log In" href="{% url django.contrib.auth.views.login %}?next={% if request.path %}{{ request.path|safe }}{% else %}{% url home %}{% endif %}"><i class="icon-signin"></i></a>
 		{% endif %}		
     		</p>
                            	          
@@ -141,28 +141,30 @@
     <script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
 
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/docs/assets/js/bootstrap.js"></script>
-
         
 	{% block script %}
 	{% endblock %}
 
-<script type="text/javascript">
-function sizing() {
-    var windowwidth=$(window).width();
-    if(windowwidth<=767) {
-    	$('.scrollable').css('height', 'inherit' );      
-    }
-    else {
-	    $('.scrollable').map( function() {
-	    	var targetHeight = ( $(window).height() - $(this).offset().top - 40 );
-	    	var minHeight = parseInt( $('.scrollable').css( "min-height" ) );
-	    	var newHeight = Math.max( targetHeight, minHeight );
-	    	$(this).css('height', newHeight + 'px');  
-    });
-    }
-}
-$(document).ready(sizing);
-$(window).resize(sizing);
-</script>    
+	<script type="text/javascript">
+		// activate bootstrap tooltips
+	    $('a[rel=tooltip]').tooltip();
+	
+		function sizing() {
+		    var windowwidth=$(window).width();
+		    if(windowwidth<=767) {
+		    	$('.scrollable').css('height', 'inherit' );      
+		    }
+		    else {
+			    $('.scrollable').map( function() {
+			    	var targetHeight = ( $(window).height() - $(this).offset().top - 40 );
+			    	var minHeight = parseInt( $('.scrollable').css( "min-height" ) );
+			    	var newHeight = Math.max( targetHeight, minHeight );
+			    	$(this).css('height', newHeight + 'px');  
+		    	});
+	    	}
+		}
+		$(document).ready(sizing);
+		$(window).resize(sizing);
+	</script>    
 </body>
 </html>
