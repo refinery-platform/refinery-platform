@@ -348,7 +348,7 @@ function updateDownloadButton( data, button_id ) {
 		$("#" + button_id ).attr( "data-original-title", MESSAGE_DOWNLOAD_UNAVAILABE );
 	} else {
 		$("#" + button_id ).removeClass( "disabled" );		
-		$("#" + button_id ).attr( "data-original-title", MESSAGE_DOWNLOAD_AVAILABE );
+		$("#" + button_id ).attr( "data-original-title", MESSAGE_DOWNLOAD_AVAILABLE );
 	}
 }
 
