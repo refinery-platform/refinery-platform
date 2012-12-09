@@ -136,12 +136,14 @@ rect.active {
 			 	<div class="span12" style="margin-top: 10px; margin-bottom: 15px; background-color: #ededed; padding: 5px 10px 5px 10px; border-radius: 5px;">
  					<label class="control-label" id="statistics-view" style="position: relative; top: 3px;"></label>
   					<span class="controls">
-  					<a id="igv-multi-species" href="#" role="button" style="margin-left: 5px" class="btn btn-warning" data-toggle="modal" rel="tooltip" data-placement="bottom" data-html="true" title="Launch IGV with<br>current selection.">View in IGV</a>
+  					<a id="igv-multi-species" href="#" role="button" style="margin-left: 5px" class="btn btn-warning" data-toggle="modal" rel="tooltip" data-placement="bottom" data-html="true" title="Launch IGV with<br>current selection."><i class="icon-bar-chart"></i>&nbsp;&nbsp;View in IGV</a>
+					<a href="#" id="help-igv-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
 					
 					{% if REFINERY_REPOSITORY_MODE %}
 					<!-- CHECK BOXES FOR SELECTING SAMPLES -->					
 					{% for work in workflows %}
-						<a id="submitReposBtn" data-workflow_id="{{work.uuid}}" role="button" style="margin-left: 5px" class="btn  btn-warning disabled" rel="tooltip" data-placement="bottom" data-html="true" title="">Download as Archive</a>
+						<a id="submitReposBtn" data-workflow_id="{{work.uuid}}" role="button" style="margin-left: 5px" class="btn  btn-warning disabled" rel="tooltip" data-placement="bottom" data-html="true" title=""><i class="icon-download"></i>&nbsp;&nbsp;Download as Archive</a>
+						<a href="#" id="help-download-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
 					{% endfor %}
 					
 					{% else %}
@@ -157,15 +159,14 @@ rect.active {
 					{% endif %}
 					
 					
-					<!-- <a class="btn" id="profile-viewer-session-link" href="#">Profile</a> -->
-
-					
+					<!-- <a class="btn" id="profile-viewer-session-link" href="#">Profile</a> -->					
  					<label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Showing</label>
   					<span class="controls">
-					<div class="btn-group annotation-buttons" data-toggle="buttons-radio">
-					  	<button type="button" id="data-button" data-toggle="button" class="btn  btn-warning active">Data</button>
-					  	<button type="button" id="annotation-button" data-toggle="button" class="btn  btn-warning">Annotation</button>
-					</div>
+						<div class="btn-group annotation-buttons" data-toggle="buttons-radio">
+						  	<button type="button" id="data-button" data-toggle="button" class="btn btn-warning active">Data</button>
+						  	<button type="button" id="annotation-button" data-toggle="button" class="btn btn-warning">Annotation</button>
+						</div>					
+						<a href="#" id="help-data-annotation-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
   					</span>
 				</div>
 			</div>
@@ -397,8 +398,8 @@ rect.active {
 	    
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v2.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/fisheye.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.cookie/jquery.cookie.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/underscore/underscore.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
 
 	<!-- Refinery libraries -->
 	<script type="text/javascript">
@@ -420,6 +421,7 @@ rect.active {
 		var REFINERY_USER_AUTHENTICATED = false;
 		{% endif %}
 	</script>	
+	
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/utilities.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/viewers/pivot-matrix.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
@@ -429,8 +431,50 @@ rect.active {
 
 	<script type="application/javascript">
 		$(document).ready(function () {
-	    	$("[rel=tooltip]").tooltip();	    	
-	  	});
+	    	$("[rel=tooltip]").tooltip();
+	    	
+	    	$("#help-igv-button").click( function(event) {
+   				bootbox.alert(
+	   				"<h3><i class=\"icon-bar-chart\"></i>&nbsp;&nbsp;View in IGV</h3>" +
+					"<p>" +
+					"The selected files can be viewed in IGV (<a href=\"http://www.broadinstitute.org/igv\">Integrative Genomics Viewer</a>) along with the meta data shown in the table. " +
+					"IGV is launched through <a href=\"http://www.java.com/en/download/faq/java_webstart.xml\">Java WebStart</a>. This means that the software will be launched even if IGV is not installed on your computer. <b>Java needs to be installed for Java WebStart to be available</b>." +
+					"</p>" +
+					"<p>" +
+					"Once you have selected a of files and the clicked the \"View in IGV\" button (and selected a genome build) a <b>JNLP</b> file named \"igv.jnlp\" will be downloaded to your computer." +
+					"</p>" +
+					"<p>" +
+					"Many browsers will automatically open the downloaded JNLP file to launch the Java WebStart application. <b>If IGV is not launched by your browser after the file was downloaded, you need to launch IGV manually by double-clicking the downloaded JNLP file</b>." +
+					"</p>"
+				);
+			});
+			
+	    	$("#help-download-button").click( function(event) {
+   				bootbox.alert(
+	   				"<h3><i class=\"icon-download\"></i>&nbsp;&nbsp;Download as Archive</h3>" +
+					"<p>" +
+					"The selected files can be bulk downloaded as an archive file if you are logged in and if you have selected 20 or less files." +
+					"</p>" +
+					"<p>" +
+					"Archives are created on demand and will require some time to be processed. After clicking the \"Download as Archive\" button you will be taken to a progress page. You can leave this page at any time." +
+					"</p>" +
+					"<p>" +
+					"You will receive an email once the archive is ready for downloading. You can also monitor progress on the homepage in the \"Downloads\" section if you are logged in." +
+					"</p>"
+				);
+			});	    		    	
+				    		    	
+	    	$("#help-data-annotation-button").click( function(event) {
+   				bootbox.alert(
+	   				"<h3>Showing Data or Annotation Files</h3>" +
+					"<p>" +
+					"Data sets can have associated \"annotation\" files that will be included when you launch IGV with a set of selected data files. " +
+					"To view available annotation files select \"Annotation\". To switch back to the data files select \"Data\"." +
+					"</p>"
+				);
+			});	    		    	
+				    		    	
+	  	});	  	
 	</script>
 			    			        
 {% endblock %}  
