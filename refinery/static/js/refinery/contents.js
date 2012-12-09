@@ -22,7 +22,6 @@ var currentStudyUuid = externalStudyUuid; //urlComponents[urlComponents.length-2
 var currentAssayUuid = externalAssayUuid; //urlComponents[urlComponents.length-3]; 
 var currentNodeType = "\"Raw Data File\"";
 
-
 	$(document).ready(function() {		
 		configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
 		configurator.initialize()
