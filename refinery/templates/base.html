@@ -193,7 +193,7 @@
 
 		$(document).ready( function(){
 			sizing();
-			if ( ie !== undefined ) {
+			if ( ie !== undefined || $.browser.msie ) {
 				// detected IE
 				$( "#warning-ie-not-supported" ).delay( 500 );
 				$( "#warning-ie-not-supported" ).animate({
