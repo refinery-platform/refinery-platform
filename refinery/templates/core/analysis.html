@@ -23,6 +23,8 @@
 
 {% if REFINERY_REPOSITORY_MODE %}
 <!-- start repository mode -->
+	{% load core_extras %}
+	
 	<div class="refinery-header">
 		<span class="refinery-header-left">
 			<h3>Download</h3>				
@@ -34,7 +36,7 @@
 	{% for result in analysis_results.all %}
 		{% for fs in fs_files %}	
 			{% ifequal result.file_store_uuid fs.uuid %}
-				<a href="{{fs.get_url}}">{{result.file_name}}</a> ({{ input_filenames|length }} file{{ input_filenames|length|pluralize }}, {{fs.get_file_size|filesizeformat}})
+				<a href="{{fs.get_url}}">{{ fs.uuid|simple_name }}</a> ({{ input_filenames|length }} file{{ input_filenames|length|pluralize }}, {{fs.get_file_size|filesizeformat}})
 			{% endifequal %}
 		{% endfor %}				
 	{% endfor %}	
