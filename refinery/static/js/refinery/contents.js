@@ -4,7 +4,7 @@
 // ---------------------------------
 
 var MAX_DOWNLOAD_FILES = 20;
-var MESSAGE_DOWNLOAD_UNAVAILABE = "Please select " + MAX_DOWNLOAD_FILES + "<br>or less files to create<br>an archive for download.";
+var MESSAGE_DOWNLOAD_UNAVAILABE = "You have to be logged in<br> and selected " + MAX_DOWNLOAD_FILES + " files or less<br>to create an archive for download.";
 var MESSAGE_DOWNLOAD_AVAILABLE = "Click to create<br>archive for download<br>of selected files.";
 
 var urlComponents = document.location.href.split("/");	
@@ -21,7 +21,6 @@ var query = { total_items: 0, selected_items: 0, items_per_page: 10, page: 0 };
 var currentStudyUuid = externalStudyUuid; //urlComponents[urlComponents.length-2];
 var currentAssayUuid = externalAssayUuid; //urlComponents[urlComponents.length-3]; 
 var currentNodeType = "\"Raw Data File\"";
-
 
 	$(document).ready(function() {		
 		configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
@@ -283,7 +282,7 @@ function getData( studyUuid, assayUuid, nodeType ) {
 	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, query.items_per_page * query.page, query.items_per_page, facets, fields, {}, showAnnotation ), success: function(data) {		
 		query.selected_items = data.response.numFound;
 	    $( "#statistics-view" ).html("");
-    	$( "<h1/>", { html: query.selected_items + "/" + query.total_items } ).appendTo( "#statistics-view" );				
+    	$( "<span/>", { style: "font-size: large;", html: "<b>" + query.selected_items + "</b> of <b>" + query.total_items + "</b> selected" } ).appendTo( "#statistics-view" );				
 
 		if (  data.response.numFound < data.response.start ) {
 			// requesting data that is not available -> empty results -> rerun query			
@@ -343,7 +342,7 @@ function composeFacetId( facet ) {
 }
 
 function updateDownloadButton( data, button_id ) {
-	if ( data.response.numFound > MAX_DOWNLOAD_FILES ) {
+	if ( data.response.numFound > MAX_DOWNLOAD_FILES || !REFINERY_USER_AUTHENTICATED ) {
 		$("#" + button_id ).addClass( "disabled" );
 		$("#" + button_id ).attr( "data-original-title", MESSAGE_DOWNLOAD_UNAVAILABE );
 	} else {
@@ -640,7 +639,7 @@ function processDocs( data ) {
 		var file_uuid = document.file_uuid;
 		
 		// IF Repository mode 
-		if (REFINERY_REPOSITORY_MODE == 'True') { 
+		if ( REFINERY_REPOSITORY_MODE ) { 
 			//s += '<td><label><input name="assay_' + file_uuid + '" type=\"checkbox\" checked></label>' + '</td>'
 			s += '<td></td>';
 			}
@@ -957,12 +956,11 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 		if ( $("#submitReposBtn").hasClass( "disabled" ) ) {
 			return;
 		}
-		
-		
+				
 		event.preventDefault(); // cancel default behavior
 		
-		console.log("workflowActions: REFINERY_REPOSITORY_MODE");
-		console.log(REFINERY_REPOSITORY_MODE);
+		console.log( "workflowActions: REFINERY_REPOSITORY_MODE" );
+		console.log( REFINERY_REPOSITORY_MODE );
 		
 		var the_workflow_uuid = $('#submitReposBtn').data().workflow_id;
 		console.log("the_workflow_uuid");

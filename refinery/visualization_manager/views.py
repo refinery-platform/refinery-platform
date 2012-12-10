@@ -216,8 +216,8 @@ def igv_multi_species(solr_results, solr_annot=None):
                 temp_url = createIGVsessionAnnot(k, unique_species[k], annot_uuids=None, samp_file=sampleFile)
             ui_results['species'][k] = temp_url
         
-    #logger.debug("visualization_manager.views.igv_multi_species = ui_results")    
-    #logger.debug(simplejson.dumps(unique_annot, indent=4) )    
+    logger.debug("visualization_manager.views.igv_multi_species = ui_results")    
+    logger.debug(simplejson.dumps(ui_results, indent=4) )    
     
     # 5. reflect buttons in the bootbox modal in UI
     return ui_results
@@ -498,7 +498,7 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     filestore_item = rename(filestore_uuid, temp_file)
     
     # getting file information based on file_uuids
-    curr_fs = FileStoreItem.objects.filter(uuid=filestore_uuid)[0]
+    curr_fs = FileStoreItem.objects.get(uuid=filestore_uuid)
     curr_name = curr_fs.datafile.name
     
     # full path to selected UUID File
@@ -520,7 +520,7 @@ def getFileName(fileuuid, sampFile=None):
     """
     
     # getting file information based on file_uuids
-    temp_fs = FileStoreItem.objects.filter(uuid=fileuuid)[0]
+    temp_fs = FileStoreItem.objects.get(uuid=fileuuid)
     temp_name = temp_fs.datafile.name
     temp_name = temp_fs.datafile.name.split('/')
     temp_name = temp_name[len(temp_name)-1]
