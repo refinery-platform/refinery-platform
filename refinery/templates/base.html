@@ -191,11 +191,7 @@
 			    
 			}());
 			
-			console.log( ie );
-			console.log( $.browser.msie )
-			console.log( $.browser )			
-			
-			if ( ie || $.browser.msie ) {
+			if ( ie !== undefined || $.browser.msie ) {
 				// detected IE
 				$( "#warning-ie-not-supported" ).delay( 500 );
 				$( "#warning-ie-not-supported" ).animate({
