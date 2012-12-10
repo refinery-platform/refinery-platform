@@ -112,7 +112,7 @@
         
 	<div class="container-fluid">
 		
-		<div class="row-fluid" style="opacity: 0;" hidden id="warning-ie-not-supported">
+		<div class="row-fluid" hidden id="warning-ie-not-supported">
 			<div class="alert alert-error">
 				<b>Notice</b>&nbsp;
 				We currently do not support <i>Microsoft Internet Explorer</i> and strongly recommend that you continue browsing
@@ -193,6 +193,10 @@
 			
 			if ( ie !== undefined || $.browser.msie ) {
 				// detected IE
+				$( "#warning-ie-not-supported" ).show();
+				sizing();
+				
+				/*
 				$( "#warning-ie-not-supported" ).delay( 500 );
 				$( "#warning-ie-not-supported" ).animate({
 				    	height: 'toggle'
@@ -202,7 +206,8 @@
 				//$( "#warning-ie-not-supported" ).delay( 250 );
 				$( "#warning-ie-not-supported" ).animate({
 				    	opacity: 1
-  					}, 500 );	
+  					}, 500 );
+  				*/	
 			}							
 		});
 	</script>    
