@@ -17,4 +17,4 @@ def simple_name(arg):
 
     '''
     #logger.debug("simple_name template function called")
-    return os.path.basename( FileStoreItem.objects.get(uuid=arg).get_file_object().name ) 
+    return os.path.basename(FileStoreItem.objects.get(uuid=arg).get_absolute_path())
