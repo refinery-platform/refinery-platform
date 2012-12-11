@@ -22,18 +22,14 @@ var currentStudyUuid = externalStudyUuid; //urlComponents[urlComponents.length-2
 var currentAssayUuid = externalAssayUuid; //urlComponents[urlComponents.length-3]; 
 var currentNodeType = "\"Raw Data File\"";
 
-	$(document).ready(function() {		
-		configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
-		configurator.initialize()
+$(document).ready(function() {		
+	configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
+	configurator.initialize()
 
-		configurator.getState( function() {
-			initializeDataWithState( currentAssayUuid, currentStudyUuid, currentNodeType );	
-		});
-
-		
-		//var that = this;
-		//var timerId = setInterval( function(){ console.log( monitor ); monitor.getUpdate(); }, 3000 );
-	});    		
+	configurator.getState( function() {
+		initializeDataWithState( currentAssayUuid, currentStudyUuid, currentNodeType );	
+	});
+});    		
 
 var showAnnotation = false;
 
@@ -230,7 +226,18 @@ function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 		
 		// clear facet view
 		$( "#facet-view" ).html("");		
-	
+		$( "#facet-view" ).append( "<a id=\"clear-facets\" href=\"#\" class=\"btn btn-mini\" data-placement=\"bottom\" data-html=\"true\" rel=\"tooltip\" data-original-title=\"Click to clear facet selection.\"><i class=\"icon-remove-sign\"></i>&nbsp;&nbsp;Reset All</a>" );
+	   	
+	   	$( "#clear-facets" ).click( function( event ) {
+			// clear facet selection
+			var counter = clearFacets();
+			
+			// reload page
+			if ( counter > 0 ) {
+	   			getData( currentAssayUuid, currentStudyUuid, currentNodeType );				
+			}
+	   	});				
+					
 		for ( var i = 0; i < configurator.state.objects.length; ++i ) {
 			var attribute = configurator.state.objects[i];
 			
@@ -320,6 +327,25 @@ function getField( studyUuid, assayUuid, nodeType, field, callback ) {
 }
 
 
+function clearFacets() {
+	var counter = 0;
+	
+	for ( var facet in facets ) {
+		if ( facets.hasOwnProperty( facet ) ) {
+			for ( var facetValue in facets[facet] ) {
+				if ( facets[facet].hasOwnProperty( facetValue ) ) {
+					if ( facets[facet][facetValue].isSelected ) {
+						facets[facet][facetValue].isSelected = false;
+						++counter;
+					}					
+				}
+			}				
+		}
+	}
+	
+	return counter;
+}
+
 function composeFieldNameId( fieldName ) {
 	return ( "fieldname" + "___" + fieldName );
 }
@@ -399,6 +425,7 @@ function processFacets( data ) {
    		$( "#" + $( this).attr( "data-target" ) ).toggleClass( "in" );
    	} );
    	*/			
+
    	
    	$(".facet-value").on( "click", function() {
    		var facetValueId = this.id;
@@ -407,7 +434,7 @@ function processFacets( data ) {
    	   		
    		facets[facet][facetValue].isSelected = !facets[facet][facetValue].isSelected;   		
    		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
-   	} );				
+   	} );
 }
 
 function getFacetValueLookupTable( facet ) {
