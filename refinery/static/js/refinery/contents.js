@@ -18,6 +18,8 @@ var solrSettings = "wt=json&json.wrf=?&facet=true";
 
 var query = { total_items: 0, selected_items: 0, items_per_page: 10, page: 0 };
 
+var currentCount = 0;
+
 var currentStudyUuid = externalStudyUuid; //urlComponents[urlComponents.length-2];
 var currentAssayUuid = externalAssayUuid; //urlComponents[urlComponents.length-3]; 
 var currentNodeType = "\"Raw Data File\"";
@@ -293,8 +295,15 @@ function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 
 function updateSelectionCount( elementId ) {
     $( "#" + elementId ).html("");
-    var selectionCount = ( nodeSelectionBlacklistMode ? query.selected_items - nodeSelection.length : nodeSelection.length ); 
-	$( "<span/>", { style: "font-size: large;", html: "<b>" + selectionCount + "</b> of <b>" + query.total_items + "</b> selected" } ).appendTo( "#" + elementId );					
+    currentCount = ( nodeSelectionBlacklistMode ? query.selected_items - nodeSelection.length : nodeSelection.length ); 
+	$( "<span/>", { style: "font-size: large;", html: "<b>" + currentCount + "</b> of <b>" + query.total_items + "</b> selected" } ).appendTo( "#" + elementId );
+	
+	// update viewer buttons
+	if ( REFINERY_REPOSITORY_MODE ) {
+		updateDownloadButton( "submitReposBtn" );
+		updateIgvButton( "igv-multi-species" );	
+	}
+	
 }
 
 
@@ -380,8 +389,8 @@ function composeFacetId( facet ) {
 	return ( "facet" + "___" + facet );
 }
 
-function updateDownloadButton( data, button_id ) {
-	if ( data.response.numFound > MAX_DOWNLOAD_FILES || !REFINERY_USER_AUTHENTICATED ) {
+function updateDownloadButton( button_id ) {
+	if ( currentCount > MAX_DOWNLOAD_FILES || currentCount <= 0 || !REFINERY_USER_AUTHENTICATED ) {
 		$("#" + button_id ).addClass( "disabled" );
 		$("#" + button_id ).attr( "data-original-title", MESSAGE_DOWNLOAD_UNAVAILABE );
 	} else {
@@ -390,13 +399,21 @@ function updateDownloadButton( data, button_id ) {
 	}
 }
 
+function updateIgvButton( button_id ) {
+	if ( currentCount <= 0 ) {
+		$("#" + button_id ).addClass( "disabled" );
+	} else {
+		$("#" + button_id ).removeClass( "disabled" );		
+	}
+}
+
+
 function decomposeFacetId( facetId ) {
 	return ( { facet: facetId.split( "___" )[1] } );
 }
 
 
 function processFacets( data ) {
-	//$( "#facet-view" ).html("");
 
 	for ( var facet in data.facet_counts.facet_fields ) {
 		if ( data.facet_counts.facet_fields.hasOwnProperty( facet ) ) {
@@ -419,7 +436,6 @@ function processFacets( data ) {
 				}
 				
 				if ( facets[facet][facetValue].isSelected ) {
-		    		//selectedItems.push("<li class=\"facet-value\">" + "<span class=\"badge badge-info\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "&nbsp;<i class=\"icon-remove\"/>" + "</span>" +"</li>");
 		    		selectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-check\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
 	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-check\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
 				}
@@ -432,12 +448,6 @@ function processFacets( data ) {
 			$( "#" + composeFacetId( facet + "___inactive" ) ).html( "<table class=\"\"><tbody>" + unselectedItems.join('') + "</tbody></table>" );
 		}		
     }
-   	
-   	/*
-   	$(".facet-title").click( function() {
-   		$( "#" + $( this).attr( "data-target" ) ).toggleClass( "in" );
-   	} );
-   	*/			
 
    	
    	$(".facet-value").on( "click", function() {
@@ -754,24 +764,20 @@ function processDocs( data ) {
 	});
 
 	// attach events to node selection checkboxes
-	for ( var i = 0; i < documents.length; ++i ) {
-		var file_uuid = documents[i].file_uuid;
-				
-		$( "#" + "file_" + file_uuid ).click( function( event ) {
-			var fileUuid = $(this).data( "fileUuid" );			
-			var fileUuidIndex = nodeSelection.indexOf( fileUuid );
-			
-			if ( fileUuidIndex != -1 ) {
-				// remove element
-				nodeSelection.splice( fileUuidIndex, 1 ); 			
-			}
-			else {
-				nodeSelection.push( fileUuid );
-			}
-			
-			updateSelectionCount( "statistics-view" );
-		});
-	}	
+	$( "." + "node-selection-checkbox" ).click( function( event ) {
+		var fileUuid = $(this).data( "fileUuid" );			
+		var fileUuidIndex = nodeSelection.indexOf( fileUuid );
+		
+		if ( fileUuidIndex != -1 ) {
+			// remove element
+			nodeSelection.splice( fileUuidIndex, 1 ); 			
+		}
+		else {
+			nodeSelection.push( fileUuid );
+		}
+		
+		updateSelectionCount( "statistics-view" );
+	});
 	
 	// attach events to column headers
 	for ( field in fields ) {
@@ -1005,7 +1011,7 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 	     url:temp_url,
 	     type:"POST",
 	     dataType: "json",
-	     data: {'query': solr_url, 'annot':solr_annot },
+	     data: {'query': solr_url, 'annot':solr_annot, 'node_selection': nodeSelection, 'node_selection_blacklist_mode': nodeSelectionBlacklistMode },
 	     success: function(result){
 	     	
 	     	// stop spinner     	
@@ -1102,9 +1108,9 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 		     url:'/analysis_manager/repository_run/',
 		     type:"POST",
 		     dataType: "json",
-		     data: {'query': solr_url, 'workflow_choice':the_workflow_uuid, 'study_uuid':$('input[name=study_uuid]').val() },
+		     data: {'query': solr_url, 'workflow_choice':the_workflow_uuid, 'study_uuid':$('input[name=study_uuid]').val(),
+		     	'node_selection': nodeSelection, 'node_selection_blacklist_mode': nodeSelectionBlacklistMode },
 		     success: function(result){		     	
-		     	console.log("SUCCESSSS" ); 
 		     	console.log(result);
 				window.location = result;
 				}
