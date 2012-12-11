@@ -488,7 +488,7 @@ def _add_wig(data_file, tdf_file_uuid=None):
 
     # create WIGItem instance
     try:
-        item = BAMItem.objects.create(data_file=data_file, tdf_file=tdf_file)
+        item = WIGItem.objects.create(data_file=data_file, tdf_file=tdf_file)
     except (IntegrityError, ValueError) as e:
         transaction.rollback()
         logger.error("Failed to create WIGItem\n%s", e.message)
