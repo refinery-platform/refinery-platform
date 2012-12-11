@@ -129,6 +129,22 @@ class TDFItem(_FileServerItem):
         return self.data_file.get_file_object()
 
 
+class BigBEDItem(_FileServerItem):
+    '''Represents a BigBED file.
+
+    '''
+    def __unicode__(self):
+        return self.data_file.uuid
+
+    def get_file_object(self):
+        '''Return the TDF file object.
+
+        :returns: file object or None if it's not available.
+
+        '''
+        return self.data_file.get_file_object()
+
+
 class BAMItem(_FileServerItem):
     '''Represents a BAM file and optionally links it to an index file and a TDF file.
 
