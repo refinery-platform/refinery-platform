@@ -247,7 +247,7 @@ class SingleFileColumnParser:
             # iterate over columns to create attributes to attach to the sample node
             for column_index in range( 0, len( row ) ):
                 # skip data file column
-                if ( internal_file_column_index == column_index ) or ( self.annotation_column_index == column_index ):
+                if ( internal_file_column_index == column_index ) or ( internal_auxiliary_file_column_index == column_index ) or ( self.annotation_column_index == column_index ):
                     continue
                 
                 # create attribute as characteristic and attach to sample node if the sample node was newly created
