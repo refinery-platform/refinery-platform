@@ -17,7 +17,7 @@ import logging
 import tempfile
 import os
 import uuid
-from annotation_server.models import taxon_id_to_genome_build, species_to_genome_build
+from annotation_server.models import taxon_id_to_genome_build, species_to_genome_build, genome_build_to_species
 from annotation_server.utils import SUPPORTED_GENOMES
 
 logger = logging.getLogger(__name__)
@@ -208,18 +208,28 @@ def igv_multi_species(solr_results, solr_annot=None):
         # if file_uuids generated for given species
         # generate igv session file 
         if "file_uuid" in v:
+            # adding default species name to key information
+            species_id, taxon_id = genome_build_to_species(k)
+            species_id = species_id.split()
+            species_id = species_id[0][0] + '. ' + species_id[1]
+            #logger.debug( "unique_species3: %s " % k )
+            #logger.debug( species_id )
+    
             # if annotation contains species 
             if solr_annot:
                 if k in unique_annot:
                     temp_url = createIGVsessionAnnot(k, unique_species[k], annot_uuids=unique_annot[k], samp_file=sampleFile)
             else:
                 temp_url = createIGVsessionAnnot(k, unique_species[k], annot_uuids=None, samp_file=sampleFile)
-            ui_results['species'][k] = temp_url
+            #ui_results['species'][k] = temp_url
+            ui_results['species'][species_id + ' (' + k + ')'] = temp_url
         
     logger.debug("visualization_manager.views.igv_multi_species = ui_results")    
     logger.debug(simplejson.dumps(ui_results, indent=4) )    
-    
     # 5. reflect buttons in the bootbox modal in UI
+    
+    # change genome_build keys to include species name 
+        
     return ui_results
     
 def get_unique_species(docs):
