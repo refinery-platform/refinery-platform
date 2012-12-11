@@ -18,6 +18,8 @@ var solrSettings = "wt=json&json.wrf=?&facet=true";
 
 var query = { total_items: 0, selected_items: 0, items_per_page: 10, page: 0 };
 
+var currentCount = 0;
+
 var currentStudyUuid = externalStudyUuid; //urlComponents[urlComponents.length-2];
 var currentAssayUuid = externalAssayUuid; //urlComponents[urlComponents.length-3]; 
 var currentNodeType = "\"Raw Data File\"";
@@ -67,10 +69,11 @@ var documents = [];
 
 // fine-grained selection on top of the facet selection
 // currently a list of file uuids, to be switched to node uuids eventually
-var documentSelection = [];
-// if false, the documenSelection list is to be subtracted from the Solr query results (blacklist)
-// if true, the documentSelection list is to be used instead of the Solr query results (whitelist)
-var documentSelectionAddMode = false;
+var nodeSelection = [];
+// if true, the nodeSelection list is to be subtracted from the Solr query results (blacklist)
+// if false, the nodeSelection list is to be used instead of the Solr query results (whitelist)
+var nodeSelectionBlacklistMode = true;
+
 
 $(".collapse").collapse("show");
 
@@ -290,11 +293,25 @@ function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 }
 
 
+function updateSelectionCount( elementId ) {
+    $( "#" + elementId ).html("");
+    currentCount = ( nodeSelectionBlacklistMode ? query.selected_items - nodeSelection.length : nodeSelection.length ); 
+	$( "<span/>", { style: "font-size: large;", html: "<b>" + currentCount + "</b> of <b>" + query.total_items + "</b> selected" } ).appendTo( "#" + elementId );
+	
+	// update viewer buttons
+	if ( REFINERY_REPOSITORY_MODE ) {
+		updateDownloadButton( "submitReposBtn" );
+		updateIgvButton( "igv-multi-species" );	
+	}
+	
+}
+
+
 function getData( studyUuid, assayUuid, nodeType ) {
 	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, query.items_per_page * query.page, query.items_per_page, facets, fields, {}, showAnnotation ), success: function(data) {		
 		query.selected_items = data.response.numFound;
-	    $( "#statistics-view" ).html("");
-    	$( "<span/>", { style: "font-size: large;", html: "<b>" + query.selected_items + "</b> of <b>" + query.total_items + "</b> selected" } ).appendTo( "#statistics-view" );				
+	    
+	    updateSelectionCount( "statistics-view" );
 
 		if (  data.response.numFound < data.response.start ) {
 			// requesting data that is not available -> empty results -> rerun query			
@@ -372,8 +389,8 @@ function composeFacetId( facet ) {
 	return ( "facet" + "___" + facet );
 }
 
-function updateDownloadButton( data, button_id ) {
-	if ( data.response.numFound > MAX_DOWNLOAD_FILES || !REFINERY_USER_AUTHENTICATED ) {
+function updateDownloadButton( button_id ) {
+	if ( currentCount > MAX_DOWNLOAD_FILES || currentCount <= 0 || !REFINERY_USER_AUTHENTICATED ) {
 		$("#" + button_id ).addClass( "disabled" );
 		$("#" + button_id ).attr( "data-original-title", MESSAGE_DOWNLOAD_UNAVAILABE );
 	} else {
@@ -382,13 +399,21 @@ function updateDownloadButton( data, button_id ) {
 	}
 }
 
+function updateIgvButton( button_id ) {
+	if ( currentCount <= 0 ) {
+		$("#" + button_id ).addClass( "disabled" );
+	} else {
+		$("#" + button_id ).removeClass( "disabled" );		
+	}
+}
+
+
 function decomposeFacetId( facetId ) {
 	return ( { facet: facetId.split( "___" )[1] } );
 }
 
 
 function processFacets( data ) {
-	//$( "#facet-view" ).html("");
 
 	for ( var facet in data.facet_counts.facet_fields ) {
 		if ( data.facet_counts.facet_fields.hasOwnProperty( facet ) ) {
@@ -411,7 +436,6 @@ function processFacets( data ) {
 				}
 				
 				if ( facets[facet][facetValue].isSelected ) {
-		    		//selectedItems.push("<li class=\"facet-value\">" + "<span class=\"badge badge-info\" id=\"" + composeFacetValueId( facet, facetValue ) + "\">" + facetValue + " (" + facetValueCount + ")"  + "&nbsp;<i class=\"icon-remove\"/>" + "</span>" +"</li>");
 		    		selectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-check\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
 	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-check\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
 				}
@@ -424,12 +448,6 @@ function processFacets( data ) {
 			$( "#" + composeFacetId( facet + "___inactive" ) ).html( "<table class=\"\"><tbody>" + unselectedItems.join('') + "</tbody></table>" );
 		}		
     }
-   	
-   	/*
-   	$(".facet-title").click( function() {
-   		$( "#" + $( this).attr( "data-target" ) ).toggleClass( "in" );
-   	} );
-   	*/			
 
    	
    	$(".facet-value").on( "click", function() {
@@ -437,9 +455,15 @@ function processFacets( data ) {
    		var facet = decomposeFacetValueId( facetValueId ).facet;
    		var facetValue = decomposeFacetValueId( facetValueId ).facetValue;
    	   		
-   		facets[facet][facetValue].isSelected = !facets[facet][facetValue].isSelected;   		
+   		facets[facet][facetValue].isSelected = !facets[facet][facetValue].isSelected;
+   		resetNodeSelection();
    		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
    	} );
+}
+
+function resetNodeSelection() {
+	nodeSelection = [];
+   	nodeSelectionBlacklistMode = true;   		
 }
 
 function getFacetValueLookupTable( facet ) {
@@ -626,15 +650,11 @@ function processFields() {
 	
 }
 
-function makeTableHeader( leadingExtra, trailingExtra ) {
-	leadingExtra = leadingExtra | 0;
-	trailingExtra = trailingExtra | 0;
-	
+function makeTableHeader() {
+
 	var items = [];
 
-	for ( var i = 0; i < leadingExtra; ++i ) {
-		items.push("<th align=left width=0></th>" );	
-	}
+	items.push( '<th align="left" width="0" id="node-selection-column-header"></th>' );	
 		
 	for ( field in fields ) {
 		if ( fields.hasOwnProperty( field ) ) {
@@ -650,10 +670,6 @@ function makeTableHeader( leadingExtra, trailingExtra ) {
 		}
 	}
 
-	for ( var i = 0; i < trailingExtra; ++i ) {
-		items.push("<th></th>" );	
-	}
-	
 	return "<thead><tr>" + items.join("") + "</tr></thead>";
 }
 
@@ -671,16 +687,36 @@ function processDocs( data ) {
 		var file_uuid = document.file_uuid;
 		
 		// IF Repository mode 
-		if ( REFINERY_REPOSITORY_MODE ) { 
-			//s += '<td><label><input name="assay_' + file_uuid + '" type=\"checkbox\" checked></label>' + '</td>'
-			s += '<td></td>';
+		if ( REFINERY_REPOSITORY_MODE ) {
+			var isNodeSelected;
+			
+			if ( nodeSelection.indexOf( file_uuid ) != -1 ) {
+				if ( nodeSelectionBlacklistMode ) {
+					isNodeSelected = false;
+				}
+				else {
+					isNodeSelected = true;
+				}				
 			}
+			else
+			{
+				if ( nodeSelectionBlacklistMode ) {
+					isNodeSelected = true;
+				}
+				else {
+					isNodeSelected = false;
+				}				
+			}
+									
+			s += '<td><label><input id="file_' + file_uuid + '" data-file-uuid="' + file_uuid + '" class="node-selection-checkbox" type=\"checkbox\" ' + ( isNodeSelected ? "checked" : "" ) + '></label>' + '</td>';							
+			
+			//s += '<td></td>';
+		}
 		else { 
 			var check_temp = '<select name="assay_'+ file_uuid +'" id="webmenu" class="btn-mini OGcombobox"> <option></option> </select>';
 			s += '<td>' + check_temp + '</td>'
-			}
+		}
 
-		
 		for ( entry in fields )
 		{
 			if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible && !fields[entry].isInternal ) {
@@ -701,11 +737,47 @@ function processDocs( data ) {
 		s += "</tr>";
 		items.push( s );
     }	
-    // RPARK getting headers
-    var tableHeader = makeTableHeader( 1 ); 
-    
+
+    var tableHeader = makeTableHeader();
+                 
     $( "#table-view" ).html("");
 	$('<table/>', { 'class': "table table-striped table-condensed", 'id':'table_matrix',html: tableHeader + "<tbody>" + items.join('\n') + "</tbody>" }).appendTo('#table-view');
+	
+	// add node selection mode checkbox to node selection column header cell
+	var nodeSelectionModeCheckbox = '<label><input id="node-selection-mode" type=\"checkbox\" ' + ( nodeSelectionBlacklistMode ? "checked" : "" ) + '></label>';
+	$( "#" + "node-selection-column-header" ).html( nodeSelectionModeCheckbox );	
+
+	// attach event to node selection mode checkbox
+	$( "#" + "node-selection-mode" ).click( function( event ){
+		if ( nodeSelectionBlacklistMode ) {
+			nodeSelectionBlacklistMode = false;
+			nodeSelection = [];
+			$( "." + "node-selection-checkbox" ).removeAttr( "checked" );
+		}
+		else {
+			nodeSelectionBlacklistMode = true;
+			nodeSelection = [];
+			$( "." + "node-selection-checkbox" ).attr( "checked", "checked" );
+		}
+		
+		updateSelectionCount( "statistics-view" );
+	});
+
+	// attach events to node selection checkboxes
+	$( "." + "node-selection-checkbox" ).click( function( event ) {
+		var fileUuid = $(this).data( "fileUuid" );			
+		var fileUuidIndex = nodeSelection.indexOf( fileUuid );
+		
+		if ( fileUuidIndex != -1 ) {
+			// remove element
+			nodeSelection.splice( fileUuidIndex, 1 ); 			
+		}
+		else {
+			nodeSelection.push( fileUuid );
+		}
+		
+		updateSelectionCount( "statistics-view" );
+	});
 	
 	// attach events to column headers
 	for ( field in fields ) {
@@ -846,9 +918,6 @@ function createSpeciesModal(aresult) {
 	   					});
 	}
 	
-	//console.log("ret_buttons");
-	//console.log(ret_buttons);
-	
 	return ret_buttons;
 }
 
@@ -942,7 +1011,7 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 	     url:temp_url,
 	     type:"POST",
 	     dataType: "json",
-	     data: {'query': solr_url, 'annot':solr_annot },
+	     data: {'query': solr_url, 'annot':solr_annot, 'node_selection': nodeSelection, 'node_selection_blacklist_mode': nodeSelectionBlacklistMode },
 	     success: function(result){
 	     	
 	     	// stop spinner     	
@@ -1039,9 +1108,9 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 		     url:'/analysis_manager/repository_run/',
 		     type:"POST",
 		     dataType: "json",
-		     data: {'query': solr_url, 'workflow_choice':the_workflow_uuid, 'study_uuid':$('input[name=study_uuid]').val() },
+		     data: {'query': solr_url, 'workflow_choice':the_workflow_uuid, 'study_uuid':$('input[name=study_uuid]').val(),
+		     	'node_selection': nodeSelection, 'node_selection_blacklist_mode': nodeSelectionBlacklistMode },
 		     success: function(result){		     	
-		     	console.log("SUCCESSSS" ); 
 		     	console.log(result);
 				window.location = result;
 				}
