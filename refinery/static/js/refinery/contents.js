@@ -65,7 +65,11 @@ var pivots = [];
 
 var documents = [];
 
+// fine-grained selection on top of the facet selection
+// currently a list of file uuids, to be switched to node uuids eventually
 var documentSelection = [];
+// if false, the documenSelection list is to be subtracted from the Solr query results (blacklist)
+// if true, the documentSelection list is to be used instead of the Solr query results (whitelist)
 var documentSelectionAddMode = false;
 
 $(".collapse").collapse("show");
