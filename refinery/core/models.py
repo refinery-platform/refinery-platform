@@ -21,6 +21,7 @@ from guardian.shortcuts import assign, get_users_with_perms, \
     get_groups_with_perms
 from registration.signals import user_registered, user_activated
 from django.core.mail import mail_admins
+from django.contrib import messages
 import logging
 
 
@@ -60,9 +61,9 @@ def create_user_profile_registered(sender, user, request, **kwargs):
     mail_admins('New User Registered', 'User %s registered at %s' % (user, datetime.now()))
     logger.info('email has been sent to admins informing of registration of user %s' % user)
 
-user_registered.connect(create_user_profile_registered)
+user_registered.connect(create_user_profile_registered, dispatch_uid="registered")
 
-from django.contrib import messages
+
 def register_handler(request, sender, user, **kwargs):
     messages.success(request, 'Thank you!  Your account has been activated.')
     
@@ -75,6 +76,7 @@ def create_catch_all_project( sender, user, request, **kwargs ):
         project.set_owner( user )
         user.get_profile().catch_all_project = project
         user.get_profile().save()
+        messages.success(request, "If you don't want to fill your profile out now, you can go to the <a href='/'>homepage</a>.", extra_tags='safe')
         
     
 # create catch all project for user if none exists

@@ -13,6 +13,13 @@
 {% endblock %}
 
 {% block content %}
+{% if messages %}
+    {% for message in messages %}
+    	{% if 'safe' in message.tags %}
+    		<p>{{message|safe}}</p>
+    	{% endif %}
+    {% endfor %}
+{% endif %}
 <div class="refinery-panel refinery-panel-content scrollable">
 	<div class="row-fluid">
 		<form method="post" action="" class="wide" id="user-edit-form">
