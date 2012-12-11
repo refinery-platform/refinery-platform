@@ -18,10 +18,11 @@ class Command(BaseCommand):
     Description:
         main program; calls the parsing and insertion functions
     """   
-    def handle(self, username, title, file_name, source_column_index, data_file_column, base_path="", slug=None, species_column=None, annotation_column=None, genome_build_column=None, data_file_permanent=False, is_public=False, **options):    
+    def handle(self, username, title, file_name, source_column_index, data_file_column, auxiliary_file_column, base_path="", slug=None, species_column=None, annotation_column=None, genome_build_column=None, data_file_permanent=False, is_public=False, **options):    
         parser = SingleFileColumnParser()
         parser.file_permanent = data_file_permanent
         parser.file_column_index = int( data_file_column )
+        parser.auxiliary_file_column_index = int( auxiliary_file_column )
         parser.source_column_index = [int(x.strip()) for x in source_column_index.split(",")]
         parser.column_index_separator = "/"
         parser.file_base_path = base_path

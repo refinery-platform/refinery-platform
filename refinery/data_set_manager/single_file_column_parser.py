@@ -8,6 +8,7 @@ from data_set_manager.genomes import map_species_name_to_id
 from data_set_manager.models import Investigation, Study, Node, Attribute, Assay
 from file_store.tasks import create
 import csv
+import file_server
 import logging
 import operator
 import os
@@ -52,6 +53,10 @@ class SingleFileColumnParser:
     # column of the input file that contains the path to the input file
     # May not be None. Negative values are allowed and are counted from the last column of the file (-1 = last column)
     file_column_index = -1
+    
+    # column of the input file that contains the path to an auxiliary file (e.g. for visualization) associated with the input file
+    # May be None. Negative values are allowed and are counted from the last column of the file (-1 = last column)
+    auxiliary_file_column_index = None
     
     # column containing species names or ids, if set to None the parser will not set this information
     species_column_index = None
@@ -138,32 +143,69 @@ class SingleFileColumnParser:
         headers = []
         headers = self._current_reader.next()
         
+        # compute absolute file_column_index (in case a negative value was provided)
+        if self.file_column_index >= 0:
+            internal_file_column_index = self.file_column_index
+        else:                
+            internal_file_column_index = len( headers ) + self.file_column_index
+
+        # compute absolute auxiliary_file_column_index (in case a negative value was provided)
+        if self.auxiliary_file_column_index is not None:
+            if self.auxiliary_file_column_index >= 0:
+                internal_auxiliary_file_column_index = self.auxiliary_file_column_index
+            else:                
+                internal_auxiliary_file_column_index = len( headers ) + self.auxiliary_file_column_index
+        else:
+            internal_auxiliary_file_column_index = None
+        
+        # TODO: test if there are fewer columns than required        
+        logger.debug( "Parsing with file column %s and auxiliary file column %s." % ( internal_file_column_index, internal_auxiliary_file_column_index ) )
+        
         # iterate over non-header rows in file
         for row in self._current_reader:
             
-            # compute absolute file_column_index (in case a negative value was provided)
-            if self.file_column_index >= 0:
-                internal_file_column_index = self.file_column_index
-            else:                
-                internal_file_column_index = len( row ) + self.file_column_index
                 
             # TODO: resolve relative indices
             internal_source_column_index = self.source_column_index            
             internal_sample_column_index = self.sample_column_index            
             internal_assay_column_index = self.assay_column_index            
                 
-            # create the nodes for the data file in this row
+
+            # add data file to file store
+            file_uuid = None            
+
             if self.file_base_path is None:
                 file_path = row[internal_file_column_index].strip()
             else:
                 file_path = os.path.join( self.file_base_path, row[internal_file_column_index].strip() )
-                
+
             file_uuid = create( source=file_path, permanent=self.file_permanent )
                                     
             if file_uuid is not None:
-                logger.info( "Added " + file_path + " to file store." )
+                logger.debug( "Added data file " + file_path + " to file store." )
             else:
-                logger.exception( "Unable to add " + file_path + " to file store." )
+                logger.exception( "Unable to add data file " + file_path + " to file store." )            
+
+
+            # add auxiliary file to file store
+            auxiliary_file_uuid = None
+            
+            if internal_auxiliary_file_column_index is not None:
+                if self.file_base_path is None:
+                    auxiliary_file_path = row[internal_auxiliary_file_column_index].strip()
+                else:
+                    auxiliary_file_path = os.path.join( self.file_base_path, row[internal_auxiliary_file_column_index].strip() )
+                    
+                auxiliary_file_uuid = create( source=auxiliary_file_path, permanent=self.file_permanent )
+    
+                if auxiliary_file_uuid is not None:
+                    logger.debug( "Added auxiliary file " + auxiliary_file_path + "  to file store." )
+                else:
+                    logger.exception( "Unable to add auxiliary file " + file_path + " to file store." )
+                    
+                
+            # add files to file server
+            file_server.models.add( file_uuid, auxiliary_file_uuid );
 
             # create nodes if file was successfully created
             
