@@ -353,7 +353,7 @@ def genome_build_to_species(genome_build):
     :returns: tuple -- returns a tuple of (species name, species taxon ID) or raises an error  
     '''
     try:
-        gb = GenomeBuild.objects.get(name=genome_build)
+        gb = GenomeBuild.objects.get(name__icontains=genome_build)
     except:
         #something went very wrong, so just re-raise whatever the problem was
         raise
