@@ -67,10 +67,11 @@ var documents = [];
 
 // fine-grained selection on top of the facet selection
 // currently a list of file uuids, to be switched to node uuids eventually
-var documentSelection = [];
-// if false, the documenSelection list is to be subtracted from the Solr query results (blacklist)
-// if true, the documentSelection list is to be used instead of the Solr query results (whitelist)
-var documentSelectionAddMode = false;
+var nodeSelection = [];
+// if true, the nodeSelection list is to be subtracted from the Solr query results (blacklist)
+// if false, the nodeSelection list is to be used instead of the Solr query results (whitelist)
+var nodeSelectionBlacklistMode = true;
+
 
 $(".collapse").collapse("show");
 
@@ -290,11 +291,18 @@ function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 }
 
 
+function updateSelectionCount( elementId ) {
+    $( "#" + elementId ).html("");
+    var selectionCount = ( nodeSelectionBlacklistMode ? query.selected_items - nodeSelection.length : query.selected_items ); 
+	$( "<span/>", { style: "font-size: large;", html: "<b>" + selectionCount + "</b> of <b>" + query.total_items + "</b> selected" } ).appendTo( "#" + elementId );					
+}
+
+
 function getData( studyUuid, assayUuid, nodeType ) {
 	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, query.items_per_page * query.page, query.items_per_page, facets, fields, {}, showAnnotation ), success: function(data) {		
 		query.selected_items = data.response.numFound;
-	    $( "#statistics-view" ).html("");
-    	$( "<span/>", { style: "font-size: large;", html: "<b>" + query.selected_items + "</b> of <b>" + query.total_items + "</b> selected" } ).appendTo( "#statistics-view" );				
+	    
+	    updateSelectionCount( "statistics-view" );
 
 		if (  data.response.numFound < data.response.start ) {
 			// requesting data that is not available -> empty results -> rerun query			
@@ -437,9 +445,15 @@ function processFacets( data ) {
    		var facet = decomposeFacetValueId( facetValueId ).facet;
    		var facetValue = decomposeFacetValueId( facetValueId ).facetValue;
    	   		
-   		facets[facet][facetValue].isSelected = !facets[facet][facetValue].isSelected;   		
+   		facets[facet][facetValue].isSelected = !facets[facet][facetValue].isSelected;
+   		resetNodeSelection();
    		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
    	} );
+}
+
+function resetNodeSelection() {
+	nodeSelection = [];
+   	nodeSelectionBlacklistMode = true;   		
 }
 
 function getFacetValueLookupTable( facet ) {
@@ -671,16 +685,36 @@ function processDocs( data ) {
 		var file_uuid = document.file_uuid;
 		
 		// IF Repository mode 
-		if ( REFINERY_REPOSITORY_MODE ) { 
-			//s += '<td><label><input name="assay_' + file_uuid + '" type=\"checkbox\" checked></label>' + '</td>'
-			s += '<td></td>';
+		if ( REFINERY_REPOSITORY_MODE ) {
+			var isNodeSelected;
+			
+			if ( nodeSelection.indexOf( file_uuid ) != -1 ) {
+				if ( nodeSelectionBlacklistMode ) {
+					isNodeSelected = false;
+				}
+				else {
+					isNodeSelected = true;
+				}				
 			}
+			else
+			{
+				if ( nodeSelectionBlacklistMode ) {
+					isNodeSelected = true;
+				}
+				else {
+					isNodeSelected = false;
+				}				
+			}
+									
+			s += '<td><label><input id="file_' + file_uuid + '" data-file-uuid="' + file_uuid + '" type=\"checkbox\" ' + ( isNodeSelected ? "checked" : "" ) + '></label>' + '</td>';							
+			
+			//s += '<td></td>';
+		}
 		else { 
 			var check_temp = '<select name="assay_'+ file_uuid +'" id="webmenu" class="btn-mini OGcombobox"> <option></option> </select>';
 			s += '<td>' + check_temp + '</td>'
-			}
+		}
 
-		
 		for ( entry in fields )
 		{
 			if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible && !fields[entry].isInternal ) {
@@ -706,6 +740,16 @@ function processDocs( data ) {
     
     $( "#table-view" ).html("");
 	$('<table/>', { 'class': "table table-striped table-condensed", 'id':'table_matrix',html: tableHeader + "<tbody>" + items.join('\n') + "</tbody>" }).appendTo('#table-view');
+
+	// attach events to checkboxes
+	for ( var i = 0; i < documents.length; ++i ) {
+		var file_uuid = documents[i].file_uuid;
+				
+		$( "#" + "file_" + file_uuid ).click( function( event ) {
+			nodeSelection.push( $(this).data( "fileUuid" ) );
+			updateSelectionCount( "statistics-view" );
+		});
+	}	
 	
 	// attach events to column headers
 	for ( field in fields ) {
