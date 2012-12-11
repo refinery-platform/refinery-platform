@@ -63,9 +63,10 @@ var fields = {};
 // a list of facet names for the pivot view
 var pivots = [];
 
-
 var documents = [];
 
+var documentSelection = [];
+var documentSelectionAddMode = false;
 
 $(".collapse").collapse("show");
 
