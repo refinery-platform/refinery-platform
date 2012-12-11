@@ -293,7 +293,7 @@ function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 
 function updateSelectionCount( elementId ) {
     $( "#" + elementId ).html("");
-    var selectionCount = ( nodeSelectionBlacklistMode ? query.selected_items - nodeSelection.length : query.selected_items ); 
+    var selectionCount = ( nodeSelectionBlacklistMode ? query.selected_items - nodeSelection.length : nodeSelection.length ); 
 	$( "<span/>", { style: "font-size: large;", html: "<b>" + selectionCount + "</b> of <b>" + query.total_items + "</b> selected" } ).appendTo( "#" + elementId );					
 }
 
@@ -640,15 +640,11 @@ function processFields() {
 	
 }
 
-function makeTableHeader( leadingExtra, trailingExtra ) {
-	leadingExtra = leadingExtra | 0;
-	trailingExtra = trailingExtra | 0;
-	
+function makeTableHeader() {
+
 	var items = [];
 
-	for ( var i = 0; i < leadingExtra; ++i ) {
-		items.push("<th align=left width=0></th>" );	
-	}
+	items.push( '<th align="left" width="0" id="node-selection-column-header"></th>' );	
 		
 	for ( field in fields ) {
 		if ( fields.hasOwnProperty( field ) ) {
@@ -664,10 +660,6 @@ function makeTableHeader( leadingExtra, trailingExtra ) {
 		}
 	}
 
-	for ( var i = 0; i < trailingExtra; ++i ) {
-		items.push("<th></th>" );	
-	}
-	
 	return "<thead><tr>" + items.join("") + "</tr></thead>";
 }
 
@@ -706,7 +698,7 @@ function processDocs( data ) {
 				}				
 			}
 									
-			s += '<td><label><input id="file_' + file_uuid + '" data-file-uuid="' + file_uuid + '" type=\"checkbox\" ' + ( isNodeSelected ? "checked" : "" ) + '></label>' + '</td>';							
+			s += '<td><label><input id="file_' + file_uuid + '" data-file-uuid="' + file_uuid + '" class="node-selection-checkbox" type=\"checkbox\" ' + ( isNodeSelected ? "checked" : "" ) + '></label>' + '</td>';							
 			
 			//s += '<td></td>';
 		}
@@ -735,18 +727,48 @@ function processDocs( data ) {
 		s += "</tr>";
 		items.push( s );
     }	
-    // RPARK getting headers
-    var tableHeader = makeTableHeader( 1 ); 
-    
+
+    var tableHeader = makeTableHeader();
+                 
     $( "#table-view" ).html("");
 	$('<table/>', { 'class': "table table-striped table-condensed", 'id':'table_matrix',html: tableHeader + "<tbody>" + items.join('\n') + "</tbody>" }).appendTo('#table-view');
+	
+	// add node selection mode checkbox to node selection column header cell
+	var nodeSelectionModeCheckbox = '<label><input id="node-selection-mode" type=\"checkbox\" ' + ( nodeSelectionBlacklistMode ? "checked" : "" ) + '></label>';
+	$( "#" + "node-selection-column-header" ).html( nodeSelectionModeCheckbox );	
 
-	// attach events to checkboxes
+	// attach event to node selection mode checkbox
+	$( "#" + "node-selection-mode" ).click( function( event ){
+		if ( nodeSelectionBlacklistMode ) {
+			nodeSelectionBlacklistMode = false;
+			nodeSelection = [];
+			$( "." + "node-selection-checkbox" ).removeAttr( "checked" );
+		}
+		else {
+			nodeSelectionBlacklistMode = true;
+			nodeSelection = [];
+			$( "." + "node-selection-checkbox" ).attr( "checked", "checked" );
+		}
+		
+		updateSelectionCount( "statistics-view" );
+	});
+
+	// attach events to node selection checkboxes
 	for ( var i = 0; i < documents.length; ++i ) {
 		var file_uuid = documents[i].file_uuid;
 				
 		$( "#" + "file_" + file_uuid ).click( function( event ) {
-			nodeSelection.push( $(this).data( "fileUuid" ) );
+			var fileUuid = $(this).data( "fileUuid" );			
+			var fileUuidIndex = nodeSelection.indexOf( fileUuid );
+			
+			if ( fileUuidIndex != -1 ) {
+				// remove element
+				nodeSelection.splice( fileUuidIndex, 1 ); 			
+			}
+			else {
+				nodeSelection.push( fileUuid );
+			}
+			
 			updateSelectionCount( "statistics-view" );
 		});
 	}	
@@ -889,9 +911,6 @@ function createSpeciesModal(aresult) {
 	   					"url": session_url
 	   					});
 	}
-	
-	//console.log("ret_buttons");
-	//console.log(ret_buttons);
 	
 	return ret_buttons;
 }
