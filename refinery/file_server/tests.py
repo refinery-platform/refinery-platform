@@ -6,8 +6,20 @@ Created on Apr 21, 2012
 
 from django.utils import unittest
 import struct
-from file_server import tdf_file
+from file_server import tdf_file, models
 import cStringIO
+from file_store.models import FileStoreItem
+
+
+class FileServerItemTest(unittest.TestCase):
+    '''Test instantiation of all models derived from _FileServerItem
+
+    '''
+    def setUp(self):
+        self.bigbed_file = FileStoreItem.objects.create_item("/example/path/test_file.bb")
+
+    def test_add_bigbeditem(self):
+        self.assertIsNotNone(models.add(self.bigbed_file.uuid))
 
 
 class TDFByteStreamTest(unittest.TestCase):

@@ -8,7 +8,7 @@ import logging
 import simplejson
 from django.db import models, transaction
 from django.db.utils import IntegrityError
-from file_store.models import FileStoreItem
+from file_store.models import FileStoreItem, TDF, BAM, WIG, BIGBED
 import file_server.tdf_file as tdf_module
 
 
@@ -341,12 +341,14 @@ def add(data_file_uuid, aux_file_uuid=None):
         return None
 
     file_type = data_file.get_filetype()
-    if file_type == 'tdf':
+    if file_type == TDF:
         return _add_tdf(data_file=data_file)
-    elif file_type == 'bam':
+    elif file_type == BAM:
         return _add_bam(data_file=data_file, tdf_file_uuid=aux_file_uuid)
-    elif file_type == 'wig':
+    elif file_type == WIG:
         return _add_wig(data_file=data_file, tdf_file_uuid=aux_file_uuid)
+    elif file_type == BIGBED:
+        return _add_bigbed(data_file=data_file)
     else:
         logger.error("Could not create _FileServerItem: unknown file type '%s'", file_type)
         return None
@@ -429,8 +431,8 @@ def get_aux_file_item(data_file_uuid):
 def _add_tdf(data_file):
     '''Create a new TDFItem instance.
 
-    :param data_file_uuid: UUID of the TDF file.
-    :type data_file_uuid: str.
+    :param data_file: TDF file instance.
+    :type data_file: file_store.models.FileStoreItem.
     :returns: TDFItem -- newly created TDFItem model instance or None if there was an error.
 
     '''
@@ -447,14 +449,35 @@ def _add_tdf(data_file):
     return item
 
 
+@transaction.commit_manually()
+def _add_bigbed(data_file):
+    '''Create a new BigBEDItem instance.
+
+    :param data_file: BigBED file instance.
+    :type data_file: file_store.models.FileStoreItem.
+    :returns: BigBEDItem -- newly created BigBEDItem model instance or None if there was an error.
+
+    '''
+    try:
+        item = BigBEDItem.objects.create(data_file=data_file)
+    except (IntegrityError, ValueError) as e:
+        transaction.rollback()
+        logger.error("Failed to create BigBEDItem\n%s", e.message)
+        return None
+
+    transaction.commit()
+    logger.info("BigBEDItem created")
+    return item
+
+
 @transaction.commit_manually
 def _add_bam(data_file, tdf_file_uuid=None):
     '''Create a new BAMItem instance.
     Manual transaction control is required when using PostgreSQL and save() or create() raise an exception.
     See: https://docs.djangoproject.com/en/dev/topics/db/transactions/#handling-exceptions-within-postgresql-transactions
 
-    :param data_file_uuid: BAM file instance.
-    :type data_file_uuid: str.
+    :param data_file: BAM file instance.
+    :type data_file: file_store.models.FileStoreItem.
     :param tdf_file_uuid: UUID of the TDF file.
     :type tdf_file_uuid: str.
     :returns: BAMItem -- newly created BAMItem model instance or None if there was an error.
@@ -487,8 +510,8 @@ def _add_wig(data_file, tdf_file_uuid=None):
     Manual transaction control is required when using PostgreSQL and save() or create() raise an exception.
     See: https://docs.djangoproject.com/en/dev/topics/db/transactions/#handling-exceptions-within-postgresql-transactions
 
-    :param data_file_uuid: WIG file instance.
-    :type data_file_uuid: str.
+    :param data_file: WIG file instance.
+    :type data_file: file_store.models.FileStoreItem.
     :param tdf_file_uuid: UUID of the TDF file.
     :type tdf_file_uuid: str.
     :returns: WIGItem -- newly created WIGItem model instance or None if there was an error.
