@@ -301,7 +301,7 @@ class WIGItem(_FileServerItem):
         :returns: bool -- True if update succeeded, False if failed.
 
         '''
-        logger.debug("Updating WIGItem using TDF UUID '%s'", tdf_uuid)
+        logger.debug("Updating WIGItem '{}' using TDF UUID '{}'".format(self.data_file.uuid, tdf_uuid))
 
         item = FileStoreItem.objects.get_item(uuid=tdf_uuid)
         if item:
@@ -309,13 +309,13 @@ class WIGItem(_FileServerItem):
             try:
                 self.save()
             except IntegrityError as e:
-                logger.error("Failed updating WIGItem\n%s", e.message)
+                logger.error("WIGItem update failed: {}".format(e.message))
                 return False
         else:
-            logger.error("Failed updating WIGItem")
+            logger.error("WIGItem update failed: FileStoreItem '{}' does not exist".format(tdf_uuid))
             return False
 
-        logger.info("WIGItem updated")
+        logger.info("Updated WIGItem '{}'".format(self.data_file_file.uuid))
         return True
 
     def get_aux_file_item(self):
@@ -337,7 +337,8 @@ def add(data_file_uuid, aux_file_uuid=None):
     '''
     data_file = FileStoreItem.objects.get_item(uuid=data_file_uuid)
     if not data_file:
-        logger.error("Could not create _FileServerItem: data_file_uuid doesn't exist")
+        logger.error("Could not create _FileServerItem: FileServerItem UUID '{}' doesn't exist"
+                     .format(data_file_uuid))
         return None
 
     file_type = data_file.get_filetype()
@@ -350,7 +351,7 @@ def add(data_file_uuid, aux_file_uuid=None):
     elif file_type == BIGBED:
         return _add_bigbed(data_file=data_file)
     else:
-        logger.error("Could not create _FileServerItem: unknown file type '%s'", file_type)
+        logger.error("Could not create _FileServerItem: unknown file type '{}'".format(file_type))
         return None
 
 
