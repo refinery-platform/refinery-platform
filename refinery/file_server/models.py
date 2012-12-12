@@ -8,14 +8,14 @@ import logging
 import simplejson
 from django.db import models, transaction
 from django.db.utils import IntegrityError
-from file_store.models import FileStoreItem, TDF, BAM, WIG, BIGBED
+import file_store.models as fs_models
 import file_server.tdf_file as tdf_module
 
 
 logger = logging.getLogger('file_server')
 
-# list of the available file server models - update if new models are added
-FILE_SERVER_MODELS = ('tdfitem', 'bamitem', 'wigitem')
+# list of lowercase names of file server models (update if new models are added)
+FILE_SERVER_MODELS = ('tdfitem', 'bamitem', 'wigitem', 'bigbeditem')
 #TODO: get names of all classes derived from _FileServerItem automatically
 
 
@@ -48,7 +48,7 @@ class _FileServerItem(models.Model):
     Do not use directly.  Use derived models instead.
 
     '''
-    data_file = models.ForeignKey(FileStoreItem, unique=True)
+    data_file = models.ForeignKey(fs_models.FileStoreItem, unique=True)
 
     objects = _FileServerItemManager()
 
@@ -150,9 +150,9 @@ class BAMItem(_FileServerItem):
 
     '''
     #: BAM file index
-    index_file = models.ForeignKey(FileStoreItem, blank=True, null=True, related_name="bamitem_index_file")
+    index_file = models.ForeignKey(fs_models.FileStoreItem, blank=True, null=True, related_name="bamitem_index_file")
     #: Visualization file
-    tdf_file = models.ForeignKey(FileStoreItem, blank=True, null=True, related_name="bamitem_tdf_file")
+    tdf_file = models.ForeignKey(fs_models.FileStoreItem, blank=True, null=True, related_name="bamitem_tdf_file")
     # related_name is required to avoid naming clashes in reverse relationships
     # http://stackoverflow.com/questions/5180729/django-related-name-attribute-databaseerror
 
@@ -215,7 +215,7 @@ class BAMItem(_FileServerItem):
         '''
         logger.debug("Updating BAMItem using TDF UUID '%s'", tdf_uuid)
 
-        item = FileStoreItem.objects.get_item(uuid=tdf_uuid)
+        item = fs_models.FileStoreItem.objects.get_item(uuid=tdf_uuid)
         if item:
             self.tdf_file = item
             try:
@@ -242,7 +242,7 @@ class WIGItem(_FileServerItem):
 
     '''
     #: Visualization file
-    tdf_file = models.ForeignKey(FileStoreItem, blank=True, null=True)
+    tdf_file = models.ForeignKey(fs_models.FileStoreItem, blank=True, null=True)
 
     def __unicode__(self):
         if self.tdf_file:
@@ -303,7 +303,7 @@ class WIGItem(_FileServerItem):
         '''
         logger.debug("Updating WIGItem '{}' using TDF UUID '{}'".format(self.data_file.uuid, tdf_uuid))
 
-        item = FileStoreItem.objects.get_item(uuid=tdf_uuid)
+        item = fs_models.FileStoreItem.objects.get_item(uuid=tdf_uuid)
         if item:
             self.tdf_file = item
             try:
@@ -335,20 +335,20 @@ def add(data_file_uuid, aux_file_uuid=None):
     :returns: instance of a _FileServerItem subclass or None if there was an error.
 
     '''
-    data_file = FileStoreItem.objects.get_item(uuid=data_file_uuid)
+    data_file = fs_models.FileStoreItem.objects.get_item(uuid=data_file_uuid)
     if not data_file:
         logger.error("Could not create _FileServerItem: FileServerItem UUID '{}' doesn't exist"
                      .format(data_file_uuid))
         return None
 
     file_type = data_file.get_filetype()
-    if file_type == TDF:
+    if file_type == fs_models.TDF:
         return _add_tdf(data_file=data_file)
-    elif file_type == BAM:
+    elif file_type == fs_models.BAM:
         return _add_bam(data_file=data_file, tdf_file_uuid=aux_file_uuid)
-    elif file_type == WIG:
+    elif file_type == fs_models.WIG:
         return _add_wig(data_file=data_file, tdf_file_uuid=aux_file_uuid)
-    elif file_type == BIGBED:
+    elif file_type == fs_models.BIGBED:
         return _add_bigbed(data_file=data_file)
     else:
         logger.error("Could not create _FileServerItem: unknown file type '{}'".format(file_type))
@@ -487,7 +487,7 @@ def _add_bam(data_file, tdf_file_uuid=None):
 
     # check if we can get the TDF file
     if tdf_file_uuid:
-        tdf_file = FileStoreItem.objects.get_item(tdf_file_uuid)
+        tdf_file = fs_models.FileStoreItem.objects.get_item(tdf_file_uuid)
     else:
         tdf_file = None
         logger.debug("TDF file UUID was not provided")
@@ -521,7 +521,7 @@ def _add_wig(data_file, tdf_file_uuid=None):
 
     # check if we can get the TDF file
     if tdf_file_uuid:
-        tdf_file = FileStoreItem.objects.get_item(tdf_file_uuid)
+        tdf_file = fs_models.FileStoreItem.objects.get_item(tdf_file_uuid)
     else:
         tdf_file = None
         logger.debug("TDF file UUID was not provided")
