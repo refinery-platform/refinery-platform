@@ -2,6 +2,7 @@
 {% load humanize %}
 
 {% block head_html %}
+	<link href="{{ STATIC_URL }}styles/css/tipsy/tipsy.css" rel="stylesheet"/>	    
 
     <style type="text/css">
 
@@ -184,12 +185,12 @@ rect.active {
 					
 					<div class="tabbable">
 						<ul class="nav nav-pills" id="navigation-tabs">
-						  <li class="active"><a href="#table-view-tab" data-toggle="pill">List</a></li>
-						  <li><a href="#pivot-view-tab" data-toggle="pill">Matrix</a></li>
+						  <li><a href="#table-view-tab" data-toggle="pill">List</a></li>
+						  <li class="active"><a href="#pivot-view-tab" data-toggle="pill">Matrix</a></li>
 						</ul>
 			
 						<div class="tab-content">
-						  <div class="tab-pane active fade in" id="table-view-tab">
+						  <div class="tab-pane fade in" id="table-view-tab">
 						  	<div class="dropdown">
 							  <a href="#" class="dropdown-toggle btn btn-mini btn-default" data-toggle="dropdown"><i class="icon-wrench"></i>&nbsp;Columns&nbsp;<i class="icon-caret-down"></i></a>							   
 							  <ul class="dropdown-menu" id="field-view" role="menu" aria-labelledby="dLabel">
@@ -198,7 +199,7 @@ rect.active {
 							<div id="table-view"></div>
 							<div id="pager-view"></div>
 						  </div>
-						  <div class="tab-pane fade in" id="pivot-view-tab">
+						  <div class="tab-pane active fade in" id="pivot-view-tab">
 						  	<div id="pivot-view">			  		
 						  	</div>			  	
 						  	<div id="pivot-matrix">
@@ -423,6 +424,7 @@ rect.active {
 	</script>	
 	
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/utilities.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/tipsy/jquery.tipsy.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/viewers/pivot-matrix.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>

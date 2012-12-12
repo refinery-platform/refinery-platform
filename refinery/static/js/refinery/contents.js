@@ -526,7 +526,7 @@ function processPivots( data ) {
 			table[i] = new Array( Object.keys( facetValue2Lookup ).length );
 			
 			for ( var j = 0; j < table[i].length; ++j ) {
-				table[i][j] = { x: j, y: i, xlab: Object.keys( facetValue2Lookup )[j], ylab: Object.keys( facetValue1Lookup )[i], count: 0 };
+				table[i][j] = { x: j, y: i, xlab: Object.keys( facetValue2Lookup )[j], xfacet: pivots[1], ylab: Object.keys( facetValue1Lookup )[i], yfacet: pivots[0], count: 0 };
 			}
 		}
 				
@@ -571,7 +571,8 @@ function processPivots( data ) {
 		//$( "<table/>", { 'class': "table table-striped table-condensed", html: header + "<tbody>" + rows.join("") + "</tbody>" } ).appendTo( "#pivot-view" );
 
 		$( "#pivot-matrix" ).html( "" );		
-		graph = new PivotMatrix( "pivot-matrix", {}, table );					
+		var useGradient = false;
+		graph = new PivotMatrix( "pivot-matrix", {}, table, facets, useGradient, function(){ getData( currentAssayUuid, currentStudyUuid, currentNodeType ); } );					
 	}
 	
 	$( "#pivot_x1_choice" ).change( function( ) {

@@ -76,8 +76,7 @@
 		monitor = new AnalysisMonitor( "{{ uuid }}", "http://{{ REFINERY_BASE_URL }}", "{% url analysis statuses.analysis.uuid %}", "{{ csrf_token }}" );
 		monitor.getUpdate();
 		
-		//var that = this;
-		var timerId = setInterval( function(){ console.log( monitor ); monitor.getUpdate(); }, 3000 );
+		var timerId = setInterval( function(){ monitor.getUpdate(); }, 3000 );
 	});    		
 	</script>
 {% endblock %}

@@ -11,13 +11,16 @@ maxCount = function( matrix ) {
 	return max;
 } 
 
-PivotMatrix = function(elemid, options, matrix ) {
+PivotMatrix = function(elemid, options, matrix, facets, useGradient, updateCallback ) {
   var self = this;
   this.chart = document.getElementById(elemid);
   this.cx = this.chart.clientWidth;
   this.cy = this.chart.clientHeight;
   this.options = options || {};
   this.options.ymin = options.ymin || 0;
+  this.useGradient = useGradient;
+  this.matrix = matrix;
+  this.facets = facets;
   
 var matrix2 = [ 
 			   [
@@ -50,7 +53,20 @@ var y = d3.scale.ordinal().rangeBands([0, height]);
 //var y = d3.fisheye.scale(d3.scale.identity).domain([0, height]).focus(90);
 
 var max = maxCount( matrix );
-var c = d3.scale.linear().domain([0,max]).range(["white", "black"]).clamp(true);
+
+var c;
+var selectedColor;
+if ( this.useGradient ) {
+	// gradient color map
+	c = d3.scale.linear().domain([0,max]).range(["lightgray", "black"]).clamp(true);	
+	selectedColor = d3.scale.linear().domain([0,max]).range(["lightgray", "red"]).clamp(true);	
+}
+else {
+	// binary color map
+	c = d3.scale.linear().domain([0,1]).range(["lightgray", "black"]).clamp(true);		
+	selectedColor = d3.scale.linear().domain([0,1]).range(["lightgray", "red"]).clamp(true);	
+}
+
 //var c = d3.scale.category10().domain(d3.range(10));
 
 var svg = d3.select(document.getElementById(elemid)).append("svg")
@@ -61,7 +77,7 @@ var svg = d3.select(document.getElementById(elemid)).append("svg")
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  // Precompute the orders.
+  // precompute the orders.
   var orders = {
   	xDefault: d3.range(matrix[0].length).sort(),
   	yDefault: d3.range(matrix.length).sort(),
@@ -89,16 +105,27 @@ var svg = d3.select(document.getElementById(elemid)).append("svg")
   //    .attr("x2", width);
 
   row.append("text")
-      .attr("x", -6)
+      .attr("x", -5)
       .attr("y", y.rangeBand()/2 )
       .attr("dy", ".32em")
-	  .style("font-size", "9px")	            
+	  .style("font-size", "12px")	            
 	  .style("cursor", "pointer")	            
       .attr("text-anchor", "end")
       .text(function(d, row ) { return matrix[row][0].ylab; })
       .on("mouseover", function(p){ d3.selectAll(".row text").classed("active", function(d, i) { return i == p[0].y; }); } )
       .on("mouseout", mouseout)      
-      .on("click", function(p) { if ( d3.event.altKey ) { orderRows( orders.yLabels ); } else { orderColumns( computeColumnOrder( p[0].y, false ) ); } }, true );
+      .on("click", function(p) { 
+      		if ( d3.event.altKey ) {
+      			orderRows( orders.yLabels ); 
+      		}
+      		else {
+      			console.log( p );
+      			facets[p[0].yfacet][p[0].ylab].isSelected = !facets[p[0].yfacet][p[0].ylab].isSelected;
+				updateCallback();      			
+
+      			//orderColumns( computeColumnOrder( p[0].y, false ) );
+      		} 
+      	}, true );
             
 
   var column = svg.selectAll(".column")
@@ -110,33 +137,75 @@ var svg = d3.select(document.getElementById(elemid)).append("svg")
   //column.append("line")
   //    .attr("x1", -height);
 
+  // labels
   column.append("text")
-      .attr("x", 6 )
-      .attr("y", x.rangeBand() / 2 - 10)
+      .attr("x", 5 )
+      .attr("y", x.rangeBand() / 2)
       .attr("dy", ".32em")
-	  .style("font-size", "9px")	      
+	  .style("font-size", "12px")	      
 	  .style("cursor", "pointer")	            
       .attr("text-anchor", "start")
       .attr("transform", "rotate(0)" )
       .text(function( d, col) { return ( matrix[0][col].xlab ); })
       .on("mouseover", function(p){ d3.selectAll(".column text").classed("active", function(d, i) { return i == p.x; }); } )
       .on("mouseout", mouseout)
-      .on("click", function(p) { if ( d3.event.altKey ) { orderColumns( orders.xLabels ); } else { orderRows( computeRowOrder( p.x, false ) ); } }, true );
+      .on("click", function(p) {
+      		if ( d3.event.altKey ) {
+      			//orderColumns( orders.xLabels ); 
+      		}
+      		else {
+				facets[p.xfacet][p.xlab].isSelected = !facets[p.xfacet][p.xlab].isSelected;
+				updateCallback();      			
+      			//orderRows( computeRowOrder( p.x, false ) ); 
+      		} 
+      	}, true );
       
 
   function makeRow(row) {
+  	var self = this;
+  	
     var cell = d3.select(this).selectAll(".cell")
         .data(row.filter(function(d) { return d; }))
       .enter().append("rect")
+		.attr("xlink:title", function(p) {
+	    		return p.count;
+			 })
         .attr("class", "cell")
         .attr("x", function(d) { return x(d.x); })
         .attr("height", y.rangeBand() )
         .attr("width", x.rangeBand() )
         .style("fill-opacity", function(d) { return 1; })
-        .style("fill", function(d) { return( c(d.count)); })
+        .style("fill", function(p) {
+        		if ( facets[p.yfacet][p.ylab].isSelected || facets[p.xfacet][p.xlab].isSelected ) {
+					return ( selectedColor(p.count) );        				
+        		} 
+    			return( c(p.count) );
+        	})
         .on("mouseover", mouseover)
         .on("mouseout", mouseout)
-        .on("click", function(p) { console.log( p.xlab + " -- " + p.ylab ); d3.select( this ).style("fill", "#f00" ); } );
+        .on("click", function(p) {
+        	//console.log( p.xlab + " -- " + p.ylab );
+        	//d3.select( this ).style("fill", "#f00" );
+        	if ( facets[p.xfacet][p.xlab].isSelected && facets[p.yfacet][p.ylab].isSelected ) {
+        		// cell is selected
+        		facets[p.yfacet][p.ylab].isSelected = false;
+        		facets[p.xfacet][p.xlab].isSelected = false;
+        	} 
+        	else {
+        		facets[p.yfacet][p.ylab].isSelected = true;
+        		facets[p.xfacet][p.xlab].isSelected = true;        		
+        	}
+
+			updateCallback();      			        	
+         }, true );
+         
+        $(".cell").tipsy({
+		        gravity:'n',
+		        html: true,
+		        delayIn: 100,
+		        fade: true
+		 	});
+
   }
 
 
