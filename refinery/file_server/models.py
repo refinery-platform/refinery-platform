@@ -445,7 +445,7 @@ def _add_tdf(data_file):
         return None
 
     transaction.commit()
-    logger.info("TDFItem created")
+    logger.info("TDFItem created with UUID '{}'".format(item.data_file.uuid))
     return item
 
 
@@ -466,7 +466,7 @@ def _add_bigbed(data_file):
         return None
 
     transaction.commit()
-    logger.info("BigBEDItem created")
+    logger.info("BigBEDItem created with UUID '{}'".format(item.data_file.uuid))
     return item
 
 
@@ -530,10 +530,10 @@ def _add_wig(data_file, tdf_file_uuid=None):
         item = WIGItem.objects.create(data_file=data_file, tdf_file=tdf_file)
     except (IntegrityError, ValueError) as e:
         transaction.rollback()
-        logger.error("Failed to create WIGItem\n%s", e.message)
+        logger.error("Failed to create WIGItem. %s", e.message)
         return None
 
     transaction.commit()
-    logger.info("WIGItem created")
+    logger.info("WIGItem '{}' created".format(item.data_file.uuid))
     return item
 

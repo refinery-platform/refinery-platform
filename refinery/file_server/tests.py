@@ -4,22 +4,37 @@ Created on Apr 21, 2012
 @author: Ilya Sytchev
 '''
 
-from django.utils import unittest
 import struct
-from file_server import tdf_file, models
 import cStringIO
-from file_store.models import FileStoreItem
+from django.utils import unittest
+from file_store import models as fs_models
+from file_server import tdf_file, models
 
 
-class FileServerItemTest(unittest.TestCase):
+class FileServerItemAddTest(unittest.TestCase):
     '''Test instantiation of all models derived from _FileServerItem
 
     '''
-    def setUp(self):
-        self.bigbed_file = FileStoreItem.objects.create_item("/example/path/test_file.bb")
+    def test_add_tdfitem(self):
+        tdf_file = fs_models.FileStoreItem.objects.create_item("/example/path/test_file.tdf")
+        self.assertIsNotNone(models.add(tdf_file.uuid))
 
     def test_add_bigbeditem(self):
-        self.assertIsNotNone(models.add(self.bigbed_file.uuid))
+        bigbed_file = fs_models.FileStoreItem.objects.create_item("/example/path/test_file.bb")
+        self.assertIsNotNone(models.add(bigbed_file.uuid))
+
+    def test_add_bamitem(self):
+        bam_file = fs_models.FileStoreItem.objects.create_item("/example/path/test_file.bam")
+        self.assertIsNotNone(models.add(bam_file.uuid))
+
+    def test_add_wigitem(self):
+        wig_file = fs_models.FileStoreItem.objects.create_item("/example/path/test_file.wig")
+        self.assertIsNotNone(models.add(wig_file.uuid))
+
+    def test_add_unknown_file_type(self):
+        # create a FileStoreItem without a file type 
+        undefined_file = fs_models.FileStoreItem.objects.create(source="/example/path/test_file")
+        self.assertIsNone(models.add(undefined_file.uuid))
 
 
 class TDFByteStreamTest(unittest.TestCase):
