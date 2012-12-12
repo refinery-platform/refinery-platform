@@ -108,6 +108,10 @@ var svg = d3.select(document.getElementById(elemid)).append("svg")
       .attr("x", -5)
       .attr("y", y.rangeBand()/2 )
       .attr("dy", ".32em")
+		.attr("class", "matrix-row-label" )
+		.attr("title", function(p) {
+			return p[0].ylab;
+		 })      
 	  .style("font-size", "12px")	            
 	  .style("cursor", "pointer")	            
       .attr("text-anchor", "end")
@@ -138,27 +142,45 @@ var svg = d3.select(document.getElementById(elemid)).append("svg")
   //    .attr("x1", -height);
 
   // labels
-  column.append("text")
-      .attr("x", 5 )
-      .attr("y", x.rangeBand() / 2)
-      .attr("dy", ".32em")
-	  .style("font-size", "12px")	      
-	  .style("cursor", "pointer")	            
-      .attr("text-anchor", "start")
-      .attr("transform", "rotate(0)" )
-      .text(function( d, col) { return ( matrix[0][col].xlab ); })
-      .on("mouseover", function(p){ d3.selectAll(".column text").classed("active", function(d, i) { return i == p.x; }); } )
-      .on("mouseout", mouseout)
-      .on("click", function(p) {
-      		if ( d3.event.altKey ) {
-      			//orderColumns( orders.xLabels ); 
-      		}
-      		else {
-				facets[p.xfacet][p.xlab].isSelected = !facets[p.xfacet][p.xlab].isSelected;
-				updateCallback();      			
-      			//orderRows( computeRowOrder( p.x, false ) ); 
-      		} 
-      	}, true );
+	column.append("text")
+		.attr("x", 5 )
+		.attr("y", x.rangeBand() / 2)
+		.attr("dy", ".32em")
+		.attr("class", "matrix-column-label")
+		.attr("title", function(p) {
+			return p.xlab;
+		 })      
+		.style("font-size", "12px")	      
+		.style("cursor", "pointer")	            
+		.attr("text-anchor", "start")
+		.attr("transform", "rotate(0)" )
+		.text(function( d, col) { return ( matrix[0][col].xlab ); })
+		.on("mouseover", function(p){ d3.selectAll(".column text").classed("active", function(d, i) { return i == p.x; }); } )
+		.on("mouseout", mouseout)
+		.on("click", function(p) {
+		if ( d3.event.altKey ) {
+			//orderColumns( orders.xLabels ); 
+		}
+		else {
+			facets[p.xfacet][p.xlab].isSelected = !facets[p.xfacet][p.xlab].isSelected;
+			updateCallback();      			
+			//orderRows( computeRowOrder( p.x, false ) ); 
+			} 
+		}, true );
+
+        $(".matrix-row-label").tipsy({
+		        gravity:'n',
+		        html: true,
+		        delayIn: 100,
+		        fade: true
+		 	});
+
+        $( ".matrix-column-label").tipsy({
+		        gravity:'nw',
+		        html: true,
+		        delayIn: 100,
+		        fade: true
+		 	});
       
 
   function makeRow(row) {
@@ -167,7 +189,7 @@ var svg = d3.select(document.getElementById(elemid)).append("svg")
     var cell = d3.select(this).selectAll(".cell")
         .data(row.filter(function(d) { return d; }))
       .enter().append("rect")
-		.attr("xlink:title", function(p) {
+		.attr("title", function(p) {
 	    		return p.count;
 			 })
         .attr("class", "cell")
@@ -199,7 +221,7 @@ var svg = d3.select(document.getElementById(elemid)).append("svg")
 			updateCallback();      			        	
          }, true );
          
-        $(".cell").tipsy({
+        $("." + "cell").tipsy({
 		        gravity:'n',
 		        html: true,
 		        delayIn: 100,
