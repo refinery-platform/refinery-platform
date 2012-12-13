@@ -4,25 +4,23 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
-from data_set_manager.models import Investigation, Node
 from datetime import datetime
+import logging
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.signals import user_logged_in
+from django.core.mail import mail_admins
 from django.db import models
 from django.db.models import Max, signals
 from django.db.models.signals import post_save, post_init
 from django.forms import ModelForm
 from django_extensions.db.fields import UUIDField
-from file_store.models import get_file_size
-from file_store.tasks import read
-from galaxy_connector.models import Instance
-from guardian.shortcuts import assign, get_users_with_perms, \
-    get_groups_with_perms
+from guardian.shortcuts import assign, get_users_with_perms, get_groups_with_perms
 from registration.signals import user_registered, user_activated
-from django.core.mail import mail_admins
-from django.contrib import messages
-import logging
+from data_set_manager.models import Investigation, Node, Study, Assay
+from file_store.models import get_file_size
+from galaxy_connector.models import Instance
 
 
 logger = logging.getLogger(__name__)
@@ -525,3 +523,70 @@ def create_manager_group( sender, instance, created, **kwargs ):
         post_save.connect(create_manager_group, sender=ExtendedGroup)        
         
 post_save.connect(create_manager_group, sender=ExtendedGroup)
+
+
+class NodeSet(SharableResource):
+    '''A collection of Nodes representing data files.
+    Used to save selection state between sessions and to map data files to workflow inputs.
+
+    '''
+    node = models.ManyToManyField(Node)
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay)
+
+    class Meta:
+        verbose_name = "nodeset"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
+            ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
+        )
+
+
+def create_nodeset(name, summary, node_uuids):
+    '''Create a new NodeSet from a list of Nodes.
+
+    :param name: name of the new NodeSet.
+    :type name: str.
+    :param summary: description of the new NodeSet.
+    :type summary: str.
+    :returns: str -- UUID of the new NodeSet.
+
+    '''
+
+
+def get_nodeset(uuid):
+    '''Retrieve a NodeSet given its UUID.
+
+    :param uuid: NodeSet UUID.
+    :type uuid: str.
+    :returns: NodeSet
+    :raises: DoesNotExist
+
+    '''
+
+
+def update_nodeset(uuid, node_uuids=None, name=None, summary=None):
+    '''Update NodeSet with the new data.
+
+    :param uuid: NodeSet UUID.
+    :type uuid: str.
+    :param node_uuids: list of new Node UUIDs to replace existing Nodes.
+    :type node_uuids: list.
+    :param name: new NodeSet name.
+    :type name: str.
+    :param summary: new NodeSet description.
+    :type summary: str.
+    :raises: DoesNotExist
+
+    '''
+
+
+def delete_nodeset(uuid):
+    '''Delete a NodeSet specified by UUID.
+
+    :param uuid: NodeSet UUID.
+    :type uuid: str.
+    :raises: DoesNotExist
+
+    '''
+

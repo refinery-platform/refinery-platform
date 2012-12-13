@@ -3,16 +3,17 @@ Created on May 10, 2012
 
 @author: nils
 '''
-from data_set_manager.genomes import map_species_id_to_default_genome_build
+
+import logging
+import settings
+import simplejson
+import urllib2
 from django.db import models
 from django.db.models.query_utils import Q
 from django.db.models.signals import post_save, post_init
 from django.dispatch.dispatcher import receiver
 from django_extensions.db.fields import UUIDField
-import logging
-import settings
-import simplejson
-import urllib2
+from data_set_manager.genomes import map_species_id_to_default_genome_build
 
 
 # get module logger
@@ -555,8 +556,5 @@ class ProtocolReferenceParameter(models.Model):
     value_source = models.TextField(blank=True, null=True)
     
     def __unicode__(self):
-        return unicode(self.name) + " = " +  unicode(self.value) 
-
-
-
+        return unicode(self.name) + " = " +  unicode(self.value)
 
