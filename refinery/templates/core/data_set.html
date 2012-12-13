@@ -12,17 +12,28 @@ svg {
 	margin-top: 15px;
 	margin-bottom: 15px;
 }    
+
 .background {
-  fill: #777;
+  fill: #FD0;
 }
 
 line {
-  stroke: #eee;
+  //stroke: #eee;
 }
 
 text.active {
   fill: red;
 }
+
+text.matrix-label {
+	fill: #222222;
+}
+
+text.matrix-label-selected {
+	fill: #136382;
+	font-weight: bold;
+}
+
 
 rect.frame {
   stroke: #f0f0f0;
@@ -33,7 +44,7 @@ rect.active {
 }
 
 	.pivot-matrix {
-		background-color: #f00;
+		//background-color: #f00;
 	}
 
     
@@ -84,6 +95,15 @@ rect.active {
  	.facet-title {
  		margin-top: 10px;
  	}
+ 	
+ 	.matrix-label {
+ 		color: blue;
+ 	}
+
+ 	.matrix-label-selected {
+ 		color: red;
+ 	}
+
     </style>
 {% endblock %}
 
