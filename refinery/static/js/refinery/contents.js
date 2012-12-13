@@ -64,6 +64,7 @@ var fields = {};
 
 // a list of facet names for the pivot view
 var pivots = [];
+var pivotMatrixData;
 
 var documents = [];
 
@@ -87,9 +88,42 @@ $(".annotation-buttons button").click(function () {
 
 	initializeDataWithState( currentAssayUuid, currentStudyUuid, currentNodeType );
 });	
-		
+
+
+function buildPivotQuery( studyUuid, assayUuid, nodeType, loadAnnotation ) {
+	var url = solrSelectUrl
+		+ "?" + solrQuery 
+		+ "&" + solrSettings
+		+ "&" + "start=" + 0
+		+ "&" + "rows=" + 1
+		+ "&" + "fq="
+		+ "("
+			+ "study_uuid:" + studyUuid
+			+ " AND " + "assay_uuid:" + assayUuid
+			+ " AND " + "is_annotation:" + loadAnnotation			
+			+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + ")"
+	   	+ ")"
+	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
+	   	+ "&" + "facet.limit=-1"; // unlimited number of facet values (otherwise some values will be missing)	   	
+
+
+	// ------------------------------------------------------------------------------
+	// pivot fields: facet.pivot 
+	// ------------------------------------------------------------------------------
+	if ( pivots.length > 1 ) {
+		var pivotQuery = pivots.join( "," );
+
+		if ( pivotQuery.length > 0 ) {
+			url += "&facet.pivot=" + pivotQuery;
+		}		
+	}		
+	
+	return ( url );	
+}
+	
 
 function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents, annotationParam ) {
+	
 	var url = solrSelectUrl
 		+ "?" + solrQuery 
 		+ "&" + solrSettings
@@ -105,7 +139,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
 	   	+ "&" + "facet.limit=-1"; // unlimited number of facet values (otherwise some values will be missing)	   	
 	  
-	  
+	 
 	// ------------------------------------------------------------------------------
 	// selecting facets: facet.field, fq 	
 	// ------------------------------------------------------------------------------
@@ -210,14 +244,13 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 	// ------------------------------------------------------------------------------
 	// pivot fields: facet.pivot 
 	// ------------------------------------------------------------------------------
-	
 	if ( pivots.length > 1 ) {
 		var pivotQuery = pivots.join( "," );
 
 		if ( pivotQuery.length > 0 ) {
 			url += "&facet.pivot=" + pivotQuery;
 		}		
-	}
+	}		
 	
 	$( "#url-view" ).html( "" );
 	$( "<a/>", { href: url + "&indent=on", html: "Solr Query" } ).appendTo( "#url-view" );
@@ -307,8 +340,10 @@ function updateSelectionCount( elementId ) {
 }
 
 
-function getData( studyUuid, assayUuid, nodeType ) {
-	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, query.items_per_page * query.page, query.items_per_page, facets, fields, {}, showAnnotation ), success: function(data) {		
+function getData( studyUuid, assayUuid, nodeType ) {	
+	var url = buildSolrQuery( studyUuid, assayUuid, nodeType, query.items_per_page * query.page, query.items_per_page, facets, fields, {}, showAnnotation );
+	
+	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {		
 		query.selected_items = data.response.numFound;
 	    
 	    updateSelectionCount( "statistics-view" );
@@ -323,14 +358,25 @@ function getData( studyUuid, assayUuid, nodeType ) {
 			processFacets( data );
 			processFields();
 			processDocs( data );
-			processPivots( data );
 			processPages( data );
+			
+			//processPivots( data );				
 			
 			if ( REFINERY_REPOSITORY_MODE ) {
 				updateDownloadButton( data, "submitReposBtn" );
 			}			
 		} 
 	}});	
+}
+
+
+function getPivotData( studyUuid, assayUuid, nodeType ) {	
+	var url = buildPivotQuery( studyUuid, assayUuid, nodeType ); 
+	
+	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {		
+			processPivots( data );				
+		} 
+	});	
 }
 
 
@@ -459,29 +505,10 @@ function processFacets( data ) {
    		resetNodeSelection();
    		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
    	} );
-}
-
-function resetNodeSelection() {
-	nodeSelection = [];
-   	nodeSelectionBlacklistMode = true;   		
-}
-
-function getFacetValueLookupTable( facet ) {
-	// make lookup table mapping from facet values to facet value indices
-	var lookup = {};
-	var index = 0;
-			
-	for ( facetValue in facets[facet] ) {
-		if ( facets[facet].hasOwnProperty( facetValue ) ) {
-			lookup[facetValue] = index++;
-		}
-	}	
-	
-	return lookup;
-}
-	
-
-function processPivots( data ) {
+   	
+   	
+   	// === initialize pivots ===
+   	
 	// make dropdown lists	
 	var pivot1List = [];
 	var pivot2List = [];
@@ -510,70 +537,8 @@ function processPivots( data ) {
 	$( "#pivot-view" ).html( "" );
 	$( "<select/>", { "class": "combobox", "id": "pivot_x1_choice", html: pivot1List.join("") } ).appendTo( "#pivot-view" );	
 	$( "<select/>", { "class": "combobox", "id": "pivot_y1_choice", html: pivot2List.join("") } ).appendTo( "#pivot-view" );
-	
-	if ( data.facet_counts.facet_pivot ) {
 		
-		// get lookup table for facets (mapping from facet value to facet value index)
-		var facetValue1Lookup = getFacetValueLookupTable( pivots[0] );		
-		var facetValue2Lookup = getFacetValueLookupTable( pivots[1] );		
-		
-		var rows = [];
-		
-		// make empty 2D array of the expected dimensions
-		var table = new Array( Object.keys( facetValue1Lookup ).length );
-		
-		for ( var i = 0; i < table.length; ++i ) {
-			table[i] = new Array( Object.keys( facetValue2Lookup ).length );
-			
-			for ( var j = 0; j < table[i].length; ++j ) {
-				table[i][j] = { x: j, y: i, xlab: Object.keys( facetValue2Lookup )[j], ylab: Object.keys( facetValue1Lookup )[i], count: 0 };
-			}
-		}
-				
-		// fill 2D array
-		if ( data.facet_counts.facet_pivot[pivots.join(",")] ) {			
-			var tableData = data.facet_counts.facet_pivot[pivots.join(",")];
-			var tableRows = [];
-			
-			for ( var r = 0; r < tableData.length; ++r ) {
-				var facetValue1 = tableData[r].value;								 
-				var facetValue1Index = facetValue1Lookup[facetValue1];
-				
-				for ( var c = 0; c < tableData[r].pivot.length; ++c ) {
-					var facetValue2 = tableData[r].pivot[c].value;
-					var facetValue2Index = facetValue2Lookup[facetValue2];
-					
-					table[facetValue1Index][facetValue2Index].count = tableData[r].pivot[c].count; 					
-				}
-			}
-		}
-		
-		// convert 2D array into table
-		for ( var r = 0; r < table.length; ++r ) {
-			// start row
-			var row = "<tr>";
-			
-			// row name
-			row += "<td>" + Object.keys( facetValue1Lookup )[r] + "</td>";
-			
-			// row content
-			row += "<td>" + $.map( table[r], function(entry) { return( entry.count )} ).join( "</td><td>" ) + "</td>";
-			
-			// end row
-			row += "</tr>";
-			
-			rows.push( row );
-		}
-
-		// build table header
-		var header = "<thead><tr><th></th><th>" + Object.keys( facetValue2Lookup ).join( "</th><th>" ) + "</th></tr></thead>"; 
-		
-		//$( "<table/>", { 'class': "table table-striped table-condensed", html: header + "<tbody>" + rows.join("") + "</tbody>" } ).appendTo( "#pivot-view" );
-
-		$( "#pivot-matrix" ).html( "" );		
-		graph = new PivotMatrix( "pivot-matrix", {}, table );					
-	}
-	
+	// events on pivot dimensions
 	$( "#pivot_x1_choice" ).change( function( ) {
 		pivots = []
 		var pivot_x1 = this.value;
@@ -589,7 +554,7 @@ function processPivots( data ) {
 			pivots.push( pivot_y1 );
 		}
 				
-   		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
+   		getPivotData( currentAssayUuid, currentStudyUuid, currentNodeType );
    	} );		
 
 	$( "#pivot_y1_choice" ).change( function( ) {
@@ -607,8 +572,104 @@ function processPivots( data ) {
 			pivots.push( pivot_y1 );
 		}
 		
-   		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
+   		getPivotData( currentAssayUuid, currentStudyUuid, currentNodeType );
    	} );   	
+   	
+   	
+   	renderPivotMatrix( true, pivots[1], pivots[0] );
+}
+
+
+function resetNodeSelection() {
+	nodeSelection = [];
+   	nodeSelectionBlacklistMode = true;   		
+}
+
+
+function getFacetValueLookupTable( facet ) {
+	// make lookup table mapping from facet values to facet value indices
+	var lookup = {};
+	var index = 0;
+			
+	for ( facetValue in facets[facet] ) {
+		if ( facets[facet].hasOwnProperty( facetValue ) ) {
+			lookup[facetValue] = index++;
+		}
+	}	
+	
+	return lookup;
+}
+	
+
+function processPivots( data ) {
+	
+	if ( data.facet_counts.facet_pivot ) {
+		
+		// get lookup table for facets (mapping from facet value to facet value index)
+		var facetValue1Lookup = getFacetValueLookupTable( pivots[0] );		
+		var facetValue2Lookup = getFacetValueLookupTable( pivots[1] );		
+		
+		var rows = [];
+		
+		// make empty 2D array of the expected dimensions
+		pivotMatrixData = new Array( Object.keys( facetValue1Lookup ).length );
+		
+		for ( var i = 0; i < pivotMatrixData.length; ++i ) {
+			pivotMatrixData[i] = new Array( Object.keys( facetValue2Lookup ).length );
+			
+			for ( var j = 0; j < pivotMatrixData[i].length; ++j ) {
+				pivotMatrixData[i][j] = { x: j, y: i, xlab: Object.keys( facetValue2Lookup )[j], xfacet: pivots[1], ylab: Object.keys( facetValue1Lookup )[i], yfacet: pivots[0], count: 0 };
+			}
+		}
+				
+		// fill 2D array
+		if ( data.facet_counts.facet_pivot[pivots.join(",")] ) {			
+			var tableData = data.facet_counts.facet_pivot[pivots.join(",")];
+			var tableRows = [];
+			
+			for ( var r = 0; r < tableData.length; ++r ) {
+				var facetValue1 = tableData[r].value;								 
+				var facetValue1Index = facetValue1Lookup[facetValue1];
+				
+				for ( var c = 0; c < tableData[r].pivot.length; ++c ) {
+					var facetValue2 = tableData[r].pivot[c].value;
+					var facetValue2Index = facetValue2Lookup[facetValue2];
+					
+					pivotMatrixData[facetValue1Index][facetValue2Index].count = tableData[r].pivot[c].count; 					
+				}
+			}
+		}
+		
+		// convert 2D array into table
+		for ( var r = 0; r < pivotMatrixData.length; ++r ) {
+			// start row
+			var row = "<tr>";
+			
+			// row name
+			row += "<td>" + Object.keys( facetValue1Lookup )[r] + "</td>";
+			
+			// row content
+			row += "<td>" + $.map( pivotMatrixData[r], function(entry) { return( entry.count )} ).join( "</td><td>" ) + "</td>";
+			
+			// end row
+			row += "</tr>";
+			
+			rows.push( row );
+		}
+
+		// build table header
+		var header = "<thead><tr><th></th><th>" + Object.keys( facetValue2Lookup ).join( "</th><th>" ) + "</th></tr></thead>"; 
+		
+		//$( "<table/>", { 'class': "table table-striped table-condensed", html: header + "<tbody>" + rows.join("") + "</tbody>" } ).appendTo( "#pivot-view" );
+		renderPivotMatrix( true, pivots[1], pivots[0] );
+	}
+}
+
+function renderPivotMatrix( useGradient, xPivot, yPivot ) {
+	var useGradient = useGradient || true;
+
+	$( "#pivot-matrix" ).html( "" );		
+	graph = new PivotMatrix( "pivot-matrix", {}, pivotMatrixData, facets, xPivot, yPivot, useGradient, function(){ getData( currentAssayUuid, currentStudyUuid, currentNodeType ); } );						
 }
 
 
