@@ -168,6 +168,7 @@ var svg = d3.select(document.getElementById(elemid)).append("svg")
 			} 
 		}, true );
 
+		/*
         $(".matrix-row-label").tipsy({
 		        gravity:'n',
 		        html: true,
@@ -181,7 +182,7 @@ var svg = d3.select(document.getElementById(elemid)).append("svg")
 		        delayIn: 100,
 		        fade: true
 		 	});
-      
+      */
 
   function makeRow(row) {
   	var self = this;
@@ -220,13 +221,15 @@ var svg = d3.select(document.getElementById(elemid)).append("svg")
 
 			updateCallback();      			        	
          }, true );
-         
+        
+        /* 
         $("." + "cell").tipsy({
 		        gravity:'n',
 		        html: true,
 		        delayIn: 100,
 		        fade: true
 		 	});
+		 */
 
   }
 

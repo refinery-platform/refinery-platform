@@ -571,7 +571,7 @@ function processPivots( data ) {
 		//$( "<table/>", { 'class': "table table-striped table-condensed", html: header + "<tbody>" + rows.join("") + "</tbody>" } ).appendTo( "#pivot-view" );
 
 		$( "#pivot-matrix" ).html( "" );		
-		var useGradient = false;
+		var useGradient = true;
 		graph = new PivotMatrix( "pivot-matrix", {}, table, facets, useGradient, function(){ getData( currentAssayUuid, currentStudyUuid, currentNodeType ); } );					
 	}
 	
