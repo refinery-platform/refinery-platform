@@ -94,8 +94,8 @@ class Contact(models.Model):
 
 
 class Investigation(NodeCollection):
-    isarchive_file = UUIDField(blank=True, null=True)    
-    pre_isarchive_file = UUIDField(blank=True, null=True) 
+    isarchive_file = UUIDField(blank=True, null=True, auto=False)
+    pre_isarchive_file = UUIDField(blank=True, null=True, auto=False)
     
     """easily retrieves the proper NodeCollection fields"""
     def get_identifier(self):

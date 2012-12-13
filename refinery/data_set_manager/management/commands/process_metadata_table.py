@@ -26,7 +26,9 @@ class Command(BaseCommand):
         parser.source_column_index = [int(x.strip()) for x in source_column_index.split(",")]
         parser.column_index_separator = "/"
         parser.file_base_path = base_path
-        parser.species_column_index = int( species_column )
+        
+        if species_column is not None:
+            parser.species_column_index = int( species_column )
         
         if genome_build_column is not None:
             parser.genome_build_column_index = int( genome_build_column )                
@@ -38,4 +40,4 @@ class Command(BaseCommand):
         investigation.title = title
         investigation.save()
         
-        create_dataset( investigation.uuid, username, dataset_title=title, slug=slug, public=False )
+        create_dataset( investigation.uuid, username, dataset_title=title, slug=slug, public=True )

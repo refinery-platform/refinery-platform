@@ -6,7 +6,7 @@ Created on Jun 20, 2012
 from annotation_server.models import species_to_taxon_id, Taxon
 from data_set_manager.genomes import map_species_name_to_id
 from data_set_manager.models import Investigation, Study, Node, Attribute, Assay
-from file_store.tasks import create
+from file_store.tasks import create, import_file
 import csv
 import file_server
 import logging
@@ -67,7 +67,7 @@ class SingleFileColumnParser:
     # column containing boolean flag to indicate whether the data file in this row should be treated as an annotation file
     # only those rows where this flag is "True"/"true"/"TRUE"/etc. will be treated a annotation files
     # all others (most notably those where the field is empty) will be treated as regular files  
-    annotation_column_index = None        
+    annotation_column_index = None     
     
     # list of column indices to be used for source, sample and assay grouping (may be None)
     # values in these columns will be combined using the value in column_index_separator  
@@ -137,7 +137,13 @@ class SingleFileColumnParser:
         # create investigation, study and assay objects
         investigation = self._create_investigation()
         study = self._create_study( investigation=investigation, file_name=file_name )                
-        assay = self._create_assay( study=study, file_name=file_name )                
+        assay = self._create_assay( study=study, file_name=file_name )
+        
+        #import in file as "pre-isa" file
+        logger.info('trying to add pre-isa archive file %s' % file_name)
+        investigation.pre_isarchive_file = create(file_name, permanent=True)
+        import_file(investigation.pre_isarchive_file, refresh=True, permanent=True)
+        investigation.save()
             
         # read column headers
         headers = []
