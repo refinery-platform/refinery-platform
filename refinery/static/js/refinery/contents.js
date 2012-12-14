@@ -16,13 +16,17 @@ var solrIgvUrl = solrRoot + "igv/";
 var solrQuery = "q=django_ct:data_set_manager.node";
 var solrSettings = "wt=json&json.wrf=?&facet=true";
 
-var query = { total_items: 0, selected_items: 0, items_per_page: 10, page: 0 };
+var itemsPerPageOptions = [10,20,50,100]; 
+var currentItemsPerPage = itemsPerPageOptions[0];
+
+var query = { total_items: 0, selected_items: 0, items_per_page: currentItemsPerPage, page: 0 };
 
 var currentCount = 0;
 
 var currentStudyUuid = externalStudyUuid; //urlComponents[urlComponents.length-2];
 var currentAssayUuid = externalAssayUuid; //urlComponents[urlComponents.length-3]; 
 var currentNodeType = "\"Raw Data File\"";
+
 
 $(document).ready(function() {		
 	configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
@@ -341,7 +345,7 @@ function updateSelectionCount( elementId ) {
 
 
 function getData( studyUuid, assayUuid, nodeType ) {	
-	var url = buildSolrQuery( studyUuid, assayUuid, nodeType, query.items_per_page * query.page, query.items_per_page, facets, fields, {}, showAnnotation );
+	var url = buildSolrQuery( studyUuid, assayUuid, nodeType, currentItemsPerPage * query.page, currentItemsPerPage, facets, fields, {}, showAnnotation );
 	
 	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {		
 		query.selected_items = data.response.numFound;
@@ -351,7 +355,7 @@ function getData( studyUuid, assayUuid, nodeType ) {
 		if (  data.response.numFound < data.response.start ) {
 			// requesting data that is not available -> empty results -> rerun query			
 			// determine last available page given items_per_page setting
-			query.page = Math.max( 0, Math.ceil( data.response.numFound/query.items_per_page ) - 1 );
+			query.page = Math.max( 0, Math.ceil( data.response.numFound/currentItemsPerPage ) - 1 );
 			getData( currentAssayUuid, currentStudyUuid, currentNodeType );
 		}
 		else {
@@ -363,7 +367,7 @@ function getData( studyUuid, assayUuid, nodeType ) {
 			//processPivots( data );				
 			
 			if ( REFINERY_REPOSITORY_MODE ) {
-				updateDownloadButton( data, "submitReposBtn" );
+				updateDownloadButton( "submitReposBtn" );
 			}			
 		} 
 	}});	
@@ -482,11 +486,11 @@ function processFacets( data ) {
 				}
 				
 				if ( facets[facet][facetValue].isSelected ) {
-		    		selectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-check\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
-	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-check\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
+		    		selectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td>" + '<label class="checkbox"><input type="checkbox" checked></label>' + "</td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
+	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td>" + '<label class="checkbox"><input type="checkbox" checked></label>' + "</td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
 				}
 				else {
-	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td><i class=\"icon-check-empty\"/></td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td><td></td>"  + "</tr>" );					
+	    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + composeFacetValueId( facet, facetValue ) + "\"><td>" + '<label class="checkbox"><input type="checkbox"></label>' + "</td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td><td></td>"  + "</tr>" );					
 				}												
 			}
 			
@@ -669,7 +673,9 @@ function renderPivotMatrix( useGradient, xPivot, yPivot ) {
 	var useGradient = useGradient || true;
 
 	$( "#pivot-matrix" ).html( "" );		
-	graph = new PivotMatrix( "pivot-matrix", {}, pivotMatrixData, facets, xPivot, yPivot, useGradient, function(){ getData( currentAssayUuid, currentStudyUuid, currentNodeType ); } );						
+	if ( pivotMatrixData ) {
+		graph = new PivotMatrix( "pivot-matrix", {}, pivotMatrixData, facets, xPivot, yPivot, useGradient, function(){ getData( currentAssayUuid, currentStudyUuid, currentNodeType ); } );		
+	}
 }
 
 
@@ -679,11 +685,11 @@ function processFields() {
 	for ( field in fields ) {
 		if ( fields.hasOwnProperty( field ) ) {
 			if ( fields[field].isVisible && !fields[field].isInternal ) {
-				visibleItems.push("<a class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-check\"/>&nbsp;" + prettifySolrFieldName( field, true ) + "</a>" );				
+				visibleItems.push("<a class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + '<label class="checkbox"><input type="checkbox" checked></label>' + "&nbsp;" + prettifySolrFieldName( field, true ) + "</a>" );				
 			}
 			else {
 				if ( hiddenFieldNames.indexOf( field ) < 0 && !fields[field].isInternal ) {
-					visibleItems.push("<a class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + "<i class=\"icon-check-empty\"/>&nbsp;" + prettifySolrFieldName( field, true ) + "</a>" );
+					visibleItems.push("<a class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">"  + '<label class="checkbox"><input type="checkbox"></label>' +  "&nbsp;" + prettifySolrFieldName( field, true ) + "</a>" );
 				}
 			}
 		}
@@ -699,6 +705,7 @@ function processFields() {
 		$("#field-view").append( listItems.join( ""));
 	}	
 	
+	// configure columns
    	$("#field-view").children().click( function(event) {
    		event.stopPropagation();
    		
@@ -708,7 +715,27 @@ function processFields() {
    		fields[fieldName].isVisible = !fields[fieldName].isVisible;   		
    		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
    	} );				
-	
+   	
+   	// configure rows
+   	$( "#" + "items-per-page-buttons" ).html("");
+   	for ( var i = 0; i < itemsPerPageOptions.length; ++i ) {
+   		if ( itemsPerPageOptions[i] == currentItemsPerPage ) {
+			$( "#" + "items-per-page-buttons" ).append(
+				'<button type="button" data-items="' + itemsPerPageOptions[i] + '" data-toggle="button" class="btn btn-mini active" rel="tooltip" data-placement="bottom" data-html="true" title="View ' + itemsPerPageOptions[i] + ' rows per page">' + itemsPerPageOptions[i] + '</button>' );   			
+   		}
+   		else {
+			$( "#" + "items-per-page-buttons" ).append(
+				'<button type="button" data-items="' + itemsPerPageOptions[i] + '" data-toggle="button" class="btn btn-mini" rel="tooltip" data-placement="bottom" data-html="true" title="View ' + itemsPerPageOptions[i] + ' rows per page">' + itemsPerPageOptions[i] + '</button>' );   			   			
+   		}
+   	}
+   	
+   	$("#" + "items-per-page-buttons").children().click( function(event) {
+   		currentItemsPerPage = $(this).data("items");
+   		console.log( currentItemsPerPage );
+   		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
+   	});
+   	   	
+
 }
 
 function makeTableHeader() {
@@ -864,7 +891,7 @@ function processPages( data ) {
 	var visiblePages = 5;
 	var padLower = 2;
 	var padUpper = 2;
-	var availablePages = Math.max( 0, Math.ceil( data.response.numFound/query.items_per_page ) - 1 );
+	var availablePages = Math.max( 0, Math.ceil( data.response.numFound/currentItemsPerPage ) - 1 );
 
 	if ( query.page > availablePages ) {
 		query.page = availablePages;
