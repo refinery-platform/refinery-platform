@@ -9,6 +9,8 @@ var MESSAGE_DOWNLOAD_AVAILABLE = "Click to create<br>archive for download<br>of 
 
 var urlComponents = document.location.href.split("/");	
 	
+var allowAnnotationDownload = false;
+
 var solrRoot = "http://" + REFINERY_BASE_URL + "/solr/";
 var solrSelectUrl = solrRoot + "data_set_manager/select/";
 var solrIgvUrl = solrRoot + "igv/";
@@ -440,7 +442,7 @@ function composeFacetId( facet ) {
 }
 
 function updateDownloadButton( button_id ) {
-	if ( currentCount > MAX_DOWNLOAD_FILES || currentCount <= 0 || !REFINERY_USER_AUTHENTICATED ) {
+	if ( currentCount > MAX_DOWNLOAD_FILES || currentCount <= 0 || !REFINERY_USER_AUTHENTICATED || ( showAnnotation && !allowAnnotationDownload ) ) {
 		$("#" + button_id ).addClass( "disabled" );
 		$("#" + button_id ).attr( "data-original-title", MESSAGE_DOWNLOAD_UNAVAILABE );
 	} else {
