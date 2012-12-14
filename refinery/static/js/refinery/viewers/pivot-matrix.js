@@ -342,9 +342,9 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
     t.selectAll(".row")
 		.selectAll(".empty-cell")
 	        .attr("x1", function(d) { return x(d.x) + 5; } )
-	        .attr("y1", 5 )
+	        .attr("y1", y.rangeBand() - 5 )
 	        .attr("x2", function(d) { return x(d.x) + x.rangeBand() - 5; } )
-	        .attr("y2", y.rangeBand() - 5 );
+	        .attr("y2", 5 );
 
 	t.selectAll(".row")
 		.selectAll(".cell")
