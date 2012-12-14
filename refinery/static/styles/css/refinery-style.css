@@ -276,3 +276,11 @@ body {
 .refinery-dnd-handle:hover {
   text-shadow: 0 0px 10px #3fa0c7;
 }
+.refinery-tooltip {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+  font-weight: normal;
+  font-size: 11.9px;
+  border-radius: 3px;
+  padding: 1px 4px 1px 4px;
+}
