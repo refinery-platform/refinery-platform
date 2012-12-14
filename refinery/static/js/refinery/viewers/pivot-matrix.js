@@ -33,7 +33,7 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 
 	var columnLabelLength = 20;
 	var rowLabelLength = 20;
-	var margin = {top: 150, right: 20, bottom: 0, left: 150},
+	var margin = {top: 150, right: 50, bottom: 0, left: 150},
     	width = Math.max( matrix[0].length * 14, 800 );
     	height = Math.max( matrix.length * 14, 500 );
 
@@ -103,7 +103,7 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 		.attr("dy", ".32em")
 		.attr("class", function(p) {
 			if ( facets[p[0].yfacet][p[0].ylab].isSelected ) {
-				return ( "matrix-label-selected" );		
+				return ( "matrix-label matrix-label-selected" );		
 			}
 			return ( "matrix-label" );			
 		})
@@ -121,10 +121,20 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 		.on("mouseover", function(p) {
 				d3.selectAll(".column text")
 					.classed("active", function(d, i) { return i == p[0].y; }); 				
-				showTooltip( p[0].ylab, event );
+				if ( event.shiftKey ) {
+					showTooltip( "Click to sort columns by this row", event );
+				} 
+				else {			
+					showTooltip( p[0].ylab, event );
+				}
 			})
 		.on("mousemove", function(p){
-				showTooltip( p[0].ylab, event );
+				if ( event.shiftKey ) {
+					showTooltip( "Click to sort columns by this row", event );
+				} 
+				else {			
+					showTooltip( p[0].ylab, event );
+				}
 			})
 		.on("mouseout", function(p){
 				hideTooltip();
@@ -154,12 +164,10 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 	
 	// labels
 	column.append("text")
-		.attr("x", 5 )
-		.attr("y", x.rangeBand() / 2)
 		.attr("dy", ".32em")		
 		.attr("class", function(p) {
 				if ( facets[p.xfacet][p.xlab].isSelected ) {
-					return ( "matrix-label-selected" );		
+					return ( "matrix-label matrix-label-selected" );		
 				}
 				return ( "matrix-label" );			
 			})
@@ -167,7 +175,9 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 				return p.xlab;
 			 })      
 		.attr("text-anchor", "start")
-		.attr("transform", "translate(" + x.rangeBand() / 2 + ")rotate(45)" )
+		.attr("x", 0)
+		.attr("y", 0)
+		.attr("transform", "translate(" + 7 + "," + (x.rangeBand()/2) + ") rotate(45)" )
 		.style("font-size", "12px")	      
 		.style("cursor", "pointer")	 
   		.style( "user-select", "none" )           
@@ -178,10 +188,20 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 		.on("mouseover", function(p) {
 				d3.selectAll(".column text")
 					.classed("active", function(d, i) { return i == p.x; }); 				
-				showTooltip( p.xlab, event );
+				if ( event.shiftKey ) {
+					showTooltip( "Click to sort rows by this column", event );
+				} 
+				else {
+					showTooltip( p.xlab, event );					
+				}
 			})
 		.on("mousemove", function(p){
-				showTooltip( p.xlab, event );
+				if ( event.shiftKey ) {
+					showTooltip( "Click to sort rows by this column", event );
+				} 
+				else {
+					showTooltip( p.xlab, event );					
+				}
 			})
 		.on("mouseout", function(p){
 				hideTooltip();
@@ -196,8 +216,22 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 				updateCallback();      			
 			} 
 		}, true );
+	
+	var maxRowLabelWidth = 0;
+	d3.selectAll(".row" ).selectAll(".matrix-label")
+		.each( function (){			
+			maxRowLabelWidth = Math.max( maxRowLabelWidth, this.getBBox().width );
+		});
 
+	var maxColumnLabelWidth = 0;
+	d3.selectAll(".column" ).selectAll(".matrix-label")
+		.each( function (){			
+			maxColumnLabelWidth = Math.max( maxColumnLabelWidth, this.getBBox().width );
+		});
 
+	// set borders on matrix
+	d3.select( "svg" ).select("g")
+		 .attr("transform", "translate(" + maxRowLabelWidth + "," + maxColumnLabelWidth + ")");
 
   function makeRow(row) {
 
@@ -265,9 +299,9 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
       .enter().append("line")
         .attr("class", "empty-cell" )
         .attr("x1", function(d) { return x(d.x) + 5; } )
-        .attr("y1", 5 )
+        .attr("y1", y.rangeBand() - 5 )
         .attr("x2", function(d) { return x(d.x) + x.rangeBand() - 5; } )
-        .attr("y2", y.rangeBand() - 5 )
+        .attr("y2", 5 )
         .style( "stroke-width", 1 )
         .style( "stroke", "rgb(230,230,230)" );
   }
@@ -351,7 +385,7 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 	}
   
 	function trimLabel( label, maxLength ) {		
-		if ( label.length >= maxLength ) {
+		if ( label.length > maxLength + 3 ) {
 			return ( label.substring( 0, maxLength ) + "..." );			
 		}
 		
