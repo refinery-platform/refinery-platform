@@ -1013,7 +1013,6 @@ function createSpeciesModal(aresult) {
 
 
 
-
 $( "#profile-viewer-session-link" ).on( "click", function() {
 	getField( currentAssayUuid, currentStudyUuid, currentNodeType, "file_uuid", function( uuids ) {
 		

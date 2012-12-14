@@ -50,6 +50,7 @@
 			{% endif %}		
 			<p>{{ form.password2 }}</p>
 
+			{% comment %}
 			<div class="refinery-subheader">
 				<h4>Terms of Service</h4>
 			</div>
@@ -60,6 +61,8 @@
 			{{form.tos}}
 			I have read and agree to the Terms of Service.				
 			</label>
+			{% endcomment %}
+
 			<p class="submit"><input class="btn" type="submit" value="Register"></p>
 		</form>
 	</div>
