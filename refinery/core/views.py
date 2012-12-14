@@ -303,7 +303,6 @@ def data_set(request,uuid):
 
 
 def samples(request, ds_uuid, study_uuid, assay_uuid):
-    print "core.views.samples called"
     data_set = get_object_or_404( DataSet, uuid=ds_uuid )
     
     # getting current workflows
@@ -466,8 +465,6 @@ def admin_test_data( request ):
     public_members = [ ".nils", ".richard", ".psalm", ".ilya", ".shannan" ]    
     for username in public_members:
         user_object = User.objects.get( username__exact=username )
-        print "username"
-        print username
         print ExtendedGroup.objects.public_group()
         user_object.groups.add( ExtendedGroup.objects.public_group() )
         
