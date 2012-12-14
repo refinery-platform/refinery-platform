@@ -182,9 +182,15 @@ def repository_run(request):
     if request.method == 'POST':
         #logger.debug( simplejson.dumps(request.POST, indent=4) )  
         
+        # attributes associated with node selection from interface
+        node_selection_blacklist_mode = request.POST['node_selection_blacklist_mode']
+        if node_selection_blacklist_mode == 'true':
+            node_selection_blacklist_mode = True
+        node_selection = request.POST.getlist('node_selection[]')
+        
         # solr results
         solr_query = request.POST["query"]
-        solr_uuids = get_solr_results(solr_query, only_uuids=True)
+        solr_uuids = get_solr_results(solr_query, only_uuids=True, selected_mode=node_selection_blacklist_mode, selected_nodes=node_selection)
         
         # gets workflow_uuid
         workflow_uuid = request.POST['workflow_choice']

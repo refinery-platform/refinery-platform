@@ -728,20 +728,30 @@ def solr_igv(request):
     # copy querydict to make it editable
     if request.is_ajax():
         logger.debug("solr_igv called: request is ajax")
+        logger.debug(simplejson.dumps(request.POST, indent=4))
+        
+        # attributes associated with node selection from interface
+        node_selection_blacklist_mode = request.POST['node_selection_blacklist_mode']
+        if node_selection_blacklist_mode == 'true':
+            node_selection_blacklist_mode = True
+        node_selection = request.POST.getlist('node_selection[]')
         
         # extracting solr query from request 
         for i, val in request.POST.iteritems():
+            # for solr query for data
             if i == 'query':
                 solr_query = val
-                solr_results = get_solr_results(solr_query)
+                solr_results = get_solr_results(solr_query, selected_mode=node_selection_blacklist_mode, selected_nodes=node_selection)
                 #logger.debug("solr_results")
                 #logger.debug(simplejson.dumps(solr_results, indent=4))
         
+            # for solr query for annotation files 
             elif i == 'annot':
                 solr_annot = get_solr_results(val)
                 solr_annot
                 #logger.debug("solr_annot")
                 #logger.debug(simplejson.dumps(solr_annot, indent=4))
+    
         
         # if solr query returns results
         if solr_results:
@@ -753,7 +763,7 @@ def solr_igv(request):
         return HttpResponse(simplejson.dumps(session_urls),mimetype='application/json')
 
     
-def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uuids=False):
+def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uuids=False, selected_mode=True, selected_nodes=None ):
     '''
     Helper function for taking solr request url. Removes facet requests, converts to json, from input solr query  
     
@@ -765,6 +775,10 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
     :type jsonp: boolean
     :param only_uuids: Returns list of file_uuids from all solr results
     :type only_uuids: boolean
+    :param selected_mode: UI selection mode (blacklist or whitelist)
+    :type selected_mode: boolean
+    :param selected_nodes: List of UUIDS to remove from the solr query
+    :type selected_nodes: array
     :returns: dictionary of current solr results
     '''
     
@@ -790,10 +804,31 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
         
     # converting results into json for python 
     results = simplejson.loads(results)
-        
-    # number of results 
+    
+    #logger.debug("--------- get_solr_results")
+    #logger.debug( simplejson.dumps(results, indent=4) )
+    
+    # number of solr results 
     num_found = int(results["response"]["numFound"])
-    #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
+    logger.debug("core.views: get_solr_results num_found=%s" % num_found)
+    
+    # IF list of nodes to remove from query exists
+    if selected_nodes:
+        # blacklist mode (remove uuid's from solr query) 
+        if selected_mode:
+           # need to iterate over list backwards to properly delete from a list
+           for i in xrange(len(results["response"]["docs"]) - 1, -1, -1):
+               node = results["response"]["docs"][i]
+    
+               # if this node has a file_uuid key
+               if 'file_uuid' in node:
+                   # if the current node should be removed from the results
+                   if node["file_uuid"] in selected_nodes: 
+                       del results["response"]["docs"][i]
+                       num_found -= 1
+    
+    # updating the number found in the list
+    results["response"]["numFound"] = str(num_found)
     
     # Will return only list of file_uuids
     if only_uuids:
