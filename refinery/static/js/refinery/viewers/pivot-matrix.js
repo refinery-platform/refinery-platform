@@ -18,9 +18,10 @@ var tooltip = d3.select("body")
 	.style( "z-index", "10" )
 	.style( "visibility", "hidden" );
 
-PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useGradient, updateCallback ) {
-	
+
+PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useGradient, updateCallback ) {	
 	var self = this;
+	
 	this.chart = document.getElementById(elementId);
 	this.cx = this.chart.clientWidth;
 	this.cy = this.chart.clientHeight;
@@ -30,27 +31,6 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 	this.matrix = matrix;
 	this.facets = facets;
 
-    
-	var matrix2 = [ 
-		[
-			{x:0, y:0, xlab:"x0",ylab:"y0", count:1},
-			{x:1, y:0, xlab:"x1",ylab:"y1", count:2}
-		], 
-		[
-			{x:0, y:1, xlab:"x0",ylab:"y1", count:3},
-			{x:1, y:1, xlab:"x1",ylab:"y1", count:4}
-		],			   
-		[
-			{x:0, y:2, xlab:"x0",ylab:"y2", count:5},
-			{x:1, y:2, xlab:"x1",ylab:"y2", count:0}
-		],			   
-		[
-			{x:0, y:3, xlab:"x0",ylab:"y3", count:10},
-			{x:1, y:3, xlab:"x1",ylab:"y3", count:8}
-		]			   
-	];
-
-	//var matrix = matrix2;
 	var columnLabelLength = 20;
 	var rowLabelLength = 20;
 	var margin = {top: 150, right: 20, bottom: 0, left: 150},
@@ -65,9 +45,8 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 
 	var max = maxCount( matrix );
 
-	var defaultColor;
-	var selectedColor;
-	
+	var defaultColorMap;
+	var selectedColorMap;	
 	var clampValue;
 	
 	if ( this.useGradient ) {
@@ -79,8 +58,8 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 		clampValue = 1;
 	}
 
-	defaultColor = d3.scale.linear().domain([0,max]).range(["#EEEEEE", "#222222"]).clamp(true);	
-	selectedColor = d3.scale.linear().domain([0,max]).range(["#E0EAEF", "#136382"]).clamp(true);	
+	defaultColorMap = d3.scale.linear().domain([0,max]).range(["#EEEEEE", "#222222"]).clamp(true);	
+	selectedColorMap = d3.scale.linear().domain([0,max]).range(["#E0EAEF", "#136382"]).clamp(true);	
 
 
 	var svg = d3.select(document.getElementById(elementId)).append("svg")
@@ -131,9 +110,11 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 		.attr("title", function(p) {
 			return p[0].ylab;
 		 })      
+		.attr("text-anchor", "end")
 		.style("font-size", "12px")	            
 		.style("cursor", "pointer")	            
-		.attr("text-anchor", "end")
+  		.style( "user-select", "none" )           
+  		.style( "-webkit-user-select", "none" )           
 		.text( function( d, row ) {
 				return ( trimLabel( matrix[row][0].ylab, rowLabelLength ) );
 			})		
@@ -151,9 +132,10 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 			})
 		
 		.on("click", function(p) { 
-			if ( d3.event.altKey ) {
-      			//orderRows( orders.yLabels ); 
-      		}
+			if ( event.shiftKey ) {
+				orderColumns( computeColumnOrder( p[0].y, false ) );
+				event.preventDefault(); 
+			}
       		else {
       			console.log( p );
       			facets[p[0].yfacet][p[0].ylab].isSelected = !facets[p[0].yfacet][p[0].ylab].isSelected;
@@ -184,10 +166,12 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 		.attr("title", function(p) {
 				return p.xlab;
 			 })      
-		.style("font-size", "12px")	      
-		.style("cursor", "pointer")	            
 		.attr("text-anchor", "start")
 		.attr("transform", "translate(" + x.rangeBand() / 2 + ")rotate(45)" )
+		.style("font-size", "12px")	      
+		.style("cursor", "pointer")	 
+  		.style( "user-select", "none" )           
+  		.style( "-webkit-user-select", "none" )           
 		.text( function( d, col ) {
 				return ( trimLabel( matrix[0][col].xlab, columnLabelLength ) );
 			})		
@@ -203,20 +187,20 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 				hideTooltip();
 			})
 		.on("click", function(p) {
-			if ( d3.event.altKey ) {
-				//orderColumns( orders.xLabels ); 
+			if ( event.shiftKey ) {
+				orderRows( computeRowOrder( p.x, false ) );
+				event.preventDefault(); 
 			}
 			else {
 				facets[p.xfacet][p.xlab].isSelected = !facets[p.xfacet][p.xlab].isSelected;
 				updateCallback();      			
-				//orderRows( computeRowOrder( p.x, false ) ); 
 			} 
 		}, true );
 
 
 
   function makeRow(row) {
-  	var self = this;
+
     var cell = d3.select(this).selectAll(".cell")
         .data(row.filter(function(d) { return d.count > 0 }))
       .enter().append("rect")
@@ -228,25 +212,25 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
         .style("fill", function(p) {
         		if ( facets[p.yfacet][p.ylab].isSelected ) {
         			if ( !hasSelection( facets, xPivot ) ) {
-						return( selectedColor(p.count) );        			        				
+						return( selectedColorMap(p.count) );        			        				
         			}
         		}
         		
         		if ( facets[p.xfacet][p.xlab].isSelected ) {
         			if ( !hasSelection( facets, yPivot ) ) {
-						return( selectedColor(p.count) );        			        				
+						return( selectedColorMap(p.count) );        			        				
         			}
         		} 
 
         		if ( facets[p.xfacet][p.xlab].isSelected && facets[p.yfacet][p.ylab].isSelected ) {
-					return( selectedColor(p.count) );        			        				
+					return( selectedColorMap(p.count) );        			        				
         		} 
 
     			if ( !hasSelection( facets, xPivot ) && !hasSelection( facets, yPivot ) ) {
-					return( selectedColor(p.count) );        			        				
+					return( selectedColorMap(p.count) );        			        				
     			}
         		
-				return ( defaultColor(p.count) );        				
+				return ( defaultColorMap(p.count) );        				
         	})
 		.on("mouseover", function(p) {
 				d3.selectAll(".column text")
@@ -279,6 +263,7 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
     var emptyCell = d3.select(this).selectAll(".empty-cell")
         .data(row.filter(function(d,i) { return d.count <= 0; }))
       .enter().append("line")
+        .attr("class", "empty-cell" )
         .attr("x1", function(d) { return x(d.x) + 5; } )
         .attr("y1", 5 )
         .attr("x2", function(d) { return x(d.x) + x.rangeBand() - 5; } )
@@ -289,8 +274,8 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
 
 
   function mouseover(p) {
-    d3.selectAll(".row text").classed("active", function(d, i) { return i == p.y; });
-    d3.selectAll(".column text").classed("active", function(d, i) { return i == p.x; });
+    d3.selectAll(".row text").classed("active", function(d, i) { return i == d.y; });
+    d3.selectAll(".column text").classed("active", function(d, i) { return i == d.x; });
   }
 
   function mouseout() {
@@ -311,9 +296,9 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
     var t = svg.transition().duration( 0 );
 
     t.selectAll(".row")
-        //.delay(function(d, i) { return y(i) * 4; })
         .attr("transform", function(d, i) { return "translate(0," + y(i) + ")"; });
   }
+  
   
   function orderColumns(order) {
     x.domain(order);
@@ -321,12 +306,17 @@ PivotMatrix = function( elementId, options, matrix, facets, xPivot, yPivot, useG
     var t = svg.transition().duration( 0 );
 
     t.selectAll(".row")
-      .selectAll(".cell")
-        //.delay(function(d) { return x(d.x) * 4; })
-        .attr("x", function(d) { return x(d.x); });
+		.selectAll(".empty-cell")
+	        .attr("x1", function(d) { return x(d.x) + 5; } )
+	        .attr("y1", 5 )
+	        .attr("x2", function(d) { return x(d.x) + x.rangeBand() - 5; } )
+	        .attr("y2", y.rangeBand() - 5 );
 
+	t.selectAll(".row")
+		.selectAll(".cell")
+        	.attr("x", function(d) { return x(d.x) + 1; });
+        
     t.selectAll(".column")
-        //.delay(function(d, i) { return x(i) * 4; })
         .attr("transform", function(d, i) { return "translate(" + x(i) + ",0)rotate(-90)"; });
   }
   
