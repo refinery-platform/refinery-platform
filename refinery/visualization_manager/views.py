@@ -19,6 +19,7 @@ import os
 import uuid
 from annotation_server.models import taxon_id_to_genome_build, species_to_genome_build, genome_build_to_species
 from annotation_server.utils import SUPPORTED_GENOMES
+from file_server.models import get, get_aux_file_item
 
 logger = logging.getLogger(__name__)
 
@@ -174,10 +175,7 @@ def igv_multi_species(solr_results, solr_annot=None):
     logger.debug("visualization_manager.views.igv_multi_species called")
     
     unique_annot = None
-    #print "solr_results"
-    #print simplejson.dumps(solr_results, indent=4)
     
-    #num_found = solr_results["response"]["numFound"]
     results = solr_results["response"]["docs"]
     fields = str(solr_results["responseHeader"]["params"]["fl"]).split(',')
     
@@ -438,10 +436,14 @@ def addIGVResource(uuidlist, xml_res, xml_doc):
     :param xml_doc: Current IGV XML document
     :type xml_doc: XML document
     """
+    #logger.debug("visualization_manager.views addIGVResource")   
+        
     # get paths to url 
     for samp in uuidlist:
         # gets filestore item 
         curr_name, curr_url = getFileName(samp)
+        #logger.debug("createIGVsession: name = %s, curr_url = %s" % (curr_name, curr_url))
+        
         # What to do if fs does not exist? 
         if (curr_name):
             # creates Resource element 
@@ -460,11 +462,7 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     :type annot_samples: Array
     """
     
-    logger.debug("visualization_manager.views addIGVSamples called, fields=%s" % fields)
-    
-    # fields to iterate over
-    #fields = str(samples["responseHeader"]["params"]["fl"]).split(',')
-    #results_samp = samples["response"]["docs"]
+    #logger.debug("visualization_manager.views addIGVSamples called, fields=%s" % fields)
     
     # creates human readable indexes of fields to iterate over
     fields_dict = {}
@@ -518,8 +516,8 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     # full path to selected UUID File
     curr_url = curr_fs.get_url()
     
-    print "curr_url"
-    print curr_url
+    #print "curr_url"
+    #print curr_url
     
     # delete temp file
     os.unlink(tempsampname.name)
@@ -533,8 +531,14 @@ def getFileName(fileuuid, sampFile=None):
     :type fileuuid: String
     """
     
-    # getting file information based on file_uuids
-    temp_fs = FileStoreItem.objects.get(uuid=fileuuid)
+    # checking to see if it has a file_server item 
+    temp_fs = get_aux_file_item(fileuuid)
+    
+    # If no associated file_server auxiliary file then use main data file for IGV
+    if temp_fs is None:
+        # getting file information based on file_uuids
+        temp_fs = FileStoreItem.objects.get(uuid=fileuuid)
+    
     temp_name = temp_fs.datafile.name
     temp_name = temp_fs.datafile.name.split('/')
     temp_name = temp_name[len(temp_name)-1]
@@ -559,7 +563,7 @@ def getSampleLines(fields, results):
     :returns: a string of the matrix to be included in the IGV sample information file 
     """
     
-    logger.debug("visualization_manager.views getSampleLines called")
+    #logger.debug("visualization_manager.views getSampleLines called")
     
     output_mat = ""
     
