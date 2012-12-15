@@ -731,7 +731,13 @@ def solr_igv(request):
         node_selection_blacklist_mode = request.POST['node_selection_blacklist_mode']
         if node_selection_blacklist_mode == 'true':
             node_selection_blacklist_mode = True
+        else:
+            node_selection_blacklist_mode = False
         node_selection = request.POST.getlist('node_selection[]')
+        
+        logger.debug("node_selection_blacklist_mode")
+        logger.debug(node_selection_blacklist_mode)
+        logger.debug(node_selection)
         
         # extracting solr query from request 
         for i, val in request.POST.iteritems():
@@ -802,30 +808,41 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
     # converting results into json for python 
     results = simplejson.loads(results)
     
-    #logger.debug("--------- get_solr_results")
-    #logger.debug( simplejson.dumps(results, indent=4) )
-    
     # number of solr results 
-    num_found = int(results["response"]["numFound"])
-    logger.debug("core.views: get_solr_results num_found=%s" % num_found)
+    if selected_mode:
+        num_found = int(results["response"]["numFound"])
+    else:
+        num_found = 0
+    
+    #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
     
     # IF list of nodes to remove from query exists
     if selected_nodes:
-        # blacklist mode (remove uuid's from solr query) 
-        if selected_mode:
-           # need to iterate over list backwards to properly delete from a list
-           for i in xrange(len(results["response"]["docs"]) - 1, -1, -1):
-               node = results["response"]["docs"][i]
-    
-               # if this node has a file_uuid key
+        # need to iterate over list backwards to properly delete from a list
+        for i in xrange(len(results["response"]["docs"]) - 1, -1, -1):
+            node = results["response"]["docs"][i]
+            
+            # blacklist mode (remove uuid's from solr query) 
+            if selected_mode:
                if 'file_uuid' in node:
                    # if the current node should be removed from the results
                    if node["file_uuid"] in selected_nodes: 
                        del results["response"]["docs"][i]
                        num_found -= 1
+            
+            # whitelist mode (add's uuids from solr query) 
+            else:
+               if 'file_uuid' in node:
+                   # if the current node should be removed from the results
+                   if node["file_uuid"] not in selected_nodes: 
+                       del results["response"]["docs"][i]
+                       num_found += 1
+    
     
     # updating the number found in the list
     results["response"]["numFound"] = str(num_found)
+    
+    #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
     
     # Will return only list of file_uuids
     if only_uuids:

@@ -80,6 +80,16 @@ def dev():
     env.galaxy_root = os.path.join(galaxy_base_dir, "live")
     env.galaxy_r_libs_target_dir = os.path.join(env.galaxy_r_libs_base_dir, "dev")
 
+
+@task
+def local():
+    '''Set config to local
+
+    '''
+    env.dev_settings_file = "settings_local.py"
+    django.settings_module(os.path.splitext(env.dev_settings_file)[0])
+
+
 @task
 def stage():
     '''Set config to staging
@@ -461,7 +471,8 @@ def setup_refinery():
     Django superuser account is created without a password
 
     '''
-    execute(upload_refinery_settings)
+    if env.hosts:
+        execute(upload_refinery_settings)
     execute(create_refinery_db)
     execute(refinery_syncdb)
     execute(init_refinery)

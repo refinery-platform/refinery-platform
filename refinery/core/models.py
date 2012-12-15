@@ -530,9 +530,9 @@ class NodeSet(SharableResource):
     Used to save selection state between sessions and to map data files to workflow inputs.
 
     '''
-    node = models.ManyToManyField(Node)
-    study = models.ForeignKey(Study)
-    assay = models.ForeignKey(Assay)
+    nodes = models.ManyToManyField(Node, blank=True, null=True)
+    study = models.ForeignKey(Study, blank=True, null=True)
+    assay = models.ForeignKey(Assay, blank=True, null=True)
 
     class Meta:
         verbose_name = "nodeset"
@@ -542,16 +542,27 @@ class NodeSet(SharableResource):
         )
 
 
-def create_nodeset(name, summary, node_uuids):
+def create_nodeset(name, summary='', nodes=[], study=None, assay=None):
     '''Create a new NodeSet from a list of Nodes.
 
     :param name: name of the new NodeSet.
     :type name: str.
     :param summary: description of the new NodeSet.
     :type summary: str.
-    :returns: str -- UUID of the new NodeSet.
+    :param nodes: list of Node UUIDs.
+    :type nodes: list.
+    :param study: Study model instance.
+    :type study: Study.
+    :param study: Assay model instance.
+    :type study: Assay.
+    :returns: NodeSet -- new instance.
 
     '''
+    # manual transaction commit?
+    # handle TypeError
+    ns = NodeSet.objects.create(name=name, summary=summary, study=study, assay=assay)
+    ns.nodes.add(*nodes)
+    return ns
 
 
 def get_nodeset(uuid):
@@ -559,23 +570,28 @@ def get_nodeset(uuid):
 
     :param uuid: NodeSet UUID.
     :type uuid: str.
-    :returns: NodeSet
+    :returns: NodeSet -- instance that corresponds to the given UUID.
     :raises: DoesNotExist
 
     '''
+    return NodeSet.objects.get(uuid=uuid)
 
 
-def update_nodeset(uuid, node_uuids=None, name=None, summary=None):
-    '''Update NodeSet with the new data.
+def update_nodeset(uuid, name=None, summary='', nodes=[], study=None, assay=None):
+    '''Replace data in an existing NodeSet with the new data.
 
     :param uuid: NodeSet UUID.
     :type uuid: str.
-    :param node_uuids: list of new Node UUIDs to replace existing Nodes.
-    :type node_uuids: list.
     :param name: new NodeSet name.
     :type name: str.
     :param summary: new NodeSet description.
     :type summary: str.
+    :param nodes: list of new Node UUIDs.
+    :type nodes: list.
+    :param study: Study model instance.
+    :type study: Study.
+    :param study: Assay model instance.
+    :type study: Assay.
     :raises: DoesNotExist
 
     '''
@@ -589,4 +605,4 @@ def delete_nodeset(uuid):
     :raises: DoesNotExist
 
     '''
-
+    get_nodeset(uuid=uuid).delete()
