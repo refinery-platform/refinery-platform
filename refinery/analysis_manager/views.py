@@ -183,9 +183,10 @@ def repository_run(request):
         #logger.debug( simplejson.dumps(request.POST, indent=4) )  
         
         # attributes associated with node selection from interface
-        node_selection_blacklist_mode = request.POST['node_selection_blacklist_mode']
         if node_selection_blacklist_mode == 'true':
             node_selection_blacklist_mode = True
+        else:
+            node_selection_blacklist_mode = False
         node_selection = request.POST.getlist('node_selection[]')
         
         # solr results
