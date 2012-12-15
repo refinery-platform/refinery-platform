@@ -530,9 +530,9 @@ class NodeSet(SharableResource):
     Used to save selection state between sessions and to map data files to workflow inputs.
 
     '''
-    node = models.ManyToManyField(Node, blank=True)
-    study = models.ForeignKey(Study, blank=True)
-    assay = models.ForeignKey(Assay, blank=True)
+    nodes = models.ManyToManyField(Node, blank=True, null=True)
+    study = models.ForeignKey(Study, blank=True, null=True)
+    assay = models.ForeignKey(Assay, blank=True, null=True)
 
     class Meta:
         verbose_name = "nodeset"
@@ -542,7 +542,7 @@ class NodeSet(SharableResource):
         )
 
 
-def create_nodeset(name, summary=None, nodes=None, study=None, assay=None):
+def create_nodeset(name, summary='', nodes=[], study=None, assay=None):
     '''Create a new NodeSet from a list of Nodes.
 
     :param name: name of the new NodeSet.
@@ -555,9 +555,14 @@ def create_nodeset(name, summary=None, nodes=None, study=None, assay=None):
     :type study: Study.
     :param study: Assay model instance.
     :type study: Assay.
-    :returns: str -- UUID of the new NodeSet.
+    :returns: NodeSet -- new instance.
 
     '''
+    # manual transaction commit?
+    # handle TypeError
+    ns = NodeSet.objects.create(name=name, summary=summary, study=study, assay=assay)
+    ns.nodes.add(*nodes)
+    return ns
 
 
 def get_nodeset(uuid):
@@ -569,9 +574,10 @@ def get_nodeset(uuid):
     :raises: DoesNotExist
 
     '''
+    return NodeSet.objects.get(uuid=uuid)
 
 
-def update_nodeset(uuid, name=None, summary=None, nodes=None, study=None, assay=None):
+def update_nodeset(uuid, name=None, summary='', nodes=[], study=None, assay=None):
     '''Replace data in an existing NodeSet with the new data.
 
     :param uuid: NodeSet UUID.
@@ -599,4 +605,4 @@ def delete_nodeset(uuid):
     :raises: DoesNotExist
 
     '''
-
+    get_nodeset(uuid=uuid).delete()
