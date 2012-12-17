@@ -531,8 +531,8 @@ class NodeSet(SharableResource):
 
     '''
     nodes = models.ManyToManyField(Node, blank=True, null=True)
-    study = models.ForeignKey(Study, blank=True, null=True)
-    assay = models.ForeignKey(Assay, blank=True, null=True)
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay)
 
     class Meta:
         verbose_name = "nodeset"
@@ -558,8 +558,6 @@ def create_nodeset(name, summary='', nodes=[], study=None, assay=None):
     :returns: NodeSet -- new instance.
 
     '''
-    # manual transaction commit?
-    # handle TypeError
     ns = NodeSet.objects.create(name=name, summary=summary, study=study, assay=assay)
     ns.nodes.add(*nodes)
     return ns
