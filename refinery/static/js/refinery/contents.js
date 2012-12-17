@@ -732,9 +732,10 @@ function processFields() {
    	}
    	
    	$("#" + "items-per-page-buttons").children().click( function(event) {
-   		currentItemsPerPage = $(this).data("items");
-   		console.log( currentItemsPerPage );
-   		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
+   		if ( currentItemsPerPage != $(this).data("items") ) {
+	   		currentItemsPerPage = $(this).data("items");
+	   		getData( currentAssayUuid, currentStudyUuid, currentNodeType );   			
+   		}
    	});
    	   	
 
