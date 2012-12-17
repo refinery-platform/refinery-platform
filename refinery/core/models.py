@@ -575,7 +575,7 @@ def get_nodeset(uuid):
     return NodeSet.objects.get(uuid=uuid)
 
 
-def update_nodeset(uuid, name=None, summary='', nodes=[], study=None, assay=None):
+def update_nodeset(uuid, name='', summary='', nodes=[], study=None, assay=None):
     '''Replace data in an existing NodeSet with the new data.
 
     :param uuid: NodeSet UUID.
@@ -593,6 +593,19 @@ def update_nodeset(uuid, name=None, summary='', nodes=[], study=None, assay=None
     :raises: DoesNotExist
 
     '''
+    ns = get_nodeset(uuid=uuid)
+    if name:
+        ns.name = name
+    if summary:
+        ns.summary = summary
+    if study:
+        ns.study = study
+    if assay:
+        ns.assay = assay
+    if nodes:
+        ns.nodes.clear()
+        ns.nodes.add(*nodes)
+    ns.save()
 
 
 def delete_nodeset(uuid):
