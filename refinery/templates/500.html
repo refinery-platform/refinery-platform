@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - 500 Internal Server Error
+{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+<h1>500 <small>Internal Server Error</small></h1>	
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Internal Server Error</h3>
+			</span>
+		</div>
+		<p>
+			The server encountered an internal error or misconfiguration and was unable to complete your request.<br /><br />
+			Please contact the server administrator ({{REFINERY_CONTACT_EMAIL}}), and inform them of the time the error occurred and anything you might have done that may have caused the error.<br /><br />
+			More information about this error may be available in the server error log.
+		</p>
+	</div>
+</div>
+{% endblock %}

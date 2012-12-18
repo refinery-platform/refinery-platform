@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - 403 HTTP Forbidden Error
+{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+<h1>403 <small>HTTP Forbidden Error</small></h1>	
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>HTTP Forbidden Error</h3>
+			</span>
+		</div>
+		<p>
+			We're sorry, but you do not have permission to view this page.<br />
+			{{msg}}
+		</p>
+	</div>
+</div>
+{% endblock %}

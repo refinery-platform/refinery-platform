@@ -13,7 +13,7 @@ from django.core.urlresolvers import resolve, reverse
 from django.http import HttpResponse, HttpResponseForbidden, \
     HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
-from django.template import RequestContext
+from django.template import RequestContext, loader
 from django.utils import simplejson
 from file_store.models import FileStoreItem, FileStoreItem
 from galaxy_connector.models import Instance
@@ -73,6 +73,10 @@ def statistics(request):
     
     return render_to_response('core/statistics.html', { "users": users, "groups": groups, "projects": projects, "workflows": workflows, "data_sets": data_sets, "files": files, "base_url": base_url }, context_instance=RequestContext( request ) )
 
+def custom_error_page(request, template, msg):
+    temp_loader = loader.get_template(template)
+    context = RequestContext(request, {'msg': msg})
+    return temp_loader.render(context)
 
 @login_required()
 def user(request, query):
@@ -83,7 +87,7 @@ def user(request, query):
         user = get_object_or_404( UserProfile, uuid=query ).user
         
     if len( get_shared_groups( request.user, user ) ) == 0 and user != request.user:
-        return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view the profile of user " + user.username + ".</h1>" )
+        return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view the profile of user " + user.username + "."))
 
     return render_to_response('core/user.html', {'profile_user': user }, context_instance=RequestContext( request ) )
 
@@ -122,7 +126,8 @@ def group(request, query):
 
     # only group members are allowed to see group pages
     if not group.id in request.user.groups.values_list('id', flat=True):
-        return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view group " + group.name + ".</h1>" )
+        return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view group " + group.name + "."))
+        
                         
     return render_to_response('core/group.html', {'group': group }, context_instance=RequestContext( request ) )
 
@@ -138,7 +143,7 @@ def project(request, uuid):
         
     if not request.user.has_perm('core.read_project', project ):
         if not 'read_project' in get_perms( public_group, project ):
-            return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this project.</h1>" )
+            return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view this project."))
                 
     analyses = project.analyses.all()
     
@@ -172,7 +177,7 @@ def project_edit(request,uuid):
     project = get_object_or_404( Project, uuid=uuid )
         
     if not request.user.has_perm('core.change_project', project ):
-        return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to edit this project.</h1>" )
+        return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to edit this project."))
             
     if request.method == "POST": # If the form has been submitted...
         form = ProjectForm( request.POST, instance=project ) # A form bound to the POST data
@@ -255,7 +260,7 @@ def data_set(request,uuid):
     
     if not request.user.has_perm( 'core.read_dataset', data_set ):
         if not 'read_dataset' in get_perms( public_group, data_set ):
-            return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this data set.</h1>" )
+            return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view this data set."))
             
     #get studies
     investigation = data_set.get_investigation()
@@ -334,7 +339,7 @@ def workflow(request, uuid):
     
     if not request.user.has_perm('core.read_workflow', workflow ):
         if not 'read_workflow' in get_perms( public_group, workflow ):
-            return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this workflow.</h1>" )
+            return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view this workflow."))
             
     return render_to_response('core/workflow.html', { 'workflow': workflow }, context_instance=RequestContext( request ) )
 
@@ -345,7 +350,7 @@ def workflow_engine(request,uuid):
     
     if not request.user.has_perm('core.read_workflowengine', workflow_engine ):
         if not 'read_workflowengine' in get_perms( public_group, workflow_engine ):
-            return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this workflow engine.</h1>" )
+            return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view this workflow engine."))
             
     return render_to_response('core/workflow_engine.html', { 'workflow_engine': workflow_engine }, context_instance=RequestContext( request ) )
 
