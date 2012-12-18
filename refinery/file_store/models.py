@@ -52,7 +52,7 @@ def _mkdir(path):
 
 # configure and create file store directories
 if not settings.FILE_STORE_DIR:
-    settings.FILE_STORE_DIR = 'files'   # relative to MEDIA_ROOT
+    settings.FILE_STORE_DIR = 'file_store'   # relative to MEDIA_ROOT
 
 # absolute path to the file store root dir
 FILE_STORE_BASE_DIR = os.path.join(settings.MEDIA_ROOT, settings.FILE_STORE_DIR)
@@ -95,8 +95,10 @@ def file_path(instance, filename):
     return os.path.join(instance.sharename, dir1, dir2, filename)
 
 
+# http://stackoverflow.com/questions/4832626/how-does-django-construct-the-url-returned-by-filesystemstorage
+FILE_STORE_BASE_URL = urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + '/'
 # set the file store location
-fss = FileSystemStorage(location=FILE_STORE_BASE_DIR)
+fss = FileSystemStorage(location=FILE_STORE_BASE_DIR, base_url=FILE_STORE_BASE_URL)
 
 
 #TODO: expand the list of file types. Reference:

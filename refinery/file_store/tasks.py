@@ -1,4 +1,5 @@
 import os
+import stat
 import logging
 import urllib2
 from urlparse import urlparse
@@ -158,6 +159,14 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
             logger.error("Error moving temp file into the file store\nOSError: %s, file name: %s, error: %s",
                          e.errno, e.filename, e.strerror)
             return False
+
+        # temp file is only accessible by the owner by defaultmake 
+        try:
+            mode = os.stat(abs_dst_path).st_mode
+            os.chmod(abs_dst_path, mode | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
+        except OSError as e:
+            logger.error("Failed changing permissions on %s", abs_dst_path)
+            logger.error("OSError: %s, file name %s, error: %s", e.errno, e.filename, e.strerror)
 
         # assign new path to datafile
         item.datafile.name = rel_dst_path
