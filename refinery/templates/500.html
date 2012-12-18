@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
 {% block title %}
-{{ block.super }} - 500 Internal Server Error
+{{ block.super }} - Server Problem
 {% endblock %}
 
 {% block subheader %}
 <div class="page-header">
-<h1>500 <small>Internal Server Error</small></h1>	
+<h1>Server Problem</h1>
 </div>
 {% endblock %}
 
@@ -15,13 +15,12 @@
 	<div class="row-fluid">
 		<div class="refinery-header">
 			<span class="refinery-header-left">
-				<h3>Internal Server Error</h3>
+				<h3>Server Problem</h3>
 			</span>
 		</div>
 		<p>
 			The server encountered an internal error or misconfiguration and was unable to complete your request.<br /><br />
-			Please contact the server administrator ({{REFINERY_CONTACT_EMAIL}}), and inform them of the time the error occurred and anything you might have done that may have caused the error.<br /><br />
-			More information about this error may be available in the server error log.
+			Please contact {{REFINERY_CONTACT_EMAIL}} if this is a recurring problem and describe anything you might have done that may have caused the error.
 		</p>
 	</div>
 </div>
