@@ -11,9 +11,10 @@ from django.contrib import messages
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.signals import user_logged_in
 from django.core.mail import mail_admins
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Max, signals
 from django.db.models.signals import post_save, post_init
+from django.db.utils import IntegrityError
 from django.forms import ModelForm
 from django_extensions.db.fields import UUIDField
 from guardian.shortcuts import assign, get_users_with_perms, get_groups_with_perms
@@ -542,6 +543,7 @@ class NodeSet(SharableResource):
         )
 
 
+@transaction.commit_manually()
 def create_nodeset(name, summary='', nodes=[], study=None, assay=None):
     '''Create a new NodeSet from a list of Nodes.
 
@@ -556,11 +558,19 @@ def create_nodeset(name, summary='', nodes=[], study=None, assay=None):
     :param study: Assay model instance.
     :type study: Assay.
     :returns: NodeSet -- new instance.
+    :raises: IntegrityError, ValueError
 
     '''
-    ns = NodeSet.objects.create(name=name, summary=summary, study=study, assay=assay)
-    ns.nodes.add(*nodes)
-    return ns
+    try:
+        nodeset = NodeSet.objects.create(name=name, summary=summary, study=study, assay=assay)
+        nodeset.nodes.add(*nodes)
+    except (IntegrityError, ValueError) as e:
+        transaction.rollback()
+        logger.error("Failed to create NodeSet: {}".format(e.message))
+        raise
+    transaction.commit()
+    logger.info("NodeSet created with UUID '{}'".format(nodeset.uuid))
+    return nodeset
 
 
 def get_nodeset(uuid):
@@ -572,7 +582,28 @@ def get_nodeset(uuid):
     :raises: DoesNotExist
 
     '''
-    return NodeSet.objects.get(uuid=uuid)
+    try:
+        return NodeSet.objects.get(uuid=uuid)
+    except NodeSet.DoesNotExist:
+        logger.error("Failed to retrieve NodeSet: UUID '{}' does not exist".format(uuid))
+        raise
+
+
+def get_nodesets(uuid):
+    '''Retrieve all the NodeSets that a Node with the given UUID is part of.
+
+    :param uuid: Node UUID.
+    :type uuid: str.
+    :returns: list -- NodeSet instances that the Node is part of.
+    :raises: DoesNotExist
+
+    '''
+    try:
+        node = Node.objects.get(uuid=uuid)
+    except Node.DoesNotExist:
+        logger.error("Failed to retrieve NodeSets: Node with UUID '{}' does not exist".format(uuid))
+        raise
+    return node.nodeset_set.all()
 
 
 def update_nodeset(uuid, name='', summary='', nodes=[], study=None, assay=None):
@@ -593,19 +624,23 @@ def update_nodeset(uuid, name='', summary='', nodes=[], study=None, assay=None):
     :raises: DoesNotExist
 
     '''
-    ns = get_nodeset(uuid=uuid)
+    try:
+        nodeset = get_nodeset(uuid=uuid)
+    except NodeSet.DoesNotExist:
+        logger.error("Failed to update NodeSet: UUID '{}' does not exist".format(uuid))
+        raise
     if name:
-        ns.name = name
+        nodeset.name = name
     if summary:
-        ns.summary = summary
+        nodeset.summary = summary
     if study:
-        ns.study = study
+        nodeset.study = study
     if assay:
-        ns.assay = assay
+        nodeset.assay = assay
     if nodes:
-        ns.nodes.clear()
-        ns.nodes.add(*nodes)
-    ns.save()
+        nodeset.nodes.clear()
+        nodeset.nodes.add(*nodes)
+    nodeset.save()
 
 
 def delete_nodeset(uuid):
@@ -613,7 +648,7 @@ def delete_nodeset(uuid):
 
     :param uuid: NodeSet UUID.
     :type uuid: str.
-    :raises: DoesNotExist
 
     '''
-    get_nodeset(uuid=uuid).delete()
+    NodeSet.objects.filter(uuid=uuid).delete()
+
