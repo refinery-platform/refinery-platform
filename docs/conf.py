@@ -20,7 +20,9 @@ import sys, os
 
 # added these lines to avoid ImportError
 # see: http://stackoverflow.com/questions/9612296/importerror-in-django-in-sphinx-python
-sys.path.append('/Users/isytchev/workspace/Refinery/refinery')
+parent_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join( parent_directory, "refinery" ) )
+
 import settings
 from django.core.management import setup_environ
 setup_environ(settings)
@@ -48,7 +50,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Refinery'
-copyright = u'2012, Park Lab at HMS and Hide Lab at HSPH'
+copyright = u'2013, Park Lab at Harvard Medical School in collaboration with Hide Lab at Harvard School of Public Health'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -98,7 +100,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'nature'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
