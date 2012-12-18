@@ -21,5 +21,5 @@ def extra_context(context):
         "REFINERY_GOOGLE_ANALYTICS_ID": settings.REFINERY_GOOGLE_ANALYTICS_ID,
         "REFINERY_INSTANCE_NAME": Site.objects.get_current().name,
         "REFINERY_REPOSITORY_MODE": settings.REFINERY_REPOSITORY_MODE,
-        "DEFAULT_FROM_EMAIL": settings.DEFAULT_FROM_EMAIL,
+        "REFINERY_CONTACT_EMAIL": settings.DEFAULT_FROM_EMAIL,
     }
