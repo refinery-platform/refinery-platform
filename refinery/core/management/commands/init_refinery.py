@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.sites.models import Site
-
+from django.db import connection, transaction
 
 class Command(BaseCommand):
     help = "Initializes a Refinery installation:"
@@ -50,4 +50,11 @@ class Command(BaseCommand):
             print("A Refinery group with id '%s' already exists." % settings.REFINERY_PUBLIC_GROUP_ID)
         else:
             ExtendedGroup.objects.create( id=settings.REFINERY_PUBLIC_GROUP_ID, name=settings.REFINERY_PUBLIC_GROUP_NAME, is_public=True )
+            
+            # in order to avoid clashes of group ids for groups created after the creation of the public group we need to set
+            # the sequence for the group ids to the public group id (this is not updated automatically when the id is set explicitly) 
+            cursor = connection.cursor()
+            cursor.execute( "SELECT setval(\'auth_group_id_seq\', %s )", (settings.REFINERY_PUBLIC_GROUP_ID,) );
+            transaction.commit_unless_managed()
+            
             print( "Successfully created group '%s'." % settings.REFINERY_PUBLIC_GROUP_NAME ) 

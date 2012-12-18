@@ -17,6 +17,7 @@ Example: FILE_STORE_DIR = 'files'
 """
 
 import os
+import re
 import logging
 from urlparse import urlparse, urljoin
 from django.conf import settings
@@ -92,6 +93,9 @@ def file_path(instance, filename):
     # provides 256 * 256 = 65536 of possible directory combinations
     dir1 = "{:0>2x}".format(hashcode & mask)
     dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
+    # replace parentheses with underscores in the filename since
+    # Galaxy doesn't process names with parentheses in them
+    filename = re.sub('[()]', '_', filename)
     return os.path.join(instance.sharename, dir1, dir2, filename)
 
 
@@ -110,6 +114,7 @@ BAM = 'bam'
 BED = 'bed'
 BIGBED = 'bigbed'
 BIGWIG = 'bigwig'
+CBS = 'cbs'
 CEL = 'cel'
 CSV = 'csv'
 ELAND = 'eland'
@@ -123,7 +128,9 @@ FASTQILLUMINA = 'fastqillumina'
 FASTQSANGER = 'fastqsanger'
 FASTQSOLEXA = 'fastqsolexa'
 SAM = 'sam'
+SEG = 'seg'
 TDF = 'tdf'
+TGZ = 'tgz'
 TXT = 'txt'
 VCF = 'vcf'
 WIG = 'wig'
@@ -137,6 +144,7 @@ FILE_TYPES = (
     (BED, 'BED file'),
     (BIGBED, 'Big BED'),
     (BIGWIG, 'Big WIG'),
+    (CBS, 'Circular Binary Segmentation File'), # see SEG below
     (CEL, 'Affymetrix Probe Results file'),
     (CSV, 'Comma Separated Values'),
     (ELAND, 'Eland file'),
@@ -150,7 +158,9 @@ FILE_TYPES = (
     (FASTQSANGER, 'FASTQ Sanger'),
     (FASTQSOLEXA, 'FASTQ Solexa'),
     (SAM, 'Sequence Alignment/Map'),
+    (SEG, 'Segmented Data File'), # http://www.broadinstitute.org/software/igv/SEG
     (TDF, 'TDF file'),
+    (TGZ, 'Gzip compressed tar archive'),
     (TXT, 'Text file'),
     (VCF, 'Variant Call Format'),
     (WIG, 'Wiggle Track Format'),
@@ -180,6 +190,7 @@ FILE_EXTENSIONS = {
     'fastqsolexa': FASTQSOLEXA,
     'sam': SAM,
     'tdf': TDF,
+    'tgz': TGZ,
     'txt': TXT,
     'vcf': VCF,
     'wig': WIG,

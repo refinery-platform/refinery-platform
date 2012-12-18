@@ -20,6 +20,10 @@
   font-weight: 400;
   padding: 2px 4px;
 }
+.alert.alert-error a {
+  color: #f62400;
+  text-decoration: underline;
+}
 .clearfix {
   *zoom: 1;
 }

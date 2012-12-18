@@ -4,10 +4,78 @@ Created on Apr 21, 2012
 @author: Ilya Sytchev
 '''
 
-from django.utils import unittest
 import struct
-from file_server import tdf_file
 import cStringIO
+from django.utils import unittest
+from file_store import models as fs_models
+from file_server import tdf_file, models
+
+
+class TDFItemTest(unittest.TestCase):
+    '''Test all operations on TDFItem instances
+
+    '''
+    #TODO: add missing tests
+    def setUp(self):
+        self.tdf_file = fs_models.FileStoreItem.objects.create_item("/example/path/test_file.tdf")
+
+    def test_add_tdfitem(self):
+        self.assertIsNotNone(models.add(self.tdf_file.uuid))
+
+
+class BigBEDItemTest(unittest.TestCase):
+    '''Test all operations on BigBEDItem instances
+
+    '''
+    def setUp(self):
+        self.bigbed_file = fs_models.FileStoreItem.objects.create_item("/example/path/test_file.bb")
+
+    def test_add_bigbeditem(self):
+        self.assertIsNotNone(models.add(self.bigbed_file.uuid))
+
+    def test_get_bigbeditem(self):
+        bigbed_item = models.BigBEDItem.objects.create(data_file=self.bigbed_file)
+        self.assertEqual(models.get(bigbed_item), bigbed_item)
+
+    def test_delete_bigbeditem(self):
+        bigbed_item = models.BigBEDItem.objects.create(data_file=self.bigbed_file)
+        self.assertTrue(models.delete(bigbed_item.data_file.uuid))
+        self.assertRaises(models._FileServerItem.DoesNotExist,
+                          models.BigBEDItem.objects.get, data_file__uuid=bigbed_item.data_file.uuid)
+
+
+class BAMItemTest(unittest.TestCase):
+    '''Test all operations on BAMItem instances
+
+    '''
+    #TODO: add missing tests
+    def setUp(self):
+        self.bam_file = fs_models.FileStoreItem.objects.create_item("/example/path/test_file.bam")
+
+    def test_add_bamitem(self):
+        self.assertIsNotNone(models.add(self.bam_file.uuid))
+
+
+class WIGItemTest(unittest.TestCase):
+    '''Test all operations on WIGItem instances
+
+    '''
+    #TODO: add missing tests
+    def setUp(self):
+        self.wig_file = fs_models.FileStoreItem.objects.create_item("/example/path/test_file.wig")
+
+    def test_add_wigitem(self):
+        self.assertIsNotNone(models.add(self.wig_file.uuid))
+
+
+class InvalidItemTest(unittest.TestCase):
+    '''Test operations on invalid instances
+
+    '''
+    def test_add_unknown_file_type(self):
+        # create a FileStoreItem without a file type 
+        undefined_file = fs_models.FileStoreItem.objects.create(source="/example/path/test_file")
+        self.assertIsNone(models.add(undefined_file.uuid))
 
 
 class TDFByteStreamTest(unittest.TestCase):

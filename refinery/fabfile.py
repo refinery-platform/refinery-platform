@@ -50,7 +50,7 @@ env.local_django_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(env.local_django_root)
 from django.conf import settings as django_settings  # to avoid conflict with fabric.api.settings
 # config files and templates
-env.local_conf = os.path.join(env.local_django_root, "fabric")
+env.local_conf_dir = os.path.join(env.local_django_root, "fabric")
 
 # remote settings
 env.bootstrap_dir = os.path.join(env.deployment_base_dir, "bootstrap")
@@ -79,6 +79,16 @@ def dev():
     galaxy_base_dir = env.galaxy_root + "dev"
     env.galaxy_root = os.path.join(galaxy_base_dir, "live")
     env.galaxy_r_libs_target_dir = os.path.join(env.galaxy_r_libs_base_dir, "dev")
+
+
+@task
+def local():
+    '''Set config to local
+
+    '''
+    env.dev_settings_file = "settings_local.py"
+    django.settings_module(os.path.splitext(env.dev_settings_file)[0])
+
 
 @task
 def stage():
@@ -170,10 +180,10 @@ def update_project_user_home_dir():
     '''Upload .bashrc and .bash_profile to $HOME of project_user
 
     '''
-    bash_profile_path = os.path.join(env.local_conf, "bash_profile_template")
+    bash_profile_path = os.path.join(env.local_conf_dir, "bash_profile_template")
     upload_template(bash_profile_path, "~/.bash_profile")
 
-    bashrc_path = os.path.join(env.local_conf, "bashrc_template")
+    bashrc_path = os.path.join(env.local_conf_dir, "bashrc_template")
     bashrc_context = {'deployment_target_dir': env.deployment_target_dir}
     upload_template(bashrc_path, "~/.bashrc", bashrc_context)
 
@@ -224,12 +234,12 @@ def start_postgresql_server():
 
 
 @task
-def upload_httpd_settings():
+def upload_apache_settings():
     '''Upload Apache settings
 
     '''
-    upload_template("{local_conf}/httpd_refinery_conf_template".format(**env),
-                    "/etc/httpd/conf.d/refinery.conf",
+    upload_template("{local_conf_dir}/httpd_refinery_conf_template".format(**env),
+                    "{apache_conf_dir}/zzz_refinery.conf".format(**env),
                     backup=False, use_sudo=True)
 
 
@@ -457,9 +467,12 @@ def create_refinery_data_dirs():
 @task
 def setup_refinery():
     '''Re-create refinery setup after dropdb
+    Requires entering password for sudo access to the project account
+    Django superuser account is created without a password
 
     '''
-    execute(upload_refinery_settings)
+    if env.hosts:
+        execute(upload_refinery_settings)
     execute(create_refinery_db)
     execute(refinery_syncdb)
     execute(init_refinery)
@@ -472,7 +485,8 @@ def setup_refinery():
 @with_settings(user=env.project_user)
 def refinery_syncdb():
     '''Create database tables for all Django apps in Refinery
-    (also, create a superuser - requires user input)
+    (does not create a superuser account)
+
     '''
     #TODO: make non-interactive
     with prefix("workon refinery"):
@@ -482,7 +496,7 @@ def refinery_syncdb():
 @task
 @with_settings(user=env.project_user)
 def refinery_createsuperuser():
-    '''Create the Django superuser
+    '''Create the Django superuser account without assigning a password
 
     '''
     with prefix("workon refinery"), settings(hide('commands'), warn_only=True):
@@ -490,6 +504,22 @@ def refinery_createsuperuser():
         run("./manage.py createsuperuser --noinput --username {} --email {}"
             .format(django_settings.REFINERY_SUPERUSER['username'],
                     django_settings.REFINERY_SUPERUSER['email']))
+
+
+@task
+@with_settings(user=env.project_user)
+def refinery_changepassword(username):
+    '''Change password for an existing Django user account
+    (requires user input)
+    Useful for creating a password for the Django superuser
+    after Refinery has been set up for the first time
+
+    '''
+    if username:
+        with prefix("workon refinery"):
+            run("./manage.py changepassword {}".format(username))
+    else:
+        puts("Username was not provided - cannot change password")
 
 
 @task
@@ -646,11 +676,11 @@ def upload_galaxy_tool_data():
     #TODO: change settings to env.galaxy_user
     tool_data_path = os.path.join(env.galaxy_root, "tool-data")
 
-    local_path = os.path.join(env.local_conf, "bowtie_indices_template")
+    local_path = os.path.join(env.local_conf_dir, "bowtie_indices_template")
     remote_path = os.path.join(tool_data_path, "bowtie_indices.loc")
     upload_template(local_path, remote_path)
 
-    local_path = os.path.join(env.local_conf, "sam_fa_indices_template")
+    local_path = os.path.join(env.local_conf_dir, "sam_fa_indices_template")
     remote_path = os.path.join(tool_data_path, "sam_fa_indices.loc")
     upload_template(local_path, remote_path)
 
@@ -664,12 +694,12 @@ def update_galaxy_user_home():
     with hide('commands'):
         home_dir = run("echo ~{}".format(env.galaxy_user))
 
-    local_path = os.path.join(env.local_conf, "bashrc_galaxy_template")
+    local_path = os.path.join(env.local_conf_dir, "bashrc_galaxy_template")
     remote_path = os.path.join(home_dir, ".bashrc.customizations")
     bashrc_context = {'galaxy_r_libs': env.galaxy_r_libs_base_dir}
     upload_template(local_path, remote_path, bashrc_context, backup=False)
 
-    local_path = os.path.join(env.local_conf, "Rprofile_template")
+    local_path = os.path.join(env.local_conf_dir, "Rprofile_template")
     remote_path = os.path.join(home_dir, ".Rprofile")
     upload_template(local_path, remote_path, backup=False)
 
@@ -741,7 +771,7 @@ def upload_galaxy_tool_conf():
 
     '''
     #TODO: change settings to env.galaxy_user
-    local_path = os.path.join(env.local_conf, "tool_conf_xml_template")
+    local_path = os.path.join(env.local_conf_dir, "tool_conf_xml_template")
     remote_path = os.path.join(env.galaxy_root, "tool_conf.xml")
     upload_template(local_path, remote_path)
 

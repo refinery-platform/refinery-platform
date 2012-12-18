@@ -259,7 +259,7 @@ def species_to_taxon_id(species_name):
     return list of (scientific_name, id) tuples for every taxon ID
 
     :param species_name: species whose taxon ID is unknown
-    :type species_name: str
+    :type species_name: string
     :returns: list -- list of (scientific_name, id) tuples -- returns the UCSC equivalent
     :raises: Taxon.DoesNotExist -- raised if there's no match in db
     '''
@@ -286,7 +286,7 @@ def taxon_id_to_genome_build(taxon_id):
 
     :param taxon_id: NCBI taxonomy ID
     :type taxon_id: integer
-    :returns: str -- default_genome_build
+    :returns: string -- default_genome_build
     '''
     org = Taxon.objects.get(taxon_id=taxon_id, type='scientific name')
     default_gb = GenomeBuild.objects.get(default_build=True, species=org).name
@@ -297,7 +297,7 @@ def species_to_genome_build(species_name):
     Finds the default genome build for this species given the name.
 
     :param species_name: species whose taxon ID is unknown
-    :type species_name: str
+    :type species_name: string
     :returns: list -- list of (species_scientific_name, default_genome_build) tuples
     :raises: Taxon.DoesNotExist, GenomeBuild.DoesNotExist
     '''
@@ -330,8 +330,8 @@ def resolve_to_ucsc_genome_build(alt_genome_build):
     returns the UCSC equivalent of a non-UCSC genome build name if an equivalent exists
 
     :param alt_genome_build: non-UCSC genome build name
-    :type alt_genome_build: str
-    :returns: str -- returns the UCSC equivalent genome build name
+    :type alt_genome_build: string
+    :returns: string -- returns the UCSC equivalent genome build name
     :raises: GenomeBuild.DoesNotExist
     '''
     try:
@@ -344,20 +344,20 @@ def resolve_to_ucsc_genome_build(alt_genome_build):
     except:
         raise GenomeBuild.DoesNotExist
 
-def genome_build_to_species_id(genome_build):
+def genome_build_to_species(genome_build):
     '''
     Returns the NCBI taxon ID of the species associated with the genome build provided
 
     :param genome_build: genome build whose associated species is not known
-    :type genome_build: str
-    :returns: integer -- returns the taxon ID of the species or raises an error  
+    :type genome_build: string
+    :returns: tuple -- returns a tuple of (species name, species taxon ID) or raises an error  
     '''
     try:
-        gb = GenomeBuild.objects.get(name=genome_build)
+        gb = GenomeBuild.objects.get(name__icontains=genome_build)
     except:
         #something went very wrong, so just re-raise whatever the problem was
         raise
-    return gb.species.taxon_id
+    return (gb.species.name, gb.species.taxon_id)
 
 ##################################################
 ### CLASSES FOR Human, hg19 

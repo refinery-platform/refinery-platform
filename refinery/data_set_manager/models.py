@@ -3,13 +3,18 @@ Created on May 10, 2012
 
 @author: nils
 '''
-from data_set_manager.genomes import map_species_id_to_default_genome_build
+
+import logging
+import settings
+import simplejson
+import urllib2
 from django.db import models
 from django.db.models.query_utils import Q
 from django.db.models.signals import post_save, post_init
 from django.dispatch.dispatcher import receiver
 from django_extensions.db.fields import UUIDField
-import logging
+from data_set_manager.genomes import map_species_id_to_default_genome_build
+
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -90,8 +95,8 @@ class Contact(models.Model):
 
 
 class Investigation(NodeCollection):
-    isarchive_file = UUIDField(blank=True, null=True)    
-    pre_isarchive_file = UUIDField(blank=True, null=True) 
+    isarchive_file = UUIDField(blank=True, null=True, auto=False)
+    pre_isarchive_file = UUIDField(blank=True, null=True, auto=False)
     
     """easily retrieves the proper NodeCollection fields"""
     def get_identifier(self):
@@ -424,8 +429,7 @@ class AttributeOrder(models.Model):
     study = models.ForeignKey(Study, db_index=True)
     assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
 
-    type = models.TextField(db_index=True)
-    subtype = models.TextField(blank=True, null=True, db_index=True)
+    solr_field = models.TextField(db_index=True)
     
     # position of the attribute in the facet list and table
     rank = models.IntegerField(blank=True, null=True)
@@ -436,8 +440,11 @@ class AttributeOrder(models.Model):
     # should this attribute be used as a facet?
     is_facet = models.BooleanField(default=True)
 
-    # should this
+    # should be shown in the table by default?
     is_active = models.BooleanField(default=True)
+    
+    # is this an internal attribute? (retrieved by solr by never exposed to any user)
+    is_internal = models.BooleanField(default=False)
     
     def __unicode__(self):
         return unicode( self.type + "[" + self.subtype + "] = " ) + str( self.rank ) 
@@ -472,25 +479,58 @@ class AnnotatedNode(models.Model):
     is_annotation = models.BooleanField(default=False) 
 
 
-def _initialize_attribute_order(sender, instance, **kwargs):
-    
-    logger.debug( "Created Attribute Order object: instance=%s", ( instance,) )
-    
-    # only necessary if the model was newly created:
-    #if created:
-    # test if there is already an entry for this attribute in this S/A in the database
-    # TODO: subtype could be "null"
-    object, object_created = AttributeOrder.objects.get_or_create( study=instance.study, assay=instance.assay, type=instance.attribute_type, subtype=instance.attribute_subtype )
-    
-    if object_created: 
-        object.rank = 1 + AttributeOrder.objects.filter( study=instance.study, assay=instance.assay ).count()
-        object.save() 
-        return True
-                 
-    return False
+def _is_internal_attribute(attribute):
+    return attribute in [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation", "species", "genome_build" ]
 
-post_init.connect(_initialize_attribute_order, sender=AnnotatedNode)
+def _is_active_attribute(attribute):
+    return (not _is_internal_attribute(attribute) and attribute not in ["name"] )
 
+def _is_ignored_attribute(attribute):
+    """
+    Ignore Django internal Solr fields.
+    """
+    return attribute in [ "django_ct", "django_id", "id" ]    
+    
+
+def initialize_attribute_order( study, assay ):    
+    """
+    Initializes the AttributeOrder table after all nodes for the given study and assay have been indexed by Solr.
+    
+    :param study: Study object to query for in AnnotatedNode.
+    :type study: Study    
+    :param assay: Assay object to query for in AnnotatedNode.
+    :type assay: Assay
+    
+    :returns: Number of attributes that were indexed.
+    """
+ 
+    query = settings.REFINERY_SOLR_BASE_URL + "data_set_manager" + "/select?" + "q=django_ct:data_set_manager.node&wt=json&start=0&rows=1&fq=(study_uuid:" + study.uuid + "%20AND%20assay_uuid:" + assay.uuid + "%20AND%20is_annotation:false%20AND%20(type:%22Raw%20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22))&facet.sort=count&facet.limit=-1"
+    
+    # proper url encoding                  
+    query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
+        
+    # opening solr query results
+    results =  urllib2.urlopen( query ).read()
+        
+    # converting results into json for python 
+    results = simplejson.loads(results)
+    
+    attribute_order_objects = []
+    rank = 0
+    for key in results["response"]["docs"][0]:
+        
+        is_facet = True
+        is_exposed = True
+        is_internal = _is_internal_attribute(key);
+        is_active = _is_active_attribute(key)
+        
+        if not _is_ignored_attribute(key):
+            attribute_order_objects.append( AttributeOrder( study=study, assay=assay, solr_field=key, rank=++rank, is_facet=is_facet, is_exposed=is_exposed, is_internal=is_internal, is_active=is_active ) )
+
+    # insert AttributeOrder objects into database
+    AttributeOrder.objects.bulk_create(attribute_order_objects)    
+    
+    return len( attribute_order_objects )
 
                 
 class ProtocolReference(models.Model):
@@ -516,8 +556,5 @@ class ProtocolReferenceParameter(models.Model):
     value_source = models.TextField(blank=True, null=True)
     
     def __unicode__(self):
-        return unicode(self.name) + " = " +  unicode(self.value) 
-
-
-
+        return unicode(self.name) + " = " +  unicode(self.value)
 

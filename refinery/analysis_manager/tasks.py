@@ -35,58 +35,75 @@ def send_analysis_email(analysis):
 
     :param analysis: Analysis object
     '''
+    #get basic information
     user = analysis.get_owner()
     name = analysis.name
-    workflow = analysis.workflow.name
     site_name = Site.objects.get_current().name
     site_domain = Site.objects.get_current().domain
     status = analysis.status
-    project = analysis.project
-    start = analysis.time_start
-    end = analysis.time_end
-    duration = end - start
-    hours, remainder = divmod(duration.total_seconds(), 3600)
-    minutes, seconds = divmod(remainder, 60)
-    
-    #formatting the duration string 
-    hours = int(hours)
-    minutes = int(minutes)
-    if hours < 10:
-        hours = '0%s' % hours
-    if minutes < 10:
-        minutes = '0%s' % minutes
-    duration = "%s:%s hours" % (hours, minutes)
 
     #check status and change text slightly based on that
     if status == Analysis.SUCCESS_STATUS:
-        logic = 'finished successfully'
+        success = True
     else:
-        logic = 'failed'
+        success = False
         
-    #get project name
-    project_name = project.name
-    if project.is_catch_all:
-        project_name = '-'
+    #set context for things needed in all emails
+    context_dict = {'name': name,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'username': user.username,
+                    'site_name': site_name,
+                    'site_domain': site_domain,
+                    'success': success
+                    }
+    if success:
+        email_subj = "[%s] Archive ready for download: %s" % (site_name, name)
+        context_dict['url'] = "http://%s%s" % (site_domain, reverse('core.views.analysis', args=(analysis.uuid,)))
+    else:
+        email_subj = "[%s] Archive creation failed: %s" % (site_name, name)
+        context_dict['default_email'] = settings.DEFAULT_FROM_EMAIL
 
-    email_subj = "[%s] %s: %s (%s)" % (site_name, status, name, workflow)
+    if settings.REFINERY_REPOSITORY_MODE:
+        temp_loader = loader.get_template('analysis_manager/analysis_email_repository.txt')
+    else:
+        workflow = analysis.workflow.name
+        project = analysis.project
+        
+        #get project name
+        project_name = project.name
+        if project.is_catch_all:
+            project_name = '-'
 
-    temp_loader = loader.get_template('analysis_manager/analysis_email.txt')
-    context = Context({
-                 'project': project_name,
-                 'name': name,
-                 'first_name': user.first_name,
-                 'last_name': user.last_name,
-                 'username': user.username,
-                 'dataset': analysis.data_set.name,
-                 'workflow': analysis.workflow.name,
-                 'site_name': site_name,
-                 'site_domain': site_domain,
-                 'start': datetime.strftime(start, '%A, %d %B %G %r'),
-                 'end': datetime.strftime(end, '%A, %d %B %G %r'),
-                 'duration': duration,
-                 'logic': logic,
-                 'url': "http://%s%s" % (site_domain, reverse('core.views.analysis', args=(analysis.project.uuid, analysis.uuid,)))                 
-                 })
+        #get information needed to calculate the duration
+        start = analysis.time_start
+        end = analysis.time_end
+        duration = end - start
+        hours, remainder = divmod(duration.total_seconds(), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        
+        #formatting the duration string 
+        hours = int(hours)
+        minutes = int(minutes)
+        if hours < 10:
+            hours = '0%s' % hours
+        if minutes < 10:
+            minutes = '0%s' % minutes
+        duration = "%s:%s hours" % (hours, minutes)
+
+        #fill in extra context
+        context_dict['workflow'] = workflow
+        context_dict['project'] = project
+        context_dict['dataset'] = analysis.data_set.name
+        context_dict['start'] = datetime.strftime(start, '%A, %d %B %G %r')
+        context_dict['end'] = datetime.strftime(end, '%A, %d %B %G %r')
+        context_dict['duration'] = duration
+
+        #get email contents ready
+        email_subj = "[%s] %s: %s (%s)" % (site_name, status, name, workflow)
+        temp_loader = loader.get_template('analysis_manager/analysis_email_full.txt')
+        
+    context = Context(context_dict)
     try:    
         user.email_user(email_subj, temp_loader.render(context))
         logger.info('Emailed completion message with status \"%s\" to %s for analysis %s with UUID %s.' % (analysis.status, user.email, name, analysis.uuid))    
@@ -365,19 +382,16 @@ def run_analysis_cleanup(analysis):
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     
-    # log time when analysis is finished
+    # saving when analysis is finished
     analysis.time_end = datetime.now()
     
     # if analysis was declared failure, do not send completion email
     if analysis.status != Analysis.FAILURE_STATUS:
+        analysis.status = Analysis.SUCCESS_STATUS
+        # save state of analysis
+        analysis.save()
         logger.debug("analysis completion status: %s" % analysis.status)
         send_analysis_email(analysis)
-    else:
-        analysis.status = Analysis.SUCCESS_STATUS
-
-    # save state of analysis
-    analysis.save()
-
         
     # Adding task to rename files after downloading results from history
     logger.debug("before rename_analysis_results called");
@@ -394,7 +408,7 @@ def run_analysis_cleanup(analysis):
     
     # delete history
     ## DEBUG CURRENTLY NOT DELETING HISTORY
-    #connection.delete_history(analysis.history_id)
+    connection.delete_history(analysis.history_id)
     
     # delete_library
     connection.delete_library(analysis.library_id)
@@ -472,11 +486,10 @@ def download_history_files(analysis) :
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     dl_files = analysis.workflow_dl_files
     
-    ### creating dictionary based on files to download predetermined by workflow w/ keep operators
+    ### creating dicionary based on files to download predetermined by workflow w/ keep operators
     dl_dict = {}
     
     for dl in dl_files.all():
-        #print dl
         temp_dict = {}
         temp_dict['filename'] = dl.filename
         temp_dict['pair_id'] = dl.pair_id
@@ -490,8 +503,6 @@ def download_history_files(analysis) :
     
     # Iterating through files in current galaxy history
     for results in download_list:
-        #print "results"
-        #print results
         
         # download file if result state is "ok"
         if results['state'] == 'ok':
@@ -501,10 +512,6 @@ def download_history_files(analysis) :
             if curr_file_id in dl_dict:
                 curr_dl_dict = dl_dict[curr_file_id]
                 
-                #print "#######results"
-                #print "found in dict"
-                #print results
-                
                 result_name = curr_dl_dict['filename'] + '.' + file_type
             
                 # size of file defined by galaxy
@@ -512,13 +519,9 @@ def download_history_files(analysis) :
                 # URL to download
                 download_url = connection.make_url(str(results['dataset_id']), is_data=True, key=False)
                 
-                #print "download url"
-                #print download_url
-                #print file_type
-                #print download_url
-                
-                # getting file_store_uuid
-                filestore_uuid = create(source=download_url, filetype=file_type, permanent=True)
+                # getting file_store_uuid, 
+                # TODO: when changing permanent=True, fix update of % download of file 
+                filestore_uuid = create(source=download_url, filetype=file_type, permanent=False)
                 
                 # adding history files to django model 
                 temp_file = AnalysisResult(analysis_uuid=analysis.uuid, file_store_uuid=filestore_uuid, file_name=result_name, file_type=file_type)
@@ -529,7 +532,7 @@ def download_history_files(analysis) :
                 # downloading analysis results into file_store
                 # only download files if size is greater than 1
                 if file_size > 0:
-                    task_id = import_file.subtask((filestore_uuid, False, False, file_size,))
+                    task_id = import_file.subtask((filestore_uuid, True, False, file_size,))
                     task_list.append(task_id)
             
     return task_list

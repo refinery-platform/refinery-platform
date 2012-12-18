@@ -4,23 +4,24 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
-from data_set_manager.models import Investigation, Node
 from datetime import datetime
+import logging
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.signals import user_logged_in
-from django.db import models
+from django.core.mail import mail_admins
+from django.db import models, transaction
 from django.db.models import Max, signals
 from django.db.models.signals import post_save, post_init
+from django.db.utils import IntegrityError
 from django.forms import ModelForm
 from django_extensions.db.fields import UUIDField
-from file_store.models import get_file_size
-from file_store.tasks import read
-from galaxy_connector.models import Instance
-from guardian.shortcuts import assign, get_users_with_perms, \
-    get_groups_with_perms
+from guardian.shortcuts import assign, get_users_with_perms, get_groups_with_perms
 from registration.signals import user_registered, user_activated
-import logging
+from data_set_manager.models import Investigation, Node, Study, Assay
+from file_store.models import get_file_size
+from galaxy_connector.models import Instance
 
 
 logger = logging.getLogger(__name__)
@@ -56,10 +57,12 @@ def create_user_profile_registered(sender, user, request, **kwargs):
     user_object.groups.add( ExtendedGroup.objects.public_group() )
 
     logger.info('user profile for user %s has been created after registration %s' % ( user, datetime.now()))
+    mail_admins('New User Registered', 'User %s registered at %s' % (user, datetime.now()))
+    logger.info('email has been sent to admins informing of registration of user %s' % user)
 
-user_registered.connect(create_user_profile_registered)
+user_registered.connect(create_user_profile_registered, dispatch_uid="registered")
 
-from django.contrib import messages
+
 def register_handler(request, sender, user, **kwargs):
     messages.success(request, 'Thank you!  Your account has been activated.')
     
@@ -72,6 +75,7 @@ def create_catch_all_project( sender, user, request, **kwargs ):
         project.set_owner( user )
         user.get_profile().catch_all_project = project
         user.get_profile().save()
+        messages.success(request, "If you don't want to fill your profile out now, you can go to the <a href='/'>homepage</a>.", extra_tags='safe')
         
     
 # create catch all project for user if none exists
@@ -368,8 +372,8 @@ class Workflow ( SharableResource, ManageableResource ):
 
     data_inputs = models.ManyToManyField( WorkflowDataInput, blank=True )
     internal_id = models.CharField( max_length=50 )
-    
     workflow_engine = models.ForeignKey( WorkflowEngine )    
+    show_in_repository_mode = models.BooleanField( default=False )
 
     def __unicode__(self):
         return self.name + " - " + self.summary
@@ -520,3 +524,131 @@ def create_manager_group( sender, instance, created, **kwargs ):
         post_save.connect(create_manager_group, sender=ExtendedGroup)        
         
 post_save.connect(create_manager_group, sender=ExtendedGroup)
+
+
+class NodeSet(SharableResource):
+    '''A collection of Nodes representing data files.
+    Used to save selection state between sessions and to map data files to workflow inputs.
+
+    '''
+    nodes = models.ManyToManyField(Node, blank=True, null=True)
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay)
+
+    class Meta:
+        verbose_name = "nodeset"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
+            ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
+        )
+
+
+@transaction.commit_manually()
+def create_nodeset(name, summary='', nodes=[], study=None, assay=None):
+    '''Create a new NodeSet from a list of Nodes.
+
+    :param name: name of the new NodeSet.
+    :type name: str.
+    :param summary: description of the new NodeSet.
+    :type summary: str.
+    :param nodes: list of Node UUIDs.
+    :type nodes: list.
+    :param study: Study model instance.
+    :type study: Study.
+    :param study: Assay model instance.
+    :type study: Assay.
+    :returns: NodeSet -- new instance.
+    :raises: IntegrityError, ValueError
+
+    '''
+    try:
+        nodeset = NodeSet.objects.create(name=name, summary=summary, study=study, assay=assay)
+        nodeset.nodes.add(*nodes)
+    except (IntegrityError, ValueError) as e:
+        transaction.rollback()
+        logger.error("Failed to create NodeSet: {}".format(e.message))
+        raise
+    transaction.commit()
+    logger.info("NodeSet created with UUID '{}'".format(nodeset.uuid))
+    return nodeset
+
+
+def get_nodeset(uuid):
+    '''Retrieve a NodeSet given its UUID.
+
+    :param uuid: NodeSet UUID.
+    :type uuid: str.
+    :returns: NodeSet -- instance that corresponds to the given UUID.
+    :raises: DoesNotExist
+
+    '''
+    try:
+        return NodeSet.objects.get(uuid=uuid)
+    except NodeSet.DoesNotExist:
+        logger.error("Failed to retrieve NodeSet: UUID '{}' does not exist".format(uuid))
+        raise
+
+
+def get_nodesets(uuid):
+    '''Retrieve all the NodeSets that a Node with the given UUID is part of.
+
+    :param uuid: Node UUID.
+    :type uuid: str.
+    :returns: list -- NodeSet instances that the Node is part of.
+    :raises: DoesNotExist
+
+    '''
+    try:
+        node = Node.objects.get(uuid=uuid)
+    except Node.DoesNotExist:
+        logger.error("Failed to retrieve NodeSets: Node with UUID '{}' does not exist".format(uuid))
+        raise
+    return node.nodeset_set.all()
+
+
+def update_nodeset(uuid, name='', summary='', nodes=[], study=None, assay=None):
+    '''Replace data in an existing NodeSet with the new data.
+
+    :param uuid: NodeSet UUID.
+    :type uuid: str.
+    :param name: new NodeSet name.
+    :type name: str.
+    :param summary: new NodeSet description.
+    :type summary: str.
+    :param nodes: list of new Node UUIDs.
+    :type nodes: list.
+    :param study: Study model instance.
+    :type study: Study.
+    :param study: Assay model instance.
+    :type study: Assay.
+    :raises: DoesNotExist
+
+    '''
+    try:
+        nodeset = get_nodeset(uuid=uuid)
+    except NodeSet.DoesNotExist:
+        logger.error("Failed to update NodeSet: UUID '{}' does not exist".format(uuid))
+        raise
+    if name:
+        nodeset.name = name
+    if summary:
+        nodeset.summary = summary
+    if study:
+        nodeset.study = study
+    if assay:
+        nodeset.assay = assay
+    if nodes:
+        nodeset.nodes.clear()
+        nodeset.nodes.add(*nodes)
+    nodeset.save()
+
+
+def delete_nodeset(uuid):
+    '''Delete a NodeSet specified by UUID.
+
+    :param uuid: NodeSet UUID.
+    :type uuid: str.
+
+    '''
+    NodeSet.objects.filter(uuid=uuid).delete()
+

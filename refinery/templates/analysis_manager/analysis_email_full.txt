@@ -1,0 +1,20 @@
+Dear {{first_name}} {{last_name}} ({{username}}),
+
+{% if success %}
+Your analysis successfully completed.  View your results here: {{url}}
+{% else %}
+Unfortunately, your analysis failed.  Please forward this email to your admin at 
+{{default_email}} for further assistance.
+{% endif %}
+
+Project: {{project}}
+Analysis: {{name}}
+Dataset used: {{dataset}}
+Workflow used: {{workflow}}
+Start time: {{start}} 
+End time: {{end}}
+Duration: {{duration}}
+
+We are looking forward to your next visit.
+
+{{site_name}} - {{site_domain}}

@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-	<form action="/projects/{{ project.uuid }}/edit/" method="post">{% csrf_token %}
+	<form action="{% url project_edit project.uuid %}" method="post">{% csrf_token %}
 		<table>		
 			{{ form.as_table }}
 		</table>

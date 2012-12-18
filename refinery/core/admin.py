@@ -5,6 +5,7 @@ Created on Feb 20, 2012
 '''
 
 from django.contrib import admin
+from tastypie.models import ApiKey
 from core.models import UserProfile
 from core.models import ExtendedGroup
 from core.models import Project
@@ -16,7 +17,7 @@ from core.models import WorkflowDataInput
 from core.models import WorkflowDataInputMap
 from core.models import Analysis
 from core.models import DiskQuota
-from tastypie.models import ApiKey
+from core.models import NodeSet
 
 from guardian.admin import GuardedModelAdmin
 
@@ -54,3 +55,4 @@ admin.site.register(WorkflowDataInput)
 admin.site.register(WorkflowDataInputMap)
 admin.site.register(Analysis,AnalysisAdmin)
 admin.site.register(DiskQuota,DiskQuotaAdmin)
+admin.site.register(NodeSet)

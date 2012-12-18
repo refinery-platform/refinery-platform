@@ -13,7 +13,7 @@ from django.core.urlresolvers import resolve, reverse
 from django.http import HttpResponse, HttpResponseForbidden, \
     HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
-from django.template import RequestContext
+from django.template import RequestContext, loader
 from django.utils import simplejson
 from file_store.models import FileStoreItem, FileStoreItem
 from galaxy_connector.models import Instance
@@ -21,9 +21,11 @@ from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
     get_perms, get_objects_for_group, get_objects_for_user, get_perms, \
     get_users_with_perms
 from haystack.query import SearchQuerySet
-import logging
-import urllib2
 from visualization_manager.views import igv_multi_species
+import logging
+import os.path
+import settings
+import urllib2
 
 
 logger = logging.getLogger(__name__)
@@ -71,6 +73,10 @@ def statistics(request):
     
     return render_to_response('core/statistics.html', { "users": users, "groups": groups, "projects": projects, "workflows": workflows, "data_sets": data_sets, "files": files, "base_url": base_url }, context_instance=RequestContext( request ) )
 
+def custom_error_page(request, template, msg):
+    temp_loader = loader.get_template(template)
+    context = RequestContext(request, {'msg': msg})
+    return temp_loader.render(context)
 
 @login_required()
 def user(request, query):
@@ -81,7 +87,7 @@ def user(request, query):
         user = get_object_or_404( UserProfile, uuid=query ).user
         
     if len( get_shared_groups( request.user, user ) ) == 0 and user != request.user:
-        return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view the profile of user " + user.username + ".</h1>" )
+        return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view the profile of user " + user.username + "."))
 
     return render_to_response('core/user.html', {'profile_user': user }, context_instance=RequestContext( request ) )
 
@@ -120,7 +126,8 @@ def group(request, query):
 
     # only group members are allowed to see group pages
     if not group.id in request.user.groups.values_list('id', flat=True):
-        return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view group " + group.name + ".</h1>" )
+        return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view group " + group.name + "."))
+        
                         
     return render_to_response('core/group.html', {'group': group }, context_instance=RequestContext( request ) )
 
@@ -133,21 +140,14 @@ def project_slug(request,slug):
 def project(request, uuid):
     project = get_object_or_404( Project, uuid=uuid )
     public_group = ExtendedGroup.objects.public_group()
-    
-    print get_perms( public_group, project )
-    
+        
     if not request.user.has_perm('core.read_project', project ):
         if not 'read_project' in get_perms( public_group, project ):
-            return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this project.</h1>" )
-            
-    permissions = get_users_with_perms( project, attach_perms=True )
-    
-    accessors = project.get_groups()
-    print accessors
-    
+            return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view this project."))
+                
     analyses = project.analyses.all()
     
-    return render_to_response('core/project.html', { 'project': project, "permissions": permissions, "analyses": analyses }, context_instance=RequestContext( request ) )
+    return render_to_response('core/project.html', { 'project': project, "analyses": analyses }, context_instance=RequestContext( request ) )
 
 
 @login_required()
@@ -160,7 +160,8 @@ def project_new(request):
             project.set_owner( request.user )
             # Process the data in form.cleaned_data
             # ...
-            return HttpResponseRedirect( "/" ) # Redirect after POST
+            
+            return HttpResponseRedirect( reverse('project', args=(project.uuid,)) ) # Redirect after POST
     else:
         form = ProjectForm() # An unbound form
 
@@ -176,7 +177,7 @@ def project_edit(request,uuid):
     project = get_object_or_404( Project, uuid=uuid )
         
     if not request.user.has_perm('core.change_project', project ):
-        return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to edit this project.</h1>" )
+        return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to edit this project."))
             
     if request.method == "POST": # If the form has been submitted...
         form = ProjectForm( request.POST, instance=project ) # A form bound to the POST data
@@ -256,17 +257,20 @@ def data_set_slug(request,slug):
 def data_set(request,uuid):    
     data_set = get_object_or_404( DataSet, uuid=uuid )
     public_group = ExtendedGroup.objects.public_group()
-        
+    
     if not request.user.has_perm( 'core.read_dataset', data_set ):
         if not 'read_dataset' in get_perms( public_group, data_set ):
-            return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this data set.</h1>" )
-        
-    permissions = get_users_with_perms( data_set, attach_perms=True )
-    
+            return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view this data set."))
+            
     #get studies
     investigation = data_set.get_investigation()
     studies = investigation.study_set.all()
-    workflows = Workflow.objects.all()
+    
+    # If repository mode, only return workflows tagged for the repository
+    if (settings.REFINERY_REPOSITORY_MODE):
+        workflows = Workflow.objects.filter(show_in_repository_mode=True)
+    else:
+        workflows = Workflow.objects.all()
     
     study_uuid = studies[0].uuid
     assay_uuid = studies[0].assay_set.all()[0].uuid
@@ -287,13 +291,15 @@ def data_set(request,uuid):
     except:
         pass
     
+    print( get_perms( request.user, data_set ) )
+    
     return render_to_response('core/data_set.html', 
                               {
                                 'data_set': data_set, 
-                                "permissions": permissions,
                                 "studies": studies,
                                 "study_uuid": study_uuid,
                                 "assay_uuid": assay_uuid,
+                                "has_change_dataset_permission": 'change_dataset' in get_perms( request.user, data_set ),
                                 "workflows": workflows,
                                 "isatab_archive": isatab_archive,
                                 "pre_isatab_archive": pre_isatab_archive,                             
@@ -302,7 +308,6 @@ def data_set(request,uuid):
 
 
 def samples(request, ds_uuid, study_uuid, assay_uuid):
-    print "core.views.samples called"
     data_set = get_object_or_404( DataSet, uuid=ds_uuid )
     
     # getting current workflows
@@ -334,11 +339,9 @@ def workflow(request, uuid):
     
     if not request.user.has_perm('core.read_workflow', workflow ):
         if not 'read_workflow' in get_perms( public_group, workflow ):
-            return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this workflow.</h1>" )
-        
-    permissions = get_users_with_perms( workflow, attach_perms=True )
-    
-    return render_to_response('core/workflow.html', { 'workflow': workflow, "permissions": permissions }, context_instance=RequestContext( request ) )
+            return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view this workflow."))
+            
+    return render_to_response('core/workflow.html', { 'workflow': workflow }, context_instance=RequestContext( request ) )
 
 
 def workflow_engine(request,uuid):  
@@ -347,11 +350,9 @@ def workflow_engine(request,uuid):
     
     if not request.user.has_perm('core.read_workflowengine', workflow_engine ):
         if not 'read_workflowengine' in get_perms( public_group, workflow_engine ):
-            return HttpResponseForbidden("<h1>User " + request.user.username + " is not allowed to view this workflow engine.</h1>" )
-        
-    permissions = get_users_with_perms( workflow_engine, attach_perms=True )
-    
-    return render_to_response('core/workflow_engine.html', { 'workflow_engine': workflow_engine, "permissions": permissions }, context_instance=RequestContext( request ) )
+            return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view this workflow engine."))
+            
+    return render_to_response('core/workflow_engine.html', { 'workflow_engine': workflow_engine }, context_instance=RequestContext( request ) )
 
 
 def admin_test_data( request ):
@@ -469,8 +470,6 @@ def admin_test_data( request ):
     public_members = [ ".nils", ".richard", ".psalm", ".ilya", ".shannan" ]    
     for username in public_members:
         user_object = User.objects.get( username__exact=username )
-        print "username"
-        print username
         print ExtendedGroup.objects.public_group()
         user_object.groups.add( ExtendedGroup.objects.public_group() )
         
@@ -671,7 +670,7 @@ def analyses(request, project_uuid ):
                               {"project": project, "analyses": analyses},
                               context_instance=RequestContext(request))
 
-def analysis(request, project_uuid, analysis_uuid ):
+def analysis(request, analysis_uuid ):
     analysis = Analysis.objects.get(uuid=analysis_uuid)
     
     project = analysis.project
@@ -685,15 +684,21 @@ def analysis(request, project_uuid, analysis_uuid ):
     # getting file_store references
     file_all = []
     for i in analysis_results.all():
-      file_store_uuid = i.file_store_uuid
-      fs = FileStoreItem.objects.get(uuid=file_store_uuid)
-      file_all.append(fs)
+        file_store_uuid = i.file_store_uuid
+        fs = FileStoreItem.objects.get(uuid=file_store_uuid)
+        file_all.append(fs)
+    
+    # NG: get file_store items for inputs
+    input_filenames = []
+    for workflow_input in data_inputs.all():
+        input_filenames.append( os.path.basename( FileStoreItem.objects.get(uuid=workflow_input.data_uuid).get_file_object().name ) ) 
     
     return render_to_response('core/analysis.html',
                               {
                                "analysis": analysis,
                                "analysis_results": analysis_results,
                                "inputs": data_inputs,
+                               "input_filenames": input_filenames, 
                                "project": project,
                                "workflow": workflow, 
                                "fs_files" : file_all
@@ -706,22 +711,12 @@ def analysis_redirect(request, project_uuid, analysis_uuid):
     return HttpResponseRedirect(reverse('analysis_manager.views.analysis', args=(analysis_uuid,)))
 """
 
-def solr(request):
-    # copy querydict to make it editable
-    query = request.GET.copy()
-    
-    if request.user.is_authenticated():        
-        # limit query to objects owned by the current user and to
-        # objects shared with groups that the user is part of who
-        # have at least read permissions for this model instance 
-        user_id = request.user.id
-        group_ids = request.user.groups.all().values_list( "id", flat=True )    
-        query.update( { "fq": "owner_id:" + str( user_id ) + " OR "  + "(group_ids:" + " OR ".join( [ str( g ) for g in group_ids ]) + ")" } )        
-    else:
-        # limit results to anything shared with the public group
-        query.update( { "fq": "group_ids:" + str( ExtendedGroup.objects.public_group().id ) } )    
-        
-    return HttpResponse( urllib2.urlopen( "http://127.0.0.1:8983/solr/core/select?" + query.urlencode() ).read(), mimetype='application/json' )
+def solr_select(request, core):
+    # core format is <name_of_core>    
+    # query.GET is a querydict containing all parts of the query
+    url = settings.REFINERY_SOLR_BASE_URL + core + "/select?" + request.GET.urlencode()
+    return HttpResponse( urllib2.urlopen( url ).read(), mimetype='application/json' )
+
 
 def solr_igv(request):
     '''
@@ -734,30 +729,49 @@ def solr_igv(request):
     
     # copy querydict to make it editable
     if request.is_ajax():
-        query = request.GET.copy()
         logger.debug("solr_igv called: request is ajax")
+        logger.debug(simplejson.dumps(request.POST, indent=4))
+        
+        # attributes associated with node selection from interface
+        node_selection_blacklist_mode = request.POST['node_selection_blacklist_mode']
+        if node_selection_blacklist_mode == 'true':
+            node_selection_blacklist_mode = True
+        else:
+            node_selection_blacklist_mode = False
+        node_selection = request.POST.getlist('node_selection[]')
+        
+        logger.debug("node_selection_blacklist_mode")
+        logger.debug(node_selection_blacklist_mode)
+        logger.debug(node_selection)
         
         # extracting solr query from request 
         for i, val in request.POST.iteritems():
+            # for solr query for data
             if i == 'query':
                 solr_query = val
-                solr_results = get_solr_results(solr_query)
+                solr_results = get_solr_results(solr_query, selected_mode=node_selection_blacklist_mode, selected_nodes=node_selection)
                 #logger.debug("solr_results")
                 #logger.debug(simplejson.dumps(solr_results, indent=4))
         
+            # for solr query for annotation files 
             elif i == 'annot':
                 solr_annot = get_solr_results(val)
                 solr_annot
                 #logger.debug("solr_annot")
                 #logger.debug(simplejson.dumps(solr_annot, indent=4))
+    
         
         # if solr query returns results
         if solr_results:
             session_urls = igv_multi_species(solr_results, solr_annot)
-            
+        
+        logger.debug("session_urls")
+        logger.debug(simplejson.dumps(session_urls, indent=4))
+        
         return HttpResponse(simplejson.dumps(session_urls),mimetype='application/json')
+
     
-def get_solr_results(query, facets=False, jsonp=False, annotation=False):
+def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uuids=False, selected_mode=True, selected_nodes=None ):
     '''
     Helper function for taking solr request url. Removes facet requests, converts to json, from input solr query  
     
@@ -767,6 +781,12 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False):
     :type facets: boolean
     :param jsonp: Removes JSONP query from solr query string
     :type jsonp: boolean
+    :param only_uuids: Returns list of file_uuids from all solr results
+    :type only_uuids: boolean
+    :param selected_mode: UI selection mode (blacklist or whitelist)
+    :type selected_mode: boolean
+    :param selected_nodes: List of UUIDS to remove from the solr query
+    :type selected_nodes: array
     :returns: dictionary of current solr results
     '''
     
@@ -786,21 +806,62 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False):
         
     # proper url encoding                  
     query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
-    
+        
     # opening solr query results
     results =  urllib2.urlopen( query ).read()
         
     # converting results into json for python 
     results = simplejson.loads(results)
     
-    # number of results 
-    num_found = int(results["response"]["numFound"])
-    logger.debug("core.views: get_solr_results num_found=%s" % num_found)
+    # number of solr results 
+    if selected_mode:
+        num_found = int(results["response"]["numFound"])
+    else:
+        num_found = 0
     
+    #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
+    
+    # IF list of nodes to remove from query exists
+    if selected_nodes:
+        # need to iterate over list backwards to properly delete from a list
+        for i in xrange(len(results["response"]["docs"]) - 1, -1, -1):
+            node = results["response"]["docs"][i]
+            
+            # blacklist mode (remove uuid's from solr query) 
+            if selected_mode:
+               if 'file_uuid' in node:
+                   # if the current node should be removed from the results
+                   if node["file_uuid"] in selected_nodes: 
+                       del results["response"]["docs"][i]
+                       num_found -= 1
+            
+            # whitelist mode (add's uuids from solr query) 
+            else:
+               if 'file_uuid' in node:
+                   # if the current node should be removed from the results
+                   if node["file_uuid"] not in selected_nodes: 
+                       del results["response"]["docs"][i]
+                       num_found += 1
+    
+    
+    # updating the number found in the list
+    results["response"]["numFound"] = str(num_found)
+    
+    #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
+    
+    # Will return only list of file_uuids
+    if only_uuids:
+        ret_file_uuids = []
+        solr_results = results["response"]["docs"]
+        for res in solr_results:
+            ret_file_uuids.append(res["file_uuid"])
+        return ret_file_uuids
+        
     if num_found == 0:
         return None
     else:
         return results
+    
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
     logger.debug("core.views.samples_solr called")

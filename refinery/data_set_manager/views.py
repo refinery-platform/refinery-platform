@@ -60,9 +60,7 @@ def contents(request, study_uuid, assay_uuid ):
 # ajax function for returning typeahead queries
 def search_typeahead(request):
     
-    if (request.is_ajax()):
-        #print "RETURNING AJAX"
-        
+    if (request.is_ajax()):        
         search_value = request.POST.getlist('search')
         
         results = SearchQuerySet().autocomplete(content_auto=search_value[0])
@@ -72,10 +70,7 @@ def search_typeahead(request):
         for res in results:
             ret_list.append(res.name)
         return HttpResponse( simplejson.dumps( ret_list, indent=2 ), mimetype='application/json' )
-    
-    #else:
-        #print "NOT AJAX"
-        #return HttpResponse("not ajax")
+
 
 #===============================================================================
 # ISA-Tab import

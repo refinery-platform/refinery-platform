@@ -13,6 +13,13 @@
 {% endblock %}
 
 {% block content %}
+{% if messages %}
+    {% for message in messages %}
+    	{% if 'safe' in message.tags %}
+    		<p>{{message|safe}}</p>
+    	{% endif %}
+    {% endfor %}
+{% endif %}
 <div class="refinery-panel refinery-panel-content scrollable">
 	<div class="row-fluid">
 		<form method="post" action="" class="wide" id="user-edit-form">
@@ -21,11 +28,6 @@
 			<span class="refinery-header-left">
 				<h3>Profile for {{profile_user.username}}</h3>				
 			</span>
-			<span class="refinery-header-right">
-				<!-- <input type="submit"> -->
-				<h3><a href="#" id="submit-link"><i class="icon-ok"></i></a></h3>
-				<h3><a href="{% url 'user' profile_user.get_profile.uuid %}"><i class="icon-remove"></i></a></h3>			
-			</span>		
 		</div>		
 		{% if uform.errors %}
   		<div class="alert alert-error">Please correct the errors below.{{ uform.non_field_errors }}</div>
@@ -55,8 +57,13 @@
 		
 		<div class="refinery-subheader">
 			<h4>Profile Visibility</h4>
-		</div>		
-		<p>{{pform.is_public}}&nbsp;Make my profile visible to the public.</p>
+		</div>
+
+		<p>
+			<label class="checkbox">
+			{{pform.is_public}} Make my profile visible to the public.
+			</label>
+		</p>
 		
 		<div class="refinery-header">
 			<span class="refinery-header-left">
@@ -75,6 +82,10 @@
 			</span>			
 		</div>		
 		<p>Joined on {{ profile_user.date_joined }} Last login on {{ profile_user.last_login }}</p>
+		
+		<a href="#" class="btn btn-primary" id="submit-link">Save</a>
+		<a href="{% url 'user' profile_user.get_profile.uuid %}" class="btn">Cancel</a>			
+		
 		</form>		
 	</div>
 </div>  

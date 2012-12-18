@@ -20,9 +20,6 @@
 			<span class="refinery-header-left">
 				<h3>Profile for {{profile_user.username}}</h3>				
 			</span>			
-			<span class="refinery-header-right">
-				<h3><a href="{% url user_edit profile_user.get_profile.uuid %}"><i class="icon-pencil"></i></a></h3>				
-			</span>			
 		</div>		
 		
 		<div class="refinery-subheader">
@@ -74,6 +71,8 @@
 			</span>			
 		</div>		
 		<p>Joined on {{ profile_user.date_joined }} Last login on {{ profile_user.last_login }}</p>
+		
+		<a class="btn" href="{% url user_edit profile_user.get_profile.uuid %}">Edit</a>				
 			
 	{% else %}
 	    <p>No valid user.</p>

@@ -11,6 +11,9 @@ from core.models import WorkflowEngine
 from workflow_manager.tasks import get_workflows
 from django.contrib.auth.decorators import login_required
 import simplejson
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @login_required()
@@ -23,7 +26,7 @@ def import_workflows(request):
     for engine in workflow_engines:
         get_workflows( engine );
         new_workflow_count = engine.workflow_set.all().count()
-        print "Engine: " + engine.name + " - " + str( ( new_workflow_count ) ) + ' workflows after.'
+        logger.debug( "Engine: " + engine.name + " - " + str( ( new_workflow_count ) ) + ' workflows after.' )
         workflows += new_workflow_count
     
     return HttpResponse( str( workflows ) + ' workflows imported.' ) 

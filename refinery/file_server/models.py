@@ -8,14 +8,14 @@ import logging
 import simplejson
 from django.db import models, transaction
 from django.db.utils import IntegrityError
-from file_store.models import FileStoreItem
+import file_store.models as fs_models
 import file_server.tdf_file as tdf_module
 
 
 logger = logging.getLogger('file_server')
 
-# list of the available file server models - update if new models are added
-FILE_SERVER_MODELS = ('tdfitem', 'bamitem', 'wigitem')
+# list of lowercase names of file server models (update if new models are added)
+FILE_SERVER_MODELS = ('tdfitem', 'bamitem', 'wigitem', 'bigbeditem')
 #TODO: get names of all classes derived from _FileServerItem automatically
 
 
@@ -48,7 +48,7 @@ class _FileServerItem(models.Model):
     Do not use directly.  Use derived models instead.
 
     '''
-    data_file = models.ForeignKey(FileStoreItem, unique=True)
+    data_file = models.ForeignKey(fs_models.FileStoreItem, unique=True)
 
     objects = _FileServerItemManager()
 
@@ -129,14 +129,30 @@ class TDFItem(_FileServerItem):
         return self.data_file.get_file_object()
 
 
+class BigBEDItem(_FileServerItem):
+    '''Represents a BigBED file.
+
+    '''
+    def __unicode__(self):
+        return self.data_file.uuid
+
+    def get_file_object(self):
+        '''Return the TDF file object.
+
+        :returns: file object or None if it's not available.
+
+        '''
+        return self.data_file.get_file_object()
+
+
 class BAMItem(_FileServerItem):
     '''Represents a BAM file and optionally links it to an index file and a TDF file.
 
     '''
     #: BAM file index
-    index_file = models.ForeignKey(FileStoreItem, blank=True, null=True, related_name="bamitem_index_file")
+    index_file = models.ForeignKey(fs_models.FileStoreItem, blank=True, null=True, related_name="bamitem_index_file")
     #: Visualization file
-    tdf_file = models.ForeignKey(FileStoreItem, blank=True, null=True, related_name="bamitem_tdf_file")
+    tdf_file = models.ForeignKey(fs_models.FileStoreItem, blank=True, null=True, related_name="bamitem_tdf_file")
     # related_name is required to avoid naming clashes in reverse relationships
     # http://stackoverflow.com/questions/5180729/django-related-name-attribute-databaseerror
 
@@ -199,7 +215,7 @@ class BAMItem(_FileServerItem):
         '''
         logger.debug("Updating BAMItem using TDF UUID '%s'", tdf_uuid)
 
-        item = FileStoreItem.objects.get_item(uuid=tdf_uuid)
+        item = fs_models.FileStoreItem.objects.get_item(uuid=tdf_uuid)
         if item:
             self.tdf_file = item
             try:
@@ -226,7 +242,7 @@ class WIGItem(_FileServerItem):
 
     '''
     #: Visualization file
-    tdf_file = models.ForeignKey(FileStoreItem, blank=True, null=True)
+    tdf_file = models.ForeignKey(fs_models.FileStoreItem, blank=True, null=True)
 
     def __unicode__(self):
         if self.tdf_file:
@@ -285,21 +301,21 @@ class WIGItem(_FileServerItem):
         :returns: bool -- True if update succeeded, False if failed.
 
         '''
-        logger.debug("Updating WIGItem using TDF UUID '%s'", tdf_uuid)
+        logger.debug("Updating WIGItem '{}' using TDF UUID '{}'".format(self.data_file.uuid, tdf_uuid))
 
-        item = FileStoreItem.objects.get_item(uuid=tdf_uuid)
+        item = fs_models.FileStoreItem.objects.get_item(uuid=tdf_uuid)
         if item:
             self.tdf_file = item
             try:
                 self.save()
             except IntegrityError as e:
-                logger.error("Failed updating WIGItem\n%s", e.message)
+                logger.error("WIGItem update failed: {}".format(e.message))
                 return False
         else:
-            logger.error("Failed updating WIGItem")
+            logger.error("WIGItem update failed: FileStoreItem '{}' does not exist".format(tdf_uuid))
             return False
 
-        logger.info("WIGItem updated")
+        logger.info("Updated WIGItem '{}'".format(self.data_file_file.uuid))
         return True
 
     def get_aux_file_item(self):
@@ -319,20 +335,23 @@ def add(data_file_uuid, aux_file_uuid=None):
     :returns: instance of a _FileServerItem subclass or None if there was an error.
 
     '''
-    data_file = FileStoreItem.objects.get_item(uuid=data_file_uuid)
+    data_file = fs_models.FileStoreItem.objects.get_item(uuid=data_file_uuid)
     if not data_file:
-        logger.error("Could not create _FileServerItem: data_file_uuid doesn't exist")
+        logger.error("Could not create _FileServerItem: FileServerItem UUID '{}' doesn't exist"
+                     .format(data_file_uuid))
         return None
 
     file_type = data_file.get_filetype()
-    if file_type == 'tdf':
+    if file_type == fs_models.TDF:
         return _add_tdf(data_file=data_file)
-    elif file_type == 'bam':
+    elif file_type == fs_models.BAM:
         return _add_bam(data_file=data_file, tdf_file_uuid=aux_file_uuid)
-    elif file_type == 'wig':
+    elif file_type == fs_models.WIG:
         return _add_wig(data_file=data_file, tdf_file_uuid=aux_file_uuid)
+    elif file_type == fs_models.BIGBED:
+        return _add_bigbed(data_file=data_file)
     else:
-        logger.error("Could not create _FileServerItem: unknown file type '%s'", file_type)
+        logger.error("Could not create _FileServerItem: unknown file type '{}'".format(file_type))
         return None
 
 
@@ -413,8 +432,8 @@ def get_aux_file_item(data_file_uuid):
 def _add_tdf(data_file):
     '''Create a new TDFItem instance.
 
-    :param data_file_uuid: UUID of the TDF file.
-    :type data_file_uuid: str.
+    :param data_file: TDF file instance.
+    :type data_file: file_store.models.FileStoreItem.
     :returns: TDFItem -- newly created TDFItem model instance or None if there was an error.
 
     '''
@@ -427,7 +446,28 @@ def _add_tdf(data_file):
         return None
 
     transaction.commit()
-    logger.info("TDFItem created")
+    logger.info("TDFItem created with UUID '{}'".format(item.data_file.uuid))
+    return item
+
+
+@transaction.commit_manually()
+def _add_bigbed(data_file):
+    '''Create a new BigBEDItem instance.
+
+    :param data_file: BigBED file instance.
+    :type data_file: file_store.models.FileStoreItem.
+    :returns: BigBEDItem -- newly created BigBEDItem model instance or None if there was an error.
+
+    '''
+    try:
+        item = BigBEDItem.objects.create(data_file=data_file)
+    except (IntegrityError, ValueError) as e:
+        transaction.rollback()
+        logger.error("Failed to create BigBEDItem\n%s", e.message)
+        return None
+
+    transaction.commit()
+    logger.info("BigBEDItem created with UUID '{}'".format(item.data_file.uuid))
     return item
 
 
@@ -437,8 +477,8 @@ def _add_bam(data_file, tdf_file_uuid=None):
     Manual transaction control is required when using PostgreSQL and save() or create() raise an exception.
     See: https://docs.djangoproject.com/en/dev/topics/db/transactions/#handling-exceptions-within-postgresql-transactions
 
-    :param data_file_uuid: BAM file instance.
-    :type data_file_uuid: str.
+    :param data_file: BAM file instance.
+    :type data_file: file_store.models.FileStoreItem.
     :param tdf_file_uuid: UUID of the TDF file.
     :type tdf_file_uuid: str.
     :returns: BAMItem -- newly created BAMItem model instance or None if there was an error.
@@ -447,7 +487,7 @@ def _add_bam(data_file, tdf_file_uuid=None):
 
     # check if we can get the TDF file
     if tdf_file_uuid:
-        tdf_file = FileStoreItem.objects.get_item(tdf_file_uuid)
+        tdf_file = fs_models.FileStoreItem.objects.get_item(tdf_file_uuid)
     else:
         tdf_file = None
         logger.debug("TDF file UUID was not provided")
@@ -471,8 +511,8 @@ def _add_wig(data_file, tdf_file_uuid=None):
     Manual transaction control is required when using PostgreSQL and save() or create() raise an exception.
     See: https://docs.djangoproject.com/en/dev/topics/db/transactions/#handling-exceptions-within-postgresql-transactions
 
-    :param data_file_uuid: WIG file instance.
-    :type data_file_uuid: str.
+    :param data_file: WIG file instance.
+    :type data_file: file_store.models.FileStoreItem.
     :param tdf_file_uuid: UUID of the TDF file.
     :type tdf_file_uuid: str.
     :returns: WIGItem -- newly created WIGItem model instance or None if there was an error.
@@ -481,20 +521,20 @@ def _add_wig(data_file, tdf_file_uuid=None):
 
     # check if we can get the TDF file
     if tdf_file_uuid:
-        tdf_file = FileStoreItem.objects.get_item(tdf_file_uuid)
+        tdf_file = fs_models.FileStoreItem.objects.get_item(tdf_file_uuid)
     else:
         tdf_file = None
         logger.debug("TDF file UUID was not provided")
 
     # create WIGItem instance
     try:
-        item = BAMItem.objects.create(data_file=data_file, tdf_file=tdf_file)
+        item = WIGItem.objects.create(data_file=data_file, tdf_file=tdf_file)
     except (IntegrityError, ValueError) as e:
         transaction.rollback()
-        logger.error("Failed to create WIGItem\n%s", e.message)
+        logger.error("Failed to create WIGItem. %s", e.message)
         return None
 
     transaction.commit()
-    logger.info("WIGItem created")
+    logger.info("WIGItem '{}' created".format(item.data_file.uuid))
     return item
 
