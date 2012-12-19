@@ -160,7 +160,8 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
                          e.errno, e.filename, e.strerror)
             return False
 
-        # temp file is only accessible by the owner by defaultmake 
+        # temp file is only accessible by the owner by default
+        # which prevents access by the web server if it is running as it's own user
         try:
             mode = os.stat(abs_dst_path).st_mode
             os.chmod(abs_dst_path, mode | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)

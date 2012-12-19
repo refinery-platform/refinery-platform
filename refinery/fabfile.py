@@ -371,7 +371,9 @@ def upload_refinery_settings():
     with prefix("workon refinery"), hide('commands'):
         refinery_home = run("pwd")
     django_settings_path = os.path.join(env.local_django_root, env.dev_settings_file)
-    upload_template(django_settings_path, os.path.join(refinery_home, "settings_local.py"))
+    upload_template(django_settings_path,
+                    os.path.join(refinery_home, "settings_local.py"),
+                    backup=False)
 
 
 @task
@@ -412,16 +414,16 @@ def create_refinery_db_user():
 
 
 @task
-@with_settings(shell="/bin/su postgres -c")  # we cannot execute commands with sudo as user postgres
+@with_settings(user=env.project_user)
 def create_refinery_db():
     '''Create PostgreSQL database for Refinery
 
     '''
     # check if the database already exists
     with settings(hide('commands'), warn_only=True):
-        db_list = sudo("psql -c 'SELECT datname FROM pg_database WHERE datistemplate = false;' -t")
+        db_list = run("psql template1 -c 'SELECT datname FROM pg_database WHERE datistemplate = false;' -t")
     if django_settings.DATABASES['default']['NAME'] not in db_list:
-        sudo("createdb -O {USER} {NAME}".format(**django_settings.DATABASES['default']))
+        run("createdb -O {USER} {NAME}".format(**django_settings.DATABASES['default']))
     else:
         puts("PostgreSQL database '{NAME}' already exists".format(**django_settings.DATABASES['default']))
 
@@ -479,6 +481,7 @@ def setup_refinery():
     execute(create_refinery_users)
     execute(create_galaxy_instances)
     execute(refinery_createsuperuser)
+#    execute(refinery_changepassword("admin"))
 
 
 @task
