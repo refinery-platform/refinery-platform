@@ -78,6 +78,6 @@ urlpatterns = patterns('',
     #url(r'^search/', include('haystack.urls')),
     url(r'^search/', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=sqs), name='search' ),
     url(r'^typeahead/$', search_typeahead),
-) + static( MEDIA_URL, document_root=MEDIA_ROOT + "/" + FILE_STORE_DIR )
+) + static( MEDIA_URL, document_root=MEDIA_ROOT)
 # for "static" see https://docs.djangoproject.com/en/dev/howto/static-files/#serving-other-directories
 
