@@ -42,9 +42,10 @@ def create_dir(file_path):
     """
     Name: create_dir
     Description:
-        creates a directory if it needs to be created
+    creates a directory if it needs to be created
     Parameters:
-        file_path: directory to create if necessary
+    file_path: directory to create if necessary
+
     """
     try:
         os.makedirs(file_path)
@@ -56,9 +57,10 @@ def delete_external_file(file_path):
     """
     Name: delete_external_file
     Description:
-        removes a file with the given path (that is outside the file_store)
+    removes a file with the given path (that is outside the file_store)
     Parameters:
-        file_path: location of the file to delete
+    file_path: location of the file to delete
+
     """
     try:
         os.remove(file_path)
@@ -70,13 +72,13 @@ def delete_external_file(file_path):
 def download_http_file(url, out_dir, accession, new_name=None, galaxy_file_size=None, as_task=True):
     """
     Name: download_http_file
-    Description:
-        downloads a file from a given URL
+    Description: 
+    downloads a file from a given URL
     Parameters:
-        url: URL for the file being downloaded
-        out_dir: base directory where file is being downloaded
-        accession: name of directory that will house the downloaded 
-                   file, in this case, the investigation accession
+    url: URL for the file being downloaded
+    out_dir: base directory where file is being downloaded
+    accession: name of directory that will house the downloaded file, in this case, the investigation accession
+    
     """
     out_dir = os.path.join(out_dir, accession) #directory where file downloads
     
@@ -139,11 +141,10 @@ def fix_last_col(file):
     """
     Name: fix_last_col
     Description:
-        If the header has empty columns in it, then it will delete this and
-        corresponding columns in the rows; returns 0 or 1 based on whether
-        it failed or was successful, respectively
+    If the header has empty columns in it, then it will delete this and corresponding columns in the rows; returns 0 or 1 based on whether it failed or was successful, respectively
     Parameters:
-        file: name of file to fix
+    file: name of file to fix
+
     """
     logger.info("trying to fix the last column if necessary")
     reader = csv.reader(open(file, 'rU'), dialect='excel-tab')
@@ -201,11 +202,12 @@ def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):
     """
     Name: zip_converted_files
     Description:
-        zips up the isatab and pre-isatab files from MAGE-Tab conversion
+    zips up the isatab and pre-isatab files from MAGE-Tab conversion
     Parameters:
-        accession: accession number of investigation
-        isatab_zip_loc: prefix for isatab zipped file (dir/accession)
-        preisatab_zip_loc: directory where pre-isatab zipped file will be
+    accession: accession number of investigation
+    isatab_zip_loc: prefix for isatab zipped file (dir/accession)
+    preisatab_zip_loc: directory where pre-isatab zipped file will be
+
     """
     logger.info("zipping up ISA-Tab files")
 
@@ -274,10 +276,10 @@ def convert_to_isatab(accession, isatab_zip_loc, preisatab_zip_loc):
     """
     Name: convert_to_isatab
     Description:
-        converts MAGE-Tab file from ArrayExpress into ISA-Tab, zips up the 
-        ISA-Tab, and zips up the MAGE-Tab
+    converts MAGE-Tab file from ArrayExpress into ISA-Tab, zips up the ISA-Tab, and zips up the MAGE-Tab
     Parameters:
-        accession: ArrayExpress study to convert
+    accession: ArrayExpress study to convert
+
     """
     logger = convert_to_isatab.get_logger()
     logger.info("logging from convert_to_isatab")
@@ -335,9 +337,8 @@ def get_arrayexpress_studies():
     """
     Name: get_arrayexpress_studies
     Description:
-        task that runs every Friday at 9:00PM that checks ArrayExpress for new
-        and updated studies, then pulls down their metadata, converts it to
-        ISA-Tab, and parses it into the Django database
+    task that runs every Friday at 9:00PM that checks ArrayExpress for new and updated studies, then pulls down their metadata, converts it to ISA-Tab, and parses it into the Django database
+
     """
     """
     If you don't want to fetch all studies, edit in this fashion:
@@ -351,15 +352,14 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None, da
     """
     Name: create_dataset
     Description:
-        creates (or updates) a dataset with the given investigation and user
-        and returns the dataset UUID or None if something went wrong
+    creates (or updates) a dataset with the given investigation and user and returns the dataset UUID or None if something went wrong
     Parameters:
-        investigation_uuid: UUID of the investigation that's being assigned
-                            to the dataset
-        username: username of the user this dataset will belong to
-        identifier: If not None, this will be used as the identifier of the data set.
-        title: If not None, this will be  
-        public: boolean value that determines if the dataset is public or not
+    investigation_uuid: UUID of the investigation that's being assigned to the dataset
+    username: username of the user this dataset will belong to
+    identifier: If not None, this will be used as the identifier of the data set.
+    title: If not None, this will be  
+    public: boolean value that determines if the dataset is public or not
+
     """
     #logger = create_dataset.get_logger()
 
@@ -429,7 +429,8 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None, da
 @task()
 def annotate_nodes(investigation_uuid):
     """
-    Adds all nodes in this investigation to the annotated nodes table for faster lookup. 
+    Adds all nodes in this investigation to the annotated nodes table for faster lookup.
+
     """
     investigation = Investigation.objects.get(uuid=investigation_uuid)
     
@@ -452,22 +453,16 @@ def parse_isatab(username, public, path, additional_raw_data_file_extension=None
     """
     Name: parse_isatab
     Description:
-        parses in an ISA-TAB file to create database entries and creates
-        or updates a dataset for the investigation to belong to; returns 
-        the dataset UUID or None if something went wrong
-        Use like this: parse_isatab(username, is_public, folder_name, 
-        additional_raw_data_file_extension, isa_archive=<path>, 
-        pre_isa_archive=<path>, file_base_path=<path>
+    parses in an ISA-TAB file to create database entries and creates or updates a dataset for the investigation to belong to; returns the dataset UUID or None if something went wrong. Use like this: parse_isatab(username, is_public, folder_name, additional_raw_data_file_extension, isa_archive=<path>, pre_isa_archive=<path>, file_base_path=<path>
     Parameters:
-        username: username of the person the dataset will belong to
-        public: boolean that determines if the dataset is public or not
-        path: absolute path of the ISA-Tab file to parse
-        additional_raw_data_file_extension: an optional argument that will 
-                    append a suffix to items in Raw Data File as need be
-        isa_archive: if you're passing a directory, a zipped version of the 
-                    directory for storage and legacy purposes
-        pre_isa_archive: optional copy of files that were converted to ISA-Tab
-        file_base_path: if your file locations are relative paths, this is the base
+    username: username of the person the dataset will belong to
+    public: boolean that determines if the dataset is public or not
+    path: absolute path of the ISA-Tab file to parse
+    additional_raw_data_file_extension: an optional argument that will append a suffix to items in Raw Data File as need be
+    isa_archive: if you're passing a directory, a zipped version of the directory for storage and legacy purposes
+    pre_isa_archive: optional copy of files that were converted to ISA-Tab
+    file_base_path: if your file locations are relative paths, this is the base
+
     """
     logger.info("logging from parse_isatab")
     p = IsaTabParser()
