@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load markup %}
 
 {% block title %}
 {{ block.super }} - Workflow {{ workflow.name }}
@@ -20,7 +21,14 @@
 				<h3>Summary</h3>				
 			</span>			
 		</div>		
-		<p>{% if workflow.summary %} {{ workflow.summary }} {% else %} <i>None provided.</i>{% endif %}</p>
+		<p>{% if workflow.summary %} {{ workflow.summary|markdown:"safe" }} {% else %} <i>None provided.</i>{% endif %}</p>
+
+	<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Summary</h3>				
+			</span>			
+		</div>		
+		<p>{% if workflow.description %} {{ workflow.description|markdown:"safe" }} {% else %} <i>None provided.</i>{% endif %}</p>
 	
 		<div class="refinery-header">
 			<span class="refinery-header-left">
