@@ -385,6 +385,8 @@ def update_refinery():
     puts("Updating Refinery")
     with prefix("workon refinery"):
         run("git pull")
+        run("./manage.py collectstatic --noinput")
+        run("touch wsgi.py")
 
 
 @task
