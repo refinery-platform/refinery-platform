@@ -92,7 +92,8 @@ class BaseResource ( models.Model ):
     name = models.CharField( max_length=250 )
     summary = models.CharField( max_length=1000, blank=True )
     creation_date = models.DateTimeField( auto_now_add=True )
-    modification_date = models.DateTimeField( auto_now=True )    
+    modification_date = models.DateTimeField( auto_now=True )
+    description = models.TextField( max_length=5000, blank=True )    
 
     slug = models.CharField( max_length=250, blank=True, null=True )
 
@@ -388,7 +389,6 @@ class Workflow ( SharableResource, ManageableResource ):
 
     
 class Project( SharableResource ):
-    description = models.CharField( max_length=5000, blank=True )
     is_catch_all = models.BooleanField( default=False )
 
     def __unicode__(self):
