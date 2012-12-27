@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load markup %}
 
 {% block title %}
 {{ block.super }} - Project {{ project.name }}
@@ -14,10 +15,10 @@
 <div class="row-fluid">
 	<div class="span8">
 		<h2>Summary</h2>
-		<p>{{ project.summary }}</p>
+		<p>{{ project.summary|markdown:"safe" }}</p>
 		
 		<h2>Description</h2>
-		<p>{{ project.description }}</p>		
+		<p>{{ project.description|markdown:"safe" }}</p>		
 	</div>
 	<div class="span4">
 		<h2>Permissions</h2>

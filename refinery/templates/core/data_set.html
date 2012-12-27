@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load humanize %}
+{% load markup %}
 
 {% block head_html %}
 	<link href="{{ STATIC_URL }}styles/css/tipsy/tipsy.css" rel="stylesheet"/>	    
@@ -289,7 +290,14 @@ rect.active {
 					<h3>Summary</h3>				
 				</span>
 			</div>
-			<p>{% if data_set.summary %} {{ data_set.summary }} {% else %} <i>None provided.</i>{% endif %}</p>
+			<p>{% if data_set.summary %} {{ data_set.summary|markdown:"safe" }} {% else %} <i>None provided.</i>{% endif %}</p>
+			
+			<div class="refinery-header">
+				<span class="refinery-header-left">
+					<h3>Description</h3>				
+				</span>
+			</div>
+			<p>{% if data_set.description %} {{ data_set.description|markdown:"safe" }} {% else %} <i>None provided.</i>{% endif %}</p>
 			
 			{% if not REFINERY_REPOSITORY_MODE %}
 				<div class="refinery-header">
