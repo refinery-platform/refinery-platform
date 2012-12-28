@@ -110,7 +110,7 @@ class FileStoreItemTest(SimpleTestCase):
         '''Check that the correct file type is returned
 
         '''
-        filetype = 'bb'
+        filetype = models.BIGBED
         item_from_path = models.FileStoreItem.objects.create(source=self.url_source,
                                                              sharename=self.sharename,
                                                              filetype=filetype)
@@ -128,23 +128,25 @@ class FileStoreItemTest(SimpleTestCase):
                                                              sharename=self.sharename)
         item_from_url = models.FileStoreItem.objects.create(source=self.path_source,
                                                             sharename=self.sharename)
-        filetype = 'wig'
+        filetype = models.WIG
         self.assertTrue(item_from_path.set_filetype(filetype))
         self.assertEqual(item_from_path.filetype, filetype)
         self.assertTrue(item_from_url.set_filetype(filetype))
         self.assertEqual(item_from_url.filetype, filetype)
 
-    def test_set_invalid_file_type(self):
-        '''Check that an invalid file type is not set
+    def test_set_unkown_file_type(self):
+        '''Check that an unknown file type is not set
 
         '''
         item_from_url = models.FileStoreItem.objects.create(source=self.path_source,
                                                             sharename=self.sharename)
         item_from_path = models.FileStoreItem.objects.create(source=self.url_source,
                                                              sharename=self.sharename)
-        filetype = 'invalidtype'
+        filetype = 'unknowntype'
         self.assertFalse(item_from_path.set_filetype(filetype))
+        self.assertEqual(item_from_path.filetype, models.UNKNOWN)
         self.assertFalse(item_from_url.set_filetype(filetype))
+        self.assertEqual(item_from_url.filetype, models.UNKNOWN)
 
     def test_set_file_type_automatically(self):
         '''Check that a file type is set automatically

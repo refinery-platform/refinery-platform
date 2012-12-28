@@ -136,6 +136,7 @@ VCF = 'vcf'
 WIG = 'wig'
 XML = 'xml'
 ZIP = 'zip'
+UNKNOWN = ''    # special catch-all type with no corresponding extension
 
 # file types with descriptions used by FileStoreItem.filetype choice field
 FILE_TYPES = (
@@ -166,6 +167,7 @@ FILE_TYPES = (
     (WIG, 'Wiggle Track Format'),
     (XML, 'XML file'),
     (ZIP, 'Zip compressed archive'),
+    (UNKNOWN, 'Unknown file type'),
 )
 
 # mapping of file extensions to file types
@@ -352,7 +354,8 @@ class FileStoreItem(models.Model):
         try:
             self.filetype = FILE_EXTENSIONS[filetype]
         except KeyError:
-            logger.error("'%s' is an invalid file type", filetype)
+            logger.info("'%s' is an unknown file type", filetype)
+            self.filetype = UNKNOWN
             return False
 
         self.save()
@@ -373,7 +376,7 @@ class FileStoreItem(models.Model):
 
     def is_local(self):
         '''Check if the datafile can be used as a file object.
-        
+
         :returns: bool -- True if the datafile can be used as a file object, False otherwise.
 
         '''
@@ -389,7 +392,7 @@ class FileStoreItem(models.Model):
 
     def delete_datafile(self):
         '''Delete datafile if it exists on disk.
-        
+
         :returns: bool -- True if deletion succeeded, False otherwise.
 
         '''
