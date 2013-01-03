@@ -220,7 +220,7 @@ def get_tdf_profile(request, uuid, sequence_name, zoom_level, start_location, en
         _cache_tdf_data_set(request.session, uuid, data_set_name, data_set)
 
     with file_store_item.get_file_object() as file_object:
-        profile = tdf_file.get_profile_from_file(data_set, int(start_location), int(end_location), file_object)
+        profile = tdf_module.get_profile_from_file(data_set, int(start_location), int(end_location), file_object)
 
     print("Profile Length: " + str(len(profile)))
         
