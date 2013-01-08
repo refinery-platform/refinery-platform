@@ -5,7 +5,6 @@ Created on Feb 20, 2012
 '''
 
 from django.contrib import admin
-from tastypie.models import ApiKey
 from core.models import UserProfile
 from core.models import ExtendedGroup
 from core.models import Project
@@ -44,7 +43,6 @@ class DiskQuotaAdmin(GuardedModelAdmin):
 
 
 admin.site.register(UserProfile)
-admin.site.register(ApiKey)
 admin.site.register(ExtendedGroup)
 admin.site.register(Project,ProjectAdmin)
 admin.site.register(DataSet,DataSetAdmin)

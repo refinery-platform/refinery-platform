@@ -7,7 +7,8 @@ Created on May 4, 2012
 from django.contrib.auth.models import User
 from tastypie import fields
 from tastypie.resources import ModelResource
-from tastypie.authentication import ApiKeyAuthentication
+from tastypie.authentication import SessionAuthentication
+from tastypie.authorization import DjangoAuthorization
 from core.models import Project, NodeSet
 
 
@@ -29,4 +30,5 @@ class NodeSetResource(ModelResource):
     class Meta:
         queryset = NodeSet.objects.all()
         resource_name = 'nodeset'
-        allowed_methods = ['get']
+        authentication = SessionAuthentication()
+        authorization = DjangoAuthorization()

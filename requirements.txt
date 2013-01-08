@@ -11,7 +11,7 @@ django-guardian==1.0.4
 -e git+https://github.com/toastdriven/django-haystack.git@master#egg=django-haystack
 django-picklefield==0.2.0
 django-registration
-django-tastypie==0.9.11
+-e git+https://github.com/toastdriven/django-tastypie.git@master#egg=django-tastypie
 django-uuidfield==0.2
 Fabric==1.5.1
 jsonpickle==0.4.0
