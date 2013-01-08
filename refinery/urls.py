@@ -6,7 +6,7 @@ from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
 from registration.forms import RegistrationFormUniqueEmail
-from settings import MEDIA_ROOT, MEDIA_URL, FILE_STORE_DIR
+from settings import MEDIA_ROOT, MEDIA_URL, STATIC_URL
 from tastypie.api import Api
 from core.api import ProjectResource, NodeSetResource
 from core.forms import RegistrationFormTermsOfServiceUniqueEmail
@@ -79,6 +79,9 @@ urlpatterns = patterns('',
     #url(r'^search/', include('haystack.urls')),
     url(r'^search/', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=sqs), name='search' ),
     url(r'^typeahead/$', search_typeahead),
+
+    (r'^favicon\.ico$', 'django.views.generic.simple.redirect_to', {'url': STATIC_URL+'images/favicon.ico'}),
+
 ) + static( MEDIA_URL, document_root=MEDIA_ROOT)
 # for "static" see https://docs.djangoproject.com/en/dev/howto/static-files/#serving-other-directories
 
