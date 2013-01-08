@@ -4,9 +4,14 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
-from core.models import *
-from django.conf.urls.defaults import patterns, url
-from django.views import defaults
+from django.conf.urls.defaults import patterns, url, include
+from tastypie.api import Api
+from core.api import NodeSetResource, UserResource
+
+
+v1_api = Api(api_name='v1')
+v1_api.register(NodeSetResource())
+
 
 urlpatterns = patterns('core.views',
     url(r'^$', 'home', name="home" ),        
@@ -37,8 +42,11 @@ urlpatterns = patterns('core.views',
     url(r'^solr/(?P<core>.+)/select/$', 'solr_select', name="solr_select"),
     
     # test solr/search view
-    url(r'^data_sets/(?P<ds_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/samples/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/solr$', 'samples_solr', name="samples"),          
+    url(r'^data_sets/(?P<ds_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/samples/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/solr$', 'samples_solr', name="samples"),
+
+    url(r'^api/', include(v1_api.urls)),
 )
+
 
 """
 class DataSetList(ListView):
