@@ -75,7 +75,10 @@ def create_catch_all_project( sender, user, request, **kwargs ):
         project.set_owner( user )
         user.get_profile().catch_all_project = project
         user.get_profile().save()
-        messages.success(request, "If you don't want to fill your profile out now, you can go to the <a href='/'>homepage</a>.", extra_tags='safe')
+        messages.success(request,
+                         "If you don't want to fill your profile out now, you can go to the <a href='/'>homepage</a>.",
+                         extra_tags='safe',
+                         fail_silently=True)   # needed to avoid MessageFailure when running tests
         
     
 # create catch all project for user if none exists

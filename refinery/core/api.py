@@ -4,12 +4,29 @@ Created on May 4, 2012
 @author: nils
 '''
 
-from django.contrib.auth.models import User
+from django.conf.urls.defaults import url
+from django.core.serializers import json
+from django.utils import simplejson
 from tastypie import fields
 from tastypie.resources import ModelResource
 from tastypie.authentication import SessionAuthentication
 from tastypie.authorization import DjangoAuthorization
+from tastypie.serializers import Serializer
 from core.models import Project, NodeSet
+from data_set_manager.models import Node
+
+
+class PrettyJSONSerializer(Serializer):
+    '''Adds indentations and newlines to JSON output
+    Source: http://django-tastypie.readthedocs.org/en/latest/cookbook.html#pretty-printed-json-serialization
+    '''
+    json_indent = 2
+
+    def to_json(self, data, options=None):
+        options = options or {}
+        data = self.to_simple(data, options)
+        return simplejson.dumps(data, cls=json.DjangoJSONEncoder,
+                sort_keys=True, ensure_ascii=False, indent=self.json_indent)
 
 
 class ProjectResource(ModelResource):
@@ -18,17 +35,25 @@ class ProjectResource(ModelResource):
         queryset = Project.objects.all()
 
 
-class UserResource(ModelResource):
+class NodeResource(ModelResource):
     class Meta:
-        queryset = User.objects.all()
-        resource_name = 'user'
+        queryset = Node.objects.all()
+        resource_name = 'node'
 
 
 class NodeSetResource(ModelResource):
-    user = fields.ForeignKey(UserResource, 'user')
+#    node = fields.ToManyField(NodeResource, 'node')
 
     class Meta:
         queryset = NodeSet.objects.all()
         resource_name = 'nodeset'
         authentication = SessionAuthentication()
         authorization = DjangoAuthorization()
+        serializer = PrettyJSONSerializer()
+
+    def prepend_urls(self):
+        return [
+            url(r"^(?P<resource_name>%s)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$" % self._meta.resource_name,
+                self.wrap_view('dispatch_detail'),
+                name="api_dispatch_detail"),
+        ]
