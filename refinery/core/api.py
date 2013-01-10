@@ -39,10 +39,13 @@ class NodeResource(ModelResource):
     class Meta:
         queryset = Node.objects.all()
         resource_name = 'node'
+        authentication = SessionAuthentication()
+        authorization = DjangoAuthorization()
+        serializer = PrettyJSONSerializer()
 
 
 class NodeSetResource(ModelResource):
-#    node = fields.ToManyField(NodeResource, 'node')
+    nodes = fields.ToManyField(NodeResource, 'nodes')
 
     class Meta:
         queryset = NodeSet.objects.all()

@@ -48,6 +48,8 @@ class _FileServerItem(models.Model):
     Do not use directly.  Use derived models instead.
 
     '''
+    #TODO: raise NotImplemented exception in all abstract methods
+
     data_file = models.ForeignKey(fs_models.FileStoreItem, unique=True)
 
     objects = _FileServerItemManager()
