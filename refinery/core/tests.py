@@ -7,7 +7,7 @@ These will pass when you run "manage.py test".
 
 from urlparse import urljoin
 from django.contrib.auth.models import User
-from django.utils import unittest
+from django.utils import unittest, simplejson
 from tastypie.test import ResourceTestCase
 from core.models import NodeSet, create_nodeset, get_nodeset, delete_nodeset,\
     update_nodeset, get_nodesets
@@ -154,7 +154,7 @@ class NodeSetTest(unittest.TestCase):
         '''Test retrieving NodeSets using an invalid Node UUID.
 
         '''
-        self.assertRaises(data_set_manager.models.Node.DoesNotExist, get_nodesets, uuid='Invalid UUID')
+        self.assertRaises(data_set_manager.models.Node.DoesNotExist, get_nodesets, node_uuid='Invalid UUID')
 
 
 class NodeSetResourceTest(ResourceTestCase):
@@ -163,6 +163,70 @@ class NodeSetResourceTest(ResourceTestCase):
     '''
     def setUp(self):
         super(NodeSetResourceTest, self).setUp()
+
+        self.investigation = data_set_manager.models.Investigation.objects.create()
+        self.study = data_set_manager.models.Study.objects.create(investigation=self.investigation)
+        self.assay = data_set_manager.models.Assay.objects.create(study=self.study)
+
+        # create a user
+        self.username = self.password = 'test'
+        self.user = User.objects.create_user(self.username, '', self.password)
+
+        self.base_url = '/api/v1/nodeset/'
+        # using TestClient since TestAPIClient does not support SessionAuthentication yet
+        self.client.login(username=self.username, password=self.password)
+        #TODO: try to set X-CSRFToken header in self.api_client (get value from Client.cookies)
+
+    def test_get_nodeset(self):
+        '''Test making a GET request for NodeSet.
+
+        '''
+        n1 = data_set_manager.models.Node.objects.create(study=self.study)
+        n2 = data_set_manager.models.Node.objects.create(study=self.study)
+        nodeset = NodeSet.objects.create(name='nodeset1', study=self.study, assay=self.assay)
+        nodeset.nodes.add(n1, n2)
+
+        # trailing slash is required to avoid HTTP 301
+        nodeset_url = urljoin(self.base_url, nodeset.uuid) + '/'
+        response = self.client.get(nodeset_url, {'format': 'json'})
+        self.assertValidJSONResponse(response)
+
+    def test_create_minimal_nodeset(self):
+        '''Test adding a new NodeSet with required fields only
+
+        '''
+        data = simplejson.dumps({
+            'name': 'nodeset1',
+            'study': "/api/v1/study/{}/".format(self.study.pk),
+            'assay': "/api/v1/assay/{}/".format(self.assay.pk),
+            'nodes': []
+        })
+        self.assertEqual(NodeSet.objects.count(), 0)
+        response = self.client.post(self.base_url, data, content_type='application/json')
+        self.assertHttpCreated(response)
+        self.assertEqual(NodeSet.objects.count(), 1)
+
+    def test_delete_nodeset(self):
+        '''Test deleting an existing NodeSet.
+
+        '''
+        n1 = data_set_manager.models.Node.objects.create(study=self.study)
+        n2 = data_set_manager.models.Node.objects.create(study=self.study)
+        nodeset = NodeSet.objects.create(name='nodeset1', study=self.study, assay=self.assay)
+        nodeset.nodes.add(n1, n2)
+        self.assertEqual(NodeSet.objects.count(), 1)
+        nodeset_url = urljoin(self.base_url, nodeset.uuid) + '/'
+        response = self.client.delete(nodeset_url)
+        self.assertHttpAccepted(response)
+        self.assertEqual(NodeSet.objects.count(), 0)
+
+
+class NodeSetResourceAuthenticationTest(ResourceTestCase):
+    '''Test NodeSet REST API authentication.
+
+    '''
+    def setUp(self):
+        super(NodeSetResourceAuthenticationTest, self).setUp()
 
         # create a user
         self.username = self.password = 'test'
@@ -179,20 +243,3 @@ class NodeSetResourceTest(ResourceTestCase):
 
         '''
         self.assertHttpUnauthorized(self.client.get(self.base_url, format='json'))
-
-    def test_get_nodeset(self):
-        '''Test making a GET request for NodeSet.
-
-        '''
-        n1 = data_set_manager.models.Node.objects.create(study=self.study)
-        n2 = data_set_manager.models.Node.objects.create(study=self.study)
-        nodeset = NodeSet.objects.create(name='nodeset1', study=self.study, assay=self.assay)
-        nodeset.nodes.add(n1, n2)
-
-        # using TestClient since TestAPIClient does not support SessionAuthentication yet
-        self.client.login(username=self.username, password=self.password)
-        # trailing slash is required to avoid HTTP 301
-        nodeset_url = urljoin(self.base_url, nodeset.uuid) + '/'
-        response = self.client.get(nodeset_url, {'format': 'json'})
-        self.assertValidJSONResponse(response)
-

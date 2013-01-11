@@ -29,8 +29,8 @@ v1_api.register(ProjectResource())
 v1_api.register(StudyResource())
 v1_api.register(AssayResource())
 v1_api.register(AttributeOrderResource())
-v1_api.register(NodeSetResource())
 v1_api.register(NodeResource())
+v1_api.register(NodeSetResource())
 
 #patterns for all of the different applications
 urlpatterns = patterns('',    

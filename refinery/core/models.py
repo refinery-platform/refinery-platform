@@ -547,7 +547,7 @@ class NodeSet(SharableResource):
 
 
 @transaction.commit_manually()
-def create_nodeset(name, summary='', nodes=[], study=None, assay=None):
+def create_nodeset(name, study, assay, summary='', nodes=[]):
     '''Create a new NodeSet from a list of Nodes.
 
     :param name: name of the new NodeSet.
@@ -592,19 +592,19 @@ def get_nodeset(uuid):
         raise
 
 
-def get_nodesets(uuid):
+def get_nodesets(node_uuid):
     '''Retrieve all the NodeSets that a Node with the given UUID is part of.
 
-    :param uuid: Node UUID.
-    :type uuid: str.
+    :param node_uuid: Node UUID.
+    :type node_uuid: str.
     :returns: list -- NodeSet instances that the Node is part of.
     :raises: DoesNotExist
 
     '''
     try:
-        node = Node.objects.get(uuid=uuid)
+        node = Node.objects.get(uuid=node_uuid)
     except Node.DoesNotExist:
-        logger.error("Failed to retrieve NodeSets: Node with UUID '{}' does not exist".format(uuid))
+        logger.error("Failed to retrieve NodeSets: Node with UUID '{}' does not exist".format(node_uuid))
         raise
     return node.nodeset_set.all()
 

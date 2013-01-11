@@ -10,10 +10,14 @@ from django.utils import simplejson
 from tastypie import fields
 from tastypie.resources import ModelResource
 from tastypie.authentication import SessionAuthentication
-from tastypie.authorization import DjangoAuthorization
+from tastypie.authorization import Authorization
 from tastypie.serializers import Serializer
 from core.models import Project, NodeSet
 from data_set_manager.models import Node
+from data_set_manager.api import StudyResource, AssayResource
+
+
+#TODO: implement custom authorization class based on django-guardian permissions
 
 
 class PrettyJSONSerializer(Serializer):
@@ -40,18 +44,20 @@ class NodeResource(ModelResource):
         queryset = Node.objects.all()
         resource_name = 'node'
         authentication = SessionAuthentication()
-        authorization = DjangoAuthorization()
+        authorization = Authorization() # any user can chance any Node instance
         serializer = PrettyJSONSerializer()
 
 
 class NodeSetResource(ModelResource):
     nodes = fields.ToManyField(NodeResource, 'nodes')
+    study = fields.ToOneField(StudyResource, 'study')
+    assay = fields.ToOneField(AssayResource, 'assay')
 
     class Meta:
         queryset = NodeSet.objects.all()
         resource_name = 'nodeset'
         authentication = SessionAuthentication()
-        authorization = DjangoAuthorization()
+        authorization = Authorization() # any user can chance any NodeSet instance
         serializer = PrettyJSONSerializer()
 
     def prepend_urls(self):
