@@ -285,6 +285,8 @@ function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 			}
 	   	});				
 					
+
+		var defaultSortFieldFound = false;
 		for ( var i = 0; i < configurator.state.objects.length; ++i ) {
 			var attribute = configurator.state.objects[i];
 			
@@ -304,8 +306,8 @@ function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 			   		attribute = decomposeFacetId( this.id ).facet;
 			   		$( "#" + composeFacetId( attribute + "___active" ) ).fadeIn( "slow" ); //slideDown( "slow");
 			   	});																							
-			}								
-											
+			}											
+												
 			// fields
 			if ( ignoredFieldNames.indexOf( attribute.solr_field ) < 0 ) {
 				if ( attribute.is_internal ) {
@@ -314,6 +316,11 @@ function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 				else {
 					if ( attribute.is_exposed && attribute.is_active ) {
 						fields[attribute.solr_field] = { isVisible: true, isInternal: false, direction: "" };
+						
+						if ( !defaultSortFieldFound ) {
+							fields[attribute.solr_field].direction = "asc";
+							defaultSortFieldFound = true;
+						}
 					}
 					else {
 						if ( attribute.is_exposed && !attribute.is_active ) {
