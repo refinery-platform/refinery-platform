@@ -15,6 +15,7 @@ from tastypie.resources import ModelResource
 class StudyResource(ModelResource):
     class Meta:
         queryset = Study.objects.all()
+        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         allowed_methods = ["get"]
         resource_name = "study"
         filtering = { "uuid": ALL }
@@ -23,6 +24,7 @@ class StudyResource(ModelResource):
 class AssayResource(ModelResource):
     class Meta:
         queryset = Assay.objects.all()
+        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         allowed_methods = ["get"]
         resource_name = "assay"
         filtering = { "uuid": ALL }

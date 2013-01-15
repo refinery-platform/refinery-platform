@@ -43,9 +43,18 @@ class NodeResource(ModelResource):
     class Meta:
         queryset = Node.objects.all()
         resource_name = 'node'
+        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
-        authorization = Authorization() # any user can chance any Node instance
+        authorization = Authorization() # any user can change any Node instance
         serializer = PrettyJSONSerializer()
+
+    def prepend_urls(self):
+        return [
+            url(r"^(?P<resource_name>%s)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$" %
+                    self._meta.resource_name,
+                self.wrap_view('dispatch_detail'),
+                name="api_dispatch_detail"),
+        ]
 
 
 class NodeSetResource(ModelResource):
@@ -56,13 +65,16 @@ class NodeSetResource(ModelResource):
     class Meta:
         queryset = NodeSet.objects.all()
         resource_name = 'nodeset'
+        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
-        authorization = Authorization() # any user can chance any NodeSet instance
+        authorization = Authorization() # any user can change any NodeSet instance
         serializer = PrettyJSONSerializer()
+        fields = ['name', 'summary', 'assay', 'study', 'uuid', 'nodes']
 
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$" % self._meta.resource_name,
+            url(r"^(?P<resource_name>%s)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$" %
+                    self._meta.resource_name,
                 self.wrap_view('dispatch_detail'),
                 name="api_dispatch_detail"),
         ]
