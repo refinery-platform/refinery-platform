@@ -5,6 +5,7 @@ Created on Oct 3, 2012
 '''
 from django.core.management.base import BaseCommand
 from galaxy_connector.models import Instance
+from optparse import make_option
 import logging
 
 # get module logger
