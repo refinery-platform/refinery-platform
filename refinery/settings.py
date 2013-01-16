@@ -3,7 +3,9 @@
 # splitting ideas taken from https://code.djangoproject.com/wiki/SplitSettings (solution by Steven Armstrong)
 
 import os
+import sys
 import djcelery
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 djcelery.setup_loader()
@@ -27,6 +29,10 @@ DATABASES = {
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
+
+# use in-memory database for testing if TEST_NAME=None (default value)
+if len(sys.argv) > 1 and sys.argv[1] == 'test':
+    DATABASES['default'] = {'ENGINE': 'django.db.backends.sqlite3'}
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
