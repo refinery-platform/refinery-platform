@@ -5,6 +5,10 @@ from annotation_server.models import Taxon
 import tempfile, urllib2, os.path, tarfile, string, shutil, re
 
 class Command(BaseCommand):
+    help = "Either takes in a file of Taxon IDs to filter (only these taxon IDs will be"
+    help = "%s included in the database) or will download all the information from" % help
+    help = "%s NCBI and put information in the database."
+    
     def handle(self, *args, **options):
         taxon_file = "" #optional file of taxon IDs that we want
         try:
@@ -19,7 +23,7 @@ class Command(BaseCommand):
             for line in tf:
                 taxon_filter[string.strip(line)] = 1
         except:
-            print "no taxon_file"
+            print "No taxon_file"
 
 
         #setup
