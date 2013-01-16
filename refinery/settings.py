@@ -34,6 +34,14 @@ DATABASES = {
 if len(sys.argv) > 1 and sys.argv[1] == 'test':
     DATABASES['default'] = {'ENGINE': 'django.db.backends.sqlite3'}
 
+# transport://userid:password@hostname:port/virtual_host
+#BROKER_URL = "amqp://guest:guest@localhost:5672//"
+BROKER_HOST = "localhost"
+BROKER_PORT = 5672
+BROKER_USER = "guest"
+BROKER_PASSWORD = "guest"
+BROKER_VHOST = "/"
+
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
