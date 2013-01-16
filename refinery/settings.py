@@ -58,7 +58,7 @@ MEDIA_ROOT = ''
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = 'media'
+MEDIA_URL = '/media/'
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -359,6 +359,9 @@ UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 
 # Tag for repository mode
 REFINERY_REPOSITORY_MODE = False
+
+# used by the "sites" framework
+REFINERY_BASE_URL = 'localhost:8000'
 
 # import local settings
 from settings_local import *
