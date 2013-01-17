@@ -351,7 +351,7 @@ AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 # relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
 FILE_STORE_DIR = 'files'
 
-# location of the solr server
+# location of the Solr server (must be accessible from the web browser)
 REFINERY_SOLR_BASE_URL = "http://127.0.0.1:8983/solr/"
 
 # used to replaces spaces in the names of dynamic fields in Solr indexing
