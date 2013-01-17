@@ -25,6 +25,7 @@ from django.dispatch import receiver
 from django.db import models
 from django.db.models.signals import pre_delete
 from django_extensions.db.fields import UUIDField
+from django.contrib.sites.models import Site
 from django.core.files.storage import FileSystemStorage
 
 
@@ -466,16 +467,19 @@ class FileStoreItem(models.Model):
         else:
             logger.error("Symlinking failed: source is not a file")
             return False
-        
-    def get_url(self):
-        '''
-        Return absolute URL of the FileStoreItem.
 
-        :returns: str -- local URL (None if file doesn't exist) or source if it's a remote file
+    def get_full_url(self):
+        '''Return the full URL (including hostname) for the datafile.
+
+        :returns: str -- local URL or source if it's a remote file
 
         '''
         if self.is_local():
-            return urljoin(settings.MEDIA_HOST, self.datafile.url)
+            try:
+                current_site = Site.objects.get_current()
+            except Site.DoesNotExist:
+                logger.error("Cannot provide a full URL: no sites configured or SITE_ID is not set correctly")
+            return 'http://{}{}'.format(current_site.domain, self.datafile.url)
         else:
             if os.path.abspath(self.source):
                 # in case source is a file system path but file doesn't exist on disk

@@ -138,7 +138,7 @@ def createIGVsession(genome, uuids):
     #print filestore_item.datafile.url
     
     # Url for session file 
-    fs_url = filestore_item.get_url()
+    fs_url = filestore_item.get_full_url()
     
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php?sessionURL=" + fs_url
@@ -418,7 +418,7 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     #print filestore_item.datafile.url
     
     # Url for session file 
-    fs_url = filestore_item.get_url()
+    fs_url = filestore_item.get_full_url()
     
     # IGV url for automatic launch of Java Webstart
     igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php?sessionURL=" + fs_url
@@ -514,7 +514,7 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     curr_name = curr_fs.datafile.name
     
     # full path to selected UUID File
-    curr_url = curr_fs.get_url()
+    curr_url = curr_fs.get_full_url()
     
     #print "curr_url"
     #print curr_url
@@ -544,7 +544,7 @@ def getFileName(fileuuid, sampFile=None):
     temp_name = temp_name[len(temp_name)-1]
     
     # full path to selected UUID File
-    temp_url = temp_fs.get_url()
+    temp_url = temp_fs.get_full_url()
     
     # IGV SEG FILE HACK
     if (sampFile):
