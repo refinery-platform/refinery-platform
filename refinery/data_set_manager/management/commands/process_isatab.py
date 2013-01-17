@@ -2,6 +2,7 @@ from celery.task.sets import TaskSet, subtask
 from data_set_manager.tasks import parse_isatab, create_dataset
 from core.models import DataSet
 from django.core.management.base import BaseCommand, CommandError
+from optparse import make_option
 import os
 import re
 import time
@@ -16,10 +17,25 @@ class Command(BaseCommand):
     help = "Takes the directory of an ISA-Tab file as input, parses, and"
     help = "%s inputs it into the database\n" % help
     help = "%s\nUsage: python manage.py process_isatab <username>" % help
-    help = "%s <base_isatab_directory> [base_pre_isa_dir=" % help
-    help = "%s<base_pre_isatab_directory> is_public=True " % help
-    help = "%sfile_base_path=<base path if file locations are " % help
-    help = "%srelative>]\n" % help
+    help = "%s <isatab directory or file> [--base_pre_isa_dir" % help
+    help = "%s <base pre-isatab directory or file> --public" % help
+    help = "%s --file_base_path <base path if file locations are relative>]\n" % help
+    
+    option_list = BaseCommand.option_list + (
+                make_option('--base_pre_isa_dir',
+                            action='store',
+                            type='string'
+                            ),
+                make_option('--file_base_path',
+                            action='store',
+                            type='string',
+                            default=None
+                            ),
+                make_option('--public',
+                            action='store_true',
+                            default=False
+                            ),
+                )
 
     """
     Name: handle
@@ -33,30 +49,12 @@ class Command(BaseCommand):
         super( Command, self ).__init__()
     
        
-    def handle(self, *args, **options):
-        """parse arguments"""
-        if len(args) < 2:
-            logger.info("ERROR: Insufficient arguments; see description and usage")
-            logger.info(" below before trying again.\n")
-            logger.info(self.help)
-            sys.exit()
-        
-        self._username = args[0]
-        base_isa_dir = args[1]
-        
-        opt = {'base_pre_isa_dir': None,
-               'is_public': False,
-               'file_base_path': None
-              }
+    def handle(self, username, base_isa_dir, **options):
+        try:
+            self._username = username
+        except:
+            raise CommandError(self.help) 
 
-        """assign base_pre_isa_dir and is_public values"""
-        for arg in args:
-            """split on "="s or ignore it"""
-            try:
-                split_arg = string.split(arg, '=')
-                opt[split_arg[0]] = split_arg[1]
-            except:
-                pass
 
         """get a list of all the isatab files in base_isa_dir"""
         isatab_dict = dict()
@@ -64,16 +62,14 @@ class Command(BaseCommand):
             for filename in filenames:
                 isatab_dict[filename] = [os.path.join(dirname, filename)]
 
-        """
-        If isatab_dict is empty, then base_isa_dir is a file, not a directory
-        """
+        """If isatab_dict is empty, then base_isa_dir is a file, not a directory"""
         if not isatab_dict:
             isatab_dict[base_isa_dir] = [base_isa_dir]
         
         """get a list of all the isatab files in base_pre_isa_dir"""
         pre_isatab_files = 0
         try:
-            for dirname, dirnames, filenames in os.walk(opt['base_pre_isa_dir']):
+            for dirname, dirnames, filenames in os.walk(options['base_pre_isa_dir']):
                 for filename in filenames:
                     """associate pre-isatab file with isatab file"""
                     for key in isatab_dict:
@@ -84,13 +80,13 @@ class Command(BaseCommand):
                             break
         except:
             pass
-        
+
         """
         If base_pre_isa_dir is defined but pre_isatab_files is 0,
         then base_pre_isa_dir is a pre-ISA-Tab archive, not a directory
         """
-        if opt['base_pre_isa_dir'] and not pre_isatab_files:
-            isatab_dict[base_isa_dir].append(opt['base_pre_isa_dir'])
+        if options['base_pre_isa_dir'] and not pre_isatab_files:
+            isatab_dict[base_isa_dir].append(options['base_pre_isa_dir'])
 
         s_tasks = list()
         """add subtasks to list"""
@@ -103,11 +99,11 @@ class Command(BaseCommand):
 
             sub_task = parse_isatab.subtask(args=(
                                                   self._username,
-                                                  opt['is_public'],
+                                                  options['public'],
                                                   isa_file, 
                                                   self._additional_raw_data_file_extension, 
                                                   isa_file, pre_file,
-                                                  opt['file_base_path']
+                                                  options['file_base_path']
                                                   )
                                             )
             s_tasks.append(sub_task)
