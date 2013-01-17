@@ -504,13 +504,17 @@ def initialize_attribute_order( study, assay ):
     :returns: Number of attributes that were indexed.
     """
  
-    query = settings.REFINERY_SOLR_BASE_URL + "data_set_manager" + "/select?" + "q=django_ct:data_set_manager.node&wt=json&start=0&rows=1&fq=(study_uuid:" + study.uuid + "%20AND%20assay_uuid:" + assay.uuid + "%20AND%20is_annotation:false%20AND%20(type:%22Raw%20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22))&facet.sort=count&facet.limit=-1"
+    query = settings.REFINERY_SOLR_BASE_URL + "data_set_manager" + "/select?" + "q=django_ct:data_set_manager.node&wt=json&start=0&rows=1&fq=(study_uuid:" + study.uuid + "%20AND%20assay_uuid:" + assay.uuid + "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22))&facet.sort=count&facet.limit=-1"
+
+    logger.debug( "Query for initialize_attribute_order: %s" % ( query, ) )
     
     # proper url encoding                  
     query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
         
     # opening solr query results
     results =  urllib2.urlopen( query ).read()
+    
+    logger.debug( "Query results for initialize_attribute_order: %s" % ( results, ) )
         
     # converting results into json for python 
     results = simplejson.loads(results)

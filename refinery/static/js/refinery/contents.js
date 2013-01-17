@@ -107,7 +107,7 @@ function buildPivotQuery( studyUuid, assayUuid, nodeType, loadAnnotation ) {
 			+ "study_uuid:" + studyUuid
 			+ " AND " + "assay_uuid:" + assayUuid
 			+ " AND " + "is_annotation:" + loadAnnotation			
-			+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + ")"
+			+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + " OR " + "type: \"Array Data File\"" + " OR " + "type: \"Derived Array Data File\"" + ")"
 	   	+ ")"
 	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
 	   	+ "&" + "facet.limit=-1"; // unlimited number of facet values (otherwise some values will be missing)	   	
@@ -140,8 +140,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 			+ "study_uuid:" + studyUuid
 			+ " AND " + "assay_uuid:" + assayUuid
 			+ " AND " + "is_annotation:" + annotationParam			
-			+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + ")"
-	   	+ ")"
++ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + " OR " + "type: \"Array Data File\"" + " OR " + "type: \"Derived Array Data File\"" + ")"	   	+ ")"
 	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
 	   	+ "&" + "facet.limit=-1"; // unlimited number of facet values (otherwise some values will be missing)	   	
 	  
