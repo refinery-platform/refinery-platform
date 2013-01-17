@@ -1,22 +1,12 @@
-.. Refinery documentation master file, created by
-   sphinx-quickstart on Tue Sep 18 14:12:04 2012.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Refinery Platform Documentation
+===============================
 
-Welcome to Refinery's documentation!
-====================================
-
-Contents:
+The Refinery Platform documentation is split up into three major sections: one for users, one for administrators and one for developers.
 
 .. toctree::
    :maxdepth: 2
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+   
+   user/index   
+   administrator/index
+   developer/index
+   license
