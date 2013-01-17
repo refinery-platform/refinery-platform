@@ -3,7 +3,9 @@
 # splitting ideas taken from https://code.djangoproject.com/wiki/SplitSettings (solution by Steven Armstrong)
 
 import os
+import sys
 import djcelery
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 djcelery.setup_loader()
@@ -11,10 +13,13 @@ djcelery.setup_loader()
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
+# A tuple that lists people who get code error notifications.
 ADMINS = (
-    ('Refinery Admin', 'refinery@hms.harvard.edu'),
+    ('Refinery Admin', 'admin@example.org'),
 )
 
+# A tuple in the same format as ADMINS that specifies who should get broken link
+# notifications when BrokenLinkEmailsMiddleware is enabled.
 MANAGERS = ADMINS
 
 DATABASES = {
@@ -27,6 +32,18 @@ DATABASES = {
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
+
+# use in-memory database for testing if TEST_NAME=None (default value)
+if len(sys.argv) > 1 and sys.argv[1] == 'test':
+    DATABASES['default'] = {'ENGINE': 'django.db.backends.sqlite3'}
+
+# transport://userid:password@hostname:port/virtual_host
+#BROKER_URL = "amqp://guest:guest@localhost:5672//"
+BROKER_HOST = "localhost"
+BROKER_PORT = 5672
+BROKER_USER = "guest"
+BROKER_PASSWORD = "guest"
+BROKER_VHOST = "/"
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -310,10 +327,12 @@ HAYSTACK_CONNECTIONS = {
 
 # send email via SMTP, can be replaced with "django.core.mail.backends.console.EmailBackend" to send emails to the console
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-#DEFAULT_FROM_EMAIL = "refinery@hms.harvard.edu"
-#EMAIL_HOST = 'smtp.orchestra'
-#EMAIL_PORT = 25
-
+# Default email address to use for various automated correspondence from the site manager(s).
+DEFAULT_FROM_EMAIL = 'webmaster@localhost'
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 25
+# The email address that error messages come from, such as those sent to ADMINS and MANAGERS.
+SERVER_EMAIL = 'root@localhost'
 
 # === Refinery Settings ===
 
