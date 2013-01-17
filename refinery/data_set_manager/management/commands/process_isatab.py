@@ -29,7 +29,7 @@ class Command(BaseCommand):
                 make_option('--file_base_path',
                             action='store',
                             type='string',
-                            default='samplepass'
+                            default=None
                             ),
                 make_option('--public',
                             action='store_true',
