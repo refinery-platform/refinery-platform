@@ -188,6 +188,8 @@ INSTALLED_APPS = (
     'data_set_manager', 
     'annotation_server',
     'registration',
+    # RP: added for database migration between builds 
+    'south', 
 )
 
 # NG: added for django-guardian
