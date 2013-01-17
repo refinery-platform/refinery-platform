@@ -36,7 +36,8 @@ class Command(BaseCommand):
                             ),
                 make_option('--auxiliary_file_column',
                             action='store',
-                            type='string'
+                            type='string',
+                            default=None
                             ),
                 make_option('--base_path',
                             action='store',
@@ -80,7 +81,7 @@ class Command(BaseCommand):
     """   
     def handle(self, *args, **options):
         
-        required = ['username', 'title', 'file_name', 'source_column_index', 'data_file_column', 'auxiliary_file_column']
+        required = ['username', 'title', 'file_name', 'source_column_index', 'data_file_column']
         for arg in required:
             if not options[arg]:
                 raise CommandError('%s was not provided.' % arg)
@@ -89,10 +90,12 @@ class Command(BaseCommand):
         parser = SingleFileColumnParser()
         parser.file_permanent = options['data_file_permanent']
         parser.file_column_index = int( options['data_file_column'] )
-        parser.auxiliary_file_column_index = int( options['auxiliary_file_column'] )
         parser.source_column_index = [int(x.strip()) for x in options['source_column_index'].split(",")]
         parser.column_index_separator = "/"
         parser.file_base_path = options['base_path']
+        
+        if options['auxiliary_file_column'] is not None:
+            parser.auxiliary_file_column_index = int( options['auxiliary_file_column'] )
         
         if options['species_column'] is not None:
             parser.species_column_index = int( options['species_column'] )
