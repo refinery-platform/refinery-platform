@@ -181,7 +181,8 @@ def createStepsAnnot(file_list, workflow):
            
             # 4. Updating post job actions for renaming datasets
             if (len(curr_workflow_step['inputs']) == 0):
-                tool_name = curr_workflow_step["tool_id"];
+                tool_name = parseToolName(curr_workflow_step["tool_id"]);
+                
                 input_type = map[int(curr_step)];
                 
                 # getting current filename for workflow
@@ -227,8 +228,6 @@ def createStepsAnnot(file_list, workflow):
                         
                         # if the output name is being tracked and downloaded for Refinery
                         if str(oname) in keep_files:
-                            #print "INDISE DICT INSIDE DICT INSIDE DICT"
-                            #print keep_files
                             if input_type in file_list[i].keys():
                                 curr_pair_id = file_list[i][input_type]['pair_id']
                                 curr_pair_id = str((i)-1+int(curr_pair_id)) 
@@ -311,7 +310,6 @@ def createStepsCompact(file_list, workflow):
             for ofiles in output_list:
                 output_names.append(ofiles['name'])
         
-        
         # uses renamedataset action to rename output of specified tool
         if "post_job_actions" in curr_workflow_step:
             pja_dict = curr_workflow_step["post_job_actions"]
@@ -389,7 +387,6 @@ def createStepsCompact(file_list, workflow):
                         # updated key for reinserting funcky index value back into galaxy workflow tool_state
                         key_tool_state = k_key.rstrip('_')
                         
-                        
                         new_connections[new_key] = new_edge
                         
                         temp_tool_val = '{"__index__": %s, "%s": null}' % (str(tindex),k_type)
@@ -417,13 +414,10 @@ def createStepsCompact(file_list, workflow):
             # add updated connections back to galaxy workflow step
             curr_workflow_step['input_connections'] = new_connections
             
-            
-            
             curr_workflow_step['id'] = counter
             updated_dict[str(counter)] = curr_workflow_step
             counter += 1
         else:
-            #print "eleleleles"
             curr_workflow_step['id'] = counter
             updated_dict[str(counter)] = curr_workflow_step
             counter += 1
@@ -497,7 +491,7 @@ def countWorkflowSteps(workflow):
     """
     Helper function for counting number of workflow steps from a galaxy workflow. Number of steps in workflow is not reflective of the actual number of workflows created by galaxy when run
     """
-    print "galaxy_connector.galaxy_workflow called"
+    logger.debug("galaxy_connector.galaxy_workflow called") 
     
     workflow_steps = workflow["steps"]
     total_steps = 0
@@ -508,7 +502,6 @@ def countWorkflowSteps(workflow):
         
         # count number of output files
         output_num = len(curr_step['outputs'])
-        #print "output_num: " + str(output_num)
         
         if (output_num > 0):
             # check to see if HideDatasetActionoutput_ keys exist in current step
@@ -518,12 +511,8 @@ def countWorkflowSteps(workflow):
                 for k,v in pja_step.iteritems():
                     if (k.find('HideDatasetActionoutput_') > -1):
                         pja_hide_count += 1
-                #print "pja_hide_count"
-                #print pja_hide_count
                 
                 diff_count = output_num - pja_hide_count
-                #print "diff_count"
-                #print diff_count
                 
                 # add one step if HideDatasetActionoutput_ = outputs for file
                 if diff_count == 0:
@@ -540,3 +529,17 @@ def countWorkflowSteps(workflow):
     #print "total_steps: " + str(total_steps)
     
     return total_steps
+
+def parseToolName(toolname):
+    """ Creates a simpler tool name when dealing with Galaxy Toolshed tool names 
+    
+    :param toolname: Tool name defined from Galaxy i.e. toolshed.g2.bx.psu.edu/repos/jjohnson/igvtools/igvtools_tile/1.0
+    :type toolname: string.
+    :returns: parsed tool name i.e. igvtools 
+    """
+    temp = toolname.split("/")
+    if len(temp) > 1:
+        return temp[len(temp)-2]
+    else:
+        return toolname 
+    

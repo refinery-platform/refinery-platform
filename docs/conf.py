@@ -50,7 +50,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Refinery'
-copyright = u'2013, Park Lab at Harvard Medical School in collaboration with Hide Lab at Harvard School of Public Health'
+copyright = u'2011-2013, Park Lab at Harvard Medical School in collaboration with Hide Lab at Harvard School of Public Health'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -73,7 +73,7 @@ release = '0.1'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ['_build','global.rst','_themes']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -98,9 +98,13 @@ pygments_style = 'sphinx'
 
 # -- Options for HTML output ---------------------------------------------------
 
+sys.path.append(os.path.abspath('_themes'))
+html_theme_path = ['_themes']
+html_theme = 'flask'
+
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'nature'
+# html_theme = 'agogo'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
