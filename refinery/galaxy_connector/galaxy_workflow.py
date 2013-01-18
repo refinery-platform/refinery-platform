@@ -181,7 +181,7 @@ def createStepsAnnot(file_list, workflow):
            
             # 4. Updating post job actions for renaming datasets
             if (len(curr_workflow_step['inputs']) == 0):
-                tool_name = parseToolName(curr_workflow_step["tool_id"]);
+                tool_name = parse_tool_name(curr_workflow_step["tool_id"]);
                 
                 input_type = map[int(curr_step)];
                 
@@ -530,7 +530,7 @@ def countWorkflowSteps(workflow):
     
     return total_steps
 
-def parseToolName(toolname):
+def parse_tool_name(toolname):
     """ Creates a simpler tool name when dealing with Galaxy Toolshed tool names 
     
     :param toolname: Tool name defined from Galaxy i.e. toolshed.g2.bx.psu.edu/repos/jjohnson/igvtools/igvtools_tile/1.0
