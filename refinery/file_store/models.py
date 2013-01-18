@@ -296,7 +296,6 @@ class FileStoreItem(models.Model):
         try:
             return self.datafile.size
         except ValueError:  # file is not local
-            logger.warn("Datafile doesn't exist in FileStoreItem '%s'", self.uuid)
             return 0
 
     def get_file_extension(self):
