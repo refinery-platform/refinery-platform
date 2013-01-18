@@ -43,7 +43,7 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
     if permanent:
         # copy to file store now and don't add to cache
         #TODO: provide progress update, call import_file as subtask?
-        if not import_file(item.uuid, permanent=True, file_size=file_size):
+        if not import_file(item.uuid, permanent=True, refresh=True, file_size=file_size):
             logger.error("Could not import file from '%s'", item.source)
 
     return item.uuid
