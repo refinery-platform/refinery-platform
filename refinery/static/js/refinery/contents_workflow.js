@@ -21,6 +21,9 @@ function workflowActions() {
 	$("#submitSamplesBtn").click( function(event) {
 		event.preventDefault(); // cancel default behavior
 		
+		console.log("workflowActions: REFINERY_REPOSITORY_MODE");
+		console.log(REFINERY_REPOSITORY_MODE);
+		
 		// getting currently selected workflow
 		var temp_value = $("#workflow_choice").val();
 		if (temp_value != "") {	
