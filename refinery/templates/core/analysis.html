@@ -36,7 +36,7 @@
 	{% for result in analysis_results.all %}
 		{% for fs in fs_files %}	
 			{% ifequal result.file_store_uuid fs.uuid %}
-				<a href="{{fs.get_url}}">{{ fs.uuid|simple_name }}</a> ({{ input_filenames|length }} file{{ input_filenames|length|pluralize }}, {{fs.get_file_size|filesizeformat}})
+				<a href="{{fs.get_full_url}}">{{ fs.uuid|simple_name }}</a> ({{ input_filenames|length }} file{{ input_filenames|length|pluralize }}, {{fs.get_file_size|filesizeformat}})
 			{% endifequal %}
 		{% endfor %}				
 	{% endfor %}	
@@ -85,7 +85,7 @@
 						</td>
 					
 						<td>
-							<a href="{{fs.get_url}}">{{result.file_name}}</a>
+							<a href="{{fs.get_full_url}}">{{result.file_name}}</a>
 						</td>
 						
 						<td>
