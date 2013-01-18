@@ -6,6 +6,7 @@ class Instance( models.Model ):
     api_url = models.CharField( max_length=100, default="api" )
     api_key = models.CharField( max_length=50 )
     description = models.CharField( max_length=500 )
+    local_download = models.BooleanField( default=False )
 
     def __unicode__(self):
         return self.description + " (" + self.api_key + ")"

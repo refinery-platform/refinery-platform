@@ -516,8 +516,16 @@ def download_history_files(analysis) :
             
                 # size of file defined by galaxy
                 file_size = results['file_size']
+                   
+                # Determing tag if galaxy results should be download through http or copying files directly
+                local_download = analysis.workflow.workflow_engine.instance.local_download
+                
                 # URL to download
-                download_url = connection.make_url(str(results['dataset_id']), is_data=True, key=False)
+                if local_download:
+                    download_url = results['file_name']
+                   # filestore_uuid = create(source=download_url, filetype=file_type, permanent=True)
+                else:
+                    download_url = connection.make_url(str(results['dataset_id']), is_data=True, key=False)
                 
                 # getting file_store_uuid, 
                 # TODO: when changing permanent=True, fix update of % download of file 
@@ -532,7 +540,12 @@ def download_history_files(analysis) :
                 # downloading analysis results into file_store
                 # only download files if size is greater than 1
                 if file_size > 0:
-                    task_id = import_file.subtask((filestore_uuid, True, False, file_size,))
+                    #task_id = import_file.subtask((filestore_uuid, True, False, file_size,))
+                    # local download, force copying into the file_store instead of symlinking
+                    if local_download:
+                        task_id = import_file.subtask((filestore_uuid, False, True, file_size,))
+                    else:
+                        task_id = import_file.subtask((filestore_uuid, False, False, file_size,))
                     task_list.append(task_id)
             
     return task_list

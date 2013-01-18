@@ -175,6 +175,26 @@ class Connection( object ):
             else:
                 file_info["visible"] = history_content["visible"]
             
+            if "file_name" not in history_content:
+                file_info["file_name"] = None
+            else:
+                file_info["file_name"] = history_content["file_name"]
+                
+            if "genome_build" not in history_content:
+                file_info["genome_build"] = None
+            else:
+                file_info["genome_build"] = history_content["genome_build"]   
+            
+            if "misc_info" not in history_content:
+                file_info["misc_info"] = None
+            else:
+                file_info["misc_info"] = history_content["misc_info"]    
+           
+            if "misc_blurb" not in history_content:
+                file_info["misc_blurb"] = None
+            else:
+                file_info["misc_blurb"] = history_content["misc_blurb"]   
+            
             files.append( file_info )
             
         return files    
