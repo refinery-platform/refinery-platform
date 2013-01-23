@@ -1,5 +1,5 @@
 from collections import defaultdict
-from core.forms import ProjectForm, UserForm, UserProfileForm
+from core.forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 from core.models import ExtendedGroup, Project, DataSet, Workflow, UserProfile, \
     WorkflowEngine, Analysis, get_shared_groups
 from data_set_manager.models import *
@@ -98,7 +98,7 @@ def user_profile(request):
 
 @login_required()
 def user_edit(request, uuid):
-    profile_object = UserProfile.objects.get(uuid=uuid)
+    profile_object = get_object_or_404(UserProfile, uuid=uuid)
     user_object = profile_object.user
     if request.method == "POST":
         uform = UserForm(data=request.POST, instance=user_object)
@@ -180,12 +180,12 @@ def project_edit(request,uuid):
         return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to edit this project."))
             
     if request.method == "POST": # If the form has been submitted...
-        form = ProjectForm( request.POST, instance=project ) # A form bound to the POST data
+        form = ProjectForm(data=request.POST, instance=project) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass            
             form.save()
             # Process the data in form.cleaned_data
             # ...
-            return HttpResponseRedirect( "/" ) # Redirect after POST
+            return HttpResponseRedirect(reverse('core.views.project', args=(uuid,))) # Redirect after POST
     else:
         form = ProjectForm( instance=project ) # An unbound form
 
@@ -307,6 +307,59 @@ def data_set(request,uuid):
                               context_instance=RequestContext( request ) )
 
 
+def data_set_edit(request,uuid):    
+    data_set = get_object_or_404( DataSet, uuid=uuid )
+    public_group = ExtendedGroup.objects.public_group()
+
+    if not request.user.has_perm('core.change_dataset', data_set ):
+        return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to edit this data set."))
+
+    #get studies
+    investigation = data_set.get_investigation()
+    studies = investigation.study_set.all()
+
+    study_uuid = studies[0].uuid
+    assay_uuid = studies[0].assay_set.all()[0].uuid
+
+    # TODO: catch errors
+    isatab_archive = None
+    pre_isatab_archive = None
+
+    try:
+        if investigation.isarchive_file is not None:
+            isatab_archive = FileStoreItem.objects.get( uuid=investigation.isarchive_file )
+    except:
+        pass
+
+    try:
+        if investigation.pre_isarchive_file is not None:
+            pre_isatab_archive = FileStoreItem.objects.get( uuid=investigation.pre_isarchive_file )
+    except:
+        pass
+    
+    if request.method == "POST": # If the form has been submitted...
+        form = DataSetForm(data=request.POST, instance=data_set) # A form bound to the POST data
+        if form.is_valid(): # All validation rules pass    
+            form.save()
+            # Process the data in form.cleaned_data
+            # ...
+            return HttpResponseRedirect(reverse('core.views.data_set', args=(uuid,))) # Redirect after POST
+    else:
+        form = DataSetForm( instance=data_set ) # An unbound form
+
+    return render_to_response('core/data_set_edit.html',
+                              {
+                               'data_set': data_set,
+                                "studies": studies,
+                                "study_uuid": study_uuid,
+                                "assay_uuid": assay_uuid,
+                                "isatab_archive": isatab_archive,
+                                "pre_isatab_archive": pre_isatab_archive,
+                               'form': form
+                              },
+                              context_instance=RequestContext(request))
+
+
 def samples(request, ds_uuid, study_uuid, assay_uuid):
     data_set = get_object_or_404( DataSet, uuid=ds_uuid )
     
@@ -343,6 +396,25 @@ def workflow(request, uuid):
             
     return render_to_response('core/workflow.html', { 'workflow': workflow }, context_instance=RequestContext( request ) )
 
+
+@login_required()
+def workflow_edit(request, uuid):
+    workflow = get_object_or_404( Workflow, uuid=uuid )
+
+    if not request.user.has_perm('core.change_workflow', workflow ):
+        return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to edit this workflow."))
+
+    if request.method == "POST": # If the form has been submitted...
+        form = WorkflowForm(data=request.POST, instance=workflow) # A form bound to the POST data
+        if form.is_valid(): # All validation rules pass    
+            form.save()
+            # Process the data in form.cleaned_data
+            # ...
+            return HttpResponseRedirect(reverse('core.views.workflow', args=(uuid,))) # Redirect after POST
+    else:
+        form = WorkflowForm( instance=workflow ) # An unbound form
+    
+    return render_to_response('core/workflow_edit.html', {'workflow': workflow, 'form': form}, context_instance=RequestContext(request))
 
 def workflow_engine(request,uuid):  
     workflow_engine = get_object_or_404( WorkflowEngine, uuid=uuid )

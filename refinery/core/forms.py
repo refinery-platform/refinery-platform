@@ -7,15 +7,17 @@ Created on Apr 15, 2012
 from django.forms import ModelForm, Textarea, ValidationError
 from django.contrib.auth.models import User
 from registration.forms import RegistrationFormUniqueEmail, RegistrationFormTermsOfService
-from core.models import Project, UserProfile
+from core.models import Project, UserProfile, Workflow, DataSet
 
 class ProjectForm(ModelForm):
     class Meta:
         model = Project
-        exclude = ( "is_catch_all",)
+        fields = ["name", "slug", "summary", "description"]
+        '''
         widgets = {
             'description': Textarea(attrs={'cols': 80, 'rows': 20}),
-        }   
+        }
+        ''' 
         
 class RegistrationFormTermsOfServiceUniqueEmail(RegistrationFormTermsOfService, RegistrationFormUniqueEmail):
     pass
@@ -35,3 +37,13 @@ class UserProfileForm(ModelForm):
     class Meta:
         model = UserProfile
         fields = ["affiliation", "is_public"]
+
+class WorkflowForm(ModelForm):
+    class Meta:
+        model = Workflow
+        fields = ["name", "slug", "summary", "description"]
+        
+class DataSetForm(ModelForm):
+    class Meta:
+        model = DataSet
+        fields = ["summary", "description", "slug"]

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load markup %}
+
+{% block title %}
+{{ block.super }} - Edit DataSet
+{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+	<h1>Edit DataSet Information</h1>	
+</div>
+{% endblock %}
+
+{% block content %}	
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">
+		<form method="post" action="" class="wide" id="dataset-edit-form">
+		{% csrf_token %}
+			{% if form.errors %}
+  				<div class="alert alert-error">Please correct the errors below.{{ form.non_field_errors }}</div>
+  			{% endif %}
+			<div class="refinery-header">
+				<span class="refinery-header-left">
+					<h3>{{ data_set.name }}</h3>
+				</span>
+			</div>
+
+			<div class="refinery-subheader">
+				<h4>Summary (Supports Markdown)</h4>
+			</div>
+			{% if form.summary.errors %}
+				<p class="errors">{{ form.summary.errors.as_text }}</p>
+			{% endif %}
+			<p>{{form.summary}}</p>
+
+			<div class="refinery-subheader">
+				<h4>Description (Supports Markdown)</h4>
+			</div>
+			{% if form.description.errors %}
+				<p class="errors">{{ form.description.errors.as_text }}</p>
+			{% endif %}
+			<p>{{form.description}}</p>
+
+			<div class="refinery-subheader">
+				<h4>Shortcut Name</h4>
+			</div>
+			{% if form.slug.errors %}
+				<p class="errors">{{ form.slug.errors.as_text }}</p>
+			{% endif %}
+			<p>{{form.slug}}</p>
+
+			{% if not REFINERY_REPOSITORY_MODE %}
+				<div class="refinery-header">
+					<span class="refinery-header-left">
+						<h3>Studies</h3>
+					</span>
+				</div>
+				{% for study in studies %}
+				<p><strong>{{study.identifier}}</strong>: {{study.title}}</p>
+				<ul>
+				{% for assay in study.assay_set.all %}
+					<!-- <li>Assay - <a href="{% url data_set_manager_contents study.uuid assay.uuid %}">{{assay}}</a></li> -->
+					<li>Assay - {{assay}}</li> 
+				{% endfor %}
+				</ul>
+				{% endfor %}
+			{% endif %}
+			
+			<div class="refinery-header">
+				<span class="refinery-header-left">
+					<h3>Files</h3>
+				</span>
+			</div>
+
+			<span class="refinery-subheader">
+				<h3>Meta Data</h3>
+			</span>
+			{% if isatab_archive or pre_isatab_archive %}
+				{% load core_extras %}
+				{% if isatab_archive %}
+				<p><a href="{{isatab_archive.get_url}}">{{isatab_archive.uuid|simple_name}}</a> ({{isatab_archive.get_file_size|filesizeformat}})</p>
+				{% endif %}
+				{% if pre_isatab_archive %}
+				<p><a href="{{pre_isatab_archive.get_url}}">{{pre_isatab_archive.uuid|simple_name}}</a> ({{pre_isatab_archive.get_file_size|filesizeformat}})</p>
+				{% endif %}
+			{% else %}
+				<p><i>Not available.</i></p>
+			{% endif %}
+
+			<span class="refinery-subheader">
+				<h3>Data Files</h3>
+			</span>
+			<p>{{ data_set.file_count }} files using {{ data_set.file_size|filesizeformat }}</p>
+								
+			<div class="refinery-header">
+				<span class="refinery-header-left">
+					<h3>History</h3>
+				</span>
+			</div>
+			<p>Current version <i>{{ data_set.get_version_details.version }}</i> created <i>{{ data_set.get_version_details.date }}</i>.
+			Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{ data_set.modification_date }}</i>.</p>
+
+			<a href="#" class="btn btn-primary" id="submit-link">Save</a>
+			<a href="{% url data_set data_set.uuid %}" class="btn">Cancel</a>			
+		</form>
+	</div>
+</div>
+{% endblock %}
+
+{% block script %}
+	<script>
+		$( "#submit-link" ).click( function() { $( "#dataset-edit-form" ).submit();});
+	</script>
+{% endblock %}

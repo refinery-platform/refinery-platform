@@ -7,61 +7,107 @@
 
 {% block subheader %}
 <div class="page-header">
-  	<h1>Project <small>{{ project.name }}</small></h1>
+	<h1>Project&nbsp;<small>{{ project.name }}</small></h1>
 </div>
 {% endblock %}
 
 {% block content %}
-<div class="row-fluid">
-	<div class="span8">
-		<h2>Summary</h2>
-		<p>{{ project.summary|markdown:"safe" }}</p>
+{% if project %}	
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">		
 		
-		<h2>Description</h2>
-		<p>{{ project.description|markdown:"safe" }}</p>		
-	</div>
-	<div class="span4">
-		<h2>Permissions</h2>
-		
-		Owner: {{ project.get_owner.get_full_name }}<br>
-		
-		{% for perm in project.get_groups %}
-			<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a> - Read: {{ perm.read }} | Change: {{ perm.change }}
-		{% endfor %}
-		
-		<h2>History</h2>
-		<p>
-			Last modified {{ project.modification_date }}<br> 
-			Created {{ project.creation_date }}
-		</p> 
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>{{project.name}}</h3>				
+			</span>			
+		</div>		
+
+		<div class="refinery-subheader">
+			<h4>Summary</h4>
+		</div>	
+		<p>{% if project.summary %} {{ project.summary|markdown:"safe" }} {% else %} <i>None provided.</i>{% endif %}</p>
+
+		<div class="refinery-subheader">
+			<h4>Description</h4>
+		</div>		
+		<p>{% if project.description %} {{ project.description|markdown:"safe" }} {% else %} <i>None provided.</i>{% endif %}</p>
 	
-		<h2>UUID</h2>
-		<span class="label label-inverse">{{ project.uuid }}</span>
-	</div>		
-</div>
-<div class="row-fluid">
-	<div class="span12">
-		<h2>Analyses</h2>
-			<table class="table table-striped table-condensed table-bordered">
-				<thead>
-					<tr>
-						<th>Name</th>
-						<th>Last Modified</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for analysis in project.analyses.all %}
-					    <tr>
-					    	<td>
-					    		<a href="{% url analysis project.uuid analysis.uuid %}">{{ analysis.name }}</a>
-					    	</td>
-					    	<td>
-					    		{{ analysis.modification_date }}
-					    	</td>
-					    </tr>
-					{% endfor %}							
-				</tbody>
+		<div class="refinery-subheader">
+			<h4>Shortcut Name</h4>
+		</div>
+		<p>{% if project.slug %} {{ project.slug }} {% else %} <i>None provided.</i>{% endif %}</p>
+
+		<div class="refinery-subheader">
+			<h4>UUID</h4>
+		</div>
+		<p>{{ project.uuid }}</p>
+
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Sharing</h3>				
+			</span>			
+		</div>		
+
+		<div class="refinery-subheader">
+			<h4>Owner</h4>
+		</div>	
+		<p>{{ project.get_owner.get_full_name }}</p>
+		
+		{% if project.get_groups|length > 0 %}
+		<div class="refinery-subheader">
+			<h4>Groups</h4>
+		</div>
+			<p>
+			{% for perm in project.get_groups %}
+				{% if perm.group.is_managed %}					
+					<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
+					{% if perm.read %}
+						<i class="icon-eye-open"></i>
+					{% endif %}
+					{% if perm.change %}
+						<i class="icon-pencil"></i>
+					{% endif %}
+				</br>
+				{% endif %}
+			{% endfor %}
+			</p>
+		{% endif %}
+
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>History</h3>				
+			</span>			
+		</div>		
+		<p>Created: {{ project.creation_date }} | Last Modified: {{ project.modification_date }}</p>
+		
+		{% if project.analyses.count > 0 %}
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Analyses</h3>
+			</span>
+		</div>
+		<table class="table table-striped table-condensed table-bordered">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Last Modified</th>
+				</tr>
+			</thead>
+			<tbody>
+			{% for analysis in project.analyses.all %}
+				<tr>
+			    	<td>
+					    <a href="{% url analysis project.uuid analysis.uuid %}">{{ analysis.name }}</a>
+					</td>
+					<td>{{ analysis.modification_date }}</td>
+				</tr>
+			{% endfor %}
+			</tbody>
 		</table>
-	</div>
+		{% endif %}
+		<a class="btn" href="{% url project_edit project.uuid %}">Edit</a>
+	{% else %}
+	    <p>No valid project.</p>
+	{% endif %}
 <div>
 {% endblock %}

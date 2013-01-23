@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load markup %}
+
+{% block title %}
+{{ block.super }} - Edit Workflow
+{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+	<h1>Edit Workflow Information</h1>	
+</div>
+{% endblock %}
+
+{% block content %}	
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">
+		<form method="post" action="" class="wide" id="workflow-edit-form">
+		{% csrf_token %}
+			{% if form.errors %}
+  				<div class="alert alert-error">Please correct the errors below.{{ form.non_field_errors }}</div>
+  			{% endif %}
+  			<div class="refinery-subheader">
+				<h4>Name</h4>
+			</div>
+  			{% if form.name.errors %}
+				<p class="errors">{{ form.name.errors.as_text }}</p>
+			{% endif %}
+			<p>{{ form.name }}</p>
+
+			<div class="refinery-subheader">
+				<h4>Summary (Supports Markdown)</h4>
+			</div>
+			{% if form.summary.errors %}
+				<p class="errors">{{ form.summary.errors.as_text }}</p>
+			{% endif %}
+			<p>{{form.summary}}</p>
+
+			<div class="refinery-subheader">
+				<h4>Description (Supports Markdown)</h4>
+			</div>
+			{% if form.description.errors %}
+				<p class="errors">{{ form.description.errors.as_text }}</p>
+			{% endif %}
+			<p>{{form.description}}</p>
+
+			<div class="refinery-subheader">
+				<h4>Shortcut Name</h4>
+			</div>
+			{% if form.slug.errors %}
+				<p class="errors">{{ form.slug.errors.as_text }}</p>
+			{% endif %}
+			<p>{{form.slug}}</p>
+
+			<div class="refinery-header">
+				<span class="refinery-header-left">
+					<h3>Workflow Engine</h3>
+				</span>
+			</div>
+			<div class="refinery-subheader">
+				<h4>Name</h4>
+			</div>
+			{{ workflow.workflow_engine.name }}
+
+			<div class="refinery-subheader">
+				<h4>Workflow Id</h4>
+			</div>
+			<p>{{ workflow.internal_id }} (<a href="{% url download_workflow workflow.uuid %}">Download</a>)</p>
+
+			<div class="refinery-header">
+				<span class="refinery-header-left">
+					<h3>Sharing</h3>
+				</span>
+			</div>
+
+			{% if workflow.get_groups|length > 0 %}
+				<div class="refinery-subheader">
+					<h4>Groups</h4>
+				</div>
+				<p>
+				{% for perm in workflow.get_groups %}
+					{% if perm.group.is_managed %}
+						<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
+						{% if perm.read %}
+							<i class="icon-eye-open"></i>
+						{% endif %}
+						{% if perm.change %}
+							<i class="icon-pencil"></i>
+						{% endif %}
+						</br>
+					{% endif %}
+				{% endfor %}
+				</p>
+			{% endif %}
+
+			<div class="refinery-header">
+				<span class="refinery-header-left">
+					<h3>History</h3>
+				</span>
+			</div>
+			<p>Created: {{ workflow.creation_date }} | Last Modified: {{ workflow.modification_date }}</p>
+			<a href="#" class="btn btn-primary" id="submit-link">Save</a>
+			<a href="{% url workflow workflow.uuid %}" class="btn">Cancel</a>			
+		</form>
+	</div>
+</div>
+{% endblock %}
+
+{% block script %}
+	<script>
+		$( "#submit-link" ).click( function() { $( "#workflow-edit-form" ).submit();});
+	</script>
+{% endblock %}

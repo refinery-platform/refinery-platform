@@ -15,55 +15,55 @@
 {% if workflow %}	
 <div class="refinery-panel refinery-panel-content scrollable">
 	<div class="row-fluid">		
-		
 		<div class="refinery-header">
 			<span class="refinery-header-left">
-				<h3>Summary</h3>				
-			</span>			
-		</div>		
+				<h3>{{ workflow.name }}</h3>
+			</span>
+		</div>
+
+		<div class="refinery-subheader">
+			<h4>Summary</h4>
+		</div>
 		<p>{% if workflow.summary %} {{ workflow.summary|markdown:"safe" }} {% else %} <i>None provided.</i>{% endif %}</p>
 
-	<div class="refinery-header">
-			<span class="refinery-header-left">
-				<h3>Description</h3>				
-			</span>			
-		</div>		
+		<div class="refinery-subheader">
+			<h4>Description</h4>
+		</div>
 		<p>{% if workflow.description %} {{ workflow.description|markdown:"safe" }} {% else %} <i>None provided.</i>{% endif %}</p>
-	
+
+		<div class="refinery-subheader">
+			<h4>Shortcut Name</h4>
+		</div>
+		<p>{% if workflow.slug %} {{ workflow.slug }} {% else %} <i>None provided.</i>{% endif %}</p>
+
 		<div class="refinery-header">
 			<span class="refinery-header-left">
-				<h3>Workflow Engine</h3>				
-			</span>			
-		</div>		
+				<h3>Workflow Engine</h3>
+			</span>
+		</div>
 		<div class="refinery-subheader">
 			<h4>Name</h4>
-		</div>		
+		</div>
 		{{ workflow.workflow_engine.name }}
-		
+
 		<div class="refinery-subheader">
 			<h4>Workflow Id</h4>
-		</div>		
+		</div>
 		<p>{{ workflow.internal_id }} (<a href="{% url download_workflow workflow.uuid %}">Download</a>)</p>
-		
+
 		<div class="refinery-header">
 			<span class="refinery-header-left">
-				<h3>Sharing</h3>				
-			</span>			
-		</div>		
-
-		<!--
-		<div class="refinery-subheader">
-			<h4>Owner</h4>
+				<h3>Sharing</h3>
+			</span>
 		</div>
-		-->		
-	
+
 		{% if workflow.get_groups|length > 0 %}
 		<div class="refinery-subheader">
 			<h4>Groups</h4>
 		</div>
 			<p>
 			{% for perm in workflow.get_groups %}
-				{% if perm.group.is_managed %}					
+				{% if perm.group.is_managed %}
 					<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
 					{% if perm.read %}
 						<i class="icon-eye-open"></i>
@@ -77,17 +77,16 @@
 			</p>
 		{% endif %}
 
-		
 		<div class="refinery-header">
 			<span class="refinery-header-left">
-				<h3>History</h3>				
-			</span>			
-		</div>		
+				<h3>History</h3>
+			</span>
+		</div>
 		<p>Created: {{ workflow.creation_date }} | Last Modified: {{ workflow.modification_date }}</p>
+		<a class="btn" href="{% url workflow_edit workflow.uuid %}">Edit</a>
 	{% else %}
 	    <p>No valid workflow.</p>
 	{% endif %}
 	</div>
 </div>
-
 {% endblock %}

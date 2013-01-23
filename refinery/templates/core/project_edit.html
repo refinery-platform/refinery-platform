@@ -1,18 +1,133 @@
 {% extends "base.html" %}
+{% load markup %}
 
 {% block title %}
 {{ block.super }} - Edit Project
 {% endblock %}
 
 {% block subheader %}
- Edit Project
+<div class="page-header">
+	<h1>Edit Project Information</h1>	
+</div>
 {% endblock %}
 
 {% block content %}
-	<form action="{% url project_edit project.uuid %}" method="post">{% csrf_token %}
-		<table>		
-			{{ form.as_table }}
-		</table>
-		<input type="submit" value="Save" />
-	</form>	
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">		
+		<form method="post" action="{% url project_edit project.uuid %}" class="wide" id="project-edit-form">
+		{% csrf_token %}
+			{% if form.errors %}
+  			<div class="alert alert-error">Please correct the errors below.{{ form.non_field_errors }}</div>
+  			{% endif %}
+  			<div class="refinery-subheader">
+				<h4>Name</h4>
+			</div>
+  			{% if form.name.errors %}
+			<p class="errors">{{ form.name.errors.as_text }}</p>
+			{% endif %}
+			<p>{{form.name}}</p>
+
+			<div class="refinery-subheader">
+				<h4>Summary (Supports Markdown)</h4>
+			</div>
+			{% if form.summary.errors %}
+			<p class="errors">{{ form.summary.errors.as_text }}</p>
+			{% endif %}
+			<p>{{form.summary}}</p>
+
+			<div class="refinery-subheader">
+				<h4>Description (Supports Markdown)</h4>
+			</div>
+			{% if form.description.errors %}
+			<p class="errors">{{ form.description.errors.as_text }}</p>
+			{% endif %}
+			<p>{{form.description}}</p>
+	
+			<div class="refinery-subheader">
+				<h4>Shortcut Name</h4>
+			</div>
+			{% if form.slug.errors %}
+			<p class="errors">{{ form.name.slug.as_text }}</p>
+			{% endif %}
+			<p>{{form.slug}}</p>
+
+			<div class="refinery-subheader">
+				<h4>UUID</h4>
+			</div>
+			<p>{{ project.uuid }}</p>
+
+			<div class="refinery-header">
+				<span class="refinery-header-left">
+					<h3>Sharing</h3>				
+				</span>
+			</div>
+
+			<div class="refinery-subheader">
+				<h4>Owner</h4>
+			</div>
+			<p>{{ project.get_owner.get_full_name }}</p>
+
+			{% if project.get_groups|length > 0 %}
+				<div class="refinery-subheader">
+					<h4>Groups</h4>
+				</div>
+				<p>
+				{% for perm in project.get_groups %}
+					{% if perm.group.is_managed %}
+						<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
+						{% if perm.read %}
+							<i class="icon-eye-open"></i>
+						{% endif %}
+						{% if perm.change %}
+							<i class="icon-pencil"></i>
+						{% endif %}
+						</br>
+					{% endif %}
+				{% endfor %}
+				</p>
+			{% endif %}
+
+			<div class="refinery-header">
+				<span class="refinery-header-left">
+					<h3>History</h3>
+				</span>
+			</div>
+			<p>Created: {{ project.creation_date }} | Last Modified: {{ project.modification_date }}</p>
+
+			{% if project.analyses.count > 0 %}
+			<div class="refinery-header">
+				<span class="refinery-header-left">
+					<h3>Analyses</h3>
+				</span>
+			</div>
+			<table class="table table-striped table-condensed table-bordered">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Last Modified</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for analysis in project.analyses.all %}
+					<tr>
+			    		<td>
+					    	<a href="{% url analysis project.uuid analysis.uuid %}">{{ analysis.name }}</a>
+						</td>
+						<td>{{ analysis.modification_date }}</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+			{% endif %}
+			<a href="#" class="btn btn-primary" id="submit-link">Save</a>
+			<a href="{% url project project.uuid %}" class="btn">Cancel</a>			
+		</form>		
+	</div>
+</div>
+{% endblock %}
+
+{% block script %}
+	<script>
+		$( "#submit-link" ).click( function() { $( "#project-edit-form" ).submit();});					
+	</script>
 {% endblock %}
