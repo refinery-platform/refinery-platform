@@ -25,22 +25,23 @@
 		<div class="refinery-subheader">
 			<h4>First Name</h4>
 		</div>		
-		<p>{{ profile_user.first_name }}</p>
+		<p>{% if profile_user.first_name %} {{ profile_user.first_name }} {% else %} <i>None provided.</i>{% endif %}</p>
 	
 		<div class="refinery-subheader">
 			<h4>Last Name</h4>
 		</div>		
-		<p>{{ profile_user.last_name }}</p>
+		<p>{% if profile_user.last_name %} {{ profile_user.last_name }} {% else %} <i>None provided.</i>{% endif %}</p>
 		
 		<div class="refinery-subheader">
 			<h4>Email</h4>
 		</div>		
-		<p>{{ profile_user.email }}</p>
+		<p>{% if profile_user.email %} {{ profile_user.email }} {% else %} <i>None provided.</i>{% endif %}</p>
 		
 		<div class="refinery-subheader">
 			<h4>Affiliation</h4>
-		</div>		
-		<p>{{ profile_user.get_profile.affiliation }}</p>
+		</div>
+		<p>{% if profile_user.get_profile.affiliation %} {{ profile_user.get_profile.affiliation }} {% else %} <i>None provided.</i>{% endif %}</p>
+
 		<div class="refinery-subheader">
 			<h4>Profile Visibility</h4>
 		</div>		
@@ -53,17 +54,19 @@
 			<h4>Password</h4>
 		</div>
 		<p><i class="icon-key"></i>&nbsp;<a href="/accounts/password/change/">Change Password?</a></p>
-		
-		<div class="refinery-header">
-			<span class="refinery-header-left">
-				<h3>Groups</h3>				
-			</span>			
-		</div>		
+
+		{% if profile_user.groups.count > 0 %}
+			<div class="refinery-header">
+				<span class="refinery-header-left">
+					<h3>Groups</h3>				
+				</span>			
+			</div>		
 		    <p>   
 			{% for group in profile_user.groups.all %}
-		        <a href="{% url group group.extendedgroup.uuid %}">{{ group.name }}</a></br>
-		    {% endfor %}
-		    </p>
+		       	<a href="{% url group group.extendedgroup.uuid %}">{{ group.name }}</a></br>
+		   	{% endfor %}
+		   	</p>
+		{% endif %}
 
 		<div class="refinery-header">
 			<span class="refinery-header-left">
@@ -71,9 +74,8 @@
 			</span>			
 		</div>		
 		<p>Joined on {{ profile_user.date_joined }} Last login on {{ profile_user.last_login }}</p>
-		
+
 		<a class="btn" href="{% url user_edit profile_user.get_profile.uuid %}">Edit</a>				
-			
 	{% else %}
 	    <p>No valid user.</p>
 	{% endif %}	
