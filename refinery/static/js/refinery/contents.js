@@ -42,7 +42,7 @@ $(document).ready(function() {
 var showAnnotation = false;
 
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
-var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation", "species", "genome_build" ]; // TODO: make these regexes
+var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build" ]; // TODO: make these regexes
 var invisibleFieldNames = [ "name" ];
 
 
@@ -75,7 +75,7 @@ var pivotMatrixData;
 var documents = [];
 
 // fine-grained selection on top of the facet selection
-// currently a list of file uuids, to be switched to node uuids eventually
+// currently a list of node uuids
 var nodeSelection = [];
 // if true, the nodeSelection list is to be subtracted from the Solr query results (blacklist)
 // if false, the nodeSelection list is to be used instead of the Solr query results (whitelist)
@@ -781,13 +781,13 @@ function processDocs( data ) {
 		var s = "<tr>";
 		
 		//adding galaxy comboboxes 
-		var file_uuid = document.file_uuid;
+		var node_uuid = document.uuid;
 		
 		// IF Repository mode 
 		if ( REFINERY_REPOSITORY_MODE ) {
 			var isNodeSelected;
 			
-			if ( nodeSelection.indexOf( file_uuid ) != -1 ) {
+			if ( nodeSelection.indexOf( node_uuid ) != -1 ) {
 				if ( nodeSelectionBlacklistMode ) {
 					isNodeSelected = false;
 				}
@@ -805,12 +805,12 @@ function processDocs( data ) {
 				}				
 			}
 									
-			s += '<td><label><input id="file_' + file_uuid + '" data-file-uuid="' + file_uuid + '" class="node-selection-checkbox" type=\"checkbox\" ' + ( isNodeSelected ? "checked" : "" ) + '></label>' + '</td>';							
+			s += '<td><label><input id="file_' + node_uuid + '" data-file-uuid="' + node_uuid + '" class="node-selection-checkbox" type=\"checkbox\" ' + ( isNodeSelected ? "checked" : "" ) + '></label>' + '</td>';							
 			
 			//s += '<td></td>';
 		}
 		else { 
-			var check_temp = '<select name="assay_'+ file_uuid +'" id="webmenu" class="btn-mini OGcombobox"> <option></option> </select>';
+			var check_temp = '<select name="assay_'+ node_uuid +'" id="webmenu" class="btn-mini OGcombobox"> <option></option> </select>';
 			s += '<td>' + check_temp + '</td>'
 		}
 
@@ -862,15 +862,15 @@ function processDocs( data ) {
 
 	// attach events to node selection checkboxes
 	$( "." + "node-selection-checkbox" ).click( function( event ) {
-		var fileUuid = $(this).data( "fileUuid" );			
-		var fileUuidIndex = nodeSelection.indexOf( fileUuid );
+		var nodeUuid = $(this).data( "uuid" );			
+		var nodeUuidIndex = nodeSelection.indexOf( nodeUuid );
 		
-		if ( fileUuidIndex != -1 ) {
+		if ( nodeUuidIndex != -1 ) {
 			// remove element
-			nodeSelection.splice( fileUuidIndex, 1 ); 			
+			nodeSelection.splice( nodeUuidIndex, 1 ); 			
 		}
 		else {
-			nodeSelection.push( fileUuid );
+			nodeSelection.push( nodeUuid );
 		}
 		
 		updateSelectionCount( "statistics-view" );
@@ -1021,7 +1021,7 @@ function createSpeciesModal(aresult) {
 
 
 $( "#profile-viewer-session-link" ).on( "click", function() {
-	getField( currentAssayUuid, currentStudyUuid, currentNodeType, "file_uuid", function( uuids ) {
+	getField( currentAssayUuid, currentStudyUuid, currentNodeType, "uuid", function( uuids ) {
 		
 		var limit = 1;
 		var newUrl = "/visualization_manager/profile_viewer_session?uuid=" + uuids[0];
