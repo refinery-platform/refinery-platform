@@ -2,9 +2,12 @@
 # requires settings_local.py with machine specific information
 # splitting ideas taken from https://code.djangoproject.com/wiki/SplitSettings (solution by Steven Armstrong)
 
+import ldap
 import os
 import sys
 import djcelery
+from django_auth_ldap.config import LDAPSearch
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -135,9 +138,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    #'django.middleware.cache.UpdateCacheMiddleware',
-    #'django.middleware.common.CommonMiddleware',
-    #'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
 ROOT_URLCONF = 'refinery.urls'
@@ -192,12 +192,26 @@ INSTALLED_APPS = (
     'south', 
 )
 
+# IS: added for django-auth-ldap
+# Baseline configuration
+AUTH_LDAP_SERVER_URI = "ldap://ldap.example.com"
+AUTH_LDAP_BIND_DN = ""
+AUTH_LDAP_BIND_PASSWORD = ""
+AUTH_LDAP_USER_SEARCH = LDAPSearch("ou=users,dc=example,dc=com",
+                                   ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
+# Populate the Django user from the LDAP directory.
+AUTH_LDAP_USER_ATTR_MAP = {
+    "first_name": "givenName",
+    "last_name": "sn",
+    "email": "mail"
+}
+
 # NG: added for django-guardian
 AUTHENTICATION_BACKENDS = (
+    'django_auth_ldap.backend.LDAPBackend',
     'django.contrib.auth.backends.ModelBackend', # default
     'guardian.backends.ObjectPermissionBackend',
 )
-
 
 # NG: added to support sessions
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
