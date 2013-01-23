@@ -75,7 +75,7 @@ var pivotMatrixData;
 var documents = [];
 
 // fine-grained selection on top of the facet selection
-// currently a list of node uuids
+// a list of node uuids
 var nodeSelection = [];
 // if true, the nodeSelection list is to be subtracted from the Solr query results (blacklist)
 // if false, the nodeSelection list is to be used instead of the Solr query results (whitelist)
