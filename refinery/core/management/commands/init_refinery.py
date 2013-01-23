@@ -31,7 +31,7 @@ class Command(BaseCommand):
             try:
                 s = Site.objects.get(id=settings.SITE_ID)
             except:
-                s = Site(domain="example.com", name="example")
+                s = Site(domain=settings.REFINERY_INSTANCE_NAME, name=settings.REFINERY_BASE_URL)
             s.name = settings.REFINERY_INSTANCE_NAME
             s.domain = settings.REFINERY_BASE_URL
             s.save()
