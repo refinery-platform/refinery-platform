@@ -10,10 +10,12 @@ from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.sites.models import Site
 from django.db import connection, transaction
+import sys
 
 class Command(BaseCommand):
     help = "Initializes a Refinery installation:"
     help = "%s - tests if admin user exists and if none exists, asks user to create one \n" % help
+    help = "%s - assigns the user-provided name of the website and base URL for use throughout Refinery\n" % help
     help = "%s - generates the Public group and the Public Manager group and adds the admin user to it\n" % help    
 
     """
@@ -21,20 +23,21 @@ class Command(BaseCommand):
     Description:
     main program; run the command
     """   
-    def handle(self, **options):
+    def handle(self, *args, **options):
+        try:
+            refinery_instance_name = args[0]
+            refinery_base_url = args[1]
+        except:
+            print "Insufficient arguments provided:\n%s" % self.help
+            sys.exit(2)
         # 1. test if admin user exists
          
         # 2. set up the site name
-        if Site.objects.filter(domain__exact=settings.REFINERY_BASE_URL).count() > 0:
-            print("This URL already exists in the database")
-        else:
-            try:
-                s = Site.objects.get(id=settings.SITE_ID)
-            except:
-                s = Site(domain=settings.REFINERY_INSTANCE_NAME, name=settings.REFINERY_BASE_URL)
-            s.name = settings.REFINERY_INSTANCE_NAME
-            s.domain = settings.REFINERY_BASE_URL
-            s.save()
+        site_obj, created = Site.objects.get_or_create(id=settings.SITE_ID)
+        site_obj.name = refinery_instance_name
+        site_obj.domain = refinery_base_url
+        site_obj.save()
+        print "Created Site with name %s and base URL %s.\n" % (site_obj.name, site_obj.domain)
 
         # 3. create public group
         print("Creating public group '%s' for Refinery. Edit 'REFINERY_PUBLIC_GROUP_NAME' in your settings to choose another name or 'REFINERY_PUBLIC_GROUP_ID' to choose another id."
