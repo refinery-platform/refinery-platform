@@ -16,15 +16,18 @@ class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
                 make_option('--username',
                             action='store',
-                            type='string'
+                            type='string',
+                            help='username of the owner of this data set'
                             ),
                 make_option('--title',
                             action='store',
-                            type='string'
+                            type='string',
+                            help='name of this data set'
                             ),
                 make_option('--file_name',
                             action='store',
-                            type='string'
+                            type='string',
+                            help='absolute path to the file being parsed'
                             ),
                 make_option('--source_column_index',
                             action='store',
@@ -70,7 +73,8 @@ class Command(BaseCommand):
                             ),
                 make_option('--is_public',
                             action='store_true',
-                            default=False
+                            default=False,
+                            help='whether this data set will be visible to the public'
                             ),
                 )
 
