@@ -16,7 +16,8 @@ class Command(BaseCommand):
     help = "Initializes a Refinery installation:"
     help = "%s - tests if admin user exists and if none exists, asks user to create one \n" % help
     help = "%s - assigns the user-provided name of the website and base URL for use throughout Refinery\n" % help
-    help = "%s - generates the Public group and the Public Manager group and adds the admin user to it\n" % help    
+    help = "%s - generates the Public group and the Public Manager group and adds the admin user to it\n" % help
+    help = "%s\nUsage: python manage.py init_refinery <site name> <site base URL>" % help    
 
     """
     Name: handle
