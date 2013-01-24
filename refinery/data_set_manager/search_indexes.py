@@ -49,7 +49,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare(self, object):
         data = super(NodeIndex, self).prepare(object)
         annotations = AnnotatedNode.objects.filter( node=object )
-        
+            
         uuid = str( object.study.id )
         
         if object.assay is not None:
@@ -81,7 +81,10 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             
         # add type as dynamic field to get proper facet values
         data["REFINERY_TYPE_" + uuid + "_s"] = object.type
-        
+
+        # add type as dynamic field to get proper facet values
+        data["REFINERY_NAME_" + uuid + "_s"] = object.name
+
         # add file type as facet value        
         file_store_item = file_store_tasks.read( object.file_uuid );
         

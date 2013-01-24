@@ -480,16 +480,50 @@ class AnnotatedNode(models.Model):
 
 
 def _is_internal_attribute(attribute):
-    return attribute in [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation", "species", "genome_build" ]
+    return attribute in [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation", "species", "genome_build", "name" ]
 
 def _is_active_attribute(attribute):
-    return (not _is_internal_attribute(attribute) and attribute not in ["name"] )
+    return (not _is_internal_attribute(attribute) and attribute not in [] )
 
 def _is_ignored_attribute(attribute):
     """
     Ignore Django internal Solr fields.
     """
-    return attribute in [ "django_ct", "django_id", "id" ]    
+    return attribute in [ "django_ct", "django_id", "id" ]
+
+def _is_facet_attribute(attribute,study,assay):
+    """
+    Tests if a an attribute should be used as a facet by default.
+    
+    :param attribute: The name of the attribute.
+    :type attribute: string
+    
+    :returns: True if the ratio between items in the data set and the number of facet attribute values is smaller than settings.DEFAULT_FACET_ATTRIBUTE_VALUES_RATIO, false otherwise.
+    """
+    ratio = 0.5
+
+    query = settings.REFINERY_SOLR_BASE_URL + "data_set_manager" + "/select?" + "q=django_ct:data_set_manager.node&wt=json&start=0&rows=1&fq=(study_uuid:" + study.uuid + "%20AND%20assay_uuid:" + assay.uuid + "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22))&facet=true&facet.field=" + attribute + "&facet.sort=count&facet.limit=-1"
+
+    logger.debug( "Query for initialize_attribute_order: %s" % ( query, ) )
+    
+    # proper url encoding                  
+    query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
+        
+    # opening solr query results
+    results =  urllib2.urlopen( query ).read()
+    
+    logger.debug( "Query results for initialize_attribute_order: %s" % ( results, ) )
+        
+    # converting results into json for python 
+    results = simplejson.loads(results)
+
+    
+    items = results["response"]["numFound"]
+    attributeValues = len( results["facet_counts"]["facet_fields"][attribute] )/2
+    
+    logger.debug( results["facet_counts"]["facet_fields"] );
+        
+    return ( attributeValues/items ) < ratio 
     
 
 def initialize_attribute_order( study, assay ):    
@@ -504,7 +538,7 @@ def initialize_attribute_order( study, assay ):
     :returns: Number of attributes that were indexed.
     """
  
-    query = settings.REFINERY_SOLR_BASE_URL + "data_set_manager" + "/select?" + "q=django_ct:data_set_manager.node&wt=json&start=0&rows=1&fq=(study_uuid:" + study.uuid + "%20AND%20assay_uuid:" + assay.uuid + "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22))&facet.sort=count&facet.limit=-1"
+    query = settings.REFINERY_SOLR_BASE_URL + "data_set_manager" + "/select?" + "q=django_ct:data_set_manager.node&wt=json&start=0&rows=1&fq=(study_uuid:" + study.uuid + "%20AND%20assay_uuid:" + assay.uuid + "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22))&facet=true&facet.sort=count&facet.limit=-1"
 
     logger.debug( "Query for initialize_attribute_order: %s" % ( query, ) )
     
@@ -523,7 +557,7 @@ def initialize_attribute_order( study, assay ):
     rank = 0
     for key in results["response"]["docs"][0]:
         
-        is_facet = True
+        is_facet = _is_facet_attribute(key,study,assay)
         is_exposed = True
         is_internal = _is_internal_attribute(key);
         is_active = _is_active_attribute(key)

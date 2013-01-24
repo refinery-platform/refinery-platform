@@ -42,8 +42,8 @@ $(document).ready(function() {
 var showAnnotation = false;
 
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
-var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build" ]; // TODO: make these regexes
-var invisibleFieldNames = [ "name" ];
+var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ]; // TODO: make these regexes
+var invisibleFieldNames = [];
 
 
 var facets = {};
