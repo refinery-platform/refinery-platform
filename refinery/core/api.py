@@ -65,9 +65,10 @@ class NodeSetResource(ModelResource):
     # Once the above has been integrated into a tastypie release branch remove NodeSetListResource and
     # use "use_in" instead 
     # nodes = fields.ToManyField(NodeResource, 'nodes', use_in="detail" )
-    
-    nodes = fields.ToManyField(NodeResource, 'nodes' )
-    node_count = fields.IntegerField(attribute='node_count',readonly=True)
+
+    solr_query = fields.CharField(attribute='solr_query')
+    node_count = fields.IntegerField(attribute='node_count', readonly=True)
+    is_implicit = fields.BooleanField(attribute='is_implicit')
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
 
