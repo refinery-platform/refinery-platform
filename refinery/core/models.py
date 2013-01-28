@@ -534,7 +534,13 @@ class NodeSet(SharableResource):
     Used to save selection state between sessions and to map data files to workflow inputs.
 
     '''
-    nodes = models.ManyToManyField(Node, blank=True, null=True)
+    #: Solr query representing a list of Nodes
+    solr_query = models.TextField(blank=True, null=True)
+    #: Number of nodes in the NodeSet (provided in POST/PUT/PATCH requests)
+    node_count = models.IntegerField(blank=True, null=True)
+    #: Implicit node is created "on the fly" to support an analysis while
+    #: explicit node is created by the user to store a particular selection
+    is_implicit = models.BooleanField()
     study = models.ForeignKey(Study)
     assay = models.ForeignKey(Assay)
 
