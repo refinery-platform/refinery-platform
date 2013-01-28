@@ -567,26 +567,26 @@ class NodeSet(SharableResource, TemporaryResource):
 
 
 @transaction.commit_manually()
-def create_nodeset(name, study, assay, summary='', nodes=[]):
-    '''Create a new NodeSet from a list of Nodes.
+def create_nodeset(name, study, assay, summary='', solr_query=''):
+    '''Create a new NodeSet.
 
     :param name: name of the new NodeSet.
     :type name: str.
-    :param summary: description of the new NodeSet.
-    :type summary: str.
-    :param nodes: list of Node UUIDs.
-    :type nodes: list.
     :param study: Study model instance.
     :type study: Study.
     :param study: Assay model instance.
     :type study: Assay.
+    :param summary: description of the new NodeSet.
+    :type summary: str.
+    :param solr_query: Solr query representing a list of Node instances.
+    :type solr_query: str.
     :returns: NodeSet -- new instance.
     :raises: IntegrityError, ValueError
 
     '''
     try:
-        nodeset = NodeSet.objects.create(name=name, summary=summary, study=study, assay=assay)
-        nodeset.nodes.add(*nodes)
+        nodeset = NodeSet.objects.create(name=name, study=study, assay=assay,
+                                         summary=summary, solr_query=solr_query)
     except (IntegrityError, ValueError) as e:
         transaction.rollback()
         logger.error("Failed to create NodeSet: {}".format(e.message))
@@ -612,25 +612,8 @@ def get_nodeset(uuid):
         raise
 
 
-def get_nodesets(node_uuid):
-    '''Retrieve all the NodeSets that a Node with the given UUID is part of.
-
-    :param node_uuid: Node UUID.
-    :type node_uuid: str.
-    :returns: list -- NodeSet instances that the Node is part of.
-    :raises: DoesNotExist
-
-    '''
-    try:
-        node = Node.objects.get(uuid=node_uuid)
-    except Node.DoesNotExist:
-        logger.error("Failed to retrieve NodeSets: Node with UUID '{}' does not exist".format(node_uuid))
-        raise
-    return node.nodeset_set.all()
-
-
-def update_nodeset(uuid, name='', summary='', nodes=[], study=None, assay=None):
-    '''Replace data in an existing NodeSet with the new data.
+def update_nodeset(uuid, name=None, summary=None, study=None, assay=None, solr_query=None):
+    '''Replace data in an existing NodeSet with the provided data.
 
     :param uuid: NodeSet UUID.
     :type uuid: str.
@@ -638,12 +621,12 @@ def update_nodeset(uuid, name='', summary='', nodes=[], study=None, assay=None):
     :type name: str.
     :param summary: new NodeSet description.
     :type summary: str.
-    :param nodes: list of new Node UUIDs.
-    :type nodes: list.
     :param study: Study model instance.
     :type study: Study.
-    :param study: Assay model instance.
-    :type study: Assay.
+    :param assay: Assay model instance.
+    :type assay: Assay.
+    :param solr_query: new Solr query.
+    :type solr_query: str.
     :raises: DoesNotExist
 
     '''
@@ -652,17 +635,16 @@ def update_nodeset(uuid, name='', summary='', nodes=[], study=None, assay=None):
     except NodeSet.DoesNotExist:
         logger.error("Failed to update NodeSet: UUID '{}' does not exist".format(uuid))
         raise
-    if name:
+    if name is not None:
         nodeset.name = name
-    if summary:
+    if summary is not None:
         nodeset.summary = summary
-    if study:
+    if study is not None:
         nodeset.study = study
-    if assay:
+    if assay is not None:
         nodeset.assay = assay
-    if nodes:
-        nodeset.nodes.clear()
-        nodeset.nodes.add(*nodes)
+    if solr_query is not None:
+        nodeset.solr_query = solr_query
     nodeset.save()
 
 
