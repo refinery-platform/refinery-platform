@@ -13,6 +13,7 @@ var allowAnnotationDownload = false;
 
 var solrRoot = "http://" + REFINERY_BASE_URL + "/solr/";
 var solrSelectUrl = solrRoot + "data_set_manager/select/";
+var solrSelectEndpoint = "data_set_manager/select/";
 var solrIgvUrl = solrRoot + "igv/";
 
 var solrQuery = "q=django_ct:data_set_manager.node";
@@ -32,10 +33,27 @@ var currentNodeType = "\"Raw Data File\"";
 
 $(document).ready(function() {		
 	configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
-	configurator.initialize()
+	configurator.initialize();
+	
+	/*	
+	var q = new DataSetSolrQuery( externalAssayUuid, externalStudyUuid, ['"Raw Data File"', '"Derived Data File"', '"Array Data File"', '"Derived Array Data File"'] );
+	var client = new SolrSelectClient( solrRoot, solrSelectEndpoint, "csrfMiddlewareToken" );
 
+	configurator.initialize( function() {
+		client.initializeDataSetQuery( q, configurator, function(query) {
+			console.log( query );
+			client.executeDataSetQuery( query, DATA_SET_FULL_QUERY, 0, 10, function( data ) {
+				console.log( data );
+				var serializedQuery = query.serialize( DATA_SET_QUERY_NODE_SET_SERIALIZATION ); 
+				console.log( serializedQuery ); 
+				console.log( query.deserialize( serializedQuery ) ); 
+			});
+		});		
+	});
+	*/	
+			
 	nodeSetManager = new NodeSetManager( externalAssayUuid, externalStudyUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
-	nodeSetManager.initialize()
+	nodeSetManager.initialize();
 	
 	nodeSetManager.setLoadSelectionCallback( function( nodeSet ) {
 		// reset current node selection
@@ -68,7 +86,7 @@ $(document).ready(function() {
 });    		
 
 var showAnnotation = false;
-
+	
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
 var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ]; // TODO: make these regexes
 var invisibleFieldNames = [];
@@ -328,6 +346,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 	url += buildSolrQuerySortFields( fields );
 	url += buildSolrQueryPivots( pivots );
 	
+	console.log( url );
 	
 	return ( url );
 }
@@ -363,7 +382,6 @@ function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 			}
 	   	});				
 					
-
 		var defaultSortFieldFound = false;
 		for ( var i = 0; i < configurator.state.objects.length; ++i ) {
 			var attribute = configurator.state.objects[i];
