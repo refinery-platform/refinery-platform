@@ -180,9 +180,23 @@ class SharableResource ( OwnableResource ):
         
         return groups        
 
-        
+
     class Meta:
         verbose_name = "sharableresource"
+        abstract = True
+
+
+class TemporaryResource:
+    '''Mix-in class for temporary resources like NodeSet instances.
+
+    '''
+    #: Expiration time and date of the instance
+    expiration = models.DateTimeField()
+
+    def __unicode__(self):
+        return self.name + " (" + self.uuid + ")"
+
+    class Meta:
         abstract = True
 
 
@@ -529,7 +543,7 @@ def create_manager_group( sender, instance, created, **kwargs ):
 post_save.connect(create_manager_group, sender=ExtendedGroup)
 
 
-class NodeSet(SharableResource):
+class NodeSet(SharableResource, TemporaryResource):
     '''A collection of Nodes representing data files.
     Used to save selection state between sessions and to map data files to workflow inputs.
 
