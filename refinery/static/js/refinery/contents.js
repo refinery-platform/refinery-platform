@@ -34,6 +34,34 @@ $(document).ready(function() {
 	configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
 	configurator.initialize()
 
+	nodeSetManager = new NodeSetManager( externalAssayUuid, externalStudyUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
+	nodeSetManager.initialize()
+	
+	nodeSetManager.setLoadSelectionCallback( function( nodeSet ) {
+		// reset current node selection
+		nodeSelection = [];
+		nodeSelectionBlacklistMode = false;
+		
+		// iterate over nodes in node set and extract node uuids for resource uris		
+		for ( var i = 0; i < nodeSet.nodes.length; ++i ) {
+			var nodeResourceUri = nodeSet.nodes[i];			
+			
+			var uriComponents = nodeResourceUri.split( "/" )
+			
+			nodeSelection.push( uriComponents[uriComponents.length-2] );
+		}			
+		
+		getData( currentAssayUuid, currentStudyUuid, currentNodeType );				
+	});
+	
+	nodeSetManager.setSaveSelectionCallback( function() {
+		getField( currentAssayUuid, currentStudyUuid, currentNodeType, "uuid", function( uuids ) {
+			nodeSetManager.postState( "" + Date(), "Summary for Node Set", uuids, function(){
+				alert( "Node Set Created! Refresh node set list!!!" );
+			});
+		});		
+	});
+
 	configurator.getState( function() {
 		initializeDataWithState( currentAssayUuid, currentStudyUuid, currentNodeType );	
 	});
@@ -127,24 +155,10 @@ function buildPivotQuery( studyUuid, assayUuid, nodeType, loadAnnotation ) {
 	return ( url );	
 }
 	
-
-function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents, annotationParam ) {
+function buildSolrQueryFacetFields( fields ) {
 	
-	var url = solrSelectUrl
-		+ "?" + solrQuery 
-		+ "&" + solrSettings
-		+ "&" + "start=" + start
-		+ "&" + "rows=" + rows
-		+ "&" + "fq="
-		+ "("
-			+ "study_uuid:" + studyUuid
-			+ " AND " + "assay_uuid:" + assayUuid
-			+ " AND " + "is_annotation:" + annotationParam			
-+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + " OR " + "type: \"Array Data File\"" + " OR " + "type: \"Derived Array Data File\"" + ")"	   	+ ")"
-	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
-	   	+ "&" + "facet.limit=-1"; // unlimited number of facet values (otherwise some values will be missing)	   	
-	  
-	 
+	var url = "";
+	
 	// ------------------------------------------------------------------------------
 	// selecting facets: facet.field, fq 	
 	// ------------------------------------------------------------------------------
@@ -190,8 +204,15 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 			
 		}
 	}
+	
+	return url;
+}
 
 
+function buildSolrQueryFieldList( fields ) {
+	
+	var url = "";
+	
 	// ------------------------------------------------------------------------------
 	// selecting fields: fl 
 	// ------------------------------------------------------------------------------
@@ -216,6 +237,13 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 	}	
 	url += "&fl=" + fieldNames.join( ",");
 
+	return url;
+}
+
+
+function buildSolrQuerySortFields( fields ) {
+	
+	var url = "";
 	
 	// ------------------------------------------------------------------------------
 	// sorting by field: sort
@@ -244,7 +272,14 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 				}				
 			}
 		}				
-	}	
+	}
+	
+	return url;	
+}
+
+
+function buildSolrQueryPivots( pivots ) {
+	var url = "";
 	
 	// ------------------------------------------------------------------------------
 	// pivot fields: facet.pivot 
@@ -256,16 +291,60 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 			url += "&facet.pivot=" + pivotQuery;
 		}		
 	}		
-	
-	$( "#url-view" ).html( "" );
-	$( "<a/>", { href: url + "&indent=on", html: "Solr Query" } ).appendTo( "#url-view" );
 
+	return url;	
+}
+
+
+function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents, annotationParam ) {
+		
+	var nodeSelectionFilter;
+	
+	if ( nodeSelection.length > 0 ) {
+		nodeSelectionFilter = ( nodeSelectionBlacklistMode ? "-" : "" ) + "uuid:" + "(" + nodeSelection.join( " OR " ) +  ")"; 
+	}  
+	else {
+		nodeSelectionFilter = "uuid:*"
+	}
+	
+	var url = solrSelectUrl
+		+ "?" + solrQuery 
+		+ "&" + solrSettings
+		+ "&" + "start=" + start
+		+ "&" + "rows=" + rows
+		+ "&" + "fq="
+		+ "("
+			+ "study_uuid:" + studyUuid
+			+ " AND " + "assay_uuid:" + assayUuid
+			+ " AND " + "is_annotation:" + annotationParam			
+		+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + " OR " + "type: \"Array Data File\"" + " OR " + "type: \"Derived Array Data File\"" + ")"
+		+ ")"
+		+ "&" + "fq=" + nodeSelectionFilter
+	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
+	   	+ "&" + "facet.limit=-1"; // unlimited number of facet values (otherwise some values will be missing)	   	
+	  	
+	url += buildSolrQueryFacetFields( facets );		
+	url += buildSolrQueryFieldList( fields );
+	url += buildSolrQuerySortFields( fields );
+	url += buildSolrQueryPivots( pivots );
+	
+	
 	return ( url );
 }
 
 
+function updateSolrQueryDebugElement( elementId, query ) {
+	// "#url-view"
+	$( "#" + elementId ).html( "" );
+	$( "<a/>", { href: query + "&indent=on", html: "Solr Query" } ).appendTo( "#" + elementId );	
+}
+
+
 function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
-	$.ajax( { type: "GET", dataType: "jsonp", url: buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 1, {}, {}, {}, showAnnotation ), success: function(data) {
+	var url = buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 1, {}, {}, {}, showAnnotation );
+	updateSolrQueryDebugElement( "url-view", url );
+	
+	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {
 		
 		query.total_items = data.response.numFound;		
 		query.selected_items = data.response.numFound;
@@ -354,30 +433,34 @@ function updateSelectionCount( elementId ) {
 
 function getData( studyUuid, assayUuid, nodeType ) {	
 	var url = buildSolrQuery( studyUuid, assayUuid, nodeType, currentItemsPerPage * query.page, currentItemsPerPage, facets, fields, {}, showAnnotation );
-	
-	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {		
-		query.selected_items = data.response.numFound;
-	    
-	    updateSelectionCount( "statistics-view" );
+	updateSolrQueryDebugElement( "url-view", url );
 
-		if (  data.response.numFound < data.response.start ) {
-			// requesting data that is not available -> empty results -> rerun query			
-			// determine last available page given items_per_page setting
-			query.page = Math.max( 0, Math.ceil( data.response.numFound/currentItemsPerPage ) - 1 );
-			getData( currentAssayUuid, currentStudyUuid, currentNodeType );
-		}
-		else {
-			processFacets( data );
-			processFields();
-			processDocs( data );
-			processPages( data );
-			
-			//processPivots( data );				
-			
-			if ( REFINERY_REPOSITORY_MODE ) {
-				updateDownloadButton( "submitReposBtn" );
-			}			
-		} 
+	$.ajax( {
+		type: "GET",
+		dataType: "jsonp",
+		url: url,
+		success: function(data) {		
+			query.selected_items = data.response.numFound;	    
+		    updateSelectionCount( "statistics-view" );
+	
+			if (  data.response.numFound < data.response.start ) {
+				// requesting data that is not available -> empty results -> rerun query			
+				// determine last available page given items_per_page setting
+				query.page = Math.max( 0, Math.ceil( data.response.numFound/currentItemsPerPage ) - 1 );
+				getData( currentAssayUuid, currentStudyUuid, currentNodeType );
+			}
+			else {
+				processFacets( data );
+				processFields();
+				processDocs( data );
+				processPages( data );
+				
+				//processPivots( data );				
+				
+				if ( REFINERY_REPOSITORY_MODE ) {
+					updateDownloadButton( "submitReposBtn" );
+				}			
+			} 
 	}});	
 }
 
@@ -393,9 +476,11 @@ function getPivotData( studyUuid, assayUuid, nodeType ) {
 
 
 function getField( studyUuid, assayUuid, nodeType, field, callback ) {
-	var query = buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 10000, facets, { field: { "isVisible": false },  }, {}, showAnnotation );
-	console.log( query );
-	$.ajax( { type: "GET", dataType: "jsonp", url: query, success: function(data) {		
+	var fieldSelection = {};
+	fieldSelection[field] = { isVisible: true };
+	var solr_query = buildSolrQuery( studyUuid, assayUuid, nodeType, 0, query.total_items, {}, fieldSelection, {}, showAnnotation );
+		
+	$.ajax( { type: "GET", dataType: "jsonp", url: solr_query, success: function(data) {
 		var fieldValues = [] 
 				
 		for ( var i = 0; i < data.response.docs.length; ++i ) {
@@ -805,7 +890,7 @@ function processDocs( data ) {
 				}				
 			}
 									
-			s += '<td><label><input id="file_' + node_uuid + '" data-file-uuid="' + node_uuid + '" class="node-selection-checkbox" type=\"checkbox\" ' + ( isNodeSelected ? "checked" : "" ) + '></label>' + '</td>';							
+			s += '<td><label><input id="file_' + node_uuid + '" data-uuid="' + node_uuid + '" class="node-selection-checkbox" type=\"checkbox\" ' + ( isNodeSelected ? "checked" : "" ) + '></label>' + '</td>';							
 			
 			//s += '<td></td>';
 		}
@@ -1032,6 +1117,15 @@ $( "#profile-viewer-session-link" ).on( "click", function() {
 });
 
 
+$( "#save-selection-button" ).on( "click", function() {
+	getField( currentAssayUuid, currentStudyUuid, currentNodeType, "uuid", function( uuids ) {
+		nodeSetManager.postState( "Test Set " + Date(), "Summary for Node Set", uuids, function(){
+			alert( "Node Set Created!" );
+		});
+	});
+});
+
+
 $( "#igv-multi-species" ).on( "click", function(e) {
 		if ( $("#igv-multi-species").hasClass( "disabled" ) ) {
 			return;
@@ -1165,6 +1259,7 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 		
 		// function for getting current solr query 
 		var solr_url = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, facets, fields, {}, false );
+		
 		
 		// --- START: set correct CSRF token via cookie ---
 		// https://docs.djangoproject.com/en/1.4/ref/contrib/csrf/#ajax
