@@ -4,18 +4,20 @@ Created on May 4, 2012
 @author: nils
 '''
 
+from core.models import Project, NodeSet
+from data_set_manager.api import StudyResource, AssayResource
+from data_set_manager.models import Node
 from django.conf.urls.defaults import url
 from django.core.serializers import json
+from django.db.models.aggregates import Count
 from django.utils import simplejson
 from tastypie import fields
-from tastypie.resources import ModelResource
-from tastypie.authentication import SessionAuthentication
+from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import Authorization
+from tastypie.bundle import Bundle
+from tastypie.constants import ALL_WITH_RELATIONS
+from tastypie.resources import ModelResource
 from tastypie.serializers import Serializer
-from core.models import Project, NodeSet
-from data_set_manager.models import Node
-from data_set_manager.api import StudyResource, AssayResource
-
 
 #TODO: implement custom authorization class based on django-guardian permissions
 
@@ -58,18 +60,28 @@ class NodeResource(ModelResource):
 
 
 class NodeSetResource(ModelResource):
-    nodes = fields.ToManyField(NodeResource, 'nodes')
+    # https://github.com/toastdriven/django-tastypie/pull/538
+    # https://github.com/toastdriven/django-tastypie/issues/526
+    # Once the above has been integrated into a tastypie release branch remove NodeSetListResource and
+    # use "use_in" instead 
+    # nodes = fields.ToManyField(NodeResource, 'nodes', use_in="detail" )
+    
+    nodes = fields.ToManyField(NodeResource, 'nodes' )
+    node_count = fields.IntegerField(attribute='node_count',readonly=True)
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
 
     class Meta:
-        queryset = NodeSet.objects.all()
+        # create node count attribute on the fly - node_count field has to be defined on resource
+        queryset = NodeSet.objects.annotate( node_count=Count("nodes") )
         resource_name = 'nodeset'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
-        authentication = SessionAuthentication()
+        #authentication = SessionAuthentication()
+        authentication = Authentication()
         authorization = Authorization() # any user can change any NodeSet instance
         serializer = PrettyJSONSerializer()
         fields = ['name', 'summary', 'assay', 'study', 'uuid', 'nodes']
+        allowed_methods = ["get", "patch", "put", "post" ]
 
     def prepend_urls(self):
         return [
@@ -78,3 +90,28 @@ class NodeSetResource(ModelResource):
                 self.wrap_view('dispatch_detail'),
                 name="api_dispatch_detail"),
         ]
+
+
+class NodeSetListResource(ModelResource):
+    study = fields.ToOneField(StudyResource, 'study')
+    assay = fields.ToOneField(AssayResource, 'assay')
+    node_count = fields.IntegerField(attribute='node_count',readonly=True)
+
+    class Meta:
+        # create node count attribute on the fly - node_count field has to be defined on resource
+        queryset = NodeSet.objects.annotate( node_count=Count("nodes") )
+        detail_resource_name = 'nodeset' # NG: introduced to get correct resource ids
+        resource_name = 'nodesetlist'
+        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
+        #authentication = SessionAuthentication()
+        authentication = Authentication()
+        authorization = Authorization() # any user can change any NodeSet instance
+        fields = ['name', 'summary', 'assay', 'study', 'uuid' ]
+        allowed_methods = ["get" ]
+        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
+        ordering = [ 'name', 'node_count' ];
+    
+    def dehydrate(self, bundle):
+        # replace resource URI to point to the nodeset resource instead of the nodesetlist resource        
+        bundle.data['resource_uri'] = bundle.data['resource_uri'].replace( self._meta.resource_name, self._meta.detail_resource_name ) 
+        return bundle
