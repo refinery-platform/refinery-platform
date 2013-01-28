@@ -48,13 +48,13 @@ NodeSetManager.prototype.setLoadSelectionCallback = function ( callback ) {
 	var self = this;
 	
 	self.loadSelectionCallback = callback;
-}
+};
 
 NodeSetManager.prototype.setSaveSelectionCallback = function ( callback ) {
 	var self = this;
 	
 	self.saveSelectionCallback = callback;
-}
+};
 
 NodeSetManager.prototype.initialize = function () {
 	var self = this;
@@ -122,7 +122,7 @@ NodeSetManager.prototype.makeClickEvent = function( uuid, callback ) {
 		console.log( event );
 		callback();
 	});
-}
+};
 
 
 
@@ -344,5 +344,4 @@ NodeSetManager.prototype.postState = function( name, summary, nodes, callback ) 
 	     	} 
     	}
 	});
-
 };
