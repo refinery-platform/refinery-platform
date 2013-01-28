@@ -40,10 +40,16 @@ DataSetConfigurator = function( studyUuid, assayUuid, elementId, apiBaseUrl, crs
 };	
 	
 	
-DataSetConfigurator.prototype.initialize = function () {
+DataSetConfigurator.prototype.initialize = function( callback ) {
 	var self = this;
 	
-	self.getState( function() { self.render(); } );
+	self.getState( function() {
+		self.render();
+
+		if ( typeof callback !== 'undefined' ) {			
+			callback();
+		}
+	 } );
 	 
 	return null;	
 };
