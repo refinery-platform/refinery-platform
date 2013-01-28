@@ -28,6 +28,11 @@ function prettifySolrFieldName( name, isTitle )
 		name = "Material Type";
 	}
 
+	var position = name.indexOf( "Label_" );
+	if ( position != -1 ) {
+		name = "Label";
+	}
+
 	var position = name.indexOf( "REFINERY_TYPE_" );
 	if ( position == 0 ) {
 		name = "Type";
@@ -38,6 +43,10 @@ function prettifySolrFieldName( name, isTitle )
 		name = "File Type";
 	}
 
+	var position = name.indexOf( "REFINERY_NAME_" );
+	if ( position == 0 ) {
+		name = "Name";
+	}
 
 	name = name.replace( /\_/g, " " );
 	

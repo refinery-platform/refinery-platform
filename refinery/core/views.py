@@ -22,6 +22,7 @@ from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
     get_users_with_perms
 from haystack.query import SearchQuerySet
 from visualization_manager.views import igv_multi_species
+import json
 import logging
 import os.path
 import settings
@@ -786,8 +787,17 @@ def analysis_redirect(request, project_uuid, analysis_uuid):
 def solr_select(request, core):
     # core format is <name_of_core>    
     # query.GET is a querydict containing all parts of the query
-    url = settings.REFINERY_SOLR_BASE_URL + core + "/select?" + request.GET.urlencode()
-    return HttpResponse( urllib2.urlopen( url ).read(), mimetype='application/json' )
+    #url = settings.REFINERY_SOLR_BASE_URL + core + "/select?" + request.GET.urlencode()
+    
+    url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
+    print( request.GET.urlencode() )
+    data = request.GET.urlencode()
+    req = urllib2.Request(url, data ) #, {'Content-Type': 'application/json'})
+    f = urllib2.urlopen(req)
+    response = f.read()
+    f.close()
+    return HttpResponse( response, mimetype='application/json' )    
+    #return HttpResponse( urllib2.urlopen( url ).read() )
 
 
 def solr_igv(request):

@@ -31,7 +31,6 @@ class AssayResource(ModelResource):
         fields = [ "uuid" ]
 
 
-
 class AttributeOrderResource(ModelResource):
     study = fields.ToOneField(StudyResource, "study")
     assay = fields.ToOneField(AssayResource, "assay")

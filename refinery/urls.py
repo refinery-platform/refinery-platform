@@ -1,3 +1,11 @@
+from core.api import ProjectResource, NodeSetResource, NodeResource, \
+    NodeSetListResource
+from core.forms import RegistrationFormTermsOfServiceUniqueEmail
+from core.models import DataSet
+from core.views import admin_test_data
+from data_set_manager.api import AttributeOrderResource, StudyResource, \
+    AssayResource
+from data_set_manager.views import search_typeahead
 from django.conf.urls.defaults import patterns, include, url
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -8,12 +16,6 @@ from haystack.views import FacetedSearchView
 from registration.forms import RegistrationFormUniqueEmail
 from settings import MEDIA_ROOT, MEDIA_URL, STATIC_URL
 from tastypie.api import Api
-from core.api import ProjectResource, NodeSetResource, NodeResource
-from core.forms import RegistrationFormTermsOfServiceUniqueEmail
-from core.models import DataSet
-from core.views import admin_test_data
-from data_set_manager.api import AttributeOrderResource, StudyResource, AssayResource
-from data_set_manager.views import search_typeahead
 from workflow_manager.views import import_workflows
 
 
@@ -31,6 +33,7 @@ v1_api.register(AssayResource())
 v1_api.register(AttributeOrderResource())
 v1_api.register(NodeResource())
 v1_api.register(NodeSetResource())
+v1_api.register(NodeSetListResource())
 
 #patterns for all of the different applications
 urlpatterns = patterns('',    
