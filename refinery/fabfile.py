@@ -135,6 +135,8 @@ def bootstrap():
     # init virtualenvs
 
     # install requirements
+    
+    # add symlink for Refinery Apache config file 
 
 
 @task
@@ -234,13 +236,13 @@ def start_postgresql_server():
 
 
 @task
+@with_settings(user=env.project_user)
 def upload_apache_settings():
     '''Upload Apache settings
 
     '''
-    upload_template("{local_conf_dir}/httpd_refinery_conf_template".format(**env),
-                    "{apache_conf_dir}/zzz_refinery.conf".format(**env),
-                    backup=False, use_sudo=True)
+    upload_template("{local_conf_dir}/refinery-apache.conf".format(**env),
+                    "{deployment_target_dir}/etc/refinery-apache.conf".format(**env))
 
 
 @task
@@ -248,8 +250,9 @@ def install_mod_wsgi():
     '''Install WSGI interface for Python web applications in Apache from the CentOS repository
 
     '''
-    puts("Installing mod_wsgi")
-    sudo("yum -q -y install mod_wsgi")
+    #TODO: mod_wsgi is compiled and installed manually
+#    puts("Installing mod_wsgi")
+#    sudo("yum -q -y install mod_wsgi")
 
 
 @task
