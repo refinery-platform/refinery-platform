@@ -53,8 +53,4 @@ admin.site.register(WorkflowDataInput)
 admin.site.register(WorkflowDataInputMap)
 admin.site.register(Analysis,AnalysisAdmin)
 admin.site.register(DiskQuota,DiskQuotaAdmin)
-
-class NodeSetAdmin(admin.ModelAdmin):
-    exclude = ('nodes',)
-
-admin.site.register(NodeSet,NodeSetAdmin)
+admin.site.register(NodeSet)

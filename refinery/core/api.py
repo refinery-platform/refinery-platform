@@ -66,14 +66,14 @@ class NodeSetResource(ModelResource):
     # use "use_in" instead 
     # nodes = fields.ToManyField(NodeResource, 'nodes', use_in="detail" )
     solr_query = fields.CharField(attribute='solr_query')
-    node_count = fields.IntegerField(attribute='node_count', readonly=True)
+    node_count = fields.IntegerField(attribute='node_count')
     is_implicit = fields.BooleanField(attribute='is_implicit')
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
 
     class Meta:
         # create node count attribute on the fly - node_count field has to be defined on resource
-        queryset = NodeSet.objects.annotate( node_count=Count("nodes") )
+        queryset = NodeSet.objects.all()
         resource_name = 'nodeset'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         #TODO: switch to SessionAuthentication()
@@ -81,7 +81,7 @@ class NodeSetResource(ModelResource):
         authentication = Authentication()
         authorization = Authorization() # any user can change any NodeSet instance
         serializer = PrettyJSONSerializer()
-        fields = ['name', 'summary', 'assay', 'study', 'uuid', 'nodes']
+        fields = ['name', 'summary', 'assay', 'study', 'uuid', 'nodes', 'node_count']
         allowed_methods = ["get", "patch", "put", "post" ]
 
     def prepend_urls(self):
@@ -100,7 +100,7 @@ class NodeSetListResource(ModelResource):
 
     class Meta:
         # create node count attribute on the fly - node_count field has to be defined on resource
-        queryset = NodeSet.objects.annotate( node_count=Count("nodes") )
+        queryset = NodeSet.objects.all()
         detail_resource_name = 'nodeset' # NG: introduced to get correct resource ids
         resource_name = 'nodesetlist'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
