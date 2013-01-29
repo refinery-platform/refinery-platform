@@ -276,7 +276,7 @@ NodeSetManager.prototype.createPostUrl = function() {
 };
 
 
-NodeSetManager.prototype.postState = function( name, summary, nodes, callback ) {
+NodeSetManager.prototype.postState = function( name, summary, solr_query, node_count, callback ) {
 	var self = this;
 
 	// --- START: set correct CSRF token via cookie ---
@@ -314,16 +314,13 @@ NodeSetManager.prototype.postState = function( name, summary, nodes, callback ) 
 	// --- END: set correct CSRF token via cookie ---
 
 	
-	for ( var i = 0; i < nodes.length; ++i ) {
-		nodes[i] = "/api/v1/node/" + nodes[i] + "/";
- 	}
-
 	var data = {
 		"study": "/api/v1/study/" + self.studyUuid + "/",
 		"assay": "/api/v1/assay/" + self.assayUuid + "/",
 		"name": name,
 		"summary": summary,
-		"nodes": nodes,
+		"node_count": node_count,
+		"solr_query": solr_query,
 		"uuid": null
 		};
 	
