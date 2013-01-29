@@ -97,6 +97,7 @@ class NodeSetListResource(ModelResource):
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
     node_count = fields.IntegerField(attribute='node_count',readonly=True)
+    is_implicit = fields.BooleanField(attribute='is_implicit')
 
     class Meta:
         # create node count attribute on the fly - node_count field has to be defined on resource

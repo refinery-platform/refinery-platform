@@ -36,7 +36,7 @@ $(document).ready(function() {
 	configurator.initialize();
 	
 	/*	
-	var q = new DataSetSolrQuery( externalAssayUuid, externalStudyUuid, ['"Raw Data File"', '"Derived Data File"', '"Array Data File"', '"Derived Array Data File"'] );
+	var q = new DataSetSolrQuery( externalAssayUuid, externalStudyUuid, ['"Raw Data File"', '"Derived Data File"', '"Array Data File"', '"Derived Array Data File"', '"Array Data Matrix File"', '"Derived Array Data Matrix File"'] );
 	var client = new SolrSelectClient( solrRoot, solrSelectEndpoint, "csrfMiddlewareToken" );
 
 	configurator.initialize( function() {
@@ -59,25 +59,15 @@ $(document).ready(function() {
 		// reset current node selection
 		nodeSelection = [];
 		nodeSelectionBlacklistMode = false;
-		
-		// iterate over nodes in node set and extract node uuids for resource uris		
-		for ( var i = 0; i < nodeSet.nodes.length; ++i ) {
-			var nodeResourceUri = nodeSet.nodes[i];			
-			
-			var uriComponents = nodeResourceUri.split( "/" )
-			
-			nodeSelection.push( uriComponents[uriComponents.length-2] );
-		}			
-		
-		getData( currentAssayUuid, currentStudyUuid, currentNodeType );				
+				
+		getData( currentAssayUuid, currentStudyUuid, currentNodeType, nodeSet.solr_query );				
 	});
 	
 	nodeSetManager.setSaveSelectionCallback( function() {
-		getField( currentAssayUuid, currentStudyUuid, currentNodeType, "uuid", function( uuids ) {
-			nodeSetManager.postState( "" + Date(), "Summary for Node Set", uuids, function(){
+		var solr_query = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, query.total_items, facets, fields, {}, showAnnotation );
+		nodeSetManager.postState( "" + Date(), "Summary for Node Set", solr_query, query.selected_items, function(){
 				alert( "Node Set Created! Refresh node set list!!!" );
-			});
-		});		
+		});
 	});
 
 	configurator.getState( function() {
@@ -88,7 +78,7 @@ $(document).ready(function() {
 var showAnnotation = false;
 	
 var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
-var hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ]; // TODO: make these regexes
+var hiddenFieldNames = [ "uuid", "file_uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ]; // TODO: make these regexes
 var invisibleFieldNames = [];
 
 
@@ -153,7 +143,7 @@ function buildPivotQuery( studyUuid, assayUuid, nodeType, loadAnnotation ) {
 			+ "study_uuid:" + studyUuid
 			+ " AND " + "assay_uuid:" + assayUuid
 			+ " AND " + "is_annotation:" + loadAnnotation			
-			+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + " OR " + "type: \"Array Data File\"" + " OR " + "type: \"Derived Array Data File\"" + ")"
+			+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + " OR " + "type: \"Array Data File\"" + " OR " + "type: \"Derived Array Data File\"" + " OR " + "type: \"Array Data Matrix File\"" + " OR " + "type: \"Derived Array Data Matrix File\"" + ")"
 	   	+ ")"
 	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
 	   	+ "&" + "facet.limit=-1"; // unlimited number of facet values (otherwise some values will be missing)	   	
@@ -335,7 +325,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 			+ "study_uuid:" + studyUuid
 			+ " AND " + "assay_uuid:" + assayUuid
 			+ " AND " + "is_annotation:" + annotationParam			
-		+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + " OR " + "type: \"Array Data File\"" + " OR " + "type: \"Derived Array Data File\"" + ")"
+			+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + " OR " + "type: \"Array Data File\"" + " OR " + "type: \"Derived Array Data File\"" + " OR " + "type: \"Array Data Matrix File\"" + " OR " + "type: \"Derived Array Data Matrix File\"" + ")"
 		+ ")"
 		+ "&" + "fq=" + nodeSelectionFilter
 	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
@@ -449,8 +439,17 @@ function updateSelectionCount( elementId ) {
 }
 
 
-function getData( studyUuid, assayUuid, nodeType ) {	
-	var url = buildSolrQuery( studyUuid, assayUuid, nodeType, currentItemsPerPage * query.page, currentItemsPerPage, facets, fields, {}, showAnnotation );
+function getData( studyUuid, assayUuid, nodeType, solr_query ) {
+	
+	var url = "";
+	
+	if ( typeof solr_query === 'undefined' ) {
+		url = buildSolrQuery( studyUuid, assayUuid, nodeType, currentItemsPerPage * query.page, currentItemsPerPage, facets, fields, {}, showAnnotation );		
+	}
+	else {
+		url = solr_query;
+	}
+		
 	updateSolrQueryDebugElement( "url-view", url );
 
 	$.ajax( {
@@ -1077,6 +1076,7 @@ function processPages( data ) {
 	});
 }
 
+
 function toggleFieldDirection( direction ) {
 	if ( direction === "asc" ) {
 		return ( "desc" );
@@ -1104,6 +1104,7 @@ var createCallback = function(url) {
     };
 };
 
+
 function createSpeciesModal(aresult) {
 	//console.log("contents.js createSpeciesModal called");
     var ret_buttons = [];
@@ -1122,7 +1123,6 @@ function createSpeciesModal(aresult) {
 }
 
 
-
 $( "#profile-viewer-session-link" ).on( "click", function() {
 	getField( currentAssayUuid, currentStudyUuid, currentNodeType, "uuid", function( uuids ) {
 		
@@ -1131,15 +1131,6 @@ $( "#profile-viewer-session-link" ).on( "click", function() {
 		
 		console.log( newUrl );
 		window.location = newUrl;			
-	});
-});
-
-
-$( "#save-selection-button" ).on( "click", function() {
-	getField( currentAssayUuid, currentStudyUuid, currentNodeType, "uuid", function( uuids ) {
-		nodeSetManager.postState( "Test Set " + Date(), "Summary for Node Set", uuids, function(){
-			alert( "Node Set Created!" );
-		});
 	});
 });
 
