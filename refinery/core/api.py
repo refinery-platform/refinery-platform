@@ -81,7 +81,7 @@ class NodeSetResource(ModelResource):
         authentication = Authentication()
         authorization = Authorization() # any user can change any NodeSet instance
         serializer = PrettyJSONSerializer()
-        fields = ['name', 'summary', 'assay', 'study', 'uuid', 'nodes', 'node_count']
+        fields = ['name', 'summary', 'assay', 'study', 'uuid', 'node_count']
         allowed_methods = ["get", "patch", "put", "post" ]
 
     def prepend_urls(self):
