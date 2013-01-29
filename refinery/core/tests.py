@@ -175,6 +175,25 @@ class NodeSetResourceTest(ResourceTestCase):
         self.investigation = data_set_manager.models.Investigation.objects.create()
         self.study = data_set_manager.models.Study.objects.create(investigation=self.investigation)
         self.assay = data_set_manager.models.Assay.objects.create(study=self.study)
+        self.query = {
+            "facets":{
+                "platform_Characteristics_10_5_s": [],
+                "cell_or_tissue_Characteristics_10_5_s": [],
+                "REFINERY_TYPE_10_5_s": [],
+                "species_Characteristics_10_5_s": [],
+                "treatment_Characteristics_10_5_s": [],
+                "factor_Characteristics_10_5_s": [],
+                "factor_function_Characteristics_10_5_s": [],
+                "data_source_Characteristics_10_5_s": [],
+                "genome_build_Characteristics_10_5_s": [],
+                "REFINERY_FILETYPE_10_5_s": [],
+                "antibody_Characteristics_10_5_s": [],
+                "data_type_Characteristics_10_5_s": [],
+                "lab_Characteristics_10_5_s": []
+                },
+                "nodeSelection": [],
+                "nodeSelectionBlacklistMode": True
+        }
 
         # create a user
         self.username = self.password = 'test'
@@ -188,16 +207,15 @@ class NodeSetResourceTest(ResourceTestCase):
         '''Test retrieving an existing NodeSet.
 
         '''
-        n1 = data_set_manager.models.Node.objects.create(study=self.study)
-        n2 = data_set_manager.models.Node.objects.create(study=self.study)
-        nodeset = NodeSet.objects.create(name='nodeset1', study=self.study, assay=self.assay)
-        nodeset.nodes.add(n1, n2)
+        nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay,
+                                         solr_query=simplejson.dumps(self.query))
 
         nodeset_uri = make_uri('nodeset', nodeset.uuid)
         response = self.client.get(nodeset_uri, {'format': 'json'})
         self.assertValidJSONResponse(response)
-        self.assertKeys(self.deserialize(response),
-                        ['name', 'summary', 'assay', 'study', 'uuid', 'nodes', 'resource_uri'])
+        keys = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit',
+                'node_count', 'solr_query', 'resource_uri']
+        self.assertKeys(self.deserialize(response), keys)
 
     def test_get_nodeset_with_invalid_uuid(self):
         '''Test retrieving a NodeSet instance that doesn't exist.
@@ -215,7 +233,6 @@ class NodeSetResourceTest(ResourceTestCase):
             'name': 'nodeset1',
             'study': make_uri('study', self.study.uuid),
             'assay': make_uri('assay', self.assay.uuid),
-            'nodes': []
         })
         self.assertEqual(NodeSet.objects.count(), 0)
         nodeset_uri = make_uri('nodeset')
@@ -227,15 +244,12 @@ class NodeSetResourceTest(ResourceTestCase):
         '''Test adding a new NodeSet with a list of Node instances and summary
 
         '''
-        n1 = data_set_manager.models.Node.objects.create(study=self.study)
-        n2 = data_set_manager.models.Node.objects.create(study=self.study)
         nodeset_data = simplejson.dumps({
             'name': 'nodeset1',
             'summary': 'sample summary',
             'study': make_uri('study', self.study.uuid),
             'assay': make_uri('assay', self.assay.uuid),
-            'nodes': [make_uri('node', n1.uuid),
-                      make_uri('node', n2.uuid)],
+            'solr_query': self.query,
         })
         self.assertEqual(NodeSet.objects.count(), 0)
         nodeset_uri = make_uri('nodeset')
@@ -243,81 +257,23 @@ class NodeSetResourceTest(ResourceTestCase):
         self.assertHttpCreated(response)
         self.assertEqual(NodeSet.objects.count(), 1)
 
-    def test_delete_nodeset(self):
-        '''Test deleting NodeSets.
-
-        '''
-        n1 = data_set_manager.models.Node.objects.create(study=self.study)
-        n2 = data_set_manager.models.Node.objects.create(study=self.study)
-        nodeset = NodeSet.objects.create(name='nodeset1', study=self.study, assay=self.assay)
-        nodeset.nodes.add(n1, n2)
-        self.assertEqual(NodeSet.objects.count(), 1)
-        nodeset_uri = make_uri('nodeset', nodeset.uuid)
-        response = self.client.delete(nodeset_uri)
-        self.assertHttpAccepted(response)
-        self.assertEqual(NodeSet.objects.count(), 0)
-        # try deleting a NodeSet that doesn't exist
-        response = self.client.delete(nodeset_uri)
-        self.assertHttpNotFound(response)
-
     def test_update_nodeset(self):
-        '''Test updating entire NodeSet with a new list of Nodes.
+        '''Test updating a NodeSet with new data.
 
         '''
-        nodeset = NodeSet.objects.create(name='nodeset1', study=self.study, assay=self.assay)
-        n1 = data_set_manager.models.Node.objects.create(study=self.study)
-        n2 = data_set_manager.models.Node.objects.create(study=self.study)
-        nodeset_data = simplejson.dumps({
-            'name': 'nodeset1',
+        nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay)
+        new_nodeset_data = simplejson.dumps({
+            'name': 'nodeset2',
             'study': make_uri('study', self.study.uuid),
             'assay': make_uri('assay', self.assay.uuid),
-            'nodes': [make_uri('node', n1.uuid),
-                      make_uri('node', n2.uuid)],
         })
         self.assertEqual(NodeSet.objects.count(), 1)
-        self.assertItemsEqual(NodeSet.objects.get(uuid=nodeset.uuid).nodes.all(), ())
         nodeset_uri = make_uri('nodeset', nodeset.uuid)
-        response = self.client.put(nodeset_uri, nodeset_data, content_type='application/json')
+        response = self.client.put(nodeset_uri, new_nodeset_data, content_type='application/json')
         self.assertHttpAccepted(response)
         self.assertEqual(NodeSet.objects.count(), 1)
-        self.assertItemsEqual(NodeSet.objects.get(uuid=nodeset.uuid).nodes.all(), (n1, n2))
+        nodeset = NodeSet.objects.get(uuid=nodeset.uuid)
+        self.assertEqual(nodeset.name, 'nodeset2')
 
 
-class NodeSetResourceAuthenticationTest(ResourceTestCase):
-    '''Test NodeSet REST API authentication.
-
-    '''
-    def setUp(self):
-        super(NodeSetResourceAuthenticationTest, self).setUp()
-
-        # create a user
-        self.username = self.password = 'test'
-        self.user = User.objects.create_user(self.username, '', self.password)
-
-        self.investigation = data_set_manager.models.Investigation.objects.create()
-        self.study = data_set_manager.models.Study.objects.create(investigation=self.investigation)
-        self.assay = data_set_manager.models.Assay.objects.create(study=self.study)
-
-    def test_get_nodeset_unauthenticated(self):
-        '''Test retrieving a NodeSet without logging in.
-
-        '''
-        nodeset = NodeSet.objects.create(name='nodeset1', study=self.study, assay=self.assay)
-        nodeset_uri = make_uri('nodeset', nodeset.uuid)
-        response = self.client.get(nodeset_uri, content_type='application/json')
-        self.assertHttpUnauthorized(response)
-
-    def test_post_nodeset_unauthenticated(self):
-        '''Test creating a NodeSet without logging in.
-
-        '''
-        nodeset_uri = make_uri('nodeset')
-        nodeset_data = simplejson.dumps({
-            'name': 'nodeset1',
-            'study': make_uri('study', self.study.uuid),
-            'assay': make_uri('assay', self.assay.uuid),
-            'nodes': []
-        })
-        response = self.client.post(nodeset_uri, nodeset_data, content_type='application/json')
-        self.assertHttpUnauthorized(response)
-        self.assertEqual(NodeSet.objects.count(), 0)
+#TODO: test authentication when it's enabled
