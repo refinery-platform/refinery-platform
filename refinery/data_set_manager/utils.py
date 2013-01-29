@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 # https://docs.djangoproject.com/en/dev/ref/models/querysets/#django.db.models.query.QuerySet.bulk_create
 MAX_BULK_LIST_SIZE = 75
 
+# make a list of values unique
 def uniquify(seq):
     set = {}
     map(set.__setitem__, seq, [])
@@ -152,11 +153,9 @@ def _retrieve_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_
     current_node = None
     nodes = {}
     
-    
     for attribute in attribute_list:
         attributes[attribute[0]] = attribute
-        
-        
+                
     for node in node_list:
         if current_id is None or current_id != node["id"]:
             
@@ -206,7 +205,7 @@ def get_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_fields
     
     return results
 
-
+# this method is obsolete - do not use!
 def get_matrix( node_type, study_uuid, assay_uuid=None, ontology_attribute_fields=False ):
     
     nodes = _retrieve_nodes( node_type, study_uuid, assay_uuid, ontology_attribute_fields )
@@ -244,8 +243,8 @@ def get_matrix( node_type, study_uuid, assay_uuid=None, ontology_attribute_field
             if results["meta"]["attributes"] is None:
                 results["meta"]["attributes"] = []
                 for attribute in _get_parent_attributes( nodes, key ):
-                    results["meta"]["attributes"].append( { "type": attribute[1], "subtype": attribute[2] } )                                
-            
+                    results["meta"]["attributes"].append( { "type": attribute[1], "subtype": attribute[2] } )
+                            
             attribute_count += len(results["data"][nodes[key]["uuid"]]["attributes"])
 
     #print( "Nodes: " + str( len(results["data"]) ) + "   attributes: " + str( attribute_count ) )
@@ -293,8 +292,9 @@ def update_annotated_nodes( node_type, study_uuid, assay_uuid=None, update=False
     bulk_list = []
     for node_id, node in nodes.iteritems():
         if node["type"] == node_type:
-            # save attributes (attribute[1], etc. are based on Attribute.ALL_FIELDS) 
-            for attribute in _get_parent_attributes( nodes, node_id ):
+            # save attributes (attribute[1], etc. are based on Attribute.ALL_FIELDS)
+            attributes = _get_parent_attributes( nodes, node_id )
+            for attribute in attributes:
                 counter += 1
                 
                 bulk_list.append(                                 
