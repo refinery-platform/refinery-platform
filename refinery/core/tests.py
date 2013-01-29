@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.utils import unittest, simplejson
 from tastypie.test import ResourceTestCase
 from core.models import NodeSet, create_nodeset, get_nodeset, delete_nodeset,\
-    update_nodeset, get_nodesets
+    update_nodeset
 import data_set_manager
 
 
@@ -21,6 +21,25 @@ class NodeSetTest(unittest.TestCase):
         self.investigation = data_set_manager.models.Investigation.objects.create()
         self.study = data_set_manager.models.Study.objects.create(investigation=self.investigation)
         self.assay = data_set_manager.models.Assay.objects.create(study=self.study)
+        self.query = simplejson.dumps({
+            "facets":{
+                "platform_Characteristics_10_5_s": [],
+                "cell_or_tissue_Characteristics_10_5_s": [],
+                "REFINERY_TYPE_10_5_s": [],
+                "species_Characteristics_10_5_s": [],
+                "treatment_Characteristics_10_5_s": [],
+                "factor_Characteristics_10_5_s": [],
+                "factor_function_Characteristics_10_5_s": [],
+                "data_source_Characteristics_10_5_s": [],
+                "genome_build_Characteristics_10_5_s": [],
+                "REFINERY_FILETYPE_10_5_s": [],
+                "antibody_Characteristics_10_5_s": [],
+                "data_type_Characteristics_10_5_s": [],
+                "lab_Characteristics_10_5_s": []
+                },
+                "nodeSelection": [],
+                "nodeSelectionBlacklistMode": True
+        })
 
     def test_create_minimal_nodeset(self):
         '''Test adding a new NodeSet with required fields only
@@ -29,22 +48,22 @@ class NodeSetTest(unittest.TestCase):
         name = 'nodeset'
         nodeset = create_nodeset(name=name, study=self.study, assay=self.assay)
         self.assertIsInstance(nodeset, NodeSet)
-        self.assertItemsEqual(nodeset.nodes.all(), [])
         self.assertEqual(nodeset.name, name)
+        self.assertEqual(nodeset.summary, '')
+        self.assertEqual(nodeset.solr_query, '')
 
     def test_create_full_nodeset(self):
         '''Test adding a new NodeSet with a list of Node instances and summary
 
         '''
-        n1 = data_set_manager.models.Node.objects.create(study=self.study)
-        n2 = data_set_manager.models.Node.objects.create(study=self.study)
         name = 'nodeset'
         summary = 'sample summary'
-        nodeset = create_nodeset(name=name, summary=summary, nodes=[n1, n2], study=self.study, assay=self.assay)
+        nodeset = create_nodeset(name=name, study=self.study, assay=self.assay,
+                                 summary=summary, solr_query=self.query)
         self.assertIsInstance(nodeset, NodeSet)
-        self.assertItemsEqual(nodeset.nodes.all(), [n1, n2])
         self.assertEqual(nodeset.name, name)
         self.assertEqual(nodeset.summary, summary)
+        self.assertEqual(nodeset.solr_query, self.query)
 
     def test_get_nodeset_with_valid_uuid(self):
         '''Test retrieving an existing NodeSet instance
@@ -109,41 +128,30 @@ class NodeSetTest(unittest.TestCase):
         update_nodeset(uuid=nodeset.uuid, assay=new_assay)
         self.assertEqual(NodeSet.objects.get(uuid=nodeset.uuid).assay, new_assay)
 
-    def test_update_nodeset_nodes(self):
-        '''Test updating NodeSet with a new list of Node instances
+    def test_update_nodeset_with_solr_query(self):
+        '''Test updating NodeSet with a new Solr query
 
         '''
-        n1 = data_set_manager.models.Node.objects.create(study=self.study)
-        n2 = data_set_manager.models.Node.objects.create(study=self.study)
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay)
-        nodeset.nodes.add(n1, n2)
-        n3 = data_set_manager.models.Node.objects.create(study=self.study)
-        n4 = data_set_manager.models.Node.objects.create(study=self.study)
-        new_nodes = [n3, n4]
-        update_nodeset(uuid=nodeset.uuid, nodes=new_nodes)
-        self.assertItemsEqual(nodeset.nodes.all(), new_nodes)
+        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
+                                         assay=self.assay, solr_query='')
+        update_nodeset(uuid=nodeset.uuid, solr_query=self.query)
+        self.assertEqual(NodeSet.objects.get(uuid=nodeset.uuid).solr_query, self.query)
 
-    def test_get_nodesets_with_valid_node_uuid(self):
-        '''Test retrieving NodeSets for a given valid Node UUID.
+    def test_update_nodeset_with_blank_solr_query(self):
+        '''Test deleting Solr query from a NodeSet.
 
         '''
-        n1 = data_set_manager.models.Node.objects.create(study=self.study)
-        n2 = data_set_manager.models.Node.objects.create(study=self.study)
-        n3 = data_set_manager.models.Node.objects.create(study=self.study)
-        n4 = data_set_manager.models.Node.objects.create(study=self.study)
-        nodeset1 = NodeSet.objects.create(name='nodeset1', study=self.study, assay=self.assay)
-        nodeset1.nodes.add(n1, n2)
-        nodeset2 = NodeSet.objects.create(name='nodeset2', study=self.study, assay=self.assay)
-        nodeset2.nodes.add(n2, n3)
-        self.assertItemsEqual(get_nodesets(n1.uuid), [nodeset1])
-        self.assertItemsEqual(get_nodesets(n2.uuid), [nodeset1, nodeset2])
-        self.assertItemsEqual(get_nodesets(n4.uuid), [])
+        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
+                                         assay=self.assay, solr_query=self.query)
+        new_query = ''
+        update_nodeset(uuid=nodeset.uuid, solr_query=new_query)
+        self.assertEqual(NodeSet.objects.get(uuid=nodeset.uuid).solr_query, new_query)
 
-    def test_get_nodesets_with_invalid_node_uuid(self):
-        '''Test retrieving NodeSets using an invalid Node UUID.
+    def test_update_nodeset_with_invalid_uuid(self):
+        '''Test updating a NodeSet instance that doesn't exist
 
         '''
-        self.assertRaises(data_set_manager.models.Node.DoesNotExist, get_nodesets, node_uuid='Invalid UUID')
+        self.assertRaises(NodeSet.DoesNotExist, update_nodeset, uuid='Invalid UUID')
 
 
 def make_uri(resource_name, resource_id=''):
