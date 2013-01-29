@@ -77,7 +77,28 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             name = string.replace( name, " ", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
 
             key = name + "_" + uuid + "_s"
-            data[key] = value
+                        
+            # a node might have multiple parents with different attribute values for a given attribute
+            # e.g. parentA Characteristic[cell type] = K562 and parentB Characteristic[cell type] = HeLa
+            # child nodes should inherit all attributes of their parents as a concatenation of the 
+            # unique list
+            #
+            # old version (only one attribute kept):
+            # data[key] = value
+            # 
+            if not key in data:
+                data[key] = set();
+            
+            if value != "":    
+                data[key].add( value )
+            else:
+                data[key].add( "N/A" )
+            
+        # iterate over all keys in data and join sets into strings
+        for key, value in data.iteritems():
+            if type(value) is set:
+                data[key] = "+".join(value)
+                #print "Merged values for %s: %s" % ( key, data[key] )
             
         # add type as dynamic field to get proper facet values
         data["REFINERY_TYPE_" + uuid + "_s"] = object.type
