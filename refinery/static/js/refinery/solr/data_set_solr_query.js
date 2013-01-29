@@ -57,7 +57,7 @@ DataSetSolrQuery = function( studyUuid, assayUuid, nodeTypes ) {
 	// -------------------------------------------------------------- 
   	// selection
 	// -------------------------------------------------------------- 
-	self.facets = {};
+	self._facets = {};
 	/* Data Structure
 	 * facets = 
 	 * { "facet_name1": { "value_name": { count: "count", isSelected: true }, ...  },
@@ -77,10 +77,11 @@ DataSetSolrQuery = function( studyUuid, assayUuid, nodeTypes ) {
 	// -------------------------------------------------------------- 
   	// field visibility and sorting
 	// -------------------------------------------------------------- 	
-	self.hiddenFields = [ "uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ];
-	self.ignoredFields = [ "django_ct", "django_id", "id" ];
+	self._hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ];
+	self._ignoredFieldNames = [ "django_ct", "django_id", "id" ];
+	self._internalFieldNames = [];
 	
-	self.fields = {};
+	self._fields = {};
 	/* Data Structure
 	 * fields = 
 	 * { "field_name1": { isVisible: true, direction: "asc" },
@@ -98,11 +99,21 @@ DataSetSolrQuery = function( studyUuid, assayUuid, nodeTypes ) {
   	// pivots
 	// -------------------------------------------------------------- 	
 	// a list of facet names for the pivot view
-	self.pivots = [];	
+	self._pivots = [];	
+
+	// -------------------------------------------------------------- 
+  	// documents
+	// -------------------------------------------------------------- 	
+	// list of document entries from Solr response (same as the "docs" array in the reponse element)
+	self._documents = [];
+	/* Data Structure
+	 * _documents = [ { ... }, { ... }, ..., { ... } ]
+	 */	
+
 	
 	// retrieved from database:
-	self.totalNodes = -1;
-	self.selectedNodes = -1;
+	self._totalNodeCount = -1;
+	self._selectedNodeCount = -1;
 };	
 
 
@@ -156,7 +167,7 @@ DataSetSolrQuery.prototype.create = function ( start, rows, queryComponents ) {
 	}
 		
 	return ( url );
-}
+};
 
 
 DataSetSolrQuery.prototype._createNodeTypeComponent = function () {	
@@ -169,7 +180,8 @@ DataSetSolrQuery.prototype._createNodeTypeComponent = function () {
 	url += "&" + "fq=" + nodeTypeFilter;
 	
 	return url;	
-}
+};
+
 
 DataSetSolrQuery.prototype._createNodeSelectionComponent = function () {	
 	
@@ -189,7 +201,8 @@ DataSetSolrQuery.prototype._createNodeSelectionComponent = function () {
 	url += "&" + "fq=" + nodeSelectionFilter;  	
 	
 	return url;
-}
+};
+	
 	
 DataSetSolrQuery.prototype._createFacetComponent = function () {
 	
@@ -201,8 +214,8 @@ DataSetSolrQuery.prototype._createFacetComponent = function () {
 	// selecting facets: facet.field, fq 	
 	// ------------------------------------------------------------------------------
 
-	for ( var facet in self.facets ) {
-		var facetValues = self.facets[facet];
+	for ( var facet in self._facets ) {
+		var facetValues = self._facets[facet];
 		var filter = null; 
 		var filterValues = [];
 						
@@ -231,7 +244,7 @@ DataSetSolrQuery.prototype._createFacetComponent = function () {
 			url += "&fq={!tag=" + filter + "}" + facet.replace( /\ /g, "\\ " ) + ":(" + filterValues.join( " OR " ) + ")";													
 		}
 		
-		if ( self.facets.hasOwnProperty( facet ) )
+		if ( self._facets.hasOwnProperty( facet ) )
 		{
 			if ( filter ) {
 				url += "&facet.field={!ex=" + filter + "}" + facet;
@@ -244,7 +257,7 @@ DataSetSolrQuery.prototype._createFacetComponent = function () {
 	}
 	
 	return url;
-}
+};
 
 
 DataSetSolrQuery.prototype._createFieldComponent = function () {
@@ -258,10 +271,10 @@ DataSetSolrQuery.prototype._createFieldComponent = function () {
 	// ------------------------------------------------------------------------------
 	
 	var fieldNames = [];
-	for ( var field in self.fields ) {
-		if ( self.fields.hasOwnProperty( field ) )
+	for ( var field in self._fields ) {
+		if ( self._fields.hasOwnProperty( field ) )
 		{			
-			if ( ( self.fields[field].isVisible ) || ( self.hiddenFields.indexOf( field ) >= 0 ) ) {				
+			if ( ( self._fields[field].isVisible ) || ( self._hiddenFieldNames.indexOf( field ) >= 0 ) ) {				
 				// escape or encode special characters
 				field = field.replace( /\ /g, "\\ " );
 				field = field.replace( /\//g, "%2F" );
@@ -278,7 +291,7 @@ DataSetSolrQuery.prototype._createFieldComponent = function () {
 	url += "&fl=" + fieldNames.join( ",");
 
 	return url;
-}
+};
 
 
 DataSetSolrQuery.prototype._createSortComponent = function () {
@@ -291,12 +304,12 @@ DataSetSolrQuery.prototype._createSortComponent = function () {
 	// sorting by field: sort
 	// ------------------------------------------------------------------------------
  
-	for ( var field in self.fields ) {
-		if ( self.fields.hasOwnProperty( field ) ) {
+	for ( var field in self._fields ) {
+		if ( self._fields.hasOwnProperty( field ) ) {
 			// only sort on visible fields			
-			if ( self.fields[field].isVisible ) {
-				if ( ( self.fields[field].direction === "asc" ) || ( self.fields[field].direction === "desc" ) ) {
-					var direction = self.fields[field].direction;  				
+			if ( self._fields[field].isVisible ) {
+				if ( ( self._fields[field].direction === "asc" ) || ( self._fields[field].direction === "desc" ) ) {
+					var direction = self._fields[field].direction;  				
 					
 					// escape or encode special characters
 					field = field.replace( /\ /g, "\\ " );
@@ -317,7 +330,7 @@ DataSetSolrQuery.prototype._createSortComponent = function () {
 	}
 	
 	return url;	
-}
+};
 
 
 DataSetSolrQuery.prototype._createPivotComponent = function () {
@@ -329,8 +342,8 @@ DataSetSolrQuery.prototype._createPivotComponent = function () {
 	// ------------------------------------------------------------------------------
 	// pivot fields: facet.pivot 
 	// ------------------------------------------------------------------------------
-	if ( self.pivots.length > 1 ) {
-		var pivotQuery = self.pivots.join( "," );
+	if ( self._pivots.length > 1 ) {
+		var pivotQuery = self._pivots.join( "," );
 
 		if ( pivotQuery.length > 0 ) {
 			url += "&facet.pivot=" + pivotQuery;
@@ -338,21 +351,93 @@ DataSetSolrQuery.prototype._createPivotComponent = function () {
 	}		
 
 	return url;	
+};
+
+
+DataSetSolrQuery.prototype.process = function ( solrResponse ) {
+	
+	var self = this;
+	
+	self._processFacets( solrResponse );
+	self._processFields( solrResponse );
+	self._processDocuments( solrResponse );
+	self._processPivots( solrResponse );
+	
+	return self;
 }
 
 
+DataSetSolrQuery.prototype._processFacets = function ( solrResponse ) {
+	
+	var self = this;
+	
+	for ( var facet in solrResponse.facet_counts.facet_fields ) {
+		if ( solrResponse.facet_counts.facet_fields.hasOwnProperty( facet ) ) {
+
+			for ( var j = 0; j < solrResponse.facet_counts.facet_fields[facet].length; j += 2 ) {
+				var facetValue = solrResponse.facet_counts.facet_fields[facet][j];
+				var facetValueCount = solrResponse.facet_counts.facet_fields[facet][j+1];
+				
+				if ( ( facetValue === "" ) || ( facetValue === undefined ) ) {
+					facetValue = "undefined";
+				}
+				
+				if ( self._facets[facet][facetValue] ) {
+					self.updateFacet( facet, facetValue, facetValueCount, self.isSelectedFacet( facet, facetValue ) );
+				}
+				else {
+					self.updateFacet( facet, facetValue, facetValueCount, false );
+				}
+			}
+		}		
+    }
+    
+    return self;
+}
+
+
+DataSetSolrQuery.prototype._processFields = function ( solrResponse ) {
+	var self = this;
+	
+	// nothing to do
+	
+	return self;
+}
+
+
+DataSetSolrQuery.prototype._processDocuments = function ( solrResponse ) {
+	var self = this;
+	
+	for ( var i = 0; i < solrResponse.response.docs.length; ++i ) {
+		self._documents.push( solrResponse.response.docs[i] );
+    }
+}
+
+
+DataSetSolrQuery.prototype._processPivots = function ( solrResponse ) {
+	var self = this;
+	
+	// nothing to do
+	
+	return self;
+}
+
+
+
+
+// returns true if any facets were cleared, otherwise false
 DataSetSolrQuery.prototype.clearFacets = function () {
 
 	var self = this;
 
 	var counter = 0;
 	
-	for ( var facet in self.facets ) {
-		if ( self.facets.hasOwnProperty( facet ) ) {
-			for ( var facetValue in self.facets[facet] ) {
-				if ( self.facets[facet].hasOwnProperty( facetValue ) ) {
-					if ( self.facets[facet][facetValue].isSelected ) {
-						self.facets[facet][facetValue].isSelected = false;
+	for ( var facet in self._facets ) {
+		if ( self._facets.hasOwnProperty( facet ) ) {
+			for ( var facetValue in self._facets[facet] ) {
+				if ( self._facets[facet].hasOwnProperty( facetValue ) ) {
+					if ( self._facets[facet][facetValue].isSelected ) {
+						self._facets[facet][facetValue].isSelected = false;
 						++counter;
 					}					
 				}
@@ -360,8 +445,34 @@ DataSetSolrQuery.prototype.clearFacets = function () {
 		}
 	}
 	
-	return counter;
-}
+	return counter > 0;
+};
+
+
+// returns true if any nodes were cleared, otherwise false
+DataSetSolrQuery.prototype.clearNodeSelection = function () {
+
+	var self = this;
+	
+	if ( self.nodeSelection.length > 0 )
+	{
+		self.nodeSelection = [];
+		self.nodeSelectionBlacklistMode = true;
+		
+		return true;
+	}
+	
+	return false;
+};
+
+
+DataSetSolrQuery.prototype.clearAll = function() {
+	
+	var self = this;
+	
+	return self.clearNodes() || self.clearNodeSelection();
+};
+
 
 
 DataSetSolrQuery.prototype.serialize = function ( mode ) {
@@ -372,7 +483,7 @@ DataSetSolrQuery.prototype.serialize = function ( mode ) {
 	var serializedQuery = {};
 	
 	if ( mode == DATA_SET_QUERY_NODE_SET_SERIALIZATION ) {
-		serializedQuery["facets"] = self.facets;
+		serializedQuery["facets"] = self._facets;
 		serializedQuery["nodeSelection"] = self.nodeSelection;
 		serializedQuery["nodeSelectionBlacklistMode"] = self.nodeSelectionBlacklistMode;	
 	}
@@ -381,7 +492,7 @@ DataSetSolrQuery.prototype.serialize = function ( mode ) {
 	}
 		
 	return JSON.stringify( serializedQuery );
-}
+};
 
 
 DataSetSolrQuery.prototype.deserialize = function ( serializedQuery ) {
@@ -390,17 +501,220 @@ DataSetSolrQuery.prototype.deserialize = function ( serializedQuery ) {
 	var deserializedQuery = JSON.parse( serializedQuery );
 	
 	if ( deserializedQuery.hasOwnProperty( "facets" ) ) {
-		self.facets = deserializedQuery["facets"];
+		self._facets = deserializedQuery["facets"];
 	}
 
 	if ( deserializedQuery.hasOwnProperty( "nodeSelection" ) ) {
-		self.facets = deserializedQuery["nodeSelection"];
+		self._facets = deserializedQuery["nodeSelection"];
 	}
 
 	if ( deserializedQuery.hasOwnProperty( "nodeSelectionBlacklistMode" ) ) {
-		self.facets = deserializedQuery["nodeSelectionBlacklistMode"];
+		self._facets = deserializedQuery["nodeSelectionBlacklistMode"];
 	}
 	
 	return deserializedQuery;
-}
+};
 
+
+DataSetSolrQuery.prototype.addFacet = function ( name ) {
+	
+	var self = this;
+	
+	// initialize facet
+	self._facets[name] = [];
+};
+
+
+DataSetSolrQuery.prototype.updateFacet = function ( name, value, count, isSelected ) {
+	
+	var self = this;
+	
+	count = typeof count !== 'undefined' ? count : 0;
+	isSelected = typeof isSelected !== 'undefined' ? isSelected : false;			
+		
+	self._facets[name][value] = { count: count, isSelected: isSelected };
+	
+	return self;	
+};
+
+
+DataSetSolrQuery.prototype.isSelectedFacet = function ( name, value ) {
+	
+	var self = this;
+
+	return self._facets[name][value].isSelected;	
+};
+
+
+
+
+DataSetSolrQuery.prototype.getFacetNames = function ( name, isVisible ) {
+	
+	var self = this;
+	
+	var facetNames = [];
+
+	for ( facet in self._facets ) {
+		if ( self._facets.hasOwnProperty( facet ) ) {
+			if ( !self._facets[facet].isInternal ) {	
+				if ( typeof isVisible !== 'undefined' ) {
+					facetNames.push( facet );
+				}	
+				else {
+					if ( facets[facet].isVisible == isVisible ) {
+						facetNames.push( facet );
+					}
+				}
+			}
+		}
+	}
+		
+	return facetNames;
+};
+
+
+
+DataSetSolrQuery.prototype.toggleFacetSelection = function ( name, value ) {
+	
+	var self = this;
+	
+	self._facets[name][value].isSelected = !self._facets[name][value].isSelected;
+	
+	return self;
+};
+
+
+DataSetSolrQuery.prototype.addField = function ( name ) {
+	
+	var self = this;
+	
+	self.updateField( name, true, false, "" );
+	
+	return self;	
+};
+
+
+DataSetSolrQuery.prototype.updateField = function ( name, isVisible, isInternal, direction ) {
+	
+	var self = this;
+	
+	isVisible = typeof isVisible !== 'undefined' ? isVisible : true;			
+	isInternal = typeof isInternal !== 'undefined' ? isInternal : false;			
+	direction = typeof direction !== 'undefined' ? direction : "";			
+		
+	self._fields[name] = { isVisible: isVisible, isInternal: isInternal, direction: direction };	
+
+	return self;
+};
+
+
+DataSetSolrQuery.prototype.getFieldNames = function ( name, isVisible ) {
+	
+	var self = this;
+	
+	var fieldNames = [];
+
+	for ( field in self._fields ) {
+		if ( self._fields.hasOwnProperty( field ) ) {
+			if ( !self._fields[field].isInternal ) {	
+				if ( typeof isVisible !== 'undefined' ) {
+					fieldNames.push( field );
+				}	
+				else {
+					if ( fields[field].isVisible == isVisible ) {
+						fieldNames.push( field );
+					}
+				}
+			}
+		}
+	}
+		
+	return fieldNames;
+};
+
+
+DataSetSolrQuery.prototype.toggleFieldDirection = function ( name ) {
+	
+	var self = this;
+	
+	if ( self._fields[name].direction === "asc" ) {
+		self._fields[name].direction = "desc";
+	}
+	
+	if ( self._fields[name].direction === "desc" ) {
+		self._fields[name].direction = "asc";
+	}
+	
+	return self;
+};
+
+
+DataSetSolrQuery.prototype.toggleFieldVisibility = function ( name ) {
+	
+	var self = this;
+	
+	self._fields[name].isVisible = !self._fields[name].isVisible;
+	
+	return self;
+};
+
+
+DataSetSolrQuery.prototype.isIgnoredField = function( name ) {
+	
+	var self = this;
+		
+	return self._ignoredFieldNames.indexOf( name ) < 0;	
+};
+
+
+DataSetSolrQuery.prototype.isHiddenField = function( name ) {
+	
+	var self = this;
+		
+	return self._hiddenFieldNames.indexOf( name ) < 0;	
+}; 
+
+
+DataSetSolrQuery.prototype.isInternalField = function( name ) {
+	
+	var self = this;
+		
+	return self._internalFieldNames.indexOf( name ) < 0;	
+};
+
+
+
+DataSetSolrQuery.prototype.getSelectedNodeCount = function() {
+	
+	var self = this;
+	
+    return ( self.nodeSelectionBlacklistMode ? self.selectedNode - self.nodeSelection.length : self.nodeSelection.length ); 
+};
+
+
+DataSetSolrQuery.prototype.setSelectedNodeCount = function( nodeCount ) {
+
+	var self = this;
+	
+	self._selectedNodeCount = nodeCount; 
+
+	return self; 
+};
+
+
+DataSetSolrQuery.prototype.getTotalNodeCount = function() {
+	
+	var self = this;
+	
+    return ( self._totalNodeCount ); 
+};
+
+
+DataSetSolrQuery.prototype.setTotalNodeCount = function( nodeCount ) {
+
+	var self = this;
+	
+	self._totalNodeCount = nodeCount;
+	
+	return self; 
+};

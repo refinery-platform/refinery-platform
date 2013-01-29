@@ -36,44 +36,42 @@ SolrSelectClient.prototype.initialize = function () {
  * Initializes a DataSetSolrQuery: retrieves field names, facets, etc.
  */
 SolrSelectClient.prototype.initializeDataSetQuery = function ( query, configurator, callback ) {
-	var self = this;
-	
+	var self = this;	
 	var url = self.apiBaseUrl + self.apiEndpoint + "?" + query.create( 0, 1, DATA_SET_INITIALIZATION_QUERY );
 	
-	console.log( url );
-	
 	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {
-		
-		console.log( data );
-		
-		query.totalNodes = data.response.numFound;		
-		query.selectedNodes = data.response.numFound;
+				
+		query.setTotalNodeCount( data.response.numFound );		
+		query.setSelectedNodeCount( data.response.numFound );
 		
 		var defaultSortFieldFound = false;
+		
 		for ( var i = 0; i < configurator.state.objects.length; ++i ) {
 			var attribute = configurator.state.objects[i];
 			
 			if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal ) {
-				query.facets[attribute.solr_field] = [];
+				query.addFacet( attribute.solr_field );
 			}											
 												
 			// fields
-			if ( query.ignoredFields.indexOf( attribute.solr_field ) < 0 ) {
+			if ( query.isIgnoredField( attribute.solr_field ) ) {
 				if ( attribute.is_internal ) {
-						query.fields[attribute.solr_field] = { isVisible: false, isInternal: true, direction: "" };					
+						query.addField( attribute.solr_field, false, true, "" );					
 				}
 				else {
 					if ( attribute.is_exposed && attribute.is_active ) {
-						query.fields[attribute.solr_field] = { isVisible: true, isInternal: false, direction: "" };
 						
 						if ( !defaultSortFieldFound ) {
-							query.fields[attribute.solr_field].direction = "asc";
+							query.addField( attribute.solr_field, true, false, "asc" );					
 							defaultSortFieldFound = true;
+						}
+						else {
+							query.addField( attribute.solr_field, true, false, "" );
 						}
 					}
 					else {
 						if ( attribute.is_exposed && !attribute.is_active ) {
-							query.fields[attribute.solr_field] = { isVisible: false, isInternal: false, direction: "" };						
+							query.addField( attribute.solr_field, false, false, "" );					
 						}					
 					}
 				}					
@@ -99,10 +97,10 @@ SolrSelectClient.prototype.executeDataSetQuery = function ( query, queryComponen
 	
 	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {
 		
-		query.selectedNodes = data.response.numFound;
+		query.setSelectedNodeCount( data.response.numFound );
 		
 		if ( typeof callback !== 'undefined' ) {			
-			callback( data );
+			query.process( data );
 		}
 		
 		return data;
