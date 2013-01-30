@@ -62,7 +62,7 @@ def analysis_run(request):
     # list of selected assays
     selected_uuids = {};
     
-    # finds all selected assays (assay_uuid, and associated workflow input type for selected samples) 
+    # finds all selected assays (node_uuid, and associated workflow input type for selected samples) 
     for i, val in request.POST.iteritems():
         if (val and val != ""):
             if (i.startswith('assay_')):
@@ -100,7 +100,7 @@ def analysis_run(request):
                 if len_inputs > 1:   
                     if k == sd and ret_item[k] is None:       
                         ret_item[k] = {}
-                        ret_item[k]["assay_uuid"] = index
+                        ret_item[k]["node_uuid"] = index
                         ret_item[k]["pair_id"] = pair
                         pair_count += 1
                         del selected_uuids[index]
@@ -115,7 +115,7 @@ def analysis_run(request):
                 elif len_inputs == 1:
                     ret_item = copy.deepcopy(annot_inputs)
                     ret_item[k] = {};
-                    ret_item[k]["assay_uuid"] = index
+                    ret_item[k]["node_uuid"] = index
                     ret_item[k]["pair_id"] = pair
                     ret_list.append(ret_item)
                     del selected_uuids[index]
@@ -155,12 +155,12 @@ def analysis_run(request):
     logger.debug(simplejson.dumps(ret_list, indent=4))
     
     ######### ANALYSIS MODEL 
-    # Updating Refinery Models for updated workflow input (galaxy worfkflow input id & assay_uuid 
+    # Updating Refinery Models for updated workflow input (galaxy worfkflow input id & node_uuid 
     count = 0;
     for samp in ret_list:
         count += 1
         for k,v in samp.items():
-            temp_input = WorkflowDataInputMap( workflow_data_input_name=k, data_uuid=samp[k]["assay_uuid"], pair_id=count)
+            temp_input = WorkflowDataInputMap( workflow_data_input_name=k, data_uuid=samp[k]["node_uuid"], pair_id=count)
             
             temp_input.save() 
             analysis.workflow_data_input_maps.add( temp_input ) 

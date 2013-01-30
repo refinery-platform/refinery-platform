@@ -189,15 +189,15 @@ def createStepsAnnot(file_list, workflow):
                 curr_filename = ''
                 
                 if input_type in file_list[i].keys():
-                    curr_filename = removeFileExt(file_list[i][input_type]['assay_uuid'])
+                    curr_filename = removeFileExt(file_list[i][input_type]['node_uuid'])
                 #elif input_type == 'all':
                 else:
                     curr_filename = ''
                     for itypes in file_list[i].keys():
                         if curr_filename == '':
-                            curr_filename += removeFileExt(file_list[i][itypes]['assay_uuid'])
+                            curr_filename += removeFileExt(file_list[i][itypes]['node_uuid'])
                         else:
-                            curr_filename += ','+removeFileExt(file_list[i][itypes]['assay_uuid'])
+                            curr_filename += ','+removeFileExt(file_list[i][itypes]['node_uuid'])
                
                 # getting "keep" flag to keep track of files to be saved from workflow
                 # parsing annotation field in galaxy workflows to parse output files to keep: "keep=output_file, keep=output_file2" etc..
@@ -300,8 +300,11 @@ def createStepsCompact(file_list, workflow):
         if 'keep' in step_opt:
             keep_files = step_opt['keep']
         
-        #print "keep_files"
-        #print keep_files
+        print "step_opt"
+        print step_opt
+        
+        print "keep_files"
+        print keep_files
         
         # creates list of output names from specified tool to rename
         output_names = [];
