@@ -3,12 +3,13 @@ Created on May 29, 2012
 
 @author: nils
 '''
-from data_set_manager.models import Node, Attribute, AnnotatedNode, Study, Assay, AnnotatedNodeRegistry
+from data_set_manager.models import Node, Attribute, AnnotatedNode, Study, Assay, \
+    AnnotatedNodeRegistry
 from data_set_manager.search_indexes import NodeIndex
 from django.db.models import Q
 from django.utils.datetime_safe import datetime
-import simplejson
 import logging
+import simplejson
 
 
 # get module logger

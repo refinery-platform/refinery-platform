@@ -78,10 +78,10 @@
 			{% if isatab_archive or pre_isatab_archive %}
 				{% load core_extras %}
 				{% if isatab_archive %}
-				<p><a href="{{isatab_archive.get_url}}">{{isatab_archive.uuid|simple_name}}</a> ({{isatab_archive.get_file_size|filesizeformat}})</p>
+				<p><a href="{{isatab_archive.get_full_url}}">{{isatab_archive.uuid|simple_name}}</a> ({{isatab_archive.get_file_size|filesizeformat}})</p>
 				{% endif %}
 				{% if pre_isatab_archive %}
-				<p><a href="{{pre_isatab_archive.get_url}}">{{pre_isatab_archive.uuid|simple_name}}</a> ({{pre_isatab_archive.get_file_size|filesizeformat}})</p>
+				<p><a href="{{pre_isatab_archive.get_full_url}}">{{pre_isatab_archive.uuid|simple_name}}</a> ({{pre_isatab_archive.get_file_size|filesizeformat}})</p>
 				{% endif %}
 			{% else %}
 				<p><i>Not available.</i></p>

@@ -85,7 +85,6 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             #
             # old version (only one attribute kept):
             # data[key] = value
-            # 
             if not key in data:
                 data[key] = set();
             
@@ -97,8 +96,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         # iterate over all keys in data and join sets into strings
         for key, value in data.iteritems():
             if type(value) is set:
-                data[key] = "+".join(value)
-                #print "Merged values for %s: %s" % ( key, data[key] )
+                data[key] = " + ".join(value)
             
         # add type as dynamic field to get proper facet values
         data["REFINERY_TYPE_" + uuid + "_s"] = object.type
