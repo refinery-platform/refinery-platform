@@ -25,6 +25,7 @@ from tastypie.serializers import Serializer
 class PrettyJSONSerializer(Serializer):
     '''Adds indentations and newlines to JSON output
     Source: http://django-tastypie.readthedocs.org/en/latest/cookbook.html#pretty-printed-json-serialization
+
     '''
     json_indent = 2
 
@@ -65,8 +66,8 @@ class NodeSetResource(ModelResource):
     # Once the above has been integrated into a tastypie release branch remove NodeSetListResource and
     # use "use_in" instead 
     # nodes = fields.ToManyField(NodeResource, 'nodes', use_in="detail" )
-    solr_query = fields.CharField(attribute='solr_query')
-    node_count = fields.IntegerField(attribute='node_count')
+    solr_query = fields.CharField(attribute='solr_query', null=True)
+    node_count = fields.IntegerField(attribute='node_count', null=True)
     is_implicit = fields.BooleanField(attribute='is_implicit')
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
@@ -81,7 +82,8 @@ class NodeSetResource(ModelResource):
         authentication = Authentication()
         authorization = Authorization() # any user can change any NodeSet instance
         serializer = PrettyJSONSerializer()
-        fields = ['name', 'summary', 'assay', 'study', 'uuid', 'nodes', 'node_count']
+        fields = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query']
+        ordering = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query']
         allowed_methods = ["get", "patch", "put", "post" ]
 
     def prepend_urls(self):
