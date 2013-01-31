@@ -42,7 +42,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_group_ids(self, object):
         return [ g["id"] for g in object.get_groups() ]
 
-    def index_queryset(self):
+    def index_queryset(self, using=None):
         """Used when the entire index for model is updated."""
         return self.get_model().objects.all()
     
@@ -156,7 +156,7 @@ class ProjectIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_group_ids(self, object):
         return [ g["id"] for g in object.get_groups() ]
 
-    def index_queryset(self):
+    def index_queryset(self, using=None):
         """Used when the entire index for model is updated."""
         return self.get_model().objects.all().exclude( is_catch_all=True )
     
