@@ -37,6 +37,8 @@ $(document).ready(function() {
 	configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
 	configurator.initialize();
 	
+	/*
+	
 	var client = new SolrClient( solrRoot,
 		solrSelectEndpoint,
 		"csrfMiddlewareToken",
@@ -69,7 +71,9 @@ $(document).ready(function() {
 			
 		});		
 	});
-			
+		
+	*/
+		
 	nodeSetManager = new NodeSetManager( externalAssayUuid, externalStudyUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
 	nodeSetManager.initialize();
 	
