@@ -30,28 +30,50 @@ var currentStudyUuid = externalStudyUuid; //urlComponents[urlComponents.length-2
 var currentAssayUuid = externalAssayUuid; //urlComponents[urlComponents.length-3]; 
 var currentNodeType = "\"Raw Data File\"";
 
+var dataSetNodeTypes = ['"Raw Data File"', '"Derived Data File"', '"Array Data File"', '"Derived Array Data File"', '"Array Data Matrix File"', '"Derived Array Data Matrix File"'];
+
 
 $(document).ready(function() {		
 	configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
 	configurator.initialize();
 	
-	/*	
-	var q = new DataSetSolrQuery( externalAssayUuid, externalStudyUuid, ['"Raw Data File"', '"Derived Data File"', '"Array Data File"', '"Derived Array Data File"', '"Array Data Matrix File"', '"Derived Array Data Matrix File"'] );
-	var client = new SolrSelectClient( solrRoot, solrSelectEndpoint, "csrfMiddlewareToken" );
+	/*
+	
+	var client = new SolrClient( solrRoot,
+		solrSelectEndpoint,
+		"csrfMiddlewareToken",
+		"django_ct:data_set_manager.node",
+		"(study_uuid:" + currentAssayUuid + " AND assay_uuid:" + currentStudyUuid + ")" );
 
 	configurator.initialize( function() {
-		client.initializeDataSetQuery( q, configurator, function(query) {
+		var q = new SolrQuery( configurator );
+		q.initialize();
+		q.addFilter( "type", dataSetNodeTypes );
+		
+		client.initialize( q, function(query) {
+			console.log( "Initialized query:" );
 			console.log( query );
-			client.executeDataSetQuery( query, DATA_SET_FULL_QUERY, 0, 10, function( data ) {
-				console.log( data );
-				var serializedQuery = query.serialize( DATA_SET_QUERY_NODE_SET_SERIALIZATION ); 
+			client.run( query, SOLR_FULL_QUERY,  0, 10, function( response ) {
+				console.log( response );
+				
+				var serializedQuery = query.serialize( SOLR_QUERY_SELECTION_SERIALIZATION ); 
 				console.log( serializedQuery ); 
 				console.log( query.deserialize( serializedQuery ) ); 
 			});
+
+			client.run( query, SOLR_SELECTION_QUERY,  0, 5, function( response ) {
+				console.log( response );
+			});
+
+			client.run( query, SOLR_SELECTION_QUERY,  5, 10, function( response ) {
+				console.log( response );
+			});
+			
 		});		
 	});
-	*/	
-			
+		
+	*/
+		
 	nodeSetManager = new NodeSetManager( externalAssayUuid, externalStudyUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
 	nodeSetManager.initialize();
 	
