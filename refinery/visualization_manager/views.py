@@ -102,7 +102,7 @@ def createIGVsession(genome, uuids):
     # get paths to url 
     for samp in uuids:
         # gets filestore item 
-        curr_name, curr_url = getFileName(samp)
+        curr_name, curr_url = get_file_name(samp)
         
         # What to do if fs does not exist? 
         if (curr_name):
@@ -134,7 +134,7 @@ def createIGVsession(genome, uuids):
     os.unlink(tempfilename.name)
     
     # Print our newly created XML
-    print doc.toprettyxml(indent="  ")
+    #print doc.toprettyxml(indent="  ")
     #print filestore_item.datafile.url
     
     # Url for session file 
@@ -183,6 +183,9 @@ def igv_multi_species(solr_results, solr_annot=None):
     if solr_annot:
         unique_annot, unique_annot_num = get_unique_species(solr_annot)
     
+    #print "unique_species"
+    #print simplejson.dumps(unique_species, indent=4)
+    
     # 1. check to see how many species are selected? 
     # move this to visualization_manager.utils 
     
@@ -196,24 +199,20 @@ def igv_multi_species(solr_results, solr_annot=None):
     # 4. generate igv files for each species, including phenotype data + paths generated from uuid's
     ui_results = {'species_count':unique_species_num, 'species':{}}
     for k,v in unique_species.items():
-        logger.debug("visualization_manager.views.igv_multi_species = k:  %s" % k )
-            
         if solr_annot:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'], unique_annot[k]['solr'])
         else:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'])
         
-        # if file_uuids generated for given species
+        # if node_uuids generated for given species
         # generate igv session file 
-        if "file_uuid" in v:
+        if "node_uuid" in v:
             # adding default species name to key information
             species_id, taxon_id = genome_build_to_species(k)
             if species_id:
                 species_id = species_id.split()
                 species_id = species_id[0][0] + '. ' + species_id[1]
-            #logger.debug( "unique_species3: %s " % k )
-            #logger.debug( species_id )
-    
+            
             # if annotation contains species 
             if solr_annot:
                 if k in unique_annot:
@@ -226,8 +225,8 @@ def igv_multi_species(solr_results, solr_annot=None):
             else:
                 ui_results['species'][k] = temp_url
         
-    logger.debug("visualization_manager.views.igv_multi_species = ui_results")    
-    logger.debug(simplejson.dumps(ui_results, indent=4) )    
+    #logger.debug("visualization_manager.views.igv_multi_species = ui_results")    
+    #logger.debug(simplejson.dumps(ui_results, indent=4) )    
     # 5. reflect buttons in the bootbox modal in UI
     
     # change genome_build keys to include species name 
@@ -252,9 +251,6 @@ def get_unique_species(docs):
     
     # If results have a defined genome_build or species field
     for res in docs:
-        #logger.debug("-------------------------")
-        #logger.debug(simplejson.dumps(res, indent=4))
-    
         # Defaults to checking for genome_build
         if "genome_build" in res:
             curr_build = str(res["genome_build"])
@@ -265,10 +261,10 @@ def get_unique_species(docs):
         
             if curr_build not in unique_species:
                 #unique_species.append(res["genome_build"])
-                unique_species[curr_build] = {'file_uuid':[], 'solr':[]}
+                unique_species[curr_build] = {'node_uuid':[], 'solr':[]}
             res["igv_build"] = curr_build
             unique_species[curr_build]['solr'].append(res)
-            unique_species[curr_build]['file_uuid'].append(res['file_uuid'])
+            unique_species[curr_build]['node_uuid'].append(res['uuid'])
         
         # checks to see if species exits otherwise
         elif "species" in res:
@@ -279,10 +275,10 @@ def get_unique_species(docs):
         
             if curr_build not in unique_species:
                 #unique_species.append(curr_build)
-                unique_species[curr_build] = {'file_uuid':[], 'solr':[]}
+                unique_species[curr_build] = {'node_uuid':[], 'solr':[]}
             res["igv_build"] = curr_build
             unique_species[curr_build]['solr'].append(res)
-            unique_species[curr_build]['file_uuid'].append(res['file_uuid'])
+            unique_species[curr_build]['node_uuid'].append(res['uuid'])
         #else:
         #    logger.error("core.views.solr_igv: Selected Samples do not have genome_build or species associated")
     
@@ -294,13 +290,13 @@ def get_unique_species(docs):
     
     # CASE: when species is unknown, launch IGV with predefined genomes
     if not unique_species:
-        temp_species = {'file_uuid':[], 'solr':[]}
+        temp_species = {'node_uuid':[], 'solr':[]}
         for res in docs:
             temp_species['solr'].append(res)
             try:
-                temp_species['file_uuid'].append(res['file_uuid'])
+                temp_species['node_uuid'].append(res['uuid'])
             except KeyError as e:
-                 logger.error("Solr results do not have file_uuid. Reason: '%s'", e.message)
+                 logger.error("Solr results do not have node_uuid. Reason: '%s'", e.message)
                  return None
         
         for genome in SUPPORTED_GENOMES:
@@ -339,7 +335,7 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
         </Resources>
     </Global>
     """
-    logger.debug("visualization_manager.views createIGVsessionAnnot called")
+    #logger.debug("visualization_manager.views createIGVsessionAnnot called")
     
     # Create the minidom document
     doc = Document()
@@ -356,11 +352,11 @@ def createIGVsessionAnnot(genome, uuids, annot_uuids=None, samp_file=None):
     xml.appendChild(xml_resources)        
     
     # adding selected samples to xml file
-    addIGVResource(uuids["file_uuid"], xml_resources, doc)
+    addIGVResource(uuids["node_uuid"], xml_resources, doc)
     
     if annot_uuids:
         # adding selected samples to xml file
-        addIGVResource(annot_uuids["file_uuid"], xml_resources, doc)
+        addIGVResource(annot_uuids["node_uuid"], xml_resources, doc)
         
         
     # adds sample information file to IGV session file 
@@ -441,7 +437,7 @@ def addIGVResource(uuidlist, xml_res, xml_doc):
     # get paths to url 
     for samp in uuidlist:
         # gets filestore item 
-        curr_name, curr_url = getFileName(samp)
+        curr_name, curr_url = get_file_name(samp)
         #logger.debug("createIGVsession: name = %s, curr_url = %s" % (curr_name, curr_url))
         
         # What to do if fs does not exist? 
@@ -493,10 +489,9 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
         #results_annot = annot_samples["response"]["docs"]
         pheno_annot = getSampleLines(fields_dict, annot_samples)
         tempsampname.write(pheno_annot)
-    
+        
     # closing temp file 
     tempsampname.close()
-
 
     # getting file_store_uuid
     filestore_uuid = create(tempsampname.name, permanent=True, filetype="txt")
@@ -524,20 +519,25 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     
     return curr_url
 
-def getFileName(fileuuid, sampFile=None):
+def get_file_name(nodeuuid, sampFile=None):
     """ Helper function for getting a file_name from a filestore uuid
     
     :param fileuuid: Filestore uuid
     :type fileuuid: String
     """
+    #logger.debug("visualization_manager.get_file_name: nodeuuid=%s", nodeuuid)
+    #logger.debug(sampFile)
+    
+    # getting the current file_uuid from the given node_uuid
+    curr_file_uuid = Node.objects.get( uuid=nodeuuid ).file_uuid   
     
     # checking to see if it has a file_server item 
-    temp_fs = get_aux_file_item(fileuuid)
+    temp_fs = get_aux_file_item(curr_file_uuid)
     
     # If no associated file_server auxiliary file then use main data file for IGV
     if temp_fs is None:
         # getting file information based on file_uuids
-        temp_fs = FileStoreItem.objects.get(uuid=fileuuid)
+        temp_fs = FileStoreItem.objects.get(uuid=curr_file_uuid)
     
     temp_name = temp_fs.datafile.name
     temp_name = temp_fs.datafile.name.split('/')
@@ -545,6 +545,9 @@ def getFileName(fileuuid, sampFile=None):
     
     # full path to selected UUID File
     temp_url = temp_fs.get_full_url()
+    
+    #logger.debug("temp_url")
+    #logger.debug(temp_url)
     
     # IGV SEG FILE HACK
     if (sampFile):
@@ -563,14 +566,14 @@ def getSampleLines(fields, results):
     :returns: a string of the matrix to be included in the IGV sample information file 
     """
     
-    #logger.debug("visualization_manager.views getSampleLines called")
+    logger.debug("visualization_manager.views getSampleLines called")
     
     output_mat = ""
     
     # iterating over samples
     for row in results:
         # adding file_name to matrix as linking id
-        line, url = getFileName(row["file_uuid"], True)
+        line, url = get_file_name(row["uuid"], True)
         
         # adding fields to sample information matrix
         for k,v in fields.iteritems():
@@ -580,7 +583,7 @@ def getSampleLines(fields, results):
                 line = line + '\t' + ''
                 
         output_mat = output_mat + line + '\n'    
-    
+        
     # returns matrix for given inputs
     return output_mat      
 

@@ -26,6 +26,7 @@ from django.core.urlresolvers import reverse
 from django.template import loader, Context
 from django.contrib.sites.models import Site
 import socket 
+from data_set_manager.models import Node
 
 logger = logging.getLogger(__name__)
 
@@ -438,7 +439,7 @@ def get_analysis_config(analysis):
         if ret_item[wd.workflow_data_input_name] is None:
             ret_item[wd.workflow_data_input_name] = {}
             ret_item[wd.workflow_data_input_name]['pair_id'] = wd.pair_id
-            ret_item[wd.workflow_data_input_name]['assay_uuid'] = wd.data_uuid
+            ret_item[wd.workflow_data_input_name]['node_uuid'] = wd.data_uuid
             temp_count += 1
        
         if temp_count == temp_len:
@@ -464,8 +465,11 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
         for k, v in fileset.iteritems():
             cur_item = fileset[k]
             
+            # getting the current file_uuid from the given node_uuid
+            curr_file_uuid = Node.objects.get( uuid=cur_item['node_uuid'] ).file_uuid
+            
             # getting current filestoreitem
-            curr_filestore = FileStoreItem.objects.get(uuid=cur_item['assay_uuid'])
+            curr_filestore = FileStoreItem.objects.get(uuid=curr_file_uuid)
             
             file_path = curr_filestore.get_absolute_path()
             cur_item["filepath"] = file_path
@@ -486,7 +490,7 @@ def download_history_files(analysis) :
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     dl_files = analysis.workflow_dl_files
     
-    ### creating dicionary based on files to download predetermined by workflow w/ keep operators
+    ### creating dictionary based on files to download predetermined by workflow w/ keep operators
     dl_dict = {}
     
     for dl in dl_files.all():
