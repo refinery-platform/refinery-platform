@@ -328,14 +328,15 @@ function buildSolrQueryPivots( pivots ) {
 
 function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents, annotationParam ) {
 		
-	var nodeSelectionFilter;
-	
+	var nodeSelectionFilter = "";
+	/*
 	if ( nodeSelection.length > 0 ) {
 		nodeSelectionFilter = ( nodeSelectionBlacklistMode ? "-" : "" ) + "uuid:" + "(" + nodeSelection.join( " OR " ) +  ")"; 
 	}  
 	else {
 		nodeSelectionFilter = "uuid:*"
 	}
+	*/
 	
 	var url = solrSelectUrl
 		+ "?" + solrQuery 
