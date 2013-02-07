@@ -8,11 +8,13 @@ from celery.task import task
 from galaxy_connector.galaxy_workflow import GalaxyWorkflow, GalaxyWorkflowInput
 from galaxy_connector.models import Instance
 from galaxy_connector.connection import Connection
-from core.models import Workflow, WorkflowDataInput, WorkflowEngine
+from core.models import Workflow, WorkflowDataInput, WorkflowEngine, WorkflowInputRelationships
 from django.contrib.auth.models import Group
 from django.contrib.sites.models import Site
 from galaxy_connector.galaxy_workflow import createBaseWorkflow, createStepsAnnot, createStepsCompact, getStepOptions
+import ast
 import logging
+
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -38,7 +40,8 @@ def get_workflows( workflow_engine ):
     #for each workflow, create a core Workflow object and its associated WorkflowDataInput objects
     for workflow in workflows:
         #logger.debug("Checking workflow for import: %s", workflow.name)
-        if check_workflow(connection, workflow.identifier): # if workflow is meant for refinery 
+        is_refinery, opt_refinery = check_workflow(connection, workflow.identifier)
+        if is_refinery: # if workflow is meant for refinery 
             logger.debug("Importing workflow into %s: %s" % (Site.objects.get_current().name, workflow.name))
             
             workflow_object = Workflow.objects.create( name=workflow.name, internal_id=workflow.identifier, workflow_engine=workflow_engine )        
@@ -57,7 +60,19 @@ def get_workflows( workflow_engine ):
                 i.save()
                 workflow_object.data_inputs.add(i)
         
-@task()                 
+            # check to input NodeRelationshipType
+            for opt_r in opt_refinery:
+                #logger.debug("opt_r")
+                #logger.debug(opt_r)
+                try:
+                    temp_relationship = WorkflowInputRelationships(**opt_r)
+                    temp_relationship.save()
+                    workflow_object.input_relationships.add(temp_relationship)
+
+                except KeyError, e:
+                    logger.error("refinery_relationship option error: %s" % e)
+                    return
+            
 def configure_workflow( workflow_uuid, ret_list, connection_galaxy=None ):
     """
     Takes a workflow_uuid and associated data input map to return an expanded workflow 
@@ -137,6 +152,7 @@ def check_workflow(connection, workflow_uuid):
     annotation_tag = getStepOptions(workflow_dict["annotation"])
     
     keep_workflow = False
+    opt_workflow = None
     
     for k,v in annotation_tag.iteritems(): 
         if k.lower() == str('refinery_workflow').lower():
@@ -149,6 +165,17 @@ def check_workflow(connection, workflow_uuid):
                         keep_workflow = True      
             except:
                 logger.exception( "Galaxy workflow: Base tag for determining to keep a workflow is malformed: " +  annotation_tag)
-    
-    return keep_workflow
+                return
+        
+        # reading in refinery_relationships options from workflow annotation
+        elif k.lower() == str('refinery_relationship').lower():
+            try:
+                opt_workflow = ast.literal_eval(v[0])
+            except:
+                logger.exception("Galaxy workflow: refinery_relationship option string is malformed")
+                return
+                        
+    #logger.debug("check_workflow")
+    #logger.debug(keep_workflow)
+    return keep_workflow, opt_workflow
     
