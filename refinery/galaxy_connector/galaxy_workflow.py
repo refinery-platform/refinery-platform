@@ -475,8 +475,8 @@ def getStepOptions(step_annot):
     ret_dict = {}
         
     if (step_annot):
-        # splitting multiple options based on ','
-        step_split = step_annot.strip().split(',')
+        # splitting multiple options based on ';'
+        step_split = step_annot.strip().split(';')
         for st in step_split:
             st_opts = st.strip().split('=')
             if len(st_opts) > 1:
@@ -487,7 +487,10 @@ def getStepOptions(step_annot):
                     ret_dict[temp_key].append(temp_val)
                 else:
                     ret_dict[temp_key] = [temp_val]
-                
+   
+    #logger.debug("galaxy_connector.galaxy_workflow getStepOptions called")     
+    #logger.debug(ret_dict)
+            
     return ret_dict
 
 def countWorkflowSteps(workflow):
