@@ -291,9 +291,7 @@ def data_set(request,uuid):
             pre_isatab_archive = FileStoreItem.objects.get( uuid=investigation.pre_isarchive_file )
     except:
         pass
-    
-    print( get_perms( request.user, data_set ) )
-    
+        
     return render_to_response('core/data_set.html', 
                               {
                                 'data_set': data_set, 
@@ -543,7 +541,6 @@ def admin_test_data( request ):
     public_members = [ ".nils", ".richard", ".psalm", ".ilya", ".shannan" ]    
     for username in public_members:
         user_object = User.objects.get( username__exact=username )
-        print ExtendedGroup.objects.public_group()
         user_object.groups.add( ExtendedGroup.objects.public_group() )
         
     """
@@ -790,7 +787,6 @@ def solr_select(request, core):
     #url = settings.REFINERY_SOLR_BASE_URL + core + "/select?" + request.GET.urlencode()
     
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
-    print( request.GET.urlencode() )
     data = request.GET.urlencode()
     req = urllib2.Request(url, data ) #, {'Content-Type': 'application/json'})
     f = urllib2.urlopen(req)
@@ -813,6 +809,8 @@ def solr_igv(request):
     if request.is_ajax():
         #logger.debug("solr_igv called: request is ajax")
         #logger.debug(simplejson.dumps(request.POST, indent=4))
+        
+        logger.debug( 'IGV query: ' + request.POST['query'] )
         
         # attributes associated with node selection from interface
         node_selection_blacklist_mode = request.POST['node_selection_blacklist_mode']
@@ -899,6 +897,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
     # converting results into json for python 
     results = simplejson.loads(results)
     
+    '''
     # number of solr results 
     if selected_mode:
         num_found = int(results["response"]["numFound"])
@@ -962,6 +961,10 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
         return None
     else:
         return results
+    '''
+    
+    return results    
+    
     
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
