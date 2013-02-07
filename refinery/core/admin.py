@@ -17,6 +17,9 @@ from core.models import WorkflowDataInputMap
 from core.models import Analysis
 from core.models import DiskQuota
 from core.models import NodeSet
+from core.models import NodePair
+from core.models import NodeRelationship
+from core.models import WorkflowInputRelationships
 
 from guardian.admin import GuardedModelAdmin
 
@@ -54,3 +57,6 @@ admin.site.register(WorkflowDataInputMap)
 admin.site.register(Analysis,AnalysisAdmin)
 admin.site.register(DiskQuota,DiskQuotaAdmin)
 admin.site.register(NodeSet)
+admin.site.register(NodePair)
+admin.site.register(NodeRelationship)
+admin.site.register(WorkflowInputRelationships)

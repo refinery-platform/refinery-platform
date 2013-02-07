@@ -26,6 +26,17 @@ from galaxy_connector.models import Instance
 
 logger = logging.getLogger(__name__)
 
+#: Defining available node relationship types 
+TYPE_1_1 = '1-1'
+TYPE_1_N = '1-N'
+TYPE_N_1 = 'N-1'
+TYPE_REPLICATE = 'replicate' 
+NR_TYPES = (
+            (TYPE_1_1, '1-1'),
+            (TYPE_1_N, '1-N'),
+            (TYPE_N_1, 'N-1'),
+            (TYPE_REPLICATE, 'replicate')
+            )
 
 class UserProfile ( models.Model ):
     '''
@@ -385,6 +396,16 @@ class DiskQuota ( SharableResource, ManageableResource ):
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
 
+class WorkflowInputRelationships(models.Model):
+    '''
+    Defines relationships between inputs based on the input string assoicated with each workflow i.e refinery_relationship=[{"category":"1-1", "set1":"input_file", "set2":"exp_file"}]
+    '''
+    category = models.CharField(max_length=15, choices=NR_TYPES, blank=True)
+    set1 = models.CharField( max_length=50 )
+    set2 = models.CharField( max_length=50, blank=True, null=True )
+    
+    def __unicode__(self):
+        return str(self.category) + " - " + str(self.set1) + "," + str(self.set2)
         
 class Workflow ( SharableResource, ManageableResource ):
 
@@ -392,7 +413,8 @@ class Workflow ( SharableResource, ManageableResource ):
     internal_id = models.CharField( max_length=50 )
     workflow_engine = models.ForeignKey( WorkflowEngine )    
     show_in_repository_mode = models.BooleanField( default=False )
-
+    input_relationships = models.ManyToManyField( WorkflowInputRelationships, blank=True )
+    
     def __unicode__(self):
         return self.name + " - " + self.summary
 
@@ -656,4 +678,35 @@ def delete_nodeset(uuid):
 
     '''
     NodeSet.objects.filter(uuid=uuid).delete()
+
+   
+class NodePair(models.Model):
+    '''Linking of specific node relationships for a given node relationship 
+    '''
+    #: specific file node 
+    node1 = models.ForeignKey(Node, related_name="node1")
+    #: connected file node 
+    node2 = models.ForeignKey(Node, related_name="node2", blank=True, null=True)
+    # defines a grouping of node relationships i.e. replicate
+    group = models.IntegerField(blank=True, null=True)
+    
+    
+class NodeRelationship(BaseResource):
+    '''A collection of Nodes NodePair, representing connections between data files i.e. input/chip pairs
+    Used to define a collection of connections between data files for a specified data set 
+    '''
+    
+    #: type of relationship i.e. single, paired, replicates 
+    #: must refer to type from noderelationshiptype 
+    type = models.CharField(max_length=15, choices=NR_TYPES, blank=True)
+    
+    #: references multiple nodepair relationships 
+    node_pairs = models.ManyToManyField(NodePair, related_name='node_pairs', blank=True, null=True)
+    
+    #: references node_sets that were used to determine this relationship
+    node_set_1 = models.ForeignKey(NodeSet, related_name='node_set_1', blank=True, null=True)
+    node_set_2 = models.ForeignKey(NodeSet, related_name='node_set_2', blank=True, null=True)
+    
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay)
 
