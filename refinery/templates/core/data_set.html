@@ -422,8 +422,13 @@ rect.active {
 {% endblock %}
 
 {% block script %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v2.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/d3/fisheye.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/underscore/underscore-min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
+
 	<!-- adding spinner -->
-	<script language="javascript" type="text/javascript" src="http://fgnass.github.com/spin.js/dist/spin.min.js"></script>
+	<script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/spin/spin.min.js"></script>
 
 	<script language="javascript" type="text/javascript">
 	    var opts = {
@@ -445,10 +450,6 @@ rect.active {
 	    };
 	</script>
 	    
-    <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v2.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/d3/fisheye.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/underscore/underscore-min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
 
 	<!-- Refinery libraries -->
 	<script type="text/javascript">
@@ -483,6 +484,7 @@ rect.active {
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/node_set_manager.js"></script>
 
 	<script type="application/javascript">
+	
 		$(document).ready(function () {
 	    	$("[rel=tooltip]").tooltip();
 	    	
