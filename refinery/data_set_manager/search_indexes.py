@@ -40,7 +40,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     def get_model(self):
         return Node
 
-    def index_queryset(self):
+    def index_queryset(self, using=None):
         """Used when the entire index for model is updated."""
         return self.get_model().objects.all() #filter(modification_date__lte=datetime.datetime.now())
     

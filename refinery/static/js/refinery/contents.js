@@ -37,7 +37,6 @@ $(document).ready(function() {
 	configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
 	configurator.initialize();
 	
-	
 	/*
 	
 	var client = new SolrClient( solrRoot,
@@ -74,8 +73,7 @@ $(document).ready(function() {
 	});
 		
 	*/
-	
-	/*	
+		
 	nodeSetManager = new NodeSetManager( externalAssayUuid, externalStudyUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
 	nodeSetManager.initialize();
 	
@@ -90,9 +88,9 @@ $(document).ready(function() {
 	nodeSetManager.setSaveSelectionCallback( function() {
 		var solr_query = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, query.total_items, facets, fields, {}, showAnnotation );
 		nodeSetManager.postState( "" + Date(), "Summary for Node Set", solr_query, query.selected_items, function(){
+				alert( "Node Set Created! Refresh node set list!!!" );
 		});
 	});
-	*/
 
 	configurator.getState( function() {
 		initializeDataWithState( currentAssayUuid, currentStudyUuid, currentNodeType );	
@@ -328,18 +326,17 @@ function buildSolrQueryPivots( pivots ) {
 }
 
 
-function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents, annotationParam, filterNodeSelection ) {
+function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents, annotationParam ) {
 		
-	filterNodeSelection = filterNodeSelection || true;
-		
-	var nodeSelectionFilter;
-	
-	if ( nodeSelection.length > 0 && filterNodeSelection ) {
+	var nodeSelectionFilter = "";
+	/*
+	if ( nodeSelection.length > 0 ) {
 		nodeSelectionFilter = ( nodeSelectionBlacklistMode ? "-" : "" ) + "uuid:" + "(" + nodeSelection.join( " OR " ) +  ")"; 
 	}  
 	else {
 		nodeSelectionFilter = "uuid:*"
 	}
+	*/
 	
 	var url = solrSelectUrl
 		+ "?" + solrQuery 
@@ -1174,8 +1171,8 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 	
 	// function for getting current solr query 
 	var solr_url = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, facets, fields, {}, false );
-	// annotation files solr query -- DO NOT FILTER NODE SELECTION!!! (last parameter set to false, it is true by default) 
-	var solr_annot = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, {}, fields, {}, true, false );
+	// annotation files solr query 
+	var solr_annot = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, 10000, {}, fields, {}, true );
 	
 	// url to point ajax function too 
 	var temp_url = solrIgvUrl;
@@ -1230,6 +1227,7 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 	    }
 	});
 	// --- END: set correct CSRF token via cookie ---
+
 	
  	var xhr = $.ajax({
 	     url:temp_url,
@@ -1348,5 +1346,3 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 // ---------------------------------
 })();
 // end scope  
-
-

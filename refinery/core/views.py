@@ -818,11 +818,12 @@ def solr_igv(request):
             node_selection_blacklist_mode = True
         else:
             node_selection_blacklist_mode = False
+        
         node_selection = request.POST.getlist('node_selection[]')
         
-        logger.debug("node_selection_blacklist_mode")
-        logger.debug(node_selection_blacklist_mode)
-        logger.debug(node_selection)
+        #logger.debug("node_selection_blacklist_mode")
+        #logger.debug(node_selection_blacklist_mode)
+        #logger.debug(node_selection)
         
         # extracting solr query from request 
         for i, val in request.POST.iteritems():
@@ -830,23 +831,21 @@ def solr_igv(request):
             if i == 'query':
                 solr_query = val
                 solr_results = get_solr_results(solr_query, selected_mode=node_selection_blacklist_mode, selected_nodes=node_selection)
-                logger.debug("solr_results")
-                logger.debug(simplejson.dumps(solr_results, indent=4))
+                #logger.debug("solr_results")
+                #logger.debug(simplejson.dumps(solr_results, indent=4))
         
             # for solr query for annotation files 
             elif i == 'annot':
                 solr_annot = get_solr_results(val)
-                solr_annot
                 #logger.debug("solr_annot")
                 #logger.debug(simplejson.dumps(solr_annot, indent=4))
-    
         
         # if solr query returns results
         if solr_results:
             session_urls = igv_multi_species(solr_results, solr_annot)
         
-        #logger.debug("session_urls")
-        #logger.debug(simplejson.dumps(session_urls, indent=4))
+        logger.debug("session_urls")
+        logger.debug(simplejson.dumps(session_urls, indent=4))
         
         return HttpResponse(simplejson.dumps(session_urls),mimetype='application/json')
 
@@ -870,8 +869,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
     :returns: dictionary of current solr results
     '''
     
-    logger.debug("core.views: get_solr_results \\annot")
-    logger.debug(annotation)
+    logger.debug("core.views: get_solr_results")
     
     if not facets:
         # replacing facets w/ false 
@@ -884,13 +882,10 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
     if annotation:
         # changing annotation 
         query = query.replace('is_annotation:false', 'is_annotation:true')
-    
-    logger.debug(query)
-    
         
     # proper url encoding                  
     query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
-        
+    
     # opening solr query results
     results =  urllib2.urlopen( query ).read()
         
@@ -904,9 +899,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
     else:
         num_found = 0
     
-    logger.debug("core.views: get_solr_results num_found=%s" % num_found)
-    logger.debug("selected_nodes")
-    logger.debug(selected_nodes)
+    #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
     
     # IF list of nodes to remove from query exists
     if selected_nodes:
@@ -914,12 +907,8 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
         for i in xrange(len(results["response"]["docs"]) - 1, -1, -1):
             node = results["response"]["docs"][i]
             
-            logger.debug("******** NODE")
-            logger.debug(simplejson.dumps(node, indent=4))
-            
             # blacklist mode (remove uuid's from solr query) 
             if selected_mode:
-                logger.debug("****blacklist**** NODE")
                 if 'uuid' in node:
                    # if the current node should be removed from the results
                    if node['uuid'] in selected_nodes: 
@@ -928,29 +917,20 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
             
             # whitelist mode (add's uuids from solr query) 
             else:
-                logger.debug("****whitelist**** NODE")
                 if 'uuid' in node:
                    # if the current node should be removed from the results
-                   logger.debug("****whitelist**** UUID")
-                   logger.debug(node["uuid"])
-                   logger.debug(selected_nodes)
-                   logger.debug(results["response"]["docs"][i])
-                      
                    if node['uuid'] not in selected_nodes: 
-                       logger.debug("****whitelist**** NODE DELETING")
                        del results["response"]["docs"][i]
                        num_found += 1
     
     # updating the number found in the list
     results["response"]["numFound"] = str(num_found)
     
-    logger.debug("core.views: get_solr_results num_found=%s" % num_found)
-    logger.debug(simplejson.dumps(results, indent=4))
-            
+    #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
+    #logger.debug(simplejson.dumps(results, indent=4))
     
     # Will return only list of file_uuids
     if only_uuids:
-        logger.debug("^^^^^^^^^^^^^^^ only uuids")
         ret_file_uuids = []
         solr_results = results["response"]["docs"]
         for res in solr_results:
