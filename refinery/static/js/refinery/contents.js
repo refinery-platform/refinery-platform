@@ -330,7 +330,7 @@ function buildSolrQueryPivots( pivots ) {
 
 function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents, annotationParam, filterNodeSelection ) {
 		
-	filterNodeSelection = filterNodeSelection || true;
+	filterNodeSelection = typeof filterNodeSelection !== 'undefined' ? filterNodeSelection : true;
 		
 	var nodeSelectionFilter;
 	
@@ -361,9 +361,7 @@ function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fi
 	url += buildSolrQueryFieldList( fields );
 	url += buildSolrQuerySortFields( fields );
 	url += buildSolrQueryPivots( pivots );
-	
-	console.log( url );
-	
+		
 	return ( url );
 }
 
