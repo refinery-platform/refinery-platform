@@ -8,15 +8,6 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'NodePair'
-        db.create_table('core_nodepair', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('node1', self.gf('django.db.models.fields.related.ForeignKey')(related_name='node1', to=orm['data_set_manager.Node'])),
-            ('node2', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='node2', null=True, to=orm['data_set_manager.Node'])),
-            ('group', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
-        ))
-        db.send_create_signal('core', ['NodePair'])
-
         # Adding model 'WorkflowInputRelationships'
         db.create_table('core_workflowinputrelationships', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
@@ -25,6 +16,16 @@ class Migration(SchemaMigration):
             ('set2', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True)),
         ))
         db.send_create_signal('core', ['WorkflowInputRelationships'])
+
+        # Adding model 'NodePair'
+        db.create_table('core_nodepair', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('uuid', self.gf('django.db.models.fields.CharField')(unique=True, max_length=36, blank=True)),
+            ('node1', self.gf('django.db.models.fields.related.ForeignKey')(related_name='node1', to=orm['data_set_manager.Node'])),
+            ('node2', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='node2', null=True, to=orm['data_set_manager.Node'])),
+            ('group', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+        ))
+        db.send_create_signal('core', ['NodePair'])
 
         # Adding model 'NodeRelationship'
         db.create_table('core_noderelationship', (
@@ -62,11 +63,11 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-        # Deleting model 'NodePair'
-        db.delete_table('core_nodepair')
-
         # Deleting model 'WorkflowInputRelationships'
         db.delete_table('core_workflowinputrelationships')
+
+        # Deleting model 'NodePair'
+        db.delete_table('core_nodepair')
 
         # Deleting model 'NodeRelationship'
         db.delete_table('core_noderelationship')
@@ -196,7 +197,8 @@ class Migration(SchemaMigration):
             'group': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'node1': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'node1'", 'to': "orm['data_set_manager.Node']"}),
-            'node2': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'node2'", 'null': 'True', 'to': "orm['data_set_manager.Node']"})
+            'node2': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'node2'", 'null': 'True', 'to': "orm['data_set_manager.Node']"}),
+            'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
         },
         'core.noderelationship': {
             'Meta': {'object_name': 'NodeRelationship'},

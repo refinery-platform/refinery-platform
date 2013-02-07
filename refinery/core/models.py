@@ -683,6 +683,7 @@ def delete_nodeset(uuid):
 class NodePair(models.Model):
     '''Linking of specific node relationships for a given node relationship 
     '''
+    uuid = UUIDField( unique=True, auto=True )
     #: specific file node 
     node1 = models.ForeignKey(Node, related_name="node1")
     #: connected file node 
