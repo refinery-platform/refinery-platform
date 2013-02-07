@@ -910,7 +910,7 @@ function processDocs( data ) {
 		var node_uuid = document.uuid;
 		
 		// IF Repository mode 
-		if ( REFINERY_REPOSITORY_MODE ) {
+		//if ( REFINERY_REPOSITORY_MODE ) {
 			var isNodeSelected;
 			
 			if ( nodeSelection.indexOf( node_uuid ) != -1 ) {
@@ -934,11 +934,13 @@ function processDocs( data ) {
 			s += '<td><label><input id="file_' + node_uuid + '" data-uuid="' + node_uuid + '" class="node-selection-checkbox" type=\"checkbox\" ' + ( isNodeSelected ? "checked" : "" ) + '></label>' + '</td>';							
 			
 			//s += '<td></td>';
-		}
+		/* }
 		else { 
 			var check_temp = '<select name="assay_'+ node_uuid +'" id="webmenu" class="btn-mini OGcombobox"> <option></option> </select>';
 			s += '<td>' + check_temp + '</td>'
 		}
+		
+		*/
 
 		for ( entry in fields )
 		{
