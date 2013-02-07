@@ -75,7 +75,7 @@ $(document).ready(function() {
 		
 	*/
 	
-	/*	
+	
 	nodeSetManager = new NodeSetManager( externalAssayUuid, externalStudyUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
 	nodeSetManager.initialize();
 	
@@ -92,7 +92,7 @@ $(document).ready(function() {
 		nodeSetManager.postState( "" + Date(), "Summary for Node Set", solr_query, query.selected_items, function(){
 		});
 	});
-	*/
+	
 
 	configurator.getState( function() {
 		initializeDataWithState( currentAssayUuid, currentStudyUuid, currentNodeType );	
