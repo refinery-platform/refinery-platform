@@ -54,27 +54,38 @@ Refinery uses Solr for searching and faceted browsing.
 Setup
 """""
 
-We recommend to run Solr using the bundled Jetty webserver. Solr has to run on the same host as the Refinery application. 
-The Solr example configuration included in the standard download is sufficient and should be run like this:
+We recommend to run Solr using the bundled Jetty webserver. The Solr example configuration included in the standard download
+is sufficient and should be run like this:
 
-.. code-block:: bash
-   
+.. code-block:: bash   
+
    cd <solr-download-directory>
    java -Dsolr.solr.home=<refinery-installation-directory>/solr/ -jar start.jar > <path-to-solr-log-file> 2>&1 &
       
 By default Jetty will allow connections to Solr from any IP address. This is not secure and not required to run Refinery. We recommend to 
-allow connections to Solr only from ``localhost``. This can be configured as follows:
+allow connections to Solr only from ``localhost``. Note that this requires Solr to run on the same host as Refinery. If Solr should run on another host change
+the IP address used below accordingly. 
+
+To configure Jetty to only accept connections from ``localhost`` do the following:
    
 1. Go to ``<solr-download-directory>/etc``.
 2. Open ``jetty.xml``.
 3. Locate ``<Call name="addConnector">`` in ``jetty.xml``. Be aware that the default ``jetty.xml`` file contains an ``addConnector`` block that is commented out. 
 4. Supply a default value of "127.0.0.1" for the ``jetty.host`` system property used to configure ``Host`` as follows:
 
-.. code-block:: xml
-   
+.. code-block:: xml   
+
    <Set name="Host"><SystemProperty name="jetty.host" default="127.0.0.1"/></Set>
 
-5. Restart Jetty using the command shown above.
+5. Make sure that the ``jetty.host`` system variable is not set. 
+6. Restart Jetty using the command shown above.
+7. In the ``settings_local.py`` of your Refinery installation configure ``REFINERY_SOLR_BASE_URL`` as follows:
+
+.. code-block:: python   
+
+    REFINERY_SOLR_BASE_URL = "http://localhost:8983/solr/"
+    
+8. Restart the WSGI server running Refinery to reload your settings.
 
 RabbitMQ
 ^^^^^^^^
