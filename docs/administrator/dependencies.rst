@@ -51,8 +51,8 @@ Refinery uses Solr for searching and faceted browsing.
 *Version*
    4.0.0-alpha or later
    
-Setup
-"""""
+Configuration
+"""""""""""""
 
 We recommend to run Solr using the bundled Jetty webserver. The Solr example configuration included in the standard download
 is sufficient and should be run like this:
