@@ -697,7 +697,6 @@ class NodeRelationship(BaseResource):
     Used to define a collection of connections between data files for a specified data set 
     '''
     
-    #: type of relationship i.e. single, paired, replicates 
     #: must refer to type from noderelationshiptype 
     type = models.CharField(max_length=15, choices=NR_TYPES, blank=True)
     

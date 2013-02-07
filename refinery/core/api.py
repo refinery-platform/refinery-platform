@@ -4,7 +4,7 @@ Created on May 4, 2012
 @author: nils
 '''
 
-from core.models import Project, NodeSet
+from core.models import Project, NodeSet, NodeRelationship, NodePair
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node
 from django.conf.urls.defaults import url
@@ -65,7 +65,8 @@ class NodeSetResource(ModelResource):
     # https://github.com/toastdriven/django-tastypie/issues/526
     # Once the above has been integrated into a tastypie release branch remove NodeSetListResource and
     # use "use_in" instead 
-    # nodes = fields.ToManyField(NodeResource, 'nodes', use_in="detail" )
+    #nodes = fields.ToManyField(NodeResource, 'nodes', use_in="detail" )
+    
     solr_query = fields.CharField(attribute='solr_query', null=True)
     node_count = fields.IntegerField(attribute='node_count', null=True)
     is_implicit = fields.BooleanField(attribute='is_implicit')
@@ -120,3 +121,34 @@ class NodeSetListResource(ModelResource):
         # replace resource URI to point to the nodeset resource instead of the nodesetlist resource        
         bundle.data['resource_uri'] = bundle.data['resource_uri'].replace( self._meta.resource_name, self._meta.detail_resource_name ) 
         return bundle
+
+
+class NodePairResource(ModelResource):
+    node1 = fields.ToOneField(NodeResource, 'node1')
+    node2 = fields.ToOneField(NodeResource, 'node2', null=True)
+    group = fields.CharField(attribute='group', null=True)
+    
+    class Meta:
+        # create node count attribute on the fly - node_count field has to be defined on resource
+        queryset = NodePair.objects.all()
+        detail_resource_name = 'nodepair' 
+        resource_name = 'nodepair'
+        detail_uri_name = 'uuid'  
+ 
+class NodeRelationshipResource(ModelResource):
+    name = fields.CharField(attribute='name', null=True)
+    type = fields.CharField(attribute='type', null=True)
+    node_pairs = fields.ToManyField(NodePairResource, 'node_pairs')  #, full=True), if you need each attribute for each nodepair
+    study = fields.ToOneField(StudyResource, 'study')
+    assay = fields.ToOneField(AssayResource, 'assay')
+    
+    class Meta:
+        # create node count attribute on the fly - node_count field has to be defined on resource
+        queryset = NodeRelationship.objects.all()
+        detail_resource_name = 'noderelationship' 
+        resource_name = 'noderelationship'
+        detail_uri_name = 'uuid'  
+        
+        fields = ['type', 'study', 'assay', 'node_pairs']
+        ordering = ['type', 'node_pairs']
+        
