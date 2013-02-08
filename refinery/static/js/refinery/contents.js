@@ -468,7 +468,7 @@ function getData( studyUuid, assayUuid, nodeType, solr_query ) {
 	var url = "";
 	
 	if ( typeof solr_query === 'undefined' ) {
-		url = buildSolrQuery( studyUuid, assayUuid, nodeType, currentItemsPerPage * query.page, currentItemsPerPage, facets, fields, {}, showAnnotation );		
+		url = buildSolrQuery( studyUuid, assayUuid, nodeType, currentItemsPerPage * query.page, currentItemsPerPage, facets, fields, {}, showAnnotation, false );		
 	}
 	else {
 		url = solr_query;
@@ -519,7 +519,7 @@ function getPivotData( studyUuid, assayUuid, nodeType ) {
 function getField( studyUuid, assayUuid, nodeType, field, callback ) {
 	var fieldSelection = {};
 	fieldSelection[field] = { isVisible: true };
-	var solr_query = buildSolrQuery( studyUuid, assayUuid, nodeType, 0, query.total_items, {}, fieldSelection, {}, showAnnotation );
+	var solr_query = buildSolrQuery( studyUuid, assayUuid, nodeType, 0, query.total_items, {}, fieldSelection, {}, showAnnotation, false );
 		
 	$.ajax( { type: "GET", dataType: "jsonp", url: solr_query, success: function(data) {
 		var fieldValues = [] 
