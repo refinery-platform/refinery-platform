@@ -37,6 +37,26 @@ SolrResponse.prototype.initialize = function ( response ) {
 }
 
 
+SolrResponse.prototype.getFacetCounts = function() {
+	return this._facetCounts;
+}
+
+
+SolrResponse.prototype.getPivotCounts = function() {
+	return this._pivotCounts;
+}
+
+
+SolrResponse.prototype.getFieldList = function() {
+	return this._fieldList;
+}
+
+
+SolrResponse.prototype.getDocumentList = function() {
+	return this._documentList;
+}
+
+
 SolrResponse.prototype._processFacetCounts = function ( response ) {
 	
 	var self = this;
