@@ -8,23 +8,15 @@ Deployment script for the Refinery software environment
 OS: CentOS 5.7
 
 Requirements:
-* ~/.fabricrc with the following variables:
-** deployment_base_dir=<absolute path to the root of the Refinery deployment tree>
-** project_user=<username of the Refinery user>
-** project_group=<main group of the Refinery user>
-** dev_hosts=<comma-separated list of development hosts>
-** galaxy_root=<absolute path to the root of Galaxy deployment tree>
-** galaxy_user=<username of the Galaxy user>
-** galaxy_r_libs_base_dir=<absolute path to the root of R library tree>
-* local Refinery project directory with the following templates:
-** bash_profile_template and bashrc_template
+* ~/.fabricrc (see fabricrc.txt for details):
+* Config file templates:
+** bash_profile
+** bashrc
 ** settings_local_*.py
 * deployment_base_dir on the remote hosts must be:
 ** owned by project_user and project_group
 ** group writeable and have setgid attribute
-* deployment_base_dir/'bootstrap' directory containing:
-**Apache Solr package
-**SPP R library package
+* project_user home dir
 * local user account running this script must be able:
 ** to run commands as root on target hosts using sudo
 ** SSH in to the target hosts as project_user
@@ -49,11 +41,6 @@ from fabric.utils import puts
 env.local_django_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(env.local_django_root)
 from django.conf import settings as django_settings  # to avoid conflict with fabric.api.settings
-# config files and templates
-env.local_conf_dir = os.path.join(env.local_django_root, "fabric")
-
-# remote settings
-env.bootstrap_dir = os.path.join(env.deployment_base_dir, "bootstrap")
 
 # Fabric settings
 env.forward_agent = True    # for Github operations
@@ -63,7 +50,7 @@ def check_env_vars():
     '''Check if the required variable were initialized in ~/.fabricrc
 
     '''
-    require("project_user", "project_group", "deployment_base_dir")
+    require("project_user", "project_group", "deployment_dir")
 
 
 @task
@@ -72,10 +59,17 @@ def dev():
 
     '''
     check_env_vars()
-    env.hosts = env.dev_hosts.split(',') # variables in .fabricrc can only be strings
+    env.hosts = [env.dev_host]
     env.dev_settings_file = "settings_local_dev.py"
     django.settings_module(os.path.splitext(env.dev_settings_file)[0])
-    env.deployment_target_dir = os.path.join(env.deployment_base_dir, "dev")
+    env.os = env.remote_os
+    # configure software package names
+    if env.os == "CentOS":
+        env.postgresql_server = "postgresql84-server"
+        env.postgresql_devel = "postgresql84-devel"
+    else:
+        abort("{os} is not supported".format(**env))
+    # Galaxy config
     galaxy_base_dir = env.galaxy_root + "dev"
     env.galaxy_root = os.path.join(galaxy_base_dir, "live")
     env.galaxy_r_libs_target_dir = os.path.join(env.galaxy_r_libs_base_dir, "dev")
@@ -88,6 +82,7 @@ def local():
     '''
     env.dev_settings_file = "settings_local.py"
     django.settings_module(os.path.splitext(env.dev_settings_file)[0])
+    env.os = env.local_os
 
 
 @task
@@ -111,128 +106,92 @@ def bootstrap():
     '''Initialize the target VM from the default state
 
     '''
-    create_project_user_home_dir()
-    create_deployment_target_dir()
-    update_project_user_home_dir()
 
-    install_postgresql_server()
-    init_postgresql_server()
-    install_postgresql_devel()
-
+    # install and configure required software packages
+    install_postgresql()
+    init_postgresql()
+#    start_postgresql()
     install_git()
-
     install_rabbitmq()
     init_rabbitmq()
-    start_rabbitmq()
+#    start_rabbitmq()
     configure_rabbitmq()
+
+    upload_bash_config()
 
     deploy_refinery()
 
+    create_refinery_data_dirs()
+
     # init db
-
     # create users
-
     # init virtualenvs
-
     # install requirements
-    
-    # add symlink for Refinery Apache config file 
-
-
-@task
-def create_project_user_home_dir():
-    '''Create home directory for project_user
-    (no access to the NFS-mounted home directories from the VMs at FAS RC)
-
-    '''
-    puts("Logging in as user '{project_user}'".format(**env))
-    with settings(hide('commands')):
-        run("whoami")
-
-    puts("Creating home directory for user '{project_user}'".format(**env))
-    with hide('commands'):
-        home_dir = run("echo ~{}".format(env.project_user))
-    if not exists(home_dir):
-        sudo("mkdir {}".format(home_dir))
-        sudo("chown {}:{} {}".format(env.project_user, env.project_group, home_dir))
-    else:
-        puts("Home directory for user '{}' already exists at '{}'".format(env.project_user, home_dir))
+    # add symlink for Refinery Apache config file
 
 
 @task
 @with_settings(user=env.project_user)
-def create_deployment_target_dir():
-    '''Create target directory for deployment if doesn't exist
-
-    '''
-    puts("Checking if deployment base directory exists at '{deployment_base_dir}'".format(**env))
-    if not exists(env.deployment_base_dir):
-        abort("'{deployment_base_dir}' does not exist".format(**env))
-
-    puts("Creating target directory for deployment at '{deployment_target_dir}'".format(**env))
-    if not exists(env.deployment_target_dir):
-        run("mkdir '{deployment_target_dir}'".format(**env))
-    else:
-        puts("'{deployment_target_dir}' already exists".format(**env))
-
-
-@task
-@with_settings(user=env.project_user)
-def update_project_user_home_dir():
+def upload_bash_config():
     '''Upload .bashrc and .bash_profile to $HOME of project_user
 
     '''
-    bash_profile_path = os.path.join(env.local_conf_dir, "bash_profile_template")
+    bash_profile_path = os.path.join(env.local_conf_dir, env.bash_profile_template)
     upload_template(bash_profile_path, "~/.bash_profile")
 
-    bashrc_path = os.path.join(env.local_conf_dir, "bashrc_template")
-    bashrc_context = {'deployment_target_dir': env.deployment_target_dir}
+    #TODO: replace with fabric.contrib.files.sed() to add/edit the following:
+    #export WORKON_HOME=%(deployment_dir)s/virtualenvs
+    #export PROJECT_HOME=%(deployment_dir)s/apps
+    #source $PYTHONHOME/bin/virtualenvwrapper.sh
+    bashrc_path = os.path.join(env.local_conf_dir, env.bashrc_template)
+    bashrc_context = {"deployment_dir": env.deployment_dir}
     upload_template(bashrc_path, "~/.bashrc", bashrc_context)
 
 
 @task
-def install_postgresql_server():
-    '''Install PostgreSQL server from the CentOS repository
-
+def install_postgresql():
+    '''Install PostgreSQL server and development libraries
+    (pg_config is required by psycopg2 module)
     '''
-    puts("Installing PostgreSQL server")
-    sudo("yum -q -y install postgresql84-server")
+    puts("Installing PostgreSQL")
+    if env.os == "CentOS":
+        sudo("yum -q -y install {postgresql_server}".format(**env))
+        sudo("yum -q -y install {postgresql_devel}".format(**env))
+    elif env.os == "Debian":
+        pass
 
 
 @task
-def init_postgresql_server():
-    '''Configure PostgreSQL server to start automatically at boot time and create a new database cluster
+def init_postgresql():
+    '''Configure PostgreSQL server to start automatically at boot time and
+    create a new database cluster
 
     '''
-    sudo("/sbin/chkconfig postgresql on")
-    with settings(hide('warnings'), warn_only=True):
-        # initdb command returns 1 if data directory is not empty
-        sudo("/sbin/service postgresql initdb")
+    if env.os == "CentOS":
+        sudo("/sbin/chkconfig postgresql on")
+        with settings(hide('warnings'), warn_only=True):
+            # initdb command returns 1 if data directory is not empty
+            sudo("/sbin/service postgresql initdb")
+    elif env.os == "Debian":
+        pass
 
 
 @task
-def install_postgresql_devel():
-    '''Install PostgreSQL development libraries from the CentOS repository
-     (pg_config is required by psycopg2 module)
-
-    '''
-    puts("Installing PostgreSQL development libraries")
-    sudo("yum -q -y install postgresql84-devel")
-
-
-@task
-def start_postgresql_server():
+def start_postgresql():
     '''Start PostgreSQL server
 
     '''
-    # need to check if the server is running because
-    # service command exits with non-zero status if it is
-    with settings(hide('everything'), warn_only=True):
-        result = sudo("/sbin/service postgresql status")
-    if result.failed:
-        sudo("/sbin/service postgres start")
-    else:
-        puts("PostrgreSQL server is already running")
+    if env.os == "CentOS":
+        # need to check if the server is running because
+        # service command exits with non-zero status if it is
+        with settings(hide('everything'), warn_only=True):
+            result = sudo("/sbin/service postgresql status")
+        if result.failed:
+            sudo("/sbin/service postgres start")
+        else:
+            puts("PostrgreSQL server is already running")
+    elif env.os == "Debian":
+        pass
 
 
 @task
@@ -242,7 +201,7 @@ def upload_apache_settings():
 
     '''
     upload_template("{local_conf_dir}/refinery-apache.conf".format(**env),
-                    "{deployment_target_dir}/etc/refinery-apache.conf".format(**env))
+                    "{deployment_dir}/etc/refinery-apache.conf".format(**env))
 
 
 @task
@@ -250,7 +209,7 @@ def install_mod_wsgi():
     '''Install WSGI interface for Python web applications in Apache from the CentOS repository
 
     '''
-    #TODO: mod_wsgi is compiled and installed manually
+    #TODO: mod_wsgi is compiled and installed manually on CentOS 5.7
 #    puts("Installing mod_wsgi")
 #    sudo("yum -q -y install mod_wsgi")
 
@@ -721,7 +680,7 @@ def install_spp():
 
     '''
     #TODO: change settings to env.galaxy_user before using
-    #TODO: specidy 'lib' to make sure packahes is installed into the correct location
+    #TODO: specify 'lib' to make sure packages are installed into the correct location
     run("R -e \"install.packages('caTools')\"")
     run("R -e \"install.packages('{bootstrap_dir}/spp_1.11.tar.gz')\"".format(**env))
 
