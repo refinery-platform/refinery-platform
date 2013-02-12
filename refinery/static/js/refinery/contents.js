@@ -10,7 +10,7 @@ var MESSAGE_DOWNLOAD_AVAILABLE = "Click to create<br>archive for download<br>of 
 	
 var allowAnnotationDownload = false;
 
-var solrRoot = "http://" + REFINERY_BASE_URL + "/solr/";
+var solrRoot = document.location.protocol + "//" + document.location.host + "/solr/";
 var solrSelectUrl = solrRoot + "data_set_manager/select/";
 var solrSelectEndpoint = "data_set_manager/select/";
 var solrIgvUrl = solrRoot + "igv/";

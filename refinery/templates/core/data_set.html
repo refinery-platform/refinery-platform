@@ -458,8 +458,8 @@ rect.active {
 
 	<!-- Refinery libraries -->
 	<script type="text/javascript">
-		var REFINERY_BASE_URL = "{{ REFINERY_BASE_URL }}";
-		var REFINERY_API_BASE_URL = "http://" + REFINERY_BASE_URL + "/" + "api" + "/" + "v1" + "/";
+		var REFINERY_BASE_URL = document.location.host;
+		var REFINERY_API_BASE_URL = document.location.protocol + "//" + REFINERY_BASE_URL + "/api/v1/";
 		var REFINERY_SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}";
 		var externalStudyUuid = "{{ assay_uuid }}";		
 		var externalAssayUuid = "{{ study_uuid }}";
