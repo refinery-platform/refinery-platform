@@ -11,7 +11,7 @@ var urlComponents = document.location.href.split("/");
 	
 var allowAnnotationDownload = false;
 
-var solrRoot = "http://" + REFINERY_BASE_URL + "/solr/";
+var solrRoot = document.location.protocol + "//" + document.location.host + "/solr/";
 var solrSelectUrl = solrRoot + "data_set_manager/select/";
 var solrSelectEndpoint = "data_set_manager/select/";
 var solrIgvUrl = solrRoot + "igv/";
