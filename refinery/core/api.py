@@ -159,7 +159,7 @@ class WorkflowResource(ModelResource):
         detail_resource_name = 'workflow' 
         resource_name = 'workflow'
         detail_uri_name = 'uuid'
-        fields = ['name', 'internal_id', 'uuid']  
+        fields = ['name', 'uuid']  
         
 class WorkflowInputRelationshipsResource(ModelResource):
     #workflow = fields.ToOneField(WorkflowResource, 'workflow')
