@@ -938,11 +938,13 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
         for res in solr_results:
             ret_file_uuids.append(res["uuid"])
         return ret_file_uuids
-        
+    
+    '''    
     if num_found == 0:
         return None
     else:
         return results
+    '''
     
     return results    
     
