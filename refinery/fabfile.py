@@ -354,21 +354,18 @@ def install_refinery_requirements():
     '''
     execute(install_requirements,
             env_name=env.refinery_virtualenv_name,
-            requirements_path="../requirements.txt")
+            requirements_path=os.path.join(env.refinery_base_dir, "requirements.txt"))
 
 
 @task
 @with_settings(user=env.project_user)
 def upload_refinery_settings():
-    '''Upload appropriate settings_local file
+    '''Upload appropriate settings_local.py file
 
     '''
-    with prefix("workon {}".format(env.refinery_virtualenv_name)), hide('commands'):
-        refinery_home = run("pwd")
-    django_settings_path = os.path.join(env.local_django_root, env.dev_settings_file)
-    upload_template(django_settings_path,
-                    os.path.join(refinery_home, "settings_local.py"),
-                    backup=False)
+    local_path = os.path.join(env.local_conf_dir, env.dev_settings_file)
+    remote_path = os.path.join(env.refinery_base_dir, "refinery/settings_local.py")
+    upload_template(local_path, remote_path, backup=False)
 
 
 @task
