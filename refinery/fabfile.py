@@ -69,6 +69,11 @@ def dev():
         env.postgresql_devel = "postgresql84-devel"
     else:
         abort("{os} is not supported".format(**env))
+    env.app_dir = os.path.join(env.deployment_dir, "apps")
+    env.virtualenv_dir = os.path.join(env.deployment_dir, "virtualenvs")
+    env.data_dir = os.path.join(env.deployment_dir, "data")
+    env.refinery_base_dir = os.path.join(env.app_dir, "Refinery")
+    env.refinery_branch = "develop"
     # Galaxy config
     galaxy_base_dir = env.galaxy_root + "dev"
     env.galaxy_root = os.path.join(galaxy_base_dir, "live")
@@ -287,41 +292,69 @@ def configure_rabbitmq():
 
 @task
 @with_settings(user=env.project_user)
-def create_virtualenv(env_name):
-    '''Create a virtual environment using provided name
+def git_clone(branch, repo_url, target_dir):
+    '''Clone specified branch of Github repository
 
     '''
-    run("mkvirtualenv {}".format(env_name))
+    puts("Cloning branch '{}' from '{}' into {}"
+         .format(branch, repo_url, target_dir))
+    if exists(os.path.join(target_dir, ".git")):
+        puts("Git project already exists in '{}'".format(target_dir))
+    else:
+        run("git clone -b {} {} {}".format(branch, repo_url, target_dir))
 
 
 @task
 @with_settings(user=env.project_user)
-def clone_refinery(branch):
-    '''Clone the specified branch of the Refinery repository and create a new virtualenv project
+def clone_refinery():
+    '''Clone Refinery repository from Github
 
     '''
-    puts("Cloning Refinery into a new virtual project")
+    execute(git_clone,
+            branch=env.refinery_branch,
+            repo_url=env.refinery_repo_url,
+            target_dir=env.refinery_base_dir)
 
-    # check if PROJECT_HOME is defined and exists
-    with hide('commands'):
-        project_home = run("echo $PROJECT_HOME")
-    if not project_home:
-        abort("Missing $PROJECT_HOME")
-    if not exists(project_home):
-        run("mkdir {}".format(project_home))
+@task
+@with_settings(user=env.project_user)
+def create_virtualenv(env_name, project_path):
+    '''Create a virtual environment using provided name and
+    associate it with a project
 
-    # clone Refinery from Github
-    refinery_home = os.path.join(project_home, "Refinery")
-    if exists(os.path.join(refinery_home, ".git")):
-        puts("Git project already exists in '{}'".format(refinery_home))
-    else:
-        with cd(project_home):
-            run("git clone -b {} git@github.com:parklab/Refinery.git".format(branch))
+    '''
+    run("mkvirtualenv -a {} {}".format(project_path, env_name))
 
-    # associate the new project with its virtual environment
-    refinery_home = os.path.join(project_home, "Refinery", "refinery")  # for ./manage.py commands
-    with prefix("workon refinery"):
-        run("setvirtualenvproject $VIRTUAL_ENV {}".format(refinery_home))
+
+@task
+@with_settings(user=env.project_user)
+def create_refinery_virtualenv():
+    '''Create a virtual environment for Refinery
+
+    '''
+    execute(create_virtualenv,
+            env_name=env.refinery_virtualenv_name,
+            project_path=os.path.join(env.refinery_base_dir, "refinery"))
+
+
+@task
+@with_settings(user=env.project_user)
+def install_requirements(env_name, requirements_path):
+    '''Install Python packages listed in requirements.txt into the given virtualenv
+
+    '''
+    with prefix("workon {}".format(env_name)):
+        run("pip install -U -r {}".format(requirements_path))
+
+
+@task
+@with_settings(user=env.project_user)
+def install_refinery_requirements():
+    '''Install Refinery Python packages
+
+    '''
+    execute(install_requirements,
+            env_name=env.refinery_virtualenv_name,
+            requirements_path="../requirements.txt")
 
 
 @task
@@ -330,7 +363,7 @@ def upload_refinery_settings():
     '''Upload appropriate settings_local file
 
     '''
-    with prefix("workon refinery"), hide('commands'):
+    with prefix("workon {}".format(env.refinery_virtualenv_name)), hide('commands'):
         refinery_home = run("pwd")
     django_settings_path = os.path.join(env.local_django_root, env.dev_settings_file)
     upload_template(django_settings_path,
@@ -349,16 +382,6 @@ def update_refinery():
         run("git pull")
         run("./manage.py collectstatic --noinput")
         run("touch wsgi.py")
-
-
-@task
-@with_settings(user=env.project_user)
-def init_virtualenv(env_name):
-    '''Install requirements for the associated project
-
-    '''
-    with prefix("workon {}".format(env_name)):
-        run("pip install -U -r ../requirements.txt")
 
 
 @task
