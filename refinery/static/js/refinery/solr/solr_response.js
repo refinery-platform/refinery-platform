@@ -20,7 +20,7 @@ SolrResponse = function() {
 	self._facetCounts = {};		
 	self._pivotCounts = {};	
 	self._fieldList = [];
-	self._documentList = [];
+	self._documentList = [];	
 };	
 
 
@@ -91,7 +91,7 @@ SolrResponse.prototype._processFieldList = function ( response ) {
 	var self = this;
 	
 	var fieldList = [];
-	
+
 	for ( var i = 0; i < response.response.docs.length; ++i ) {
 		var document = response.response.docs[i];
 		

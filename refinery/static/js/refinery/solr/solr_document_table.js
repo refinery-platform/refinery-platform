@@ -1,5 +1,5 @@
 /*
- * data_set_solr_table.js
+ * solr_document_table.js
  *  
  * Author: Nils Gehlenborg 
  * Created: 28 January 2013
@@ -15,8 +15,12 @@
  * - SolrSelectClient
  */
 
+SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND = 'solr_document_selection_updated';
+SOLR_DOCUMENT_ORDER_UPDATED_COMMAND = 'solr_document_order_updated';
 
-SolrDocumentTable = function( parentElementId, idPrefix, solrQuery, solrClient, configurator ) {
+
+
+SolrDocumentTable = function( parentElementId, idPrefix, solrQuery, solrClient, configurator, commands ) {
   	
   	var self = this;
 	
@@ -31,7 +35,12 @@ SolrDocumentTable = function( parentElementId, idPrefix, solrQuery, solrClient, 
   	self.client = solrClient;
   	
   	// data set configuration
-  	self.configurator = configurator;  	
+  	self.configurator = configurator;
+  	
+  	// wreqr commands
+  	self._commands = commands;
+  	
+  	self.hiddenFieldNames = [ "uuid", "file_uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ]; // TODO: make these regexes;  	
 };	
 	
 	
@@ -47,14 +56,9 @@ SolrDocumentTable.prototype.initialize = function() {
  */
 SolrDocumentTable.prototype.render = function ( solrResponse ) {
 	var self = this;
-
+	
 	// clear parent element
-	$( "#" + self.parentElementId ).html("");
-	
-	var code = "Documents = " + solrResponse.getDocumentList().length;
-	
-	console.log( solrResponse.getDocumentList() );
-	
+	$( "#" + self.parentElementId ).html("");		
 	self._renderTable( solrResponse );
 	
 	//$( "#" + self.parentElementId ).html( code );		
@@ -70,23 +74,48 @@ SolrDocumentTable.prototype._renderTable = function( solrResponse ) {
 	var tableHead = self._generateTableHead( solrResponse );
 	var tableBody = self._generateTableBody( solrResponse );
 	
-	console.log( "th" + tableHead );	
-
 	$('<table/>', {	
 		'class': 'table table-striped table-condensed',
 		'id': 'table_matrix',
 		'html': tableHead + "<tbody>" + tableBody + "</tbody>"
-	}).appendTo('#' + self.parentElementId );	
+	}).appendTo('#' + self.parentElementId );
+	
+	// attach events
+	$( ".field-header-sort" ).on( "click", function( event ) {
+		var fieldName = $( event.target ).data( "fieldname" );
+		self.query.toggleFieldDirection( fieldName );
+		
+		self._commands.execute( SOLR_DOCUMENT_ORDER_UPDATED_COMMAND, { 'fieldname': fieldName } );		
+	});
+	
+	
+	$( ".document-checkbox-select" ).on( "click", function( event ) {				
+		var uuid = $( event.target ).data( "uuid" );		
+		var uuidIndex = self.query._documentSelection.indexOf( uuid );
+		
+		var event = ""
+		
+		if ( uuidIndex != -1 ) {
+			// remove element
+			self.query._documentSelection.splice( uuidIndex, 1 );
+			event = 'remove'; 			
+		}
+		else {
+			// add element
+			self.query._documentSelection.push( uuid );
+			event = 'add';
+		}
+
+		self._commands.execute( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, { 'uuid': uuid, 'event': event } );		
+	});	
+		
 }
 	
 	
 SolrDocumentTable.prototype._generateTableBody = function( solrResponse ) {
-	
-	var self = this;
-	
+	var self = this;	
 	var documents = solrResponse.getDocumentList();
-	var fields = self.query._fields; //solrResponse.getFieldList();
-	
+	var fields = self.query._fields;
 	var rows = [];
 	
 	for ( var i = 0; i < documents.length; ++i ) {		
@@ -94,21 +123,18 @@ SolrDocumentTable.prototype._generateTableBody = function( solrResponse ) {
 		
 		var s = "<tr>";
 		
-		var isDocumentSelected = self.query.isDocumentSelected( document.uuid ); 
-		
-		s += '<td><label><input id="document_' + document.uuid + '" data-uuid="' + document.uuid + '" class="document-selection-checkbox" type=\"checkbox\" ' + ( isDocumentSelected ? "checked" : "" ) + '></label>' + '</td>';							
+		var isDocumentSelected = self.query.isDocumentSelected( document.uuid );
+				
+		s += '<td><label><input class="document-checkbox-select" data-uuid="' + document["uuid"] + '" type=\"checkbox\" ' + ( isDocumentSelected ? "checked" : "" ) + '></label>' + '</td>';							
 
-		for ( entry in fields )
-		{
-			if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible && !fields[entry].isInternal ) {
-				if ( document.hasOwnProperty( entry ) ) //&& !( hiddenFieldNames.indexOf( entry ) >= 0 ) )
-				{
+		for ( entry in fields ) {
+			if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible && !fields[entry].isInternal  && !( self.hiddenFieldNames.indexOf( entry ) >= 0 ) ) {				
+				if ( document.hasOwnProperty( entry ) ) {
 					s += "<td>";
 					s += document[entry];
 					s += "</td>";				
 				}
-				else // this field does not exist in this result
-				{
+				else { // this field does not exist in this result
 					s += "<td>";
 					s += ""
 					s += "</td>";								
@@ -123,31 +149,44 @@ SolrDocumentTable.prototype._generateTableBody = function( solrResponse ) {
 }
 
 
-SolrDocumentTable.prototype._generateTableHead = function( solrResponse ) {
-	
-	var self = this;
-	
-	var row = [];
-	
+SolrDocumentTable.prototype._generateTableHead = function( solrResponse ) {	
+	var self = this;	
+	var row = [];	
 	var fields = self.query._fields;
 	
-	console.log( fields );
-
 	row.push( '<th align="left" width="0" id="node-selection-column-header"></th>' );	
 		
-	for ( field in fields ) {
-		if ( fields.hasOwnProperty( field ) ) {
-			if ( fields[field].isVisible ) {
-				if ( fields[field].direction === "asc" ) {
-					row.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\"><i class=\"icon-arrow-down\">&nbsp;" + prettifySolrFieldName( field, true ) + "</th>" );				
-				} else if ( fields[field].direction === "desc" ) {
-					row.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\"><i class=\"icon-arrow-up\">&nbsp;" + prettifySolrFieldName( field, true ) + "</th>" );				
-				} else {
-					row.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifySolrFieldName( field, true ) + "</th>" );									
-				}
+	for ( entry in fields ) {
+		if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible && !fields[entry].isInternal && !( self.hiddenFieldNames.indexOf( entry ) >= 0 ) ) {
+			if ( fields[entry].direction === "asc" ) {
+				row.push('<th align=left class="field-header-sort" data-fieldname="' + entry + '"><i class="icon-arrow-down"></i>&nbsp;' + prettifySolrFieldName( entry, true ) + '</th>' );				
+			} else if ( fields[entry].direction === "desc" ) {
+				row.push('<th align=left class="field-header-sort" data-fieldname="' + entry + '"><i class="icon-arrow-up"></i>&nbsp;' + prettifySolrFieldName( entry, true ) + '</th>' );				
+			} else {
+				row.push('<th align=left class="field-header-sort" data-fieldname="' + entry + '">' + prettifySolrFieldName( entry, true ) + '</th>' );				
 			}
 		}
 	}
 
 	return "<thead><tr>" + row.join("") + "</tr></thead>";	
 }
+
+
+SolrDocumentTable.prototype._composeFieldId = function( field ) {	
+	var self = this;
+	
+	return ( self.idPrefix + "___" + "field" + "___" + field );
+}
+
+
+SolrDocumentTable.prototype._decomposeFieldId = function( fieldId ) {	
+	var self = this;
+		
+	return ( { field: fieldId.split( "___" )[2] } );
+}
+
+
+
+
+
+

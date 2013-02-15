@@ -38,7 +38,7 @@ SOLR_FULL_QUERY =
 SOLR_QUERY_SELECTION_SERIALIZATION = 1;
 
 
-SolrQuery = function( configurator ) {
+SolrQuery = function( configurator, commands ) {
 	
   	var self = this;
   	
@@ -80,7 +80,6 @@ SolrQuery = function( configurator ) {
 	// depends on table etc. 
 	//self._hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ];
 	self._ignoredFieldNames = [ "django_ct", "django_id", "id" ];
-	//self._internalFieldNames = [];
 	
 	self._fields = {};
 	/* Data Structure
@@ -101,14 +100,18 @@ SolrQuery = function( configurator ) {
 	// -------------------------------------------------------------- 	
 	// a list of facet names for the pivot view
 	self._pivots = [];	
+	
+	
+	// wreqr commands object
+	self._commands = commands;	
 };	
 
 
 SolrQuery.prototype.initialize = function () {
 	var self = this;	
-	
+
 	var defaultSortFieldFound = false;
-	
+		
 	for ( var i = 0; i < self._configurator.state.objects.length; ++i ) {
 		var attribute = self._configurator.state.objects[i];
 		
@@ -188,7 +191,13 @@ SolrQuery.prototype._createFilterSelectionComponent = function () {
 	for ( var field in self._filterSelection ) {
 		if ( self._filterSelection.hasOwnProperty( field ) ) {
 			url += "&" + "fq=";
-			url += field + ":" + "(" + self._filterSelection[field].join( " OR " ) + ")";
+			
+			if ( $.isArray( self._filterSelection[field] ) ) {
+				url += field + ":" + "(" + self._filterSelection[field].join( " OR " ) + ")";				
+			}
+			else {
+				url += field + ":" + self._filterSelection[field];								
+			}			
 		}
 	}	
 	
@@ -230,6 +239,8 @@ SolrQuery.prototype._createFacetComponent = function () {
 	// ------------------------------------------------------------------------------
 	// selecting facets: facet.field, fq 	
 	// ------------------------------------------------------------------------------
+	
+	console.log(self._facetSelection);
 
 	for ( var facet in self._facetSelection ) {
 		var facetValues = self._facetSelection[facet];
@@ -290,7 +301,7 @@ SolrQuery.prototype._createFieldComponent = function () {
 	for ( var field in self._fields ) {
 		if ( self._fields.hasOwnProperty( field ) )
 		{			
-			if ( ( self._fields[field].isVisible ) || ( self._hiddenFieldNames.indexOf( field ) >= 0 ) ) {				
+			if ( self._fields[field].isVisible || self._fields[field].isInternal ) {				
 				// escape or encode special characters
 				field = field.replace( /\ /g, "\\ " );
 				field = field.replace( /\//g, "%2F" );
@@ -441,7 +452,11 @@ SolrQuery.prototype.isDocumentSelected = function ( uuid ) {
 	
 	var self = this;
 	
-	return ( self._documentSelection.indexOf( uuid ) > 0 && !self._documentSelectionBlacklistMode );	
+	if ( self._documentSelection.length == 0  && self._documentSelectionBlacklistMode ) {
+		return true;
+	}
+	
+	return ( self._documentSelection.indexOf( uuid ) >= 0 && !self._documentSelectionBlacklistMode );	
 }
 
 
@@ -587,11 +602,11 @@ SolrQuery.prototype.getFilter = function ( field ) {
 
 
 
-SolrQuery.prototype.addField = function ( name ) {
+SolrQuery.prototype.addField = function ( name, isVisible, isInternal, direction ) {
 	
 	var self = this;
-	
-	self.updateField( name, true, false, "" );
+
+	self.updateField( name, isVisible, isInternal, direction );
 	
 	return self;	
 };
@@ -636,23 +651,43 @@ SolrQuery.prototype.getFieldNames = function ( isVisible ) {
 };
 
 
-SolrQuery.prototype.toggleFieldDirection = function ( name ) {
+SolrQuery.prototype._clearFieldDirections = function() {
+	var self = this;
+	
+	for ( field in self._fields ) {
+		if ( self._fields.hasOwnProperty( field ) ) {
+			self._fields[field].direction = "";
+		}
+	}
+}
+
+
+SolrQuery.prototype.toggleFieldDirection = function( name ) {
 	
 	var self = this;
 	
-	if ( self._fields[name].direction === "asc" ) {
-		self._fields[name].direction = "desc";
-	}
+	console.log( name );
 	
-	if ( self._fields[name].direction === "desc" ) {
+	console.log( self._fields );
+		
+	if ( self._fields[name].direction === "asc" ) {
+		self._clearFieldDirections();
+		self._fields[name].direction = "desc";
+	}	
+	else if ( self._fields[name].direction === "desc" ) {
+		self._clearFieldDirections();
 		self._fields[name].direction = "asc";
+	}
+	else {
+		self._clearFieldDirections();
+		self._fields[name].direction = "asc";		
 	}
 	
 	return self;
 };
 
 
-SolrQuery.prototype.toggleFieldVisibility = function ( name ) {
+SolrQuery.prototype.toggleFieldVisibility = function( name ) {
 	
 	var self = this;
 	

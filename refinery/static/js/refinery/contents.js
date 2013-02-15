@@ -35,41 +35,64 @@ var dataSetNodeTypes = ['"Raw Data File"', '"Derived Data File"', '"Array Data F
 $(document).ready(function() {		
 	configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
 	configurator.initialize();
-	
-	/*
-	var client = new SolrClient( solrRoot,
-		solrSelectEndpoint,
-		"csrfMiddlewareToken",
-		"django_ct:data_set_manager.node",
-		"(study_uuid:" + currentAssayUuid + " AND assay_uuid:" + currentStudyUuid + ")" );
-
-	configurator.initialize( function() {
-		var q = new SolrQuery( configurator );
-		q.initialize();
-		q.addFilter( "type", dataSetNodeTypes );
 		
-		client.initialize( q, function(query) {
-			console.log( "Initialized query:" );			
-			console.log( query );
-			
-			var table = new SolrDocumentTable( "solr-table-view", "solrdoctab", query, client, configurator );
-			
-			client.run( query, SOLR_FULL_QUERY,  0, 10, function( response ) {
-				console.log( response );
-				
-				var serializedQuery = query.serialize( SOLR_QUERY_SELECTION_SERIALIZATION ); 
-				console.log( serializedQuery ); 
-				console.log( query.deserialize( serializedQuery ) ); 
-			});
-
-			client.run( query, SOLR_SELECTION_QUERY, 0, 5, function( response ) {
-				console.log( response );
-				table.render( response );
-			});			
-		});		
-	});
+	// event handling
+	var document_table_commands = new Backbone.Wreqr.Commands();
+	var facet_view_commands = new Backbone.Wreqr.Commands();
+	var client_commands = new Backbone.Wreqr.Commands();
+	var query_commands = new Backbone.Wreqr.Commands();
 	
-	*/
+	configurator.initialize( function() {
+		var query = new SolrQuery( configurator, query_commands );
+		query.initialize();
+		query.addFilter( "type", dataSetNodeTypes );
+		query.addFilter( "is_annotation", false );
+
+		var client = new SolrClient( solrRoot,
+			solrSelectEndpoint,
+			"csrfMiddlewareToken",
+			"django_ct:data_set_manager.node",
+			"(study_uuid:" + currentAssayUuid + " AND assay_uuid:" + currentStudyUuid + ")",
+			client_commands );
+
+		var tableView = new SolrDocumentTable( "solr-table-view", "solrdoctab1", query, client, configurator, document_table_commands );
+		var facetView = new SolrFacetView( "solr-facet-view", "solrfacets1", query, configurator, facet_view_commands );
+
+		client_commands.addHandler( SOLR_QUERY_INITIALIZED_COMMAND, function( arguments ){
+			console.log( SOLR_QUERY_INITIALIZED_COMMAND + ' executed' );
+			console.log( query );
+			client.run( query, SOLR_FULL_QUERY, 0, 10 );									
+		});
+
+		client_commands.addHandler( SOLR_QUERY_UPDATED_COMMAND, function( arguments ){
+			console.log( SOLR_QUERY_UPDATED_COMMAND + ' executed' );  				
+			console.log( arguments );
+			
+			tableView.render( arguments.response );
+			facetView.render( arguments.response );
+		});
+				
+		document_table_commands.addHandler( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, function( arguments ){
+			console.log( "the document_selection_update command was executed" );  				
+			console.log( arguments );
+		});
+
+		document_table_commands.addHandler( SOLR_DOCUMENT_ORDER_UPDATED_COMMAND, function( arguments ){
+			console.log( "the solr_query_update command was executed" );  				
+			console.log( arguments );
+			
+			client.run( query, SOLR_FULL_QUERY, 0, 10 );
+		});
+
+		facet_view_commands.addHandler( SOLR_FACET_SELECTION_UPDATED_COMMAND, function( arguments ){
+			console.log( SOLR_FACET_SELECTION_UPDATED_COMMAND + ' executed' );  				
+			console.log( arguments );
+			
+			client.run( query, SOLR_FULL_QUERY, 0, 10 );
+		});
+
+		client.initialize( query );		
+	});
 	
 	/*	
 	nodeSetManager = new NodeSetManager( externalAssayUuid, externalStudyUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
@@ -440,6 +463,8 @@ function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 		pivots.push( Object.keys( facets )[0] );
 		pivots.push( Object.keys( facets )[1] );
 		
+		console.log(facets);
+		
 		getData( studyUuid, assayUuid, nodeType )				
 	} });	
 }
@@ -569,6 +594,11 @@ function composeFacetId( facet ) {
 	return ( "facet" + "___" + facet );
 }
 
+function decomposeFacetId( facetId ) {
+	return ( { facet: facetId.split( "___" )[1] } );
+}
+
+
 function updateDownloadButton( button_id ) {
 	if ( currentCount > MAX_DOWNLOAD_FILES || currentCount <= 0 || !REFINERY_USER_AUTHENTICATED || ( showAnnotation && !allowAnnotationDownload ) ) {
 		$("#" + button_id ).addClass( "disabled" );
@@ -587,10 +617,6 @@ function updateIgvButton( button_id ) {
 	}
 }
 
-
-function decomposeFacetId( facetId ) {
-	return ( { facet: facetId.split( "___" )[1] } );
-}
 
 
 function processFacets( data ) {

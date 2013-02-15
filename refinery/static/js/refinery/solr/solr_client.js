@@ -15,7 +15,10 @@
  * - SolrQuery
  */
 
-SolrClient = function( apiBaseUrl, apiEndpoint, crsfMiddlewareToken, baseQuery, baseFilter ) {  	
+SOLR_QUERY_INITIALIZED_COMMAND = 'solr_query_initialized';
+SOLR_QUERY_UPDATED_COMMAND = 'solr_query_updated';
+
+SolrClient = function( apiBaseUrl, apiEndpoint, crsfMiddlewareToken, baseQuery, baseFilter, commands ) {  	
   	var self = this;
 
   	// API related properties
@@ -25,9 +28,11 @@ SolrClient = function( apiBaseUrl, apiEndpoint, crsfMiddlewareToken, baseQuery, 
   	
   	self._baseQuery = baseQuery; // e.g. "q=django_ct:data_set_manager.node";
   	self._baseFilter = baseFilter; // e.g. "fq=(study_uuid:<some id> AND assay_uuid:<someotherid> AND ...)"
-	self._baseSettings = "wt=json&json.wrf=?";		
+	self._baseSettings = "wt=json&json.wrf=?";
+		
+	// wreqr commands
+	self._commands = commands;
 };	
-
 
 SolrClient.prototype._createBaseUrl = function( start, rows ) {
 	
@@ -56,8 +61,10 @@ SolrClient.prototype.initialize = function ( query, callback ) {
 		
 		query.initialize();
 		query.setTotalDocumentCount( data.response.numFound );
+		
+		self._commands.execute( SOLR_QUERY_INITIALIZED_COMMAND );
 								
-		if ( typeof callback !== 'undefined' ) {			
+		if ( typeof callback !== 'undefined' ) {						
 			callback( query );
 		}
 	}});
@@ -76,9 +83,13 @@ SolrClient.prototype.run = function ( query, queryComponents, start, rows, callb
 	
 	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {
 				
-		if ( typeof callback !== 'undefined' ) {
-			var response = new SolrResponse();			
-			callback( response.initialize( data ) );
+		var response = new SolrResponse();		
+		var response = response.initialize( data );
+		
+		self._commands.execute( SOLR_QUERY_UPDATED_COMMAND, { 'response': response } );
+
+		if ( typeof callback !== 'undefined' ) {				
+			callback( response );
 		}
 	}});		
 };
