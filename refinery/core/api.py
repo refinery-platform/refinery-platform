@@ -86,6 +86,7 @@ class NodeSetResource(ModelResource):
         fields = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query']
         ordering = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query']
         allowed_methods = ["get", "patch", "put", "post" ]
+        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
 
     def prepend_urls(self):
         return [

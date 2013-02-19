@@ -761,8 +761,12 @@ def analysis(request, analysis_uuid ):
     # NG: get file_store items for inputs
     input_filenames = []
     for workflow_input in data_inputs.all():
-        input_filenames.append( os.path.basename( FileStoreItem.objects.get(uuid=workflow_input.data_uuid).get_file_object().name ) ) 
-    
+        #print "core crap";
+        #print workflow_input.data_uuid
+        #print workflow_input
+        file_uuid = Node.objects.get( uuid=workflow_input.data_uuid ).file_uuid
+        input_filenames.append( os.path.basename( FileStoreItem.objects.get(uuid=file_uuid).get_file_object().name ) ) 
+        
     return render_to_response('core/analysis.html',
                               {
                                "analysis": analysis,
@@ -892,12 +896,12 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
     # converting results into json for python 
     results = simplejson.loads(results)
     
-    '''
     # number of solr results 
     if selected_mode:
         num_found = int(results["response"]["numFound"])
     else:
         num_found = 0
+    '''
     
     #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
     
@@ -928,6 +932,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
     
     #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
     #logger.debug(simplejson.dumps(results, indent=4))
+        '''
     
     # Will return only list of file_uuids
     if only_uuids:
@@ -941,7 +946,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
         return None
     else:
         return results
-    '''
+
     
     return results    
     
