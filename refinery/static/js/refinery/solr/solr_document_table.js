@@ -139,6 +139,26 @@ SolrDocumentTable.prototype._renderTable = function( solrResponse ) {
 	});
 	
 	
+	// attach event to node selection mode checkbox
+	$( "#" + "node-selection-mode" ).click( function( event ){
+		if ( self._query.getDocumentSelectionBlacklistMode() ) {
+			self._query.setDocumentSelectionBlacklistMode( false );					
+			self._query.clearDocumentSelection();
+			
+			$( "." + "document-checkbox-select" ).removeAttr( "checked" );			
+		}
+		else {
+			self._query.setDocumentSelectionBlacklistMode( true);					
+			self._query.clearDocumentSelection();
+			
+			$( "." + "document-checkbox-select" ).attr( "checked", "checked" );
+		}		
+		
+		self._commands.execute( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, { 'event': event } );				
+	});
+	
+	
+	
 	$( ".document-checkbox-select" ).on( "click", function( event ) {				
 		var uuid = $( event.target ).data( "uuid" );		
 		var uuidIndex = self._query._documentSelection.indexOf( uuid );
@@ -204,7 +224,10 @@ SolrDocumentTable.prototype._generateTableHead = function( solrResponse ) {
 	var row = [];	
 	var fields = self._query._fields;
 	
-	row.push( '<th align="left" width="0" id="node-selection-column-header"></th>' );	
+	var nodeSelectionModeCheckbox = '<label><input id="node-selection-mode" type=\"checkbox\" ' + ( self._query.getDocumentSelectionBlacklistMode() ? "checked" : "" ) + '></label>';
+	//$( "#" + "node-selection-column-header" ).html( nodeSelectionModeCheckbox );	
+
+	row.push( '<th align="left" width="0" id="node-selection-column-header">'+ nodeSelectionModeCheckbox + '</th>' );	
 		
 	for ( entry in fields ) {
 		if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible && !fields[entry].isInternal && !( self._hiddenFieldNames.indexOf( entry ) >= 0 ) ) {
@@ -243,9 +266,10 @@ SolrDocumentTable.prototype._generateDocumentsPerPageControl = function( parentE
    		if ( self._documentsPerPage != $(this).data( "documents" ) ) {
 	   		self._documentsPerPage = $(this).data( "documents" );
 	   		
-	   		self._query.setLastDocument( Math.min( self._query.getFirstDocument() + self._documentsPerPage, self._query.getTotalDocumentCount() ) ); 
+	   		self._query.setDocumentIndex( Math.max( 0, self._query.getDocumentIndex() - ( self._query.getDocumentIndex() % self._documentsPerPage ) ) ); 
+	   		self._query.setDocumentCount( self._documentsPerPage ); 
 	   		
-			self._commands.execute( SOLR_DOCUMENT_COUNT_PER_PAGE_UPDATED_COMMAND, { 'documents_per_page': self._documents_per_page } );			   		
+			self._commands.execute( SOLR_DOCUMENT_COUNT_PER_PAGE_UPDATED_COMMAND, { 'count': self._documents_per_page } );			   		
    		}
    	});	
 }
@@ -305,10 +329,8 @@ SolrDocumentTable.prototype._generatePagerControl = function( parentElementId, v
    	
    	$( "#" + parentElementId ).html("");
    	
-	var availablePages = Math.max( 0, Math.ceil( self._query.getCurrentDocumentCount()/self._documentsPerPage ) - 1 );
-	var currentPage = Math.floor( self._query.getFirstDocument()/self._documentsPerPage );
-	
-	console.log( "ap: " + availablePages + "  cp: " + currentPage );	
+	var availablePages = Math.max( 0, Math.floor( self._query.getCurrentDocumentCount( false )/self._documentsPerPage ) );
+	var currentPage = Math.floor( self._query.getDocumentIndex()/self._documentsPerPage );
 
 	if ( currentPage > availablePages ) {
 		currentPage = availablePages;
@@ -379,16 +401,13 @@ SolrDocumentTable.prototype._generatePagerControl = function( parentElementId, v
 			currentPage = page - 1;			
 		}
 		
-		self._query.setFirstDocument( currentPage * self._documentsPerPage );
-		self._query.setLastDocument( ( currentPage + 1 ) * self._documentsPerPage  );
+		self._query.setDocumentIndex( currentPage * self._documentsPerPage );
 				
 		self._commands.execute( SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND, { 'page': currentPage } );			   				 							  
 	});
    	
    	
 }
-
-
 
 
 SolrDocumentTable.prototype._composeFieldId = function( field ) {	
@@ -404,6 +423,27 @@ SolrDocumentTable.prototype._decomposeFieldId = function( fieldId ) {
 	return ( { field: fieldId.split( "___" )[2] } );
 }
 
+
+SolrDocumentTable.prototype.setDocumentsPerPage = function( count, isSilent ) {
+	var self = this;
+	
+	isSilent = typeof isSilent !== 'undefined' ? isSilent : true;	
+	
+	self._documentsPerPage = count;
+
+	if ( !isSilent ) {
+		self._commands.execute( SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND, { 'page': currentPage } );
+	}
+	
+	return self;
+}
+
+
+SolrDocumentTable.prototype.getDocumentsPerPage = function() {
+	var self = this;
+	
+	return self._documentsPerPage;
+}
 
 
 

@@ -34,15 +34,15 @@ SolrClient = function( apiBaseUrl, apiEndpoint, crsfMiddlewareToken, baseQuery, 
 	self._commands = commands;
 };	
 
-SolrClient.prototype._createBaseUrl = function( firstDocument, lastDocument ) {
+SolrClient.prototype._createBaseUrl = function( documentIndex, documentCount ) {
 	
 	var self = this;
 	
 	var url = self._apiBaseUrl + self._apiEndpoint
 		+ "?" + "q=" + self._baseQuery 
 		+ "&" + self._baseSettings		
-		+ "&" + "start=" + firstDocument
-		+ "&" + "rows=" + (lastDocument - firstDocument)
+		+ "&" + "start=" + documentIndex
+		+ "&" + "rows=" + documentCount
 		+ "&" + "fq=" + self._baseFilter;
 		
 	return url;	
@@ -55,7 +55,7 @@ SolrClient.prototype._createBaseUrl = function( firstDocument, lastDocument ) {
 SolrClient.prototype.initialize = function ( query, callback ) {
 	
 	var self = this;	
-	var url = self._createBaseUrl( query.getFirstDocument(), query.getFirstDocument() + 1 ) + query.create( SOLR_FILTER_QUERY );
+	var url = self._createBaseUrl( query.getDocumentIndex(), query.getDocumentIndex() + 1 ) + query.create( SOLR_FILTER_QUERY );
 		
 	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {
 		
@@ -78,7 +78,7 @@ SolrClient.prototype.initialize = function ( query, callback ) {
 SolrClient.prototype.run = function ( query, queryComponents, callback ) {
 	
 	var self = this;	
-	var url = self._createBaseUrl( query.getFirstDocument(), query.getLastDocument() ) + query.create( queryComponents );
+	var url = self._createBaseUrl( query.getDocumentIndex(), query.getDocumentCount() ) + query.create( queryComponents );
 	
 	//console.log( url );
 	

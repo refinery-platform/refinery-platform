@@ -56,12 +56,33 @@ $(document).ready(function() {
 			client_commands );
 
 		var tableView = new SolrDocumentTable( "solr-table-view", "solrdoctab1", query, client, configurator, document_table_commands );
+		tableView.setDocumentsPerPage( 20 );
+		
 		var facetView = new SolrFacetView( "solr-facet-view", "solrfacets1", query, configurator, facet_view_commands );
 		var documentCountView = new SolrDocumentCountView( "solr-document-count-view", "solrcounts1", query, undefined );
+
+		query_commands.addHandler( SOLR_QUERY_DESERIALIZED_COMMAND, function( arguments ){
+			console.log( SOLR_QUERY_DESERIALIZED_COMMAND + ' executed' );
+			console.log( query );
+			
+			query.setDocumentIndex( 0 );
+			
+			client.run( query, SOLR_FULL_QUERY );									
+		});
+
+		query_commands.addHandler( SOLR_QUERY_SERIALIZED_COMMAND, function( arguments ){
+			console.log( SOLR_QUERY_SERIALIZED_COMMAND + ' executed' );
+			
+			// do nothing
+		});
+
 
 		client_commands.addHandler( SOLR_QUERY_INITIALIZED_COMMAND, function( arguments ){
 			console.log( SOLR_QUERY_INITIALIZED_COMMAND + ' executed' );
 			//console.log( query );
+			
+			query.setDocumentIndex( 0 );
+			query.setDocumentCount( tableView.getDocumentsPerPage() );
 			
 			client.run( query, SOLR_FULL_QUERY );									
 		});
@@ -133,32 +154,30 @@ $(document).ready(function() {
 			client.run( query, SOLR_FULL_QUERY );
 		});
 
+		// ---------------------------
+		// node set manager
+		// ---------------------------
+		nodeSetManager = new NodeSetManager( externalAssayUuid, externalStudyUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
+		nodeSetManager.initialize();
+		
+		nodeSetManager.setLoadSelectionCallback( function( nodeSet ) {
+			query.deserialize( nodeSet.solr_query );						
+		});
+		
+		nodeSetManager.setSaveSelectionCallback( function() {
+			var solr_query = query.serialize();
+			nodeSetManager.postState( "" + Date(), "Summary for Node Set", solr_query, query.getCurrentDocumentCount(), function(){
+			});
+		});
 
 		client.initialize( query );		
 	});
-	
-	/*	
-	nodeSetManager = new NodeSetManager( externalAssayUuid, externalStudyUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
-	nodeSetManager.initialize();
-	
-	nodeSetManager.setLoadSelectionCallback( function( nodeSet ) {
-		// reset current node selection
-		nodeSelection = [];
-		nodeSelectionBlacklistMode = false;
-				
-		getData( currentAssayUuid, currentStudyUuid, currentNodeType, nodeSet.solr_query );				
-	});
-	
-	nodeSetManager.setSaveSelectionCallback( function() {
-		var solr_query = buildSolrQuery( currentAssayUuid, currentStudyUuid, currentNodeType, 0, query.total_items, facets, fields, {}, showAnnotation );
-		nodeSetManager.postState( "" + Date(), "Summary for Node Set", solr_query, query.selected_items, function(){
-		});
-	});
-	*/
 
+	
 	configurator.getState( function() {
-		initializeDataWithState( currentAssayUuid, currentStudyUuid, currentNodeType );	
+		//initializeDataWithState( currentAssayUuid, currentStudyUuid, currentNodeType );	
 	});
+	
 });    		
 
 var showAnnotation = false;

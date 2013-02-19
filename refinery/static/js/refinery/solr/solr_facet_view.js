@@ -62,6 +62,8 @@ SolrFacetView.prototype.render = function ( solrResponse ) {
 		// clear facet selection
 		var counter = self._query.clearFacetSelection();
 		
+		self._query.clearDocumentSelection();
+		
 		// reload page
 		if ( counter > 0 ) {
    			self._commands.execute( SOLR_FACET_SELECTION_CLEARED_COMMAND );   						
@@ -93,6 +95,8 @@ SolrFacetView.prototype._renderTree = function( solrResponse ) {
    		var facetValue = self._decomposeFacetValueId( facetValueId ).facetValue;
    	   		
    		self._query._facetSelection[facet][facetValue].isSelected = !self._query._facetSelection[facet][facetValue].isSelected;
+
+		self._query.clearDocumentSelection();
    		
    		self._commands.execute( SOLR_FACET_SELECTION_UPDATED_COMMAND, { 'facet': facet, 'facet_value': facetValue, 'isSelected': self._query._facetSelection[facet][facetValue].isSelected } );   		
    	} );	

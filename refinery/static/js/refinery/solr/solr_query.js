@@ -27,7 +27,7 @@ SOLR_SELECTION_QUERY =
 	SOLR_FACET_QUERY |
 	SOLR_FILTER_QUERY;
 
-SOLR_FULL_QUERY =
+SOLR_FULL_WITH_DOCUMENT_QUERY =
 	SOLR_DOCUMENT_QUERY |
 	SOLR_FACET_QUERY |
 	SOLR_FILTER_QUERY |
@@ -35,7 +35,18 @@ SOLR_FULL_QUERY =
 	SOLR_SORT_QUERY |
 	SOLR_PIVOT_QUERY; 
 
+SOLR_FULL_QUERY =
+	SOLR_FACET_QUERY |
+	SOLR_FILTER_QUERY |
+	SOLR_FIELD_QUERY |
+	SOLR_SORT_QUERY |
+	SOLR_PIVOT_QUERY; 
+
 SOLR_QUERY_SELECTION_SERIALIZATION = 1;
+
+// commands
+SOLR_QUERY_DESERIALIZED_COMMAND = 'solr_query_deserialized';
+SOLR_QUERY_SERIALIZED_COMMAND = 'solr_query_serialized';
 
 
 SolrQuery = function( configurator, commands ) {
@@ -104,8 +115,8 @@ SolrQuery = function( configurator, commands ) {
 	self._totalDocumentCount = undefined;
 	self._currentDocumentCount = undefined;
 	
-	self._firstDocument = 0;
-	self._lastDocument = self._firstDocument + 10;	
+	self._documentIndex = 0;
+	self._documentCount = 1;	
 	
 	// wreqr commands object
 	self._commands = commands;	
@@ -455,11 +466,22 @@ SolrQuery.prototype.isDocumentSelected = function ( uuid ) {
 	
 	var self = this;
 	
-	if ( self._documentSelection.length == 0  && self._documentSelectionBlacklistMode ) {
-		return true;
+	if ( self._documentSelectionBlacklistMode ) {
+		if ( self._documentSelection.length == 0 ) {
+			return true;			
+		}
+		else {
+			return self._documentSelection.indexOf( uuid ) < 0;
+		}
+	} 
+	else {
+		if ( self._documentSelection.length == 0 ) {
+			return false;			
+		}
+		else {
+			return self._documentSelection.indexOf( uuid ) >= 0;
+		}		
 	}
-	
-	return ( self._documentSelection.indexOf( uuid ) >= 0 && !self._documentSelectionBlacklistMode );	
 }
 
 
@@ -471,7 +493,7 @@ SolrQuery.prototype.serialize = function ( mode ) {
 	var serializedQuery = {};
 	
 	if ( mode == SOLR_QUERY_SELECTION_SERIALIZATION ) {
-		serializedQuery["facetSelection"] = self._facetSelection;
+		serializedQuery["facetSelection"] = self._facetSelection; //$.extend(true, {}, self._facetSelection );
 		serializedQuery["filterSelection"] = self._filterSelection;
 		serializedQuery["documentSelection"] = self._documentSelection;
 		serializedQuery["documentSelectionBlacklistMode"] = self._documentSelectionBlacklistMode;	
@@ -479,8 +501,12 @@ SolrQuery.prototype.serialize = function ( mode ) {
 	else {
 		// TODO: implement full serialization
 	}
-		
-	return JSON.stringify( serializedQuery );
+
+	var queryString = JSON.stringify( serializedQuery );
+
+	self._commands.execute( SOLR_QUERY_SERIALIZED_COMMAND, { "query": queryString } );				
+	
+	return queryString;
 };
 
 
@@ -498,12 +524,14 @@ SolrQuery.prototype.deserialize = function ( serializedQuery ) {
 	}
 
 	if ( deserializedQuery.hasOwnProperty( "documentSelection" ) ) {
-		self._documentelection = deserializedQuery["documentSelection"];
+		self._documentSelection = deserializedQuery["documentSelection"];
 	}
 
 	if ( deserializedQuery.hasOwnProperty( "documentSelectionBlacklistMode" ) ) {
 		self._documentSelectionBlacklistMode = deserializedQuery["documentSelectionBlacklistMode"];
 	}
+	
+	self._commands.execute( SOLR_QUERY_DESERIALIZED_COMMAND );
 	
 	return deserializedQuery;
 };
@@ -514,7 +542,7 @@ SolrQuery.prototype.addFacet = function ( name ) {
 	var self = this;
 	
 	// initialize facet
-	self._facetSelection[name] = [];
+	self._facetSelection[name] = {};
 };
 
 
@@ -728,48 +756,72 @@ SolrQuery.prototype.setCurrentDocumentCount = function( documentCount ) {
 };
 
 
-SolrQuery.prototype.getCurrentDocumentCount = function() {
-	
+SolrQuery.prototype.getCurrentDocumentCount = function( includeDocumentSelection ) {
+		
 	var self = this;
 	
-    return ( self._documentSelectionBlacklistMode ? self._currentDocumentCount - self._documentSelection.length : self._documentSelection.length ); 
+	includeDocumentSelection = typeof includeDocumentSelection !== 'undefined' ? includeDocumentSelection : true;			
+	
+	if ( includeDocumentSelection ) {
+	    return ( self._documentSelectionBlacklistMode ? self._currentDocumentCount - self._documentSelection.length : self._documentSelection.length ); 
+	}
+	
+	return ( self._currentDocumentCount );	
 };
 
 
-SolrQuery.prototype.setFirstDocument = function( document ) {
+SolrQuery.prototype.setDocumentIndex = function( index ) {
 	
 	var self = this;
 	
-    self._firstDocument = document;
+    self._documentIndex = index;
     
     return self; 
 };
 
 
-SolrQuery.prototype.getFirstDocument = function() {
+SolrQuery.prototype.getDocumentIndex = function() {
 	
 	var self = this;
 	
-    return self._firstDocument; 
+    return self._documentIndex; 
 };
 
 
 
-SolrQuery.prototype.setLastDocument = function( document ) {
+SolrQuery.prototype.setDocumentCount = function( count ) {
 	
 	var self = this;
 	
-    self._lastDocument = document;
+    self._documentCount = count;
     
     return self; 
 };
 
 
-SolrQuery.prototype.getLastDocument = function() {
+SolrQuery.prototype.getDocumentCount = function() {
 	
 	var self = this;
 	
-    return self._lastDocument; 
+    return self._documentCount; 
 };
+
+
+SolrQuery.prototype.setDocumentSelectionBlacklistMode = function( blacklistMode ) {
+	
+	var self = this;
+	
+	self._documentSelectionBlacklistMode = blacklistMode;
+	
+	return this;
+}
+
+
+SolrQuery.prototype.getDocumentSelectionBlacklistMode = function() {
+	
+	var self = this;
+	
+	return self._documentSelectionBlacklistMode;
+}
 
 
