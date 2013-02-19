@@ -34,8 +34,12 @@ from fabric.contrib.files import exists, upload_template
 from fabric.decorators import task, with_settings
 from fabric.operations import require
 from fabric.utils import puts
+
+
+env.local_project_dir = os.path.dirname(os.path.abspath(__file__))
+
 # Django integration
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(env.local_project_dir)
 # use import as to avoid conflict with fabric.api.settings
 from django.conf import settings as django_settings
 
@@ -71,6 +75,7 @@ def dev():
     env.virtualenv_dir = os.path.join(env.deployment_dir, "virtualenvs")
     env.data_dir = os.path.join(env.deployment_dir, "data")
     env.refinery_base_dir = os.path.join(env.app_dir, "Refinery")
+    env.conf_dir = os.path.join(env.deployment_dir, "etc")
     env.refinery_branch = "develop"
     # Galaxy config
     galaxy_base_dir = env.galaxy_root + "dev"
@@ -361,7 +366,7 @@ def upload_refinery_settings():
     '''Upload appropriate settings_local.py file
 
     '''
-    local_path = os.path.join(env.local_conf_dir, env.dev_settings_file)
+    local_path = os.path.join(env.local_project_dir, env.dev_settings_file)
     remote_path = os.path.join(env.refinery_base_dir, "refinery/settings_local.py")
     upload_template(local_path, remote_path, backup=False)
     with prefix("workon refinery"):
@@ -401,7 +406,7 @@ def create_refinery_db():
 @task
 @with_settings(user=env.project_user)
 def create_refinery_data_dirs():
-    '''Create Refinery data storage directories
+    '''Create Refinery data directories
 
     '''
     puts("Creating Refinery top-level data directory '{}'".format(env.data_dir))
@@ -409,9 +414,6 @@ def create_refinery_data_dirs():
         run("mkdir '{}'".format(env.data_dir))
     else:
         puts("'{}' already exists".format(env.data_dir))
-
-    for path in sys.path: puts(path)
-    puts(os.environ['DJANGO_SETTINGS_MODULE'])
 
     puts("Creating Refinery MEDIA_ROOT directory '{}'"
          .format(django_settings.MEDIA_ROOT))
@@ -428,12 +430,12 @@ def create_refinery_data_dirs():
     else:
         puts("'{}' already exists".format(file_store_dir))
 
-    puts("Creating Refinery DOWNLOAD_BASE_DIR directory '{}'"
-         .format(django_settings.DOWNLOAD_BASE_DIR))
-    if not exists(django_settings.DOWNLOAD_BASE_DIR):
-        run("mkdir '{}'".format(django_settings.DOWNLOAD_BASE_DIR))
+    puts("Creating Refinery STATIC_ROOT directory '{}'"
+         .format(django_settings.STATIC_ROOT))
+    if not exists(django_settings.STATIC_ROOT):
+        run("mkdir '{}'".format(django_settings.STATIC_ROOT))
     else:
-        puts("'{}' already exists".format(django_settings.DOWNLOAD_BASE_DIR))
+        puts("'{}' already exists".format(django_settings.STATIC_ROOT))
 
     puts("Creating Refinery ISA_TAB_DIR directory '{}'"
          .format(django_settings.ISA_TAB_DIR))
