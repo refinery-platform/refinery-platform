@@ -12,7 +12,7 @@
  * Dependencies:
  */
 
-SolrResponse = function() {
+SolrResponse = function( query ) {
 	
   	var self = this;
   	
@@ -20,7 +20,9 @@ SolrResponse = function() {
 	self._facetCounts = {};		
 	self._pivotCounts = {};	
 	self._fieldList = [];
-	self._documentList = [];	
+	self._documentList = [];
+	
+	self._query = query;	
 };	
 
 

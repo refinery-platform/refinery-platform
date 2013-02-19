@@ -57,39 +57,82 @@ $(document).ready(function() {
 
 		var tableView = new SolrDocumentTable( "solr-table-view", "solrdoctab1", query, client, configurator, document_table_commands );
 		var facetView = new SolrFacetView( "solr-facet-view", "solrfacets1", query, configurator, facet_view_commands );
+		var documentCountView = new SolrDocumentCountView( "solr-document-count-view", "solrcounts1", query, undefined );
 
 		client_commands.addHandler( SOLR_QUERY_INITIALIZED_COMMAND, function( arguments ){
 			console.log( SOLR_QUERY_INITIALIZED_COMMAND + ' executed' );
-			console.log( query );
-			client.run( query, SOLR_FULL_QUERY, 0, 10 );									
+			//console.log( query );
+			
+			client.run( query, SOLR_FULL_QUERY );									
 		});
 
 		client_commands.addHandler( SOLR_QUERY_UPDATED_COMMAND, function( arguments ){
 			console.log( SOLR_QUERY_UPDATED_COMMAND + ' executed' );  				
-			console.log( arguments );
+			//console.log( arguments );
 			
 			tableView.render( arguments.response );
 			facetView.render( arguments.response );
+			documentCountView.render( arguments.response );
 		});
 				
 		document_table_commands.addHandler( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, function( arguments ){
-			console.log( "the document_selection_update command was executed" );  				
-			console.log( arguments );
+			console.log( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND + ' executed' );  				
+			//console.log( arguments );
+
+			documentCountView.render( arguments.response );
 		});
 
 		document_table_commands.addHandler( SOLR_DOCUMENT_ORDER_UPDATED_COMMAND, function( arguments ){
-			console.log( "the solr_query_update command was executed" );  				
-			console.log( arguments );
+			console.log( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND + ' executed' );  				
+			//console.log( arguments );
 			
-			client.run( query, SOLR_FULL_QUERY, 0, 10 );
+			client.run( query, SOLR_FULL_QUERY );
 		});
+
+		document_table_commands.addHandler( SOLR_FIELD_VISIBILITY_UPDATED_COMMAND, function( arguments ){
+			console.log( SOLR_FIELD_VISIBILITY_UPDATED_COMMAND + ' executed' );  				
+			//console.log( arguments );
+			
+			client.run( query, SOLR_FULL_QUERY );
+		});
+
+		document_table_commands.addHandler( SOLR_DOCUMENT_COUNT_PER_PAGE_UPDATED_COMMAND, function( arguments ){
+			console.log( SOLR_DOCUMENT_COUNT_PER_PAGE_UPDATED_COMMAND + ' executed' );  				
+			//console.log( arguments );
+			
+			client.run( query, SOLR_FULL_QUERY );
+		});
+
+		document_table_commands.addHandler( SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND, function( arguments ){
+			console.log( SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND + ' executed' );  				
+			//console.log( arguments );
+
+			client.run( query, SOLR_FULL_QUERY );
+		});
+
 
 		facet_view_commands.addHandler( SOLR_FACET_SELECTION_UPDATED_COMMAND, function( arguments ){
 			console.log( SOLR_FACET_SELECTION_UPDATED_COMMAND + ' executed' );  				
-			console.log( arguments );
+			//console.log( arguments );
 			
-			client.run( query, SOLR_FULL_QUERY, 0, 10 );
+			client.run( query, SOLR_FULL_QUERY );
 		});
+
+		facet_view_commands.addHandler( SOLR_FACET_SELECTION_CLEARED_COMMAND, function( arguments ){
+			console.log( SOLR_FACET_SELECTION_CLEARED_COMMAND + ' executed' );  				
+			//console.log( arguments );
+			
+			client.run( query, SOLR_FULL_QUERY );
+		});
+
+
+		facet_view_commands.addHandler( SOLR_FACET_SELECTION_UPDATED_COMMAND, function( arguments ){
+			console.log( SOLR_FACET_SELECTION_UPDATED_COMMAND + ' executed' );  				
+			//console.log( arguments );
+			
+			client.run( query, SOLR_FULL_QUERY );
+		});
+
 
 		client.initialize( query );		
 	});
@@ -512,10 +555,10 @@ function getData( studyUuid, assayUuid, nodeType, solr_query ) {
 				getData( currentAssayUuid, currentStudyUuid, currentNodeType );
 			}
 			else {
-				processFacets( data );
-				processFields();
-				processDocs( data );
-				processPages( data );
+				//processFacets( data );
+				//processFields();
+				//processDocs( data );
+				//processPages( data );
 				
 				//processPivots( data );				
 				
@@ -872,7 +915,7 @@ function processFields() {
    		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
    	} );				
    	
-   	// configure rows
+   	// configure rows   	
    	$( "#" + "items-per-page-buttons" ).html("");
    	for ( var i = 0; i < itemsPerPageOptions.length; ++i ) {
    		if ( itemsPerPageOptions[i] == currentItemsPerPage ) {

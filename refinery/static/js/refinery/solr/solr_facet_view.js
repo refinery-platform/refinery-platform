@@ -15,6 +15,7 @@
  */
 
 SOLR_FACET_SELECTION_UPDATED_COMMAND = 'solr_facet_selection_updated';
+SOLR_FACET_SELECTION_CLEARED_COMMAND = 'solr_facet_selection_cleared';
 
 SolrFacetView = function( parentElementId, idPrefix, solrQuery, configurator, commands ) {
   	
@@ -53,7 +54,20 @@ SolrFacetView.prototype.render = function ( solrResponse ) {
 	var self = this;
 	
 	// clear parent element
-	$( "#" + self.parentElementId ).html("");		
+	$( "#" + self._parentElementId ).html("");
+	
+	$( "#" + self._parentElementId ).append( "<a id=\"clear-facets\" href=\"#\" class=\"btn btn-mini\" data-placement=\"bottom\" data-html=\"true\" rel=\"tooltip\" data-original-title=\"Click to clear facet selection.\"><i class=\"icon-remove-sign\"></i>&nbsp;&nbsp;Reset All</a>" );
+   	
+   	$( "#clear-facets" ).click( function( event ) {
+		// clear facet selection
+		var counter = self._query.clearFacetSelection();
+		
+		// reload page
+		if ( counter > 0 ) {
+   			self._commands.execute( SOLR_FACET_SELECTION_CLEARED_COMMAND );   						
+		}
+   	});				
+			
 	self._renderTree( solrResponse );
 	
 	//$( "#" + self.parentElementId ).html( code );		
@@ -62,12 +76,11 @@ SolrFacetView.prototype.render = function ( solrResponse ) {
 	// ..
 };
 
+
 SolrFacetView.prototype._renderTree = function( solrResponse ) {
 	
 	var self = this;
-	
-	$( '#' + self._parentElementId ).html("");
-	
+
 	var tree = self._generateTree( solrResponse );
 		
 	// attach events
@@ -96,7 +109,7 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 		if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal ) {
 			//facets[attribute.solr_field] = [];
 			
-			$('<div/>', { 'href': '#' + self._composeFacetId( attribute.solr_field + "___inactive" ), 'class': 'facet-title', "data-toggle": "collapse", "data-parent": "#facet-view", "data-target": "#" + self._composeFacetId( attribute.solr_field + "___inactive" ), 'id': self._composeFacetId( attribute.solr_field ), html: "<h4>" + prettifySolrFieldName( attribute.solr_field, true ) + "</h4>" }).appendTo('#' + self._parentElementId);
+			$('<div/>', { 'href': '#' + self._composeFacetId( attribute.solr_field + "___inactive" ), 'class': 'facet-title', "data-toggle": "collapse", "data-parent": "#facet-view", "data-target": "#" + self._composeFacetId( attribute.solr_field + "___inactive" ), 'id': self._composeFacetId( attribute.solr_field ), html: "<h5>" + prettifySolrFieldName( attribute.solr_field, true ) + "</h5>" }).appendTo('#' + self._parentElementId);
 			$('<div/>', { 'class': 'facet-value-list selected', "id": self._composeFacetId( attribute.solr_field + "___active" ), html: "" }).appendTo('#' + self._parentElementId);							
 			$('<div/>', { 'class': 'facet-value-list collapse', "id": self._composeFacetId( attribute.solr_field + "___inactive" ), html: "" }).appendTo('#' + self._parentElementId);
 	

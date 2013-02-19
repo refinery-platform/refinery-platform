@@ -99,8 +99,13 @@ SolrQuery = function( configurator, commands ) {
   	// pivots
 	// -------------------------------------------------------------- 	
 	// a list of facet names for the pivot view
-	self._pivots = [];	
+	self._pivots = [];
 	
+	self._totalDocumentCount = undefined;
+	self._currentDocumentCount = undefined;
+	
+	self._firstDocument = 0;
+	self._lastDocument = self._firstDocument + 10;	
 	
 	// wreqr commands object
 	self._commands = commands;	
@@ -240,8 +245,6 @@ SolrQuery.prototype._createFacetComponent = function () {
 	// selecting facets: facet.field, fq 	
 	// ------------------------------------------------------------------------------
 	
-	console.log(self._facetSelection);
-
 	for ( var facet in self._facetSelection ) {
 		var facetValues = self._facetSelection[facet];
 		var filter = null; 
@@ -377,7 +380,7 @@ SolrQuery.prototype._createPivotComponent = function () {
 		}		
 	}		
 
-	return url;	
+	return url;
 };
 
 
@@ -701,7 +704,7 @@ SolrQuery.prototype.setTotalDocumentCount = function( documentCount ) {
 	
 	var self = this;
 	
-    return _totalDocumentCount = documentCount;
+    self._totalDocumentCount = documentCount;
     
     return self; 
 };
@@ -715,10 +718,58 @@ SolrQuery.prototype.getTotalDocumentCount = function() {
 };
 
 
-SolrQuery.prototype.getSelectedDocumentCount = function() {
+SolrQuery.prototype.setCurrentDocumentCount = function( documentCount ) {
 	
 	var self = this;
 	
-    return ( self._documentSelectionBlacklistMode ? self._totalDocumentCount - self._documentSelection.length : self._documentSelection.length ); 
+    self._currentDocumentCount = documentCount;
+    
+    return self; 
 };
+
+
+SolrQuery.prototype.getCurrentDocumentCount = function() {
+	
+	var self = this;
+	
+    return ( self._documentSelectionBlacklistMode ? self._currentDocumentCount - self._documentSelection.length : self._documentSelection.length ); 
+};
+
+
+SolrQuery.prototype.setFirstDocument = function( document ) {
+	
+	var self = this;
+	
+    self._firstDocument = document;
+    
+    return self; 
+};
+
+
+SolrQuery.prototype.getFirstDocument = function() {
+	
+	var self = this;
+	
+    return self._firstDocument; 
+};
+
+
+
+SolrQuery.prototype.setLastDocument = function( document ) {
+	
+	var self = this;
+	
+    self._lastDocument = document;
+    
+    return self; 
+};
+
+
+SolrQuery.prototype.getLastDocument = function() {
+	
+	var self = this;
+	
+    return self._lastDocument; 
+};
+
 

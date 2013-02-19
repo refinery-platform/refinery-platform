@@ -34,15 +34,15 @@ SolrClient = function( apiBaseUrl, apiEndpoint, crsfMiddlewareToken, baseQuery, 
 	self._commands = commands;
 };	
 
-SolrClient.prototype._createBaseUrl = function( start, rows ) {
+SolrClient.prototype._createBaseUrl = function( firstDocument, lastDocument ) {
 	
 	var self = this;
 	
 	var url = self._apiBaseUrl + self._apiEndpoint
 		+ "?" + "q=" + self._baseQuery 
 		+ "&" + self._baseSettings		
-		+ "&" + "start=" + start
-		+ "&" + "rows=" + rows
+		+ "&" + "start=" + firstDocument
+		+ "&" + "rows=" + (lastDocument - firstDocument)
 		+ "&" + "fq=" + self._baseFilter;
 		
 	return url;	
@@ -55,13 +55,14 @@ SolrClient.prototype._createBaseUrl = function( start, rows ) {
 SolrClient.prototype.initialize = function ( query, callback ) {
 	
 	var self = this;	
-	var url = self._createBaseUrl( 0, 1 );
+	var url = self._createBaseUrl( query.getFirstDocument(), query.getFirstDocument() + 1 ) + query.create( SOLR_FILTER_QUERY );
 		
 	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {
 		
 		query.initialize();
 		query.setTotalDocumentCount( data.response.numFound );
-		
+		query.setCurrentDocumentCount( data.response.numFound );
+
 		self._commands.execute( SOLR_QUERY_INITIALIZED_COMMAND );
 								
 		if ( typeof callback !== 'undefined' ) {						
@@ -74,17 +75,19 @@ SolrClient.prototype.initialize = function ( query, callback ) {
 /*
  * Executes a DataSetSolrQuery: can be a DATA_SET_FULL_QUERY or a DATA_SET_PIVOT_QUERY or any other combination 
  */
-SolrClient.prototype.run = function ( query, queryComponents, start, rows, callback ) {
+SolrClient.prototype.run = function ( query, queryComponents, callback ) {
 	
 	var self = this;	
-	var url = self._createBaseUrl( start, rows ) + query.create( queryComponents );
+	var url = self._createBaseUrl( query.getFirstDocument(), query.getLastDocument() ) + query.create( queryComponents );
 	
-	console.log( url );
+	//console.log( url );
 	
 	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {
 				
-		var response = new SolrResponse();		
-		var response = response.initialize( data );
+		var response = new SolrResponse( query );		
+		response.initialize( data );
+		
+		query.setCurrentDocumentCount( data.response.numFound );
 		
 		self._commands.execute( SOLR_QUERY_UPDATED_COMMAND, { 'response': response } );
 
@@ -92,13 +95,4 @@ SolrClient.prototype.run = function ( query, queryComponents, start, rows, callb
 			callback( response );
 		}
 	}});		
-};
-
-
-
-SolrClient.prototype.getTotalDocumentCount = function() {
-	
-	var self = this;
-	
-    return ( self._totalDocumentCount ); 
 };
