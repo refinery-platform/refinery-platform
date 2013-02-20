@@ -4,7 +4,7 @@ Created on May 4, 2012
 @author: nils
 '''
 
-from core.models import Project, NodeSet, NodeRelationship, NodePair
+from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, WorkflowInputRelationships
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node
 from django.conf.urls.defaults import url
@@ -86,6 +86,7 @@ class NodeSetResource(ModelResource):
         fields = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query']
         ordering = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query']
         allowed_methods = ["get", "patch", "put", "post" ]
+        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
 
     def prepend_urls(self):
         return [
@@ -129,7 +130,6 @@ class NodePairResource(ModelResource):
     group = fields.CharField(attribute='group', null=True)
     
     class Meta:
-        # create node count attribute on the fly - node_count field has to be defined on resource
         queryset = NodePair.objects.all()
         detail_resource_name = 'nodepair' 
         resource_name = 'nodepair'
@@ -143,12 +143,34 @@ class NodeRelationshipResource(ModelResource):
     assay = fields.ToOneField(AssayResource, 'assay')
     
     class Meta:
-        # create node count attribute on the fly - node_count field has to be defined on resource
         queryset = NodeRelationship.objects.all()
         detail_resource_name = 'noderelationship' 
         resource_name = 'noderelationship'
         detail_uri_name = 'uuid'  
         
-        fields = ['type', 'study', 'assay', 'node_pairs']
+        #fields = ['type', 'study', 'assay', 'node_pairs']
         ordering = ['type', 'node_pairs']
+        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
+
+
+class WorkflowResource(ModelResource):
+    input_relationships = fields.ToManyField("core.api.WorkflowInputRelationshipsResource", 'input_relationships', full=True)
+    
+    class Meta:
+        queryset = Workflow.objects.all()
+        detail_resource_name = 'workflow' 
+        resource_name = 'workflow'
+        detail_uri_name = 'uuid'
+        fields = ['name', 'uuid']  
         
+class WorkflowInputRelationshipsResource(ModelResource):
+    #workflow = fields.ToOneField(WorkflowResource, 'workflow')
+    
+    class Meta:
+        queryset = WorkflowInputRelationships.objects.all()
+        detail_resource_name = 'workflowrelationships' 
+        resource_name = 'workflowrelationships'
+        #detail_uri_name = 'uuid'   
+        fields = ['category', 'set1', 'set2', 'workflow']  
+    
+    

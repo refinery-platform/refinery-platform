@@ -13,4 +13,6 @@ urlpatterns = patterns('analysis_manager.views',
     url(r'^workflow_inputs/(?P<workflow_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'getWorkflowDataInputMap'),
     url(r'^analysis_run/$', 'analysis_run'),
     url(r'^repository_run/$', 'repository_run'),
+    url(r'^run_nodeset/$', 'run_nodeset'),
+    url(r'^run_noderelationship/$', 'run_noderelationship'),
 )
