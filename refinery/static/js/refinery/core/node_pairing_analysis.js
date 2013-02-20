@@ -177,6 +177,17 @@ var analyzeApp = new Marionette.Application();
 	var nodeRelationshipCollection = Backbone.Collection.extend({
 	    urlRoot: '/api/v1/noderelationship/',
 	    model: nodeRelationshipModel,
+
+	    getOptions: function() {
+	    	out_html = "";
+	    	model_json = this.toJSON();
+	    	for ( var i = 0; i < model_json.length; i++ ) {
+	    		//console.log(i);
+	    		out_html += '<option value="'+model_json[i].uuid +'">' + model_json[i].name + '</option> '
+	    	}
+	    	//console.log(out_html);
+	    	return out_html;
+	    }
 	});
 
 
@@ -202,6 +213,11 @@ var analyzeApp = new Marionette.Application();
 		ui_name: "wcv_dropdown",
 		current_uuid: "",
 
+		initialize: function(opts) {
+			var current_uuid = $(this.el).val();
+			this.current_uuid = current_uuid;
+		},
+
 		events: {
 			"change": "changeWorkflow"
 		},
@@ -213,7 +229,7 @@ var analyzeApp = new Marionette.Application();
 		},
 
 		changeWorkflow: function(event) {
-			event.preventDefault();
+			//event.preventDefault();
 			//console.log(event);
 			//console.log($(this.el).val());
 			var current_uuid = $(this.el).val();
@@ -240,12 +256,14 @@ var analyzeApp = new Marionette.Application();
 		current_inputs: '',
 		template_holder: '',
 		node_set_options: '',
+		node_relations_options: '',
 		set1_field: '',
 		set2_field: '',
 
 		ui: {
 			set1: "#dropdown_set1",
-			set2: "#dropdown_set2"
+			set2: "#dropdown_set2",
+			relation: "#dropdown_noderelationship",
 		},
 
 		events: {
@@ -262,6 +280,7 @@ var analyzeApp = new Marionette.Application();
 				var temp_options = this.node_set_options;
 				var temp_html = '<form class="form-horizontal"><fieldset>';
 				temp_html += '<legend>Run Analysis</legend>';
+				var self = this;
 
 				_.each(this.current_inputs, function (w2) {
 					//console.log("inputRelationshipView each"); console.log(w2);
@@ -280,10 +299,17 @@ var analyzeApp = new Marionette.Application();
 						 	temp_html += '<i class="icon-dashboard"></i>&nbsp;&nbsp;Run Analysis</a>';
 						 	temp_html += '</div>';
 						 	temp_html += '</div>';
+						}
+					}
 
+					if (w2.set2 != null){
 
+						if (this.node_relations_options != '') {
+							temp_html += self.getNodeRelationshipHTML();
 						}
 						else {
+
+							///* For creating multiple dropdowns for 2 inputs to a workflows
 							temp_html += '<div class="control-group">';
 							temp_html += '<label class="control-label" for="set1">Set1</label>   \
 						<div class="controls"> <select id="dropdown_set1" name="set1">'
@@ -291,24 +317,20 @@ var analyzeApp = new Marionette.Application();
 						 	temp_html += '</div>';
 						 	temp_html += '</div>';
 						 	temp_html += '</div>';
+
+							temp_html += '<div class="control-group">';
+							temp_html += '<label class="control-label" for="set2">Set2</label>   \
+							<div class="controls"> <select id="dropdown_set2" name="set2">'
+							+ temp_options + '</select></div></div>';
+							temp_html += '</div>';
+
+							temp_html += '<div class="control-group">';
+							temp_html += '<div class="controls">';
+							temp_html += '<a id="run_analysis_single_btn" href="#" onclick="runSingleAnalysis()" role="button" class="btn btn-warning">';
+							temp_html += '<i class="icon-sitemap"></i>&nbsp;&nbsp;Create Relationships</a>';
+							temp_html += '</div></div>';
+							//*/
 						}
-
-
-					}
-					if (w2.set2 != null){
-						temp_html += '<div class="control-group">';
-						temp_html += '<label class="control-label" for="set2">Set2</label>   \
-						<div class="controls"> <select id="dropdown_set2" name="set2">'
-						+ temp_options + '</select></div></div>';
-						temp_html += '</div>';
-
-						temp_html += '<div class="control-group">';
-						temp_html += '<div class="controls">';
-						temp_html += '<a id="run_analysis_single_btn" href="#" onclick="runSingleAnalysis()" role="button" class="btn btn-warning">';
-						temp_html += '<i class="icon-sitemap"></i>&nbsp;&nbsp;Create Relationships</a>';
-						temp_html += '</div></div>';
-
-
 					}
 				});
 
@@ -322,21 +344,21 @@ var analyzeApp = new Marionette.Application();
 
 		getNodeRelationshipHTML: function() {
 
-			var t_html ='<form class="form-horizontal"><fieldset>';
-			t_html += '<legend>Run Analysis</legend>';
-			t_html += '<div class="control-group">';
-			t_html += '<label class="control-label" for="set2">Set2</label>   \
-			<div class="controls"> <select id="dropdown_set2" name="set2">'
-			+ '' + '</select></div></div>';
+			//var t_html ='<form class="form-horizontal"><fieldset>';
+			//t_html += '<legend>Run Analysis</legend>';
+			var t_html = '<div class="control-group">';
+			t_html += '<label class="control-label" for="dropdown_noderelationship">Choose Relationship</label>   \
+			<div class="controls"> <select id="dropdown_noderelationship" name="Choose Relationship">'
+			+ this.node_relations_options + '</select></div></div>';
 			t_html += '</div>';
 
 			t_html += '<div class="control-group">';
 			t_html += '<div class="controls">';
-			t_html += '<a id="run_analysis_single_btn" href="#" onclick="runSingleAnalysis()" role="button" class="btn btn-warning">';
-			t_html += '<i class="icon-sitemap"></i>&nbsp;&nbsp;Create Relationships</a>';
+			t_html += '<a id="run_analysis_single_btn" href="#" onclick="runRelationAnalysis()" role="button" class="btn btn-warning">';
+			t_html += '<i class="icon-sitemap"></i>&nbsp;&nbsp;Run Analysis</a>';
 			t_html += '</div></div>';
 			t_html += '</div>';
-			t_html += '</fieldset></form>';
+			//t_html += '</fieldset></form>';
 			return t_html;
 		},
 
@@ -376,16 +398,18 @@ var analyzeApp = new Marionette.Application();
 		setNodeSet: function(opt) {
 			console.log("setNodeSet called");
 			this.node_set_options = opt;
-			//console.log(this.node_set_options);
-			//this.render();
+		},
+
+		setNodeRelations: function(opt) {
+			console.log("setNodeSetRelations called");
+			this.node_relations_options = opt;
+		},
+		getRelationship: function () {
+			console.log("getRelationship called");
+			return $(this.ui.relation).val();
 		},
 
 	});
-
-
-
-
-
 
 
 //});
@@ -416,11 +440,9 @@ function runSingleAnalysis(event) {
 	//event.preventDefault(); // cancel default behavior
 
 	console.log("workflowActions: runSingleAnalysis");
-	console.log(REFINERY_REPOSITORY_MODE);
-
-	analyzeApp.vent.on("run_single", function(wf_inputs){});
+	//console.log(REFINERY_REPOSITORY_MODE);
+	//analyzeApp.vent.on("run_single", function(wf_inputs){});
 	console.log("change run_single called VENT GETTING WORKFLOW ID");
-
 	console.log(nr_wcv.getWorkflowID());;
 
 	opts = {};
@@ -432,17 +454,31 @@ function runSingleAnalysis(event) {
 	opts['study_uuid'] = externalAssayUuid;
 	//console.log("nr_inputs.getNodeSet1()");
 	//console.log(nr_inputs.getNodeSet1());
-	//alert("run_analysis_single_btn");
 
 	// execute the command and send this data with it
-	signForm.execute(opts);
+	nodeset_form.execute(opts);
+}
+
+// Function for running an analysis using an existing node relationship
+function runRelationAnalysis(event) {
+	console.log("workflowActions: runRelationAnalysis");
+
+	opts = {};
+	opts['csrfmiddlewaretoken'] = crsf_token;
+	opts['workflow_id'] = nr_wcv.getWorkflowID();
+	opts['node_relationship_uuid'] = nr_inputs.getRelationship();
+	opts['study_uuid'] = externalAssayUuid;
+	console.log(opts);
+
+	// execute the command and send this data with it
+	node_relation_form.execute(opts);
 }
 
 // Register a command to use
 // -------------------------
 
 // http://lostechies.com/derickbailey/2012/05/04/wrapping-ajax-in-a-thin-command-framework-for-backbone-apps/
-Backbone.AjaxCommands.register("signForm", {
+Backbone.AjaxCommands.register("nodesetForm", {
   url: "/analysis_manager/run_nodeset/",
   type: "POST",
   dataType: "JSON",
@@ -450,18 +486,35 @@ Backbone.AjaxCommands.register("signForm", {
 
 // somewhere else in the application, use the command
 // --------------------------------------------------
-var signForm = Backbone.AjaxCommands.get("signForm");
+var nodeset_form = Backbone.AjaxCommands.get("nodesetForm");
 
-signForm.on("success", function(response){
+nodeset_form.on("success", function(response){
   // handle success here
   console.log("node_set run success called");
   console.log(response);
   window.location = response;
 });
 
-signForm.on("error", function(response){
-  // handle failure here
+
+
+
+Backbone.AjaxCommands.register("nodeRelationForm", {
+  url: "/analysis_manager/run_noderelationship/",
+  type: "POST",
+  dataType: "JSON",
 });
+
+// somewhere else in the application, use the command
+// --------------------------------------------------
+var node_relation_form = Backbone.AjaxCommands.get("nodeRelationForm");
+
+node_relation_form.on("success", function(response){
+  // handle success here
+  console.log("node_relation_form run success called");
+  console.log(response);
+  //window.location = response;
+});
+
 
 
 analyzeApp.start();
@@ -471,14 +524,14 @@ var view, ui1, ui2, nr_wcv, nr_inputs;
 
 // getting workflows and possible node input models
 var deferreds = [];
-var model_ns = new nodeSetCollection();
-var model_in = new workflowCollection();
-deferreds.push(model_ns.fetch({data: { study__uuid: externalAssayUuid, assay__uuid:externalStudyUuid, format:'json' }}));
-deferreds.push(model_in.fetch());
+var model_nodeset = new nodeSetCollection();
+var model_workflow = new workflowCollection();
+deferreds.push(model_nodeset.fetch({data: { study__uuid: externalAssayUuid, assay__uuid:externalStudyUuid, format:'json' }}));
+deferreds.push(model_workflow.fetch());
 
-var model_nrc = new nodeRelationshipCollection();
-//deferreds.push(model_nrc.fetch({data: { study__uuid: externalAssayUuid, assay__uuid:externalStudyUuid, format:'json' }}));
-deferreds.push(model_nrc.fetch());
+var model_noderelation = new nodeRelationshipCollection();
+//deferreds.push(model_noderelation.fetch({data: { study__uuid: externalAssayUuid, assay__uuid:externalStudyUuid, format:'json' }}));
+deferreds.push(model_noderelation.fetch());
 
 $.when.apply($, deferreds).done(startStuff);
 
@@ -491,285 +544,20 @@ analyzeApp.vent.on("change_inputs", function(wf_inputs){
 
 function startStuff() {
 	//console.log("startStuff called");
-	nr_wcv = new workflowCollectionView({collection:model_in});
-	analyzeApp.p_workflow.show(nr_wcv);
+	nr_wcv = new workflowCollectionView({collection:model_workflow});
 
 	nr_inputs = new inputRelationshipView();
-	nr_inputs.setNodeSet(model_ns.getOptions());
+	nr_inputs.setNodeSet(model_nodeset.getOptions());
+	nr_inputs.setNodeRelations(model_noderelation.getOptions());
+
+	analyzeApp.p_workflow.show(nr_wcv);
 	analyzeApp.p_inputs.show(nr_inputs);
 
-	console.log("model_nrc");
-	console.log(model_nrc.toJSON());
+	$.Event("empty");
+	nr_wcv.changeWorkflow();
+
+	//console.log("model_noderelation");
+	//console.log(model_noderelation.toJSON());
 }
 
 
-/*
-//analyze_controller = new npController();
-//analyze_controller.start();
-
-
-//===================================================================
-// models
-//===================================================================
-
-//http://127.0.0.1:8000/api/v1/workflow?format=json
-
-    // (Optional) Do this if you are using csrf protection:
-    // See: https://docs.djangoproject.com/en/dev/ref/contrib/csrf/
-
-//console.log("sub file called");
- /*
-var oldSync = Backbone.sync;
-Backbone.sync = function(method, model, options) {
-    options.beforeSend = function(xhr){
-        xhr.setRequestHeader('X-CSRFToken', crsf_token);
-    };
-    return oldSync(method, model, options);
-};
-*/
-
-/*
-
-
-
-	var workflowsView = Marionette.ItemView.extend({
-	//analyze_nodepair.view.p_workflow = Backbone.View.extend({
-	    template : '#template_workflow_item',
-
-	    //itemTemplate: _.template("<options value=<% = name %>><%= name %></options>"),
-
-	   	events : {
-			'change #pr_workflow' : 'optionChanged'
-		},
-
-		initialize: function(options){
-			//_.bindAll(this);
-			//_.bindAll(this, "updateOptions");
-			var self = this;
-
-
-		    console.log("options");
-		    console.log(options);
-		    console.log(this.model);
-		    console.log(options.model.toJSON());
-		    //this.listenTo(this.model, "change:foo", this.updateOptions);
-
-		    this.render();
-		    this.updateOptions();
-		},
-		render: function(){
-		    // Compile the template using underscore
-		    //console.log("p_workflow render called");
-		    //console.log(this.model.toJSON());
-
-		    //_.each(this.model.models, function(band){
-		    //	console.log("####3");
-		    //	console.log(band.toJSON());
-		    //}, this);
-
-		    var template = _.template( $("#template_workflow").html(), {}); //this.model.toJSON() );
-
-		    // Load the compiled HTML into the Backbone "el"
-
-		   this.$el.html( template );
-		   this.updateOptions();
-		},
-
-
-		updateOptions: function() {
-			//console.log("update options called");
-			//console.log(this.model);
-
-			this.$('#pr_workflow').empty();
-			this.$('#pr_workflow').append('<option></option>');
-
-
-			_.each(this.model.models, function (w2) {
-				//console.log("----");
-				//console.log(w2);
-				//console.log(w2.attributes.name);
-				this.$('#pr_workflow').append('<option value="'+ w2.attributes.name + '">' + w2.attributes.name + '</option>');
-				}  );
-
-		},
-
-		optionChanged: function() {
-			console.log("updateOptions called");
-			console.log(this.$('#pr_workflow').val());
-		}
-	  });
-
-
-
-	var npUI1 = Backbone.Form.extend({
-		workflow_inputs : [],
-
-		events: {
-			'change' : 'formChanged'
-		},
-
-		initialize: function(options){
-			Backbone.Form.prototype.initialize.call(this, options)
-			var self = this;
-			console.log("npUI1 initiliazed");
-		},
-
-		updateSchema: function() {
-			var return_opt = [];
-			_.each(this.model.models, function (w2) {
-				return_opt.push({val:w2.attributes.name, label:w2.attributes.name});
-			});
-
-			console.log("updateSchema");
-			console.log(return_opt);
-
-			this.schema.workflow.options = return_opt;
-			this.render();
-		},
-
-		formChanged: function() {
-			console.log("formChanged, formChanged");
-
-			var temp = this.getValue('workflow');
-			this.workflow_inputs = _.find(this.model.models, function(w2) {
-			return w2.attributes.name == temp;
-			});
-			this.workflow_inputs = this.workflow_inputs.toJSON().input_relationships;
-
-			analyzeApp.vent.trigger("change_inputs", this.workflow_inputs); // => alert box "bar"
-		}
-
-    });
-
-	var npUI2 = Backbone.Form.extend({
-
-		initialize: function(options) {
-        	Backbone.Form.prototype.initialize.call(this, options);
-    	},
-
-		destroy: function(){
-		  this.remove();
-		  this.unbind();
-		},
-
-		changeSchema: function(opt) {
-			console.log("changeSchema");
-			console.log(opt);
-
-			this.destroy();
-
-			var temp_schema = {
-							schema: {
-						        set1: { type: 'Select', options: ['1', '2'] },
-						        set2: { type: 'Select', options: ['3', '4'] },
-							},
-					};
-
-			this.initialize(temp_schema);
-			//this.schema.workflow.options = return_opt;
-			this.render();
-		},
-
-    });
-
-	//===================================================================
-	// Controller
-	//===================================================================
-	var npController = Marionette.Controller.extend({
-		deferreds: [],
-		model_nodes: null,
-		model_workflow: null,
-		view_wcv: null,
-		view_irv: null,
-
-        start: function(options){
-
-        	this.model_nodes = new nodeSetsModel();
-			this.model_workflow = new workflowsModel();
-            //this.region = options.region
-            console.log("npController started");
-
-            this.deferreds.push(this.model_nodes.fetch())
-			this.deferreds.push(this.model_workflow.fetch())
-
-			$.when.apply($, this.deferreds).done(this.show);
-            //console.log(this.region);
-            //console.log()
-        },
-
-        show: function(){
-        	console.log("---- controller: show called");
-            //var model = new analyze_nodepair.collection.workflows();
-            //analyzeApp.p_workflow.show();
-
-            //this.show(viewA);
-
-            this.view_wcv = new workflowCollectionView({collection:this.model_workflow});
-			analyzeApp.p_workflow.show(this.nr_wcv);
-
-			this.view_irv = new inputRelationshipView();
-			this.view_irv.setNodeSet(this.model_nodes.getOptions());
-			analyzeApp.p_inputs.show(this.view_irv);
-        }
-    });
-
-
-var analyze_nodepair =  analyze_nodepair || {};
-
-// check for existence of nested children
-analyze_nodepair.view = analyze_nodepair.view || {};
-analyze_nodepair.layout = analyze_nodepair.layout || {};
-analyze_nodepair.controller = analyze_nodepair.controller || {};
-
-analyze_nodepair.router = analyze_nodepair.router || {};
-analyze_nodepair.model = analyze_nodepair.model || {};
-analyze_nodepair.collection = analyze_nodepair.collection || {};
-
-
-//===================================================================
-// models
-//===================================================================
-
-
-var workflowsView = Backbone.View.extend({
-        initialize: function(par){
-        	_.bindAll(this, "render", "updateOptions");
-            console.log("par");
-            console.log(par);
-            console.log(this.model);
-            this.collection.fetch({success : this.updateOptions});
-            this.collection.bind('change', this.render);
-            this.render();
-        },
-        render: function(){
-            // Compile the template using underscore
-            var template = _.template( $("#template_workflow").html(), {} );
-            // Load the compiled HTML into the Backbone "el"
-            this.$el.html( template );
-            this.updateOptions();
-            return this;
-        },
-        events : {
-			'change #pr_workflow' : 'optionChanged'
-		},
-
-        updateOptions: function() {
-        	this.$('#pr_workflow').empty();
-        	this.$('#pr_workflow').append('<option></option>');
-
-        	_.each(this.model.models, function (w2) {
-        		console.log("----");
-        		console.log(w2);
-        		console.log(w2.attributes.name);
-        		this.$('#pr_workflow').append('<option value="'+ w2.attributes.name + '">' + w2.attributes.name + '</option>');
-        		}  );
-
-        },
-
-        optionChanged: function() {
-        	console.log("updateOptions called");
-        	console.log(this.$('#pr_workflow').val());
-        }
-    });
-
-    */
