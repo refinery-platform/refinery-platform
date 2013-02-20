@@ -930,7 +930,6 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
     
     #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
     #logger.debug(simplejson.dumps(results, indent=4))
-    '''
     
     # Will return only list of file_uuids
     if only_uuids:

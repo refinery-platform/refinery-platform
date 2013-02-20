@@ -241,7 +241,7 @@ var analyzeApp = new Marionette.Application();
 			this.workflow_inputs = workflow_inputs;
 			//alert(this.model.name);
 
-			console.log(workflow_inputs);
+			//console.log(workflow_inputs);
 			analyzeApp.vent.trigger("change_inputs", this.workflow_inputs); // => alert box "bar"
 		},
 
@@ -272,7 +272,7 @@ var analyzeApp = new Marionette.Application();
 		},
 
 		render: function() {
-			console.log("inputRelationshipView render called");
+			//console.log("inputRelationshipView render called");
 			//console.log(this.el);
 			//console.log(this.node_set_options);
 
@@ -363,7 +363,7 @@ var analyzeApp = new Marionette.Application();
 		},
 
 		changeInputs: function (new_inputs) {
-			console.log("inputRelationshipView changeInputs called");
+			//console.log("inputRelationshipView changeInputs called");
 			this.current_inputs = new_inputs.get("input_relationships");
 			//console.log(this.current_inputs);
 
@@ -401,11 +401,11 @@ var analyzeApp = new Marionette.Application();
 		},
 
 		setNodeRelations: function(opt) {
-			console.log("setNodeSetRelations called");
+			//console.log("setNodeSetRelations called");
 			this.node_relations_options = opt;
 		},
 		getRelationship: function () {
-			console.log("getRelationship called");
+			//console.log("getRelationship called");
 			return $(this.ui.relation).val();
 		},
 
@@ -423,11 +423,10 @@ analyzeApp.addRegions({
 // Initialize this module when the app starts
 // ------------------------------------------
 
-analyzeApp.addInitializer(function(){
-	console.log("mod initializer called");
+//analyzeApp.addInitializer(function(){
+	//console.log("mod initializer called");
     //analyzeApp.controller = new analyze_nodepair.controller();
-
-});
+//});
 
 
 
@@ -437,13 +436,7 @@ analyzeApp.addInitializer(function(){
 
 
 function runSingleAnalysis(event) {
-	//event.preventDefault(); // cancel default behavior
-
 	console.log("workflowActions: runSingleAnalysis");
-	//console.log(REFINERY_REPOSITORY_MODE);
-	//analyzeApp.vent.on("run_single", function(wf_inputs){});
-	console.log("change run_single called VENT GETTING WORKFLOW ID");
-	console.log(nr_wcv.getWorkflowID());;
 
 	opts = {};
 	opts['csrfmiddlewaretoken'] = crsf_token;
@@ -490,8 +483,8 @@ var nodeset_form = Backbone.AjaxCommands.get("nodesetForm");
 
 nodeset_form.on("success", function(response){
   // handle success here
-  console.log("node_set run success called");
-  console.log(response);
+  //console.log("node_set run success called");
+  //console.log(response);
   window.location = response;
 });
 
@@ -510,9 +503,9 @@ var node_relation_form = Backbone.AjaxCommands.get("nodeRelationForm");
 
 node_relation_form.on("success", function(response){
   // handle success here
-  console.log("node_relation_form run success called");
-  console.log(response);
-  //window.location = response;
+  //console.log("node_relation_form run success called");
+  //console.log(response);
+  window.location = response;
 });
 
 
@@ -555,9 +548,6 @@ function startStuff() {
 
 	$.Event("empty");
 	nr_wcv.changeWorkflow();
-
-	//console.log("model_noderelation");
-	//console.log(model_noderelation.toJSON());
 }
 
 
