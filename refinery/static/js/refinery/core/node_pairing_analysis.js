@@ -95,26 +95,106 @@ Backbone.AjaxCommands = (function (Backbone, $, _) {
 })(Backbone, $, _);
 
 
-
-
 /*
  * Marionette view of creating node pairs from node sets
  *
  */
 
 
+var nrApp = new Marionette.Application();
+
+nrApp.addRegions({
+  p_workflow : '#process_1',
+  p_inputs   : '#process_2',
+  p_cols : '#process_3'
+});
+
+// starts marionette application once tab is opened for the first time
+$('#tabs li a[href="#process"]').on('shown', function (e) {
+  //$('#tabs li a[href="#process"]').tab('show')
+  e.target // activated tab
+  e.relatedTarget // previous tab
+  console.log("tab shown");
+  console.log('is started');
+  console.log(nrApp.nrMod.started);
+  if (!nrApp.nrMod.started) {
+	nrApp.start();
+  }
+})
 
 
+nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
+	//console.log("inside nrMOD Module");
+	var nr_wcv;
+	var nr_inputs;
+	var model_nodeset;
+	var model_workflow;
+	var model_noderelation;
+	var deferreds = [];
+	var nodeset_form;
+	var node_relation_form;
+	nrMod.started = false;
 
-var analyzeApp = new Marionette.Application();
+	//===================================================================
+	// Registering Ajax commands
+	//===================================================================
 
-//analyzeApp.module('npApp', function(npApp, App, Backbone, Marionette, $, _){
+	// http://lostechies.com/derickbailey/2012/05/04/wrapping-ajax-in-a-thin-command-framework-for-backbone-apps/
+	Backbone.AjaxCommands.register("nodesetForm", {
+	  url: "/analysis_manager/run_nodeset/",
+	  type: "POST",
+	  dataType: "JSON",
+	});
+
+	Backbone.AjaxCommands.register("nodeRelationForm", {
+	  url: "/analysis_manager/run_noderelationship/",
+	  type: "POST",
+	  dataType: "JSON",
+	});
+
+
+	//===================================================================
+	// Button Actions
+	//===================================================================
+
+	nrMod.runSingleAnalysis = function(event) {
+		console.log("workflowActions: runSingleAnalysis");
+
+		opts = {};
+		opts['csrfmiddlewaretoken'] = crsf_token;
+		opts['workflow_id'] = nr_wcv.getWorkflowID();
+		var temp_ns_opts = nr_inputs.getNodeSet1();
+		opts['node_set_uuid'] = temp_ns_opts.node_set_uuid;
+		opts['node_set_field'] = temp_ns_opts.node_input;
+		opts['study_uuid'] = externalAssayUuid;
+		//console.log("nr_inputs.getNodeSet1()");
+		//console.log(nr_inputs.getNodeSet1());
+
+		// execute the command and send this data with it
+		nodeset_form.execute(opts);
+	}
+
+	// Function for running an analysis using an existing node relationship
+	nrMod.runRelationAnalysis = function (event) {
+		console.log("workflowActions: runRelationAnalysis");
+
+		opts = {};
+		opts['csrfmiddlewaretoken'] = crsf_token;
+		opts['workflow_id'] = nr_wcv.getWorkflowID();
+		opts['node_relationship_uuid'] = nr_inputs.getRelationship();
+		opts['study_uuid'] = externalAssayUuid;
+		console.log(opts);
+
+		// execute the command and send this data with it
+		node_relation_form.execute(opts);
+	}
+
 
 	//===================================================================
 	// models
 	//===================================================================
 
-	var nodeSetModel = Backbone.Model.extend({
+	nrMod.nodeSetModel = Backbone.Model.extend({
 	    //urlRoot: '/api/v1/workflow/'
 	    idAttribute: 'uuid',
 	    url: function(){ return this.get('resource_uri') ||
@@ -122,10 +202,10 @@ var analyzeApp = new Marionette.Application();
 	    	},
 	});
 
-	var nodeSetCollection = Backbone.Collection.extend({
+	nrMod.nodeSetCollection = Backbone.Collection.extend({
 	    urlRoot: '/api/v1/nodeset/',
-	    model: nodeSetModel,
-	    //idAttribute: 'uuid',
+	    model: nrMod.nodeSetModel,
+	    idAttribute: 'uuid',
 	    //url: function(){ return this.get('resource_uri') ||
 	    //		this.model.url;
 	    //	},
@@ -142,7 +222,7 @@ var analyzeApp = new Marionette.Application();
 	});
 
 
-	var workflowModel = Backbone.Model.extend({
+	nrMod.workflowModel = Backbone.Model.extend({
 	    //urlRoot: '/api/v1/workflow/'
 	    idAttribute: 'uuid',
 	    url: function(){ return this.get('resource_uri') ||
@@ -154,9 +234,9 @@ var analyzeApp = new Marionette.Application();
 
 	});
 
-	var workflowCollection= Backbone.Collection.extend({
+	nrMod.workflowCollection= Backbone.Collection.extend({
 	    urlRoot: '/api/v1/workflow/',
-	    model: workflowModel,
+	    model: nrMod.workflowModel,
 	});
 
 	/*
@@ -166,7 +246,7 @@ var analyzeApp = new Marionette.Application();
 	});
 	*/
 
-	var nodeRelationshipModel = Backbone.Model.extend({
+	nrMod.nodeRelationshipModel = Backbone.Model.extend({
 	    //urlRoot: '/api/v1/workflow/'
 	    idAttribute: 'uuid',
 	    url: function(){ return this.get('resource_uri') ||
@@ -174,9 +254,9 @@ var analyzeApp = new Marionette.Application();
 	    	},
 	});
 
-	var nodeRelationshipCollection = Backbone.Collection.extend({
+	nrMod.nodeRelationshipCollection = Backbone.Collection.extend({
 	    urlRoot: '/api/v1/noderelationship/',
-	    model: nodeRelationshipModel,
+	    model: nrMod.nodeRelationshipModel,
 
 	    getOptions: function() {
 	    	out_html = "";
@@ -191,12 +271,11 @@ var analyzeApp = new Marionette.Application();
 	});
 
 
-
 	//===================================================================
 	// views
 	//===================================================================
 
-	var workflowItemView = Marionette.ItemView.extend({
+	nrMod.workflowItemView = Marionette.ItemView.extend({
 		template: '#template_workflow_item',
 		tagName: 'option',
 
@@ -207,9 +286,9 @@ var analyzeApp = new Marionette.Application();
 		}
 	});
 
-	var workflowCollectionView = Marionette.CollectionView.extend({
+	nrMod.workflowCollectionView = Marionette.CollectionView.extend({
 		tagName: "select",
-		itemView: workflowItemView,
+		itemView: nrMod.workflowItemView,
 		ui_name: "wcv_dropdown",
 		current_uuid: "",
 
@@ -230,7 +309,6 @@ var analyzeApp = new Marionette.Application();
 
 		changeWorkflow: function(event) {
 			//event.preventDefault();
-			//console.log(event);
 			//console.log($(this.el).val());
 			var current_uuid = $(this.el).val();
 			this.current_uuid = current_uuid;
@@ -239,10 +317,8 @@ var analyzeApp = new Marionette.Application();
 				return w2.attributes.uuid == current_uuid;
 			});
 			this.workflow_inputs = workflow_inputs;
-			//alert(this.model.name);
 
-			//console.log(workflow_inputs);
-			analyzeApp.vent.trigger("change_inputs", this.workflow_inputs); // => alert box "bar"
+			App.vent.trigger("change_inputs", this.workflow_inputs);
 		},
 
 		getWorkflowID: function () {
@@ -252,7 +328,7 @@ var analyzeApp = new Marionette.Application();
 
 	});
 
-	var inputRelationshipView = Marionette.ItemView.extend({
+	nrMod.inputRelationshipView = Marionette.ItemView.extend({
 		current_inputs: '',
 		template_holder: '',
 		node_set_options: '',
@@ -272,9 +348,6 @@ var analyzeApp = new Marionette.Application();
 		},
 
 		render: function() {
-			//console.log("inputRelationshipView render called");
-			//console.log(this.el);
-			//console.log(this.node_set_options);
 
 			if (this.current_inputs != '') {
 				var temp_options = this.node_set_options;
@@ -295,7 +368,7 @@ var analyzeApp = new Marionette.Application();
 
 							temp_html += '<div class="control-group">';
 							temp_html += '<div class="controls">';
-						 	temp_html += '<a id="run_analysis_single_btn" href="#" onclick="runSingleAnalysis()" role="button" class="btn btn-warning" data-toggle="modal" rel="tooltip" data-placement="" data-html="true" data-original-title="Launch IGV with&lt;br&gt;current selection.">';
+						 	temp_html += '<a id="run_analysis_single_btn" href="#" onclick="nrApp.nrMod.runSingleAnalysis()" role="button" class="btn btn-warning" data-toggle="modal" rel="tooltip" data-placement="" data-html="true" data-original-title="Launch IGV with&lt;br&gt;current selection.">';
 						 	temp_html += '<i class="icon-dashboard"></i>&nbsp;&nbsp;Run Analysis</a>';
 						 	temp_html += '</div>';
 						 	temp_html += '</div>';
@@ -326,7 +399,7 @@ var analyzeApp = new Marionette.Application();
 
 							temp_html += '<div class="control-group">';
 							temp_html += '<div class="controls">';
-							temp_html += '<a id="run_analysis_single_btn" href="#" onclick="runSingleAnalysis()" role="button" class="btn btn-warning">';
+							temp_html += '<a id="run_analysis_single_btn" href="#" onclick="nrApp.nrMod.runSingleAnalysis()" role="button" class="btn btn-warning">';
 							temp_html += '<i class="icon-sitemap"></i>&nbsp;&nbsp;Create Relationships</a>';
 							temp_html += '</div></div>';
 							//*/
@@ -354,7 +427,7 @@ var analyzeApp = new Marionette.Application();
 
 			t_html += '<div class="control-group">';
 			t_html += '<div class="controls">';
-			t_html += '<a id="run_analysis_single_btn" href="#" onclick="runRelationAnalysis()" role="button" class="btn btn-warning">';
+			t_html += '<a id="run_analysis_single_btn" href="#" onclick="nrApp.nrMod.runRelationAnalysis()" role="button" class="btn btn-warning">';
 			t_html += '<i class="icon-sitemap"></i>&nbsp;&nbsp;Run Analysis</a>';
 			t_html += '</div></div>';
 			t_html += '</div>';
@@ -365,7 +438,6 @@ var analyzeApp = new Marionette.Application();
 		changeInputs: function (new_inputs) {
 			//console.log("inputRelationshipView changeInputs called");
 			this.current_inputs = new_inputs.get("input_relationships");
-			//console.log(this.current_inputs);
 
 			var set1_field;
 			var set2_field;
@@ -376,9 +448,6 @@ var analyzeApp = new Marionette.Application();
 
 			this.set1_field = set1_field;
 			this.set2_field = set2_field;
-
-			//console.log("set1_field");
-			//console.log(this.set1_field);
 
 			this.render();
 		},
@@ -411,143 +480,132 @@ var analyzeApp = new Marionette.Application();
 
 	});
 
+    App.vent.on("change_inputs", function(wf_inputs){
+		console.log("change inputs called VENT");
+		nr_inputs.changeInputs(wf_inputs);
+	});
 
-//});
+	App.vent.on("begin_loaded", function(){
+		console.log("begin_loaded called");
+		nr_wcv = new nrMod.workflowCollectionView({collection:model_workflow});
 
-analyzeApp.addRegions({
-  p_workflow : '#process_1',
-  p_inputs   : '#process_2',
-  p_cols : '#process_3'
+		nr_inputs = new nrMod.inputRelationshipView();
+		nr_inputs.setNodeSet(model_nodeset.getOptions());
+		nr_inputs.setNodeRelations(model_noderelation.getOptions());
+
+		App.p_workflow.show(nr_wcv);
+		App.p_inputs.show(nr_inputs);
+
+		nr_wcv.changeWorkflow();
+	});
+
+	// Initialize this module when the app starts
+	// ------------------------------------------
+	nrMod.addInitializer(function(){
+		console.log("mod initializer called");
+
+		nrMod.started = true;
+
+		// ajax command for running analyses with nodesetForm
+		nodeset_form = Backbone.AjaxCommands.get("nodesetForm");
+
+		nodeset_form.on("success", function(response){
+		  window.location = response;
+		});
+
+		// ajax command for running analyses with nodeRelationForm
+		node_relation_form = Backbone.AjaxCommands.get("nodeRelationForm");
+		node_relation_form.on("success", function(response){
+		  window.location = response;
+		});
+
+		// getting workflows and possible node input models
+		deferreds = [];
+		model_nodeset = new nrMod.nodeSetCollection();
+		model_workflow = new nrMod.workflowCollection();
+		deferreds.push(model_nodeset.fetch({data: { study__uuid: externalAssayUuid, assay__uuid:externalStudyUuid, format:'json' }}));
+		deferreds.push(model_workflow.fetch());
+
+		model_noderelation = new nrMod.nodeRelationshipCollection();
+		//deferreds.push(model_noderelation.fetch({data: { study__uuid: externalAssayUuid, assay__uuid:externalStudyUuid, format:'json' }}));
+		deferreds.push(model_noderelation.fetch());
+
+		$.when.apply($, deferreds).done(function() { App.vent.trigger("begin_loaded");} );
+
+		//nrMod.controller = new nrMod.npController();
+	    //nrMod.controller.start();
+	    //console.log(nrApp);
+	});
+
 });
 
-// Initialize this module when the app starts
-// ------------------------------------------
+/*
+  	//===================================================================
+	// Controller
+	//===================================================================
 
-//analyzeApp.addInitializer(function(){
-	//console.log("mod initializer called");
-    //analyzeApp.controller = new analyze_nodepair.controller();
-//});
+	 nrMod.npController = Marionette.Controller.extend({
+		defer: [],
+		model_nodes: null,
+		model_workflow: null,
+		view_wcv: null,
+		view_irv: null,
 
+		initialize: function(options){
+			console.log("nrMod.npController initialized")
+			//this.stuff = options.stuff;
+			var self = this;
+			this.model_nodeset = new nrMod.nodeSetCollection();
+			this.model_workflow = new nrMod.workflowCollection();
+			this.model_noderelation = new nrMod.nodeRelationshipCollection();
+			this.defer = [];
 
+			App.vent.on("change_inputs", this.change_inputs);
+		},
 
-//===================================================================
-// Button Actions
-//===================================================================
+        start: function(options){
+            //this.region = options.region
+            console.log("npController started");
+            console.log(options);
 
+            this.defer.push(this.model_nodeset.fetch({data: { study__uuid: externalAssayUuid, assay__uuid:externalStudyUuid, format:'json' }}));
+			this.defer.push(this.model_workflow.fetch());
 
-function runSingleAnalysis(event) {
-	console.log("workflowActions: runSingleAnalysis");
+			//this.defer.push(model_noderelation.fetch({data: { study__uuid: externalAssayUuid, assay__uuid:externalStudyUuid, format:'json' }}));
+			this.defer.push(this.model_noderelation.fetch());
 
-	opts = {};
-	opts['csrfmiddlewaretoken'] = crsf_token;
-	opts['workflow_id'] = nr_wcv.getWorkflowID();
-	var temp_ns_opts = nr_inputs.getNodeSet1();
-	opts['node_set_uuid'] = temp_ns_opts.node_set_uuid;
-	opts['node_set_field'] = temp_ns_opts.node_input;
-	opts['study_uuid'] = externalAssayUuid;
-	//console.log("nr_inputs.getNodeSet1()");
-	//console.log(nr_inputs.getNodeSet1());
+			$.when.apply($, this.defer).done(function() {
+				//console.log(self);
+				//console.log("succesesdfadfasdf called");
+				nrMod.controller.data_loaded();
+				//App.vent.trigger("begin_loaded");
+			} );
 
-	// execute the command and send this data with it
-	nodeset_form.execute(opts);
-}
+        },
 
-// Function for running an analysis using an existing node relationship
-function runRelationAnalysis(event) {
-	console.log("workflowActions: runRelationAnalysis");
+		data_loaded: function() {
+			console.log("data_loaded called");
+			this.view_wcv = new nrMod.workflowCollectionView({collection:this.model_workflow});
 
-	opts = {};
-	opts['csrfmiddlewaretoken'] = crsf_token;
-	opts['workflow_id'] = nr_wcv.getWorkflowID();
-	opts['node_relationship_uuid'] = nr_inputs.getRelationship();
-	opts['study_uuid'] = externalAssayUuid;
-	console.log(opts);
+			this.view_irv = new nrMod.inputRelationshipView();
+			this.view_irv.setNodeSet(this.model_nodeset.getOptions());
+			this.view_irv.setNodeRelations(this.model_noderelation.getOptions());
 
-	// execute the command and send this data with it
-	node_relation_form.execute(opts);
-}
+			this.show();
+		},
 
-// Register a command to use
-// -------------------------
+        show: function(){
+        	console.log("---- controller: show called");
+         	App.p_workflow.show(this.view_wcv);
+			App.p_inputs.show(this.view_irv);
+			this.view_wcv.changeWorkflow();
+        },
 
-// http://lostechies.com/derickbailey/2012/05/04/wrapping-ajax-in-a-thin-command-framework-for-backbone-apps/
-Backbone.AjaxCommands.register("nodesetForm", {
-  url: "/analysis_manager/run_nodeset/",
-  type: "POST",
-  dataType: "JSON",
-});
-
-// somewhere else in the application, use the command
-// --------------------------------------------------
-var nodeset_form = Backbone.AjaxCommands.get("nodesetForm");
-
-nodeset_form.on("success", function(response){
-  // handle success here
-  //console.log("node_set run success called");
-  //console.log(response);
-  window.location = response;
-});
-
-
-
-
-Backbone.AjaxCommands.register("nodeRelationForm", {
-  url: "/analysis_manager/run_noderelationship/",
-  type: "POST",
-  dataType: "JSON",
-});
-
-// somewhere else in the application, use the command
-// --------------------------------------------------
-var node_relation_form = Backbone.AjaxCommands.get("nodeRelationForm");
-
-node_relation_form.on("success", function(response){
-  // handle success here
-  //console.log("node_relation_form run success called");
-  //console.log(response);
-  window.location = response;
-});
-
-
-
-analyzeApp.start();
-
-
-var view, ui1, ui2, nr_wcv, nr_inputs;
-
-// getting workflows and possible node input models
-var deferreds = [];
-var model_nodeset = new nodeSetCollection();
-var model_workflow = new workflowCollection();
-deferreds.push(model_nodeset.fetch({data: { study__uuid: externalAssayUuid, assay__uuid:externalStudyUuid, format:'json' }}));
-deferreds.push(model_workflow.fetch());
-
-var model_noderelation = new nodeRelationshipCollection();
-//deferreds.push(model_noderelation.fetch({data: { study__uuid: externalAssayUuid, assay__uuid:externalStudyUuid, format:'json' }}));
-deferreds.push(model_noderelation.fetch());
-
-$.when.apply($, deferreds).done(startStuff);
-
-
-analyzeApp.vent.on("change_inputs", function(wf_inputs){
-	//console.log("change inputs called VENT");
-	nr_inputs.changeInputs(wf_inputs);
-});
-
-
-function startStuff() {
-	//console.log("startStuff called");
-	nr_wcv = new workflowCollectionView({collection:model_workflow});
-
-	nr_inputs = new inputRelationshipView();
-	nr_inputs.setNodeSet(model_nodeset.getOptions());
-	nr_inputs.setNodeRelations(model_noderelation.getOptions());
-
-	analyzeApp.p_workflow.show(nr_wcv);
-	analyzeApp.p_inputs.show(nr_inputs);
-
-	$.Event("empty");
-	nr_wcv.changeWorkflow();
-}
-
+        change_inputs: function(wf_inputs) {
+        	console.log("CONTROLLER: change inputs called VENT");
+        	console.log(wf_inputs);
+			nrMod.controller.view_irv.changeInputs(wf_inputs);
+        }
+    });
+ */
 
