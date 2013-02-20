@@ -148,8 +148,9 @@ class NodeRelationshipResource(ModelResource):
         resource_name = 'noderelationship'
         detail_uri_name = 'uuid'  
         
-        fields = ['type', 'study', 'assay', 'node_pairs']
+        #fields = ['type', 'study', 'assay', 'node_pairs']
         ordering = ['type', 'node_pairs']
+        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
 
 
 class WorkflowResource(ModelResource):
