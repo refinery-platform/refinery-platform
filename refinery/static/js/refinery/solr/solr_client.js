@@ -52,14 +52,17 @@ SolrClient.prototype._createBaseUrl = function( documentIndex, documentCount ) {
 /*
  * Initializes a DataSetSolrQuery: retrieves field names, facets, etc.
  */
-SolrClient.prototype.initialize = function ( query, callback ) {
+SolrClient.prototype.initialize = function ( query, resetQuery, callback ) {
 	
 	var self = this;	
 	var url = self._createBaseUrl( query.getDocumentIndex(), query.getDocumentIndex() + 1 ) + query.create( SOLR_FILTER_QUERY );
 		
 	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {
 		
-		query.initialize();
+		if ( resetQuery ) {
+			query.initialize();			
+		}
+		
 		query.setTotalDocumentCount( data.response.numFound );
 		query.setCurrentDocumentCount( data.response.numFound );
 

@@ -42,11 +42,41 @@ $(document).ready(function() {
 	var client_commands = new Backbone.Wreqr.Commands();
 	var query_commands = new Backbone.Wreqr.Commands();
 	
+	var showAnnotation = false;
+	
 	configurator.initialize( function() {
 		var query = new SolrQuery( configurator, query_commands );
 		query.initialize();
 		query.addFilter( "type", dataSetNodeTypes );
 		query.addFilter( "is_annotation", false );
+
+		var dataQuery = $.extend( true, {}, query );
+		dataQuery.addFilter( "is_annotation", false );
+				
+		var annotationQuery = $.extend( true, {}, query );
+		annotationQuery.addFilter( "is_annotation", true );
+				 
+		// =====================================
+		
+		function updateDownloadButton( button_id ) {
+			if ( query.getCurrentDocumentCount() > MAX_DOWNLOAD_FILES || query.getCurrentDocumentCount() <= 0 || !REFINERY_USER_AUTHENTICATED || ( showAnnotation && !allowAnnotationDownload ) ) {
+				$("#" + button_id ).addClass( "disabled" );
+				$("#" + button_id ).attr( "data-original-title", MESSAGE_DOWNLOAD_UNAVAILABE );
+			} else {
+				$("#" + button_id ).removeClass( "disabled" );		
+				$("#" + button_id ).attr( "data-original-title", MESSAGE_DOWNLOAD_AVAILABLE );
+			}
+		}
+		
+		function updateIgvButton( button_id ) {
+			if ( query.getCurrentDocumentCount() <= 0 ) {
+				$("#" + button_id ).addClass( "disabled" );
+			} else {
+				$("#" + button_id ).removeClass( "disabled" );		
+			}
+		}
+		
+		// =====================================		
 
 		var client = new SolrClient( solrRoot,
 			solrSelectEndpoint,
@@ -55,11 +85,13 @@ $(document).ready(function() {
 			"(study_uuid:" + currentAssayUuid + " AND assay_uuid:" + currentStudyUuid + ")",
 			client_commands );
 
+		/*
 		var tableView = new SolrDocumentTable( "solr-table-view", "solrdoctab1", query, client, configurator, document_table_commands );
 		tableView.setDocumentsPerPage( 20 );
 		
 		var facetView = new SolrFacetView( "solr-facet-view", "solrfacets1", query, configurator, facet_view_commands );
 		var documentCountView = new SolrDocumentCountView( "solr-document-count-view", "solrcounts1", query, undefined );
+		*/
 
 		query_commands.addHandler( SOLR_QUERY_DESERIALIZED_COMMAND, function( arguments ){
 			console.log( SOLR_QUERY_DESERIALIZED_COMMAND + ' executed' );
@@ -81,8 +113,15 @@ $(document).ready(function() {
 			console.log( SOLR_QUERY_INITIALIZED_COMMAND + ' executed' );
 			//console.log( query );
 			
+			tableView = new SolrDocumentTable( "solr-table-view", "solrdoctab1", query, client, configurator, document_table_commands );
+			tableView.setDocumentsPerPage( 20 );
+		
+			facetView = new SolrFacetView( "solr-facet-view", "solrfacets1", query, configurator, facet_view_commands );
+			documentCountView = new SolrDocumentCountView( "solr-document-count-view", "solrcounts1", query, undefined );			
+			
 			query.setDocumentIndex( 0 );
 			query.setDocumentCount( tableView.getDocumentsPerPage() );
+					
 			
 			client.run( query, SOLR_FULL_QUERY );									
 		});
@@ -94,6 +133,9 @@ $(document).ready(function() {
 			tableView.render( arguments.response );
 			facetView.render( arguments.response );
 			documentCountView.render( arguments.response );
+			updateDownloadButton( "submitReposBtn" );
+			updateIgvButton( "igv-multi-species" );	
+
 		});
 				
 		document_table_commands.addHandler( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, function( arguments ){
@@ -101,6 +143,13 @@ $(document).ready(function() {
 			//console.log( arguments );
 
 			documentCountView.render( arguments.response );
+			
+			// update viewer buttons
+			updateIgvButton( "igv-multi-species" );
+				
+			if ( REFINERY_REPOSITORY_MODE ) {
+				updateDownloadButton( "submitReposBtn" );
+			}			
 		});
 
 		document_table_commands.addHandler( SOLR_DOCUMENT_ORDER_UPDATED_COMMAND, function( arguments ){
@@ -169,72 +218,47 @@ $(document).ready(function() {
 			nodeSetManager.postState( "" + Date(), "Summary for Node Set", solr_query, query.getCurrentDocumentCount(), function(){
 			});
 		});
+		
+		// --------------
+		// annotation
+		// --------------
+		$(".annotation-buttons button").click(function () {
+		    if ( $(this).attr("id") == "annotation-button" ) {		    	
+		    	dataQuery = $.extend(true, {}, query );
+		    	query = annotationQuery;
+		    			    	 
+		    	client.initialize( query, false );
+		    }
+		    else {		    	
+		    	annotationQuery = $.extend(true, {}, query );		    	
+		    	query = dataQuery;		 
+		    	   	 
+				client.initialize( query, false );		
+		    }    
+			
+			client.run( query, SOLR_FULL_QUERY );					
+		});	
 
-		client.initialize( query );		
+		client.initialize( query, true );		
+		//client.initialize( annotationQuery, true );		
+		//client.initialize( dataQuery, true );		
 	});
 
 	
 	configurator.getState( function() {
-		//initializeDataWithState( currentAssayUuid, currentStudyUuid, currentNodeType );	
+		// callback	
 	});
 	
 });    		
 
-var showAnnotation = false;
 	
-var ignoredFieldNames = [ "django_ct", "django_id", "id" ];
-var hiddenFieldNames = [ "uuid", "file_uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ]; // TODO: make these regexes
-var invisibleFieldNames = [];
-
-
-var facets = {};
-/*
- * facets = 
- * { "facet_name1": { "value_name": { count: "count", isSelected: true }, ...  },
- *   "facet_name2": [ { value: "value_name", count: "count", isSelected: false }, ... ] },
- * ... } 
- */
-
-var fields = {};
-/*
- * fields = 
- * { "field_name1": { isVisible: true, direction: "asc" },
- *   "field_name2": { isVisible: false, direction: "desc" },
- *   "field_name3": { isVisible: true, direction: "" },
- * ... } 
- * 
- * Notes: 
- * 	- multiple fields can be used for sorting
- *  - direction will be checked for "asc" or "desc", everything else means no sorting
- *  - invisible fields can not be used for sorting (even if direction is given correctly)  
- */
-
 // a list of facet names for the pivot view
 var pivots = [];
 var pivotMatrixData;
 
-var documents = [];
-
-// fine-grained selection on top of the facet selection
-// a list of node uuids
-var nodeSelection = [];
-// if true, the nodeSelection list is to be subtracted from the Solr query results (blacklist)
-// if false, the nodeSelection list is to be used instead of the Solr query results (whitelist)
-var nodeSelectionBlacklistMode = true;
-
 
 $(".collapse").collapse("show");
 
-$(".annotation-buttons button").click(function () {
-    if ( $(this).attr("id") == "annotation-button" ) {
-    	showAnnotation = true;
-    }
-    else {
-    	showAnnotation = false;
-    }    
-
-	initializeDataWithState( currentAssayUuid, currentStudyUuid, currentNodeType );
-});	
 
 
 function buildPivotQuery( studyUuid, assayUuid, nodeType, loadAnnotation ) {
@@ -268,185 +292,6 @@ function buildPivotQuery( studyUuid, assayUuid, nodeType, loadAnnotation ) {
 	return ( url );	
 }
 	
-function buildSolrQueryFacetFields( fields ) {
-	
-	var url = "";
-	
-	// ------------------------------------------------------------------------------
-	// selecting facets: facet.field, fq 	
-	// ------------------------------------------------------------------------------
-
-	for ( var facet in facets ) {
-		var facetValues = facets[facet];
-		var filter = null; 
-		var filterValues = [];
-						
-		for ( var facetValue in facetValues ) {
-			if ( facetValues.hasOwnProperty( facetValue ) )
-			{
-				if ( facetValues[facetValue].isSelected ) {
-					// escape or encode special characters
-					facetValue = facetValue.replace( /\ /g, "\\ " );
-					facetValue = facetValue.replace( /\//g, "\\/" );
-					facetValue = facetValue.replace( /\,/g, "\\," );									
-					facetValue = facetValue.replace( /\#/g, "%23" );
-					facetValue = facetValue.replace( /\(/g, "\\(" );
-					facetValue = facetValue.replace( /\)/g, "\\)" );
-					facetValue = facetValue.replace( /\+/g, "%2B" );
-					facetValue = facetValue.replace( /\:/g, "%3A" );
-					filterValues.push( facetValue );
-				}
-			}				
-		}		
-		
-		
-		if ( filterValues.length > 0 ) {
-			filter = facet.replace( /\ /g, "_" );
-			
-			url += "&fq={!tag=" + filter + "}" + facet.replace( /\ /g, "\\ " ) + ":(" + filterValues.join( " OR " ) + ")";													
-		}
-		
-		if ( facets.hasOwnProperty( facet ) )
-		{
-			if ( filter ) {
-				url += "&facet.field={!ex=" + filter + "}" + facet;
-			}
-			else {
-				url += "&facet.field=" + facet;					
-			}
-			
-		}
-	}
-	
-	return url;
-}
-
-
-function buildSolrQueryFieldList( fields ) {
-	
-	var url = "";
-	
-	// ------------------------------------------------------------------------------
-	// selecting fields: fl 
-	// ------------------------------------------------------------------------------
-	
-	var fieldNames = [];
-	for ( var field in fields ) {
-		if ( fields.hasOwnProperty( field ) )
-		{			
-			if ( ( fields[field].isVisible ) || ( hiddenFieldNames.indexOf( field ) >= 0 ) ) {				
-				// escape or encode special characters
-				field = field.replace( /\ /g, "\\ " );
-				field = field.replace( /\//g, "%2F" );
-				field = field.replace( /\#/g, "%23" );
-				field = field.replace( /\&/g, "%26" );
-				field = field.replace( /\(/g, "\\(" );
-				field = field.replace( /\)/g, "\\)" );
-				field = field.replace( /\+/g, "%2B" );
-				field = field.replace( /\:/g, "%3A" );
-				fieldNames.push( field );
-			}			
-		}				
-	}	
-	url += "&fl=" + fieldNames.join( ",");
-
-	return url;
-}
-
-
-function buildSolrQuerySortFields( fields ) {
-	
-	var url = "";
-	
-	// ------------------------------------------------------------------------------
-	// sorting by field: sort
-	// ------------------------------------------------------------------------------
- 
-	for ( var field in fields ) {
-		if ( fields.hasOwnProperty( field ) ) {
-			// only sort on visible fields			
-			if ( fields[field].isVisible ) {
-				if ( ( fields[field].direction === "asc" ) || ( fields[field].direction === "desc" ) ) {
-					var direction = fields[field].direction;  				
-					
-					// escape or encode special characters
-					field = field.replace( /\ /g, "\\ " );
-					field = field.replace( /\//g, "%2F" );
-					field = field.replace( /\#/g, "%23" );
-					field = field.replace( /\&/g, "%26" );
-					field = field.replace( /\(/g, "\\(" );
-					field = field.replace( /\)/g, "\\)" );
-					field = field.replace( /\+/g, "%2B" );
-					field = field.replace( /\:/g, "%3A" );
-					
-					url += "&sort=" + field + " " + direction;
-					// only use the first field that has sorting information
-					break;
-				}				
-			}
-		}				
-	}
-	
-	return url;	
-}
-
-
-function buildSolrQueryPivots( pivots ) {
-	var url = "";
-	
-	// ------------------------------------------------------------------------------
-	// pivot fields: facet.pivot 
-	// ------------------------------------------------------------------------------
-	if ( pivots.length > 1 ) {
-		var pivotQuery = pivots.join( "," );
-
-		if ( pivotQuery.length > 0 ) {
-			url += "&facet.pivot=" + pivotQuery;
-		}		
-	}		
-
-	return url;	
-}
-
-
-function buildSolrQuery( studyUuid, assayUuid, nodeType, start, rows, facets, fields, documents, annotationParam, filterNodeSelection ) {
-		
-	filterNodeSelection = typeof filterNodeSelection !== 'undefined' ? filterNodeSelection : true;
-		
-	var nodeSelectionFilter;
-	
-	if ( nodeSelection.length > 0 && filterNodeSelection ) {
-		nodeSelectionFilter = ( nodeSelectionBlacklistMode ? "-" : "" ) + "uuid:" + "(" + nodeSelection.join( " OR " ) +  ")"; 
-	}  
-	else {
-		nodeSelectionFilter = "uuid:*"
-	}
-	
-	var url = solrSelectUrl
-		+ "?" + solrQuery 
-		+ "&" + solrSettings
-		+ "&" + "start=" + start
-		+ "&" + "rows=" + rows
-		+ "&" + "fq="
-		+ "("
-			+ "study_uuid:" + studyUuid
-			+ " AND " + "assay_uuid:" + assayUuid
-			+ " AND " + "is_annotation:" + annotationParam			
-			+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + " OR " + "type: \"Array Data File\"" + " OR " + "type: \"Derived Array Data File\"" + " OR " + "type: \"Array Data Matrix File\"" + " OR " + "type: \"Derived Array Data Matrix File\"" + ")"
-		+ ")"
-		+ "&" + "fq=" + nodeSelectionFilter
-	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
-	   	+ "&" + "facet.limit=-1"; // unlimited number of facet values (otherwise some values will be missing)	   	
-	  	
-	url += buildSolrQueryFacetFields( facets );		
-	url += buildSolrQueryFieldList( fields );
-	url += buildSolrQuerySortFields( fields );
-	url += buildSolrQueryPivots( pivots );
-		
-	return ( url );
-}
-
-
 function updateSolrQueryDebugElement( elementId, query ) {
 	// "#url-view"
 	$( "#" + elementId ).html( "" );
@@ -532,19 +377,6 @@ function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 }
 
 
-function updateSelectionCount( elementId ) {
-    $( "#" + elementId ).html("");
-    currentCount = ( nodeSelectionBlacklistMode ? query.selected_items - nodeSelection.length : nodeSelection.length ); 
-	$( "<span/>", { style: "font-size: large;", html: "<b>" + currentCount + "</b> of <b>" + query.total_items + "</b> selected" } ).appendTo( "#" + elementId );
-	
-	// update viewer buttons
-	if ( REFINERY_REPOSITORY_MODE ) {
-		updateDownloadButton( "submitReposBtn" );
-		updateIgvButton( "igv-multi-species" );	
-	}
-	
-}
-
 
 function getData( studyUuid, assayUuid, nodeType, solr_query ) {
 	
@@ -615,69 +447,6 @@ function getField( studyUuid, assayUuid, nodeType, field, callback ) {
 	}});	
 }
 
-
-function clearFacets() {
-	var counter = 0;
-	
-	for ( var facet in facets ) {
-		if ( facets.hasOwnProperty( facet ) ) {
-			for ( var facetValue in facets[facet] ) {
-				if ( facets[facet].hasOwnProperty( facetValue ) ) {
-					if ( facets[facet][facetValue].isSelected ) {
-						facets[facet][facetValue].isSelected = false;
-						++counter;
-					}					
-				}
-			}				
-		}
-	}
-	
-	return counter;
-}
-
-function composeFieldNameId( fieldName ) {
-	return ( "fieldname" + "___" + fieldName );
-}
-
-function decomposeFieldNameId( fieldNameId ) {
-	return ( { fieldName: fieldNameId.split( "___" )[1] } );
-}
-
-
-function composeFacetValueId( facet, facetValue ) {
-	return ( "facetvalue" + "___" + facet + "___" + facetValue );
-}
-
-function decomposeFacetValueId( facetValueId ) {
-	return ( { facet: facetValueId.split( "___" )[1], facetValue: facetValueId.split( "___" )[2] } );
-}
-
-function composeFacetId( facet ) {
-	return ( "facet" + "___" + facet );
-}
-
-function decomposeFacetId( facetId ) {
-	return ( { facet: facetId.split( "___" )[1] } );
-}
-
-
-function updateDownloadButton( button_id ) {
-	if ( currentCount > MAX_DOWNLOAD_FILES || currentCount <= 0 || !REFINERY_USER_AUTHENTICATED || ( showAnnotation && !allowAnnotationDownload ) ) {
-		$("#" + button_id ).addClass( "disabled" );
-		$("#" + button_id ).attr( "data-original-title", MESSAGE_DOWNLOAD_UNAVAILABE );
-	} else {
-		$("#" + button_id ).removeClass( "disabled" );		
-		$("#" + button_id ).attr( "data-original-title", MESSAGE_DOWNLOAD_AVAILABLE );
-	}
-}
-
-function updateIgvButton( button_id ) {
-	if ( currentCount <= 0 ) {
-		$("#" + button_id ).addClass( "disabled" );
-	} else {
-		$("#" + button_id ).removeClass( "disabled" );		
-	}
-}
 
 
 
@@ -897,322 +666,6 @@ function renderPivotMatrix( useGradient, xPivot, yPivot ) {
 }
 
 
-function processFields() {
-	var visibleItems = []
-	var invisibleItems = []
-	for ( field in fields ) {
-		if ( fields.hasOwnProperty( field ) ) {
-			if ( fields[field].isVisible && !fields[field].isInternal ) {
-				visibleItems.push("<a class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">" + '<label class="checkbox"><input type="checkbox" checked></label>' + "&nbsp;" + prettifySolrFieldName( field, true ) + "</a>" );				
-			}
-			else {
-				if ( hiddenFieldNames.indexOf( field ) < 0 && !fields[field].isInternal ) {
-					visibleItems.push("<a class=\"field-name\" label id=\"" + composeFieldNameId( field ) + "\">"  + '<label class="checkbox"><input type="checkbox"></label>' +  "&nbsp;" + prettifySolrFieldName( field, true ) + "</a>" );
-				}
-			}
-		}
-	}
-
-	$("#field-view").html("" );
-
-	if ( visibleItems.length > 0 ) {
-		var listItems = [];
-		for ( var i = 0; i < visibleItems.length; ++i ) {
-			listItems.push( "<li>" + visibleItems[i] + "</li>" );			
-		}
-		$("#field-view").append( listItems.join( ""));
-	}	
-	
-	// configure columns
-   	$("#field-view").children().click( function(event) {
-   		event.stopPropagation();
-   		
-   		var fieldNameId = event.target.id;
-   		var fieldName = decomposeFieldNameId( fieldNameId ).fieldName;
-   	   		
-   		fields[fieldName].isVisible = !fields[fieldName].isVisible;   		
-   		getData( currentAssayUuid, currentStudyUuid, currentNodeType );
-   	} );				
-   	
-   	// configure rows   	
-   	$( "#" + "items-per-page-buttons" ).html("");
-   	for ( var i = 0; i < itemsPerPageOptions.length; ++i ) {
-   		if ( itemsPerPageOptions[i] == currentItemsPerPage ) {
-			$( "#" + "items-per-page-buttons" ).append(
-				'<button type="button" data-items="' + itemsPerPageOptions[i] + '" data-toggle="button" class="btn btn-mini active" rel="tooltip" data-placement="bottom" data-html="true" title="View ' + itemsPerPageOptions[i] + ' rows per page">' + itemsPerPageOptions[i] + '</button>' );   			
-   		}
-   		else {
-			$( "#" + "items-per-page-buttons" ).append(
-				'<button type="button" data-items="' + itemsPerPageOptions[i] + '" data-toggle="button" class="btn btn-mini" rel="tooltip" data-placement="bottom" data-html="true" title="View ' + itemsPerPageOptions[i] + ' rows per page">' + itemsPerPageOptions[i] + '</button>' );   			   			
-   		}
-   	}
-   	
-   	$("#" + "items-per-page-buttons").children().click( function(event) {
-   		if ( currentItemsPerPage != $(this).data("items") ) {
-	   		currentItemsPerPage = $(this).data("items");
-	   		getData( currentAssayUuid, currentStudyUuid, currentNodeType );   			
-   		}
-   	});
-   	   	
-
-}
-
-function makeTableHeader() {
-
-	var items = [];
-
-	items.push( '<th align="left" width="0" id="node-selection-column-header"></th>' );	
-		
-	for ( field in fields ) {
-		if ( fields.hasOwnProperty( field ) ) {
-			if ( fields[field].isVisible ) {
-				if ( fields[field].direction === "asc" ) {
-					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\"><i class=\"icon-arrow-down\">&nbsp;" + prettifySolrFieldName( field, true ) + "</th>" );				
-				} else if ( fields[field].direction === "desc" ) {
-					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\"><i class=\"icon-arrow-up\">&nbsp;" + prettifySolrFieldName( field, true ) + "</th>" );				
-				} else {
-					items.push("<th align=left id=\"" + composeFieldNameId( field + "___header" ) + "\">" + prettifySolrFieldName( field, true ) + "</th>" );									
-				}
-			}
-		}
-	}
-
-	return "<thead><tr>" + items.join("") + "</tr></thead>";
-}
-
-
-function processDocs( data ) {
-	var items = []
-	documents = []
-	for ( var i = 0; i < data.response.docs.length; ++i ) {
-		documents.push( data.response.docs[i] );
-		
-		var document = documents[i];
-		var s = "<tr>";
-		
-		//adding galaxy comboboxes 
-		var node_uuid = document.uuid;
-		
-		// IF Repository mode 
-		if ( REFINERY_REPOSITORY_MODE ) {
-			var isNodeSelected;
-			
-			if ( nodeSelection.indexOf( node_uuid ) != -1 ) {
-				if ( nodeSelectionBlacklistMode ) {
-					isNodeSelected = false;
-				}
-				else {
-					isNodeSelected = true;
-				}				
-			}
-			else
-			{
-				if ( nodeSelectionBlacklistMode ) {
-					isNodeSelected = true;
-				}
-				else {
-					isNodeSelected = false;
-				}				
-			}
-									
-			s += '<td><label><input id="file_' + node_uuid + '" data-uuid="' + node_uuid + '" class="node-selection-checkbox" type=\"checkbox\" ' + ( isNodeSelected ? "checked" : "" ) + '></label>' + '</td>';							
-			
-			//s += '<td></td>';
-		}
-		else { 
-			var check_temp = '<select name="assay_'+ node_uuid +'" id="webmenu" class="btn-mini OGcombobox"> <option></option> </select>';
-			s += '<td>' + check_temp + '</td>'
-		}
-
-		for ( entry in fields )
-		{
-			if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible && !fields[entry].isInternal ) {
-				if ( document.hasOwnProperty( entry ) && !( hiddenFieldNames.indexOf( entry ) >= 0 ) )
-				{
-					s += "<td>";
-					s += document[entry];
-					s += "</td>";				
-				}
-				else // this field does not exist in this result
-				{
-					s += "<td>";
-					s += ""
-					s += "</td>";								
-				}				
-			}
-		}
-		s += "</tr>";
-		items.push( s );
-    }	
-
-    var tableHeader = makeTableHeader();
-                 
-    $( "#table-view" ).html("");
-	$('<table/>', { 'class': "table table-striped table-condensed", 'id':'table_matrix',html: tableHeader + "<tbody>" + items.join('\n') + "</tbody>" }).appendTo('#table-view');
-	
-	// add node selection mode checkbox to node selection column header cell
-	var nodeSelectionModeCheckbox = '<label><input id="node-selection-mode" type=\"checkbox\" ' + ( nodeSelectionBlacklistMode ? "checked" : "" ) + '></label>';
-	$( "#" + "node-selection-column-header" ).html( nodeSelectionModeCheckbox );	
-
-	// attach event to node selection mode checkbox
-	$( "#" + "node-selection-mode" ).click( function( event ){
-		if ( nodeSelectionBlacklistMode ) {
-			nodeSelectionBlacklistMode = false;
-			nodeSelection = [];
-			$( "." + "node-selection-checkbox" ).removeAttr( "checked" );
-		}
-		else {
-			nodeSelectionBlacklistMode = true;
-			nodeSelection = [];
-			$( "." + "node-selection-checkbox" ).attr( "checked", "checked" );
-		}
-		
-		updateSelectionCount( "statistics-view" );
-	});
-
-	// attach events to node selection checkboxes
-	$( "." + "node-selection-checkbox" ).click( function( event ) {
-		var nodeUuid = $(this).data( "uuid" );			
-		var nodeUuidIndex = nodeSelection.indexOf( nodeUuid );
-		
-		if ( nodeUuidIndex != -1 ) {
-			// remove element
-			nodeSelection.splice( nodeUuidIndex, 1 ); 			
-		}
-		else {
-			nodeSelection.push( nodeUuid );
-		}
-		
-		updateSelectionCount( "statistics-view" );
-	});
-	
-	// attach events to column headers
-	for ( field in fields ) {
-		if ( fields.hasOwnProperty( field ) ) {
-			if ( fields[field].isVisible && !fields[field].isInternal ) {
-				$( "#" + composeFieldNameId( field + "___header" ) ).on( "click", function() {
-					newDirection = toggleFieldDirection( fields[decomposeFieldNameId( this.id ).fieldName].direction );
-					clearFieldDirections();
-					fields[decomposeFieldNameId( this.id ).fieldName].direction = newDirection;					
-					getData( currentAssayUuid, currentStudyUuid, currentNodeType ); 					
-				});
-			}
-		}
-	}
-	
-    //initialize data table
-    //initDataTable('table_matrix');
-    workflowActions();	
-}
-
-
-function processPages( data ) {	
-	var visiblePages = 5;
-	var padLower = 2;
-	var padUpper = 2;
-	var availablePages = Math.max( 0, Math.ceil( data.response.numFound/currentItemsPerPage ) - 1 );
-
-	if ( query.page > availablePages ) {
-		query.page = availablePages;
-	}
-	
-	if ( availablePages < visiblePages ) {
-		if ( query.page < padLower ) {
-			padUpper = padUpper + padLower;  
-			padLower = query.page;
-			padUpper = padUpper - padLower;  		
-		}
-	}  	
-	else if ( query.page < padLower ) {
-		padUpper = padUpper + padLower;  
-		padLower = query.page;
-		padUpper = padUpper - padLower;  		
-	}  
-	else if ( query.page > availablePages - padLower ) {
-		padLower = padLower + padUpper - ( availablePages - query.page );  
-		padUpper = availablePages - query.page;
-	}  
-
-	
-	var items = [];
-		
-	if ( query.page == 0 ) {
-		items.push( "<li class=\"disabled\"><a>&laquo;</a></li>" );						
-	}
-	else {
-		items.push( "<li><a href=\"#\" id=\"page-first\">&laquo;</a></li>" );		
-	}
-	
-	for ( var i = query.page - padLower; i <= query.page + padUpper; ++i ) {
-		if ( i == query.page ) {
-			items.push( "<li class=\"active\"><a href=\"#\" id=\"page-" + (i+1) + "\">" + (i+1) + "</a></li>")			
-		} 
-		else {
-			if ( i > availablePages ) {
-				items.push( "<li class=\"disabled\"><a>"+ (i+1) + "</a></li>")							
-			}
-			else {
-				items.push( "<li><a href=\"#\" id=\"page-" + (i+1) + "\">"+ (i+1) + "</a></li>")				
-			}			 
-		}
-	}
-	
-	if ( query.page == availablePages ) {
-		items.push( "<li class=\"disabled\"><a>&raquo;</a></li>" );						
-	} 
-	else {
-		items.push( "<li><a href=\"#\" id=\"page-last\">&raquo;</a></li>")					
-	}
-	
-	
-    $( "#pager-view" ).html("");	
-	$('<div/>', { 'class': "pagination", html: "<ul>" + items.join('') + "</ul>" }).appendTo( '#pager-view' );
-
-	$( "[id^=page-]" ).on( "click", function() {
-		
-		page = this.id.split( "-" )[1];
-		
-		if ( page === "first" ) {
-			query.page = 0;			
-		} else if ( page === "last" ) {
-			query.page = availablePages;						
-		} else {
-			query.page = page - 1;			
-		}
-				
-		getData( currentAssayUuid, currentStudyUuid, currentNodeType ); 							  
-	});
-}
-
-
-function toggleFieldDirection( direction ) {
-	if ( direction === "asc" ) {
-		return ( "desc" );
-	}
-	
-	if ( direction === "desc" ) {
-		return ( "asc" );
-	}
-	
-	return ( "asc" );
-}
-
-function clearFieldDirections() {
-	for ( field in fields ) {
-		if ( fields.hasOwnProperty( field ) ) {
-			fields[field].direction = "";
-		}
-	}
-}
-
-
-var createCallback = function(url) {
-    return function() {
-        window.open(url);
-    };
-};
-
-
 function createSpeciesModal(aresult) {
 	//console.log("contents.js createSpeciesModal called");
     var ret_buttons = [];
@@ -1229,18 +682,6 @@ function createSpeciesModal(aresult) {
 	
 	return ret_buttons;
 }
-
-
-$( "#profile-viewer-session-link" ).on( "click", function() {
-	getField( currentAssayUuid, currentStudyUuid, currentNodeType, "uuid", function( uuids ) {
-		
-		var limit = 1;
-		var newUrl = "/visualization_manager/profile_viewer_session?uuid=" + uuids[0];
-		
-		console.log( newUrl );
-		window.location = newUrl;			
-	});
-});
 
 
 $( "#igv-multi-species" ).on( "click", function(e) {
