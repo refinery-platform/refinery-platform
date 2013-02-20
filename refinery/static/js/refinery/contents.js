@@ -7,11 +7,10 @@ var MAX_DOWNLOAD_FILES = 20;
 var MESSAGE_DOWNLOAD_UNAVAILABE = "You have to be logged in<br> and selected " + MAX_DOWNLOAD_FILES + " files or less<br>to create an archive for download.";
 var MESSAGE_DOWNLOAD_AVAILABLE = "Click to create<br>archive for download<br>of selected files.";
 
-var urlComponents = document.location.href.split("/");	
 	
 var allowAnnotationDownload = false;
 
-var solrRoot = "http://" + REFINERY_BASE_URL + "/solr/";
+var solrRoot = document.location.protocol + "//" + document.location.host + "/solr/";
 var solrSelectUrl = solrRoot + "data_set_manager/select/";
 var solrSelectEndpoint = "data_set_manager/select/";
 var solrIgvUrl = solrRoot + "igv/";
@@ -26,8 +25,8 @@ var query = { total_items: 0, selected_items: 0, items_per_page: currentItemsPer
 
 var currentCount = 0;
 
-var currentStudyUuid = externalStudyUuid; //urlComponents[urlComponents.length-2];
-var currentAssayUuid = externalAssayUuid; //urlComponents[urlComponents.length-3]; 
+var currentStudyUuid = externalStudyUuid;
+var currentAssayUuid = externalAssayUuid; 
 var currentNodeType = "\"Raw Data File\"";
 
 var dataSetNodeTypes = ['"Raw Data File"', '"Derived Data File"', '"Array Data File"', '"Derived Array Data File"', '"Array Data Matrix File"', '"Derived Array Data Matrix File"'];
@@ -37,9 +36,7 @@ $(document).ready(function() {
 	configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
 	configurator.initialize();
 	
-	
 	/*
-	
 	var client = new SolrClient( solrRoot,
 		solrSelectEndpoint,
 		"csrfMiddlewareToken",
@@ -52,8 +49,11 @@ $(document).ready(function() {
 		q.addFilter( "type", dataSetNodeTypes );
 		
 		client.initialize( q, function(query) {
-			console.log( "Initialized query:" );
+			console.log( "Initialized query:" );			
 			console.log( query );
+			
+			var table = new SolrDocumentTable( "solr-table-view", "solrdoctab", query, client, configurator );
+			
 			client.run( query, SOLR_FULL_QUERY,  0, 10, function( response ) {
 				console.log( response );
 				
@@ -62,17 +62,13 @@ $(document).ready(function() {
 				console.log( query.deserialize( serializedQuery ) ); 
 			});
 
-			client.run( query, SOLR_SELECTION_QUERY,  0, 5, function( response ) {
+			client.run( query, SOLR_SELECTION_QUERY, 0, 5, function( response ) {
 				console.log( response );
-			});
-
-			client.run( query, SOLR_SELECTION_QUERY,  5, 10, function( response ) {
-				console.log( response );
-			});
-			
+				table.render( response );
+			});			
 		});		
 	});
-		
+	
 	*/
 	
 	
@@ -468,7 +464,7 @@ function getData( studyUuid, assayUuid, nodeType, solr_query ) {
 	var url = "";
 	
 	if ( typeof solr_query === 'undefined' ) {
-		url = buildSolrQuery( studyUuid, assayUuid, nodeType, currentItemsPerPage * query.page, currentItemsPerPage, facets, fields, {}, showAnnotation );		
+		url = buildSolrQuery( studyUuid, assayUuid, nodeType, currentItemsPerPage * query.page, currentItemsPerPage, facets, fields, {}, showAnnotation, false );		
 	}
 	else {
 		url = solr_query;
@@ -519,7 +515,7 @@ function getPivotData( studyUuid, assayUuid, nodeType ) {
 function getField( studyUuid, assayUuid, nodeType, field, callback ) {
 	var fieldSelection = {};
 	fieldSelection[field] = { isVisible: true };
-	var solr_query = buildSolrQuery( studyUuid, assayUuid, nodeType, 0, query.total_items, {}, fieldSelection, {}, showAnnotation );
+	var solr_query = buildSolrQuery( studyUuid, assayUuid, nodeType, 0, query.total_items, {}, fieldSelection, {}, showAnnotation, false );
 		
 	$.ajax( { type: "GET", dataType: "jsonp", url: solr_query, success: function(data) {
 		var fieldValues = [] 

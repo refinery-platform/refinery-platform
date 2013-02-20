@@ -435,9 +435,10 @@ def addIGVResource(uuidlist, xml_res, xml_doc):
     #logger.debug("visualization_manager.views addIGVResource")   
         
     # get paths to url 
-    for samp in uuidlist:
-        # gets filestore item 
-        curr_name, curr_url = get_file_name(samp)
+    for node_uuid in uuidlist:
+        # gets filestore item
+         
+        curr_name, curr_url = get_file_name( node_uuid )
         #logger.debug("createIGVsession: name = %s, curr_url = %s" % (curr_name, curr_url))
         
         # What to do if fs does not exist? 

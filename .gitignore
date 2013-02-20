@@ -38,7 +38,8 @@ Thumbs.db
 ###############################
 setup_refinery.sh
 settings_local*.py
-docs/_*
+docs/_build/*
+docs/_static/*
 .project
 .DS_Store
 .pydevproject

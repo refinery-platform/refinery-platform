@@ -437,6 +437,13 @@ SolrQuery.prototype.clearAll = function() {
 };
 
 
+SolrQuery.prototype.isDocumentSelected = function ( uuid ) {
+	
+	var self = this;
+	
+	return ( self._documentSelection.indexOf( uuid ) > 0 && !self._documentSelectionBlacklistMode );	
+}
+
 
 SolrQuery.prototype.serialize = function ( mode ) {
 	

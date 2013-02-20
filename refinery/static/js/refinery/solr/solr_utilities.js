@@ -19,6 +19,26 @@ function inherit(proto) {
   return new F
 }
 
+function composeFieldNameId( fieldName ) {
+	return ( "fieldname" + "___" + fieldName );
+}
+
+function decomposeFieldNameId( fieldNameId ) {
+	return ( { fieldName: fieldNameId.split( "___" )[1] } );
+}
+
+
+function composeFacetValueId( facet, facetValue ) {
+	return ( "facetvalue" + "___" + facet + "___" + facetValue );
+}
+
+function decomposeFacetValueId( facetValueId ) {
+	return ( { facet: facetValueId.split( "___" )[1], facetValue: facetValueId.split( "___" )[2] } );
+}
+
+function composeFacetId( facet ) {
+	return ( "facet" + "___" + facet );
+}
 
 
 function prettifySolrFieldName( name, isTitle )

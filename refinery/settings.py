@@ -365,8 +365,11 @@ REFINERY_PUBLIC_GROUP_ID = 100  # DO NOT CHANGE THIS after initialization of you
 AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
 AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 
+ISA_TAB_DIR = '/srv/refinery/isatabdir'
+ISA_TAB_TEMP_DIR = '/srv/refinery/isatabdir/temp'
+
 # relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
-FILE_STORE_DIR = 'files'
+FILE_STORE_DIR = 'file_store'
 
 # location of the Solr server (must be accessible from the web browser)
 REFINERY_SOLR_BASE_URL = "http://127.0.0.1:8983/solr/"
