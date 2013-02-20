@@ -50,10 +50,10 @@ $(document).ready(function() {
 		query.addFilter( "type", dataSetNodeTypes );
 		query.addFilter( "is_annotation", false );
 
-		var dataQuery = $.extend( true, {}, query );
+		var dataQuery = query.clone();
 		dataQuery.addFilter( "is_annotation", false );
 				
-		var annotationQuery = $.extend( true, {}, query );
+		var annotationQuery = query.clone();
 		annotationQuery.addFilter( "is_annotation", true );
 				 
 		// =====================================
@@ -224,13 +224,13 @@ $(document).ready(function() {
 		// --------------
 		$(".annotation-buttons button").click(function () {
 		    if ( $(this).attr("id") == "annotation-button" ) {		    	
-		    	dataQuery = $.extend(true, {}, query );
+		    	dataQuery = query.clone();
 		    	query = annotationQuery;
 		    			    	 
 		    	client.initialize( query, false );
 		    }
 		    else {		    	
-		    	annotationQuery = $.extend(true, {}, query );		    	
+		    	annotationQuery = query.clone();		    	
 		    	query = dataQuery;		 
 		    	   	 
 				client.initialize( query, false );		
@@ -240,8 +240,6 @@ $(document).ready(function() {
 		});	
 
 		client.initialize( query, true );		
-		//client.initialize( annotationQuery, true );		
-		//client.initialize( dataQuery, true );		
 	});
 
 	

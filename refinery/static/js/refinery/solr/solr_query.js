@@ -824,4 +824,10 @@ SolrQuery.prototype.getDocumentSelectionBlacklistMode = function() {
 	return self._documentSelectionBlacklistMode;
 }
 
+SolrQuery.prototype.clone = function() {
+	var self = this;
+	
+	return $.extend( true, {}, self );
+}
+
 
