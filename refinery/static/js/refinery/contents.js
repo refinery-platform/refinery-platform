@@ -39,6 +39,7 @@ $(document).ready(function() {
 	// event handling
 	var document_table_commands = new Backbone.Wreqr.Commands();
 	var facet_view_commands = new Backbone.Wreqr.Commands();
+	var pivotMatrixCommands = new Backbone.Wreqr.Commands();
 	var client_commands = new Backbone.Wreqr.Commands();
 	var query_commands = new Backbone.Wreqr.Commands();
 	
@@ -76,7 +77,8 @@ $(document).ready(function() {
 			}
 		}
 		
-		// =====================================		
+		// =====================================
+		
 
 		var client = new SolrClient( solrRoot,
 			solrSelectEndpoint,
@@ -117,14 +119,24 @@ $(document).ready(function() {
 			tableView.setDocumentsPerPage( 20 );
 		
 			facetView = new SolrFacetView( "solr-facet-view", "solrfacets1", query, configurator, facet_view_commands );
-			documentCountView = new SolrDocumentCountView( "solr-document-count-view", "solrcounts1", query, undefined );			
+			documentCountView = new SolrDocumentCountView( "solr-document-count-view", "solrcounts1", query, undefined );
+			
+			pivotMatrixView = new SolrPivotMatrix( "solr-pivot-matrix", "solrpivot1", query, {}, pivotMatrixCommands );			
+
+			// render pivot matrix upon activation of tab (otherwise the labels will be missing because their
+			// width cannot be determined while the matrix is not visible (getBBox and getBoundingClientRect don't work)
+			$('a[data-toggle="pill"]').on('shown', function (event) {			  
+			  if ( event.target.href.split( "#" )[1] == "pivot-view-tab" ) {
+			  	pivotMatrixView.render();
+			  }
+			})				
 			
 			query.setDocumentIndex( 0 );
 			query.setDocumentCount( tableView.getDocumentsPerPage() );
-					
-			
+								
 			client.run( query, SOLR_FULL_QUERY );									
 		});
+
 
 		client_commands.addHandler( SOLR_QUERY_UPDATED_COMMAND, function( arguments ){
 			console.log( SOLR_QUERY_UPDATED_COMMAND + ' executed' );  				
@@ -133,9 +145,9 @@ $(document).ready(function() {
 			tableView.render( arguments.response );
 			facetView.render( arguments.response );
 			documentCountView.render( arguments.response );
+			pivotMatrixView.render( arguments.response );
 			updateDownloadButton( "submitReposBtn" );
 			updateIgvButton( "igv-multi-species" );	
-
 		});
 				
 		document_table_commands.addHandler( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, function( arguments ){
@@ -198,6 +210,23 @@ $(document).ready(function() {
 
 		facet_view_commands.addHandler( SOLR_FACET_SELECTION_UPDATED_COMMAND, function( arguments ){
 			console.log( SOLR_FACET_SELECTION_UPDATED_COMMAND + ' executed' );  				
+			//console.log( arguments );
+			
+			query.clearDocumentSelection();
+			query.setDocumentSelectionBlacklistMode( true );
+			
+			client.run( query, SOLR_FULL_QUERY );
+		});
+
+		pivotMatrixCommands.addHandler( SOLR_PIVOT_MATRIX_FACETS_UPDATED_COMMAND, function( arguments ){
+			console.log( SOLR_PIVOT_MATRIX_FACETS_UPDATED_COMMAND + ' executed' );  				
+			//console.log( arguments );
+			
+			client.run( query, SOLR_FULL_QUERY );
+		});
+
+		pivotMatrixCommands.addHandler( SOLR_PIVOT_MATRIX_SELECTION_UPDATED_COMMAND, function( arguments ){
+			console.log( SOLR_PIVOT_MATRIX_SELECTION_UPDATED_COMMAND + ' executed' );  				
 			//console.log( arguments );
 			
 			client.run( query, SOLR_FULL_QUERY );
@@ -290,12 +319,6 @@ function buildPivotQuery( studyUuid, assayUuid, nodeType, loadAnnotation ) {
 	return ( url );	
 }
 	
-function updateSolrQueryDebugElement( elementId, query ) {
-	// "#url-view"
-	$( "#" + elementId ).html( "" );
-	$( "<a/>", { href: query + "&indent=on", html: "Solr Query" } ).appendTo( "#" + elementId );	
-}
-
 
 function initializeDataWithState( studyUuid, assayUuid, nodeType ) {
 	var url = buildSolrQuery( studyUuid, assayUuid, nodeType, 0, 1, {}, {}, {}, showAnnotation );

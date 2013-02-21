@@ -831,3 +831,42 @@ SolrQuery.prototype.clone = function() {
 }
 
 
+SolrQuery.prototype.getFacetValueLookupTable = function( facet ) {
+	
+	var self = this;
+	
+	// make lookup table mapping from facet values to facet value indices
+	var lookup = {};
+	var index = 0;
+			
+	for ( facetValue in self._facetSelection[facet] ) {
+		if ( self._facetSelection[facet].hasOwnProperty( facetValue ) ) {
+			lookup[facetValue] = index++;
+		}
+	}	
+	
+	return lookup;
+}
+
+
+SolrQuery.prototype.setPivots = function( pivot1, pivot2 ) {
+	var self = this;
+	
+	self._pivots = [ pivot1, pivot2 ];	
+	
+	return self;
+}
+
+
+SolrQuery.prototype.getPivots = function() {
+	var self = this;
+	
+	return self._pivots;
+}
+
+
+
+
+
+
+
