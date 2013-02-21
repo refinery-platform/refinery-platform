@@ -15,85 +15,6 @@
  * - backbone.js
  */
 
-// Backbone.AjaxCommands
-// ---------------------
-
-Backbone.AjaxCommands = (function (Backbone, $, _) {
-    var Commands = {};
-
-    // Private data
-    // ------------
-
-    var commandList = {};
-
-    // Public API
-    // ----------
-
-    Commands.register = function (commandName, options) {
-        commandList[commandName] = options;
-    }
-
-    Commands.get = function (commandName) {
-        var options = commandList[commandName];
-        options = options || {};
-        options = _.clone(options);
-        var command = new Commands.Command(commandName, options);
-        return command;
-    };
-
-    // Command Type
-    // -------------------
-
-    Commands.Command = function (name, options) {
-        this.name = name;
-        this.options = options
-    };
-
-    _.extend(Commands.Command.prototype, Backbone.Events, {
-        execute: function (data) {
-            var that = this;
-
-            var config = this.getAjaxConfig(this.options, data);
-
-            this.trigger("before:execute");
-
-            var request = $.ajax(config);
-            request.done(function (response) {
-                that.trigger("success", response);
-            });
-
-            request.fail(function (response) {
-                that.trigger("error", response);
-            });
-
-            request.always(function (response) {
-                that.trigger("complete", response);
-            });
-        },
-
-        getAjaxConfig: function (options, data) {
-            var url = this.getUrl(options, data);
-
-            var ajaxConfig = {
-                type: "GET",
-                dataType: "JSON",
-                url: url
-            };
-
-            _.extend(ajaxConfig, options);
-            ajaxConfig.data = data;
-
-            return ajaxConfig;
-        },
-
-        getUrl: function (options, data) {
-            return options.url;
-        }
-    });
-
-    return Commands;
-})(Backbone, $, _);
-
 
 /*
  * Marionette view of creating node pairs from node sets
@@ -134,6 +55,10 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 	var nodeset_form;
 	var node_relation_form;
 	nrMod.started = false;
+	var view_fields;
+	var model_fields;
+	var query_fields;
+	var tl;
 
 	//===================================================================
 	// Registering Ajax commands
@@ -156,6 +81,26 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 	//===================================================================
 	// Button Actions
 	//===================================================================
+
+	nrMod.openFields = function(event) {
+		console.log("workflowActions: openFields");
+		App.vent.trigger("show_fields");
+	}
+
+	nrMod.getDataFields = function(event) {
+		console.log("workflowActions: getDataFields");
+
+		opts = {};
+		opts['csrfmiddlewaretoken'] = crsf_token;
+		opts['workflow_id'] = nr_wcv.getWorkflowID();
+		var temp_ns_opts = nr_inputs.getNodeSet1();
+		opts['node_set_uuid'] = temp_ns_opts.node_set_uuid;
+		opts['node_set_field'] = temp_ns_opts.node_input;
+		opts['study_uuid'] = externalAssayUuid;
+
+		// execute the command and send this data with it
+		//nodeset_form.execute(opts);
+	}
 
 	nrMod.runSingleAnalysis = function(event) {
 		console.log("workflowActions: runSingleAnalysis");
@@ -193,6 +138,20 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 	//===================================================================
 	// models
 	//===================================================================
+
+	nrMod.fieldModel = Backbone.Model.extend({
+		defaults: {
+            name: '',
+            full_name: '',
+        },
+        initialize: function(){
+            //alert("Welcome (nrMod.fieldsModel) to this world");
+        }
+	});
+
+	nrMod.fieldCollection = Backbone.Collection.extend({
+	    model: nrMod.fieldModel,
+	});
 
 	nrMod.nodeSetModel = Backbone.Model.extend({
 	    //urlRoot: '/api/v1/workflow/'
@@ -274,6 +233,37 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 	//===================================================================
 	// views
 	//===================================================================
+
+	nrMod.fieldItemView = Marionette.ItemView.extend({
+		template: '#template_field_item',
+		tagName: 'label',
+
+		onRender: function() {
+			this.$el.attr("class", "checkbox inline");
+  			//this.$el.attr( "class", "myclass1 myclass2" );
+		},
+
+	});
+	nrMod.fieldCollectionView = Marionette.CollectionView.extend({
+		tagName: "fieldset",
+		itemView: nrMod.fieldItemView,
+		//ui_name: "wcv_dropdown",
+		//current_uuid: "",
+
+		initialize: function(opts) {
+			console.log("fieldCollectionView initialized");
+			console.log(opts);
+			//var current_uuid = $(this.el).val();
+			//this.current_uuid = current_uuid;
+		},
+		onRender: function() {
+			//this.$el.attr( "id", "my-id" );
+  			//this.$el.attr( "class", "myclass1 myclass2" );
+  			//console.log("workflowCollectionView render called");
+			//$(this.el).attr('id', '1111');
+			//return this;
+		},
+	});
 
 	nrMod.workflowItemView = Marionette.ItemView.extend({
 		template: '#template_workflow_item',
@@ -377,33 +367,36 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 					if (w2.set2 != null){
 
+						///* For creating multiple dropdowns for 2 inputs to a workflows
+						temp_html += '<div class="control-group">';
+						temp_html += '<div class="input-append">';
+						temp_html += '<label class="control-label" for="set1">' + self.set1_field + '</label>';
+						temp_html += '<div class="controls"> <select id="dropdown_set1" name="set1">'
+					 + temp_options + '</select>';
+					 	temp_html += '<a id="new_relationship_btn" href="#" onclick="nrApp.nrMod.openFields()" role="button" class="btn btn-warning">';
+						temp_html += '<i class="icon-plus"></i>&nbsp;&nbsp;New</a>';
+					 	temp_html += '</div>';
+
+					 	temp_html += '</div>';
+					 	temp_html += '</div>';
+					 	temp_html += '</div>';
+
+						temp_html += '<div class="control-group">';
+						temp_html += '<label class="control-label" for="set2">' + self.set2_field + '</label>';
+						temp_html += '<div class="controls"> <select id="dropdown_set2" name="set2">'
+						+ temp_options + '</select></div></div>';
+						temp_html += '</div>';
+
+						temp_html += '<div class="control-group">';
+						temp_html += '<div class="controls">';
+
+						temp_html += '</div></div>';
+
+						//creates node relationship drop down section
 						if (this.node_relations_options != '') {
 							temp_html += self.getNodeRelationshipHTML();
 						}
-						else {
 
-							///* For creating multiple dropdowns for 2 inputs to a workflows
-							temp_html += '<div class="control-group">';
-							temp_html += '<label class="control-label" for="set1">Set1</label>   \
-						<div class="controls"> <select id="dropdown_set1" name="set1">'
-						 + temp_options + '</select>';
-						 	temp_html += '</div>';
-						 	temp_html += '</div>';
-						 	temp_html += '</div>';
-
-							temp_html += '<div class="control-group">';
-							temp_html += '<label class="control-label" for="set2">Set2</label>   \
-							<div class="controls"> <select id="dropdown_set2" name="set2">'
-							+ temp_options + '</select></div></div>';
-							temp_html += '</div>';
-
-							temp_html += '<div class="control-group">';
-							temp_html += '<div class="controls">';
-							temp_html += '<a id="run_analysis_single_btn" href="#" onclick="nrApp.nrMod.runSingleAnalysis()" role="button" class="btn btn-warning">';
-							temp_html += '<i class="icon-sitemap"></i>&nbsp;&nbsp;Create Relationships</a>';
-							temp_html += '</div></div>';
-							//*/
-						}
 					}
 				});
 
@@ -436,12 +429,13 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		},
 
 		changeInputs: function (new_inputs) {
-			//console.log("inputRelationshipView changeInputs called");
+			console.log("inputRelationshipView changeInputs called");
 			this.current_inputs = new_inputs.get("input_relationships");
 
 			var set1_field;
 			var set2_field;
 			_.each(this.current_inputs, function (w2) {
+				console.log(w2);
 				set1_field = w2.set1;
 				set2_field = w2.set2;
 			});
@@ -480,9 +474,25 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 	});
 
+	App.vent.on("show_fields", function(){
+		console.log("show_fields called VENT");
+		//nr_inputs.changeInputs(wf_inputs);
+		TweenMax.to("#process_3_p", 1, {autoAlpha:1, ease:Power4.easeInOut});
+	});
+
     App.vent.on("change_inputs", function(wf_inputs){
 		console.log("change inputs called VENT");
 		nr_inputs.changeInputs(wf_inputs);
+
+		tl = new TimelineMax({align:"sequence"});
+		var temp_delay = 0;
+		if ($('#process_3_p').css('opacity') != 0) {
+			//tl.add(TweenMax.to("#process_2", .3, { autoAlpha:0, ease:Power4.easeIn}));
+			tl.add(TweenMax.to("#process_3_p", .5, {autoAlpha:0, ease:Power4.easeInOut}));
+			//temp_delay = .5;
+		}
+		tl.add(TweenMax.to("#process_2", .5, { autoAlpha:1, ease:Power4.easeIn}));
+		tl.play();
 	});
 
 	App.vent.on("begin_loaded", function(){
@@ -497,6 +507,14 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		App.p_inputs.show(nr_inputs);
 
 		nr_wcv.changeWorkflow();
+
+		App.p_cols.show(view_fields);
+
+		var tl1 = new TimelineMax({stagger:0.3, align:"normal"});
+		tl1.add(TweenMax.to("#process_container", .5, {autoAlpha:1, ease:Power4.easeInOut}));
+		tl1.add(TweenMax.to("#process_2", .5, {autoAlpha:1, ease:Power4.easeInOut}));
+		tl1.play();
+
 	});
 
 	// Initialize this module when the app starts
@@ -527,14 +545,31 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		deferreds.push(model_workflow.fetch());
 
 		model_noderelation = new nrMod.nodeRelationshipCollection();
-		//deferreds.push(model_noderelation.fetch({data: { study__uuid: externalAssayUuid, assay__uuid:externalStudyUuid, format:'json' }}));
-		deferreds.push(model_noderelation.fetch());
+		deferreds.push(model_noderelation.fetch({data: { study__uuid: externalAssayUuid, assay__uuid:externalStudyUuid, format:'json' }}));
+		//deferreds.push(model_noderelation.fetch());
 
 		$.when.apply($, deferreds).done(function() { App.vent.trigger("begin_loaded");} );
 
 		//nrMod.controller = new nrMod.npController();
 	    //nrMod.controller.start();
 	    //console.log(nrApp);
+
+	    // temporary holder for creating models out of fields from solr queries
+
+	    query_fields = query.getFacetNames(true);
+	    console.log("contents: Fields" );
+	    console.log(query_fields);
+	    model_fields = new nrMod.fieldCollection()
+	    for ( field in query_fields ) {
+	    	//console.log(prettifySolrFieldName(query_fields[field], true));
+	    	var temp_field = new nrMod.fieldModel({name:prettifySolrFieldName(query_fields[field], true), full_name:query_fields[field]})
+			model_fields.add(temp_field);
+	    }
+
+		view_fields = new nrMod.fieldCollectionView({collection:model_fields});
+		console.log(view_fields);
+		//*/
+
 	});
 
 });
@@ -560,7 +595,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 			this.model_noderelation = new nrMod.nodeRelationshipCollection();
 			this.defer = [];
 
-			App.vent.on("change_inputs", this.change_inputs);
+			//App.vent.on("change_inputs", this.change_inputs);
 		},
 
         start: function(options){

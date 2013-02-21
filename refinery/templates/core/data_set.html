@@ -3,7 +3,7 @@
 {% load markup %}
 
 {% block head_html %}
-	<link href="{{ STATIC_URL }}styles/css/tipsy/tipsy.css" rel="stylesheet"/>	    
+	<link href="{{ STATIC_URL }}styles/css/tipsy/tipsy.css" rel="stylesheet"/>
 
     <style type="text/css">
 
@@ -12,7 +12,7 @@ svg {
 	padding: 5px;
 	margin-top: 15px;
 	margin-bottom: 15px;
-}    
+}
 
 .background {
   fill: #FD0;
@@ -50,30 +50,30 @@ rect.active {
 		//background-color: #f00;
 	}
 
-    
+
  	.facet-title {
- 		cursor:pointer; 		
- 	} 	
+ 		cursor:pointer;
+ 	}
 
  	.facet-value {
- 		cursor:pointer; 		
+ 		cursor:pointer;
  	}
 
  	tr th {
  		cursor:pointer;
  	}
- 	 
+
  	.field-name {
  		cursor:pointer;
- 	} 
- 	 	
+ 	}
+
  	#facet-view .active {
- 		cursor:pointer; 
+ 		cursor:pointer;
  		background-color: #3A87AD;
  		color: #fff;
  		font-weight: bold;
- 	} 	
- 	
+ 	}
+
  	#pager-view {
  		text-align:right;
  	}
@@ -86,15 +86,15 @@ rect.active {
  	}
 
  	.facet-value-list td {
- 		padding: 2px; 		
+ 		padding: 2px;
  	}
  	.facet-value-list tr {
- 		padding: 2px; 		
+ 		padding: 2px;
  	}
- 	
+
  	.facet-value-list.selected {
  	}
- 	
+
  	.facet-title {
  		margin-top: 10px;
  	}
@@ -116,63 +116,63 @@ rect.active {
 
 {% block content %}
 	<!-- tab headers -->
-	
+
 <div class="refinery-panel-tabs">
 
-	<div class="row-fluid">      
+	<div class="row-fluid">
 	    <ul class="nav nav-tabs" id="tabs">
   			<li class="active"><a href="#content" data-toggle="tab">Samples</a></li>
   			{% if has_change_dataset_permission %}
   			<li><a href="#configuration" data-toggle="tab">Attributes</a></li>
-  			{% endif %}	
+  			{% endif %}
   			{% if has_change_dataset_permission %}
   			<li><a href="#analyses" data-toggle="tab">Analyses</a></li>
-  			{% endif %}	
+  			{% endif %}
   			<li><a href="#details" data-toggle="tab">Details</a></li>
   			<li><a href="#sharing" data-toggle="tab">Sharing</a></li>
   			  						<li><a href="#process" data-toggle="tab">Process</a></li>
   	    </ul>
   	</div>
-  	
+
 </div>
 <div class="refinery-panel refinery-panel-content scrollable">
 
-	{% if data_set %}	
+	{% if data_set %}
 	<!-- tabs -->
 
 	<div class="tab-content">
 
-  		<div class="tab-pane fade active in" id="content">			
+  		<div class="tab-pane fade active in" id="content">
 			<form id="sampleForm" method="post" class="form-inline">
 				{% csrf_token %}
-			
+
 				<!-- pass study information into the receiving view when posting -->
 				<input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
-				
+
 			<div class="row-fluid">
 			 	<div class="span12" style="margin-top: 10px; margin-bottom: 15px; background-color: #ededed; padding: 5px 10px 5px 10px; border-radius: 5px;">
  					<label class="control-label" id="solr-document-count-view" style="position: relative; top: 3px;"></label>
   					<span class="controls">
   					<a id="igv-multi-species" href="#" role="button" style="margin-left: 5px" class="btn btn-warning" data-toggle="modal" rel="tooltip" data-placement="bottom" data-html="true" title="Launch IGV with<br>current selection."><i class="icon-bar-chart"></i>&nbsp;&nbsp;View in IGV</a>
 					<a href="#" id="help-igv-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
-					
+
 					{% if REFINERY_REPOSITORY_MODE %}
-					<!-- CHECK BOXES FOR SELECTING SAMPLES -->					
+					<!-- CHECK BOXES FOR SELECTING SAMPLES -->
 					{% for work in workflows %}
 						<a id="submitReposBtn" data-workflow_id="{{work.uuid}}" role="button" style="margin-left: 5px" class="btn  btn-warning disabled" rel="tooltip" data-placement="bottom" data-html="true" title=""><i class="icon-download"></i>&nbsp;&nbsp;Download as Archive</a>
 						<a href="#" id="help-download-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
 					{% endfor %}
-					
+
 					{% else %}
-					<!-- DROP DOWN BUTTONS FOR MULTIPLE WORKFLOWS --> 
+					<!-- DROP DOWN BUTTONS FOR MULTIPLE WORKFLOWS -->
 					<select class="combobox" name="workflow_choice" id="workflow_choice">
 						<option></option>
 						{% for work in workflows %}
 							<option value="{{work.uuid}}">{{work.name}}</option>
 						{% endfor %}
 					</select>
-					<a class="btn  btn-warning disabled"" id="submitSamplesBtn"><i class="icon-play-circle"></i>&nbsp;Run</a> &nbsp;	
-					
+					<a class="btn  btn-warning disabled"" id="submitSamplesBtn"><i class="icon-play-circle"></i>&nbsp;Run</a> &nbsp;
+
 					{% endif %}
 
  					<label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Showing</label>
@@ -180,50 +180,50 @@ rect.active {
 						<div class="btn-group annotation-buttons" data-toggle="buttons-radio">
 						  	<button type="button" id="data-button" data-toggle="button" class="btn btn-warning active"  rel="tooltip" data-placement="bottom" data-html="true" title="View (primary) data files<br>included in this data set.">Data</button>
 						  	<button type="button" id="annotation-button" data-toggle="button" class="btn btn-warning" rel="tooltip" data-placement="bottom" data-html="true" title="View annotation files<br>associated with this data set.">Annotation</button>
-						</div>					
+						</div>
 						<a href="#" id="help-data-annotation-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
   					</span>
-  					
-					<span id="node-set-manager-panel">  					
+
+					<span id="node-set-manager-panel">
 	 					<label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Selection</label>
-						<span id="node-set-manager-controls"></span>  					
-  					</span>  					
+						<span id="node-set-manager-controls"></span>
+  					</span>
 				</div>
 			</div>
 
 			<div class="row-fluid">
-			 	
+
 			 	<div class="span2">
 						<ul class="nav nav-pills" id="navigation-tabs">
 						  <li class="active"><a href="#solr-facet-view" data-toggle="pill">Facets</a></li>
-						</ul> 	
+						</ul>
 
-						<div id="solr-facet-view" class="accordion"></div>						
-			 	</div>	
-			 	
-			 	<div class="span10"> 			
-					
+						<div id="solr-facet-view" class="accordion"></div>
+			 	</div>
+
+			 	<div class="span10">
+
 					<div class="tabbable">
 						<ul class="nav nav-pills" id="navigation-tabs">
 						  <li class="active"><a href="#table-view-tab" data-toggle="pill">List</a></li>
 						  <li><a href="#pivot-view-tab" data-toggle="pill">Matrix</a></li>
 						</ul>
-			
+
 						<div class="tab-content">
 						  <div class="tab-pane active fade in" id="table-view-tab">
 							<div id="solr-table-view"></div>
 						  </div>
 						  <div class="tab-pane fade in" id="pivot-view-tab">
-						  	<div id="pivot-view">			  		
-						  	</div>			  	
+						  	<div id="pivot-view">
+						  	</div>
 						  	<div id="solr-pivot-matrix">
 						  		<!-- the matrix -->
 						  	</div>
 						  </div>
 						</div>
-					</div>								
-				</div>				
-			</div>			
+					</div>
+				</div>
+			</div>
 		</form>
 	</div>
 
@@ -239,37 +239,37 @@ rect.active {
 			<h4>Attribute Order and Visibility</h4>
 		</div>
 		<div id="configurator-panel">
-		</div>	
+		</div>
   	</div>
-  	{% endif %}	
+  	{% endif %}
 
 	{% if has_change_dataset_permission %}
-  	<div class="tab-pane" id="analyses">
+  	<div class="tab-pane fade" id="analyses">
 		<div class="refinery-header">
 			<span class="refinery-header-left">
 				<h3>Analyses</h3>
 			</span>
 		</div>
 		<p>
-		{% if data_set.analysis_set.all|length > 0 %}	
+		{% if data_set.analysis_set.all|length > 0 %}
 			{% for analysis in data_set.analysis_set.all %}
 					<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }}</a>
 					{% if analysis.project.is_catch_all %}
 						(unassigned)
 					{% else %}
 						(Project <a href="{% url project analysis.project.uuid %}">{{ analysis.project.name }}</a>)
-					{% endif %}  
+					{% endif %}
 					<br/>
 			{% endfor %}
 		{% else %}
 			<i>None.</i>
 		{% endif %}
-		</p>		
+		</p>
   	</div>
-  	{% endif %}	
+  	{% endif %}
 
-	<div class="tab-pane" id="details">
-			
+	<div class="tab-pane fade" id="details">
+
 			<div class="refinery-header">
 				<span class="refinery-header-left">
 					<h3>{{ data_set.name }}</h3>
@@ -280,17 +280,17 @@ rect.active {
 				<h4>Summary</h4>
 			</div>
 			<p>{% if data_set.summary %} {{ data_set.summary|markdown:"safe" }} {% else %} <i>None provided.</i>{% endif %}</p>
-			
+
 			<div class="refinery-subheader">
 				<h4>Description</h4>
 			</div>
 			<p>{% if data_set.description %} {{ data_set.description|markdown:"safe" }} {% else %} <i>None provided.</i>{% endif %}</p>
-			
+
 			<div class="refinery-subheader">
 				<h4>Shortcut Name</h4>
 			</div>
 			<p>{% if data_set.slug %} {{ data_set.slug }} {% else %} <i>None provided.</i>{% endif %}</p>
-			
+
 			{% if not REFINERY_REPOSITORY_MODE %}
 				<div class="refinery-header">
 					<span class="refinery-header-left">
@@ -302,12 +302,12 @@ rect.active {
 				<ul>
 				{% for assay in study.assay_set.all %}
 					<!-- <li>Assay - <a href="{% url data_set_manager_contents study.uuid assay.uuid %}">{{assay}}</a></li> -->
-					<li>Assay - {{assay}}</li> 
+					<li>Assay - {{assay}}</li>
 				{% endfor %}
 				</ul>
 				{% endfor %}
 			{% endif %}
-		
+
 			<div class="refinery-header">
 				<span class="refinery-header-left">
 					<h3>Files</h3>
@@ -333,7 +333,7 @@ rect.active {
 				<h3>Data Files</h3>
 			</span>
 			<p>{{ data_set.file_count }} files using {{ data_set.file_size|filesizeformat }}</p>
-								
+
 			<div class="refinery-header">
 				<span class="refinery-header-left">
 					<h3>History</h3>
@@ -344,11 +344,11 @@ rect.active {
 
 			<a class="btn" href="{% url data_set_edit data_set.uuid %}">Edit</a>
 		</div>
-		
 
-	  	<div class="tab-pane" id="sharing">
+
+	  	<div class="tab-pane fade" id="sharing">
 			<div class="refinery-header">
-				<span class="refinery-header-left">	
+				<span class="refinery-header-left">
 					<h3>Sharing</h3>
 				</span>
 			</div>
@@ -356,7 +356,7 @@ rect.active {
 				<h4>Owner</h4>
 			</div>
 			<p><a href="{% url user data_set.get_owner.get_profile.uuid %}">{% if data_set.get_owner.get_full_name %}{{ data_set.get_owner.get_full_name }}{% else %}{{ data_set.get_owner }}{%endif%}</a></p>
-		
+
 			{% if data_set.get_groups|length > 0 %}
 			<div class="refinery-subheader">
 				<h4>Groups</h4>
@@ -377,7 +377,7 @@ rect.active {
 
 	  	</div>
 
-	  	<div class="tab-pane" id="process">
+	  	<div class="tab-pane fade" id="process">
 
 	  	<script type="text/template" id="search_template">
 			<label>Search</label>
@@ -398,24 +398,11 @@ rect.active {
 	  					<li class=""><a href="#process_1"><i class="icon-chevron-right"></i> 1. Workflow </a></li>
 	  					<li class=""><a href="#process_2"><i class="icon-chevron-right"></i> 2. Assign Inputs </a></li>
 
-
-	  					<!--
-	  					1. Choose Workflow
-	  					2. Match workflow inputs with nodeset
-	  					3. Run nodeset mapping
-	  					4. Show results
-	  					5. Fix mapping
-	  					6. Run Analysis
-
-	  					-->
-
 					</div>
 	  			</div>
 	  			<div class="span9">
 	  				<div class="row-fluid">
-	  					<div id="process_container">
-
-
+	  					<div id="process_container" style="opacity:0">
 
 	  					<script type="text/template" id="template_workflow_item">
 	  						<%= name %>
@@ -442,21 +429,43 @@ rect.active {
 	  					</fieldset>
 	  				</form>
 
-	  					<div id="process_2" class="well"></div>
+	  					<div id="process_2" class="well" style="opacity:0"></div>
 	  					<!-- <div id="process_3" class="well"></div> -->
+						   <script type="text/template" id="template_field_item"><input type="checkbox" id=<%= full_name%>><%= name %></script>
+
+                        <div class="well" id="process_3_p" style="opacity:0">
+                        <form class="form-horizontal">
+                        	<legend>Choose Fields</legend>
+                            <div id="process_3" class="control-group"></div>
+
+                            <!--
+                            <label class="checkbox inline">
+                              <input type="checkbox" id="inlineCheckbox1" value="option1"> 1
+                            </label>
+                            <label class="checkbox inline">
+                              <input type="checkbox" id="inlineCheckbox2" value="option2"> 2
+                            </label>
+                            <label class="checkbox inline">
+                              <input type="checkbox" id="inlineCheckbox3" value="option3"> 3
+                            </label>
+                            -->
+                        </form>
+                        </div>
+
+
 
 	  				</div>
 	  			</div>
-	  		
+
 	  	</div>
 
 	</div>
-			
+
 	{% else %}
 	    <p>No valid data set.</p>
 	{% endif %}
 	</div>
-	
+
 <!-- Modal -->
 <div id="igvModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-header">
@@ -509,22 +518,22 @@ rect.active {
 	    left: 'top' // Left position relative to parent in px
 	    };
 	</script>
-	    
+
 
 	<!-- Refinery libraries -->
 	<script type="text/javascript">
 		var REFINERY_BASE_URL = document.location.host;
 		var REFINERY_API_BASE_URL = document.location.protocol + "//" + REFINERY_BASE_URL + "/api/v1/";
 		var REFINERY_SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}";
-		var externalStudyUuid = "{{ assay_uuid }}";		
+		var externalStudyUuid = "{{ assay_uuid }}";
 		var externalAssayUuid = "{{ study_uuid }}";
-		
+
 		{% if REFINERY_REPOSITORY_MODE %}
 		var REFINERY_REPOSITORY_MODE = true;
 		{% else %}
 		var REFINERY_REPOSITORY_MODE = false;
 		{% endif %}
-		
+
 		{% if user.is_authenticated %}
 		var REFINERY_USER_AUTHENTICATED = true;
 		{% else %}
@@ -532,8 +541,8 @@ rect.active {
 		{% endif %}
 
 		var crsf_token = "{{csrf_token }}";
-	</script>	
-	
+	</script>
+
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_utilities.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_client.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_query.js"></script>
@@ -544,15 +553,22 @@ rect.active {
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_pivot_matrix.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/tipsy/jquery.tipsy.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js">var query;</script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/data_set_manager/data_set_configurator.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/node_set_manager.js"></script>
 
+	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TweenMax.min.js"></script>
+  	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/jquery.gsap.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/easing/EasePack.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/plugins/CSSPlugin.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TimelineMax.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-ajaxcommands/backbone.ajaxcommands.js"></script>
+
 	<script type="application/javascript">
-	
+
 		$(document).ready(function () {
 	    	$("[rel=tooltip]").tooltip();
-	    	
+
 	    	$("#help-igv-button").click( function(event) {
    				bootbox.alert(
 	   				"<h3><i class=\"icon-bar-chart\"></i>&nbsp;&nbsp;View in IGV</h3>" +
@@ -568,7 +584,7 @@ rect.active {
 					"</p>"
 				);
 			});
-			
+
 	    	$("#help-download-button").click( function(event) {
    				bootbox.alert(
 	   				"<h3><i class=\"icon-download\"></i>&nbsp;&nbsp;Download as Archive</h3>" +
@@ -582,8 +598,8 @@ rect.active {
 					"You will receive an email once the archive is ready for downloading. You can also monitor progress on the homepage in the \"Downloads\" section if you are logged in." +
 					"</p>"
 				);
-			});	    		    	
-				    		    	
+			});
+
 	    	$("#help-data-annotation-button").click( function(event) {
    				bootbox.alert(
 	   				"<h3>Showing Data or Annotation Files</h3>" +
@@ -592,9 +608,9 @@ rect.active {
 					"To view available annotation files select \"Annotation\". To switch back to the data files select \"Data\"." +
 					"</p>"
 				);
-			});	    		    	
-				    		    	
-	  	});	  	
+			});
+
+	  	});
 	</script>
-			    			        
-{% endblock %}  
+
+{% endblock %}
