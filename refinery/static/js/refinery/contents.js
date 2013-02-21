@@ -84,7 +84,7 @@ $(document).ready(function() {
 			client_commands );
 
 		query_commands.addHandler( SOLR_QUERY_DESERIALIZED_COMMAND, function( arguments ){
-			console.log( SOLR_QUERY_DESERIALIZED_COMMAND + ' executed' );
+			//console.log( SOLR_QUERY_DESERIALIZED_COMMAND + ' executed' );
 			//console.log( query );
 			
 			query.setDocumentIndex( 0 );
@@ -93,14 +93,14 @@ $(document).ready(function() {
 		});
 
 		query_commands.addHandler( SOLR_QUERY_SERIALIZED_COMMAND, function( arguments ){
-			console.log( SOLR_QUERY_SERIALIZED_COMMAND + ' executed' );
+			//console.log( SOLR_QUERY_SERIALIZED_COMMAND + ' executed' );
 			
 			// do nothing
 		});
 
 
 		client_commands.addHandler( SOLR_QUERY_INITIALIZED_COMMAND, function( arguments ){
-			console.log( SOLR_QUERY_INITIALIZED_COMMAND + ' executed' );
+			//console.log( SOLR_QUERY_INITIALIZED_COMMAND + ' executed' );
 			//console.log( query );
 			
 			tableView = new SolrDocumentTable( "solr-table-view", "solrdoctab1", query, client, configurator, document_table_commands );
@@ -137,9 +137,7 @@ $(document).ready(function() {
 		  		pivotMatrixView.setFacet1( visibleFacets[0] );
 		  		pivotMatrixView.setFacet2( visibleFacets[1] );
 		  		
-		  		query.setPivots( visibleFacets[0], visibleFacets[1] )
-		  		
-		  		console.log( query.getPivots() ); 
+		  		query.setPivots( visibleFacets[0], visibleFacets[1] )		  		
 		  	}
 								
 			client.run( query, SOLR_FULL_QUERY );									
@@ -147,7 +145,7 @@ $(document).ready(function() {
 
 
 		client_commands.addHandler( SOLR_QUERY_UPDATED_COMMAND, function( arguments ){
-			console.log( SOLR_QUERY_UPDATED_COMMAND + ' executed' );  				
+			//console.log( SOLR_QUERY_UPDATED_COMMAND + ' executed' );  				
 			//console.log( arguments );
 			
 			// update global query strings
@@ -180,7 +178,7 @@ $(document).ready(function() {
 		});
 				
 		document_table_commands.addHandler( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, function( arguments ){
-			console.log( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND + ' executed' );  				
+			//console.log( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND + ' executed' );  				
 			//console.log( arguments );
 
 			documentCountView.render( arguments.response );
@@ -194,14 +192,14 @@ $(document).ready(function() {
 		});
 
 		document_table_commands.addHandler( SOLR_DOCUMENT_ORDER_UPDATED_COMMAND, function( arguments ){
-			console.log( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND + ' executed' );  				
+			//console.log( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND + ' executed' );  				
 			//console.log( arguments );
 			
 			client.run( query, SOLR_FULL_QUERY );
 		});
 
 		document_table_commands.addHandler( SOLR_FIELD_VISIBILITY_UPDATED_COMMAND, function( arguments ){
-			console.log( SOLR_FIELD_VISIBILITY_UPDATED_COMMAND + ' executed' );  				
+			//console.log( SOLR_FIELD_VISIBILITY_UPDATED_COMMAND + ' executed' );  				
 			//console.log( arguments );
 			
 			client.run( query, SOLR_FULL_QUERY );
@@ -209,7 +207,7 @@ $(document).ready(function() {
 
 
 		document_table_commands.addHandler( SOLR_DOCUMENT_COUNT_PER_PAGE_UPDATED_COMMAND, function( arguments ){
-			console.log( SOLR_DOCUMENT_COUNT_PER_PAGE_UPDATED_COMMAND + ' executed' );  				
+			//console.log( SOLR_DOCUMENT_COUNT_PER_PAGE_UPDATED_COMMAND + ' executed' );  				
 			//console.log( arguments );
 			
 			client.run( query, SOLR_FULL_QUERY );
@@ -217,7 +215,7 @@ $(document).ready(function() {
 
 
 		document_table_commands.addHandler( SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND, function( arguments ){
-			console.log( SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND + ' executed' );  				
+			//console.log( SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND + ' executed' );  				
 			//console.log( arguments );
 
 			client.run( query, SOLR_FULL_QUERY );
@@ -225,7 +223,7 @@ $(document).ready(function() {
 
 
 		facet_view_commands.addHandler( SOLR_FACET_SELECTION_CLEARED_COMMAND, function( arguments ){
-			console.log( SOLR_FACET_SELECTION_CLEARED_COMMAND + ' executed' );  				
+			//console.log( SOLR_FACET_SELECTION_CLEARED_COMMAND + ' executed' );  				
 			//console.log( arguments );
 			
 			client.run( query, SOLR_FULL_QUERY );
@@ -233,7 +231,7 @@ $(document).ready(function() {
 
 		
 		var facetSelectionUpdated = function( arguments ) {
-			console.log( SOLR_FACET_SELECTION_UPDATED_COMMAND + ' executed' );  				
+			//console.log( SOLR_FACET_SELECTION_UPDATED_COMMAND + ' executed' );  				
 			//console.log( arguments );
 			
 			query.clearDocumentSelection();
@@ -252,7 +250,7 @@ $(document).ready(function() {
 
 
 		pivotMatrixCommands.addHandler( SOLR_PIVOT_MATRIX_FACETS_UPDATED_COMMAND, function( arguments ){
-			console.log( SOLR_PIVOT_MATRIX_FACETS_UPDATED_COMMAND + ' executed' );  				
+			//console.log( SOLR_PIVOT_MATRIX_FACETS_UPDATED_COMMAND + ' executed' );  				
 			//console.log( arguments );
 			
 			client.run( query, SOLR_FULL_QUERY );
