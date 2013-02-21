@@ -80,15 +80,22 @@ NodeSetManager.prototype.renderList = function () {
 	
 	var code = ""; 
 
-	code += '<div class="btn-group">'
-  	code += '<a id="' + nodeSetSaveSelectionButtonElementId + '"class="btn btn-warning" href="#">'
-    code += 'Save'
-    code += '</a>'
-  	code += '<a class="btn btn-warning dropdown-toggle" id="show-node-sets-button" data-toggle="dropdown" href="#">'
-    code += 'Load&nbsp;'
-    code += '<span class="caret"></span>'
-  	code += '</a>'
-  	code += '<ul id="' + nodeSetListElementId + '" class="dropdown-menu" style="' +  nodeSetListElementStyle + '">'
+	code += '<div class="btn-group">';
+  	code += '<a id="' + nodeSetSaveSelectionButtonElementId + '"class="btn btn-warning" href="#">';
+    code += 'Save';
+    code += '</a>';
+    
+    if (  self.list.objects.length > 0 ) {	
+  		code += '<a class="btn btn-warning dropdown-toggle" id="show-node-sets-button" data-toggle="dropdown" href="#">';    	
+    }
+    else {
+  		code += '<a class="btn btn-warning disabled dropdown-toggle" id="show-node-sets-button" data-toggle="dropdown" href="#">';    	    	
+    }
+    
+    code += 'Load&nbsp;';
+    code += '<span class="caret"></span>';
+  	code += '</a>';
+  	code += '<ul id="' + nodeSetListElementId + '" class="dropdown-menu" style="' +  nodeSetListElementStyle + '">';
 	
 	for ( var i = 0; i < self.list.objects.length; ++i ) {
 		var object = self.list.objects[i];
@@ -205,7 +212,6 @@ NodeSetManager.prototype.createGetListUrl = function() {
 		"&" + "study__uuid=" + self.studyUuid +
 		"&" + "assay__uuid=" + self.assayUuid;
 		
-	console.log( url );
 	return url;		
 };
 
@@ -224,8 +230,7 @@ NodeSetManager.prototype.getList = function( callback ) {
 	     		return;
 	     	} 
 	     	
-	     	self.list = result;    	
-     	     	
+	     	self.list = result;    	     	     	
 			// callback
 			callback( result );										
     	}
@@ -322,9 +327,7 @@ NodeSetManager.prototype.postState = function( name, summary, solr_query, solr_q
 		"solr_query_components": solr_query_components,
 		"uuid": null
 		};
-	
-	console.log( data );
-	
+		
 	$.ajax({
      url: self.createPostUrl(),
      type: "POST",
@@ -333,8 +336,8 @@ NodeSetManager.prototype.postState = function( name, summary, solr_query, solr_q
 	 dataType: "json",
   	 processData: false,     
      success: function( result, status, jqXHR ) {
-     		console.log( jqXHR.getResponseHeader( "Location" ) );
      		callback();
+     		
 	     	if ( $.isEmptyObject( result ) ) {
 	     		// do nothing
 	     		return;
