@@ -78,8 +78,6 @@ NodeSetManager.prototype.renderList = function () {
 
 	$( "#" + self.elementId ).html("");
 	
-	console.log( self.list.objects );
-	
 	var code = ""; 
 
 	code += '<div class="btn-group">'
@@ -276,7 +274,7 @@ NodeSetManager.prototype.createPostUrl = function() {
 };
 
 
-NodeSetManager.prototype.postState = function( name, summary, solr_query, node_count, callback ) {
+NodeSetManager.prototype.postState = function( name, summary, solr_query, solr_query_components, node_count, callback ) {
 	var self = this;
 
 	// --- START: set correct CSRF token via cookie ---
@@ -321,6 +319,7 @@ NodeSetManager.prototype.postState = function( name, summary, solr_query, node_c
 		"summary": summary,
 		"node_count": node_count,
 		"solr_query": solr_query,
+		"solr_query_components": solr_query_components,
 		"uuid": null
 		};
 	

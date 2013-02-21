@@ -12,7 +12,7 @@
  * Dependencies:
  */
 
-SolrResponse = function() {
+SolrResponse = function( query ) {
 	
   	var self = this;
   	
@@ -21,6 +21,8 @@ SolrResponse = function() {
 	self._pivotCounts = {};	
 	self._fieldList = [];
 	self._documentList = [];
+	
+	self._query = query;	
 };	
 
 
@@ -91,7 +93,7 @@ SolrResponse.prototype._processFieldList = function ( response ) {
 	var self = this;
 	
 	var fieldList = [];
-	
+
 	for ( var i = 0; i < response.response.docs.length; ++i ) {
 		var document = response.response.docs[i];
 		
@@ -125,9 +127,27 @@ SolrResponse.prototype._processDocumentList = function ( response ) {
 SolrResponse.prototype._processPivotCounts = function ( response ) {
 	var self = this;
 	
-	var pivotCounts = {};
-	
-	// TODO: implement pivot parsing
-	
-	return pivotCounts;
+	return response.facet_counts.facet_pivot;
+			
+	/*
+	// convert 2D array into table
+	for ( var r = 0; r < pivotCounts.length; ++r ) {
+		// start row
+		var row = "<tr>";
+		
+		// row name
+		row += "<td>" + Object.keys( facetValue1Lookup )[r] + "</td>";
+		
+		// row content
+		row += "<td>" + $.map( pivotCounts[r], function(entry) { return( entry.count )} ).join( "</td><td>" ) + "</td>";
+		
+		// end row
+		row += "</tr>";
+		
+		rows.push( row );
+	}
+
+	// build table header
+	var header = "<thead><tr><th></th><th>" + Object.keys( facetValue2Lookup ).join( "</th><th>" ) + "</th></tr></thead>"; 	
+	*/	
 }

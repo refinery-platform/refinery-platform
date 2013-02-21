@@ -284,3 +284,14 @@ body {
   border-radius: 3px;
   padding: 1px 4px 1px 4px;
 }
+.refinery-facet-label {
+  font-weight: normal;
+  margin-right: 5px;
+  font-size: 16.099999999999998px;
+  cursor: pointer;
+}
+.refinery-facet-title {
+  width: 100%;
+  margin-top: 5px;
+  margin-bottom: 2px;
+}

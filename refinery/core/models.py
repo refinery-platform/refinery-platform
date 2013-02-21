@@ -572,6 +572,9 @@ class NodeSet(SharableResource, TemporaryResource):
     '''
     #: Solr query representing a list of Nodes
     solr_query = models.TextField(blank=True, null=True)
+    #: components of Solr query representing a list of Nodes (required to restore query object in JavaScript client)
+    solr_query_components = models.TextField(blank=True, null=True)
+    
     #: Number of nodes in the NodeSet (provided in POST/PUT/PATCH requests)
     node_count = models.IntegerField(blank=True, null=True)
     #: Implicit node is created "on the fly" to support an analysis while
@@ -589,7 +592,7 @@ class NodeSet(SharableResource, TemporaryResource):
 
 
 @transaction.commit_manually()
-def create_nodeset(name, study, assay, summary='', solr_query=''):
+def create_nodeset(name, study, assay, summary='', solr_query='', solr_query_components=''):
     '''Create a new NodeSet.
 
     :param name: name of the new NodeSet.
@@ -602,13 +605,16 @@ def create_nodeset(name, study, assay, summary='', solr_query=''):
     :type summary: str.
     :param solr_query: Solr query representing a list of Node instances.
     :type solr_query: str.
+    :param solr_query_components: JSON stringyfied representation of components of Solr query representing a list of Node instances.
+    :type solr_query_components: str.
     :returns: NodeSet -- new instance.
     :raises: IntegrityError, ValueError
 
     '''
     try:
         nodeset = NodeSet.objects.create(name=name, study=study, assay=assay,
-                                         summary=summary, solr_query=solr_query)
+                                         summary=summary, solr_query=solr_query,
+                                         solr_query_components=solr_query_components)
     except (IntegrityError, ValueError) as e:
         transaction.rollback()
         logger.error("Failed to create NodeSet: {}".format(e.message))
@@ -634,7 +640,7 @@ def get_nodeset(uuid):
         raise
 
 
-def update_nodeset(uuid, name=None, summary=None, study=None, assay=None, solr_query=None):
+def update_nodeset(uuid, name=None, summary=None, study=None, assay=None, solr_query=None, solr_query_components=None):
     '''Replace data in an existing NodeSet with the provided data.
 
     :param uuid: NodeSet UUID.
@@ -667,6 +673,8 @@ def update_nodeset(uuid, name=None, summary=None, study=None, assay=None, solr_q
         nodeset.assay = assay
     if solr_query is not None:
         nodeset.solr_query = solr_query
+    if solr_query_components is not None:
+        nodeset.solr_query_components = solr_query_components
     nodeset.save()
 
 

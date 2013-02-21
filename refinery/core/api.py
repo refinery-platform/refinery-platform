@@ -68,6 +68,7 @@ class NodeSetResource(ModelResource):
     #nodes = fields.ToManyField(NodeResource, 'nodes', use_in="detail" )
     
     solr_query = fields.CharField(attribute='solr_query', null=True)
+    solr_query_components = fields.CharField(attribute='solr_query_components', null=True)
     node_count = fields.IntegerField(attribute='node_count', null=True)
     is_implicit = fields.BooleanField(attribute='is_implicit')
     study = fields.ToOneField(StudyResource, 'study')
@@ -83,8 +84,8 @@ class NodeSetResource(ModelResource):
         authentication = Authentication()
         authorization = Authorization() # any user can change any NodeSet instance
         serializer = PrettyJSONSerializer()
-        fields = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query']
-        ordering = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query']
+        fields = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
+        ordering = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
         allowed_methods = ["get", "patch", "put", "post" ]
 
     def prepend_urls(self):
