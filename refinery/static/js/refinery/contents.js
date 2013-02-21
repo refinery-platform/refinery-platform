@@ -264,12 +264,13 @@ $(document).ready(function() {
 		nodeSetManager.initialize();
 		
 		nodeSetManager.setLoadSelectionCallback( function( nodeSet ) {
-			query.deserialize( nodeSet.solr_query );						
+			query.deserialize( nodeSet.solr_query_components );						
 		});
 		
 		nodeSetManager.setSaveSelectionCallback( function() {
-			var solr_query = query.serialize();
-			nodeSetManager.postState( "" + Date(), "Summary for Node Set", solr_query, query.getCurrentDocumentCount(), function(){
+			var solr_query_components = query.serialize();
+			var solr_query = client.createUrl( query, SOLR_FULL_QUERY );
+			nodeSetManager.postState( "" + Date(), "Summary for Node Set", solr_query, solr_query_components, query.getCurrentDocumentCount(), function(){
 			});
 		});
 		
