@@ -7,16 +7,12 @@ var MAX_DOWNLOAD_FILES = 20;
 var MESSAGE_DOWNLOAD_UNAVAILABE = "You have to be logged in<br> and selected " + MAX_DOWNLOAD_FILES + " files or less<br>to create an archive for download.";
 var MESSAGE_DOWNLOAD_AVAILABLE = "Click to create<br>archive for download<br>of selected files.";
 
-	
 var allowAnnotationDownload = false;
 
 var solrRoot = document.location.protocol + "//" + document.location.host + "/solr/";
 var solrSelectUrl = solrRoot + "data_set_manager/select/";
 var solrSelectEndpoint = "data_set_manager/select/";
 var solrIgvUrl = solrRoot + "igv/";
-
-var solrQuery = "q=django_ct:data_set_manager.node";
-var solrSettings = "wt=json&json.wrf=?&facet=true";
 
 var dataSetNodeTypes = ['"Raw Data File"', '"Derived Data File"', '"Array Data File"', '"Derived Array Data File"', '"Array Data Matrix File"', '"Derived Array Data Matrix File"'];
 
@@ -305,78 +301,7 @@ $(document).ready(function() {
 });    		
 
 	
-// a list of facet names for the pivot view
-var pivots = [];
-var pivotMatrixData;
-
-
-$(".collapse").collapse("show");
-
-
-
-function buildPivotQuery( studyUuid, assayUuid, nodeType, loadAnnotation ) {
-	var url = solrSelectUrl
-		+ "?" + solrQuery 
-		+ "&" + solrSettings
-		+ "&" + "start=" + 0
-		+ "&" + "rows=" + 1
-		+ "&" + "fq="
-		+ "("
-			+ "study_uuid:" + studyUuid
-			+ " AND " + "assay_uuid:" + assayUuid
-			+ " AND " + "is_annotation:" + loadAnnotation			
-			+ " AND " + "(" + "type:" + nodeType + " OR " + "type: \"Derived Data File\"" + " OR " + "type: \"Array Data File\"" + " OR " + "type: \"Derived Array Data File\"" + " OR " + "type: \"Array Data Matrix File\"" + " OR " + "type: \"Derived Array Data Matrix File\"" + ")"
-	   	+ ")"
-	   	+ "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
-	   	+ "&" + "facet.limit=-1"; // unlimited number of facet values (otherwise some values will be missing)	   	
-
-
-	// ------------------------------------------------------------------------------
-	// pivot fields: facet.pivot 
-	// ------------------------------------------------------------------------------
-	if ( pivots.length > 1 ) {
-		var pivotQuery = pivots.join( "," );
-
-		if ( pivotQuery.length > 0 ) {
-			url += "&facet.pivot=" + pivotQuery;
-		}		
-	}		
-	
-	return ( url );	
-}
-	
-
-function getField( studyUuid, assayUuid, nodeType, field, callback ) {
-	var fieldSelection = {};
-	fieldSelection[field] = { isVisible: true };
-	var solr_query = buildSolrQuery( studyUuid, assayUuid, nodeType, 0, query.total_items, {}, fieldSelection, {}, showAnnotation, false );
-		
-	$.ajax( { type: "GET", dataType: "jsonp", url: solr_query, success: function(data) {
-		var fieldValues = [] 
-				
-		for ( var i = 0; i < data.response.docs.length; ++i ) {
-			fieldValues.push( data.response.docs[i][field] );
-	    }
-	    
-	    callback( fieldValues );					
-	}});	
-}
-
-
-function getFacetValueLookupTable( facet ) {
-	// make lookup table mapping from facet values to facet value indices
-	var lookup = {};
-	var index = 0;
-			
-	for ( facetValue in facets[facet] ) {
-		if ( facets[facet].hasOwnProperty( facetValue ) ) {
-			lookup[facetValue] = index++;
-		}
-	}	
-	
-	return lookup;
-}
-	
+//$(".collapse").collapse("show");
 
 function createSpeciesModal(aresult) {
 	//console.log("contents.js createSpeciesModal called");
