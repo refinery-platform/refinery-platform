@@ -84,7 +84,7 @@ NodeSetManager.prototype.renderList = function () {
   	code += '<a id="' + nodeSetSaveSelectionButtonElementId + '"class="btn btn-warning" href="#">'
     code += 'Save'
     code += '</a>'
-  	code += '<a class="btn btn-warning dropdown-toggle" data-toggle="dropdown" href="#">'
+  	code += '<a class="btn btn-warning dropdown-toggle" id="show-node-sets-button" data-toggle="dropdown" href="#">'
     code += 'Load&nbsp;'
     code += '<span class="caret"></span>'
   	code += '</a>'
@@ -334,10 +334,11 @@ NodeSetManager.prototype.postState = function( name, summary, solr_query, solr_q
   	 processData: false,     
      success: function( result, status, jqXHR ) {
      		console.log( jqXHR.getResponseHeader( "Location" ) );
+     		callback();
 	     	if ( $.isEmptyObject( result ) ) {
 	     		// do nothing
 	     		return;
-	     	} 
+	     	}	     		     	 
     	}
 	});
 };

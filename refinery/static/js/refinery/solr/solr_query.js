@@ -21,15 +21,18 @@ SOLR_FILTER_QUERY = 4;
 SOLR_FIELD_QUERY = 8;
 SOLR_SORT_QUERY = 16;
 SOLR_PIVOT_QUERY = 32;
+SOLR_FACET_COUNT_QUERY = 64;
 
 SOLR_SELECTION_QUERY =
 	SOLR_DOCUMENT_QUERY |
 	SOLR_FACET_QUERY |
-	SOLR_FILTER_QUERY;
+	SOLR_FILTER_QUERY |
+	SOLR_FIELD_QUERY;
 
 SOLR_FULL_WITH_DOCUMENT_QUERY =
 	SOLR_DOCUMENT_QUERY |
 	SOLR_FACET_QUERY |
+	SOLR_FACET_COUNT_QUERY |
 	SOLR_FILTER_QUERY |
 	SOLR_FIELD_QUERY |
 	SOLR_SORT_QUERY |
@@ -37,6 +40,7 @@ SOLR_FULL_WITH_DOCUMENT_QUERY =
 
 SOLR_FULL_QUERY =
 	SOLR_FACET_QUERY |
+	SOLR_FACET_COUNT_QUERY |
 	SOLR_FILTER_QUERY |
 	SOLR_FIELD_QUERY |
 	SOLR_SORT_QUERY |
@@ -178,7 +182,11 @@ SolrQuery.prototype.create = function ( queryComponents ) {
 	}
 
 	if ( queryComponents & SOLR_FACET_QUERY ) {
-		url += self._createFacetComponent();		
+		url += self._createFacetSelectionComponent();		
+	}
+
+	if ( queryComponents & SOLR_FACET_COUNT_QUERY ) {
+		url += self._createFacetCountComponent();		
 	}
 
 	if ( queryComponents & SOLR_FIELD_QUERY ) {
@@ -241,8 +249,8 @@ SolrQuery.prototype._createDocumentSelectionComponent = function () {
 	return url;
 };
 	
-	
-SolrQuery.prototype._createFacetComponent = function () {
+
+SolrQuery.prototype._createFacetCountComponent = function () {
 	
 	var self = this;
 
@@ -251,6 +259,22 @@ SolrQuery.prototype._createFacetComponent = function () {
 	url +=  "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
 	   	  + "&" + "facet.limit=-1" // unlimited number of facet values (otherwise some values will be missing)
 	   	  + "&" + "facet=true"; // request facet counts	   	
+	
+	return url;
+}
+
+	
+SolrQuery.prototype._createFacetSelectionComponent = function () {
+	
+	var self = this;
+
+	var url = "";
+	
+	/*
+	url +=  "&" + "facet.sort=count" // sort by count, change to "index" to sort by index	   	
+	   	  + "&" + "facet.limit=-1" // unlimited number of facet values (otherwise some values will be missing)
+	   	  + "&" + "facet=true"; // request facet counts	   	
+	*/
 	   	  	
 	// ------------------------------------------------------------------------------
 	// selecting facets: facet.field, fq 	

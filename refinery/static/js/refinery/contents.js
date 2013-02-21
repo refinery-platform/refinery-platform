@@ -97,8 +97,8 @@ $(document).ready(function() {
 
 		client_commands.addHandler( SOLR_QUERY_INITIALIZED_COMMAND, function( arguments ){
 			//console.log( SOLR_QUERY_INITIALIZED_COMMAND + ' executed' );
-			//console.log( query );
-			
+			//console.log( arguments );
+						
 			tableView = new SolrDocumentTable( "solr-table-view", "solrdoctab1", query, client, configurator, document_table_commands );
 			tableView.setDocumentsPerPage( 20 );
 		
@@ -146,12 +146,12 @@ $(document).ready(function() {
 			
 			// update global query strings
 			if ( !showAnnotation ) {
-				dataQueryString = client.createUrl( query, SOLR_FULL_QUERY );
-				annotationQueryString = client.createUrl( annotationQuery, SOLR_FULL_QUERY );				
+				dataQueryString = client.createUnpaginatedUrl( query, SOLR_SELECTION_QUERY )
+				annotationQueryString = client.createUnpaginatedUrl( annotationQuery, SOLR_SELECTION_QUERY );				
 			}
 			else {
-				dataQueryString = client.createUrl( dataQuery, SOLR_FULL_QUERY );
-				annotationQueryString = client.createUrl( query, SOLR_FULL_QUERY );				
+				dataQueryString = client.createUnpaginatedUrl( dataQuery, SOLR_SELECTION_QUERY );
+				annotationQueryString = client.createUnpaginatedUrl( query, SOLR_SELECTION_QUERY );				
 			}
 			
 			if ( arguments.query == pivotQuery ) {
@@ -177,7 +177,17 @@ $(document).ready(function() {
 			//console.log( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND + ' executed' );  				
 			//console.log( arguments );
 
-			documentCountView.render( arguments.response );
+			// update global query strings
+			if ( !showAnnotation ) {
+				dataQueryString = client.createUnpaginatedUrl( query, SOLR_SELECTION_QUERY )
+				annotationQueryString = client.createUnpaginatedUrl( annotationQuery, SOLR_SELECTION_QUERY );				
+			}
+			else {
+				dataQueryString = client.createUnpaginatedUrl( dataQuery, SOLR_SELECTION_QUERY );
+				annotationQueryString = client.createUnpaginatedUrl( query, SOLR_SELECTION_QUERY );				
+			}
+			
+			documentCountView.render();
 			
 			// update viewer buttons
 			updateIgvButton( "igv-multi-species" );
@@ -247,7 +257,7 @@ $(document).ready(function() {
 
 		pivotMatrixCommands.addHandler( SOLR_PIVOT_MATRIX_FACETS_UPDATED_COMMAND, function( arguments ){
 			//console.log( SOLR_PIVOT_MATRIX_FACETS_UPDATED_COMMAND + ' executed' );  				
-			//console.log( arguments );
+			//console.log( arguments );						
 			
 			client.run( query, SOLR_FULL_QUERY );
 		});
@@ -266,8 +276,17 @@ $(document).ready(function() {
 		nodeSetManager.setSaveSelectionCallback( function() {
 			var solr_query_components = query.serialize();
 			var solr_query = client.createUrl( query, SOLR_FULL_QUERY );
-			nodeSetManager.postState( "" + Date(), "Summary for Node Set", solr_query, solr_query_components, query.getCurrentDocumentCount(), function(){
-			});
+			
+			bootbox.prompt( "Enter a Name for the Selection", function( name ) {                
+				if ( name === null ) {                                             
+					bootbox.alert( "The selection was not saved." );                              
+				} else {
+					nodeSetManager.postState( name, "Summary for Node Set", solr_query, solr_query_components, query.getCurrentDocumentCount(), function(){						
+						bootbox.alert( 'The selection was saved as "' + name + '".' );
+						nodeSetManager.getList( function() { nodeSetManager.renderList() } );						
+					});                          
+			  	}
+			});									
 		});
 		
 		// --------------
@@ -292,7 +311,8 @@ $(document).ready(function() {
 			client.run( query, SOLR_FULL_QUERY );					
 		});	
 
-		client.initialize( query, true );		
+		client.initialize( query, true );
+		client.initialize( annotationQuery, true );				
 	});
 
 	

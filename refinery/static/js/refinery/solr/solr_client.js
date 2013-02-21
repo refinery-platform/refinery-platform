@@ -106,3 +106,9 @@ SolrClient.prototype.createUrl = function( query, queryComponents ) {
 	
 	return  self._createBaseUrl( query.getDocumentIndex(), query.getDocumentCount() ) + query.create( queryComponents );		
 }
+
+SolrClient.prototype.createUnpaginatedUrl = function( query, queryComponents ) {
+	var self = this;
+	
+	return  self._createBaseUrl( query.getDocumentIndex(), query.getTotalDocumentCount() ) + query.create( queryComponents );		
+}
