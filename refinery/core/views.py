@@ -899,6 +899,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
         num_found = int(results["response"]["numFound"])
     else:
         num_found = 0
+    '''
     
     #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
     
@@ -925,11 +926,10 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
                        num_found += 1
     
     # updating the number found in the list
-    results["response"]["numFound"] = str(num_found)
+    #results["response"]["numFound"] = str(num_found)
     
     #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
     #logger.debug(simplejson.dumps(results, indent=4))
-    '''
     
     # Will return only list of file_uuids
     if only_uuids:

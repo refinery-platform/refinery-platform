@@ -1,5 +1,6 @@
 from core.api import ProjectResource, NodeSetResource, NodeResource, \
-    NodeSetListResource, NodePairResource, NodeRelationshipResource
+    NodeSetListResource, NodePairResource, NodeRelationshipResource, WorkflowResource, \
+    WorkflowInputRelationshipsResource
 from core.forms import RegistrationFormTermsOfServiceUniqueEmail
 from core.models import DataSet
 from core.views import admin_test_data
@@ -36,6 +37,8 @@ v1_api.register(NodeSetResource())
 v1_api.register(NodeSetListResource())
 v1_api.register(NodePairResource())
 v1_api.register(NodeRelationshipResource())
+v1_api.register(WorkflowResource())
+v1_api.register(WorkflowInputRelationshipsResource())
 
 #patterns for all of the different applications
 urlpatterns = patterns('',    

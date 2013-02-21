@@ -29,18 +29,20 @@ import sys
 from fabric.api import local, settings, abort, run, env, sudo, execute
 from fabric.contrib import django
 from fabric.contrib.console import confirm
-from fabric.context_managers import hide, cd, prefix
+from fabric.context_managers import hide, prefix
 from fabric.contrib.files import exists, upload_template
 from fabric.decorators import task, with_settings
 from fabric.operations import require
 from fabric.utils import puts
 
 
-# local settings
-# Django
-env.local_django_root = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(env.local_django_root)
-from django.conf import settings as django_settings  # to avoid conflict with fabric.api.settings
+env.local_project_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Django integration
+sys.path.append(env.local_project_dir)
+# use import as to avoid conflict with fabric.api.settings
+from django.conf import settings as django_settings
+
 
 # Fabric settings
 env.forward_agent = True    # for Github operations
@@ -50,7 +52,7 @@ def check_env_vars():
     '''Check if the required variable were initialized in ~/.fabricrc
 
     '''
-    require("project_user", "project_group", "deployment_dir")
+    require("deployment_dir", "project_user", "project_group")
 
 
 @task
@@ -73,6 +75,7 @@ def dev():
     env.virtualenv_dir = os.path.join(env.deployment_dir, "virtualenvs")
     env.data_dir = os.path.join(env.deployment_dir, "data")
     env.refinery_base_dir = os.path.join(env.app_dir, "Refinery")
+    env.conf_dir = os.path.join(env.deployment_dir, "etc")
     env.refinery_branch = "develop"
     # Galaxy config
     galaxy_base_dir = env.galaxy_root + "dev"
@@ -363,23 +366,11 @@ def upload_refinery_settings():
     '''Upload appropriate settings_local.py file
 
     '''
-    local_path = os.path.join(env.local_conf_dir, env.dev_settings_file)
+    local_path = os.path.join(env.local_project_dir, env.dev_settings_file)
     remote_path = os.path.join(env.refinery_base_dir, "refinery/settings_local.py")
     upload_template(local_path, remote_path, backup=False)
-
-
-@task
-@with_settings(user=env.project_user)
-def update_refinery():
-    '''Pull code updates from the Github Refinery repository
-
-    '''
-    puts("Updating Refinery")
     with prefix("workon refinery"):
-        run("git pull")
-        run("./manage.py collectstatic --noinput")
         run("touch wsgi.py")
-
 
 @task
 @with_settings(shell="/bin/su postgres -c")  # we cannot execute commands with sudo as user postgres
@@ -415,35 +406,46 @@ def create_refinery_db():
 @task
 @with_settings(user=env.project_user)
 def create_refinery_data_dirs():
-    '''Create Refinery data storage directories
+    '''Create Refinery data directories
 
     '''
-    puts("Creating Refinery MEDIA_ROOT directory '{}'".format(django_settings.MEDIA_ROOT))
+    puts("Creating Refinery top-level data directory '{}'".format(env.data_dir))
+    if not exists(env.data_dir):
+        run("mkdir '{}'".format(env.data_dir))
+    else:
+        puts("'{}' already exists".format(env.data_dir))
+
+    puts("Creating Refinery MEDIA_ROOT directory '{}'"
+         .format(django_settings.MEDIA_ROOT))
     if not exists(django_settings.MEDIA_ROOT):
         run("mkdir '{}'".format(django_settings.MEDIA_ROOT))
     else:
         puts("'{}' already exists".format(django_settings.MEDIA_ROOT))
 
-    file_store_dir = os.path.join(django_settings.MEDIA_ROOT, django_settings.FILE_STORE_DIR)
+    file_store_dir = os.path.join(django_settings.MEDIA_ROOT,
+                                  django_settings.FILE_STORE_DIR)
     puts("Creating Refinery FILE_STORE_DIR at '{}'".format(file_store_dir))
     if not exists(file_store_dir):
         run("mkdir '{}'".format(file_store_dir))
     else:
         puts("'{}' already exists".format(file_store_dir))
 
-    puts("Creating Refinery DOWNLOAD_BASE_DIR directory '{}'".format(django_settings.DOWNLOAD_BASE_DIR))
-    if not exists(django_settings.DOWNLOAD_BASE_DIR):
-        run("mkdir '{}'".format(django_settings.DOWNLOAD_BASE_DIR))
+    puts("Creating Refinery STATIC_ROOT directory '{}'"
+         .format(django_settings.STATIC_ROOT))
+    if not exists(django_settings.STATIC_ROOT):
+        run("mkdir '{}'".format(django_settings.STATIC_ROOT))
     else:
-        puts("'{}' already exists".format(django_settings.DOWNLOAD_BASE_DIR))
+        puts("'{}' already exists".format(django_settings.STATIC_ROOT))
 
-    puts("Creating Refinery ISA_TAB_DIR directory '{}'".format(django_settings.ISA_TAB_DIR))
+    puts("Creating Refinery ISA_TAB_DIR directory '{}'"
+         .format(django_settings.ISA_TAB_DIR))
     if not exists(django_settings.ISA_TAB_DIR):
         run("mkdir '{}'".format(django_settings.ISA_TAB_DIR))
     else:
         puts("'{}' already exists".format(django_settings.ISA_TAB_DIR))
 
-    puts("Creating Refinery ISA_TAB_TEMP_DIR directory '{}'".format(django_settings.ISA_TAB_TEMP_DIR))
+    puts("Creating Refinery ISA_TAB_TEMP_DIR directory '{}'"
+         .format(django_settings.ISA_TAB_TEMP_DIR))
     if not exists(django_settings.ISA_TAB_TEMP_DIR):
         run("mkdir '{}'".format(django_settings.ISA_TAB_TEMP_DIR))
     else:
@@ -457,8 +459,7 @@ def setup_refinery():
     Django superuser account is created without a password
 
     '''
-    if env.hosts:
-        execute(upload_refinery_settings)
+    execute(upload_refinery_settings)
     execute(create_refinery_db)
     execute(refinery_syncdb)
     execute(init_refinery)
@@ -466,6 +467,19 @@ def setup_refinery():
     execute(create_galaxy_instances)
     execute(refinery_createsuperuser)
 #    execute(refinery_changepassword("admin"))
+
+
+@task
+@with_settings(user=env.project_user)
+def update_refinery():
+    '''Pull code updates from the Github Refinery repository
+
+    '''
+    puts("Updating Refinery")
+    with prefix("workon refinery"):
+        run("git pull")
+        run("./manage.py collectstatic --noinput")
+        run("touch wsgi.py")
 
 
 @task
@@ -617,7 +631,7 @@ def deploy_refinery():
     '''
     create_virtualenv("refinery")
     clone_refinery("develop")
-    init_virtualenv("refinery")
+#    init_virtualenv("refinery")
     create_refinery_db_user()
     create_refinery_db()
     create_refinery_data_dirs()
