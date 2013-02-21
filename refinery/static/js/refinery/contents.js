@@ -343,6 +343,14 @@ function createSpeciesModal(aresult) {
 }
 
 
+var createCallback = function(url) {
+    return function() {
+        window.open(url);
+    };
+};
+
+
+
 $( "#igv-multi-species" ).on( "click", function(e) {
 	if ( $("#igv-multi-species").hasClass( "disabled" ) ) {
 		return;
