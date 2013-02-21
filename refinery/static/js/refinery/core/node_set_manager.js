@@ -78,8 +78,6 @@ NodeSetManager.prototype.renderList = function () {
 
 	$( "#" + self.elementId ).html("");
 	
-	console.log( self.list.objects );
-	
 	var code = ""; 
 
 	code += '<div class="btn-group">'

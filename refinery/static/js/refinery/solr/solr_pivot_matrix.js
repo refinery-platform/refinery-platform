@@ -144,8 +144,6 @@ SolrPivotMatrix.prototype.render = function ( solrResponse ) {
   	.append("g")
     	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     	
-    console.log( margin.left );
-
   	// precompute the orders.
   	var orders = {
 	  	xDefault: d3.range(self._matrix[0].length).sort(),
@@ -225,7 +223,7 @@ SolrPivotMatrix.prototype.render = function ( solrResponse ) {
       		else {
       			facets[p[0].yfacet][p[0].ylab].isSelected = !facets[p[0].yfacet][p[0].ylab].isSelected;
       			
-      			self._commands.execute( SOLR_PIVOT_MATRIX_SELECTION_UPDATED_COMMAND, { 'facet': p[0].yfacet, 'value': p[0].ylab, 'isSelected': facets[p[0].yfacet][p[0].ylab].isSelected } ); 
+      			self._commands.execute( SOLR_FACET_SELECTION_UPDATED_COMMAND, { 'facet': p[0].yfacet, 'value': p[0].ylab, 'isSelected': facets[p[0].yfacet][p[0].ylab].isSelected } ); 
       			//orderColumns( computeColumnOrder( p[0].y, false ) );
       		} 
       	}, true );
@@ -289,7 +287,7 @@ SolrPivotMatrix.prototype.render = function ( solrResponse ) {
 			else {
 				facets[p.xfacet][p.xlab].isSelected = !facets[p.xfacet][p.xlab].isSelected;
 				
-      			self._commands.execute( SOLR_PIVOT_MATRIX_SELECTION_UPDATED_COMMAND, { 'facet': p.xfacet, 'value': p.xlab, 'isSelected': facets[p.xfacet][p.xlab].isSelected } ); 
+      			self._commands.execute( SOLR_FACET_SELECTION_UPDATED_COMMAND, { 'facet': p.xfacet, 'value': p.xlab, 'isSelected': facets[p.xfacet][p.xlab].isSelected } ); 
 			} 
 		}, true );
 	
@@ -306,8 +304,6 @@ SolrPivotMatrix.prototype.render = function ( solrResponse ) {
 		});
 
 	// set borders on matrix	
-	console.log( maxRowLabelWidth);
-	console.log( maxColumnLabelWidth);
 	d3.select( "svg" ).select("g")
 		 .attr("transform", "translate(" + maxRowLabelWidth + "," + maxColumnLabelWidth + ")");
 
@@ -370,7 +366,7 @@ SolrPivotMatrix.prototype.render = function ( solrResponse ) {
         		facets[p.xfacet][p.xlab].isSelected = true;        		
         	}
 
-			self._commands.execute( SOLR_PIVOT_MATRIX_SELECTION_UPDATED_COMMAND );       			        	
+			self._commands.execute( SOLR_FACET_SELECTION_UPDATED_COMMAND );       			        	
          }, true );
 
 	// "cross out" empty cells
@@ -489,25 +485,30 @@ SolrPivotMatrix.prototype._generateFacetSelectionControls = function( parentElem
 	
 	for ( facet in facets ) {
 		if ( facets.hasOwnProperty( facet ) ) {
+			
+			var facetValues = self._query.getNumberOfFacetValues( facet ).total;
+			
 			if ( self._facet1 === facet ) {
-				pivot1List.push( "<option selected value=\"" + facet + "\">" + prettifySolrFieldName( facet ) + "</option>" );
+				pivot1List.push( "<option selected value=\"" + facet + "\">" + prettifySolrFieldName( facet, true ) + " (" + facetValues + ")</option>" );
 			}
 			else {
-				pivot1List.push( "<option value=\"" + facet + "\">" + prettifySolrFieldName( facet ) + "</option>" );				
+				pivot1List.push( "<option value=\"" + facet + "\">" + prettifySolrFieldName( facet, true ) + " (" + facetValues + ")</option>" );				
 			}
 			
 			if ( self._facet2 === facet ) {
-				pivot2List.push( "<option selected value=\"" + facet + "\">" + prettifySolrFieldName( facet ) + "</option>" );
+				pivot2List.push( "<option selected value=\"" + facet + "\">" + prettifySolrFieldName( facet, true ) + " (" + facetValues + ")</option>" );
 			}
 			else {
-				pivot2List.push( "<option value=\"" + facet + "\">" + prettifySolrFieldName( facet ) + "</option>" );				
+				pivot2List.push( "<option value=\"" + facet + "\">" + prettifySolrFieldName( facet, true ) + " (" + facetValues + ")</option>" );				
 			}
 		}
 	}
 	
 	$( "#" + parentElementId ).html( "" );
 	
+	$( "<span/>", { "class": "refinery-facet-label", html: "Rows" } ).appendTo( "#" + parentElementId );	
 	$( "<select/>", { "class": "combobox", "id": "pivot_x1_choice", html: pivot1List.join("") } ).appendTo( "#" + parentElementId );	
+	$( "<span/>", { "style": "margin-left: 15px", "class": "refinery-facet-label", html: "Columns" } ).appendTo( "#" + parentElementId );	
 	$( "<select/>", { "class": "combobox", "id": "pivot_y1_choice", html: pivot2List.join("") } ).appendTo( "#" + parentElementId );
 		
 	// events on pivot dimensions
@@ -640,6 +641,23 @@ SolrPivotMatrix.prototype.getFacet2 = function() {
 	var self = this;
 
 	return self._facet2;
+}
+
+
+SolrPivotMatrix.prototype.updateMatrix = function( solrResponse ) {
+	
+	var self = this;
+
+	if ( solrResponse ) {
+		if ( solrResponse.getPivotCounts() ) {
+			self._matrix = self._generateMatrix( solrResponse.getPivotCounts(), self._facet1, self._facet2 );							
+		}
+		else {
+			return;
+		}
+	}
+	
+	self.render();							
 }
 
 

@@ -127,7 +127,6 @@ SolrResponse.prototype._processDocumentList = function ( response ) {
 SolrResponse.prototype._processPivotCounts = function ( response ) {
 	var self = this;
 	
-	console.log( response );
 	return response.facet_counts.facet_pivot;
 			
 	/*

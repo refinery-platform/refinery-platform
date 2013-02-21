@@ -113,7 +113,18 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 		if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal ) {
 			//facets[attribute.solr_field] = [];
 			
-			$('<div/>', { 'href': '#' + self._composeFacetId( attribute.solr_field + "___inactive" ), 'class': 'facet-title', "data-toggle": "collapse", "data-parent": "#facet-view", "data-target": "#" + self._composeFacetId( attribute.solr_field + "___inactive" ), 'id': self._composeFacetId( attribute.solr_field ), html: "<h5>" + prettifySolrFieldName( attribute.solr_field, true ) + "</h5>" }).appendTo('#' + self._parentElementId);
+			var counts = self._query.getNumberOfFacetValues( attribute.solr_field );
+			var countsString = ""; //"(" + counts.total + ")";
+			
+			$('<div/>', {
+				'href': '#' + self._composeFacetId( attribute.solr_field + "___inactive" ),
+				'class': 'refinery-facet-title',
+				'data-toggle': "collapse",
+				'data-parent': "#" + self._parentElementId,
+				'data-target': "#" + self._composeFacetId( attribute.solr_field + "___inactive" ),
+				'id': self._composeFacetId( attribute.solr_field ),
+				'html': '<span class="refinery-facet-label">' + prettifySolrFieldName( attribute.solr_field, true ) + "</span><small>" + countsString + "</small>"
+				}).appendTo('#' + self._parentElementId);
 			$('<div/>', { 'class': 'facet-value-list selected', "id": self._composeFacetId( attribute.solr_field + "___active" ), html: "" }).appendTo('#' + self._parentElementId);							
 			$('<div/>', { 'class': 'facet-value-list collapse', "id": self._composeFacetId( attribute.solr_field + "___inactive" ), html: "" }).appendTo('#' + self._parentElementId);
 	

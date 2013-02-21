@@ -66,7 +66,7 @@ SolrClient.prototype.initialize = function ( query, resetQuery, callback ) {
 		query.setTotalDocumentCount( data.response.numFound );
 		query.setCurrentDocumentCount( data.response.numFound );
 
-		self._commands.execute( SOLR_QUERY_INITIALIZED_COMMAND );
+		self._commands.execute( SOLR_QUERY_INITIALIZED_COMMAND, { 'query': query } );
 								
 		if ( typeof callback !== 'undefined' ) {						
 			callback( query );
@@ -81,7 +81,7 @@ SolrClient.prototype.initialize = function ( query, resetQuery, callback ) {
 SolrClient.prototype.run = function ( query, queryComponents, callback ) {
 	
 	var self = this;	
-	var url = self._createBaseUrl( query.getDocumentIndex(), query.getDocumentCount() ) + query.create( queryComponents );
+	var url = self.createUrl( query, queryComponents );
 	
 	//console.log( url );
 	
@@ -92,10 +92,17 @@ SolrClient.prototype.run = function ( query, queryComponents, callback ) {
 		
 		query.setCurrentDocumentCount( data.response.numFound );
 		
-		self._commands.execute( SOLR_QUERY_UPDATED_COMMAND, { 'response': response } );
+		self._commands.execute( SOLR_QUERY_UPDATED_COMMAND, { 'query': query, 'response': response } );
 
 		if ( typeof callback !== 'undefined' ) {				
 			callback( response );
 		}
 	}});		
 };
+
+
+SolrClient.prototype.createUrl = function( query, queryComponents ) {
+	var self = this;
+	
+	return  self._createBaseUrl( query.getDocumentIndex(), query.getDocumentCount() ) + query.create( queryComponents );		
+}

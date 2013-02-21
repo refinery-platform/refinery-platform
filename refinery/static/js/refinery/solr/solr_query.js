@@ -396,27 +396,70 @@ SolrQuery.prototype._createPivotComponent = function () {
 
 
 // returns true if any facets were cleared, otherwise false
-SolrQuery.prototype.clearFacetSelection = function () {
+SolrQuery.prototype.clearFacetSelection = function ( facet ) {
 
 	var self = this;
 
 	var counter = 0;
 	
-	for ( var facet in self._facetSelection ) {
-		if ( self._facetSelection.hasOwnProperty( facet ) ) {
-			for ( var facetValue in self._facetSelection[facet] ) {
-				if ( self._facetSelection[facet].hasOwnProperty( facetValue ) ) {
-					if ( self._facetSelection[facet][facetValue].isSelected ) {
-						self._facetSelection[facet][facetValue].isSelected = false;
-						++counter;
-					}					
-				}
-			}				
-		}
+	if ( typeof facet === 'undefined' ) {
+		for ( var facet in self._facetSelection ) {
+			self._clearFacetSelection( facet ) ? ++counter : counter;
+		}		
+	}
+	else {
+		self._clearFacetSelection( facet ) ? ++counter : counter;
 	}
 	
 	return counter > 0;
 };
+
+
+SolrQuery.prototype._clearFacetSelection = function( facet ) {
+	
+	var self = this;
+	
+	var counter = 0;
+	
+	if ( typeof facet === 'undefined' ) {
+		return counter;
+	}	
+
+	if ( self._facetSelection.hasOwnProperty( facet ) ) {
+		for ( var facetValue in self._facetSelection[facet] ) {
+			if ( self._facetSelection[facet].hasOwnProperty( facetValue ) ) {
+				if ( self._facetSelection[facet][facetValue].isSelected ) {
+					self._facetSelection[facet][facetValue].isSelected = false;
+					++counter;
+				}					
+			}
+		}				
+	}
+
+	return counter > 0;	
+}
+
+
+SolrQuery.prototype.getNumberOfFacetValues = function( facet ) {
+	var self = this;
+	var unselectedCount = 0
+	var selectedCount = 0
+	
+	if ( self._facetSelection.hasOwnProperty( facet ) ) {
+		for ( var facetValue in self._facetSelection[facet] ) {
+			if ( self._facetSelection[facet].hasOwnProperty( facetValue ) ) {
+				if ( self._facetSelection[facet][facetValue].isSelected ) {
+					++selectedCount;
+				}
+				else {
+					++unselectedCount;
+				}					
+			}
+		}				
+	}
+	
+	return { 'total': ( unselectedCount + selectedCount), 'unselected': unselectedCount, 'selected': selectedCount };
+}
 
 
 // returns true if any nodes were cleared, otherwise false
