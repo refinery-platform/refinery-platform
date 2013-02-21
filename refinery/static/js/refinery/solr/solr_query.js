@@ -646,7 +646,7 @@ SolrQuery.prototype.getFacetNames = function ( isVisible ) {
 					facetNames.push( facet );
 				}	
 				else {
-					if ( facets[facet].isVisible == isVisible ) {
+					if ( !self._facetSelection[facet].isVisible == isVisible ) {
 						facetNames.push( facet );
 					}
 				}
