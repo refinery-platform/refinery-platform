@@ -54,6 +54,9 @@ SolrPivotMatrix = function( parentElementId, idPrefix, solrQuery, options, comma
 	
 	self._facet1 = undefined;
 	self._facet2 = undefined;	
+	
+	self._rowOrderIndex = undefined;
+	self._columnOrderIndex = undefined;
 };	
 	
 	
@@ -153,9 +156,20 @@ SolrPivotMatrix.prototype.render = function ( solrResponse ) {
   	};
 
 	// The default sort order.
-	x.domain(orders.xDefault);
-	y.domain(orders.yDefault);
+	if ( self._rowOrderIndex != undefined ) {
+		y.domain( computeRowOrder( self._rowOrderIndex, false ) );		
+	}
+	else {
+		y.domain(orders.yDefault);		
+	}	
 
+	if ( self._columnOrderIndex != undefined ) {
+		x.domain( computeColumnOrder( self._columnOrderIndex, false ) );		
+	}
+	else {
+		x.domain(orders.xDefault);		
+	}	
+	
   	svg.append("rect")
 		.attr("class", "frame")
 		.attr("width", width)
@@ -217,14 +231,15 @@ SolrPivotMatrix.prototype.render = function ( solrResponse ) {
 		
 		.on("click", function(p) { 
 			if ( event.shiftKey ) {
-				orderColumns( computeColumnOrder( p[0].y, false ) );
+				self._columnOrderIndex = p[0].y;
+				orderColumns( computeColumnOrder( self._columnOrderIndex, false ) );
+								
 				event.preventDefault(); 
 			}
       		else {
       			facets[p[0].yfacet][p[0].ylab].isSelected = !facets[p[0].yfacet][p[0].ylab].isSelected;
       			
       			self._commands.execute( SOLR_FACET_SELECTION_UPDATED_COMMAND, { 'facet': p[0].yfacet, 'value': p[0].ylab, 'isSelected': facets[p[0].yfacet][p[0].ylab].isSelected } ); 
-      			//orderColumns( computeColumnOrder( p[0].y, false ) );
       		} 
       	}, true );
             
@@ -281,7 +296,9 @@ SolrPivotMatrix.prototype.render = function ( solrResponse ) {
 			})
 		.on("click", function(p) {
 			if ( event.shiftKey ) {
-				orderRows( computeRowOrder( p.x, false ) );
+				self._rowOrderIndex = p.x;
+				orderRows( computeRowOrder( self._rowOrderIndex, false ) );
+				
 				event.preventDefault(); 
 			}
 			else {
@@ -518,12 +535,12 @@ SolrPivotMatrix.prototype._generateFacetSelectionControls = function( parentElem
 		
 		if ( pivot_x1 !== "" )
 		{
-			self._facet1 = pivot_x1;
+			self.setFacet1( pivot_x1 );
 		}
 				
 		if ( pivot_y1 !== "" )
 		{
-			self._facet2 = pivot_y1;
+			self.setFacet2( pivot_y1 );
 		}
 								
 		if ( self._facet1 !== undefined && self._facet2 !== undefined ) {
@@ -613,7 +630,10 @@ SolrPivotMatrix.prototype.getMatrixMax = function( matrix ) {
 
 SolrPivotMatrix.prototype.setFacet1 = function( facet ) {
 	var self = this;
-	
+
+	self._rowOrderIndex = undefined;
+	self._columnOrderIndex = undefined;
+		
 	self._facet1 = facet;
 	
 	return this;
@@ -630,6 +650,9 @@ SolrPivotMatrix.prototype.getFacet1 = function() {
 
 SolrPivotMatrix.prototype.setFacet2 = function( facet ) {
 	var self = this;
+
+	self._rowOrderIndex = undefined;
+	self._columnOrderIndex = undefined;
 	
 	self._facet2 = facet;
 	
