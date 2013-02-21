@@ -811,7 +811,8 @@ def solr_igv(request):
         #logger.debug("solr_igv called: request is ajax")
         #logger.debug(simplejson.dumps(request.POST, indent=4))
         
-        logger.debug( 'IGV query: ' + request.POST['query'] )
+        logger.debug( 'IGV data query: ' + request.POST['query'] )
+        logger.debug( 'IGV annotation query: ' + request.POST['annot'] )
         
         # attributes associated with node selection from interface
         node_selection_blacklist_mode = request.POST['node_selection_blacklist_mode']

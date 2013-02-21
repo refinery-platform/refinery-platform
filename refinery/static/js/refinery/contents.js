@@ -145,11 +145,11 @@ $(document).ready(function() {
 			//console.log( arguments );
 			
 			// update global query strings
-			if ( query == dataQuery ) {
+			if ( !showAnnotation ) {
 				dataQueryString = client.createUrl( query, SOLR_FULL_QUERY );
 				annotationQueryString = client.createUrl( annotationQuery, SOLR_FULL_QUERY );				
 			}
-			if ( query == annotationQuery ) {
+			else {
 				dataQueryString = client.createUrl( dataQuery, SOLR_FULL_QUERY );
 				annotationQueryString = client.createUrl( query, SOLR_FULL_QUERY );				
 			}
@@ -274,13 +274,15 @@ $(document).ready(function() {
 		// annotation
 		// --------------
 		$(".annotation-buttons button").click(function () {
-		    if ( $(this).attr("id") == "annotation-button" ) {		    	
+		    if ( $(this).attr("id") == "annotation-button" ) {
+		    	showAnnotation = true;		    	
 		    	dataQuery = query.clone();
 		    	query = annotationQuery;
 		    			    	 
 		    	client.initialize( query, false );
 		    }
 		    else {		    	
+		    	showAnnotation = false;		    	
 		    	annotationQuery = query.clone();		    	
 		    	query = dataQuery;		 
 		    	   	 
