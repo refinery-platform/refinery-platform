@@ -447,7 +447,7 @@ class AttributeOrder(models.Model):
     is_internal = models.BooleanField(default=False)
     
     def __unicode__(self):
-        return unicode( self.type + "[" + self.subtype + "] = " ) + str( self.rank ) 
+        return unicode( self.solr_field + " [facet = " + str(self.is_facet) + " exp = "  + str(self.is_exposed) + " act = "  + str(self.is_active) + " int = " + str(self.is_internal) + "] = " ) + str( self.rank ) 
     
     
 class AnnotatedNodeRegistry(models.Model):
