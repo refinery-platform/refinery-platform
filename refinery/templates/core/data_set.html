@@ -431,14 +431,22 @@ rect.active {
 
 	  					<div id="process_2" class="well" style="opacity:0"></div>
 	  					<!-- <div id="process_3" class="well"></div> -->
-						   <script type="text/template" id="template_field_item"><input type="checkbox" id=<%= full_name%>><%= name %></script>
+						   <script type="text/template" id="template_field_item"><label class="checkbox"><input type="checkbox" value=<%= full_name%> id=<%= full_name%>><%= name %></label></script>
 
                         <div class="well" id="process_3_p" style="opacity:0">
                         <form class="form-horizontal">
                         	<legend>Choose Fields</legend>
-                            <div id="process_3" class="control-group"></div>
+                        	<div class="control-group">
+								<a id="run_analysis_single_btn" href="#" onclick="nrApp.nrMod.createRelationship()" role="button" class="btn-block  btn btn-warning" data-toggle="modal" rel="tooltip"><i class="icon-dashboard"></i>&nbsp;&nbsp;Create Relationship</a>
+						</div>
 
-                            <!--
+                        	<table class="table table-hover table-condensed">
+                        	<!--	<tbody> -->
+                            <tbody id="process_3"></tbody>
+                            <!-- </tbody> -->
+                            </table>
+
+<!--
                             <label class="checkbox inline">
                               <input type="checkbox" id="inlineCheckbox1" value="option1"> 1
                             </label>
@@ -448,8 +456,8 @@ rect.active {
                             <label class="checkbox inline">
                               <input type="checkbox" id="inlineCheckbox3" value="option3"> 3
                             </label>
-                            -->
-                        </form>
+-->
+						                        </form>
                         </div>
 
 
@@ -562,7 +570,7 @@ rect.active {
     <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/easing/EasePack.min.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/plugins/CSSPlugin.min.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TimelineMax.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-ajaxcommands/backbone.ajaxcommands.js"></script>
+
 
 	<script type="application/javascript">
 

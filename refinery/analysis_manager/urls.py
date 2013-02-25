@@ -15,4 +15,5 @@ urlpatterns = patterns('analysis_manager.views',
     url(r'^repository_run/$', 'repository_run'),
     url(r'^run_nodeset/$', 'run_nodeset'),
     url(r'^run_noderelationship/$', 'run_noderelationship'),
+    url(r'^create_noderelationship/$', 'create_noderelationship'),
 )

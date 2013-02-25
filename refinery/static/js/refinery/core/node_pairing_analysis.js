@@ -43,6 +43,29 @@ $('#tabs li a[href="#process"]').on('shown', function (e) {
   }
 })
 
+//===================================================================
+// Registering Ajax commands
+//===================================================================
+
+// http://lostechies.com/derickbailey/2012/05/04/wrapping-ajax-in-a-thin-command-framework-for-backbone-apps/
+Backbone.AjaxCommands.register("nodesetForm", {
+  url: "/analysis_manager/run_nodeset/",
+  type: "POST",
+  dataType: "JSON",
+});
+
+Backbone.AjaxCommands.register("nodeRelationForm", {
+  url: "/analysis_manager/run_noderelationship/",
+  type: "POST",
+  dataType: "JSON",
+});
+
+Backbone.AjaxCommands.register("createRelationForm", {
+  url: "/analysis_manager/create_noderelationship/",
+  type: "POST",
+  dataType: "JSON",
+});
+
 
 nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 	//console.log("inside nrMOD Module");
@@ -59,28 +82,44 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 	var model_fields;
 	var query_fields;
 	var tl;
-
-	//===================================================================
-	// Registering Ajax commands
-	//===================================================================
-
-	// http://lostechies.com/derickbailey/2012/05/04/wrapping-ajax-in-a-thin-command-framework-for-backbone-apps/
-	Backbone.AjaxCommands.register("nodesetForm", {
-	  url: "/analysis_manager/run_nodeset/",
-	  type: "POST",
-	  dataType: "JSON",
-	});
-
-	Backbone.AjaxCommands.register("nodeRelationForm", {
-	  url: "/analysis_manager/run_noderelationship/",
-	  type: "POST",
-	  dataType: "JSON",
-	});
+	var create_relation_form;
 
 
 	//===================================================================
 	// Button Actions
 	//===================================================================
+	nrMod.createRelationship = function(event) {
+		console.log("BUTTON: createRelationship called ");
+
+		// Determining which fields have been selected
+		sel_fields = [];
+		var temp_check = $(view_fields.$el).find('input[type=checkbox]');
+		for (var i=0;i<temp_check.length;i++){
+			if (temp_check[i].checked) {
+				sel_fields.push(temp_check[i].value);
+			}
+		}
+
+		opts = {};
+		opts['csrfmiddlewaretoken'] = crsf_token;
+		//opts['workflow_id'] = nr_wcv.getWorkflowID();
+		var temp_ns_opts1 = nr_inputs.getNodeSet1();
+		var temp_ns_opts2 = nr_inputs.getNodeSet2();
+		//console.log('temp_ns_opts2');
+		//console.log(temp_ns_opts2);
+		opts['node_set_uuid1'] = temp_ns_opts1.node_set_uuid;
+		opts['node_set_field1'] = temp_ns_opts1.node_input;
+		opts['node_set_uuid2'] = temp_ns_opts2.node_set_uuid;
+		opts['node_set_field2'] = temp_ns_opts2.node_input;
+		opts['study_uuid'] = externalAssayUuid;
+		opts['fields[]'] = sel_fields;
+
+		console.log("submitting form");
+		console.log(opts);
+
+		// execute the command and send this data with it
+		create_relation_form.execute(opts);
+	}
 
 	nrMod.openFields = function(event) {
 		console.log("workflowActions: openFields");
@@ -112,8 +151,6 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		opts['node_set_uuid'] = temp_ns_opts.node_set_uuid;
 		opts['node_set_field'] = temp_ns_opts.node_input;
 		opts['study_uuid'] = externalAssayUuid;
-		//console.log("nr_inputs.getNodeSet1()");
-		//console.log(nr_inputs.getNodeSet1());
 
 		// execute the command and send this data with it
 		nodeset_form.execute(opts);
@@ -143,6 +180,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		defaults: {
             name: '',
             full_name: '',
+            countid: 0,
         },
         initialize: function(){
             //alert("Welcome (nrMod.fieldsModel) to this world");
@@ -236,16 +274,24 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 	nrMod.fieldItemView = Marionette.ItemView.extend({
 		template: '#template_field_item',
-		tagName: 'label',
+		tagName: 'td',
 
 		onRender: function() {
-			this.$el.attr("class", "checkbox inline");
+			//console.log("item item");
+			//console.log(this.model.get('countid'));
+			//console.log(this.$el.html());
+			//console.log(this.$el);
+			//this.$el.wrap('<tr>');
+			//console.log($(this.el));
+			//this.$el.html('</tr>'+this.$el.text() + '<tr>');
+			//this.$el.attr("class", "checkbox inline");
   			//this.$el.attr( "class", "myclass1 myclass2" );
+  			//this.ui.checkbox.addClass('checked');
 		},
 
 	});
 	nrMod.fieldCollectionView = Marionette.CollectionView.extend({
-		tagName: "fieldset",
+		tagName: "tr",
 		itemView: nrMod.fieldItemView,
 		//ui_name: "wcv_dropdown",
 		//current_uuid: "",
@@ -262,6 +308,9 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
   			//console.log("workflowCollectionView render called");
 			//$(this.el).attr('id', '1111');
 			//return this;
+			console.log("fieldCollectionView onRendeer called");
+			console.log($(this.el));
+			console.log(this.$el);
 		},
 	});
 
@@ -435,7 +484,6 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 			var set1_field;
 			var set2_field;
 			_.each(this.current_inputs, function (w2) {
-				console.log(w2);
 				set1_field = w2.set1;
 				set2_field = w2.set2;
 			});
@@ -450,12 +498,16 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 			console.log("changeSet1");
 			console.log($(this.ui.set1).val());
 		},
-		getNodeSet1: function() {
-			return {node_input:this.set1_field, node_set_uuid:$(this.ui.set1).val()};
-		},
 		changeSet2: function() {
 			console.log("changeSet2");
 			console.log($(this.ui.set2).val());
+		},
+		getNodeSet1: function() {
+			return {node_input:this.set1_field, node_set_uuid:$(this.ui.set1).val()};
+		},
+
+		getNodeSet2: function() {
+			return {node_input:this.set2_field, node_set_uuid:$(this.ui.set2).val()};
 		},
 
 		setNodeSet: function(opt) {
@@ -475,13 +527,13 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 	});
 
 	App.vent.on("show_fields", function(){
-		console.log("show_fields called VENT");
+		//console.log("show_fields called VENT");
 		//nr_inputs.changeInputs(wf_inputs);
 		TweenMax.to("#process_3_p", 1, {autoAlpha:1, ease:Power4.easeInOut});
 	});
 
     App.vent.on("change_inputs", function(wf_inputs){
-		console.log("change inputs called VENT");
+		//console.log("change inputs called VENT");
 		nr_inputs.changeInputs(wf_inputs);
 
 		tl = new TimelineMax({align:"sequence"});
@@ -496,7 +548,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 	});
 
 	App.vent.on("begin_loaded", function(){
-		console.log("begin_loaded called");
+		//console.log("begin_loaded called");
 		nr_wcv = new nrMod.workflowCollectionView({collection:model_workflow});
 
 		nr_inputs = new nrMod.inputRelationshipView();
@@ -526,7 +578,6 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 		// ajax command for running analyses with nodesetForm
 		nodeset_form = Backbone.AjaxCommands.get("nodesetForm");
-
 		nodeset_form.on("success", function(response){
 		  window.location = response;
 		});
@@ -535,6 +586,14 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		node_relation_form = Backbone.AjaxCommands.get("nodeRelationForm");
 		node_relation_form.on("success", function(response){
 		  window.location = response;
+		});
+
+		// ajax command for creating node relationships
+		create_relation_form = Backbone.AjaxCommands.get("createRelationForm");
+		create_relation_form.on("success", function(response){
+			console.log("NODE RELATIONSHIPS SUCCESS");
+			console.log(response);
+			//window.location = response;
 		});
 
 		// getting workflows and possible node input models
@@ -550,97 +609,19 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 		$.when.apply($, deferreds).done(function() { App.vent.trigger("begin_loaded");} );
 
-		//nrMod.controller = new nrMod.npController();
-	    //nrMod.controller.start();
-	    //console.log(nrApp);
-
-	    // temporary holder for creating models out of fields from solr queries
-
+	    // holder for creating models out of fields from solr queries
 	    query_fields = query.getFacetNames(true);
-	    console.log("contents: Fields" );
-	    console.log(query_fields);
+
+	    //console.log("contents: Fields" );
+	    //console.log(query_fields);
 	    model_fields = new nrMod.fieldCollection()
 	    for ( field in query_fields ) {
 	    	//console.log(prettifySolrFieldName(query_fields[field], true));
-	    	var temp_field = new nrMod.fieldModel({name:prettifySolrFieldName(query_fields[field], true), full_name:query_fields[field]})
+	    	var temp_field = new nrMod.fieldModel({name:prettifySolrFieldName(query_fields[field], true), full_name:query_fields[field], countid:field})
 			model_fields.add(temp_field);
 	    }
 
 		view_fields = new nrMod.fieldCollectionView({collection:model_fields});
-		console.log(view_fields);
-		//*/
-
 	});
 
 });
-
-/*
-  	//===================================================================
-	// Controller
-	//===================================================================
-
-	 nrMod.npController = Marionette.Controller.extend({
-		defer: [],
-		model_nodes: null,
-		model_workflow: null,
-		view_wcv: null,
-		view_irv: null,
-
-		initialize: function(options){
-			console.log("nrMod.npController initialized")
-			//this.stuff = options.stuff;
-			var self = this;
-			this.model_nodeset = new nrMod.nodeSetCollection();
-			this.model_workflow = new nrMod.workflowCollection();
-			this.model_noderelation = new nrMod.nodeRelationshipCollection();
-			this.defer = [];
-
-			//App.vent.on("change_inputs", this.change_inputs);
-		},
-
-        start: function(options){
-            //this.region = options.region
-            console.log("npController started");
-            console.log(options);
-
-            this.defer.push(this.model_nodeset.fetch({data: { study__uuid: externalAssayUuid, assay__uuid:externalStudyUuid, format:'json' }}));
-			this.defer.push(this.model_workflow.fetch());
-
-			//this.defer.push(model_noderelation.fetch({data: { study__uuid: externalAssayUuid, assay__uuid:externalStudyUuid, format:'json' }}));
-			this.defer.push(this.model_noderelation.fetch());
-
-			$.when.apply($, this.defer).done(function() {
-				//console.log(self);
-				//console.log("succesesdfadfasdf called");
-				nrMod.controller.data_loaded();
-				//App.vent.trigger("begin_loaded");
-			} );
-
-        },
-
-		data_loaded: function() {
-			console.log("data_loaded called");
-			this.view_wcv = new nrMod.workflowCollectionView({collection:this.model_workflow});
-
-			this.view_irv = new nrMod.inputRelationshipView();
-			this.view_irv.setNodeSet(this.model_nodeset.getOptions());
-			this.view_irv.setNodeRelations(this.model_noderelation.getOptions());
-
-			this.show();
-		},
-
-        show: function(){
-        	console.log("---- controller: show called");
-         	App.p_workflow.show(this.view_wcv);
-			App.p_inputs.show(this.view_irv);
-			this.view_wcv.changeWorkflow();
-        },
-
-        change_inputs: function(wf_inputs) {
-        	console.log("CONTROLLER: change inputs called VENT");
-        	console.log(wf_inputs);
-			nrMod.controller.view_irv.changeInputs(wf_inputs);
-        }
-    });
- */
-
