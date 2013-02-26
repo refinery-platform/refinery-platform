@@ -45,7 +45,7 @@ docs/_static/*
 .pydevproject
 .settings/*
 *.conflict
-refinery/celeryev.pid
+refinery/celery*.pid
 refinery/solr/*/data
 refinery/refinery/*
 refinery/middleware.py

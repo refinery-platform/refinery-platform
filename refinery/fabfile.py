@@ -26,7 +26,7 @@ Requirements:
 
 import os
 import sys
-from fabric.api import local, settings, abort, run, env, sudo, execute
+from fabric.api import settings, abort, run, env, sudo, execute
 from fabric.contrib import django
 from fabric.contrib.console import confirm
 from fabric.context_managers import hide, prefix
@@ -37,6 +37,8 @@ from fabric.utils import puts
 
 
 env.local_project_dir = os.path.dirname(os.path.abspath(__file__))
+# config files and templates
+env.local_conf_dir=os.path.join(env.local_project_dir, "fabric")
 
 # Django integration
 sys.path.append(env.local_project_dir)
@@ -64,11 +66,11 @@ def dev():
     env.hosts = [env.dev_host]
     env.dev_settings_file = "settings_local_dev.py"
     django.settings_module(os.path.splitext(env.dev_settings_file)[0])
-    env.os = env.remote_os
     # configure software package names
     if env.os == "CentOS":
         env.postgresql_server = "postgresql84-server"
         env.postgresql_devel = "postgresql84-devel"
+        env.supervisorctl = "/usr/bin/supervisorctl"
     else:
         abort("{os} is not supported".format(**env))
     env.app_dir = os.path.join(env.deployment_dir, "apps")
@@ -76,7 +78,11 @@ def dev():
     env.data_dir = os.path.join(env.deployment_dir, "data")
     env.refinery_base_dir = os.path.join(env.app_dir, "Refinery")
     env.conf_dir = os.path.join(env.deployment_dir, "etc")
+    env.apache_conf_dir = "/etc/httpd/conf.d"
     env.refinery_branch = "develop"
+    # config file templates
+    env.bash_profile_template="bash_profile"
+    env.bashrc_template="bashrc"
     # Galaxy config
     galaxy_base_dir = env.galaxy_root + "dev"
     env.galaxy_root = os.path.join(galaxy_base_dir, "live")
@@ -84,7 +90,7 @@ def dev():
 
 
 @task
-def local():
+def loc():
     '''Set config to local
 
     '''
@@ -147,12 +153,8 @@ def upload_bash_config():
     bash_profile_path = os.path.join(env.local_conf_dir, env.bash_profile_template)
     upload_template(bash_profile_path, "~/.bash_profile")
 
-    #TODO: replace with fabric.contrib.files.sed() to add/edit the following:
-    #export WORKON_HOME=%(deployment_dir)s/virtualenvs
-    #export PROJECT_HOME=%(deployment_dir)s/apps
-    #source $PYTHONHOME/bin/virtualenvwrapper.sh
     bashrc_path = os.path.join(env.local_conf_dir, env.bashrc_template)
-    bashrc_context = {"deployment_dir": env.deployment_dir}
+    bashrc_context = {"apps": env.app_dir, "virtualenvs": env.virtualenv_dir}
     upload_template(bashrc_path, "~/.bashrc", bashrc_context)
 
 
@@ -475,11 +477,16 @@ def update_refinery():
     '''Pull code updates from the Github Refinery repository
 
     '''
+    #TODO: refactor to move each operation to a separate task
     puts("Updating Refinery")
-    with prefix("workon refinery"):
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("git pull")
+        run("./manage.py syncdb --migrate")
         run("./manage.py collectstatic --noinput")
         run("touch wsgi.py")
+    with settings(user=env.local_user):
+        sudo("{supervisorctl} restart celeryd".format(**env))
+        sudo("{supervisorctl} restart celerycam".format(**env))
 
 
 @task
@@ -564,7 +571,7 @@ def create_galaxy_instance(instance_id):
     '''
     instance = django_settings.GALAXY_INSTANCES[instance_id]
     with prefix("workon refinery"):
-        run("./manage.py create_galaxy_instance '{base_url}' '{api_key}' '{description}'"
+        run("./manage.py create_galaxy_instance '{base_url}' '{api_key}' --description '{description}'"
             .format(**instance))
 
 
@@ -584,7 +591,6 @@ def import_workflows():
     '''Import all available workflows from all available Galaxy instances into Refinery
 
     '''
-    #TODO: check for idempotence
     with prefix("workon refinery"):
         run("./manage.py import_workflows")
 
@@ -595,8 +601,9 @@ def install_solr():
     '''Install Solr
 
     '''
-    run("unzip -uq {bootstrap_dir}/apache-solr-4.0.0.zip -d {deployment_target_dir}/apps"
-        .format(**env))
+    #TODO: update to download Solr and install into /opt
+#    run("unzip -uq {bootstrap_dir}/apache-solr-4.0.0.zip -d {deployment_target_dir}/apps"
+#        .format(**env))
 
 
 @task
@@ -637,36 +644,6 @@ def deploy_refinery():
     create_refinery_data_dirs()
     setup_refinery()
 
-
-@task
-def pull():
-    local("git pull")
-
-@task
-def test():
-    '''Run unit tests
-
-    '''
-    with settings(warn_only=True):
-        result = local("./manage.py test", capture=True)
-    if result.failed and not confirm("Tests failed. Continue anyway?"):
-        abort("Aborting at user request")
-
-@task
-def commit():
-    local("git add -p && git commit")   # both commands may require user input
-
-@task
-def push():
-    local("git push")
-
-@task
-def prepare_deploy():
-    #TODO: make sure we are in the right directory
-    pull()
-    test()
-    commit()
-    push()
 
 @task
 @with_settings(user=env.project_user)
