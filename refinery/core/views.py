@@ -916,7 +916,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
                    # if the current node should be removed from the results
                    if node['uuid'] in selected_nodes: 
                        del results["response"]["docs"][i]
-                       num_found -= 1
+                       #num_found -= 1
             
             # whitelist mode (add's uuids from solr query) 
             else:
@@ -924,7 +924,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
                    # if the current node should be removed from the results
                    if node['uuid'] not in selected_nodes: 
                        del results["response"]["docs"][i]
-                       num_found += 1
+                       #num_found += 1
     
     # updating the number found in the list
     #results["response"]["numFound"] = str(num_found)

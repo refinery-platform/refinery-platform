@@ -4,7 +4,7 @@ from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import run_analysis
 from core.models import Analysis, Workflow, WorkflowEngine, WorkflowDataInputMap, \
     Project, DataSet, InvestigationLink, NodeSet, NodeRelationship, NodePair
-from data_set_manager.models import Study
+from data_set_manager.models import Study, Assay, Node
 from datetime import datetime
 from django.contrib.auth.models import User, Group
 from django.core import serializers
@@ -481,25 +481,47 @@ def create_noderelationship(request):
         
         # fields to match on
         diff_fields = request.POST.getlist('fields[]')
+        if len(diff_fields) < 1:
+            logger.error('create_noderelationship: failed b/c no field selected for defining Node Relationships')
         
         # get study uuid
+        assay_uuid = request.POST.getlist('assay_uuid')[0]
         study_uuid = request.POST.getlist('study_uuid')[0]
+        study = Study.objects.get( uuid=study_uuid );
+        
+        # TODO: catch if study or data set don't exist
+        study = Study.objects.get( uuid=study_uuid );
+        assay = Assay.objects.get( uuid=assay_uuid );
         
         # Need to deal w/ limits on current solr queries
         # solr results
-        node_set_solr1 = get_solr_results(curr_node_set1.solr_query)
-        node_set_solr2 = get_solr_results(curr_node_set2.solr_query)
+        #print "curr_node_set1.solr_query_components"
+        curr_node_dict1 = curr_node_set1.solr_query_components
+        curr_node_dict1 = simplejson.loads(curr_node_dict1)
         
+        curr_node_dict2 = curr_node_set2.solr_query_components
+        curr_node_dict2 = simplejson.loads(curr_node_dict2)
+        
+        # getting list of node uuids based on input solr query 
+        node_set_solr1 = get_solr_results(curr_node_set1.solr_query, selected_mode=curr_node_dict1['documentSelectionBlacklistMode'], selected_nodes=curr_node_dict1['documentSelection'])
+        node_set_solr2 = get_solr_results(curr_node_set2.solr_query, selected_mode=curr_node_dict2['documentSelectionBlacklistMode'], selected_nodes=curr_node_dict2['documentSelection'])
+       
+        # all fields from the first solr query 
         all_fields = node_set_solr1['responseHeader']['params']['fl']
-        print "all_fields"
-        print all_fields
         
+        # actual documents retreived from solr response
         node_set_results1 = node_set_solr1['response']['docs']
         node_set_results2 = node_set_solr2['response']['docs']
         
-        nodes_set_match = match_nodesets(node_set_results1, node_set_results2, diff_fields, all_fields)
+        # match between 2 nodesets for a given column
+        nodes_set_match, match_info = match_nodesets(node_set_results1, node_set_results2, diff_fields, all_fields)
         
         """
+        #print "ns_comp1"
+        #print simplejson.dumps(curr_node_dict1, indent=4)
+        #print simplejson.dumps(curr_node_dict2, indent=4)
+        #print ns_comp1[documentSelectionBlacklistMode]
+        
         print "node_set_uuid1"
         print node_set_uuid1
         print "node_set_uuid"
@@ -510,16 +532,31 @@ def create_noderelationship(request):
         
         print "MAKING RELATIONSHIPS NOW"
         print simplejson.dumps(nodes_set_match, indent=4);
+        print nodes_set_match
         
-        #NodeRelationship
-        #NodePair
+        # TODO: need to include names, descriptions, summary
+        temp_name = curr_node_set1.name + " - " + curr_node_set2.name + " " + str( datetime.now() )
+        #temp_name = '444444444'
+        summary_name = "None provided."
+        
+        new_relationship = NodeRelationship(node_set_1=curr_node_set1, node_set_2=curr_node_set2, study=study, assay=assay, name=temp_name, summary=summary_name)
+        new_relationship.save()
+        
+        for i in range(len(nodes_set_match)):
+            #print "### i =" + str(i)
+            node1 = Node.objects.get(uuid=nodes_set_match[0]['uuid_1'])
+            node2 = Node.objects.get(uuid=nodes_set_match[0]['uuid_2'])
+            new_pair = NodePair(node1=node1, node2=node2, group=i+1)
+            new_pair.save()
+            new_relationship.node_pairs.add(new_pair)
+            
         
         #print "node_set_solr1"
         #print simplejson.dumps(node_set_solr1, indent=4)
         #print "node_set_solr2"
         #print simplejson.dumps(node_set_solr2, indent=4)
         
-        return HttpResponse(simplejson.dumps("MADE NODE RELATIONSHIPS"), mimetype='application/json')
+        return HttpResponse(simplejson.dumps(match_info, indent=4), mimetype='application/json')
 
 
 """
@@ -527,7 +564,6 @@ A dictionary difference calculator
 Originally posted as:
 http://stackoverflow.com/questions/1165352/fast-comparison-between-two-python-dictionary/1165552#1165552
 """
-
 
 class DictDiffer(object):
     """
@@ -562,18 +598,18 @@ def match_nodesets(ns1, ns2, diff_f, all_f, rel_type=None ):
     Helper function for matching 2 nodesets solr results
     '''    
     logger.debug("analysis_manager.views match_nodesets called")
-    #print 'ns1'
-    #print simplejson.dumps(ns1, indent=4)
-    #print 'ns2'
-    #print simplejson.dumps(ns2, indent=4)
     
     num_fields = len(all_f)
+    ret_info = {};
+    ret_info['total'] = str(len(ns1) + len(ns2))
+    ret_info['node1_count'] = str(len(ns1))
+    ret_info['node2_count'] = str(len(ns2))
+    
     
     best_list = []
     template = {'uuid_1':'', 'uuid_2':'', 'frac':0.0, 'same':0, 'diff':0, 'tot':0, 'sel_tot':0, 'sel':0, 'sel_frac':0.0}
     i = 0 
     for node1 in ns1:
-        #print "#############"
         best_node = template.copy()
         
         j = 0
@@ -584,21 +620,25 @@ def match_nodesets(ns1, ns2, diff_f, all_f, rel_type=None ):
                 temp_node = template.copy()
                 temp_node['uuid_1'] = node1['uuid']
                 temp_node['uuid_2'] = node2['uuid']
+                
+                # counts differences for list of fields
+                for df in diff_f:
+                    # if the given column matches between Nodesets
+                    if node1[df] == node2[df]:
+                        best_node = temp_node
+        
+                """
+                #df_tot = len(diff_f)
+                #df_count = 0
+
                 temp_node['same'] = len(tdd.unchanged())
                 temp_node['diff'] = len(tdd.changed())
                 temp_node['tot'] = len(tdd.current_keys)
                 temp_node['frac'] = float(temp_node['same'])/float(temp_node['tot'])
                 
-                #print "    %%%%%%%%%%"
                 #shared_item = set(node1.items()) & set(node2.items())
                 #diff_item = set(node1.items()) ^ set(node2.items())
-                #print node1
-                #print node2
                 
-                df_tot = len(diff_f)
-                df_count = 0
-                # counts differences for list of fields
-                for df in diff_f:
                     if node1[df] != node2[df]:
                         df_count += 1
                 
@@ -606,29 +646,29 @@ def match_nodesets(ns1, ns2, diff_f, all_f, rel_type=None ):
                 temp_node['sel_tot'] = df_tot
                 temp_node['sel_frac'] = float(df_count) / float(df_tot)
                 
-                
                 if (best_node['sel_frac'] <= temp_node['sel_frac']):
                     if (best_node['frac'] <= temp_node['frac']):
-                       #print "BEST BEST BEST"
+                        best_node = temp_node 
+                       
                        #print "i: " + str(i) + " j: "+ str(j);
                        #print "temp_node"
                        #print simplejson.dumps(temp_node, indent=4)
                        #print "best_node"
                        #print simplejson.dumps(best_node, indent=4)
-                      # print node1['treatment_Characteristics_18_9_s']
-                       #print node2['treatment_Characteristics_18_9_s']
-                       best_node = temp_node 
-                       #print "best_node"
-                       #print best_node    
+                """
             j+=1
             
         best_list.append(best_node)    
         i+=1
 
+    # matches
+    ret_info['matches'] = str(len(best_list))
+    
     #for field in all_f:        
-    #print "*********** best_list"
+    #    print "*********** best_list"
+    
     #print simplejson.dumps(best_list, indent=4)
     
-    return best_list
+    return best_list, ret_info
     
     

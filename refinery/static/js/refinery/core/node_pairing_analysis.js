@@ -93,7 +93,9 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 		// Determining which fields have been selected
 		sel_fields = [];
-		var temp_check = $(view_fields.$el).find('input[type=checkbox]');
+		var temp_check = $(view_fields.$el).find('input[type=radio]');
+
+		//var temp_check = $(view_fields.$el).find('input[type=checkbox]');
 		for (var i=0;i<temp_check.length;i++){
 			if (temp_check[i].checked) {
 				sel_fields.push(temp_check[i].value);
@@ -112,13 +114,20 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		opts['node_set_uuid2'] = temp_ns_opts2.node_set_uuid;
 		opts['node_set_field2'] = temp_ns_opts2.node_input;
 		opts['study_uuid'] = externalAssayUuid;
+		opts['assay_uuid'] = externalStudyUuid;
 		opts['fields[]'] = sel_fields;
 
 		console.log("submitting form");
 		console.log(opts);
 
-		// execute the command and send this data with it
-		create_relation_form.execute(opts);
+		if (sel_fields.length > 0) {
+			// execute the command and send this data with it
+			create_relation_form.execute(opts);
+		}
+		else {
+			bootbox.alert( "Please select a column to map relationship" );
+		}
+
 	}
 
 	nrMod.openFields = function(event) {
@@ -387,6 +396,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		},
 
 		render: function() {
+			console.log("inputRelationshipView render called");
 
 			if (this.current_inputs != '') {
 				var temp_options = this.node_set_options;
@@ -422,8 +432,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 						temp_html += '<label class="control-label" for="set1">' + self.set1_field + '</label>';
 						temp_html += '<div class="controls"> <select id="dropdown_set1" name="set1">'
 					 + temp_options + '</select>';
-					 	temp_html += '<a id="new_relationship_btn" href="#" onclick="nrApp.nrMod.openFields()" role="button" class="btn btn-warning">';
-						temp_html += '<i class="icon-plus"></i>&nbsp;&nbsp;New</a>';
+
 					 	temp_html += '</div>';
 
 					 	temp_html += '</div>';
@@ -464,7 +473,12 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 			var t_html = '<div class="control-group">';
 			t_html += '<label class="control-label" for="dropdown_noderelationship">Choose Relationship</label>   \
 			<div class="controls"> <select id="dropdown_noderelationship" name="Choose Relationship">'
-			+ this.node_relations_options + '</select></div></div>';
+			+ this.node_relations_options + '</select>';
+
+			t_html += '<a id="new_relationship_btn" href="#" onclick="nrApp.nrMod.openFields()" role="button" class="btn btn-warning">';
+			t_html += '<i class="icon-plus"></i>&nbsp;&nbsp;New</a>';
+
+			t_html += '</div></div>';
 			t_html += '</div>';
 
 			t_html += '<div class="control-group">';
@@ -526,6 +540,33 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 	});
 
+	App.vent.on("noderelationship:new", function(ret){
+		console.log("noderelationship:new called VENT");
+		// refreshing updated node relationships
+
+		console.log(ret);
+
+		nr_inputs.setNodeRelations(model_noderelation.getOptions());
+		App.p_inputs.show(nr_inputs);
+		TweenMax.to("#process_3_p", 1, {autoAlpha:0, ease:Power4.easeInOut});
+
+		//Object {matches: "2", node2_count: "2", total: "4", node1_count: "2"}
+		var output_str = '<div class="modal-header"><h3>';
+		output_str += 'Match results'
+		output_str +='</h3>'
+		//output_str += ret.total + "," + ret.node1_count + "," + ret.node2_count + "," + ret.matches;
+		output_str += '</div>';
+		output_str += '<div class="modal-body">';
+		output_str += '<p>' + 'Total Matches: ' + ret.matches + '</p>';
+		output_str += '<p>' + 'Total NodeSet 1 Files: ' + ret.node1_count + '</p>';
+		output_str += '<p>' + 'Total NodeSet 2 Files: ' + ret.node2_count + '</p>';
+		output_str += '<div>';
+
+		bootbox.alert(output_str, function() {
+  		//Example.show("Hello world callback");
+		});
+	});
+
 	App.vent.on("show_fields", function(){
 		//console.log("show_fields called VENT");
 		//nr_inputs.changeInputs(wf_inputs);
@@ -551,7 +592,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		//console.log("begin_loaded called");
 		nr_wcv = new nrMod.workflowCollectionView({collection:model_workflow});
 
-		nr_inputs = new nrMod.inputRelationshipView();
+		nr_inputs = new nrMod.inputRelationshipView({collection:model_noderelation});
 		nr_inputs.setNodeSet(model_nodeset.getOptions());
 		nr_inputs.setNodeRelations(model_noderelation.getOptions());
 
@@ -593,7 +634,20 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		create_relation_form.on("success", function(response){
 			console.log("NODE RELATIONSHIPS SUCCESS");
 			console.log(response);
-			//window.location = response;
+			var res = response;
+
+			// manually refreshing node relationships
+			deferreds = [];
+			deferreds.push(
+			model_noderelation.fetch({
+				data: {
+					study__uuid: externalAssayUuid,
+					assay__uuid:externalStudyUuid,
+					format:'json'
+				}}));
+
+			$.when.apply($, deferreds).done(function() { App.vent.trigger("noderelationship:new", res);} );
+
 		});
 
 		// getting workflows and possible node input models
