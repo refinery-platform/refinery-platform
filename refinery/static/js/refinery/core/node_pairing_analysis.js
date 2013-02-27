@@ -142,6 +142,16 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 	}
 
+	nrMod.hidePanel = function(elem) {
+		console.log("button: hidePanel");
+		//console.log(elem);
+		var tl = new TimelineMax({align:"sequence"});
+		tl.add(TweenMax.to('.scrollable', 2, {scrollTo:{y:$('#process_2').position().top}, ease:Power2.easeOut}));
+		tl.add(TweenMax.to(elem , .5, {autoAlpha:0, ease:Power4.easeOut}));
+		tl.play();
+
+	},
+
 	nrMod.openFields = function(event) {
 		console.log("workflowActions: openFields");
 		App.vent.trigger("show_fields");
@@ -424,13 +434,25 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		activateSelect : function() {
 			//console.log("activateSelect called");
 			// creates it as select2 checkbox
-			//console.log("before select2 on set1");
 			$(this.ui.set1).select2({placeholder: "Select a NodeSet"});
 			$(this.ui.relation).select2({placeholder: "Select a Relationship"});
 			if (!this.is_single) {
-				//console.log("before select1 on set1");
 				$(this.ui.set2).select2({placeholder: "Select a NodeSet"});
 			}
+
+			// if no available node sets
+			if (this.node_set_options == '') {
+				$(this.ui.btn_single).addClass("disabled");
+				$(this.ui.btn_relation).addClass("disabled");
+				$(this.ui.set1).select2("disable")
+				$(this.ui.set2).select2("disable")
+			}
+			// if no available node relationships
+			if (this.node_relations_options == '') {
+				$(this.ui.btn_multi).addClass("disabled");
+				$(this.ui.relation).select2("disable")
+			}
+
 		},
 
 		render: function() {
@@ -496,21 +518,10 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 				this.is_single = is_single;
 
 				temp_html += '</fieldset></form>';
-				//temp_html += this.getNodeRelationshipHTML();
 
 				$(this.el).html(temp_html);
 
 				this.activateSelect();
-
-				// if no available node sets
-				if (this.node_set_options == '') {
-					$(this.ui.btn_single).addClass("disabled");
-					$(this.ui.btn_relation).addClass("disabled");
-				}
-				// if no available node relationships
-				if (this.node_relations_options == '') {
-					$(this.ui.btn_multi).addClass("disabled");
-				}
 
 				return this;
 			}
@@ -620,7 +631,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
   		//Example.show("Hello world callback");
   			tl = new TimelineMax({align:"sequence"});
 			tl.add(TweenMax.to("#process_3_p", 1, {autoAlpha:0, ease:Power4.easeInOut}));
-			tl.add(TweenMax.to('.scrollable', 2, {scrollTo:{y:$('#process_2').position().top}, ease:Power2.easeOut}));
+			tl.add(TweenMax.to('.scrollable', 2, {scrollTo:{y:$('#process_2').position().top}, ease:Power2.easeIn}));
 			tl.play();
 		});
 	});
@@ -630,7 +641,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		//nr_inputs.changeInputs(wf_inputs);
 		tl = new TimelineMax({align:"sequence"});
 		tl.add(TweenMax.to("#process_3_p", .5, {autoAlpha:1, ease:Power4.easeInOut}));
-		tl.add(TweenMax.to('.scrollable', .5, {scrollTo:{y:$('#process_3_p').position().top}, ease:Power2.easeOut}));
+		tl.add(TweenMax.to('.scrollable', 2, {scrollTo:{y:$('#process_3_p').position().top}, ease:Power2.easeOut}));
 		tl.play();
 	});
 

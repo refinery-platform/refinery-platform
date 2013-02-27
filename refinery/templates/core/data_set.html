@@ -392,7 +392,7 @@ rect.active {
 			<input type="text" id="search_input" />
 			<input type="button" id="search_button" value="Search" />
 		</script>
-
+			<!--
 	  		<div class="row-fluid">
 	  			<div class="refinery-header">
 					<span class="refinery-header-left">
@@ -400,16 +400,19 @@ rect.active {
 					</span>
 				</div>
 			</div>
+			-->
 			<div class="row-fluid">
 				<div class="span3">
 	  				<div class="nav nav-list affix">
-	  					<li class=""><a href="#process_1"><i class="icon-chevron-right"></i> 1. Workflow </a></li>
-	  					<li class=""><a href="#process_2"><i class="icon-chevron-right"></i> 2. Assign Inputs </a></li>
+	  					<h3>Process Analysis</h3>
+	  					<li class=""><a href="#p1p"><i class="icon-chevron-right"></i> 1. Choose Workflow </a></li>
+	  					<li class=""><a href="#process_2"><i class="icon-chevron-right"></i> 2. Assign Input(s) </a></li>
+	  					<li class=""><a href="#process_3_p"><i class="icon-chevron-right"></i> 3. Create Relationship(s) </a></li>
 
 					</div>
 	  			</div>
 	  			<div class="span9">
-	  				<div class="row-fluid">
+	  				<div class="row-fluid" style= "margin-top:20px">
 	  					<div id="process_container" style="opacity:0">
 
 	  					<script type="text/template" id="template_workflow_item">
@@ -423,6 +426,7 @@ rect.active {
 	  					</div>
 	  					</script>
 
+						<div id="p1p">
 	  					<form class="form-horizontal">
 	  					<fieldset>
 	  					<div class="control-group field-set1 well">
@@ -436,6 +440,7 @@ rect.active {
 	  					</div>
 	  					</fieldset>
 	  				</form>
+	  				 </div>
 
 	  					<div id="process_2" class="well" style="opacity:0"></div>
 	  					<!-- <div id="process_3" class="well"></div> -->
@@ -443,7 +448,9 @@ rect.active {
 
                         <div class="well" id="process_3_p" style="opacity:0">
                         <form class="form-horizontal">
-                        	<legend>Create New Relationship</legend>
+                        	<legend>Create New Relationship
+                        	<button type="button" class="close" aria-hidden="true" onclick="nrApp.nrMod.hidePanel('#process_3_p')">&times;</button>
+                        	</legend>
 
 <div class="control-group">
 	<!-- <label class="control-label" for="rel_info">Set1</label>
