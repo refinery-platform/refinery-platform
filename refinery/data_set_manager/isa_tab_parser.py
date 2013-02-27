@@ -862,7 +862,7 @@ class IsaTabParser:
             logger.info( "Supplied path \"" + path + "\" is not a directory. Assuming ISArchive file." )
             try:
                 # TODO: do we need a random subdirectory here?
-                extract_path = tempfile.mkdtemp(dir=settings.ISA_TAB_TEMP_DIR)
+                extract_path = tempfile.mkdtemp()
                 with ZipFile(path, 'r') as zip:
                     # test if any paths are relative or absolute and outside the extract path
                     for name in zip.namelist():
