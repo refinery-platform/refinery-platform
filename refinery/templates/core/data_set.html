@@ -131,7 +131,9 @@ rect.active {
   			{% endif %}
   			<li><a href="#details" data-toggle="tab">Details</a></li>
   			<li><a href="#sharing" data-toggle="tab">Sharing</a></li>
-  			  						<li><a href="#process" data-toggle="tab">Process</a></li>
+  			{% if not REFINERY_REPOSITORY_MODE %}
+  				<li><a href="#process" data-toggle="tab">Process</a></li>
+  			{% endif %}
   	    </ul>
   	</div>
 
@@ -185,10 +187,12 @@ rect.active {
 						<a href="#" id="help-data-annotation-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
   					</span>
 
+					{% if not REFINERY_REPOSITORY_MODE %}
 					<span id="node-set-manager-panel">
 	 					<label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Selection</label>
 						<span id="node-set-manager-controls"></span>
   					</span>
+  					{% endif %}
 				</div>
 			</div>
 
@@ -378,6 +382,9 @@ rect.active {
 
 	  	</div>
 
+
+		{% if not REFINERY_REPOSITORY_MODE %}
+
 	  	<div class="tab-pane fade" id="process">
 
 	  	<script type="text/template" id="search_template">
@@ -471,6 +478,7 @@ rect.active {
 	  			</div>
 
 	  	</div>
+	  	{% endif %}
 
 	</div>
 
