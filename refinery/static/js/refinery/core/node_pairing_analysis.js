@@ -35,9 +35,9 @@ $('#tabs li a[href="#process"]').on('shown', function (e) {
   //$('#tabs li a[href="#process"]').tab('show')
   e.target // activated tab
   e.relatedTarget // previous tab
-  console.log("tab shown");
-  console.log('is started');
-  console.log(nrApp.nrMod.started);
+  //console.log("tab shown");
+  //console.log('is started');
+  //console.log(nrApp.nrMod.started);
   if (!nrApp.nrMod.started) {
 	nrApp.start();
   }
@@ -115,20 +115,42 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		opts['node_set_field2'] = temp_ns_opts2.node_input;
 		opts['study_uuid'] = externalAssayUuid;
 		opts['assay_uuid'] = externalStudyUuid;
+		opts['name'] = view_fields.getName();
+		opts['description'] = view_fields.getDescription();
 		opts['fields[]'] = sel_fields;
 
 		console.log("submitting form");
 		console.log(opts);
+		console
+		//
 
 		if (sel_fields.length > 0) {
-			// execute the command and send this data with it
-			create_relation_form.execute(opts);
+			if (opts['node_set_uuid2'] == opts['node_set_uuid1']) {
+				// execute the command and send this data with it
+				bootbox.alert( "Please choose 2 different nodesets" );
+			}
+			else if  (opts['name'] == "") {
+				bootbox.alert( "Please enter a name", function() { $('#rel_name').focus(); } );
+			}
+			else {
+				create_relation_form.execute(opts);
+			}
 		}
 		else {
 			bootbox.alert( "Please select a column to map relationship" );
 		}
 
 	}
+
+	nrMod.hidePanel = function(elem) {
+		console.log("button: hidePanel");
+		//console.log(elem);
+		var tl = new TimelineMax({align:"sequence"});
+		tl.add(TweenMax.to('.scrollable', 2, {scrollTo:{y:$('#process_2').position().top}, ease:Power2.easeOut}));
+		tl.add(TweenMax.to(elem , .5, {autoAlpha:0, ease:Power4.easeOut}));
+		tl.play();
+
+	},
 
 	nrMod.openFields = function(event) {
 		console.log("workflowActions: openFields");
@@ -302,24 +324,30 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 	nrMod.fieldCollectionView = Marionette.CollectionView.extend({
 		tagName: "tr",
 		itemView: nrMod.fieldItemView,
-		//ui_name: "wcv_dropdown",
-		//current_uuid: "",
+
+		ui: {
+			form_name: "#rel_name",
+			form_description: "#rel_description",
+		},
 
 		initialize: function(opts) {
 			console.log("fieldCollectionView initialized");
 			console.log(opts);
 			//var current_uuid = $(this.el).val();
-			//this.current_uuid = current_uuid;
+
 		},
 		onRender: function() {
-			//this.$el.attr( "id", "my-id" );
-  			//this.$el.attr( "class", "myclass1 myclass2" );
-  			//console.log("workflowCollectionView render called");
-			//$(this.el).attr('id', '1111');
-			//return this;
 			console.log("fieldCollectionView onRendeer called");
 			console.log($(this.el));
 			console.log(this.$el);
+		},
+
+		getName: function() {
+			return $(this.ui.form_name).val();
+		},
+
+		getDescription: function() {
+			return $(this.ui.form_description).val();
 		},
 	});
 
@@ -352,6 +380,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		onRender: function() {
 			//console.log("workflowCollectionView render called");
 			$(this.el).attr('id', this.ui_name);
+			$(this.el).attr('style','width: 50%;');
 			return this;
 		},
 
@@ -365,6 +394,9 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 				return w2.attributes.uuid == current_uuid;
 			});
 			this.workflow_inputs = workflow_inputs;
+
+			// creates it as select2 checkbox
+			$(this.el).select2();
 
 			App.vent.trigger("change_inputs", this.workflow_inputs);
 		},
@@ -383,11 +415,15 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		node_relations_options: '',
 		set1_field: '',
 		set2_field: '',
+		is_single: true,
 
 		ui: {
 			set1: "#dropdown_set1",
 			set2: "#dropdown_set2",
 			relation: "#dropdown_noderelationship",
+			btn_single: "#run_analysis_single_btn",
+			btn_multi: "#run_analysis_multi_btn",
+			btn_relation: "#new_relationship_btn",
 		},
 
 		events: {
@@ -395,8 +431,33 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 			'change #dropdown_set2' : 'changeSet2',
 		},
 
+		activateSelect : function() {
+			//console.log("activateSelect called");
+			// creates it as select2 checkbox
+			$(this.ui.set1).select2({placeholder: "Select a NodeSet"});
+			$(this.ui.relation).select2({placeholder: "Select a Relationship"});
+			if (!this.is_single) {
+				$(this.ui.set2).select2({placeholder: "Select a NodeSet"});
+			}
+
+			// if no available node sets
+			if (this.node_set_options == '') {
+				$(this.ui.btn_single).addClass("disabled");
+				$(this.ui.btn_relation).addClass("disabled");
+				$(this.ui.set1).select2("disable")
+				$(this.ui.set2).select2("disable")
+			}
+			// if no available node relationships
+			if (this.node_relations_options == '') {
+				$(this.ui.btn_multi).addClass("disabled");
+				$(this.ui.relation).select2("disable")
+			}
+
+		},
+
 		render: function() {
-			console.log("inputRelationshipView render called");
+			//console.log("inputRelationshipView render called");
+			is_single = true;
 
 			if (this.current_inputs != '') {
 				var temp_options = this.node_set_options;
@@ -408,9 +469,10 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 					//console.log("inputRelationshipView each"); console.log(w2);
 					if (w2.set1 != null) {
 						if (w2.set2 == null) {
+							//console.log("set2 IS NULL");
 							temp_html += '<div class="control-group">';
 							temp_html += '<label class="control-label" for="set1">Set1</label>';
-							temp_html += '<div class="controls"> <select id="dropdown_set1" name="set1">'
+							temp_html += '<div class="controls"> <select id="dropdown_set1" name="set1" style="width: 50%;")>'
 						 + temp_options + '</select>';
 						 	temp_html += '</div>';
 						 	temp_html += '</div>';
@@ -422,46 +484,45 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 						 	temp_html += '</div>';
 						 	temp_html += '</div>';
 						}
-					}
+						else{
+							is_single = false;
+							///* For creating multiple dropdowns for 2 inputs to a workflows
+							temp_html += '<div class="control-group">';
+							temp_html += '<label class="control-label" for="set1">' + self.set1_field + '</label>';
+							temp_html += '<div class="controls"> <select id="dropdown_set1" name="set1" style="width: 50%;">'
+						 + temp_options + '</select>';
 
-					if (w2.set2 != null){
+						 	temp_html += '</div>';
+						 	temp_html += '</div>';
+						 	temp_html += '</div>';
 
-						///* For creating multiple dropdowns for 2 inputs to a workflows
-						temp_html += '<div class="control-group">';
-						temp_html += '<div class="input-append">';
-						temp_html += '<label class="control-label" for="set1">' + self.set1_field + '</label>';
-						temp_html += '<div class="controls"> <select id="dropdown_set1" name="set1">'
-					 + temp_options + '</select>';
+							temp_html += '<div class="control-group">';
+							temp_html += '<label class="control-label" for="set2">' + self.set2_field + '</label>';
+							temp_html += '<div class="controls"> <select id="dropdown_set2" name="set2" style="width: 50%;">'
+							+ temp_options + '</select></div></div>';
+							temp_html += '</div>';
 
-					 	temp_html += '</div>';
+							temp_html += '<div class="control-group">';
+							temp_html += '<div class="controls">';
 
-					 	temp_html += '</div>';
-					 	temp_html += '</div>';
-					 	temp_html += '</div>';
+							temp_html += '</div></div>';
 
-						temp_html += '<div class="control-group">';
-						temp_html += '<label class="control-label" for="set2">' + self.set2_field + '</label>';
-						temp_html += '<div class="controls"> <select id="dropdown_set2" name="set2">'
-						+ temp_options + '</select></div></div>';
-						temp_html += '</div>';
-
-						temp_html += '<div class="control-group">';
-						temp_html += '<div class="controls">';
-
-						temp_html += '</div></div>';
-
-						//creates node relationship drop down section
-						if (this.node_relations_options != '') {
-							temp_html += self.getNodeRelationshipHTML();
+							//creates node relationship drop down section
+							if (this.node_relations_options != '') {
+								temp_html += self.getNodeRelationshipHTML();
+							}
 						}
-
 					}
 				});
 
+				this.is_single = is_single;
+
 				temp_html += '</fieldset></form>';
-				//temp_html += this.getNodeRelationshipHTML();
 
 				$(this.el).html(temp_html);
+
+				this.activateSelect();
+
 				return this;
 			}
 		},
@@ -472,7 +533,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 			//t_html += '<legend>Run Analysis</legend>';
 			var t_html = '<div class="control-group">';
 			t_html += '<label class="control-label" for="dropdown_noderelationship">Choose Relationship</label>   \
-			<div class="controls"> <select id="dropdown_noderelationship" name="Choose Relationship">'
+			<div class="controls"> <select id="dropdown_noderelationship" name="Choose Relationship" style="width: 50%;">'
 			+ this.node_relations_options + '</select>';
 
 			t_html += '<a id="new_relationship_btn" href="#" onclick="nrApp.nrMod.openFields()" role="button" class="btn btn-warning">';
@@ -483,7 +544,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 			t_html += '<div class="control-group">';
 			t_html += '<div class="controls">';
-			t_html += '<a id="run_analysis_single_btn" href="#" onclick="nrApp.nrMod.runRelationAnalysis()" role="button" class="btn btn-warning">';
+			t_html += '<a id="run_analysis_multi_btn" href="#" onclick="nrApp.nrMod.runRelationAnalysis()" role="button" class="btn btn-warning">';
 			t_html += '<i class="icon-sitemap"></i>&nbsp;&nbsp;Run Analysis</a>';
 			t_html += '</div></div>';
 			t_html += '</div>';
@@ -492,7 +553,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		},
 
 		changeInputs: function (new_inputs) {
-			console.log("inputRelationshipView changeInputs called");
+			//console.log("inputRelationshipView changeInputs called");
 			this.current_inputs = new_inputs.get("input_relationships");
 
 			var set1_field;
@@ -506,6 +567,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 			this.set2_field = set2_field;
 
 			this.render();
+
 		},
 
 		changeSet1: function() {
@@ -525,7 +587,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		},
 
 		setNodeSet: function(opt) {
-			console.log("setNodeSet called");
+			//console.log("setNodeSet called");
 			this.node_set_options = opt;
 		},
 
@@ -541,14 +603,15 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 	});
 
 	App.vent.on("noderelationship:new", function(ret){
-		console.log("noderelationship:new called VENT");
+		//console.log("noderelationship:new called VENT");
 		// refreshing updated node relationships
 
 		console.log(ret);
 
 		nr_inputs.setNodeRelations(model_noderelation.getOptions());
 		App.p_inputs.show(nr_inputs);
-		TweenMax.to("#process_3_p", 1, {autoAlpha:0, ease:Power4.easeInOut});
+
+		nr_inputs.activateSelect();
 
 		//Object {matches: "2", node2_count: "2", total: "4", node1_count: "2"}
 		var output_str = '<div class="modal-header"><h3>';
@@ -562,15 +625,24 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		output_str += '<p>' + 'Total NodeSet 2 Files: ' + ret.node2_count + '</p>';
 		output_str += '<div>';
 
+
+
 		bootbox.alert(output_str, function() {
   		//Example.show("Hello world callback");
+  			tl = new TimelineMax({align:"sequence"});
+			tl.add(TweenMax.to("#process_3_p", 1, {autoAlpha:0, ease:Power4.easeInOut}));
+			tl.add(TweenMax.to('.scrollable', 2, {scrollTo:{y:$('#process_2').position().top}, ease:Power2.easeIn}));
+			tl.play();
 		});
 	});
 
 	App.vent.on("show_fields", function(){
 		//console.log("show_fields called VENT");
 		//nr_inputs.changeInputs(wf_inputs);
-		TweenMax.to("#process_3_p", 1, {autoAlpha:1, ease:Power4.easeInOut});
+		tl = new TimelineMax({align:"sequence"});
+		tl.add(TweenMax.to("#process_3_p", .5, {autoAlpha:1, ease:Power4.easeInOut}));
+		tl.add(TweenMax.to('.scrollable', 2, {scrollTo:{y:$('#process_3_p').position().top}, ease:Power2.easeOut}));
+		tl.play();
 	});
 
     App.vent.on("change_inputs", function(wf_inputs){

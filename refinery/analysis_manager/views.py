@@ -469,7 +469,10 @@ def create_noderelationship(request):
     logger.debug( simplejson.dumps(request.POST, indent=4) )
     
     if request.is_ajax():
-        print "is ajax"
+        #print "is ajax"
+        
+        nr_name = request.POST.getlist('name')[0]
+        nr_description = request.POST.getlist('description')[0]
         
         # getting nodeset uuids
         node_set_uuid1 = request.POST.getlist('node_set_uuid1')[0]
@@ -535,11 +538,13 @@ def create_noderelationship(request):
         print nodes_set_match
         
         # TODO: need to include names, descriptions, summary
-        temp_name = curr_node_set1.name + " - " + curr_node_set2.name + " " + str( datetime.now() )
+        if (nr_name.strip() == ''):
+            nr_name = curr_node_set1.name + " - " + curr_node_set2.name + " " + str( datetime.now() )
         #temp_name = '444444444'
-        summary_name = "None provided."
+        if (nr_description.strip() == ''):
+            nr_description = curr_node_set1.name + " - " + curr_node_set2.name + " " + str( datetime.now() )
         
-        new_relationship = NodeRelationship(node_set_1=curr_node_set1, node_set_2=curr_node_set2, study=study, assay=assay, name=temp_name, summary=summary_name)
+        new_relationship = NodeRelationship(node_set_1=curr_node_set1, node_set_2=curr_node_set2, study=study, assay=assay, name=nr_name, summary=nr_description)
         new_relationship.save()
         
         for i in range(len(nodes_set_match)):
@@ -549,8 +554,7 @@ def create_noderelationship(request):
             new_pair = NodePair(node1=node1, node2=node2, group=i+1)
             new_pair.save()
             new_relationship.node_pairs.add(new_pair)
-            
-        
+             
         #print "node_set_solr1"
         #print simplejson.dumps(node_set_solr1, indent=4)
         #print "node_set_solr2"
@@ -616,7 +620,7 @@ def match_nodesets(ns1, ns2, diff_f, all_f, rel_type=None ):
         for node2 in ns2:
             
             if node1['uuid'] != node2['uuid']:
-                tdd = DictDiffer(node1, node2)
+                #tdd = DictDiffer(node1, node2)
                 temp_node = template.copy()
                 temp_node['uuid_1'] = node1['uuid']
                 temp_node['uuid_2'] = node2['uuid']
