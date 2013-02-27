@@ -446,13 +446,6 @@ def create_refinery_data_dirs():
     else:
         puts("'{}' already exists".format(django_settings.ISA_TAB_DIR))
 
-    puts("Creating Refinery ISA_TAB_TEMP_DIR directory '{}'"
-         .format(django_settings.ISA_TAB_TEMP_DIR))
-    if not exists(django_settings.ISA_TAB_TEMP_DIR):
-        run("mkdir '{}'".format(django_settings.ISA_TAB_TEMP_DIR))
-    else:
-        puts("'{}' already exists".format(django_settings.ISA_TAB_TEMP_DIR))
-
 
 @task
 def setup_refinery():
