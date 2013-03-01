@@ -32,7 +32,7 @@ from fabric.contrib.console import confirm
 from fabric.context_managers import hide, prefix
 from fabric.contrib.files import exists, upload_template
 from fabric.decorators import task, with_settings
-from fabric.operations import require
+from fabric.operations import require, open_shell
 from fabric.utils import puts
 
 
@@ -484,6 +484,17 @@ def update_refinery():
 
 @task
 @with_settings(user=env.project_user)
+def kill_celeryd():
+    '''Kill all celeryd processes in case they cannot be stopped normally
+    Not necessary with supervisord v3.0 (supports stopasgroup and killasgroup)?
+
+    '''
+    with settings(warn_only=True):
+        open_shell("ps auxww | grep celeryd | awk '{print $2}' | xargs kill -9")
+
+
+@task
+@with_settings(user=env.project_user)
 def refinery_syncdb():
     '''Create database tables for all Django apps in Refinery
     (does not create a superuser account)
@@ -528,7 +539,9 @@ def refinery_changepassword(username):
 def init_refinery():
     '''Initialize Refinery
     (create public group "Public", etc)
+
     '''
+    #TODO: add args: refinery_instance_name and refinery_base_url
     with prefix("workon refinery"):
         run("./manage.py init_refinery")
 
