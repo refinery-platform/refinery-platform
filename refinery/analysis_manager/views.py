@@ -58,7 +58,6 @@ def analysis_run(request):
     # get study uuid
     study_uuid = request.POST.getlist('study_uuid')[0]
     
-    
     # list of selected assays
     selected_uuids = {};
     
@@ -309,9 +308,10 @@ def run_nodeset(request):
         node_set_field = request.POST.getlist('node_set_field')[0]
         
         curr_node_set = NodeSet.objects.get(uuid=node_set_uuid)
+        curr_node_dict = curr_node_set.solr_query_components
         
         # solr results
-        solr_uuids = get_solr_results(curr_node_set.solr_query, only_uuids=True)
+        solr_uuids = get_solr_results(curr_node_set.solr_query, only_uuids=True, selected_mode=curr_node_dict1['documentSelectionBlacklistMode'], selected_nodes=curr_node_dict1['documentSelection'])
         
         # retrieving workflow based on input workflow_uuid
         curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
@@ -518,21 +518,7 @@ def create_noderelationship(request):
         
         # match between 2 nodesets for a given column
         nodes_set_match, match_info = match_nodesets(node_set_results1, node_set_results2, diff_fields, all_fields)
-        
-        """
-        #print "ns_comp1"
-        #print simplejson.dumps(curr_node_dict1, indent=4)
-        #print simplejson.dumps(curr_node_dict2, indent=4)
-        #print ns_comp1[documentSelectionBlacklistMode]
-        
-        print "node_set_uuid1"
-        print node_set_uuid1
-        print "node_set_uuid"
-        print node_set_uuid2
-        print "diff_fields"
-        print diff_fields
-        """
-        
+                
         print "MAKING RELATIONSHIPS NOW"
         print simplejson.dumps(nodes_set_match, indent=4);
         print nodes_set_match
@@ -540,7 +526,6 @@ def create_noderelationship(request):
         # TODO: need to include names, descriptions, summary
         if (nr_name.strip() == ''):
             nr_name = curr_node_set1.name + " - " + curr_node_set2.name + " " + str( datetime.now() )
-        #temp_name = '444444444'
         if (nr_description.strip() == ''):
             nr_description = curr_node_set1.name + " - " + curr_node_set2.name + " " + str( datetime.now() )
         
@@ -559,7 +544,6 @@ def create_noderelationship(request):
         #print simplejson.dumps(node_set_solr1, indent=4)
         #print "node_set_solr2"
         #print simplejson.dumps(node_set_solr2, indent=4)
-        
         return HttpResponse(simplejson.dumps(match_info, indent=4), mimetype='application/json')
 
 
