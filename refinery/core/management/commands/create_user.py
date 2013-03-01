@@ -23,27 +23,33 @@ class Command(BaseCommand):
     main program; run the command
     """   
     def handle(self, username, password, email, first_name, last_name, affiliation, **options):
-        '''
-        This function creates a user account for Refinery.
+        '''This function creates a user account for Refinery.
+
         '''
         # delete if exists
-        user_object = User.objects.filter( username__exact=username )
+        user_object = User.objects.filter(username__exact=username)
         
-        if len( user_object ) > 0:
-            print "User " + username + " already exists. Please delete the account and try again."
-            logger.error( "User " + username + " already exists. Please delete the account and try again." )
+        if len(user_object) > 0:
+            error_msg = "User {} already exists. Please delete the account and try again."\
+                        .format(username)
+            print error_msg
+            logger.error(error_msg)
             return
-        
-        user_object = User.objects.create_user( username, email=email, password=password )        
-        user_object.first_name =first_name
-        user_object.last_name = last_name        
-        user_object.get_profile().affiliation = affiliation
-        user_object.save()
-        user_object.get_profile().save()
 
-        # add user to public group        
-        user_object.groups.add( ExtendedGroup.objects.public_group() )
-                
-        print "User " + username + " created."
-        logger.info( "User " + username + " created." )
-         
+        init_user(username, password, email, first_name, last_name, affiliation)
+
+
+def init_user(username, password, email, first_name, last_name, affiliation):
+    '''Create a new User instance with specified values
+
+    '''
+    user_object = User.objects.create_user(username, email=email, password=password)
+    user_object.first_name = first_name
+    user_object.last_name = last_name        
+    user_object.get_profile().affiliation = affiliation
+    user_object.save()
+    user_object.get_profile().save()
+
+    success_msg = "User {} created.".format(username) 
+    print(success_msg)
+    logger.info(success_msg)

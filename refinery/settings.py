@@ -36,10 +36,6 @@ DATABASES = {
     }
 }
 
-# use in-memory database for testing if TEST_NAME=None (default value)
-if len(sys.argv) > 1 and sys.argv[1] == 'test':
-    DATABASES['default'] = {'ENGINE': 'django.db.backends.sqlite3'}
-
 # transport://userid:password@hostname:port/virtual_host
 #BROKER_URL = "amqp://guest:guest@localhost:5672//"
 BROKER_HOST = "localhost"

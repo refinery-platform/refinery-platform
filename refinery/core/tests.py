@@ -5,12 +5,49 @@ These will pass when you run "manage.py test".
 """
 
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.utils import unittest, simplejson
-from tastypie.test import ResourceTestCase
-from core.models import NodeSet, create_nodeset, get_nodeset, delete_nodeset,\
-    update_nodeset
+from tastypie.test import ResourceTestCase, TestApiClient
+from core.management.commands.init_refinery import create_public_group
+from core.management.commands.create_user import init_user
+from core.models import NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,\
+                        ExtendedGroup
 import data_set_manager
+
+
+class UserCreateTest(unittest.TestCase):
+    '''Test User instance creation
+
+    '''
+    def setUp(self):
+        self.username = "testuser"
+        self.password = "password"
+        self.email = "test@example.com"
+        self.first_name = "John"
+        self.last_name = "Sample"
+        self.affiliation = "University"
+        create_public_group()
+        self.public_group_name = ExtendedGroup.objects.public_group().name 
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Group.objects.all().delete()
+
+    def test_add_new_user_to_public_group(self):
+        '''Test if User accounts are added to Public group
+
+        '''
+        new_user = User.objects.create_user(self.username)
+        self.assertEqual(new_user.groups.filter(name=self.public_group_name).count(), 1)
+
+    def test_init_user(self):
+        '''Test if User account are created correctly using the management command
+
+        '''
+        init_user(self.username, self.password, self.email, self.first_name,
+                  self.last_name, self.affiliation)
+        new_user = User.objects.get(username=self.username)
+        self.assertEqual(new_user.groups.filter(name=self.public_group_name).count(), 1)
 
 
 class NodeSetTest(unittest.TestCase):
@@ -155,7 +192,7 @@ class NodeSetTest(unittest.TestCase):
 
 
 def make_uri(resource_name, resource_id=''):
-    '''Helper function to create Tastypie REST URIs
+    '''Helper function to build Tastypie REST URIs
 
     '''
     base_url = '/api/v1'
@@ -199,22 +236,26 @@ class NodeSetResourceTest(ResourceTestCase):
         self.username = self.password = 'test'
         self.user = User.objects.create_user(self.username, '', self.password)
 
-        # using TestClient since TestAPIClient does not support SessionAuthentication yet
-        self.client.login(username=self.username, password=self.password)
-        #TODO: try to set X-CSRFToken header in self.api_client (get value from Client.cookies)
+    def get_credentials(self):
+        # workaround required to use SessionAuthentication
+        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
+        return self.api_client.client.login(username=self.username,
+                                            password=self.password)
 
     def test_get_nodeset(self):
         '''Test retrieving an existing NodeSet.
 
         '''
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay,
+        nodeset = NodeSet.objects.create(name='nodeset',
+                                         study=self.study, assay=self.assay,
                                          solr_query=simplejson.dumps(self.query))
 
         nodeset_uri = make_uri('nodeset', nodeset.uuid)
-        response = self.client.get(nodeset_uri, {'format': 'json'})
+        response = self.api_client.get(nodeset_uri, format='json',
+                                       authentication=self.get_credentials())
         self.assertValidJSONResponse(response)
         keys = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit',
-                'node_count', 'solr_query', 'resource_uri']
+                'node_count', 'solr_query', 'solr_query_components', 'resource_uri']
         self.assertKeys(self.deserialize(response), keys)
 
     def test_get_nodeset_with_invalid_uuid(self):
@@ -222,21 +263,23 @@ class NodeSetResourceTest(ResourceTestCase):
 
         '''
         nodeset_uri = make_uri('nodeset', 'Invalid UUID')
-        response = self.client.get(nodeset_uri, {'format': 'json'})
+        response = self.api_client.get(nodeset_uri, format='json',
+                                       authentication=self.get_credentials())
         self.assertHttpNotFound(response)
 
     def test_create_minimal_nodeset(self):
         '''Test adding a new NodeSet with required fields only
 
         '''
-        post_data = simplejson.dumps({
+        nodeset_data = simplejson.dumps({
             'name': 'nodeset1',
             'study': make_uri('study', self.study.uuid),
             'assay': make_uri('assay', self.assay.uuid),
         })
         self.assertEqual(NodeSet.objects.count(), 0)
         nodeset_uri = make_uri('nodeset')
-        response = self.client.post(nodeset_uri, post_data, content_type='application/json')
+        response = self.api_client.post(nodeset_uri, format='json', data=nodeset_data,
+                                        authentication=self.get_credentials())
         self.assertHttpCreated(response)
         self.assertEqual(NodeSet.objects.count(), 1)
 
@@ -253,7 +296,8 @@ class NodeSetResourceTest(ResourceTestCase):
         })
         self.assertEqual(NodeSet.objects.count(), 0)
         nodeset_uri = make_uri('nodeset')
-        response = self.client.post(nodeset_uri, nodeset_data, content_type='application/json')
+        response = self.api_client.post(nodeset_uri, format='json', data=nodeset_data,
+                                        authentication=self.get_credentials())
         self.assertHttpCreated(response)
         self.assertEqual(NodeSet.objects.count(), 1)
 

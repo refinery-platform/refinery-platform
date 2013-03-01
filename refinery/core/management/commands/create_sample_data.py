@@ -136,12 +136,7 @@ class Command(BaseCommand):
             
         for group in group_objects:
             print( str( group ) )
-                        
-        public_members = [ ".nils", ".richard", ".psalm", ".ilya", ".shannan" ]    
-        for username in public_members:
-            user_object = User.objects.get( username__exact=username )
-            user_object.groups.add( ExtendedGroup.objects.public_group() )
-            
+
         for user in user_objects:
             print( str( user ) )            
             

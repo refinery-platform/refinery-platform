@@ -15,6 +15,7 @@ from django.db import models, transaction
 from django.db.models import Max, signals
 from django.db.models.signals import post_save, post_init
 from django.db.utils import IntegrityError
+from django.dispatch import receiver
 from django.forms import ModelForm
 from django_extensions.db.fields import UUIDField
 from guardian.shortcuts import assign, get_users_with_perms, get_groups_with_perms
@@ -60,13 +61,21 @@ def create_user_profile( sender, instance, created, **kwargs ):
         
 post_save.connect(create_user_profile, sender=User)
 
+
+@receiver(post_save, sender=User)
+def add_new_user_to_public_group(sender, instance, created, raw, **kwargs):
+    '''Add new users to Public group automatically
+
+    '''
+    # avoid adding django-guardian AnonymousUser to the Public group
+    # since it causes errors when AnonymousUser is created during syncdb
+    if created and instance.id != settings.ANONYMOUS_USER_ID:
+        instance.groups.add(ExtendedGroup.objects.public_group())
+
+
 def create_user_profile_registered(sender, user, request, **kwargs):
     UserProfile.objects.get_or_create(user=user)
         
-    # add user to public group
-    user_object = User.objects.get( username=user )
-    user_object.groups.add( ExtendedGroup.objects.public_group() )
-
     logger.info('user profile for user %s has been created after registration %s' % ( user, datetime.now()))
     mail_admins('New User Registered', 'User %s registered at %s' % (user, datetime.now()))
     logger.info('email has been sent to admins informing of registration of user %s' % user)
@@ -79,6 +88,7 @@ def register_handler(request, sender, user, **kwargs):
     
 user_activated.connect(register_handler, dispatch_uid='activated')
 
+
 # check if user has a catch all project and create one if not
 def create_catch_all_project( sender, user, request, **kwargs ):
     if user.get_profile().catch_all_project is None:
@@ -90,8 +100,7 @@ def create_catch_all_project( sender, user, request, **kwargs ):
                          "If you don't want to fill your profile out now, you can go to the <a href='/'>homepage</a>.",
                          extra_tags='safe',
                          fail_silently=True)   # needed to avoid MessageFailure when running tests
-        
-    
+
 # create catch all project for user if none exists
 user_logged_in.connect(create_catch_all_project)
 
