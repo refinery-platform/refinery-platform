@@ -405,6 +405,10 @@ def run_noderelationship(request):
         count = 1
         for curr_pair in curr_relationship.node_pairs.all():
             temp_pair = copy.deepcopy(base_input)
+            print "curr_pair"
+            print temp_pair
+            print curr_pair
+            #temp_pair = {}
             if curr_pair.node2:
                 #print curr_pair.node2.uuid
                 temp_pair[input_keys[0]]['node_uuid'] = curr_pair.node1.uuid
@@ -412,6 +416,7 @@ def run_noderelationship(request):
                 temp_pair[input_keys[1]]['node_uuid'] = curr_pair.node2.uuid
                 temp_pair[input_keys[1]]['pair_id'] = count
                 ret_list.append(temp_pair)
+                print temp_pair
                 count += 1
         
         logger.info( "Associating analysis with data set %s (%s)" % ( data_set, data_set.uuid ) )
@@ -535,8 +540,8 @@ def create_noderelationship(request):
         
         for i in range(len(nodes_set_match)):
             #print "### i =" + str(i)
-            node1 = Node.objects.get(uuid=nodes_set_match[0]['uuid_1'])
-            node2 = Node.objects.get(uuid=nodes_set_match[0]['uuid_2'])
+            node1 = Node.objects.get(uuid=nodes_set_match[i]['uuid_1'])
+            node2 = Node.objects.get(uuid=nodes_set_match[i]['uuid_2'])
             new_pair = NodePair(node1=node1, node2=node2, group=i+1)
             new_pair.save()
             new_relationship.node_pairs.add(new_pair)
@@ -600,6 +605,7 @@ def match_nodesets(ns1, ns2, diff_f, all_f, rel_type=None ):
     i = 0 
     for node1 in ns1:
         best_node = template.copy()
+        #best_node['uuid_1'] = node1['uuid']
         
         j = 0
         for node2 in ns2:
@@ -615,6 +621,7 @@ def match_nodesets(ns1, ns2, diff_f, all_f, rel_type=None ):
                     # if the given column matches between Nodesets
                     if node1[df] == node2[df]:
                         best_node = temp_node
+                        #best_node['uuid_2']  = node2['uuid']
         
                 """
                 #df_tot = len(diff_f)
