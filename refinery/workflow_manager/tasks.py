@@ -8,13 +8,12 @@ from celery.task import task
 from galaxy_connector.galaxy_workflow import GalaxyWorkflow, GalaxyWorkflowInput
 from galaxy_connector.models import Instance
 from galaxy_connector.connection import Connection
-from core.models import Workflow, WorkflowDataInput, WorkflowEngine, WorkflowInputRelationships
+from core.models import Workflow, WorkflowDataInput, WorkflowEngine, WorkflowInputRelationships, TYPE_1_1
 from django.contrib.auth.models import Group
 from django.contrib.sites.models import Site
 from galaxy_connector.galaxy_workflow import createBaseWorkflow, createStepsAnnot, createStepsCompact, getStepOptions
 import ast
 import logging
-
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -51,6 +50,7 @@ def get_workflows( workflow_engine ):
     
             inputs = workflow.inputs
             
+            # Adding workflowdatainputs i.e. inputs from workflow into database models
             for input in inputs:
                 input_dict = {
                               'name': input.name,
@@ -59,19 +59,30 @@ def get_workflows( workflow_engine ):
                 i = WorkflowDataInput(**input_dict)
                 i.save()
                 workflow_object.data_inputs.add(i)
-        
-            # check to input NodeRelationshipType
-            for opt_r in opt_refinery:
-                #logger.debug("opt_r")
-                #logger.debug(opt_r)
-                try:
-                    temp_relationship = WorkflowInputRelationships(**opt_r)
+                
+                # if workflow has only 1 input, input a default input relationship type
+                if (len(inputs) == 1):
+                    opt_single = {
+                                  'category':TYPE_1_1,
+                                  'set1':input.name
+                                  }
+                    temp_relationship = WorkflowInputRelationships(**opt_single)
                     temp_relationship.save()
                     workflow_object.input_relationships.add(temp_relationship)
-
-                except KeyError, e:
-                    logger.error("refinery_relationship option error: %s" % e)
-                    return
+                
+            # check to input NodeRelationshipType
+            # noderelationship types defined for workflows with greater than 1 input
+            # refinery_relationship=[{"category":"N-1", "set1":"input_file"}] 
+            if (len(inputs) > 1):
+                for opt_r in opt_refinery:
+                    try:
+                        temp_relationship = WorkflowInputRelationships(**opt_r)
+                        temp_relationship.save()
+                        workflow_object.input_relationships.add(temp_relationship)
+    
+                    except KeyError, e:
+                        logger.error("refinery_relationship option error: %s" % e)
+                        return
             
 def configure_workflow( workflow_uuid, ret_list, connection_galaxy=None ):
     """
