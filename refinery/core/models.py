@@ -63,14 +63,17 @@ post_save.connect(create_user_profile, sender=User)
 
 
 @receiver(post_save, sender=User)
-def add_new_user_to_public_group(sender, instance, created, raw, **kwargs):
+def add_new_user_to_public_group(sender, instance, created, **kwargs):
     '''Add new users to Public group automatically
 
     '''
-    # avoid adding django-guardian AnonymousUser to the Public group
-    # since it causes errors when AnonymousUser is created during syncdb
-    if created and instance.id != settings.ANONYMOUS_USER_ID:
-        instance.groups.add(ExtendedGroup.objects.public_group())
+    if created:
+        public_group = ExtendedGroup.objects.public_group()
+        # need to check if Public group exists to avoid errors when creating
+        # user accounts (like superuser and AnonymousUser) before the group
+        # is created by init_refinery command
+        if public_group:
+            instance.groups.add(public_group)
 
 
 def create_user_profile_registered(sender, user, request, **kwargs):
