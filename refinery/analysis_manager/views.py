@@ -292,11 +292,11 @@ def run_nodeset(request):
     """ 
     ajax function for running an analysis w/ a single input with a given nodeset
     """
-    print "analysis_manager.views.analysis_nodeset"
+    logger.debug( "analysis_manager.views.run_nodeset called" )
     logger.debug( simplejson.dumps(request.POST, indent=4) )
     
     if request.is_ajax():
-        print "is ajax"
+        #print "is ajax"
         
         # gets workflow_uuid
         workflow_uuid = request.POST.getlist('workflow_id')[0]
@@ -309,9 +309,10 @@ def run_nodeset(request):
         
         curr_node_set = NodeSet.objects.get(uuid=node_set_uuid)
         curr_node_dict = curr_node_set.solr_query_components
+        curr_node_dict = simplejson.loads(curr_node_dict)
         
         # solr results
-        solr_uuids = get_solr_results(curr_node_set.solr_query, only_uuids=True, selected_mode=curr_node_dict1['documentSelectionBlacklistMode'], selected_nodes=curr_node_dict1['documentSelection'])
+        solr_uuids = get_solr_results(curr_node_set.solr_query, only_uuids=True, selected_mode=curr_node_dict['documentSelectionBlacklistMode'], selected_nodes=curr_node_dict['documentSelection'])
         
         # retrieving workflow based on input workflow_uuid
         curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
