@@ -219,14 +219,18 @@ def run_analysis(analysis, interval=5.0):
     download_tasks = []
   
     for files in datainputs:
-        cur_fs_uuid = files.data_uuid
+        
+        cur_node_uuid = files.data_uuid
         
         # Adding downloading task if file is not remote
-        if not is_local(cur_fs_uuid):
-            #print "not_local"
+        if not is_local(cur_node_uuid):
+            # getting the current file_uuid from the given node_uuid
+            cur_fs_uuid = Node.objects.get( uuid=cur_node_uuid ).file_uuid
+            
             task_id = import_file.subtask((cur_fs_uuid, False,))
             download_tasks.append(task_id)
-    
+            
+            
     # PREPROCESSING            
     task_id = run_analysis_preprocessing.subtask( (analysis,) ) 
     download_tasks.append(task_id)
