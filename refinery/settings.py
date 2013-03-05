@@ -383,8 +383,5 @@ UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 # Tag for repository mode
 REFINERY_REPOSITORY_MODE = False
 
-# used by the "sites" framework
-REFINERY_BASE_URL = 'localhost:8000'
-
 # import local settings
 from settings_local import *
