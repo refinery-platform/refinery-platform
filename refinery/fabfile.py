@@ -457,6 +457,7 @@ def setup_refinery():
     execute(upload_refinery_settings)
     execute(create_refinery_db)
     execute(refinery_syncdb)
+    execute(refinery_migrate)
     execute(init_refinery)
     execute(create_refinery_users)
     execute(create_galaxy_instances)
@@ -500,10 +501,19 @@ def refinery_syncdb():
     (does not create a superuser account)
 
     '''
-    #TODO: make non-interactive
     with prefix("workon refinery"):
-        run("./manage.py syncdb --noinput")
+        run("./manage.py syncdb --noinput --all")
 
+
+@task
+@with_settings(user=env.project_user)
+def refinery_migrate():
+    '''Perform database migration using South
+
+    '''
+    with prefix("workon refinery"):
+        run("./manage.py migrate --fake")
+    
 
 @task
 @with_settings(user=env.project_user)
@@ -536,9 +546,8 @@ def refinery_changepassword(username):
 
 @task
 @with_settings(user=env.project_user)
-def init_refinery():
-    '''Initialize Refinery
-    (create public group "Public", etc)
+def init_refinery(site_name, site_base_url):
+    '''Initialize Refinery (create public group "Public", etc)
 
     '''
     #TODO: add args: refinery_instance_name and refinery_base_url
