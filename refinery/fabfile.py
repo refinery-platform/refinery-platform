@@ -546,13 +546,14 @@ def refinery_changepassword(username):
 
 @task
 @with_settings(user=env.project_user)
-def init_refinery(site_name, site_base_url):
-    '''Initialize Refinery (create public group "Public", etc)
+def init_refinery():
+    '''Initialize Refinery (create Public group, create Site, etc)
 
     '''
     #TODO: add args: refinery_instance_name and refinery_base_url
     with prefix("workon refinery"):
-        run("./manage.py init_refinery")
+        run("./manage.py init_refinery '{}' '{}'"
+            .format(django_settings.SITE_NAME, django_settings.SITE_BASE_URL))
 
 
 @task
@@ -617,8 +618,6 @@ def install_solr():
 
     '''
     #TODO: update to download Solr and install into /opt
-#    run("unzip -uq {bootstrap_dir}/apache-solr-4.0.0.zip -d {deployment_target_dir}/apps"
-#        .format(**env))
 
 
 @task
