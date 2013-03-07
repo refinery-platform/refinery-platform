@@ -2,6 +2,7 @@ from celery.result import AsyncResult, TaskSetResult
 from core.models import Analysis
 from django.db import models
 from django_extensions.db.fields import UUIDField
+import analysis_manager
 import math
 
 
@@ -36,17 +37,19 @@ class AnalysisStatus( models.Model ):
         return getPayload(self.preprocessing_taskset_id)
     
     def execution_status(self):
-        total_steps = Analysis.objects.get(uuid=self.analysis.uuid).workflow_steps_num        
-        test = getPayload(self.execution_monitor_task_id)
-        #print "test lgneth"
-        #print len(test)
-            
-        test[0]['total_steps'] = total_steps
-        if 'ok' in test[0].keys():
-            test[0]['percent_done'] =  str(100*float(test[0]['ok'])/float(total_steps)) + '%'
-        else:
-            test[0]['percent_done'] = '0%'
-        return test
+        status = getPayload(self.execution_monitor_task_id)
+        connection = analysis_manager.tasks.get_analysis_connection(self.analysis)
+        history = connection.get_history(self.analysis.history_id)
+        if history and history['state'] != 'queued':
+            # history in 'queued' state does not have reliable numbers
+            total_datasets = sum(history['state_details'].itervalues())
+            processed_datasets = history['state_details']['ok']
+            if total_datasets > 0:
+                percent_complete = 100 * processed_datasets / total_datasets
+            else:
+                percent_complete = 0
+            status[0]['percent_done'] = str(percent_complete) + '%'
+        return status
     
     def postprocessing_status(self):
         return getPayload(self.postprocessing_taskset_id)
