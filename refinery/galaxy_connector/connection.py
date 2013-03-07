@@ -102,9 +102,12 @@ class Connection( object ):
         
         return identifiers                
             
-    def get_history( self, history_id ):            
-        return self.get( "histories" + "/" + history_id )
-        
+    def get_history(self, history_id):
+        if history_id:
+            return self.get( "histories" + "/" + history_id )
+        else:
+            logger.debug("Can not retrieve history_id = '{}'".format(history_id))
+            return None
 
     def get_history_contents( self, history_id ):            
         return self.get( "histories" + "/" + history_id + "/" + "contents" )
