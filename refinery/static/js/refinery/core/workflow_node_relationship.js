@@ -1,8 +1,8 @@
 /*
- * node_pairing_analysis.js
+ * workflow_node_relationship.js
  *
  * Author: Richard Park
- * Created: 6 Feb 2012
+ * Created: 1 Mar 2012
  *
  * Initial attempt to use backbone + nodeset + nodepair relationships to automatically determine input pairing and to run workflows in galaxy
  */
@@ -30,18 +30,15 @@ nrApp.addRegions({
   p_cols : '#process_3'
 });
 
+/*
 // starts marionette application once tab is opened for the first time
 $('#tabs li a[href="#process"]').on('shown', function (e) {
   //$('#tabs li a[href="#process"]').tab('show')
-  e.target // activated tab
-  e.relatedTarget // previous tab
-  //console.log("tab shown");
-  //console.log('is started');
-  //console.log(nrApp.nrMod.started);
   if (!nrApp.nrMod.started) {
 	nrApp.start();
   }
 })
+*/
 
 //===================================================================
 // Registering Ajax commands
@@ -83,11 +80,46 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 	var query_fields;
 	var tl;
 	var create_relation_form;
+	var isOpen = false;
 
 
 	//===================================================================
 	// Button Actions
 	//===================================================================
+	nrMod.toggleSideBar = function(event) {
+		console.log("BUTTON: toggleSideBar called ");
+		console.log(event);
+
+		var tempClose = false;
+
+		tl = new TimelineMax({align:"honor"});
+
+		if (event) {
+			if (!isOpen) {
+				tempClose = true;
+			}
+		}
+		else {
+			tempClose = true;
+		}
+
+
+		if (tempClose) {
+// Opening side panel when a workflow is changed
+			if ($('#main-area').is('.span8')) {
+				isOpen = false;
+				tl.add(TweenMax.to('#process_container', 1, {autoAlpha:0, ease:Power4.easeIn }));
+				tl.add(TweenMax.to('#main-area', 1, {css:{className:"span10"}, ease:Power4.easeIn }));
+			}
+			else {
+				isOpen = true;
+				tl.add(TweenMax.to('#main-area', 1, {css:{className:"span8"}, ease:Power4.easeOut }));
+				tl.add(TweenMax.to("#process_container", 1, {autoAlpha:1, ease:Power4.easeInOut}));
+			}
+		}
+	}
+
+
 	nrMod.createRelationship = function(event) {
 		console.log("BUTTON: createRelationship called ");
 
@@ -146,7 +178,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		console.log("button: hidePanel");
 		//console.log(elem);
 		var tl = new TimelineMax({align:"sequence"});
-		tl.add(TweenMax.to('.scrollable', 2, {scrollTo:{y:$('#process_2').position().top}, ease:Power2.easeOut}));
+		//tl.add(TweenMax.to('.scrollable', 2, {scrollTo:{y:$('#process_2').position().top}, ease:Power2.easeOut}));
 		tl.add(TweenMax.to(elem , .5, {autoAlpha:0, ease:Power4.easeOut}));
 		tl.play();
 
@@ -305,25 +337,22 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 	nrMod.fieldItemView = Marionette.ItemView.extend({
 		template: '#template_field_item',
-		tagName: 'td',
+		tagName: 'label',
 
 		onRender: function() {
+			this.$el.attr("class", "radio");
+			//$(this.el).prepend("<dd>");
+			//$(this.el).append("</dd>");
 			//console.log("item item");
-			//console.log(this.model.get('countid'));
-			//console.log(this.$el.html());
-			//console.log(this.$el);
-			//this.$el.wrap('<tr>');
-			//console.log($(this.el));
-			//this.$el.html('</tr>'+this.$el.text() + '<tr>');
-			//this.$el.attr("class", "checkbox inline");
-  			//this.$el.attr( "class", "myclass1 myclass2" );
-  			//this.ui.checkbox.addClass('checked');
+			//console.log(this.el);
 		},
 
 	});
+
 	nrMod.fieldCollectionView = Marionette.CollectionView.extend({
-		tagName: "tr",
+		tagName: "div",
 		itemView: nrMod.fieldItemView,
+		ref_inputs: '',
 
 		ui: {
 			form_name: "#rel_name",
@@ -332,14 +361,35 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 		initialize: function(opts) {
 			console.log("fieldCollectionView initialized");
-			console.log(opts);
+			//console.log(opts);
 			//var current_uuid = $(this.el).val();
-
 		},
+
+		onBeforeRender: function( ) {
+			$(this.el).empty();
+		},
+
 		onRender: function() {
-			console.log("fieldCollectionView onRendeer called");
-			console.log($(this.el));
-			console.log(this.$el);
+			//console.log("fieldCollectionView onRendeer called");
+			//console.log(this.ref_inputs.set1_field);
+			//console.log(this.ref_inputs.set2_field);
+
+			///* For creating multiple dropdowns for 2 inputs to a workflows
+			var temp_html = '';
+			temp_html += '<div class="control-group">';
+			temp_html += '<label for="set1"><strong>Input: </strong>' + this.ref_inputs.set1_field + '</label>';
+			temp_html += '<select id="dropdown_set1" name="set1" style="width: 100%;">'
+		 + this.ref_inputs.node_set_options + '</select>';
+		 	temp_html += '</div>';
+
+			temp_html += '<div class="control-group">';
+			temp_html += '<label for="set2"><strong>Input: </strong>' + this.ref_inputs.set2_field + '</label>';
+			temp_html += '<select id="dropdown_set2" name="set2" style="width: 100%;">'
+			+ this.ref_inputs.node_set_options + '</select></div>';
+			temp_html += '</div>';
+
+			temp_html += '<label><strong>Mapping Column</strong></label>';
+			$(this.el).prepend(temp_html);
 		},
 
 		getName: function() {
@@ -349,6 +399,14 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		getDescription: function() {
 			return $(this.ui.form_description).val();
 		},
+
+		setWorkflowInputs: function(newinput) {
+			// helper function for keep reference to active workflow inputs
+			//console.log("fieldCollection setWorkflowInputs called");
+			//console.log(newinput);
+			this.ref_inputs = newinput;
+		},
+
 	});
 
 	nrMod.workflowItemView = Marionette.ItemView.extend({
@@ -371,6 +429,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		initialize: function(opts) {
 			var current_uuid = $(this.el).val();
 			this.current_uuid = current_uuid;
+			$(this.el).prepend('<option></option>');
 		},
 
 		events: {
@@ -380,7 +439,8 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		onRender: function() {
 			//console.log("workflowCollectionView render called");
 			$(this.el).attr('id', this.ui_name);
-			//$(this.el).attr('style','width: 50%;');
+
+			$(this.el).attr('style','width: 25%;');
 			return this;
 		},
 
@@ -390,15 +450,17 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 			var current_uuid = $(this.el).val();
 			this.current_uuid = current_uuid;
 
-			var workflow_inputs = _.find(this.collection.models, function(w2) {
-				return w2.attributes.uuid == current_uuid;
-			});
-			this.workflow_inputs = workflow_inputs;
-
 			// creates it as select2 checkbox
 			$(this.el).select2();
 
-			App.vent.trigger("change_inputs", this.workflow_inputs);
+			if ( $(this.el).val() != "") {
+				var workflow_inputs = _.find(this.collection.models, function(w2) {
+					return w2.attributes.uuid == current_uuid;
+				});
+				this.workflow_inputs = workflow_inputs;
+
+				App.vent.trigger("change_inputs", this.workflow_inputs);
+			}
 		},
 
 		getWorkflowID: function () {
@@ -461,51 +523,26 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 			if (this.current_inputs != '') {
 				var temp_options = this.node_set_options;
-				var temp_html = '<form class="form-horizontal"><fieldset>';
-				temp_html += '<legend>Run Analysis</legend>';
+				var temp_html = '<legend>Run Analysis';
+				temp_html += '<button type="button" class="close" aria-hidden="true" onclick="nrApp.nrMod.toggleSideBar(false);">&times;</button>';
+				temp_html += '</legend>';
+				//temp_html += '<form><fieldset>';
+				//temp_html += '<legend>Run Analysis</legend>';
 				var self = this;
 
 				_.each(this.current_inputs, function (w2) {
 					//console.log("inputRelationshipView each"); console.log(w2);
 					if (w2.set1 != null) {
 						if (w2.set2 == null) {
-							//console.log("set2 IS NULL");
-							temp_html += '<div class="control-group">';
-							temp_html += '<label class="control-label" for="set1">Set1</label>';
-							temp_html += '<div class="controls"> <select id="dropdown_set1" name="set1" style="width: 50%;")>'
+							temp_html += '<label for="set1">Set1</label>';
+							temp_html += '<select id="dropdown_set1" name="set1" style="width: 100%;")>'
 						 + temp_options + '</select>';
-						 	temp_html += '</div>';
-						 	temp_html += '</div>';
-
-							temp_html += '<div class="control-group">';
-							temp_html += '<div class="controls">';
-						 	temp_html += '<a id="run_analysis_single_btn" href="#" onclick="nrApp.nrMod.runSingleAnalysis()" role="button" class="btn btn-warning" data-toggle="modal" rel="tooltip" data-placement="" data-html="true" data-original-title="Launch IGV with&lt;br&gt;current selection.">';
+						 	temp_html += '<a id="run_analysis_single_btn" href="#" onclick="nrApp.nrMod.runSingleAnalysis()" role="button" class="btn-block btn btn-warning" data-toggle="modal" rel="tooltip">';
 						 	temp_html += '<i class="icon-dashboard"></i>&nbsp;&nbsp;Run Analysis</a>';
-						 	temp_html += '</div>';
-						 	temp_html += '</div>';
 						}
 						else{
 							is_single = false;
-							///* For creating multiple dropdowns for 2 inputs to a workflows
-							temp_html += '<div class="control-group">';
-							temp_html += '<label class="control-label" for="set1">' + self.set1_field + '</label>';
-							temp_html += '<div class="controls"> <select id="dropdown_set1" name="set1" style="width: 50%;">'
-						 + temp_options + '</select>';
-
-						 	temp_html += '</div>';
-						 	temp_html += '</div>';
-						 	temp_html += '</div>';
-
-							temp_html += '<div class="control-group">';
-							temp_html += '<label class="control-label" for="set2">' + self.set2_field + '</label>';
-							temp_html += '<div class="controls"> <select id="dropdown_set2" name="set2" style="width: 50%;">'
-							+ temp_options + '</select></div></div>';
-							temp_html += '</div>';
-
-							temp_html += '<div class="control-group">';
-							temp_html += '<div class="controls">';
-
-							temp_html += '</div></div>';
+							// rendering input dropdowns in fieldCollectionView
 
 							//creates node relationship drop down section
 							if (this.node_relations_options != '') {
@@ -517,11 +554,11 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 				this.is_single = is_single;
 
-				temp_html += '</fieldset></form>';
+				//temp_html += '</fieldset></form>';
 
 				$(this.el).html(temp_html);
 
-				this.activateSelect();
+				//this.activateSelect();
 
 				return this;
 			}
@@ -529,26 +566,31 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 		getNodeRelationshipHTML: function() {
 
-			//var t_html ='<form class="form-horizontal"><fieldset>';
-			//t_html += '<legend>Run Analysis</legend>';
-			var t_html = '<div class="control-group">';
-			t_html += '<label class="control-label" for="dropdown_noderelationship">Choose Relationship</label>   \
-			<div class="controls"> <select id="dropdown_noderelationship" name="Choose Relationship" style="width: 50%;">'
-			+ this.node_relations_options + '</select>';
+			var t_html = "";
 
+			if (this.node_relations_options == "") {
+				t_html = '<div class="alert"><button type="button" class="close" data-dismiss="alert">&times;</button> <strong>Warning!</strong> This workflow requires a relationship</div>';
+			}
+
+			t_html += '<label for="dropdown_noderelationship">Choose Relationship</label>';
+			t_html += '<select id="dropdown_noderelationship" name="Choose Relationship" style="width: 100%;">'
+			+ this.node_relations_options + '</select>';
+			t_html += '<div class="btn-group">';
 			t_html += '<a id="new_relationship_btn" href="#" onclick="nrApp.nrMod.openFields()" role="button" class="btn btn-warning">';
 			t_html += '<i class="icon-plus"></i>&nbsp;&nbsp;New</a>';
+			//t_html += '</div>';
 
-			t_html += '</div></div>';
-			t_html += '</div>';
+			t_html += '<a id="run_analysis_multi_btn" href="#" onclick="nrApp.nrMod.runRelationAnalysis()" role="button" class="btn btn-warning';
 
-			t_html += '<div class="control-group">';
-			t_html += '<div class="controls">';
-			t_html += '<a id="run_analysis_multi_btn" href="#" onclick="nrApp.nrMod.runRelationAnalysis()" role="button" class="btn btn-warning">';
-			t_html += '<i class="icon-sitemap"></i>&nbsp;&nbsp;Run Analysis</a>';
-			t_html += '</div></div>';
+			if (this.node_relations_options == "") {
+				t_html += ' disabled">';
+			}
+			else {
+				t_html += '">';
+			}
+			t_html += '<i class="icon-sitemap"></i>&nbsp;&nbsp;Run</a>';
+			//t_html += '</div>';
 			t_html += '</div>';
-			//t_html += '</fieldset></form>';
 			return t_html;
 		},
 
@@ -611,7 +653,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		nr_inputs.setNodeRelations(model_noderelation.getOptions());
 		App.p_inputs.show(nr_inputs);
 
-		nr_inputs.activateSelect();
+		//nr_inputs.activateSelect();
 
 		//Object {matches: "2", node2_count: "2", total: "4", node1_count: "2"}
 		var output_str = '<div class="modal-header"><h3>';
@@ -629,9 +671,11 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 		bootbox.alert(output_str, function() {
   		//Example.show("Hello world callback");
+  			var temp_offset =  $('#process_2').offset().top - $('#process_3_p').offset().top;
+
   			tl = new TimelineMax({align:"sequence"});
 			tl.add(TweenMax.to("#process_3_p", 1, {autoAlpha:0, ease:Power4.easeInOut}));
-			tl.add(TweenMax.to('.scrollable', 2, {scrollTo:{y:$('#process_2').position().top}, ease:Power2.easeIn}));
+			//tl.add(TweenMax.to('.scrollable', 2, {scrollTo:{y:0}, ease:Power2.easeIn}));
 			tl.play();
 		});
 	});
@@ -639,17 +683,24 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 	App.vent.on("show_fields", function(){
 		//console.log("show_fields called VENT");
 		//nr_inputs.changeInputs(wf_inputs);
+		var temp_offset = $('#process_3_p').offset().top - $('#process_2').offset().top;
 		tl = new TimelineMax({align:"sequence"});
 		tl.add(TweenMax.to("#process_3_p", .5, {autoAlpha:1, ease:Power4.easeInOut}));
-		tl.add(TweenMax.to('.scrollable', 2, {scrollTo:{y:$('#process_3_p').position().top}, ease:Power2.easeOut}));
+		//tl.add(TweenMax.to('.scrollable', 2, {scrollTo:{y:temp_offset}, ease:Power2.easeOut}));
 		tl.play();
 	});
 
     App.vent.on("change_inputs", function(wf_inputs){
 		//console.log("change inputs called VENT");
-		nr_inputs.changeInputs(wf_inputs);
 
 		tl = new TimelineMax({align:"sequence"});
+
+
+		nrMod.toggleSideBar(true);
+
+		nr_inputs.changeInputs(wf_inputs);
+		view_fields.render();
+
 		var temp_delay = 0;
 		if ($('#process_3_p').css('opacity') != 0) {
 			//tl.add(TweenMax.to("#process_2", .3, { autoAlpha:0, ease:Power4.easeIn}));
@@ -668,6 +719,8 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		nr_inputs.setNodeSet(model_nodeset.getOptions());
 		nr_inputs.setNodeRelations(model_noderelation.getOptions());
 
+		view_fields.setWorkflowInputs(nr_inputs);
+
 		App.p_workflow.show(nr_wcv);
 		App.p_inputs.show(nr_inputs);
 
@@ -675,17 +728,19 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 
 		App.p_cols.show(view_fields);
 
+		/*
 		var tl1 = new TimelineMax({stagger:0.3, align:"normal"});
 		tl1.add(TweenMax.to("#process_container", .5, {autoAlpha:1, ease:Power4.easeInOut}));
 		tl1.add(TweenMax.to("#process_2", .5, {autoAlpha:1, ease:Power4.easeInOut}));
 		tl1.play();
+		*/
 
 	});
 
 	// Initialize this module when the app starts
 	// ------------------------------------------
 	nrMod.addInitializer(function(){
-		console.log("mod initializer called");
+		//console.log("mod initializer called");
 
 		nrMod.started = true;
 
@@ -748,6 +803,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 	    }
 
 		view_fields = new nrMod.fieldCollectionView({collection:model_fields});
+
 	});
 
 });
