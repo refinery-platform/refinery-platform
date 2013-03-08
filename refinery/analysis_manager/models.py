@@ -40,8 +40,7 @@ class AnalysisStatus( models.Model ):
         status = getPayload(self.execution_monitor_task_id)
         connection = analysis_manager.tasks.get_analysis_connection(self.analysis)
         history = connection.get_history(self.analysis.history_id)
-        if history and history['state'] != 'queued':
-            # history in 'queued' state does not have reliable numbers
+        if history:
             total_datasets = sum(history['state_details'].itervalues())
             processed_datasets = history['state_details']['ok']
             if total_datasets > 0:
