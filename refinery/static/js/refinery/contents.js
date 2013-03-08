@@ -39,6 +39,7 @@ $(document).ready(function() {
 	configurator.initialize( function() {
 		query = new SolrQuery( configurator, query_commands );
 		query.initialize();
+
 		query.addFilter( "type", dataSetNodeTypes );
 		query.addFilter( "is_annotation", false );
 
@@ -314,12 +315,19 @@ $(document).ready(function() {
 
 		client.initialize( query, true );
 		client.initialize( annotationQuery, true );
+
+
+		//INITIALIZING node relationship bundle
+		//console.log("after query initialized");
+		nrApp.start();
+
 	});
 
 
 	configurator.getState( function() {
 		// callback
 	});
+
 
 });
 

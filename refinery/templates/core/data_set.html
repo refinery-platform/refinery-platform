@@ -131,9 +131,6 @@ rect.active {
   			{% endif %}
   			<li><a href="#details" data-toggle="tab">Details</a></li>
   			<li><a href="#sharing" data-toggle="tab">Sharing</a></li>
-  			{% if not REFINERY_REPOSITORY_MODE %}
-  				<li><a href="#process" data-toggle="tab">Process</a></li>
-  			{% endif %}
   	    </ul>
   	</div>
 
@@ -152,7 +149,7 @@ rect.active {
 				<!-- pass study information into the receiving view when posting -->
 				<input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
 
-			<div class="row-fluid">
+			<div class="row-fluid" class="form-inline">
 			 	<div class="span12" style="margin-top: 10px; margin-bottom: 15px; background-color: #ededed; padding: 5px 10px 5px 10px; border-radius: 5px;">
  					<label class="control-label" id="solr-document-count-view" style="position: relative; top: 3px;"></label>
   					<span class="controls">
@@ -166,15 +163,7 @@ rect.active {
 						<a href="#" id="help-download-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
 					{% endfor %}
 
-					{% else %}
-					<!-- DROP DOWN BUTTONS FOR MULTIPLE WORKFLOWS -->
-					<select class="combobox" name="workflow_choice" id="workflow_choice">
-						<option></option>
-						{% for work in workflows %}
-							<option value="{{work.uuid}}">{{work.name}}</option>
-						{% endfor %}
-					</select>
-					<a class="btn  btn-warning disabled"" id="submitSamplesBtn"><i class="icon-play-circle"></i>&nbsp;Run</a> &nbsp;
+
 
 					{% endif %}
 
@@ -193,8 +182,19 @@ rect.active {
 						<span id="node-set-manager-controls"></span>
   					</span>
   					{% endif %}
+
+					{% if user.is_authenticated %}
+					<span id="p1p">
+						<span class="controls">
+							<label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Workflow</label>
+							<span id="process_1" class=""></span>
+						</span>
+					</span>
+					{% endif %}
+
 				</div>
 			</div>
+			</form>
 
 			<div class="row-fluid">
 
@@ -206,31 +206,84 @@ rect.active {
 						<div id="solr-facet-view" class="accordion"></div>
 			 	</div>
 
-			 	<div class="span10">
+<div class="span10" id="main-area">
 
 					<div class="tabbable">
 						<ul class="nav nav-pills" id="navigation-tabs">
-						  <li class="active"><a href="#table-view-tab" data-toggle="pill">List</a></li>
-						  <li><a href="#pivot-view-tab" data-toggle="pill">Matrix</a></li>
+							<li class="active">
+								<a href="#table-view-tab" data-toggle="pill">List</a>
+							</li>
+							<li>
+								<a href="#pivot-view-tab" data-toggle="pill">Matrix</a>
+							</li>
 						</ul>
 
 						<div class="tab-content">
-						  <div class="tab-pane active fade in" id="table-view-tab">
-							<div id="solr-table-view"></div>
-						  </div>
-						  <div class="tab-pane fade in" id="pivot-view-tab">
-						  	<div id="pivot-view">
-						  	</div>
-						  	<div id="solr-pivot-matrix">
-						  		<!-- the matrix -->
-						  	</div>
-						  </div>
+							<div class="tab-pane active fade in" id="table-view-tab">
+								<div id="solr-table-view"></div>
+							</div>
+							<div class="tab-pane fade in" id="pivot-view-tab">
+								<div id="pivot-view"></div>
+								<div id="solr-pivot-matrix">
+									<!-- the matrix -->
+								</div>
+							</div>
 						</div>
 					</div>
+
 				</div>
-			</div>
-		</form>
-	</div>
+
+
+				<div class="span2" id="process_container" style="opacity: 0; ">
+
+					<script type="text/template" id="template_workflow_item">
+						<%= name %>
+					</script>
+
+					<script type="text/template" id="template_inputs">
+						<div class="refinery-subheader">
+						<label class="control-label" for="pr_workflow">Choose Workflow</label>
+						</div>
+					</script>
+
+					<div id="process_2" class="well" ></div>
+
+					<!-- <div id="process_3" class="well"></div> -->
+					<script type="text/template" id="template_field_item">
+						<input name="matchingRadio" type="radio" value=<%= full_name%> id=<%= full_name%>><%= name %>
+					</script>
+
+					<div class="well" id="process_3_p" style="opacity:0">
+						<legend>Relationship<button type="button" class="close" aria-hidden="true" onclick="nrApp.nrMod.hidePanel('#process_3_p')">&times;</button>
+						</legend>
+						<form>
+
+							<div class="control-group">
+								<div class="input-prepend">
+									<span class="add-on"><i class="icon-pencil"></i></span>
+									<input id="rel_name" type="text" class="input-small" required placeholder="Name">
+								</div>
+								<div class="input-prepend">
+									<span class="add-on"><i class="icon-book"></i></span>
+									<input id="rel_description" type="text" class="input-small" placeholder="Description">
+								</div>
+							</div>
+
+
+							<div class="control-group">
+								<div id="process_3"></div>
+							</div>
+
+							<a id="run_analysis_single_btn" href="#" onclick="nrApp.nrMod.createRelationship()" role="button" class="btn-block  btn btn-warning" data-toggle="modal" rel="tooltip"><i class="icon-dashboard"></i>&nbsp;&nbsp;Create</a>
+
+						</form>
+					</div>
+
+				</div>
+
+				</div>
+				</form>
+				</div>
 
 	{% if has_change_dataset_permission %}
   	<div class="tab-pane" id="configuration">
@@ -382,111 +435,6 @@ rect.active {
 
 	  	</div>
 
-
-		{% if not REFINERY_REPOSITORY_MODE %}
-
-	  	<div class="tab-pane fade" id="process">
-
-	  	<script type="text/template" id="search_template">
-			<label>Search</label>
-			<input type="text" id="search_input" />
-			<input type="button" id="search_button" value="Search" />
-		</script>
-			<!--
-	  		<div class="row-fluid">
-	  			<div class="refinery-header">
-					<span class="refinery-header-left">
-						<h3>Process Analysis</h3>
-					</span>
-				</div>
-			</div>
-			-->
-			<div class="row-fluid">
-				<div class="span3">
-	  				<div class="nav nav-list affix">
-	  					<h3>Process Analysis</h3>
-	  					<li class=""><a href="#p1p"><i class="icon-chevron-right"></i> 1. Choose Workflow </a></li>
-	  					<li class=""><a href="#process_2"><i class="icon-chevron-right"></i> 2. Assign Input(s) </a></li>
-	  					<li class=""><a href="#process_3_p"><i class="icon-chevron-right"></i> 3. Create Relationship(s) </a></li>
-
-					</div>
-	  			</div>
-	  			<div class="span9">
-	  				<div class="row-fluid" style= "margin-top:20px">
-	  					<div id="process_container" style="opacity:0">
-
-	  					<script type="text/template" id="template_workflow_item">
-	  						<%= name %>
-	  					</script>
-
-	  					<script type="text/template" id="template_inputs">
-		  					<div class="refinery-subheader">
-		  						<label class="control-label" for="pr_workflow">Choose Workflow</label>
-		  					</div>
-	  					</div>
-	  					</script>
-
-						<div id="p1p">
-	  					<form class="form-horizontal">
-	  					<fieldset>
-	  					<div class="control-group field-set1 well">
-	  						<legend>Choose Workflow</legend>
-	  						<label class="control-label" for="wcv_dropdown">Available Workflow</label>
-	  							<div class="controls">
-	  								<div id="process_1" class="">
-	  								</div>
-	  							</div>
-	  						</div>
-	  					</div>
-	  					</fieldset>
-	  				</form>
-	  				 </div>
-
-	  					<div id="process_2" class="well" style="opacity:0"></div>
-	  					<!-- <div id="process_3" class="well"></div> -->
-						   <script type="text/template" id="template_field_item"><label class="radio"><input name="matchingRadio" type="radio" value=<%= full_name%> id=<%= full_name%>><%= name %></label></script>
-
-                        <div class="well" id="process_3_p" style="opacity:0">
-                        <form class="form-horizontal">
-                        	<legend>Create New Relationship
-                        	<button type="button" class="close" aria-hidden="true" onclick="nrApp.nrMod.hidePanel('#process_3_p')">&times;</button>
-                        	</legend>
-
-<div class="control-group">
-	<!-- <label class="control-label" for="rel_info">Set1</label>
-
-	<div class="controls" id="rel_info"> -->
-	<div class="input-prepend">
-  		<span class="add-on span3">Name</span>
-		<input id="rel_name" type="text" class="input" required placeholder="">
-	</div>
-	<div class="input-prepend">
-		<span class="add-on span6">Description</span>
-	  	<input id="rel_description" type="text" class="input" placeholder="">
-	</div>
-  	<!-- </div> -->
-</div>
-
-                        	<table class="table table-hover table-condensed">
-                        	<!--	<tbody> -->
-                            <tbody id="process_3"></tbody>
-                            <!-- </tbody> -->
-                            </table>
-
-							<div class="control-group">
-								<a id="run_analysis_single_btn" href="#" onclick="nrApp.nrMod.createRelationship()" role="button" class="btn-block  btn btn-warning" data-toggle="modal" rel="tooltip"><i class="icon-dashboard"></i>&nbsp;&nbsp;Create Relationship</a>
-							</div>
-						</form>
-                      	</div>
-
-
-
-	  				</div>
-	  			</div>
-
-	  	</div>
-	  	{% endif %}
-
 	</div>
 
 	{% else %}
@@ -522,7 +470,7 @@ rect.active {
     <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-marionette/backbone.marionette.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-ajaxcommands/backbone.ajaxcommands.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/select2/select2.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/node_pairing_analysis.js"></script>
+    <!-- <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/node_pairing_analysis.js"></script> -->
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
 
 	<!-- adding spinner -->
@@ -592,6 +540,7 @@ rect.active {
     <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/plugins/CSSPlugin.min.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/plugins/ScrollToPlugin.min.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TimelineMax.min.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/workflow_node_relationship.js"></script>
 
 
 
@@ -640,6 +589,7 @@ rect.active {
 					"</p>"
 				);
 			});
+
 
 	  	});
 	</script>
