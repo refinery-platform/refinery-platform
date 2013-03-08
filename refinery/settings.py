@@ -4,7 +4,6 @@
 
 import ldap
 import os
-import sys
 import djcelery
 from django_auth_ldap.config import LDAPSearch
 
@@ -307,26 +306,6 @@ LOGGING = {
     },
 }
 
-# NG: added for search and faceting (for Solr multicore)
-HAYSTACK_CONNECTIONS = {
-    'default': {
-        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
-        'URL': 'http://127.0.0.1:8983/solr/default',
-        'EXCLUDED_INDEXES': ['data_set_manager.search_indexes.NodeIndex','core.search_indexes.DataSetIndex', 'core.search_indexes.ProjectIndex'],
-    },
-    'core': {
-        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
-        'URL': 'http://127.0.0.1:8983/solr/core',
-        'EXCLUDED_INDEXES': ['data_set_manager.search_indexes.NodeIndex'],
-    },
-    'data_set_manager': {
-        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
-        'URL': 'http://127.0.0.1:8983/solr/data_set_manager',
-        'EXCLUDED_INDEXES': ['core.search_indexes.DataSetIndex', 'core.search_indexes.ProjectIndex'],
-    },
-}
-
-
 # send email via SMTP, can be replaced with "django.core.mail.backends.console.EmailBackend" to send emails to the console
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 # Default email address to use for various automated correspondence from the site manager(s).
@@ -357,13 +336,36 @@ ISA_TAB_DIR = ''
 FILE_STORE_DIR = 'file_store'
 
 # location of the Solr server (must be accessible from the web browser)
-REFINERY_SOLR_BASE_URL = "http://127.0.0.1:8983/solr/"
+REFINERY_SOLR_BASE_URL = "http://localhost:8983/solr/"
 
 # used to replaces spaces in the names of dynamic fields in Solr indexing
 REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = "_"
 
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
+        'URL': REFINERY_SOLR_BASE_URL + 'default',
+        'EXCLUDED_INDEXES': ['data_set_manager.search_indexes.NodeIndex',
+                             'core.search_indexes.DataSetIndex',
+                             'core.search_indexes.ProjectIndex'],
+    },
+    'core': {
+        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
+        'URL': REFINERY_SOLR_BASE_URL + 'core',
+        'EXCLUDED_INDEXES': ['data_set_manager.search_indexes.NodeIndex'],
+    },
+    'data_set_manager': {
+        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
+        'URL': REFINERY_SOLR_BASE_URL + 'data_set_manager',
+        'EXCLUDED_INDEXES': ['core.search_indexes.DataSetIndex',
+                             'core.search_indexes.ProjectIndex'],
+    },
+}
+
 # list of paths to CSS files used to style Refinery pages (relative to STATIC_URL)
-REFINERY_CSS = [ "styles/css/refinery-style-bootstrap.css", "styles/css/refinery-style-bootstrap-responsive.css", "styles/css/refinery-style.css" ]
+REFINERY_CSS = ["styles/css/refinery-style-bootstrap.css",
+                "styles/css/refinery-style-bootstrap-responsive.css",
+                "styles/css/refinery-style.css" ]
 
 # set height of navigation bar (e.g. to fit a logo)
 REFINERY_INNER_NAVBAR_HEIGHT = 20
