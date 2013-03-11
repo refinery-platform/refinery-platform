@@ -28,7 +28,6 @@ import os
 import sys
 from fabric.api import settings, abort, run, env, sudo, execute
 from fabric.contrib import django
-from fabric.contrib.console import confirm
 from fabric.context_managers import hide, prefix
 from fabric.contrib.files import exists, upload_template
 from fabric.decorators import task, with_settings
@@ -37,8 +36,6 @@ from fabric.utils import puts
 
 
 env.local_project_dir = os.path.dirname(os.path.abspath(__file__))
-# config files and templates
-env.local_conf_dir=os.path.join(env.local_project_dir, "fabric")
 
 # Django integration
 sys.path.append(env.local_project_dir)
@@ -81,22 +78,13 @@ def dev():
     env.apache_conf_dir = "/etc/httpd/conf.d"
     env.refinery_branch = "develop"
     # config file templates
-    env.bash_profile_template="bash_profile"
-    env.bashrc_template="bashrc"
+    env.local_conf_dir = os.path.join(env.local_project_dir, "fabric", "dev")
+    env.bash_profile_template = "bash_profile"
+    env.bashrc_template = "bashrc"
     # Galaxy config
     galaxy_base_dir = env.galaxy_root + "dev"
     env.galaxy_root = os.path.join(galaxy_base_dir, "live")
     env.galaxy_r_libs_target_dir = os.path.join(env.galaxy_r_libs_base_dir, "dev")
-
-
-@task
-def loc():
-    '''Set config to local
-
-    '''
-    env.dev_settings_file = "settings_local.py"
-    django.settings_module(os.path.splitext(env.dev_settings_file)[0])
-    env.os = env.local_os
 
 
 @task
@@ -113,6 +101,16 @@ def prod():
 
     '''
     #TODO: implement using stage() as a template
+
+
+@task
+def loc():
+    '''Set config to local (requires SSH server running on localhost)
+
+    '''
+    env.dev_settings_file = "settings_local.py"
+    django.settings_module(os.path.splitext(env.dev_settings_file)[0])
+    env.os = env.local_os
 
 
 @task
@@ -206,7 +204,7 @@ def start_postgresql():
 
 @task
 @with_settings(user=env.project_user)
-def upload_apache_settings():
+def upload_apache_config():
     '''Upload Apache settings
 
     '''
