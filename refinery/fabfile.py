@@ -228,7 +228,10 @@ def install_git():
 
     '''
     puts("Installing Git")
-    sudo("yum -q -y install git")
+    if env.os == "CentOS":
+        sudo("yum -q -y install git")
+    elif env.os == "Debian":
+        pass
 
 
 @task
@@ -237,7 +240,10 @@ def install_rabbitmq():
 
     '''
     puts("Installing RabbitMQ server")
-    sudo("yum -q -y install rabbitmq-server")
+    if env.os == "CentOS":
+        sudo("yum -q -y install rabbitmq-server")
+    elif env.os == "Debian":
+        pass
 
 
 @task
@@ -245,7 +251,10 @@ def init_rabbitmq():
     '''Configure RabbitMQ to start at boot time
 
     '''
-    sudo("/sbin/chkconfig rabbitmq-server on")
+    if env.os == "CentOS":
+        sudo("/sbin/chkconfig rabbitmq-server on")
+    elif env.os == "Debian":
+        pass
 
 
 @task
@@ -253,14 +262,17 @@ def start_rabbitmq():
     '''Start RabbitMQ server
 
     '''
-    # need to check if the server is running because
-    # service command exits with non-zero status if it is
-    with settings(hide('everything'), warn_only=True):
-        result = sudo("/sbin/service rabbitmq-server status")
-    if result.failed:
-        sudo("/sbin/service rabbitmq-server start")
-    else:
-        puts("RabbitMQ is already running")
+    if env.os == "CentOS":
+        # need to check if the server is running because
+        # service command exits with non-zero status if it is
+        with settings(hide('everything'), warn_only=True):
+            result = sudo("/sbin/service rabbitmq-server status")
+        if result.failed:
+            sudo("/sbin/service rabbitmq-server start")
+        else:
+            puts("RabbitMQ is already running")
+    elif env.os == "Debian":
+        pass
 
 
 @task
