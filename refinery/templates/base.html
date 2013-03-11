@@ -69,7 +69,7 @@
 
 			<p class="navbar-text pull-right">
 		{% if user.is_authenticated %}       
-				<i class="icon-user icon-white"></i>
+				<i class="icon-user"></i>
 				<a href="{% url user user.get_profile.uuid %}">
 				{% if user.first_name != "" or user.last_name != "" %}
 					{{ user.first_name }} {{ user.last_name }}
