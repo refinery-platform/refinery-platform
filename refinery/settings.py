@@ -307,7 +307,7 @@ LOGGING = {
 }
 
 # send email via SMTP, can be replaced with "django.core.mail.backends.console.EmailBackend" to send emails to the console
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # Default email address to use for various automated correspondence from the site manager(s).
 DEFAULT_FROM_EMAIL = 'webmaster@localhost'
 EMAIL_HOST = 'localhost'
