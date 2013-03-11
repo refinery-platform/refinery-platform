@@ -63,10 +63,14 @@ def dev():
     env.hosts = [env.dev_host]
     env.dev_settings_file = "settings_local_dev.py"
     django.settings_module(os.path.splitext(env.dev_settings_file)[0])
-    # configure software package names
     if env.os == "CentOS":
-        env.postgresql_server = "postgresql84-server"
-        env.postgresql_devel = "postgresql84-devel"
+        # configure software package names
+        env.postgresql_server_pkg = "postgresql84-server"
+        env.postgresql_devel_pkg = "postgresql84-devel"
+        env.git_pkg = "git"
+        env.rabbitmq_server_pkg = "rabbitmq-server"
+        env.supervisor_pkg = "supervisor"
+        # configure commands
         env.supervisorctl = "/usr/bin/supervisorctl"
     else:
         abort("{os} is not supported".format(**env))
@@ -75,7 +79,6 @@ def dev():
     env.data_dir = os.path.join(env.deployment_dir, "data")
     env.refinery_base_dir = os.path.join(env.app_dir, "Refinery")
     env.conf_dir = os.path.join(env.deployment_dir, "etc")
-    env.apache_conf_dir = "/etc/httpd/conf.d"
     env.refinery_branch = "develop"
     # config file templates
     env.local_conf_dir = os.path.join(env.local_project_dir, "fabric", "dev")
@@ -163,8 +166,8 @@ def install_postgresql():
     '''
     puts("Installing PostgreSQL")
     if env.os == "CentOS":
-        sudo("yum -q -y install {postgresql_server}".format(**env))
-        sudo("yum -q -y install {postgresql_devel}".format(**env))
+        sudo("yum -q -y install {postgresql_server_pkg}".format(**env))
+        sudo("yum -q -y install {postgresql_devel_pkg}".format(**env))
     elif env.os == "Debian":
         pass
 
@@ -209,7 +212,7 @@ def upload_apache_config():
 
     '''
     upload_template("{local_conf_dir}/refinery-apache.conf".format(**env),
-                    "{deployment_dir}/etc/refinery-apache.conf".format(**env))
+                    "{conf_dir}/refinery-apache.conf".format(**env))
 
 
 @task
@@ -229,7 +232,7 @@ def install_git():
     '''
     puts("Installing Git")
     if env.os == "CentOS":
-        sudo("yum -q -y install git")
+        sudo("yum -q -y install {git_pkg}".format(**env))
     elif env.os == "Debian":
         pass
 
@@ -241,7 +244,7 @@ def install_rabbitmq():
     '''
     puts("Installing RabbitMQ server")
     if env.os == "CentOS":
-        sudo("yum -q -y install rabbitmq-server")
+        sudo("yum -q -y install {rabbitmq_server_pkg}".format(**env))
     elif env.os == "Debian":
         pass
 
@@ -312,9 +315,29 @@ def install_supervisor():
     '''
     puts("Installing Supervisor")
     if env.os == "CentOS":
-        sudo("yum -q -y install supervisor")
+        sudo("yum -q -y install {supervisor_pkg}".format(**env))
     elif env.os == "Debian":
         pass
+
+
+@task
+def init_supervisor():
+    '''Configure Supervisor to start at boot time
+
+    '''
+    if env.os == "CentOS":
+        sudo("/sbin/chkconfig supervisord on")
+    elif env.os == "Debian":
+        pass
+
+
+def upload_supervisor_config():
+    '''Upload Supervisor settings
+
+    '''
+    upload_template("{local_conf_dir}/refinery-supervisord.conf".format(**env),
+                    "/etc/supervisord.conf".format(**env),
+                    use_sudo=True)
 
 
 @task
