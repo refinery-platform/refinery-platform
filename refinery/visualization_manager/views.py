@@ -59,7 +59,7 @@ def profile_viewer_session( request ):
     return profile_viewer( request, uuid=uuid, start_location=1, end_location=200000000, sequence_name="chr1" );
 
 
-def createIGVsession(genome, uuids):
+def createIGVsession(genome, uuids, is_file_uuid=False):
     """ Creates session file for selected file uuids, returns newly created filestore uuid 
     
     :param genome: Genome to be used in session file i.e. hg18, dm3
@@ -102,7 +102,7 @@ def createIGVsession(genome, uuids):
     # get paths to url 
     for samp in uuids:
         # gets filestore item 
-        curr_name, curr_url = get_file_name(samp)
+        curr_name, curr_url = get_file_name(samp, is_file_uuid=is_file_uuid)
         
         # What to do if fs does not exist? 
         if (curr_name):
@@ -158,8 +158,11 @@ def results_igv(request):
                 temp_uuid = i.replace('igv_', '')
                 uuids.append(temp_uuid)
                 
+    print "uuids"
+    print uuids
+                
     ### NEED SPECIES ###          
-    igv_url = createIGVsession("mm9", uuids)
+    igv_url = createIGVsession("mm9", uuids, is_file_uuid=True)
     
     return redirect(igv_url)  
 
@@ -482,13 +485,13 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     tempsampname.write(col_names + "\n")
     
     # iterating over sample files 
-    pheno_results = getSampleLines(fields_dict, results_samp)
+    pheno_results = get_sample_lines(fields_dict, results_samp)
     tempsampname.write(pheno_results)
     
     # if annotations are not null
     if annot_samples:
         #results_annot = annot_samples["response"]["docs"]
-        pheno_annot = getSampleLines(fields_dict, annot_samples)
+        pheno_annot = get_sample_lines(fields_dict, annot_samples)
         tempsampname.write(pheno_annot)
         
     # closing temp file 
@@ -520,7 +523,7 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     
     return curr_url
 
-def get_file_name(nodeuuid, sampFile=None):
+def get_file_name(nodeuuid, sampFile=None, is_file_uuid=False):
     """ Helper function for getting a file_name from a filestore uuid
     
     :param fileuuid: Filestore uuid
@@ -529,12 +532,16 @@ def get_file_name(nodeuuid, sampFile=None):
     #logger.debug("visualization_manager.get_file_name: nodeuuid=%s", nodeuuid)
     #logger.debug(sampFile)
     
-    # getting the current file_uuid from the given node_uuid
-    curr_file_uuid = Node.objects.get( uuid=nodeuuid ).file_uuid   
-    
-    # checking to see if it has a file_server item 
-    temp_fs = get_aux_file_item(curr_file_uuid)
-    
+    # if uuid is a file_store uuid (associated w/ analysis results) 
+    if (is_file_uuid):
+        temp_fs = FileStoreItem.objects.get(uuid=nodeuuid)
+    else:
+        # getting the current file_uuid from the given node_uuid
+        curr_file_uuid = Node.objects.get( uuid=nodeuuid ).file_uuid   
+        
+        # checking to see if it has a file_server item 
+        temp_fs = get_aux_file_item(curr_file_uuid)
+        
     # If no associated file_server auxiliary file then use main data file for IGV
     if temp_fs is None:
         # getting file information based on file_uuids
@@ -543,7 +550,7 @@ def get_file_name(nodeuuid, sampFile=None):
     temp_name = temp_fs.datafile.name
     temp_name = temp_fs.datafile.name.split('/')
     temp_name = temp_name[len(temp_name)-1]
-    
+
     # full path to selected UUID File
     temp_url = temp_fs.get_full_url()
     
@@ -559,7 +566,7 @@ def get_file_name(nodeuuid, sampFile=None):
             
     return temp_name, temp_url
 
-def getSampleLines(fields, results):
+def get_sample_lines(fields, results):
     """ Helper function for producing a matrix of solr fields and results
     
     :param fields: A dictionary containing solr encoded variables and human readable version of the keys
@@ -567,14 +574,14 @@ def getSampleLines(fields, results):
     :returns: a string of the matrix to be included in the IGV sample information file 
     """
     
-    logger.debug("visualization_manager.views getSampleLines called")
+    logger.debug("visualization_manager.views get_sample_lines called")
     
     output_mat = ""
     
     # iterating over samples
     for row in results:
         # adding file_name to matrix as linking id
-        line, url = get_file_name(row["uuid"], True)
+        line, url = get_file_name(row["uuid"], sampFile=True)
         
         # adding fields to sample information matrix
         for k,v in fields.iteritems():
