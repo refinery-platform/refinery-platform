@@ -176,7 +176,6 @@ DataSetConfigurator.prototype.makeFlagClickEvent = function( flag, id, callback 
 	var self = this; 
 	$( "#" + "attributeorder_" + id + "_" + flag ).click( function() { 
 		// get data attributes from parent tr
-		console.log( event );
 		var data = $(this).closest('tr').data();
 		var flags = { "id": data.id, "resource_uri": data.resource_uri };
 		flags["is_" + flag] = $(this).prop( "checked" );
