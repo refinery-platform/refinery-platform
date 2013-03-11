@@ -203,6 +203,19 @@ class SharableResource ( OwnableResource ):
         
         return groups        
 
+    # TODO: clean this up    
+    def is_public(self):                
+        permissions = get_groups_with_perms( self, attach_perms=True )
+        
+        for group_object, permission_list in permissions.items():            
+            if ExtendedGroup.objects.public_group().id == group_object.id:
+                for permission in permission_list:  
+                    if permission.startswith( "change" ):
+                        return True
+                    if permission.startswith( "read" ):
+                        return True            
+                            
+        return False
 
     class Meta:
         verbose_name = "sharableresource"
