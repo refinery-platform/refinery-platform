@@ -195,7 +195,7 @@ def start_postgresql():
         with settings(hide('everything'), warn_only=True):
             result = sudo("/sbin/service postgresql status")
         if result.failed:
-            sudo("/sbin/service postgres start")
+            sudo("/sbin/service postgresql start")
         else:
             puts("PostrgreSQL server is already running")
     elif env.os == "Debian":
@@ -303,6 +303,18 @@ def configure_rabbitmq():
     # set permissions for the user
     sudo("rabbitmqctl set_permissions -p {} {} '.*' '.*' '.*'"
          .format(django_settings.BROKER_HOST, django_settings.BROKER_USER))
+
+
+@task
+def install_supervisor():
+    '''Install Supervisor
+
+    '''
+    puts("Installing Supervisor")
+    if env.os == "CentOS":
+        sudo("yum -q -y install supervisor")
+    elif env.os == "Debian":
+        pass
 
 
 @task
