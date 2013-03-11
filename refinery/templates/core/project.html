@@ -51,16 +51,7 @@
 		<div class="refinery-subheader">
 			<h4>Owner</h4>
 		</div>	
-		<p>
-				<i class="icon-user"></i>&nbsp;
-				<a href="{% url user user.get_profile.uuid %}">
-				{% if user.first_name != "" or user.last_name != "" %}
-					{{ user.first_name }} {{ user.last_name }}
-				{% else %}
-					{{ user.username }}				
-				{% endif %}
-				</a>			
-		</p>
+		<p><i class="icon-user"></i>&nbsp;<a href="{% url user project.get_owner.get_profile.uuid %}">{% if project.get_owner.get_full_name %}{{ project.get_owner.get_full_name }}{% else %}{{ project.get_owner }}{%endif%}</a></p>
 		
 		{% if project.get_groups|length > 0 %}
 		<div class="refinery-subheader">
