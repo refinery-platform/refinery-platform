@@ -31,7 +31,7 @@ from fabric.contrib import django
 from fabric.context_managers import hide, prefix
 from fabric.contrib.files import exists, upload_template
 from fabric.decorators import task, with_settings
-from fabric.operations import require, open_shell
+from fabric.operations import require, open_shell, put
 from fabric.utils import puts
 
 
@@ -54,15 +54,10 @@ def check_env_vars():
     require("deployment_dir", "project_user", "project_group")
 
 
-@task
-def dev():
-    '''Set config to development
+def software_config():
+    '''Configure software package names and commands
 
     '''
-    check_env_vars()
-    env.hosts = [env.dev_host]
-    env.dev_settings_file = "settings_local_dev.py"
-    django.settings_module(os.path.splitext(env.dev_settings_file)[0])
     if env.os == "CentOS":
         # configure software package names
         env.postgresql_server_pkg = "postgresql84-server"
@@ -74,17 +69,36 @@ def dev():
         env.supervisorctl = "/usr/bin/supervisorctl"
     else:
         abort("{os} is not supported".format(**env))
+
+
+def directory_structure_config():
+    '''Configure directory layout
+
+    '''
     env.app_dir = os.path.join(env.deployment_dir, "apps")
     env.virtualenv_dir = os.path.join(env.deployment_dir, "virtualenvs")
     env.data_dir = os.path.join(env.deployment_dir, "data")
     env.refinery_base_dir = os.path.join(env.app_dir, "Refinery")
     env.conf_dir = os.path.join(env.deployment_dir, "etc")
+
+
+@task
+def dev():
+    '''Set config to development
+
+    '''
+    check_env_vars()
+    env.hosts = [env.dev_host]
+    env.dev_settings_file = "settings_local_dev.py"
+    django.settings_module(os.path.splitext(env.dev_settings_file)[0])
     env.refinery_branch = "develop"
+    software_config()
+    directory_structure_config()
     # config file templates
     env.local_conf_dir = os.path.join(env.local_project_dir, "fabric", "dev")
     env.bash_profile_template = "bash_profile"
     env.bashrc_template = "bashrc"
-    # Galaxy config
+    #Galaxy config
     galaxy_base_dir = env.galaxy_root + "dev"
     env.galaxy_root = os.path.join(galaxy_base_dir, "live")
     env.galaxy_r_libs_target_dir = os.path.join(env.galaxy_r_libs_base_dir, "dev")
@@ -95,7 +109,17 @@ def stage():
     '''Set config to staging
 
     '''
-    #TODO: implement using dev() as a template
+    check_env_vars()
+    env.hosts = [env.stage_host]
+    env.dev_settings_file = "settings_local_stage.py"
+    django.settings_module(os.path.splitext(env.dev_settings_file)[0])
+    env.refinery_branch = "develop"
+    software_config()
+    directory_structure_config()
+    # config file templates
+    env.local_conf_dir = os.path.join(env.local_project_dir, "fabric", "stage")
+    env.bash_profile_template = "bash_profile"
+    env.bashrc_template = "bashrc"
 
 
 @task
@@ -104,6 +128,7 @@ def prod():
 
     '''
     #TODO: implement using stage() as a template
+    # add a warning message/confirmation about changing config on production VM
 
 
 @task
@@ -121,22 +146,17 @@ def bootstrap():
     '''Initialize the target VM from the default state
 
     '''
+    upload_bash_config()
 
     # install and configure required software packages
     install_postgresql()
     init_postgresql()
-#    start_postgresql()
     install_git()
     install_rabbitmq()
     init_rabbitmq()
-#    start_rabbitmq()
     configure_rabbitmq()
 
-    upload_bash_config()
-
     deploy_refinery()
-
-    create_refinery_data_dirs()
 
     # init db
     # create users
@@ -179,6 +199,7 @@ def init_postgresql():
 
     '''
     if env.os == "CentOS":
+        # make sure server starts at boot time
         sudo("/sbin/chkconfig postgresql on")
         with settings(hide('warnings'), warn_only=True):
             # initdb command returns 1 if data directory is not empty
@@ -206,23 +227,35 @@ def start_postgresql():
 
 
 @task
-@with_settings(user=env.project_user)
-def upload_apache_config():
-    '''Upload Apache settings
+@with_settings(shell="/bin/su postgres -c")  # we cannot execute commands with sudo as user postgres
+def create_refinery_db_user():
+    '''Create PostgreSQL user for Refinery
 
     '''
-    upload_template("{local_conf_dir}/refinery-apache.conf".format(**env),
-                    "{conf_dir}/refinery-apache.conf".format(**env))
+    # check if the user already exists
+    with settings(hide('commands'), warn_only=True):
+        user_list = sudo("psql -c 'SELECT usename FROM pg_user;' -t")
+    if django_settings.DATABASES['default']['USER'] not in user_list:
+        sudo("psql -c \"CREATE ROLE {USER} PASSWORD '{PASSWORD}' NOSUPERUSER CREATEDB NOCREATEROLE LOGIN;\""
+             .format(**django_settings.DATABASES['default']))
+    else:
+        puts("PostgreSQL user '{USER}' already exists".format(**django_settings.DATABASES['default']))
 
 
 @task
-def install_mod_wsgi():
-    '''Install WSGI interface for Python web applications in Apache from the CentOS repository
+@with_settings(user=env.project_user)
+def create_refinery_db():
+    '''Create PostgreSQL database for Refinery
+    Make sure database user exists before running this task
 
     '''
-    #TODO: mod_wsgi is compiled and installed manually on CentOS 5.7
-#    puts("Installing mod_wsgi")
-#    sudo("yum -q -y install mod_wsgi")
+    # check if the database already exists
+    with settings(hide('commands'), warn_only=True):
+        db_list = run("psql template1 -c 'SELECT datname FROM pg_database WHERE datistemplate = false;' -t")
+    if django_settings.DATABASES['default']['NAME'] not in db_list:
+        run("createdb -O {USER} {NAME}".format(**django_settings.DATABASES['default']))
+    else:
+        puts("PostgreSQL database '{NAME}' already exists".format(**django_settings.DATABASES['default']))
 
 
 @task
@@ -309,6 +342,18 @@ def configure_rabbitmq():
 
 
 @task
+def install_mod_wsgi():
+    '''Install WSGI interface for Python web applications in Apache from the CentOS repository
+
+    '''
+    if env.os == "CentOS":
+        # mod_wsgi is compiled and installed manually on CentOS 5.7
+        pass
+    elif env.os == "Debian":
+        pass
+
+
+@task
 def install_supervisor():
     '''Install Supervisor
 
@@ -327,23 +372,17 @@ def init_supervisor():
     '''
     if env.os == "CentOS":
         sudo("/sbin/chkconfig supervisord on")
+        sudo("chown {project_user}:{project_group} /var/log/supervisor"
+             .format(**env))
     elif env.os == "Debian":
         pass
-
-
-def upload_supervisor_config():
-    '''Upload Supervisor settings
-
-    '''
-    upload_template("{local_conf_dir}/refinery-supervisord.conf".format(**env),
-                    "/etc/supervisord.conf".format(**env),
-                    use_sudo=True)
 
 
 @task
 @with_settings(user=env.project_user)
 def git_clone(branch, repo_url, target_dir):
     '''Clone specified branch of Github repository
+    Helper for clone_refinery()
 
     '''
     puts("Cloning branch '{}' from '{}' into {}"
@@ -365,11 +404,13 @@ def clone_refinery():
             repo_url=env.refinery_repo_url,
             target_dir=env.refinery_base_dir)
 
+
 @task
 @with_settings(user=env.project_user)
 def create_virtualenv(env_name, project_path):
     '''Create a virtual environment using provided name and
-    associate it with a project
+    associate it with provided project path
+    Helper for create_refinery_virtualenv()
 
     '''
     run("mkvirtualenv -a {} {}".format(project_path, env_name))
@@ -390,6 +431,7 @@ def create_refinery_virtualenv():
 @with_settings(user=env.project_user)
 def install_requirements(env_name, requirements_path):
     '''Install Python packages listed in requirements.txt into the given virtualenv
+    Helper for install_refinery_requirements()
 
     '''
     with prefix("workon {}".format(env_name)):
@@ -419,77 +461,36 @@ def upload_refinery_settings():
     with prefix("workon refinery"):
         run("touch wsgi.py")
 
-@task
-@with_settings(shell="/bin/su postgres -c")  # we cannot execute commands with sudo as user postgres
-def create_refinery_db_user():
-    '''Create PostgreSQL user for Refinery
-
-    '''
-    # check if the user already exists
-    with settings(hide('commands'), warn_only=True):
-        user_list = sudo("psql -c 'SELECT usename FROM pg_user;' -t")
-    if django_settings.DATABASES['default']['USER'] not in user_list:
-        sudo("psql -c \"CREATE ROLE {USER} PASSWORD '{PASSWORD}' NOSUPERUSER CREATEDB NOCREATEROLE LOGIN;\""
-             .format(**django_settings.DATABASES['default']))
-    else:
-        puts("PostgreSQL user '{USER}' already exists".format(**django_settings.DATABASES['default']))
-
 
 @task
 @with_settings(user=env.project_user)
-def create_refinery_db():
-    '''Create PostgreSQL database for Refinery
+def upload_supervisor_runscripts():
+    '''Upload Supervisor runscripts
 
     '''
-    # check if the database already exists
-    with settings(hide('commands'), warn_only=True):
-        db_list = run("psql template1 -c 'SELECT datname FROM pg_database WHERE datistemplate = false;' -t")
-    if django_settings.DATABASES['default']['NAME'] not in db_list:
-        run("createdb -O {USER} {NAME}".format(**django_settings.DATABASES['default']))
-    else:
-        puts("PostgreSQL database '{NAME}' already exists".format(**django_settings.DATABASES['default']))
+    put("{local_conf_dir}/celeryd-supervisor.sh".format(**env),
+        "{deployment_dir}/celeryd-supervisor.sh".format(**env),
+        mode=0775)
+    put("{local_conf_dir}/celerycam-supervisor.sh".format(**env),
+        "{deployment_dir}/celerycam-supervisor.sh".format(**env),
+        mode=0775)
+    put("{local_conf_dir}/solr-supervisor.sh".format(**env),
+        "{deployment_dir}/solr-supervisor.sh".format(**env),
+        mode=0775)
 
 
 @task
-@with_settings(user=env.project_user)
-def create_refinery_data_dirs():
-    '''Create Refinery data directories
+def upload_supervisor_config():
+    '''Upload Supervisor settings
 
     '''
-    puts("Creating Refinery top-level data directory '{}'".format(env.data_dir))
-    if not exists(env.data_dir):
-        run("mkdir '{}'".format(env.data_dir))
-    else:
-        puts("'{}' already exists".format(env.data_dir))
-
-    puts("Creating Refinery MEDIA_ROOT directory '{}'"
-         .format(django_settings.MEDIA_ROOT))
-    if not exists(django_settings.MEDIA_ROOT):
-        run("mkdir '{}'".format(django_settings.MEDIA_ROOT))
-    else:
-        puts("'{}' already exists".format(django_settings.MEDIA_ROOT))
-
-    file_store_dir = os.path.join(django_settings.MEDIA_ROOT,
-                                  django_settings.FILE_STORE_DIR)
-    puts("Creating Refinery FILE_STORE_DIR at '{}'".format(file_store_dir))
-    if not exists(file_store_dir):
-        run("mkdir '{}'".format(file_store_dir))
-    else:
-        puts("'{}' already exists".format(file_store_dir))
-
-    puts("Creating Refinery STATIC_ROOT directory '{}'"
-         .format(django_settings.STATIC_ROOT))
-    if not exists(django_settings.STATIC_ROOT):
-        run("mkdir '{}'".format(django_settings.STATIC_ROOT))
-    else:
-        puts("'{}' already exists".format(django_settings.STATIC_ROOT))
-
-    puts("Creating Refinery ISA_TAB_DIR directory '{}'"
-         .format(django_settings.ISA_TAB_DIR))
-    if not exists(django_settings.ISA_TAB_DIR):
-        run("mkdir '{}'".format(django_settings.ISA_TAB_DIR))
-    else:
-        puts("'{}' already exists".format(django_settings.ISA_TAB_DIR))
+    if env.os == "CentOS":
+        #TODO: replace with upload_template() with project_user and deployment_dir
+        put("{local_conf_dir}/refinery-supervisord.conf".format(**env),
+            "/etc/supervisord.conf",
+            use_sudo=True)
+    elif env.os == "Debian":
+        pass
 
 
 @task
@@ -526,6 +527,16 @@ def update_refinery():
     with settings(user=env.local_user):
         sudo("{supervisorctl} restart celeryd".format(**env))
         sudo("{supervisorctl} restart celerycam".format(**env))
+
+
+@task
+@with_settings(user=env.project_user)
+def upload_apache_config():
+    '''Upload Apache settings
+
+    '''
+    upload_template("{local_conf_dir}/refinery-apache.conf".format(**env),
+                    "{conf_dir}/refinery-apache.conf".format(**env))
 
 
 @task
