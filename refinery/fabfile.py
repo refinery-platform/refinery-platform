@@ -71,11 +71,11 @@ def software_config():
         abort("{os} is not supported".format(**env))
 
     env.solr_version = "4.2.0"
-    env.solr_pkg = "solr-" + env.solr_version
+    env.solr_pkg = "solr-" + env.solr_version   # Solr directory name
     env.solr_mirrors = [
-        "http://mirrors.ibiblio.org/apache/lucene/solr/4.2.0/solr-4.2.0.tgz",
         "http://apache.mirrors.pair.com/lucene/solr/4.2.0/solr-4.2.0.tgz",
-        "http://www.gtlib.gatech.edu/pub/apache/lucene/solr/4.2.0/solr-4.2.0.tgz"]
+        "http://www.gtlib.gatech.edu/pub/apache/lucene/solr/4.2.0/solr-4.2.0.tgz",
+        "http://mirrors.ibiblio.org/apache/lucene/solr/4.2.0/solr-4.2.0.tgz"]
 
 
 def directory_structure_config():
@@ -507,11 +507,16 @@ def install_solr():
 
     '''
     for url in env.solr_mirrors:
+        # remove failed download from disk if necessary
         with settings(warn_only=True):
             result = run("wget -P /tmp {}".format(url))
         if result.succeeded:
             break
-    # unpack and copy to /opt
+        else:
+            pass
+    # unpack
+    # move to /opt (moving as superuser preserves ownership)
+    # symlink to /opt/solr
 
 
 @task
@@ -617,6 +622,16 @@ def refinery_migrate():
     with prefix("workon refinery"):
         run("./manage.py migrate --fake")
     
+
+@task
+@with_settings(user=env.project_user)
+def refinery_collectstatic():
+    '''Collect static files
+
+    '''
+    with prefix("workon refinery"):
+        run("./manage.py collectstatic --noinput")
+
 
 @task
 @with_settings(user=env.project_user)
