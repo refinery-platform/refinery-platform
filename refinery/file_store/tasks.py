@@ -278,9 +278,7 @@ def download_file(url, target_path, file_size=1):
     # check if source file can be downloaded
     try:
         response = urllib2.urlopen(req)
-    except urllib2.URLError as e:
-        raise DownloadError("Could not open URL '{}'. Reason: '{}'".format(url, e.reason))
-    except ValueError as e:
+    except (urllib2.URLError, ValueError) as e:
         raise DownloadError("Could not open URL '{}'. Reason: '{}'".format(url, e.reason))
 
     # get remote file size, provide a default value in case Content-Length is missing
