@@ -23,6 +23,7 @@ from registration.signals import user_registered, user_activated
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size
 from galaxy_connector.models import Instance
+from data_set_manager.models import Node
 
 
 logger = logging.getLogger(__name__)
@@ -469,6 +470,8 @@ class WorkflowFilesDL( models.Model ):
     step_id = models.TextField()
     pair_id = models.TextField()
     filename = models.TextField()
+    #template_num = models.IntegerField(blank=True, null=True)
+    #input_nodes = models.ManyToManyField(Node, blank=True)
     #[{'step_id': '1', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '2', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '4', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '6', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '12', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '19', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}]
     
     def __unicode__(self):
@@ -488,8 +491,9 @@ class AnalysisResult (models.Model):
     file_store_uuid = UUIDField( auto=False )
     file_name = models.TextField()
     file_type = models.TextField()
-    # associated tdf file 
+    # many to many to nodes uuid 
     
+    # associated tdf file 
     ### TODO ### ?galaxy_id?
     # add reference to file_store models
     # foreign key into analysis
@@ -527,6 +531,9 @@ class Analysis ( OwnableResource ):
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
     status = models.TextField(default=INITIALIZED_STATUS, choices=STATUS_CHOICES, blank=True, null=True)
+    # possibly replace results
+    # output_nodes = models.ManyToManyField(Nodes, blank=True)
+    # protocol = i.e. protocol node created when the analysis is created 
         
     def __unicode__(self):
         return self.name + " - " + self.summary
