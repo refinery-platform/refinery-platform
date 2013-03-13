@@ -70,6 +70,13 @@ def software_config():
     else:
         abort("{os} is not supported".format(**env))
 
+    env.solr_version = "4.2.0"
+    env.solr_pkg = "solr-" + env.solr_version
+    env.solr_mirrors = [
+        "http://mirrors.ibiblio.org/apache/lucene/solr/4.2.0/solr-4.2.0.tgz",
+        "http://apache.mirrors.pair.com/lucene/solr/4.2.0/solr-4.2.0.tgz",
+        "http://www.gtlib.gatech.edu/pub/apache/lucene/solr/4.2.0/solr-4.2.0.tgz"]
+
 
 def directory_structure_config():
     '''Configure directory layout
@@ -494,6 +501,46 @@ def upload_supervisor_config():
 
 
 @task
+@with_settings(user=env.project_user)
+def install_solr():
+    '''Install Solr
+
+    '''
+    for url in env.solr_mirrors:
+        with settings(warn_only=True):
+            result = run("wget -P /tmp {}".format(url))
+        if result.succeeded:
+            break
+    # unpack and copy to /opt
+
+
+@task
+@with_settings(user=env.project_user)
+def build_solr_schema(core):
+    '''Generate Solr schema for a specific core
+
+    '''
+    #TODO: build schema for a specific core
+    core_conf_dir = "./solr/{}/conf".format(core)
+    with prefix("workon refinery"):
+        if not exists(core_conf_dir):
+            run("mkdir {}".format(core_conf_dir))
+        run("./manage.py build_solr_schema --using={} > {}/schema.xml"
+            .format(core, core_conf_dir))
+
+
+@task
+@with_settings(user=env.project_user)
+def rebuild_solr_index(module):
+    '''Rebuild Solr index for the specific core
+
+    '''
+    #TODO: check for idempotence
+    with prefix("workon refinery"):
+        run("./manage.py rebuild_index --noinput --using={}".format(module))
+
+
+@task
 def setup_refinery():
     '''Re-create refinery setup after dropdb
     Requires entering password for sudo access to the project account
@@ -665,41 +712,6 @@ def import_workflows():
     '''
     with prefix("workon refinery"):
         run("./manage.py import_workflows")
-
-
-@task
-@with_settings(user=env.project_user)
-def install_solr():
-    '''Install Solr
-
-    '''
-    #TODO: update to download Solr and install into /opt
-
-
-@task
-@with_settings(user=env.project_user)
-def build_solr_schema(core):
-    '''Generate Solr schema for a specific core
-
-    '''
-    #TODO: build schema for a specific core
-    core_conf_dir = "./solr/{}/conf".format(core)
-    with prefix("workon refinery"):
-        if not exists(core_conf_dir):
-            run("mkdir {}".format(core_conf_dir))
-        run("./manage.py build_solr_schema --using={} > {}/schema.xml"
-            .format(core, core_conf_dir))
-
-
-@task
-@with_settings(user=env.project_user)
-def rebuild_solr_index(module):
-    '''Rebuild Solr index for the specific core
-
-    '''
-    #TODO: check for idempotence
-    with prefix("workon refinery"):
-        run("./manage.py rebuild_index --noinput --using={}".format(module))
 
 
 def deploy_refinery():
