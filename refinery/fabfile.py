@@ -723,7 +723,6 @@ def deploy_refinery():
 #    init_virtualenv("refinery")
     create_refinery_db_user()
     create_refinery_db()
-    create_refinery_data_dirs()
     setup_refinery()
 
 
