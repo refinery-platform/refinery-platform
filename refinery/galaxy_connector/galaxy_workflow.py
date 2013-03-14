@@ -7,8 +7,11 @@ Created on Jan 11, 2012
 import simplejson
 import copy
 import ast
+import networkx as nx
+import matplotlib.pyplot as plt
 from datetime import datetime
 import logging
+
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -579,4 +582,83 @@ def parse_tool_name(toolname):
         return temp[len(temp)-2]
     else:
         return toolname 
+    
+    
+def create_workflow_graph(dictionary):
+    graph = nx.MultiDiGraph()
+    
+    steps = dictionary["steps"];
+    
+    # iterate over steps to create nodes        
+    for current_node_id, step in steps.iteritems():
+        print step
+        
+        # ensure node id is an integer
+        current_node_id = int(current_node_id)
+        
+        # create node
+        graph.add_node(current_node_id)
+        
+        # add node attributes
+        graph.node[current_node_id]['name'] = str(current_node_id) + ": " + step['name'];
+        graph.node[current_node_id]['tool_id'] = step['tool_id'];
+        graph.node[current_node_id]['type'] = step['type'];
+        graph.node[current_node_id]['position'] = ( int(step['position']['left']), -int(step['position']['top']) );
+        graph.node[current_node_id]['outputs'] = {}
+
+        output_counter = 1
+        
+        for output in step['outputs']:
+            output_counter += 1
+            output_id = current_node_id*100 + output_counter
+            output_name = str(output_id) + ": " + output["name"] + "(" + output["type"] + ")"
+            print output_name
+            graph.add_node(output_id)
+            graph.add_edge(current_node_id,output_id)
+
+            graph.node[output_id]['name'] = output_name;
+            graph.node[output_id]['tool_id'] = "";
+            graph.node[output_id]['type'] = "output";
+            graph.node[output_id]['position'] = ( int(step['position']['left']), -int(step['position']['top'])-(100*output_counter) );
+            graph.node[current_node_id]['outputs'][output['name']] = output_id;
+            graph[current_node_id][output_id]['name'] = ""
+
+                    
+    # iterate over steps to create edges        
+    for current_node_id, step in steps.iteritems():
+        # ensure node id is an integer
+        current_node_id = int(current_node_id)
+        
+        for edge_name, input_connection in step['input_connections'].iteritems():
+            print edge_name
+            
+            parent_node_id = input_connection["id"]
+            parent_node_output_name = input_connection["output_name"]
+            # create edge from current node to input
+            
+            # basic edge
+            print str( parent_node_id ) + " -> " + str( current_node_id )
+            #graph.add_edge(parent_node_id,current_node_id)
+            #graph[parent_node_id][current_node_id]['name'] = edge_name
+            
+            # find output (node) of parent node to which this input edge needs to be attached (based on name)
+            try:
+                parent_node_output_id = graph.node[parent_node_id]['outputs'][parent_node_output_name]
+            except:
+                parent_node_output_id = parent_node_id
+            print str( parent_node_output_id ) + " -> " + str( current_node_id )
+            graph.add_edge(parent_node_output_id,current_node_id)
+            graph[parent_node_output_id][current_node_id]['name'] = edge_name
+
+
+
+    print graph.nodes()
+    print graph.edges()
+    print [graph.node[node_id]['position'] for node_id in graph.nodes()]
+    print [graph.node[node_id]['name'] for node_id in graph.nodes()]
+    print {i:graph.node[graph.nodes()[i]]['name'] for i in range(0,len(graph.nodes()))}
+
+    
+    return graph    
+    
     

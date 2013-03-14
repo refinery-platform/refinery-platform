@@ -22,11 +22,19 @@ from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
     get_users_with_perms
 from haystack.query import SearchQuerySet
 from visualization_manager.views import igv_multi_species
+from galaxy_connector.galaxy_workflow import create_workflow_graph
 import json
 import logging
 import os.path
 import settings
 import urllib2
+import networkx as nx
+import matplotlib.pyplot as plt
+from tempfile import NamedTemporaryFile
+from file_store.models import FileStoreItem, get_temp_dir, file_path, FILE_STORE_BASE_DIR
+from file_store.tasks import create, import_file
+from galaxy_connector.connection import Connection
+
 
 
 logger = logging.getLogger(__name__)
@@ -392,8 +400,61 @@ def workflow(request, uuid):
     if not request.user.has_perm('core.read_workflow', workflow ):
         if not 'read_workflow' in get_perms( public_group, workflow ):
             return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view this workflow."))
+        
+    # load graph dictionary from Galaxy
+    workflow = Workflow.objects.filter( uuid=uuid ).get()
+    
+    connection = Connection( workflow.workflow_engine.instance.base_url,
+                             workflow.workflow_engine.instance.data_url,
+                             workflow.workflow_engine.instance.api_url,
+                             workflow.workflow_engine.instance.api_key )
+
+    workflow_dictionary = connection.get_workflow_dict( workflow.internal_id );
+        
+    # parse workflow into graph data structure
+    graph = create_workflow_graph( workflow_dictionary )    
+        
+    # draw graph
+    #nx.draw(graph)
+    plt.figure(figsize=(32,9))
+    positions = {node_id:graph.node[node_id]['position'] for node_id in graph.nodes()}
+    tool_nodes = [node_id for node_id in graph.nodes() if graph.node[node_id]['type'] == "tool"]
+    input_nodes = [node_id for node_id in graph.nodes() if graph.node[node_id]['type'] == "data_input"]
+    output_nodes = [node_id for node_id in graph.nodes() if graph.node[node_id]['type'] == "output"]
+    
+    print tool_nodes
+    print input_nodes
+    print output_nodes
+    
+    nx.draw_networkx_edges(graph, positions, alpha=0.1)    
+    nx.draw_networkx_nodes(graph, positions, node_shape='o', nodelist=output_nodes, node_size=300,node_color='orange',alpha=0.4)    
+    nx.draw_networkx_nodes(graph, positions, node_shape='<', nodelist=input_nodes, node_size=300,node_color='orange',alpha=0.4)    
+    nx.draw_networkx_nodes(graph, positions, node_shape='s', nodelist=tool_nodes, node_size=500,node_color='yellow')
+        
+    nx.draw_networkx_labels(graph, positions, labels={graph.nodes()[i]:graph.node[graph.nodes()[i]]['name'] for i in range(0,len(graph.nodes()))},font_color="black")    
+    nx.draw_networkx_edge_labels(graph, positions, labels=["("+graph[id[0]][id[1]]["name"]+")" for id in graph.edges()],font_size=12)    
+    tempfile = NamedTemporaryFile(dir=get_temp_dir(), delete=False)
+    tempfile_name = tempfile.name + ".png";
+    plt.axis('off')
+    plt.savefig(tempfile_name, dpi=72)
+    plt.close()
+    
+    graph_file_uuid = create(tempfile_name, permanent=True)
+    import_file(graph_file_uuid, refresh=True, permanent=True)
+    
+    workflow_graph_url = FileStoreItem.objects.get( uuid=graph_file_uuid ).get_full_url()
             
-    return render_to_response('core/workflow.html', { 'workflow': workflow }, context_instance=RequestContext( request ) )
+    return render_to_response('core/workflow.html', { 'workflow': workflow, 'workflow_graph_url': workflow_graph_url }, context_instance=RequestContext( request ) )
+
+def graph_node_shape(node_type):
+    if node_type == "input":
+        return ">"
+    
+    if node_type == "tool":
+        return "<"
+    
+    return "o"
+    
 
 
 @login_required()
