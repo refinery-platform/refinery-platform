@@ -591,7 +591,6 @@ def create_workflow_graph(dictionary):
     
     # iterate over steps to create nodes        
     for current_node_id, step in steps.iteritems():
-        print step
         
         # ensure node id is an integer
         current_node_id = int(current_node_id)
@@ -612,14 +611,14 @@ def create_workflow_graph(dictionary):
             output_counter += 1
             output_id = current_node_id*100 + output_counter
             output_name = str(output_id) + ": " + output["name"] + "(" + output["type"] + ")"
-            print output_name
+            
             graph.add_node(output_id)
             graph.add_edge(current_node_id,output_id)
 
             graph.node[output_id]['name'] = output_name;
             graph.node[output_id]['tool_id'] = "";
             graph.node[output_id]['type'] = "output";
-            graph.node[output_id]['position'] = ( int(step['position']['left']), -int(step['position']['top'])-(100*output_counter) );
+            graph.node[output_id]['position'] = ( int(step['position']['left']), -int(step['position']['top'])-(20*output_counter) );
             graph.node[current_node_id]['outputs'][output['name']] = output_id;
             graph[current_node_id][output_id]['name'] = ""
 
@@ -629,9 +628,7 @@ def create_workflow_graph(dictionary):
         # ensure node id is an integer
         current_node_id = int(current_node_id)
         
-        for edge_name, input_connection in step['input_connections'].iteritems():
-            print edge_name
-            
+        for edge_name, input_connection in step['input_connections'].iteritems():            
             parent_node_id = input_connection["id"]
             parent_node_output_name = input_connection["output_name"]
             # create edge from current node to input
@@ -649,15 +646,6 @@ def create_workflow_graph(dictionary):
             print str( parent_node_output_id ) + " -> " + str( current_node_id )
             graph.add_edge(parent_node_output_id,current_node_id)
             graph[parent_node_output_id][current_node_id]['name'] = edge_name
-
-
-
-    print graph.nodes()
-    print graph.edges()
-    print [graph.node[node_id]['position'] for node_id in graph.nodes()]
-    print [graph.node[node_id]['name'] for node_id in graph.nodes()]
-    print {i:graph.node[graph.nodes()[i]]['name'] for i in range(0,len(graph.nodes()))}
-
     
     return graph    
     

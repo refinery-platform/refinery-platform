@@ -422,10 +422,6 @@ def workflow(request, uuid):
     input_nodes = [node_id for node_id in graph.nodes() if graph.node[node_id]['type'] == "data_input"]
     output_nodes = [node_id for node_id in graph.nodes() if graph.node[node_id]['type'] == "output"]
     
-    print tool_nodes
-    print input_nodes
-    print output_nodes
-    
     nx.draw_networkx_edges(graph, positions, alpha=0.1)    
     nx.draw_networkx_nodes(graph, positions, node_shape='o', nodelist=output_nodes, node_size=300,node_color='orange',alpha=0.4)    
     nx.draw_networkx_nodes(graph, positions, node_shape='<', nodelist=input_nodes, node_size=300,node_color='orange',alpha=0.4)    
