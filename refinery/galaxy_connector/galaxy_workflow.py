@@ -7,8 +7,11 @@ Created on Jan 11, 2012
 import simplejson
 import copy
 import ast
+import networkx as nx
+import matplotlib.pyplot as plt
 from datetime import datetime
 import logging
+
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -193,11 +196,16 @@ def createStepsAnnot(file_list, workflow):
                 #elif input_type == 'all':
                 else:
                     curr_filename = ''
+                    curr_nodelist = []
                     for itypes in file_list[i].keys():
+                        temp_name = removeFileExt(file_list[i][itypes]['node_uuid'])
+                        # array of node_uuids associated with the current toolset
+                        curr_nodelist.append(temp_name)
+                        
                         if curr_filename == '':
-                            curr_filename += removeFileExt(file_list[i][itypes]['node_uuid'])
+                            curr_filename += temp_name
                         else:
-                            curr_filename += ','+removeFileExt(file_list[i][itypes]['node_uuid'])
+                            curr_filename += ','+ temp_name
                
                 # getting "keep" flag to keep track of files to be saved from workflow
                 # parsing annotation field in galaxy workflows to parse output files to keep: "keep=output_file, keep=output_file2" etc..
@@ -242,8 +250,10 @@ def createStepsAnnot(file_list, workflow):
                            
                             curr_result = {}
                             curr_result["pair_id"] = curr_pair_id
-                            curr_result["name"] = new_output_name;
-                            curr_result["step_id"] = new_tool_name;
+                            curr_result["name"] = new_output_name
+                            curr_result["step_id"] = new_tool_name
+                            #curr_result["template_num"] = i 
+                            #curr_result["nodelist"] = curr_nodelist
                             
                             #print "curr_result"
                             #print curr_result
@@ -508,17 +518,36 @@ def countWorkflowSteps(workflow):
         
         # count number of output files
         output_num = len(curr_step['outputs'])
+        print "############### output_num"
+        print output_num
+        #print curr_step_id
+        print simplejson.dumps(curr_step, indent=4)
         
         if (output_num > 0):
             # check to see if HideDatasetActionoutput_ keys exist in current step
             if 'post_job_actions' in curr_step.keys():
                 pja_step = curr_step['post_job_actions']
                 pja_hide_count = 0
+                pja_hide = False
+                
+                # if using HideDatasetActions from older versions of galaxy
                 for k,v in pja_step.iteritems():
                     if (k.find('HideDatasetActionoutput_') > -1):
                         pja_hide_count += 1
+                        pja_hide = True
                 
                 diff_count = output_num - pja_hide_count
+                print "DIFF COUNT: " + str(diff_count)
+                
+                #if not pja_hide:
+                #    print "PJA_HIDING CRAP"
+                #    for k,v in pja_step.iteritems():
+                #        if (k.find('RenameDatasetAction') > -1):
+                #            pja_hide_count += 1
+                #    
+                #    diff_count = pja_hide_count
+                #    
+                #else:
                 
                 # add one step if HideDatasetActionoutput_ = outputs for file
                 if diff_count == 0:
@@ -526,11 +555,16 @@ def countWorkflowSteps(workflow):
                 # add total number of steps for this defined step in galaxy workflow    
                 else:
                     total_steps += diff_count
+                    
                 
         # case where their are no outputs associated with step
-        else:
+        elif (curr_step['type'] == 'data_input' ):
+            print "ELSING"
             total_steps += 1
+            print total_steps
     
+        print "\t\t TOTAL:STEPS= " + str(total_steps)
+        
     #print "workflow_steps: " + str(len(workflow["steps"]))
     #print "total_steps: " + str(total_steps)
     
@@ -548,4 +582,71 @@ def parse_tool_name(toolname):
         return temp[len(temp)-2]
     else:
         return toolname 
+    
+    
+def create_workflow_graph(dictionary):
+    graph = nx.MultiDiGraph()
+    
+    steps = dictionary["steps"];
+    
+    # iterate over steps to create nodes        
+    for current_node_id, step in steps.iteritems():
+        
+        # ensure node id is an integer
+        current_node_id = int(current_node_id)
+        
+        # create node
+        graph.add_node(current_node_id)
+        
+        # add node attributes
+        graph.node[current_node_id]['name'] = str(current_node_id) + ": " + step['name'];
+        graph.node[current_node_id]['tool_id'] = step['tool_id'];
+        graph.node[current_node_id]['type'] = step['type'];
+        graph.node[current_node_id]['position'] = ( int(step['position']['left']), -int(step['position']['top']) );
+        graph.node[current_node_id]['outputs'] = {}
+
+        output_counter = 1
+        
+        for output in step['outputs']:
+            output_counter += 1
+            output_id = current_node_id*100 + output_counter
+            output_name = str(output_id) + ": " + output["name"] + "(" + output["type"] + ")"
+            
+            graph.add_node(output_id)
+            graph.add_edge(current_node_id,output_id)
+
+            graph.node[output_id]['name'] = output_name;
+            graph.node[output_id]['tool_id'] = "";
+            graph.node[output_id]['type'] = "output";
+            graph.node[output_id]['position'] = ( int(step['position']['left']), -int(step['position']['top'])-(20*output_counter) );
+            graph.node[current_node_id]['outputs'][output['name']] = output_id;
+            graph[current_node_id][output_id]['name'] = ""
+
+                    
+    # iterate over steps to create edges        
+    for current_node_id, step in steps.iteritems():
+        # ensure node id is an integer
+        current_node_id = int(current_node_id)
+        
+        for edge_name, input_connection in step['input_connections'].iteritems():            
+            parent_node_id = input_connection["id"]
+            parent_node_output_name = input_connection["output_name"]
+            # create edge from current node to input
+            
+            # basic edge
+            print str( parent_node_id ) + " -> " + str( current_node_id )
+            #graph.add_edge(parent_node_id,current_node_id)
+            #graph[parent_node_id][current_node_id]['name'] = edge_name
+            
+            # find output (node) of parent node to which this input edge needs to be attached (based on name)
+            try:
+                parent_node_output_id = graph.node[parent_node_id]['outputs'][parent_node_output_name]
+            except:
+                parent_node_output_id = parent_node_id
+            print str( parent_node_output_id ) + " -> " + str( current_node_id )
+            graph.add_edge(parent_node_output_id,current_node_id)
+            graph[parent_node_output_id][current_node_id]['name'] = edge_name
+    
+    return graph    
+    
     

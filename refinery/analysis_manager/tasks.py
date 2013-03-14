@@ -272,6 +272,10 @@ def run_analysis_preprocessing(analysis):
         temp_dl.save()
         analysis.workflow_dl_files.add( temp_dl ) 
         analysis.save()
+        #####################################################
+        ########### SAVE EXTRA NODE PARAMETERS ##############
+        #####################################################
+        
             
     # import newly generated workflow 
     new_workflow_info = connection.import_workflow(new_workflow);
@@ -507,6 +511,11 @@ def download_history_files(analysis) :
     download_list = connection.get_history_file_list(analysis.history_id)
     task_list = []
     
+    #########################################
+    ### PROTOCOL REF (=attribute of data transformation node) i.e. workflow (created when a workflow is imported into refinery)  
+    ### DATA TRANSFORMATION NODE i.e. data transformed by protocol
+    #########################################
+    
     # Iterating through files in current galaxy history
     for results in download_list:
         
@@ -542,6 +551,13 @@ def download_history_files(analysis) :
                 temp_file.save() 
                 analysis.results.add(temp_file) 
                 analysis.save() 
+                
+                ##########################
+                ##########################
+                # create new nodes 
+                # node uuid (protocols) 
+                ##########################
+                ##########################
                 
                 # downloading analysis results into file_store
                 # only download files if size is greater than 1

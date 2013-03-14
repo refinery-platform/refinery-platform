@@ -20,6 +20,7 @@ from core.models import NodeSet
 from core.models import NodePair
 from core.models import NodeRelationship
 from core.models import WorkflowInputRelationships
+from core.models import WorkflowFilesDL
 
 from guardian.admin import GuardedModelAdmin
 
@@ -60,3 +61,4 @@ admin.site.register(NodeSet)
 admin.site.register(NodePair)
 admin.site.register(NodeRelationship)
 admin.site.register(WorkflowInputRelationships)
+admin.site.register(WorkflowFilesDL)
