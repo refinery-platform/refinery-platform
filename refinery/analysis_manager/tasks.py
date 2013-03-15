@@ -4,29 +4,31 @@ Created on Apr 5, 2012
 @author: nils
 '''
 
-from core.models import Analysis, AnalysisResult, WorkflowFilesDL
 from analysis_manager.models import AnalysisStatus
-from celery.task import task
-from celery.task.sets import subtask, TaskSet
-import time, os, copy, urllib2
-from django.conf import settings
-from galaxy_connector.connection import Connection
-from workflow_manager.tasks import configure_workflow
-from datetime import datetime, timedelta
-from celery.task import chord
-from celery.utils import uuid
-from celery.task.chords import Chord
 from celery import current_app as celery
-from file_store.models import FileStoreItem, is_local
-from file_store.tasks import import_file, create, rename
-import logging
-from galaxy_connector.galaxy_workflow import countWorkflowSteps
-from django.contrib.sites.models import Site
+from celery.task import chord, task
+from celery.task.chords import Chord
+from celery.task.sets import subtask, TaskSet
+from celery.utils import uuid
+from core.models import Analysis, AnalysisResult, WorkflowFilesDL, \
+    AnalysisNodeConnection
+from data_set_manager.models import Node
+from datetime import datetime, timedelta
+from django.conf import settings
+from django.contrib.sites.models import Site, Site
 from django.core.urlresolvers import reverse
 from django.template import loader, Context
-from django.contrib.sites.models import Site
-import socket 
-from data_set_manager.models import Node
+from file_store.models import FileStoreItem, is_local
+from file_store.tasks import import_file, create, rename
+from galaxy_connector.connection import Connection
+from galaxy_connector.galaxy_workflow import countWorkflowSteps
+from workflow_manager.tasks import configure_workflow
+import logging
+import socket
+import time
+import os
+import copy
+import urllib2
 
 logger = logging.getLogger(__name__)
 
@@ -260,7 +262,22 @@ def run_analysis_preprocessing(analysis):
     print ret_list
 
     # getting expanded workflow configured based on input: ret_list
-    new_workflow, history_download = configure_workflow(analysis.workflow.uuid, ret_list, connection)
+    new_workflow, history_download, analysis_node_connections = configure_workflow(analysis.workflow, ret_list, connection)
+    
+    # import connections into database
+    for analysis_node_connection in analysis_node_connections:
+        
+        print analysis_node_connection                
+        
+        # lookup node object
+        node = Node.objects.get(uuid=connection["node_uuid"]) 
+
+        AnalysisNodeConnection.objects.create(analysis=analysis,
+                                              node=node,
+                                              step=int(analysis_node_connection['step']),
+                                              name=analysis_node_connection['name'],
+                                              filetype=analysis_node_connection['filetype'],
+                                              direction=analysis_node_connection['direction'])
     
     #print "history_download"
     #print history_download
@@ -411,7 +428,7 @@ def run_analysis_cleanup(analysis):
     connection = get_analysis_connection(analysis)
     
     # delete workflow 
-    del_workflow_id = connection.delete_workflow(analysis.workflow_galaxy_id);
+    #del_workflow_id = connection.delete_workflow(analysis.workflow_galaxy_id);
     
     # delete history
     ## DEBUG CURRENTLY NOT DELETING HISTORY

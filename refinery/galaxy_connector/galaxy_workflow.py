@@ -4,13 +4,13 @@ Created on Jan 11, 2012
 @author: Nils Gehlenborg, Harvard Medical School, nils@hms.harvard.edu
 '''
 
-import simplejson
-import copy
-import ast
-import networkx as nx
-import matplotlib.pyplot as plt
 from datetime import datetime
+import ast
+import copy
 import logging
+import matplotlib.pyplot as plt
+import networkx as nx
+import simplejson
 
 
 # get module logger
@@ -149,6 +149,9 @@ def createStepsAnnot(file_list, workflow):
     history_download = []
     map = workflowMap(workflow);
     
+    # connections between workflow inputs and nodes
+    connections = []
+    
     #print "map"
     #print map
     #print "file_list"
@@ -282,6 +285,12 @@ def createStepsAnnot(file_list, workflow):
                     curr_node = str(removeFileExt(file_list[i][input_type]['node_uuid']))
                     curr_workflow_step['inputs'][0]['description'] = str(curr_node)
                     curr_workflow_step['annotation'] = str(curr_node)
+                                        
+                    connections.append({ 'node_uuid': curr_node,
+                                         'step': int(curr_workflow_step['id']),
+                                         'name': curr_workflow_step['inputs'][0]['name'], 
+                                         'filetype': None,
+                                         'direction':1 })  
                     
                     #print "\t checking input nodes"
                     #print curr_workflow_step['inputs']
@@ -294,9 +303,9 @@ def createStepsAnnot(file_list, workflow):
     
     #print simplejson.dumps(updated_dict, indent=4)
     
-    return updated_dict, history_download;
+    return updated_dict, history_download, connections;
 
-def createStepsCompact(file_list, workflow):
+def createStepsCompact(file_list, workflow, analysis):
     # Deals with the case where we want multiple inputs to propogate into a single tool i.e. bulk downloader
     logger.debug("galaxy_workflow.createStepsCompact called")
     
@@ -306,8 +315,13 @@ def createStepsCompact(file_list, workflow):
     history_download = []
     map = workflowMap(workflow);
     
-    #print "file_list"
-    #print file_list
+    # connections between workflow inputs (and outputs) and node uuids
+    connections = []
+    
+    print "file_list"
+    print file_list
+    
+    print analysis
     
     counter = 0
     edge_ids = []
@@ -452,7 +466,7 @@ def createStepsCompact(file_list, workflow):
 
     #print "updated_dict"
     #print simplejson.dumps(updated_dict, indent=4);
-    return updated_dict, history_download;
+    return updated_dict, history_download, connections;
     
 def createSteps(repeat_num, workflow):
     #print "createSteps called"

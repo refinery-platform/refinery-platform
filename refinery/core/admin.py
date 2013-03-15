@@ -4,25 +4,19 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
+from core.models import Analysis, AnalysisNodeConnection, AnalysisResult, \
+    DataSet, DiskQuota, ExtendedGroup, InvestigationLink, NodePair, NodeRelationship, \
+    NodeSet, Project, UserProfile, Workflow, WorkflowDataInput, WorkflowDataInputMap, \
+    WorkflowEngine, WorkflowFilesDL, WorkflowInputRelationships
 from django.contrib import admin
-from core.models import UserProfile
-from core.models import ExtendedGroup
-from core.models import Project
-from core.models import DataSet
-from core.models import InvestigationLink
-from core.models import Workflow
-from core.models import WorkflowEngine
-from core.models import WorkflowDataInput
-from core.models import WorkflowDataInputMap
-from core.models import Analysis
-from core.models import DiskQuota
-from core.models import NodeSet
-from core.models import NodePair
-from core.models import NodeRelationship
-from core.models import WorkflowInputRelationships
-from core.models import WorkflowFilesDL
-
+from django_extensions.admin import ForeignKeyAutocompleteAdmin
 from guardian.admin import GuardedModelAdmin
+from django.db import models
+
+
+
+class AnalysisNodeConnectionAdmin(ForeignKeyAutocompleteAdmin):
+    raw_id_fields = ("node",)    
 
 class ProjectAdmin(GuardedModelAdmin):
     pass
@@ -56,6 +50,8 @@ admin.site.register(WorkflowEngine,WorkflowEngineAdmin)
 admin.site.register(WorkflowDataInput)
 admin.site.register(WorkflowDataInputMap)
 admin.site.register(Analysis,AnalysisAdmin)
+admin.site.register(AnalysisResult)
+admin.site.register(AnalysisNodeConnection,AnalysisNodeConnectionAdmin)
 admin.site.register(DiskQuota,DiskQuotaAdmin)
 admin.site.register(NodeSet)
 admin.site.register(NodePair)
