@@ -13,7 +13,7 @@ from django.db.models.aggregates import Count
 from django.utils import simplejson
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
-from tastypie.authorization import Authorization
+from tastypie.authorization import DjangoAuthorization, Authorization
 from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS
 from tastypie.resources import ModelResource
@@ -47,8 +47,10 @@ class NodeResource(ModelResource):
         queryset = Node.objects.all()
         resource_name = 'node'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
-        authentication = SessionAuthentication()
-        authorization = Authorization() # any user can change any Node instance
+#        authentication = SessionAuthentication()
+#        authorization = DjangoAuthorization()
+        authentication = Authentication()
+        authorization = Authorization()
         serializer = PrettyJSONSerializer()
 
     def prepend_urls(self):
@@ -79,10 +81,8 @@ class NodeSetResource(ModelResource):
         queryset = NodeSet.objects.all()
         resource_name = 'nodeset'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
-        #TODO: switch to SessionAuthentication()
-        #authentication = SessionAuthentication()
-        authentication = Authentication()
-        authorization = Authorization() # any user can change any NodeSet instance
+        authentication = SessionAuthentication()
+        authorization = DjangoAuthorization()
         serializer = PrettyJSONSerializer()
         fields = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
         ordering = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
@@ -110,10 +110,10 @@ class NodeSetListResource(ModelResource):
         detail_resource_name = 'nodeset' # NG: introduced to get correct resource ids
         resource_name = 'nodesetlist'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
-        #TODO: switch to SessionAuthentication()
-        #authentication = SessionAuthentication()
+#        authentication = SessionAuthentication()
+#        authorization = DjangoAuthorization()
         authentication = Authentication()
-        authorization = Authorization() # any user can change any NodeSet instance
+        authorization = Authorization()
         fields = ['name', 'summary', 'assay', 'study', 'uuid' ]
         allowed_methods = ["get" ]
         filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
@@ -173,5 +173,3 @@ class WorkflowInputRelationshipsResource(ModelResource):
         resource_name = 'workflowrelationships'
         #detail_uri_name = 'uuid'   
         fields = ['category', 'set1', 'set2', 'workflow']  
-    
-    

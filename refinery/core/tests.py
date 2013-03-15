@@ -13,6 +13,7 @@ from core.management.commands.create_user import init_user
 from core.models import NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,\
                         ExtendedGroup
 import data_set_manager
+from guardian.shortcuts import assign
 
 
 class UserCreateTest(unittest.TestCase):
@@ -191,7 +192,7 @@ class NodeSetTest(unittest.TestCase):
         self.assertRaises(NodeSet.DoesNotExist, update_nodeset, uuid='Invalid UUID')
 
 
-def make_uri(resource_name, resource_id=''):
+def make_api_uri(resource_name, resource_id=''):
     '''Helper function to build Tastypie REST URIs
 
     '''
@@ -231,7 +232,6 @@ class NodeSetResourceTest(ResourceTestCase):
                 "nodeSelection": [],
                 "nodeSelectionBlacklistMode": True
         }
-
         # create a user
         self.username = self.password = 'test'
         self.user = User.objects.create_user(self.username, '', self.password)
@@ -249,8 +249,7 @@ class NodeSetResourceTest(ResourceTestCase):
         nodeset = NodeSet.objects.create(name='nodeset',
                                          study=self.study, assay=self.assay,
                                          solr_query=simplejson.dumps(self.query))
-
-        nodeset_uri = make_uri('nodeset', nodeset.uuid)
+        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
         response = self.api_client.get(nodeset_uri, format='json',
                                        authentication=self.get_credentials())
         self.assertValidJSONResponse(response)
@@ -258,11 +257,22 @@ class NodeSetResourceTest(ResourceTestCase):
                 'node_count', 'solr_query', 'solr_query_components', 'resource_uri']
         self.assertKeys(self.deserialize(response), keys)
 
+    def test_get_nodeset_unauthenticated(self):
+        '''Test retrieving an existing NodeSet without authenticating.
+
+        '''
+        nodeset = NodeSet.objects.create(name='nodeset',
+                                         study=self.study, assay=self.assay,
+                                         solr_query=simplejson.dumps(self.query))
+        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
+        response = self.api_client.get(nodeset_uri, format='json')
+        self.assertHttpUnauthorized(response)
+
     def test_get_nodeset_with_invalid_uuid(self):
         '''Test retrieving a NodeSet instance that doesn't exist.
 
         '''
-        nodeset_uri = make_uri('nodeset', 'Invalid UUID')
+        nodeset_uri = make_api_uri('nodeset', 'Invalid UUID')
         response = self.api_client.get(nodeset_uri, format='json',
                                        authentication=self.get_credentials())
         self.assertHttpNotFound(response)
@@ -271,32 +281,18 @@ class NodeSetResourceTest(ResourceTestCase):
         '''Test adding a new NodeSet with required fields only
 
         '''
-        nodeset_data = simplejson.dumps({
-            'name': 'nodeset1',
-            'study': make_uri('study', self.study.uuid),
-            'assay': make_uri('assay', self.assay.uuid),
-        })
+        assign('core.add_nodeset', self.user)
         self.assertEqual(NodeSet.objects.count(), 0)
-        nodeset_uri = make_uri('nodeset')
-        response = self.api_client.post(nodeset_uri, format='json', data=nodeset_data,
-                                        authentication=self.get_credentials())
-        self.assertHttpCreated(response)
-        self.assertEqual(NodeSet.objects.count(), 1)
 
-    def test_create_full_nodeset(self):
-        '''Test adding a new NodeSet with a list of Node instances and summary
-
-        '''
-        nodeset_data = simplejson.dumps({
+        nodeset_data = {
             'name': 'nodeset1',
-            'summary': 'sample summary',
-            'study': make_uri('study', self.study.uuid),
-            'assay': make_uri('assay', self.assay.uuid),
-            'solr_query': self.query,
-        })
-        self.assertEqual(NodeSet.objects.count(), 0)
-        nodeset_uri = make_uri('nodeset')
-        response = self.api_client.post(nodeset_uri, format='json', data=nodeset_data,
+            'study': make_api_uri('study', self.study.uuid),
+            'assay': make_api_uri('assay', self.assay.uuid),
+            'is_implicit': True
+        }
+        nodeset_uri = make_api_uri('nodeset')
+        response = self.api_client.post(nodeset_uri, format='json',
+                                        data=nodeset_data,
                                         authentication=self.get_credentials())
         self.assertHttpCreated(response)
         self.assertEqual(NodeSet.objects.count(), 1)
@@ -305,19 +301,20 @@ class NodeSetResourceTest(ResourceTestCase):
         '''Test updating a NodeSet with new data.
 
         '''
+        assign('core.change_nodeset', self.user)
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay)
-        new_nodeset_data = simplejson.dumps({
-            'name': 'nodeset2',
-            'study': make_uri('study', self.study.uuid),
-            'assay': make_uri('assay', self.assay.uuid),
-        })
         self.assertEqual(NodeSet.objects.count(), 1)
-        nodeset_uri = make_uri('nodeset', nodeset.uuid)
-        response = self.client.put(nodeset_uri, new_nodeset_data, content_type='application/json')
+        self.assertEqual(nodeset.name, 'nodeset')
+        self.assertFalse(nodeset.is_implicit)
+
+        new_nodeset_data = {'name': 'nodeset2', 'is_implicit': True}
+        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
+        response = self.api_client.put(nodeset_uri, format='json',
+                                       data=new_nodeset_data,
+                                       authentication=self.get_credentials())
         self.assertHttpAccepted(response)
         self.assertEqual(NodeSet.objects.count(), 1)
         nodeset = NodeSet.objects.get(uuid=nodeset.uuid)
         self.assertEqual(nodeset.name, 'nodeset2')
+        self.assertTrue(nodeset.is_implicit)
 
-
-#TODO: test authentication when it's enabled
