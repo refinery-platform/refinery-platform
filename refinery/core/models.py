@@ -486,6 +486,8 @@ class WorkflowDataInputMap( models.Model ):
     def __unicode__(self):
         return str( self.workflow_data_input_name ) + " <-> " + self.data_uuid
 
+
+
 class AnalysisResult (models.Model):
     analysis_uuid = UUIDField( auto=False )
     file_store_uuid = UUIDField( auto=False )
@@ -543,6 +545,32 @@ class Analysis ( OwnableResource ):
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' %  verbose_name ),
         )
+
+#: Defining available  relationship types 
+INPUT_CONNECTION = 1
+OUTPUT_CONNECTION = 0
+WORKFLOW_NODE_CONNECTION_TYPES = (
+            (INPUT_CONNECTION, 1),
+            (OUTPUT_CONNECTION, 0),
+            )
+
+
+class AnalysisNodeConnection( models.Model ):    
+    analysis = models.ForeignKey(Analysis, related_name="workflow_node_connections")
+    node = models.ForeignKey(Node, related_name="workflow_node_connections")    
+    
+    # step id in the expanded workflow template, e.g. 10 
+    step = models.IntegerField(null=False, blank=False)
+    
+    # name of the connection, e.g. "wig_outfile" or "Input File 2"
+    name = models.CharField(null=False, blank=False, max_length=100)
+    
+    # file type if known
+    filetype = models.CharField(null=True, blank=True, max_length=100)
+    
+    # direction of the connection, either an input or an output
+    direction = models.IntegerField(null=False, blank=False,choices=WORKFLOW_NODE_CONNECTION_TYPES)
+
 
 
 def get_shared_groups( user1, user2, include_public_group=False ):
