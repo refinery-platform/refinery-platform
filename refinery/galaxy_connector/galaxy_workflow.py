@@ -153,7 +153,7 @@ def createStepsAnnot(file_list, workflow):
     #print map
     #print "file_list"
     #print file_list
-    
+            
     for i in range(0, repeat_num):
         for j in range(0, len(temp_steps)):
             curr_id = str(len(temp_steps)*i+j);
@@ -172,7 +172,7 @@ def createStepsAnnot(file_list, workflow):
                         input_id_old = input_dict[key]['id']
                         input_id_new = (len(temp_steps)*i+int(input_id_old));
                         input_dict[key]['id'] = input_id_new;
-            
+
             # 3. Update positions 
             pos_dict = curr_workflow_step["position"];
             if pos_dict:
@@ -181,12 +181,10 @@ def createStepsAnnot(file_list, workflow):
                 # TODO: find a better way of defining positions 
                 pos_dict["top"] = top_pos * (i+1);
            
-           
             # 4. Updating post job actions for renaming datasets
+            input_type = map[int(curr_step)];    
             if (len(curr_workflow_step['inputs']) == 0):
                 tool_name = parse_tool_name(curr_workflow_step["tool_id"]);
-                
-                input_type = map[int(curr_step)];
                 
                 # getting current filename for workflow
                 curr_filename = ''
@@ -253,8 +251,7 @@ def createStepsAnnot(file_list, workflow):
                             curr_result["name"] = new_output_name
                             curr_result["step_id"] = new_tool_name
                             #curr_result["template_num"] = i 
-                            #curr_result["nodelist"] = curr_nodelist
-                            
+                            #curr_result["nodelist"] = curr_nodelist        
                             #print "curr_result"
                             #print curr_result
                             
@@ -275,9 +272,27 @@ def createStepsAnnot(file_list, workflow):
                             
                             new_rename_dict = ast.literal_eval(new_rename_action);
                             pja_dict[temp_key] = new_rename_dict;
-
+                
+            # 5. adding node uuid for each input step
+            elif (len(curr_workflow_step['inputs']) > 0):
+                #print file_list
+                
+                # adding node uuid to input description field 
+                if input_type in file_list[i].keys():
+                    curr_node = str(removeFileExt(file_list[i][input_type]['node_uuid']))
+                    curr_workflow_step['inputs'][0]['description'] = str(curr_node)
+                    curr_workflow_step['annotation'] = str(curr_node)
+                    
+                    #print "\t checking input nodes"
+                    #print curr_workflow_step['inputs']
+                    #print curr_workflow_step['inputs'][0]
+                    #print curr_workflow_step
+                
+                    
             # Adds updated module 
             updated_dict[curr_id] = curr_workflow_step;
+    
+    #print simplejson.dumps(updated_dict, indent=4)
     
     return updated_dict, history_download;
 
@@ -518,10 +533,10 @@ def countWorkflowSteps(workflow):
         
         # count number of output files
         output_num = len(curr_step['outputs'])
-        print "############### output_num"
-        print output_num
+        #print "############### output_num"
+        #print output_num
         #print curr_step_id
-        print simplejson.dumps(curr_step, indent=4)
+        #print simplejson.dumps(curr_step, indent=4)
         
         if (output_num > 0):
             # check to see if HideDatasetActionoutput_ keys exist in current step
@@ -537,17 +552,7 @@ def countWorkflowSteps(workflow):
                         pja_hide = True
                 
                 diff_count = output_num - pja_hide_count
-                print "DIFF COUNT: " + str(diff_count)
-                
-                #if not pja_hide:
-                #    print "PJA_HIDING CRAP"
-                #    for k,v in pja_step.iteritems():
-                #        if (k.find('RenameDatasetAction') > -1):
-                #            pja_hide_count += 1
-                #    
-                #    diff_count = pja_hide_count
-                #    
-                #else:
+                #print "DIFF COUNT: " + str(diff_count)
                 
                 # add one step if HideDatasetActionoutput_ = outputs for file
                 if diff_count == 0:
@@ -559,11 +564,9 @@ def countWorkflowSteps(workflow):
                 
         # case where their are no outputs associated with step
         elif (curr_step['type'] == 'data_input' ):
-            print "ELSING"
             total_steps += 1
-            print total_steps
-    
-        print "\t\t TOTAL:STEPS= " + str(total_steps)
+            
+        #print "\t\t TOTAL:STEPS= " + str(total_steps)
         
     #print "workflow_steps: " + str(len(workflow["steps"]))
     #print "total_steps: " + str(total_steps)
