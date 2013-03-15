@@ -373,7 +373,7 @@ class Node(models.Model):
             
     
     def __unicode__(self):
-        return unicode(self.type) + ": " + unicode(self.name) + " (" + unicode( self.parents.count() ) + " parents, " + unicode( self.children.count() ) + " children " + "| " + "species: " + unicode( self.species ) + "genome build: " + unicode( self.species ) + ")" 
+        return unicode(self.type) + ": " + unicode(self.name) + " (" + unicode( self.parents.count() ) + " parents, " + unicode( self.children.count() ) + " children " + "| " + "species: " + unicode( self.species ) + ", genome build: " + unicode( self.genome_build ) + ")" 
     
     
 class Attribute(models.Model):
