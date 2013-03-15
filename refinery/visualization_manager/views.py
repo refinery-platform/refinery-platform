@@ -202,7 +202,7 @@ def igv_multi_species(solr_results, solr_annot=None):
     # 4. generate igv files for each species, including phenotype data + paths generated from uuid's
     ui_results = {'species_count':unique_species_num, 'species':{}}
     for k,v in unique_species.items():
-        if solr_annot:
+        if solr_annot["response"]["numFound"] > 0:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'], unique_annot[k]['solr'])
         else:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'])
@@ -217,7 +217,7 @@ def igv_multi_species(solr_results, solr_annot=None):
                 species_id = species_id[0][0] + '. ' + species_id[1]
             
             # if annotation contains species 
-            if solr_annot:
+            if solr_annot["response"]["numFound"] > 0:
                 if k in unique_annot:
                     temp_url = createIGVsessionAnnot(k, unique_species[k], annot_uuids=unique_annot[k], samp_file=sampleFile)
             else:
@@ -292,7 +292,7 @@ def get_unique_species(docs):
     unique_count = len(unique_count)
     
     # CASE: when species is unknown, launch IGV with predefined genomes
-    if not unique_species:
+    if not unique_species and len(docs) > 0:
         temp_species = {'node_uuid':[], 'solr':[]}
         for res in docs:
             temp_species['solr'].append(res)
