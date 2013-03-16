@@ -270,14 +270,18 @@ def run_analysis_preprocessing(analysis):
         print analysis_node_connection                
         
         # lookup node object
-        node = Node.objects.get(uuid=connection["node_uuid"]) 
+        if ( analysis_node_connection["node_uuid"] ):
+            node = Node.objects.get(uuid=analysis_node_connection["node_uuid"])
+        else:
+            node = None 
 
         AnalysisNodeConnection.objects.create(analysis=analysis,
                                               node=node,
                                               step=int(analysis_node_connection['step']),
                                               name=analysis_node_connection['name'],
                                               filetype=analysis_node_connection['filetype'],
-                                              direction=analysis_node_connection['direction'])
+                                              direction=analysis_node_connection['direction'],
+                                              is_refinery_file=analysis_node_connection['is_refinery_file'])
     
     #print "history_download"
     #print history_download
@@ -428,7 +432,7 @@ def run_analysis_cleanup(analysis):
     connection = get_analysis_connection(analysis)
     
     # delete workflow 
-    #del_workflow_id = connection.delete_workflow(analysis.workflow_galaxy_id);
+    del_workflow_id = connection.delete_workflow(analysis.workflow_galaxy_id);
     
     # delete history
     ## DEBUG CURRENTLY NOT DELETING HISTORY

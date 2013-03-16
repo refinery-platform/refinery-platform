@@ -223,7 +223,7 @@ def createStepsAnnot(file_list, workflow):
                 if (len(output_list) > 0):
                     for ofiles in output_list:
                         output_names.append(ofiles['name'])
-                
+                                
                 # uses renamedataset action to rename output of specified tool
                 if "post_job_actions" in curr_workflow_step:
                     pja_dict = curr_workflow_step["post_job_actions"]
@@ -235,8 +235,20 @@ def createStepsAnnot(file_list, workflow):
                         new_output_name =  curr_filename + ","  + tool_name + ',' + input_type + ',' + oname
                         new_tool_name = str(curr_id) + "_" + oname
                         
+                        # store information about the output files of this tools
+                        analysis_node_connection = {}
+                        
+                        analysis_node_connection['name'] = oname
+                        analysis_node_connection['step'] = curr_id
+                        analysis_node_connection['filetype'] = None
+                        analysis_node_connection['direction'] = 'out'
+                        analysis_node_connection['node_uuid'] = None # setting to none will trigger creation of a new Node                                                 
+                        analysis_node_connection['is_refinery_file'] = False
+                        
                         # if the output name is being tracked and downloaded for Refinery
                         if str(oname) in keep_files:
+                            analysis_node_connection['is_refinery_file'] = True
+                            
                             if input_type in file_list[i].keys():
                                 curr_pair_id = file_list[i][input_type]['pair_id']
                                 curr_pair_id = str((i)-1+int(curr_pair_id)) 
@@ -260,6 +272,8 @@ def createStepsAnnot(file_list, workflow):
                             
                             history_download.append(curr_result)
                         
+                        # store information about this output file    
+                        connections.append(analysis_node_connection)
                         
                         # if rename dataset action already exists for this tool output
                         if temp_key in pja_dict:
@@ -275,7 +289,7 @@ def createStepsAnnot(file_list, workflow):
                             
                             new_rename_dict = ast.literal_eval(new_rename_action);
                             pja_dict[temp_key] = new_rename_dict;
-                
+                                        
             # 5. adding node uuid for each input step
             elif (len(curr_workflow_step['inputs']) > 0):
                 #print file_list
@@ -290,7 +304,8 @@ def createStepsAnnot(file_list, workflow):
                                          'step': int(curr_workflow_step['id']),
                                          'name': curr_workflow_step['inputs'][0]['name'], 
                                          'filetype': None,
-                                         'direction':1 })  
+                                         'direction': 'in',
+                                         'is_refinery_file': True })  
                     
                     #print "\t checking input nodes"
                     #print curr_workflow_step['inputs']

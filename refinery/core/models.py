@@ -547,17 +547,17 @@ class Analysis ( OwnableResource ):
         )
 
 #: Defining available  relationship types 
-INPUT_CONNECTION = 1
-OUTPUT_CONNECTION = 0
+INPUT_CONNECTION = 'in'
+OUTPUT_CONNECTION = 'out'
 WORKFLOW_NODE_CONNECTION_TYPES = (
-            (INPUT_CONNECTION, 1),
-            (OUTPUT_CONNECTION, 0),
+            (INPUT_CONNECTION, 'in'),
+            (OUTPUT_CONNECTION, 'out'),
             )
 
 
 class AnalysisNodeConnection( models.Model ):    
     analysis = models.ForeignKey(Analysis, related_name="workflow_node_connections")
-    node = models.ForeignKey(Node, related_name="workflow_node_connections")    
+    node = models.ForeignKey(Node, related_name="workflow_node_connections", null=True, blank=True, default=None)    
     
     # step id in the expanded workflow template, e.g. 10 
     step = models.IntegerField(null=False, blank=False)
@@ -569,7 +569,10 @@ class AnalysisNodeConnection( models.Model ):
     filetype = models.CharField(null=True, blank=True, max_length=100)
     
     # direction of the connection, either an input or an output
-    direction = models.IntegerField(null=False, blank=False,choices=WORKFLOW_NODE_CONNECTION_TYPES)
+    direction = models.CharField(null=False, blank=False,choices=WORKFLOW_NODE_CONNECTION_TYPES, max_length=3)
+    
+    # flag to indicate if file is a file that will (for outputs) or does (for inputs) exist in Refinery
+    is_refinery_file = models.BooleanField(null=False, blank=False, default=False)
 
 
 
