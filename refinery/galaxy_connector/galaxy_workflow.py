@@ -680,5 +680,52 @@ def create_workflow_graph(dictionary):
             graph[parent_node_output_id][current_node_id]['name'] = edge_name
     
     return graph    
+
+
+def create_expanded_workflow_graph(dictionary):
+    graph = nx.MultiDiGraph()
+    
+    steps = dictionary["steps"];
+    
+    # iterate over steps to create nodes        
+    for current_node_id, step in steps.iteritems():
+        
+        # ensure node id is an integer
+        current_node_id = int(current_node_id)
+        
+        # create node
+        graph.add_node(current_node_id)
+        
+        # add node attributes
+        graph.node[current_node_id]['name'] = str(current_node_id) + ": " + step['name'];
+        graph.node[current_node_id]['tool_id'] = step['tool_id'];
+        graph.node[current_node_id]['type'] = step['type'];
+        graph.node[current_node_id]['position'] = ( int(step['position']['left']), -int(step['position']['top']) );
+        graph.node[current_node_id]['node'] = None
+                    
+    # iterate over steps to create edges (this is done by looking at input_connections, i.e. only by looking at tool nodes)        
+    for current_node_id, step in steps.iteritems():
+        # ensure node id is an integer
+        current_node_id = int(current_node_id)
+        
+        for current_node_input_name, input_connection in step['input_connections'].iteritems():            
+            parent_node_id = input_connection["id"]
+            
+            # test if parent node is a tool node or an input node to pick the right name for the outgoing edge
+            if graph.node[parent_node_id]['type'] == 'data_input':
+                parent_node_output_name = steps[str(parent_node_id)]['inputs'][0]['name']
+            else:
+                parent_node_output_name = input_connection['output_name']
+            
+            print str(parent_node_id) + '_' + parent_node_output_name + '->' +  str(current_node_id) + '_' + current_node_input_name
+            
+            edge_output_id = str(parent_node_id) + '_' + parent_node_output_name;
+            edge_input_id = str(current_node_id) + '_' + current_node_input_name
+            edge_id = edge_output_id + '___' + edge_input_id  
+            graph.add_edge(parent_node_id,current_node_id,key=edge_id)
+            graph[parent_node_id][current_node_id]['output_id'] = str(parent_node_id) + '_' + parent_node_output_name              
+            graph[parent_node_id][current_node_id]['input_id'] = str(current_node_id) + '_' + current_node_input_name
+    
+    return graph    
     
     

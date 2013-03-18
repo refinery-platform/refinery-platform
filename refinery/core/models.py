@@ -573,7 +573,9 @@ class AnalysisNodeConnection( models.Model ):
     
     # flag to indicate if file is a file that will (for outputs) or does (for inputs) exist in Refinery
     is_refinery_file = models.BooleanField(null=False, blank=False, default=False)
-
+    
+    def __unicode__(self):
+        return self.direction + ": " + str(self.step) + "_" + self.name + " (" + str(self.is_refinery_file) + ")"
 
 
 def get_shared_groups( user1, user2, include_public_group=False ):

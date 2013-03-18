@@ -11,8 +11,10 @@ from celery.task.chords import Chord
 from celery.task.sets import subtask, TaskSet
 from celery.utils import uuid
 from core.models import Analysis, AnalysisResult, WorkflowFilesDL, \
-    AnalysisNodeConnection
+    AnalysisNodeConnection, INPUT_CONNECTION, OUTPUT_CONNECTION
 from data_set_manager.models import Node
+from data_set_manager.utils import get_node_types, update_annotated_nodes, \
+    index_annotated_nodes
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.sites.models import Site, Site
@@ -21,13 +23,15 @@ from django.template import loader, Context
 from file_store.models import FileStoreItem, is_local
 from file_store.tasks import import_file, create, rename
 from galaxy_connector.connection import Connection
-from galaxy_connector.galaxy_workflow import countWorkflowSteps
+from galaxy_connector.galaxy_workflow import countWorkflowSteps, \
+    create_workflow_graph, create_expanded_workflow_graph
 from workflow_manager.tasks import configure_workflow
+import copy
+import data_set_manager
 import logging
+import os
 import socket
 import time
-import os
-import copy
 import urllib2
 
 logger = logging.getLogger(__name__)
@@ -264,6 +268,8 @@ def run_analysis_preprocessing(analysis):
     # getting expanded workflow configured based on input: ret_list
     new_workflow, history_download, analysis_node_connections = configure_workflow(analysis.workflow, ret_list, connection)
     
+    print new_workflow
+    
     # import connections into database
     for analysis_node_connection in analysis_node_connections:
         
@@ -315,7 +321,70 @@ def run_analysis_preprocessing(analysis):
     analysis.library_id = library_id
     analysis.history_id = history_id
     analysis.save()
+
+    # ----------------------------------------------------------------------------------------
+    # for testing: attach workflow graph and output files to data set graph
+    # ----------------------------------------------------------------------------------------
+        
+    # 0. get study and assay from the first input node
+    study = AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION )[0].node.study;
+    assay = AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION )[0].node.assay;
     
+    # 1. read workflow into graph
+    graph = create_expanded_workflow_graph(analysis.workflow_copy)
+    
+    # 2. create data transformation nodes for all tool nodes
+    data_transformation_nodes = [graph.node[node_id] for node_id in graph.nodes() if graph.node[node_id]['type'] == "tool"]
+    for data_transformation_node in data_transformation_nodes:
+        data_transformation_node['node'] = Node.objects.create(study=study, assay=assay, type=Node.DATA_TRANSFORMATION, name=data_transformation_node['tool_id'] + '_' + data_transformation_node['name'])
+
+    # 3. create connection from input nodes to first data transformation nodes (input tool nodes in the graph are skipped)
+    for input_connection in AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION ):
+        for edge in graph.edges_iter([input_connection.step]):
+            if graph[edge[0]][edge[1]]['output_id'] == str(input_connection.step) + '_' + input_connection.name:
+                input_node_id = edge[1];                
+                data_transformation_node = graph.node[input_node_id]['node']        
+                input_connection.node.add_child(data_transformation_node)
+    
+    # 4. create derived data file nodes for all entries and connect to data transformation nodes
+    for output_connection in AnalysisNodeConnection.objects.filter( analysis=analysis, direction=OUTPUT_CONNECTION ):
+        # create derived data file node
+        derived_data_file_node = Node.objects.create(study=study, assay=assay, type=Node.DERIVED_DATA_FILE, name=str(output_connection.step) + '_' + output_connection.name)
+        output_connection.node = derived_data_file_node
+        output_connection.save() 
+        
+        # get graph edge that corresponds to this output node:
+        # a. attach output node to source data transformation node
+        # b. attach output node to target data transformation node (if exists, i.e. node type != 'sink' = dummy target for outputs that are not kept)
+        if len( graph.edges([output_connection.step]) ) > 0:
+            for edge in graph.edges_iter([output_connection.step]):
+                if graph[edge[0]][edge[1]]['output_id'] == derived_data_file_node.name:
+                    output_node_id = edge[0];
+                    input_node_id = edge[1];                
+                    data_transformation_output_node = graph.node[output_node_id]['node']        
+                    data_transformation_input_node = graph.node[input_node_id]['node']        
+                    data_transformation_output_node.add_child(derived_data_file_node)
+                    derived_data_file_node.add_child(data_transformation_input_node)        
+                    # TODO: here we could add a (Refinery internal) attribute to the derived data file node to indicate which output of the tool it corresponds to
+                    
+        # connect outputs that are not inputs for any data transformation
+        if output_connection.is_refinery_file and derived_data_file_node.parents.count() == 0:
+            graph.node[output_connection.step]['node'].add_child( derived_data_file_node ) 
+
+        # delete output nodes that are not refinery files and don't have any children
+        if not output_connection.is_refinery_file and derived_data_file_node.children.count() == 0:
+            output_connection.node.delete()
+        
+    # 5. create annotated nodes and index new nodes
+    print "Indexing new nodes ..."
+    node_types = get_node_types(study.uuid, assay.uuid, files_only=True, filter_set=Node.FILES)                
+    for node_type in node_types:
+        print "Indexing new nodes ...: " + node_type
+        update_annotated_nodes( node_type, study.uuid, assay.uuid, update=True )
+        index_annotated_nodes( node_type, study.uuid, assay.uuid )
+    
+    # ??? 6. create node set containing all outputs of the analysis (those with the "keep" flag)
+        
     return
 
 # task: monitor workflow execution (calls subtask that does the actual work)

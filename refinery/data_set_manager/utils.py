@@ -132,15 +132,18 @@ def _get_assay_name(result,node):
     return None
 
 
-def _retrieve_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_fields=False ):
+def _retrieve_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_fields=False, node_uuids=None ):
             
     node_fields = [ "id", "uuid", "file_uuid", "type", "name", "parents", "attribute" ]
     
-    # query nodes (both from assay and from study only)
-    if assay_uuid is None:
-        node_list = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) ).prefetch_related( "attribute_set" ).order_by( "id", "attribute" ).values( *node_fields )
+    # if node_uuids is none: query nodes (both from assay and from study only)
+    if node_uuids is None:
+        if assay_uuid is None:
+            node_list = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) ).prefetch_related( "attribute_set" ).order_by( "id", "attribute" ).values( *node_fields )
+        else:
+            node_list = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ) ).prefetch_related( "attribute_set" ).order_by( "id", "attribute" ).values( *node_fields )
     else:
-        node_list = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ) ).prefetch_related( "attribute_set" ).order_by( "id", "attribute" ).values( *node_fields )
+        node_list = Node.objects.filter( uuid__in=node_uuids ).prefetch_related( "attribute_set" ).order_by( "id", "attribute" ).values( *node_fields )                
             
     if ontology_attribute_fields:
         attribute_fields = Attribute.ALL_FIELDS
@@ -267,7 +270,10 @@ def update_annotated_nodes( node_type, study_uuid, assay_uuid=None, update=False
         registry, created = AnnotatedNodeRegistry.objects.get_or_create( study_id=study.id, assay__isnull=True, node_type=node_type )
     else:
         registry, created = AnnotatedNodeRegistry.objects.get_or_create( study_id=study.id, assay_id=assay.id, node_type=node_type )
-        
+
+    # update registry entry
+    registry.save()
+            
     if not created and not update:
         # registry entry exists and no updating requested  
         return 
@@ -326,18 +332,6 @@ def update_annotated_nodes( node_type, study_uuid, assay_uuid=None, update=False
                  
     logger.info( str( counter ) + " annotated nodes generated in " + str( end - start ) )
     
-    # update registry entry
-    registry.save()
-    
-    #from django.core import serializers
-    
-    #if assay_uuid is None:
-    #    result = AnnotatedNode.objects.filter( Q( study_id=study.id, assay__isnull=True ), node_type=node_type )
-    #else:
-    #    result = AnnotatedNode.objects.filter( Q( study_id=study.id, assay__isnull=True ) | Q( study_id=study.id, assay_id=assay.id ), node_type=node_type)
-    
-    #return ( serializers.serialize("python", result, ensure_ascii=False ) )
-
 
 def index_annotated_nodes( node_type, study_uuid, assay_uuid=None ):
         
