@@ -213,10 +213,22 @@ def createStepsAnnot(file_list, workflow):
                 step_annot = curr_workflow_step['annotation']
                 
                 step_annot2 = getStepOptions(curr_workflow_step['annotation'])
-                keep_files = []
-                if 'keep' in step_annot2:
-                    keep_files = step_annot2['keep']
-
+                keep_files = {}
+                
+                # OLD: semi-colon 
+                #if 'keep' in step_annot2:
+                #    keep_files = step_annot2['keep']
+                
+                # Update with added JSON to define description and new names of files 
+                if 'refinery_files' in step_annot2:
+                    #print "FOUND refinery_files"
+                    try:
+                        keep_files = ast.literal_eval(step_annot2['refinery_files'][0])
+                        #keep_files = step_annot2['refinery_files']
+                        #print keep_files
+                    except Exception:
+                        logger.error("Malformed String in Galaxy Workflow: " + str(step_annot2['refinery_files'][0]))
+                
                 # creates list of output names from specified tool to rename
                 output_names = [];
                 output_list = curr_workflow_step['outputs']
@@ -238,7 +250,9 @@ def createStepsAnnot(file_list, workflow):
                         # store information about the output files of this tools
                         analysis_node_connection = {}
                         
-                        analysis_node_connection['name'] = oname
+                        analysis_node_connection['filename'] = oname
+                        analysis_node_connection['name'] = oname + '_display'
+                        analysis_node_connection['subanalysis'] = i
                         analysis_node_connection['step'] = curr_id
                         analysis_node_connection['filetype'] = None
                         analysis_node_connection['direction'] = 'out'
@@ -246,7 +260,9 @@ def createStepsAnnot(file_list, workflow):
                         analysis_node_connection['is_refinery_file'] = False
                         
                         # if the output name is being tracked and downloaded for Refinery
-                        if str(oname) in keep_files:
+                        #if str(oname) in keep_files:
+                        if str(oname) in keep_files.keys():
+                            #print "KEY FOUND: refinery_files = " + str(oname)
                             analysis_node_connection['is_refinery_file'] = True
                             
                             if input_type in file_list[i].keys():
@@ -262,16 +278,18 @@ def createStepsAnnot(file_list, workflow):
                                         curr_pair_id += "," + str(file_list[i][itypes]['pair_id'])
                            
                             curr_result = {}
-                            curr_result["pair_id"] = curr_pair_id
-                            curr_result["name"] = new_output_name
                             curr_result["step_id"] = new_tool_name
-                            #curr_result["template_num"] = i 
-                            #curr_result["nodelist"] = curr_nodelist        
+                            curr_result["pair_id"] = curr_pair_id
+                            #curr_result["name"] = new_output_name
+                            user_output_name = str(i+1) + '_' + keep_files[str(oname)]['name']
+                            curr_result["name"] = user_output_name
+                            analysis_node_connection['name'] = user_output_name
+        
                             #print "curr_result"
                             #print curr_result
                             
                             history_download.append(curr_result)
-                        
+                            
                         # store information about this output file    
                         connections.append(analysis_node_connection)
                         
@@ -302,7 +320,9 @@ def createStepsAnnot(file_list, workflow):
                                         
                     connections.append({ 'node_uuid': curr_node,
                                          'step': int(curr_workflow_step['id']),
-                                         'name': curr_workflow_step['inputs'][0]['name'], 
+                                         'filename': curr_workflow_step['inputs'][0]['name'],
+                                         'name': curr_workflow_step['inputs'][0]['name'] + "_display", 
+                                         'subanalysis': i,
                                          'filetype': None,
                                          'direction': 'in',
                                          'is_refinery_file': True })  
@@ -316,7 +336,8 @@ def createStepsAnnot(file_list, workflow):
             # Adds updated module 
             updated_dict[curr_id] = curr_workflow_step;
     
-    #print simplejson.dumps(updated_dict, indent=4)
+    print "history_download"
+    print simplejson.dumps(history_download, indent=4)
     
     return updated_dict, history_download, connections;
 
@@ -335,7 +356,6 @@ def createStepsCompact(file_list, workflow, analysis):
     
     print "file_list"
     print file_list
-    
     print analysis
     
     counter = 0
@@ -525,9 +545,13 @@ def createSteps(repeat_num, workflow):
 
 def getStepOptions(step_annot):
     "Helper function: convert galaxy workflow step annotations into lookup dictionary"
-    #print "galaxy_workflow. getStepOptions: " + step_annot
+    #logger.debug("galaxy_connector.galaxy_workflow getStepOptions called")     
+    #logger.debug( step_annot )
+    
     ret_dict = {}
         
+    step_annot = step_annot.strip()
+    
     if (step_annot):
         # splitting multiple options based on ';'
         step_split = step_annot.strip().split(';')
@@ -542,7 +566,6 @@ def getStepOptions(step_annot):
                 else:
                     ret_dict[temp_key] = [temp_val]
    
-    #logger.debug("galaxy_connector.galaxy_workflow getStepOptions called")     
     #logger.debug(ret_dict)
             
     return ret_dict
