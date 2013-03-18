@@ -282,9 +282,11 @@ def run_analysis_preprocessing(analysis):
             node = None 
 
         AnalysisNodeConnection.objects.create(analysis=analysis,
+                                              subanalysis=analysis_node_connection['subanalysis'],
                                               node=node,
                                               step=int(analysis_node_connection['step']),
                                               name=analysis_node_connection['name'],
+                                              filename=analysis_node_connection['filename'],
                                               filetype=analysis_node_connection['filetype'],
                                               direction=analysis_node_connection['direction'],
                                               is_refinery_file=analysis_node_connection['is_refinery_file'])
@@ -336,12 +338,13 @@ def run_analysis_preprocessing(analysis):
     # 2. create data transformation nodes for all tool nodes
     data_transformation_nodes = [graph.node[node_id] for node_id in graph.nodes() if graph.node[node_id]['type'] == "tool"]
     for data_transformation_node in data_transformation_nodes:
+        # TODO: incorporate subanalysis id in tool name???
         data_transformation_node['node'] = Node.objects.create(study=study, assay=assay, type=Node.DATA_TRANSFORMATION, name=data_transformation_node['tool_id'] + '_' + data_transformation_node['name'])
 
     # 3. create connection from input nodes to first data transformation nodes (input tool nodes in the graph are skipped)
     for input_connection in AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION ):
         for edge in graph.edges_iter([input_connection.step]):
-            if graph[edge[0]][edge[1]]['output_id'] == str(input_connection.step) + '_' + input_connection.name:
+            if graph[edge[0]][edge[1]]['output_id'] == str(input_connection.step) + '_' + input_connection.filename:
                 input_node_id = edge[1];                
                 data_transformation_node = graph.node[input_node_id]['node']        
                 input_connection.node.add_child(data_transformation_node)
@@ -349,7 +352,7 @@ def run_analysis_preprocessing(analysis):
     # 4. create derived data file nodes for all entries and connect to data transformation nodes
     for output_connection in AnalysisNodeConnection.objects.filter( analysis=analysis, direction=OUTPUT_CONNECTION ):
         # create derived data file node
-        derived_data_file_node = Node.objects.create(study=study, assay=assay, type=Node.DERIVED_DATA_FILE, name=str(output_connection.step) + '_' + output_connection.name)
+        derived_data_file_node = Node.objects.create(study=study, assay=assay, type=Node.DERIVED_DATA_FILE, name=output_connection.name)
         output_connection.node = derived_data_file_node
         output_connection.save() 
         
@@ -358,7 +361,7 @@ def run_analysis_preprocessing(analysis):
         # b. attach output node to target data transformation node (if exists, i.e. node type != 'sink' = dummy target for outputs that are not kept)
         if len( graph.edges([output_connection.step]) ) > 0:
             for edge in graph.edges_iter([output_connection.step]):
-                if graph[edge[0]][edge[1]]['output_id'] == derived_data_file_node.name:
+                if graph[edge[0]][edge[1]]['output_id'] == str(output_connection.step) + output_connection.filename:
                     output_node_id = edge[0];
                     input_node_id = edge[1];                
                     data_transformation_output_node = graph.node[output_node_id]['node']        
