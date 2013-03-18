@@ -331,22 +331,90 @@ def update_annotated_nodes( node_type, study_uuid, assay_uuid=None, update=False
     end = time.time()
                  
     logger.info( str( counter ) + " annotated nodes generated in " + str( end - start ) )
-    
 
-def index_annotated_nodes( node_type, study_uuid, assay_uuid=None ):
-        
-    # retrieve study and assay ids
+
+
+def add_annotated_nodes( node_type, study_uuid, assay_uuid=None ):
+    _add_annotated_nodes( node_type, study_uuid, assay_uuid, None )
+
+
+def add_annotated_nodes_selection( node_uuids ):
+    _add_annotated_nodes( None, None, None, node_uuids )
+
+
+def _add_annotated_nodes( node_type, study_uuid, assay_uuid=None, node_uuids=None ):
+
     study = Study.objects.filter( uuid=study_uuid )[0]
     if assay_uuid is not None:
         assay = Assay.objects.filter( uuid=assay_uuid )[0]
     else:
         assay = None
+             
+    # retrieve annotated nodes
+    nodes = _retrieve_nodes( node_type, study_uuid, assay_uuid, True, node_uuids )    
+    
+    # insert node and attribute information    
+    import time
+    start = time.time()
+    
+    counter = 0    
+    bulk_list = []
+    for node_id, node in nodes.iteritems():
+        if node["type"] == node_type:
+            # save attributes (attribute[1], etc. are based on Attribute.ALL_FIELDS)
+            attributes = _get_parent_attributes( nodes, node_id )
+            for attribute in attributes:
+                counter += 1
+                
+                bulk_list.append(                                 
+                    AnnotatedNode( 
+                        node_id=node["id"],
+                        attribute_id=attribute[0],
+                        study=study,
+                        assay=assay,
+                        node_uuid=node["uuid"],
+                        node_file_uuid=node["file_uuid"],
+                        node_type=node["type"],
+                        node_name=node["name"],
+                        attribute_type=attribute[1],
+                        attribute_subtype=attribute[2],
+                        attribute_value=attribute[3],
+                        attribute_value_unit=attribute[4]
+                    ) )
+                
+                if len( bulk_list ) == MAX_BULK_LIST_SIZE:
+                    AnnotatedNode.objects.bulk_create( bulk_list )
+                    bulk_list = []
+    
+    if len( bulk_list ) > 0:
+        AnnotatedNode.objects.bulk_create( bulk_list )
+        bulk_list = []
+    
+    end = time.time()
+                 
+    logger.info( str( counter ) + " annotated nodes generated in " + str( end - start ) )
+    
+    
+def index_annotated_nodes( node_type, study_uuid, assay_uuid=None ):    
+    _index_annotated_nodes( node_type, study_uuid, assay_uuid=assay_uuid, None )
+
+def index_annotated_nodes_selection( node_uuids ):    
+    _index_annotated_nodes( None, None, None, node_uuids )
+
+def _index_annotated_nodes( node_type, study_uuid, assay_uuid=None, node_uuids=None ):
+
+    if node_uuids is None:            
+        if assay_uuid is None:
+            nodes = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ), type=node_type )
+        else:
+            nodes = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ), type=node_type )                
         
-    # remove existing annotated node objects for this node_type in this study/assay
-    if assay_uuid is None:
-        nodes = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ), type=node_type )
+        if assay_uuid is None:
+            nodes = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ), type=node_type )
+        else:
+            nodes = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ), type=node_type )                
     else:
-        nodes = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ), type=node_type )                
+        nodes = Node.objects.filter( uuid__in=node_uuids )                
     
     logger.info( str( nodes.count() ) + " nodes for indexing." )                
     

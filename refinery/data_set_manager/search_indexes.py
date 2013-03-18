@@ -28,6 +28,10 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     species = indexes.IntegerField(model_attr='species',null=True)
     genome_build = indexes.CharField(model_attr='genome_build',null=True)
     is_annotation = indexes.BooleanField(model_attr='is_annotation')
+
+    analysis_uuid = indexes.CharField(model_attr='analysis_uuid',null=True)
+    subanalysis = indexes.IntegerField(model_attr='subanalysis',null=True)
+    workflow_output = indexes.CharField(model_attr='workflow_output',null=True)
     
     #TODO: add modification date (based on registry)
         
