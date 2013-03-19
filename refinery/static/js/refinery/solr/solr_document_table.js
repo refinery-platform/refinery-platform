@@ -145,12 +145,14 @@ SolrDocumentTable.prototype._renderTable = function( solrResponse ) {
 			self._query.setDocumentSelectionBlacklistMode( false );					
 			self._query.clearDocumentSelection();
 			
+			// update individual checkboxes in table
 			$( "." + "document-checkbox-select" ).removeAttr( "checked" );			
 		}
 		else {
-			self._query.setDocumentSelectionBlacklistMode( true);					
+			self._query.setDocumentSelectionBlacklistMode( true );					
 			self._query.clearDocumentSelection();
 			
+			// update individual checkboxes in table
 			$( "." + "document-checkbox-select" ).attr( "checked", "checked" );
 		}		
 		
