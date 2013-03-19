@@ -287,11 +287,11 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function( parentElem
 	for ( entry in fields ) {
 		if ( fields.hasOwnProperty( entry ) ) {
 			if ( fields[entry].isVisible && !fields[entry].isInternal ) {
-				visibleItems.push("<a class=\"field-name\" label id=\"" + self._composeFieldId( entry ) + "\">" + '<label class="checkbox"><input type="checkbox" checked></label>' + "&nbsp;" + prettifySolrFieldName( entry, true ) + "</a>" );				
+				visibleItems.push("<a class=\"field-name\">" + '<label id="' + self._composeFieldId( entry ) + '" class="checkbox"><input type="checkbox" checked>' + "&nbsp;" + prettifySolrFieldName( entry, true ) + "</label></a>" );				
 			}
 			else {
 				if ( self._hiddenFieldNames.indexOf( entry ) < 0 && !fields[entry].isInternal ) {
-					visibleItems.push("<a class=\"field-name\" label id=\"" + self._composeFieldId( entry ) + "\">"  + '<label class="checkbox"><input type="checkbox"></label>' +  "&nbsp;" + prettifySolrFieldName( entry, true ) + "</a>" );
+					visibleItems.push("<a class=\"field-name\">"  + '<label id="' + self._composeFieldId( entry ) + '" class="checkbox"><input type="checkbox">' +  "&nbsp;" + prettifySolrFieldName( entry, true ) + "</label></a>" );
 				}
 			}
 		}
@@ -307,7 +307,7 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function( parentElem
 			listItems.push( "<li>" + visibleItems[i] + "</li>" );			
 		}
 		
-		$( "#" + parentElementId ).append( listHeader + '<ul id="' + listId + '"  style="max-height: 300px; overflow: hidden; overflow-y: auto;" class="dropdown-menu" role="menu" aria-labelledby="dLabel">' + listItems.join( "\n" ) + '</ul>' );
+		$( "#" + parentElementId ).append( listHeader + '<ul id="' + listId + '"  style="max-height: 300px;  overflow: hidden; overflow-y: auto;" class="dropdown-menu" role="menu" aria-labelledby="dLabel">' + listItems.join( "\n" ) + '</ul>' );
 	}	
 	
 	// configure columns
@@ -315,12 +315,19 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function( parentElem
    		event.stopPropagation();
    		
    		var fieldId = event.target.id;
+   		
+   		// user clicked on checkbox -> get id from label, which is the parent of the checkbox
+   		if ( fieldId == "" ) {
+   			fieldId = event.target.parentElement.id;
+   		}
+   		
    		var field = self._decomposeFieldId( fieldId ).field;
    		
    		self._query._fields[field].isVisible = !self._query._fields[field].isVisible;   		
 		self._commands.execute( SOLR_FIELD_VISIBILITY_UPDATED_COMMAND, { 'field': field, 'isVisible': self._query._fields[field].isVisible } );			   		
    	} );				
 }
+
 
 
 SolrDocumentTable.prototype._generatePagerControl = function( parentElementId, visiblePages, padLower, padUpper ) {
