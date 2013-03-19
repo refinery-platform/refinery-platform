@@ -587,9 +587,6 @@ class AnalysisNodeConnection( models.Model ):
     def __unicode__(self):
         return self.direction + ": " + str(self.step) + "_" + self.name + " (" + str(self.is_refinery_file) + ")"
     
-    class Meta:
-        unique_together = (('name', 'subanalysis', 'analysis'), ('subanalysis', 'analysis'), )    
-    
 
 def get_shared_groups( user1, user2, include_public_group=False ):
     '''

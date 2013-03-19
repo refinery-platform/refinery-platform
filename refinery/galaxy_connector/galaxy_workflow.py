@@ -251,9 +251,10 @@ def createStepsAnnot(file_list, workflow):
                         analysis_node_connection = {}
                         
                         analysis_node_connection['filename'] = oname
-                        analysis_node_connection['name'] = oname + '_display'
+                        analysis_node_connection['name'] = oname
                         analysis_node_connection['subanalysis'] = i
                         analysis_node_connection['step'] = curr_id
+                        # TODO: set file type
                         analysis_node_connection['filetype'] = None
                         analysis_node_connection['direction'] = 'out'
                         analysis_node_connection['node_uuid'] = None # setting to none will trigger creation of a new Node                                                 
@@ -321,7 +322,7 @@ def createStepsAnnot(file_list, workflow):
                     connections.append({ 'node_uuid': curr_node,
                                          'step': int(curr_workflow_step['id']),
                                          'filename': curr_workflow_step['inputs'][0]['name'],
-                                         'name': curr_workflow_step['inputs'][0]['name'] + "_display", 
+                                         'name': curr_workflow_step['inputs'][0]['name'], 
                                          'subanalysis': i,
                                          'filetype': None,
                                          'direction': 'in',
@@ -739,8 +740,6 @@ def create_expanded_workflow_graph(dictionary):
                 parent_node_output_name = steps[str(parent_node_id)]['inputs'][0]['name']
             else:
                 parent_node_output_name = input_connection['output_name']
-            
-            print str(parent_node_id) + '_' + parent_node_output_name + '->' +  str(current_node_id) + '_' + current_node_input_name
             
             edge_output_id = str(parent_node_id) + '_' + parent_node_output_name;
             edge_input_id = str(current_node_id) + '_' + current_node_input_name

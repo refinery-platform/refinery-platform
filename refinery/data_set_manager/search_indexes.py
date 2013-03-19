@@ -28,7 +28,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     species = indexes.IntegerField(model_attr='species',null=True)
     genome_build = indexes.CharField(model_attr='genome_build',null=True)
     is_annotation = indexes.BooleanField(model_attr='is_annotation')
-
+    
     analysis_uuid = indexes.CharField(model_attr='analysis_uuid',null=True)
     subanalysis = indexes.IntegerField(model_attr='subanalysis',null=True)
     workflow_output = indexes.CharField(model_attr='workflow_output',null=True)
@@ -105,8 +105,18 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         # add type as dynamic field to get proper facet values
         data["REFINERY_TYPE_" + uuid + "_s"] = object.type
 
-        # add type as dynamic field to get proper facet values
+        # add name as dynamic field to get proper facet values
         data["REFINERY_NAME_" + uuid + "_s"] = object.name
+
+        # add analysis_uuid as dynamic field to get proper facet values
+        data["REFINERY_ANALYSIS_UUID_" + uuid + "_s"] = object.analysis_uuid
+
+        # add subanalysis as dynamic field to get proper facet values
+        data["REFINERY_SUBANALYSIS_" + uuid + "_s"] = object.subanalysis
+        
+        # add workflow_output as dynamic field to get proper facet values
+        data["REFINERY_WORKFLOW_OUTPUT" + uuid + "_s"] = object.workflow_output
+
 
         # add file type as facet value        
         file_store_item = file_store_tasks.read( object.file_uuid );

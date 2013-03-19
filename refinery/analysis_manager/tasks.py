@@ -14,7 +14,8 @@ from core.models import Analysis, AnalysisResult, WorkflowFilesDL, \
     AnalysisNodeConnection, INPUT_CONNECTION, OUTPUT_CONNECTION
 from data_set_manager.models import Node
 from data_set_manager.utils import get_node_types, update_annotated_nodes, \
-    index_annotated_nodes
+    index_annotated_nodes, add_annotated_nodes_selection, \
+    index_annotated_nodes_selection
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.sites.models import Site, Site
@@ -234,7 +235,7 @@ def run_analysis(analysis, interval=5.0):
             task_id = import_file.subtask((cur_fs_uuid, False,))
             download_tasks.append(task_id)
             
-            
+                
     # PREPROCESSING            
     task_id = run_analysis_preprocessing.subtask( (analysis,) ) 
     download_tasks.append(task_id)
@@ -268,12 +269,8 @@ def run_analysis_preprocessing(analysis):
     # getting expanded workflow configured based on input: ret_list
     new_workflow, history_download, analysis_node_connections = configure_workflow(analysis.workflow, ret_list, connection)
     
-    print new_workflow
-    
     # import connections into database
     for analysis_node_connection in analysis_node_connections:
-        
-        print analysis_node_connection                
         
         # lookup node object
         if ( analysis_node_connection["node_uuid"] ):
@@ -339,7 +336,7 @@ def run_analysis_preprocessing(analysis):
     data_transformation_nodes = [graph.node[node_id] for node_id in graph.nodes() if graph.node[node_id]['type'] == "tool"]
     for data_transformation_node in data_transformation_nodes:
         # TODO: incorporate subanalysis id in tool name???
-        data_transformation_node['node'] = Node.objects.create(study=study, assay=assay, type=Node.DATA_TRANSFORMATION, name=data_transformation_node['tool_id'] + '_' + data_transformation_node['name'])
+        data_transformation_node['node'] = Node.objects.create(study=study, assay=assay, analysis_uuid=analysis.uuid, type=Node.DATA_TRANSFORMATION, name=data_transformation_node['tool_id'] + '_' + data_transformation_node['name'])
 
     # 3. create connection from input nodes to first data transformation nodes (input tool nodes in the graph are skipped)
     for input_connection in AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION ):
@@ -352,16 +349,16 @@ def run_analysis_preprocessing(analysis):
     # 4. create derived data file nodes for all entries and connect to data transformation nodes
     for output_connection in AnalysisNodeConnection.objects.filter( analysis=analysis, direction=OUTPUT_CONNECTION ):
         # create derived data file node
-        derived_data_file_node = Node.objects.create(study=study, assay=assay, type=Node.DERIVED_DATA_FILE, name=output_connection.name)
+        derived_data_file_node = Node.objects.create(study=study, assay=assay, type=Node.DERIVED_DATA_FILE, name=output_connection.name, analysis_uuid=analysis.uuid, subanalysis=output_connection.subanalysis, workflow_output=output_connection.name )
         output_connection.node = derived_data_file_node
         output_connection.save() 
         
         # get graph edge that corresponds to this output node:
         # a. attach output node to source data transformation node
-        # b. attach output node to target data transformation node (if exists, i.e. node type != 'sink' = dummy target for outputs that are not kept)
+        # b. attach output node to target data transformation node (if exists)
         if len( graph.edges([output_connection.step]) ) > 0:
             for edge in graph.edges_iter([output_connection.step]):
-                if graph[edge[0]][edge[1]]['output_id'] == str(output_connection.step) + output_connection.filename:
+                if graph[edge[0]][edge[1]]['output_id'] == str(output_connection.step) + "_" + output_connection.filename:
                     output_node_id = edge[0];
                     input_node_id = edge[1];                
                     data_transformation_output_node = graph.node[output_node_id]['node']        
@@ -379,14 +376,9 @@ def run_analysis_preprocessing(analysis):
             output_connection.node.delete()
         
     # 5. create annotated nodes and index new nodes
-    print "Indexing new nodes ..."
-    node_types = get_node_types(study.uuid, assay.uuid, files_only=True, filter_set=Node.FILES)                
-    for node_type in node_types:
-        print "Indexing new nodes ...: " + node_type
-        update_annotated_nodes( node_type, study.uuid, assay.uuid, update=True )
-        index_annotated_nodes( node_type, study.uuid, assay.uuid )
-    
-    # ??? 6. create node set containing all outputs of the analysis (those with the "keep" flag)
+    node_uuids = AnalysisNodeConnection.objects.filter(analysis=analysis, direction=OUTPUT_CONNECTION, is_refinery_file=True).values_list('node__uuid', flat=True)
+    add_annotated_nodes_selection( node_uuids, Node.DERIVED_DATA_FILE, study.uuid, assay.uuid )
+    index_annotated_nodes_selection( node_uuids )
         
     return
 

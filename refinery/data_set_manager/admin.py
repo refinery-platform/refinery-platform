@@ -11,6 +11,9 @@ from django_extensions.admin import ForeignKeyAutocompleteAdmin
 class NodeAdmin(ForeignKeyAutocompleteAdmin):
     raw_id_fields = ("parents","children")    
 
+class AnnotatedNodeAdmin(ForeignKeyAutocompleteAdmin):
+    raw_id_fields = ("node","attribute","study","assay")    
+
 admin.site.register(NodeCollection)
 admin.site.register(Investigation)
 admin.site.register(Study)
@@ -27,6 +30,6 @@ admin.site.register(Node,NodeAdmin)
 admin.site.register(Attribute)
 admin.site.register(AttributeOrder)
 admin.site.register(AttributeDefinition)
-admin.site.register(AnnotatedNode)
+admin.site.register(AnnotatedNode,AnnotatedNodeAdmin)
 admin.site.register(AnnotatedNodeRegistry)
 
