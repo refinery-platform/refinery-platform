@@ -699,6 +699,24 @@ def create_refinery_users():
 
 @task
 @with_settings(user=env.project_user)
+def upload_logrotate_config():
+    '''Upload Logrotate settings
+    Requires symlinks in /etc/logrotate.d
+
+    '''
+    upload_template("{local_conf_dir}/refinery-logrotate.conf".format(**env),
+                    "{conf_dir}/refinery-logrotate.conf".format(**env),
+                    backup=False)
+    upload_template("{local_conf_dir}/apache-logrotate.conf".format(**env),
+                    "{conf_dir}/apache-logrotate.conf".format(**env),
+                    backup=False)
+    upload_template("{local_conf_dir}/galaxy-logrotate.conf".format(**env),
+                    "{conf_dir}/galaxy-logrotate.conf".format(**env),
+                    backup=False)
+
+
+@task
+@with_settings(user=env.project_user)
 def create_galaxy_instance(instance_id):
     '''Create a Galaxy instance in Refinery
 
