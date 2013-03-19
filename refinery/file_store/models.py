@@ -120,6 +120,7 @@ CEL = 'cel'
 CSV = 'csv'
 ELAND = 'eland'
 GFF = 'gff'
+GTF = 'gtf'
 GZ = 'gz'
 IDF = 'idf'
 FASTA = 'fasta'
@@ -151,6 +152,7 @@ FILE_TYPES = (
     (CSV, 'Comma Separated Values'),
     (ELAND, 'Eland file'),
     (GFF, 'GFF file'),
+    (GTF, 'GTF file'),
     (GZ, 'Gzip compressed archive'),
     (IDF, 'IDF file'),
     (FASTA, 'FASTA file'),
@@ -183,6 +185,7 @@ FILE_EXTENSIONS = {
     'csv': CSV,
     'eland': ELAND,
     'gff': GFF,
+    'gtf': GTF,
     'gz': GZ,
     'idf': IDF,
     'fasta': FASTA,

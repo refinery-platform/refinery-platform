@@ -270,6 +270,36 @@
       }
    },
    {
+      "pk": 28,
+      "model": "annotation_server.taxon",
+      "fields": {
+         "taxon_id": 4896,
+         "unique_name": "",
+         "type": "common name",
+         "name": "fission yeast"
+      }
+   },
+   {
+      "pk": 29,
+      "model": "annotation_server.taxon",
+      "fields": {
+         "taxon_id": 4896,
+         "unique_name": "",
+         "type": "scientifc name",
+         "name": "Schizosaccharomyces pombe"
+      }
+   },
+   {
+      "pk": 30,
+      "model": "annotation_server.taxon",
+      "fields": {
+         "taxon_id": 4896,
+         "unique_name": "Schizosaccharomyces pombe",
+         "type": "abbreviation name",
+         "name": "S. pombe"
+      }
+   },
+   {
       "pk": 1,
       "model": "annotation_server.genomebuild",
       "fields": {
@@ -567,6 +597,21 @@
          "affiliation": "WormBase",
          "species": 12,
          "description": "May 2008"
+      }
+   },
+   {
+      "pk": 21,
+      "model": "annotation_server.genomebuild",
+      "fields": {
+         "available": true,
+         "ucsc_equivalent": null,
+         "source_name": null,
+         "name": "spombe_1.55",
+         "default_build": true,
+         "html_path": null,
+         "affiliation": "",
+         "species": 29,
+         "description": "Added manually by Nils Gehlenborg on 15 March 2013."
       }
    }
 ]

@@ -494,7 +494,6 @@ SolrQuery.prototype.clearDocumentSelection = function () {
 	if ( self._documentSelection.length > 0 )
 	{
 		self._documentSelection = [];
-		self._documentSelectionBlacklistMode = true;
 		
 		return true;
 	}
