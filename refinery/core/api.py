@@ -90,7 +90,7 @@ class NodeSetResource(ModelResource):
         serializer = PrettyJSONSerializer()
         fields = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
         ordering = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
-        allowed_methods = ["get", "patch", "put", "post" ]
+        allowed_methods = ["get", "post" ]
         filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
 
     def prepend_urls(self):
