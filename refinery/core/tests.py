@@ -7,7 +7,7 @@ These will pass when you run "manage.py test".
 
 from django.contrib.auth.models import User, Group
 from django.utils import unittest, simplejson
-from tastypie.test import ResourceTestCase, TestApiClient
+from tastypie.test import ResourceTestCase
 from core.management.commands.init_refinery import create_public_group
 from core.management.commands.create_user import init_user
 from core.models import NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,\
@@ -232,23 +232,27 @@ class NodeSetResourceTest(ResourceTestCase):
                 "nodeSelection": [],
                 "nodeSelectionBlacklistMode": True
         }
-        # create a user
-        self.username = self.password = 'test'
+        self.username = self.password = 'user'
         self.user = User.objects.create_user(self.username, '', self.password)
+        self.username2 = self.password2 = 'user2'
+        self.user2 = User.objects.create_user(self.username2, '', self.password2)
 
     def get_credentials(self):
+        '''Authenticate as self.user
+
+        '''
         # workaround required to use SessionAuthentication
         # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
         return self.api_client.client.login(username=self.username,
                                             password=self.password)
 
     def test_get_nodeset(self):
-        '''Test retrieving an existing NodeSet.
+        '''Test retrieving an existing NodeSet that belongs to a user who created it.
 
         '''
-        nodeset = NodeSet.objects.create(name='nodeset',
-                                         study=self.study, assay=self.assay,
+        nodeset = NodeSet.objects.create(name='ns', study=self.study, assay=self.assay,
                                          solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % nodeset._meta.verbose_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
         response = self.api_client.get(nodeset_uri, format='json',
                                        authentication=self.get_credentials())
@@ -257,21 +261,47 @@ class NodeSetResourceTest(ResourceTestCase):
                 'node_count', 'solr_query', 'solr_query_components', 'resource_uri']
         self.assertKeys(self.deserialize(response), keys)
 
-    def test_get_nodeset_unauthenticated(self):
-        '''Test retrieving an existing NodeSet without authenticating.
+    def test_get_nodeset_without_login(self):
+        '''Test retrieving an existing NodeSet without logging in.
 
         '''
-        nodeset = NodeSet.objects.create(name='nodeset',
-                                         study=self.study, assay=self.assay,
+        nodeset = NodeSet.objects.create(name='ns', study=self.study, assay=self.assay,
                                          solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % nodeset._meta.verbose_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
         response = self.api_client.get(nodeset_uri, format='json')
+        self.assertHttpUnauthorized(response)
+
+    def test_get_nodeset_without_owner(self):
+        '''Test retrieving an existing NodeSet that belongs to no one.
+
+        '''
+        nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay,
+                                         solr_query=simplejson.dumps(self.query))
+        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
+        response = self.api_client.get(nodeset_uri, format='json',
+                                       authentication=self.get_credentials())
+        self.assertHttpUnauthorized(response)
+
+    def test_get_nodeset_without_permission(self):
+        '''Test retrieving an existing NodeSet that belongs to a different user.
+
+        '''
+        nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay,
+                                         solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % nodeset._meta.verbose_name, self.user2, nodeset)
+        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
+        response = self.api_client.get(nodeset_uri, format='json',
+                                       authentication=self.get_credentials())
         self.assertHttpUnauthorized(response)
 
     def test_get_nodeset_with_invalid_uuid(self):
         '''Test retrieving a NodeSet instance that doesn't exist.
 
         '''
+        nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay,
+                                         solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % nodeset._meta.verbose_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', 'Invalid UUID')
         response = self.api_client.get(nodeset_uri, format='json',
                                        authentication=self.get_credentials())
@@ -283,7 +313,6 @@ class NodeSetResourceTest(ResourceTestCase):
         '''
         assign('core.add_nodeset', self.user)
         self.assertEqual(NodeSet.objects.count(), 0)
-
         nodeset_data = {
             'name': 'nodeset1',
             'study': make_api_uri('study', self.study.uuid),
@@ -297,15 +326,50 @@ class NodeSetResourceTest(ResourceTestCase):
         self.assertHttpCreated(response)
         self.assertEqual(NodeSet.objects.count(), 1)
 
+    def test_create_minimal_nodeset_without_login(self):
+        '''Test adding a new NodeSet without logging in
+
+        '''
+        self.assertEqual(NodeSet.objects.count(), 0)
+        nodeset_data = {
+            'name': 'nodeset1',
+            'study': make_api_uri('study', self.study.uuid),
+            'assay': make_api_uri('assay', self.assay.uuid),
+            'is_implicit': True
+        }
+        nodeset_uri = make_api_uri('nodeset')
+        response = self.api_client.post(nodeset_uri, format='json',
+                                        data=nodeset_data)
+        self.assertHttpUnauthorized(response)
+        self.assertEqual(NodeSet.objects.count(), 0)
+
+    def test_create_minimal_nodeset_without_permission(self):
+        '''Test adding a new NodeSet by a user that doesn't have core.add_nodeset permission
+
+        '''
+        self.assertEqual(NodeSet.objects.count(), 0)
+        nodeset_data = {
+            'name': 'nodeset1',
+            'study': make_api_uri('study', self.study.uuid),
+            'assay': make_api_uri('assay', self.assay.uuid),
+            'is_implicit': True
+        }
+        nodeset_uri = make_api_uri('nodeset')
+        response = self.api_client.post(nodeset_uri, format='json',
+                                        data=nodeset_data,
+                                        authentication=self.get_credentials())
+        self.assertHttpUnauthorized(response)
+        self.assertEqual(NodeSet.objects.count(), 0)
+
     def test_update_nodeset(self):
         '''Test updating a NodeSet with new data.
 
         '''
-        assign('core.change_nodeset', self.user)
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay)
         self.assertEqual(NodeSet.objects.count(), 1)
         self.assertEqual(nodeset.name, 'nodeset')
         self.assertFalse(nodeset.is_implicit)
+        assign("change_%s" % nodeset._meta.verbose_name, self.user, nodeset)
 
         new_nodeset_data = {'name': 'nodeset2', 'is_implicit': True}
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)

@@ -4,6 +4,7 @@ Created on May 4, 2012
 @author: nils
 '''
 
+import logging
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, WorkflowInputRelationships
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node
@@ -18,8 +19,11 @@ from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS
 from tastypie.resources import ModelResource
 from tastypie.serializers import Serializer
+from GuardianTastypieAuthz import GuardianAuthorization
 
 #TODO: implement custom authorization class based on django-guardian permissions
+
+logger = logging.getLogger(__name__)
 
 
 class PrettyJSONSerializer(Serializer):
@@ -82,7 +86,7 @@ class NodeSetResource(ModelResource):
         resource_name = 'nodeset'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
-        authorization = DjangoAuthorization()
+        authorization = GuardianAuthorization()
         serializer = PrettyJSONSerializer()
         fields = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
         ordering = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
