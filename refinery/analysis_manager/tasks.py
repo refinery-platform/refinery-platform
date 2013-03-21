@@ -34,6 +34,7 @@ import os
 import socket
 import time
 import urllib2
+import ast
 
 logger = logging.getLogger(__name__)
 
@@ -308,9 +309,6 @@ def run_analysis_preprocessing(analysis):
     analysis.history_id = history_id
     analysis.save()
 
-    # attach workflow outputs back to dataset isatab graph
-    attach_outputs_dataset(analysis)
-    
     return
 
 # task: monitor workflow execution (calls subtask that does the actual work)
@@ -437,7 +435,7 @@ def run_analysis_cleanup(analysis):
     connection.delete_library(analysis.library_id)
     
     # attach workflow outputs back to dataset isatab graph
-    #attach_outputs_dataset(analysis)
+    attach_outputs_dataset(analysis)
     
     return
 
@@ -603,7 +601,7 @@ def attach_outputs_dataset(analysis):
     assay = AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION )[0].node.assay;
     
     # 1. read workflow into graph
-    graph = create_expanded_workflow_graph(analysis.workflow_copy)
+    graph = create_expanded_workflow_graph(ast.literal_eval(analysis.workflow_copy))
     
     # 2. create data transformation nodes for all tool nodes
     data_transformation_nodes = [graph.node[node_id] for node_id in graph.nodes() if graph.node[node_id]['type'] == "tool"]
