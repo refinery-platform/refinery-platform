@@ -579,6 +579,7 @@ def update_refinery():
     with settings(user=env.local_user):
         sudo("{supervisorctl} restart celeryd".format(**env))
         sudo("{supervisorctl} restart celerycam".format(**env))
+        sudo("{supervisorctl} restart solr".format(**env))
 
 
 @task
