@@ -147,7 +147,7 @@ def chord_execution(ret_val, analysis):
      
     # EXECUTION
     ## TESTING NEW DEBUGGING ###
-    # execution_monitor_task_id = monitor_analysis_execution.subtask((analysis,)).apply_async().task_id
+    #execution_monitor_task_id = monitor_analysis_execution.subtask((analysis,)).apply_async().task_id
     #execution_taskset = TaskSet(task=[run_analysis_execution.subtask((analysis,)) ])            
     #result_chord, result_set = progress_chord(execution_taskset)(chord_postprocessing.subtask((analysis,)))
     
@@ -202,8 +202,6 @@ def chord_cleanup(ret_val, analysis):
     ### TODO ###  UPDATE CLEANUP TASKID FOR ANALYSIS_STATUS
     analysis_status.cleanup_taskset_id = result_set.task_id 
     analysis_status.save()
-    
-    
     
     return
 
@@ -263,9 +261,6 @@ def run_analysis_preprocessing(analysis):
     ### generates same ret_list purely based on analysis object ###
     ret_list = get_analysis_config(analysis)
     
-    print "ret_list"
-    print ret_list
-
     # getting expanded workflow configured based on input: ret_list
     new_workflow, history_download, analysis_node_connections = configure_workflow(analysis.workflow, ret_list, connection)
     
@@ -288,20 +283,12 @@ def run_analysis_preprocessing(analysis):
                                               direction=analysis_node_connection['direction'],
                                               is_refinery_file=analysis_node_connection['is_refinery_file'])
     
-    #print "history_download"
-    #print history_download
-    
     # saving ouputs of workflow to download 
     for file_dl in history_download:
-        #print file_dl
         temp_dl = WorkflowFilesDL(step_id=file_dl['step_id'], pair_id=file_dl['pair_id'], filename=file_dl['name'])
         temp_dl.save()
         analysis.workflow_dl_files.add( temp_dl ) 
         analysis.save()
-        #####################################################
-        ########### SAVE EXTRA NODE PARAMETERS ##############
-        #####################################################
-        
             
     # import newly generated workflow 
     new_workflow_info = connection.import_workflow(new_workflow);
@@ -321,65 +308,9 @@ def run_analysis_preprocessing(analysis):
     analysis.history_id = history_id
     analysis.save()
 
-    # ----------------------------------------------------------------------------------------
-    # for testing: attach workflow graph and output files to data set graph
-    # ----------------------------------------------------------------------------------------
-        
-    # 0. get study and assay from the first input node
-    study = AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION )[0].node.study;
-    assay = AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION )[0].node.assay;
+    # attach workflow outputs back to dataset isatab graph
+    attach_outputs_dataset(analysis)
     
-    # 1. read workflow into graph
-    graph = create_expanded_workflow_graph(analysis.workflow_copy)
-    
-    # 2. create data transformation nodes for all tool nodes
-    data_transformation_nodes = [graph.node[node_id] for node_id in graph.nodes() if graph.node[node_id]['type'] == "tool"]
-    for data_transformation_node in data_transformation_nodes:
-        # TODO: incorporate subanalysis id in tool name???
-        data_transformation_node['node'] = Node.objects.create(study=study, assay=assay, analysis_uuid=analysis.uuid, type=Node.DATA_TRANSFORMATION, name=data_transformation_node['tool_id'] + '_' + data_transformation_node['name'])
-
-    # 3. create connection from input nodes to first data transformation nodes (input tool nodes in the graph are skipped)
-    for input_connection in AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION ):
-        for edge in graph.edges_iter([input_connection.step]):
-            if graph[edge[0]][edge[1]]['output_id'] == str(input_connection.step) + '_' + input_connection.filename:
-                input_node_id = edge[1];                
-                data_transformation_node = graph.node[input_node_id]['node']        
-                input_connection.node.add_child(data_transformation_node)
-    
-    # 4. create derived data file nodes for all entries and connect to data transformation nodes
-    for output_connection in AnalysisNodeConnection.objects.filter( analysis=analysis, direction=OUTPUT_CONNECTION ):
-        # create derived data file node
-        derived_data_file_node = Node.objects.create(study=study, assay=assay, type=Node.DERIVED_DATA_FILE, name=output_connection.name, analysis_uuid=analysis.uuid, subanalysis=output_connection.subanalysis, workflow_output=output_connection.name )
-        output_connection.node = derived_data_file_node
-        output_connection.save() 
-        
-        # get graph edge that corresponds to this output node:
-        # a. attach output node to source data transformation node
-        # b. attach output node to target data transformation node (if exists)
-        if len( graph.edges([output_connection.step]) ) > 0:
-            for edge in graph.edges_iter([output_connection.step]):
-                if graph[edge[0]][edge[1]]['output_id'] == str(output_connection.step) + "_" + output_connection.filename:
-                    output_node_id = edge[0];
-                    input_node_id = edge[1];                
-                    data_transformation_output_node = graph.node[output_node_id]['node']        
-                    data_transformation_input_node = graph.node[input_node_id]['node']        
-                    data_transformation_output_node.add_child(derived_data_file_node)
-                    derived_data_file_node.add_child(data_transformation_input_node)        
-                    # TODO: here we could add a (Refinery internal) attribute to the derived data file node to indicate which output of the tool it corresponds to
-                    
-        # connect outputs that are not inputs for any data transformation
-        if output_connection.is_refinery_file and derived_data_file_node.parents.count() == 0:
-            graph.node[output_connection.step]['node'].add_child( derived_data_file_node ) 
-
-        # delete output nodes that are not refinery files and don't have any children
-        if not output_connection.is_refinery_file and derived_data_file_node.children.count() == 0:
-            output_connection.node.delete()
-        
-    # 5. create annotated nodes and index new nodes
-    node_uuids = AnalysisNodeConnection.objects.filter(analysis=analysis, direction=OUTPUT_CONNECTION, is_refinery_file=True).values_list('node__uuid', flat=True)
-    add_annotated_nodes_selection( node_uuids, Node.DERIVED_DATA_FILE, study.uuid, assay.uuid )
-    index_annotated_nodes_selection( node_uuids )
-        
     return
 
 # task: monitor workflow execution (calls subtask that does the actual work)
@@ -505,6 +436,9 @@ def run_analysis_cleanup(analysis):
     # delete_library
     connection.delete_library(analysis.library_id)
     
+    # attach workflow outputs back to dataset isatab graph
+    #attach_outputs_dataset(analysis)
+    
     return
 
 @task()
@@ -551,7 +485,6 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
     """
     logger.debug("analysis_manager.tasks import_analysis_in_galaxy called")
     
-    
     for fileset in ret_list:
         for k, v in fileset.iteritems():
             cur_item = fileset[k]
@@ -574,7 +507,6 @@ def download_history_files(analysis) :
     """
     Download entire histories from galaxy. Getting files out of history to file store
     """
-    
     logger.debug("analysis_manger.download_history_files called")
     
     # retrieving list of files to download for workflow
@@ -595,11 +527,6 @@ def download_history_files(analysis) :
     
     download_list = connection.get_history_file_list(analysis.history_id)
     task_list = []
-    
-    #########################################
-    ### PROTOCOL REF (=attribute of data transformation node) i.e. workflow (created when a workflow is imported into refinery)  
-    ### DATA TRANSFORMATION NODE i.e. data transformed by protocol
-    #########################################
     
     # Iterating through files in current galaxy history
     for results in download_list:
@@ -637,13 +564,6 @@ def download_history_files(analysis) :
                 analysis.results.add(temp_file) 
                 analysis.save() 
                 
-                ##########################
-                ##########################
-                # create new nodes 
-                # node uuid (protocols) 
-                ##########################
-                ##########################
-                
                 # downloading analysis results into file_store
                 # only download files if size is greater than 1
                 if file_size > 0:
@@ -670,3 +590,68 @@ def get_analysis_connection(analysis):
                              cur_workflow.workflow_engine.instance.api_url,
                              cur_workflow.workflow_engine.instance.api_key)
     return connection
+
+def attach_outputs_dataset(analysis):
+    
+    # ----------------------------------------------------------------------------------------
+    # for testing: attach workflow graph and output files to data set graph
+    # ----------------------------------------------------------------------------------------
+    analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+        
+    # 0. get study and assay from the first input node
+    study = AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION )[0].node.study;
+    assay = AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION )[0].node.assay;
+    
+    # 1. read workflow into graph
+    graph = create_expanded_workflow_graph(analysis.workflow_copy)
+    
+    # 2. create data transformation nodes for all tool nodes
+    data_transformation_nodes = [graph.node[node_id] for node_id in graph.nodes() if graph.node[node_id]['type'] == "tool"]
+    for data_transformation_node in data_transformation_nodes:
+        # TODO: incorporate subanalysis id in tool name???
+        data_transformation_node['node'] = Node.objects.create(study=study, assay=assay, analysis_uuid=analysis.uuid, type=Node.DATA_TRANSFORMATION, name=data_transformation_node['tool_id'] + '_' + data_transformation_node['name'])
+
+    # 3. create connection from input nodes to first data transformation nodes (input tool nodes in the graph are skipped)
+    for input_connection in AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION ):
+        for edge in graph.edges_iter([input_connection.step]):
+            if graph[edge[0]][edge[1]]['output_id'] == str(input_connection.step) + '_' + input_connection.filename:
+                input_node_id = edge[1];                
+                data_transformation_node = graph.node[input_node_id]['node']        
+                input_connection.node.add_child(data_transformation_node)
+    
+    # 4. create derived data file nodes for all entries and connect to data transformation nodes
+    for output_connection in AnalysisNodeConnection.objects.filter( analysis=analysis, direction=OUTPUT_CONNECTION ):
+        # create derived data file node
+        derived_data_file_node = Node.objects.create(study=study, assay=assay, type=Node.DERIVED_DATA_FILE, name=output_connection.name, analysis_uuid=analysis.uuid, subanalysis=output_connection.subanalysis, workflow_output=output_connection.name )
+        output_connection.node = derived_data_file_node
+        output_connection.save() 
+        
+        # get graph edge that corresponds to this output node:
+        # a. attach output node to source data transformation node
+        # b. attach output node to target data transformation node (if exists)
+        if len( graph.edges([output_connection.step]) ) > 0:
+            for edge in graph.edges_iter([output_connection.step]):
+                if graph[edge[0]][edge[1]]['output_id'] == str(output_connection.step) + "_" + output_connection.filename:
+                    output_node_id = edge[0];
+                    input_node_id = edge[1];                
+                    data_transformation_output_node = graph.node[output_node_id]['node']        
+                    data_transformation_input_node = graph.node[input_node_id]['node']        
+                    data_transformation_output_node.add_child(derived_data_file_node)
+                    derived_data_file_node.add_child(data_transformation_input_node)        
+                    # TODO: here we could add a (Refinery internal) attribute to the derived data file node to indicate which output of the tool it corresponds to
+                    
+        # connect outputs that are not inputs for any data transformation
+        if output_connection.is_refinery_file and derived_data_file_node.parents.count() == 0:
+            graph.node[output_connection.step]['node'].add_child( derived_data_file_node ) 
+
+        # delete output nodes that are not refinery files and don't have any children
+        if not output_connection.is_refinery_file and derived_data_file_node.children.count() == 0:
+            output_connection.node.delete()
+        
+    # 5. create annotated nodes and index new nodes
+    node_uuids = AnalysisNodeConnection.objects.filter(analysis=analysis, direction=OUTPUT_CONNECTION, is_refinery_file=True).values_list('node__uuid', flat=True)
+    add_annotated_nodes_selection( node_uuids, Node.DERIVED_DATA_FILE, study.uuid, assay.uuid )
+    index_annotated_nodes_selection( node_uuids )
+    
+    
+
