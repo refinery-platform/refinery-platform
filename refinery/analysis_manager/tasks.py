@@ -308,6 +308,9 @@ def run_analysis_preprocessing(analysis):
     analysis.library_id = library_id
     analysis.history_id = history_id
     analysis.save()
+    
+    # attach workflow outputs back to dataset isatab graph
+    attach_outputs_dataset(analysis)
 
     return
 
@@ -435,7 +438,7 @@ def run_analysis_cleanup(analysis):
     connection.delete_library(analysis.library_id)
     
     # attach workflow outputs back to dataset isatab graph
-    attach_outputs_dataset(analysis)
+    # attach_outputs_dataset(analysis)
     
     return
 
