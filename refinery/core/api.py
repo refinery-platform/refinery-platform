@@ -122,10 +122,8 @@ class NodeSetListResource(ModelResource):
         detail_resource_name = 'nodeset' # NG: introduced to get correct resource ids
         resource_name = 'nodesetlist'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
-#        authentication = SessionAuthentication()
-#        authorization = DjangoAuthorization()
-        authentication = Authentication()
-        authorization = Authorization()
+        authentication = SessionAuthentication()
+        authorization = GuardianAuthorization()
         fields = ['name', 'summary', 'assay', 'study', 'uuid' ]
         allowed_methods = ["get" ]
         filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }

@@ -291,7 +291,7 @@ class NodeSetResourceTest(ResourceTestCase):
         self.assertHttpUnauthorized(response)
 
     def test_get_nodeset_list_without_login(self):
-        '''Test retrieving a list of NodeSets that belong to a user who created them.
+        '''Test retrieving a list of NodeSets without logging in.
 
         '''
         nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
@@ -429,3 +429,73 @@ class NodeSetResourceTest(ResourceTestCase):
                                        authentication=self.get_credentials())
         self.assertHttpMethodNotAllowed(response)
         self.assertEqual(NodeSet.objects.count(), 1)
+
+
+class NodeSetListResourceTest(ResourceTestCase):
+    '''Test NodeSetListResource REST API operations.
+
+    '''
+    def setUp(self):
+        super(NodeSetListResourceTest, self).setUp()
+
+        self.investigation = data_set_manager.models.Investigation.objects.create()
+        self.study = data_set_manager.models.Study.objects.create(investigation=self.investigation)
+        self.assay = data_set_manager.models.Assay.objects.create(study=self.study)
+        self.query = {
+            "facets":{
+                "platform_Characteristics_10_5_s": [],
+                "cell_or_tissue_Characteristics_10_5_s": [],
+                "REFINERY_TYPE_10_5_s": [],
+                "species_Characteristics_10_5_s": [],
+                "treatment_Characteristics_10_5_s": [],
+                "factor_Characteristics_10_5_s": [],
+                "factor_function_Characteristics_10_5_s": [],
+                "data_source_Characteristics_10_5_s": [],
+                "genome_build_Characteristics_10_5_s": [],
+                "REFINERY_FILETYPE_10_5_s": [],
+                "antibody_Characteristics_10_5_s": [],
+                "data_type_Characteristics_10_5_s": [],
+                "lab_Characteristics_10_5_s": []
+                },
+                "nodeSelection": [],
+                "nodeSelectionBlacklistMode": True
+        }
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(self.username, '', self.password)
+        self.username2 = self.password2 = 'user2'
+        self.user2 = User.objects.create_user(self.username2, '', self.password2)
+        self.nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
+                                         solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % self.nodeset1._meta.module_name, self.user, self.nodeset1)
+        self.nodeset2 = NodeSet.objects.create(name='ns2', study=self.study, assay=self.assay,
+                                         solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % self.nodeset2._meta.module_name, self.user2, self.nodeset2)
+        self.nodeset_uri = make_api_uri('nodeset')
+
+    def get_credentials(self):
+        '''Authenticate as self.user
+
+        '''
+        # workaround required to use SessionAuthentication
+        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
+        return self.api_client.client.login(username=self.username,
+                                            password=self.password)
+
+    def test_get_nodeset_list(self):
+        '''Test retrieving a list of NodeSets that belong to a user who created them.
+
+        '''
+        response = self.api_client.get(self.nodeset_uri, format='json',
+                                       authentication=self.get_credentials())
+        self.assertValidJSONResponse(response)
+        data = self.deserialize(response)['objects']
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['name'], 'ns1')
+
+    def test_get_nodeset_list_without_login(self):
+        '''Test retrieving a list of NodeSets without logging in.
+
+        '''
+        response = self.api_client.get(self.nodeset_uri, format='json')
+        self.assertHttpUnauthorized(response)
+
