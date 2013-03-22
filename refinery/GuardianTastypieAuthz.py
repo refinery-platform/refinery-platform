@@ -9,13 +9,9 @@ from tastypie.exceptions import Unauthorized
 
 class GuardianAuthorization(DjangoAuthorization):
     """
-    Uses permission checking from ``django.contrib.auth`` to map
-    ``GET`` to its equivalent django-guardian permission.
-
-    Only model-level checks are done for other types of requests.  Add
-    appropriate instance-level check before using with resources that support
-    those additional requests.
-
+    Maps ``GET`` to its equivalent django-guardian permission.
+    Only model-level checks are done for ``POST``.
+    Other types of requests are not allowed.
     """
     def read_list(self, object_list, bundle):
         klass = self.base_checks(bundle.request, object_list.model)
@@ -48,3 +44,20 @@ class GuardianAuthorization(DjangoAuthorization):
             return True
         raise Unauthorized("You are not allowed to access that resource.")
 
+    def create_list(self, object_list, bundle):
+        return super(GuardianAuthorization, self).create_list(object_list, bundle)
+
+    def create_detail(self, object_list, bundle):
+        return super(GuardianAuthorization, self).create_detail(object_list, bundle)
+
+    def update_list(self, object_list, bundle):
+        return []
+
+    def update_detail(self, object_list, bundle):
+        raise Unauthorized("You are not allowed to access that resource.")
+
+    def delete_list(self, object_list, bundle):
+        return []
+
+    def delete_detail(self, object_list, bundle):
+        raise Unauthorized("You are not allowed to access that resource.")
