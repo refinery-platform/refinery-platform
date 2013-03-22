@@ -343,6 +343,8 @@ class NodeSetResourceTest(ResourceTestCase):
                                         authentication=self.get_credentials())
         self.assertHttpCreated(response)
         self.assertEqual(NodeSet.objects.count(), 1)
+        nodeset = NodeSet.objects.get(name='nodeset1')
+        self.assertEqual(nodeset.get_owner(), self.user)
 
     def test_create_minimal_nodeset_without_login(self):
         '''Test adding a new NodeSet without logging in

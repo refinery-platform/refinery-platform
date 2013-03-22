@@ -101,6 +101,14 @@ class NodeSetResource(ModelResource):
                 name="api_dispatch_detail"),
         ]
 
+    def obj_create(self, bundle, **kwargs):
+        '''Assign owner to the new NodeSet instance
+
+        '''
+        bundle = super(NodeSetResource, self).obj_create(bundle, **kwargs)
+        bundle.obj.set_owner(bundle.request.user)
+        return bundle
+
 
 class NodeSetListResource(ModelResource):
     study = fields.ToOneField(StudyResource, 'study')
