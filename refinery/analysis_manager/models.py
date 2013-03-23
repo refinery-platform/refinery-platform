@@ -3,8 +3,10 @@ from core.models import Analysis
 from django.db import models
 from django_extensions.db.fields import UUIDField
 import analysis_manager
+import logging
 import math
 
+logger = logging.getLogger(__name__)
 
 '''
 shift+command+o // cleans up imports 
@@ -37,9 +39,20 @@ class AnalysisStatus( models.Model ):
         return getPayload(self.preprocessing_taskset_id)
     
     def execution_status(self):
-        status = getPayload(self.execution_monitor_task_id)
+        try:
+            status = getPayload(self.execution_monitor_task_id)
+        except:
+            logger.warn( 'Unable to get status for task id ' + self.execution_monitor_task_id )
+            return None
+
         connection = analysis_manager.tasks.get_analysis_connection(self.analysis)
-        history = connection.get_history(self.analysis.history_id)
+        
+        try:
+            history = connection.get_history(self.analysis.history_id)
+        except:
+            logger.warn( 'Unable to get progress from for history ' + self.analysis.history_id + ' of analysis ' + self.analysis.name )
+            return None
+
         if history:
             total_datasets = sum(history['state_details'].itervalues())
             processed_datasets = history['state_details']['ok']
@@ -49,6 +62,7 @@ class AnalysisStatus( models.Model ):
                 percent_complete = 0
             status[0]['percent_done'] = str(percent_complete) + '%'
         return status
+                
     
     def postprocessing_status(self):
         return getPayload(self.postprocessing_taskset_id)

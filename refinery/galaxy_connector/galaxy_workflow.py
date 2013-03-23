@@ -218,8 +218,9 @@ def createStepsAnnot(file_list, workflow):
                 if "post_job_actions" in curr_workflow_step:
                     pja_dict = curr_workflow_step["post_job_actions"]
                     
-                    for oname in output_names:
-                        oname = str(oname)
+                    for ofiles in output_list:
+                        oname = str(ofiles['name'])
+                        otype = str(ofiles['type'])
                         temp_key = 'RenameDatasetAction' + oname
                         #new_output_name = tool_name + ',' + input_type + ',' + str(oname) + ',' + curr_filename
                         new_output_name =  curr_filename + ","  + tool_name + ',' + input_type + ',' + oname
@@ -232,7 +233,7 @@ def createStepsAnnot(file_list, workflow):
                         analysis_node_connection['subanalysis'] = i
                         analysis_node_connection['step'] = curr_id
                         # TODO: set file type
-                        analysis_node_connection['filetype'] = None
+                        analysis_node_connection['filetype'] = otype
                         analysis_node_connection['direction'] = 'out'
                         analysis_node_connection['node_uuid'] = None # setting to none will trigger creation of a new Node                                                 
                         analysis_node_connection['is_refinery_file'] = False

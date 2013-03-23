@@ -85,6 +85,23 @@ function prettifySolrFieldName( name, isTitle )
 		name = "Name";
 	}
 
+	var position = name.indexOf( "REFINERY_ANALYSIS_UUID_" );
+	if ( position == 0 ) {
+		name = "Analysis";
+	}
+
+	var position = name.indexOf( "REFINERY_SUBANALYSIS_" );
+	if ( position == 0 ) {
+		name = "Subanalysis";
+	}
+
+	var position = name.indexOf( "REFINERY_WORKFLOW_OUTPUT_" );
+	if ( position == 0 ) {
+		name = "Output Type";
+	}
+
+
+
 	name = name.replace( /\_/g, " " );
 	
 	if ( isTitle )

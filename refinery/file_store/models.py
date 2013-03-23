@@ -130,6 +130,7 @@ FASTQSANGER = 'fastqsanger'
 FASTQSOLEXA = 'fastqsolexa'
 SAM = 'sam'
 SEG = 'seg'
+TABULAR = 'tabular'
 TDF = 'tdf'
 TGZ = 'tgz'
 TXT = 'txt'
@@ -161,6 +162,7 @@ FILE_TYPES = (
     (FASTQSOLEXA, 'FASTQ Solexa'),
     (SAM, 'Sequence Alignment/Map'),
     (SEG, 'Segmented Data File'), # http://www.broadinstitute.org/software/igv/SEG
+    (TABULAR, 'Tabular file'),
     (TDF, 'TDF file'),
     (TGZ, 'Gzip compressed tar archive'),
     (TXT, 'Text file'),
@@ -192,6 +194,7 @@ FILE_EXTENSIONS = {
     'fastqsanger': FASTQSANGER,
     'fastqsolexa': FASTQSOLEXA,
     'sam': SAM,
+    'tabular': TABULAR,
     'tdf': TDF,
     'tgz': TGZ,
     'txt': TXT,

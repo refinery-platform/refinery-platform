@@ -489,10 +489,24 @@ class AnnotatedNode(models.Model):
 
 
 def _is_internal_attribute(attribute):
-    return attribute in [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation", "species", "genome_build", "name" ]
+    return attribute in [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation", "species", "genome_build", "name", "analysis_uuid", "subanalysis", "output_type"  ]
 
-def _is_active_attribute(attribute):
+def _is_active_attribute(attribute):    
     return (not _is_internal_attribute(attribute) and attribute not in [] )
+
+
+def _is_exposed_attribute(attribute):
+    if attribute.startswith( "REFINERY_ANALYSIS_UUID_" ):
+        return False
+
+    if attribute.startswith( "REFINERY_SUBANALYSIS_" ):
+        return False
+    
+    if attribute.startswith( "REFINERY_WORKFLOW_OUTPUT_" ):
+        return False
+    
+    return True
+
 
 def _is_ignored_attribute(attribute):
     """
@@ -567,7 +581,7 @@ def initialize_attribute_order( study, assay ):
     for key in results["response"]["docs"][0]:
         
         is_facet = _is_facet_attribute(key,study,assay)
-        is_exposed = True
+        is_exposed = _is_exposed_attribute(key)
         is_internal = _is_internal_attribute(key);
         is_active = _is_active_attribute(key)
         

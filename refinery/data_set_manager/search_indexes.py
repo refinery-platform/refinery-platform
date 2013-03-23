@@ -109,13 +109,22 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         data["REFINERY_NAME_" + uuid + "_s"] = object.name
 
         # add analysis_uuid as dynamic field to get proper facet values
-        data["REFINERY_ANALYSIS_UUID_" + uuid + "_s"] = object.analysis_uuid
+        if object.analysis_uuid is not None:
+            data["REFINERY_ANALYSIS_UUID_" + uuid + "_s"] = object.analysis_uuid
+        else:
+            data["REFINERY_ANALYSIS_UUID_" + uuid + "_s"] = "N/A"
 
         # add subanalysis as dynamic field to get proper facet values
-        data["REFINERY_SUBANALYSIS_" + uuid + "_s"] = object.subanalysis
+        if object.subanalysis is not None:
+            data["REFINERY_SUBANALYSIS_" + uuid + "_s"] = object.subanalysis
+        else:
+            data["REFINERY_SUBANALYSIS_" + uuid + "_s"] = -1
         
         # add workflow_output as dynamic field to get proper facet values
-        data["REFINERY_WORKFLOW_OUTPUT" + uuid + "_s"] = object.workflow_output
+        if object.workflow_output is not None:
+            data["REFINERY_WORKFLOW_OUTPUT_" + uuid + "_s"] = object.workflow_output
+        else:
+            data["REFINERY_WORKFLOW_OUTPUT_" + uuid + "_s"] = "N/A"
 
 
         # add file type as facet value        
