@@ -484,6 +484,7 @@ class FileStoreItem(models.Model):
                 current_site = Site.objects.get_current()
             except Site.DoesNotExist:
                 logger.error("Cannot provide a full URL: no sites configured or SITE_ID is not set correctly")
+            #FIXME: provide a protocol-neutral URL
             return 'http://{}{}'.format(current_site.domain, self.datafile.url)
         else:
             if os.path.abspath(self.source):
@@ -491,73 +492,6 @@ class FileStoreItem(models.Model):
                 return None
             else:
                 return self.source
-
-#===============================================================================
-#    def copy_datafile(self):
-#        '''Copy file from source.
-#        Assumes datafile does not exist.
-#        Does not check that the source is an absolute file system path.
-# 
-#        :returns: bool -- True if success, False if failure.
-# 
-#        '''
-#        #TODO: handle out of disk space condition
-#        if os.path.isfile(self.source):
-#            # check if source file can be opened
-#            try:
-#                srcfile = File(open(self.source))
-#            except IOError:
-#                logger.error("Could not open file: %s", self.source)
-#                return False
-#            srcfilename = os.path.basename(self.source)
-# 
-#            #TODO: copy file in chunks to display progress report
-#            self.datafile.save(srcfilename, srcfile)  # model is saved by default if FileField.save() is called
-#            srcfile.close()
-#            logger.info("File copied")
-#            return True
-#        else:
-#            logger.error("Copying failed: source is not a file")
-#            return False
-#===============================================================================
-
-#===============================================================================
-#    def download_datafile(self, file_size=1):
-#        '''Download file from source.
-#        Assumes datafile does not exist.
-# 
-#        :param file_size: Size of the external files.
-#        :type file_size: int.
-#        :returns: bool -- True if success, False if failure.
-# 
-#        '''
-#        # download the file from source URL to a temp location on disk
-#        tmpfile = tasks.download_file.delay(self.source, file_size).get()
-#        if not tmpfile:
-#            logger.error("Downloading from '%s' failed", self.source)
-#            return False
-#    
-#        # get the file name from URL (remove query string)
-#        u = urlparse(self.source)
-#        src_file_name = os.path.basename(u.path)
-#        # construct destination path based on source file name
-#        rel_dst_path = self.datafile.storage.get_available_name(file_path(self, src_file_name))
-#        abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
-# 
-#        # move the temp file into the file store
-#        try:
-#            os.renames(tmpfile.name, abs_dst_path)
-#        except OSError as e:
-#            logger.error("Error moving temp file into the file store\nOSError: %s, file name: %s, error: %s",
-#                         e.errno, e.filename, e.strerror)
-#            return False
-# 
-#        # assign new path to datafile
-#        self.datafile.name = rel_dst_path
-#        # save the model instance
-#        self.save()
-#        return True
-#===============================================================================
 
 
 def is_local(uuid):

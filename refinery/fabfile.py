@@ -579,6 +579,7 @@ def update_refinery():
     with settings(user=env.local_user):
         sudo("{supervisorctl} restart celeryd".format(**env))
         sudo("{supervisorctl} restart celerycam".format(**env))
+        sudo("{supervisorctl} restart solr".format(**env))
 
 
 @task
@@ -695,6 +696,24 @@ def create_refinery_users():
     '''
     for user_id in django_settings.REFINERY_USERS.keys():
         execute(create_refinery_user, user_id)
+
+
+@task
+@with_settings(user=env.project_user)
+def upload_logrotate_config():
+    '''Upload Logrotate settings
+    Requires symlinks in /etc/logrotate.d
+
+    '''
+    upload_template("{local_conf_dir}/refinery-logrotate.conf".format(**env),
+                    "{conf_dir}/refinery-logrotate.conf".format(**env),
+                    backup=False)
+    upload_template("{local_conf_dir}/apache-logrotate.conf".format(**env),
+                    "{conf_dir}/apache-logrotate.conf".format(**env),
+                    backup=False)
+    upload_template("{local_conf_dir}/galaxy-logrotate.conf".format(**env),
+                    "{conf_dir}/galaxy-logrotate.conf".format(**env),
+                    backup=False)
 
 
 @task
