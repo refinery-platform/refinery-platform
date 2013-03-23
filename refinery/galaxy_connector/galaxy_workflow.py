@@ -4,11 +4,14 @@ Created on Jan 11, 2012
 @author: Nils Gehlenborg, Harvard Medical School, nils@hms.harvard.edu
 '''
 
-import simplejson
-import copy
-import ast
 from datetime import datetime
+import ast
+import copy
 import logging
+import matplotlib.pyplot as plt
+import networkx as nx
+import simplejson
+
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -51,24 +54,6 @@ class GalaxyWorkflowInput( object ):
 # =========================================================================================================
 # Helper functions 
 # =========================================================================================================
-def combineInputExp(in_list, repeat_num):
-    """
-    combineInputExp function for generating combined list for workflow configuration
-    """
-    
-    ret_list = [];
-    
-    input_list = in_list['input_file']
-    exp_list = in_list['exp_file']
-    
-    for i in range(0, repeat_num):
-        temp_dict = {}; 
-        temp_dict['input_file'] = input_list[i]
-        temp_dict['exp_file'] = exp_list[i]
-        ret_list.append(temp_dict)
-    
-    return ret_list
-
 def openWorkflow(in_file):   
     """
     Opens a workflow file 
@@ -146,11 +131,14 @@ def createStepsAnnot(file_list, workflow):
     history_download = []
     map = workflowMap(workflow);
     
+    # connections between workflow inputs and nodes
+    connections = []
+    
     #print "map"
     #print map
     #print "file_list"
     #print file_list
-    
+            
     for i in range(0, repeat_num):
         for j in range(0, len(temp_steps)):
             curr_id = str(len(temp_steps)*i+j);
@@ -169,7 +157,7 @@ def createStepsAnnot(file_list, workflow):
                         input_id_old = input_dict[key]['id']
                         input_id_new = (len(temp_steps)*i+int(input_id_old));
                         input_dict[key]['id'] = input_id_new;
-            
+
             # 3. Update positions 
             pos_dict = curr_workflow_step["position"];
             if pos_dict:
@@ -178,12 +166,10 @@ def createStepsAnnot(file_list, workflow):
                 # TODO: find a better way of defining positions 
                 pos_dict["top"] = top_pos * (i+1);
            
-           
             # 4. Updating post job actions for renaming datasets
+            input_type = map[int(curr_step)];    
             if (len(curr_workflow_step['inputs']) == 0):
                 tool_name = parse_tool_name(curr_workflow_step["tool_id"]);
-                
-                input_type = map[int(curr_step)];
                 
                 # getting current filename for workflow
                 curr_filename = ''
@@ -193,41 +179,71 @@ def createStepsAnnot(file_list, workflow):
                 #elif input_type == 'all':
                 else:
                     curr_filename = ''
+                    curr_nodelist = []
                     for itypes in file_list[i].keys():
+                        temp_name = removeFileExt(file_list[i][itypes]['node_uuid'])
+                        # array of node_uuids associated with the current toolset
+                        curr_nodelist.append(temp_name)
+                        
                         if curr_filename == '':
-                            curr_filename += removeFileExt(file_list[i][itypes]['node_uuid'])
+                            curr_filename += temp_name
                         else:
-                            curr_filename += ','+removeFileExt(file_list[i][itypes]['node_uuid'])
+                            curr_filename += ','+ temp_name
                
                 # getting "keep" flag to keep track of files to be saved from workflow
                 # parsing annotation field in galaxy workflows to parse output files to keep: "keep=output_file, keep=output_file2" etc..
                 step_annot = curr_workflow_step['annotation']
                 
                 step_annot2 = getStepOptions(curr_workflow_step['annotation'])
-                keep_files = []
-                if 'keep' in step_annot2:
-                    keep_files = step_annot2['keep']
-
+                keep_files = {}
+                
+                # Update with added JSON to define description and new names of files 
+                if 'refinery_files' in step_annot2:
+                    #print "FOUND refinery_files"
+                    try:
+                        keep_files = ast.literal_eval(step_annot2['refinery_files'][0])
+                        #keep_files = step_annot2['refinery_files']
+                        #print keep_files
+                    except Exception:
+                        logger.error("Malformed String in Galaxy Workflow: " + str(step_annot2['refinery_files'][0]))
+                
                 # creates list of output names from specified tool to rename
                 output_names = [];
                 output_list = curr_workflow_step['outputs']
                 if (len(output_list) > 0):
                     for ofiles in output_list:
                         output_names.append(ofiles['name'])
-                
+                                
                 # uses renamedataset action to rename output of specified tool
                 if "post_job_actions" in curr_workflow_step:
                     pja_dict = curr_workflow_step["post_job_actions"]
                     
-                    for oname in output_names:
-                        oname = str(oname)
+                    for ofiles in output_list:
+                        oname = str(ofiles['name'])
+                        otype = str(ofiles['type'])
                         temp_key = 'RenameDatasetAction' + oname
                         #new_output_name = tool_name + ',' + input_type + ',' + str(oname) + ',' + curr_filename
                         new_output_name =  curr_filename + ","  + tool_name + ',' + input_type + ',' + oname
                         new_tool_name = str(curr_id) + "_" + oname
                         
+                        # store information about the output files of this tools
+                        analysis_node_connection = {}
+                        analysis_node_connection['filename'] = oname
+                        analysis_node_connection['name'] = oname
+                        analysis_node_connection['subanalysis'] = i
+                        analysis_node_connection['step'] = curr_id
+                        # TODO: set file type
+                        analysis_node_connection['filetype'] = otype
+                        analysis_node_connection['direction'] = 'out'
+                        analysis_node_connection['node_uuid'] = None # setting to none will trigger creation of a new Node                                                 
+                        analysis_node_connection['is_refinery_file'] = False
+                        
                         # if the output name is being tracked and downloaded for Refinery
-                        if str(oname) in keep_files:
+                        #if str(oname) in keep_files:
+                        if str(oname) in keep_files.keys():
+                            #print "KEY FOUND: refinery_files = " + str(oname)
+                            analysis_node_connection['is_refinery_file'] = True
+                            
                             if input_type in file_list[i].keys():
                                 curr_pair_id = file_list[i][input_type]['pair_id']
                                 curr_pair_id = str((i)-1+int(curr_pair_id)) 
@@ -241,15 +257,20 @@ def createStepsAnnot(file_list, workflow):
                                         curr_pair_id += "," + str(file_list[i][itypes]['pair_id'])
                            
                             curr_result = {}
+                            curr_result["step_id"] = new_tool_name
                             curr_result["pair_id"] = curr_pair_id
-                            curr_result["name"] = new_output_name;
-                            curr_result["step_id"] = new_tool_name;
-                            
+                            #curr_result["name"] = new_output_name
+                            user_output_name = str(i+1) + '_' + keep_files[str(oname)]['name']
+                            curr_result["name"] = user_output_name
+                            analysis_node_connection['name'] = user_output_name
+        
                             #print "curr_result"
                             #print curr_result
                             
                             history_download.append(curr_result)
-                        
+                            
+                        # store information about this output file    
+                        connections.append(analysis_node_connection)
                         
                         # if rename dataset action already exists for this tool output
                         if temp_key in pja_dict:
@@ -265,15 +286,39 @@ def createStepsAnnot(file_list, workflow):
                             
                             new_rename_dict = ast.literal_eval(new_rename_action);
                             pja_dict[temp_key] = new_rename_dict;
-
+                                        
+            # 5. adding node uuid for each input step
+            elif (len(curr_workflow_step['inputs']) > 0):
+                #print file_list
+                
+                # adding node uuid to input description field 
+                if input_type in file_list[i].keys():
+                    curr_node = str(removeFileExt(file_list[i][input_type]['node_uuid']))
+                    curr_workflow_step['inputs'][0]['description'] = str(curr_node)
+                    curr_workflow_step['annotation'] = str(curr_node)
+                                        
+                    connections.append({ 'node_uuid': curr_node,
+                                         'step': int(curr_workflow_step['id']),
+                                         'filename': curr_workflow_step['inputs'][0]['name'],
+                                         'name': curr_workflow_step['inputs'][0]['name'], 
+                                         'subanalysis': i,
+                                         'filetype': None,
+                                         'direction': 'in',
+                                         'is_refinery_file': True })  
+                
+                    
             # Adds updated module 
             updated_dict[curr_id] = curr_workflow_step;
     
-    return updated_dict, history_download;
+    #print "history_download"
+    #print simplejson.dumps(history_download, indent=4)
+    
+    return updated_dict, history_download, connections;
 
 def createStepsCompact(file_list, workflow):
     # Deals with the case where we want multiple inputs to propogate into a single tool i.e. bulk downloader
     logger.debug("galaxy_workflow.createStepsCompact called")
+    
     
     updated_dict = {};
     temp_steps = workflow["steps"];
@@ -281,8 +326,11 @@ def createStepsCompact(file_list, workflow):
     history_download = []
     map = workflowMap(workflow);
     
-    #print "file_list"
-    #print file_list
+    # connections between workflow inputs (and outputs) and node uuids
+    connections = []
+    
+    print "file_list"
+    print file_list
     
     counter = 0
     edge_ids = []
@@ -296,15 +344,15 @@ def createStepsCompact(file_list, workflow):
         curr_step_annot = curr_workflow_step['annotation']
         step_opt = getStepOptions(curr_workflow_step['annotation'])
         
-        keep_files = []
-        if 'keep' in step_opt:
-            keep_files = step_opt['keep']
-        
-        print "step_opt"
-        print step_opt
-        
-        print "keep_files"
-        print keep_files
+        input_type = map[int(curr_step)];    
+        keep_files = {}       
+        # Update with added JSON to define description and new names of files 
+        if 'refinery_files' in step_opt:
+            #print "FOUND refinery_files"
+            try:
+                keep_files = ast.literal_eval(step_opt['refinery_files'][0])
+            except Exception:
+                logger.error("Malformed String in Galaxy Workflow: " + str(step_opt['refinery_files'][0]))
         
         # creates list of output names from specified tool to rename
         output_names = [];
@@ -320,28 +368,50 @@ def createStepsCompact(file_list, workflow):
             for oname in output_names:
                 oname = str(oname)
                 temp_key = 'RenameDatasetAction' + oname
+                new_tool_name = str(1) + "_" + oname
                 #new_output_name = tool_name + ',' + input_type + ',' + str(oname) + ',' + curr_filename
-                #new_output_name =  curr_filename + ","  + tool_name + ',' + input_type + ',' + oname
                 
-                # if the output name is being tracked and downloaded for Refinery
-                if str(oname) in keep_files:
+                # store information about the output files of this tools
+                analysis_node_connection = {}
+                analysis_node_connection['filename'] = oname
+                analysis_node_connection['name'] = oname
+                analysis_node_connection['subanalysis'] = 1
+                analysis_node_connection['step'] = counter
+                # TODO: set file type
+                analysis_node_connection['filetype'] = None
+                analysis_node_connection['direction'] = 'out'
+                analysis_node_connection['node_uuid'] = None # setting to none will trigger creation of a new Node                                                 
+                analysis_node_connection['is_refinery_file'] = False
+                    
+                if str(oname) in keep_files.keys():
+                    #print "KEY FOUND: refinery_files = " + str(oname)    
+                    analysis_node_connection['is_refinery_file'] = True
+                    
+                    # TODO: fix references to i here
+                    curr_pair_id = 1
                     curr_result = {}
-                    curr_result["pair_id"] = str(counter)
-                    curr_result["name"] = oname;
-                    curr_result["step_id"] = str(counter)    
+                    curr_result["step_id"] = new_tool_name
+                    curr_result["pair_id"] = curr_pair_id
+                    #curr_result["name"] = new_output_name
+                    user_output_name = str(1) + '_' + keep_files[str(oname)]['name']
+                    curr_result["name"] = user_output_name
+                    analysis_node_connection['name'] = user_output_name
+
                     history_download.append(curr_result)
+                    
+                # store information about this output file    
+                connections.append(analysis_node_connection)
                 
                 # if rename dataset action already exists for this tool output
                 if temp_key in pja_dict:
                     # renaming output files according with step_id of workflow
-                    #pja_dict[temp_key]['action_arguments']['newname'] = new_output_name;
-                    pja_dict[temp_key]['action_arguments']['newname'] = str(counter);
+                    pja_dict[temp_key]['action_arguments']['newname'] = new_output_name;
+                    #pja_dict[temp_key]['action_arguments']['newname'] = str(counter);
                 
                 # whether post_job_action,RenameDatasetAction exists or not
                 else:
                     # renaming output files according with step_id of workflow  
-                    #new_rename_action =  '{ "action_arguments": { "newname": "%s" }, "action_type": "RenameDatasetAction", "output_name": "%s"}' % (new_output_name, oname);
-                    new_rename_action =  '{ "action_arguments": { "newname": "%s" }, "action_type": "RenameDatasetAction", "output_name": "%s"}' % (str(counter), oname);
+                    new_rename_action =  '{ "action_arguments": { "newname": "%s" }, "action_type": "RenameDatasetAction", "output_name": "%s"}' % (new_tool_name, oname);
                     
                     new_rename_dict = ast.literal_eval(new_rename_action);
                     pja_dict[temp_key] = new_rename_dict;
@@ -361,6 +431,25 @@ def createStepsCompact(file_list, workflow):
                 
                 updated_dict[str(counter)] = new_step
                 counter += 1
+                
+                # iterating through all input files to be zipped
+                # adding node uuid for each input step
+                if (len(new_step['inputs']) > 0):
+                    # adding node uuid to input description field 
+                    curr_node = str(removeFileExt(file_list[i][input_type]['node_uuid']))
+                    curr_workflow_step['inputs'][0]['description'] = str(curr_node)
+                    curr_workflow_step['annotation'] = str(curr_node)
+                                        
+                    connections.append({ 'node_uuid': curr_node,
+                                         'step': int(new_step['id']),
+                                         'filename': new_step['inputs'][0]['name'],
+                                         'name': new_step['inputs'][0]['name'], 
+                                         'subanalysis': i,
+                                         'filetype': None,
+                                         'direction': 'in',
+                                         'is_refinery_file': True })  
+            
+        # creating edges between repeated segments of the workflow w/ connecting tool  
         elif (check_step != '' and check_step == curr_step_name ):
             #print ">>>>>>>> in creating edges to bulk tool"
             curr_connections = curr_workflow_step['input_connections']
@@ -387,14 +476,12 @@ def createStepsCompact(file_list, workflow):
                         new_key = k_key + str(ei) + '|' + k_type
                         new_edge['id'] = ei
                         
-                        # updated key for reinserting funcky index value back into galaxy workflow tool_state
+                        # updated key for reinserting funky index value back into galaxy workflow tool_state
                         key_tool_state = k_key.rstrip('_')
-                        
                         new_connections[new_key] = new_edge
                         
                         temp_tool_val = '{"__index__": %s, "%s": null}' % (str(tindex),k_type)
-                        #temp_tool_val = '{\"__index__\": %s, \"%s\": null}' %  (str(tindex),k_type)
-                        #temp_tool_val = '{\\\"__index__\\\": %s, \\\"%s\\\": null}' %  (str(tindex),k_type)
+                        
                         if (key_tool_val):
                             key_tool_val += ',' + temp_tool_val
                         else:
@@ -427,7 +514,7 @@ def createStepsCompact(file_list, workflow):
 
     #print "updated_dict"
     #print simplejson.dumps(updated_dict, indent=4);
-    return updated_dict, history_download;
+    return updated_dict, history_download, connections;
     
 def createSteps(repeat_num, workflow):
     #print "createSteps called"
@@ -471,9 +558,13 @@ def createSteps(repeat_num, workflow):
 
 def getStepOptions(step_annot):
     "Helper function: convert galaxy workflow step annotations into lookup dictionary"
-    #print "galaxy_workflow. getStepOptions: " + step_annot
+    #logger.debug("galaxy_connector.galaxy_workflow getStepOptions called")     
+    #logger.debug( step_annot )
+    
     ret_dict = {}
         
+    step_annot = step_annot.strip()
+    
     if (step_annot):
         # splitting multiple options based on ';'
         step_split = step_annot.strip().split(';')
@@ -488,16 +579,14 @@ def getStepOptions(step_annot):
                 else:
                     ret_dict[temp_key] = [temp_val]
    
-    #logger.debug("galaxy_connector.galaxy_workflow getStepOptions called")     
-    #logger.debug(ret_dict)
-            
+    #logger.debug(ret_dict)     
     return ret_dict
 
 def countWorkflowSteps(workflow):
     """
     Helper function for counting number of workflow steps from a galaxy workflow. Number of steps in workflow is not reflective of the actual number of workflows created by galaxy when run
     """
-    logger.debug("galaxy_connector.galaxy_workflow called") 
+    logger.debug("galaxy_connector.galaxy_workflow countWorkflowSteps called") 
     
     workflow_steps = workflow["steps"]
     total_steps = 0
@@ -508,17 +597,26 @@ def countWorkflowSteps(workflow):
         
         # count number of output files
         output_num = len(curr_step['outputs'])
+        #print "############### output_num"
+        #print output_num
+        #print curr_step_id
+        #print simplejson.dumps(curr_step, indent=4)
         
         if (output_num > 0):
             # check to see if HideDatasetActionoutput_ keys exist in current step
             if 'post_job_actions' in curr_step.keys():
                 pja_step = curr_step['post_job_actions']
                 pja_hide_count = 0
+                pja_hide = False
+                
+                # if using HideDatasetActions from older versions of galaxy
                 for k,v in pja_step.iteritems():
                     if (k.find('HideDatasetActionoutput_') > -1):
                         pja_hide_count += 1
+                        pja_hide = True
                 
                 diff_count = output_num - pja_hide_count
+                #print "DIFF COUNT: " + str(diff_count)
                 
                 # add one step if HideDatasetActionoutput_ = outputs for file
                 if diff_count == 0:
@@ -526,11 +624,14 @@ def countWorkflowSteps(workflow):
                 # add total number of steps for this defined step in galaxy workflow    
                 else:
                     total_steps += diff_count
+                    
                 
         # case where their are no outputs associated with step
-        else:
+        elif (curr_step['type'] == 'data_input' ):
             total_steps += 1
-    
+            
+        #print "\t\t TOTAL:STEPS= " + str(total_steps)
+        
     #print "workflow_steps: " + str(len(workflow["steps"]))
     #print "total_steps: " + str(total_steps)
     
@@ -548,4 +649,116 @@ def parse_tool_name(toolname):
         return temp[len(temp)-2]
     else:
         return toolname 
+    
+    
+def create_workflow_graph(dictionary):
+    graph = nx.MultiDiGraph()
+    
+    steps = dictionary["steps"];
+    
+    # iterate over steps to create nodes        
+    for current_node_id, step in steps.iteritems():
+        
+        # ensure node id is an integer
+        current_node_id = int(current_node_id)
+        
+        # create node
+        graph.add_node(current_node_id)
+        
+        # add node attributes
+        graph.node[current_node_id]['name'] = str(current_node_id) + ": " + step['name'];
+        graph.node[current_node_id]['tool_id'] = step['tool_id'];
+        graph.node[current_node_id]['type'] = step['type'];
+        graph.node[current_node_id]['position'] = ( int(step['position']['left']), -int(step['position']['top']) );
+        graph.node[current_node_id]['outputs'] = {}
+
+        output_counter = 1
+        
+        for output in step['outputs']:
+            output_counter += 1
+            output_id = current_node_id*100 + output_counter
+            output_name = str(output_id) + ": " + output["name"] + "(" + output["type"] + ")"
+            
+            graph.add_node(output_id)
+            graph.add_edge(current_node_id,output_id)
+
+            graph.node[output_id]['name'] = output_name;
+            graph.node[output_id]['tool_id'] = "";
+            graph.node[output_id]['type'] = "output";
+            graph.node[output_id]['position'] = ( int(step['position']['left']), -int(step['position']['top'])-(20*output_counter) );
+            graph.node[current_node_id]['outputs'][output['name']] = output_id;
+            graph[current_node_id][output_id]['name'] = ""
+
+                    
+    # iterate over steps to create edges        
+    for current_node_id, step in steps.iteritems():
+        # ensure node id is an integer
+        current_node_id = int(current_node_id)
+        
+        for edge_name, input_connection in step['input_connections'].iteritems():            
+            parent_node_id = input_connection["id"]
+            parent_node_output_name = input_connection["output_name"]
+            # create edge from current node to input
+            
+            # basic edge
+            print str( parent_node_id ) + " -> " + str( current_node_id )
+            #graph.add_edge(parent_node_id,current_node_id)
+            #graph[parent_node_id][current_node_id]['name'] = edge_name
+            
+            # find output (node) of parent node to which this input edge needs to be attached (based on name)
+            try:
+                parent_node_output_id = graph.node[parent_node_id]['outputs'][parent_node_output_name]
+            except:
+                parent_node_output_id = parent_node_id
+            print str( parent_node_output_id ) + " -> " + str( current_node_id )
+            graph.add_edge(parent_node_output_id,current_node_id)
+            graph[parent_node_output_id][current_node_id]['name'] = edge_name
+    
+    return graph    
+
+
+def create_expanded_workflow_graph(dictionary):
+    graph = nx.MultiDiGraph()
+    
+    steps = dictionary["steps"];
+    
+    # iterate over steps to create nodes        
+    for current_node_id, step in steps.iteritems():
+        
+        # ensure node id is an integer
+        current_node_id = int(current_node_id)
+        
+        # create node
+        graph.add_node(current_node_id)
+        
+        # add node attributes
+        graph.node[current_node_id]['name'] = str(current_node_id) + ": " + step['name'];
+        graph.node[current_node_id]['tool_id'] = step['tool_id'];
+        graph.node[current_node_id]['type'] = step['type'];
+        graph.node[current_node_id]['position'] = ( int(step['position']['left']), -int(step['position']['top']) );
+        graph.node[current_node_id]['node'] = None
+                    
+    # iterate over steps to create edges (this is done by looking at input_connections, i.e. only by looking at tool nodes)        
+    for current_node_id, step in steps.iteritems():
+        # ensure node id is an integer
+        current_node_id = int(current_node_id)
+        
+        for current_node_input_name, input_connection in step['input_connections'].iteritems():            
+            parent_node_id = input_connection["id"]
+            
+            # test if parent node is a tool node or an input node to pick the right name for the outgoing edge
+            if graph.node[parent_node_id]['type'] == 'data_input':
+                parent_node_output_name = steps[str(parent_node_id)]['inputs'][0]['name']
+            else:
+                parent_node_output_name = input_connection['output_name']
+            
+            edge_output_id = str(parent_node_id) + '_' + parent_node_output_name;
+            edge_input_id = str(current_node_id) + '_' + current_node_input_name
+            edge_id = edge_output_id + '___' + edge_input_id  
+            graph.add_edge(parent_node_id,current_node_id,key=edge_id)
+            graph[parent_node_id][current_node_id]['output_id'] = str(parent_node_id) + '_' + parent_node_output_name              
+            graph[parent_node_id][current_node_id]['input_id'] = str(current_node_id) + '_' + current_node_input_name
+    
+    return graph    
+    
     

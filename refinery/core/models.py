@@ -4,8 +4,8 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
+from data_set_manager.models import Investigation, Node, Study, Assay, Node
 from datetime import datetime
-import logging
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User, Group
@@ -13,16 +13,18 @@ from django.contrib.auth.signals import user_logged_in
 from django.core.mail import mail_admins
 from django.db import models, transaction
 from django.db.models import Max, signals
+from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, post_init
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django.forms import ModelForm
 from django_extensions.db.fields import UUIDField
-from guardian.shortcuts import assign, get_users_with_perms, get_groups_with_perms
-from registration.signals import user_registered, user_activated
-from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size
 from galaxy_connector.models import Instance
+from guardian.shortcuts import assign, get_users_with_perms, \
+    get_groups_with_perms
+from registration.signals import user_registered, user_activated
+import logging
 
 
 logger = logging.getLogger(__name__)
@@ -469,6 +471,8 @@ class WorkflowFilesDL( models.Model ):
     step_id = models.TextField()
     pair_id = models.TextField()
     filename = models.TextField()
+    #template_num = models.IntegerField(blank=True, null=True)
+    #input_nodes = models.ManyToManyField(Node, blank=True)
     #[{'step_id': '1', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '2', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '4', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '6', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '12', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '19', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}]
     
     def __unicode__(self):
@@ -483,13 +487,16 @@ class WorkflowDataInputMap( models.Model ):
     def __unicode__(self):
         return str( self.workflow_data_input_name ) + " <-> " + self.data_uuid
 
+
+
 class AnalysisResult (models.Model):
     analysis_uuid = UUIDField( auto=False )
     file_store_uuid = UUIDField( auto=False )
     file_name = models.TextField()
     file_type = models.TextField()
-    # associated tdf file 
+    # many to many to nodes uuid 
     
+    # associated tdf file 
     ### TODO ### ?galaxy_id?
     # add reference to file_store models
     # foreign key into analysis
@@ -527,6 +534,9 @@ class Analysis ( OwnableResource ):
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
     status = models.TextField(default=INITIALIZED_STATUS, choices=STATUS_CHOICES, blank=True, null=True)
+    # possibly replace results
+    # output_nodes = models.ManyToManyField(Nodes, blank=True)
+    # protocol = i.e. protocol node created when the analysis is created 
         
     def __unicode__(self):
         return self.name + " - " + self.summary
@@ -537,6 +547,46 @@ class Analysis ( OwnableResource ):
             ('read_%s' % verbose_name, 'Can read %s' %  verbose_name ),
         )
 
+#: Defining available  relationship types 
+INPUT_CONNECTION = 'in'
+OUTPUT_CONNECTION = 'out'
+WORKFLOW_NODE_CONNECTION_TYPES = (
+            (INPUT_CONNECTION, 'in'),
+            (OUTPUT_CONNECTION, 'out'),
+            )
+
+
+class AnalysisNodeConnection( models.Model ):    
+    analysis = models.ForeignKey(Analysis, related_name="workflow_node_connections")
+    
+    # an identifier assigned to all connections to a specific instance of the workflow template
+    # (unique within the analysis)  
+    subanalysis = IntegerField(null=True, blank=False) 
+    
+    node = models.ForeignKey(Node, related_name="workflow_node_connections", null=True, blank=True, default=None)    
+    
+    # step id in the expanded workflow template, e.g. 10 
+    step = models.IntegerField(null=False, blank=False)
+
+    # (display) name for an output file "wig_outfile" or "outfile"
+    # (unique for a given workflow template)
+    name = models.CharField(null=False, blank=False, max_length=100)
+    
+    # file name of the connection, e.g. "wig_outfile" or "outfile"
+    filename = models.CharField(null=False, blank=False, max_length=100)
+    
+    # file type if known
+    filetype = models.CharField(null=True, blank=True, max_length=100)
+    
+    # direction of the connection, either an input or an output
+    direction = models.CharField(null=False, blank=False,choices=WORKFLOW_NODE_CONNECTION_TYPES, max_length=3)
+    
+    # flag to indicate if file is a file that will (for outputs) or does (for inputs) exist in Refinery
+    is_refinery_file = models.BooleanField(null=False, blank=False, default=False)
+
+    def __unicode__(self):
+        return self.direction + ": " + str(self.step) + "_" + self.name + " (" + str(self.is_refinery_file) + ")"
+    
 
 def get_shared_groups( user1, user2, include_public_group=False ):
     '''

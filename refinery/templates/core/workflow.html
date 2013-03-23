@@ -36,6 +36,11 @@
 		</div>
 		<p>{% if workflow.slug %} {{ workflow.slug }} {% else %} <i>None provided.</i>{% endif %}</p>
 
+		<div class="refinery-subheader">
+			<h4>Structure</h4>
+		</div>
+		<p><img src="{{ workflow_graph_url }}"></a></p>
+
 		<div class="refinery-header">
 			<span class="refinery-header-left">
 				<h3>Workflow Engine</h3>

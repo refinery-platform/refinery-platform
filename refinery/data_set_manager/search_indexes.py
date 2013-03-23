@@ -29,6 +29,10 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     genome_build = indexes.CharField(model_attr='genome_build',null=True)
     is_annotation = indexes.BooleanField(model_attr='is_annotation')
     
+    analysis_uuid = indexes.CharField(model_attr='analysis_uuid',null=True)
+    subanalysis = indexes.IntegerField(model_attr='subanalysis',null=True)
+    workflow_output = indexes.CharField(model_attr='workflow_output',null=True)
+    
     #TODO: add modification date (based on registry)
         
     #attribute_type = models.TextField(db_index=True)
@@ -101,8 +105,27 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         # add type as dynamic field to get proper facet values
         data["REFINERY_TYPE_" + uuid + "_s"] = object.type
 
-        # add type as dynamic field to get proper facet values
+        # add name as dynamic field to get proper facet values
         data["REFINERY_NAME_" + uuid + "_s"] = object.name
+
+        # add analysis_uuid as dynamic field to get proper facet values
+        if object.analysis_uuid is not None:
+            data["REFINERY_ANALYSIS_UUID_" + uuid + "_s"] = object.analysis_uuid
+        else:
+            data["REFINERY_ANALYSIS_UUID_" + uuid + "_s"] = "N/A"
+
+        # add subanalysis as dynamic field to get proper facet values
+        if object.subanalysis is not None:
+            data["REFINERY_SUBANALYSIS_" + uuid + "_s"] = object.subanalysis
+        else:
+            data["REFINERY_SUBANALYSIS_" + uuid + "_s"] = -1
+        
+        # add workflow_output as dynamic field to get proper facet values
+        if object.workflow_output is not None:
+            data["REFINERY_WORKFLOW_OUTPUT_" + uuid + "_s"] = object.workflow_output
+        else:
+            data["REFINERY_WORKFLOW_OUTPUT_" + uuid + "_s"] = "N/A"
+
 
         # add file type as facet value        
         file_store_item = file_store_tasks.read( object.file_uuid );

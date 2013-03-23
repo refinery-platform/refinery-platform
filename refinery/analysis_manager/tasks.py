@@ -4,29 +4,37 @@ Created on Apr 5, 2012
 @author: nils
 '''
 
-from core.models import Analysis, AnalysisResult, WorkflowFilesDL
 from analysis_manager.models import AnalysisStatus
-from celery.task import task
-from celery.task.sets import subtask, TaskSet
-import time, os, copy, urllib2
-from django.conf import settings
-from galaxy_connector.connection import Connection
-from workflow_manager.tasks import configure_workflow
-from datetime import datetime, timedelta
-from celery.task import chord
-from celery.utils import uuid
-from celery.task.chords import Chord
 from celery import current_app as celery
-from file_store.models import FileStoreItem, is_local
-from file_store.tasks import import_file, create, rename
-import logging
-from galaxy_connector.galaxy_workflow import countWorkflowSteps
-from django.contrib.sites.models import Site
+from celery.task import chord, task
+from celery.task.chords import Chord
+from celery.task.sets import subtask, TaskSet
+from celery.utils import uuid
+from core.models import Analysis, AnalysisResult, WorkflowFilesDL, \
+    AnalysisNodeConnection, INPUT_CONNECTION, OUTPUT_CONNECTION
+from data_set_manager.models import Node, initialize_attribute_order
+from data_set_manager.utils import get_node_types, update_annotated_nodes, \
+    index_annotated_nodes, add_annotated_nodes_selection, \
+    index_annotated_nodes_selection
+from datetime import datetime, timedelta
+from django.conf import settings
+from django.contrib.sites.models import Site, Site
 from django.core.urlresolvers import reverse
 from django.template import loader, Context
-from django.contrib.sites.models import Site
-import socket 
-from data_set_manager.models import Node
+from file_store.models import FileStoreItem, is_local
+from file_store.tasks import import_file, create, rename
+from galaxy_connector.connection import Connection
+from galaxy_connector.galaxy_workflow import countWorkflowSteps, \
+    create_workflow_graph, create_expanded_workflow_graph
+from workflow_manager.tasks import configure_workflow
+import ast
+import copy
+import data_set_manager
+import logging
+import os
+import socket
+import time
+import urllib2
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +148,7 @@ def chord_execution(ret_val, analysis):
      
     # EXECUTION
     ## TESTING NEW DEBUGGING ###
-    # execution_monitor_task_id = monitor_analysis_execution.subtask((analysis,)).apply_async().task_id
+    #execution_monitor_task_id = monitor_analysis_execution.subtask((analysis,)).apply_async().task_id
     #execution_taskset = TaskSet(task=[run_analysis_execution.subtask((analysis,)) ])            
     #result_chord, result_set = progress_chord(execution_taskset)(chord_postprocessing.subtask((analysis,)))
     
@@ -196,8 +204,6 @@ def chord_cleanup(ret_val, analysis):
     analysis_status.cleanup_taskset_id = result_set.task_id 
     analysis_status.save()
     
-    
-    
     return
 
 # task: run analysis (outermost task, calls subtasks that monitor and run preprocessing, execution, postprocessing)
@@ -228,7 +234,7 @@ def run_analysis(analysis, interval=5.0):
             task_id = import_file.subtask((cur_fs_uuid, False,))
             download_tasks.append(task_id)
             
-            
+                
     # PREPROCESSING            
     task_id = run_analysis_preprocessing.subtask( (analysis,) ) 
     download_tasks.append(task_id)
@@ -256,18 +262,30 @@ def run_analysis_preprocessing(analysis):
     ### generates same ret_list purely based on analysis object ###
     ret_list = get_analysis_config(analysis)
     
-    print "ret_list"
-    print ret_list
-
     # getting expanded workflow configured based on input: ret_list
-    new_workflow, history_download = configure_workflow(analysis.workflow.uuid, ret_list, connection)
+    new_workflow, history_download, analysis_node_connections = configure_workflow(analysis.workflow, ret_list, connection)
     
-    #print "history_download"
-    #print history_download
+    # import connections into database
+    for analysis_node_connection in analysis_node_connections:
+        
+        # lookup node object
+        if ( analysis_node_connection["node_uuid"] ):
+            node = Node.objects.get(uuid=analysis_node_connection["node_uuid"])
+        else:
+            node = None 
+
+        AnalysisNodeConnection.objects.create(analysis=analysis,
+                                              subanalysis=analysis_node_connection['subanalysis'],
+                                              node=node,
+                                              step=int(analysis_node_connection['step']),
+                                              name=analysis_node_connection['name'],
+                                              filename=analysis_node_connection['filename'],
+                                              filetype=analysis_node_connection['filetype'],
+                                              direction=analysis_node_connection['direction'],
+                                              is_refinery_file=analysis_node_connection['is_refinery_file'])
     
     # saving ouputs of workflow to download 
     for file_dl in history_download:
-        #print file_dl
         temp_dl = WorkflowFilesDL(step_id=file_dl['step_id'], pair_id=file_dl['pair_id'], filename=file_dl['name'])
         temp_dl.save()
         analysis.workflow_dl_files.add( temp_dl ) 
@@ -291,6 +309,9 @@ def run_analysis_preprocessing(analysis):
     analysis.history_id = history_id
     analysis.save()
     
+    # attach workflow outputs back to dataset isatab graph
+    #attach_outputs_dataset(analysis)
+
     return
 
 # task: monitor workflow execution (calls subtask that does the actual work)
@@ -314,7 +335,12 @@ def monitor_analysis_execution(analysis, interval=5.0, task_id=None):
     while not revoke_task:
         #logger.debug("Sleeping ... in monitor_analysis_execution")
         
-        progress = connection.get_progress(analysis.history_id)
+        try:
+            progress = connection.get_progress(analysis.history_id)
+        except:
+            logger.warn( 'Unable to get progress from for history ' + analysis.history_id + ' of analysis ' + analysis.name )
+            continue
+        
         monitor_analysis_execution.update_state(state="PROGRESS", meta=progress)
         
         #logger.debug("monitor_analysis_execution progress[workflow_state] = %s", progress["workflow_state"])
@@ -378,6 +404,7 @@ def rename_analysis_results(analysis):
         # rename file by way of file_store
         filestore_item = rename(result.file_store_uuid, new_file_name)
 
+
 # task: perform cleanup, after download of results cleanup galaxy run
 @task()
 def run_analysis_cleanup(analysis):
@@ -385,6 +412,9 @@ def run_analysis_cleanup(analysis):
     
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     
+    # attach workflow outputs back to dataset isatab graph
+    attach_outputs_dataset(analysis)
+        
     # saving when analysis is finished
     analysis.time_end = datetime.now()
     
@@ -415,8 +445,9 @@ def run_analysis_cleanup(analysis):
     
     # delete_library
     connection.delete_library(analysis.library_id)
-    
+        
     return
+
 
 @task()
 def get_analysis_config(analysis):
@@ -462,7 +493,6 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
     """
     logger.debug("analysis_manager.tasks import_analysis_in_galaxy called")
     
-    
     for fileset in ret_list:
         for k, v in fileset.iteritems():
             cur_item = fileset[k]
@@ -480,12 +510,12 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
     
     return ret_list
 
+
 @task
 def download_history_files(analysis) :
     """
     Download entire histories from galaxy. Getting files out of history to file store
     """
-    
     logger.debug("analysis_manger.download_history_files called")
     
     # retrieving list of files to download for workflow
@@ -556,6 +586,7 @@ def download_history_files(analysis) :
             
     return task_list
         
+        
 @task()
 def get_analysis_connection(analysis): 
     """
@@ -569,3 +600,82 @@ def get_analysis_connection(analysis):
                              cur_workflow.workflow_engine.instance.api_url,
                              cur_workflow.workflow_engine.instance.api_key)
     return connection
+
+
+def attach_outputs_dataset(analysis):
+    
+    # ----------------------------------------------------------------------------------------
+    # for testing: attach workflow graph and output files to data set graph
+    # ----------------------------------------------------------------------------------------
+    #analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+    
+        
+    # 0. get study and assay from the first input node
+    study = AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION )[0].node.study;
+    assay = AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION )[0].node.assay;
+    
+    # 1. read workflow into graph
+    graph = create_expanded_workflow_graph(ast.literal_eval(analysis.workflow_copy))
+    
+    # 2. create data transformation nodes for all tool nodes
+    data_transformation_nodes = [graph.node[node_id] for node_id in graph.nodes() if graph.node[node_id]['type'] == "tool"]
+    for data_transformation_node in data_transformation_nodes:
+        # TODO: incorporate subanalysis id in tool name???
+        data_transformation_node['node'] = Node.objects.create(study=study, assay=assay, analysis_uuid=analysis.uuid, type=Node.DATA_TRANSFORMATION, name=data_transformation_node['tool_id'] + '_' + data_transformation_node['name'])
+
+    # 3. create connection from input nodes to first data transformation nodes (input tool nodes in the graph are skipped)
+    for input_connection in AnalysisNodeConnection.objects.filter( analysis=analysis, direction=INPUT_CONNECTION ):
+        for edge in graph.edges_iter([input_connection.step]):
+            if graph[edge[0]][edge[1]]['output_id'] == str(input_connection.step) + '_' + input_connection.filename:
+                input_node_id = edge[1];                
+                data_transformation_node = graph.node[input_node_id]['node']        
+                input_connection.node.add_child(data_transformation_node)
+
+    # 4. create derived data file nodes for all entries and connect to data transformation nodes
+    for output_connection in AnalysisNodeConnection.objects.filter( analysis=analysis, direction=OUTPUT_CONNECTION ):
+        # create derived data file node
+        derived_data_file_node = Node.objects.create(study=study, assay=assay, type=Node.DERIVED_DATA_FILE, name=output_connection.name, analysis_uuid=analysis.uuid, subanalysis=output_connection.subanalysis, workflow_output=output_connection.name )
+
+        # retrieve uuid of corresponding output file if exists
+        print "Results for " + analysis.uuid + " and " + output_connection.filename + "." + output_connection.filetype + ": " + str( AnalysisResult.objects.filter(analysis_uuid=analysis.uuid,file_name=(output_connection.name + "." + output_connection.filetype) ).count() )
+        analysis_results = AnalysisResult.objects.filter(analysis_uuid=analysis.uuid,file_name=(output_connection.name + "." + output_connection.filetype) )
+
+        if analysis_results.count() == 0:
+            logger.info( 'No output file found for node "' + derived_data_file_node.name + '" (' + derived_data_file_node.uuid + ')' )
+        
+        if analysis_results.count() == 1:
+            derived_data_file_node.file_uuid = analysis_results[0].file_store_uuid
+            logger.debug( 'Output file "' + output_connection.name + "." + output_connection.filetype + '" (' + analysis_results[0].file_store_uuid + ') assigned to node "' + derived_data_file_node.name + '" (' + derived_data_file_node.uuid + ')' )
+            
+        if analysis_results.count() > 1:
+            logger.warning( 'Multiple output files returned for "' + output_connection.filename + "." + output_connection.filetype + '". No assignment to output node was made.' )
+        
+        output_connection.node = derived_data_file_node
+        output_connection.save() 
+        
+        # get graph edge that corresponds to this output node:
+        # a. attach output node to source data transformation node
+        # b. attach output node to target data transformation node (if exists)
+        if len( graph.edges([output_connection.step]) ) > 0:
+            for edge in graph.edges_iter([output_connection.step]):
+                if graph[edge[0]][edge[1]]['output_id'] == str(output_connection.step) + "_" + output_connection.filename:
+                    output_node_id = edge[0];
+                    input_node_id = edge[1];                
+                    data_transformation_output_node = graph.node[output_node_id]['node']        
+                    data_transformation_input_node = graph.node[input_node_id]['node']        
+                    data_transformation_output_node.add_child(derived_data_file_node)
+                    derived_data_file_node.add_child(data_transformation_input_node)        
+                    # TODO: here we could add a (Refinery internal) attribute to the derived data file node to indicate which output of the tool it corresponds to
+                    
+        # connect outputs that are not inputs for any data transformation
+        if output_connection.is_refinery_file and derived_data_file_node.parents.count() == 0:
+            graph.node[output_connection.step]['node'].add_child( derived_data_file_node ) 
+
+        # delete output nodes that are not refinery files and don't have any children
+        if not output_connection.is_refinery_file and derived_data_file_node.children.count() == 0:
+            output_connection.node.delete()
+        
+    # 5. create annotated nodes and index new nodes
+    node_uuids = AnalysisNodeConnection.objects.filter(analysis=analysis, direction=OUTPUT_CONNECTION, is_refinery_file=True).values_list('node__uuid', flat=True)
+    add_annotated_nodes_selection( node_uuids, Node.DERIVED_DATA_FILE, study.uuid, assay.uuid )
+    index_annotated_nodes_selection( node_uuids )

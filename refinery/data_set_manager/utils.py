@@ -132,15 +132,18 @@ def _get_assay_name(result,node):
     return None
 
 
-def _retrieve_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_fields=False ):
+def _retrieve_nodes( study_uuid, assay_uuid=None, ontology_attribute_fields=False, node_uuids=None ):
             
     node_fields = [ "id", "uuid", "file_uuid", "type", "name", "parents", "attribute" ]
     
-    # query nodes (both from assay and from study only)
-    if assay_uuid is None:
-        node_list = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) ).prefetch_related( "attribute_set" ).order_by( "id", "attribute" ).values( *node_fields )
+    # if node_uuids is none: query nodes (both from assay and from study only)
+    if node_uuids is None:
+        if assay_uuid is None:
+            node_list = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) ).prefetch_related( "attribute_set" ).order_by( "id", "attribute" ).values( *node_fields )
+        else:
+            node_list = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ) ).prefetch_related( "attribute_set" ).order_by( "id", "attribute" ).values( *node_fields )
     else:
-        node_list = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ) ).prefetch_related( "attribute_set" ).order_by( "id", "attribute" ).values( *node_fields )
+        node_list = Node.objects.filter( uuid__in=node_uuids ).prefetch_related( "attribute_set" ).order_by( "id", "attribute" ).values( *node_fields )                
             
     if ontology_attribute_fields:
         attribute_fields = Attribute.ALL_FIELDS
@@ -189,7 +192,7 @@ def _retrieve_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_
 
 def get_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_fields=False ):
     
-    nodes = _retrieve_nodes( node_type, study_uuid, assay_uuid, ontology_attribute_fields )
+    nodes = _retrieve_nodes( study_uuid, assay_uuid, ontology_attribute_fields )
                     
     results = {}
     
@@ -209,7 +212,7 @@ def get_nodes( node_type, study_uuid, assay_uuid=None, ontology_attribute_fields
 # this method is obsolete - do not use!
 def get_matrix( node_type, study_uuid, assay_uuid=None, ontology_attribute_fields=False ):
     
-    nodes = _retrieve_nodes( node_type, study_uuid, assay_uuid, ontology_attribute_fields )
+    nodes = _retrieve_nodes( study_uuid, assay_uuid, ontology_attribute_fields )
                     
     results = {}
     results["meta"] = {}
@@ -267,7 +270,10 @@ def update_annotated_nodes( node_type, study_uuid, assay_uuid=None, update=False
         registry, created = AnnotatedNodeRegistry.objects.get_or_create( study_id=study.id, assay__isnull=True, node_type=node_type )
     else:
         registry, created = AnnotatedNodeRegistry.objects.get_or_create( study_id=study.id, assay_id=assay.id, node_type=node_type )
-        
+
+    # update registry entry
+    registry.save()
+            
     if not created and not update:
         # registry entry exists and no updating requested  
         return 
@@ -283,7 +289,10 @@ def update_annotated_nodes( node_type, study_uuid, assay_uuid=None, update=False
     logger.info( str( counter ) + " annotated nodes deleted." )                
     
     # retrieve annotated nodes
-    nodes = _retrieve_nodes( node_type, study_uuid, assay_uuid, True )    
+    nodes = _retrieve_nodes( study_uuid, assay_uuid, True )
+    
+    a = [ node["attributes"] for node_id, node in nodes.iteritems() ]
+    print a
     
     # insert node and attribute information    
     import time
@@ -325,34 +334,94 @@ def update_annotated_nodes( node_type, study_uuid, assay_uuid=None, update=False
     end = time.time()
                  
     logger.info( str( counter ) + " annotated nodes generated in " + str( end - start ) )
-    
-    # update registry entry
-    registry.save()
-    
-    #from django.core import serializers
-    
-    #if assay_uuid is None:
-    #    result = AnnotatedNode.objects.filter( Q( study_id=study.id, assay__isnull=True ), node_type=node_type )
-    #else:
-    #    result = AnnotatedNode.objects.filter( Q( study_id=study.id, assay__isnull=True ) | Q( study_id=study.id, assay_id=assay.id ), node_type=node_type)
-    
-    #return ( serializers.serialize("python", result, ensure_ascii=False ) )
 
 
-def index_annotated_nodes( node_type, study_uuid, assay_uuid=None ):
-        
-    # retrieve study and assay ids
+
+def add_annotated_nodes( node_type, study_uuid, assay_uuid=None ):
+    _add_annotated_nodes( node_type, study_uuid, assay_uuid, None )
+
+
+def add_annotated_nodes_selection( node_uuids, node_type, study_uuid, assay_uuid=None ):
+    _add_annotated_nodes( node_type, study_uuid, assay_uuid, node_uuids )
+
+
+def _add_annotated_nodes( node_type, study_uuid, assay_uuid=None, node_uuids=None ):
+
     study = Study.objects.filter( uuid=study_uuid )[0]
     if assay_uuid is not None:
         assay = Assay.objects.filter( uuid=assay_uuid )[0]
     else:
         assay = None
+             
+    # retrieve annotated nodes
+    nodes = _retrieve_nodes( study_uuid, assay_uuid, True )
+    
+    logger.info( str( len( nodes ) ) + " retrieved from data set" )
+
+    # insert node and attribute information    
+    import time
+    start = time.time()
+    
+    counter = 0    
+    bulk_list = []
+    for node_id, node in nodes.iteritems():
+        if node["type"] == node_type:
+            if node_uuids is not None and ( node["uuid"] in node_uuids ):
+                # save attributes (attribute[1], etc. are based on Attribute.ALL_FIELDS)
+                attributes = _get_parent_attributes( nodes, node_id )
+
+                for attribute in attributes:
+                    counter += 1
+                    
+                    bulk_list.append(                                 
+                        AnnotatedNode( 
+                            node_id=node["id"],
+                            attribute_id=attribute[0],
+                            study=study,
+                            assay=assay,
+                            node_uuid=node["uuid"],
+                            node_file_uuid=node["file_uuid"],
+                            node_type=node["type"],
+                            node_name=node["name"],
+                            attribute_type=attribute[1],
+                            attribute_subtype=attribute[2],
+                            attribute_value=attribute[3],
+                            attribute_value_unit=attribute[4]
+                        ) )
+                    
+                    if len( bulk_list ) == MAX_BULK_LIST_SIZE:
+                        AnnotatedNode.objects.bulk_create( bulk_list )
+                        bulk_list = []
+    
+    if len( bulk_list ) > 0:
+        AnnotatedNode.objects.bulk_create( bulk_list )
+        bulk_list = []
+    
+    end = time.time()
+                 
+    logger.info( str( counter ) + " annotated nodes generated in " + str( end - start ) )
+    
+    
+def index_annotated_nodes( node_type, study_uuid, assay_uuid=None ):    
+    _index_annotated_nodes( node_type, study_uuid, assay_uuid, None )
+
+def index_annotated_nodes_selection( node_uuids ):    
+    _index_annotated_nodes( None, None, None, node_uuids )
+
+def _index_annotated_nodes( node_type, study_uuid, assay_uuid=None, node_uuids=None ):
+
+    if node_uuids is None:            
+        if assay_uuid is None:
+            nodes = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ), type=node_type )
+        else:
+            nodes = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ), type=node_type )                
         
-    # remove existing annotated node objects for this node_type in this study/assay
-    if assay_uuid is None:
-        nodes = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ), type=node_type )
+        if assay_uuid is None:
+            nodes = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ), type=node_type )
+        else:
+            nodes = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ), type=node_type )                
     else:
-        nodes = Node.objects.filter( Q( study__uuid=study_uuid, assay__uuid__isnull=True ) | Q( study__uuid=study_uuid, assay__uuid=assay_uuid ), type=node_type )                
+        nodes = Node.objects.filter( uuid__in=node_uuids )                
     
     logger.info( str( nodes.count() ) + " nodes for indexing." )                
     

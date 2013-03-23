@@ -83,15 +83,16 @@ def get_workflows( workflow_engine ):
                     except KeyError, e:
                         logger.error("refinery_relationship option error: %s" % e)
                         return
+    
             
-def configure_workflow( workflow_uuid, ret_list, connection_galaxy=None ):
+def configure_workflow( workflow, ret_list, connection_galaxy=None ):
     """
     Takes a workflow_uuid and associated data input map to return an expanded workflow 
     from core.models.workflow and workflow_data_input_map    
     """
     logger.debug("workflow.manager configure_workflow called")
     
-    curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+    curr_workflow = workflow
     # gets galaxy internal id for specified workflow
     workflow_galaxy_id = curr_workflow.internal_id
     
@@ -120,13 +121,13 @@ def configure_workflow( workflow_uuid, ret_list, connection_galaxy=None ):
     # if workflow is tagged w/ type=COMPACT tag, 
     if COMPACT_WORKFLOW:
         logger.debug("workflow_manager.tasks.configure_workflow workflow processing: COMPACT")
-        new_workflow["steps"], history_download = createStepsCompact(ret_list, workflow_dict)
+        new_workflow["steps"], history_download, analysis_node_connections = createStepsCompact(ret_list, workflow_dict)
     else:
         logger.debug("workflow_manager.tasks.configure_workflow workflow processing: EXPANSION")
         # Updating steps in imported workflow X number of times
-        new_workflow["steps"], history_download = createStepsAnnot(ret_list, workflow_dict);
+        new_workflow["steps"], history_download, analysis_node_connections = createStepsAnnot(ret_list, workflow_dict);
           
-    return new_workflow, history_download
+    return new_workflow, history_download, analysis_node_connections
 
 @task()
 def get_workflow_inputs(workflow_uuid):

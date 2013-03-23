@@ -4,16 +4,17 @@ Created on May 10, 2012
 @author: nils
 '''
 
-import logging
-import settings
-import simplejson
-import urllib2
+from data_set_manager.genomes import map_species_id_to_default_genome_build
 from django.db import models
 from django.db.models.query_utils import Q
 from django.db.models.signals import post_save, post_init
 from django.dispatch.dispatcher import receiver
 from django_extensions.db.fields import UUIDField
-from data_set_manager.genomes import map_species_id_to_default_genome_build
+import core.models
+import logging
+import settings
+import simplejson
+import urllib2
 
 
 # get module logger
@@ -354,12 +355,17 @@ class Node(models.Model):
     parents = models.ManyToManyField("self", symmetrical=False, related_name="children_set")
     type = models.TextField(db_index=True)
     name = models.TextField(db_index=True)
-    
+        
     # only used for nodes representing files
     file_uuid = UUIDField(default=None,blank=True, null=True,auto=False)
+    
+    # Refinery internal "attributes" (exported as comment attributes)     
     genome_build = models.TextField(db_index=True,null=True)
     species =  models.IntegerField(db_index=True,null=True)
     is_annotation = models.BooleanField(default=False)
+    analysis_uuid = UUIDField(default=None,blank=True, null=True,auto=False)
+    subanalysis = models.IntegerField(null=True,blank=False)
+    workflow_output = models.CharField(null=True, blank=False, max_length=100)    
     
     def add_child(self, node):
         if node is None:
@@ -475,15 +481,32 @@ class AnnotatedNode(models.Model):
     # genome information
     node_species = models.IntegerField(db_index=True, null=True)
     node_genome_build = models.TextField(db_index=True, null=True)
+    node_analysis_uuid = UUIDField(default=None,blank=True, null=True,auto=False)
+    node_subanalysis = models.IntegerField(null=True,blank=False)
+    node_workflow_output = models.CharField(null=True, blank=False, max_length=100)    
     # other information
     is_annotation = models.BooleanField(default=False) 
 
 
 def _is_internal_attribute(attribute):
-    return attribute in [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation", "species", "genome_build", "name" ]
+    return attribute in [ "uuid", "study_uuid", "assay_uuid", "file_uuid", "type", "is_annotation", "species", "genome_build", "name", "analysis_uuid", "subanalysis", "output_type"  ]
 
-def _is_active_attribute(attribute):
+def _is_active_attribute(attribute):    
     return (not _is_internal_attribute(attribute) and attribute not in [] )
+
+
+def _is_exposed_attribute(attribute):
+    if attribute.startswith( "REFINERY_ANALYSIS_UUID_" ):
+        return False
+
+    if attribute.startswith( "REFINERY_SUBANALYSIS_" ):
+        return False
+    
+    if attribute.startswith( "REFINERY_WORKFLOW_OUTPUT_" ):
+        return False
+    
+    return True
+
 
 def _is_ignored_attribute(attribute):
     """
@@ -558,7 +581,7 @@ def initialize_attribute_order( study, assay ):
     for key in results["response"]["docs"][0]:
         
         is_facet = _is_facet_attribute(key,study,assay)
-        is_exposed = True
+        is_exposed = _is_exposed_attribute(key)
         is_internal = _is_internal_attribute(key);
         is_active = _is_active_attribute(key)
         
