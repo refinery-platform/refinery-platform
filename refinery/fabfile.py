@@ -436,6 +436,25 @@ def create_refinery_virtualenv():
 
 @task
 @with_settings(user=env.project_user)
+def git_pull(env_name):
+    '''Pull the latest code from Github repository into the specified virtual env
+
+    '''
+    with prefix("workon {}".format(env_name)):
+        run("git pull")
+
+
+@task
+@with_settings(user=env.project_user)
+def pull_refinery():
+    '''Pull the latest Refinery code from Github repository
+
+    '''
+    execute(git_pull, env_name=env.refinery_virtualenv_name)
+
+
+@task
+@with_settings(user=env.project_user)
 def install_requirements(env_name, requirements_path):
     '''Install Python packages listed in requirements.txt into the given virtualenv
     Helper for install_refinery_requirements()
