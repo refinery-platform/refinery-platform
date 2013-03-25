@@ -4,6 +4,7 @@ Created on May 4, 2012
 @author: nils
 '''
 
+import logging
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, WorkflowInputRelationships
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node
@@ -18,8 +19,11 @@ from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS
 from tastypie.resources import ModelResource
 from tastypie.serializers import Serializer
+from GuardianTastypieAuthz import GuardianAuthorization
 
 #TODO: implement custom authorization class based on django-guardian permissions
+
+logger = logging.getLogger(__name__)
 
 
 class PrettyJSONSerializer(Serializer):
@@ -82,11 +86,11 @@ class NodeSetResource(ModelResource):
         resource_name = 'nodeset'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
-        authorization = DjangoAuthorization()
+        authorization = GuardianAuthorization()
         serializer = PrettyJSONSerializer()
         fields = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
         ordering = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
-        allowed_methods = ["get", "patch", "put", "post" ]
+        allowed_methods = ["get", "post" ]
         filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
 
     def prepend_urls(self):
@@ -96,6 +100,14 @@ class NodeSetResource(ModelResource):
                 self.wrap_view('dispatch_detail'),
                 name="api_dispatch_detail"),
         ]
+
+    def obj_create(self, bundle, **kwargs):
+        '''Assign owner to the new NodeSet instance
+
+        '''
+        bundle = super(NodeSetResource, self).obj_create(bundle, **kwargs)
+        bundle.obj.set_owner(bundle.request.user)
+        return bundle
 
 
 class NodeSetListResource(ModelResource):
@@ -110,10 +122,8 @@ class NodeSetListResource(ModelResource):
         detail_resource_name = 'nodeset' # NG: introduced to get correct resource ids
         resource_name = 'nodesetlist'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
-#        authentication = SessionAuthentication()
-#        authorization = DjangoAuthorization()
-        authentication = Authentication()
-        authorization = Authorization()
+        authentication = SessionAuthentication()
+        authorization = GuardianAuthorization()
         fields = ['name', 'summary', 'assay', 'study', 'uuid' ]
         allowed_methods = ["get" ]
         filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
