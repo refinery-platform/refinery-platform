@@ -791,6 +791,8 @@ def analyses(request, project_uuid ):
                               {"project": project, "analyses": analyses},
                               context_instance=RequestContext(request))
 
+
+@login_required()
 def analysis(request, analysis_uuid ):
     analysis = Analysis.objects.get(uuid=analysis_uuid)
     
