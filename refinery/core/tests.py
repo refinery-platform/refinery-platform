@@ -213,6 +213,9 @@ class NodeSetResourceTest(ResourceTestCase):
         self.investigation = data_set_manager.models.Investigation.objects.create()
         self.study = data_set_manager.models.Study.objects.create(investigation=self.investigation)
         self.assay = data_set_manager.models.Assay.objects.create(study=self.study)
+        self.investigation2 = data_set_manager.models.Investigation.objects.create()
+        self.study2 = data_set_manager.models.Study.objects.create(investigation=self.investigation)
+        self.assay2 = data_set_manager.models.Assay.objects.create(study=self.study2)
         self.query = {
             "facets":{
                 "platform_Characteristics_10_5_s": [],
@@ -278,6 +281,37 @@ class NodeSetResourceTest(ResourceTestCase):
         data = self.deserialize(response)['objects']
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]['name'], 'ns1')
+
+    def test_get_nodeset_list_for_given_study_and_assay(self):
+        '''Test retrieving a list of NodeSets for given study and assay.
+
+        '''
+        nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
+                                         solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
+        nodeset2 = NodeSet.objects.create(name='ns2', study=self.study2, assay=self.assay2,
+                                         solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % nodeset2._meta.module_name, self.user, nodeset2)
+        nodeset_uri = make_api_uri('nodeset')
+        response = self.api_client.get(nodeset_uri, format='json',
+                                       authentication=self.get_credentials(),
+                                       data={'study__uuid': self.study.uuid,
+                                             'assay__uuid': self.assay.uuid})
+        self.assertValidJSONResponse(response)
+        data = self.deserialize(response)['objects']
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['name'], 'ns1')
+
+    def test_get_empty_nodeset_list(self):
+        '''Test retrieving a list of NodeSets when none exist.
+
+        '''
+        nodeset_uri = make_api_uri('nodeset')
+        response = self.api_client.get(nodeset_uri, format='json',
+                                       authentication=self.get_credentials())
+        self.assertValidJSONResponse(response)
+        data = self.deserialize(response)['objects']
+        self.assertEqual(len(data), 0)
 
     def test_get_nodeset_without_login(self):
         '''Test retrieving an existing NodeSet without logging in.

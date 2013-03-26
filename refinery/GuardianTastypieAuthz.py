@@ -24,9 +24,7 @@ class GuardianAuthorization(DjangoAuthorization):
         for obj in object_list:
             if bundle.request.user.has_perm(permission,obj):
                 read_list.append(obj)
-        if read_list:
-            return read_list
-        raise Unauthorized("You are not allowed to access that resource.")
+        return read_list
 
     def read_detail(self, object_list, bundle):
         klass = self.base_checks(bundle.request, bundle.obj.__class__)
@@ -42,7 +40,8 @@ class GuardianAuthorization(DjangoAuthorization):
                 
         if read_list:
             return True
-        raise Unauthorized("You are not allowed to access that resource.")
+        else:
+            raise Unauthorized("You are not allowed to access that resource.")
 
     def create_list(self, object_list, bundle):
         return super(GuardianAuthorization, self).create_list(object_list, bundle)
