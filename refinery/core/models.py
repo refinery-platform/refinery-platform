@@ -19,7 +19,7 @@ from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django.forms import ModelForm
 from django_extensions.db.fields import UUIDField
-from file_store.models import get_file_size
+from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
 from guardian.shortcuts import assign, get_users_with_perms, \
     get_groups_with_perms
@@ -586,6 +586,19 @@ class AnalysisNodeConnection( models.Model ):
 
     def __unicode__(self):
         return self.direction + ": " + str(self.step) + "_" + self.name + " (" + str(self.is_refinery_file) + ")"
+    
+
+class Download(TemporaryResource,OwnableResource):
+    data_set = models.ForeignKey(DataSet)
+    analysis = models.ForeignKey(Analysis)
+    file_uuid = UUIDField(blank=False, null=False,auto=False)
+    file_size = models.BigIntegerField(blank=False, null=False)
+
+    class Meta:
+        verbose_name = "download"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' %  verbose_name ),
+        )
     
 
 def get_shared_groups( user1, user2, include_public_group=False ):
