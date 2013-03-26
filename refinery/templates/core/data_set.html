@@ -129,6 +129,7 @@ rect.active {
   			{% if has_change_dataset_permission %}
   			<li><a href="#analyses" data-toggle="tab">Analyses</a></li>
   			{% endif %}
+  			<li><a href="#downloads" data-toggle="tab">Downloads</a></li>
   			<li><a href="#details" data-toggle="tab">Details</a></li>
   			<li><a href="#sharing" data-toggle="tab">Sharing</a></li>
   	    </ul>
@@ -323,8 +324,26 @@ rect.active {
 			<i>None.</i>
 		{% endif %}
 		</p>
-  	</div>
+	</div>
   	{% endif %}
+	
+  	<div class="tab-pane fade" id="downloads">
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Downloads</h3>
+			</span>
+		</div>
+		<p>
+		{% if data_set.download_set.all|length > 0 %}
+			{% for download in data_set.download_set.all %}
+					<a href="{{download.file_store_item.get_full_url}}">{{ download.name }}</a> ({{ download.file_store_item.get_file_size|filesizeformat }})
+					<br/>
+			{% endfor %}
+		{% else %}
+			<i>None.</i>
+		{% endif %}
+		</p>
+  	</div>
 
 	<div class="tab-pane fade" id="details">
 

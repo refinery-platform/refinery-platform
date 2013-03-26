@@ -590,9 +590,8 @@ class AnalysisNodeConnection( models.Model ):
 
 class Download(TemporaryResource,OwnableResource):
     data_set = models.ForeignKey(DataSet)
-    analysis = models.ForeignKey(Analysis)
-    file_uuid = UUIDField(blank=False, null=False,auto=False)
-    file_size = models.BigIntegerField(blank=False, null=False)
+    analysis = models.ForeignKey(Analysis, default=None, null=True)
+    file_store_item = models.ForeignKey(FileStoreItem, default=None, null=True)
 
     class Meta:
         verbose_name = "download"
