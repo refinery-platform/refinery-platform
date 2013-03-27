@@ -21,7 +21,6 @@ from tastypie.resources import ModelResource
 from tastypie.serializers import Serializer
 from GuardianTastypieAuthz import GuardianAuthorization
 
-#TODO: implement custom authorization class based on django-guardian permissions
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +103,7 @@ class NodeSetResource(ModelResource):
     def obj_create(self, bundle, **kwargs):
         '''Assign owner to the new NodeSet instance
 
-        '''
+        '''        
         bundle = super(NodeSetResource, self).obj_create(bundle, **kwargs)
         bundle.obj.set_owner(bundle.request.user)
         return bundle

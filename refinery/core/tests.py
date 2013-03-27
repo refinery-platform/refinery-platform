@@ -280,10 +280,30 @@ class NodeSetResourceTest(ResourceTestCase):
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)['objects']
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['name'], 'ns1')
+        self.assertEqual(data[0]['name'], nodeset1.name)
 
     def test_get_nodeset_list_for_given_study_and_assay(self):
         '''Test retrieving a list of NodeSets for given study and assay.
+
+        '''
+        nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
+                                         solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
+        nodeset2 = NodeSet.objects.create(name='ns2', study=self.study2, assay=self.assay2,
+                                         solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % nodeset2._meta.module_name, self.user2, nodeset2)
+        nodeset_uri = make_api_uri('nodeset')
+        response = self.api_client.get(nodeset_uri, format='json',
+                                       authentication=self.get_credentials(),
+                                       data={'study__uuid': self.study.uuid,
+                                             'assay__uuid': self.assay.uuid})
+        self.assertValidJSONResponse(response)
+        data = self.deserialize(response)['objects']
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['name'], nodeset1.name)
+
+    def test_get_sorted_nodeset_list(self):
+        '''Get a list of NodeSets with sorting params applied (e.g., order_by=name)
 
         '''
         nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
@@ -295,12 +315,11 @@ class NodeSetResourceTest(ResourceTestCase):
         nodeset_uri = make_api_uri('nodeset')
         response = self.api_client.get(nodeset_uri, format='json',
                                        authentication=self.get_credentials(),
-                                       data={'study__uuid': self.study.uuid,
-                                             'assay__uuid': self.assay.uuid})
+                                       data={'order_by': 'name'})
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['name'], 'ns1')
+        self.assertEqual(len(data), 2)
+        self.assertEqual(data[0]['name'], nodeset1.name)
 
     def test_get_empty_nodeset_list(self):
         '''Test retrieving a list of NodeSets when none exist.
@@ -475,6 +494,9 @@ class NodeSetListResourceTest(ResourceTestCase):
         self.investigation = data_set_manager.models.Investigation.objects.create()
         self.study = data_set_manager.models.Study.objects.create(investigation=self.investigation)
         self.assay = data_set_manager.models.Assay.objects.create(study=self.study)
+        self.investigation2 = data_set_manager.models.Investigation.objects.create()
+        self.study2 = data_set_manager.models.Study.objects.create(investigation=self.investigation)
+        self.assay2 = data_set_manager.models.Assay.objects.create(study=self.study2)
         self.query = {
             "facets":{
                 "platform_Characteristics_10_5_s": [],
@@ -498,13 +520,8 @@ class NodeSetListResourceTest(ResourceTestCase):
         self.user = User.objects.create_user(self.username, '', self.password)
         self.username2 = self.password2 = 'user2'
         self.user2 = User.objects.create_user(self.username2, '', self.password2)
-        self.nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
-                                         solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % self.nodeset1._meta.module_name, self.user, self.nodeset1)
-        self.nodeset2 = NodeSet.objects.create(name='ns2', study=self.study, assay=self.assay,
-                                         solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % self.nodeset2._meta.module_name, self.user2, self.nodeset2)
-        self.nodeset_uri = make_api_uri('nodeset')
+
+        self.nodeset_uri = make_api_uri('nodesetlist')
 
     def get_credentials(self):
         '''Authenticate as self.user
@@ -519,12 +536,73 @@ class NodeSetListResourceTest(ResourceTestCase):
         '''Test retrieving a list of NodeSets that belong to a user who created them.
 
         '''
+        nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
+                                          node_count=1, is_implicit=True,
+                                          solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
+        nodeset2 = NodeSet.objects.create(name='ns2', study=self.study2, assay=self.assay2,
+                                          node_count=1, is_implicit=True,
+                                          solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % nodeset2._meta.module_name, self.user2, nodeset2)
         response = self.api_client.get(self.nodeset_uri, format='json',
                                        authentication=self.get_credentials())
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)['objects']
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['name'], 'ns1')
+        self.assertEqual(data[0]['name'], nodeset1.name)
+
+    def test_get_sorted_nodeset_list(self):
+        '''Get a list of NodeSets with sorting params applied (e.g., order_by=name)
+
+        '''
+        nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
+                                          node_count=1, is_implicit=True,
+                                          solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
+        nodeset2 = NodeSet.objects.create(name='ns2', study=self.study2, assay=self.assay2,
+                                          node_count=1, is_implicit=True,
+                                          solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % nodeset2._meta.module_name, self.user, nodeset2)
+
+        response = self.api_client.get(self.nodeset_uri, format='json',
+                                       authentication=self.get_credentials(),
+                                       data={'order_by': 'name'})
+        self.assertValidJSONResponse(response)
+        data = self.deserialize(response)['objects']
+        self.assertEqual(len(data), 2)
+        self.assertEqual(data[0]['name'], nodeset1.name)
+
+    def test_get_nodeset_list_for_given_study_and_assay(self):
+        '''Test retrieving a list of NodeSets for given study and assay.
+
+        '''
+        nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
+                                          node_count=1, is_implicit=True,
+                                          solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
+        nodeset2 = NodeSet.objects.create(name='ns2', study=self.study2, assay=self.assay2,
+                                          node_count=1, is_implicit=True,
+                                          solr_query=simplejson.dumps(self.query))
+        assign("read_%s" % nodeset2._meta.module_name, self.user2, nodeset2)
+
+        response = self.api_client.get(self.nodeset_uri, format='json',
+                                       authentication=self.get_credentials(),
+                                       data={'study__uuid': self.study.uuid,
+                                             'assay__uuid': self.assay.uuid})
+        self.assertValidJSONResponse(response)
+        data = self.deserialize(response)['objects']
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['name'], nodeset1.name)
+
+    def test_get_empty_nodeset_list(self):
+        '''Test retrieving a list of NodeSets when none exist.
+
+        '''
+        response = self.api_client.get(self.nodeset_uri, format='json',
+                                       authentication=self.get_credentials())
+        self.assertValidJSONResponse(response)
+        data = self.deserialize(response)['objects']
+        self.assertEqual(len(data), 0)
 
     def test_get_nodeset_list_without_login(self):
         '''Test retrieving a list of NodeSets without logging in.
@@ -532,4 +610,17 @@ class NodeSetListResourceTest(ResourceTestCase):
         '''
         response = self.api_client.get(self.nodeset_uri, format='json')
         self.assertHttpUnauthorized(response)
+
+    def test_delete_nodeset_list(self):
+        '''Test deleting a list of NodeSets.
+
+        '''
+        nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay)
+        self.assertEqual(NodeSet.objects.count(), 1)
+        assign("delete_%s" % nodeset._meta.module_name, self.user, nodeset)
+
+        response = self.api_client.delete(self.nodeset_uri, format='json',
+                                          authentication=self.get_credentials())
+        self.assertHttpMethodNotAllowed(response)
+        self.assertEqual(NodeSet.objects.count(), 1)
 

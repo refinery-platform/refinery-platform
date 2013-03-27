@@ -5,40 +5,31 @@ Source: https://github.com/davidbernick/GuardianTastypie
 
 from tastypie.authorization import DjangoAuthorization
 from tastypie.exceptions import Unauthorized
+from guardian.shortcuts import get_objects_for_user
 
 
 class GuardianAuthorization(DjangoAuthorization):
-    """
-    Maps ``GET`` to its equivalent django-guardian permission.
-    Only model-level checks are done for ``POST``.
-    Other types of requests are not allowed.
-    """
+    '''Apply django-guardian (per instance permissions)
+
+    '''
     def read_list(self, object_list, bundle):
         klass = self.base_checks(bundle.request, object_list.model)
-        read_list=[]
 
         if klass is False:
             return []
 
         permission = 'read_%s' % (klass._meta.module_name)
-        for obj in object_list:
-            if bundle.request.user.has_perm(permission,obj):
-                read_list.append(obj)
-        return read_list
+        allowed_list = get_objects_for_user(bundle.request.user, permission, klass)
+        return object_list.filter(pk__in=[obj.pk for obj in allowed_list])
 
     def read_detail(self, object_list, bundle):
         klass = self.base_checks(bundle.request, bundle.obj.__class__)
-        read_list=[]
 
         if klass is False:
             raise Unauthorized("You are not allowed to access that resource.")
 
         permission = 'read_%s' % (klass._meta.module_name)
-        for obj in object_list:
-            if bundle.request.user.has_perm(permission, obj):
-                read_list.append(obj)
-                
-        if read_list:
+        if bundle.request.user.has_perm(permission, object_list[0]):
             return True
         else:
             raise Unauthorized("You are not allowed to access that resource.")
