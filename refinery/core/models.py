@@ -274,15 +274,13 @@ class DataSet(SharableResource):
     # total number of bytes of all files in this data set
     file_size = models.BigIntegerField(blank=True, null=True, default=0)
 
-
-    _investigations = models.ManyToManyField( Investigation, through="InvestigationLink" )
     
     def set_investigation(self,investigation,message=""):
         '''
         Associate this data set with an investigation. If this data set has an association with an investigation this 
         association will be cleared first. Use update_investigation() to add a new version of the current investigation.
         ''' 
-        self._investigations.clear()        
+        self.investigationlink_set.clear()        
         link = InvestigationLink(data_set=self, investigation=investigation, version=1, message=message)
         link.save()
         return 1
