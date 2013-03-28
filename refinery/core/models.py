@@ -379,6 +379,9 @@ class InvestigationLink(models.Model):
     message = models.CharField(max_length=500, blank=True, null=True)
     date = models.DateTimeField( auto_now_add=True )
     
+    class Meta:
+        unique_together = ('data_set', 'investigation', 'version')
+        
     def __unicode__(self):
         retstr = "%s: ver=%s, %s" % (self.investigation.get_identifier(), self.version, self.message)
         return retstr
