@@ -19,7 +19,7 @@ from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django.forms import ModelForm
 from django_extensions.db.fields import UUIDField
-from file_store.models import get_file_size
+from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
 from guardian.shortcuts import assign, get_users_with_perms, \
     get_groups_with_perms
@@ -274,15 +274,13 @@ class DataSet(SharableResource):
     # total number of bytes of all files in this data set
     file_size = models.BigIntegerField(blank=True, null=True, default=0)
 
-
-    _investigations = models.ManyToManyField( Investigation, through="InvestigationLink" )
     
     def set_investigation(self,investigation,message=""):
         '''
         Associate this data set with an investigation. If this data set has an association with an investigation this 
         association will be cleared first. Use update_investigation() to add a new version of the current investigation.
         ''' 
-        self._investigations.clear()        
+        self.investigationlink_set.clear()        
         link = InvestigationLink(data_set=self, investigation=investigation, version=1, message=message)
         link.save()
         return 1
@@ -441,12 +439,13 @@ class Workflow ( SharableResource, ManageableResource ):
     workflow_engine = models.ForeignKey( WorkflowEngine )    
     show_in_repository_mode = models.BooleanField( default=False )
     input_relationships = models.ManyToManyField( WorkflowInputRelationships, blank=True )
+    is_active = models.BooleanField( default=False, null=False, blank=False )
     
     def __unicode__(self):
         return self.name + " - " + self.summary
 
     class Meta:
-        unique_together = ('internal_id', 'workflow_engine')
+        #unique_together = ('internal_id', 'workflow_engine')
         verbose_name = "workflow"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
@@ -586,6 +585,18 @@ class AnalysisNodeConnection( models.Model ):
 
     def __unicode__(self):
         return self.direction + ": " + str(self.step) + "_" + self.name + " (" + str(self.is_refinery_file) + ")"
+    
+
+class Download(TemporaryResource,OwnableResource):
+    data_set = models.ForeignKey(DataSet)
+    analysis = models.ForeignKey(Analysis, default=None, null=True)
+    file_store_item = models.ForeignKey(FileStoreItem, default=None, null=True)
+
+    class Meta:
+        verbose_name = "download"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' %  verbose_name ),
+        )
     
 
 def get_shared_groups( user1, user2, include_public_group=False ):

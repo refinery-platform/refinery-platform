@@ -182,10 +182,11 @@ class WorkflowResource(ModelResource):
     input_relationships = fields.ToManyField("core.api.WorkflowInputRelationshipsResource", 'input_relationships', full=True)
     
     class Meta:
-        queryset = Workflow.objects.all()
+        queryset = Workflow.objects.filter( is_active=True )
         detail_resource_name = 'workflow' 
         resource_name = 'workflow'
         detail_uri_name = 'uuid'
+        allowed_methods = ["get" ]        
         fields = ['name', 'uuid']  
         
 class WorkflowInputRelationshipsResource(ModelResource):

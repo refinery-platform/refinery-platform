@@ -7,11 +7,11 @@ Created on Feb 20, 2012
 from core.models import Analysis, AnalysisNodeConnection, AnalysisResult, \
     DataSet, DiskQuota, ExtendedGroup, InvestigationLink, NodePair, NodeRelationship, \
     NodeSet, Project, UserProfile, Workflow, WorkflowDataInput, WorkflowDataInputMap, \
-    WorkflowEngine, WorkflowFilesDL, WorkflowInputRelationships
+    WorkflowEngine, WorkflowFilesDL, WorkflowInputRelationships, Download
 from django.contrib import admin
+from django.db import models
 from django_extensions.admin import ForeignKeyAutocompleteAdmin
 from guardian.admin import GuardedModelAdmin
-from django.db import models
 
 
 
@@ -39,6 +39,8 @@ class AnalysisAdmin(GuardedModelAdmin):
 class DiskQuotaAdmin(GuardedModelAdmin):
     pass
 
+class DownloadAdmin(GuardedModelAdmin,ForeignKeyAutocompleteAdmin):
+    pass
 
 admin.site.register(UserProfile)
 admin.site.register(ExtendedGroup)
@@ -50,6 +52,7 @@ admin.site.register(WorkflowEngine,WorkflowEngineAdmin)
 admin.site.register(WorkflowDataInput)
 admin.site.register(WorkflowDataInputMap)
 admin.site.register(Analysis,AnalysisAdmin)
+admin.site.register(Download,DownloadAdmin)
 admin.site.register(AnalysisResult)
 admin.site.register(AnalysisNodeConnection,AnalysisNodeConnectionAdmin)
 admin.site.register(DiskQuota,DiskQuotaAdmin)
