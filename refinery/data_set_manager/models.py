@@ -10,7 +10,6 @@ from django.db.models.query_utils import Q
 from django.db.models.signals import post_save, post_init
 from django.dispatch.dispatcher import receiver
 from django_extensions.db.fields import UUIDField
-import core.models
 import logging
 import settings
 import simplejson
