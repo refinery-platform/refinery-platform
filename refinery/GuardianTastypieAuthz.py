@@ -38,7 +38,14 @@ class GuardianAuthorization(DjangoAuthorization):
         return super(GuardianAuthorization, self).create_list(object_list, bundle)
 
     def create_detail(self, object_list, bundle):
-        return super(GuardianAuthorization, self).create_detail(object_list, bundle)
+        klass = self.base_checks(bundle.request, object_list.model)
+
+        if klass is False:
+            raise Unauthorized("You are not allowed to access that resource.")
+
+        # WARNING: adding new objects is always allowed
+        # ModelResources must do their own permission checking in obj_create()
+        return True
 
     def update_list(self, object_list, bundle):
         return []

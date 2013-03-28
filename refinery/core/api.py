@@ -5,9 +5,10 @@ Created on May 4, 2012
 '''
 
 import logging
+import re
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, WorkflowInputRelationships
 from data_set_manager.api import StudyResource, AssayResource
-from data_set_manager.models import Node
+from data_set_manager.models import Node, Study
 from django.conf.urls.defaults import url
 from django.core.serializers import json
 from django.db.models.aggregates import Count
@@ -101,9 +102,23 @@ class NodeSetResource(ModelResource):
         ]
 
     def obj_create(self, bundle, **kwargs):
-        '''Assign owner to the new NodeSet instance
+        '''Create a new NodeSet instance and assign current user as owner if
+        current user has read permission on the data set referenced by the new NodeSet
 
-        '''        
+        '''
+#        # get the Study specified by the UUID in the new NodeSet
+#        study_uri = bundle.data['study']
+#        match = re.search('[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}', study_uri)
+#        study_uuid = match.group()
+#        study = Study.objects.get(uuid=study_uuid)
+#        # look up the dataset via InvestigationLink relationship
+#        # an investigation is only associated with a single data set even though
+#        # InvestigationLink is a many to many relationship
+#        study.investigation.investigationlink_set.all()[0].data_set
+#        # check if current user has the read permission on the data set
+#        # if not:
+#        raise Unauthorized("You are not allowed to access that resource.")
+
         bundle = super(NodeSetResource, self).obj_create(bundle, **kwargs)
         bundle.obj.set_owner(bundle.request.user)
         return bundle
