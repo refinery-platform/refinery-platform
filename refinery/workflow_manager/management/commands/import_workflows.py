@@ -21,6 +21,7 @@ class Command(BaseCommand):
     """   
     def handle(self, **options):
         
+        """
         workflow_engine_objects = []
         
         WorkflowEngine.objects.all().delete()
@@ -35,6 +36,7 @@ class Command(BaseCommand):
         
         for workflow_engine in workflow_engine_objects:
             print(str(workflow_engine))
+       """
                     
         workflow_engines = WorkflowEngine.objects.all()
         
@@ -44,10 +46,11 @@ class Command(BaseCommand):
         
         for engine in workflow_engines:
             print "Importing from workflow engine \"" + engine.name + "\" ..."
+            old_workflow_count = engine.workflow_set.all().count()
             get_workflows( engine );
             new_workflow_count = engine.workflow_set.all().count()
-            print str( ( new_workflow_count ) ) + " workflows imported from workflow \"" + engine.name + "\" ..." 
-            workflows += new_workflow_count
+            print str( ( new_workflow_count-old_workflow_count ) ) + " workflows imported from workflow \"" + engine.name + "\" ..." 
+            workflows += (new_workflow_count-old_workflow_count)
         
         print str( workflows ) + " workflows imported from " + str( workflow_engines.count() ) + " workflow engines"
         

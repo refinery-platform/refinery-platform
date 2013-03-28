@@ -51,13 +51,13 @@ def home(request):
         projects = get_objects_for_group( group, "core.read_project" ).filter( is_catch_all=False )
         workflow_engines = get_objects_for_group( group, "core.read_workflowengine" )
         data_sets = get_objects_for_group( group, "core.read_dataset" )
-        workflows = get_objects_for_group( group, "core.read_workflow" )
+        workflows = get_objects_for_group( group, "core.read_workflow" ).filter( is_active=True )
         unassigned_analyses = []
     else:
         projects = get_objects_for_user( request.user, "core.read_project" ).filter( is_catch_all=False )
         unassigned_analyses = request.user.get_profile().catch_all_project.analyses.all().order_by( "-time_start" )
         workflow_engines = get_objects_for_user( request.user, "core.read_workflowengine" )
-        workflows = get_objects_for_user( request.user, "core.read_workflow" )
+        workflows = get_objects_for_user( request.user, "core.read_workflow" ).filter( is_active=True )
         data_sets = get_objects_for_user( request.user, "core.read_dataset" )
             
     return render_to_response('core/home.html', {'users': users, 'projects': projects, 'unassigned_analyses': unassigned_analyses, 'workflow_engines': workflow_engines, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext( request ) )

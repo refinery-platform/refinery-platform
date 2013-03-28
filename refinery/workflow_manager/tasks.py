@@ -33,8 +33,9 @@ def get_workflows( workflow_engine ):
         return
             
     
-    # delete old references to workflows associated with this workflow engine
-    Workflow.objects.filter( workflow_engine=workflow_engine ).delete() 
+    # make existing workflows for this workflow engine inactive (deleting the workflows would remove provenance information
+    # and also lead to the deletion of the corresponding analyses) 
+    Workflow.objects.filter( workflow_engine=workflow_engine ).update( is_active=False ) 
     
     #for each workflow, create a core Workflow object and its associated WorkflowDataInput objects
     for workflow in workflows:
@@ -43,7 +44,7 @@ def get_workflows( workflow_engine ):
         if is_refinery: # if workflow is meant for refinery 
             logger.debug("Importing workflow into %s: %s" % (Site.objects.get_current().name, workflow.name))
             
-            workflow_object = Workflow.objects.create( name=workflow.name, internal_id=workflow.identifier, workflow_engine=workflow_engine )        
+            workflow_object = Workflow.objects.create( name=workflow.name, internal_id=workflow.identifier, workflow_engine=workflow_engine, is_active=True )        
             workflow_object.set_manager_group( workflow_engine.get_manager_group() )
                     
             workflow_object.share( workflow_engine.get_manager_group().get_managed_group() )
