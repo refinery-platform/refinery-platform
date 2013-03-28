@@ -11,7 +11,7 @@ from tastypie.test import ResourceTestCase
 from core.management.commands.init_refinery import create_public_group
 from core.management.commands.create_user import init_user
 from core.models import NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,\
-                        ExtendedGroup
+                        ExtendedGroup, DataSet, InvestigationLink
 import data_set_manager
 from guardian.shortcuts import assign
 
@@ -396,8 +396,9 @@ class NodeSetResourceTest(ResourceTestCase):
         '''Test adding a new NodeSet with required fields only
 
         '''
-        assign('core.add_nodeset', self.user)
-        self.assertEqual(NodeSet.objects.count(), 0)
+        dataset = DataSet.objects.create()
+        InvestigationLink.objects.create(data_set=dataset, investigation=self.investigation)
+        assign("read_%s" % dataset._meta.module_name, self.user, dataset)
         nodeset_data = {
             'name': 'nodeset1',
             'study': make_api_uri('study', self.study.uuid),
@@ -405,12 +406,14 @@ class NodeSetResourceTest(ResourceTestCase):
             'is_implicit': True
         }
         nodeset_uri = make_api_uri('nodeset')
+
+        self.assertEqual(NodeSet.objects.count(), 0)
         response = self.api_client.post(nodeset_uri, format='json',
                                         data=nodeset_data,
                                         authentication=self.get_credentials())
         self.assertHttpCreated(response)
         self.assertEqual(NodeSet.objects.count(), 1)
-        nodeset = NodeSet.objects.get(name='nodeset1')
+        nodeset = NodeSet.objects.get(name=nodeset_data['name'])
         self.assertEqual(nodeset.get_owner(), self.user)
 
     def test_create_minimal_nodeset_without_login(self):
@@ -431,7 +434,8 @@ class NodeSetResourceTest(ResourceTestCase):
         self.assertEqual(NodeSet.objects.count(), 0)
 
     def test_create_minimal_nodeset_without_permission(self):
-        '''Test adding a new NodeSet by a user that doesn't have core.add_nodeset permission
+        '''Test adding a new NodeSet by a user that doesn't have read_dataset
+        permission on the linked dataset object.
 
         '''
         self.assertEqual(NodeSet.objects.count(), 0)

@@ -18,6 +18,7 @@ from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import DjangoAuthorization, Authorization
 from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS
+from tastypie.exceptions import Unauthorized
 from tastypie.resources import ModelResource
 from tastypie.serializers import Serializer
 from GuardianTastypieAuthz import GuardianAuthorization
@@ -106,19 +107,28 @@ class NodeSetResource(ModelResource):
         current user has read permission on the data set referenced by the new NodeSet
 
         '''
-#        # get the Study specified by the UUID in the new NodeSet
-#        study_uri = bundle.data['study']
-#        match = re.search('[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}', study_uri)
-#        study_uuid = match.group()
-#        study = Study.objects.get(uuid=study_uuid)
-#        # look up the dataset via InvestigationLink relationship
-#        # an investigation is only associated with a single data set even though
-#        # InvestigationLink is a many to many relationship
-#        study.investigation.investigationlink_set.all()[0].data_set
-#        # check if current user has the read permission on the data set
-#        # if not:
-#        raise Unauthorized("You are not allowed to access that resource.")
-
+        # get the Study specified by the UUID in the new NodeSet
+        study_uri = bundle.data['study']
+        match = re.search('[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}', study_uri)
+        study_uuid = match.group()
+        try:
+            study = Study.objects.get(uuid=study_uuid)
+        except Study.DoesNotExist:
+            logger.error("Study '{}' does not exist".format(study_uuid))
+            self.unauthorized_result(Unauthorized("You are not allowed to create a new NodeSet."))
+        # look up the dataset via InvestigationLink relationship
+        # an investigation is only associated with a single data set even though
+        # InvestigationLink is a many to many relationship
+        try:
+            dataset = study.investigation.investigationlink_set.all()[0].data_set
+        except IndexError:
+            logger.error("Data set not found for study '{}'".format(study.uuid))
+            self.unauthorized_result(Unauthorized("You are not allowed to create a new NodeSet."))
+        permission = "read_%s" % dataset._meta.module_name
+        if not bundle.request.user.has_perm(permission, dataset):
+            self.unauthorized_result(Unauthorized("You are not allowed to create a new NodeSet."))
+        # if user has the read permission on the data set
+        # continue with creating the new NodeSet instance
         bundle = super(NodeSetResource, self).obj_create(bundle, **kwargs)
         bundle.obj.set_owner(bundle.request.user)
         return bundle
