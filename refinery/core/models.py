@@ -280,7 +280,7 @@ class DataSet(SharableResource):
         Associate this data set with an investigation. If this data set has an association with an investigation this 
         association will be cleared first. Use update_investigation() to add a new version of the current investigation.
         ''' 
-        self.investigationlink_set.clear()        
+        self.investigationlink_set.filter( data_set=self ).delete()        
         link = InvestigationLink(data_set=self, investigation=investigation, version=1, message=message)
         link.save()
         return 1
