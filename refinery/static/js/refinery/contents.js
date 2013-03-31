@@ -267,29 +267,32 @@ $(document).ready(function() {
 
 		// ---------------------------
 		// node set manager
-		// ---------------------------
-		nodeSetManager = new NodeSetManager( externalAssayUuid, externalStudyUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
-		nodeSetManager.initialize();
-
-		nodeSetManager.setLoadSelectionCallback( function( nodeSet ) {
-			query.deserialize( nodeSet.solr_query_components );
-		});
-
-		nodeSetManager.setSaveSelectionCallback( function() {
-			var solr_query_components = query.serialize();
-			var solr_query = client.createUrl( query, SOLR_FULL_QUERY );
-
-			bootbox.prompt( "Enter a Name for the Selection", function( name ) {
-				if ( name === null ) {
-					bootbox.alert( "The selection was not saved." );
-				} else {
-					nodeSetManager.postState( name, "Summary for Node Set", solr_query, solr_query_components, query.getCurrentDocumentCount(), function(){
-						bootbox.alert( 'The selection was saved as "' + name + '".' );
-						nodeSetManager.getList( function() { nodeSetManager.renderList() } );
-					});
-			  	}
+		// ---------------------------		
+		if ( $("#" + "node-set-manager-controls").length > 0 ) {
+		
+			nodeSetManager = new NodeSetManager( externalAssayUuid, externalStudyUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
+			nodeSetManager.initialize();
+	
+			nodeSetManager.setLoadSelectionCallback( function( nodeSet ) {
+				query.deserialize( nodeSet.solr_query_components );
 			});
-		});
+	
+			nodeSetManager.setSaveSelectionCallback( function() {
+				var solr_query_components = query.serialize();
+				var solr_query = client.createUrl( query, SOLR_FULL_QUERY );
+	
+				bootbox.prompt( "Enter a Name for the Selection", function( name ) {
+					if ( name === null ) {
+						bootbox.alert( "The selection was not saved." );
+					} else {
+						nodeSetManager.postState( name, "Summary for Node Set", solr_query, solr_query_components, query.getCurrentDocumentCount(), function(){
+							bootbox.alert( 'The selection was saved as "' + name + '".' );
+							nodeSetManager.getList( function() { nodeSetManager.renderList() } );
+						});
+				  	}
+				});
+			});
+		}
 
 		// --------------
 		// annotation

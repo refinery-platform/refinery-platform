@@ -59,7 +59,7 @@ NodeSetManager.prototype.setSaveSelectionCallback = function ( callback ) {
 NodeSetManager.prototype.initialize = function () {
 	var self = this;
 	
-	self.getList( function() { self.renderList(); } );
+	self.getList( function() { self.renderList(); }, function() { /* do nothing in case of error */ } );
 	 
 	return null;	
 };
@@ -216,7 +216,7 @@ NodeSetManager.prototype.createGetListUrl = function() {
 };
 
 
-NodeSetManager.prototype.getList = function( callback ) {
+NodeSetManager.prototype.getList = function( callback, errorCallback ) {
 	var self = this;
 
 	$.ajax({
@@ -233,6 +233,11 @@ NodeSetManager.prototype.getList = function( callback ) {
 	     	self.list = result;    	     	     	
 			// callback
 			callback( result );										
+    	},
+    error: function ( result ) {
+    		if ( errorCallback ) {
+				errorCallback( result );    			
+    		}
     	}
 	});
 };

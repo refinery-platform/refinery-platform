@@ -178,10 +178,12 @@ rect.active {
   					</span>
 
 					{% if not REFINERY_REPOSITORY_MODE %}
-					<span id="node-set-manager-panel">
-	 					<label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Selection</label>
-						<span id="node-set-manager-controls"></span>
-  					</span>
+						{% if user.is_authenticated %}
+						<span id="node-set-manager-panel">
+		 					<label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Selection</label>
+							<span id="node-set-manager-controls"></span>
+	  					</span>
+	  					{% endif %}
   					{% endif %}
 
 					{% if user.is_authenticated %}
