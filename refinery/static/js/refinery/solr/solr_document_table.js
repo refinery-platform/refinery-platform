@@ -338,7 +338,7 @@ SolrDocumentTable.prototype._generatePagerControl = function( parentElementId, v
    	
    	$( "#" + parentElementId ).html("");
    	
-	var availablePages = Math.max( 0, Math.floor( self._query.getCurrentDocumentCount( false )/self._documentsPerPage ) );
+	var availablePages = Math.max( 0, Math.floor( (self._query.getCurrentDocumentCount( false )-1)/self._documentsPerPage ) );
 	var currentPage = Math.floor( self._query.getDocumentIndex()/self._documentsPerPage );
 
 	if ( currentPage > availablePages ) {
