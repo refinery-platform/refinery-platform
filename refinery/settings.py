@@ -336,6 +336,10 @@ ISA_TAB_DIR = ''
 # relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
 FILE_STORE_DIR = 'file_store'
 
+# optional dictionary for translating file URLs into file system paths (and vice versa)
+# format: {'pattern': 'replacement'} - may contain more than one key-value pair
+FILE_SOURCE_MAP = {}
+
 # location of the Solr server (must be accessible from the web browser)
 REFINERY_SOLR_BASE_URL = "http://localhost:8983/solr/"
 

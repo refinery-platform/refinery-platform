@@ -223,6 +223,12 @@ class _FileStoreItemManager(models.Manager):
         if not source:  # it doesn't make sense to create a FileStoreItem without a file source
             logger.error("Source is required but was not provided")
             return None
+        # translate source if necessary
+        for pattern, replacement in settings.FILE_SOURCE_MAP.iteritems():
+            translated_source = re.sub(pattern, replacement, source)
+            if source != translated_source:
+                source = translated_source
+                break
 
         item = self.create(source=source, sharename=sharename)
 
