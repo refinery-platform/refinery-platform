@@ -42,6 +42,7 @@ def analysis_status(request, uuid):
         ret_json['execution'] = statuses.execution_status()
         ret_json['postprocessing'] = statuses.postprocessing_status()
         ret_json['cleanup'] = statuses.cleanup_status()
+        ret_json['overall'] = analysis.status
         
         return HttpResponse(simplejson.dumps(ret_json), mimetype='application/javascript')
 
