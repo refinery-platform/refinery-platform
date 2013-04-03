@@ -79,7 +79,9 @@
 				</a>&nbsp;&nbsp; 				
     			<a href="{% url django.contrib.auth.views.logout %}"><i class="icon-signout"></i></a>
     	{% else %}
+    		{% if not REFINERY_NO_REGISTRATION %}
 			<a rel="tooltip" data-placement="left" title="Sign Up" href="{% url home %}accounts/register">Register</a>&nbsp;&nbsp;
+			{% endif %}
 			<a rel="tooltip" data-placement="left" title="Log In" href="{% url django.contrib.auth.views.login %}?next={% if request.path %}{{ request.path|safe }}{% else %}{% url home %}{% endif %}"><i class="icon-signin"></i></a>
 		{% endif %}		
     		</p>

@@ -185,7 +185,7 @@ INSTALLED_APPS = (
     'annotation_server',
     'registration',
     # RP: added for database migration between builds 
-    'south', 
+    #'south', 
 )
 
 # IS: added for django-auth-ldap
@@ -389,6 +389,9 @@ UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 
 # Tag for repository mode
 REFINERY_REPOSITORY_MODE = False
+
+# Tag for turning off registration
+NO_REGISTRATION = False
 
 # import local settings
 from settings_local import *
