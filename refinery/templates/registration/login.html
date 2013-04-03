@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}
 {{ block.super }} - Login
@@ -45,11 +46,11 @@
 						&nbsp;<a href="/accounts/password/reset/">Forgot password?</a>
 					</p>
 				</form>
-				
+				{% if not REFINERY_DISABLE_REGISTRATION %}
 				<p>
 					If you don't have an account, you can <a href="/accounts/register/">sign up</a> for one.
 				</p>
-				
+				{% endif %}
 			</div>
 		</div>
 	</div>

@@ -391,7 +391,7 @@ UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 REFINERY_REPOSITORY_MODE = False
 
 # Tag for turning off registration
-NO_REGISTRATION = False
+REFINERY_DISABLE_REGISTRATION = False
 
 # import local settings
 from settings_local import *

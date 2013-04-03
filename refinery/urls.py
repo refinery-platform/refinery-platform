@@ -15,7 +15,7 @@ from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
 from registration.forms import RegistrationFormUniqueEmail
-from settings import MEDIA_ROOT, MEDIA_URL, STATIC_URL, NO_REGISTRATION
+from settings import MEDIA_ROOT, MEDIA_URL, STATIC_URL, REFINERY_DISABLE_REGISTRATION
 from tastypie.api import Api
 from workflow_manager.views import import_workflows
 
@@ -69,7 +69,6 @@ urlpatterns = patterns('',
     #url(r"^admin/core/test_data/$", admin.site.admin_view( admin_test_data ) ),    
     url(r'^admin/', include(admin.site.urls)),
     
-    url(r'^accounts/login/$', 'django.contrib.auth.views.login' ),
     url(r'^login/$', 'django.contrib.auth.views.login', name="login" ),
     url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page":"/" } ),
     url(r'^accounts/profile/$', 'core.views.user_profile', name='user_profile'),
@@ -89,10 +88,12 @@ urlpatterns = patterns('',
 ) + static( MEDIA_URL, document_root=MEDIA_ROOT)
 # for "static" see https://docs.djangoproject.com/en/dev/howto/static-files/#serving-other-directories
 
-if not NO_REGISTRATION:
+if not REFINERY_DISABLE_REGISTRATION:
     urlpatterns += patterns('',
                             url(r'^accounts/register/$', 'registration.views.register', {'form_class': RegistrationFormUniqueEmail, 'backend': 'registration.backends.default.DefaultBackend'}),
                             url(r'^accounts/activate/(?P<activation_key>\w+)/$', 'registration.views.activate', {'success_url': '/login?next=/accounts/profile/edit', 'backend': 'registration.backends.default.DefaultBackend'}),
                             url(r'^accounts/password/reset/confirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm', {'post_reset_redirect': '/login?next=/'}),
+                            url(r'^accounts/login/$', 'django.contrib.auth.views.login' ),
                             url(r'^accounts/', include('registration.urls')),
+                            url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page":"/" } ),
                             )

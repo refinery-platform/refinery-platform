@@ -22,4 +22,5 @@ def extra_context(context):
         "REFINERY_INSTANCE_NAME": Site.objects.get_current().name,
         "REFINERY_REPOSITORY_MODE": settings.REFINERY_REPOSITORY_MODE,
         "REFINERY_CONTACT_EMAIL": settings.DEFAULT_FROM_EMAIL,
+        "REFINERY_DISABLE_REGISTRATION": settings.REFINERY_DISABLE_REGISTRATION,
     }
