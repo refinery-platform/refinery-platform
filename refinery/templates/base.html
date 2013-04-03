@@ -76,13 +76,13 @@
 				{% else %}
 					{{ user.username }}				
 				{% endif %}
-				</a>&nbsp;&nbsp; 				
-    			<a href="{% url django.contrib.auth.views.logout %}"><i class="icon-signout"></i></a>
+				</a>&nbsp;&nbsp;|&nbsp;&nbsp; 				
+    			<i class="icon-signout"></i>&nbsp;<a href="{% url django.contrib.auth.views.logout %}">Logout</a>
     	{% else %}
     		{% if not REFINERY_DISABLE_REGISTRATION %}
-			<a rel="tooltip" data-placement="left" title="Sign Up" href="{% url home %}accounts/register">Register</a>&nbsp;&nbsp;
+			<a rel="tooltip" data-placement="left" title="Sign Up" href="{% url home %}accounts/register">Register</a>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
 			{% endif %}
-			<a rel="tooltip" data-placement="left" title="Log In" href="{% url django.contrib.auth.views.login %}?next={% if request.path %}{{ request.path|safe }}{% else %}{% url home %}{% endif %}"><i class="icon-signin"></i></a>
+			<i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{% url django.contrib.auth.views.login %}?next={% if request.path %}{{ request.path|safe }}{% else %}{% url home %}{% endif %}">Login</a>
 		{% endif %}		
     		</p>
                            	          
