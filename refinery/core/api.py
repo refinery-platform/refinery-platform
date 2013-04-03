@@ -4,24 +4,26 @@ Created on May 4, 2012
 @author: nils
 '''
 
-import logging
-import re
-from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, WorkflowInputRelationships
+from GuardianTastypieAuthz import GuardianAuthorization
+from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, \
+    WorkflowInputRelationships
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
 from django.conf.urls.defaults import url
 from django.core.serializers import json
 from django.db.models.aggregates import Count
 from django.utils import simplejson
+from file_store.models import FileStoreItem
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import DjangoAuthorization, Authorization
 from tastypie.bundle import Bundle
-from tastypie.constants import ALL_WITH_RELATIONS
+from tastypie.constants import ALL_WITH_RELATIONS, ALL
 from tastypie.exceptions import Unauthorized
 from tastypie.resources import ModelResource
 from tastypie.serializers import Serializer
-from GuardianTastypieAuthz import GuardianAuthorization
+import logging
+import re
 
 
 logger = logging.getLogger(__name__)
@@ -54,9 +56,13 @@ class NodeResource(ModelResource):
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
 #        authentication = SessionAuthentication()
 #        authorization = DjangoAuthorization()
-        authentication = Authentication()
-        authorization = Authorization()
+        authentication = SessionAuthentication()
+        authorization = GuardianAuthorization()
         serializer = PrettyJSONSerializer()
+        allowed_methods = ["get" ]
+        fields = ['name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay' ]
+        filtering = { 'uuid': ALL }
+        #filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
 
     def prepend_urls(self):
         return [
@@ -66,6 +72,21 @@ class NodeResource(ModelResource):
                 name="api_dispatch_detail"),
         ]
 
+
+    def dehydrate(self, bundle):
+        # return download URL of file if a file is associated with the node
+        
+        if bundle.obj.file_uuid is not None and bundle.obj.file_uuid != "":
+            try:
+                bundle.data['file_url'] = FileStoreItem.objects.get( uuid=bundle.obj.file_uuid ).get_full_url()
+            except:
+                logger.warning( 'Unable to find file store item with UUID "' + bundle.obj.file_uuid + '".' )
+                bundle.data['file_url'] = None
+        else:
+            bundle.data['file_url'] = None
+           
+        return bundle
+    
 
 class NodeSetResource(ModelResource):
     # https://github.com/toastdriven/django-tastypie/pull/538
