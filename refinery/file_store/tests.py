@@ -6,8 +6,10 @@ This file contains tests for file_store.models and file_store.tasks
 import os
 import mock
 from urlparse import urljoin
+from django.conf import settings
 from django.test import SimpleTestCase
 import file_store.models as models
+from file_store.models import FileStoreItem
 
 
 class FileStoreModuleTest(SimpleTestCase):
@@ -160,3 +162,24 @@ class FileStoreItemTest(SimpleTestCase):
         self.assertTrue(item_from_path.filetype, os.path.splitext(self.filename)[1])
         item_from_url.set_filetype()
         self.assertTrue(item_from_url.filetype, os.path.splitext(self.filename)[1])
+
+class FileStoreItemManagerTest(SimpleTestCase):
+    '''FileStoreItemManager methods test.
+
+    '''
+    def setUp(self):
+        self.filename = 'test_file.tdf'
+        self.sharename = 'labname'
+        self.path_prefix = '/example/local/path/'
+        self.path_source = os.path.join(self.path_prefix, self.filename)
+        self.url_prefix = 'http://example.org/web/path/'
+        self.url_source = urljoin(self.url_prefix, self.filename)
+
+    def test_file_source_map_translation(self):
+        '''Test translation from URL to file system path when creating a new instance.
+
+        '''
+        settings.FILE_SOURCE_MAP = {self.url_prefix: self.path_prefix}
+        item = FileStoreItem.objects.create_item(self.url_source)
+        self.assertEqual(item.source, self.path_source)
+
