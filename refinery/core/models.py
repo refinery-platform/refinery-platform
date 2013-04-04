@@ -434,8 +434,17 @@ class WorkflowInputRelationships(models.Model):
     
     def __unicode__(self):
         return str(self.category) + " - " + str(self.set1) + "," + str(self.set2)
+    
         
 class Workflow ( SharableResource, ManageableResource ):
+
+    ANALYSIS_TYPE = "analysis"
+    DOWNLOAD_TYPE = "download"
+    
+    TYPE_CHOICES = ( 
+                     ( ANALYSIS_TYPE, 'Workflow performs data analysis tasks. Results are merged into dataset.' ),
+                     ( DOWNLOAD_TYPE, 'Workflow creates bulk downloads. Results are add to user\'s download list.' ),
+                    ) 
 
     data_inputs = models.ManyToManyField( WorkflowDataInput, blank=True )
     internal_id = models.CharField( max_length=50 )
@@ -443,6 +452,7 @@ class Workflow ( SharableResource, ManageableResource ):
     show_in_repository_mode = models.BooleanField( default=False )
     input_relationships = models.ManyToManyField( WorkflowInputRelationships, blank=True )
     is_active = models.BooleanField( default=False, null=False, blank=False )
+    type = models.CharField( default=ANALYSIS_TYPE, null=False, blank=False, choices=TYPE_CHOICES, max_length=25 )
     
     def __unicode__(self):
         return self.name + " - " + self.summary
