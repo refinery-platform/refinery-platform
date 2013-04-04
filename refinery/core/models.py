@@ -451,8 +451,9 @@ class Workflow ( SharableResource, ManageableResource ):
     workflow_engine = models.ForeignKey( WorkflowEngine )    
     show_in_repository_mode = models.BooleanField( default=False )
     input_relationships = models.ManyToManyField( WorkflowInputRelationships, blank=True )
-    is_active = models.BooleanField( default=False, null=False, blank=False )
+    is_active = models.BooleanField( default=False, null=False, blank=False )        
     type = models.CharField( default=ANALYSIS_TYPE, null=False, blank=False, choices=TYPE_CHOICES, max_length=25 )
+    graph = models.TextField( null=True, blank=True )
     
     def __unicode__(self):
         return self.name + " - " + self.summary
