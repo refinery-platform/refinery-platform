@@ -1,5 +1,6 @@
 from collections import defaultdict
-from core.forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
+from core.forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm, \
+    DataSetForm
 from core.models import ExtendedGroup, Project, DataSet, Workflow, UserProfile, \
     WorkflowEngine, Analysis, get_shared_groups
 from data_set_manager.models import *
@@ -15,25 +16,25 @@ from django.http import HttpResponse, HttpResponseForbidden, \
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext, loader
 from django.utils import simplejson
-from file_store.models import FileStoreItem, FileStoreItem
+from file_store.models import FileStoreItem, FileStoreItem, FileStoreItem, \
+    get_temp_dir, file_path, FILE_STORE_BASE_DIR
+from file_store.tasks import create, import_file
+from galaxy_connector.connection import Connection
+from galaxy_connector.galaxy_workflow import create_workflow_graph
 from galaxy_connector.models import Instance
 from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
     get_perms, get_objects_for_group, get_objects_for_user, get_perms, \
     get_users_with_perms
 from haystack.query import SearchQuerySet
+from tempfile import NamedTemporaryFile
 from visualization_manager.views import igv_multi_species
-from galaxy_connector.galaxy_workflow import create_workflow_graph
 import json
 import logging
+import matplotlib.pyplot as plt
+import networkx as nx
 import os.path
 import settings
 import urllib2
-import networkx as nx
-import matplotlib.pyplot as plt
-from tempfile import NamedTemporaryFile
-from file_store.models import FileStoreItem, get_temp_dir, file_path, FILE_STORE_BASE_DIR
-from file_store.tasks import create, import_file
-from galaxy_connector.connection import Connection
 
 
 
@@ -403,16 +404,9 @@ def workflow(request, uuid):
         
     # load graph dictionary from Galaxy
     workflow = Workflow.objects.filter( uuid=uuid ).get()
-    
-    connection = Connection( workflow.workflow_engine.instance.base_url,
-                             workflow.workflow_engine.instance.data_url,
-                             workflow.workflow_engine.instance.api_url,
-                             workflow.workflow_engine.instance.api_key )
-
-    workflow_dictionary = connection.get_workflow_dict( workflow.internal_id );
-        
+            
     # parse workflow into graph data structure
-    graph = create_workflow_graph( workflow_dictionary )    
+    graph = create_workflow_graph( json.loads( workflow.graph ) )    
         
     # draw graph
     #nx.draw(graph)
