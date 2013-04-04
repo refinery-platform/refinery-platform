@@ -11,9 +11,6 @@
 </div>
 {% endblock %}
 
-
-{% load url from future %}
-
 {% block content %}
 
 {% if messages %}
@@ -24,7 +21,7 @@
 	<div class="row-fluid">
 		<div class="span12">
 			<div class="refinery-panel refinery-panel-content">
-				<form method="post" action="{% url 'django.contrib.auth.views.login' %}">
+				<form method="post" action="{% url django.contrib.auth.views.login %}">
 					{% csrf_token %}
 					{% if form.errors %}
 					<p>Your username and password didn't match. Please try again.</p>
@@ -43,12 +40,12 @@
 					<p>
 						<input class="btn" type="submit" value="Login" />
 						<input type="hidden" name="next" value="{{ next }}" />
-						&nbsp;<a href="/accounts/password/reset/">Forgot password?</a>
+						&nbsp;<a href="/accounts/password/reset">Forgot password?</a>
 					</p>
 				</form>
 				{% if not REFINERY_DISABLE_REGISTRATION %}
 				<p>
-					If you don't have an account, you can <a href="/accounts/register/">sign up</a> for one.
+					If you don't have an account, you can <a href="{% url registration.views.register %}">sign up</a> for one.
 				</p>
 				{% endif %}
 			</div>
