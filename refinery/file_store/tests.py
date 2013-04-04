@@ -179,7 +179,16 @@ class FileStoreItemManagerTest(SimpleTestCase):
         '''Test translation from URL to file system path when creating a new instance.
 
         '''
-        settings.FILE_SOURCE_MAP = {self.url_prefix: self.path_prefix}
+        settings.REFINERY_FILE_SOURCE_MAP = {self.url_prefix: self.path_prefix}
         item = FileStoreItem.objects.create_item(self.url_source)
         self.assertEqual(item.source, self.path_source)
 
+    def test_empty_file_source_map_translation(self):
+        '''Test that empty map doesn't affect creating new FileStoreItem instances.
+
+        '''
+        settings.REFINERY_FILE_SOURCE_MAP = {}
+        item = FileStoreItem.objects.create_item(self.url_source)
+        self.assertEqual(item.source, self.url_source)
+        item = FileStoreItem.objects.create_item(self.path_source)
+        self.assertEqual(item.source, self.path_source)

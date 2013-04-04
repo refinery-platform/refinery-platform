@@ -16,3 +16,8 @@ Required Settings
 Optional Settings
 -----------------
 
+``REFINERY_FILE_SOURCE_MAP = {}``
+   Optional dictionary for translating file URLs into file system paths (and vice versa)
+   format: *{'pattern': 'replacement'}*
+   where *pattern* is a string to search for in source and then replace with *replacement* string.
+   May contain more than one pattern-replacement pair (only the first match will be used).

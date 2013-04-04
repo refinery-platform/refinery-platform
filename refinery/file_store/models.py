@@ -224,7 +224,7 @@ class _FileStoreItemManager(models.Manager):
             logger.error("Source is required but was not provided")
             return None
         # translate source if necessary
-        for pattern, replacement in settings.FILE_SOURCE_MAP.iteritems():
+        for pattern, replacement in settings.REFINERY_FILE_SOURCE_MAP.iteritems():
             translated_source = re.sub(pattern, replacement, source)
             if source != translated_source:
                 source = translated_source
