@@ -71,12 +71,11 @@ urlpatterns = patterns('',
     #url(r"^admin/core/test_data/$", admin.site.admin_view( admin_test_data ) ),    
     url(r'^admin/', include(admin.site.urls)),
     
-    url(r'^login/$', 'django.contrib.auth.views.login', name="login" ),
-    url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page":"/" } ),
+    url(r'^accounts/password/reset/confirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm', {'post_reset_redirect': '/accounts/login/?next=/'}),
     url(r'^accounts/profile/$', 'core.views.user_profile', name='user_profile'),
     url(r'^accounts/profile/edit/$', 'core.views.user_profile_edit', name='user_profile_edit'),
-    #url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page": "http://" + Site.objects.get_current().domain } ),
-    
+    url(r'^accounts/', include('registration.auth_urls')),
+
     # NG: tastypie API urls
     url(r'^api/', include(v1_api.urls)),
     
@@ -93,9 +92,6 @@ urlpatterns = patterns('',
 if not REFINERY_DISABLE_REGISTRATION:
     urlpatterns += patterns('',
                             url(r'^accounts/register/$', 'registration.views.register', {'form_class': RegistrationFormUniqueEmail, 'backend': 'registration.backends.default.DefaultBackend'}),
-                            url(r'^accounts/activate/(?P<activation_key>\w+)/$', 'registration.views.activate', {'success_url': '/login?next=/accounts/profile/edit', 'backend': 'registration.backends.default.DefaultBackend'}),
-                            url(r'^accounts/password/reset/confirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm', {'post_reset_redirect': '/login?next=/'}),
-                            url(r'^accounts/login/$', 'django.contrib.auth.views.login' ),
-                            url(r'^accounts/', include('registration.urls')),
-                            url(r'^logout/$', 'django.contrib.auth.views.logout', { "next_page":"/" } ),
+                            url(r'^accounts/activate/(?P<activation_key>\w+)/$', 'registration.views.activate', {'success_url': '/accounts/login/?next=/accounts/profile/edit', 'backend': 'registration.backends.default.DefaultBackend'}),
+                            url(r'^accounts/', include('registration.urls')),                
                             )

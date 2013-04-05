@@ -77,7 +77,7 @@
 					{{ user.username }}				
 				{% endif %}
 				</a>&nbsp;&nbsp;|&nbsp;&nbsp; 				
-    			<i class="icon-signout"></i>&nbsp;<a href="{% url django.contrib.auth.views.logout %}">Logout</a>
+    			<i class="icon-signout"></i>&nbsp;<a href="{% url django.contrib.auth.views.logout %}?next={% url home %}">Logout</a>
     	{% else %}
     		{% if not REFINERY_DISABLE_REGISTRATION %}
 			<a rel="tooltip" data-placement="left" title="Sign Up" href="{% url registration.views.register %}">Register</a>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
