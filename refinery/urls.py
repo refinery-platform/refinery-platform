@@ -72,6 +72,7 @@ urlpatterns = patterns('',
     url(r'^accounts/password/reset/confirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm', {'post_reset_redirect': '/accounts/login/?next=/'}),
     url(r'^accounts/profile/$', 'core.views.user_profile', name='user_profile'),
     url(r'^accounts/profile/edit/$', 'core.views.user_profile_edit', name='user_profile_edit'),
+    url(r'^accounts/', include('registration.auth_urls')),
 
     # NG: tastypie API urls
     url(r'^api/', include(v1_api.urls)),
@@ -89,6 +90,6 @@ urlpatterns = patterns('',
 if not REFINERY_DISABLE_REGISTRATION:
     urlpatterns += patterns('',
                             url(r'^accounts/register/$', 'registration.views.register', {'form_class': RegistrationFormUniqueEmail, 'backend': 'registration.backends.default.DefaultBackend'}),
-                            url(r'^accounts/activate/(?P<activation_key>\w+)/$', 'registration.views.activate', {'success_url': '/accounts/login/?next=/accounts/profile/edit', 'backend': 'registration.backends.default.DefaultBackend'}),                
-                            url(r'^accounts/', include('registration.urls')),
+                            url(r'^accounts/activate/(?P<activation_key>\w+)/$', 'registration.views.activate', {'success_url': '/accounts/login/?next=/accounts/profile/edit', 'backend': 'registration.backends.default.DefaultBackend'}),
+                            url(r'^accounts/', include('registration.urls')),                
                             )
