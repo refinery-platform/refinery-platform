@@ -6,7 +6,7 @@ Created on May 4, 2012
 
 from GuardianTastypieAuthz import GuardianAuthorization
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, \
-    WorkflowInputRelationships
+    WorkflowInputRelationships, Analysis, DataSet
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
 from django.conf.urls.defaults import url
@@ -43,6 +43,52 @@ class PrettyJSONSerializer(Serializer):
                 sort_keys=True, ensure_ascii=False, indent=self.json_indent)
 
 
+class DataSetResource(ModelResource):
+    class Meta:
+        queryset = DataSet.objects.all()
+        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
+        allowed_methods = ['get']
+        resource_name = 'data_set'
+        filtering = {'uuid': ALL}
+        fields = ['uuid']
+
+
+class AnalysisResource(ModelResource):
+    data_set = fields.ToOneField(DataSetResource, 'data_set', use_in='detail')
+    uuid = fields.CharField(attribute='uuid', use_in='all')
+    name = fields.CharField(attribute='name', use_in='all')
+    creation_date = fields.CharField(attribute='creation_date', use_in='all')
+    workflow_steps_num = fields.IntegerField(attribute='workflow_steps_num',
+                                             blank=True, null=True, use_in='detail')
+    workflow_copy = fields.CharField(attribute='workflow_copy',
+                                     blank=True, null=True, use_in='detail')
+    history_id = fields.CharField(attribute='history_id', blank=True, null=True,
+                                  use_in='detail')
+    workflow_galaxy_id = fields.CharField(attribute='workflow_galaxy_id',
+                                          blank=True, null=True, use_in='detail')
+    library_id = fields.CharField(attribute='library_id', blank=True, null=True,
+                                  use_in='detail')
+    time_start = fields.DateTimeField(attribute='time_start', blank=True, null=True,
+                                      use_in='detail')
+    time_end = fields.DateTimeField(attribute='time_end', blank=True, null=True,
+                                    use_in='detail')
+    status = fields.CharField(attribute='status', default=Analysis.INITIALIZED_STATUS,
+                              blank=True, null=True, use_in='detail')
+
+    class Meta:
+        queryset = Analysis.objects.all()
+        resource_name = Analysis._meta.module_name
+        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
+        authentication = SessionAuthentication()
+        authorization = GuardianAuthorization()
+        allowed_methods = ["get", "delete"]
+        fields = ['data_set', 'creation_date', 'history_id', 'library_id', 'name',
+                'resource_uri', 'status', 'time_end', 'time_start', 'uuid',
+                'workflow_copy', 'workflow_galaxy_id', 'workflow_steps_num']
+        filtering = {'data_set': ALL_WITH_RELATIONS}
+        ordering = ['name', 'creation_date']
+
+
 class ProjectResource(ModelResource):
     class Meta:
         #authentication = ApiKeyAuthentication()
@@ -54,8 +100,6 @@ class NodeResource(ModelResource):
         queryset = Node.objects.all()
         resource_name = 'node'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
-#        authentication = SessionAuthentication()
-#        authorization = DjangoAuthorization()
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
         serializer = PrettyJSONSerializer()

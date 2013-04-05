@@ -1,6 +1,6 @@
-from core.api import ProjectResource, NodeSetResource, NodeResource, \
+from core.api import AnalysisResource, ProjectResource, NodeSetResource, NodeResource, \
     NodeSetListResource, NodePairResource, NodeRelationshipResource, WorkflowResource, \
-    WorkflowInputRelationshipsResource
+    WorkflowInputRelationshipsResource, DataSetResource
 from core.forms import RegistrationFormTermsOfServiceUniqueEmail
 from core.models import DataSet
 from core.views import admin_test_data
@@ -28,9 +28,11 @@ admin.autodiscover()
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
+v1_api.register(AnalysisResource())
 v1_api.register(ProjectResource())
 v1_api.register(StudyResource())
 v1_api.register(AssayResource())
+v1_api.register(DataSetResource())
 v1_api.register(AttributeOrderResource())
 v1_api.register(NodeResource())
 v1_api.register(NodeSetResource())
