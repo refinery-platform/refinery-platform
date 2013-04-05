@@ -285,7 +285,7 @@
 				monitors["{{ analysis.uuid }}"] = new AnalysisMonitor("{{ analysis.uuid }}", document.location.protocol + "//" + document.location.host, "", "{{ csrf_token }}");
 				
 				callbacks["{{ analysis.uuid }}"] = function(){ monitors["{{ analysis.uuid }}"].getAnalysisProgress( function( percentDone ) {
-					$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge\">" + percentDone + "</span>" );
+					$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge\"><i class=\"icon-cog icon-spin\"></i>&nbsp;" + percentDone + "</span>" );
 				}, function() {
 					$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge badge-info\"><i class=\"icon-ok\"></i></span>" );
 					
