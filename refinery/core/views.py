@@ -74,7 +74,7 @@ def statistics(request):
     groups = Group.objects.count()
     projects = Project.objects.count()
     data_sets = DataSet.objects.count()
-    workflows = Workflow.objects.count()
+    workflows = Workflow.objects.filter( is_active=True ).count()
     files = FileStoreItem.objects.count()
 
     uri = request.build_absolute_uri()
