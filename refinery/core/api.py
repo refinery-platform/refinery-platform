@@ -81,7 +81,7 @@ class AnalysisResource(ModelResource):
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
-        allowed_methods = ["get", "delete"]
+        allowed_methods = ["get"]
         fields = ['data_set', 'creation_date', 'history_id', 'library_id', 'name',
                 'resource_uri', 'status', 'time_end', 'time_start', 'uuid',
                 'workflow_copy', 'workflow_galaxy_id', 'workflow_steps_num']

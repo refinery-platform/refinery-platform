@@ -786,3 +786,35 @@ class AnalysisResourceTest(ResourceTestCase):
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)['objects']
         self.assertEqual(len(data), 0)
+
+    def test_delete_analysis(self):
+        '''Test deleting an existing Analysis instance.
+
+        '''
+        analysis = Analysis.objects.create(project=self.project,
+                                           data_set=self.dataset,
+                                           workflow=self.workflow)
+        self.assertEqual(Analysis.objects.count(), 1)
+        assign("delete_%s" % Analysis._meta.module_name, self.user, analysis)
+
+        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
+        response = self.api_client.delete(analysis_uri, format='json',
+                                          authentication=self.get_credentials())
+        self.assertHttpMethodNotAllowed(response)
+        self.assertEqual(Analysis.objects.count(), 1)
+
+    def test_delete_analysis_without_login(self):
+        '''Test deleting an existing Analysis instance with logging in.
+
+        '''
+        analysis = Analysis.objects.create(project=self.project,
+                                           data_set=self.dataset,
+                                           workflow=self.workflow)
+        self.assertEqual(Analysis.objects.count(), 1)
+        assign("delete_%s" % Analysis._meta.module_name, self.user, analysis)
+
+        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
+        response = self.api_client.delete(analysis_uri, format='json')
+        self.assertHttpMethodNotAllowed(response)
+        self.assertEqual(Analysis.objects.count(), 1)
+
