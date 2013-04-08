@@ -121,15 +121,6 @@ NodeSetManager.prototype.renderList = function () {
 };
 
 
-NodeSetManager.prototype.makeClickEvent = function( uuid, callback ) {
-	var self = this; 
-	$( "#" + uuid ).click( function() { 
-		console.log( event );
-		callback();
-	});
-};
-
-
 
 NodeSetManager.prototype.createUpdateUrl = function() {
 	var self = this;

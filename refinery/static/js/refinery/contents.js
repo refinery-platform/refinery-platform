@@ -294,6 +294,22 @@ $(document).ready(function() {
 			});
 		}
 
+		// ---------------------------
+		// analysis manager
+		// ---------------------------		
+		/*
+		if ( $("#" + "analysis-manager-controls").length > 0 ) {
+		
+			analysisManager = new AnalysisManager( dataSetUuid, "analysis-manager-controls", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
+			analysisManager.initialize();
+	
+			analysisManager.setChangeAnalysisCallback( function( analysisList ) {
+				alert( "Changed analysis selection" + " = " + analysisList.length() );
+			});	
+		}
+		*/
+
+
 		// --------------
 		// annotation
 		// --------------

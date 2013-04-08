@@ -22,7 +22,7 @@ AnalysisManager = function( dataSetUuid, elementId, apiBaseUrl, crsfMiddlewareTo
   	var self = this;
 
   	// API related properties
-  	self.apiEndpoint = "analysis";
+  	self.apiEndpointList = "analysis";
   	self.apiBaseUrl = apiBaseUrl;
   	self.crsfMiddlewareToken = crsfMiddlewareToken;  
   	
@@ -33,8 +33,18 @@ AnalysisManager = function( dataSetUuid, elementId, apiBaseUrl, crsfMiddlewareTo
   	self.elementId = elementId;
   	
   	// current list
-  	self.list = null  	  	  	
+  	self.list = null  	
+  	
+  	// callbacks
+  	self.changeAnalysisCallback = null  	  	
 };	
+
+
+AnalysisManager.prototype.setChangeAnalysisCallback = function ( callback ) {
+	var self = this;
+	
+	self.changeAnalysisCallback = callback;
+};
 
 
 AnalysisManager.prototype.initialize = function () {
@@ -46,11 +56,54 @@ AnalysisManager.prototype.initialize = function () {
 };
 	
 	
+
+
 /*
  * Render the user interface components into element defined by self.elementId.
  */
 AnalysisManager.prototype.renderList = function () {
-	var self = this;  		
+	var self = this;
+
+	// to get the bubble arrow back see here: http://www.eichefam.net/?p=4395  
+	var analysisListElementStyle = "max-height: 300px; overflow: hidden; overflow-y: auto;"
+	var analysisListElementId = "analysis-list";
+
+	$( "#" + self.elementId ).html("");
+	
+	var code = ""; 
+
+	code += '<div class="btn-group">';
+    
+    if (  self.list.objects.length > 0 ) {	
+  		code += '<a class="btn btn-warning dropdown-toggle" id="show-analyses-button" data-toggle="dropdown" href="#">';    	
+    }
+    else {
+  		code += '<a class="btn btn-warning disabled dropdown-toggle" id="show-analyses-button" data-toggle="dropdown" href="#">';    	    	
+    }
+    
+    code += 'Select&nbsp;';
+    code += '<span class="caret"></span>';
+  	code += '</a>';
+  	code += '<ul id="' + analysisListElementId + '" class="dropdown-menu" style="' +  analysisListElementStyle + '">';
+	
+	for ( var i = 0; i < self.list.objects.length; ++i ) {
+		var object = self.list.objects[i];
+		
+		code += '<li><a id="' + object.uuid + '" data-uuid="' + object.uuid + '" data-resource-uri="' + object.resource_uri + '">';
+		code += object.name + ' (' + object.node_count + ')';								
+		code += "</a></li>";
+	}	
+
+	code += '</ul>'
+	code += '</div>'		
+	
+	$( "#" + self.elementId ).html( code );		
+	
+	$( "#" + analysisListElementId ).children().click( function(event) {
+   		var analysisUuid = $( "#" + event.target.id ).data().uuid;
+   		alert( "selected " + analysisUuid )   		   		
+   		//self.getDetail( analysisUuid, self.loadSelectionCallback )   		   		
+   	} );   	
 };
 
 
@@ -59,5 +112,45 @@ AnalysisManager.prototype.makeClickEvent = function( uuid, callback ) {
 	$( "#" + uuid ).click( function() { 
 		console.log( event );
 		callback();
+	});
+};
+
+
+AnalysisManager.prototype.createGetListUrl = function() {
+	var self = this;
+		
+	var url = self.apiBaseUrl + self.apiEndpointList +
+		"?" + "format=json" +
+		"&" + "limit=0" +
+		"&" + "order_by=creation_date" +
+		"&" + "data_set__uuid=" + self.dataSetUuid;
+		
+	return url;		
+};
+
+
+AnalysisManager.prototype.getList = function( callback, errorCallback ) {
+	var self = this;
+
+	$.ajax({
+     url: self.createGetListUrl(),
+     type: "GET",
+     dataType: "json",
+     data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
+     success: function( result ) {     	
+	     	if ( $.isEmptyObject( result ) ) {
+	     		// do nothing
+	     		return;
+	     	} 
+	     	
+	     	self.list = result;    	     	     	
+			// callback
+			callback( result );										
+    	},
+    error: function ( result ) {
+    		if ( errorCallback ) {
+				errorCallback( result );    			
+    		}
+    	}
 	});
 };

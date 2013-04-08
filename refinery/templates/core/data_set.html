@@ -184,6 +184,15 @@ rect.active {
 							<span id="node-set-manager-controls"></span>
 	  					</span>
 	  					{% endif %}
+						
+						<!--
+						{% if user.is_authenticated %}
+						<span id="analysis-manager-panel">
+		 					<label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Analysis</label>
+							<span id="analysis-manager-controls"></span>
+	  					</span>
+	  					{% endif %}
+	  					-->
   					{% endif %}
 
 					{% if user.is_authenticated %}
@@ -525,6 +534,7 @@ rect.active {
 		var REFINERY_SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}";
 		var externalStudyUuid = "{{ assay_uuid }}";
 		var externalAssayUuid = "{{ study_uuid }}";
+		var dataSetUuid = "{{ data_set.uuid }}";
 
 		{% if REFINERY_REPOSITORY_MODE %}
 		var REFINERY_REPOSITORY_MODE = true;
@@ -554,6 +564,7 @@ rect.active {
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js">var query;</script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/data_set_manager/data_set_configurator.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/node_set_manager.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/analysis_manager.js"></script>
 
 	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TweenMax.min.js"></script>
   	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/jquery.gsap.min.js"></script>
