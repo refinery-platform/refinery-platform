@@ -68,7 +68,6 @@ FILE_STORE_TEMP_DIR = os.path.join(FILE_STORE_BASE_DIR, 'temp')
 if not os.path.isdir(FILE_STORE_TEMP_DIR):
     _mkdir(FILE_STORE_TEMP_DIR)
 
-
 # To make sure we can move uploaded files into file store quickly instead of copying
 if not settings.FILE_UPLOAD_TEMP_DIR:
     settings.FILE_UPLOAD_TEMP_DIR = FILE_STORE_TEMP_DIR
@@ -76,40 +75,12 @@ if not settings.FILE_UPLOAD_TEMP_DIR:
 if not settings.FILE_UPLOAD_MAX_MEMORY_SIZE:
     settings.FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
-
-def file_path(instance, filename):
-    '''Construct relative file system path for new file store files relative to FILE_STORE_BASE_DIR.
-    Based on http://michaelandrews.typepad.com/the_technical_times/2009/10/creating-a-hashed-directory-structure.html
-
-    :param instance: FileStoreItem instance.
-    :type instance: FileStoreItem.
-    :param filename: requested filename.
-    :type filename: str.
-    :returns: str -- if success, None if failure.
-
-    '''
-    hashcode = hash(filename)
-    mask = 255  # bitmask
-    # use the first and second bytes of the hash code represented as zero-padded hex numbers as directory names
-    # provides 256 * 256 = 65536 of possible directory combinations
-    dir1 = "{:0>2x}".format(hashcode & mask)
-    dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
-    # replace parentheses with underscores in the filename since
-    # Galaxy doesn't process names with parentheses in them
-    filename = re.sub('[()]', '_', filename)
-    return os.path.join(instance.sharename, dir1, dir2, filename)
-
-
 # http://stackoverflow.com/questions/4832626/how-does-django-construct-the-url-returned-by-filesystemstorage
 FILE_STORE_BASE_URL = urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + '/'
-# set the file store location
-fss = FileSystemStorage(location=FILE_STORE_BASE_DIR, base_url=FILE_STORE_BASE_URL)
-
 
 #TODO: expand the list of file types. Reference:
 # http://wiki.g2.bx.psu.edu/Admin/Datatypes/Adding%20Datatypes
 # http://en.wikipedia.org/wiki/List_of_file_formats#Biology
-
 # list of file types in alphabetical order for convenience
 BAM = 'bam'
 BED = 'bed'
@@ -208,6 +179,29 @@ FILE_EXTENSIONS = {
 }
 
 
+def file_path(instance, filename):
+    '''Construct relative file system path for new file store files relative to FILE_STORE_BASE_DIR.
+    Based on http://michaelandrews.typepad.com/the_technical_times/2009/10/creating-a-hashed-directory-structure.html
+
+    :param instance: FileStoreItem instance.
+    :type instance: FileStoreItem.
+    :param filename: requested filename.
+    :type filename: str.
+    :returns: str -- if success, None if failure.
+
+    '''
+    hashcode = hash(filename)
+    mask = 255  # bitmask
+    # use the first and second bytes of the hash code represented as zero-padded hex numbers as directory names
+    # provides 256 * 256 = 65536 of possible directory combinations
+    dir1 = "{:0>2x}".format(hashcode & mask)
+    dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
+    # replace parentheses with underscores in the filename since
+    # Galaxy doesn't process names with parentheses in them
+    filename = re.sub('[()]', '_', filename)
+    return os.path.join(instance.sharename, dir1, dir2, filename)
+
+
 class _FileStoreItemManager(models.Manager):
     '''Custom model manager to handle creation and retrieval of FileStoreItems.
 
@@ -261,12 +255,26 @@ class _FileStoreItemManager(models.Manager):
         return item
 
 
+class SymlinkedFileSystemStorage(FileSystemStorage):
+    '''Custom file system storage class with support for symlinked files.
+
+    '''
+    def exists(self, name):
+        # takes broken symlinks into account
+        return os.path.lexists(self.path(name))
+
+
+symlinked_storage = SymlinkedFileSystemStorage(location=FILE_STORE_BASE_DIR,
+                                               base_url=FILE_STORE_BASE_URL)
+
+
 class FileStoreItem(models.Model):
     '''Represents data files on disk.
     
     '''
     #: file on disk
-    datafile = models.FileField(upload_to=file_path, storage=fss, blank=True, max_length=1024)
+    datafile = models.FileField(upload_to=file_path, storage=symlinked_storage,
+                                blank=True, max_length=1024)
     #: unique ID
     uuid = UUIDField(unique=True, auto=True)
     #: source URL or absolute file system path
