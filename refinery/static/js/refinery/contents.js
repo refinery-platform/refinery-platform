@@ -300,10 +300,10 @@ $(document).ready(function() {
 		/*
 		if ( $("#" + "analysis-manager-controls").length > 0 ) {
 		
-			analysisManager = new AnalysisManager( dataSetUuid, "analysis-manager-controls", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
-			analysisManager.initialize();
+			analysisApiClient = new AnalysisApiClient( dataSetUuid, "analysis-manager-controls", REFINERY_API_BASE_URL, "{{ csrf_token }}" );
+			analysisApiClient.initialize();
 	
-			analysisManager.setChangeAnalysisCallback( function( analysisList ) {
+			analysisApiClient.setChangeAnalysisCallback( function( analysisList ) {
 				alert( "Changed analysis selection" + " = " + analysisList.length() );
 			});	
 		}

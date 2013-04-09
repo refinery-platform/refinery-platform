@@ -1,5 +1,5 @@
 /*
- * analysis_manager.js
+ * analysis_api_client.js
  *  
  * Author: Nils Gehlenborg 
  * Created: 6 April 2013
@@ -17,7 +17,7 @@
  */
 
 
-AnalysisManager = function( dataSetUuid, elementId, apiBaseUrl, crsfMiddlewareToken ) {
+AnalysisApiClient = function( dataSetUuid, elementId, apiBaseUrl, crsfMiddlewareToken ) {
   	
   	var self = this;
 
@@ -40,14 +40,14 @@ AnalysisManager = function( dataSetUuid, elementId, apiBaseUrl, crsfMiddlewareTo
 };	
 
 
-AnalysisManager.prototype.setChangeAnalysisCallback = function ( callback ) {
+AnalysisApiClient.prototype.setChangeAnalysisCallback = function ( callback ) {
 	var self = this;
 	
 	self.changeAnalysisCallback = callback;
 };
 
 
-AnalysisManager.prototype.initialize = function () {
+AnalysisApiClient.prototype.initialize = function () {
 	var self = this;
 	
 	self.getList( function() { self.renderList(); }, function() { /* do nothing in case of error */ } );
@@ -61,7 +61,7 @@ AnalysisManager.prototype.initialize = function () {
 /*
  * Render the user interface components into element defined by self.elementId.
  */
-AnalysisManager.prototype.renderList = function () {
+AnalysisApiClient.prototype.renderList = function () {
 	var self = this;
 
 	// to get the bubble arrow back see here: http://www.eichefam.net/?p=4395  
@@ -107,7 +107,7 @@ AnalysisManager.prototype.renderList = function () {
 };
 
 
-AnalysisManager.prototype.makeClickEvent = function( uuid, callback ) {
+AnalysisApiClient.prototype.makeClickEvent = function( uuid, callback ) {
 	var self = this; 
 	$( "#" + uuid ).click( function() { 
 		console.log( event );
@@ -116,7 +116,7 @@ AnalysisManager.prototype.makeClickEvent = function( uuid, callback ) {
 };
 
 
-AnalysisManager.prototype.createGetListUrl = function() {
+AnalysisApiClient.prototype.createGetListUrl = function() {
 	var self = this;
 		
 	var url = self.apiBaseUrl + self.apiEndpointList +
@@ -129,7 +129,7 @@ AnalysisManager.prototype.createGetListUrl = function() {
 };
 
 
-AnalysisManager.prototype.getList = function( callback, errorCallback ) {
+AnalysisApiClient.prototype.getList = function( callback, errorCallback ) {
 	var self = this;
 
 	$.ajax({
