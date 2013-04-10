@@ -8,8 +8,8 @@ import mock
 from urlparse import urljoin
 from django.conf import settings
 from django.test import SimpleTestCase
-import file_store.models as models
-from file_store.models import FileStoreItem
+from file_store.models import file_path, get_temp_dir, get_file_object,\
+    FileStoreItem, FILE_STORE_TEMP_DIR, BIGBED, UNKNOWN, WIG
 
 
 class FileStoreModuleTest(SimpleTestCase):
@@ -22,21 +22,21 @@ class FileStoreModuleTest(SimpleTestCase):
 
         # create FileStoreItem instances without any disk operations
         self.path_source = os.path.join('/example/path', self.filename)
-        self.item_from_path = models.FileStoreItem.objects.create(source=self.path_source,
-                                                                  sharename=self.sharename)
+        self.item_from_path = FileStoreItem.objects.create(source=self.path_source,
+                                                           sharename=self.sharename)
         self.url_source = urljoin('http://example.org/', self.filename)
-        self.item_from_url = models.FileStoreItem.objects.create(source=self.url_source,
-                                                                 sharename=self.sharename)
+        self.item_from_url = FileStoreItem.objects.create(source=self.url_source,
+                                                          sharename=self.sharename)
 
     def test_file_path(self):
         '''Check that the file store path contains share name and file name.
 
         '''
         #TODO: replace with assertRegexpMatches()?
-        path = models.file_path(self.item_from_url, self.filename)
+        path = file_path(self.item_from_url, self.filename)
         self.assertIn(self.sharename, path)
         self.assertIn(self.filename, path)
-        path = models.file_path(self.item_from_path, self.filename)
+        path = file_path(self.item_from_path, self.filename)
         self.assertIn(self.sharename, path)
         self.assertIn(self.filename, path)
 
@@ -47,13 +47,13 @@ class FileStoreModuleTest(SimpleTestCase):
         filename = 'Kc.dMi-2(Q4443).wig_5.tdf'
         new_filename = 'Kc.dMi-2_Q4443_.wig_5.tdf'
         path_source = os.path.join('/example/path', filename)
-        item_from_path = models.FileStoreItem.objects.create(source=path_source, sharename=self.sharename)
+        item_from_path = FileStoreItem.objects.create(source=path_source, sharename=self.sharename)
         url_source = urljoin('http://example.org/', filename)
-        item_from_url = models.FileStoreItem.objects.create(source=url_source, sharename=self.sharename)
-        path = models.file_path(item_from_url, filename)
+        item_from_url = FileStoreItem.objects.create(source=url_source, sharename=self.sharename)
+        path = file_path(item_from_url, filename)
         self.assertIn(self.sharename, path)
         self.assertIn(new_filename, path)
-        path = models.file_path(item_from_path, filename)
+        path = file_path(item_from_path, filename)
         self.assertIn(self.sharename, path)
         self.assertIn(new_filename, path)
 
@@ -61,13 +61,13 @@ class FileStoreModuleTest(SimpleTestCase):
         '''Check that the file store temp dir is reported correctly.
 
         '''
-        self.assertEqual(models.get_temp_dir(), models.FILE_STORE_TEMP_DIR)
+        self.assertEqual(get_temp_dir(), FILE_STORE_TEMP_DIR)
 
     def test_get_file_object(self):
         # check if the correct file is opened
         m = mock.MagicMock(spec=file, return_value=mock.sentinel.file_object)
         with mock.patch('__builtin__.open', m):
-            file_object = models.get_file_object(self.path_source)
+            file_object = get_file_object(self.path_source)
         m.assert_called_once_with(self.path_source, 'rb')
         # check if an expected object is returned
         self.assertEqual(file_object, mock.sentinel.file_object)
@@ -77,7 +77,7 @@ class FileStoreModuleTest(SimpleTestCase):
         '''Decorator version of the test_get_file_obejct()'''
         m.return_value = mock.sentinel.file_object
         # check if the correct file is opened
-        file_object = models.get_file_object(self.path_source)
+        file_object = get_file_object(self.path_source)
         m.assert_called_once_with(self.path_source, 'rb')
         # check if an expected object is returned
         self.assertEqual(file_object, mock.sentinel.file_object)
@@ -98,10 +98,10 @@ class FileStoreItemTest(SimpleTestCase):
 
         '''
         # create FileStoreItem instances without any disk operations
-        item_from_url = models.FileStoreItem.objects.create(source=self.path_source,
-                                                            sharename=self.sharename)
-        item_from_path = models.FileStoreItem.objects.create(source=self.url_source,
-                                                             sharename=self.sharename)
+        item_from_url = FileStoreItem.objects.create(source=self.path_source,
+                                                     sharename=self.sharename)
+        item_from_path = FileStoreItem.objects.create(source=self.url_source,
+                                                      sharename=self.sharename)
         # data file doesn't exist on disk and source is an abs file system path
         self.assertEqual(item_from_path.get_file_extension(), os.path.splitext(self.filename)[1])
         # data file doesn't exist on disk and source is a URL
@@ -112,13 +112,13 @@ class FileStoreItemTest(SimpleTestCase):
         '''Check that the correct file type is returned
 
         '''
-        filetype = models.BIGBED
-        item_from_path = models.FileStoreItem.objects.create(source=self.url_source,
-                                                             sharename=self.sharename,
-                                                             filetype=filetype)
-        item_from_url = models.FileStoreItem.objects.create(source=self.path_source,
-                                                            sharename=self.sharename,
-                                                            filetype=filetype)
+        filetype = BIGBED
+        item_from_path = FileStoreItem.objects.create(source=self.url_source,
+                                                      sharename=self.sharename,
+                                                      filetype=filetype)
+        item_from_url = FileStoreItem.objects.create(source=self.path_source,
+                                                     sharename=self.sharename,
+                                                     filetype=filetype)
         self.assertEqual(item_from_path.get_filetype(), filetype)
         self.assertEqual(item_from_url.get_filetype(), filetype)
 
@@ -126,11 +126,11 @@ class FileStoreItemTest(SimpleTestCase):
         '''Check that a valid file type is set correctly
 
         '''
-        item_from_path = models.FileStoreItem.objects.create(source=self.url_source,
-                                                             sharename=self.sharename)
-        item_from_url = models.FileStoreItem.objects.create(source=self.path_source,
-                                                            sharename=self.sharename)
-        filetype = models.WIG
+        item_from_path = FileStoreItem.objects.create(source=self.url_source,
+                                                      sharename=self.sharename)
+        item_from_url = FileStoreItem.objects.create(source=self.path_source,
+                                                     sharename=self.sharename)
+        filetype = WIG
         self.assertTrue(item_from_path.set_filetype(filetype))
         self.assertEqual(item_from_path.filetype, filetype)
         self.assertTrue(item_from_url.set_filetype(filetype))
@@ -140,28 +140,29 @@ class FileStoreItemTest(SimpleTestCase):
         '''Check that an unknown file type is not set
 
         '''
-        item_from_url = models.FileStoreItem.objects.create(source=self.path_source,
-                                                            sharename=self.sharename)
-        item_from_path = models.FileStoreItem.objects.create(source=self.url_source,
-                                                             sharename=self.sharename)
+        item_from_url = FileStoreItem.objects.create(source=self.path_source,
+                                                     sharename=self.sharename)
+        item_from_path = FileStoreItem.objects.create(source=self.url_source,
+                                                      sharename=self.sharename)
         filetype = 'unknowntype'
         self.assertFalse(item_from_path.set_filetype(filetype))
-        self.assertEqual(item_from_path.filetype, models.UNKNOWN)
+        self.assertEqual(item_from_path.filetype, UNKNOWN)
         self.assertFalse(item_from_url.set_filetype(filetype))
-        self.assertEqual(item_from_url.filetype, models.UNKNOWN)
+        self.assertEqual(item_from_url.filetype, UNKNOWN)
 
     def test_set_file_type_automatically(self):
         '''Check that a file type is set automatically
 
         '''
-        item_from_url = models.FileStoreItem.objects.create(source=self.path_source,
-                                                            sharename=self.sharename)
-        item_from_path = models.FileStoreItem.objects.create(source=self.url_source,
-                                                             sharename=self.sharename)
+        item_from_url = FileStoreItem.objects.create(source=self.path_source,
+                                                     sharename=self.sharename)
+        item_from_path = FileStoreItem.objects.create(source=self.url_source,
+                                                      sharename=self.sharename)
         item_from_path.set_filetype()
         self.assertTrue(item_from_path.filetype, os.path.splitext(self.filename)[1])
         item_from_url.set_filetype()
         self.assertTrue(item_from_url.filetype, os.path.splitext(self.filename)[1])
+
 
 class FileStoreItemManagerTest(SimpleTestCase):
     '''FileStoreItemManager methods test.
