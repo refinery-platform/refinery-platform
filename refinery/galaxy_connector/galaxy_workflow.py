@@ -176,7 +176,6 @@ def createStepsAnnot(file_list, workflow):
                 
                 if input_type in file_list[i].keys():
                     curr_filename = removeFileExt(file_list[i][input_type]['node_uuid'])
-                #elif input_type == 'all':
                 else:
                     curr_filename = ''
                     curr_nodelist = []
@@ -194,18 +193,18 @@ def createStepsAnnot(file_list, workflow):
                 # parsing annotation field in galaxy workflows to parse output files to keep: "keep=output_file, keep=output_file2" etc..
                 step_annot = curr_workflow_step['annotation']
                 
-                step_annot2 = getStepOptions(curr_workflow_step['annotation'])
+                #step_annot2 = getStepOptions(curr_workflow_step['annotation'])
                 keep_files = {}
                 
                 # Update with added JSON to define description and new names of files 
-                if 'refinery_files' in step_annot2:
+                if curr_workflow_step['annotation']:
                     #print "FOUND refinery_files"
                     try:
-                        keep_files = ast.literal_eval(step_annot2['refinery_files'][0])
-                        #keep_files = step_annot2['refinery_files']
+                        #keep_files = ast.literal_eval(step_annot2['refinery_files'][0])
+                        keep_files = ast.literal_eval(curr_workflow_step['annotation'])
                         #print keep_files
                     except Exception:
-                        logger.error("Malformed String in Galaxy Workflow: " + str(step_annot2['refinery_files'][0]))
+                        logger.error("Malformed String in Galaxy Workflow: " + str(curr_workflow_step['annotation']))
                 
                 # creates list of output names from specified tool to rename
                 output_names = [];
@@ -220,6 +219,7 @@ def createStepsAnnot(file_list, workflow):
                     
                     for ofiles in output_list:
                         oname = str(ofiles['name'])
+                        # galaxy output file type 
                         otype = str(ofiles['type'])
                         temp_key = 'RenameDatasetAction' + oname
                         #new_output_name = tool_name + ',' + input_type + ',' + str(oname) + ',' + curr_filename
@@ -232,14 +232,12 @@ def createStepsAnnot(file_list, workflow):
                         analysis_node_connection['name'] = oname
                         analysis_node_connection['subanalysis'] = i
                         analysis_node_connection['step'] = curr_id
-                        # TODO: set file type
                         analysis_node_connection['filetype'] = otype
                         analysis_node_connection['direction'] = 'out'
                         analysis_node_connection['node_uuid'] = None # setting to none will trigger creation of a new Node                                                 
                         analysis_node_connection['is_refinery_file'] = False
                         
                         # if the output name is being tracked and downloaded for Refinery
-                        #if str(oname) in keep_files:
                         if str(oname) in keep_files.keys():
                             #print "KEY FOUND: refinery_files = " + str(oname)
                             analysis_node_connection['is_refinery_file'] = True
@@ -259,11 +257,18 @@ def createStepsAnnot(file_list, workflow):
                             curr_result = {}
                             curr_result["step_id"] = new_tool_name
                             curr_result["pair_id"] = curr_pair_id
-                            #curr_result["name"] = new_output_name
                             user_output_name = str(i+1) + '_' + keep_files[str(oname)]['name']
                             curr_result["name"] = user_output_name
                             analysis_node_connection['name'] = user_output_name
-        
+                            
+                            
+                            try:
+                                # Using Refinery defined tool filetype
+                                curr_result["type"] = keep_files[str(oname)]['type']
+                                analysis_node_connection['filetype'] = curr_result["type"]
+                            except KeyError:
+                                logger.error("Current Galaxy Tool: %s is missing 'type' definition" % curr_workflow_step['name'])
+                            
                             #print "curr_result"
                             #print curr_result
                             
@@ -342,17 +347,20 @@ def createStepsCompact(file_list, workflow):
         
         # Looking for workflow_tags in galaxy i.e "repeat_for=\"Bulk Download Zipper\"",
         curr_step_annot = curr_workflow_step['annotation']
-        step_opt = getStepOptions(curr_workflow_step['annotation'])
+        #step_opt = getStepOptions(curr_workflow_step['annotation'])
         
         input_type = map[int(curr_step)];    
-        keep_files = {}       
+        keep_files = {}   
+        
         # Update with added JSON to define description and new names of files 
-        if 'refinery_files' in step_opt:
+        if curr_step_annot:
             #print "FOUND refinery_files"
             try:
-                keep_files = ast.literal_eval(step_opt['refinery_files'][0])
+                keep_files = ast.literal_eval(curr_step_annot)
+                #print keep_files
             except Exception:
-                logger.error("Malformed String in Galaxy Workflow: " + str(step_opt['refinery_files'][0]))
+                logger.error("Malformed String in Galaxy Workflow: " + str(curr_workflow_step['annotation']))
+        
         
         # creates list of output names from specified tool to rename
         output_names = [];
@@ -396,6 +404,13 @@ def createStepsCompact(file_list, workflow):
                     user_output_name = str(1) + '_' + keep_files[str(oname)]['name']
                     curr_result["name"] = user_output_name
                     analysis_node_connection['name'] = user_output_name
+                    
+                    try:
+                        # Using Refinery defined tool filetype
+                        curr_result["type"] = keep_files[str(oname)]['type']
+                        analysis_node_connection['filetype'] = curr_result["type"]
+                    except KeyError:
+                        logger.error("Current Galaxy Tool: %s is missing 'type' definition" % curr_workflow_step['name'])
 
                     history_download.append(curr_result)
                     
@@ -412,13 +427,12 @@ def createStepsCompact(file_list, workflow):
                 else:
                     # renaming output files according with step_id of workflow  
                     new_rename_action =  '{ "action_arguments": { "newname": "%s" }, "action_type": "RenameDatasetAction", "output_name": "%s"}' % (new_tool_name, oname);
-                    
                     new_rename_dict = ast.literal_eval(new_rename_action);
                     pja_dict[temp_key] = new_rename_dict;
         
         # checking to see if repeat_for tag exists for current tool            
-        if "repeat_for" in step_opt:
-            check_step = step_opt["repeat_for"][0]
+        if "repeat_for" in keep_files:
+            check_step = keep_files["repeat_for"]
             
             for i in range(0, len(file_list)):
                 new_step = copy.deepcopy(temp_steps[curr_step])
@@ -498,7 +512,7 @@ def createStepsCompact(file_list, workflow):
             key_tool_val = '[' + key_tool_val + ']'
             temp[key_tool_state] = key_tool_val
             
-            # dump the dicinoary as string before putting it back into workflow
+            # dump the dictionary as string before putting it back into workflow
             curr_workflow_step['tool_state'] = simplejson.dumps(temp)
                                     
             # add updated connections back to galaxy workflow step
