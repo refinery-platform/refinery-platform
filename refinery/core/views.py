@@ -34,7 +34,7 @@ from tempfile import NamedTemporaryFile
 from file_store.models import FileStoreItem, get_temp_dir, file_path, FILE_STORE_BASE_DIR
 from file_store.tasks import create, import_file
 from galaxy_connector.connection import Connection
-
+import re
 
 
 logger = logging.getLogger(__name__)
@@ -938,6 +938,14 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
         # changing annotation 
         query = query.replace('is_annotation:false', 'is_annotation:true')
         
+    # Checks for limit on solr query
+    # replaces i.e. '&rows=20' to '&rows=10000'
+    m_obj = re.search(r"&rows=(\d+)", query)
+    if m_obj:
+        # TODO: replace 10000 with settings parameter for max solr results
+        replace_rows_str = '&rows=' + str(10000)
+        query = query.replace(m_obj.group(), replace_rows_str)
+        
     # proper url encoding                  
     query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
     
@@ -946,16 +954,6 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
         
     # converting results into json for python 
     results = simplejson.loads(results)
-    
-    '''
-    # number of solr results 
-    if selected_mode:
-        num_found = int(results["response"]["numFound"])
-    else:
-        num_found = 0
-    '''
-    
-    #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
     
     # IF list of nodes to remove from query exists
     if selected_nodes:
@@ -979,9 +977,6 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
                        del results["response"]["docs"][i]
                        #num_found += 1
     
-    # updating the number found in the list
-    #results["response"]["numFound"] = str(num_found)
-    
     #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
     #logger.debug(simplejson.dumps(results, indent=4))
     
@@ -992,16 +987,8 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
         for res in solr_results:
             ret_file_uuids.append(res["uuid"])
         return ret_file_uuids
-    
-    '''    
-    if num_found == 0:
-        return None
-    else:
-        return results
-    '''
-    
+        
     return results    
-    
     
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
