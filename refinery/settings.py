@@ -396,5 +396,8 @@ REFINERY_DISABLE_REGISTRATION = False
 # Message to be displayed near the top of every page (HTML allowed)
 REFINERY_BANNER = ''
 
+# Display REFINERY_BANNER to anonymous users only
+REFINERY_BANNER_ANONYMOUS_ONLY = True
+
 # import local settings
 from settings_local import *
