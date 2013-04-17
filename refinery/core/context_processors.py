@@ -11,7 +11,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 
 def extra_context(context):
-    # return the value you want as a dictionnary. you may add multiple values in there.
+    # return the value you want as a dictionary. you may add multiple values in there.
     return {
         "REFINERY_CSS": settings.REFINERY_CSS,
         "REFINERY_MAIN_LOGO": settings.REFINERY_MAIN_LOGO,
@@ -24,4 +24,5 @@ def extra_context(context):
         "REFINERY_CONTACT_EMAIL": settings.DEFAULT_FROM_EMAIL,
         "REFINERY_DISABLE_REGISTRATION": settings.REFINERY_DISABLE_REGISTRATION,
         "REFINERY_ACCOUNT_ACTIVATION_DAYS": settings.ACCOUNT_ACTIVATION_DAYS,
+        "REFINERY_BANNER": settings.REFINERY_BANNER,
     }

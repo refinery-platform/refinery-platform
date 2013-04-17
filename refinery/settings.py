@@ -393,5 +393,8 @@ REFINERY_REPOSITORY_MODE = False
 # Tag for turning off registration
 REFINERY_DISABLE_REGISTRATION = False
 
+# Message to be displayed near the top of every page (HTML allowed)
+REFINERY_BANNER = ''
+
 # import local settings
 from settings_local import *
