@@ -21,3 +21,6 @@ Optional Settings
    format: *{'pattern': 'replacement'}*
    where *pattern* is a string to search for in source and then replace with *replacement* string.
    May contain more than one pattern-replacement pair (only the first match will be used).
+
+``REFINERY_BANNER = ''``
+   Optional string to display a message near the top of every page (HTML tags allowed).
