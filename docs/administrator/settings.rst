@@ -24,3 +24,6 @@ Optional Settings
 
 ``REFINERY_BANNER = ''``
    Optional string to display a message near the top of every page (HTML tags allowed).
+
+``REFINERY_BANNER_ANONYMOUS_ONLY = False``
+   Optional setting to display REFINERY_BANNER to anonymous users only.

@@ -114,7 +114,7 @@
 
     {% if REFINERY_BANNER %}
         {% if REFINERY_BANNER_ANONYMOUS_ONLY and not user.is_authenticated or not REFINERY_BANNER_ANONYMOUS_ONLY %}
-                <div class="alert text-center">{{ REFINERY_BANNER|safe }}</div>
+            <div class="alert text-center">{{ REFINERY_BANNER|safe }}</div>
         {% endif %}
     {% endif %}
 

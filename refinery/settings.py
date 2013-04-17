@@ -397,7 +397,7 @@ REFINERY_DISABLE_REGISTRATION = False
 REFINERY_BANNER = ''
 
 # Display REFINERY_BANNER to anonymous users only
-REFINERY_BANNER_ANONYMOUS_ONLY = True
+REFINERY_BANNER_ANONYMOUS_ONLY = False
 
 # import local settings
 from settings_local import *
