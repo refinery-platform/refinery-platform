@@ -111,8 +111,10 @@
 		</div>		                
       </div>
     </div>
-        
-    <div class="alert">{{ REFINERY_BANNER|safe }}</div>
+
+    {% if REFINERY_BANNER %}
+        <div class="alert">{{ REFINERY_BANNER|safe }}</div>
+    {% endif %}
 
 	<div class="container-fluid">
 		
