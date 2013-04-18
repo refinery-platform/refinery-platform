@@ -137,13 +137,13 @@ def group(request, query):
     group = get_object_or_404( ExtendedGroup, uuid=query )
 
     # only group members are allowed to see group pages
-    if not group.id in request.user.groups.values_list('id', flat=True):
-        if request.user.is_authenticated():
-            return HttpResponseForbidden(custom_error_page(request, '403.html', {'user': request.user, 'msg': "view group %s" % group.name}))
-        else:
-            return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "view group %s" % group.name}))
-        
-                        
+    if not request.user.is_superuser:
+        if not group.id in request.user.groups.values_list('id', flat=True):
+            if request.user.is_authenticated():
+                return HttpResponseForbidden(custom_error_page(request, '403.html', {'user': request.user, 'msg': "view group %s" % group.name}))
+            else:
+                return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "view group %s" % group.name}))
+
     return render_to_response('core/group.html', {'group': group }, context_instance=RequestContext( request ) )
 
 
