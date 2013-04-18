@@ -113,7 +113,7 @@
     </div>
 
     {% if REFINERY_BANNER %}
-        {% if REFINERY_BANNER_ANONYMOUS_ONLY and not user.is_authenticated or not REFINERY_BANNER_ANONYMOUS_ONLY %}
+        {% if not REFINERY_BANNER_ANONYMOUS_ONLY or not user.is_authenticated %}
             <div class="alert text-center">{{ REFINERY_BANNER|safe }}</div>
         {% endif %}
     {% endif %}
