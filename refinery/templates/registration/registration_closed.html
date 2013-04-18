@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - Registration Closed
+{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+	<h1>Registration Closed</h1>	
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Registration Closed</h3>
+			</span>
+		</div>
+		<p>
+			{{REFINERY_REGISTRATION_CLOSED_MESSAGE}}
+		</p>
+	</div>
+</div>
+{% endblock %}

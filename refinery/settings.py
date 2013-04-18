@@ -390,8 +390,12 @@ UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 # Tag for repository mode
 REFINERY_REPOSITORY_MODE = False
 
-# Tag for turning off registration
-REFINERY_DISABLE_REGISTRATION = False
+# Tags for turning on and off registration
+REGISTRATION_OPEN = True
+REFINERY_REGISTRATION_CLOSED_MESSAGE = "Registration is currently closed." # only used if above is False
+
+#Tag for number of days user has to activate their account before it expires
+ACCOUNT_ACTIVATION_DAYS = 7
 
 # Message to be displayed near the top of every page (HTML allowed)
 REFINERY_BANNER = ''
