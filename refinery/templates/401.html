@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - Unauthorized User
+{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+<h1>Unauthorized User</h1>	
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>Unauthorized User</h3>
+			</span>
+		</div>
+		<p>
+			We're sorry, but you need to be logged in to {{msg}}.<br /><br />
+			If you believe you reached this page in error, please contact {{REFINERY_CONTACT_EMAIL}}.
+		</p>
+	</div>
+</div>
+{% endblock %}

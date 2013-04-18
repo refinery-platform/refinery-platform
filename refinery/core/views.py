@@ -82,9 +82,9 @@ def statistics(request):
     
     return render_to_response('core/statistics.html', { "users": users, "groups": groups, "projects": projects, "workflows": workflows, "data_sets": data_sets, "files": files, "base_url": base_url }, context_instance=RequestContext( request ) )
 
-def custom_error_page(request, template, msg):
+def custom_error_page(request, template, context_dict):
     temp_loader = loader.get_template(template)
-    context = RequestContext(request, {'msg': msg})
+    context = RequestContext(request, context_dict)
     return temp_loader.render(context)
 
 @login_required()
@@ -96,7 +96,10 @@ def user(request, query):
         user = get_object_or_404( UserProfile, uuid=query ).user
         
     if len( get_shared_groups( request.user, user ) ) == 0 and user != request.user:
-        return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view the profile of user " + user.username + "."))
+        if request.user.is_authenticated():
+            return HttpResponseForbidden(custom_error_page(request, '403.html', {'user': request.user, 'msg': "view the profile of user %s" % user.username}))
+        else:
+            return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "view the profile of user %s" % user.username}))
 
     return render_to_response('core/user.html', {'profile_user': user }, context_instance=RequestContext( request ) )
 
@@ -135,7 +138,10 @@ def group(request, query):
 
     # only group members are allowed to see group pages
     if not group.id in request.user.groups.values_list('id', flat=True):
-        return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view group " + group.name + "."))
+        if request.user.is_authenticated():
+            return HttpResponseForbidden(custom_error_page(request, '403.html', {'user': request.user, 'msg': "view group %s" % group.name}))
+        else:
+            return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "view group %s" % group.name}))
         
                         
     return render_to_response('core/group.html', {'group': group }, context_instance=RequestContext( request ) )
@@ -152,8 +158,11 @@ def project(request, uuid):
         
     if not request.user.has_perm('core.read_project', project ):
         if not 'read_project' in get_perms( public_group, project ):
-            return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view this project."))
-                
+            if request.user.is_authenticated():
+                return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "view this project"}))
+            else:
+                return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "view this project"}))
+
     analyses = project.analyses.all()
     
     return render_to_response('core/project.html', { 'project': project, "analyses": analyses }, context_instance=RequestContext( request ) )
@@ -186,8 +195,11 @@ def project_edit(request,uuid):
     project = get_object_or_404( Project, uuid=uuid )
         
     if not request.user.has_perm('core.change_project', project ):
-        return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to edit this project."))
-            
+        if request.user.is_authenticated():
+            return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "edit this project"}))
+        else:
+            return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "edit this project"}))
+
     if request.method == "POST": # If the form has been submitted...
         form = ProjectForm(data=request.POST, instance=project) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass            
@@ -269,8 +281,11 @@ def data_set(request,uuid):
     
     if not request.user.has_perm( 'core.read_dataset', data_set ):
         if not 'read_dataset' in get_perms( public_group, data_set ):
-            return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view this data set."))
-            
+            if request.user.is_authenticated():
+                return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "view this data set"}))
+            else:
+                return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "view this data set"}))
+
     #get studies
     investigation = data_set.get_investigation()
     studies = investigation.study_set.all()
@@ -319,7 +334,10 @@ def data_set_edit(request,uuid):
     public_group = ExtendedGroup.objects.public_group()
 
     if not request.user.has_perm('core.change_dataset', data_set ):
-        return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to edit this data set."))
+        if request.user.is_authenticated():
+            return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "edit this data set"}))
+        else:
+            return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "edit this data set"}))
 
     #get studies
     investigation = data_set.get_investigation()
@@ -399,8 +417,11 @@ def workflow(request, uuid):
     
     if not request.user.has_perm('core.read_workflow', workflow ):
         if not 'read_workflow' in get_perms( public_group, workflow ):
-            return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view this workflow."))
-        
+            if request.user.is_authenticated():
+                return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "view this workflow"}))
+            else:
+                return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "view this workflow"}))
+
     # load graph dictionary from Galaxy
     workflow = Workflow.objects.filter( uuid=uuid ).get()
     
@@ -458,7 +479,10 @@ def workflow_edit(request, uuid):
     workflow = get_object_or_404( Workflow, uuid=uuid )
 
     if not request.user.has_perm('core.change_workflow', workflow ):
-        return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to edit this workflow."))
+        if request.user.is_authenticated():
+            return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "edit this workflow"}))
+        else:
+            return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "edit this workflow"}))
 
     if request.method == "POST": # If the form has been submitted...
         form = WorkflowForm(data=request.POST, instance=workflow) # A form bound to the POST data
@@ -478,8 +502,11 @@ def workflow_engine(request,uuid):
     
     if not request.user.has_perm('core.read_workflowengine', workflow_engine ):
         if not 'read_workflowengine' in get_perms( public_group, workflow_engine ):
-            return HttpResponseForbidden(custom_error_page(request, '403.html', "You are not allowed to view this workflow engine."))
-            
+            if request.user.is_authenticated():
+                return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "view this workflow engine"}))
+            else:
+                return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "view this workflow engine"}))
+
     return render_to_response('core/workflow_engine.html', { 'workflow_engine': workflow_engine }, context_instance=RequestContext( request ) )
 
 
