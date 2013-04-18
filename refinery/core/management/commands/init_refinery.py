@@ -6,7 +6,7 @@ Created on Jun 28, 2012
 
 from core.models import ExtendedGroup
 from django.conf import settings
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.sites.models import Site
 from django.db import connection, transaction
@@ -31,16 +31,21 @@ class Command(BaseCommand):
         except:
             print "Insufficient arguments provided:\n%s" % self.help
             sys.exit(2)
-        test_admin_user()
         set_up_site_name(refinery_instance_name, refinery_base_url)
         create_public_group()
+        test_admin_user()
 
 
 def test_admin_user():
-    '''Test if admin user exists
+    '''Test if admin user exists and add to public group if they do
 
     '''
-    pass
+    for user in User.objects.all():
+        if user.is_superuser:
+            public_group = ExtendedGroup.objects.public_group()
+            if public_group:
+                user.groups.add(public_group)
+            print "Admin user exists and has been added to the Public Group.\n"
 
 
 def set_up_site_name(refinery_instance_name, refinery_base_url):
