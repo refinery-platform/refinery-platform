@@ -43,7 +43,7 @@
 						&nbsp;<a href="/accounts/password/reset">Forgot password?</a>
 					</p>
 				</form>
-				{% if not REFINERY_DISABLE_REGISTRATION %}
+				{% if OPEN_REGISTRATION %}
 				<p>
 					If you don't have an account, you can <a href="{% url registration.views.register %}">sign up</a> for one.
 				</p>
