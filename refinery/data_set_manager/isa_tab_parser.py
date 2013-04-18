@@ -9,7 +9,7 @@ from data_set_manager.models import Node, Attribute, Investigation, Study, \
     ProtocolReference, Protocol, ProtocolReferenceParameter, NodeCollection, \
     Ontology, Publication, Contact, Design, Factor, Assay
 from django.conf import Settings
-from file_store.tasks import create, import_file
+from file_store.tasks import create
 from refinery import settings
 from sets import Set
 from zipfile import ZipFile
@@ -918,13 +918,11 @@ class IsaTabParser:
         #assign ISA-Tab archive and pre-ISA-Tab archive if present
         try:
             self._current_investigation.isarchive_file = create(isa_archive, permanent=True)
-            import_file(self._current_investigation.isarchive_file, refresh=True, permanent=True )
         except:
             pass
         
         if preisa_archive:
             self._current_investigation.pre_isarchive_file = create(preisa_archive, permanent=True)
-            import_file(self._current_investigation.pre_isarchive_file, refresh=True, permanent=True )
         
         self._current_investigation.save()
         
