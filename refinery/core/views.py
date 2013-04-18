@@ -96,10 +96,7 @@ def user(request, query):
         user = get_object_or_404( UserProfile, uuid=query ).user
         
     if len( get_shared_groups( request.user, user ) ) == 0 and user != request.user:
-        if request.user.is_authenticated():
-            return HttpResponseForbidden(custom_error_page(request, '403.html', {'user': request.user, 'msg': "view the profile of user %s" % user.username}))
-        else:
-            return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "view the profile of user %s" % user.username}))
+        return HttpResponseForbidden(custom_error_page(request, '403.html', {'user': request.user, 'msg': "view the profile of user %s" % user.username}))
 
     return render_to_response('core/user.html', {'profile_user': user }, context_instance=RequestContext( request ) )
 
@@ -139,10 +136,7 @@ def group(request, query):
     # only group members are allowed to see group pages
     if not request.user.is_superuser:
         if not group.id in request.user.groups.values_list('id', flat=True):
-            if request.user.is_authenticated():
-                return HttpResponseForbidden(custom_error_page(request, '403.html', {'user': request.user, 'msg': "view group %s" % group.name}))
-            else:
-                return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "view group %s" % group.name}))
+            return HttpResponseForbidden(custom_error_page(request, '403.html', {'user': request.user, 'msg': "view group %s" % group.name}))
 
     return render_to_response('core/group.html', {'group': group }, context_instance=RequestContext( request ) )
 
@@ -161,7 +155,7 @@ def project(request, uuid):
             if request.user.is_authenticated():
                 return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "view this project"}))
             else:
-                return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "view this project"}))
+                return HttpResponse(custom_error_page(request, '401.html', {'msg': "view this project"}), status='401')
 
     analyses = project.analyses.all()
     
@@ -195,10 +189,7 @@ def project_edit(request,uuid):
     project = get_object_or_404( Project, uuid=uuid )
         
     if not request.user.has_perm('core.change_project', project ):
-        if request.user.is_authenticated():
-            return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "edit this project"}))
-        else:
-            return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "edit this project"}))
+        return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "edit this project"}))
 
     if request.method == "POST": # If the form has been submitted...
         form = ProjectForm(data=request.POST, instance=project) # A form bound to the POST data
@@ -284,7 +275,7 @@ def data_set(request,uuid):
             if request.user.is_authenticated():
                 return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "view this data set"}))
             else:
-                return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "view this data set"}))
+                return HttpResponse(custom_error_page(request, '401.html', {'msg': "view this data set"}), status='401')
 
     #get studies
     investigation = data_set.get_investigation()
@@ -337,7 +328,7 @@ def data_set_edit(request,uuid):
         if request.user.is_authenticated():
             return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "edit this data set"}))
         else:
-            return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "edit this data set"}))
+            return HttpResponse(custom_error_page(request, '401.html', {'msg': "edit this data set"}), status='401')
 
     #get studies
     investigation = data_set.get_investigation()
@@ -420,7 +411,7 @@ def workflow(request, uuid):
             if request.user.is_authenticated():
                 return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "view this workflow"}))
             else:
-                return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "view this workflow"}))
+                return HttpResponse(custom_error_page(request, '401.html', {'msg': "view this workflow"}), status='401')
 
     # load graph dictionary from Galaxy
     workflow = Workflow.objects.filter( uuid=uuid ).get()
@@ -479,10 +470,7 @@ def workflow_edit(request, uuid):
     workflow = get_object_or_404( Workflow, uuid=uuid )
 
     if not request.user.has_perm('core.change_workflow', workflow ):
-        if request.user.is_authenticated():
-            return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "edit this workflow"}))
-        else:
-            return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "edit this workflow"}))
+        return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "edit this workflow"}))
 
     if request.method == "POST": # If the form has been submitted...
         form = WorkflowForm(data=request.POST, instance=workflow) # A form bound to the POST data
@@ -505,7 +493,7 @@ def workflow_engine(request,uuid):
             if request.user.is_authenticated():
                 return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "view this workflow engine"}))
             else:
-                return HttpResponseForbidden(custom_error_page(request, '401.html', {'msg': "view this workflow engine"}))
+                return HttpResponse(custom_error_page(request, '401.html', {'msg': "view this workflow engine"}), status='401')
 
     return render_to_response('core/workflow_engine.html', { 'workflow_engine': workflow_engine }, context_instance=RequestContext( request ) )
 
