@@ -325,11 +325,12 @@ def createStepsCompact(file_list, workflow):
     logger.debug("galaxy_workflow.createStepsCompact called")
     
     
-    updated_dict = {};
-    temp_steps = workflow["steps"];
-    repeat_num = len(file_list);
+    updated_dict = {}
+    temp_steps = workflow["steps"]
+    repeat_num = len(file_list)
     history_download = []
-    map = workflowMap(workflow);
+    map = workflowMap(workflow)
+    lookup_edges = {}
     
     # connections between workflow inputs (and outputs) and node uuids
     connections = []
@@ -354,7 +355,6 @@ def createStepsCompact(file_list, workflow):
         
         # Update with added JSON to define description and new names of files 
         if curr_step_annot:
-            #print "FOUND refinery_files"
             try:
                 keep_files = ast.literal_eval(curr_step_annot)
                 #print keep_files
@@ -385,7 +385,6 @@ def createStepsCompact(file_list, workflow):
                 analysis_node_connection['name'] = oname
                 analysis_node_connection['subanalysis'] = 1
                 analysis_node_connection['step'] = counter
-                # TODO: set file type
                 analysis_node_connection['filetype'] = None
                 analysis_node_connection['direction'] = 'out'
                 analysis_node_connection['node_uuid'] = None # setting to none will trigger creation of a new Node                                                 
@@ -433,6 +432,8 @@ def createStepsCompact(file_list, workflow):
         # checking to see if repeat_for tag exists for current tool            
         if "repeat_for" in keep_files:
             check_step = keep_files["repeat_for"]
+            # keeping track of old ids to new ids 
+            lookup_edges[curr_step] = counter   
             
             for i in range(0, len(file_list)):
                 new_step = copy.deepcopy(temp_steps[curr_step])
@@ -471,6 +472,10 @@ def createStepsCompact(file_list, workflow):
             tcount = 0
             key_tool_state = ''
             key_tool_val = ''
+            
+            # keeping track of old ids to new ids 
+            lookup_edges[curr_step] = counter   
+            
             for k,v in curr_connections.iteritems():
                 if tcount < 1:
                     tindex = 0
@@ -522,10 +527,25 @@ def createStepsCompact(file_list, workflow):
             updated_dict[str(counter)] = curr_workflow_step
             counter += 1
         else:
+            #print "ELSING IN CREATING COMPACT WORKFLOWS"
+            # keeping track of old ids to new ids 
+            lookup_edges[curr_step] = counter
+                
+            # adding additional steps past replication tool 
             curr_workflow_step['id'] = counter
+            
+            # need to update ids for new counters 
+            try:
+                temp_edges = curr_workflow_step["input_connections"]
+                for k,v in temp_edges.iteritems():
+                    new_id = lookup_edges[str(v["id"])]
+                    temp_edges[k]["id"] = new_id       
+            except Exception:
+                logger.error("Galaxy Tool Error: " + curr_workflow_step["name"] + " Missing 'input_connections' key")
+        
             updated_dict[str(counter)] = curr_workflow_step
             counter += 1
-
+            
     #print "updated_dict"
     #print simplejson.dumps(updated_dict, indent=4);
     return updated_dict, history_download, connections;
