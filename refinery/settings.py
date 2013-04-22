@@ -323,6 +323,7 @@ SOUTH_TESTS_MIGRATE = False
 
 # for registration module
 ACCOUNT_ACTIVATION_DAYS = 7
+REGISTRATION_OPEN = True
 
 # set the name of the group that is used to share data with all users (= "the public")
 REFINERY_PUBLIC_GROUP_NAME = "Public" 
@@ -390,9 +391,8 @@ UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 # Tag for repository mode
 REFINERY_REPOSITORY_MODE = False
 
-# Tags for turning on and off registration
-REGISTRATION_OPEN = True
-REFINERY_REGISTRATION_CLOSED_MESSAGE = "Registration is currently closed." # only used if above is False
+# Message to display on registration page when REGISTRATION_OPEN is set to False
+REFINERY_REGISTRATION_CLOSED_MESSAGE = "Registration is currently closed."
 
 #Tag for number of days user has to activate their account before it expires
 ACCOUNT_ACTIVATION_DAYS = 7
