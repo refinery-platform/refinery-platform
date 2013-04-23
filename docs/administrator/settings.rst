@@ -27,3 +27,6 @@ Optional Settings
 
 ``REFINERY_BANNER_ANONYMOUS_ONLY = False``
    Optional setting to display REFINERY_BANNER to anonymous users only.
+
+``REFINERY_REGISTRATION_CLOSED_MESSAGE = ''``
+   Optional string to display a message when REGISTRATION_OPEN = False (HTML tags allowed).
