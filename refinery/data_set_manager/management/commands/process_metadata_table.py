@@ -11,70 +11,79 @@ import time
 
 class Command(BaseCommand):
     help = "Takes the directory of an ISA-Tab file as input, parses, and"
-    help = "%s inputs it into the database" % help
+    help = "%s inputs it into the database\n\nNOTE: All provided indices should be zero-based" % help
 
     option_list = BaseCommand.option_list + (
                 make_option('--username',
                             action='store',
                             type='string',
-                            help='username of the owner of this data set'
+                            help='(Required) username of the owner of this data set'
                             ),
                 make_option('--title',
                             action='store',
                             type='string',
-                            help='name of this data set'
+                            help='(Required) name of this data set'
                             ),
                 make_option('--file_name',
                             action='store',
                             type='string',
-                            help='absolute path to the file being parsed'
+                            help='(Required) absolute path to the file being parsed'
                             ),
                 make_option('--source_column_index',
                             action='store',
-                            type='string'
+                            type='string',
+                            help='(Required) list of column indices to be used for source grouping (comma-separated, no spaces)'
                             ),
                 make_option('--data_file_column',
                             action='store',
-                            type='string'
+                            type='string',
+                            help='(Required) index of the column of the input file that contains the path to or the URL of the file associated with this sample'
                             ),
                 make_option('--auxiliary_file_column',
                             action='store',
                             type='string',
-                            default=None
+                            default=None,
+                            help='column index of the input file that contains the path to an auxiliary file (e.g. for visualization) associated with the input file'
                             ),
                 make_option('--base_path',
                             action='store',
                             type='string',
-                            default=""
+                            default="",
+                            help='base path of your data file paths if using relative locations'
                             ),
                 make_option('--slug',
                             action='store',
                             type='string',
-                            default=None
+                            default=None,
+                            help='shortcut name for dataset URL; can only contain alpha-numeric characters and \'_\''
                             ),
                 make_option('--species_column',
                             action='store',
                             type='string',
-                            default=None
+                            default=None,
+                            help='column containing species names or ids'
                             ),
                 make_option('--annotation_column',
                             action='store',
                             type='string',
-                            default=None
+                            default=None,
+                            help='column containing boolean flag to indicate whether the data file in this row should be treated as an annotation file'
                             ),
                 make_option('--genome_build_column',
                             action='store',
                             type='string',
-                            default=None
+                            default=None,
+                            help='column containing genome build ids'
                             ),
                 make_option('--data_file_permanent',
                             action='store_true',
-                            default=False
+                            default=False,
+                            help='flag for whether data files should be permanently on the system or cached'
                             ),
                 make_option('--is_public',
                             action='store_true',
                             default=False,
-                            help='whether this data set will be visible to the public'
+                            help='flag for whether this data set will be visible to the public'
                             ),
                 )
 
