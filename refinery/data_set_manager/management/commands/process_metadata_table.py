@@ -10,7 +10,7 @@ import re
 import time
 
 class Command(BaseCommand):
-    help = "Takes the directory of an ISA-Tab file as input, parses, and"
+    help = "Takes a tab-delimited file as input, parses, and"
     help = "%s inputs it into the database\n\nNOTE: All provided indices should be zero-based" % help
 
     option_list = BaseCommand.option_list + (
@@ -29,10 +29,10 @@ class Command(BaseCommand):
                             type='string',
                             help='(Required) absolute path to the file being parsed'
                             ),
-                make_option('--source_column_index',
+                make_option('--source_column_index', '--source_column',
                             action='store',
                             type='string',
-                            help='(Required) list of column indices to be used for source grouping (comma-separated, no spaces)'
+                            help='(Required) list of column indices to be used for source grouping (comma-separated, no spaces)\nValues in the columns indicated by the list of column indices provided for the "source_column_index" will be concatenated to create an identifier for the "source" of the sample'
                             ),
                 make_option('--data_file_column',
                             action='store',
