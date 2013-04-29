@@ -15,7 +15,7 @@
 
 {% if messages %}
     {% for message in messages %}
-    <p>{{message}}</p>
+    <p>{{message|safe}}</p>
     {% endfor %}
 {% endif %}
 	<div class="row-fluid">
