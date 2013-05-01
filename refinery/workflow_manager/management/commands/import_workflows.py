@@ -47,7 +47,9 @@ class Command(BaseCommand):
         for engine in workflow_engines:
             print "Importing from workflow engine \"" + engine.name + "\" ..."
             old_workflow_count = engine.workflow_set.all().count()
-            get_workflows( engine );
+            engine_issues = get_workflows( engine );
+            if len( engine_issues ) > 0:
+                print "\n".join( engine_issues )
             new_workflow_count = engine.workflow_set.all().count()
             print str( ( new_workflow_count-old_workflow_count ) ) + " workflows imported from workflow \"" + engine.name + "\" ..." 
             workflows += (new_workflow_count-old_workflow_count)

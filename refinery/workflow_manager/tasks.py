@@ -25,11 +25,18 @@ logger = logging.getLogger(__name__)
 GALAXY_WORKFLOW_ANNOTATION = 'annotation'
 GALAXY_WORKFLOW_TYPE = 'refinery_type'
 GALAXY_WORKFLOW_RELATIONSHIPS = 'refinery_relationships'
+GALAXY_WORKFLOW_STEPS = 'steps'
+
+GALAXY_TOOL_OUTPUTS = 'outputs'
+GALAXY_TOOL_ANNOTATION = 'annotation'
+GALAXY_TOOL_ANNOTATION_REQUIRED_FIELDS = [('name',str)] # [(field, type), ...]
+GALAXY_TOOL_ANNOTATION_OPTIONAL_FIELDS = [('type',str), ('description',str)]
     
 @task()
 def get_workflows( workflow_engine ):
     
     workflows = []
+    issues = []
     
     # obtain a connection to galaxy using the instance information
     try:
@@ -46,64 +53,91 @@ def get_workflows( workflow_engine ):
     
     #for each workflow, create a core Workflow object and its associated WorkflowDataInput objects
     for workflow in workflows:
-        logger.debug("Checking workflow for import: %s", workflow.name)
-        
+        logger.info("Importing workflow %s ...", workflow.name)
         workflow_dictionary = get_workflow_dictionary( connection, workflow.identifier )
-        workflow_annotation = get_workflow_annotation( workflow_dictionary )
+        workflow_issues = import_workflow( workflow, workflow_engine, workflow_dictionary )
         
-        if workflow_annotation is None: 
-            continue
-        
-        workflow_type = get_workflow_type( workflow_annotation )
-        workflow_relationships =  get_workflow_relationships( workflow_annotation )
-        
-        if workflow_type is not None: # if workflow is meant for refinery 
-            logger.info( "Importing workflow into %s: %s" % (Site.objects.get_current().name, workflow.name) )
+        if len( workflow_issues ) > 0:
+            issues.append( '\nUnable to import workflow "' + workflow.name + '" due to the following issues:' )
+            issues = issues + workflow_issues
             
-            workflow_object = Workflow.objects.create( name=workflow.name, internal_id=workflow.identifier, workflow_engine=workflow_engine, is_active=True, type=workflow_type, graph=json.dumps( workflow_dictionary ) )        
-            workflow_object.set_manager_group( workflow_engine.get_manager_group() )
-                    
-            workflow_object.share( workflow_engine.get_manager_group().get_managed_group() )
+    return issues
+                
+        
+        
+def import_workflow( workflow, workflow_engine, workflow_dictionary ):
     
-            inputs = workflow.inputs
+    issues = []
             
-            # Adding workflowdatainputs i.e. inputs from workflow into database models
-            for input in inputs:
-                input_dict = {
-                              'name': input.name,
-                              'internal_id': input.identifier
-                              }
-                i = WorkflowDataInput(**input_dict)
-                i.save()
-                workflow_object.data_inputs.add(i)
-                
-                # if workflow has only 1 input, input a default input relationship type
-                if (len(inputs) == 1):
-                    opt_single = {
-                                  'category':TYPE_1_1,
-                                  'set1':input.name
-                                  }
-                    temp_relationship = WorkflowInputRelationships(**opt_single)
-                    temp_relationship.save()
-                    workflow_object.input_relationships.add(temp_relationship)
-                
-            # check to input NodeRelationshipType
-            # noderelationship types defined for workflows with greater than 1 input
-            # refinery_relationship=[{"category":"N-1", "set1":"input_file"}]
-            if workflow_relationships is not None: 
-                if (len(inputs) > 1):
-                    for opt_r in workflow_relationships:
-                        try:
-                            temp_relationship = WorkflowInputRelationships(**opt_r)
-                            temp_relationship.save()
-                            workflow_object.input_relationships.add(temp_relationship)
+    workflow_annotation = get_workflow_annotation( workflow_dictionary )
+    
+    if workflow_annotation is None:
+        issues.append( "Workflow annotation not found." ) 
+        return issues
+    
+    workflow_type = get_workflow_type( workflow_annotation )
+    workflow_relationships =  get_workflow_relationships( workflow_annotation )
+    
+    if workflow_type is None:
+        issues.append( "Workflow type not found." ) 
+        return issues
+    
+    if workflow_type is not None: # if workflow is meant for refinery
         
-                        except KeyError, e:
-                            logger.error("refinery_relationship option error: %s" % e)
-                            return
-            else:
-                # TODO: assign a default relationship if required
-                pass
+        #  check workflow steps for correct annotations and skip import if problems are detected
+        step_issues = check_steps( workflow_dictionary )
+        
+        if step_issues is None: # no error in parsing but no outputs defined
+            issues.append( "Workflow does not declare outputs." )
+            return issues
+        
+        if len( step_issues ) > 0:
+            # store issues to return to calling function?
+            issues = issues + step_issues
+            return issues
+                    
+        workflow_object = Workflow.objects.create( name=workflow.name, internal_id=workflow.identifier, workflow_engine=workflow_engine, is_active=True, type=workflow_type, graph=json.dumps( workflow_dictionary ) )        
+        workflow_object.set_manager_group( workflow_engine.get_manager_group() )
+                
+        workflow_object.share( workflow_engine.get_manager_group().get_managed_group() )
+
+        inputs = workflow.inputs
+        
+        # Adding workflowdatainputs i.e. inputs from workflow into database models
+        for input in inputs:
+            input_dict = {
+                          'name': input.name,
+                          'internal_id': input.identifier
+                          }
+            i = WorkflowDataInput(**input_dict)
+            i.save()
+            workflow_object.data_inputs.add(i)
+            
+            # if workflow has only 1 input, input a default input relationship type
+            if (len(inputs) == 1):
+                opt_single = {
+                              'category':TYPE_1_1,
+                              'set1':input.name
+                              }
+                temp_relationship = WorkflowInputRelationships(**opt_single)
+                temp_relationship.save()
+                workflow_object.input_relationships.add(temp_relationship)
+            
+        # check to input NodeRelationshipType
+        # noderelationship types defined for workflows with greater than 1 input
+        # refinery_relationship=[{"category":"N-1", "set1":"input_file"}]
+        if workflow_relationships is not None: 
+            if (len(inputs) > 1):
+                for opt_r in workflow_relationships:
+                    try:
+                        temp_relationship = WorkflowInputRelationships(**opt_r)
+                        temp_relationship.save()
+                        workflow_object.input_relationships.add(temp_relationship)
+    
+                    except KeyError, e:
+                        logger.error("refinery_relationship option error: %s" % e)
+                        return
+    return issues
     
             
 def configure_workflow( workflow, ret_list, connection_galaxy=None ):
@@ -174,19 +208,175 @@ def get_workflow_dictionary(connection, workflow_uuid):
     return dictionary
 
 
-def get_workflow_annotation( dictionary ):
-    if GALAXY_WORKFLOW_ANNOTATION not in dictionary:
+def get_workflow_annotation( workflow_dictionary ):
+    if GALAXY_WORKFLOW_ANNOTATION not in workflow_dictionary:
         logger.info( 'No annotation ("' + GALAXY_WORKFLOW_ANNOTATION + '") found for workflow. Not a Refinery workflow.' )        
         return None
     
     try:
-        annotation = ast.literal_eval( dictionary[GALAXY_WORKFLOW_ANNOTATION] )
+        annotation = ast.literal_eval( workflow_dictionary[GALAXY_WORKFLOW_ANNOTATION] )
     except:
         logger.warning( 'Unable to parse annotation field as Python dictionary. Not a Refinery workflow.' )
         return None
     
     return annotation
+
+
+def get_workflow_steps( workflow_dictionary ):
     
+    steps = [] 
+    
+    if GALAXY_WORKFLOW_STEPS not in workflow_dictionary.keys():
+        logger.warning( 'Workflow does not contain any steps. Not a Refinery workflow.' )
+        return None
+        
+    for index, step_definition in workflow_dictionary[GALAXY_WORKFLOW_STEPS].iteritems():            
+        steps.append(step_definition)
+        
+    return steps
+
+
+def get_step_annotation( step_definition ):
+    
+    annotation = None
+    
+    # no annotation field
+    if GALAXY_TOOL_ANNOTATION not in step_definition:
+        return None
+
+    # empty annotation field
+    if len( step_definition[GALAXY_TOOL_ANNOTATION].strip() ) == 0:
+        return None;
+            
+    try:                                
+        annotation = ast.literal_eval( step_definition[GALAXY_TOOL_ANNOTATION] )    
+    except:
+        logger.warning( 'Annotation not empty and unable to parse annotation field as Python dictionary in step "' + step_definition['name'] + '" (' + str(step_definition['id']) + '). Not a Refinery workflow.' )
+        return None
+            
+    return annotation
+
+
+def get_step_outputs( step_definition ):
+        
+    # no output field
+    if GALAXY_TOOL_OUTPUTS not in step_definition:
+        return None
+
+    # empty output field
+    if len( step_definition[GALAXY_TOOL_OUTPUTS] ) == 0:
+        return None;
+                        
+    return step_definition[GALAXY_TOOL_OUTPUTS]
+
+
+def check_step_annotation_syntax( annotation ):
+    """
+    Check if step annotation contains all required fields and only required or optional fields (syntactic correctness).
+    
+    Returns a list of issues or a list of length 0 if the annotation is syntactically correct.     
+    """     
+    issues = []
+    
+    # iterate over output files in annotation dictionary    
+    for output_file_name, output_file_settings in annotation.iteritems():
+        
+        # test if output file name is a string
+        if not isinstance( output_file_name, str ):
+            issues.append( 'Output file "' + str( output_file_name ) + '" is not of expected type "' + str.__name__ + '".' )
+        
+        # test if all required fields are present and have the correct type 
+        for field in GALAXY_TOOL_ANNOTATION_REQUIRED_FIELDS:
+            if field[0] not in output_file_settings.keys():
+                issues.append( 'In annotation of output file "' + str( output_file_name ) + ' required field "' + field[0] + '" is missing.'  )
+ 
+        # test if all fields have the correct type 
+        for field in GALAXY_TOOL_ANNOTATION_REQUIRED_FIELDS + GALAXY_TOOL_ANNOTATION_OPTIONAL_FIELDS:
+            if field[0] in output_file_settings.keys():
+                if not isinstance( output_file_settings[field[0]], field[1] ):
+                    issues.append( 'In annotation of output file "' + str( output_file_name ) + '" field "' + field[0] + '" is of type "' + type( output_file_settings[field[0]] ).__name__ + '" but type "' + field[1].__name__ + '" is expected.' )
+
+        # test if there are undefined fields (i.e. fields that are neither required nor optional) 
+        for field in output_file_settings.keys():
+            if field in GALAXY_TOOL_ANNOTATION_REQUIRED_FIELDS + GALAXY_TOOL_ANNOTATION_OPTIONAL_FIELDS:
+                if not isinstance( output_file_settings[field[0]], field[1] ):
+                    issues.append( 'In annotation of output file "' + str( output_file_name ) + ' field "' + field + '" is neither a required nor an optional field.' )
+    
+    return issues
+
+
+def check_step_annotation_semantics( annotation, step_outputs ):
+        
+    issues = []
+
+    # iterate over output files in annotation dictionary    
+    for output_file_name, output_file_settings in annotation.iteritems():
+        # find output file name in outputs of tool
+        output_declared = False
+        
+        for output in step_outputs:
+            if output["name"] == output_file_name:
+                output_declared = True
+                break
+        
+        if not output_declared:
+            issues.append( 'Output file "' + str( output_file_name ) + '" is defined in the tool annotation but is not a declared output of the tool.' )
+    
+    return issues 
+    
+    
+
+def check_step( step_definition ):
+    """
+    Check correctness of this step:
+    1. syntactic correctness of annotations, i.e. are all required fields included and of the correct type, etc.
+    2. semantic correctness of annotations, i.e. do the defined output file names in the annotation match actual tool outputs
+    
+    Returns a list of issues. a list of length 0 if the step is correctly defined or None if there is no annotation or output for the step.     
+    """
+    issues = []
+    
+    annotation = get_step_annotation( step_definition )
+    
+    if annotation is None:
+        return None
+    else:        
+        outputs = get_step_outputs( step_definition )
+        if outputs is None:
+            return None
+        else:
+            issues = issues + check_step_annotation_syntax( annotation )
+            issues = issues + check_step_annotation_semantics( annotation, outputs )
+    
+    return issues
+
+
+def check_steps( workflow_dictionary ):
+    steps = get_workflow_steps( workflow_dictionary )
+    
+    correct_step_found = False
+    incorrect_step_found = False
+    issues = []
+    
+    for step_definition in steps:        
+        step_issues = check_step( step_definition )    
+        if step_issues is not None:
+            if len( step_issues ) == 0:
+                correct_step_found = True
+            else:
+                incorrect_step_found = True
+                issues.append( 'Workflow step "' + step_definition['name'] + '" contains at least one incorrectly declared output.' )
+                issues = issues + step_issues
+            
+    if incorrect_step_found:
+        logger.warning( 'Workflow "' + workflow_dictionary['name'] + '" contains incorrectly declared outputs for at least one step and will be ignored: ' + "\n".join( issues ) )
+        return issues        
+    if not correct_step_found:
+        logger.warning( 'Workflow "' + workflow_dictionary['name'] + '" does not declare outputs and will be ignored.' )
+        return None
+    
+    return issues 
+        
 
 def get_workflow_type( annotation ):
     """
@@ -197,8 +387,7 @@ def get_workflow_type( annotation ):
     """        
     
     if GALAXY_WORKFLOW_TYPE not in annotation:
-        logger.warning( '"' + GALAXY_WORKFLOW_TYPE + '" not declared in annotation dictionary. Assuming type "analysis".' )        
-        return Workflow.ANALYSIS_TYPE
+        return None
     
     # test if the "type" string in the annotation matches any of the defined types
     for choice in Workflow.TYPE_CHOICES: 
@@ -218,7 +407,6 @@ def get_workflow_relationships( annotation ):
     """        
     
     if 'refinery_relationships' not in annotation:
-        logger.warning( '"refinery_relationships" not declared in annotation dictionary.' )        
         return None
         
     return annotation[GALAXY_WORKFLOW_RELATIONSHIPS]
