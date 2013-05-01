@@ -79,10 +79,12 @@
 				</a>&nbsp;&nbsp;|&nbsp;&nbsp; 				
     			<i class="icon-signout"></i>&nbsp;<a href="{% url django.contrib.auth.views.logout %}?next={% url home %}">Logout</a>
     	{% else %}
+    		{% url registration.views.register as registration_url %}
+    		{% url django.contrib.auth.views.login as login_url %}
     		{% if REGISTRATION_OPEN %}
-			<a rel="tooltip" data-placement="left" title="Sign Up" href="{% url registration.views.register %}">Register</a>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+			<a rel="tooltip" data-placement="left" title="Sign Up" href="{{registration_url}}">Register</a>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
 			{% endif %}
-			<i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{% url django.contrib.auth.views.login %}?next={% if request.path %}{{ request.path|safe }}{% else %}{% url home %}{% endif %}">Login</a>
+			<i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url home %}{% endifnotequal %}{% else %}{% url home %}{% endifnotequal %}{% else %}{% url home %}{% endif %}">Login</a>
 		{% endif %}		
     		</p>
                            	          

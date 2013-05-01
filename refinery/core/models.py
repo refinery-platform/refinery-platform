@@ -4,13 +4,15 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
-from data_set_manager.models import Investigation, Node, Study, Assay, Node
 from datetime import datetime
+import logging
+import smtplib
+import socket
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.signals import user_logged_in
-from django.core.mail import mail_admins
+from django.core.mail import mail_admins, send_mail
 from django.db import models, transaction
 from django.db.models import Max, signals
 from django.db.models.fields import IntegerField
@@ -19,12 +21,13 @@ from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django.forms import ModelForm
 from django_extensions.db.fields import UUIDField
-from file_store.models import get_file_size, FileStoreItem
-from galaxy_connector.models import Instance
 from guardian.shortcuts import assign, get_users_with_perms, \
     get_groups_with_perms
 from registration.signals import user_registered, user_activated
-import logging
+from django_auth_ldap.backend import LDAPBackend
+from data_set_manager.models import Investigation, Node, Study, Assay
+from file_store.models import get_file_size, FileStoreItem
+from galaxy_connector.models import Instance
 
 
 logger = logging.getLogger(__name__)
@@ -818,3 +821,35 @@ class NodeRelationship(BaseResource):
     study = models.ForeignKey(Study)
     assay = models.ForeignKey(Assay)
 
+
+class RefineryLDAPBackend(LDAPBackend):
+    '''Custom LDAP authentication class
+
+    '''
+    def get_or_create_user(self, username, ldap_user):
+        '''Send a welcome email to new users
+
+        '''
+        (user, created) = super(RefineryLDAPBackend, self).get_or_create_user(username, ldap_user)
+        # the fields in the new User instance are not populated yet, so need
+        # to get email address from an attribute in ldap_user
+        if created:
+            try:
+                email_attribute_name = settings.AUTH_LDAP_USER_ATTR_MAP['email']
+            except KeyError:
+                logger.error("Cannot send welcome email to user '{}': key 'email' does not exist in AUTH_LDAP_USER_ATTR_MAP settings variable".format(username))
+                return user, created
+            try:
+                email_address_list = ldap_user.attrs.data[email_attribute_name]
+            except KeyError:
+                logger.error("Cannot send welcome email to user '{}': attribute '{}' was not provided by the LDAP server".format(username, email_attribute_name))
+                return user, created
+            try:
+                send_mail(settings.REFINERY_WELCOME_EMAIL_SUBJECT,
+                          settings.REFINERY_WELCOME_EMAIL_MESSAGE,
+                          settings.DEFAULT_FROM_EMAIL, email_address_list)
+            except smtplib.SMTPException:
+                logger.error("Cannot send welcome email to: {}: SMTP server error".format(email_address_list))
+            except socket.error as e:
+                logger.error("Cannot send welcome email to: {}: {}".format(email_address_list, e))
+        return user, created

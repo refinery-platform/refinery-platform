@@ -7,7 +7,6 @@ import os
 import djcelery
 from django_auth_ldap.config import LDAPSearch
 
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 djcelery.setup_loader()
@@ -204,7 +203,7 @@ AUTH_LDAP_USER_ATTR_MAP = {
 
 # NG: added for django-guardian
 AUTHENTICATION_BACKENDS = (
-    'django_auth_ldap.backend.LDAPBackend',
+    'refinery.core.models.RefineryLDAPBackend',
     'django.contrib.auth.backends.ModelBackend', # default
     'guardian.backends.ObjectPermissionBackend',
 )
@@ -402,6 +401,10 @@ REFINERY_BANNER = ''
 
 # Display REFINERY_BANNER to anonymous users only
 REFINERY_BANNER_ANONYMOUS_ONLY = False
+
+# Subject and message body of the welcome email sent to new users
+REFINERY_WELCOME_EMAIL_SUBJECT = 'Welcome to Refinery'
+REFINERY_WELCOME_EMAIL_MESSAGE = 'Please fill out your user profile'
 
 # import local settings
 from settings_local import *
