@@ -53,4 +53,6 @@ refinery/middleware.py
 refinery/fabric
 refinery/fabric/*
 
+supervisord.conf
+
 codekit-config.json

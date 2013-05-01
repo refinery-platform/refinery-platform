@@ -53,7 +53,7 @@
 			</div>
 		
 		{% if data_sets %}	
-			<table class="table table-striped table-condensed">
+			<table class="table table-condensed">
 				<thead>
 					<tr>
 						<th colspan="2">
@@ -81,7 +81,24 @@
 							{% endif %}
 						</td>
 				    	<td width="100%">
-							<a href="{% url data_set data_set.uuid %}">{{ data_set.name }}</a>        		
+							<a href="{% url data_set data_set.uuid %}">{{ data_set.name }}</a>
+							{% if data_set.download_set.all|length > 0 %}
+								<table class="table-condensed" width="100%">
+									{% for download in data_set.download_set.all %}
+									<tr>
+										<td>
+											<i class="icon-download"></i>
+										</td>																		
+										<td>
+											<a href="{{download.file_store_item.get_full_url}}">{{ download.name }}</a>
+										</td>																		
+										<td>
+											{{ download.file_store_item.get_file_size|filesizeformat }}
+										</td>																		
+									</tr>
+									{% endfor %}
+								</table>
+							{% endif %}
 			        	</td>
 						{% if REFINERY_REPOSITORY_MODE %}
 				    	<td width="100%">
@@ -128,7 +145,7 @@
 
 {% if projects or unassigned_analyses %}
 
-<table class="table table-striped table-condensed">
+<table class="table table-condensed">
 	<thead>
 		<tr>
 			<th width="100%">
@@ -161,8 +178,7 @@
 			{% for analysis in unassigned_analyses.all %}
 			    <tr>
 			    	<td>
-			    		<!-- <i class="icon-empty"></i> <a href="projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> -->
-			    		<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }}</a>
+			    		<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
 			    	</td>
 			    	<td>
 			    		<span id="analysis-{{ analysis.uuid }}-status"></span>
@@ -239,7 +255,7 @@
 </div>
 	
 {% if workflows %}
-	<table class="table table-striped table-condensed">
+	<table class="table table-condensed">
 		<thead>
 			<tr>
 				<th>

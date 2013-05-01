@@ -11,7 +11,7 @@ from celery.task.chords import Chord
 from celery.task.sets import subtask, TaskSet
 from celery.utils import uuid
 from core.models import Analysis, AnalysisResult, WorkflowFilesDL, \
-    AnalysisNodeConnection, INPUT_CONNECTION, OUTPUT_CONNECTION
+    AnalysisNodeConnection, INPUT_CONNECTION, OUTPUT_CONNECTION, Workflow, Download
 from data_set_manager.models import Node, initialize_attribute_order
 from data_set_manager.utils import get_node_types, update_annotated_nodes, \
     index_annotated_nodes, add_annotated_nodes_selection, \
@@ -309,9 +309,6 @@ def run_analysis_preprocessing(analysis):
     analysis.history_id = history_id
     analysis.save()
     
-    # attach workflow outputs back to dataset isatab graph
-    #attach_outputs_dataset(analysis)
-
     return
 
 # task: monitor workflow execution (calls subtask that does the actual work)
@@ -413,7 +410,12 @@ def run_analysis_cleanup(analysis):
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     
     # attach workflow outputs back to dataset isatab graph
-    attach_outputs_dataset(analysis)
+    if analysis.workflow.type == Workflow.ANALYSIS_TYPE:
+        attach_outputs_dataset(analysis)
+    elif analysis.workflow.type == Workflow.DOWNLOAD_TYPE:
+        attach_outputs_downloads(analysis)
+    else:
+        logger.warning( 'Unknown workflow type "' + analysis.workflow.type + '" in analysis "' + analysis.name + '".' )
         
     # saving when analysis is finished
     analysis.time_end = datetime.now()
@@ -600,6 +602,24 @@ def get_analysis_connection(analysis):
                              cur_workflow.workflow_engine.instance.api_url,
                              cur_workflow.workflow_engine.instance.api_key)
     return connection
+
+
+def attach_outputs_downloads(analysis):
+    analysis_results = AnalysisResult.objects.filter(analysis_uuid=analysis.uuid)
+
+    if analysis_results.count() == 0:
+        logger.error( 'No results for download "' + analysis.name + '" (' + analysis.uuid + ')' )
+        return
+    
+    for analysis_result in analysis_results:
+        item = FileStoreItem.objects.get( uuid=analysis_result.file_store_uuid )
+        
+        if item:
+            download = Download.objects.create( name=analysis.name, data_set=analysis.data_set, file_store_item=item )
+            download.set_owner( analysis.get_owner() )            
+        else:             
+            logger.warning( 'No file found for "' + analysis_result.file_store_uuid + '" in download "' + analysis.name + '" (' + analysis.uuid + ')' )
+        
 
 
 def attach_outputs_dataset(analysis):

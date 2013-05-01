@@ -40,11 +40,4 @@ def download_workflow ( request, workflow_uuid ):
     
     workflow = Workflow.objects.filter( uuid=workflow_uuid ).get()
     
-    connection = Connection( workflow.workflow_engine.instance.base_url,
-                             workflow.workflow_engine.instance.data_url,
-                             workflow.workflow_engine.instance.api_url,
-                             workflow.workflow_engine.instance.api_key )
-
-    result = connection.get_workflow_dict( workflow.internal_id );
-
-    return HttpResponse( simplejson.dumps(result) ) 
+    return HttpResponse( workflow.graph ) 
