@@ -73,17 +73,17 @@ To configure Jetty to only accept connections from ``localhost`` do the followin
 3. Locate ``<Call name="addConnector">`` in ``jetty.xml``. Be aware that the default ``jetty.xml`` file contains an ``addConnector`` block that is commented out. 
 4. Supply a default value of "127.0.0.1" for the ``jetty.host`` system property used to configure ``Host`` as follows:
 
-.. code-block:: xml   
+	.. code-block:: xml   
 
-   <Set name="Host"><SystemProperty name="jetty.host" default="127.0.0.1"/></Set>
+		<Set name="Host"><SystemProperty name="jetty.host" default="127.0.0.1"/></Set>
 
 5. Make sure that the ``jetty.host`` system variable is not set. 
 6. Restart Jetty using the command shown above.
 7. In the ``settings_local.py`` of your Refinery installation configure ``REFINERY_SOLR_BASE_URL`` as follows:
 
-.. code-block:: python   
+	.. code-block:: python   
 
-    REFINERY_SOLR_BASE_URL = "http://localhost:8983/solr/"
+		REFINERY_SOLR_BASE_URL = "http://localhost:8983/solr/"
     
 8. Restart the WSGI server running Refinery to reload your settings.
 

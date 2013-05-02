@@ -10,3 +10,5 @@ This section of the Refinery Platform documentation is intended for administrato
 
    setup
    upgrade
+   preparing_galaxy_workflows
+   importing_galaxy_workflows
