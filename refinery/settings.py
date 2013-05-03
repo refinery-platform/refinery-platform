@@ -404,4 +404,7 @@ REFINERY_WELCOME_EMAIL_SUBJECT = 'Welcome to Refinery'
 REFINERY_WELCOME_EMAIL_MESSAGE = 'Please fill out your user profile'
 
 # import local settings
-from settings_local import *
+try:
+    from settings_local import *
+except ImportError, exp:
+    pass
