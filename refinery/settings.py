@@ -2,7 +2,6 @@
 # requires settings_local.py with machine specific information
 # splitting ideas taken from https://code.djangoproject.com/wiki/SplitSettings (solution by Steven Armstrong)
 
-import ldap
 import os
 import djcelery
 from django_auth_ldap.config import LDAPSearch
