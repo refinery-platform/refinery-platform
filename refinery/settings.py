@@ -4,7 +4,6 @@
 
 import os
 import djcelery
-from django_auth_ldap.config import LDAPSearch
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -191,8 +190,7 @@ INSTALLED_APPS = (
 AUTH_LDAP_SERVER_URI = "ldap://ldap.example.com"
 AUTH_LDAP_BIND_DN = ""
 AUTH_LDAP_BIND_PASSWORD = ""
-AUTH_LDAP_USER_SEARCH = LDAPSearch("ou=users,dc=example,dc=com",
-                                   ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
+
 # Populate the Django user from the LDAP directory.
 AUTH_LDAP_USER_ATTR_MAP = {
     "first_name": "givenName",
