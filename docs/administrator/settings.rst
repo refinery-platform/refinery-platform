@@ -8,13 +8,73 @@ Refinery settings are configured in ``settings_local.py``.
 .. note::
    You should never edit the settings directly in ``settings.py`` to avoid conflicts when upgrading.
 
-Required Settings
+Database Settings
 -----------------
 
+``DATABASES``
+	
+
+Solr Settings
+-------------
+
+``REFINERY_SOLR_BASE_URL = "http://localhost:8983/solr/"``
+	Location of the Solr API.
+	
+Email Settings
+--------------
+
+``EMAIL_HOST = 'localhost'``
+
+``EMAIL_PORT = 25``
+
+``DEFAULT_FROM_EMAIL = 'webmaster@localhost'``
+ 
+``SERVER_EMAIL = 'root@localhost'``
+	The email address that error messages come from, such as those sent to ADMINS and MANAGERS.
 
 
-Optional Settings
------------------
+Customization Settings
+----------------------
+
+``TIME_ZONE = 'America/New_York'``
+	Local time zone for this installation. Choices can be found at http://en.wikipedia.org/wiki/List_of_tz_zones_by_name,
+	although not all choices may be available on all operating systems. On Unix systems, a value of None will cause Django to use the same
+	timezone as the operating system. If running in a Windows environment this must be set to the same as your system time zone.	
+
+``REFINERY_PUBLIC_GROUP_NAME = "Public"`` 
+	Set the name of the group that is used to share data with all users (= "the public")
+	
+``REFINERY_PUBLIC_GROUP_ID = 100``
+	**Do not change this after initialization** of your Refinery instance.
+
+``ISA_TAB_DIR = ''``
+
+``FILE_STORE_DIR = 'file_store'``
+	Location of the file store data directory relative to ``MEDIA_ROOT``.
+
+``REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = "_"``
+	Used to replaces spaces in the names of dynamic fields in Solr indexing.
+
+``REFINERY_CSS = ["styles/css/refinery-style-bootstrap.css", "styles/css/refinery-style-bootstrap-responsive.css", "styles/css/refinery-style.css" ]``
+	List of paths to CSS files used to style Refinery pages (relative to STATIC_URL)
+ 
+``REFINERY_GOOGLE_ANALYTICS_ID = ""``
+	Supply a Google analytics id "UA-..." (if set to "" tracking will be deactivated).
+	
+``EMAIL_SUBJECT_PREFIX = '[Refinery] '``
+	Prefix for emails sent by Refinery. Should always end with a space.
+
+``REFINERY_REPOSITORY_MODE = False``
+	Set to ``True`` to activate Refinery repository mode.
+
+``ACCOUNT_ACTIVATION_DAYS = 7``
+	Number of days user has to activate their account before it expires.
+
+``REFINERY_WELCOME_EMAIL_SUBJECT = 'Welcome to Refinery'``
+	Subject of the welcome email sent to new users.
+
+``REFINERY_WELCOME_EMAIL_MESSAGE = 'Please fill out your user profile'``
+	Message body of the welcome email sent to new users.
 
 ``REFINERY_FILE_SOURCE_MAP = {}``
    Optional dictionary for translating file URLs into file system paths (and vice versa)
@@ -30,3 +90,19 @@ Optional Settings
 
 ``REFINERY_REGISTRATION_CLOSED_MESSAGE = ''``
    Optional string to display a message when REGISTRATION_OPEN = False (HTML tags allowed).
+ 
+``REFINERY_INNER_NAVBAR_HEIGHT = 20``
+	Set height of navigation bar (e.g. to fit a logo).
+	
+``REFINERY_MAIN_LOGO = ""``
+	Supply a path to a logo that will become part of the branding (see navbar height correctly!)
+
+``TAXONOMY_URL = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"`` 
+
+``UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"``
+
+``AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'``
+
+``AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"``
+ 
+   
