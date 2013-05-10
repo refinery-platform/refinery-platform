@@ -13,6 +13,14 @@ as follows:
 
    > pip install -U -r requirements.txt
 
+You might need to install NumPy manually before running the above command (you can find the version in ``requirements.txt``).
+For example:
+
+.. code-block:: bash
+
+   > pip install numpy==1.7.0
+
+
 Virtual Environment
 ^^^^^^^^^^^^^^^^^^^
 
