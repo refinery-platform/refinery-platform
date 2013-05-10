@@ -107,7 +107,9 @@ Customization Settings
 
 Authentication settings
 -----------------------
-Example for user authentication via LDAP using django-auth-ldap:
+Example for user authentication via LDAP using django-auth-ldap_:
+
+.. _django-auth-ldap: http://pythonhosted.org/django-auth-ldap/
 
 ::
 
