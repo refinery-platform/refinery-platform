@@ -104,5 +104,26 @@ Customization Settings
 ``AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'``
 
 ``AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"``
- 
-   
+
+Authentication settings
+-----------------------
+Example for user authentication via LDAP using django-auth-ldap:
+
+::
+
+   from django_auth_ldap.config import LDAPSearch
+   # Baseline configuration
+   AUTH_LDAP_SERVER_URI = "ldap://ldap.example.com"
+   AUTH_LDAP_BIND_DN = ""
+   AUTH_LDAP_BIND_PASSWORD = ""
+   AUTH_LDAP_USER_SEARCH = LDAPSearch("OU=Domain Users,DC=rc,DC=Domain",
+                                   ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
+   # Populate Django user from the LDAP directory.
+   AUTH_LDAP_USER_ATTR_MAP = {
+      "first_name": "givenName",
+      "last_name": "sn",
+      "email": "mail"
+   }
+   settings.AUTHENTICATION_BACKENDS += (
+       'refinery.core.models.RefineryLDAPBackend',
+   )
