@@ -389,8 +389,7 @@ REFINERY_BANNER_ANONYMOUS_ONLY = False
 REFINERY_WELCOME_EMAIL_SUBJECT = 'Welcome to Refinery'
 REFINERY_WELCOME_EMAIL_MESSAGE = 'Please fill out your user profile'
 
-# Use external authentication system like django-auth-ldap
-# disables password management URLs
+# Use external authentication system like django-auth-ldap (disables password management URLs)
 REFINERY_EXTERNAL_AUTH = False
 # Message to display on password management pages when REFINERY_EXTERNAL_AUTH is set to True
 REFINERY_EXTERNAL_AUTH_MESSAGE = ''
