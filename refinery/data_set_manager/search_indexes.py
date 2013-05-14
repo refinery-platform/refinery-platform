@@ -17,7 +17,15 @@ import file_store.tasks as file_store_tasks
 logger = logging.getLogger(__name__)
 
 
+
 class NodeIndex(indexes.SearchIndex, indexes.Indexable):
+    TYPE_PREFIX = "REFINERY_TYPE"
+    NAME_PREFIX = "REFINERY_NAME"
+    WORKFLOW_OUTPUT_PREFIX = "REFINERY_WORKFLOW_OUTPUT"
+    ANALYSIS_UUID_PREFIX = "REFINERY_ANALYSIS_UUID"
+    SUBANALYSIS_PREFIX = "REFINERY_SUBANALYSIS"
+    FILETYPE_PREFIX = "REFINERY_FILETYPE" 
+    
     text = indexes.CharField(document=True, use_template=True)
     uuid = indexes.CharField(model_attr='uuid')
     study_uuid = indexes.CharField(model_attr='study__uuid')
@@ -79,6 +87,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             name = string.replace( name, ",", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
                 
             name = string.replace( name, " ", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
+            name = string.replace( name, "'", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
 
             key = name + "_" + uuid + "_s"
                         
@@ -103,38 +112,38 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 data[key] = " + ".join(value)
             
         # add type as dynamic field to get proper facet values
-        data["REFINERY_TYPE_" + uuid + "_s"] = object.type
+        data[NodeIndex.TYPE_PREFIX + "_" + uuid + "_s"] = object.type
 
         # add name as dynamic field to get proper facet values
-        data["REFINERY_NAME_" + uuid + "_s"] = object.name
+        data[NodeIndex.NAME_PREFIX + "_" + uuid + "_s"] = object.name
 
         # add analysis_uuid as dynamic field to get proper facet values
         if object.analysis_uuid is not None:
-            data["REFINERY_ANALYSIS_UUID_" + uuid + "_s"] = object.analysis_uuid
+            data[NodeIndex.ANALYSIS_UUID_PREFIX + "_" + uuid + "_s"] = object.analysis_uuid
         else:
-            data["REFINERY_ANALYSIS_UUID_" + uuid + "_s"] = "N/A"
+            data[NodeIndex.ANALYSIS_UUID_PREFIX + "_" + uuid + "_s"] = "N/A"
 
         # add subanalysis as dynamic field to get proper facet values
         if object.subanalysis is not None:
-            data["REFINERY_SUBANALYSIS_" + uuid + "_s"] = object.subanalysis
+            data[NodeIndex.SUBANALYSIS_PREFIX + "_" + uuid + "_s"] = object.subanalysis
         else:
-            data["REFINERY_SUBANALYSIS_" + uuid + "_s"] = -1
+            data[NodeIndex.SUBANALYSIS_PREFIX + "_" + uuid + "_s"] = -1
         
         # add workflow_output as dynamic field to get proper facet values
         if object.workflow_output is not None:
-            data["REFINERY_WORKFLOW_OUTPUT_" + uuid + "_s"] = object.workflow_output
+            data[NodeIndex.WORKFLOW_OUTPUT_PREFIX + "_" + uuid + "_s"] = object.workflow_output
         else:
-            data["REFINERY_WORKFLOW_OUTPUT_" + uuid + "_s"] = "N/A"
+            data[NodeIndex.WORKFLOW_OUTPUT_PREFIX + "_" + uuid + "_s"] = "N/A"
 
 
         # add file type as facet value        
         file_store_item = file_store_tasks.read( object.file_uuid );
         
         if file_store_item:
-            data["REFINERY_FILETYPE_" + uuid + "_s"] = file_store_item.get_filetype()
+            data[NodeIndex.FILETYPE_PREFIX + "_" + uuid + "_s"] = file_store_item.get_filetype()
         else:
             logger.warning( "Unable to get file store item " + str( object.file_uuid ) + ". No file type available." )
-            data["REFINERY_FILETYPE_" + uuid + "_s"] = ""
+            data[NodeIndex.FILETYPE_PREFIX + "_" + uuid + "_s"] = ""
                     
         return data
 

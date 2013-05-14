@@ -38,7 +38,10 @@ SolrFacetView = function( parentElementId, idPrefix, solrQuery, configurator, co
   	
   	self._expandedFacets = [];
   	
-  	self._hiddenFieldNames = [ "uuid", "file_uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ]; // TODO: make these regexes;  	
+  	self._hiddenFieldNames = [ "uuid", "file_uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ]; // TODO: make these regexes;
+  	
+    // hide all fields starting with these prefixes
+  	self._hiddenFieldPrefixes = [ NODE_INDEX_ANALYSIS_UUID_PREFIX, NODE_INDEX_SUBANALYSIS_PREFIX, NODE_INDEX_WORKFLOW_OUTPUT_PREFIX ]  	
 };	
 	
 	
@@ -89,7 +92,7 @@ SolrFacetView.prototype._renderTree = function( solrResponse ) {
 		
 	// attach events
 	// ..
-   	$(".facet-value").on( "click", function( event ) {
+   	$( "#" + self._parentElementId + " .facet-value").on( "click", function( event ) {
    		event.preventDefault();
    		   	
    		var facetValueId = this.id;
@@ -111,7 +114,19 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 
 	for ( var i = 0; i < configurator.state.objects.length; ++i ) {
 		var attribute = configurator.state.objects[i];
+		var isHiddenField = false;
 		
+		// test if this field should be skipped
+		for ( var p = 0; p < self._hiddenFieldPrefixes.length; ++p ) {
+			if ( attribute.solr_field.indexOf( self._hiddenFieldPrefixes[p] ) == 0 ) {
+				isHiddenField = true;
+			}			
+		}
+		
+		if ( isHiddenField ) {
+			continue;
+		}
+				
 	
 		if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal ) {
 			//facets[attribute.solr_field] = [];
@@ -182,7 +197,6 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 					if ( ( facetValue === "" ) || ( facetValue === undefined ) ) {
 						facetValue = "undefined";
 					}
-
 					
 					if ( self._query._facetSelection[facet][facetValue] === undefined ) {					
 						self._query._facetSelection[facet][facetValue] = { count: 0, isSelected: false };

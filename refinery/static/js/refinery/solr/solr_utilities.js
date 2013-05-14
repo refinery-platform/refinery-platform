@@ -4,6 +4,16 @@
  * Utility functions for dealing with Solr queries and results.
  */
 
+NODE_INDEX_TYPE_PREFIX = "REFINERY_TYPE"
+NODE_INDEX_NAME_PREFIX = "REFINERY_NAME"
+NODE_INDEX_WORKFLOW_OUTPUT_PREFIX = "REFINERY_WORKFLOW_OUTPUT"
+NODE_INDEX_ANALYSIS_UUID_PREFIX = "REFINERY_ANALYSIS_UUID"
+NODE_INDEX_SUBANALYSIS_PREFIX = "REFINERY_SUBANALYSIS"
+NODE_INDEX_FILETYPE_PREFIX = "REFINERY_FILETYPE" 
+
+REQUIRED_FACET_PREFIXES = [ NODE_INDEX_ANALYSIS_UUID_PREFIX, NODE_INDEX_SUBANALYSIS_PREFIX, NODE_INDEX_WORKFLOW_OUTPUT_PREFIX ];
+
+
 //===================================================================
 // prototypical inheritance framework from http://javascript.info/
 //===================================================================
@@ -111,3 +121,16 @@ function prettifySolrFieldName( name, isTitle )
 
 	return name;	
 }
+
+
+function isRequiredFacet( facet ) {
+	// test if this field should be skipped
+	for ( var p = 0; p < REQUIRED_FACET_PREFIXES.length; ++p ) {
+		if ( facet.indexOf( REQUIRED_FACET_PREFIXES[p] ) == 0 ) {
+			return true;
+		}			
+	}	
+	
+	return false;
+}
+

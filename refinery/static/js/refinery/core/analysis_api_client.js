@@ -17,8 +17,8 @@
  */
 
 
-AnalysisApiClient = function( dataSetUuid, elementId, apiBaseUrl, crsfMiddlewareToken ) {
-  	
+AnalysisApiClient = function( dataSetUuid, apiBaseUrl, crsfMiddlewareToken ) {
+
   	var self = this;
 
   	// API related properties
@@ -29,16 +29,19 @@ AnalysisApiClient = function( dataSetUuid, elementId, apiBaseUrl, crsfMiddleware
   	// data set to configure
   	self.dataSetUuid = dataSetUuid;
 
-	// parent element for UI 
-  	self.elementId = elementId;
-  	
   	// current list
-  	self.list = null  	
+  	self.list = null
+  	
+  	// current state
+  	self.status = AnalysisApiClient.STATE_UNDEFINED;  	
   	
   	// callbacks
   	self.changeAnalysisCallback = null  	  	
 };	
 
+AnalysisApiClient.prototype.STATUS_UNDEFINED = 0;
+AnalysisApiClient.prototype.STATUS_UPDATING = 1;
+AnalysisApiClient.prototype.STATUS_READY = 2;
 
 AnalysisApiClient.prototype.setChangeAnalysisCallback = function ( callback ) {
 	var self = this;
@@ -50,72 +53,21 @@ AnalysisApiClient.prototype.setChangeAnalysisCallback = function ( callback ) {
 AnalysisApiClient.prototype.initialize = function () {
 	var self = this;
 	
-	self.getList( function() { self.renderList(); }, function() { /* do nothing in case of error */ } );
+	self.refresh();
+		 
+	return this;	
+};
+
+
+AnalysisApiClient.prototype.refresh = function () {
+	var self = this;
+	
+	self.getList( function() {}, function() {} );
 	 
 	return null;	
 };
 	
 	
-
-
-/*
- * Render the user interface components into element defined by self.elementId.
- */
-AnalysisApiClient.prototype.renderList = function () {
-	var self = this;
-
-	// to get the bubble arrow back see here: http://www.eichefam.net/?p=4395  
-	var analysisListElementStyle = "max-height: 300px; overflow: hidden; overflow-y: auto;"
-	var analysisListElementId = "analysis-list";
-
-	$( "#" + self.elementId ).html("");
-	
-	var code = ""; 
-
-	code += '<div class="btn-group">';
-    
-    if (  self.list.objects.length > 0 ) {	
-  		code += '<a class="btn btn-warning dropdown-toggle" id="show-analyses-button" data-toggle="dropdown" href="#">';    	
-    }
-    else {
-  		code += '<a class="btn btn-warning disabled dropdown-toggle" id="show-analyses-button" data-toggle="dropdown" href="#">';    	    	
-    }
-    
-    code += 'Select&nbsp;';
-    code += '<span class="caret"></span>';
-  	code += '</a>';
-  	code += '<ul id="' + analysisListElementId + '" class="dropdown-menu" style="' +  analysisListElementStyle + '">';
-	
-	for ( var i = 0; i < self.list.objects.length; ++i ) {
-		var object = self.list.objects[i];
-		
-		code += '<li><a id="' + object.uuid + '" data-uuid="' + object.uuid + '" data-resource-uri="' + object.resource_uri + '">';
-		code += object.name + ' (' + object.node_count + ')';								
-		code += "</a></li>";
-	}	
-
-	code += '</ul>'
-	code += '</div>'		
-	
-	$( "#" + self.elementId ).html( code );		
-	
-	$( "#" + analysisListElementId ).children().click( function(event) {
-   		var analysisUuid = $( "#" + event.target.id ).data().uuid;
-   		alert( "selected " + analysisUuid )   		   		
-   		//self.getDetail( analysisUuid, self.loadSelectionCallback )   		   		
-   	} );   	
-};
-
-
-AnalysisApiClient.prototype.makeClickEvent = function( uuid, callback ) {
-	var self = this; 
-	$( "#" + uuid ).click( function() { 
-		console.log( event );
-		callback();
-	});
-};
-
-
 AnalysisApiClient.prototype.createGetListUrl = function() {
 	var self = this;
 		
@@ -132,6 +84,8 @@ AnalysisApiClient.prototype.createGetListUrl = function() {
 AnalysisApiClient.prototype.getList = function( callback, errorCallback ) {
 	var self = this;
 
+	self.stats = AnalysisApiClient.STATUS_UPDATING;
+	
 	$.ajax({
      url: self.createGetListUrl(),
      type: "GET",
@@ -140,15 +94,22 @@ AnalysisApiClient.prototype.getList = function( callback, errorCallback ) {
      success: function( result ) {     	
 	     	if ( $.isEmptyObject( result ) ) {
 	     		// do nothing
+				self.status = AnalysisApiClient.STATUS_UNDEFINED;	     	
+
 	     		return;
 	     	} 
+
 	     	
 	     	self.list = result;    	     	     	
+			self.status = AnalysisApiClient.STATUS_READY;	     	
+
 			// callback
 			callback( result );										
     	},
     error: function ( result ) {
-    		if ( errorCallback ) {
+			self.status = AnalysisApiClient.STATUS_ERROR;
+
+    		if ( errorCallback ) {    			
 				errorCallback( result );    			
     		}
     	}

@@ -2,8 +2,8 @@
 # requires settings_local.py with machine specific information
 # splitting ideas taken from https://code.djangoproject.com/wiki/SplitSettings (solution by Steven Armstrong)
 
-import os
 import djcelery
+import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 

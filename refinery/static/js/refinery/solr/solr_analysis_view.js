@@ -1,5 +1,5 @@
 /*
- * solr_facet_view.js
+ * solr_analysis_view.js
  *  
  * Author: Nils Gehlenborg 
  * Created: 9 April 2013
@@ -15,10 +15,10 @@
  * - AnalysisApiClient
  */
 
-SOLR_FACET_SELECTION_UPDATED_COMMAND = 'solr_analysis_facet_selection_updated';
-SOLR_FACET_SELECTION_CLEARED_COMMAND = 'solr_analysis_facet_selection_cleared';
+SOLR_ANALYSIS_SELECTION_UPDATED_COMMAND = 'solr_analysis_selection_updated';
+SOLR_ANALYSIS_SELECTION_CLEARED_COMMAND = 'solr_analysis_selection_cleared';
 
-SolrAnalysisFacetView = function( parentElementId, idPrefix, solrQuery, configurator, dataSetUuid, commands ) {
+SolrAnalysisView = function( parentElementId, idPrefix, solrQuery, configurator, commands, dataSetMonitor ) {
   	
   	var self = this;
 	
@@ -37,23 +37,21 @@ SolrAnalysisFacetView = function( parentElementId, idPrefix, solrQuery, configur
   	// wreqr commands
   	self._commands = commands;
   	
+  	self._dataSetMonitor = dataSetMonitor;
+  	self._currentSolrResponse = null;
+  	
   	self._expandedFacets = [];
   	
-  	self._hiddenFieldNames = [ "uuid", "file_uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ]; // TODO: make these regexes;
-  	
-  	self._analysisApiClient = new AnalysisApiClient( dataSetUuid, "analysis-manager-controls", REFINERY_API_BASE_URL, crsf_token );
-	//self._analysisApiClient.initialize();
-	
-	/*
-	analysisApiClient.setChangeAnalysisCallback( function( analysisList ) {
-		alert( "Changed analysis selection" + " = " + analysisList.length() );
-	});
-	*/	 
+  	self._hiddenFieldNames = [ "uuid", "file_uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ]; // TODO: make these regexes;  	  	
 };	
 	
 	
-SolrAnalysisFacetView.prototype.initialize = function() {
+SolrAnalysisView.prototype.initialize = function() {
 	var self = this;
+
+	self._dataSetMonitor._commands.addHandler( DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND, function( arguments ){
+		self.render( self._currentSolrReponse );
+	});
 
 	return this;	
 };
@@ -62,36 +60,26 @@ SolrAnalysisFacetView.prototype.initialize = function() {
 /*
  * Render the user interface components into element defined by self.elementId.
  */
-SolrAnalysisFacetView.prototype.render = function ( solrResponse ) {
+SolrAnalysisView.prototype.render = function ( solrResponse ) {
 	var self = this;
 	
 	// clear parent element
-	$( "#" + self._parentElementId ).html("");
+	self._currentSolrResponse = solrResponse;
+	analyses = self._dataSetMonitor.analyses;
 	
-	$( "#" + self._parentElementId ).append( "<a id=\"clear-facets\" href=\"#\" class=\"btn btn-mini\" data-placement=\"bottom\" data-html=\"true\" rel=\"tooltip\" data-original-title=\"Click to clear facet selection.\"><i class=\"icon-remove-sign\"></i>&nbsp;&nbsp;Reset All</a><br>&nbsp;<br>" );
-   	
-   	$( "#clear-facets" ).click( function( event ) {
-		// clear facet selection
-		var counter = self._query.clearFacetSelection();
-		
-		self._query.clearDocumentSelection();
-		
-		// reload page
-		if ( counter > 0 ) {
-   			self._commands.execute( SOLR_FACET_SELECTION_CLEARED_COMMAND );   						
-		}
-   	});				
-			
-	self._renderTree( solrResponse );
-	
-	//$( "#" + self.parentElementId ).html( code );		
-	
-	// attach event listeners
-	// ..
+  	if ( analyses != null ) {
+  		$( "#" + self._parentElementId ).html('');
+		self._renderTree( self._currentSolrResponse );  		
+  	} 
+  	else {
+		$( "#" + self._parentElementId ).html('<i class="icon-refresh icon-spin" style="padding: 2px"></i>');  		
+  	}
 };
 
 
-SolrAnalysisFacetView.prototype._renderTree = function( solrResponse ) {
+
+
+SolrAnalysisView.prototype._renderTree = function( solrResponse ) {
 	
 	var self = this;
 
@@ -99,7 +87,7 @@ SolrAnalysisFacetView.prototype._renderTree = function( solrResponse ) {
 		
 	// attach events
 	// ..
-   	$(".facet-value").on( "click", function( event ) {
+   	$( "#" + self._parentElementId + " .facet-value" ).on( "click", function( event ) {
    		event.preventDefault();
    		   	
    		var facetValueId = this.id;
@@ -110,21 +98,19 @@ SolrAnalysisFacetView.prototype._renderTree = function( solrResponse ) {
    		
 		self._query.clearDocumentSelection();
    		
-   		self._commands.execute( SOLR_FACET_SELECTION_UPDATED_COMMAND, { 'facet': facet, 'facet_value': facetValue, 'isSelected': self._query._facetSelection[facet][facetValue].isSelected } );   		
+   		self._commands.execute( SOLR_ANALYSIS_SELECTION_UPDATED_COMMAND, { 'facet': facet, 'facet_value': facetValue, 'isSelected': self._query._facetSelection[facet][facetValue].isSelected } );   		
    	} );	
 }
 	
 	
-SolrAnalysisFacetView.prototype._generateTree = function( solrResponse ) {
+SolrAnalysisView.prototype._generateTree = function( solrResponse ) {
 	var self = this;			
 	var facetCounts = solrResponse._facetCounts;
 
 	for ( var i = 0; i < configurator.state.objects.length; ++i ) {
 		var attribute = configurator.state.objects[i];
 		
-	
-		if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal ) {
-			//facets[attribute.solr_field] = [];
+		if ( attribute.solr_field.indexOf( NODE_INDEX_ANALYSIS_UUID_PREFIX ) == 0 ) {
 			
 			var counts = self._query.getNumberOfFacetValues( attribute.solr_field );
 			var countsString = ""; //"(" + counts.total + ")";
@@ -178,21 +164,30 @@ SolrAnalysisFacetView.prototype._generateTree = function( solrResponse ) {
 	}	
 
 	for ( var facet in facetCounts ) {
+		
+		// only process facets shown in this view
+		if ( facet.indexOf( NODE_INDEX_ANALYSIS_UUID_PREFIX ) != 0 ) {
+			continue;
+		}
+		
 		if ( facetCounts.hasOwnProperty( facet ) ) {
 			var unselectedItems = [];
 			var selectedItems = [];
 			
 			var facetValues = facetCounts[facet];
 			
-			for ( var facetValue in facetValues ) {
+			for ( var facetValue in facetValues ) {				
 				if ( facetValues.hasOwnProperty( facetValue ) ) {
 					
 					var facetValueCount = facetValues[facetValue];
+					var analysisName = "";
 					
 					if ( ( facetValue === "" ) || ( facetValue === undefined ) ) {
 						facetValue = "undefined";
 					}
-
+					else {
+						analysisName = self._getAnalysisLabel( facetValue, analyses );
+					}
 					
 					if ( self._query._facetSelection[facet][facetValue] === undefined ) {					
 						self._query._facetSelection[facet][facetValue] = { count: 0, isSelected: false };
@@ -201,13 +196,13 @@ SolrAnalysisFacetView.prototype._generateTree = function( solrResponse ) {
 					if ( self._query._facetSelection[facet][facetValue].isSelected ) {						
 						self._query._facetSelection[facet][facetValue] = { count: facetValueCount, isSelected: self._query._facetSelection[facet][facetValue].isSelected };
 						
-			    		selectedItems.push("<tr class=\"facet-value\" id=\"" + self._composeFacetValueId( facet, facetValue ) + "\"><td>" + '<label class="checkbox"><input type="checkbox" checked></label>' + "</td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
-		    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + self._composeFacetValueId( facet, facetValue ) + "\"><td>" + '<label class="checkbox"><input type="checkbox" checked></label>' + "</td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );
+			    		selectedItems.push("<tr class=\"facet-value\" id=\"" + self._composeFacetValueId( facet, facetValue ) + "\"><td>" + '<label class="checkbox"><input type="checkbox" checked></label>' + "</td><td width=100%>" + analysisName + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );					
+		    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + self._composeFacetValueId( facet, facetValue ) + "\"><td>" + '<label class="checkbox"><input type="checkbox" checked></label>' + "</td><td width=100%>" + analysisName + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );
 					}
 					else {
 						self._query._facetSelection[facet][facetValue] = { count: facetValueCount, isSelected: self._query._facetSelection[facet][facetValue].isSelected };
 						
-						unselectedItems.push("<tr class=\"facet-value\" id=\"" + self._composeFacetValueId( facet, facetValue ) + "\"><td>" + '<label class="checkbox"><input type="checkbox"></label>' + "</td><td width=100%>" + facetValue + "</td><td align=right>" + facetValueCount + "</td><td></td>"  + "</tr>" );									
+						unselectedItems.push("<tr class=\"facet-value\" id=\"" + self._composeFacetValueId( facet, facetValue ) + "\"><td>" + '<label class="checkbox"><input type="checkbox"></label>' + "</td><td width=100%>" + analysisName + "</td><td align=right>" + facetValueCount + "</td><td></td>"  + "</tr>" );									
 					}										
 				}			
 			}
@@ -218,7 +213,27 @@ SolrAnalysisFacetView.prototype._generateTree = function( solrResponse ) {
     }
 }
 
-SolrAnalysisFacetView.prototype._getFacetLabel = function( facet ) {	
+
+SolrAnalysisView.prototype._getAnalysisLabel = function( analysisUuid ) {	
+	var self = this;
+	
+	var analyses = self._dataSetMonitor.analyses;
+	
+	if ( analyses == null ) {
+		return analysisUuid;
+	}
+	
+	for ( var i = 0; i < analyses.objects.length; ++i ) {
+		if ( analysisUuid == analyses.objects[i].uuid ) {
+			return ( analyses.objects[i].name );
+		} 
+	}
+		
+	return ( analysisUuid );	
+}
+
+
+SolrAnalysisView.prototype._getFacetLabel = function( facet ) {	
 	var self = this;
 	
 	var indicator = ""
@@ -233,7 +248,7 @@ SolrAnalysisFacetView.prototype._getFacetLabel = function( facet ) {
 	return ( '<span style="width: 10px; text-align: center; display: inline-block;"><i class="' + indicator + '"></i></span>&nbsp;' + prettifySolrFieldName( facet, true ) );	
 }
 
-SolrAnalysisFacetView.prototype._toggleExpandedFacet = function( facet ) {	
+SolrAnalysisView.prototype._toggleExpandedFacet = function( facet ) {	
 	var self = this;
 	
 	var index = self._expandedFacets.indexOf( facet );
@@ -246,7 +261,7 @@ SolrAnalysisFacetView.prototype._toggleExpandedFacet = function( facet ) {
 	}	
 }
 
-SolrAnalysisFacetView.prototype._setFacetExpanded = function( facet ) {	
+SolrAnalysisView.prototype._setFacetExpanded = function( facet ) {	
 	var self = this;
 	
 	var index = self._expandedFacets.indexOf( facet );
@@ -256,7 +271,7 @@ SolrAnalysisFacetView.prototype._setFacetExpanded = function( facet ) {
 	}	
 }
 
-SolrAnalysisFacetView.prototype._setFacetCollapsed = function( facet ) {	
+SolrAnalysisView.prototype._setFacetCollapsed = function( facet ) {	
 	var self = this;
 	
 	var index = self._expandedFacets.indexOf( facet );
@@ -267,30 +282,29 @@ SolrAnalysisFacetView.prototype._setFacetCollapsed = function( facet ) {
 }
 
 
-
-SolrAnalysisFacetView.prototype._isFacetExpanded = function( facet ) {
+SolrAnalysisView.prototype._isFacetExpanded = function( facet ) {
 	var self = this;
 	
 	return ( self._expandedFacets.indexOf( facet ) >= 0 );	
 }
 
 
-SolrAnalysisFacetView.prototype._composeFacetValueId = function( facet, facetValue ) {
+SolrAnalysisView.prototype._composeFacetValueId = function( facet, facetValue ) {
 	var self = this;
 	return ( self._idPrefix + "___" + "facetvalue" + "___" + facet + "___" + facetValue );
 }
 
-SolrAnalysisFacetView.prototype._decomposeFacetValueId = function( facetValueId ) {
+SolrAnalysisView.prototype._decomposeFacetValueId = function( facetValueId ) {
 	var self = this;
 	return ( { facet: facetValueId.split( "___" )[2], facetValue: facetValueId.split( "___" )[3] } );
 }
 
-SolrAnalysisFacetView.prototype._composeFacetId = function( facet ) {
+SolrAnalysisView.prototype._composeFacetId = function( facet ) {
 	var self = this;
 	return ( self._idPrefix + "___" + "facet" + "___" + facet );
 }
 
-SolrAnalysisFacetView.prototype._decomposeFacetId = function( facetId ) {
+SolrAnalysisView.prototype._decomposeFacetId = function( facetId ) {
 	var self = this;
 	return ( { facet: facetId.split( "___" )[2] } );
 }

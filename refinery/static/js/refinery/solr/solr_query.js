@@ -93,7 +93,6 @@ SolrQuery = function( configurator, commands ) {
   	// field visibility and sorting
 	// --------------------------------------------------------------
 	// depends on table etc. 
-	//self._hiddenFieldNames = [ "uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ];
 	self._ignoredFieldNames = [ "django_ct", "django_id", "id" ];
 	
 	self._fields = {};
@@ -137,6 +136,10 @@ SolrQuery.prototype.initialize = function () {
 		
 		if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal ) {
 			self.addFacet( attribute.solr_field );
+		}
+		
+		if ( isRequiredFacet( attribute.solr_field ) ) {
+			self.addFacet( attribute.solr_field )
 		}											
 											
 		// fields
@@ -929,8 +932,6 @@ SolrQuery.prototype.getPivots = function() {
 	
 	return self._pivots;
 }
-
-
 
 
 

@@ -113,13 +113,23 @@ DataSetConfigurator.prototype.render = function () {
 
 		code += "<td class=\"\">";		                 			
 		code += "<label>"		                 			
-  		code += "<input id=\"attributeorder_" + object.id + "_exposed\" type=\"checkbox\" value=\"\"" + ( object.is_exposed ? "checked" : "" ) + ">";
+		if ( isRequiredFacet( object.solr_field ) ) {
+	  		code += "";			
+		}
+		else {
+  			code += "<input id=\"attributeorder_" + object.id + "_exposed\" type=\"checkbox\" value=\"\"" + ( object.is_exposed ? "checked" : "" ) + ">";				
+		}
 		code += "</label>"		                 			
 		code += "</td>";		                 			
 
 		code += "<td class=\"\">";		                 			
 		code += "<label>"		                 			
-  		code += "<input id=\"attributeorder_" + object.id + "_facet\" type=\"checkbox\" value=\"\"" + ( object.is_facet ? "checked" : "" ) + ">";
+		if ( isRequiredFacet( object.solr_field ) ) {
+	  		code += "";			
+		}
+		else {
+  			code += "<input id=\"attributeorder_" + object.id + "_facet\" type=\"checkbox\" value=\"\"" + ( object.is_facet ? "checked" : "" ) + ">";
+  		}
 		code += "</label>"		                 			
 		code += "</td>";	                 			
 

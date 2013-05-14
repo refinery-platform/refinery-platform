@@ -208,7 +208,7 @@ rect.active {
 			</div>
 			</form>
 
-			<div class="row-fluid">
+			<div class="row-fluid">				
 
 			 	<div class="span2">
 						<ul class="nav nav-pills" id="navigation-tabs">
@@ -216,9 +216,12 @@ rect.active {
 						</ul>
 
 						<div id="solr-facet-view" class="accordion"></div>
+						<hr>
+						<div id="solr-analysis-view" class="accordion"></div>
+
 			 	</div>
 
-<div class="span10" id="main-area">
+				<div class="span10" id="main-area">
 
 					<div class="tabbable">
 						<ul class="nav nav-pills" id="navigation-tabs">
@@ -557,6 +560,7 @@ rect.active {
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_response.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_document_table.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_facet_view.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_analysis_view.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_document_count_view.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_pivot_matrix.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/tipsy/jquery.tipsy.js"></script>
@@ -565,6 +569,7 @@ rect.active {
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/data_set_manager/data_set_configurator.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/node_set_manager.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/analysis_api_client.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/data_set_monitor.js"></script>
 
 	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TweenMax.min.js"></script>
   	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/jquery.gsap.min.js"></script>
