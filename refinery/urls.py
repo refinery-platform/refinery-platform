@@ -66,16 +66,23 @@ urlpatterns = patterns('',
 
     url(r'^tasks/', include('djcelery.urls')),
 
-    # NG: added to include additional views for admin (this is not the recommended way but the only one I got to work)
+    # NG: added to include additional views for admin
+    # (this is not the recommended way but the only one I got to work)
     #url(r"^admin/core/test_workflows/$", admin.site.admin_view( import_workflows ) ),    
     #url(r"^admin/core/test_data/$", admin.site.admin_view( admin_test_data ) ),    
     url(r'^admin/', include(admin.site.urls)),
     
-    url(r'^accounts/password/reset/confirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm', {'post_reset_redirect': '/accounts/login/?next=/'}),
+    url(r'^accounts/password/reset/confirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$',
+        'django.contrib.auth.views.password_reset_confirm',
+        {'post_reset_redirect': '/accounts/login/?next=/'}),
     url(r'^accounts/profile/$', 'core.views.user_profile', name='user_profile'),
     url(r'^accounts/profile/edit/$', 'core.views.user_profile_edit', name='user_profile_edit'),
-    url(r'^accounts/register/$', 'registration.views.register', {'form_class': RegistrationFormUniqueEmail, 'backend': 'registration.backends.default.DefaultBackend'}),
-    url(r'^accounts/activate/(?P<activation_key>\w+)/$', 'registration.views.activate', {'success_url': '/accounts/login/?next=/accounts/profile/edit', 'backend': 'registration.backends.default.DefaultBackend'}),
+    url(r'^accounts/register/$', 'registration.views.register',
+        {'form_class': RegistrationFormUniqueEmail,
+         'backend': 'registration.backends.default.DefaultBackend'}),
+    url(r'^accounts/activate/(?P<activation_key>\w+)/$', 'registration.views.activate',
+        {'success_url': '/accounts/login/?next=/accounts/profile/edit',
+         'backend': 'registration.backends.default.DefaultBackend'}),
     url(r'^accounts/', include('registration.urls')),
 
     # NG: tastypie API urls
