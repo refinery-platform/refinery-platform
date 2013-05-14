@@ -1,5 +1,5 @@
 .. include ../global.rst
-.. _refinery-repository: http://www.github.com/parklab/Refinery
+.. _refinery-repository: http://www.github.com/parklab/refinery-platform
 
 Developer Documentation
 =======================
@@ -13,7 +13,7 @@ __ refinery-repository_
 .. toctree::
    :maxdepth: 2
 
+   development_environment
+
 * :ref:`genindex`
 * :ref:`modindex`
-
-   

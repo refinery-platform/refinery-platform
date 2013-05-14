@@ -185,22 +185,8 @@ INSTALLED_APPS = (
     'south', 
 )
 
-# IS: added for django-auth-ldap
-# Baseline configuration
-AUTH_LDAP_SERVER_URI = "ldap://ldap.example.com"
-AUTH_LDAP_BIND_DN = ""
-AUTH_LDAP_BIND_PASSWORD = ""
-
-# Populate the Django user from the LDAP directory.
-AUTH_LDAP_USER_ATTR_MAP = {
-    "first_name": "givenName",
-    "last_name": "sn",
-    "email": "mail"
-}
-
 # NG: added for django-guardian
 AUTHENTICATION_BACKENDS = (
-    'refinery.core.models.RefineryLDAPBackend',
     'django.contrib.auth.backends.ModelBackend', # default
     'guardian.backends.ObjectPermissionBackend',
 )
