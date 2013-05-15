@@ -24,7 +24,7 @@ var currentStudyUuid = externalStudyUuid;
 var currentAssayUuid = externalAssayUuid;
 
 $(document).ready(function() {
-	configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, crsf_token );
+	configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, csrf_token );
 	configurator.initialize();
 
 	// event handling
@@ -44,7 +44,7 @@ $(document).ready(function() {
 		query = new SolrQuery( configurator, queryCommands );
 		query.initialize();
 		
-		dataSetMonitor = new DataSetMonitor( dataSetUuid, REFINERY_API_BASE_URL, crsf_token, dataSetMonitorCommands );
+		dataSetMonitor = new DataSetMonitor( dataSetUuid, REFINERY_API_BASE_URL, csrf_token, dataSetMonitorCommands );
 		dataSetMonitor.initialize();
 		
 		query.addFilter( "type", dataSetNodeTypes );
@@ -83,7 +83,7 @@ $(document).ready(function() {
 
 		var client = new SolrClient( solrRoot,
 			solrSelectEndpoint,
-			"csrfMiddlewareToken",
+			csrf_token,
 			"django_ct:data_set_manager.node",
 			"(study_uuid:" + currentAssayUuid + " AND assay_uuid:" + currentStudyUuid + ")",
 			clientCommands );
@@ -299,7 +299,7 @@ $(document).ready(function() {
 		// ---------------------------		
 		if ( $("#" + "node-set-manager-controls").length > 0 ) {
 		
-			nodeSetManager = new NodeSetManager( externalAssayUuid, externalStudyUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, crsf_token );
+			nodeSetManager = new NodeSetManager( externalAssayUuid, externalStudyUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, csrf_token );
 			nodeSetManager.initialize();
 	
 			nodeSetManager.setLoadSelectionCallback( function( nodeSet ) {
