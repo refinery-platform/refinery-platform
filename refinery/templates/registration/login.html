@@ -37,11 +37,13 @@
 					</div>
 					<p>{{ form.password }}</p>
 					
-					<p>
-						<input class="btn" type="submit" value="Login" />
-						<input type="hidden" name="next" value="{{ next }}" />
-						&nbsp;<a href="/accounts/password/reset">Forgot password?</a>
-					</p>
+                    <p>
+                        <input class="btn" type="submit" value="Login" />
+                        <input type="hidden" name="next" value="{{ next }}" />
+                        {% if not REFINERY_EXTERNAL_AUTH %}
+                            &nbsp;<a href="/accounts/password/reset">Forgot password?</a>
+                        {% endif %}
+                    </p>
 				</form>
 				<p>
 				{% if REGISTRATION_OPEN %}

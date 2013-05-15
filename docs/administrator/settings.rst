@@ -92,10 +92,16 @@ Customization Settings
    Optional string to display a message when REGISTRATION_OPEN = False (HTML tags allowed).
  
 ``REFINERY_INNER_NAVBAR_HEIGHT = 20``
-	Set height of navigation bar (e.g. to fit a logo).
+   Set height of navigation bar (e.g. to fit a logo).
 	
 ``REFINERY_MAIN_LOGO = ""``
-	Supply a path to a logo that will become part of the branding (see navbar height correctly!)
+   Supply a path to a logo that will become part of the branding (set navbar height correctly!)
+
+``REFINERY_EXTERNAL_AUTH = False``
+   Use external authentication system like django-auth-ldap (disables password management URLs)
+
+``REFINERY_EXTERNAL_AUTH_MESSAGE = ''``
+   Message to display on password management pages when REFINERY_EXTERNAL_AUTH = True
 
 ``TAXONOMY_URL = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"`` 
 
