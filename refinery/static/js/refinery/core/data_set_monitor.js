@@ -39,7 +39,7 @@ DataSetMonitor = function( dataSetUuid, apiBaseUrl, crsfMiddlewareToken, command
   	self.status = DataSetMonitor.STATE_UNDEFINED;
   	
   	// api clients
-  	self._analysisApiClient = new AnalysisApiClient( dataSetUuid, REFINERY_API_BASE_URL, crsf_token );  	  	
+  	self._analysisApiClient = new AnalysisApiClient( dataSetUuid, REFINERY_API_BASE_URL, crsfMiddlewareToken );  	  	
 };	
 
 DataSetMonitor.prototype.initialize = function () {

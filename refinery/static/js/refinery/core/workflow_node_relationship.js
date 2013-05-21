@@ -135,7 +135,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		}
 
 		opts = {};
-		opts['csrfmiddlewaretoken'] = crsf_token;
+		opts['csrfmiddlewaretoken'] = csrf_token;
 		//opts['workflow_id'] = nr_wcv.getWorkflowID();
 		var temp_ns_opts1 = nr_inputs.getNodeSet1();
 		var temp_ns_opts2 = nr_inputs.getNodeSet2();
@@ -193,7 +193,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		console.log("workflowActions: getDataFields");
 
 		opts = {};
-		opts['csrfmiddlewaretoken'] = crsf_token;
+		opts['csrfmiddlewaretoken'] = csrf_token;
 		opts['workflow_id'] = nr_wcv.getWorkflowID();
 		var temp_ns_opts = nr_inputs.getNodeSet1();
 		opts['node_set_uuid'] = temp_ns_opts.node_set_uuid;
@@ -208,7 +208,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		console.log("workflowActions: runSingleAnalysis");
 
 		opts = {};
-		opts['csrfmiddlewaretoken'] = crsf_token;
+		opts['csrfmiddlewaretoken'] = csrf_token;
 		opts['workflow_id'] = nr_wcv.getWorkflowID();
 		var temp_ns_opts = nr_inputs.getNodeSet1();
 		opts['node_set_uuid'] = temp_ns_opts.node_set_uuid;
@@ -224,7 +224,7 @@ nrApp.module('nrMod', function(nrMod, App, Backbone, Marionette, $, _){
 		console.log("workflowActions: runRelationAnalysis");
 
 		opts = {};
-		opts['csrfmiddlewaretoken'] = crsf_token;
+		opts['csrfmiddlewaretoken'] = csrf_token;
 		opts['workflow_id'] = nr_wcv.getWorkflowID();
 		opts['node_relationship_uuid'] = nr_inputs.getRelationship();
 		opts['study_uuid'] = externalAssayUuid;

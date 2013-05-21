@@ -766,10 +766,6 @@ SolrQuery.prototype.toggleFieldDirection = function( name ) {
 	
 	var self = this;
 	
-	console.log( name );
-	
-	console.log( self._fields );
-		
 	if ( self._fields[name].direction === "asc" ) {
 		self._clearFieldDirections();
 		self._fields[name].direction = "desc";

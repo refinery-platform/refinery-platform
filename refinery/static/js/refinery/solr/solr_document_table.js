@@ -44,13 +44,60 @@ SolrDocumentTable = function( parentElementId, idPrefix, solrQuery, solrClient, 
   	
   	self._documentsPerPage = 10;
   	
-  	self._hiddenFieldNames = [ "uuid", "file_uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ]; // TODO: make these regexes;  	
+  	self._hiddenFieldNames = [ "uuid", "file_uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ]; // TODO: make these regexes;
+  	
+  	self._additionalColumns = []
+  	
+	self.addColumn( "",
+		function( document ) {
+			var s = '';
+			var id = 'download-' + document["uuid"];
+			
+			
+			s += '<span id=' + id + '>';
+			s += '<i class="icon-refresh icon-spin" style="padding: 2px"></i>'
+			s += '</span>'
+			
+			$.ajax({
+		     url: '/api/v1/node/' + document["uuid"] + '/?format=json',
+		     type: "GET",
+		     dataType: "json",
+		     data: { csrfmiddlewaretoken: csrf_token },
+		     success: function( result ) {     	
+			     	if ( $.isEmptyObject( result ) ) {
+			     		// do nothing
+			     		$( '#' + id ).html( "" )						
+			     		return;
+			     	} 
+		
+			     	//console.log( result );
+			     	
+			     	if ( result.file_url != null ) {
+						var link = '<a title="Download linked file" href="' + result.file_url + '"><i class="icon-download"></i></a>';
+
+			     		$( '#' + id ).html( link ) 
+			     	}
+			     	else {
+			     		$( '#' + id ).html( "" )
+			     	}
+		    	},
+		    error: function ( result ) {
+					$( '#' + id ).html( "" )
+			}});
+
+			
+			 
+			return ( s );
+		},
+		function( document ) {
+			alert( 'Clicked on ' + document['uuid'] + '' );
+		} );  	   	
 };	
 	
 	
 SolrDocumentTable.prototype.initialize = function() {
 	var self = this;
-
+	
 	return this;	
 };
 	
@@ -195,9 +242,17 @@ SolrDocumentTable.prototype._generateTableBody = function( solrResponse ) {
 		
 		var s = "<tr>";
 		
-		var isDocumentSelected = self._query.isDocumentSelected( document.uuid );
-				
-		s += '<td><label><input class="document-checkbox-select" data-uuid="' + document["uuid"] + '" type=\"checkbox\" ' + ( isDocumentSelected ? "checked" : "" ) + '></label>' + '</td>';							
+		// selection column
+		var isDocumentSelected = self._query.isDocumentSelected( document.uuid );				
+		s += '<td><label><input class="document-checkbox-select" data-uuid="' + document["uuid"] + '" type=\"checkbox\" ' + ( isDocumentSelected ? "checked" : "" ) + '></label>' + '</td>';
+		
+		// additional columns
+		for ( var j = 0; j < self._additionalColumns.length; ++j ) {
+			var column = self._additionalColumns[j];
+			//s += '<td>' + column["formatter"]( document ) + '</td>';
+			s += '<td>' + column['formatter']( document ) + '</td>';
+		}	
+							
 
 		for ( entry in fields ) {
 			if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible && !fields[entry].isInternal  && !( self._hiddenFieldNames.indexOf( entry ) >= 0 ) ) {				
@@ -229,7 +284,13 @@ SolrDocumentTable.prototype._generateTableHead = function( solrResponse ) {
 	var nodeSelectionModeCheckbox = '<label><input id="node-selection-mode" type=\"checkbox\" ' + ( self._query.getDocumentSelectionBlacklistMode() ? "checked" : "" ) + '></label>';
 	//$( "#" + "node-selection-column-header" ).html( nodeSelectionModeCheckbox );	
 
-	row.push( '<th align="left" width="0" id="node-selection-column-header">'+ nodeSelectionModeCheckbox + '</th>' );	
+	row.push( '<th align="left" width="0" id="node-selection-column-header">'+ nodeSelectionModeCheckbox + '</th>' );
+	
+	// headers for additional columns
+	for ( var i = 0; i < self._additionalColumns.length; ++i ) {
+		var column = self._additionalColumns[i];
+		row.push( '<th align="left" width="0" id="node-selection-column-header">'+ column["name"] + '</th>' );		
+	}	
 		
 	for ( entry in fields ) {
 		if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible && !fields[entry].isInternal && !( self._hiddenFieldNames.indexOf( entry ) >= 0 ) ) {
@@ -452,6 +513,13 @@ SolrDocumentTable.prototype.getDocumentsPerPage = function() {
 	var self = this;
 	
 	return self._documentsPerPage;
+}
+
+
+SolrDocumentTable.prototype.addColumn = function( name, formatter, receiver ) {
+	var self = this;
+	
+	self._additionalColumns.push( { "name": name, "formatter": formatter, "receiver": receiver } );
 }
 
 
