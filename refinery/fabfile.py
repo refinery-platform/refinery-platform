@@ -36,6 +36,7 @@ from fabric.utils import puts
 
 
 env.local_project_dir = os.path.dirname(os.path.abspath(__file__))
+env.local_template_dir = os.path.join(env.local_project_dir, "fabric")
 
 # Django integration
 sys.path.append(env.local_project_dir)
@@ -102,13 +103,12 @@ def dev():
     software_config()
     directory_structure_config()
     # config file templates
-    env.local_conf_dir = os.path.join(env.local_project_dir, "fabric", "dev")
+    env.local_conf_dir = os.path.join(env.local_template_dir, "dev")
     env.bash_profile_template = "bash_profile"
     env.bashrc_template = "bashrc"
     #Galaxy config
     galaxy_base_dir = env.galaxy_root + "dev"
     env.galaxy_root = os.path.join(galaxy_base_dir, "live")
-    env.galaxy_r_libs_target_dir = os.path.join(env.galaxy_r_libs_base_dir, "dev")
 
 
 @task
@@ -124,7 +124,7 @@ def stage():
     software_config()
     directory_structure_config()
     # config file templates
-    env.local_conf_dir = os.path.join(env.local_project_dir, "fabric", "stage")
+    env.local_conf_dir = os.path.join(env.local_template_dir, "stage")
     env.bash_profile_template = "bash_profile"
     env.bashrc_template = "bashrc"
 
@@ -798,27 +798,6 @@ def upload_galaxy_tool_data():
 
 
 @task
-def update_galaxy_user_home():
-    '''Upload Bash config, R config to $HOME of the Galaxy user and create R library dir
-
-    '''
-    #TODO: change settings to env.galaxy_user
-    with hide('commands'):
-        home_dir = run("echo ~{}".format(env.galaxy_user))
-
-    local_path = os.path.join(env.local_conf_dir, "bashrc_galaxy_template")
-    remote_path = os.path.join(home_dir, ".bashrc.customizations")
-    bashrc_context = {'galaxy_r_libs': env.galaxy_r_libs_base_dir}
-    upload_template(local_path, remote_path, bashrc_context, backup=False)
-
-    local_path = os.path.join(env.local_conf_dir, "Rprofile_template")
-    remote_path = os.path.join(home_dir, ".Rprofile")
-    upload_template(local_path, remote_path, backup=False)
-
-    run("mkdir -pv {}".format(env.galaxy_r_libs_target_dir))
-
-
-@task
 @with_settings(user=env.project_user)
 def install_spp():
     '''Install SPP R library
@@ -840,40 +819,6 @@ def install_spp_galaxy_tool():
     run("cp {bootstrap_dir}/spp_peak_caller.xml {galaxy_root}/tools/peak_calling".format(**env))
     with prefix("cd {galaxy_root}/tools/peak_calling".format(**env)):
         run("ln -s ../plotting/r_wrapper.sh")
-
-
-@task
-@with_settings(user=env.project_user)
-def install_igvtools():
-    '''Add IGV tools to the current Galaxy instance
-
-    '''
-    #TODO: change settings to env.galaxy_user or install using main toolshed
-
-    #$ cd $GALAXYROOT/tools
-    #$ hg clone http://toolshed.g2.bx.psu.edu/repos/jjohnson/igvtools
-    #move files to appropriate directories
-    #$ cp igvtools/lib/galaxy/datatypes/igv.py $GALAXYROOT/lib/galaxy/datatypes
-    #$ cp igvtools/tool-data/datatypes_conf.xml $GALAXYROOT/tool-data
-    #$ cp igvtools/tool-data/igv_indices.loc.sample $GALAXYROOT/tool-data/igv_indices.loc (replace with a template?)
-    #
-    #install .genome files
-    #e.g., to /n/hsphS10/hsphfs1/chb/biodata/genomes/igv
-    #
-    #edit $GALAXYROOT/tool-data/igv_indices.loc
-
-
-@task
-@with_settings(user=env.project_user)
-def install_tabular_to_bed():
-    '''Add tabular-to-bed tool to the current Galaxy instance
-
-    '''
-    #TODO: change settings to env.galaxy_user or add this tool to private toolshed
-    # /n/hsphS10/hsphfs1/stemcellcommons/bootstrap
-#    $ cp tabular_to_bed.py $GALAXYROOT/tools/next_gen_conversion
-#    $ cp tabular_to_bed.xml $GALAXYROOT/tools/next_gen_conversion
-    # edit tool_conf.xml
 
 
 @task
