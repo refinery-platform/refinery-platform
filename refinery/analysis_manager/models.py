@@ -36,11 +36,11 @@ class AnalysisStatus( models.Model ):
     execution_monitor_task_id = UUIDField( blank=True, null=True, auto=False )
     
     def preprocessing_status(self):
-        return getPayload(self.preprocessing_taskset_id)
+        return get_payload(self.preprocessing_taskset_id)
     
     def execution_status(self):
         try:
-            status = getPayload(self.execution_monitor_task_id)
+            status = get_payload(self.execution_monitor_task_id)
         except:
             logger.warn( 'Unable to get status for task id ' + self.execution_monitor_task_id )
             return None
@@ -65,14 +65,18 @@ class AnalysisStatus( models.Model ):
                 
     
     def postprocessing_status(self):
-        return getPayload(self.postprocessing_taskset_id)
+        return get_payload(self.postprocessing_taskset_id)
     
     def cleanup_status(self):
-        return getPayload(self.cleanup_taskset_id)
+        return get_payload(self.cleanup_taskset_id)
   
 
-def getPayload(ts_id):
-    #print "getPayload \n"
+def get_payload(ts_id):
+    '''Goes through the task_ids for an analysis and determines the status
+    of each task (pre-processing, processing and cleanup)
+
+    '''
+    #print "get_payload \n"
     
     payload = []
     ts = AsyncResult( ts_id )
