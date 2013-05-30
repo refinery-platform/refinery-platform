@@ -7,18 +7,18 @@ in the Galaxy API example directory.
 @author: Nils Gehlenborg, Harvard Medical School, nils@hms.harvard.edu
 '''
 
+from httplib import BadStatusLine
+import logging
+import requests
 import urllib2
 import simplejson
-import os
 from galaxy_connector.galaxy_workflow import GalaxyWorkflow
 from galaxy_connector.galaxy_workflow import GalaxyWorkflowInput
 from galaxy_connector.galaxy_history import GalaxyHistory
 from galaxy_connector.galaxy_history import GalaxyHistoryItem
 from galaxy_connector.galaxy_library import GalaxyLibrary
 from galaxy_connector.galaxy_library import GalaxyLibraryItem
-from core.models import Analysis, WorkflowDataInputMap, Workflow
-import logging
-from httplib import BadStatusLine
+from core.models import Workflow
 
 logger = logging.getLogger(__name__)
 
@@ -51,25 +51,57 @@ class Connection( object ):
                 return self.base_url + '/' + self.data_url + '/' + command  + argsep + "to_ext=txt"
         else:
             return self.base_url + '/' + self.api_url + '/' + command + argsep + '&'.join( [ '='.join( t ) for t in args ] )
-        
-        
-    def get( self, command ):
-        url = self.make_url( command )
+
+    def get(self, command):
+        '''Make a GET request to the current Galaxy instance.
+
+        '''
+        url = self.make_url(command)
+
         try:
-            url_read = urllib2.urlopen( url ).read()
-            try:
-                ret_json = simplejson.loads(url_read)
-                return ret_json
-            except simplejson.decoder.JSONDecodeError:
-                return simplejson.loads( "{}" )
-        except BadStatusLine:
-            logger.debug("Galaxy_Connector.get: Could not fetch %s" % url)
-            return simplejson.loads( "{}" )
-        
-    def post( self, command, data ):
-        url = self.make_url( command )
-        request = urllib2.Request( url, headers = { 'Content-Type': 'application/json' }, data = simplejson.dumps( data ) )
-        return simplejson.loads( urllib2.urlopen( request ).read() )
+            response = requests.get(url)
+            response.raise_for_status()
+        except requests.exceptions.ConnectionError as e:
+            logger.error(e.message.message)
+            raise
+        except requests.exceptions.HTTPError as e:
+            if e.response:
+                logger.error(e.message + ' - ' + e.response.url)
+            else:
+                logger.error(e.message)
+            raise
+        except requests.exceptions.Timeout as e:
+            logger.error(e.message)
+            raise
+
+        try:
+            return response.json()
+        except simplejson.decoder.JSONDecodeError as e:
+            logger.error(e.msg)
+            raise
+
+#        try:
+#            url_read = urllib2.urlopen(url).read()
+#            try:
+#                ret_json = simplejson.loads(url_read)
+#                return ret_json
+#            except simplejson.decoder.JSONDecodeError as e:
+#                logger.error("Error parsing response from {}: {}".format(url, e.msg))
+#                return simplejson.loads("{}")
+#        except BadStatusLine:
+#            logger.debug("Galaxy_Connector.get: Could not fetch %s" % url)
+#            return simplejson.loads("{}")
+#        except urllib2.URLError as e:
+#            logger.error("Could not connect to Galaxy at {}: {}".format(url, e.reason))
+
+    def post(self, command, data):
+        url = self.make_url(command)
+        response = requests.post(url, data=simplejson.dumps(data),
+                                 headers={'Content-Type': 'application/json'})
+        response.raise_for_status()
+        return response.json()
+#        request = urllib2.Request( url, headers = { 'Content-Type': 'application/json' }, data = simplejson.dumps( data ) )
+#        return simplejson.loads( urllib2.urlopen( request ).read() )
 
     def put( self, command, data ):
         url = self.make_url( command )
@@ -84,50 +116,43 @@ class Connection( object ):
         return simplejson.loads( urllib2.urlopen( request ).read() )
 
     # =========================================================================================================
-                    
-    def get_histories( self ):            
-        return self.get( "histories" )
-    
-    
-    def get_history_id( self, history_name ):
+
+    def get_histories(self):
+        return self.get("histories")
+
+    def get_history_id(self, history_name):
+        '''Returns zero or more identifiers for histories with the provided name.
+
         '''
-        Returns zero or more identifiers for histories with the provided name.
-        '''            
         histories = self.get_histories()
-        identifiers = [] 
-        
+        identifiers = []
+
         for history in histories:
             if history['name'] == history_name:
-                identifiers.append( history['id'] )
-        
-        return identifiers                
-            
+                identifiers.append(history['id'])
+
+        return identifiers
+
     def get_history(self, history_id):
-        if history_id:
-            return self.get( "histories" + "/" + history_id )
-        else:
-            logger.debug("Can not retrieve history_id = '{}'".format(history_id))
-            return None
+        return self.get("histories/" + str(history_id))
 
-    def get_history_contents( self, history_id ):            
-        return self.get( "histories" + "/" + history_id + "/" + "contents" )
+    def get_history_contents(self, history_id):            
+        return self.get("histories/" + str(history_id) + "/contents")
 
+    def get_history_content(self, history_id, content_id):            
+        return self.get("histories/" + str(history_id) + "/contents/" + str(content_id))
 
-    def get_history_content( self, history_id, content_id ):            
-        return self.get( "histories" + "/" + history_id + "/" + "contents" + "/" + content_id )
-        
-        
     def get_history_file_type( self, history_id, content_id ):
         '''
-        Content_id expected to be of type "file".
+        Content is expected to be of type "file".
         Returns the history content data_type, i.e. the file type of a content item in the history.
-        ''' 
-        history_content = self.get_history_content( history_id, content_id )        
-        
+        '''
+        history_content = self.get_history_content(history_id, content_id)
+
         if "data_type" not in history_content:
-            return ( None )
+            return None
         else:
-            return ( history_content["data_type"] )
+            return history_content["data_type"]
 
 
     def get_history_file_list( self, history_id ):
@@ -301,21 +326,16 @@ class Connection( object ):
         return self.get( "libraries" + "/" + library_id + "/" + "contents" + "/" + content_id )
 
 
-    def create_library( self, name ):
+    def create_library(self, name):
         print "galaxy_connector: create_library called"
         data = {}
         data['name'] = name
-        try:
-            ret_val = self.post( "libraries", data )
-            # Older galaxy versions return an array, newer galaxy api's return a single dictionary
-            if type(ret_val) == dict:
-                return ret_val["id"]
-            else:
-                return ret_val[0]["id"]
-            
-        except urllib2.HTTPError, e:
-            print str( e.read( 1024 ) )
-            return 'Error. '+ str( e.read( 1024 ) )
+        ret_val = self.post("libraries", data)
+        # Older galaxy versions return an array, newer galaxy api's return a single dictionary
+        if type(ret_val) == dict:
+            return ret_val["id"]
+        else:
+            return ret_val[0]["id"]
 
 
     def put_into_library( self, library_id, filepath ):
@@ -466,15 +486,11 @@ class Connection( object ):
             return "Error. " + str( e.read( 1024 ) )
         
     def get_workflow_dict(self, workflow_id):
+        """GET /api/workflows/{encoded_workflow_id}/download
+        Returns a selected workflow as a json dictionary.
+
         """
-        GET /api/workflows/{encoded_workflow_id}/download
-        Returns a selected workflow as a json dictionary. 
-        """
-        try:
-            return self.get( "workflows/download/" + workflow_id )
-        except urllib2.HTTPError, e:
-            print str( e.read( 1024 ) )
-            return "Error. " + str( e.read( 1024 ) )
+        return self.get("workflows/download/" + str(workflow_id))
         
     def delete_workflow(self, workflow_id):
         """
@@ -492,20 +508,12 @@ class Connection( object ):
             return "Error. " + str( e.read( 1024 ) )
 
     def import_workflow(self, data):
-        """
-        POST /api/workflows
+        """POST /api/workflows
         Importing dynamic workflows from the api. Return newly generated workflow id.
         # currently assumes payload['workflow'] is a json representation of a workflow to be inserted into the database
         """
         wdata = {};
-        wdata ['workflow'] = data;
-        
-        try:
-            return self.post("workflows/upload", wdata);
-        except urllib2.HTTPError, e:
-            print str( e.read( 1024 ) )
-            return "Error. " + str( e.read( 1024 ) )
-            
-    # =========================================================================================================    
-    
+        wdata['workflow'] = data;
+        return self.post("workflows/upload", wdata);
 
+    # =========================================================================================================    

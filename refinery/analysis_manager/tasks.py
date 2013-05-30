@@ -4,37 +4,36 @@ Created on Apr 5, 2012
 @author: nils
 '''
 
-from analysis_manager.models import AnalysisStatus
+import ast
+import copy
+from datetime import datetime
+import logging
+import requests
+from simplejson.decoder import JSONDecodeError
+import socket
+import time
 from celery import current_app as celery
 from celery.task import chord, task
 from celery.task.chords import Chord
 from celery.task.sets import subtask, TaskSet
 from celery.utils import uuid
+from django.conf import settings
+from django.contrib.sites.models import Site
+from django.core.urlresolvers import reverse
+from django.template import loader, Context
+from analysis_manager.models import AnalysisStatus
 from core.models import Analysis, AnalysisResult, WorkflowFilesDL, \
     AnalysisNodeConnection, INPUT_CONNECTION, OUTPUT_CONNECTION, Workflow, Download
 from data_set_manager.models import Node, initialize_attribute_order
 from data_set_manager.utils import get_node_types, update_annotated_nodes, \
     index_annotated_nodes, add_annotated_nodes_selection, \
     index_annotated_nodes_selection
-from datetime import datetime, timedelta
-from django.conf import settings
-from django.contrib.sites.models import Site, Site
-from django.core.urlresolvers import reverse
-from django.template import loader, Context
 from file_store.models import FileStoreItem, is_local
 from file_store.tasks import import_file, create, rename
 from galaxy_connector.connection import Connection
 from galaxy_connector.galaxy_workflow import countWorkflowSteps, \
     create_workflow_graph, create_expanded_workflow_graph
 from workflow_manager.tasks import configure_workflow
-import ast
-import copy
-import data_set_manager
-import logging
-import os
-import socket
-import time
-import urllib2
 
 logger = logging.getLogger(__name__)
 
@@ -248,32 +247,105 @@ def run_analysis(analysis, interval=5.0):
     
     return
 
-# task: perform postprocessing (innermost task, does the actual work)
+# task: perform preprocessing (innermost task, does the actual work)
 @task()
 def run_analysis_preprocessing(analysis):
     logger.debug("analysis_manager.run_analysis_preprocessing called")
-    
+
     # obtain expanded workflow
     connection = get_analysis_connection(analysis)
-    
+
     # creates new library in galaxy
-    library_id = connection.create_library(Site.objects.get_current().name + " Analysis - " + str(analysis.uuid) + " (" + str(datetime.now()) + ")");
-    
+    try:
+        library_id = connection.create_library(Site.objects.get_current().name +
+                                               " Analysis - " + str(analysis.uuid) +
+                                               " (" + str(datetime.now()) + ")");
+    except requests.exceptions.ConnectionError:
+        logger.error("Failed to create Galaxy library for analysis '{}': could not connect to the Galaxy instance"
+                     .format(analysis.uuid))
+        analysis.status = Analysis.FAILURE_STATUS
+        analysis.save()
+        return
+    except requests.exceptions.HTTPError as e:
+        if e.response:
+            if e.response.status_code == 403:
+                logger.error("Failed to create Galaxy library for analysis '{}': incorrect API key"
+                             .format(analysis.uuid))
+            elif e.response.status_code == 404:
+                logger.error("Failed to create Galaxy library for analysis '{}': incorrect URL"
+                             .format(analysis.uuid))
+            else:
+                logger.error("Failed to create Galaxy library for analysis '{}': unknown response from Galaxy"
+                             .format(analysis.uuid))
+        else:
+            logger.error("Failed to create Galaxy library for analysis '{}': invalid response from Galaxy"
+                         .format(analysis.uuid))
+        analysis.status = Analysis.FAILURE_STATUS
+        analysis.save()
+        return
+    except requests.exceptions.Timeout as e:
+        logger.error("Failed to create Galaxy library for analysis '{}': Galaxy is taking too long to respond"
+                     .format(analysis.uuid))
+        analysis.status = Analysis.FAILURE_STATUS
+        analysis.save()
+        return
+    except (ValueError, JSONDecodeError):
+        logger.error("Failed to create Galaxy library for analysis '{}': improperly formatted response"
+                     .format(analysis.uuid))
+        analysis.status = Analysis.FAILURE_STATUS
+        analysis.save()
+        return
+
     ### generates same ret_list purely based on analysis object ###
     ret_list = get_analysis_config(analysis)
-    
+
     # getting expanded workflow configured based on input: ret_list
-    new_workflow, history_download, analysis_node_connections = configure_workflow(analysis.workflow, ret_list, connection)
-    
+    try:
+        new_workflow, history_download, analysis_node_connections = \
+            configure_workflow(analysis.workflow, ret_list, connection)
+    except requests.exceptions.ConnectionError:
+        logger.error("Failed to configure Galaxy workflow for analysis '{}': could not connect to the Galaxy instance"
+                     .format(analysis.uuid))
+        analysis.status = Analysis.FAILURE_STATUS
+        analysis.save()
+        return
+    except requests.exceptions.HTTPError as e:
+        if e.response:
+            if e.response.status_code == 403:
+                logger.error("Failed to configure Galaxy workflow for analysis '{}': incorrect API key"
+                             .format(analysis.uuid))
+            elif e.response.status_code == 404:
+                logger.error("Failed to configure Galaxy workflow for analysis '{}': incorrect URL"
+                             .format(analysis.uuid))
+            else:
+                logger.error("Failed to configure Galaxy workflow for analysis '{}': unknown response from Galaxy"
+                             .format(analysis.uuid))
+        else:
+            logger.error("Failed to configure Galaxy workflow for analysis '{}': invalid response from Galaxy"
+                         .format(analysis.uuid))
+        analysis.status = Analysis.FAILURE_STATUS
+        analysis.save()
+        return
+    except requests.exceptions.Timeout as e:
+        logger.error("Failed to configure Galaxy workflow for analysis '{}': Galaxy is taking too long to respond"
+                     .format(analysis.uuid))
+        analysis.status = Analysis.FAILURE_STATUS
+        analysis.save()
+        return
+    except JSONDecodeError:
+        logger.error("Failed to configure Galaxy workflow for analysis '{}': improperly formatted response"
+                     .format(analysis.uuid))
+        analysis.status = Analysis.FAILURE_STATUS
+        analysis.save()
+        return
+
     # import connections into database
     for analysis_node_connection in analysis_node_connections:
-        
         # lookup node object
         if ( analysis_node_connection["node_uuid"] ):
             node = Node.objects.get(uuid=analysis_node_connection["node_uuid"])
         else:
             node = None 
-
         AnalysisNodeConnection.objects.create(analysis=analysis,
                                               subanalysis=analysis_node_connection['subanalysis'],
                                               node=node,
@@ -283,17 +355,52 @@ def run_analysis_preprocessing(analysis):
                                               filetype=analysis_node_connection['filetype'],
                                               direction=analysis_node_connection['direction'],
                                               is_refinery_file=analysis_node_connection['is_refinery_file'])
-    
-    # saving ouputs of workflow to download 
+    # saving ouputs of workflow to download
     for file_dl in history_download:
         temp_dl = WorkflowFilesDL(step_id=file_dl['step_id'], pair_id=file_dl['pair_id'], filename=file_dl['name'])
         temp_dl.save()
         analysis.workflow_dl_files.add( temp_dl ) 
         analysis.save()
             
-    # import newly generated workflow 
-    new_workflow_info = connection.import_workflow(new_workflow);
-    
+    # import newly generated workflow
+    try:
+        new_workflow_info = connection.import_workflow(new_workflow);
+    except requests.exceptions.ConnectionError:
+        logger.error("Failed to import workflow into Galaxy for analysis '{}': could not connect to the Galaxy instance"
+                     .format(analysis.uuid))
+        analysis.status = Analysis.FAILURE_STATUS
+        analysis.save()
+        return
+    except requests.exceptions.HTTPError as e:
+        if e.response:
+            if e.response.status_code == 403:
+                logger.error("Failed to import workflow into Galaxy for analysis '{}': incorrect API key"
+                             .format(analysis.uuid))
+            elif e.response.status_code == 404:
+                logger.error("Failed to import workflow into Galaxy for analysis '{}': incorrect URL"
+                             .format(analysis.uuid))
+            else:
+                logger.error("Failed to import workflow into Galaxy for analysis '{}': unknown response from Galaxy"
+                             .format(analysis.uuid))
+        else:
+            logger.error("Failed to import workflow into Galaxy for analysis '{}': invalid response from Galaxy"
+                         .format(analysis.uuid))
+        analysis.status = Analysis.FAILURE_STATUS
+        analysis.save()
+        return
+    except requests.exceptions.Timeout as e:
+        logger.error("Failed to import workflow into Galaxy for analysis '{}': Galaxy is taking too long to respond"
+                     .format(analysis.uuid))
+        analysis.status = Analysis.FAILURE_STATUS
+        analysis.save()
+        return
+    except JSONDecodeError:
+        logger.error("Failed to import workflow into Galaxy for analysis '{}': improperly formatted response"
+                     .format(analysis.uuid))
+        analysis.status = Analysis.FAILURE_STATUS
+        analysis.save()
+        return
+
     ######### ANALYSIS MODEL 
     # getting number of steps for current workflow
     new_workflow_steps = countWorkflowSteps(new_workflow)

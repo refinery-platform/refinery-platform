@@ -157,20 +157,20 @@ def import_workflow( workflow, workflow_engine, workflow_dictionary ):
     return issues
     
             
-def configure_workflow( workflow, ret_list, connection_galaxy=None ):
+def configure_workflow(workflow, ret_list, connection_galaxy):
     """
     Takes a workflow_uuid and associated data input map to return an expanded workflow 
     from core.models.workflow and workflow_data_input_map    
     """
     logger.debug("workflow.manager configure_workflow called")
-    
+
     curr_workflow = workflow
     # gets galaxy internal id for specified workflow
     workflow_galaxy_id = curr_workflow.internal_id
-    
+
     # gets dictionary version of workflow
     workflow_dict = connection_galaxy.get_workflow_dict(workflow_galaxy_id)
-    
+
     # number of times to repeat workflow expansion
     repeat_num = len(ret_list)
     
