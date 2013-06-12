@@ -215,7 +215,7 @@ AnalysisMonitor.prototype.getUpdate = function() {
      	}
 
 		// if the analysis status is 'FAILURE' automatically redirect to next page.
-     	if (self.overall == 'FAILURE') {
+     	if (result.overall == 'FAILURE') {
      		window.location = self.redirectUrl;
      	}
 		else if ( self.isStageFinished( result.cleanup ) ) {
