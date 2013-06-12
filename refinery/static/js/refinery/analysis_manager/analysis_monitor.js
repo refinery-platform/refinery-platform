@@ -276,7 +276,12 @@ AnalysisMonitor.prototype.getAnalysisProgress = function( callbackRunning, callb
 					callbackRunning( Math.floor( result.execution[0].percent_done.replace("%","") ) + "%" );
 				}
 				else {
-					callbackRunning( "0%" );
+    	            if (result.overall == 'FAILURE') {
+    	                callbackFinished();
+    	            }
+    	            else {
+    	                callbackRunning("0%");
+    	            }
 				}
 			}
 			else {
