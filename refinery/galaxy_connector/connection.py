@@ -12,6 +12,7 @@ import logging
 import requests
 import urllib2
 import simplejson
+from galaxy_connector.exceptions import *
 from galaxy_connector.galaxy_workflow import GalaxyWorkflow
 from galaxy_connector.galaxy_workflow import GalaxyWorkflowInput
 from galaxy_connector.galaxy_history import GalaxyHistory
@@ -20,7 +21,9 @@ from galaxy_connector.galaxy_library import GalaxyLibrary
 from galaxy_connector.galaxy_library import GalaxyLibraryItem
 from core.models import Workflow
 
+
 logger = logging.getLogger(__name__)
+
 
 class Connection( object ):
     '''
@@ -57,51 +60,65 @@ class Connection( object ):
 
         '''
         url = self.make_url(command)
-
+        # check for connection errors
         try:
             response = requests.get(url)
-            response.raise_for_status()
         except requests.exceptions.ConnectionError as e:
             logger.error(e.message.message)
-            raise
-        except requests.exceptions.HTTPError as e:
-            if e.response:
-                logger.error(e.message + ' - ' + e.response.url)
-            else:
-                logger.error(e.message)
-            raise
+            raise ConnectionError()
         except requests.exceptions.Timeout as e:
             logger.error(e.message)
-            raise
-
+            raise TimeoutError()
+        # check for HTTP errors
+        try:
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            logger.error(e.message + ' - ' + e.response.url)
+            if e.response.status_code == 400:
+                raise ResourceIDError()
+            elif response.status_code == 403:
+                raise AuthError()
+            elif response.status_code == 404:
+                raise ResourceNameError()
+            elif response.status_code == 416:
+                raise DatasetError()
+            elif response.status_code == 500:
+                raise ServerError()
+            else:
+                raise UnknownResponseError()
+        # check for response content errors
         try:
             return response.json()
         except simplejson.decoder.JSONDecodeError as e:
             logger.error(e.msg)
-            raise
-
-#        try:
-#            url_read = urllib2.urlopen(url).read()
-#            try:
-#                ret_json = simplejson.loads(url_read)
-#                return ret_json
-#            except simplejson.decoder.JSONDecodeError as e:
-#                logger.error("Error parsing response from {}: {}".format(url, e.msg))
-#                return simplejson.loads("{}")
-#        except BadStatusLine:
-#            logger.debug("Galaxy_Connector.get: Could not fetch %s" % url)
-#            return simplejson.loads("{}")
-#        except urllib2.URLError as e:
-#            logger.error("Could not connect to Galaxy at {}: {}".format(url, e.reason))
+            raise InvalidResponseError()
 
     def post(self, command, data):
         url = self.make_url(command)
         response = requests.post(url, data=simplejson.dumps(data),
                                  headers={'Content-Type': 'application/json'})
-        response.raise_for_status()
-        return response.json()
-#        request = urllib2.Request( url, headers = { 'Content-Type': 'application/json' }, data = simplejson.dumps( data ) )
-#        return simplejson.loads( urllib2.urlopen( request ).read() )
+        try:
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            logger.error(e.message + ' - ' + e.response.url)
+            if e.response.status_code == 400:
+                raise ResourceIDError()
+            elif response.status_code == 403:
+                raise AuthError()
+            elif response.status_code == 404:
+                raise ResourceNameError()
+            elif response.status_code == 416:
+                raise DatasetError()
+            elif response.status_code == 500:
+                raise ServerError()
+            else:
+                raise UnknownResponseError()
+        # check for response content errors
+        try:
+            return response.json()
+        except simplejson.decoder.JSONDecodeError as e:
+            logger.error(e.msg)
+            raise InvalidResponseError()
 
     def put( self, command, data ):
         url = self.make_url( command )
@@ -134,13 +151,25 @@ class Connection( object ):
         return identifiers
 
     def get_history(self, history_id):
-        return self.get("histories/" + str(history_id))
+        try:
+            return self.get("histories/" + history_id)
+        except TypeError:
+            # avoid using ID that's not a string
+            raise MalformedResourceID(history_id)
 
-    def get_history_contents(self, history_id):            
-        return self.get("histories/" + str(history_id) + "/contents")
+    def get_history_contents(self, history_id):
+        try:
+            return self.get("histories/" + history_id + "/contents")
+        except TypeError:
+            # avoid using ID that's not a string
+            raise MalformedResourceID(history_id)
 
-    def get_history_content(self, history_id, content_id):            
-        return self.get("histories/" + str(history_id) + "/contents/" + str(content_id))
+    def get_history_content(self, history_id, content_id):
+        try:
+            return self.get("histories/" + history_id + "/contents/" + content_id)
+        except TypeError:
+            # avoid using ID that's not a string
+            raise MalformedResourceID(history_id)
 
     def get_history_file_type( self, history_id, content_id ):
         '''
@@ -155,9 +184,10 @@ class Connection( object ):
             return history_content["data_type"]
 
 
-    def get_history_file_list( self, history_id ):
-        '''
-        Returns a list of dictionaries that contain the name, type, state and download URL of all _files_ in a history.
+    def get_history_file_list(self, history_id):
+        '''Returns a list of dictionaries that contain the name, type, state and
+        download URL of all _files_ in a history.
+
         '''        
         files = []
         
@@ -176,7 +206,9 @@ class Connection( object ):
             file_info["name"] = history_content_entry["name"]
             file_info["url"] = history_content_entry["url"]
             
-            history_content = self.get_history_content( history_id, history_content_entry["id"] )        
+            history_content = self.get_history_content(
+                history_id, history_content_entry["id"]
+                )        
                        
             if "data_type" not in history_content:
                 file_info["type"] = None
@@ -216,15 +248,15 @@ class Connection( object ):
             if "misc_info" not in history_content:
                 file_info["misc_info"] = None
             else:
-                file_info["misc_info"] = history_content["misc_info"]    
-           
+                file_info["misc_info"] = history_content["misc_info"]
+
             if "misc_blurb" not in history_content:
                 file_info["misc_blurb"] = None
             else:
-                file_info["misc_blurb"] = history_content["misc_blurb"]   
-            
-            files.append( file_info )
-            
+                file_info["misc_blurb"] = history_content["misc_blurb"]
+
+            files.append(file_info)
+
         return files    
         
         
@@ -260,11 +292,7 @@ class Connection( object ):
     def create_history( self, name ):
         data = {}
         data['name'] = name
-        try:            
-            return self.post( "histories", data )["id"]
-        except urllib2.HTTPError, e:
-            print str( e.read( 1024 ) )
-            return 'Error. '+ str( e.read( 1024 ) )
+        return self.post("histories", data)["id"]
         
     def delete_history(self, history_id):
         """
@@ -283,8 +311,7 @@ class Connection( object ):
 
     def get_libraries( self ):            
         return self.get( "libraries" )
-    
-    
+
     def get_library_id( self, library_name ):
         '''
         Returns zero or more identifiers for libraries with the provided name.
@@ -297,8 +324,7 @@ class Connection( object ):
                 identifiers.append( library['id'] )
         
         return identifiers
-    
-    
+
     def get_library_item_id( self, library_id, item_name, item_type=None ):
         items = self.get_library_contents( library_id )
         identifiers = []
@@ -312,15 +338,12 @@ class Connection( object ):
                     identifiers.append( item["id"] )
                     
         return identifiers
-    
-            
+
     def get_library( self, library_id ):            
         return self.get( "libraries" + "/" + library_id )
 
-
-    def get_library_contents( self, history_id ):            
-        return self.get( "libraries" + "/" + history_id + "/" + "contents" )
-
+    def get_library_contents(self, history_id):
+        return self.get("libraries/" + str(history_id) + "/contents")
 
     def get_library_content( self, library_id, content_id ):            
         return self.get( "libraries" + "/" + library_id + "/" + "contents" + "/" + content_id )
@@ -402,8 +425,8 @@ class Connection( object ):
 
     # =========================================================================================================
 
-    def get_workflows( self ):            
-        return self.get( "workflows" )
+    def get_workflows(self):            
+        return self.get("workflows")
 
     def get_workflow_id( self, workflow_name ):
         '''
@@ -418,8 +441,12 @@ class Connection( object ):
         
         return identifiers
 
-    def get_workflow( self, workflow_id ):            
-        return self.get( "workflows" + "/" + workflow_id )
+    def get_workflow(self, workflow_id):
+        try:
+            return self.get("workflows/" + workflow_id)
+        except TypeError:
+            # avoid using ID that's not a string
+            raise MalformedResourceID(workflow_id)
     
     def get_complete_workflows( self ):
         workflows = []
@@ -438,17 +465,16 @@ class Connection( object ):
             workflows.append(workflow)
         
         return workflows
-        
+
     def run_workflow( self, workflow_id, input_map, history_id, workflow_uuid ):
-        workflow = self.get_workflow( workflow_id )
+        workflow = self.get_workflow(workflow_id)
         data = {}
         data["workflow_id"] = workflow_id
         data["history"] = "hist_id=%s" % ( history_id )
         data["ds_map"] = {}
-        
+
         # retrieving workflow based on input workflow_uuid
         curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
-    
         # getting distinct workflow inputs
         workflow_data_inputs = curr_workflow.data_inputs.all()
         annot_inputs = {}
@@ -457,23 +483,18 @@ class Connection( object ):
             input_type = data_input.name
             annot_inputs[input_type] = []
             annot_counts[input_type] = 0
-        
         #------------ CONFIGURE INPUT FILES -------------------------- #   
         for in_key, input_details in workflow["inputs"].iteritems():
             inType = workflow['inputs'][in_key]['label'];
-            
+
             if inType in annot_inputs:
                 temp_count = annot_counts[inType]
                 winput_id = input_map[temp_count][inType]['id']
                 annot_counts[inType] = temp_count + 1
             
-            data["ds_map"][in_key] = { "src": "ld", "id": winput_id }    
-        
-        try:            
-            return self.post( "workflows", data )
-        except urllib2.HTTPError, e:
-            print str( e.read( 1024 ) )
-            return "Error. " + str( e.read( 1024 ) )
+            data["ds_map"][in_key] = { "src": "ld", "id": winput_id }
+
+        return self.post("workflows", data)
 
     def run_workflow3(self, data):
         """
@@ -484,14 +505,18 @@ class Connection( object ):
         except urllib2.HTTPError, e:
             print str( e.read( 1024 ) )
             return "Error. " + str( e.read( 1024 ) )
-        
+
     def get_workflow_dict(self, workflow_id):
-        """GET /api/workflows/{encoded_workflow_id}/download
+        """GET /api/workflows/download/{encoded_workflow_id}
         Returns a selected workflow as a json dictionary.
 
         """
-        return self.get("workflows/download/" + str(workflow_id))
-        
+        try:
+            return self.get("workflows/download/" + workflow_id)
+        except TypeError:
+            # avoid using ID that's not a string
+            raise MalformedResourceID(workflow_id)
+
     def delete_workflow(self, workflow_id):
         """
         DELETE /api/workflows/{encoded_workflow_id}
@@ -516,4 +541,3 @@ class Connection( object ):
         wdata['workflow'] = data;
         return self.post("workflows/upload", wdata);
 
-    # =========================================================================================================    

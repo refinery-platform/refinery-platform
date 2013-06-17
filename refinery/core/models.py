@@ -550,6 +550,7 @@ class Analysis ( OwnableResource ):
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
     status = models.TextField(default=INITIALIZED_STATUS, choices=STATUS_CHOICES, blank=True, null=True)
+    status_detail = models.TextField(blank=True, null=True)
     # possibly replace results
     # output_nodes = models.ManyToManyField(Nodes, blank=True)
     # protocol = i.e. protocol node created when the analysis is created 
@@ -563,7 +564,21 @@ class Analysis ( OwnableResource ):
             ('read_%s' % verbose_name, 'Can read %s' %  verbose_name ),
         )
 
-#: Defining available  relationship types 
+    def get_status(self):
+        return self.status
+
+    def set_status(self, status, message=''):
+        '''Set analysis status and perform additional actions as required
+
+        '''
+        self.status = status
+        self.status_detail = message
+        if status == self.FAILURE_STATUS or self.SUCCESS_STATUS:
+            self.time_end = datetime.now()
+        self.save()
+
+
+#: Defining available relationship types
 INPUT_CONNECTION = 'in'
 OUTPUT_CONNECTION = 'out'
 WORKFLOW_NODE_CONNECTION_TYPES = (

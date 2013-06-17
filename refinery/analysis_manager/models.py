@@ -26,9 +26,7 @@ xrange(10)).apply_async()
 '''
 
 class AnalysisStatus( models.Model ):
-    analysis = models.ForeignKey(Analysis)
-    #analysis_uuid = UUIDField( unique=True, auto=False )
-    
+    analysis = models.ForeignKey(Analysis)    
     preprocessing_taskset_id = UUIDField( blank=True, null=True, auto=False )
     execution_taskset_id = UUIDField( blank=True, null=True, auto=False )
     postprocessing_taskset_id = UUIDField( blank=True, null=True, auto=False )
@@ -49,8 +47,9 @@ class AnalysisStatus( models.Model ):
         
         try:
             history = connection.get_history(self.analysis.history_id)
-        except:
-            logger.warn( 'Unable to get progress from for history ' + self.analysis.history_id + ' of analysis ' + self.analysis.name )
+        except RuntimeError:
+            logger.warn("Unable to get progress for history '{}' of analysis '{}'"
+                        .format(self.analysis.history_id, self.analysis.name))
             return None
 
         if history:
