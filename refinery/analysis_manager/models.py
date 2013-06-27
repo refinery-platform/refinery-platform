@@ -1,12 +1,12 @@
-from celery.result import AsyncResult, TaskSetResult
+from celery.result import AsyncResult
 from core.models import Analysis
 from django.db import models
 from django_extensions.db.fields import UUIDField
-import analysis_manager
 import logging
-import math
+
 
 logger = logging.getLogger(__name__)
+
 
 '''
 shift+command+o // cleans up imports 
@@ -40,11 +40,12 @@ class AnalysisStatus( models.Model ):
         try:
             status = get_payload(self.execution_monitor_task_id)
         except:
-            logger.warn( 'Unable to get status for task id ' + self.execution_monitor_task_id )
+            logger.warn("Unable to get status for task id '{}'"
+                        .format(self.execution_monitor_task_id))
             return None
 
-        connection = analysis_manager.tasks.get_analysis_connection(self.analysis)
-        
+        connection = self.analysis.get_connection()
+
         try:
             history = connection.get_history(self.analysis.history_id)
         except RuntimeError:
@@ -61,8 +62,8 @@ class AnalysisStatus( models.Model ):
                 percent_complete = 0
             status[0]['percent_done'] = str(percent_complete) + '%'
         return status
-                
-    
+
+
     def postprocessing_status(self):
         return get_payload(self.postprocessing_taskset_id)
     

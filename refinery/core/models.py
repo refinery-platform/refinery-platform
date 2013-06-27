@@ -27,10 +27,12 @@ from registration.signals import user_registered, user_activated
 from django_auth_ldap.backend import LDAPBackend
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
+import galaxy_connector
 from galaxy_connector.models import Instance
 
 
 logger = logging.getLogger(__name__)
+
 
 #: Defining available node relationship types 
 TYPE_1_1 = '1-1'
@@ -439,15 +441,18 @@ class WorkflowInputRelationships(models.Model):
         return str(self.category) + " - " + str(self.set1) + "," + str(self.set2)
     
         
-class Workflow ( SharableResource, ManageableResource ):
+class Workflow(SharableResource, ManageableResource):
 
     ANALYSIS_TYPE = "analysis"
     DOWNLOAD_TYPE = "download"
-    
-    TYPE_CHOICES = ( 
-                     ( ANALYSIS_TYPE, 'Workflow performs data analysis tasks. Results are merged into dataset.' ),
-                     ( DOWNLOAD_TYPE, 'Workflow creates bulk downloads. Results are add to user\'s download list.' ),
-                    ) 
+    TYPE_CHOICES = (
+        (ANALYSIS_TYPE,
+         "Workflow performs data analysis tasks. Results are merged into dataset."
+         ),
+        (DOWNLOAD_TYPE,
+         "Workflow creates bulk downloads. Results are add to user's download list."
+         ),
+    )
 
     data_inputs = models.ManyToManyField( WorkflowDataInput, blank=True )
     internal_id = models.CharField( max_length=50 )
@@ -522,20 +527,24 @@ class AnalysisResult (models.Model):
         return str( self.file_name ) + " <-> " + self.analysis_uuid
        
                 
-class Analysis ( OwnableResource ):
-    
+class Analysis(OwnableResource):
+
     SUCCESS_STATUS = "SUCCESS"
     FAILURE_STATUS = "FAILURE"
     RUNNING_STATUS = "RUNNING"
     INITIALIZED_STATUS = "INITIALIZED"
-    
-    STATUS_CHOICES = ( 
-                     ( SUCCESS_STATUS, "Analysis finished successfully"),
-                     ( FAILURE_STATUS, "Analysis terminated after errors"),
-                     ( RUNNING_STATUS, "Analysis is running" ),
-                     ( INITIALIZED_STATUS, "Analysis was initialized" ),
-                    ) 
-    
+    UNKNOWN_STATUS = "UNKNOWN"  # analysis status from Galaxy is not available
+
+    #TODO: state transition diagram
+    #TODO: add a flag to indicate that the analysis was canceled by user
+
+    STATUS_CHOICES = (
+                      (SUCCESS_STATUS, "Analysis finished successfully"),
+                      (FAILURE_STATUS, "Analysis terminated after errors"),
+                      (RUNNING_STATUS, "Analysis is running" ),
+                      (INITIALIZED_STATUS, "Analysis was initialized" ),
+                      )
+
     project = models.ForeignKey( Project, related_name="analyses" )
     data_set = models.ForeignKey( DataSet, blank=True )
     workflow = models.ForeignKey( Workflow, blank=True )
@@ -554,10 +563,10 @@ class Analysis ( OwnableResource ):
     # possibly replace results
     # output_nodes = models.ManyToManyField(Nodes, blank=True)
     # protocol = i.e. protocol node created when the analysis is created 
-        
+
     def __unicode__(self):
         return self.name + " - " + self.summary
-    
+
     class Meta:
         verbose_name = "analysis"
         permissions = (
@@ -573,18 +582,28 @@ class Analysis ( OwnableResource ):
         '''
         self.status = status
         self.status_detail = message
-        if status == self.FAILURE_STATUS or self.SUCCESS_STATUS:
+        if status == self.FAILURE_STATUS or status == self.SUCCESS_STATUS:
             self.time_end = datetime.now()
         self.save()
+
+    def failed(self):
+        return True if self.status == self.FAILURE_STATUS else False
+
+    def get_connection(self):
+        return galaxy_connector.connection.Connection(
+            self.workflow.workflow_engine.instance.base_url,
+            self.workflow.workflow_engine.instance.data_url,
+            self.workflow.workflow_engine.instance.api_url,
+            self.workflow.workflow_engine.instance.api_key
+        )
 
 
 #: Defining available relationship types
 INPUT_CONNECTION = 'in'
 OUTPUT_CONNECTION = 'out'
-WORKFLOW_NODE_CONNECTION_TYPES = (
-            (INPUT_CONNECTION, 'in'),
-            (OUTPUT_CONNECTION, 'out'),
-            )
+WORKFLOW_NODE_CONNECTION_TYPES = ((INPUT_CONNECTION, 'in'),
+                                  (OUTPUT_CONNECTION, 'out'),
+                                  )
 
 
 class AnalysisNodeConnection( models.Model ):    

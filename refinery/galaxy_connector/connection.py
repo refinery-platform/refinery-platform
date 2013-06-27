@@ -7,11 +7,11 @@ in the Galaxy API example directory.
 @author: Nils Gehlenborg, Harvard Medical School, nils@hms.harvard.edu
 '''
 
-from httplib import BadStatusLine
 import logging
 import requests
 import urllib2
 import simplejson
+from core.models import Workflow
 from galaxy_connector.exceptions import *
 from galaxy_connector.galaxy_workflow import GalaxyWorkflow
 from galaxy_connector.galaxy_workflow import GalaxyWorkflowInput
@@ -19,13 +19,12 @@ from galaxy_connector.galaxy_history import GalaxyHistory
 from galaxy_connector.galaxy_history import GalaxyHistoryItem
 from galaxy_connector.galaxy_library import GalaxyLibrary
 from galaxy_connector.galaxy_library import GalaxyLibraryItem
-from core.models import Workflow
 
 
 logger = logging.getLogger(__name__)
 
 
-class Connection( object ):
+class Connection(object):
     '''
     classdocs
     '''
@@ -75,7 +74,7 @@ class Connection( object ):
         except requests.exceptions.HTTPError as e:
             logger.error(e.message + ' - ' + e.response.url)
             if e.response.status_code == 400:
-                raise ResourceIDError()
+                raise ResourceError()
             elif response.status_code == 403:
                 raise AuthError()
             elif response.status_code == 404:
@@ -102,7 +101,7 @@ class Connection( object ):
         except requests.exceptions.HTTPError as e:
             logger.error(e.message + ' - ' + e.response.url)
             if e.response.status_code == 400:
-                raise ResourceIDError()
+                raise ResourceError()
             elif response.status_code == 403:
                 raise AuthError()
             elif response.status_code == 404:
@@ -325,8 +324,8 @@ class Connection( object ):
         
         return identifiers
 
-    def get_library_item_id( self, library_id, item_name, item_type=None ):
-        items = self.get_library_contents( library_id )
+    def get_library_item_id(self, library_id, item_name, item_type=None):
+        items = self.get_library_contents(library_id)
         identifiers = []
         
         for item in items:
@@ -343,42 +342,46 @@ class Connection( object ):
         return self.get( "libraries" + "/" + library_id )
 
     def get_library_contents(self, history_id):
-        return self.get("libraries/" + str(history_id) + "/contents")
+        try:
+            return self.get("libraries/" + history_id + "/contents")
+        except TypeError:
+            # avoid using ID that's not a string
+            raise MalformedResourceID(history_id)
 
-    def get_library_content( self, library_id, content_id ):            
-        return self.get( "libraries" + "/" + library_id + "/" + "contents" + "/" + content_id )
-
+    def get_library_content(self, library_id, content_id):
+        try:
+            return self.get("libraries/" + library_id +
+                            "/contents/" + content_id)
+        except TypeError:
+            # avoid using ID that's not a string
+            raise MalformedResourceID(library_id)
 
     def create_library(self, name):
-        print "galaxy_connector: create_library called"
+        logger.debug("library name: '{}'".format(name))
         data = {}
         data['name'] = name
         ret_val = self.post("libraries", data)
-        # Older galaxy versions return an array, newer galaxy api's return a single dictionary
+        # Older galaxy versions return an array,
+        # newer galaxy api's return a single dictionary
         if type(ret_val) == dict:
             return ret_val["id"]
         else:
             return ret_val[0]["id"]
 
-
     def put_into_library( self, library_id, filepath ):
-        #if not os.path.isfile( filepath ):
-        #    return None
-                
         data = {}
-        data['folder_id'] = self.get_library_item_id( library_id, "/", "folder" )[0]
+        data['folder_id'] = self.get_library_item_id(library_id, "/", "folder")[0]
         data['file_type'] = 'auto'
         data['dbkey'] = ''
         data['upload_option'] = 'upload_paths'
         data['filesystem_paths'] = filepath
         data['create_type'] = 'file'
-        
-        try:            
-            return self.post( "libraries/%s/contents" % library_id, data )[0]["id"]
-        except urllib2.HTTPError, e:
-            print str( e.read( 1024 ) )
-            return 'Error. '+ str( e.read( 1024 ) )
-        
+        try:
+            return self.post("libraries/" + library_id + "/contents",
+                             data)[0]["id"]
+        except TypeError:
+            # avoid using ID that's not a string
+            raise MalformedResourceID(library_id)
 
     def get_complete_libraries( self ):
         libraries = []
@@ -415,13 +418,16 @@ class Connection( object ):
 
     # =========================================================================================================
 
-    def get_progress( self, history_id ):            
-        history = self.get_history( history_id )
-        
+    def get_progress(self, history_id):            
+        history = self.get_history(history_id)
         if "state_details" not in history:
-            return ( { "percent_complete": 0, "workflow_state": history["state"], "message": "Preparing ..." } )
+            return ({"percent_complete": 0,
+                     "workflow_state": history["state"],
+                     "message": "Preparing ..." })
         else:
-            return ( { "percent_complete": 100, "workflow_state": history["state"], "message": history["state_details"] } )
+            return ({"percent_complete": 100,
+                     "workflow_state": history["state"],
+                     "message": history["state_details"]})
 
     # =========================================================================================================
 

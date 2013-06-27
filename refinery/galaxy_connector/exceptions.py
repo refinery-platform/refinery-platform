@@ -3,14 +3,16 @@ class ConnectionError(RuntimeError):
 
     '''
     def __init__(self):
-        super(ConnectionError, self).__init__("Could not connect to Galaxy instance")
+        super(ConnectionError, self).__init__(
+            "Could not connect to Galaxy instance")
 
-class ResourceIDError(RuntimeError):
-    '''HTTP status code 400 (returned for invalid workflow IDs)
+class ResourceError(RuntimeError):
+    '''HTTP status code 400
+    returned for invalid workflow and history IDs, and Galaxy misconfiguration?
 
     '''
     def __init__(self):
-        super(ResourceIDError, self).__init__("Invalid Galaxy resource ID")
+        super(ResourceError, self).__init__("Galaxy resource error")
 
 class AuthError(RuntimeError):
     '''HTTP status code 403
@@ -45,29 +47,34 @@ class UnknownResponseError(RuntimeError):
 
     '''
     def __init__(self):
-        super(UnknownResponseError, self).__init__("Unknown response code from Galaxy instance")
+        super(UnknownResponseError, self).__init__(
+            "Unknown response code from Galaxy instance")
 
 class TimeoutError(RuntimeError):
     '''Galaxy connection timed out
 
     '''
     def __init__(self):
-        super(TimeoutError, self).__init__("Galaxy instance is taking too long to respond")
+        super(TimeoutError, self).__init__(
+            "Galaxy instance is taking too long to respond")
 
 class InvalidResponseError(RuntimeError):
     '''Received invalid JSON response
+    Galaxy sometimes reports errors in the body of the HTTP 200 response
+    which is not possible to parse as JSON
 
     '''
     def __init__(self):
-        super(InvalidResponseError, self).__init__("Invalid response from Galaxy instance")
+        super(InvalidResponseError, self).__init__(
+            "Invalid response from Galaxy instance")
 
 class MalformedResourceID(RuntimeError):
     '''Workflow, history or history content ID is None or not a string
 
     '''
-    def __init__(self, history_id):
-        super(MalformedResourceID, self).__init__("Malformed Galaxy resource id '{}' specified"
-                                                 .format(history_id))
+    def __init__(self, resource_id):
+        super(MalformedResourceID, self).__init__(
+            "Malformed Galaxy resource id '{}' specified".format(resource_id))
 
 class TestError(Exception):
     def __init__(self, msg="TestError exception"):

@@ -41,7 +41,7 @@ AnalysisMonitor.prototype.isStageFinished = function ( result ) {
 		status = true;
 
 		for ( var i=0; i < result.length; ++i ) {
-			if ((result[i].state == 'PROGRESS') || (result[i].state == 'PENDING') ) {
+			if ((result[i].state == 'PROGRESS') || (result[i].state == 'PENDING') || (result[i].state == 'RETRY') ) {
 				status = false;
 			}
 		}
@@ -60,7 +60,7 @@ AnalysisMonitor.prototype.isStageWaiting = function ( result ) {
 
 	if ( result.length > 0 ) {
 		for ( var i = 0; i < result.length; ++i )
-			if ( result[i].state == "PROGRESS" || result[i].state == "SUCCESS" || result[i].state == "FAILURE" )
+			if ( result[i].state == "PROGRESS" || result[i].state == "SUCCESS" || result[i].state == "FAILURE" || result[i].state == "RETRY" )
 				return false;
 	}
 

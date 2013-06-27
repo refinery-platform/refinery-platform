@@ -24,18 +24,20 @@ logger = logging.getLogger(__name__)
 
 
 def index(request):
-    statuses = AnalysisStatus.objects.all()
-    
-    return render_to_response( 'analysis_manager/index.html', { 'statuses': statuses }, context_instance=RequestContext( request ) )
+    statuses = AnalysisStatus.objects.all()    
+    return render_to_response('analysis_manager/index.html',
+                              {'statuses': statuses },
+                              context_instance=RequestContext(request))
+
 
 def analysis_status(request, uuid):
-    logger.debug( "analysis_manager.views.analysis_status called")
-    
-    #import pdb; pdb.set_trace()
-    
+    logger.debug("analysis_manager.views.analysis_status called")
+
+    #TODO: handle DoesNotExist exception
     analysis = Analysis.objects.get(uuid=uuid)
+    #TODO: handle DoesNotExist exception
     statuses = AnalysisStatus.objects.get(analysis=analysis)
-    
+
     if request.is_ajax():
         ret_json = {}
         ret_json['preprocessing'] = statuses.preprocessing_status()
@@ -43,11 +45,14 @@ def analysis_status(request, uuid):
         ret_json['postprocessing'] = statuses.postprocessing_status()
         ret_json['cleanup'] = statuses.cleanup_status()
         ret_json['overall'] = analysis.status
-        
-        return HttpResponse(simplejson.dumps(ret_json), mimetype='application/javascript')
-
+        return HttpResponse(simplejson.dumps(ret_json),
+                            mimetype='application/javascript')
     else:
-        return render_to_response( 'analysis_manager/analysis_status.html', { 'uuid':uuid, 'statuses': statuses, 'analysis': analysis }, context_instance=RequestContext( request ) )
+        return render_to_response(
+            'analysis_manager/analysis_status.html',
+            {'uuid':uuid, 'statuses': statuses, 'analysis': analysis},
+            context_instance=RequestContext(request))
+
 
 def analysis_run(request):
     logger.debug( "analysis_manager.views.analysis_run called")
@@ -62,7 +67,8 @@ def analysis_run(request):
     # list of selected assays
     selected_uuids = {};
     
-    # finds all selected assays (node_uuid, and associated workflow input type for selected samples) 
+    # finds all selected assays
+    # (node_uuid, and associated workflow input type for selected samples) 
     for i, val in request.POST.iteritems():
         if (val and val != ""):
             if (i.startswith('assay_')):
