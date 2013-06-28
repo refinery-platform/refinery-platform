@@ -589,13 +589,44 @@ class Analysis(OwnableResource):
     def failed(self):
         return True if self.status == self.FAILURE_STATUS else False
 
-    def get_connection(self):
+    def get_galaxy_connection(self):
         return galaxy_connector.connection.Connection(
             self.workflow.workflow_engine.instance.base_url,
             self.workflow.workflow_engine.instance.data_url,
             self.workflow.workflow_engine.instance.api_url,
             self.workflow.workflow_engine.instance.api_key
         )
+
+    def delete_galaxy_workflow(self):
+        connection = self.get_galaxy_connection()
+        try:
+            connection.delete_workflow(self.workflow_galaxy_id);
+        except RuntimeError as e:
+            error_msg = "Analysis cleanup failed: " + \
+                        "error deleting Galaxy workflow for analysis '{}': {}" \
+                        .format(self.name, e.message)
+            logger.error(error_msg)
+
+    def delete_galaxy_history(self):
+        connection = self.get_galaxy_connection()
+        try:
+            ## DEBUG CURRENTLY NOT DELETING HISTORY
+            connection.delete_history(self.history_id)
+        except RuntimeError as e:
+            error_msg = "Analysis cleanup failed: " + \
+                        "error deleting Galaxy history for analysis '{}': {}" \
+                        .format(self.name, e.message)
+            logger.error(error_msg)
+
+    def delete_galaxy_library(self):        
+        connection = self.get_galaxy_connection()
+        try:
+            connection.delete_library(self.library_id)
+        except RuntimeError as e:
+            error_msg = "Analysis cleanup failed: " + \
+                        "error deleting Galaxy library for analysis '{}': {}" \
+                        .format(self.name, e.message)
+            logger.error(error_msg)
 
 
 #: Defining available relationship types

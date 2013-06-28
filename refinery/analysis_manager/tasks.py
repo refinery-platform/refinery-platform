@@ -259,7 +259,7 @@ def run_analysis_preprocessing(analysis):
     logger.debug("analysis_manager.run_analysis_preprocessing called")
 
     # obtain expanded workflow
-    connection = analysis.get_connection()
+    connection = analysis.get_galaxy_connection()
 
     # creates new library in galaxy
     try:
@@ -267,7 +267,7 @@ def run_analysis_preprocessing(analysis):
             "{} Analysis - {} ({})".format(
                 Site.objects.get_current().name, analysis.uuid, datetime.now())
             )
-    except (ConnectionError, ResourceError) as e:
+    except RuntimeError as e:
         error_msg = (
             "Pre-processing failed: " +
             "error creating Galaxy library for analysis '{}': {}"
@@ -405,7 +405,7 @@ def monitor_analysis_execution(analysis):
                 monitor_analysis_execution.request.id
             analysis_status.save()
 
-        connection = analysis.get_connection()
+        connection = analysis.get_galaxy_connection()
 
         try:
             progress = connection.get_progress(analysis.history_id)
@@ -454,7 +454,7 @@ def run_analysis_execution(analysis):
     ######################
     ### EXECUTION ###
     ######################
-    connection = analysis.get_connection()
+    connection = analysis.get_galaxy_connection()
     
     ### generates same ret_list purely based on analysis object ###
     ret_list = get_analysis_config(analysis)
@@ -545,42 +545,11 @@ def run_analysis_cleanup(analysis):
     rename_analysis_results(analysis)
     logger.debug("after rename_analysis_results called")
 
-    analysis_cleanup(analysis)
-    
+    analysis.delete_galaxy_history()
+    analysis.delete_galaxy_workflow()
+    analysis.delete_galaxy_library()
+
     return
-
-
-def analysis_cleanup(analysis):
-    """Delete history, workflow and library
-
-    """
-    # gets current galaxy connection
-    connection = analysis.get_connection()
-
-    try:
-        connection.delete_workflow(analysis.workflow_galaxy_id);
-    except RuntimeError as e:
-        error_msg = "Analysis cleanup failed: " + \
-                    "error deleting Galaxy workflow for analysis '{}': {}" \
-                    .format(analysis.name, e.message)
-        logger.error(error_msg)
-
-    try:
-        ## DEBUG CURRENTLY NOT DELETING HISTORY
-        connection.delete_history(analysis.history_id)
-    except RuntimeError as e:
-        error_msg = "Analysis cleanup failed: " + \
-                    "error deleting Galaxy history for analysis '{}': {}" \
-                    .format(analysis.name, e.message)
-        logger.error(error_msg)
-
-    try:
-        connection.delete_library(analysis.library_id)
-    except RuntimeError as e:
-        error_msg = "Analysis cleanup failed: " + \
-                    "error deleting Galaxy library for analysis '{}': {}" \
-                    .format(analysis.name, e.message)
-        logger.error(error_msg)
 
 
 @task()
@@ -668,7 +637,7 @@ def download_history_files(analysis) :
     task_list = []
     
     # gets current galaxy connection
-    connection = analysis.get_connection()
+    connection = analysis.get_galaxy_connection()
 
     try:
         download_list = connection.get_history_file_list(analysis.history_id)

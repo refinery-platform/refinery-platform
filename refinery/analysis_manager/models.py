@@ -44,7 +44,7 @@ class AnalysisStatus( models.Model ):
                         .format(self.execution_monitor_task_id))
             return None
 
-        connection = self.analysis.get_connection()
+        connection = self.analysis.get_galaxy_connection()
 
         try:
             history = connection.get_history(self.analysis.history_id)
