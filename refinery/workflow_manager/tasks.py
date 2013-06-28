@@ -177,7 +177,8 @@ def configure_workflow(workflow, ret_list, connection_galaxy):
     # creating base workflow to replicate input workflow
     new_workflow = createBaseWorkflow( (workflow_dict["name"]) )
     
-    # checking to see what kind of workflow exists: i.e. does it have  "annotation": "type=COMPACT",  in the workflow annotation field
+    # checking to see what kind of workflow exists:
+    # does it have  "annotation": "type=COMPACT", in the workflow annotation field
     work_type = getStepOptions(workflow_dict["annotation"])
     COMPACT_WORKFLOW = False
     

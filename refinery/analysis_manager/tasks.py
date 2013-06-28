@@ -285,7 +285,7 @@ def run_analysis_preprocessing(analysis):
     try:
         new_workflow, history_download, analysis_node_connections = \
             configure_workflow(analysis.workflow, ret_list, connection)
-    except RuntimeError as e:
+    except RuntimeError as exc:
         error_msg = (
             "Pre-processing failed: " +
             "error configuring Galaxy workflow for analysis '{}': {}"
@@ -293,8 +293,10 @@ def run_analysis_preprocessing(analysis):
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        #TODO: delete library
         send_analysis_email(analysis)
+        if not (isinstance(exc, ConnectionError) or
+                isinstance(exc, TimeoutError)):
+            analysis.delete_galaxy_library()
         return
 
     # import connections into database
@@ -303,7 +305,7 @@ def run_analysis_preprocessing(analysis):
         if (analysis_node_connection["node_uuid"]):
             node = Node.objects.get(uuid=analysis_node_connection["node_uuid"])
         else:
-            node = None 
+            node = None
 
         AnalysisNodeConnection.objects.create(
             analysis=analysis,
@@ -328,7 +330,7 @@ def run_analysis_preprocessing(analysis):
     # import newly generated workflow
     try:
         new_workflow_info = connection.import_workflow(new_workflow);
-    except RuntimeError as e:
+    except RuntimeError as exc:
         error_msg = (
             "Pre-processing failed: " +
             "error importing workflow into Galaxy for analysis '{}': {}"
@@ -336,8 +338,10 @@ def run_analysis_preprocessing(analysis):
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        #TODO: delete library
         send_analysis_email(analysis)
+        if not (isinstance(exc, ConnectionError) or
+                isinstance(exc, TimeoutError)):
+            analysis.delete_galaxy_library()
         return
 
     ######### ANALYSIS MODEL 
@@ -358,8 +362,11 @@ def run_analysis_preprocessing(analysis):
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        #TODO: delete library and workflow
         send_analysis_email(analysis)
+        if not (isinstance(exc, ConnectionError) or
+                isinstance(exc, TimeoutError)):
+            analysis.delete_galaxy_library()
+            analysis.delete_galaxy_workflow()
         return
 
     # updating analysis object
@@ -463,15 +470,19 @@ def run_analysis_execution(analysis):
     try:
         ret_list = import_analysis_in_galaxy(
             ret_list, analysis.library_id, connection)
-    except RuntimeError as e:
+    except RuntimeError as exc:
         error_msg = "Analysis execution failed: " + \
                     "error importing analysis '{}' into Galaxy: {}" \
-                    .format(analysis.name, e.message)
+                    .format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_execution.update_state(state=celery.states.FAILURE)
         send_analysis_email(analysis)
-        run_analysis_cleanup(analysis)
+        if not (isinstance(exc, ConnectionError) or
+                isinstance(exc, TimeoutError)):
+            analysis.delete_galaxy_library()
+            analysis.delete_galaxy_workflow()
+            analysis.delete_galaxy_history()
         return
 
     # Running workflow
@@ -489,6 +500,11 @@ def run_analysis_execution(analysis):
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_execution.update_state(state=celery.states.FAILURE)
         send_analysis_email(analysis)
+        if not (isinstance(exc, ConnectionError) or
+                isinstance(exc, TimeoutError)):
+            analysis.delete_galaxy_library()
+            analysis.delete_galaxy_workflow()
+            analysis.delete_galaxy_history()
 
     return
 
