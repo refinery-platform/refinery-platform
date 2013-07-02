@@ -94,8 +94,17 @@ class Connection(object):
 
     def post(self, command, data):
         url = self.make_url(command)
-        response = requests.post(url, data=simplejson.dumps(data),
-                                 headers={'Content-Type': 'application/json'})
+        # check for connection errors
+        try:
+            response = requests.post(url, data=simplejson.dumps(data),
+                                     headers={'Content-Type': 'application/json'})
+        except requests.exceptions.ConnectionError as e:
+            logger.error(e.message.message)
+            raise ConnectionError()
+        except requests.exceptions.Timeout as e:
+            logger.error(e.message)
+            raise TimeoutError()
+        # check for HTTP errors
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
@@ -119,17 +128,41 @@ class Connection(object):
             logger.error(e.msg)
             raise InvalidResponseError()
 
-    def put( self, command, data ):
-        url = self.make_url( command )
-        request = urllib2.Request( url, headers = { 'Content-Type': 'application/json' }, data = simplejson.dumps( data ))
-        request.get_method = lambda: 'PUT'
-        return simplejson.loads( urllib2.urlopen( request ).read() )
-
-    def delete( self, command, data ):
-        url = self.make_url( command )
-        request = urllib2.Request( url, headers = { 'Content-Type': 'application/json' }, data = simplejson.dumps( data ))
-        request.get_method = lambda: 'DELETE'
-        return simplejson.loads( urllib2.urlopen( request ).read() )
+    def delete(self, command, data):
+        url = self.make_url(command)
+        # check for connection errors
+        try:
+            response = requests.delete(url, data=simplejson.dumps(data),
+                                       headers={'Content-Type': 'application/json'})
+        except requests.exceptions.ConnectionError as e:
+            logger.error(e.message.message)
+            raise ConnectionError()
+        except requests.exceptions.Timeout as e:
+            logger.error(e.message)
+            raise TimeoutError()
+        # check for HTTP errors
+        try:
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            logger.error(e.message + ' - ' + e.response.url)
+            if e.response.status_code == 400:
+                raise ResourceError()
+            elif response.status_code == 403:
+                raise AuthError()
+            elif response.status_code == 404:
+                raise ResourceNameError()
+            elif response.status_code == 416:
+                raise DatasetError()
+            elif response.status_code == 500:
+                raise ServerError()
+            else:
+                raise UnknownResponseError()
+        # check for response content errors
+        try:
+            return response.json()
+        except simplejson.decoder.JSONDecodeError as e:
+            logger.error(e.msg)
+            raise InvalidResponseError()
 
     # =========================================================================================================
 
@@ -189,26 +222,22 @@ class Connection(object):
 
         '''        
         files = []
-        
-        print self.get_history_contents( history_id )
-        
-        for history_content_entry in self.get_history_contents( history_id ):
-            
+
+        for history_content_entry in self.get_history_contents(history_id):
+
             if "type" not in history_content_entry:
                 continue
             
             if history_content_entry["type"] != "file":
                 continue
-            
+
             file_info = {}
-            
             file_info["name"] = history_content_entry["name"]
             file_info["url"] = history_content_entry["url"]
-            
+
             history_content = self.get_history_content(
-                history_id, history_content_entry["id"]
-                )        
-                       
+                history_id, history_content_entry["id"])
+
             if "data_type" not in history_content:
                 file_info["type"] = None
             else:
@@ -218,32 +247,32 @@ class Connection(object):
                 file_info["state"] = None
             else:
                 file_info["state"] = history_content["state"]
-            
+
             if "id" not in history_content:
                 file_info["dataset_id"] = None
             else:
                 file_info["dataset_id"] = history_content["id"]
-            
+
             if "file_size" not in history_content:
                 file_info["file_size"] = None
             else:
                 file_info["file_size"] = history_content["file_size"]
-            
+
             if "visible" not in history_content:
                 file_info["visible"] = None
             else:
                 file_info["visible"] = history_content["visible"]
-            
+
             if "file_name" not in history_content:
                 file_info["file_name"] = None
             else:
                 file_info["file_name"] = history_content["file_name"]
-                
+
             if "genome_build" not in history_content:
                 file_info["genome_build"] = None
             else:
                 file_info["genome_build"] = history_content["genome_build"]   
-            
+
             if "misc_info" not in history_content:
                 file_info["misc_info"] = None
             else:
@@ -288,23 +317,24 @@ class Connection(object):
         return histories
         
         
-    def create_history( self, name ):
+    def create_history(self, name):
         data = {}
         data['name'] = name
         return self.post("histories", data)["id"]
-        
+
     def delete_history(self, history_id):
-        """
-        DELETE /api/histories/{history_id}
+        """DELETE /api/histories/{history_id}
         Deletes a specified history
+
         """
         data = {}
-        data[ 'purge' ] = True    
+        data['purge'] = True
         try:
-            return self.delete( "histories" + "/" + history_id, data )
-        except urllib2.HTTPError, e:
-            print str( e.read( 1024 ) )
-            return "Error. " + str( e.read( 1024 ) )
+            url = "histories/" + history_id
+        except TypeError:
+            # avoid using ID that's not a string
+            raise MalformedResourceID(history_id)
+        return self.delete(url, data)
 
     # =========================================================================================================
 
@@ -350,11 +380,14 @@ class Connection(object):
 
     def get_library_content(self, library_id, content_id):
         try:
-            return self.get("libraries/" + library_id +
-                            "/contents/" + content_id)
+            url = "libraries/" + library_id
         except TypeError:
-            # avoid using ID that's not a string
             raise MalformedResourceID(library_id)
+        try:
+            url += "/contents/" + content_id
+        except TypeError:
+            raise MalformedResourceID(content_id)
+        return self.get(url)
 
     def create_library(self, name):
         logger.debug("library name: '{}'".format(name))
@@ -376,12 +409,8 @@ class Connection(object):
         data['upload_option'] = 'upload_paths'
         data['filesystem_paths'] = filepath
         data['create_type'] = 'file'
-        try:
-            return self.post("libraries/" + library_id + "/contents",
-                             data)[0]["id"]
-        except TypeError:
-            # avoid using ID that's not a string
-            raise MalformedResourceID(library_id)
+        url = "libraries/" + library_id + "/contents"
+        return self.post(url, data)[0]["id"]
 
     def get_complete_libraries( self ):
         libraries = []
@@ -403,18 +432,19 @@ class Connection(object):
         return libraries
 
     def delete_library(self, library_id):
-        """
-        DELETE /api/library/{library_id}
+        """DELETE /api/library/{library_id}
         Deletes a specified library
+
         """
         data = {}
-        data[ 'purge' ] = True    
+        data['purge'] = True
         # TODO: Figure out way to purge data library
         try:
-            return self.delete( "libraries" + "/" + library_id, data )
-        except urllib2.HTTPError, e:
-            print str( e.read( 1024 ) )
-            return "Error. " + str( e.read( 1024 ) )
+            url = "libraries/" + library_id
+        except TypeError:
+            # avoid using ID that's not a string
+            raise MalformedResourceID(library_id)
+        return self.delete(url, data)
 
     # =========================================================================================================
 
@@ -454,22 +484,19 @@ class Connection(object):
             # avoid using ID that's not a string
             raise MalformedResourceID(workflow_id)
     
-    def get_complete_workflows( self ):
+    def get_complete_workflows(self):
         workflows = []
-        
         for workflow_entry in self.get_workflows():
-            workflow = GalaxyWorkflow( workflow_entry['name'], workflow_entry['id'] )
-            
+            workflow = GalaxyWorkflow(workflow_entry['name'], workflow_entry['id'])
             # get workflow inputs
-            for i in range( len( self.get_workflow( workflow.identifier )['inputs'] ) ):
-                
-                input_identifier = self.get_workflow( workflow.identifier )['inputs'].keys()[i]
-                
-                workflow_input = GalaxyWorkflowInput( self.get_workflow( workflow.identifier )['inputs'][input_identifier]['label'], input_identifier )                        
+            for i in range(len(self.get_workflow(workflow.identifier)['inputs'])):
+                input_identifier = \
+                    self.get_workflow(workflow.identifier)['inputs'].keys()[i]
+                workflow_input = GalaxyWorkflowInput(
+                    self.get_workflow(workflow.identifier)['inputs'][input_identifier]['label'],
+                    input_identifier)
                 workflow.add_input(workflow_input)
-            
             workflows.append(workflow)
-        
         return workflows
 
     def run_workflow( self, workflow_id, input_map, history_id, workflow_uuid ):
@@ -524,19 +551,18 @@ class Connection(object):
             raise MalformedResourceID(workflow_id)
 
     def delete_workflow(self, workflow_id):
-        """
-        DELETE /api/workflows/{encoded_workflow_id}
+        """DELETE /api/workflows/{encoded_workflow_id}
         Deletes a specified workflow
+
         """
-        
         data = {}
-        data[ 'purge' ] = True
-        
+        data['purge'] = True
         try:
-            return self.delete( "workflows" + "/" + workflow_id, data )
-        except urllib2.HTTPError, e:
-            print str( e.read( 1024 ) )
-            return "Error. " + str( e.read( 1024 ) )
+            url = "workflows/" + workflow_id
+        except TypeError:
+            # avoid using ID that's not a string
+            raise MalformedResourceID(workflow_id)
+        return self.delete(url, data)
 
     def import_workflow(self, data):
         """POST /api/workflows

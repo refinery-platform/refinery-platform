@@ -44,6 +44,7 @@ class ServerError(RuntimeError):
 
 class UnknownResponseError(RuntimeError):
     '''Any HTTP status code except 2xx, 403, 404, 416 or 500
+    Example: 501 is returned for certain API endpoints like /api/datasets
 
     '''
     def __init__(self):
