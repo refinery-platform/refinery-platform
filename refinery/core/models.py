@@ -918,3 +918,31 @@ class RefineryLDAPBackend(LDAPBackend):
             except socket.error as e:
                 logger.error("Cannot send welcome email to: {}: {}".format(email_address_list, e))
         return user, created
+    
+    
+class ExternalToolStatus(models.Model):
+    SUCCESS_STATUS = "SUCCESS"
+    FAILURE_STATUS = "FAILURE"
+    UNKNOWN_STATUS = "UNKNOWN"
+
+    CELERY_TOOL_NAME = "CELERY"
+    SOLR_TOOL_NAME = "SOLR"
+    GALAXY_TOOL_NAME = "GALAXY"
+
+    STATUS_CHOICES = ( 
+                     (SUCCESS_STATUS, "Tool is running"),
+                     (FAILURE_STATUS, "Tool is not running"),
+                     (UNKNOWN_STATUS, "Cannot reach tool"),
+                    )
+
+    TOOL_NAME_CHOICES = (
+                         (CELERY_TOOL_NAME, "Celery"), 
+                         (SOLR_TOOL_NAME, "Solr"), 
+                         (GALAXY_TOOL_NAME, "Galaxy")
+                         )
+
+    status = models.TextField(default=UNKNOWN_STATUS, choices=STATUS_CHOICES, blank=True, null=True)
+    last_time_check = models.DateTimeField(auto_now_add=True)
+    name = models.TextField(choices=TOOL_NAME_CHOICES, blank=True, null=True)
+    interval_between_time_checks = models.FloatField(default=5.0)
+    unique_instance_identifier = models.CharField(max_length=256, blank=True, null=True)
