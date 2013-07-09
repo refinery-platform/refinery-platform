@@ -921,13 +921,22 @@ class RefineryLDAPBackend(LDAPBackend):
     
     
 class ExternalToolStatus(models.Model):
+    '''Model to keep track of the status of external tools Refinery uses
+    '''
     SUCCESS_STATUS = "SUCCESS"
     FAILURE_STATUS = "FAILURE"
     UNKNOWN_STATUS = "UNKNOWN"
 
+    '''If adding a new tool, user needs to fill out TOOL_NAME, CHECK_TOOL_INTERVAL, STATUS_CHOICES, 
+    and TOOL_NAME_CHOICES
+    '''
     CELERY_TOOL_NAME = "CELERY"
     SOLR_TOOL_NAME = "SOLR"
     GALAXY_TOOL_NAME = "GALAXY"
+    
+    CELERY_CHECK_TOOL_INTERVAL = 5.0
+    SOLR_CHECK_TOOL_INTERVAL = 5.0
+    GALAXY_CHECK_TOOL_INTERVAL = 5.0
 
     STATUS_CHOICES = ( 
                      (SUCCESS_STATUS, "Tool is running"),
@@ -944,5 +953,4 @@ class ExternalToolStatus(models.Model):
     status = models.TextField(default=UNKNOWN_STATUS, choices=STATUS_CHOICES, blank=True, null=True)
     last_time_check = models.DateTimeField(auto_now_add=True)
     name = models.TextField(choices=TOOL_NAME_CHOICES, blank=True, null=True)
-    interval_between_time_checks = models.FloatField(default=5.0)
     unique_instance_identifier = models.CharField(max_length=256, blank=True, null=True)

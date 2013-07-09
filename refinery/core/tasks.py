@@ -268,7 +268,7 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
 
 LOCK_EXPIRE = 60 # Lock expires in 1 minute
 
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.CELERY_TOOL_NAME)[0].interval_between_time_checks))
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.CELERY_CHECK_TOOL_INTERVAL))
 def check_for_celery():
     # The cache key consists of the task name and the MD5 digest
     # of the feed URL.
@@ -299,7 +299,7 @@ def check_for_celery():
             release_lock()
 
 
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.SOLR_TOOL_NAME)[0].interval_between_time_checks))
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.SOLR_CHECK_TOOL_INTERVAL))
 def check_for_solr():
     """creates a lock, then pings solr"""
     # The cache key consists of the task name and the MD5 digest
@@ -334,7 +334,7 @@ def check_for_solr():
             release_lock()
 
 
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.GALAXY_TOOL_NAME)[0].interval_between_time_checks))
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.GALAXY_CHECK_TOOL_INTERVAL))
 def check_for_galaxy():
     # The cache key consists of the task name and the MD5 digest
     # of the feed URL.
