@@ -925,3 +925,46 @@ class RefineryLDAPBackend(LDAPBackend):
             except socket.error as e:
                 logger.error("Cannot send welcome email to: {}: {}".format(email_address_list, e))
         return user, created
+    
+    
+class ExternalToolStatus(models.Model):
+    '''Model to keep track of the status of external tools Refinery uses
+    '''
+    SUCCESS_STATUS = "SUCCESS"
+    FAILURE_STATUS = "FAILURE"
+    UNKNOWN_STATUS = "UNKNOWN"
+
+    '''If adding a new tool, user needs to fill out TOOL_NAME, CHECK_TOOL_INTERVAL, STATUS_CHOICES, 
+    and TOOL_NAME_CHOICES
+    '''
+    CELERY_TOOL_NAME = "CELERY"
+    SOLR_TOOL_NAME = "SOLR"
+    GALAXY_TOOL_NAME = "GALAXY"
+    
+    CELERY_CHECK_TOOL_INTERVAL = 5.0
+    SOLR_CHECK_TOOL_INTERVAL = 5.0
+    GALAXY_CHECK_TOOL_INTERVAL = 5.0
+
+    STATUS_CHOICES = ( 
+                     (SUCCESS_STATUS, "Tool is running"),
+                     (FAILURE_STATUS, "Tool is not running"),
+                     (UNKNOWN_STATUS, "Cannot reach tool"),
+                    )
+
+    TOOL_NAME_CHOICES = (
+                         (CELERY_TOOL_NAME, "Celery"), 
+                         (SOLR_TOOL_NAME, "Solr"), 
+                         (GALAXY_TOOL_NAME, "Galaxy")
+                         )
+
+    status = models.TextField(default=UNKNOWN_STATUS, choices=STATUS_CHOICES, blank=True, null=True)
+    last_time_check = models.DateTimeField(auto_now_add=True)
+    name = models.TextField(choices=TOOL_NAME_CHOICES, blank=True, null=True)
+    unique_instance_identifier = models.CharField(max_length=256, blank=True, null=True)
+    
+    def __unicode__(self):
+        retstr = self.name
+        if self.unique_instance_identifier:
+            retstr += " (%s)" % self.unique_instance_identifier
+        retstr += ": %s" % self.status
+        return retstr

@@ -332,7 +332,7 @@ def convert_to_isatab(accession, isatab_zip_loc, preisatab_zip_loc):
     return "Successfully converted %s" % accession #successful everything
 
 
-@periodic_task(run_every=crontab(hour="12", day_of_week="friday"))
+#@periodic_task(run_every=crontab(hour="12", day_of_week="friday"))
 def get_arrayexpress_studies():
     """
     Name: get_arrayexpress_studies
@@ -462,7 +462,6 @@ def parse_isatab(username, public, path, additional_raw_data_file_extension=None
     isa_archive: if you're passing a directory, a zipped version of the directory for storage and legacy purposes
     pre_isa_archive: optional copy of files that were converted to ISA-Tab
     file_base_path: if your file locations are relative paths, this is the base
-
     """
     logger.info("logging from parse_isatab")
     p = IsaTabParser()

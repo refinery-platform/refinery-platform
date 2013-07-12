@@ -1,4 +1,5 @@
 from django.db import models
+import galaxy_connector
 
 class Instance( models.Model ):
     base_url = models.CharField( max_length=2000 )
@@ -10,3 +11,11 @@ class Instance( models.Model ):
 
     def __unicode__(self):
         return self.description + " (" + self.api_key + ")"
+    
+    def get_galaxy_connection(self):
+        return galaxy_connector.connection.Connection(
+            self.base_url,
+            self.data_url,
+            self.api_url,
+            self.api_key
+        )
