@@ -29,11 +29,9 @@ def grab_workflows(instance=None, connection_galaxy=None):
     # checks to see if an existing galaxy connection, otherwise create a connection
     if (connection_galaxy is None):
         print ("instance is none")
-        #get instance
+        #get connection
         instance = Instance.objects.all()[0]
-        #get conenction
-        connection_galaxy = Connection(instance.base_url, instance.data_url, 
-                                instance.api_url, instance.api_key)
+        connection_galaxy = instance.get_galaxy_connection()
     #get all your workflows
     workflows = connection_galaxy.get_complete_workflows()
 

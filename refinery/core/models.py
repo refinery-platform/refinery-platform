@@ -14,20 +14,18 @@ from django.contrib.auth.models import User, Group
 from django.contrib.auth.signals import user_logged_in
 from django.core.mail import mail_admins, send_mail
 from django.db import models, transaction
-from django.db.models import Max, signals
+from django.db.models import Max
 from django.db.models.fields import IntegerField
-from django.db.models.signals import post_save, post_init
+from django.db.models.signals import post_save
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
-from django.forms import ModelForm
 from django_extensions.db.fields import UUIDField
+from django_auth_ldap.backend import LDAPBackend
 from guardian.shortcuts import assign, get_users_with_perms, \
     get_groups_with_perms
 from registration.signals import user_registered, user_activated
-from django_auth_ldap.backend import LDAPBackend
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
-import galaxy_connector
 from galaxy_connector.models import Instance
 
 
@@ -591,12 +589,7 @@ class Analysis(OwnableResource):
         return True if self.status == self.FAILURE_STATUS else False
 
     def get_galaxy_connection(self):
-        return galaxy_connector.connection.Connection(
-            self.workflow.workflow_engine.instance.base_url,
-            self.workflow.workflow_engine.instance.data_url,
-            self.workflow.workflow_engine.instance.api_url,
-            self.workflow.workflow_engine.instance.api_key
-        )
+        return self.workflow.workflow_engine.instance.get_galaxy_connection()
 
     def delete_galaxy_workflow(self):
         connection = self.get_galaxy_connection()

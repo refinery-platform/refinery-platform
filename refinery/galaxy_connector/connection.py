@@ -11,7 +11,7 @@ import logging
 import requests
 import urllib2
 import simplejson
-from core.models import Workflow
+import core
 from galaxy_connector.exceptions import *
 from galaxy_connector.galaxy_workflow import GalaxyWorkflow
 from galaxy_connector.galaxy_workflow import GalaxyWorkflowInput
@@ -507,7 +507,8 @@ class Connection(object):
         data["ds_map"] = {}
 
         # retrieving workflow based on input workflow_uuid
-        curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
+        #TODO: handle DoesNotExist and MultipleObjectsReturned exceptions
+        curr_workflow = core.models.Workflow.objects.get(uuid=workflow_uuid)
         # getting distinct workflow inputs
         workflow_data_inputs = curr_workflow.data_inputs.all()
         annot_inputs = {}
@@ -572,4 +573,3 @@ class Connection(object):
         wdata = {};
         wdata['workflow'] = data;
         return self.post("workflows/upload", wdata);
-

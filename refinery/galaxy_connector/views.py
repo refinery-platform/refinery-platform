@@ -4,7 +4,6 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.contrib.sites.models import get_current_site
-from galaxy_connector.connection import Connection
 from galaxy_connector.models import Instance
 from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps, createStepsAnnot
 from galaxy_connector.tasks import monitor_workflow
@@ -25,7 +24,7 @@ def checkActiveInstance(req):
         return HttpResponse( 'Unable to fulfill request. No Galaxy instance is available. You need to log in first.' )
     else:
         instance = req.session['active_galaxy_instance']
-        connection = Connection( instance.base_url, instance.data_url, instance.api_url, instance.api_key )
+        connection = instance.get_galaxy_connection()
         return instance, connection
         
 

@@ -415,12 +415,7 @@ def workflow(request, uuid):
 
     # load graph dictionary from Galaxy
     workflow = Workflow.objects.filter( uuid=uuid ).get()
-    
-    connection = Connection( workflow.workflow_engine.instance.base_url,
-                             workflow.workflow_engine.instance.data_url,
-                             workflow.workflow_engine.instance.api_url,
-                             workflow.workflow_engine.instance.api_key )
-
+    connection = workflow.workflow_engine.instance.get_galaxy_connection()
     workflow_dictionary = connection.get_workflow_dict( workflow.internal_id );
         
     # parse workflow into graph data structure

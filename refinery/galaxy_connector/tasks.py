@@ -11,7 +11,7 @@ import time
 from django.conf import settings
 from django.contrib.sites.models import Site
 from analysis_manager.tasks import run_analysis
-import copy
+
 
 @task()
 def monitor_workflow( instance, connection, interval=5.0 ):

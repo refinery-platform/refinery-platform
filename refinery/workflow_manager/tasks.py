@@ -4,23 +4,18 @@ Created on Mar 31, 2012
 @author: nils
 '''
 
-from celery.task import task
-from core.models import Workflow, WorkflowDataInput, WorkflowEngine, \
-    WorkflowInputRelationships, TYPE_1_1, TYPE_REPLICATE, NR_TYPES
-from django.contrib.auth.models import Group
-from django.contrib.sites.models import Site
-from galaxy_connector.connection import Connection
-from galaxy_connector.galaxy_workflow import GalaxyWorkflow, GalaxyWorkflowInput, \
-    createBaseWorkflow, createStepsAnnot, createStepsCompact, getStepOptions
-from galaxy_connector.models import Instance
 import ast
 import json
 import logging
-import pickle
+from celery.task import task
+from core.models import Workflow, WorkflowDataInput, WorkflowEngine, \
+    WorkflowInputRelationships, TYPE_1_1, TYPE_REPLICATE, NR_TYPES
+from galaxy_connector.galaxy_workflow import GalaxyWorkflow, GalaxyWorkflowInput, \
+    createBaseWorkflow, createStepsAnnot, createStepsCompact, getStepOptions
+
 
 # get module logger
 logger = logging.getLogger(__name__)
-
 
 GALAXY_WORKFLOW_ANNOTATION = 'annotation'
 GALAXY_WORKFLOW_TYPE = 'refinery_type'
@@ -36,6 +31,7 @@ GALAXY_TOOL_ANNOTATION_OPTIONAL_FIELDS = [('type',str), ('description',str)]
 GALAXY_INPUT_RELATIONSHIP_REQUIRED_FIELDS = [('category',str), ('set1',str), ('set2',str)] # [(field, type), ...]
 GALAXY_INPUT_RELATIONSHIP_OPTIONAL_FIELDS = [] # [(field, type), ...]
 GALAXY_INPUT_RELATIONSHIP_CATEGORIES = [ category[0] for category in NR_TYPES ] 
+
     
 @task()
 def get_workflows( workflow_engine ):
@@ -45,7 +41,7 @@ def get_workflows( workflow_engine ):
     
     # obtain a connection to galaxy using the instance information
     try:
-        connection = Connection( workflow_engine.instance.base_url, workflow_engine.instance.data_url, workflow_engine.instance.api_url, workflow_engine.instance.api_key )
+        connection = workflow_engine.instance.get_galaxy_connection()
         #get all workflows
         workflows = connection.get_complete_workflows()
     except:
