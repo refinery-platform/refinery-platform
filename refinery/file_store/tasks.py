@@ -69,14 +69,16 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         logger.error("Failed to import FileStoreItem with UUID '%s'", uuid)
         return None
 
-    # if file is ready to be used then return it, otherwise delete it if update is requested
+    # if file is ready to be used then return it,
+    # otherwise delete it if update is requested
     if item.is_local():
         if refresh:
             item.delete_datafile()
         else:
             return item
 
-    # if source is an absolute file system path then copy, otherwise assume it is a URL and download
+    # if source is an absolute file system path then copy,
+    # otherwise assume it is a URL and download
     if os.path.isabs(item.source):
         if os.path.isfile(item.source):
             # check if source file can be opened
@@ -88,7 +90,8 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
             srcfilename = os.path.basename(item.source)
 
             #TODO: copy file in chunks to display progress report
-            item.datafile.save(srcfilename, srcfile)  # model is saved by default if FileField.save() is called
+            # model is saved by default if FileField.save() is called
+            item.datafile.save(srcfilename, srcfile)
             srcfile.close()
             logger.info("File copied")
         else:

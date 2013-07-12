@@ -1,7 +1,6 @@
 '''
 Created on Apr 21, 2012
 
-@author: Ilya Sytchev
 '''
 
 import struct

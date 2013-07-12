@@ -454,6 +454,7 @@ def workflow(request, uuid):
             
     return render_to_response('core/workflow.html', { 'workflow': workflow, 'workflow_graph_url': workflow_graph_url }, context_instance=RequestContext( request ) )
 
+
 def graph_node_shape(node_type):
     if node_type == "input":
         return ">"
@@ -462,7 +463,6 @@ def graph_node_shape(node_type):
         return "<"
     
     return "o"
-    
 
 
 @login_required()
@@ -483,6 +483,7 @@ def workflow_edit(request, uuid):
         form = WorkflowForm( instance=workflow ) # An unbound form
     
     return render_to_response('core/workflow_edit.html', {'workflow': workflow, 'form': form}, context_instance=RequestContext(request))
+
 
 def workflow_engine(request,uuid):  
     workflow_engine = get_object_or_404( WorkflowEngine, uuid=uuid )
@@ -643,7 +644,6 @@ def admin_test_data( request ):
         quota_object.share( group_object, readonly=False )
     """
 
-
     project_objects = []
 
     # create projects (for each user: private, lab shared read/write, project group shared read-only, public shared) 
@@ -662,8 +662,7 @@ def admin_test_data( request ):
         project_object.set_owner( user_object )
         
         project_objects.append( project_object )
-        
-    
+
         ## PUBLIC PROJECT
         project_name = user_object.first_name + "\'s Public Project" 
         project_summary = "A project that is owned by " + user_object.first_name + " and shared for reading with the general public."
@@ -679,8 +678,7 @@ def admin_test_data( request ):
         project_object.share( group_object )
     
         project_objects.append( project_object )
-            
-    
+
         ## PROJECT GROUP READ-ONLY PROJECT
         project_name = user_object.first_name + "\'s Refinery Project" 
         project_summary = "A project that is owned by " + user_object.first_name + " and shared for reading with the \'Refinery Project\' ExtendedGroup."
@@ -696,8 +694,7 @@ def admin_test_data( request ):
         project_object.share( group_object )
     
         project_objects.append( project_object )
-    
-    
+
         ## LAB READ/WRITE PROJECT
         project_name = user_object.first_name + "\'s Lab Project" 
         project_summary = "A project that is owned by " + user_object.first_name + " and shared for reading and writing their lab ExtendedGroup."
@@ -712,7 +709,6 @@ def admin_test_data( request ):
         group_object = user_object.groups.get( name__endswith="Lab" )
         project_object.share( group_object, readonly=False )
         project_objects.append( project_object )
-
 
     data_set_objects = []
 
@@ -731,7 +727,6 @@ def admin_test_data( request ):
         data_set_object = DataSet.objects.create( name=data_set_name, summary=data_set_summary )
         data_set_object.set_owner( user_object )
         data_set_objects.append( data_set_object )
-        
 
         ## PUBLIC data_set
         data_set_name = user_object.first_name + "\'s Public Data Set" 
@@ -747,7 +742,6 @@ def admin_test_data( request ):
         group_object = ExtendedGroup.objects.public_group()
         data_set_object.share( group_object )
         data_set_objects.append( data_set_object )
-            
 
         ## data_set GROUP READ-ONLY data_set
         data_set_name = user_object.first_name + "\'s Refinery Data Set" 
@@ -763,7 +757,6 @@ def admin_test_data( request ):
         group_object = ExtendedGroup.objects.get( name__exact=".Refinery Project" )
         data_set_object.share( group_object )
         data_set_objects.append( data_set_object )
-
     
         ## LAB READ/WRITE data_set
         data_set_name = user_object.first_name + "\'s Lab Data Set"
@@ -781,20 +774,28 @@ def admin_test_data( request ):
         data_set_objects.append( data_set_object )
 
     workflow_engine_objects = []
-    
+
     WorkflowEngine.objects.all().delete()
-    
+
     for instance in Instance.objects.all():
-        workflow_engine_object = WorkflowEngine.objects.create( instance=instance, name=instance.description, summary=instance.base_url + " " + instance.api_key )
+        workflow_engine_object = WorkflowEngine.objects.create(
+            instance=instance, name=instance.description,
+            summary=instance.base_url + " " + instance.api_key
+            )
         # TODO: introduce group managers and assign ownership to them        
-        workflow_engine_object.set_manager_group( ExtendedGroup.objects.public_group().manager_group )
-                
-        workflow_engine_objects.append( workflow_engine_object )
-        
-        
+        workflow_engine_object.set_manager_group(
+            ExtendedGroup.objects.public_group().manager_group)
+        workflow_engine_objects.append(workflow_engine_object)
+
     template = "admin/core/test_data.html"    
     
-    return render_to_response( template, { "users": user_objects, "groups": group_objects, "projects": project_objects, "data_sets": data_set_objects, "workflow_engines": workflow_engine_objects }, context_instance=RequestContext( request ) )
+    return render_to_response(template,
+                              {"users": user_objects,
+                               "groups": group_objects,
+                               "projects": project_objects,
+                               "data_sets": data_set_objects,
+                               "workflow_engines": workflow_engine_objects},
+                              context_instance=RequestContext(request))
 
 
 def analyses(request, project_uuid ):
@@ -809,29 +810,29 @@ def analyses(request, project_uuid ):
 
 @login_required()
 def analysis(request, analysis_uuid ):
+    #TODO: handle DoesNotExist and MultipleObjectsReturned
     analysis = Analysis.objects.get(uuid=analysis_uuid)
-    
+    # project associated with this Analysis
     project = analysis.project
-    """Project associated with this Analysis"""
+    # list of analysis inputs
     data_inputs = analysis.workflow_data_input_maps.order_by('pair_id')
-    """List of analysis inputs"""
+    # list of analysis results
     analysis_results = analysis.results
-    """List of analysis results"""
     workflow = analysis.workflow
-    
     # getting file_store references
     file_all = []
     for i in analysis_results.all():
         file_store_uuid = i.file_store_uuid
         fs = FileStoreItem.objects.get(uuid=file_store_uuid)
         file_all.append(fs)
-    
     # NG: get file_store items for inputs
     input_filenames = []
     for workflow_input in data_inputs.all():
-        file_uuid = Node.objects.get( uuid=workflow_input.data_uuid ).file_uuid;
-        input_filenames.append( os.path.basename( FileStoreItem.objects.get(uuid=file_uuid).get_file_object().name ) ) 
-    
+        file_uuid = Node.objects.get(uuid=workflow_input.data_uuid).file_uuid
+        file_store_item = FileStoreItem.objects.get_item(uuid=file_uuid)
+        if file_store_item:
+            file_name = os.path.basename(file_store_item.get_absolute_path())
+            input_filenames.append(file_name)
     return render_to_response('core/analysis.html',
                               {
                                "analysis": analysis,
@@ -844,17 +845,10 @@ def analysis(request, analysis_uuid ):
                                },
                               context_instance=RequestContext(request))
 
-"""
-def analysis_redirect(request, project_uuid, analysis_uuid):
-    statuses = AnalysisStatus.objects.get(analysis_uuid=analysis_uuid)
-    return HttpResponseRedirect(reverse('analysis_manager.views.analysis', args=(analysis_uuid,)))
-"""
 
 def solr_select(request, core):
     # core format is <name_of_core>    
     # query.GET is a querydict containing all parts of the query
-    #url = settings.REFINERY_SOLR_BASE_URL + core + "/select?" + request.GET.urlencode()
-    
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
     data = request.GET.urlencode()
     req = urllib2.Request(url, data ) #, {'Content-Type': 'application/json'})
@@ -866,8 +860,8 @@ def solr_select(request, core):
 
 
 def solr_igv(request):
-    '''
-    Function for taking solr request url. Removes pagination, facets from input query to create multiple 
+    '''Function for taking solr request url.
+    Removes pagination, facets from input query to create multiple 
     
     :param request: Django HttpRequest object including solr query 
     :type source: HttpRequest object.
@@ -900,7 +894,10 @@ def solr_igv(request):
             # for solr query for data
             if i == 'query':
                 solr_query = val
-                solr_results = get_solr_results(solr_query, selected_mode=node_selection_blacklist_mode, selected_nodes=node_selection)
+                solr_results = get_solr_results(
+                    solr_query, selected_mode=node_selection_blacklist_mode,
+                    selected_nodes=node_selection
+                    )
                 #logger.debug("solr_results")
                 #logger.debug(simplejson.dumps(solr_results, indent=4))
         
@@ -917,12 +914,14 @@ def solr_igv(request):
         logger.debug("session_urls")
         logger.debug(simplejson.dumps(session_urls, indent=4))
         
-        return HttpResponse(simplejson.dumps(session_urls),mimetype='application/json')
+        return HttpResponse(simplejson.dumps(session_urls),
+                            mimetype='application/json')
 
-    
-def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uuids=False, selected_mode=True, selected_nodes=None ):
-    '''
-    Helper function for taking solr request url. Removes facet requests, converts to json, from input solr query  
+
+def get_solr_results(query, facets=False, jsonp=False, annotation=False,
+                     only_uuids=False, selected_mode=True, selected_nodes=None):
+    '''Helper function for taking solr request url.
+    Removes facet requests, converts to json, from input solr query  
     
     :param query: solr http query string
     :type query: string
@@ -979,22 +978,17 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
             # blacklist mode (remove uuid's from solr query) 
             if selected_mode:
                 if 'uuid' in node:
-                   # if the current node should be removed from the results
-                   if node['uuid'] in selected_nodes: 
-                       del results["response"]["docs"][i]
-                       #num_found -= 1
-            
+                    # if the current node should be removed from the results
+                    if node['uuid'] in selected_nodes: 
+                        del results["response"]["docs"][i]
+                        #num_found -= 1
             # whitelist mode (add's uuids from solr query) 
             else:
                 if 'uuid' in node:
-                   # if the current node should be removed from the results
-                   if node['uuid'] not in selected_nodes: 
-                       del results["response"]["docs"][i]
-                       #num_found += 1
-    
-    #logger.debug("core.views: get_solr_results num_found=%s" % num_found)
-    #logger.debug(simplejson.dumps(results, indent=4))
-    
+                    # if the current node should be removed from the results
+                    if node['uuid'] not in selected_nodes: 
+                        del results["response"]["docs"][i]
+                        #num_found += 1    
     # Will return only list of file_uuids
     if only_uuids:
         ret_file_uuids = []
@@ -1004,17 +998,21 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False, only_uu
         return ret_file_uuids
         
     return results    
-    
+
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
     logger.debug("core.views.samples_solr called")
-    data_set = get_object_or_404( DataSet, uuid=ds_uuid )
-    
-    # getting current workflows
+    data_set = get_object_or_404(DataSet, uuid=ds_uuid)
+
     workflows = Workflow.objects.all();
     
     # TODO: replace from settings.py or settings_local.py
     solr_url = 'http://127.0.0.1:8983'
 
-    return render_to_response('core/samples_solr.html', {'workflows': workflows, 'data_set': data_set, 'study_uuid':study_uuid, 'assay_uuid':assay_uuid, 'solr_url':solr_url}, 
+    return render_to_response('core/samples_solr.html',
+                              {'workflows': workflows,
+                               'data_set': data_set,
+                               'study_uuid': study_uuid,
+                               'assay_uuid': assay_uuid,
+                               'solr_url': solr_url}, 
                               context_instance=RequestContext(request))

@@ -20,16 +20,16 @@ from django.core.urlresolvers import reverse
 from django.template import loader, Context
 from analysis_manager.models import AnalysisStatus
 from core.models import Analysis, AnalysisResult, WorkflowFilesDL, \
-    AnalysisNodeConnection, INPUT_CONNECTION, OUTPUT_CONNECTION, Workflow, Download
-from data_set_manager.models import Node, initialize_attribute_order
-from data_set_manager.utils import get_node_types, update_annotated_nodes, \
-    index_annotated_nodes, add_annotated_nodes_selection, \
+    AnalysisNodeConnection, INPUT_CONNECTION, OUTPUT_CONNECTION, Workflow, \
+    Download
+from data_set_manager.models import Node
+from data_set_manager.utils import add_annotated_nodes_selection, \
     index_annotated_nodes_selection
 from file_store.models import FileStoreItem, is_local
 from file_store.tasks import import_file, create, rename
 from galaxy_connector.exceptions import *
 from galaxy_connector.galaxy_workflow import countWorkflowSteps, \
-    create_workflow_graph, create_expanded_workflow_graph
+    create_expanded_workflow_graph
 from workflow_manager.tasks import configure_workflow
 
 
@@ -140,8 +140,8 @@ def emptyTask(ret_val):
 
 @task
 def chord_execution(ret_val, analysis):
-    analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-
+    #TODO: handle DoesNotExist and MultipleObjectsReturned
+    analysis = Analysis.objects.get(uuid=analysis.uuid)
     if analysis.failed():
         send_analysis_email(analysis)
         return
@@ -164,9 +164,8 @@ def chord_execution(ret_val, analysis):
 @task
 def chord_postprocessing(ret_val, analysis):
     logger.debug("analysis_manager.chord_postprocessing called")
-
-    analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-
+    #TODO: handle DoesNotExist and MultipleObjectsReturned
+    analysis = Analysis.objects.get(uuid=analysis.uuid)
     if analysis.failed():
         send_analysis_email(analysis)
         return
@@ -194,9 +193,10 @@ def chord_cleanup(ret_val, analysis):
 
     """
     logger.debug("analysis_manager.chord_cleanup called")
-
-    analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
-    analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
+    #TODO: handle DoesNotExist and MultipleObjectsReturned
+    analysis = Analysis.objects.get(uuid=analysis.uuid)
+    #TODO: handle DoesNotExist and MultipleObjectsReturned
+    analysis_status = AnalysisStatus.objects.get(analysis=analysis)
 
     cleanup_taskset = TaskSet(task=[run_analysis_cleanup.subtask((analysis,))])
 
@@ -206,7 +206,6 @@ def chord_cleanup(ret_val, analysis):
     ### TODO ###  UPDATE CLEANUP TASKID FOR ANALYSIS_STATUS
     analysis_status.cleanup_taskset_id = result_set.task_id 
     analysis_status.save()
-    return
 
 
 @task()
@@ -216,39 +215,30 @@ def run_analysis(analysis, interval=5.0):
 
     '''
     logger.debug("analysis_manager.tasks run_analysis called")
-    
     analysis_status = AnalysisStatus.objects.get(analysis=analysis)
-    
     # updating status of analysis to running
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
     analysis.set_status(Analysis.RUNNING_STATUS)
-
     # DOWNLOADING
     # GETTING LIST OF DOWNLOADED REMOTE FILES 
     datainputs = analysis.workflow_data_input_maps.all()
     download_tasks = []
-
     for files in datainputs:
         cur_node_uuid = files.data_uuid
         cur_fs_uuid = Node.objects.get(uuid=cur_node_uuid).file_uuid
-
         # Adding downloading task if file is not local
         if not is_local(cur_fs_uuid):
             # getting the current file_uuid from the given node_uuid
             task_id = import_file.subtask((cur_fs_uuid, False, ))
             download_tasks.append(task_id)
-
     # PREPROCESSING
     task_id = run_analysis_preprocessing.subtask((analysis, )) 
     download_tasks.append(task_id)
     result_chord, result_set = progress_chord(download_tasks)(
         chord_execution.subtask(analysis=analysis, ))
-
     # saving preprocessing taskset
     analysis_status.preprocessing_taskset_id = result_set.task_id 
     analysis_status.save()
-
-    return
 
 
 # task: perform preprocessing (innermost task, does the actual work)
@@ -273,7 +263,6 @@ def run_analysis_preprocessing(analysis):
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        send_analysis_email(analysis)
         return
 
     ### generates same ret_list purely based on analysis object ###
@@ -291,9 +280,12 @@ def run_analysis_preprocessing(analysis):
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        send_analysis_email(analysis)
         if not isinstance(exc, (ConnectionError, TimeoutError, AuthError)):
-            analysis.delete_galaxy_library()
+            try:
+                analysis.delete_galaxy_library()
+            except RuntimeError:
+                logger.error(
+                    "Cleanup failed for analysis '{}'".format(analysis.name))
         return
 
     # import connections into database
@@ -303,7 +295,6 @@ def run_analysis_preprocessing(analysis):
             node = Node.objects.get(uuid=analysis_node_connection["node_uuid"])
         else:
             node = None
-
         AnalysisNodeConnection.objects.create(
             analysis=analysis,
             subanalysis=analysis_node_connection['subanalysis'],
@@ -335,9 +326,12 @@ def run_analysis_preprocessing(analysis):
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        send_analysis_email(analysis)
         if not isinstance(exc, (ConnectionError, TimeoutError, AuthError)):
-            analysis.delete_galaxy_library()
+            try:
+                analysis.delete_galaxy_library()
+            except RuntimeError:
+                logger.error(
+                    "Cleanup failed for analysis '{}'".format(analysis.name))
         return
 
     ######### ANALYSIS MODEL 
@@ -351,17 +345,19 @@ def run_analysis_preprocessing(analysis):
                 Site.objects.get_current().name, analysis.uuid, datetime.now())
             )
     except RuntimeError as e:
-        error_msg = (
-            "Pre-processing failed: " +
-            "error creating Galaxy history for analysis '{}': {}"
-            ).format(analysis.name, e.message)
+        error_msg = "Pre-processing failed: " + \
+                    "error creating Galaxy history for analysis '{}': {}" \
+                    .format(analysis.name, e.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        send_analysis_email(analysis)
         if not isinstance(exc, (ConnectionError, TimeoutError, AuthError)):
-            analysis.delete_galaxy_library()
-            analysis.delete_galaxy_workflow()
+            try:
+                analysis.delete_galaxy_library()
+                analysis.delete_galaxy_workflow()
+            except RuntimeError:
+                logger.error(
+                    "Cleanup failed for analysis '{}'".format(analysis.name))
         return
 
     # updating analysis object
@@ -388,7 +384,6 @@ def monitor_analysis_execution(analysis):
         return
 
     if analysis.failed():
-        logger.info("Analysis '{}' failed".format(analysis))
         return
     else:
         try:
@@ -411,13 +406,13 @@ def monitor_analysis_execution(analysis):
 
         try:
             progress = connection.get_progress(analysis.history_id)
-        except ConnectionError as e:
+        except (ConnectionError, TimeoutError) as e:
             error_msg = "Unable to get progress for " + \
                         "history {} of analysis {}: {}".format(
                             analysis.history_id, analysis.name, e.message)
-            monitor_analysis_execution.update_state(state=celery.states.FAILURE)
-            logger.error(error_msg)
-            return
+            analysis.set_status(Analysis.UNKNOWN_STATUS, error_msg)
+            logger.warning(error_msg)
+            monitor_analysis_execution.retry(countdown=5)
         except RuntimeError as e:
             # if this is not just a connection error,
             # analysis has probably failed
@@ -434,7 +429,7 @@ def monitor_analysis_execution(analysis):
         if progress["workflow_state"] == "error":
             # Setting state of analysis to failure
             analysis.set_status(Analysis.FAILURE_STATUS)
-            logger.debug("analysis status: %s" % analysis.status)
+            logger.debug("analysis status: %s" % analysis.get_status())
             return
         elif progress["workflow_state"] == "ok":
             logger.debug("workflow message OK:  %s", progress["message"]["ok"] )
@@ -460,7 +455,6 @@ def run_analysis_execution(analysis):
 
     ### generates same ret_list purely based on analysis object ###
     ret_list = get_analysis_config(analysis)
-
     #### NEED TO IMPORT TO GALAXY TO GET GALAXY_IDS ###
     try:
         ret_list = import_analysis_in_galaxy(
@@ -472,13 +466,15 @@ def run_analysis_execution(analysis):
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_execution.update_state(state=celery.states.FAILURE)
-        send_analysis_email(analysis)
         if not isinstance(exc, (ConnectionError, TimeoutError, AuthError)):
-            analysis.delete_galaxy_library()
-            analysis.delete_galaxy_workflow()
-            analysis.delete_galaxy_history()
+            try:
+                analysis.delete_galaxy_library()
+                analysis.delete_galaxy_workflow()
+                analysis.delete_galaxy_history()
+            except RuntimeError:
+                logger.error(
+                    "Cleanup failed for analysis '{}'".format(analysis.name))
         return
-
     # Running workflow
     try:
         result = connection.run_workflow(
@@ -487,16 +483,19 @@ def run_analysis_execution(analysis):
             )
     except RuntimeError as e:
         error_msg = "Analysis launch failed: " + \
-            "error running Galaxy workflow for analysis '{}': {}" \
-            .format(analysis.name, e.message)
+                    "error running Galaxy workflow for analysis '{}': {}" \
+                    .format(analysis.name, e.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_execution.update_state(state=celery.states.FAILURE)
-        send_analysis_email(analysis)
         if not isinstance(exc, (ConnectionError, TimeoutError, AuthError)):
-            analysis.delete_galaxy_library()
-            analysis.delete_galaxy_workflow()
-            analysis.delete_galaxy_history()
+            try:
+                analysis.delete_galaxy_library()
+                analysis.delete_galaxy_workflow()
+                analysis.delete_galaxy_history()
+            except RuntimeError:
+                logger.error(
+                    "Cleanup failed for analysis '{}'".format(analysis.name))
 
 
 @task()
@@ -552,9 +551,12 @@ def run_analysis_cleanup(analysis):
     rename_analysis_results(analysis)
     logger.debug("after rename_analysis_results called")
 
-    analysis.delete_galaxy_history()
-    analysis.delete_galaxy_workflow()
-    analysis.delete_galaxy_library()
+    try:
+        analysis.delete_galaxy_history()
+        analysis.delete_galaxy_workflow()
+        analysis.delete_galaxy_library()
+    except RuntimeError:
+        logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
 
     return
 
@@ -600,7 +602,6 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
 
     """
     logger.debug("analysis_manager.tasks import_analysis_in_galaxy called")
-    
     for fileset in ret_list:
         for k, v in fileset.iteritems():
             cur_item = fileset[k]
@@ -608,15 +609,14 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
             # getting the current file_uuid from the given node_uuid
             curr_file_uuid = Node.objects.get(
                 uuid=cur_item['node_uuid']).file_uuid
-
-            # getting current filestoreitem
-            curr_filestore = FileStoreItem.objects.get(uuid=curr_file_uuid)
-
-            file_path = curr_filestore.get_absolute_path()
+            curr_filestore = FileStoreItem.objects.get_item(uuid=curr_file_uuid)
+            if curr_filestore:
+                file_path = curr_filestore.get_absolute_path()
+            else:
+                file_path = ''
             cur_item["filepath"] = file_path
             file_id = connection.put_into_library(library_id, file_path)
             cur_item["id"] = file_id
-
     return ret_list
 
 
@@ -644,7 +644,6 @@ def download_history_files(analysis) :
     task_list = []
     # gets current galaxy connection
     connection = analysis.get_galaxy_connection()
-
     try:
         download_list = connection.get_history_file_list(analysis.history_id)
     except RuntimeError as exc:
@@ -654,10 +653,13 @@ def download_history_files(analysis) :
         logger.error(error_msg)
         if not isinstance(exc, (ConnectionError, TimeoutError, AuthError)):
             analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-            send_analysis_email(analysis)
-            analysis.delete_galaxy_library()
-            analysis.delete_galaxy_workflow()
-            analysis.delete_galaxy_history()
+            try:
+                analysis.delete_galaxy_library()
+                analysis.delete_galaxy_workflow()
+                analysis.delete_galaxy_history()
+            except RuntimeError:
+                logger.error(
+                    "Cleanup failed for analysis '{}'".format(analysis.name))
         return task_list
 
     # Iterating through files in current galaxy history

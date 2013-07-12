@@ -1,8 +1,6 @@
 """
 file_store module
 
-@author: Ilya Sytchev
-
 * Manages all data files
 * Downloads files from external repositories (by URL)
 * Manage the import cache/public data space

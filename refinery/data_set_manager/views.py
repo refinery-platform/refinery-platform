@@ -78,7 +78,8 @@ def search_typeahead(request):
 class ImportISATabFileForm(forms.Form):
     ''' ISA-Tab file upload form '''
     isa_tab_file = forms.FileField(label='ISA-Tab file', required=False)
-    isa_tab_url = forms.URLField(label='ISA-Tab URL', required=False, widget=forms.TextInput(attrs={'size':'37'}))
+    isa_tab_url = forms.URLField(label='ISA-Tab URL', required=False,
+                                 widget=forms.TextInput(attrs={'size':'37'}))
 
     def clean(self):
         cleaned_data = super(ImportISATabFileForm, self).clean()

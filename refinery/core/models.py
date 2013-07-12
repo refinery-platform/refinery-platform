@@ -535,20 +535,18 @@ class Analysis(OwnableResource):
     INITIALIZED_STATUS = "INITIALIZED"
     UNKNOWN_STATUS = "UNKNOWN"  # analysis status from Galaxy is not available
 
-    #TODO: state transition diagram
-    #TODO: add a flag to indicate that the analysis was canceled by user
-
     STATUS_CHOICES = (
-                      (SUCCESS_STATUS, "Analysis finished successfully"),
-                      (FAILURE_STATUS, "Analysis terminated after errors"),
-                      (RUNNING_STATUS, "Analysis is running" ),
-                      (INITIALIZED_STATUS, "Analysis was initialized" ),
-                      )
+        (SUCCESS_STATUS, "Analysis finished successfully"),
+        (FAILURE_STATUS, "Analysis terminated after errors"),
+        (RUNNING_STATUS, "Analysis is running" ),
+        (INITIALIZED_STATUS, "Analysis was initialized" ),
+    )
 
-    project = models.ForeignKey( Project, related_name="analyses" )
-    data_set = models.ForeignKey( DataSet, blank=True )
-    workflow = models.ForeignKey( Workflow, blank=True )
-    workflow_data_input_maps = models.ManyToManyField( WorkflowDataInputMap, blank=True )
+    project = models.ForeignKey(Project, related_name="analyses")
+    data_set = models.ForeignKey(DataSet, blank=True)
+    workflow = models.ForeignKey(Workflow, blank=True)
+    workflow_data_input_maps = models.ManyToManyField(WorkflowDataInputMap,
+                                                      blank=True)
     workflow_steps_num = models.IntegerField(blank=True, null=True)
     workflow_copy = models.TextField(blank=True, null=True)
     history_id = models.TextField(blank=True, null=True)
@@ -558,11 +556,14 @@ class Analysis(OwnableResource):
     workflow_dl_files = models.ManyToManyField(WorkflowFilesDL, blank=True) 
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
-    status = models.TextField(default=INITIALIZED_STATUS, choices=STATUS_CHOICES, blank=True, null=True)
+    status = models.TextField(default=INITIALIZED_STATUS,
+                              choices=STATUS_CHOICES, blank=True, null=True)
     status_detail = models.TextField(blank=True, null=True)
+    # indicates if a user requested cancellation of this analysis
+    cancel = models.BooleanField(default=False) 
     # possibly replace results
     # output_nodes = models.ManyToManyField(Nodes, blank=True)
-    # protocol = i.e. protocol node created when the analysis is created 
+    # protocol = i.e. protocol node created when the analysis is created
 
     def __unicode__(self):
         return self.name + " - " + self.summary
@@ -602,31 +603,37 @@ class Analysis(OwnableResource):
         try:
             connection.delete_workflow(self.workflow_galaxy_id);
         except RuntimeError as e:
-            error_msg = "Analysis cleanup failed: " + \
-                        "error deleting Galaxy workflow for analysis '{}': {}" \
+            error_msg = "Error deleting Galaxy workflow for analysis '{}': {}" \
                         .format(self.name, e.message)
             logger.error(error_msg)
+            raise
 
     def delete_galaxy_history(self):
         connection = self.get_galaxy_connection()
         try:
-            ## DEBUG CURRENTLY NOT DELETING HISTORY
             connection.delete_history(self.history_id)
         except RuntimeError as e:
-            error_msg = "Analysis cleanup failed: " + \
-                        "error deleting Galaxy history for analysis '{}': {}" \
+            error_msg = "Error deleting Galaxy history for analysis '{}': {}" \
                         .format(self.name, e.message)
             logger.error(error_msg)
+            raise
 
     def delete_galaxy_library(self):        
         connection = self.get_galaxy_connection()
         try:
             connection.delete_library(self.library_id)
         except RuntimeError as e:
-            error_msg = "Analysis cleanup failed: " + \
-                        "error deleting Galaxy library for analysis '{}': {}" \
+            error_msg = "Error deleting Galaxy library for analysis '{}': {}" \
                         .format(self.name, e.message)
             logger.error(error_msg)
+            raise
+
+    def cancel(self):
+        self.cancel = True
+        self.save()
+        # running workflow is stopped by deleting its history
+        self.delete_galaxy_history()
+        self.set_status(Analysis.FAILURE_STATUS, "Cancelled at user's request")
 
 
 #: Defining available relationship types

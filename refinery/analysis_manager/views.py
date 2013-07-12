@@ -1,22 +1,22 @@
 # Create your views here.
 
-from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import run_analysis
-from core.models import Analysis, Workflow, WorkflowEngine, WorkflowDataInputMap, \
-    Project, DataSet, InvestigationLink, NodeSet, NodeRelationship, NodePair
-from data_set_manager.models import Study, Assay, Node
+import copy
 from datetime import datetime
-from django.contrib.auth.models import User, Group
+import logging
+from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseForbidden, Http404, \
-    HttpResponseRedirect
-from django.shortcuts import render_to_response, get_object_or_404
+from django.http import HttpResponse, HttpResponseRedirect, \
+    HttpResponseServerError, HttpResponseBadRequest, HttpResponseNotAllowed
+from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils import simplejson
+from analysis_manager.models import AnalysisStatus
+from analysis_manager.tasks import run_analysis
+from core.models import Analysis, Workflow, WorkflowEngine, \
+    WorkflowDataInputMap, InvestigationLink, NodeSet, NodeRelationship, NodePair
+from data_set_manager.models import Study, Assay, Node
 from workflow_manager.tasks import get_workflow_inputs, get_workflows
-import copy
-import logging
 from core.views import get_solr_results
 
 
@@ -32,19 +32,30 @@ def index(request):
 
 def analysis_status(request, uuid):
     logger.debug("analysis_manager.views.analysis_status called")
-
-    #TODO: handle DoesNotExist exception
-    analysis = Analysis.objects.get(uuid=uuid)
-    #TODO: handle DoesNotExist exception
-    statuses = AnalysisStatus.objects.get(analysis=analysis)
+    #TODO: handle MultipleObjectsReturned exception
+    try:
+        analysis = Analysis.objects.get(uuid=uuid)
+    except Analysis.DoesNotExist:
+        analysis = None
+        logger.error(
+            "Analysis '{}' does not exist".format(analysis.name))
+    #TODO: handle MultipleObjectsReturned exception
+    try:
+        statuses = AnalysisStatus.objects.get(analysis=analysis)
+    except AnalysisStatus.DoesNotExist:
+        statuses = None
+        logger.error(
+            "AnalysisStatus object does not exist for Analysis '{}'".format(
+                analysis.name))
 
     if request.is_ajax():
         ret_json = {}
-        ret_json['preprocessing'] = statuses.preprocessing_status()
-        ret_json['execution'] = statuses.execution_status()
-        ret_json['postprocessing'] = statuses.postprocessing_status()
-        ret_json['cleanup'] = statuses.cleanup_status()
-        ret_json['overall'] = analysis.status
+        if statuses:
+            ret_json['preprocessing'] = statuses.preprocessing_status()
+            ret_json['execution'] = statuses.execution_status()
+            ret_json['postprocessing'] = statuses.postprocessing_status()
+            ret_json['cleanup'] = statuses.cleanup_status()
+            ret_json['overall'] = analysis.status
         return HttpResponse(simplejson.dumps(ret_json),
                             mimetype='application/javascript')
     else:
@@ -52,6 +63,35 @@ def analysis_status(request, uuid):
             'analysis_manager/analysis_status.html',
             {'uuid':uuid, 'statuses': statuses, 'analysis': analysis},
             context_instance=RequestContext(request))
+
+
+@login_required
+def analysis_cancel(request):
+    '''Send request to cancel a running workflow
+    Returns HTTP status codes 200, 400, 405, 500 or 503
+
+    '''
+    if request.method == 'POST':
+        try:
+            uuid = request.POST['uuid']
+        except KeyError:
+            return HttpResponseBadRequest()  # 400
+        error_msg = "Cancellation failed for analysis '{}'".format(uuid)
+        try:
+            analysis = Analysis.objects.get(uuid=uuid)
+        except (Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as exc:
+            logger.error(error_msg + ": " + str(exc))
+            return HttpResponseServerError()  # 500
+        try:
+            analysis.cancel()
+        except RuntimeError as exc:
+            logger.error(error_msg)
+            return HttpResponse(status=503)  # service unavailable
+        else:
+            logger.info("Analysis '{}' was cancelled".format(uuid))
+            return HttpResponse()  # 200
+    else:
+        return HttpResponseNotAllowed(['POST'])  # 405
 
 
 def analysis_run(request):

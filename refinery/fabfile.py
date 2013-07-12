@@ -1,8 +1,6 @@
 '''
 Created on Oct 24, 2012
 
-@author: Ilya Sytchev
-
 Deployment script for the Refinery software environment
 
 OS: CentOS 5.7
