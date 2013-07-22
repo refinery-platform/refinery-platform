@@ -68,7 +68,7 @@ def analysis_status(request, uuid):
 @login_required
 def analysis_cancel(request):
     '''Send request to cancel a running workflow
-    Returns HTTP status codes 200, 400, 405, 500 or 503
+    Returns HTTP status codes 200, 400, 403, 405, 500 or 503
 
     '''
     if request.method == 'POST':

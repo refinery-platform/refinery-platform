@@ -10,7 +10,7 @@ from django.utils import simplejson
 from file_server.views import profile_viewer
 from file_store.models import FileStoreItem, FileStoreItem
 from file_store.tasks import import_file, create, rename
-from refinery.data_set_manager.models import Node
+from data_set_manager.models import Node
 from settings import MEDIA_URL, FILE_STORE_DIR
 from xml.dom.minidom import Document
 import logging
