@@ -8,7 +8,6 @@
 *.so
 *.pyc
 
-
 # Packages #
 ############
 # it's better to unpack these files and commit the raw source
@@ -46,13 +45,11 @@ docs/_static/*
 .pydevproject
 .settings/*
 *.conflict
-refinery/celery*.pid
+refinery/*.pid
 refinery/solr/*/data
 refinery/refinery/*
 refinery/middleware.py
 refinery/fabric
 refinery/fabric/*
-
 supervisord.conf
-
 codekit-config.json

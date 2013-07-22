@@ -235,10 +235,10 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': os.path.join( BASE_DIR, "refinery.log" ),
+            'filename': "/tmp/refinery.log",
             'formatter': 'verbose'
         }
-                 
+
     },
     'loggers': {
         'django.request': {
