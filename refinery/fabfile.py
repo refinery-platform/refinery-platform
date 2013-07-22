@@ -50,7 +50,8 @@ def check_env_vars():
     '''Check if the required variable were initialized in ~/.fabricrc
 
     '''
-    require("deployment_dir", "project_user", "project_group")
+    require("deployment_dir", "project_user", "project_group",
+            "refinery_virtualenv_name")
 
 
 def software_config():
@@ -64,8 +65,6 @@ def software_config():
         env.git_pkg = "git"
         env.rabbitmq_server_pkg = "rabbitmq-server"
         env.supervisor_pkg = "supervisor"
-        # configure commands
-        env.supervisorctl = "/usr/bin/supervisorctl"
     else:
         abort("{os} is not supported".format(**env))
 
@@ -84,8 +83,8 @@ def directory_structure_config():
     env.app_dir = os.path.join(env.deployment_dir, "apps")
     env.virtualenv_dir = os.path.join(env.deployment_dir, "virtualenvs")
     env.data_dir = os.path.join(env.deployment_dir, "data")
-    env.refinery_base_dir = os.path.join(env.app_dir, "Refinery")
     env.conf_dir = os.path.join(env.deployment_dir, "etc")
+    env.refinery_base_dir = os.path.join(env.app_dir, env.refinery_virtualenv_name)
 
 
 @task
@@ -359,31 +358,6 @@ def install_mod_wsgi():
 
 
 @task
-def install_supervisor():
-    '''Install Supervisor
-
-    '''
-    puts("Installing Supervisor")
-    if env.os == "CentOS":
-        sudo("yum -q -y install {supervisor_pkg}".format(**env))
-    elif env.os == "Debian":
-        pass
-
-
-@task
-def init_supervisor():
-    '''Configure Supervisor to start at boot time
-
-    '''
-    if env.os == "CentOS":
-        sudo("/sbin/chkconfig supervisord on")
-        sudo("chown {project_user}:{project_group} /var/log/supervisor"
-             .format(**env))
-    elif env.os == "Debian":
-        pass
-
-
-@task
 @with_settings(user=env.project_user)
 def git_clone(branch, repo_url, target_dir):
     '''Clone specified branch of Github repository
@@ -413,8 +387,8 @@ def clone_refinery():
 @task
 @with_settings(user=env.project_user)
 def create_virtualenv(env_name, project_path):
-    '''Create a virtual environment using provided name and
-    associate it with provided project path
+    '''Create a virtual environment using provided name and associate it with
+    provided project path (must exist, create with clone_refinery())
     Helper for create_refinery_virtualenv()
 
     '''
@@ -444,7 +418,7 @@ def git_pull(env_name):
 
 @task
 @with_settings(user=env.project_user)
-def pull_refinery():
+def refinery_pull():
     '''Pull the latest Refinery code from Github repository
 
     '''
@@ -482,39 +456,19 @@ def upload_refinery_settings():
     local_path = os.path.join(env.local_project_dir, env.dev_settings_file)
     remote_path = os.path.join(env.refinery_base_dir, "refinery/settings_local.py")
     upload_template(local_path, remote_path, backup=False)
-    with prefix("workon refinery"):
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("touch wsgi.py")
 
 
 @task
 @with_settings(user=env.project_user)
-def upload_supervisor_runscripts():
-    '''Upload Supervisor runscripts
-
-    '''
-    put("{local_conf_dir}/celeryd-supervisor.sh".format(**env),
-        "{deployment_dir}/celeryd-supervisor.sh".format(**env),
-        mode=0775)
-    put("{local_conf_dir}/celerycam-supervisor.sh".format(**env),
-        "{deployment_dir}/celerycam-supervisor.sh".format(**env),
-        mode=0775)
-    put("{local_conf_dir}/solr-supervisor.sh".format(**env),
-        "{deployment_dir}/solr-supervisor.sh".format(**env),
-        mode=0775)
-
-
-@task
 def upload_supervisor_config():
     '''Upload Supervisor settings
 
     '''
-    if env.os == "CentOS":
-        #TODO: replace with upload_template() with project_user and deployment_dir
-        put("{local_conf_dir}/refinery-supervisord.conf".format(**env),
-            "/etc/supervisord.conf",
-            use_sudo=True)
-    elif env.os == "Debian":
-        pass
+    #TODO: replace with upload_template() with project_user and deployment_dir
+    put("{local_conf_dir}/refinery-supervisord.conf".format(**env),
+        os.path.join(env.refinery_base_dir, "refinery/supervisord.conf"))
 
 
 @task
@@ -533,7 +487,7 @@ def install_solr():
             pass
     # unpack
     # move to /opt (moving as superuser preserves ownership)
-    # symlink to /opt/solr
+    # symlink to /opt/solr (check if already exists)
 
 
 @task
@@ -544,7 +498,7 @@ def build_solr_schema(core):
     '''
     #TODO: build schema for a specific core
     core_conf_dir = "./solr/{}/conf".format(core)
-    with prefix("workon refinery"):
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
         if not exists(core_conf_dir):
             run("mkdir {}".format(core_conf_dir))
         run("./manage.py build_solr_schema --using={} > {}/schema.xml"
@@ -558,7 +512,7 @@ def rebuild_solr_index(module):
 
     '''
     #TODO: check for idempotence
-    with prefix("workon refinery"):
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("./manage.py rebuild_index --noinput --using={}".format(module))
 
 
@@ -592,19 +546,19 @@ def update_refinery():
         run("git pull")
         run("./manage.py syncdb --migrate")
         run("./manage.py collectstatic --noinput")
+        run("supervisorctl restart celeryd".format(**env))
+        run("supervisorctl restart celerycam".format(**env))
         run("touch wsgi.py")
-    with settings(user=env.local_user):
-        sudo("{supervisorctl} restart celeryd".format(**env))
-        sudo("{supervisorctl} restart celerycam".format(**env))
-        sudo("{supervisorctl} restart solr".format(**env))
 
 
 @task
 @with_settings(user=env.project_user)
 def upload_apache_config():
     '''Upload Apache settings
+    Requires symlink in /etc/httpd/conf.d
 
     '''
+    #TODO: add variables to the template
     upload_template("{local_conf_dir}/refinery-apache.conf".format(**env),
                     "{conf_dir}/refinery-apache.conf".format(**env))
 
@@ -627,7 +581,7 @@ def refinery_syncdb():
     (does not create a superuser account)
 
     '''
-    with prefix("workon refinery"):
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("./manage.py syncdb --noinput --all")
 
 
@@ -637,7 +591,7 @@ def refinery_migrate():
     '''Perform database migration using South
 
     '''
-    with prefix("workon refinery"):
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("./manage.py migrate --fake")
     
 
@@ -647,7 +601,7 @@ def refinery_collectstatic():
     '''Collect static files
 
     '''
-    with prefix("workon refinery"):
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("./manage.py collectstatic --noinput")
 
 
@@ -657,11 +611,12 @@ def refinery_createsuperuser():
     '''Create the Django superuser account without assigning a password
 
     '''
-    with prefix("workon refinery"), settings(hide('commands'), warn_only=True):
-        # createsuperuser returns 1 if username already exists
-        run("./manage.py createsuperuser --noinput --username {} --email {}"
-            .format(django_settings.REFINERY_SUPERUSER['username'],
-                    django_settings.REFINERY_SUPERUSER['email']))
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
+        with settings(hide('commands'), warn_only=True):
+            # createsuperuser returns 1 if username already exists
+            run("./manage.py createsuperuser --noinput --username {} --email {}"
+                .format(django_settings.REFINERY_SUPERUSER['username'],
+                        django_settings.REFINERY_SUPERUSER['email']))
 
 
 @task
@@ -674,7 +629,7 @@ def refinery_changepassword(username):
 
     '''
     if username:
-        with prefix("workon refinery"):
+        with prefix("workon {refinery_virtualenv_name}".format(**env)):
             run("./manage.py changepassword {}".format(username))
     else:
         puts("Username was not provided - cannot change password")
@@ -687,7 +642,7 @@ def init_refinery():
 
     '''
     #TODO: add args: refinery_instance_name and refinery_base_url
-    with prefix("workon refinery"):
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("./manage.py init_refinery '{}' '{}'"
             .format(django_settings.SITE_NAME, django_settings.SITE_BASE_URL))
 
@@ -699,10 +654,12 @@ def create_refinery_user(user_id):
 
     '''
     user = django_settings.REFINERY_USERS[user_id]
-    with prefix("workon refinery"), settings(warn_only=True):
-        run("./manage.py create_user "
-            "'{username}' '{password}' '{email}' '{firstname}' '{lastname}' '{affiliation}'"
-            .format(**user))
+    user_fields = \
+        "'{username}' '{password}' '{email}' '{firstname}' '{lastname}' '{affiliation}'"\
+        .format(**user)
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
+        with settings(warn_only=True):
+            run("./manage.py create_user {}".format(user_fields))
 
 
 @task
@@ -740,7 +697,7 @@ def create_galaxy_instance(instance_id):
 
     '''
     instance = django_settings.GALAXY_INSTANCES[instance_id]
-    with prefix("workon refinery"):
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("./manage.py create_galaxy_instance '{base_url}' '{api_key}' --description '{description}'"
             .format(**instance))
 
@@ -761,7 +718,7 @@ def import_workflows():
     '''Import all available workflows from all available Galaxy instances into Refinery
 
     '''
-    with prefix("workon refinery"):
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("./manage.py import_workflows")
 
 
@@ -775,60 +732,6 @@ def deploy_refinery():
     create_refinery_db_user()
     create_refinery_db()
     setup_refinery()
-
-
-@task
-@with_settings(user=env.project_user)
-def upload_galaxy_tool_data():
-    '''Upload Galaxy tool data files to the current Galaxy instance
-
-    '''
-    #TODO: change settings to env.galaxy_user
-    tool_data_path = os.path.join(env.galaxy_root, "tool-data")
-
-    local_path = os.path.join(env.local_conf_dir, "bowtie_indices_template")
-    remote_path = os.path.join(tool_data_path, "bowtie_indices.loc")
-    upload_template(local_path, remote_path)
-
-    local_path = os.path.join(env.local_conf_dir, "sam_fa_indices_template")
-    remote_path = os.path.join(tool_data_path, "sam_fa_indices.loc")
-    upload_template(local_path, remote_path)
-
-
-@task
-@with_settings(user=env.project_user)
-def install_spp():
-    '''Install SPP R library
-
-    '''
-    #TODO: change settings to env.galaxy_user before using
-    #TODO: specify 'lib' to make sure packages are installed into the correct location
-    run("R -e \"install.packages('caTools')\"")
-    run("R -e \"install.packages('{bootstrap_dir}/spp_1.11.tar.gz')\"".format(**env))
-
-
-@task
-@with_settings(user=env.project_user)
-def install_spp_galaxy_tool():
-    '''Add SPP tool to the current Galaxy instance
-
-    '''
-    #TODO: change settings to env.galaxy_user or add to private toolshed
-    run("cp {bootstrap_dir}/spp_peak_caller.xml {galaxy_root}/tools/peak_calling".format(**env))
-    with prefix("cd {galaxy_root}/tools/peak_calling".format(**env)):
-        run("ln -s ../plotting/r_wrapper.sh")
-
-
-@task
-@with_settings(user=env.project_user)
-def upload_galaxy_tool_conf():
-    '''Update tool_conf.xml in the current Galaxy instance
-
-    '''
-    #TODO: change settings to env.galaxy_user
-    local_path = os.path.join(env.local_conf_dir, "tool_conf_xml_template")
-    remote_path = os.path.join(env.galaxy_root, "tool_conf.xml")
-    upload_template(local_path, remote_path)
 
 
 @task
