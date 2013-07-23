@@ -1,16 +1,14 @@
 ; Sample config file for managing Celery, Solr and Django dev server processes
 ; using Supervisor.
-; Requires $SOLR and $WORKON_HOME environment variables
 ; Copy to refinery-platform/refinery/supervisord.conf and customize to match
 ; your environment.
 
 [supervisord]
-logfile = /tmp/supervisord.log
+logfile = %(here)s/supervisord.log
 logfile_maxbytes = 1MB
 logfile_backups = 4
 pidfile = /tmp/supervisord.pid
 nocleanup = true
-childlogdir = %(here)s
 
 [inet_http_server]         ; inet (TCP) server disabled by default
 port = 127.0.0.1:9001        ; (ip_address:port specifier, *:port for all iface)
@@ -31,23 +29,23 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 
 [program:solr]
 command = java -Djava.awt.headless=true -Dsolr.solr.home=%(here)s/solr/ -jar start.jar
-directory = %(ENV_SOLR)s/example
-stdout_logfile = /tmp/solr.log
+directory = /opt/solr/example
+stdout_logfile = %(here)s/solr.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
-stderr_logfile = /tmp/solr.log
+stderr_logfile = %(here)s/solr.log
 redirect_stderr = true
 autostart = true
 autorestart = true
 startsecs = 10
 
 [program:celeryd]
-command = %(ENV_WORKON_HOME)s/refinery-platform/bin/python %(here)s/manage.py celeryd -E --purge --discard
-environment = PYTHONPATH=%(here)s
-stdout_logfile = /tmp/celeryd.log
+command = %(here)s/manage.py celeryd -E --purge --discard
+environment = PATH=%(ENV_HOME)s/environments/refinery-platform/bin,PYTHONPATH=%(here)s
+stdout_logfile = %(here)s/celeryd.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
-stderr_logfile = /tmp/celeryd.log
+stderr_logfile = %(here)s/celeryd.log
 redirect_stderr = true
 autostart = true
 autorestart = true
@@ -58,12 +56,12 @@ startsecs = 5
 priority = 995
 
 [program:celerycam]
-command = %(ENV_WORKON_HOME)s/refinery-platform/bin/python %(here)s/manage.py celerycam
-environment = PYTHONPATH=%(here)s
-stdout_logfile = /tmp/celerycam.log
+command = %(here)s/manage.py celerycam
+environment = PATH=%(ENV_HOME)s/environments/refinery-platform/bin,PYTHONPATH=%(here)s
+stdout_logfile = %(here)s/celerycam.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
-stderr_logfile = /tmp/celerycam.log
+stderr_logfile = %(here)s/celerycam.log
 redirect_stderr = true
 autostart = true
 autorestart = true
@@ -71,12 +69,12 @@ startsecs = 3
 priority= 995
 
 [program:runserver]
-command = %(ENV_WORKON_HOME)s/refinery-platform/bin/python %(here)s/manage.py runserver --noreload
-environment = PYTHONPATH=%(here)s
-stdout_logfile = /tmp/refinery.log
+command = %(here)s/manage.py runserver --noreload
+environment = PATH=%(ENV_HOME)s/environments/refinery-platform/bin,PYTHONPATH=%(here)s
+stdout_logfile = %(here)s/refinery.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
-stderr_logfile = /tmp/refinery.log
+stderr_logfile = %(here)s/refinery.log
 redirect_stderr = true
 autostart = true
 autorestart = true

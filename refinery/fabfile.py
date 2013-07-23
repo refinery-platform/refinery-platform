@@ -51,7 +51,7 @@ def check_env_vars():
 
     '''
     require("deployment_dir", "project_user", "project_group",
-            "refinery_virtualenv_name")
+            "refinery_repo_url", "refinery_virtualenv_name", "solr_base_dir")
 
 
 def software_config():
@@ -84,7 +84,10 @@ def directory_structure_config():
     env.virtualenv_dir = os.path.join(env.deployment_dir, "virtualenvs")
     env.data_dir = os.path.join(env.deployment_dir, "data")
     env.conf_dir = os.path.join(env.deployment_dir, "etc")
+    env.log_dir = os.path.join(env.deployment_dir, "logs")
     env.refinery_base_dir = os.path.join(env.app_dir, env.refinery_virtualenv_name)
+    env.refinery_project_dir = os.path.join(env.refinery_base_dir, "refinery")
+    env.refinery_virtualenv_dir = os.path.join(env.virtualenv_dir, env.refinery_virtualenv_name)
 
 
 @task
@@ -179,7 +182,8 @@ def upload_bash_config():
     upload_template(bash_profile_path, "~/.bash_profile")
 
     bashrc_path = os.path.join(env.local_conf_dir, env.bashrc_template)
-    bashrc_context = {"apps": env.app_dir, "virtualenvs": env.virtualenv_dir}
+    bashrc_context = {"app_dir": env.app_dir,
+                      "virtualenv_dir": env.virtualenv_dir}
     upload_template(bashrc_path, "~/.bashrc", bashrc_context)
 
 
@@ -401,9 +405,8 @@ def create_refinery_virtualenv():
     '''Create a virtual environment for Refinery
 
     '''
-    execute(create_virtualenv,
-            env_name=env.refinery_virtualenv_name,
-            project_path=os.path.join(env.refinery_base_dir, "refinery"))
+    execute(create_virtualenv, env_name=env.refinery_virtualenv_name,
+            project_path=env.refinery_project_dir)
 
 
 @task
@@ -454,7 +457,7 @@ def upload_refinery_settings():
 
     '''
     local_path = os.path.join(env.local_project_dir, env.dev_settings_file)
-    remote_path = os.path.join(env.refinery_base_dir, "refinery/settings_local.py")
+    remote_path = os.path.join(env.refinery_project_dir, "settings_local.py")
     upload_template(local_path, remote_path, backup=False)
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("touch wsgi.py")
@@ -466,9 +469,9 @@ def upload_supervisor_config():
     '''Upload Supervisor settings
 
     '''
-    #TODO: replace with upload_template() with project_user and deployment_dir
-    put("{local_conf_dir}/refinery-supervisord.conf".format(**env),
-        os.path.join(env.refinery_base_dir, "refinery/supervisord.conf"))
+    remote_path = os.path.join(env.refinery_project_dir, "supervisord.conf")
+    upload_template("supervisord.conf", remote_path, env, use_jinja=True,
+                    template_dir=env.local_conf_dir)
 
 
 @task
@@ -477,6 +480,7 @@ def install_solr():
     '''Install Solr
 
     '''
+    #TODO: finish implementation
     for url in env.solr_mirrors:
         # remove failed download from disk if necessary
         with settings(warn_only=True):

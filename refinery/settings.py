@@ -5,6 +5,7 @@
 import djcelery
 import os
 
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 djcelery.setup_loader()
@@ -136,8 +137,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'refinery.urls'
 
 TEMPLATE_DIRS = (
-    os.path.join( BASE_DIR, "templates" ),
-
+    os.path.join(BASE_DIR, "templates"),
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -145,8 +145,8 @@ TEMPLATE_DIRS = (
 
 # NG: added to provide fixtures for non-Refinery models
 FIXTURE_DIRS = (
-    os.path.join( BASE_DIR, "fixtures/auth" ),    
-    os.path.join( BASE_DIR, "fixtures/guardian" ),    
+    os.path.join(BASE_DIR, "fixtures/auth"),
+    os.path.join(BASE_DIR, "fixtures/guardian"),
 )
 
 INSTALLED_APPS = (
@@ -210,17 +210,16 @@ LOGGING = {
     'disable_existing_loggers': True,
     'root': {
         'level': 'DEBUG',
-        'handlers': ['file'],
+        'handlers': ['console'],
     },
     'formatters': {
         'verbose': {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'default': {
-            'format': '%(asctime)s %(levelname)-8s %(name)s %(funcName)s: %(message)s',
+            'format': '%(asctime)s %(levelname)-8s %(module)s %(funcName)s: %(message)s',
             'datefmt': '%Y-%m-%d %H:%M:%S'
         },
-
     },
     'handlers': {
         'mail_admins': {
@@ -230,15 +229,8 @@ LOGGING = {
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
+            'formatter': 'default'
         },
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': "/tmp/refinery.log",
-            'formatter': 'verbose'
-        }
-
     },
     'loggers': {
         'django.request': {
@@ -397,5 +389,5 @@ REFINERY_EXTERNAL_AUTH_MESSAGE = ''
 # import local settings
 try:
     from settings_local import *
-except ImportError, exp:
+except ImportError:
     pass
