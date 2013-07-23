@@ -248,6 +248,11 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': False,
         },
+        'core': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
         'data_set_manager': {
             'level': 'DEBUG',
             'handlers': ['console'],
