@@ -38,7 +38,7 @@ def analysis_status(request, uuid):
     except Analysis.DoesNotExist:
         analysis = None
         logger.error(
-            "Analysis '{}' does not exist".format(analysis.name))
+            "Analysis with UUID '{}' does not exist".format(uuid))
     #TODO: handle MultipleObjectsReturned exception
     try:
         statuses = AnalysisStatus.objects.get(analysis=analysis)
