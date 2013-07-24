@@ -471,7 +471,7 @@ def upload_supervisor_config():
     '''
     remote_path = os.path.join(env.refinery_project_dir, "supervisord.conf")
     upload_template("supervisord.conf", remote_path, env, use_jinja=True,
-                    template_dir=env.local_conf_dir)
+                    template_dir=env.local_conf_dir, backup=False)
 
 
 @task

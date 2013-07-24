@@ -11,13 +11,13 @@ pidfile = /tmp/supervisord.pid
 nocleanup = true
 
 [inet_http_server]         ; inet (TCP) server disabled by default
-port = 127.0.0.1:9001        ; (ip_address:port specifier, *:port for all iface)
+port = localhost:9001        ; (ip_address:port specifier, *:port for all iface)
 username = refinery
 password = test
 
 [supervisorctl]
 ;serverurl = unix:///tmp/supervisor.sock ; use a unix:// URL  for a unix socket
-serverurl = http://127.0.0.1:9001 ; use an http:// url to specify an inet socket
+serverurl = http://localhost:9001 ; use an http:// url to specify an inet socket
 username = refinery            ; should be same as http_username if set
 password = test                ; should be same as http_password if set
 
@@ -29,11 +29,10 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 
 [program:solr]
 command = java -Djava.awt.headless=true -Dsolr.solr.home=%(here)s/solr/ -jar start.jar
-directory = /opt/solr/example
+directory = /path/to/solr/example
 stdout_logfile = %(here)s/solr.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
-stderr_logfile = %(here)s/solr.log
 redirect_stderr = true
 autostart = true
 autorestart = true
@@ -41,11 +40,10 @@ startsecs = 10
 
 [program:celeryd]
 command = %(here)s/manage.py celeryd -E --purge --discard
-environment = PATH=%(ENV_HOME)s/environments/refinery-platform/bin,PYTHONPATH=%(here)s
+environment = PATH=/path/to/virtualenv/refinery-platform/bin
 stdout_logfile = %(here)s/celeryd.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
-stderr_logfile = %(here)s/celeryd.log
 redirect_stderr = true
 autostart = true
 autorestart = true
@@ -57,11 +55,10 @@ priority = 995
 
 [program:celerycam]
 command = %(here)s/manage.py celerycam
-environment = PATH=%(ENV_HOME)s/environments/refinery-platform/bin,PYTHONPATH=%(here)s
+environment = PATH=/path/to/virtualenv/refinery-platform/bin
 stdout_logfile = %(here)s/celerycam.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
-stderr_logfile = %(here)s/celerycam.log
 redirect_stderr = true
 autostart = true
 autorestart = true
@@ -70,11 +67,10 @@ priority= 995
 
 [program:runserver]
 command = %(here)s/manage.py runserver --noreload
-environment = PATH=%(ENV_HOME)s/environments/refinery-platform/bin,PYTHONPATH=%(here)s
+environment = PATH=/path/to/virtualenv/refinery-platform/bin
 stdout_logfile = %(here)s/refinery.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
-stderr_logfile = %(here)s/refinery.log
 redirect_stderr = true
 autostart = true
 autorestart = true
