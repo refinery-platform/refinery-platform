@@ -29,7 +29,7 @@ from fabric.contrib import django
 from fabric.context_managers import hide, prefix
 from fabric.contrib.files import exists, upload_template
 from fabric.decorators import task, with_settings
-from fabric.operations import require, open_shell, put
+from fabric.operations import require, open_shell
 from fabric.utils import puts
 
 
@@ -60,11 +60,10 @@ def software_config():
     '''
     if env.os == "CentOS":
         # configure software package names
+        env.git_pkg = "git"
         env.postgresql_server_pkg = "postgresql84-server"
         env.postgresql_devel_pkg = "postgresql84-devel"
-        env.git_pkg = "git"
         env.rabbitmq_server_pkg = "rabbitmq-server"
-        env.supervisor_pkg = "supervisor"
     else:
         abort("{os} is not supported".format(**env))
 
@@ -77,17 +76,21 @@ def software_config():
 
 
 def directory_structure_config():
-    '''Configure directory layout
+    '''Configure directory structure for deployment
 
     '''
     env.app_dir = os.path.join(env.deployment_dir, "apps")
-    env.virtualenv_dir = os.path.join(env.deployment_dir, "virtualenvs")
     env.data_dir = os.path.join(env.deployment_dir, "data")
     env.conf_dir = os.path.join(env.deployment_dir, "etc")
     env.log_dir = os.path.join(env.deployment_dir, "logs")
-    env.refinery_base_dir = os.path.join(env.app_dir, env.refinery_virtualenv_name)
-    env.refinery_project_dir = os.path.join(env.refinery_base_dir, "refinery")
-    env.refinery_virtualenv_dir = os.path.join(env.virtualenv_dir, env.refinery_virtualenv_name)
+    env.virtualenv_dir = os.path.join(env.deployment_dir, "virtualenvs")
+    env.refinery_app_dir = os.path.join(env.app_dir,
+                                        env.refinery_virtualenv_name)
+    env.refinery_data_dir = os.path.join(env.data_dir,
+                                         env.refinery_virtualenv_name)
+    env.refinery_virtualenv_dir = os.path.join(env.virtualenv_dir,
+                                               env.refinery_virtualenv_name)
+    env.refinery_project_dir = os.path.join(env.refinery_app_dir, "refinery")
 
 
 @task
@@ -106,9 +109,6 @@ def dev():
     env.local_conf_dir = os.path.join(env.local_template_dir, "dev")
     env.bash_profile_template = "bash_profile"
     env.bashrc_template = "bashrc"
-    #Galaxy config
-    galaxy_base_dir = env.galaxy_root + "dev"
-    env.galaxy_root = os.path.join(galaxy_base_dir, "live")
 
 
 @task
@@ -178,13 +178,12 @@ def upload_bash_config():
     '''Upload .bashrc and .bash_profile to $HOME of project_user
 
     '''
-    bash_profile_path = os.path.join(env.local_conf_dir, env.bash_profile_template)
-    upload_template(bash_profile_path, "~/.bash_profile")
-
-    bashrc_path = os.path.join(env.local_conf_dir, env.bashrc_template)
-    bashrc_context = {"app_dir": env.app_dir,
-                      "virtualenv_dir": env.virtualenv_dir}
-    upload_template(bashrc_path, "~/.bashrc", bashrc_context)
+    upload_template(env.bash_profile_template, "~/.bash_profile", context=env,
+                    use_jinja=True, template_dir=env.local_conf_dir,
+                    backup=False)
+    upload_template(env.bashrc_template, "~/.bashrc", context=env,
+                    use_jinja=True, template_dir=env.local_conf_dir,
+                    backup=False)
 
 
 @task
@@ -351,7 +350,7 @@ def configure_rabbitmq():
 
 @task
 def install_mod_wsgi():
-    '''Install WSGI interface for Python web applications in Apache from the CentOS repository
+    '''Install WSGI interface for Python web applications in Apache
 
     '''
     if env.os == "CentOS":
@@ -385,7 +384,7 @@ def clone_refinery():
     execute(git_clone,
             branch=env.refinery_branch,
             repo_url=env.refinery_repo_url,
-            target_dir=env.refinery_base_dir)
+            target_dir=env.refinery_app_dir)
 
 
 @task
@@ -447,18 +446,19 @@ def install_refinery_requirements():
     '''
     execute(install_requirements,
             env_name=env.refinery_virtualenv_name,
-            requirements_path=os.path.join(env.refinery_base_dir, "requirements.txt"))
+            requirements_path=os.path.join(env.refinery_app_dir, "requirements.txt"))
 
 
 @task
 @with_settings(user=env.project_user)
-def upload_refinery_settings():
+def upload_django_settings():
     '''Upload appropriate settings_local.py file
 
     '''
-    local_path = os.path.join(env.local_project_dir, env.dev_settings_file)
     remote_path = os.path.join(env.refinery_project_dir, "settings_local.py")
-    upload_template(local_path, remote_path, backup=False)
+    upload_template(env.dev_settings_file, remote_path, context=env,
+                    use_jinja=True, template_dir=env.local_project_dir,
+                    backup=False)
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("touch wsgi.py")
 
@@ -470,8 +470,9 @@ def upload_supervisor_config():
 
     '''
     remote_path = os.path.join(env.refinery_project_dir, "supervisord.conf")
-    upload_template("supervisord.conf", remote_path, env, use_jinja=True,
-                    template_dir=env.local_conf_dir, backup=False)
+    upload_template("supervisord.conf", remote_path, context=env,
+                    use_jinja=True, template_dir=env.local_conf_dir,
+                    backup=False)
 
 
 @task
@@ -487,8 +488,6 @@ def install_solr():
             result = run("wget -P /tmp {}".format(url))
         if result.succeeded:
             break
-        else:
-            pass
     # unpack
     # move to /opt (moving as superuser preserves ownership)
     # symlink to /opt/solr (check if already exists)
@@ -503,8 +502,7 @@ def build_solr_schema(core):
     #TODO: build schema for a specific core
     core_conf_dir = "./solr/{}/conf".format(core)
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
-        if not exists(core_conf_dir):
-            run("mkdir {}".format(core_conf_dir))
+        run("mkdir -p {}".format(core_conf_dir))
         run("./manage.py build_solr_schema --using={} > {}/schema.xml"
             .format(core, core_conf_dir))
 
@@ -527,7 +525,7 @@ def setup_refinery():
     Django superuser account is created without a password
 
     '''
-    execute(upload_refinery_settings)
+    execute(upload_django_settings())
     execute(create_refinery_db)
     execute(refinery_syncdb)
     execute(refinery_migrate)
@@ -556,15 +554,21 @@ def update_refinery():
 
 
 @task
-@with_settings(user=env.project_user)
 def upload_apache_config():
-    '''Upload Apache settings
-    Requires symlink in /etc/httpd/conf.d
+    '''Upload Apache settings. Requires symlink in /etc/httpd/conf.d
 
     '''
-    #TODO: add variables to the template
-    upload_template("{local_conf_dir}/refinery-apache.conf".format(**env),
-                    "{conf_dir}/refinery-apache.conf".format(**env))
+    with settings(user=env.project_user):
+        upload_template("apache.conf", "{conf_dir}/apache.conf".format(**env),
+                        context=env, use_jinja=True,
+                        template_dir=env.local_conf_dir, backup=False)
+    # create a symlink if necessary
+    if env.os == "CentOS":
+        target = "/etc/httpd/conf.d/refinery.conf"
+        if not exists(target):
+            sudo("ln -s {conf_dir}/apache.conf {t}".format(t=target, **env))
+    else:
+        pass
 
 
 @task
@@ -677,21 +681,21 @@ def create_refinery_users():
 
 
 @task
-@with_settings(user=env.project_user)
 def upload_logrotate_config():
-    '''Upload Logrotate settings
-    Requires symlinks in /etc/logrotate.d
+    '''Upload Logrotate settings. Requires a symlink in /etc/logrotate.d
 
     '''
-    upload_template("{local_conf_dir}/refinery-logrotate.conf".format(**env),
-                    "{conf_dir}/refinery-logrotate.conf".format(**env),
-                    backup=False)
-    upload_template("{local_conf_dir}/apache-logrotate.conf".format(**env),
-                    "{conf_dir}/apache-logrotate.conf".format(**env),
-                    backup=False)
-    upload_template("{local_conf_dir}/galaxy-logrotate.conf".format(**env),
-                    "{conf_dir}/galaxy-logrotate.conf".format(**env),
-                    backup=False)
+    with settings(user=env.project_user):
+        upload_template("logrotate.conf", "{conf_dir}/logrotate.conf".format(**env),
+                        context=env, use_jinja=True, template_dir=env.local_conf_dir,
+                        backup=False)
+    # create a symlink if necessary
+    if env.os == "CentOS":
+        target = "/etc/logrotate.d/refinery"
+        if not exists(target):
+            sudo("ln -s {conf_dir}/logrotate.conf {t}".format(t=target, **env))
+    else:
+        pass
 
 
 @task
