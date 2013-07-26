@@ -12,7 +12,7 @@ class ResourceError(RuntimeError):
 
     '''
     def __init__(self):
-        super(ResourceError, self).__init__("Galaxy resource error")
+        super(ResourceError, self).__init__("Galaxy request error")
 
 class AuthError(RuntimeError):
     '''HTTP status code 403

@@ -43,7 +43,7 @@ def _mkdir(path):
     try:
         os.mkdir(path)
     except OSError as e:
-        logger.error("Error creating directory\nOSError: [Errno %s], error: %s, path: %s",
+        logger.error("Error creating directory. OSError: [Errno %s], error: %s, path: %s",
                      e.errno, e.strerror, e.filename)
         return False
     logger.info("Directory %s created", path)
@@ -132,7 +132,7 @@ FILE_TYPES = (
     (FASTQSANGER, 'FASTQ Sanger'),
     (FASTQSOLEXA, 'FASTQ Solexa'),
     (SAM, 'Sequence Alignment/Map'),
-    (SEG, 'Segmented Data File'), # http://www.broadinstitute.org/software/igv/SEG
+    (SEG, 'Segmented Data File'), # http://broadinstitute.org/software/igv/SEG
     (TABULAR, 'Tabular file'),
     (TDF, 'TDF file'),
     (TGZ, 'Gzip compressed tar archive'),
@@ -178,8 +178,10 @@ FILE_EXTENSIONS = {
 
 
 def file_path(instance, filename):
-    '''Construct relative file system path for new file store files relative to FILE_STORE_BASE_DIR.
-    Based on http://michaelandrews.typepad.com/the_technical_times/2009/10/creating-a-hashed-directory-structure.html
+    '''Construct relative file system path for new file store files relative to
+    FILE_STORE_BASE_DIR.
+    Based on
+    http://michaelandrews.typepad.com/the_technical_times/2009/10/creating-a-hashed-directory-structure.html
 
     :param instance: FileStoreItem instance.
     :type instance: FileStoreItem.
@@ -190,7 +192,8 @@ def file_path(instance, filename):
     '''
     hashcode = hash(filename)
     mask = 255  # bitmask
-    # use the first and second bytes of the hash code represented as zero-padded hex numbers as directory names
+    # use the first and second bytes of the hash code represented as zero-padded
+    # hex numbers as directory names
     # provides 256 * 256 = 65536 of possible directory combinations
     dir1 = "{:0>2x}".format(hashcode & mask)
     dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
@@ -212,7 +215,8 @@ class _FileStoreItemManager(models.Manager):
         :returns: FileStoreItem -- if success, None if failure.
 
         '''
-        if not source:  # it doesn't make sense to create a FileStoreItem without a file source
+        # it doesn't make sense to create a FileStoreItem without a file source
+        if not source:
             logger.error("Source is required but was not provided")
             return None
         # translate source if necessary
@@ -238,7 +242,8 @@ class _FileStoreItemManager(models.Manager):
 
         :param uuid: UUID of a FileStoreItem.
         :type uuid: str.
-        :returns: FileStoreItem -- model instance if exactly one match is found, None otherwise.
+        :returns: FileStoreItem -- model instance if exactly one match is found,
+        None otherwise.
 
         '''
         try:
@@ -277,7 +282,8 @@ class FileStoreItem(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     #: source URL or absolute file system path
     source = models.CharField(max_length=1024)
-    #: optional subdirectory inside the file store that contains the files of a particular group
+    #: optional subdirectory inside the file store that contains the files of a
+    # particular group
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
     filetype = models.CharField(max_length=15, choices=FILE_TYPES, blank=True)
@@ -290,13 +296,15 @@ class FileStoreItem(models.Model):
     def get_absolute_path(self):
         '''Compute the absolute path to the data file.
         
-        :returns: str -- the absolute path to the data file or None if the file does not exist on disk.
+        :returns: str -- the absolute path to the data file or None if the file
+        does not exist on disk.
         
         '''
-        try:
+        if self.datafile and self.datafile.storage.exists(self.datafile.path):
             return self.datafile.path
-        except ValueError:  # file is not local
-            logger.warn("Datafile doesn't exist in FileStoreItem %s", self.uuid)
+        else:
+            logger.warn("Datafile doesn't exist in FileStoreItem '{}'"
+                        .format(self.uuid))
             return None
 
     def get_file_size(self, report_symlinks=False):
@@ -419,8 +427,8 @@ class FileStoreItem(models.Model):
             try:
                 self.datafile.delete()
             except OSError as e:
-                logger.error("Error deleting file\nOSError: [Errno: %s], file name: %s, error: %s",
-                                 e.errno, e.filename, e.strerror)
+                logger.error("Error deleting file. OSError: [Errno: %s], file name: %s, error: %s",
+                             e.errno, e.filename, e.strerror)
                 return False
             logger.info("Datafile deleted")
             return True

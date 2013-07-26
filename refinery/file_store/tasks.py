@@ -132,7 +132,8 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
                 percent_done = 0
             import_file.update_state(
                 state="PROGRESS",
-                meta={"percent_done": "%3.2f%%" % (percent_done), 'current': localfilesize, 'total': remotefilesize}
+                meta={"percent_done": "%3.2f%%" % (percent_done),
+                      'current': localfilesize, 'total': remotefilesize}
                 )
 
         # cleanup
@@ -149,9 +150,6 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         # construct destination path based on source file name
         rel_dst_path = item.datafile.storage.get_available_name(file_path(item, src_file_name))
         abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
-        
-        
-        logger.debug( "u.path = " + u.path + "\nsrc_file_name = " + src_file_name + "\nrel_dst_path = " + rel_dst_path + "abs_dst_path = " + abs_dst_path + "\ntmpfile.name = " + tmpfile.name )
 
         # move the temp file into the file store
         try:
@@ -159,18 +157,20 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
                 os.makedirs(os.path.dirname(abs_dst_path))
             os.rename(tmpfile.name, abs_dst_path)
         except OSError as e:
-            logger.error("Error moving temp file into the file store\nOSError: %s, file name: %s, error: %s",
+            logger.error("Error moving temp file into the file store. OSError: %s, file name: %s, error: %s",
                          e.errno, e.filename, e.strerror)
             return False
 
-        # temp file is only accessible by the owner by default
-        # which prevents access by the web server if it is running as it's own user
+        # temp file is only accessible by the owner by default which prevents
+        # access by the web server if it is running as it's own user
         try:
             mode = os.stat(abs_dst_path).st_mode
-            os.chmod(abs_dst_path, mode | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
+            os.chmod(abs_dst_path,
+                     mode | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
         except OSError as e:
             logger.error("Failed changing permissions on %s", abs_dst_path)
-            logger.error("OSError: %s, file name %s, error: %s", e.errno, e.filename, e.strerror)
+            logger.error("OSError: %s, file name %s, error: %s",
+                         e.errno, e.filename, e.strerror)
 
         # assign new path to datafile
         item.datafile.name = rel_dst_path
@@ -190,7 +190,8 @@ def read(uuid):
 
     :param uuid: UUID of a FileStoreItem.
     :type uuid: str.
-    :returns: FileStoreItem -- Model instance if reading the file succeeded, None if failed. 
+    :returns: FileStoreItem -- Model instance if reading the file succeeded,
+    None if failed. 
     
     '''
     return FileStoreItem.objects.get_item(uuid)

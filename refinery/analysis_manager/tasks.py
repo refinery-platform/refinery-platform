@@ -146,7 +146,8 @@ def chord_execution(ret_val, analysis):
         send_analysis_email(analysis)
         return
 
-    analysis_status = AnalysisStatus.objects.filter(analysis=analysis)[0]
+    #TODO: handle DoesNotExist and MultipleObjectsReturned
+    analysis_status = AnalysisStatus.objects.get(analysis=analysis)
 
     execution_taskset = [];
     execution_taskset.append(run_analysis_execution.subtask((analysis, )))
@@ -241,12 +242,13 @@ def run_analysis(analysis, interval=5.0):
     analysis_status.save()
 
 
-# task: perform preprocessing (innermost task, does the actual work)
 @task()
 def run_analysis_preprocessing(analysis):
+    '''perform preprocessing (innermost task, does the actual work)
+
+    '''
     logger.debug("analysis_manager.run_analysis_preprocessing called")
 
-    # obtain expanded workflow
     connection = analysis.get_galaxy_connection()
 
     # creates new library in galaxy
@@ -612,11 +614,20 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
             curr_filestore = FileStoreItem.objects.get_item(uuid=curr_file_uuid)
             if curr_filestore:
                 file_path = curr_filestore.get_absolute_path()
+                if file_path:
+                    cur_item["filepath"] = file_path
+                    file_id = connection.put_into_library(library_id, file_path)
+                    cur_item["id"] = file_id
+                else:
+                    raise RuntimeError(
+                        "Input file with UUID '{}' is not available"
+                        .format(curr_file_uuid)
+                        )
             else:
-                file_path = ''
-            cur_item["filepath"] = file_path
-            file_id = connection.put_into_library(library_id, file_path)
-            cur_item["id"] = file_id
+                raise RuntimeError(
+                    "Input file with UUID '{}' is not available"
+                    .format(curr_file_uuid)
+                    )
     return ret_list
 
 

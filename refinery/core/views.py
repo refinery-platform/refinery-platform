@@ -826,8 +826,10 @@ def analysis(request, analysis_uuid ):
         file_uuid = Node.objects.get(uuid=workflow_input.data_uuid).file_uuid
         file_store_item = FileStoreItem.objects.get_item(uuid=file_uuid)
         if file_store_item:
-            file_name = os.path.basename(file_store_item.get_absolute_path())
-            input_filenames.append(file_name)
+            file_path = file_store_item.get_absolute_path()
+            if file_path:
+                file_name = os.path.basename(file_path)
+                input_filenames.append(file_name)
     return render_to_response('core/analysis.html',
                               {
                                "analysis": analysis,
