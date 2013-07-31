@@ -31,6 +31,7 @@ import urllib2
 import networkx as nx
 import matplotlib.pyplot as plt
 from tempfile import NamedTemporaryFile
+from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem, get_temp_dir, file_path, FILE_STORE_BASE_DIR
 from file_store.tasks import create, import_file
 from galaxy_connector.connection import Connection
@@ -906,7 +907,11 @@ def solr_igv(request):
         
         # if solr query returns results
         if solr_results:
-            session_urls = igv_multi_species(solr_results, solr_annot)
+            try:
+                session_urls = igv_multi_species(solr_results, solr_annot)
+            except GenomeBuild.DoesNotExist:
+                logger.error("Provided genome build cannot be found in the database.")
+                session_urls = "Couldn't find the provided genome build."
         
         logger.debug("session_urls")
         logger.debug(simplejson.dumps(session_urls, indent=4))
