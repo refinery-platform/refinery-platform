@@ -103,13 +103,18 @@ Customization Settings
 ``REFINERY_EXTERNAL_AUTH_MESSAGE = ''``
    Message to display on password management pages when REFINERY_EXTERNAL_AUTH = True
 
-``TAXONOMY_URL = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"`` 
+``TAXONOMY_URL = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"``
+   Location of the zip file that contains the entire NCBI taxonomy database 
 
 ``UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"``
+   Database of all UCSC genomes, alternate names, and their corresponding organisms.
 
 ``AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'``
+   Base query for what kind of ArrayExpress studies to pull in (e.g. only ChIP-Seq studies, or studies updated after a certain date)
 
 ``AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"``
+   prefix of the URL where all ArrayExpress studies' MAGE-TAB files can be accessed   
+
 
 Authentication settings
 -----------------------
