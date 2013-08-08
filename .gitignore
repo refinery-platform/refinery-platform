@@ -53,3 +53,8 @@ refinery/fabric
 refinery/fabric/*
 supervisord.conf
 codekit-config.json
+.vagrant/
+.librarian/
+.tmp
+modules
+Puppetfile.lock
