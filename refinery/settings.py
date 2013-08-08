@@ -308,7 +308,10 @@ REGISTRATION_OPEN = True
 REFINERY_PUBLIC_GROUP_NAME = "Public" 
 REFINERY_PUBLIC_GROUP_ID = 100  # DO NOT CHANGE THIS after initialization of your Refinery instance
 
+#Base query for what kind of ArrayExpress studies to pull in (e.g. only ChIP-Seq studies, or studies updated after a certain date)
 AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
+
+#prefix of the URL where all ArrayExpress studies' MAGE-TAB files can be accessed
 AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 
 ISA_TAB_DIR = ''
@@ -364,7 +367,10 @@ REFINERY_GOOGLE_ANALYTICS_ID = ""
 # so managers and admins know Refinery is emailing them
 EMAIL_SUBJECT_PREFIX = '[Refinery] '
 
+#dump of the entire NCBI taxonomy archive
 TAXONOMY_URL = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"
+
+#table of UCSC genomes and their corresponding organisms
 UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 
 # Tag for repository mode
