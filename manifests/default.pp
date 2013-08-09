@@ -1,9 +1,11 @@
-exec { 'apt-get update':
-  path => '/usr/bin',
-}
+$appuser = "vagrant"
+
+#exec { 'apt-get update':
+#  path => '/usr/bin',
+#}
+#Package { require => Exec['apt-get update'] }
 
 #TODO: peg packages to specific versions
-Package { require => Exec['apt-get update'] }
 package { 'build-essential': }
 package { 'libncurses5-dev': }
 package { 'g++': }
@@ -21,11 +23,12 @@ package { 'solr-jetty': }
 class { 'postgresql':
   charset => 'UTF8',
   locale => 'en_US.utf8',
-}->
+}
+->
 class { 'postgresql::server':
 }
 postgresql::db { 'refinery':
-  user => 'vagrant',
+  user => $appuser,
   password => '',
 }
 
@@ -36,25 +39,33 @@ class { 'python':
   virtualenv => true,
 }
 
+$virtualenv = "/home/${appuser}/.virtualenvs/refinery-platform"
+$requirements = "/vagrant/requirements.txt"
+
 # create virtualenv
-$virtualenv = "/home/vagrant/.virtualenvs/refinery-platform"
 python::virtualenv { $virtualenv:
   ensure => present,
-  requirements => "/vagrant/requirements.txt",
-  owner => 'vagrant',
-  require => Package['virtualenvwrapper'],
+#  requirements => $requirements,
+  owner => $appuser,
+  group => $appuser,
 }
-
+->
 # a workaround for a bug in matplotlib installation
-python::pip { 'numpy==1.7.0':
-  virtualenv => $virtualenv,
-  owner => 'vagrant',
+exec { "numpy":
+  command => "pip install numpy==1.7.0",
+  path => "/home/${appuser}/.virtualenvs/refinery-platform/bin:/usr/bin:/bin",
+  user => $appuser,
+  group => $appuser,
 }
-
+# this doesn't work because it creates a dependency cycle
+#python::pip { 'numpy==1.7.0':
+#  virtualenv => $virtualenv,
+#  owner => 'vagrant',
+#}
+~>
 # install packages from requirements.txt
-python::requirements { '/vagrant/requirements.txt':
+python::requirements { $requirements:
   virtualenv => $virtualenv,
   owner => 'vagrant',
   group => 'vagrant',
-#  require => Python::Virtualenv[$virtualenv],
 }
