@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Git is required for librarian-puppet
+/usr/bin/apt-get install git
 gem install librarian-puppet && cd /vagrant && librarian-puppet install
 
 #MODULEPATH=/usr/share/puppet/modules

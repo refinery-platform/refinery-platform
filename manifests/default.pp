@@ -7,7 +7,6 @@ Package { require => Exec['apt-get update'] }
 package { 'build-essential': }
 package { 'libncurses5-dev': }
 package { 'g++': }
-package { 'git': }
 package { 'libfreetype6': }  # required by matplotlib
 package { 'libfreetype6-dev': }  # required by matplotlib
 package { 'libpng12-dev': }  # required by matplotlib
