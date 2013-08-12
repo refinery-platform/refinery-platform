@@ -39,7 +39,7 @@ def _mkdir(path):
     :returns: bool -- True if directory was created, False if it wasn't.
 
     '''
-    logger.info("Creating directory %s", path)
+    logger.debug("Creating directory %s", path)
     try:
         os.mkdir(path)
     except OSError as e:
