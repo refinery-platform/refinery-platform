@@ -58,4 +58,5 @@ codekit-config.json
 .tmp
 modules
 Puppetfile.lock
-data/
+media/
+static/
