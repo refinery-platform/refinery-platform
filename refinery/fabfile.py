@@ -67,12 +67,13 @@ def software_config():
     else:
         abort("{os} is not supported".format(**env))
 
-    env.solr_version = "4.2.0"
+    env.solr_version = "4.4.0"
     env.solr_pkg = "solr-" + env.solr_version   # Solr directory name
     env.solr_mirrors = [
-        "http://apache.mirrors.pair.com/lucene/solr/4.2.0/solr-4.2.0.tgz",
+        "http://mirror.cc.columbia.edu/pub/software/apache/lucene/solr/4.4.0/solr-4.4.0.tgz"
+        "http://apache.mirrors.pair.com/lucene/solr/4.4.0/solr-4.4.0.tgz",
         "http://www.gtlib.gatech.edu/pub/apache/lucene/solr/4.2.0/solr-4.2.0.tgz",
-        "http://mirrors.ibiblio.org/apache/lucene/solr/4.2.0/solr-4.2.0.tgz"]
+        ]
 
 
 def directory_structure_config():
