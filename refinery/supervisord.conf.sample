@@ -29,7 +29,7 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 
 [program:solr]
 command = java -Djava.awt.headless=true -Dsolr.solr.home=%(here)s/solr/ -jar start.jar
-directory = /path/to/solr/example
+directory = /opt/solr/example
 stdout_logfile = %(here)s/solr.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
@@ -40,7 +40,7 @@ startsecs = 10
 
 [program:celeryd]
 command = %(here)s/manage.py celeryd -E --purge --discard
-environment = PATH=/path/to/virtualenv/refinery-platform/bin
+environment = PATH=/home/vagrant/.virtualenvs/refinery-platform/bin
 stdout_logfile = %(here)s/celeryd.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
@@ -55,7 +55,7 @@ priority = 995
 
 [program:celerycam]
 command = %(here)s/manage.py celerycam
-environment = PATH=/path/to/virtualenv/refinery-platform/bin
+environment = PATH=/home/vagrant/.virtualenvs/refinery-platform/bin
 stdout_logfile = %(here)s/celerycam.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
@@ -67,7 +67,7 @@ priority= 995
 
 [program:runserver]
 command = %(here)s/manage.py runserver --noreload
-environment = PATH=/path/to/virtualenv/refinery-platform/bin
+environment = PATH=/home/vagrant/.virtualenvs/refinery-platform/bin
 stdout_logfile = %(here)s/refinery.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4

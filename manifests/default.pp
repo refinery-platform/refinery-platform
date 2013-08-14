@@ -57,7 +57,7 @@ exec { "numpy":
   group => $appuser,
   require => Class["venvdeps"],
 }
-~>
+->
 # install packages from requirements.txt
 python::requirements { $requirements:
   virtualenv => $virtualenv,
@@ -105,12 +105,14 @@ exec { "init_refinery":
 ->
 exec {
   "build_core_schema":
-    command => "${project_root}/manage.py build_solr_schema --using=core > ${project_root}/solr/core/conf/schema.xml",
+    command => "${project_root}/manage.py build_solr_schema --using=core > solr/core/conf/schema.xml",
+    cwd => $project_root,
     path => $venvpath,
     user => $appuser,
     group => $appuser;
   "build_data_set_manager_schema":
-    command => "${project_root}/manage.py build_solr_schema --using=data_set_manager > ${project_root}/solr/data_set_manager/conf/schema.xml",
+    command => "${project_root}/manage.py build_solr_schema --using=data_set_manager > solr/data_set_manager/conf/schema.xml",
+    cwd => $project_root,
     path => $venvpath,
     user => $appuser,
     group => $appuser;
@@ -126,10 +128,22 @@ exec { "solr_wget":
 }
 ->
 exec { "solr_unpack":
-  command => "mkdir -p /opt && tar -xzf /usr/src/${solr_archive} -C /opt && ln -s solr-${solr_version} /opt/solr",
+  command => "mkdir -p /opt && tar -xzf /usr/src/${solr_archive} -C /opt",
   creates => "/opt/solr-${solr_version}",
   path => "/usr/bin:/bin",
 }
+->
+file { "/opt/solr-${solr_version}":
+  owner => $appuser,
+  group => $appuser,
+  recurse => true,
+}
+->
+file { "/opt/solr":
+  ensure => link,
+  target => "solr-${solr_version}",
+}
+
 
 file { "${project_root}/supervisord.conf":
   ensure => file,
