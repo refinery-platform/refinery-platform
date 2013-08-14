@@ -2,6 +2,7 @@ $appuser = "vagrant"
 $virtualenv = "/home/${appuser}/.virtualenvs/refinery-platform"
 $venvpath = "${virtualenv}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/opt/vagrant_ruby/bin"
 $requirements = "/vagrant/requirements.txt"
+$project_root = "/vagrant/refinery"
 
 #TODO: peg packages to specific versions
 class venvdeps {
@@ -17,9 +18,9 @@ class venvdeps {
 include venvdeps
 
 package { 'postgresql': }
+package { 'openjdk-7-jre': }  # required by solr
 #package { 'virtualenvwrapper': }
 #package { 'rabbitmq-server': }
-#package { 'solr-jetty': }
 
 class { 'postgresql':
   charset => 'UTF8',
@@ -77,7 +78,7 @@ file { [ "/vagrant/media", "/vagrant/static", "/vagrant/isa-tab" ]:
 }
 
 exec { "syncdb":
-  command => "/vagrant/refinery/manage.py syncdb --noinput --all",
+  command => "${project_root}/manage.py syncdb --noinput --all",
   path => $venvpath,
   user => $appuser,
   group => $appuser,
@@ -89,15 +90,52 @@ exec { "syncdb":
 }
 ->
 exec { "migrate":
-  command => "/vagrant/refinery/manage.py migrate --fake",
+  command => "${project_root}/manage.py migrate --fake",
   path => $venvpath,
   user => $appuser,
   group => $appuser,
 }
 ->
-exec { "init":
-  command => "/vagrant/refinery/manage.py init_refinery 'Refinery' 'localhost:8000'",
+exec { "init_refinery":
+  command => "${project_root}/manage.py init_refinery 'Refinery' 'localhost:8000'",
   path => $venvpath,
   user => $appuser,
   group => $appuser,
 }
+->
+exec {
+  "build_core_schema":
+    command => "${project_root}/manage.py build_solr_schema --using=core > ${project_root}/solr/core/conf/schema.xml",
+    path => $venvpath,
+    user => $appuser,
+    group => $appuser;
+  "build_data_set_manager_schema":
+    command => "${project_root}/manage.py build_solr_schema --using=data_set_manager > ${project_root}/solr/data_set_manager/conf/schema.xml",
+    path => $venvpath,
+    user => $appuser,
+    group => $appuser;
+}
+
+$solr_version = "4.4.0"
+$solr_archive = "solr-${solr_version}.tgz"
+$solr_url = "http://mirror.cc.columbia.edu/pub/software/apache/lucene/solr/${solr_version}/${solr_archive}"
+exec { "solr_wget":
+  command => "wget ${solr_url} -O /usr/src/${solr_archive}",
+  creates => "/usr/src/${solr_archive}",
+  path => "/usr/bin:/bin",
+}
+->
+exec { "solr_unpack":
+  command => "mkdir -p /opt && tar -xzf /usr/src/${solr_archive} -C /opt && ln -s solr-${solr_version} /opt/solr",
+  creates => "/opt/solr-${solr_version}",
+  path => "/usr/bin:/bin",
+}
+
+file { "${project_root}/supervisord.conf":
+  ensure => file,
+  source => "${project_root}/supervisord.conf.sample",
+  owner => $appuser,
+  group => $appuser,
+}
+
+# launch supervisord (requires rabbitmq and solr packages, Exec['init_refinery'] and schemas)
