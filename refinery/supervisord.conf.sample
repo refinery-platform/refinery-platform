@@ -11,7 +11,7 @@ pidfile = /tmp/supervisord.pid
 nocleanup = true
 
 [inet_http_server]         ; inet (TCP) server disabled by default
-port = localhost:9001        ; (ip_address:port specifier, *:port for all iface)
+port = *:9001        ; (ip_address:port specifier, *:port for all iface)
 username = refinery
 password = test
 
@@ -66,7 +66,7 @@ startsecs = 3
 priority= 995
 
 [program:runserver]
-command = %(here)s/manage.py runserver --noreload
+command = %(here)s/manage.py runserver 0.0.0.0:8000 --noreload
 environment = PATH=/home/vagrant/.virtualenvs/refinery-platform/bin
 stdout_logfile = %(here)s/refinery.log
 stdout_logfile_maxbytes = 1MB

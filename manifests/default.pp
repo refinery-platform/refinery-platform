@@ -57,7 +57,7 @@ exec { "numpy":
   group => $appuser,
   require => Class["venvdeps"],
 }
-->
+~>
 # install packages from requirements.txt
 python::requirements { $requirements:
   virtualenv => $virtualenv,
@@ -144,6 +144,23 @@ file { "/opt/solr":
   target => "solr-${solr_version}",
 }
 
+# configure rabbitmq
+class { '::rabbitmq':
+  package_ensure => installed,
+  service_ensure => running,
+  port => '5672',
+}
+rabbitmq_user { 'guest':
+  password => 'guest',
+}
+rabbitmq_vhost { 'localhost':
+  ensure => present,
+}
+rabbitmq_user_permissions { 'guest@localhost':
+  configure_permission => '.*',
+  read_permission => '.*',
+  write_permission => '.*',
+}
 
 file { "${project_root}/supervisord.conf":
   ensure => file,
@@ -151,5 +168,11 @@ file { "${project_root}/supervisord.conf":
   owner => $appuser,
   group => $appuser,
 }
-
+#~>
 # launch supervisord (requires rabbitmq and solr packages, Exec['init_refinery'] and schemas)
+#exec { "supervisor":
+#  command => "supervisord",
+#  path => $venvpath,
+#  user => $appuser,
+#  group => $appuser,
+#}
