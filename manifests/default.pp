@@ -19,8 +19,8 @@ include venvdeps
 
 package { 'postgresql': }
 package { 'openjdk-7-jre': }  # required by solr
-#package { 'virtualenvwrapper': }
-#package { 'rabbitmq-server': }
+package { 'curl': }  # required by rabbitmq installer
+package { 'virtualenvwrapper': }
 
 class { 'postgresql':
   charset => 'UTF8',
@@ -128,15 +128,9 @@ exec { "solr_wget":
 }
 ->
 exec { "solr_unpack":
-  command => "mkdir -p /opt && tar -xzf /usr/src/${solr_archive} -C /opt",
+  command => "mkdir -p /opt && tar -xzf /usr/src/${solr_archive} -C /opt && chown -R ${appuser}:${appuser} /opt/solr-${solr_version}",
   creates => "/opt/solr-${solr_version}",
   path => "/usr/bin:/bin",
-}
-->
-file { "/opt/solr-${solr_version}":
-  owner => $appuser,
-  group => $appuser,
-  recurse => true,
 }
 ->
 file { "/opt/solr":
@@ -149,6 +143,7 @@ class { '::rabbitmq':
   package_ensure => installed,
   service_ensure => running,
   port => '5672',
+  require => Package['curl'],
 }
 rabbitmq_user { 'guest':
   password => 'guest',

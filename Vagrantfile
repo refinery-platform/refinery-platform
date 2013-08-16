@@ -15,7 +15,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.hostname = "refinery"
   config.vm.network :forwarded_port, host: 8000, guest: 8000  # Django dev server
   config.vm.network :forwarded_port, host: 8983, guest: 8983  # Solr
-  config.vm.network :forwarded_port, host: 9001, guest: 9001  # Supervisor
+  # Supervisor (host port number changed because of a conflict with Eclipse)
+  config.vm.network :forwarded_port, host: 9000, guest: 9001
 
   # If true, then any SSH connections made will enable agent forwarding.
   # Default value: false
