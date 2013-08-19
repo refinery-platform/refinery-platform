@@ -12,7 +12,7 @@ You may have to import the right VM image:
 
 .. code-block:: bash
 
-    > vagrant box add base http://files.vagrantup.com/precise32.box
+    > vagrant box add precise32 http://files.vagrantup.com/precise32.box
 
 .. code-block:: bash
 
