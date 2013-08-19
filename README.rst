@@ -14,13 +14,21 @@ You may have to import the right VM image:
 
     > vagrant box add precise32 http://files.vagrantup.com/precise32.box
 
+Then deploy:
+
 .. code-block:: bash
 
     > git clone git@github.com:parklab/refinery-platform.git
     > cd refinery-platform
     > vagrant up
-This step should take 15-20 minutes depending on the speed of your machine and
-Internet connection.
+The above step should take about 15 minutes depending on the speed of your machine and
+Internet connection.  If you get an error, simply retry by:
+
+.. code-block:: bash
+
+    > vagrant reload
+
+Then connect to the initialized VM and start Refinery services:
 
 .. code-block:: bash
 
