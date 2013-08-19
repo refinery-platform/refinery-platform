@@ -60,3 +60,4 @@ modules
 Puppetfile.lock
 media/
 static/
+refinery/celerybeat-schedule.db
