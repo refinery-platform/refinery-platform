@@ -64,12 +64,6 @@ python::requirements { $requirements:
   owner => 'vagrant',
   group => 'vagrant',
 }
-#exec { "requirements":
-#  command => "pip install -U -r ${requirements}",
-#  path => $venvpath,
-#  user => $appuser,
-#  group => $appuser,
-#}
 
 file { [ "/vagrant/media", "/vagrant/static", "/vagrant/isa-tab" ]:
   ensure => directory,
@@ -163,11 +157,3 @@ file { "${project_root}/supervisord.conf":
   owner => $appuser,
   group => $appuser,
 }
-#~>
-# launch supervisord (requires rabbitmq and solr packages, Exec['init_refinery'] and schemas)
-#exec { "supervisor":
-#  command => "supervisord",
-#  path => $venvpath,
-#  user => $appuser,
-#  group => $appuser,
-#}
