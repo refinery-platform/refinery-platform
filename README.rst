@@ -1,6 +1,8 @@
 Refinery Platform
+=================
 
-Quick start installation instructions
+Installation instructions
+-------------------------
 
 Install `Python <http://www.python.org/>`_, `Git <http://git-scm.com/>`_,
 `Vagrant <http://www.vagrantup.com/>`_ and
