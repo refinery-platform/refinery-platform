@@ -40,7 +40,11 @@ Galaxy is required to run analyses in Refinery and to provide support for archiv
 
 *Version*
    ???
-   
+
+*Notes*
+   You will need to configure a `synced folder
+   <http://docs.vagrantup.com/v2/synced-folders/basic_usage.html>`_ if you want to
+   copy files directly to/from a Galaxy instance installed on the host.
 
 Postgresql
 ^^^^^^^^^^
