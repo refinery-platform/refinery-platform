@@ -63,7 +63,19 @@ redirect_stderr = true
 autostart = true
 autorestart = true
 startsecs = 3
-priority= 995
+priority= 994
+
+[program:celerybeat]
+command = %(here)s/manage.py celerybeat
+environment = PATH=/home/vagrant/.virtualenvs/refinery-platform/bin
+stdout_logfile = %(here)s/celerybeat.log
+stdout_logfile_maxbytes = 1MB
+stdout_logfile_backups = 4
+redirect_stderr = true
+autostart = true
+autorestart = true
+startsecs = 3
+priority= 996
 
 [program:runserver]
 command = %(here)s/manage.py runserver 0.0.0.0:8000 --noreload
