@@ -6,9 +6,12 @@ Importing Galaxy Workflows into Refinery
 Before you can import *Workflows* from a Galaxy installation into Refinery, the
 following requirements have to be met:
 
-* you have to add a *Galaxy Instance* for the Galaxy installation in question to Refinery
-* you have to create a *Workflow Engine* for this *Galaxy Instance*
-* you have to :ref:`annotate <preparing_galaxy_workflows>` all workflows in the Galaxy installation that you want to import  
+* You have to add a *Galaxy Instance* for the Galaxy installation in question to Refinery through the admin UI.
+* You have to create a *Workflow Engine* for this *Galaxy Instance* using the ``create_workflowengine`` command, which requires a *Galaxy Instance* id and the name of a group that should own the workflow engine, e.g. "Public".
+
+  >>> python manage.py create_workflowengine <instance_id> "<group_name>"
+
+* You have to :ref:`annotate <preparing_galaxy_workflows>` all workflows in the Galaxy installation that you want to import.  
 
 Once these requirements have been met, run the ``import_workflows`` command:
 
