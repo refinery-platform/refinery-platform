@@ -10,6 +10,8 @@ following requirements have to be met:
 * You have to create a *Workflow Engine* for this *Galaxy Instance* using the ``create_workflowengine`` command, which requires a *Galaxy Instance* id and the name of a group that should own the workflow engine, e.g. "Public".
 
   >>> python manage.py create_workflowengine <instance_id> "<group_name>"
+  
+  Alternatively, you can also create a workflow engine through the admin UI, in that case, however, you have to manually assign ownership to the managers of the group that should own the workflow engine.
 
 * You have to :ref:`annotate <preparing_galaxy_workflows>` all workflows in the Galaxy installation that you want to import.  
 
