@@ -84,7 +84,7 @@ exec { "syncdb":
 }
 ->
 exec { "migrate":
-  command => "${project_root}/manage.py migrate --fake",
+  command => "${project_root}/manage.py migrate",
   path => $venvpath,
   user => $appuser,
   group => $appuser,
