@@ -37,3 +37,7 @@ Then connect to the initialized VM and start Refinery services:
     > supervisord
 
 Open http://localhost:8000/ in your web browser.
+
+Please see `installation notes
+<https://refinery-platform.readthedocs.org/en/latest/administrator/setup.html>`_
+for more details.
