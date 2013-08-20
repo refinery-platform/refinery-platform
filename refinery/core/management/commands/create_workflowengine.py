@@ -5,11 +5,9 @@ Created on Aug 20, 2013
 '''
 
 from core.models import ExtendedGroup, WorkflowEngine
-from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from galaxy_connector.models import Instance
-import galaxy_connector
 import logging
 
 
