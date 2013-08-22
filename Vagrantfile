@@ -13,10 +13,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "precise32"
   config.vm.provision :shell, :path => "bootstrap.sh"
   config.vm.hostname = "refinery"
-  config.vm.network :forwarded_port, host: 8000, guest: 8000  # Django dev server
-  config.vm.network :forwarded_port, host: 8983, guest: 8983  # Solr
-  # Supervisor (host port number changed because of a conflict with Eclipse)
-  config.vm.network :forwarded_port, host: 9000, guest: 9001
+  config.vm.network :private_network, ip: "192.168.50.50"
 
   config.vm.provider "virtualbox" do |v|
     v.customize ["modifyvm", :id, "--memory", "1024"]
