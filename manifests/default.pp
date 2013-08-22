@@ -141,14 +141,17 @@ class { '::rabbitmq':
 }
 rabbitmq_user { 'guest':
   password => 'guest',
+  require => Class['::rabbitmq'],
 }
 rabbitmq_vhost { 'localhost':
   ensure => present,
+  require => Class['::rabbitmq'],
 }
 rabbitmq_user_permissions { 'guest@localhost':
   configure_permission => '.*',
   read_permission => '.*',
   write_permission => '.*',
+  require => [ Rabbitmq_user['guest'], Rabbitmq_vhost['localhost'] ]
 }
 
 file { "${project_root}/supervisord.conf":
