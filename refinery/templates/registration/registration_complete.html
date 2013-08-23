@@ -22,6 +22,19 @@
 			An activation link has been sent to the email address you supplied, along 
 			with instructions for activating your account.
 		</p>
+			
+		{% if EMAIL_BACKEND == "django.core.mail.backends.filebased.EmailBackend" %}
+				<div class="alert">
+				Since no mail server has been configured yet, a copy of the email was saved to <i>{{ EMAIL_FILE_PATH }}.</i>
+				</div>
+		{% endif %} 
+
+		{% if EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend" %}
+				<div class="alert">
+				Since no mail server has been configured yet, a copy of the email was written to the console.</i>
+				</div>
+		{% endif %} 
+
 	</div>
 </div>
 {% endblock %}
