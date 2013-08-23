@@ -101,6 +101,7 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'djangular.finders.NamespacedAngularAppDirectoriesFinder',
     #'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
@@ -171,6 +172,7 @@ INSTALLED_APPS = (
     "tastypie",
     'guardian',
     'raven.contrib.django',
+    'djangular',
     'galaxy_connector',
     'core',
     'analysis_manager',

@@ -118,6 +118,8 @@ rect.active {
 {% block content %}
 	<!-- tab headers -->
 
+<div ng-app="core">
+
 <div class="refinery-panel-tabs">
 
 	<div class="row-fluid">
@@ -235,6 +237,31 @@ rect.active {
 
 						<div class="tab-content">
 							<div class="tab-pane active fade in" id="table-view-tab">
+								
+  <ul class="menu">
+    <li><a href="#/view1">view1</a></li>
+    <li><a href="#/view2">view2</a></li>
+  </ul>
+
+  <div ng-view-test></div>
+
+  <div>Angular seed app: v<span app-version></span></div>
+
+  <!-- In production use:
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.2/angular.min.js"></script>
+  -->
+  <script src="{{ STATIC_URL }}lib/angular/angular.js"></script>
+  <script src="{{ STATIC_URL }}lib/angular/angular-cookies.js"></script>
+  <script src="/djangular/app.js"></script>
+  <script src="{{ STATIC_URL }}core/js/app.js"></script>
+  <script src="{{ STATIC_URL }}core/js/services.js"></script>
+  <script src="{{ STATIC_URL }}core/js/controllers.js"></script>
+  <script src="{{ STATIC_URL }}core/js/filters.js"></script>
+  <script src="{{ STATIC_URL }}core/js/directives.js"></script>
+								
+								 {% verbatim %}
+								 <p>1 + 2 = {{ 1 + 2 }}</p>
+								 {% endverbatim %}
 								<div id="solr-table-view"></div>
 							</div>
 							<div class="tab-pane fade in" id="pivot-view-tab">
@@ -326,11 +353,11 @@ rect.active {
 		<p>
 		{% if data_set.analysis_set.all|length > 0 %}
 			{% for analysis in data_set.analysis_set.all %}
-					<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }}</a>
+					<a href="{% url "analysis_status" analysis.uuid %}">{{ analysis.name }}</a>
 					{% if analysis.project.is_catch_all %}
 						(unassigned)
 					{% else %}
-						(Project <a href="{% url project analysis.project.uuid %}">{{ analysis.project.name }}</a>)
+						(Project <a href="{% url "project" analysis.project.uuid %}">{{ analysis.project.name }}</a>)
 					{% endif %}
 					<br/>
 			{% endfor %}
@@ -392,7 +419,7 @@ rect.active {
 				<p><strong>{{study.identifier}}</strong>: {{study.title}}</p>
 				<ul>
 				{% for assay in study.assay_set.all %}
-					<!-- <li>Assay - <a href="{% url data_set_manager_contents study.uuid assay.uuid %}">{{assay}}</a></li> -->
+					<!-- <li>Assay - <a href="{% url "data_set_manager_contents" study.uuid assay.uuid %}">{{assay}}</a></li> -->
 					<li>Assay - {{assay}}</li>
 				{% endfor %}
 				</ul>
@@ -433,7 +460,7 @@ rect.active {
 			<p>Current version <i>{{ data_set.get_version_details.version }}</i> created <i>{{ data_set.get_version_details.date }}</i>.
 			Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{ data_set.modification_date }}</i>.</p>
 
-			<a class="btn" href="{% url data_set_edit data_set.uuid %}">Edit</a>
+			<a class="btn" href="{% url "data_set_edit" data_set.uuid %}">Edit</a>
 		</div>
 
 
@@ -446,7 +473,7 @@ rect.active {
 			<div class="refinery-subheader">
 				<h4>Owner</h4>
 			</div>
-			<p><i class="icon-user"></i>&nbsp;<a href="{% url user data_set.get_owner.get_profile.uuid %}">{% if data_set.get_owner.get_full_name %}{{ data_set.get_owner.get_full_name }}{% else %}{{ data_set.get_owner }}{%endif%}</a></p>
+			<p><i class="icon-user"></i>&nbsp;<a href="{% url "user" data_set.get_owner.get_profile.uuid %}">{% if data_set.get_owner.get_full_name %}{{ data_set.get_owner.get_full_name }}{% else %}{{ data_set.get_owner }}{%endif%}</a></p>
 
 			{% if data_set.get_groups|length > 0 %}
 			<div class="refinery-subheader">
@@ -454,7 +481,7 @@ rect.active {
 			</div>
 				<p>
 				{% for perm in data_set.get_groups %}
-						<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
+						<a href="{% url "group" perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
 						{% if perm.read %}
 							<i class="icon-eye-open"></i>
 						{% endif %}
@@ -488,10 +515,12 @@ rect.active {
   </div>
 </div>
 
-
 </div>
 
-{% endblock %}
+</div> <!-- ng-app -->
+
+{% endblock %} <!-- content -->
+
 
 {% block script %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v3.min.js"></script>
@@ -570,6 +599,8 @@ rect.active {
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/node_set_manager.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/analysis_api_client.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/data_set_monitor.js"></script>
+    
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
 
 	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TweenMax.min.js"></script>
   	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/jquery.gsap.min.js"></script>

@@ -47,7 +47,7 @@
 				</span>
 				{% if user.is_authenticated and not REFINERY_REPOSITORY_MODE %}       
 					<span class="refinery-header-right">
-						<h4><a href={% url import_isa_tab %}><i class="icon-plus-sign"></i></a></h4>
+						<h4><a href={% url "import_isa_tab" %}><i class="icon-plus-sign"></i></a></h4>
 					</span> 
 				{% endif %}				
 			</div>
@@ -81,7 +81,7 @@
 							{% endif %}
 						</td>
 				    	<td width="100%">
-							<a href="{% url data_set data_set.uuid %}">{{ data_set.name }}</a>
+							<a href="{% url "data_set" data_set.uuid %}">{{ data_set.name }}</a>
 							{% if data_set.download_set.all|length > 0 %}
 								<table class="table-condensed" width="100%">
 									{% for download in data_set.download_set.all %}
@@ -137,7 +137,7 @@
 
 	{% if user.is_authenticated and not REFINERY_REPOSITORY_MODE %}       
 		<span class="refinery-header-right">
-			<h4><a href="{% url project_new %}"><i class="icon-plus-sign"></i></a></h4> 
+			<h4><a href="{% url "project_new" %}"><i class="icon-plus-sign"></i></a></h4> 
 		</span>	
 	{% endif %}		
 </div>
@@ -178,7 +178,7 @@
 			{% for analysis in unassigned_analyses.all %}
 			    <tr>
 			    	<td>
-			    		<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
+			    		<a href="{% url "analysis_status" analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
 			    	</td>
 			    	<td>
 			    		<span id="analysis-{{ analysis.uuid }}-status"></span>
@@ -201,7 +201,7 @@
 						<i class="icon-group"></i>								
 					{% endif %}
 				{% endif %}
-	        	&nbsp;<a href="{% url project project.uuid %}">{{ project.name }}</a>
+	        	&nbsp;<a href="{% url "project" project.uuid %}">{{ project.name }}</a>
 	        </td>
 	    	<td>
 	        {{project.analyses.all|length}}
@@ -211,7 +211,7 @@
 			    <tr>
 			    	<td>
 			    		<!-- <a href="projects/{{ project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> - {{analysis.summary}} -->
-			    		<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }}</a> - {{analysis.summary}}
+			    		<a href="{% url "analysis_status" analysis.uuid %}">{{ analysis.name }}</a> - {{analysis.summary}}
 			    	</td>
 				    <td>
 						<span id="status-{{ analysis.uuid }}"></span>
@@ -267,7 +267,7 @@
 		{% for workflow in workflows %}
         <tr>
         	<td>
-        		<a href="{% url workflow workflow.uuid %}">{{ workflow.name }}</a>
+        		<a href="{% url "workflow" workflow.uuid %}">{{ workflow.name }}</a>
         	</td>
         </tr>
     	{% endfor %}
