@@ -6,6 +6,16 @@ from django.db import models
 
 
 class Migration(SchemaMigration):
+    
+    depends_on = (
+        ("data_set_manager", "0001_initial"),
+        ("file_store", "0001_initial"),
+        ("galaxy_connector", "0001_initial"),
+    )    
+
+    needed_by = (
+        ("guardian", "0005_auto__chg_field_groupobjectpermission_object_pk__chg_field_userobjectp"),
+    )
 
     def forwards(self, orm):
         # Adding model 'UserProfile'
