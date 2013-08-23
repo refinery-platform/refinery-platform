@@ -13,24 +13,20 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "precise32"
   config.vm.provision :shell, :path => "bootstrap.sh"
   config.vm.hostname = "refinery"
-  config.vm.network :forwarded_port, host: 8000, guest: 8000  # Django dev server
-  config.vm.network :forwarded_port, host: 8983, guest: 8983  # Solr
-  # Supervisor (host port number changed because of a conflict with Eclipse)
-  config.vm.network :forwarded_port, host: 9000, guest: 9001
+  config.vm.network :private_network, ip: "192.168.50.50"
 
   config.vm.provider "virtualbox" do |v|
     v.customize ["modifyvm", :id, "--memory", "1024"]
   end
 
-  # If true, then any SSH connections made will enable agent forwarding.
-  # Default value: false
-  # config.ssh.forward_agent = true
-
-  # Share an additional folder to the guest VM. The first argument is
-  # the path on the host to the actual folder. The second argument is
-  # the path on the guest to mount the folder. And the optional third
-  # argument is a set of non-required options.
-  # config.vm.synced_folder "../data", "/vagrant_data"
+  # If you'd like to be able to copy data from an instance of Galaxy
+  # that's installed on the host, set $GALAXY_DATABSE_DIR environment
+  # variable to the absolute path of the $GALAXY_ROOT/database folder
+  if ENV['GALAXY_DATABASE_DIR']
+    config.vm.synced_folder ENV['GALAXY_DATABASE_DIR'], ENV['GALAXY_DATABASE_DIR']
+  else
+   puts("$GALAXY_DATABASE_DIR is not set: copying files from local Galaxy instance will not work.")
+  end
 
   config.vm.provision :puppet do |puppet|
     puppet.manifests_path = "manifests"
