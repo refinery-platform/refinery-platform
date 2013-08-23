@@ -1,4 +1,4 @@
-Django==1.4
+Django==1.5.2
 Fabric==1.5.1
 Jinja2==2.6
 Markdown==2.2.1
@@ -21,10 +21,11 @@ django-extensions==0.7.1
 django-guardian==1.0.4
 -e git+https://github.com/toastdriven/django-haystack.git@e0fd6aba05db4da53761556fb188b0a22f223e54#egg=django_haystack-dev
 django-picklefield==0.2.0
-django-registration==0.8
+django-registration==1.0
 django-supervisor==0.3.1
 -e git+https://github.com/toastdriven/django-tastypie.git@4adf118024ff8762a38230430e0b7b9b2a99981d#egg=django_tastypie-dev
 django-uuidfield==0.2
+djangular==0.2.3
 docutils==0.10
 jsonpickle==0.4.0
 kombu==2.1.0
