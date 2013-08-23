@@ -91,7 +91,7 @@ exec { "migrate":
 }
 ->
 exec { "init_refinery":
-  command => "${project_root}/manage.py init_refinery 'Refinery' 'localhost:8000'",
+  command => "${project_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
   path => $venvpath,
   user => $appuser,
   group => $appuser,
