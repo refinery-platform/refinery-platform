@@ -6,6 +6,11 @@ from django.db import models
 
 
 class Migration(SchemaMigration):
+    
+    depends_on = (
+        ("data_set_manager", "0001_initial"),
+        ("file_store", "0001_initial"),
+    )    
 
     def forwards(self, orm):
         # Adding model 'UserProfile'
