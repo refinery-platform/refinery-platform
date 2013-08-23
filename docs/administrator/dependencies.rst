@@ -42,9 +42,11 @@ Galaxy is required to run analyses in Refinery and to provide support for archiv
    ???
 
 *Notes*
-   You will need to configure a `synced folder
-   <http://docs.vagrantup.com/v2/synced-folders/basic_usage.html>`_ if you want to
-   copy files directly to/from a Galaxy instance installed on the host.
+   On your host you will need to:
+
+   - Set $GALAXY_DATABASE_DIR env variable to the absolute path of the $GALAXY_ROOT/database folder of your local Galaxy instance installed on the host if you want to copy files directly it.
+
+   - Create a symlink /vagrant/media that points to the absolute path of the media subdirectory inside the Refinery project directory.
 
 Postgresql
 ^^^^^^^^^^
