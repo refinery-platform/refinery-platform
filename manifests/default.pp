@@ -72,7 +72,7 @@ file { [ "/vagrant/media", "/vagrant/static", "/vagrant/isa-tab" ]:
 }
 
 exec { "syncdb":
-  command => "${project_root}/manage.py syncdb --noinput --all",
+  command => "${project_root}/manage.py syncdb --noinput",
   path => $venvpath,
   user => $appuser,
   group => $appuser,
