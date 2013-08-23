@@ -4,7 +4,7 @@ Refinery Platform
 Installation instructions
 -------------------------
 
-Install `Python <http://www.python.org/>`_, `Git <http://git-scm.com/>`_,
+Install `Git <http://git-scm.com/>`_,
 `Vagrant <http://www.vagrantup.com/>`_ and
 `Virtualbox <https://www.virtualbox.org/>`_.
 
@@ -36,7 +36,7 @@ Then connect to the initialized VM and start Refinery services:
     > cd /vagrant/refinery && workon refinery-platform
     > supervisord
 
-Open http://localhost:8000/ in your web browser.
+Open http://192.168.50.50:8000/ in your web browser.
 
 Please see `installation notes
 <https://refinery-platform.readthedocs.org/en/latest/administrator/setup.html>`_
