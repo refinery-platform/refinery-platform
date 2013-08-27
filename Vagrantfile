@@ -11,7 +11,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box = "precise32"
-  config.vm.provision :shell, :path => "bootstrap.sh"
+  config.vm.provision :shell, :path => "deployment/bootstrap.sh"
   config.vm.hostname = "refinery"
   config.vm.network :private_network, ip: "192.168.50.50"
 
@@ -29,7 +29,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   config.vm.provision :puppet do |puppet|
-    puppet.manifests_path = "manifests"
+    puppet.manifests_path = "deployment/manifests"
     puppet.manifest_file  = "default.pp"
     # puppet.module_path = "modules"  # requires modules dir to exist when this file is parsed
     puppet.options = "--modulepath /vagrant/modules"
