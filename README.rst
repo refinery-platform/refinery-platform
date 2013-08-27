@@ -26,7 +26,7 @@ Internet connection.  If you get an error, simply retry by:
 
 .. code-block:: bash
 
-    > vagrant reload
+    > vagrant provision
 
 Then connect to the initialized VM and start Refinery services:
 
