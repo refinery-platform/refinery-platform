@@ -416,14 +416,11 @@ def workflow(request, uuid):
 
     # load graph dictionary from Galaxy
     workflow = Workflow.objects.filter( uuid=uuid ).get()
-    connection = workflow.workflow_engine.instance.get_galaxy_connection()
-    workflow_dictionary = connection.get_workflow_dict( workflow.internal_id );
         
     # parse workflow into graph data structure
-    graph = create_workflow_graph( workflow_dictionary )    
-        
+    graph = create_workflow_graph( json.loads( workflow.graph ) )
+       
     # draw graph
-    #nx.draw(graph)
     plt.figure(figsize=(32,9))
     positions = {node_id:graph.node[node_id]['position'] for node_id in graph.nodes()}
     tool_nodes = [node_id for node_id in graph.nodes() if graph.node[node_id]['type'] == "tool"]
