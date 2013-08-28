@@ -5,8 +5,8 @@ Installation instructions
 -------------------------
 
 Install `Git <http://git-scm.com/>`_,
-`Vagrant <http://www.vagrantup.com/>`_ and
-`Virtualbox <https://www.virtualbox.org/>`_.
+`Vagrant <http://www.vagrantup.com/>`_ (1.2.7 or later) and
+`Virtualbox <https://www.virtualbox.org/>`_ (4.2.16 or later).
 
 You may have to import the right VM image:
 
