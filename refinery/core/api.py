@@ -266,8 +266,14 @@ class WorkflowResource(ModelResource):
         fields = ['name', 'uuid' ]  
 
     def dehydrate(self, bundle):
-        # add graph as json        
-        bundle.data['graph'] = json.loads( bundle.obj.graph ) 
+        # add graph as json
+        try:        
+            bundle.data['graph'] = json.loads( bundle.obj.graph )
+        except ValueError:
+            logger.error( "Failed to decode workflow graph into dictionary for workflow " + str( bundle.obj ) + "." )
+            # don't include in response if error occurs
+            pass
+            
         return bundle
 
         
