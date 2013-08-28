@@ -24,6 +24,7 @@ from tastypie.resources import ModelResource
 from tastypie.serializers import Serializer
 import logging
 import re
+import json
 
 
 logger = logging.getLogger(__name__)
@@ -262,7 +263,13 @@ class WorkflowResource(ModelResource):
         resource_name = 'workflow'
         detail_uri_name = 'uuid'
         allowed_methods = ["get" ]        
-        fields = ['name', 'uuid']  
+        fields = ['name', 'uuid' ]  
+
+    def dehydrate(self, bundle):
+        # add graph as json        
+        bundle.data['graph'] = json.loads( bundle.obj.graph ) 
+        return bundle
+
         
 class WorkflowInputRelationshipsResource(ModelResource):
     #workflow = fields.ToOneField(WorkflowResource, 'workflow')
