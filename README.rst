@@ -1,8 +1,8 @@
 Refinery Platform
 =================
 
-Installation instructions
--------------------------
+Installing and Launching for Development
+----------------------------------------
 
 Install `Git <http://git-scm.com/>`_,
 `Vagrant <http://www.vagrantup.com/>`_ (1.2.7 or later) and
