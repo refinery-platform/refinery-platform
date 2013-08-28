@@ -25,7 +25,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   if ENV['GALAXY_DATABASE_DIR']
     config.vm.synced_folder ENV['GALAXY_DATABASE_DIR'], ENV['GALAXY_DATABASE_DIR']
   else
-   puts("$GALAXY_DATABASE_DIR is not set: copying files from local Galaxy instance will not work.")
+   puts("WARNING: $GALAXY_DATABASE_DIR is not set: copying files from local Galaxy instance will not work.")
   end
 
   config.vm.provision :puppet do |puppet|
