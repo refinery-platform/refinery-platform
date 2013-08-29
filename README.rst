@@ -22,7 +22,7 @@ Configure and Load Virtual Machine
 
 .. code-block:: bash
 
-    > git clone git@github.com:parklab/refinery-platform.git
+    > git clone https://github.com/parklab/refinery-platform.git
     > cd refinery-platform
     > vagrant up
 The above step should take about 15 minutes depending on the speed of your machine and
