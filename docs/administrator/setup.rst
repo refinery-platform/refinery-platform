@@ -20,8 +20,11 @@ file.
 Note:
 Installation process will fail if any of the ports forwarded from the VM are in
 use on the host machine (please see Vagrantfile for the list of ports).
-After installation has finished you will need to create a `Django superuser
-<https://docs.djangoproject.com/en/dev/ref/django-admin/#createsuperuser>`_.
+After installation has finished you will need to create a Django superuser:
+
+.. code-block:: bash
+
+    > python manage.py createsuperuser
 
 Obtaining the Software
 ----------------------
