@@ -45,8 +45,7 @@ def get_workflows( workflow_engine ):
         #get all workflows
         workflows = connection.get_complete_workflows()
     except:
-        logger.exception( "Unable to connect to " + workflow_engine.instance.base_url )
-        return
+        logger.exception( "Unable to retrieve workflows from " + workflow_engine.instance.base_url + " - skipping ..." )
     
     # make existing workflows for this workflow engine inactive (deleting the workflows would remove provenance information
     # and also lead to the deletion of the corresponding analyses) 
