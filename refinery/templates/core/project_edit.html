@@ -14,7 +14,7 @@
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable">
 	<div class="row-fluid">		
-		<form method="post" action="{% url project_edit project.uuid %}" class="wide" id="project-edit-form">
+		<form method="post" action="{% url 'project_edit' project.uuid %}" class="wide" id="project-edit-form">
 		{% csrf_token %}
 			{% if form.errors %}
   			<div class="alert alert-error">Please correct the errors below.{{ form.non_field_errors }}</div>
@@ -74,7 +74,7 @@
 				<p>
 				{% for perm in project.get_groups %}
 					{% if perm.group.is_managed %}
-						<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
+						<a href="{% url 'group' perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
 						{% if perm.read %}
 							<i class="icon-eye-open"></i>
 						{% endif %}
@@ -111,7 +111,7 @@
 				{% for analysis in project.analyses.all %}
 					<tr>
 			    		<td>
-					    	<a href="{% url analysis project.uuid analysis.uuid %}">{{ analysis.name }}</a>
+					    	<a href="{% url 'analysis' project.uuid analysis.uuid %}">{{ analysis.name }}</a>
 						</td>
 						<td>{{ analysis.modification_date }}</td>
 					</tr>
@@ -120,7 +120,7 @@
 			</table>
 			{% endif %}
 			<a href="#" class="btn btn-primary" id="submit-link">Save</a>
-			<a href="{% url project project.uuid %}" class="btn">Cancel</a>			
+			<a href="{% url 'project' project.uuid %}" class="btn">Cancel</a>			
 		</form>		
 	</div>
 </div>

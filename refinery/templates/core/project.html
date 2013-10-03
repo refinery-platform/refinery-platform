@@ -51,7 +51,7 @@
 		<div class="refinery-subheader">
 			<h4>Owner</h4>
 		</div>	
-		<p><i class="icon-user"></i>&nbsp;<a href="{% url user project.get_owner.get_profile.uuid %}">{% if project.get_owner.get_full_name %}{{ project.get_owner.get_full_name }}{% else %}{{ project.get_owner }}{%endif%}</a></p>
+		<p><i class="icon-user"></i>&nbsp;<a href="{% url 'user' project.get_owner.get_profile.uuid %}">{% if project.get_owner.get_full_name %}{{ project.get_owner.get_full_name }}{% else %}{{ project.get_owner }}{%endif%}</a></p>
 		
 		{% if project.get_groups|length > 0 %}
 		<div class="refinery-subheader">
@@ -60,7 +60,7 @@
 			<p>
 			{% for perm in project.get_groups %}
 				{% if perm.group.is_managed %}					
-					<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
+					<a href="{% url 'group' perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
 					{% if perm.read %}
 						<i class="icon-eye-open"></i>
 					{% endif %}
@@ -97,7 +97,7 @@
 			{% for analysis in project.analyses.all %}
 				<tr>
 			    	<td>
-					    <a href="{% url analysis project.uuid analysis.uuid %}">{{ analysis.name }}</a>
+					    <a href="{% url 'analysis' project.uuid analysis.uuid %}">{{ analysis.name }}</a>
 					</td>
 					<td>{{ analysis.modification_date }}</td>
 				</tr>
@@ -105,7 +105,7 @@
 			</tbody>
 		</table>
 		{% endif %}
-		<a class="btn" href="{% url project_edit project.uuid %}">Edit</a>
+		<a class="btn" href="{% url 'project_edit' project.uuid %}">Edit</a>
 	{% else %}
 	    <p>No valid project.</p>
 	{% endif %}

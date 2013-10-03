@@ -64,7 +64,7 @@
 			<div class="refinery-subheader">
 				<h4>Workflow Id</h4>
 			</div>
-			<p>{{ workflow.internal_id }} (<a href="{% url download_workflow workflow.uuid %}">Download</a>)</p>
+			<p>{{ workflow.internal_id }} (<a href="{% url 'download_workflow' workflow.uuid %}">Download</a>)</p>
 
 			<div class="refinery-header">
 				<span class="refinery-header-left">
@@ -79,7 +79,7 @@
 				<p>
 				{% for perm in workflow.get_groups %}
 					{% if perm.group.is_managed %}
-						<a href="{% url group perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
+						<a href="{% url 'group' perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
 						{% if perm.read %}
 							<i class="icon-eye-open"></i>
 						{% endif %}
@@ -99,7 +99,7 @@
 			</div>
 			<p>Created: {{ workflow.creation_date }} | Last Modified: {{ workflow.modification_date }}</p>
 			<a href="#" class="btn btn-primary" id="submit-link">Save</a>
-			<a href="{% url workflow workflow.uuid %}" class="btn">Cancel</a>			
+			<a href="{% url 'workflow' workflow.uuid %}" class="btn">Cancel</a>			
 		</form>
 	</div>
 </div>
