@@ -126,12 +126,14 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.request",    
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE_CLASSES = (                      
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'core.middleware.ExternalToolErrorMiddleware',
+    'core.middleware.DatabaseFailureMiddleware',
 )
 
 ROOT_URLCONF = 'refinery.urls'
@@ -170,7 +172,7 @@ INSTALLED_APPS = (
     # NG: added for API
     "tastypie",
     'guardian',
-    'raven.contrib.django',
+    #'raven.contrib.django',
     'galaxy_connector',
     'core',
     'analysis_manager',
@@ -182,7 +184,7 @@ INSTALLED_APPS = (
     'annotation_server',
     'registration',
     # RP: added for database migration between builds 
-    'south', 
+    #'south', 
 )
 
 # NG: added for django-guardian
