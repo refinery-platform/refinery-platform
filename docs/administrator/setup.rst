@@ -45,13 +45,15 @@ Galaxy
 Galaxy is required to run analyses in Refinery and to provide support for archiving.
 
 *Website*
-   http://www.galaxyproject.org
+   https://bitbucket.org/galaxy/galaxy-dist
 
 *Version*
-   ???
+   `Aug 12, 2013 Galaxy Distribution <http://wiki.galaxyproject.org/DevNewsBriefs/2013_08_12>`_
 
 *Notes*
-   On your host you will need to:
+   Refinery running in the VM can access Galaxy instance running on the host at http://192.168.50.1:8080
+
+   On the host you will need to:
 
    - Set $GALAXY_DATABASE_DIR env variable to the absolute path of the $GALAXY_ROOT/database folder of your local Galaxy instance installed on the host if you want to copy files directly it.
 
