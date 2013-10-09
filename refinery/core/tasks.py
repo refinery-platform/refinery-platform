@@ -1,5 +1,6 @@
 from celery.task import task, periodic_task
 from celery.task.control import ping
+from psycopg2 import OperationalError
 from django.conf import settings
 from django.db import connection
 from django.db.models.deletion import Collector
@@ -281,7 +282,7 @@ def check_for_celery():
     
     if acquire_lock():
         try:
-            celery, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.CELERY_TOOL_NAME)
+            celery, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.CELERY_TOOL_NAME, interval_between_time_checks=ExternalToolStatus.CELERY_CHECK_TOOL_INTERVAL)
 
             #actually check now
             array = ping() #pings celery to see if it's alive
@@ -313,7 +314,7 @@ def check_for_solr():
     
     if acquire_lock():
         try:
-            solr, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.SOLR_TOOL_NAME)
+            solr, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.SOLR_TOOL_NAME, interval_between_time_checks=ExternalToolStatus.SOLR_CHECK_TOOL_INTERVAL)
             solr.status = ExternalToolStatus.UNKNOWN_STATUS #set initially in case of timeout
             #save status
             solr.save()
@@ -346,11 +347,11 @@ def check_for_galaxy():
     release_lock = lambda: cache.delete(lock_id)
     
     if acquire_lock():
-        instances = Instance.objects.all()
         try:
+            instances = Instance.objects.all()
             for instance in instances:
                 try:
-                    galaxy, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.GALAXY_TOOL_NAME, unique_instance_identifier=instance.api_key)
+                    galaxy, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.GALAXY_TOOL_NAME, unique_instance_identifier=instance.api_key, interval_between_time_checks=ExternalToolStatus.GALAXY_CHECK_TOOL_INTERVAL)
                     instance.get_galaxy_connection().get_histories()
                     galaxy.status = ExternalToolStatus.SUCCESS_STATUS #galaxy running properly
                 except:
@@ -366,7 +367,7 @@ def check_for_galaxy():
 def check_tool_status(tool_name, tool_unique_instance_identifier=None):
     try:
         tool = ExternalToolStatus.objects.get(name=tool_name, unique_instance_identifier=tool_unique_instance_identifier)
-    except:
+    except ExternalToolStatus.DoesNotExist:
         return ExternalToolStatus.UNKNOWN_STATUS
 
     if(datetime.now() - tool.last_time_check) > timedelta(seconds=tool.interval_between_time_checks):
