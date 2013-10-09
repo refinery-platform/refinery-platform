@@ -38,3 +38,21 @@ Settings
 Before Refinery can be installed a number of variables - so called "settings" -
 have to be configured. In addition to the settings discussed here, please also
 see the complete list of all Refinery :ref:`settings` that can be customized.
+
+Galaxy
+------
+
+Galaxy is required to run analyses in Refinery and to provide support for archiving.
+
+*Website*
+   http://www.galaxyproject.org
+
+*Version*
+   ???
+
+*Notes*
+   On your host you will need to:
+
+   - Set $GALAXY_DATABASE_DIR env variable to the absolute path of the $GALAXY_ROOT/database folder of your local Galaxy instance installed on the host if you want to copy files directly it.
+
+   - Create a symlink /vagrant/media that points to the absolute path of the media subdirectory inside the Refinery project directory.
