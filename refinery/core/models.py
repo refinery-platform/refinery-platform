@@ -934,9 +934,13 @@ class ExternalToolStatus(models.Model):
     SOLR_TOOL_NAME = "SOLR"
     GALAXY_TOOL_NAME = "GALAXY"
     
-    CELERY_CHECK_TOOL_INTERVAL = 5.0
-    SOLR_CHECK_TOOL_INTERVAL = 5.0
-    GALAXY_CHECK_TOOL_INTERVAL = 5.0
+    INTERVAL_BETWEEN_CHECKS = {
+                               CELERY_TOOL_NAME: 5.0,
+                               SOLR_TOOL_NAME: 5.0,
+                               GALAXY_TOOL_NAME: 5.0,
+                                }
+    
+    
 
     STATUS_CHOICES = ( 
                      (SUCCESS_STATUS, "Tool is running"),
@@ -954,7 +958,6 @@ class ExternalToolStatus(models.Model):
     last_time_check = models.DateTimeField(auto_now_add=True)
     name = models.TextField(choices=TOOL_NAME_CHOICES, blank=True, null=True)
     unique_instance_identifier = models.CharField(max_length=256, blank=True, null=True)
-    interval_between_time_checks = models.FloatField(default=5.0)
     
     def __unicode__(self):
         retstr = self.name
@@ -962,3 +965,6 @@ class ExternalToolStatus(models.Model):
             retstr += " (%s)" % self.unique_instance_identifier
         retstr += ": %s" % self.status
         return retstr
+    
+    class Meta:
+        unique_together = (name, unique_instance_identifier)
