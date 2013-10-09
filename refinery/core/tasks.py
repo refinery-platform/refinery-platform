@@ -267,7 +267,7 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
 
 LOCK_EXPIRE = 60 # Lock expires in 1 minute
 
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.CELERY_CHECK_TOOL_INTERVAL))
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.CELERY_TOOL_NAME]))
 def check_for_celery():
     # The cache key consists of the task name and the MD5 digest
     # of the feed URL.
@@ -282,7 +282,7 @@ def check_for_celery():
     
     if acquire_lock():
         try:
-            celery, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.CELERY_TOOL_NAME, interval_between_time_checks=ExternalToolStatus.CELERY_CHECK_TOOL_INTERVAL)
+            celery, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.CELERY_TOOL_NAME)
 
             #actually check now
             array = ping() #pings celery to see if it's alive
@@ -298,7 +298,7 @@ def check_for_celery():
             release_lock()
 
 
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.SOLR_CHECK_TOOL_INTERVAL))
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.SOLR_TOOL_NAME]))
 def check_for_solr():
     """creates a lock, then pings solr"""
     # The cache key consists of the task name and the MD5 digest
@@ -314,7 +314,7 @@ def check_for_solr():
     
     if acquire_lock():
         try:
-            solr, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.SOLR_TOOL_NAME, interval_between_time_checks=ExternalToolStatus.SOLR_CHECK_TOOL_INTERVAL)
+            solr, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.SOLR_TOOL_NAME)
             solr.status = ExternalToolStatus.UNKNOWN_STATUS #set initially in case of timeout
             #save status
             solr.save()
@@ -333,7 +333,7 @@ def check_for_solr():
             release_lock()
 
 
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.GALAXY_CHECK_TOOL_INTERVAL))
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.GALAXY_TOOL_NAME]))
 def check_for_galaxy():
     # The cache key consists of the task name and the MD5 digest
     # of the feed URL.
@@ -351,7 +351,7 @@ def check_for_galaxy():
             instances = Instance.objects.all()
             for instance in instances:
                 try:
-                    galaxy, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.GALAXY_TOOL_NAME, unique_instance_identifier=instance.api_key, interval_between_time_checks=ExternalToolStatus.GALAXY_CHECK_TOOL_INTERVAL)
+                    galaxy, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.GALAXY_TOOL_NAME, unique_instance_identifier=instance.api_key)
                     instance.get_galaxy_connection().get_histories()
                     galaxy.status = ExternalToolStatus.SUCCESS_STATUS #galaxy running properly
                 except:
@@ -370,7 +370,7 @@ def check_tool_status(tool_name, tool_unique_instance_identifier=None):
     except ExternalToolStatus.DoesNotExist:
         return ExternalToolStatus.UNKNOWN_STATUS
 
-    if(datetime.now() - tool.last_time_check) > timedelta(seconds=tool.interval_between_time_checks):
+    if(datetime.now() - tool.last_time_check) > timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[tool_name]):
         return ExternalToolStatus.UNKNOWN_STATUS
 
     return tool.status
