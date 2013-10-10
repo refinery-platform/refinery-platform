@@ -265,8 +265,6 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     return dataset_copy
 
 
-LOCK_EXPIRE = 60 # Lock expires in 1 minute
-
 @periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.CELERY_TOOL_NAME]))
 def check_for_celery():
     # The cache key consists of the task name and the MD5 digest
@@ -275,7 +273,7 @@ def check_for_celery():
     lock_id = '%s-lock-%s' % (ExternalToolStatus.CELERY_TOOL_NAME, hexdigest)
 
     # cache.add fails if if the key already exists
-    acquire_lock = lambda: cache.add(lock_id, 'true', LOCK_EXPIRE)
+    acquire_lock = lambda: cache.add(lock_id, 'true', ExternalToolStatus.LOCK_EXPIRE)
     # memcache delete is very slow, but we have to use it to take
     # advantage of using add() for atomic locking
     release_lock = lambda: cache.delete(lock_id)
@@ -307,7 +305,7 @@ def check_for_solr():
     lock_id = '%s-lock-%s' % (ExternalToolStatus.SOLR_TOOL_NAME, hexdigest)
 
     # cache.add fails if if the key already exists
-    acquire_lock = lambda: cache.add(lock_id, 'true', LOCK_EXPIRE)
+    acquire_lock = lambda: cache.add(lock_id, 'true', ExternalToolStatus.LOCK_EXPIRE)
     # memcache delete is very slow, but we have to use it to take
     # advantage of using add() for atomic locking
     release_lock = lambda: cache.delete(lock_id)
@@ -341,7 +339,7 @@ def check_for_galaxy():
     lock_id = '%s-lock-%s' % (ExternalToolStatus.GALAXY_TOOL_NAME, hexdigest)
 
     # cache.add fails if if the key already exists
-    acquire_lock = lambda: cache.add(lock_id, 'true', LOCK_EXPIRE)
+    acquire_lock = lambda: cache.add(lock_id, 'true', ExternalToolStatus.LOCK_EXPIRE)
     # memcache delete is very slow, but we have to use it to take
     # advantage of using add() for atomic locking
     release_lock = lambda: cache.delete(lock_id)
