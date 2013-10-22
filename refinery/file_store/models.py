@@ -630,7 +630,7 @@ def _symlink_file_on_disk(source, target):
         try:
             os.makedirs(target_dir)
         except OSError as e:
-            logger.error("Error creating file store directory\nOSError: [Errno %s], file name: %s, error: %s",
+            logger.error("Error creating file store directory. OSError: [Errno %s], file name: %s, error: %s",
                          target_dir, e.errno, e.filename, e.strerror)
             return False
 
