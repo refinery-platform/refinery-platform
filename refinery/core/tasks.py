@@ -1,5 +1,6 @@
 from celery.task import task, periodic_task
 from celery.task.control import ping
+from psycopg2 import OperationalError
 from django.conf import settings
 from django.db import connection
 from django.db.models.deletion import Collector
@@ -264,9 +265,7 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     return dataset_copy
 
 
-LOCK_EXPIRE = 60 # Lock expires in 1 minute
-
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.CELERY_CHECK_TOOL_INTERVAL))
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.CELERY_TOOL_NAME]))
 def check_for_celery():
     # The cache key consists of the task name and the MD5 digest
     # of the feed URL.
@@ -274,7 +273,7 @@ def check_for_celery():
     lock_id = '%s-lock-%s' % (ExternalToolStatus.CELERY_TOOL_NAME, hexdigest)
 
     # cache.add fails if if the key already exists
-    acquire_lock = lambda: cache.add(lock_id, 'true', LOCK_EXPIRE)
+    acquire_lock = lambda: cache.add(lock_id, 'true', ExternalToolStatus.LOCK_EXPIRE)
     # memcache delete is very slow, but we have to use it to take
     # advantage of using add() for atomic locking
     release_lock = lambda: cache.delete(lock_id)
@@ -297,7 +296,7 @@ def check_for_celery():
             release_lock()
 
 
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.SOLR_CHECK_TOOL_INTERVAL))
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.SOLR_TOOL_NAME]))
 def check_for_solr():
     """creates a lock, then pings solr"""
     # The cache key consists of the task name and the MD5 digest
@@ -306,7 +305,7 @@ def check_for_solr():
     lock_id = '%s-lock-%s' % (ExternalToolStatus.SOLR_TOOL_NAME, hexdigest)
 
     # cache.add fails if if the key already exists
-    acquire_lock = lambda: cache.add(lock_id, 'true', LOCK_EXPIRE)
+    acquire_lock = lambda: cache.add(lock_id, 'true', ExternalToolStatus.LOCK_EXPIRE)
     # memcache delete is very slow, but we have to use it to take
     # advantage of using add() for atomic locking
     release_lock = lambda: cache.delete(lock_id)
@@ -332,7 +331,7 @@ def check_for_solr():
             release_lock()
 
 
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.GALAXY_CHECK_TOOL_INTERVAL))
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.GALAXY_TOOL_NAME]))
 def check_for_galaxy():
     # The cache key consists of the task name and the MD5 digest
     # of the feed URL.
@@ -340,14 +339,14 @@ def check_for_galaxy():
     lock_id = '%s-lock-%s' % (ExternalToolStatus.GALAXY_TOOL_NAME, hexdigest)
 
     # cache.add fails if if the key already exists
-    acquire_lock = lambda: cache.add(lock_id, 'true', LOCK_EXPIRE)
+    acquire_lock = lambda: cache.add(lock_id, 'true', ExternalToolStatus.LOCK_EXPIRE)
     # memcache delete is very slow, but we have to use it to take
     # advantage of using add() for atomic locking
     release_lock = lambda: cache.delete(lock_id)
     
     if acquire_lock():
-        instances = Instance.objects.all()
         try:
+            instances = Instance.objects.all()
             for instance in instances:
                 try:
                     galaxy, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.GALAXY_TOOL_NAME, unique_instance_identifier=instance.api_key)
@@ -366,10 +365,10 @@ def check_for_galaxy():
 def check_tool_status(tool_name, tool_unique_instance_identifier=None):
     try:
         tool = ExternalToolStatus.objects.get(name=tool_name, unique_instance_identifier=tool_unique_instance_identifier)
-    except:
+    except ExternalToolStatus.DoesNotExist:
         return ExternalToolStatus.UNKNOWN_STATUS
 
-    if(datetime.now() - tool.last_time_check) > timedelta(seconds=tool.interval_between_time_checks):
+    if(datetime.now() - tool.last_time_check) > timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[tool_name]):
         return ExternalToolStatus.UNKNOWN_STATUS
 
     return tool.status

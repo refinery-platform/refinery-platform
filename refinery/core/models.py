@@ -934,10 +934,14 @@ class ExternalToolStatus(models.Model):
     SOLR_TOOL_NAME = "SOLR"
     GALAXY_TOOL_NAME = "GALAXY"
     
-    CELERY_CHECK_TOOL_INTERVAL = 5.0
-    SOLR_CHECK_TOOL_INTERVAL = 5.0
-    GALAXY_CHECK_TOOL_INTERVAL = 5.0
-
+    LOCK_EXPIRE = 60 # Lock for database access expires in 1 minute
+    
+    INTERVAL_BETWEEN_CHECKS = {
+                               CELERY_TOOL_NAME: 5.0,
+                               SOLR_TOOL_NAME: 5.0,
+                               GALAXY_TOOL_NAME: 5.0,
+                                }
+    
     STATUS_CHOICES = ( 
                      (SUCCESS_STATUS, "Tool is running"),
                      (FAILURE_STATUS, "Tool is not running"),
@@ -961,3 +965,6 @@ class ExternalToolStatus(models.Model):
             retstr += " (%s)" % self.unique_instance_identifier
         retstr += ": %s" % self.status
         return retstr
+    
+    class Meta:
+        unique_together = ('name', 'unique_instance_identifier')

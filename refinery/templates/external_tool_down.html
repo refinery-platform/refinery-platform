@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} - {{external_tool_name}} Problem
+{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+<h1>{{external_tool_name}} Problem</h1>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="refinery-panel refinery-panel-content scrollable">
+	<div class="row-fluid">
+		<div class="refinery-header">
+			<span class="refinery-header-left">
+				<h3>{{external_tool_name}} Problem</h3>
+			</span>
+		</div>
+		<p>
+			{{message_start}} has encountered an internal error or misconfiguration and was unable to complete your request.<br /><br />
+			The system administrator has been informed of the problem.  We apologize for the inconvenience.
+		</p>
+	</div>
+</div>
+{% endblock %}

@@ -101,7 +101,6 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'djangular.finders.NamespacedAngularAppDirectoriesFinder',
     #'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
@@ -133,6 +132,8 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'core.middleware.ExternalToolErrorMiddleware',
+    'core.middleware.DatabaseFailureMiddleware',
 )
 
 ROOT_URLCONF = 'refinery.urls'
@@ -171,8 +172,7 @@ INSTALLED_APPS = (
     # NG: added for API
     "tastypie",
     'guardian',
-    'raven.contrib.django',
-    'djangular',
+#    'raven.contrib.django',
     'galaxy_connector',
     'core',
     'analysis_manager',
