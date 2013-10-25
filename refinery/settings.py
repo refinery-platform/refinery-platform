@@ -101,6 +101,7 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'djangular.finders.NamespacedAngularAppDirectoriesFinder',
     #'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
@@ -172,7 +173,8 @@ INSTALLED_APPS = (
     # NG: added for API
     "tastypie",
     'guardian',
-    #'raven.contrib.django',
+    'raven.contrib.django',
+    'djangular',
     'galaxy_connector',
     'core',
     'analysis_manager',
@@ -183,6 +185,7 @@ INSTALLED_APPS = (
     'data_set_manager', 
     'annotation_server',
     'registration',
+    'flatblocks',
     # RP: added for database migration between builds 
     'south', 
 )

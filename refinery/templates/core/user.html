@@ -57,7 +57,7 @@
         {% if REFINERY_EXTERNAL_AUTH %}
             <p>{{ REFINERY_EXTERNAL_AUTH_MESSAGE|safe }}</p>
         {% else %}
-            <p><i class="icon-key"></i>&nbsp;<a href="{% url django.contrib.auth.views.password_change %}">Change Password?</a></p>
+            <p><i class="icon-key"></i>&nbsp;<a href="{% url 'django.contrib.auth.views.password_change' %}">Change Password?</a></p>
         {% endif %}
 
 		{% if profile_user.groups.count > 0 %}
@@ -68,7 +68,7 @@
 			</div>		
 		    <p>   
 			{% for group in profile_user.groups.all %}
-		       	<a href="{% url group group.extendedgroup.uuid %}">{{ group.name }}</a></br>
+		       	<a href="{% url 'group' group.extendedgroup.uuid %}">{{ group.name }}</a></br>
 		   	{% endfor %}
 		   	</p>
 		{% endif %}
@@ -80,7 +80,7 @@
 		</div>		
 		<p>Joined on {{ profile_user.date_joined }} Last login on {{ profile_user.last_login }}</p>
 
-		<a class="btn" href="{% url user_edit profile_user.get_profile.uuid %}">Edit</a>				
+		<a class="btn" href="{% url 'user_edit' profile_user.get_profile.uuid %}">Edit</a>				
 	{% else %}
 	    <p>No valid user.</p>
 	{% endif %}	

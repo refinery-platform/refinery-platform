@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 
+{% load flatblock_tags %}
+
+
 {% block title %}
 {{ block.super }} - About
 {% endblock %}
@@ -23,6 +26,10 @@
 					
 					<p>
 						{{site_name}} is a web-based data visualization and analysis system powered by an ISA-Tab-compatible data repository for public and private data sets. Analyses are implemented as Galaxy workflows and executed through the Galaxy API. 						
+					</p>
+					
+					<p>
+						{% flatblock "website.about" %}
 					</p>
 	
 					<div class="refinery-header">
