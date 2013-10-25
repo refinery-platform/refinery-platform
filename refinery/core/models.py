@@ -938,9 +938,7 @@ class ExternalToolStatus(models.Model):
                                CELERY_TOOL_NAME: 5.0,
                                SOLR_TOOL_NAME: 5.0,
                                GALAXY_TOOL_NAME: 5.0,
-                                }
-    
-    
+                                }    
 
     STATUS_CHOICES = ( 
                      (SUCCESS_STATUS, "Tool is running"),
@@ -967,4 +965,4 @@ class ExternalToolStatus(models.Model):
         return retstr
     
     class Meta:
-        unique_together = (name, unique_instance_identifier)
+        unique_together = ('name', 'unique_instance_identifier')
