@@ -185,6 +185,7 @@ INSTALLED_APPS = (
     'data_set_manager', 
     'annotation_server',
     'registration',
+    'flatblocks',
     # RP: added for database migration between builds 
     #'south', 
 )
