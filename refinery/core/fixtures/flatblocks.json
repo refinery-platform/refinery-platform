@@ -1,0 +1,38 @@
+[
+{
+  "pk": 1, 
+  "model": "flatblocks.flatblock", 
+  "fields": {
+    "content": "{% load markup %}\r\n{% filter markdown:\"safe\" %}\r\n\r\nRefinery is a web-based data visualization and analysis system powered by an [ISA-Tab](http://www.isatools.org)-compatible data repository for public and private data sets. Analyses are implemented as [Galaxy](http://www.usegalaxy.org) workflows and executed through the Galaxy API.\r\n\r\n{% endfilter %}", 
+    "header": "", 
+    "slug": "about.website.background"
+  }
+},
+{
+  "pk": 2, 
+  "model": "flatblocks.flatblock", 
+  "fields": {
+    "content": "{% load markup %}\r\n{% filter markdown:\"safe\" %}\r\n\r\nYou can reach the Refinery team at [refinery@hms.harvard.edu](mailto:refinery@hms.harvard.edu).\r\n{% endfilter %}\r\n", 
+    "header": "", 
+    "slug": "about.website.contact"
+  }
+},
+{
+  "pk": 3, 
+  "model": "flatblocks.flatblock", 
+  "fields": {
+    "content": "{% load markup %}\r\n{% filter markdown %}\r\nRefinery is in part funded by an __Agilent Technologies__ Emerging Insights Grant.\r\n{% endfilter %}\r\n", 
+    "header": "", 
+    "slug": "about.website.funding"
+  }
+},
+{
+  "pk": 4, 
+  "model": "flatblocks.flatblock", 
+  "fields": {
+    "content": "{% load markup %}\r\n{% filter markdown %}\r\n\r\nRefinery is a project of the [Park Lab](http://compbio.med.harvard.edu) at [Harvard Medical School](http://cbmi.med.harvard.edu) in collaboration with the [Hide Lab](http://www.hsph.harvard.edu/faculty/winston-hide) at [Harvard School of Public Health](http://hsph.harvard.edu).\r\n\r\n#### Members at Harvard Medical School\r\n\r\n* Nils Gehlenborg\r\n* Richard Park\r\n* Psalm Haseley\r\n* Peter J Park, _Principal Investigator_\r\n\r\n#### Members at Harvard School of Public Health\r\n\r\n* Shannan Ho Sui\r\n* Ilya Sytchev\r\n* Winston Hide\r\n\r\n\r\n{% endfilter %}", 
+    "header": "", 
+    "slug": "about.website.team"
+  }
+}
+]
