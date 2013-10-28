@@ -25,6 +25,14 @@ After installation has finished you will need to create a Django superuser:
 .. code-block:: bash
 
     > python manage.py createsuperuser
+    
+To instantiate administrator-modifiable content on the Refinery website, e.g.,
+the contents of the "About" page, load the default content into the database:  
+    
+.. code-block:: bash
+
+	> python manage.py loaddata core/fixtures/default-pages.json
+
 
 Obtaining the Software
 ----------------------

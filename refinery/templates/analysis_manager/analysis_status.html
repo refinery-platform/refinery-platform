@@ -27,10 +27,10 @@
 				</p>
 				{% else %}
 				<p>
-					<i class="icon-cog"></i>&nbsp;<a href="{% url workflow statuses.analysis.workflow.uuid %}">{{ statuses.analysis.workflow.name }}</a> started on {{ statuses.analysis.modification_date }}.
+					<i class="icon-cog"></i>&nbsp;<a href="{% url 'workflow' statuses.analysis.workflow.uuid %}">{{ statuses.analysis.workflow.name }}</a> started on {{ statuses.analysis.modification_date }}.
 					(<a href="{{ statuses.analysis.workflow.workflow_engine.instance.base_url }}/history/list?f-sharing=All&sort=-update_time&f-name=All&f-tags=All&f-deleted=False&operation=Switch&use_panels=False&id={{ statuses.analysis.history_id }}">View in Galaxy</a>)
 					
-					<!-- <i class="icon-file"></i>&nbsp;<a href="{% url data_set statuses.analysis.data_set.uuid %}">{{ statuses.analysis.data_set.name }}</a> -->
+					<!-- <i class="icon-file"></i>&nbsp;<a href="{% url 'data_set' statuses.analysis.data_set.uuid %}">{{ statuses.analysis.data_set.name }}</a> -->
 				</p>
 				{% endif %}
 			</div> <!-- column -->
@@ -73,7 +73,7 @@
 	
 	<script>
 	$(document).ready(function() {		
-		monitor = new AnalysisMonitor("{{ uuid }}", document.location.protocol + "//" + document.location.host, "{% url analysis statuses.analysis.uuid %}", "{{ csrf_token }}");
+		monitor = new AnalysisMonitor("{{ uuid }}", document.location.protocol + "//" + document.location.host, "{% url 'analysis' statuses.analysis.uuid %}", "{{ csrf_token }}");
 		monitor.getUpdate();
 		
 		var timerId = setInterval( function(){ monitor.getUpdate(); }, 3000 );

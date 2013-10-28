@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% load markup %}
+{% load flatblock_tags %}
+
 
 {% block title %}
 {{ block.super }} - About
@@ -6,7 +9,7 @@
 
 {% block subheader %}
 <div class="page-header">
-<h1>About {{site_name}} <small>The idea, the team, the funders</small></h1>	
+<h1>About {{site_name}}</h1>	
 </div>
 {% endblock %}
 
@@ -22,7 +25,8 @@
 					</div>
 					
 					<p>
-						{{site_name}} is a web-based data visualization and analysis system powered by an ISA-Tab-compatible data repository for public and private data sets. Analyses are implemented as Galaxy workflows and executed through the Galaxy API. 						
+						
+						{% flatblock "about.website.background" evaluated %}
 					</p>
 	
 					<div class="refinery-header">
@@ -31,7 +35,7 @@
 						</span>
 					</div>
 					<p>
-						You can reach the {{site_name}} team at <a href="mailto:refinery@hms.harvard.edu">refinery@hms.harvard.edu</a>.
+						{% flatblock "about.website.contact" evaluated %}
 					</p>
 										
 					<div class="refinery-header">
@@ -40,7 +44,7 @@
 						</span>
 					</div>
 					<p>
-						{{site_name}} is in part funded by an <b>Agilent Technologies</b> Emerging Insights Grant.
+						{% flatblock "about.website.funding" evaluated %}
 					</p>
 	
 				</div>
@@ -57,39 +61,8 @@
 					</div>
 					
 					<p>
-						{{site_name}} is a project of the <a href="http://compbio.med.harvard.edu">Park Lab</a> at <a href="http://cbmi.med.harvard.edu">Harvard Medical School</a> in collaboration with the <a href="http://www.hsph.harvard.edu/faculty/winston-hide">Hide Lab</a> at <a href="http://hsph.harvard.edu">Harvard School of Public Health</a>.						
+						{% flatblock "about.website.team" evaluated %}
 					</p>					
-
-					<span class="refinery-subheader">
-						<h4>Harvard Medical School</h4>
-					</span>
-
-					<p>
-			      		<i class="icon-user"></i> Nils Gehlenborg			
-					</p>
-					<p>
-			      		<i class="icon-user"></i> Richard Park			
-					</p>
-					<p>
-			      		<i class="icon-user"></i> Psalm Haseley			
-					</p>
-					<p>
-			      		<i class="icon-user"></i> Peter J Park, <i>Principal Investigator</i>			
-					</p>
-			
-					<span class="refinery-subheader">
-						<h4>Harvard School of Public Health</h4>
-					</span>
-					
-					<p>
-			      		<i class="icon-user"></i> Ilya Sytchev			
-					</p>
-					<p>
-			      		<i class="icon-user"></i> Shannan Ho Sui			
-					</p>
-					<p>
-			      		<i class="icon-user"></i> Winston Hide			
-					</p>				
 				</div>
 			</div>
 		</div>

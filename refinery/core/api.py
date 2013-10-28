@@ -30,20 +30,6 @@ import json
 logger = logging.getLogger(__name__)
 
 
-class PrettyJSONSerializer(Serializer):
-    '''Adds indentations and newlines to JSON output
-    Source: http://django-tastypie.readthedocs.org/en/latest/cookbook.html#pretty-printed-json-serialization
-
-    '''
-    json_indent = 2
-
-    def to_json(self, data, options=None):
-        options = options or {}
-        data = self.to_simple(data, options)
-        return simplejson.dumps(data, cls=json.DjangoJSONEncoder,
-                sort_keys=True, ensure_ascii=False, indent=self.json_indent)
-
-
 class DataSetResource(ModelResource):
     class Meta:
         queryset = DataSet.objects.all()
@@ -103,7 +89,6 @@ class NodeResource(ModelResource):
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
-        serializer = PrettyJSONSerializer()
         allowed_methods = ["get" ]
         fields = ['name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay' ]
         filtering = { 'uuid': ALL }
@@ -154,7 +139,6 @@ class NodeSetResource(ModelResource):
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
-        serializer = PrettyJSONSerializer()
         fields = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
         ordering = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
         allowed_methods = ["get", "post" ]

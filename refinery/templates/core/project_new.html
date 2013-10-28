@@ -14,7 +14,7 @@
 <div class="refinery-panel refinery-panel-content scrollable">
 	<div class="row-fluid">		
 
-	<form action="{% url project_new %}" method="post">{% csrf_token %}
+	<form action="{% url 'project_new' %}" method="post">{% csrf_token %}
 		<table>		
 			{{ form.as_p }}
 		</table>

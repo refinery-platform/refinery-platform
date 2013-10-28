@@ -118,8 +118,6 @@ rect.active {
 {% block content %}
 	<!-- tab headers -->
 
-<div ng-app="core">
-
 <div class="refinery-panel-tabs">
 
 	<div class="row-fluid">
@@ -237,31 +235,6 @@ rect.active {
 
 						<div class="tab-content">
 							<div class="tab-pane active fade in" id="table-view-tab">
-								
-  <ul class="menu">
-    <li><a href="#/view1">view1</a></li>
-    <li><a href="#/view2">view2</a></li>
-  </ul>
-
-  <div ng-view-test></div>
-
-  <div>Angular seed app: v<span app-version></span></div>
-
-  <!-- In production use:
-  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.2/angular.min.js"></script>
-  -->
-  <script src="{{ STATIC_URL }}lib/angular/angular.js"></script>
-  <script src="{{ STATIC_URL }}lib/angular/angular-cookies.js"></script>
-  <script src="/djangular/app.js"></script>
-  <script src="{{ STATIC_URL }}core/js/app.js"></script>
-  <script src="{{ STATIC_URL }}core/js/services.js"></script>
-  <script src="{{ STATIC_URL }}core/js/controllers.js"></script>
-  <script src="{{ STATIC_URL }}core/js/filters.js"></script>
-  <script src="{{ STATIC_URL }}core/js/directives.js"></script>
-								
-								 {% verbatim %}
-								 <p>1 + 2 = {{ 1 + 2 }}</p>
-								 {% endverbatim %}
 								<div id="solr-table-view"></div>
 							</div>
 							<div class="tab-pane fade in" id="pivot-view-tab">
@@ -353,11 +326,11 @@ rect.active {
 		<p>
 		{% if data_set.analysis_set.all|length > 0 %}
 			{% for analysis in data_set.analysis_set.all %}
-					<a href="{% url "analysis_status" analysis.uuid %}">{{ analysis.name }}</a>
+					<a href="{% url analysis_status analysis.uuid %}">{{ analysis.name }}</a>
 					{% if analysis.project.is_catch_all %}
 						(unassigned)
 					{% else %}
-						(Project <a href="{% url "project" analysis.project.uuid %}">{{ analysis.project.name }}</a>)
+						(Project <a href="{% url project analysis.project.uuid %}">{{ analysis.project.name }}</a>)
 					{% endif %}
 					<br/>
 			{% endfor %}
@@ -481,7 +454,7 @@ rect.active {
 			</div>
 				<p>
 				{% for perm in data_set.get_groups %}
-						<a href="{% url "group" perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
+						<a href="{% url "group perm.group.uuid" %}">{{ perm.group.name }}</a>&nbsp;
 						{% if perm.read %}
 							<i class="icon-eye-open"></i>
 						{% endif %}
@@ -505,7 +478,7 @@ rect.active {
 <!-- Modal -->
 <div id="igvModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">√ó</button>
     <h3 id="myModalLabel">Launch IGV</h3>
   </div>
   <div class="modal-body" id="myModalBody">
@@ -515,12 +488,10 @@ rect.active {
   </div>
 </div>
 
+
 </div>
 
-</div> <!-- ng-app -->
-
-{% endblock %} <!-- content -->
-
+{% endblock %}
 
 {% block script %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v3.min.js"></script>
@@ -599,8 +570,6 @@ rect.active {
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/node_set_manager.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/analysis_api_client.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/data_set_monitor.js"></script>
-    
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
 
 	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TweenMax.min.js"></script>
   	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/jquery.gsap.min.js"></script>
