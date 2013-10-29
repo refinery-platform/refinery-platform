@@ -1,23 +1,24 @@
 # Create your views here.
 
-import copy
+from analysis_manager.models import AnalysisStatus
+from analysis_manager.tasks import run_analysis
+from core.models import Analysis, Workflow, WorkflowEngine, WorkflowDataInputMap, \
+    InvestigationLink, NodeSet, NodeRelationship, NodePair
+from core.views import get_solr_results, custom_error_page
+from data_set_manager.models import Study, Assay, Node
 from datetime import datetime
-import logging
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseServerError, HttpResponseBadRequest, HttpResponseNotAllowed
+    HttpResponseServerError, HttpResponseBadRequest, HttpResponseNotAllowed, \
+    HttpResponseNotFound
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils import simplejson
-from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import run_analysis
-from core.models import Analysis, Workflow, WorkflowEngine, \
-    WorkflowDataInputMap, InvestigationLink, NodeSet, NodeRelationship, NodePair
-from data_set_manager.models import Study, Assay, Node
 from workflow_manager.tasks import get_workflow_inputs, get_workflows
-from core.views import get_solr_results
+import copy
+import logging
 
 
 logger = logging.getLogger(__name__)
@@ -43,9 +44,17 @@ def analysis_status(request, uuid):
         statuses = AnalysisStatus.objects.get(analysis=analysis)
     except AnalysisStatus.DoesNotExist:
         statuses = None
-        logger.error(
-            "AnalysisStatus object does not exist for Analysis '{}'".format(
-                analysis.name))
+        
+        if analysis is not None:
+            logger.error("AnalysisStatus object does not exist for Analysis '{}'".format(analysis.name))
+            # else do not thing since analysis does not exist 
+            
+    
+    if analysis is None:
+        return HttpResponse(custom_error_page(request, '404.html'), status='404')
+    
+    if statuses is None:
+        return HttpResponse(custom_error_page(request, '500.html'), status='500')
 
     if request.is_ajax():
         ret_json = {}
