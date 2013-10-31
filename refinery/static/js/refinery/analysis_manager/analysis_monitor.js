@@ -219,7 +219,7 @@ AnalysisMonitor.prototype.getUpdate = function() {
      		window.location = self.redirectUrl;
      	}
 		else if ( self.isStageFinished( result.cleanup ) ) {
-  			//window.location = self.redirectUrl;
+  			window.location = self.redirectUrl;
 		}
      	else {
 	     	self.updateStageProgress( result.preprocessing, "#preprocessing-status", "File upload" );

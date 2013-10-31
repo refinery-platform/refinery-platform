@@ -33,8 +33,8 @@
 				</p>
 				
 				<p>
-					<button type="button" class="btn" id="cancel-analysis-button">View in Galaxy</button>
-					<button type="button" class="btn btn-danger" id="cancel-analysis-button">Cancel Analysis</button>
+					<button type="button" class="btn btn-danger" id="cancel-analysis-button">Cancel Analysis</button>															
+					<button type="button" class="btn" id="view-in-galaxy-button" disabled="disabled">View in Galaxy</button>
 				</p>
 				{% endif %}
 			</div> <!-- column -->
@@ -77,27 +77,47 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
 	
 	<script>
-	$(document).ready(function() {		
+	$(document).ready(function() {
+		
+		var history_id = null;
+		
+		(function poll(){
+			
+			if ( history_id == null ) {
+			    $.ajax({ url: "/api/v1/analysis/{{ uuid }}/?format=json", success: function(data){
+			    	
+			    	if ( history_id == null && data.history_id != null ) {
+			    		// a history id has become available
+				        history_id = data.history_id;		        						
+						$("#view-in-galaxy-button").removeAttr( "disabled" );			    		
+			    	}			        		        
+			
+			    }, dataType: "json", complete: poll, timeout: 5000 });				
+			}
+		})();		
+				
 		monitor = new AnalysisMonitor("{{ uuid }}", document.location.protocol + "//" + document.location.host, "{% url 'analysis' statuses.analysis.uuid %}", "{{ csrf_token }}");
 		monitor.getUpdate();
 		
 		var timerId = setInterval( function(){ monitor.getUpdate(); }, 3000 );
-
-					//<a href="{{ statuses.analysis.workflow.workflow_engine.instance.base_url }}/history/list?f-sharing=All&sort=-update_time&f-name=All&f-tags=All&f-deleted=False&operation=Switch&use_panels=False&id={{ statuses.analysis.history_id }}">View in Galaxy</a>) 
 		
 		$("#cancel-analysis-button").click( function(event) {
 				bootbox.confirm(
-	   				"<h3><i class=\"icon-question\"></i>&nbsp;&nbsp;Cancel Analysis?</h3>" +
+	   				"<h3>Cancel Analysis?</h3>" +
 					"<p>" +
 					"Are you sure you want to cancel this analysis?" +
 					"</p>",
 					function(result) {
 						if ( result ) {
-							alert( "User canceled analysis!" );							
+							alert( "Canceling analyses is not supported at the moment." );							
 						}
 					}
 				); 				
 			});		
+
+		$("#view-in-galaxy-button").click( function(event) {
+				window.location = "{{ statuses.analysis.workflow.workflow_engine.instance.base_url }}/history/view?id=" + history_id;
+			});
 	});    		
 	</script>
 {% endblock %}
