@@ -37,11 +37,14 @@ logger = logging.getLogger(__name__)
 
 
 def send_analysis_email(analysis):
-    '''
-    Sends an email when the analysis finishes somehow or other
+    '''Sends an email when the analysis finishes somehow or other
 
     :param analysis: Analysis object
+
     '''
+    # don't mail the user if analysis was canceled
+    if analysis.cancel: return
+
     #get basic information
     user = analysis.get_owner()
     name = analysis.name
@@ -77,12 +80,6 @@ def send_analysis_email(analysis):
         workflow = analysis.workflow.name
         project = analysis.project
         
-        #get project name
-#        if project.is_catch_all:
-#            project_name = '-'
-#        else:
-#            project_name = project.name
-
         #get information needed to calculate the duration
         start = analysis.time_start
         end = analysis.time_end
