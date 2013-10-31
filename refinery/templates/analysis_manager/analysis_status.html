@@ -28,9 +28,13 @@
 				{% else %}
 				<p>
 					<i class="icon-cog"></i>&nbsp;<a href="{% url 'workflow' statuses.analysis.workflow.uuid %}">{{ statuses.analysis.workflow.name }}</a> started on {{ statuses.analysis.modification_date }}.
-					(<a href="{{ statuses.analysis.workflow.workflow_engine.instance.base_url }}/history/list?f-sharing=All&sort=-update_time&f-name=All&f-tags=All&f-deleted=False&operation=Switch&use_panels=False&id={{ statuses.analysis.history_id }}">View in Galaxy</a>)
-					
+										
 					<!-- <i class="icon-file"></i>&nbsp;<a href="{% url 'data_set' statuses.analysis.data_set.uuid %}">{{ statuses.analysis.data_set.name }}</a> -->
+				</p>
+				
+				<p>
+					<button type="button" class="btn" id="cancel-analysis-button">View in Galaxy</button>
+					<button type="button" class="btn btn-danger" id="cancel-analysis-button">Cancel Analysis</button>
 				</p>
 				{% endif %}
 			</div> <!-- column -->
@@ -70,6 +74,7 @@
 
 {% block script %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/analysis_manager/analysis_monitor.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
 	
 	<script>
 	$(document).ready(function() {		
@@ -77,6 +82,22 @@
 		monitor.getUpdate();
 		
 		var timerId = setInterval( function(){ monitor.getUpdate(); }, 3000 );
+
+					//<a href="{{ statuses.analysis.workflow.workflow_engine.instance.base_url }}/history/list?f-sharing=All&sort=-update_time&f-name=All&f-tags=All&f-deleted=False&operation=Switch&use_panels=False&id={{ statuses.analysis.history_id }}">View in Galaxy</a>) 
+		
+		$("#cancel-analysis-button").click( function(event) {
+				bootbox.confirm(
+	   				"<h3><i class=\"icon-question\"></i>&nbsp;&nbsp;Cancel Analysis?</h3>" +
+					"<p>" +
+					"Are you sure you want to cancel this analysis?" +
+					"</p>",
+					function(result) {
+						if ( result ) {
+							alert( "User canceled analysis!" );							
+						}
+					}
+				); 				
+			});		
 	});    		
 	</script>
 {% endblock %}
