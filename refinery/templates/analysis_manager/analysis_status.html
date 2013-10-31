@@ -109,7 +109,16 @@
 					"</p>",
 					function(result) {
 						if ( result ) {
-							alert( "Canceling analyses is not supported at the moment." );							
+							monitor.cancelAnalysis( 
+								function( result ) {
+									alert( "Successfully canceled analysis." );
+									window.location = "{% url 'data_set' statuses.analysis.data_set.uuid %}";
+									// redirect to dataset page?
+								},
+								function( result ) {
+									alert( "Cancelling analysis failed." );
+								}
+							 );							
 						}
 					}
 				); 				

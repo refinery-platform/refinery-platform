@@ -231,6 +231,24 @@ AnalysisMonitor.prototype.getUpdate = function() {
 };
 
 
+AnalysisMonitor.prototype.cancelAnalysis = function(successCallback,errorCallback) {
+	var self = this;
+
+	$.ajax({
+     url: self.baseUrl + "/analysis_manager/analysis_cancel/",
+     type:"POST",
+     dataType: "json",
+     data: { csrfmiddlewaretoken: self.crsfMiddlewareToken, uuid: self.uuid },
+     success: function( result ) {
+     	successCallback( result );
+     },
+     error: function( result ) {
+     	errorCallback( result );
+     }     
+	});
+};
+
+
 AnalysisMonitor.prototype.isAnalysisRunning = function( callbackRunning, callbackFinished ) {
 	var self = this;
 
