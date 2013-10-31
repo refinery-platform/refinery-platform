@@ -622,10 +622,23 @@ class Analysis(OwnableResource):
             raise
 
     def cancel(self):
+        # mark analysis as canceled
         self.cancel = True
         self.save()
         # running workflow is stopped by deleting its history
-        self.delete_galaxy_history()
+#        self.delete_galaxy_history()
+        # workaround for the Galaxy bug that doesn't stop workflow execution
+        # when history is deleted via API (https://trello.com/c/Tbota8xG):
+        # send email to site admins with Galaxy history ID
+        username = self.get_owner().get_username()
+        subject = "Analysis cancellation request from user '{}'"\
+                  .format(username)
+        history_url = "{}/history/switch_to_history?hist_id={}"\
+                      .format(self.workflow.workflow_engine.instance.base_url,
+                              self.history_id)
+        message = "Please delete the following history to cancel analysis: {}"\
+                  .format(history_url)
+        mail_admins(subject, message)
         self.set_status(Analysis.FAILURE_STATUS, "Cancelled at user's request")
 
 
