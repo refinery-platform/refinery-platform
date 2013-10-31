@@ -549,8 +549,9 @@ def update_refinery():
         run("git pull")
         run("./manage.py syncdb --migrate")
         run("./manage.py collectstatic --noinput")
-        run("supervisorctl restart celeryd".format(**env))
-        run("supervisorctl restart celerycam".format(**env))
+        run("supervisorctl restart celeryd")
+        run("supervisorctl restart celerycam")
+        run("supervisorctl restart celerybeat")
         run("touch wsgi.py")
 
 

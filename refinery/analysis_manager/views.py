@@ -37,24 +37,18 @@ def analysis_status(request, uuid):
     try:
         analysis = Analysis.objects.get(uuid=uuid)
     except Analysis.DoesNotExist:
-        analysis = None
         logger.error("Analysis with UUID '{}' does not exist".format(uuid))
+        return HttpResponse(custom_error_page(request, '404.html', {}),
+                            status='404')
+
     #TODO: handle MultipleObjectsReturned exception
     try:
         statuses = AnalysisStatus.objects.get(analysis=analysis)
     except AnalysisStatus.DoesNotExist:
-        statuses = None
-        
-        if analysis is not None:
-            logger.error("AnalysisStatus object does not exist for Analysis '{}'".format(analysis.name))
-            # else do not thing since analysis does not exist 
-            
-    
-    if analysis is None:
-        return HttpResponse(custom_error_page(request, '404.html'), status='404')
-    
-    if statuses is None:
-        return HttpResponse(custom_error_page(request, '500.html'), status='500')
+        logger.error("AnalysisStatus object does not exist for Analysis '{}'"
+                     .format(analysis.name))
+        return HttpResponse(custom_error_page(request, '500.html', {}),
+                            status='500')
 
     if request.is_ajax():
         ret_json = {}
