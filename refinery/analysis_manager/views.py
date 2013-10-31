@@ -12,7 +12,7 @@ from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, \
     HttpResponseServerError, HttpResponseBadRequest, HttpResponseNotAllowed, \
-    HttpResponseNotFound
+    HttpResponseForbidden
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils import simplejson
@@ -66,7 +66,6 @@ def analysis_status(request, uuid):
             {'uuid':uuid, 'statuses': statuses, 'analysis': analysis},
             context_instance=RequestContext(request))
 
-
 @login_required
 def analysis_cancel(request):
     '''Send request to cancel a running workflow
@@ -84,14 +83,20 @@ def analysis_cancel(request):
         except (Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as exc:
             logger.error(error_msg + ": " + str(exc))
             return HttpResponseServerError()  # 500
-        try:
-            analysis.cancel()
-        except RuntimeError as exc:
-            logger.error(error_msg)
-            return HttpResponse(status=503)  # service unavailable
+        # check if the user has permission to cancel this analysis
+        if (request.user == analysis.get_owner() or
+            request.user == analysis.workflow.workflow_engine.get_owner() or
+            request.user.is_superuser):
+            try:
+                analysis.cancel()
+            except RuntimeError as exc:
+                logger.error(error_msg)
+                return HttpResponse(status=503)  # service unavailable
+            else:
+                logger.info("Analysis '{}' was cancelled".format(uuid))
+                return HttpResponse()  # 200
         else:
-            logger.info("Analysis '{}' was cancelled".format(uuid))
-            return HttpResponse()  # 200
+            return HttpResponseForbidden()  # 403
     else:
         return HttpResponseNotAllowed(['POST'])  # 405
 
