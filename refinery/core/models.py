@@ -971,6 +971,7 @@ class ExternalToolStatus(models.Model):
     last_time_check = models.DateTimeField(auto_now_add=True)
     name = models.TextField(choices=TOOL_NAME_CHOICES, blank=True, null=True)
     unique_instance_identifier = models.CharField(max_length=256, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
     
     def __unicode__(self):
         retstr = self.name
