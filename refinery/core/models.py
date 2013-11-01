@@ -943,14 +943,12 @@ class ExternalToolStatus(models.Model):
     '''If adding a new tool, user needs to fill out TOOL_NAME, CHECK_TOOL_INTERVAL, STATUS_CHOICES, 
     and TOOL_NAME_CHOICES
     '''
-    CELERY_TOOL_NAME = "CELERY"
     SOLR_TOOL_NAME = "SOLR"
     GALAXY_TOOL_NAME = "GALAXY"
     
     LOCK_EXPIRE = 60 # Lock for database access expires in 1 minute
     
     INTERVAL_BETWEEN_CHECKS = {
-                               CELERY_TOOL_NAME: 5.0,
                                SOLR_TOOL_NAME: 5.0,
                                GALAXY_TOOL_NAME: 5.0,
                                 }
@@ -962,7 +960,6 @@ class ExternalToolStatus(models.Model):
                     )
 
     TOOL_NAME_CHOICES = (
-                         (CELERY_TOOL_NAME, "Celery"), 
                          (SOLR_TOOL_NAME, "Solr"), 
                          (GALAXY_TOOL_NAME, "Galaxy")
                          )
