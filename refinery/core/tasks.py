@@ -9,8 +9,7 @@ from django.core.cache import cache
 from django.utils.hashcompat import md5_constructor as md5
 from django.contrib.syndication.views import Feed
 from galaxy_connector.galaxy_workflow import GalaxyWorkflow, GalaxyWorkflowInput
-from galaxy_connector.models import Instance
-from core.models import DataSet, InvestigationLink, Workflow, WorkflowDataInput, ExternalToolStatus
+from core.models import DataSet, InvestigationLink, Workflow, WorkflowDataInput, ExternalToolStatus, WorkflowEngine
 from data_set_manager.models import Investigation, Study
 from data_set_manager.tasks import annotate_nodes
 from file_store.models import is_permanent
@@ -265,37 +264,6 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     return dataset_copy
 
 
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.CELERY_TOOL_NAME]))
-def check_for_celery():
-    # The cache key consists of the task name and the MD5 digest
-    # of the feed URL.
-    hexdigest = md5(ExternalToolStatus.CELERY_TOOL_NAME).hexdigest()
-    lock_id = '%s-lock-%s' % (ExternalToolStatus.CELERY_TOOL_NAME, hexdigest)
-
-    # cache.add fails if if the key already exists
-    acquire_lock = lambda: cache.add(lock_id, 'true', ExternalToolStatus.LOCK_EXPIRE)
-    # memcache delete is very slow, but we have to use it to take
-    # advantage of using add() for atomic locking
-    release_lock = lambda: cache.delete(lock_id)
-    
-    if acquire_lock():
-        try:
-            celery, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.CELERY_TOOL_NAME)
-
-            #actually check now
-            array = ping() #pings celery to see if it's alive
-            if len(array) == 0:
-                celery.status = ExternalToolStatus.FAILURE_STATUS #quit with error
-            else:
-                celery.status = ExternalToolStatus.SUCCESS_STATUS #celery running properly
-            #set new check time
-            celery.last_time_check = datetime.now()
-            #save status
-            celery.save()
-        finally:
-            release_lock()
-
-
 @periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.SOLR_TOOL_NAME]))
 def check_for_solr():
     """creates a lock, then pings solr"""
@@ -309,7 +277,7 @@ def check_for_solr():
     # memcache delete is very slow, but we have to use it to take
     # advantage of using add() for atomic locking
     release_lock = lambda: cache.delete(lock_id)
-    
+
     if acquire_lock():
         try:
             solr, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.SOLR_TOOL_NAME)
@@ -346,9 +314,10 @@ def check_for_galaxy():
     
     if acquire_lock():
         try:
-            instances = Instance.objects.all()
-            for instance in instances:
+            workflow_engines = WorkflowEngine.objects.all()
+            for workflow_engine in workflow_engines:
                 try:
+                    instance = workflow_engine.Instance
                     galaxy, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.GALAXY_TOOL_NAME, unique_instance_identifier=instance.api_key)
                     instance.get_galaxy_connection().get_histories()
                     galaxy.status = ExternalToolStatus.SUCCESS_STATUS #galaxy running properly
@@ -363,12 +332,16 @@ def check_for_galaxy():
 
 
 def check_tool_status(tool_name, tool_unique_instance_identifier=None):
+    array = ping() #pings celery to see if it's alive
+    if len(array) == 0:
+        return (True, ExternalToolStatus.UNKNOWN_STATUS) #celery is gone, get error thrown
+
     try:
         tool = ExternalToolStatus.objects.get(name=tool_name, unique_instance_identifier=tool_unique_instance_identifier)
     except ExternalToolStatus.DoesNotExist:
-        return ExternalToolStatus.UNKNOWN_STATUS
-
+        return (True, ExternalToolStatus.UNKNOWN_STATUS)
+    
     if(datetime.now() - tool.last_time_check) > timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[tool_name]):
-        return ExternalToolStatus.UNKNOWN_STATUS
-
-    return tool.status
+        return (tool.is_active, ExternalToolStatus.UNKNOWN_STATUS)
+        
+    return (tool.is_active, tool.status)
