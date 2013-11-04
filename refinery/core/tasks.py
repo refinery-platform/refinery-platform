@@ -298,6 +298,7 @@ def check_for_solr():
 
 @periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.GALAXY_TOOL_NAME]))
 def check_for_galaxy():
+    now = datetime.now()
     # The cache key consists of the task name and the MD5 digest
     # of the feed URL.
     hexdigest = md5(ExternalToolStatus.GALAXY_TOOL_NAME).hexdigest()
@@ -326,12 +327,16 @@ def check_for_galaxy():
                 galaxy.save()
         finally:
             release_lock()
+            print datetime.now() - now
 
 
 def check_tool_status(tool_name, tool_unique_instance_identifier=None):
-    array = ping() #pings celery to see if it's alive
-    if len(array) == 0:
-        return (True, ExternalToolStatus.UNKNOWN_STATUS) #celery is gone, get error thrown
+    try:
+        array = ping() #pings celery to see if it's alive
+        if len(array) == 0:
+            return (True, ExternalToolStatus.CELERY_STATUS) #celery is gone, get error thrown
+    except:
+        pass
 
     try:
         tool = ExternalToolStatus.objects.get(name=tool_name, unique_instance_identifier=tool_unique_instance_identifier)
