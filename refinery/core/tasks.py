@@ -281,9 +281,6 @@ def check_for_solr():
     if acquire_lock():
         try:
             solr, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.SOLR_TOOL_NAME)
-            solr.status = ExternalToolStatus.UNKNOWN_STATUS #set initially in case of timeout
-            #save status
-            solr.save()
         
             #actually check now
             try:
@@ -316,8 +313,8 @@ def check_for_galaxy():
         try:
             workflow_engines = WorkflowEngine.objects.all()
             for workflow_engine in workflow_engines:
+                instance = workflow_engine.instance
                 try:
-                    instance = workflow_engine.Instance
                     galaxy, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.GALAXY_TOOL_NAME, unique_instance_identifier=instance.api_key)
                     instance.get_galaxy_connection().get_histories()
                     galaxy.status = ExternalToolStatus.SUCCESS_STATUS #galaxy running properly
