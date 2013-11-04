@@ -14,6 +14,7 @@ from data_set_manager.models import Investigation, Study
 from data_set_manager.tasks import annotate_nodes
 from file_store.models import is_permanent
 from file_store.tasks import create, read, import_file
+from amqplib.client_0_8.exceptions import AMQPChannelException
 from datetime import datetime, timedelta
 import logging, requests
 
@@ -334,8 +335,8 @@ def check_tool_status(tool_name, tool_unique_instance_identifier=None):
     try:
         array = ping() #pings celery to see if it's alive
         if len(array) == 0:
-            return (True, ExternalToolStatus.CELERY_STATUS) #celery is gone, get error thrown
-    except:
+            return (True, ExternalToolStatus.UNKNOWN_STATUS) #celery is gone, get error thrown
+    except AMQPChannelException:
         pass
 
     try:
