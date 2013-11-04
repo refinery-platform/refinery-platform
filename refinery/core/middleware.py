@@ -20,7 +20,7 @@ class DatabaseFailureMiddleware(object):
 
 class ExternalToolErrorMiddleware(object):
     def process_request(self, request):
-        if not re.search('/admin/$', request.path):
+        if not re.search('/admin/', request.path):
             #check solr
             solr_tuple = check_tool_status(ExternalToolStatus.SOLR_TOOL_NAME)
             if solr_tuple == ExternalToolStatus.UNKNOWN_STATUS: #celery is down
@@ -44,7 +44,7 @@ class ExternalToolErrorMiddleware(object):
         
             #check galaxy instance(s)
             for workflow_engine in WorkflowEngine.objects.all():
-                instance = workflow_engine.Instance
+                instance = workflow_engine.instance
                 galaxy_tuple = check_tool_status(ExternalToolStatus.GALAXY_TOOL_NAME, tool_unique_instance_identifier=instance.api_key)
                 if galaxy_tuple[1] == ExternalToolStatus.UNKNOWN_STATUS: #celery is down
                     context_dict = {
