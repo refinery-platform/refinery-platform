@@ -640,6 +640,11 @@ class Analysis(OwnableResource):
                   .format(history_url)
         mail_admins(subject, message)
         self.set_status(Analysis.FAILURE_STATUS, "Cancelled at user's request")
+        try:
+            self.delete_galaxy_library()
+            self.delete_galaxy_workflow()
+        except RuntimeError:
+            logger.error("Cleanup failed for analysis '{}'".format(self.name))
 
 
 #: Defining available relationship types
