@@ -44,6 +44,7 @@ class ExternalToolErrorMiddleware(object):
         
             #check galaxy instance(s)
             for workflow_engine in WorkflowEngine.objects.all():
+                instance = workflow_engine.Instance
                 galaxy_tuple = check_tool_status(ExternalToolStatus.GALAXY_TOOL_NAME, tool_unique_instance_identifier=instance.api_key)
                 if galaxy_tuple[1] == ExternalToolStatus.UNKNOWN_STATUS: #celery is down
                     context_dict = {
