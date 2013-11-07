@@ -1,8 +1,5 @@
 forge "http://forge.puppetlabs.com"
 
-mod 'puppetlabs/postgresql'
-
-mod 'puppetlabs/rabbitmq'
-
-mod 'python',
-  :git => 'git://github.com/stankevich/puppet-python.git'
+mod "puppetlabs/postgresql", "3.2.0"
+mod "puppetlabs/rabbitmq", "3.1.0"
+mod "stankevich/python", "1.1.7"

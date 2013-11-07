@@ -13,16 +13,18 @@ class venvdeps {
   package { 'libpng12-dev': }      # required by matplotlib
   package { 'libldap2-dev': }
   package { 'libsasl2-dev': }
-  package { 'postgresql-server-dev-all': }
+  package { 'postgresql-server-dev-9.1': }
 }
 include venvdeps
 
-package { 'postgresql': }
-package { 'openjdk-7-jre': }  # required by solr
+package { 'java':
+  name => 'openjdk-7-jre-headless',
+}  # required by solr
 package { 'curl': }  # required by rabbitmq installer
 package { 'virtualenvwrapper': }
 
 class { 'postgresql::globals':
+  version => '9.1',
   encoding => 'UTF8',
   locale => 'en_US.utf8',
 }
@@ -61,8 +63,8 @@ exec { "numpy":
 # install packages from requirements.txt
 python::requirements { $requirements:
   virtualenv => $virtualenv,
-  owner => 'vagrant',
-  group => 'vagrant',
+  owner => $appuser,
+  group => $appuser,
 }
 
 file { [ "/vagrant/media", "/vagrant/static", "/vagrant/isa-tab" ]:

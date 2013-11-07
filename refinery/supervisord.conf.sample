@@ -12,14 +12,10 @@ nocleanup = true
 
 [inet_http_server]         ; inet (TCP) server disabled by default
 port = *:9001        ; (ip_address:port specifier, *:port for all iface)
-username = refinery
-password = test
 
 [supervisorctl]
 ;serverurl = unix:///tmp/supervisor.sock ; use a unix:// URL  for a unix socket
 serverurl = http://localhost:9001 ; use an http:// url to specify an inet socket
-username = refinery            ; should be same as http_username if set
-password = test                ; should be same as http_password if set
 
 ; the below section must remain in the config file for RPC
 ; (supervisorctl/web interface) to work, additional interfaces may be
