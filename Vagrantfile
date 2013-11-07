@@ -39,6 +39,6 @@ SCRIPT
     puppet.manifests_path = "deployment/manifests"
     puppet.manifest_file  = "default.pp"
 #    puppet.module_path = "deployment/modules"  # requires modules dir to exist when this file is parsed
-    puppet.options = "--modulepath /vagrant/deployment/modules --debug"
+    puppet.options = "--modulepath /vagrant/deployment/modules"
   end
 end
