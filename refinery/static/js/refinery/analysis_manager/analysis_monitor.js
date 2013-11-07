@@ -25,7 +25,7 @@ AnalysisMonitor = function( uuid, baseUrl, redirectUrl, crsfMiddlewareToken ) {
 
 AnalysisMonitor.prototype.isStageFinished = function ( result ) {
 	var self = this;
-
+	
 	if ( !result ) {
 		return false;
 	}
@@ -77,7 +77,7 @@ AnalysisMonitor.prototype.isStageRunning = function ( result ) {
 
 AnalysisMonitor.prototype.getStageStatus = function ( result ) {
 	var self = this;
-
+	
 	if ( self.isStageWaiting( result ) ) {
 		return self.STAGE_WAITING;
 	}
@@ -219,8 +219,6 @@ AnalysisMonitor.prototype.getUpdate = function() {
      		window.location = self.redirectUrl;
      	}
 		else if ( self.isStageFinished( result.cleanup ) ) {
-  			//clearTimeout ( timerId );
-  			//var url = "/projects/{{ user.get_profile.catch_all_project.uuid }}/analyses/{{ statuses.analysis.uuid }}";
   			window.location = self.redirectUrl;
 		}
      	else {
@@ -229,6 +227,24 @@ AnalysisMonitor.prototype.getUpdate = function() {
      		self.updateStageProgress( result.postprocessing, "#postprocessing-status", "File download");
      	}
      }
+	});
+};
+
+
+AnalysisMonitor.prototype.cancelAnalysis = function(successCallback,errorCallback) {
+	var self = this;
+
+	$.ajax({
+     url: self.baseUrl + "/analysis_manager/analysis_cancel/",
+     type:"POST",
+     dataType: "json",
+     data: { csrfmiddlewaretoken: self.crsfMiddlewareToken, uuid: self.uuid },
+     success: function( result ) {
+     	successCallback( result );
+     },
+     error: function( result ) {
+     	errorCallback( result );
+     }     
 	});
 };
 

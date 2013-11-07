@@ -622,11 +622,29 @@ class Analysis(OwnableResource):
             raise
 
     def cancel(self):
+        # mark analysis as canceled
         self.cancel = True
         self.save()
         # running workflow is stopped by deleting its history
-        self.delete_galaxy_history()
+#        self.delete_galaxy_history()
+        # workaround for the Galaxy bug that doesn't stop workflow execution
+        # when history is deleted via API (https://trello.com/c/Tbota8xG):
+        # send email to site admins with Galaxy history ID
+        username = self.get_owner().get_username()
+        subject = "Analysis cancellation request from user '{}'"\
+                  .format(username)
+        history_url = "{}/history/switch_to_history?hist_id={}"\
+                      .format(self.workflow.workflow_engine.instance.base_url,
+                              self.history_id)
+        message = "Please delete the following history to cancel analysis: {}"\
+                  .format(history_url)
+        mail_admins(subject, message)
         self.set_status(Analysis.FAILURE_STATUS, "Cancelled at user's request")
+        try:
+            self.delete_galaxy_library()
+            self.delete_galaxy_workflow()
+        except RuntimeError:
+            logger.error("Cleanup failed for analysis '{}'".format(self.name))
 
 
 #: Defining available relationship types
@@ -930,14 +948,12 @@ class ExternalToolStatus(models.Model):
     '''If adding a new tool, user needs to fill out TOOL_NAME, CHECK_TOOL_INTERVAL, STATUS_CHOICES, 
     and TOOL_NAME_CHOICES
     '''
-    CELERY_TOOL_NAME = "CELERY"
     SOLR_TOOL_NAME = "SOLR"
     GALAXY_TOOL_NAME = "GALAXY"
     
     LOCK_EXPIRE = 60 # Lock for database access expires in 1 minute
     
     INTERVAL_BETWEEN_CHECKS = {
-                               CELERY_TOOL_NAME: 5.0,
                                SOLR_TOOL_NAME: 5.0,
                                GALAXY_TOOL_NAME: 5.0,
                                 }
@@ -949,7 +965,6 @@ class ExternalToolStatus(models.Model):
                     )
 
     TOOL_NAME_CHOICES = (
-                         (CELERY_TOOL_NAME, "Celery"), 
                          (SOLR_TOOL_NAME, "Solr"), 
                          (GALAXY_TOOL_NAME, "Galaxy")
                          )
@@ -958,6 +973,7 @@ class ExternalToolStatus(models.Model):
     last_time_check = models.DateTimeField(auto_now_add=True)
     name = models.TextField(choices=TOOL_NAME_CHOICES, blank=True, null=True)
     unique_instance_identifier = models.CharField(max_length=256, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
     
     def __unicode__(self):
         retstr = self.name

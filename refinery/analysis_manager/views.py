@@ -1,23 +1,24 @@
 # Create your views here.
 
-import copy
+from analysis_manager.models import AnalysisStatus
+from analysis_manager.tasks import run_analysis
+from core.models import Analysis, Workflow, WorkflowEngine, WorkflowDataInputMap, \
+    InvestigationLink, NodeSet, NodeRelationship, NodePair
+from core.views import get_solr_results, custom_error_page
+from data_set_manager.models import Study, Assay, Node
 from datetime import datetime
-import logging
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseServerError, HttpResponseBadRequest, HttpResponseNotAllowed
+    HttpResponseServerError, HttpResponseBadRequest, HttpResponseNotAllowed, \
+    HttpResponseForbidden
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils import simplejson
-from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import run_analysis
-from core.models import Analysis, Workflow, WorkflowEngine, \
-    WorkflowDataInputMap, InvestigationLink, NodeSet, NodeRelationship, NodePair
-from data_set_manager.models import Study, Assay, Node
 from workflow_manager.tasks import get_workflow_inputs, get_workflows
-from core.views import get_solr_results
+import copy
+import logging
 
 
 logger = logging.getLogger(__name__)
@@ -36,16 +37,18 @@ def analysis_status(request, uuid):
     try:
         analysis = Analysis.objects.get(uuid=uuid)
     except Analysis.DoesNotExist:
-        analysis = None
         logger.error("Analysis with UUID '{}' does not exist".format(uuid))
+        return HttpResponse(custom_error_page(request, '404.html', {}),
+                            status='404')
+
     #TODO: handle MultipleObjectsReturned exception
     try:
         statuses = AnalysisStatus.objects.get(analysis=analysis)
     except AnalysisStatus.DoesNotExist:
-        statuses = None
-        logger.error(
-            "AnalysisStatus object does not exist for Analysis '{}'".format(
-                analysis.name))
+        logger.error("AnalysisStatus object does not exist for Analysis '{}'"
+                     .format(analysis.name))
+        return HttpResponse(custom_error_page(request, '500.html', {}),
+                            status='500')
 
     if request.is_ajax():
         ret_json = {}
@@ -62,7 +65,6 @@ def analysis_status(request, uuid):
             'analysis_manager/analysis_status.html',
             {'uuid':uuid, 'statuses': statuses, 'analysis': analysis},
             context_instance=RequestContext(request))
-
 
 @login_required
 def analysis_cancel(request):
@@ -81,14 +83,20 @@ def analysis_cancel(request):
         except (Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as exc:
             logger.error(error_msg + ": " + str(exc))
             return HttpResponseServerError()  # 500
-        try:
-            analysis.cancel()
-        except RuntimeError as exc:
-            logger.error(error_msg)
-            return HttpResponse(status=503)  # service unavailable
+        # check if the user has permission to cancel this analysis
+        if (request.user == analysis.get_owner() or
+            request.user == analysis.workflow.workflow_engine.get_owner() or
+            request.user.is_superuser):
+            try:
+                analysis.cancel()
+            except RuntimeError as exc:
+                logger.error(error_msg)
+                return HttpResponse(status=503)  # service unavailable
+            else:
+                logger.info("Analysis '{}' was cancelled".format(uuid))
+                return HttpResponse()  # 200
         else:
-            logger.info("Analysis '{}' was cancelled".format(uuid))
-            return HttpResponse()  # 200
+            return HttpResponseForbidden()  # 403
     else:
         return HttpResponseNotAllowed(['POST'])  # 405
 
