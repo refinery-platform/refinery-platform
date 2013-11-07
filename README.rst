@@ -9,7 +9,7 @@ Prerequisites
 
 Install `Git <http://git-scm.com/>`_,
 `Vagrant <http://www.vagrantup.com/>`_ (1.2.7 or later) and
-`Virtualbox <https://www.virtualbox.org/>`_ (4.2.16 or later).
+`Virtualbox <https://www.virtualbox.org/>`_ (4.2.16 or later). Mac OS X 10.9 "Mavericks" users should install Vagrant 1.3.5 and VirtualBox 4.3.2.
 
 You may also have to import the right VM image:
 
