@@ -22,14 +22,14 @@ package { 'openjdk-7-jre': }  # required by solr
 package { 'curl': }  # required by rabbitmq installer
 package { 'virtualenvwrapper': }
 
-class { 'postgresql':
-  charset => 'UTF8',
+class { 'postgresql::globals':
+  encoding => 'UTF8',
   locale => 'en_US.utf8',
 }
 ->
 class { 'postgresql::server':
 }
-postgresql::db { 'refinery':
+postgresql::server::db { 'refinery':
   user => $appuser,
   password => '',
 }
@@ -72,22 +72,15 @@ file { [ "/vagrant/media", "/vagrant/static", "/vagrant/isa-tab" ]:
 }
 
 exec { "syncdb":
-  command => "${project_root}/manage.py syncdb --noinput",
+  command => "${project_root}/manage.py syncdb --migrate --noinput",
   path => $venvpath,
   user => $appuser,
   group => $appuser,
   require => [
                File["/vagrant/media"],
                Python::Requirements[$requirements],
-               Postgresql::Db["refinery"]
+               Postgresql::Server::Db["refinery"]
              ],
-}
-->
-exec { "migrate":
-  command => "${project_root}/manage.py migrate",
-  path => $venvpath,
-  user => $appuser,
-  group => $appuser,
 }
 ->
 exec { "init_refinery":
@@ -114,7 +107,7 @@ exec {
 
 $solr_version = "4.4.0"
 $solr_archive = "solr-${solr_version}.tgz"
-$solr_url = "http://mirror.cc.columbia.edu/pub/software/apache/lucene/solr/${solr_version}/${solr_archive}"
+$solr_url = "http://archive.apache.org/dist/lucene/solr/${solr_version}/${solr_archive}"
 exec { "solr_wget":
   command => "wget ${solr_url} -O /usr/src/${solr_archive}",
   creates => "/usr/src/${solr_archive}",

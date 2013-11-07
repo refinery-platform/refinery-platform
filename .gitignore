@@ -55,10 +55,10 @@ refinery/fabric/*
 supervisord.conf
 codekit-config.json
 .vagrant/
-.librarian/
-.tmp/
-modules/
-Puppetfile.lock
+deployment/.librarian/
+deployment/.tmp/
+deployment/modules/
+deployment/Puppetfile.lock
 media/
 static/
 refinery/celerybeat-schedule*
