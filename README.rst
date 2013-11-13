@@ -32,7 +32,7 @@ Internet connection.  If you get an error, simply retry by:
 
     $ vagrant provision
 
-A common error is failure to install the puppetlabs-firewall module, which is a `known error in the module <https://github.com/puppetlabs/puppetlabs-firewall/issues/228>`_ and should be fixed in the next release. The module will install without issues on the second attempt.
+Refinery deployment requires a lot of external dependencies. You might have to run `vagrant provision` repeatedly to install all dependencies successfully. __Any errors__ in the output of `vagrant provision` indicate that you have to re-run the command.
 
 Launch Refinery
 ~~~~~~~~~~~~~~~
