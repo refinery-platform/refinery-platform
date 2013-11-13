@@ -32,7 +32,7 @@ Internet connection.  If you get an error, simply retry by:
 
     $ vagrant provision
 
-Refinery deployment requires a lot of external dependencies. You might have to run `vagrant provision` repeatedly to install all dependencies successfully. __Any errors__ in the output of `vagrant provision` indicate that you have to re-run the command.
+Refinery deployment requires a lot of external dependencies. You might have to run ``vagrant provision`` repeatedly to install all dependencies successfully. *Any errors* in the output of ``vagrant provision`` indicate that you have to re-run the command.
 
 Launch Refinery
 ~~~~~~~~~~~~~~~
