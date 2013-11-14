@@ -958,7 +958,7 @@ class ExternalToolStatus(models.Model):
     
     TIMEOUT = {
                SOLR_TOOL_NAME: 2.5,
-               GALAXY_TOOL_NAME: 1.5,
+               GALAXY_TOOL_NAME: 2.0,
                }
     
     STATUS_CHOICES = ( 
