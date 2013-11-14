@@ -951,12 +951,15 @@ class ExternalToolStatus(models.Model):
     SOLR_TOOL_NAME = "SOLR"
     GALAXY_TOOL_NAME = "GALAXY"
     
-    LOCK_EXPIRE = 60 # Lock for database access expires in 1 minute
-    
     INTERVAL_BETWEEN_CHECKS = {
                                SOLR_TOOL_NAME: 5.0,
                                GALAXY_TOOL_NAME: 5.0,
                                 }
+    
+    TIMEOUT = {
+               SOLR_TOOL_NAME: 2.5,
+               GALAXY_TOOL_NAME: 1.5,
+               }
     
     STATUS_CHOICES = ( 
                      (SUCCESS_STATUS, "Tool is running"),
