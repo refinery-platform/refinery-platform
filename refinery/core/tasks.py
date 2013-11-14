@@ -15,6 +15,7 @@ from data_set_manager.tasks import annotate_nodes
 from file_store.models import is_permanent
 from file_store.tasks import create, read, import_file
 from amqplib.client_0_8.exceptions import AMQPChannelException
+from celery.exceptions import TimeLimitExceeded
 from datetime import datetime, timedelta
 import logging, requests
 
@@ -265,70 +266,53 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     return dataset_copy
 
 
+@task(time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.SOLR_TOOL_NAME])
+def check_solr_running():
+    requests.get(settings.REFINERY_SOLR_BASE_URL + "core/admin/ping")
+
+
 @periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.SOLR_TOOL_NAME]))
 def check_for_solr():
-    """creates a lock, then pings solr"""
-    # The cache key consists of the task name and the MD5 digest
-    # of the feed URL.
-    hexdigest = md5(ExternalToolStatus.SOLR_TOOL_NAME).hexdigest()
-    lock_id = '%s-lock-%s' % (ExternalToolStatus.SOLR_TOOL_NAME, hexdigest)
+    solr, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.SOLR_TOOL_NAME)
 
-    # cache.add fails if if the key already exists
-    acquire_lock = lambda: cache.add(lock_id, 'true', ExternalToolStatus.LOCK_EXPIRE)
-    # memcache delete is very slow, but we have to use it to take
-    # advantage of using add() for atomic locking
-    release_lock = lambda: cache.delete(lock_id)
+    #actually check now
+    try:
+        result = check_solr_running.delay()
+        result.get()
+        solr.status = ExternalToolStatus.SUCCESS_STATUS #successfully reached solr
+    except requests.ConnectionError:
+        solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
+    except TimeLimitExceeded:
+        solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
+    #set last time check to now
+    solr.last_time_check = datetime.now()
+    #save status
+    solr.save()
 
-    if acquire_lock():
-        try:
-            solr, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.SOLR_TOOL_NAME)
-        
-            #actually check now
-            try:
-                request = requests.get(settings.REFINERY_SOLR_BASE_URL + "core/admin/ping")
-                solr.status = ExternalToolStatus.SUCCESS_STATUS #successfully reached solr
-            except requests.ConnectionError:
-                solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
-            #set last time check to now
-            solr.last_time_check = datetime.now()
-            #save status
-            solr.save()
-        finally:
-            release_lock()
+
+@task(time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME])
+def check_galaxy_running(instance):
+    instance.get_galaxy_connection().get_histories()
 
 
 @periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.GALAXY_TOOL_NAME]))
 def check_for_galaxy():
-    now = datetime.now()
-    # The cache key consists of the task name and the MD5 digest
-    # of the feed URL.
-    hexdigest = md5(ExternalToolStatus.GALAXY_TOOL_NAME).hexdigest()
-    lock_id = '%s-lock-%s' % (ExternalToolStatus.GALAXY_TOOL_NAME, hexdigest)
-
-    # cache.add fails if if the key already exists
-    acquire_lock = lambda: cache.add(lock_id, 'true', ExternalToolStatus.LOCK_EXPIRE)
-    # memcache delete is very slow, but we have to use it to take
-    # advantage of using add() for atomic locking
-    release_lock = lambda: cache.delete(lock_id)
-    
-    if acquire_lock():
+    workflow_engines = WorkflowEngine.objects.all()
+    for workflow_engine in workflow_engines:
+        instance = workflow_engine.instance
         try:
-            workflow_engines = WorkflowEngine.objects.all()
-            for workflow_engine in workflow_engines:
-                instance = workflow_engine.instance
-                try:
-                    galaxy, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.GALAXY_TOOL_NAME, unique_instance_identifier=instance.api_key)
-                    instance.get_galaxy_connection().get_histories()
-                    galaxy.status = ExternalToolStatus.SUCCESS_STATUS #galaxy running properly
-                except:
-                    galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
-                #set last time check to now
-                galaxy.last_time_check = datetime.now()
-                #save status
-                galaxy.save()
-        finally:
-            release_lock()
-            print datetime.now() - now
+            galaxy, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.GALAXY_TOOL_NAME, unique_instance_identifier=instance.api_key)
+            result = check_galaxy_running.delay(instance)
+            result.get()
+            galaxy.status = ExternalToolStatus.SUCCESS_STATUS #galaxy running properly
+        except TimeLimitExceeded:
+            galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
+        except:
+            galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
+        #set last time check to now
+        galaxy.last_time_check = datetime.now()
+        #save status
+        galaxy.save()
 
 
 def check_tool_status(tool_name, tool_unique_instance_identifier=None):
