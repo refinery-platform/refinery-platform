@@ -62,4 +62,4 @@ deployment/Puppetfile.lock
 media/
 static/
 refinery/celerybeat-schedule*
-*.sublime-project
+*.sublime-*
