@@ -23,7 +23,7 @@ class ExternalToolErrorMiddleware(object):
         if not re.search('/admin/', request.path):
             #check solr
             solr_tuple = check_tool_status(ExternalToolStatus.SOLR_TOOL_NAME)
-            if solr_tuple == ExternalToolStatus.UNKNOWN_STATUS: #celery is down
+            if solr_tuple[1] == ExternalToolStatus.UNKNOWN_STATUS: #celery is down
                 context_dict = {
                                 'external_tool_name': "Celery",
                                 'message_start': "Our task dispatcher"
