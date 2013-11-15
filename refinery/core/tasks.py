@@ -292,7 +292,10 @@ def check_for_solr():
 
 @task(time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME])
 def check_galaxy_running(instance):
-    instance.get_galaxy_connection().get_histories()
+    try:
+        instance.get_galaxy_connection().get_histories()
+    except RuntimeError as exc:
+        logger.info("Galaxy is not responding: {}".format(exc.message))
 
 
 @periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.GALAXY_TOOL_NAME]))
