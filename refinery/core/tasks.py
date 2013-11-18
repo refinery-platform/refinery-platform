@@ -275,19 +275,19 @@ def check_solr_running():
 def check_for_solr():
     solr, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.SOLR_TOOL_NAME)
 
-    #actually check now
-    try:
-        result = check_solr_running.delay()
-        result.get()
-        solr.status = ExternalToolStatus.SUCCESS_STATUS #successfully reached solr
-    except requests.ConnectionError:
-        solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
-    except TimeLimitExceeded:
-        solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
-    #set last time check to now
-    solr.last_time_check = datetime.now()
-    #save status
-    solr.save()
+    if solr.is_active:
+        try: #actually check now
+            result = check_solr_running.delay()
+            result.get()
+            solr.status = ExternalToolStatus.SUCCESS_STATUS #successfully reached solr
+        except requests.ConnectionError:
+            solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
+        except TimeLimitExceeded:
+            solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
+        #set last time check to now
+        solr.last_time_check = datetime.now()
+        #save status
+        solr.save()
 
 
 @task(time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME])
@@ -300,19 +300,20 @@ def check_for_galaxy():
     workflow_engines = WorkflowEngine.objects.all()
     for workflow_engine in workflow_engines:
         instance = workflow_engine.instance
-        try:
-            galaxy, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.GALAXY_TOOL_NAME, unique_instance_identifier=instance.api_key)
-            result = check_galaxy_running.delay(instance)
-            result.get()
-            galaxy.status = ExternalToolStatus.SUCCESS_STATUS #galaxy running properly
-        except TimeLimitExceeded:
-            galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
-        except:
-            galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
-        #set last time check to now
-        galaxy.last_time_check = datetime.now()
-        #save status
-        galaxy.save()
+        galaxy, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.GALAXY_TOOL_NAME, unique_instance_identifier=instance.api_key)
+        if galaxy.is_active:
+            try:
+                result = check_galaxy_running.delay(instance)
+                result.get()
+                galaxy.status = ExternalToolStatus.SUCCESS_STATUS #galaxy running properly
+            except TimeLimitExceeded:
+                galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
+            except RuntimeError:
+                galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
+            #set last time check to now
+            galaxy.last_time_check = datetime.now()
+            #save status
+            galaxy.save()
 
 
 def check_tool_status(tool_name, tool_unique_instance_identifier=None):
