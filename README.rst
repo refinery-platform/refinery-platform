@@ -32,8 +32,6 @@ Internet connection.  If you get an error, simply retry by:
 
     $ vagrant provision
 
-Refinery deployment requires a lot of external dependencies. You might have to run ``vagrant provision`` repeatedly to install all dependencies successfully. *Any errors* in the output of ``vagrant provision`` indicate that you have to re-run the command.
-
 Launch Refinery
 ~~~~~~~~~~~~~~~
 
@@ -47,6 +45,13 @@ Connect to the initialized VM and start Refinery services:
 
 Open http://192.168.50.50:8000/ in your web browser.
 
+
 Please see `installation notes
 <https://refinery-platform.readthedocs.org/en/latest/administrator/setup.html>`_
 for more details, including information on how to configure Galaxy for this setup.
+
+Troubleshooting
+~~~~~~~~~~~~~~~
+
+* Refinery deployment requires a lot of external dependencies. You might have to run ``vagrant provision`` repeatedly to install all dependencies successfully. *Any errors* in the output of ``vagrant provision`` indicate that you have to re-run the command.
+* If you have a VPN connection running, you may need to disconnect and reconnect before you can access the VM.

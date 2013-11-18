@@ -115,7 +115,6 @@ TEMPLATE_LOADERS = (
 #     'django.template.loaders.eggs.Loader',
 )
 
-
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.debug',
     'django.core.context_processors.i18n',
@@ -309,6 +308,9 @@ SERVER_EMAIL = 'root@localhost'
 
 # Disable migrations when running unittests and use syncdb instead
 SOUTH_TESTS_MIGRATE = False
+
+# allow 4 concurrent Celery tasks (default is the number of CPU cores)
+CELERYD_CONCURRENCY = 4
 
 # === Refinery Settings ===
 

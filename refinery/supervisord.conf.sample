@@ -44,6 +44,7 @@ redirect_stderr = true
 autostart = true
 autorestart = true
 startsecs = 5
+stopasgroup = true
 ; Need to wait for currently executing tasks to finish at shutdown.
 ; Increase this if you have very long running tasks.
 ;stopwaitsecs = 60

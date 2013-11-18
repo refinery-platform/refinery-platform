@@ -254,11 +254,11 @@ def run_analysis_preprocessing(analysis):
             "{} Analysis - {} ({})".format(
                 Site.objects.get_current().name, analysis.uuid, datetime.now())
             )
-    except RuntimeError as e:
+    except RuntimeError as exc:
         error_msg = (
             "Pre-processing failed: " +
             "error creating Galaxy library for analysis '{}': {}"
-            ).format(analysis.name, e.message)
+            ).format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
@@ -275,7 +275,7 @@ def run_analysis_preprocessing(analysis):
         error_msg = (
             "Pre-processing failed: " +
             "error configuring Galaxy workflow for analysis '{}': {}"
-            ).format(analysis.name, e.message)
+            ).format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
