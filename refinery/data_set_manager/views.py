@@ -98,6 +98,8 @@ def import_isa_tab(request):
     '''Process imported ISA-Tab file sent via POST request
 
     '''
+    #TODO: change implementation to a class-based view
+    #TODO: change from hardcoded URLs to using reverse()
     if request.method == 'POST':
         form = ImportISATabFileForm(request.POST, request.FILES)
         if form.is_valid():
