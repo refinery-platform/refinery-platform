@@ -320,9 +320,10 @@ def check_tool_status(tool_name, tool_unique_instance_identifier=None):
     try:
         array = ping() #pings celery to see if it's alive
         if len(array) == 0:
+            logger.error("ping() could not reach any workers")
             return (True, ExternalToolStatus.UNKNOWN_STATUS) #celery is gone, get error thrown
     except AMQPChannelException:
-        pass
+        logger.debug("AMQPChannelException raised by ping().  Is RabbitMQ available?")
 
     try:
         tool = ExternalToolStatus.objects.get(name=tool_name, unique_instance_identifier=tool_unique_instance_identifier)
