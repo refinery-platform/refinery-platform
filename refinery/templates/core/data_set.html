@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 {% load humanize %}
 {% load markup %}
+{% load static %}
 
 {% block head_html %}
-	<link href="{{ STATIC_URL }}styles/css/tipsy/tipsy.css" rel="stylesheet"/>
-	<link href="{{ STATIC_URL }}js/select2/select2.css" rel="stylesheet"/>
+	<link rel="stylesheet" href="{% static "styles/css/tipsy/tipsy.css" %}" />
+	<link rel="stylesheet" href="{% static "js/select2/select2.css" %}" />
 
 <style type="text/css">
 
