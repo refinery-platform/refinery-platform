@@ -579,9 +579,9 @@ def create_noderelationship(request):
         # match between 2 nodesets for a given column
         nodes_set_match, match_info = match_nodesets(node_set_results1, node_set_results2, diff_fields, all_fields)
                 
-        print "MAKING RELATIONSHIPS NOW"
-        print simplejson.dumps(nodes_set_match, indent=4);
-        print nodes_set_match
+        logger.debug("MAKING RELATIONSHIPS NOW")
+        logger.debug(simplejson.dumps(nodes_set_match, indent=4))
+        logger.debug(nodes_set_match)
         
         # TODO: need to include names, descriptions, summary
         if (nr_name.strip() == ''):
