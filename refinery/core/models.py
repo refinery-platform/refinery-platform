@@ -944,6 +944,8 @@ class ExternalToolStatus(models.Model):
     SUCCESS_STATUS = "SUCCESS"
     FAILURE_STATUS = "FAILURE"
     UNKNOWN_STATUS = "UNKNOWN"
+    CELERY_DOWN_STATUS = "CELERY_DOWN"
+    TIMEOUT_STATUS = "TIMEOUT"
 
     '''If adding a new tool, user needs to fill out TOOL_NAME, CHECK_TOOL_INTERVAL, STATUS_CHOICES, 
     and TOOL_NAME_CHOICES
@@ -965,6 +967,8 @@ class ExternalToolStatus(models.Model):
                      (SUCCESS_STATUS, "Tool is running"),
                      (FAILURE_STATUS, "Tool is not running"),
                      (UNKNOWN_STATUS, "Cannot reach tool"),
+                     (CELERY_DOWN_STATUS, "Celery workers cannot be reached"),
+                     (TIMEOUT_STATUS, "It's been too long since the database was last updated"),
                     )
 
     TOOL_NAME_CHOICES = (

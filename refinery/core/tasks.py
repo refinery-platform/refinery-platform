@@ -280,9 +280,11 @@ def check_for_solr():
             result = check_solr_running.delay()
             result.get()
             solr.status = ExternalToolStatus.SUCCESS_STATUS #successfully reached solr
-        except requests.ConnectionError:
+        except requests.ConnectionError as e:
+            logger.exception("core.tasks.check_for_solr: Could not connect to Solr")
             solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
-        except TimeLimitExceeded:
+        except TimeLimitExceeded as e:
+            logger.exception("core.tasks.check_for_solr: Pinging Solr timed out after %s" % ExternalToolStatus.TIMEOUT[ExternalToolStatus.SOLR_TOOL_NAME])
             solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         #set last time check to now
         solr.last_time_check = datetime.now()
@@ -306,9 +308,11 @@ def check_for_galaxy():
                 result = check_galaxy_running.delay(instance)
                 result.get()
                 galaxy.status = ExternalToolStatus.SUCCESS_STATUS #galaxy running properly
-            except TimeLimitExceeded:
+            except TimeLimitExceeded as e:
+                logger.exception("core.tasks.check_for_galaxy: Pinging Galaxy timed out after %s" % ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME])
                 galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
-            except RuntimeError:
+            except RuntimeError as e:
+                logger.exception("core.tasks.check_for_galaxy: Could not connect to Galaxy")
                 galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
             #set last time check to now
             galaxy.last_time_check = datetime.now()
@@ -320,8 +324,9 @@ def check_tool_status(tool_name, tool_unique_instance_identifier=None):
     try:
         array = ping() #pings celery to see if it's alive
         if len(array) == 0:
-            return (True, ExternalToolStatus.UNKNOWN_STATUS) #celery is gone, get error thrown
+            return (True, ExternalToolStatus.CELERY_DOWN_STATUS) #celery is gone, get error thrown
     except AMQPChannelException:
+        logger.error("Celery threw AMQPChannelException; it doesn't seem to affect operations thus far")
         pass
 
     try:
@@ -330,6 +335,6 @@ def check_tool_status(tool_name, tool_unique_instance_identifier=None):
         return (True, ExternalToolStatus.UNKNOWN_STATUS)
     
     if(datetime.now() - tool.last_time_check) > timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[tool_name]):
-        return (tool.is_active, ExternalToolStatus.UNKNOWN_STATUS)
+        return (tool.is_active, ExternalToolStatus.TIMEOUT_STATUS)
         
     return (tool.is_active, tool.status)

@@ -24,7 +24,7 @@ class ExternalToolErrorMiddleware(object):
             #check solr
             solr_tuple = check_tool_status(ExternalToolStatus.SOLR_TOOL_NAME)
             if solr_tuple[0]:
-                if solr_tuple[1] == ExternalToolStatus.UNKNOWN_STATUS: #celery is down
+                if solr_tuple[1] == ExternalToolStatus.CELERY_DOWN_STATUS: #celery is down
                     context_dict = {
                                     'external_tool_name': "Celery",
                                     'message_start': "Our task dispatcher"
@@ -32,6 +32,24 @@ class ExternalToolErrorMiddleware(object):
                     response = render_to_response('external_tool_down.html', context_dict)
                     response.status_code = 500
                     response.reason_phrase = "Celery Problem"
+                    return response
+                elif solr_tuple[1] == ExternalToolStatus.TIMEOUT_STATUS:
+                    context_dict = {
+                                    'external_tool_name': "Timeout",
+                                    'message_start': "Our database has not been updated with the status of one of our external tools recently leading us to believe that something"
+                                    }
+                    response = render_to_response('external_tool_down.html', context_dict)
+                    response.status_code = 500
+                    response.reason_phrase = "Timeout Problem"
+                    return response
+                elif solr_tuple[1] == ExternalToolStatus.UNKNOWN_STATUS:
+                    context_dict = {
+                                    'external_tool_name': "Unknown",
+                                    'message_start': "Something, we know not what,"
+                                    }
+                    response = render_to_response('external_tool_down.html', context_dict)
+                    response.status_code = 500
+                    response.reason_phrase = "Unknown Problem"
                     return response
                 elif solr_tuple[1] != ExternalToolStatus.SUCCESS_STATUS:
                     context_dict = {
@@ -48,7 +66,7 @@ class ExternalToolErrorMiddleware(object):
                 instance = workflow_engine.instance
                 galaxy_tuple = check_tool_status(ExternalToolStatus.GALAXY_TOOL_NAME, tool_unique_instance_identifier=instance.api_key)
                 if galaxy_tuple[0]:
-                    if galaxy_tuple[1] == ExternalToolStatus.UNKNOWN_STATUS: #celery is down
+                    if galaxy_tuple[1] == ExternalToolStatus.CELERY_DOWN_STATUS: #celery is down
                         context_dict = {
                                     'external_tool_name': "Celery",
                                     'message_start': "Our task dispatcher"
@@ -57,6 +75,23 @@ class ExternalToolErrorMiddleware(object):
                         response.status_code = 500
                         response.reason_phrase = "Celery Problem"
                         return response
+                    elif solr_tuple[1] == ExternalToolStatus.TIMEOUT_STATUS:
+                        context_dict = {
+                                        'external_tool_name': "Timeout",
+                                        'message_start': "Our database has not been updated with the status of one of our external tools recently leading us to believe that something"
+                                        }
+                        response = render_to_response('external_tool_down.html', context_dict)
+                        response.status_code = 500
+                        response.reason_phrase = "Timeout Problem"
+                        return response
+                    elif solr_tuple[1] == ExternalToolStatus.UNKNOWN_STATUS:
+                        context_dict = {
+                                        'external_tool_name': "Unknown",
+                                        'message_start': "Something, we know not what,"
+                                        }
+                        response = render_to_response('external_tool_down.html', context_dict)
+                        response.status_code = 500
+                        response.reason_phrase = "Unknown Problem"
                     elif galaxy_tuple[1] != ExternalToolStatus.SUCCESS_STATUS:
                         context_dict = {
                                     'external_tool_name': "Galaxy",
