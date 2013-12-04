@@ -48,10 +48,7 @@ docs/_static/*
 *.conflict
 refinery/*.pid
 refinery/solr/*/data
-refinery/refinery/*
-refinery/middleware.py
-refinery/fabric
-refinery/fabric/*
+refinery/fabric/
 supervisord.conf
 codekit-config.json
 .vagrant/
