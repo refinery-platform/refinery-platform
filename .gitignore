@@ -60,3 +60,6 @@ media/
 static/
 refinery/celerybeat-schedule*
 *.sublime-*
+refinery/ui/bower_components/
+refinery/ui/node_modules/
+refinery/ui/release/
