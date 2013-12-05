@@ -1015,3 +1015,10 @@ def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
                                'assay_uuid': assay_uuid,
                                'solr_url': solr_url}, 
                               context_instance=RequestContext(request))
+
+
+@login_required
+def angular_test(request):
+    return render_to_response('core/angular_test.html',
+                              {'site_name': get_current_site(request).name},
+                              context_instance=RequestContext(request))
