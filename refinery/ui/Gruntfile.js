@@ -21,7 +21,7 @@ module.exports = function(grunt) {
         clean: ['release'],
         watch: {
             files: ['<%= jshint.files %>'],
-            tasks: ['jshint']
+            tasks: ['jshint', 'uglify']
         },
     });
 
