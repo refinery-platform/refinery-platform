@@ -266,12 +266,12 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     return dataset_copy
 
 
-@task(time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.SOLR_TOOL_NAME])
+@task(time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.SOLR_TOOL_NAME], expires=4)
 def check_solr_running():
     requests.get(settings.REFINERY_SOLR_BASE_URL + "core/admin/ping")
 
 
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.SOLR_TOOL_NAME]))
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.SOLR_TOOL_NAME]), expires=4)
 def check_for_solr():
     solr, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.SOLR_TOOL_NAME)
 
@@ -285,19 +285,21 @@ def check_for_solr():
             solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         except TimeLimitExceeded as e:
             logger.exception("core.tasks.check_for_solr: Pinging Solr timed out after %s" % ExternalToolStatus.TIMEOUT[ExternalToolStatus.SOLR_TOOL_NAME])
-            solr.status = ExternalToolStatus.FAILURE_STATUS
-        # set last time check to now
+            solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
+        except TaskRevokedError as e:
+            logger.exception("core.tasks.check_for_galaxy: task was revoked because it took too long to get dispatched")
+        #set last time check to now
         solr.last_time_check = datetime.now()
         #save status
         solr.save()
 
 
-@task(time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME])
+@task(time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME], expires=4)
 def check_galaxy_running(instance):
     instance.get_galaxy_connection().get_histories()
 
 
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.GALAXY_TOOL_NAME]))
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.GALAXY_TOOL_NAME]), expires=4)
 def check_for_galaxy():
     workflow_engines = WorkflowEngine.objects.all()
     for workflow_engine in workflow_engines:
@@ -311,6 +313,8 @@ def check_for_galaxy():
             except TimeLimitExceeded as e:
                 logger.exception("core.tasks.check_for_galaxy: Pinging Galaxy timed out after %s" % ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME])
                 galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
+            except TaskRevokedError as e:
+                logger.exception("core.tasks.check_for_galaxy: task was revoked because it took too long to get dispatched")
             except RuntimeError as e:
                 logger.exception("core.tasks.check_for_galaxy: Could not connect to Galaxy")
                 galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
