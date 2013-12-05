@@ -10,6 +10,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 djcelery.setup_loader()
 
+# Required when DEBUG = False
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -410,8 +413,6 @@ REFINERY_WELCOME_EMAIL_MESSAGE = 'Please fill out your user profile'
 REFINERY_EXTERNAL_AUTH = False
 # Message to display on password management pages when REFINERY_EXTERNAL_AUTH is set to True
 REFINERY_EXTERNAL_AUTH_MESSAGE = ''
-# Allow Django to run on localhost:8000 in Django 1.5
-ALLOWED_HOSTS = ['*']
 
 # import local settings
 try:
