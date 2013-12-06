@@ -10,6 +10,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 djcelery.setup_loader()
 
+# Required when DEBUG = False
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
