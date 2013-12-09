@@ -5,162 +5,157 @@
 
 <html lang="en">
 <head>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
 
-    <!-- Le styles -->
-    {% for css_file in REFINERY_CSS %}
-    <link rel="stylesheet" href="{% static css_file %}" />
-   	{% endfor %}
+  <!-- Le styles -->
+  {% for css_file in REFINERY_CSS %}
+  <link rel="stylesheet" href="{% static css_file %}" />
+  {% endfor %}
 
-    <style type="text/css">
-      body {
-        /*padding-top: {{ REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;*/
-        /*padding-bottom: 40px;*/
-         /*position: relative;*/
-      }
-    </style>
-    
-    {% block head_html %}
-    {% endblock %}
-    
-    <title>{{REFINERY_INSTANCE_NAME}} {% block title %}{% endblock %}</title>
+  <style type="text/css">
+    body {
+      /*padding-top: {{ REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;*/
+      /*padding-bottom: 40px;*/
+      /*position: relative;*/
+    }
+  </style>
 
-    {% block tracking %}
-    
-	    {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}    
-			<script type="text/javascript">
-			
-			  var _gaq = _gaq || [];
-			  _gaq.push(['_setAccount', '{{ REFINERY_GOOGLE_ANALYTICS_ID }}']);
-			  _gaq.push(['_trackPageview']);
-			
-			  (function() {
-			    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-			    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-			    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-			  })();
-			</script>
-		{% endif %}    
-	    
-    {% endblock %}
+  {% block head_html %}{% endblock %}
+
+  <title>{{REFINERY_INSTANCE_NAME}}{% block title %}{% endblock %}</title>
+
+  {% block tracking %}
+    {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}    
+      <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', '{{ REFINERY_GOOGLE_ANALYTICS_ID }}']);
+        _gaq.push(['_trackPageview']);
+        (function() {
+          var ga = document.createElement('script');
+          ga.type = 'text/javascript';
+          ga.async = true;
+          ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+      </script>
+    {% endif %}
+  {% endblock tracking %}
 </head>
 
-<body>	
-	<!-- header navigation bar -->
-	<div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <!-- <div class="container-fluid" style="box-shadow: 0 0 5px black;"> -->
-        <div class="container-fluid"">
-        	
-		 <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
-	      <a class="btn btn-navbar" style="margin-left: 5px; margin-right: 5px;" data-toggle="collapse" data-target=".nav-collapse">
-	        <span class="icon-bar"></span>
-	        <span class="icon-bar"></span>
-	        <span class="icon-bar"></span>
-	      </a>
-	              	
-          <a class="brand" href="{% url "home" %}">
+<body>
+  <!-- header navigation bar -->
+  <div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <!-- <div class="container-fluid" style="box-shadow: 0 0 5px black;"> -->
+      <div class="container-fluid">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <a class="btn btn-navbar" style="margin-left: 5px; margin-right: 5px;" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </a>
+
+        <a class="brand" href="{% url "home" %}">
           {% if REFINERY_MAIN_LOGO != "" %}
           	<img style="height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px" src="{% static REFINERY_MAIN_LOGO %}"/>&nbsp;&nbsp;
           {% endif %}
-          {{REFINERY_INSTANCE_NAME}}</a>
+          {{REFINERY_INSTANCE_NAME}}
+        </a>
 
-			<p class="navbar-text pull-right">
-		{% if user.is_authenticated %}       
-				<i class="icon-user"></i>
-				<a href="{% url "user" user.get_profile.uuid %}">
-				{% if user.first_name != "" or user.last_name != "" %}
-					{{ user.first_name }} {{ user.last_name }}
-				{% else %}
-					{{ user.username }}				
-				{% endif %}
-				</a>&nbsp;&nbsp;|&nbsp;&nbsp; 				
-    			<i class="icon-signout"></i>&nbsp;<a href="{% url "django.contrib.auth.views.logout" %}?next={% url "home" %}">Logout</a>
-    	{% else %}
-    		{% url 'registration.views.register' as registration_url %}
-    		{% url 'django.contrib.auth.views.login' as login_url %}
-    		{% if REGISTRATION_OPEN %}
-			<a rel="tooltip" data-placement="left" title="Sign Up" href="{{registration_url}}">Register</a>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-			{% endif %}
-			<i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
-		{% endif %}		
-    		</p>
-                           	          
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li class="{{ navbar_class_home }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url "home" %}">Home</a></li>
-              <!--
-              <li class="{{ navbar_class_search }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url "search" %}">Search</a></li>
-              <li class="{{ navbar_class_contact }}"><a href="{% url "contact" %}">Contact</a></li>
-              -->
-              <li class="{{ navbar_class_statistics }}"><a href="{% url "statistics" %}">Statistics</a></li>
-              <li class="{{ navbar_class_about }}"><a href="{% url "about" %}">About</a></li>              
-            </ul>
-          </div>                   
+        <p class="navbar-text pull-right">
+        {% if user.is_authenticated %}       
+          <i class="icon-user"></i>
+          <a href="{% url "user" user.get_profile.uuid %}">
+          {% if user.first_name != "" or user.last_name != "" %}
+            {{ user.first_name }} {{ user.last_name }}
+          {% else %}
+            {{ user.username }}				
+          {% endif %}
+          </a>&nbsp;&nbsp;|&nbsp;&nbsp; 				
+          <i class="icon-signout"></i>&nbsp;<a href="{% url "django.contrib.auth.views.logout" %}?next={% url "home" %}">Logout</a>
+        {% else %}
+          {% url 'registration.views.register' as registration_url %}
+          {% url 'django.contrib.auth.views.login' as login_url %}
+          {% if REGISTRATION_OPEN %}
+          <a rel="tooltip" data-placement="left" title="Sign Up" href="{{registration_url}}">Register</a>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+        {% endif %}
+        <i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
+        {% endif %}		
+        </p>
 
+        <div class="nav-collapse collapse">
+          <ul class="nav">
+            <li class="{{ navbar_class_home }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url "home" %}">Home</a></li>
+            <!--
+            <li class="{{ navbar_class_search }}"><a style="line-height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px;" href="{% url "search" %}">Search</a></li>
+            <li class="{{ navbar_class_contact }}"><a href="{% url "contact" %}">Contact</a></li>
+            -->
+            <li class="{{ navbar_class_statistics }}"><a href="{% url "statistics" %}">Statistics</a></li>
+            <li class="{{ navbar_class_about }}"><a href="{% url "about" %}">About</a></li>              
+          </ul>
         </div>
+      </div>
 
-		<div class="navbar-header">
-			<div class="row-fluid">
-				<div class="container-fluid">
-					<div style="clear: left; display:block;">
-						{% block subheader %}{% endblock %}
-					</div>
-				</div>
-			</div>			
-		</div>		                
+  		<div class="navbar-header">
+  			<div class="row-fluid">
+  				<div class="container-fluid">
+  					<div style="clear: left; display:block;">
+  						{% block subheader %}{% endblock %}
+  					</div>
+  				</div>
+  			</div>			
+  		</div>		                
+    </div>
+  </div>
+
+  {% if REFINERY_BANNER %}
+      {% if not REFINERY_BANNER_ANONYMOUS_ONLY or not user.is_authenticated %}
+          <div class="alert text-center">{{ REFINERY_BANNER|safe }}</div>
+      {% endif %}
+  {% endif %}
+
+  <div class="container-fluid">
+    <div class="row-fluid" hidden id="warning-ie-not-supported">
+      <div class="alert alert-error">
+        <b>Notice</b>&nbsp;
+        We currently do not support <i>Microsoft Internet Explorer</i> and
+        strongly recommend that you continue browsing this site with
+        <a href="http://www.google.com/chrome/">Chrome</a>,
+        <a href="http://www.apple.com/safari/">Safari</a> or
+        <a href="http://www.mozilla.org/firefox/">Firefox</a>.
       </div>
     </div>
+    {% block content %}
+    {% endblock %}							
+  </div>
 
-    {% if REFINERY_BANNER %}
-        {% if not REFINERY_BANNER_ANONYMOUS_ONLY or not user.is_authenticated %}
-            <div class="alert text-center">{{ REFINERY_BANNER|safe }}</div>
-        {% endif %}
-    {% endif %}
+  <!-- 3rd party libraries -->                       
+  <script src="{% static "js/jquery/jquery-1.8.3.min.js" %}"></script>
+  <script src="{% static "js/jquery-ui/jquery-ui-1.10.0.custom.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/bootstrap/bootstrap.min.js" %}"></script>
 
-	<div class="container-fluid">
-		
-		<div class="row-fluid" hidden id="warning-ie-not-supported">
-			<div class="alert alert-error">
-				<b>Notice</b>&nbsp;
-				We currently do not support <i>Microsoft Internet Explorer</i> and strongly recommend that you continue browsing
-				this site with <a href="http://www.google.com/chrome/">Chrome</a>, <a href="http://www.apple.com/safari/">Safari</a> or <a href="http://www.mozilla.org/firefox/">Firefox</a>.
-			</div>
-		</div>
-			
-		{% block content %}
-		{% endblock %}							
-	</div>
-    
-	<!-- 3rd party libraries -->                       
-	<script src="{% static "js/jquery/jquery-1.8.3.min.js" %}"></script>
-    <script src="{% static "js/jquery-ui/jquery-ui-1.10.0.custom.min.js" %}"></script>
+  {% block script %}
+  {% endblock %}
 
-    <script type="text/javascript" src="{% static "js/bootstrap/bootstrap.min.js" %}"></script>
-
-	{% block script %}
-	{% endblock %}
-
-	<script type="text/javascript">
-		// activate bootstrap tooltips
-	    $('a[rel=tooltip]').tooltip();
-	
-		function sizing() {
-		    var windowwidth=$(window).width();
-		    if(windowwidth<=767) {
-		    	$('.scrollable').css('height', 'inherit' );      
-		    }
-		    else {
-			    $('.scrollable').map( function() {
-			    	var targetHeight = ( $(window).height() - $(this).offset().top - 40 );
-			    	var minHeight = parseInt( $('.scrollable').css( "min-height" ) );
-			    	var newHeight = Math.max( targetHeight, minHeight );
-			    	$(this).css('height', newHeight + 'px');  
-		    	});
-	    	}
-		}
+  <script type="text/javascript">
+    // activate bootstrap tooltips
+    $('a[rel=tooltip]').tooltip();
+    function sizing() {
+      var windowwidth = $(window).width();
+      if (windowwidth <= 767) {
+        $('.scrollable').css('height', 'inherit' );
+		  }
+      else {
+        $('.scrollable').map( function() {
+          var targetHeight = ( $(window).height() - $(this).offset().top - 40 );
+          var minHeight = parseInt( $('.scrollable').css( "min-height" ) );
+          var newHeight = Math.max( targetHeight, minHeight );
+          $(this).css('height', newHeight + 'px');  
+        });
+      }
+    }
 		$(window).resize(sizing);
 
 		$(document).ready( function(){
