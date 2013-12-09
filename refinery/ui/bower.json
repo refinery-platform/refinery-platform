@@ -11,5 +11,8 @@
     "node_modules",
     "test",
     "tests"
-  ]
+  ],
+  "dependencies": {
+    "angular-ui-select2": "~0.0.4"
+  }
 }

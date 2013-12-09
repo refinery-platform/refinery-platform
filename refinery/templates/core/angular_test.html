@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}
+{% load static %}
+
+{% block head_html %}
+<link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
+<link rel="stylesheet" href="{% static "styles/test.css" %}" />
 {% endblock %}
+
+{% block title %} - Angular test{% endblock %}
 
 {% block subheader %}
 <div class="page-header">
@@ -11,12 +17,20 @@
 
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable">
-    <div class="row-fluid">
-        <div class="refinery-header">
-            <span class="refinery-header-left">
-                <h3>Workflows</h3>
-            </span>
-        </div>
+  <div class="row-fluid">
+    <div class="refinery-header">
+      <span class="refinery-header-left">
+        <h3>Workflows</h3>
+      </span>
     </div>
+  </div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "vendor/jquery/jquery.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/select2/select2.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/angular/angular.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/angular-ui-select2/src/select2.js" %}"></script>
+<script type="text/javascript" src="{% static "js/test.js" %}"></script>
 {% endblock %}
