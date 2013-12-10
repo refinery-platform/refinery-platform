@@ -17,7 +17,8 @@ module.exports = function(grunt) {
         'select2/select2.js',
         'jquery/jquery.js',
         'angular/angular.js',
-        'angular-ui-select2/src/select2.js',        
+        'angular-ui-select2/src/select2.js',
+        'angular-resource/angular-resource.js',
       ],
       css: [
         'select2/select2.css',
