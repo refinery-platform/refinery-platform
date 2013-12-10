@@ -6,7 +6,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
 
     source_dir: 'src',
-    release_dir: 'release',
+    release_dir: 'app',
 
     app_files: {
       js: ['<%= source_dir %>/**/*.js'],
