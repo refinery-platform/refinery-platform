@@ -3,6 +3,8 @@ module.exports = function(grunt) {
   // Project configuration.
   grunt.initConfig({
 
+    pkg: grunt.file.readJSON('package.json'),
+
     source_dir: 'src',
     release_dir: 'release',
 
@@ -20,9 +22,10 @@ module.exports = function(grunt) {
       css: [
         'select2/select2.css',
       ],
+      img: [
+        'select2/select2.png', 'select2/select2-spinner.gif',
+      ],
     },
-
-    pkg: grunt.file.readJSON('package.json'),
 
     jshint: {
       files: ['Gruntfile.js', '<%= app_files.js %>'],
@@ -57,7 +60,11 @@ module.exports = function(grunt) {
           {
             expand: true,
             cwd: 'bower_components/',
-            src: ['<%= vendor_files.js %>', '<%= vendor_files.css %>'],
+            src: [
+              '<%= vendor_files.js %>',
+              '<%= vendor_files.css %>',
+              '<%= vendor_files.img %>',
+            ],
             dest: '<%= release_dir %>/vendor/',
           },
         ],
