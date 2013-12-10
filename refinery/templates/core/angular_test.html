@@ -28,6 +28,7 @@
     </div>
     {% verbatim %}
     <select ui-select2 ng-model="select2" ng-controller="WorkflowListCtrl" data-placeholder="Select a workflow">
+      <option value=""></option>  <!-- required for showing placeholder text -->
       <option ng-repeat="workflow in workflows" value="{{workflow.id}}">{{workflow.name}}</option>
     </select>
     {% endverbatim %}
