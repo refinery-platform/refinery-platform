@@ -27,10 +27,15 @@
       </div>
     </div>
     {% verbatim %}
-    <select ui-select2 ng-model="select2" ng-controller="WorkflowListCtrl" data-placeholder="Select a workflow">
-      <option value=""></option>  <!-- required for showing placeholder text -->
-      <option ng-repeat="workflow in workflows" value="{{workflow.id}}">{{workflow.name}}</option>
-    </select>
+    <div ng-controller="WorkflowListApiCtrl">
+      <select ui-select2 ng-model="workflow" style="width:25%" data-placeholder="Select a workflow">
+        <option value=""></option>  <!-- required for showing placeholder text -->
+        <option ng-repeat="w in workflows" value="{{w.uuid}}">{{w.name}}</option>
+      </select>
+      <div>
+        Currently selected: {{workflow}}
+      </div>
+    </div>
     {% endverbatim %}
   </div>
 {% endblock %}
@@ -46,9 +51,4 @@
   <script type="text/javascript" src="{% static "vendor/angular-resource/angular-resource.js" %}"></script>
   <script type="text/javascript" src="{% static "js/refinery.js" %}"></script>
   <script type="text/javascript" src="{% static "js/controllers/workflows.js" %}"></script>
-<!--
-  <script>
-    $(document).ready(function() { $("#workflows").select2(); });
-  </script>
--->
 {% endblock %}
