@@ -1,0 +1,132 @@
+/*
+ * Refinery Workflow visualization 
+ * style sheet
+ * (c) Stefan Luger 2013
+ */
+
+/* TABLE STYLESHEETS */
+
+.workflowtbl {
+	border-collapse: collapse;
+}
+
+.workflowtbl thead td, body td{
+	border: 1px solid gray;
+	font-family: sans-serif;
+	font-size: 12px;
+}
+
+.workflowtbl thead  td {
+	background-color: steelblue;
+	color: white;
+	font-weight: bold;
+}
+
+.workflowtbl tbody, tr:nth-child(odd) { 
+	background-color: white; 
+	color: black;
+}
+.workflowtbl tbody, tr:nth-child(even) { 
+	background-color: lightsteelblue; 
+	color: black;
+}
+
+.workflowtbl tbody, tr:hover td {
+	background-color: steelblue;
+	color: white;
+}
+
+.workflownestedtbl {
+	border-collapse: collapse;
+}
+
+.workflownestedtbl thead td, body td{
+	border: 1px solid gray;
+	font-family: sans-serif;
+	font-size: 12px;
+}
+
+/* WORKFLOW VISUALIZATION STYLESHEETS */
+
+.overlay {
+  fill: white;
+  pointer-events: all;
+}
+
+.fileIconOutput, .fileIconInputCon, .fileIconInput {
+	/*fill: white;*/
+	stroke: gray;
+	stroke-width: 1;
+}
+
+.wf_name, .wf_annotation {
+	font-family: sans-serif;
+	font-size: 12px;
+}
+
+.link {
+	fill: none;
+ 	/*stroke: gray;*/
+  	/*stroke-width: 1.5;*/
+}
+
+.fileIconLink {
+	fill: none;
+ 	stroke: gray;
+  	stroke-width: 1;
+}
+
+.node .nodeRect{
+	  cursor: move;
+	  /*fill: lightsteelblue;*/
+	  /*stroke: gray;
+	  stroke-width: 1.5;*/
+}
+
+.node .nodeTitle {
+	font-family: sans-serif;
+	font-size: 10px;
+	fill: black;
+}
+
+.node .nodeInput, .nodeOutput {
+	font-family: sans-serif;
+	font-size: 8px;
+	fill: black;
+}
+
+.inRectTitle, .outRectTitle, .linkTitle, .inputConRectTitle, .ioLabel {
+	font-family: sans-serif;
+	font-size: 8px;
+	fill: black;
+}
+
+.node .inputRect, .inputConRect, .outputRect {
+/*	font-family: sans-serif;
+	font-size: 8px;
+	fill: none;*/
+}
+
+.node .inRect, .outRect {
+	font-family: sans-serif;
+	font-size: 8px;
+	fill: none;
+}
+
+.textBorder {
+	stroke-width: 1;
+	stroke: lightsteelblue;
+	fill: lightsteelblue;
+	opacity: 0.3;
+}
+
+.textRect {
+	fill: lightsteelblue;
+	stroke: gray;
+	stroke-width: 1;
+	opacity: 0.3;
+}
+
+.node.fixed .nodeRect {
+
+}

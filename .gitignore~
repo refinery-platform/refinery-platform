@@ -1,0 +1,65 @@
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.pyc
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and databases #
+######################
+*.log.*
+*.log
+*.sql
+*.sqlite
+
+# OS generated files #
+######################
+.DS_Store*
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# machine/user specific files #
+###############################
+setup_refinery.sh
+settings_local*.py
+docs/_build/*
+docs/_static/*
+.project
+.DS_Store
+.pydevproject
+.settings/*
+*.conflict
+refinery/*.pid
+refinery/solr/*/data
+refinery/refinery/*
+refinery/middleware.py
+refinery/fabric
+refinery/fabric/*
+supervisord.conf
+codekit-config.json
+.vagrant/
+deployment/.librarian/
+deployment/.tmp/
+deployment/modules/
+deployment/Puppetfile.lock
+media/
+static/
+refinery/celerybeat-schedule*
+*.sublime-*
