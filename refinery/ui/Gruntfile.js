@@ -8,9 +8,9 @@ module.exports = function(grunt) {
     source_dir: 'src',
     release_dir: 'app',
 
-    app_files: {
-      js: ['<%= source_dir %>/**/*.js'],
-      css: ['<%= source_dir %>/**/*.css'],
+    source_files: {
+      js: ['**/*.js'],
+      css: ['**/*.css'],
     },
     vendor_files: {
       js: [
@@ -29,7 +29,10 @@ module.exports = function(grunt) {
     },
 
     jshint: {
-      files: ['Gruntfile.js', '<%= app_files.js %>'],
+      files: [
+        'Gruntfile.js',
+        '<%= source_dir %>/<%= source_files.js %>'
+      ],
     },
 
     uglify: {
@@ -38,20 +41,30 @@ module.exports = function(grunt) {
       },
       files: {
         expand: true,
-        cwd: 'src/',
-        src: 'js/**/*.js',
+        cwd: '<%= source_dir %>/',
+        src: '<%= source_files.js %>',
         dest: '<%= release_dir %>/',
         ext: '.min.js',
       },
     },
 
     copy: {
-      app_assets: {
+      app_scripts: {
         files: [
           {
             expand: true,
             cwd: '<%= source_dir %>/',
-            src: ['**'],
+            src: ['<%= source_files.js %>'],
+            dest: '<%= release_dir %>/',
+          },
+        ],
+      },
+      app_styles: {
+        files: [
+          {
+            expand: true,
+            cwd: '<%= source_dir %>/',
+            src: ['<%= source_files.css %>'],
             dest: '<%= release_dir %>/',
           },
         ],
@@ -72,11 +85,21 @@ module.exports = function(grunt) {
       },
     },
 
-    clean: ['<%= release_dir %>'],
+    clean: {
+      app_scripts: ['<%= release_dir %>/js'],
+      app_styles: ['<%= release_dir %>/styles'],
+      vendor_assets: ['<%= release_dir %>/vendor'],
+    },
 
     watch: {
-      files: ['<%= jshint.files %>'],
-      tasks: ['jshint', 'uglify'],
+      scripts: {
+        files: ['<%= source_dir %>/<%= source_files.js %>'],
+        tasks: ['jshint', 'clean:app_scripts', 'copy:app_scripts'],
+      },
+      styles: {
+        files: ['<%= source_dir %>/<%= source_files.css %>'],
+        tasks: ['clean:app_styles', 'copy:app_styles'],
+      },
     },
   });
 
@@ -88,6 +111,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
 
   // Default task(s).
-  grunt.registerTask('default', ['jshint', 'uglify', 'copy']);
+  grunt.registerTask('default', ['jshint', 'clean', 'copy', 'uglify']);
 
 };
