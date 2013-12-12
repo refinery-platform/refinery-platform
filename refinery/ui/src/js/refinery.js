@@ -26,16 +26,16 @@ angular.module('refineryApp', [
 //var service = angular.module("apiService", ["ngResource"]);
 
 .factory("Workflow", function($resource) {
+  'use strict';
   return $resource(
     "/api/v1/workflow/:Id/",
-    {Id: "@Id", format: "json"},
-    {'query': {method: 'GET', isArray: false}}
+    {Id: "@Id", format: "json"}
   );
 })
 
 .controller('WorkflowListApiCtrl', function($scope, Workflow) {
   'use strict';
-  var WorkflowList = Workflow.query(function() {
+  var WorkflowList = Workflow.get(function() {
     $scope.workflows = WorkflowList.objects;
   });
 });
