@@ -28,12 +28,19 @@
     </div>
     {% verbatim %}
     <div ng-controller="WorkflowListApiCtrl">
-      <select ui-select2 ng-model="workflow" style="width:25%" data-placeholder="Select a workflow">
+      <select ui-select2 ng-model="index" style="width:25%" data-placeholder="Select a workflow">
         <option value=""></option>  <!-- required for showing placeholder text -->
-        <option ng-repeat="w in workflows" value="{{w.uuid}}">{{w.name}}</option>
+        <option ng-repeat="w in workflowList" value="{{$index}}">{{w.name}}</option>
       </select>
       <div>
-        Currently selected: {{workflow}}
+        <strong>Name:</strong><br/>
+        {{workflowList[index].name}}
+      </div>
+      <div>
+        <strong>Inputs:</strong><br/>
+        Sample mapping: {{workflowList[index].input_relationships[0].category}}<br/>
+        {{workflowList[index].input_relationships[0].set1}}<br/>
+        {{workflowList[index].input_relationships[0].set2}}<br/>
       </div>
     </div>
     {% endverbatim %}
