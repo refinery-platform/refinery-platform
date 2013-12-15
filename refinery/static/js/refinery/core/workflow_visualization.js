@@ -482,8 +482,28 @@ function node_title (d) {
 	});
 }
 
+
 /*
- * dyes a a path beginning at the selected node triggered via the path selection
+ * dyes a single node
+ *
+ * node: the node of datastructure node
+ * stroke: border color
+ * stroke_width: border width
+ * fill: fill color
+ */
+function dye_node (node, stroke, stroke_width, fill, highlighted) {
+	var node_rect = d3.select("#node_" + node.id);
+
+	node_rect.select(".nodeRect")
+		.attr("stroke", stroke)
+		.attr("stroke-width", stroke_width);
+
+	node_rect.selectAll(".inputConRect")
+		.attr("fill", fill);
+}
+
+/*
+ * dyes a path beginning at the selected node triggered via the path selection
  *
  * sel_path: the selected path consisting of links
  * sel_node_rect: the svg element of the selected node
@@ -493,13 +513,17 @@ function node_title (d) {
  * fill: fill color
  */
 function dye_path (sel_path, sel_node_rect, sel_path_rect, stroke, stroke_width, fill, highlighted) {	
+	
 	// this node
-	sel_node_rect
-		.attr("stroke", stroke)
-		.attr("stroke-width", stroke_width);
-
-	sel_path_rect
-		.attr("fill", fill);
+	if (sel_node_rect !== null) {
+		sel_node_rect
+			.attr("stroke", stroke)
+			.attr("stroke-width", stroke_width);	
+	}
+	if (sel_path_rect !== null) {
+		sel_path_rect
+			.attr("fill", fill);
+	}
 
 	// links and source nodes for the selected path
 	sel_path.forEach( function (l) {
@@ -1202,8 +1226,6 @@ function visualize_workflow(data, canvas) {
 				.range([0, shape_dim.window.height]);
 	}
 
-
-
 	// zoom
 	zoom_canvas = canvas
 		.call(d3.behavior.zoom()
@@ -1648,8 +1670,27 @@ function visualize_workflow(data, canvas) {
 	});
 
 	// reset path highlighting when clicking on the background rectangle
-// TODO:	
-		//dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
+	d3.select(".overlay").on("click", function (x) {
+
+		// suppress after dragend
+		if (d3.event.defaultPrevented) return;
+
+		var sel_path = []
+			sel_node_rect = null,
+			sel_path_rect = null;
+
+		link.each( function (l) {
+			sel_path.push(l);
+		});
+		
+		// for every link
+		dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
+
+		// for each out_node
+		out_nodes.forEach( function (y) {
+			dye_node(y, "gray", 1.5, "lightsteelblue", false);
+		});
+	});
 
 
 	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("click", function (x) {
