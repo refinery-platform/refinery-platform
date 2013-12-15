@@ -1205,7 +1205,8 @@ function visualize_workflow(data, canvas) {
 
 
 	// zoom
-	zoom_canvas = canvas.call(d3.behavior.zoom()
+	zoom_canvas = canvas
+		.call(d3.behavior.zoom()
 		.x(xscale)
 		.y(yscale)
 		.size([shape_dim.window.width, shape_dim.window.height])
@@ -1214,8 +1215,10 @@ function visualize_workflow(data, canvas) {
 
 	zoom_canvas.append("rect")
 			.attr("class", "overlay")
-			.attr("width", shape_dim.window.width)
-			.attr("height", shape_dim.window.height);
+			.attr("x", -shape_dim.window.width/2)
+			.attr("y", -shape_dim.window.height/2)
+			.attr("width", shape_dim.window.width*2)
+			.attr("height", shape_dim.window.height*2);
 
 	// force layout definition
 	force = d3.layout.force()
@@ -1643,6 +1646,11 @@ function visualize_workflow(data, canvas) {
 				.attr("fill", "lightsteelblue");
 		}
 	});
+
+	// reset path highlighting when clicking on the background rectangle
+// TODO:	
+		//dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
+
 
 	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("click", function (x) {
 		// get selected node
