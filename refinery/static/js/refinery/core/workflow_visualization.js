@@ -1660,8 +1660,8 @@ function visualize_workflow(data, canvas) {
 
 	d3.selectAll(".nodeG").on("click", function (x) {
 
-		if (d3.event.defaultPrevented) return; // click suppressed
-  		console.log("clicked!");
+		// suppress after dragend
+		if (d3.event.defaultPrevented) return;
 
 		// get selected node
 		var sel_path = [],
@@ -1957,8 +1957,11 @@ function visualize_workflow(data, canvas) {
 
 
 	// ------------------- TABLE -------------------
+	// update table data with properties of selected node
 	node.select(".nodeTitle").on("click", function (x) {	
-		// update table data with properties of selected node
+			
+		// suppress after dragend
+		if (d3.event.defaultPrevented) return;
 
 		// remove old table on click
 		d3.select("#workflowtbl").remove();
