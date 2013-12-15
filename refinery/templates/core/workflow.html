@@ -138,6 +138,7 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/workflow_visualization.js"></script>
 
 	<script>
+// TODO: encapsulate into namespace as well as a separate file	
 		// ########## TOOLBAR ############################################################
 
 		/*
@@ -178,14 +179,17 @@
 			});
 		}
 
-		var canvas 	= null,
-		zoom_canvas = null,
-        shape_dim 	= null,
-        layout_prop = null,
-        table 		= null, // properties table
-        dataset 	= null, // actual dataset  
-        layout 		= document.getElementById('cb_layout_kind').value;
-        scale_wf	= document.getElementById('cb_scale_wf').checked;
+		// ########## MAIN ############################################################
+
+		// globals
+		var canvas 		= null,
+			zoom_canvas = null,
+	        shape_dim 	= null,
+	        layout_prop = null,
+	        table 		= null, // properties table
+	        dataset 	= null, // actual dataset  
+	        layout 		= document.getElementById('cb_layout_kind').value;
+	        scale_wf	= document.getElementById('cb_scale_wf').checked;
 
 		// initialize svg to body
 		canvas 		= init_canvas("#vis_workflow", 1300, 800);

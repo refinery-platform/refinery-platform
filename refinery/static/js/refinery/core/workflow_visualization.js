@@ -770,15 +770,21 @@ function geometric_zoom () {
 }
 
 /*
- * dragging behavior for the force layout
+ * dragging start behavior for the force layout
  *
  * d: node which gets dragged
  */
 function dragstart(d) {
 	d3.event.sourceEvent.stopPropagation();
-	//d.fixed = true;	
-	//d3.select(this).classed("fixed", true);
-	//update();
+}
+
+/*
+ * dragging end behavior for the force layout
+ *
+ * d: node which gets dragged
+ */
+function dragend(d) {
+	d3.event.sourceEvent.stopPropagation();
 }
 
 
@@ -1247,7 +1253,8 @@ function visualize_workflow(data, canvas) {
 */
 	// drag and drop node enabled
 	drag = force.drag()
-		.on("dragstart", dragstart);
+		.on("dragstart", dragstart)
+		.on("dragend", dragend);
 	
 	// extract links via input connections
 	dataset.steps.forEach( 
@@ -1451,27 +1458,9 @@ function visualize_workflow(data, canvas) {
 		}
 
 
-	// CENTERED VERSION
-		/*if (scale_wf) {
-			shape_dim.column.width = shape_dim.window.width/dataset.graph_depth;
-		}
-		var centered = 0;
-		in_nodes.forEach( function (d,i) {
-			centered = shape_dim.window.height / (in_nodes.length+1);
-			d.x = scale_wf ? xscale(0) : xscale(shape_dim.margin.left + shape_dim.node.width);
-			d.y = yscale((i+1)*centered);
-		});
-		for (var i = 1; i < dataset.graph_depth; i++) {
-			centered = shape_dim.window.height / (get_nodes_by_col(i).length+1);
-			get_nodes_by_col(i).forEach( function (cur,j) {
-				cur.x = scale_wf ? xscale(i*shape_dim.column.width) : xscale(shape_dim.margin.left + shape_dim.node.width + i*shape_dim.column.width);
-				cur.y = yscale((j+1)*centered);
-			});
-		}*/
-
-
+// DEBUG: grid lines for layout
 	// ------------------- DEBUG GRID LINES FOR LAYOUT -------------------
-	draw_layout_grid(xscale, yscale);
+	//draw_layout_grid(xscale, yscale);
 
 	// ------------------- FORCE LAYOUT COORDINATES -------------------
 	} else if (layout === layout_kind.FORCE) {
@@ -1669,7 +1658,11 @@ function visualize_workflow(data, canvas) {
 		}
 	});
 
-	d3.selectAll(".nodeG").on("dblclick", function (x) {
+	d3.selectAll(".nodeG").on("click", function (x) {
+
+		if (d3.event.defaultPrevented) return; // click suppressed
+  		console.log("clicked!");
+
 		// get selected node
 		var sel_path = [],
 			sel_node_rect = d3.select(this).select(".nodeRect"),
