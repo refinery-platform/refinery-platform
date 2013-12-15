@@ -474,11 +474,6 @@ function node_title (d) {
 			.attr("text-anchor", "middle")
 			.attr("y",24);
 		}
-
-		// add tooltip
-		d3.select(x).append("title")
-		.text(function (d) { return dataset.steps[d.id].name; });
-
 	});
 }
 
@@ -1326,8 +1321,6 @@ function visualize_workflow(data, canvas) {
 	set_graph_width();
 	set_graph_depth();
 
-	//console.log(dataset)
-
 
 	// add column expansion logic
 	for (var i = 0; i < dataset.graph_depth; i++) {
@@ -1540,14 +1533,18 @@ function visualize_workflow(data, canvas) {
 		.attr("ry", 3)
 		.attr("fill", "lightsteelblue")
 		.attr("stroke", "gray")
-		.attr("stroke-width", 1.5);
+		.attr("stroke-width", 1.5)
+		.append("title") // add tooltip
+		.text(function (d) { return dataset.steps[d.id].name; });
 
 	// node title	
 	node_g.append("g")
 		.attr("transform", function (d) { 
 			return "translate(" + 0 + "," + parseInt(-shape_dim.node.height/2,10) + ")";})
 		.attr("class", "nodeTitle")
-		.call(node_title);
+		.call(node_title)
+		.append("title") // add tooltip
+		.text(function (d) { return dataset.steps[d.id].name; });
 
 
 // TODO: change node shape to simple file
@@ -1692,7 +1689,6 @@ function visualize_workflow(data, canvas) {
 		});
 	});
 
-
 	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("click", function (x) {
 		// get selected node
 		var sel_path = d3.select(this.parentNode.parentNode)[0][0].__data__.subgraph[+d3.select(this).attr("id")[14]],
@@ -1706,6 +1702,7 @@ function visualize_workflow(data, canvas) {
 			dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
 		}
 	});
+
 
 	d3.selectAll(".nodeG").on("click", function (x) {
 
