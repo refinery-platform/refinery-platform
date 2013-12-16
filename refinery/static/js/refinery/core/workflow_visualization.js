@@ -5,7 +5,10 @@
  */
 
 
-// ########## ENUMS ############################################################
+
+// #################################################################
+// ########## ENUMS ################################################
+// #################################################################
 
 // supported layouts
 layout_kind = {
@@ -13,6 +16,7 @@ layout_kind = {
 	CUSTOM: "1",
 	FORCE: 	"2"
 };
+
 
 // distinguish whether the left or right side of a node is collapsed/expanded
 layout_translation = {
@@ -23,9 +27,12 @@ layout_translation = {
 };
 
 
-// ########## HELPERS ############################################################
 
+// #################################################################
+// ########## HELPERS ##############################################
+// #################################################################
 
+// TODO: generalize for all attributes
 /*
  * calculates column order through links of nodes
  *
@@ -60,6 +67,7 @@ function calc_columns (node) {
 
 	});
 }
+
 
 /*
  * adds grid lines to the layout
@@ -115,6 +123,7 @@ function draw_layout_grid (xscale, yscale) {
 			.attr("stroke-width", 1);
 }
 
+
 /*
  * shift specific nodes by rows
  *
@@ -129,6 +138,7 @@ function shift_nodes_by_rows (row_shift, col, row) {
 		}
 	});
 }
+
 
 /*
  * get number of nodes not visited yet
@@ -148,6 +158,7 @@ function get_number_of_unvisited_nodes_by_arr (arr) {
 	return count;
 }
 
+
 /*
  * get number of nodes visited already
  *
@@ -166,6 +177,7 @@ function get_number_of_visited_nodes_by_col (col) {
 	return count;
 }
 
+
 /*
  * get number of nodes visited already
  *
@@ -183,6 +195,7 @@ function get_number_of_visited_nodes_by_arr (nodes) {
 
 	return count;
 }
+
 
 /*
  * gets all predecessor nodes for a node
@@ -207,6 +220,7 @@ function get_pred_nodes_by_node (node) {
 	return pred_nodes;
 }
 
+
 /*
  * gets all successor nodes for a node
  *
@@ -230,6 +244,7 @@ function get_succ_nodes_by_node (node) {
 	return succ_nodes;
 }
 
+
 /*
  * checks whether the node is the single predecessor for its successor
  *
@@ -239,6 +254,7 @@ function get_succ_nodes_by_node (node) {
 function node_is_single_succ (node_id) {
 	return get_pred_links_by_node_id (node_id).length === 1;
 }
+
 
 /*
  * get nodes of columns from begin to end column id
@@ -259,8 +275,7 @@ function get_nodes_by_column_range (begin, end) {
 	return nodes_to_translate;
 }
 
-// DEBUG: 	can't access and change transform attribute of svg node group element
-// 			setting the x, y coords does not update the node positions, using px, py it works
+
 /*
  * collapse/expand the left/right side of a column
  * 
@@ -300,6 +315,7 @@ function update_column_translation (col, action) {
 	}
 }
 
+
 /*
  * get nodes by column
  * 
@@ -315,6 +331,7 @@ function get_nodes_by_col (col) {
 	});
 	return col_nodes;
 }
+
 
 /*
  * get all output nodes, the nodes without a successor
@@ -332,6 +349,7 @@ function get_output_nodes () {
 
 	return output_nodes;
 }
+
 
 /*
  * get all input nodes, the nodes without a predecessor
@@ -386,6 +404,7 @@ function traverse_dfs (cur_node, path_depth) {
 	}
 }
 
+
 /*
  * set the longest path of the graph by finding a maximum path
  */
@@ -409,6 +428,7 @@ function cut_io_file_name (str) {
 
 	return str;
 }
+
 
 /*
  * calculates the length of the node title and splits into two text elements, cuts it if
@@ -497,6 +517,7 @@ function dye_node (node, stroke, stroke_width, fill, highlighted) {
 		.attr("fill", fill);
 }
 
+
 /*
  * dyes a path beginning at the selected node triggered via the path selection
  *
@@ -543,6 +564,7 @@ function dye_path (sel_path, sel_node_rect, sel_path_rect, stroke, stroke_width,
 	});
 }
 
+
 /*
  * get all predecessor ids by a given node id
  *
@@ -559,6 +581,7 @@ function get_pred_links_by_node_id (id) {
 	return preds;
 }
 
+
 /*
  * get all links by a given source node id
  *
@@ -574,6 +597,7 @@ function get_succ_links_by_node_id (id) {
 	});
 	return links;
 }
+
 
 /* extracts all possible paths(links) via backtracking to root nodes starting with the selected node id
  *
@@ -609,6 +633,8 @@ function get_succ_links_by_node_id (id) {
 	// otherwise, the current node id is a root node, and we leave this recursion branch
  }
 
+
+// TODO: generalize for all attributes
 /* 
  * extract general workflow annotation
  *
@@ -616,7 +642,6 @@ function get_succ_links_by_node_id (id) {
  * returns key-value set of typical elements
  */
 function extract_wf_annotation (str) {
-// TODO: generalize for all attributes
  	var annotation 		= [],
  		patterns 		= [],
  		p_refinery_type = /(refinery_type)\":\s\"(\S+)\"/,
@@ -634,6 +659,7 @@ function extract_wf_annotation (str) {
 
  	return annotation;
  }
+
 
 /*
  * gets target nodes by a given source id
@@ -686,6 +712,7 @@ function append_text_border(text_elems) {
 	);
 } 
 
+
 /*
  * appends a rectangle to each of the given svg text elements in the array
  * similar to append_text_border, but it simplifies the function using just an rect element
@@ -706,7 +733,8 @@ function append_text_rect (text_elems) {
 		}
 	);
 }
- 
+
+
 /*
  * get the length of the inputs array for an integer id of a node
  *
@@ -716,6 +744,7 @@ function append_text_rect (text_elems) {
 function get_inputs_length (node_id) {	
 	return dataset.steps[node_id].inputs.length;
 } 
+
 
 /*
  * get the length of the input_connections array for an integer id of a node
@@ -727,6 +756,7 @@ function get_input_conns_length (node_id) {
 	return d3.values(dataset.steps[node_id].input_connections).length;
 } 
 
+
 /*
  * get the length of the outputs array for an integer id of a node
  *
@@ -736,6 +766,7 @@ function get_input_conns_length (node_id) {
 function get_outputs_length (node_id) {
 	return dataset.steps[node_id].outputs.length;
 } 
+
 
 /*
  * get index pair of the outputs elem and input_connections elem for each link between two nodes
@@ -761,6 +792,7 @@ function output_input_con_file_link (link) {
 	return [iSrcOut, jTarIn];
 }
 
+
 /*
  * checks whether an array contains a given integer element 
  *
@@ -780,13 +812,14 @@ function src_elem_in_arr(arr, node_id) {
 	return found;
 }
 
-// DEBUG: PAN_ZOOM
+
 /*
  * adds zoom behavior to the top svg root element
  */
 function geometric_zoom () {
 	zoom_canvas.attr("transform", "translate(" + d3.event.translate[0]  + "," + d3.event.translate[1] + ")scale(" + (d3.event.scale) + ")");
 }
+
 
 /*
  * dragging start behavior for the force layout
@@ -796,6 +829,7 @@ function geometric_zoom () {
 function dragstart(d) {
 	d3.event.sourceEvent.stopPropagation();
 }
+
 
 /*
  * dragging end behavior for the force layout
@@ -808,7 +842,9 @@ function dragend(d) {
 
 
 
-// ########## INITIALIZATIONS ############################################################
+// #################################################################
+// ########## INITIALIZATIONS ######################################
+// #################################################################
 
 /*
  * initializes a svg canvas root element and sets an id
@@ -826,6 +862,7 @@ function init_canvas(div_id, width, height) {
 	
 	return canvas;
 } 
+
 
 /*
  * initializes the most important svg element shape dimension properties
@@ -846,6 +883,7 @@ function init_dimensions(node_width, node_height, io_width, io_height, margin, i
 		row: 		{height: node_height*2}
 	};
 }
+
 
 /*
  * initializes force layout with given attributes
@@ -868,7 +906,9 @@ function init_force_layout(link_distance, link_strength, friction, charge, theta
 
 
 
-// ########## TABLE HELPERS ############################################################
+// #################################################################
+// ########## TABLE HELPERS ########################################
+// #################################################################
 
 /*
  * appends a table to its parent element
@@ -893,6 +933,7 @@ function create_nested_table(parent) {
 					.text(function(d) { return d; });
 }
 
+
 /*
  * appends a table to its parent element
  * for position node element
@@ -913,6 +954,7 @@ function create_nested_pos_table(parent) {
 				.append("td")
 					.text(function(d) { return d; });
 }
+
 
 /*
  * appends a table to its parent element
@@ -957,6 +999,7 @@ function create_nested_tool_state_table(parent) {
 				.text(function(d) { return d; });
 }
 
+
 /*
  * appends a table to its parent element
  * for annotation node element
@@ -990,6 +1033,7 @@ function create_nested_annotation_table(parent) {
 				.append("td")
 					.text(function(d) { return d; });
 }
+
 
 /*
  * evaluates the node parameters for the table view
@@ -1050,7 +1094,9 @@ function eval_node_params(tr) {
 
 
 
-// ########## LAYOUT UPDATE ############################################################
+// #################################################################
+// ########## LAYOUT UPDATE ########################################
+// #################################################################
 
 /*
  * rearange link, node and linklabel positions for each tick in the force layout
@@ -1124,7 +1170,9 @@ function update() {
 
 
 
-// ########## MAIN ############################################################
+// #################################################################
+// ########## MAIN #################################################
+// #################################################################
 
 /*
  * main callback function which takes care of: 
@@ -1294,12 +1342,10 @@ function visualize_workflow(data, canvas) {
 	set_graph_width();
 	set_graph_depth();
 
-
 	// add column expansion logic
 	for (var i = 0; i < dataset.graph_depth; i++) {
 		dataset.columns.push({inputs: 0, outputs: 0});	//number of inputs and outputs of nodes expanded initially set to 0
 	}
-
 
 	// save subgraph for each node
 	dataset.nodes.forEach(function (d,i) {
@@ -1317,7 +1363,10 @@ function visualize_workflow(data, canvas) {
 	});
 
 
+
+	// -----------------------------------------------------------------
 	// ------------------- GALAXY LAYOUT COORDINATES -------------------
+	// -----------------------------------------------------------------
 	if (layout === layout_kind.GALAXY) {
 		dataset.steps.forEach ( function (d) {
 			if (d.position != null) {
@@ -1326,8 +1375,13 @@ function visualize_workflow(data, canvas) {
 			}
 		});
 	}
+
+
+
 // TODO: still in debug state
+	// -----------------------------------------------------------------
 	// ------------------- CUSTOM LAYOUT COORDINATES -------------------
+	// -----------------------------------------------------------------
 	else if (layout === layout_kind.CUSTOM) {
 		
 
@@ -1424,7 +1478,7 @@ function visualize_workflow(data, canvas) {
 
 		console.log("graph rows" + dataset.graph_rows)*/
 
-		//DEBUG: consider max rows
+//DEBUG: consider max rows
 		var max_row = 0;
 		dataset.nodes.forEach( function (d) {
 			if (d.row > max_row) {
@@ -1449,11 +1503,18 @@ function visualize_workflow(data, canvas) {
 		}
 
 
+
 // DEBUG: grid lines for layout
-	// ------------------- DEBUG GRID LINES FOR LAYOUT -------------------
+	// -----------------------------------------------------------------
+	// ------------------- DEBUG GRID LINES FOR LAYOUT -----------------
+	// -----------------------------------------------------------------
 	//draw_layout_grid(xscale, yscale);
 
-	// ------------------- FORCE LAYOUT COORDINATES -------------------
+
+
+	// -----------------------------------------------------------------
+	// ------------------- FORCE LAYOUT COORDINATES --------------------
+	// -----------------------------------------------------------------
 	} else if (layout === layout_kind.FORCE) {
 		dataset.nodes.forEach ( function (d) {
 			// no coords are set for the force layout
@@ -1464,7 +1525,9 @@ function visualize_workflow(data, canvas) {
 	}
 
 
-	// ------------------- SVG ELEMENTS -------------------
+	// -----------------------------------------------------------------
+	// ------------------- SVG ELEMENTS --------------------------------
+	// -----------------------------------------------------------------
 
 	// force layout links and nodes
 	var link 		= zoom_canvas.selectAll(".link"),
@@ -1494,7 +1557,6 @@ function visualize_workflow(data, canvas) {
 	node_g = node.append("g")
 		.attr("class", "nodeG")
 
-
 	// node shape
 	node_g.append("rect")
 		.attr("class", "nodeRect")
@@ -1509,7 +1571,7 @@ function visualize_workflow(data, canvas) {
 		.attr("stroke-width", 1.5)
 		.append("title") // add tooltip
 		.text(function (d) { return dataset.steps[d.id].name; });
-
+		
 	// node title	
 	node_g.append("g")
 		.attr("transform", function (d) { 
@@ -1519,8 +1581,7 @@ function visualize_workflow(data, canvas) {
 		.append("title") // add tooltip
 		.text(function (d) { return dataset.steps[d.id].name; });
 
-
-// TODO: change node shape to simple file
+// TODO: consider chaning node shapes
 	// node inputs
 	node_input = node.append("g").attr("transform", function (d) { 
 			return "translate(" + parseInt((shape_dim.node.width/2),10) + "," + 0 + ")";})
@@ -1608,7 +1669,11 @@ function visualize_workflow(data, canvas) {
 	});
 
 
-	// ------------------- FORCE LAYOUT START -------------------
+
+	// -----------------------------------------------------------------
+	// ------------------- FORCE LAYOUT START --------------------------
+	// -----------------------------------------------------------------
+
 	// execute force layout
 	// attention: after executing the force layout, 
 	// link.source and link.target obtain the node data structures instead of simple integer ids
@@ -1621,8 +1686,9 @@ function visualize_workflow(data, canvas) {
 	
 
 
-	// ------------------- EVENTS -------------------
-
+	// -----------------------------------------------------------------
+	// ------------------- EVENTS --------------------------------------
+	// -----------------------------------------------------------------
 
 	// ------------------- SUBGRAPH HIGHLIGHTING SELECTED PATHS WITH TOGGLE -------------------
 	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("mouseover", function (x) {
@@ -1681,10 +1747,69 @@ function visualize_workflow(data, canvas) {
 	});
 
 
-	d3.selectAll(".nodeG").on("click", function (x) {
+
+	// -----------------------------------------------------------------
+	// ------------------- TABLE AND PATH HIGHLIGHTING -----------------
+	// -----------------------------------------------------------------
+
+	// update table data with properties of selected node
+	node.select(".nodeG").on("click", function (x) {	
 
 		// suppress after dragend
 		if (d3.event.defaultPrevented) return;
+
+		
+
+		// -----------------------------------------------------------------
+		// ------------------- TABLE ---------------------------------------
+		// -----------------------------------------------------------------
+
+		// remove old table on click
+		d3.select("#workflowtbl").remove();
+		
+		// add new table on click
+		table = d3.select("#node_table").append("g")
+			.attr("id", "workflowtbl");
+		
+		var prop_tbl 			= table.append("table"),
+			tableHeadColumns	= ["Property", "Value"],
+			thead 				= prop_tbl.append("thead"),
+			tbody 				= prop_tbl.append("tbody"),
+			tableEntries 		= [],
+			tr 					= {},
+			td 					= {};
+	
+		// generate two-dimensional array dataset
+		d3.entries(dataset.steps[x.id]).forEach(function(y,i) {
+			switch(y.key) {
+				case "name":
+				case "tool_id":
+				case "tool_version":
+				case "id":
+				case "tool_state":
+				case "annotation":
+					tableEntries.push([y.key, y.value]);
+					break;
+			};
+		});
+			
+		// nested tr-td selection for actual entries
+		tr = tbody.selectAll("tr")
+			.data(tableEntries)
+			.enter()
+			.append("tr");
+			
+		td = tr.selectAll("td")
+			.data(function(d) { return d; })
+			.enter()
+			.append("td")
+				.call(eval_node_params);
+
+
+
+		// -----------------------------------------------------------------
+		// ------------------- PATH HIGHLIGHTING ---------------------------
+		// -----------------------------------------------------------------
 
 		// get selected node
 		var sel_path = [],
@@ -1701,11 +1826,15 @@ function visualize_workflow(data, canvas) {
 			dye_path(sel_path, sel_node_rect, sel_path_rect, "orange", 5, "orange", true);
 		} else {
 			dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
-		}
+		}	
 	});
 
 
-	// ------------------- INPUT CON FILES -------------------
+
+	// -----------------------------------------------------------------
+	// ------------------- INPUT CON FILES -----------------------------
+	// -----------------------------------------------------------------
+
 	node_input_con_circle.on("mouseover", function (x) {	
 		d3.select(this).select(".fileIconInputConCircle")
 				.attr("fill", "steelblue");
@@ -1782,7 +1911,11 @@ function visualize_workflow(data, canvas) {
 	});
 
 
-	// ------------------- OUTPUT FILES -------------------
+
+	// -----------------------------------------------------------------
+	// ------------------- OUTPUT FILES --------------------------------
+	// -----------------------------------------------------------------
+
 	node_output_circle.on("mouseover", function (x) {	
 		d3.select(this).select(".fileIconOutputCircle")
 				.attr("fill", "steelblue");
@@ -1881,7 +2014,11 @@ function visualize_workflow(data, canvas) {
 	});
 
 
-	// ------------------- INPUT FILES -------------------
+
+	// -----------------------------------------------------------------
+	// ------------------- INPUT FILES ---------------------------------
+	// -----------------------------------------------------------------
+
 	node_input_circle.on("mouseover", function (x) {	
 		d3.select(this).select(".fileIconInputCircle")
 				.attr("fill", "steelblue");
@@ -1980,107 +2117,59 @@ function visualize_workflow(data, canvas) {
 	});
 
 
-	// ------------------- TABLE -------------------
-	// update table data with properties of selected node
-	node.select(".nodeTitle").on("click", function (x) {	
-			
-		// suppress after dragend
-		if (d3.event.defaultPrevented) return;
 
-		// remove old table on click
-		d3.select("#workflowtbl").remove();
-		
-		// add new table on click
-		table = d3.select("#node_table").append("g")
-			.attr("id", "workflowtbl");
-		
-		var prop_tbl 			= table.append("table"),
-			tableHeadColumns	= ["Property", "Value"],
-			thead 				= prop_tbl.append("thead"),
-			tbody 				= prop_tbl.append("tbody"),
-			tableEntries 		= [],
-			tr 					= {},
-			td 					= {};
-	
-		// generate two-dimensional array dataset
-		d3.entries(dataset.steps[x.id]).forEach(function(y,i) {
-			switch(y.key) {
-				case "name":
-				case "tool_id":
-				case "tool_version":
-				case "id":
-				case "tool_state":
-				case "annotation":
-					tableEntries.push([y.key, y.value]);
-					break;
-			};
-		});
-			
-		// nested tr-td selection for actual entries
-		tr = tbody.selectAll("tr")
-			.data(tableEntries)
+	// -----------------------------------------------------------------
+	// --------------------TEMPORARILY UNUSED SOURCE -------------------
+	// -----------------------------------------------------------------
+
+	// REMOVED: they don't look good on bezier curves
+		// marker arrow
+		/*canvas.append("svg:defs")
+			.selectAll(".marker")
+			.data(["end"])
 			.enter()
-			.append("tr");
-			
-		td = tr.selectAll("td")
-			.data(function(d) { return d; })
-			.enter()
-			.append("td")
-				.call(eval_node_params);
-	});
+			.append("svg:marker")    
+				.attr("id", String)
+				.attr("viewBox", "0 -5 10 10")
+				.attr("refX", 10)
+				.attr("refY", 0)
+				.attr("markerWidth", 5)
+				.attr("markerHeight", 5)
+				.attr("orient", "auto")
+				.append("svg:path")
+					.attr("d", "M0,-5L10,0L0,5")
+					.attr("fill","gray");*/
+
+	// REMOVED: currently disabled the icons
+		// file icon path
+		/*file_icon_path =  "M " + 2.5 + "," + "0"
+							+ "V " + 2.5
+							+ "h " + 2.5
+							+ "v " + 7.5
+							+ "h " + -7.5
+							+ "v " + -10
+							+ "h " + 5
+							+ "l " + 2.5 + "," + 2.5;*/
 
 
-
-
-
-// REMOVED: they don't look good on bezier curves
-	// marker arrow
-	/*canvas.append("svg:defs")
-		.selectAll(".marker")
-		.data(["end"])
-		.enter()
-		.append("svg:marker")    
-			.attr("id", String)
-			.attr("viewBox", "0 -5 10 10")
-			.attr("refX", 10)
-			.attr("refY", 0)
-			.attr("markerWidth", 5)
-			.attr("markerHeight", 5)
-			.attr("orient", "auto")
-			.append("svg:path")
-				.attr("d", "M0,-5L10,0L0,5")
-				.attr("fill","gray");*/
-
-// REMOVED: currently disabled the icons
-	// file icon path
-	/*file_icon_path =  "M " + 2.5 + "," + "0"
-						+ "V " + 2.5
-						+ "h " + 2.5
-						+ "v " + 7.5
-						+ "h " + -7.5
-						+ "v " + -10
-						+ "h " + 5
-						+ "l " + 2.5 + "," + 2.5;*/
-
-
-// REMOVED: temporarily disabled linklabels
-	// link label
-    /*linklabel = linklabel
-        .data(dataset.links)
-        .enter()
-        .append("g")
-        	.attr("class", "linklabel");*/
-    
-    // link label title
-  /*  linklabel.append("text")
-        .attr("class","linkTitle")
-        .attr("id",function(d,i){ return 'linklabel'+i; })
-        .attr("x", 0)
-		.attr("y", 0)
-        .text(function(d,i) {
-			return d3.values(dataset.steps[d.target].input_connections)[output_input_con_file_link(d)[1]].output_name;
-		})
-		.style("pointer-events", "none")
-		.call(append_text_rect);*/
+	// REMOVED: temporarily disabled linklabels
+		// link label
+	    /*linklabel = linklabel
+	        .data(dataset.links)
+	        .enter()
+	        .append("g")
+	        	.attr("class", "linklabel");*/
+	    
+	    // link label title
+	  /*  linklabel.append("text")
+	        .attr("class","linkTitle")
+	        .attr("id",function(d,i){ return 'linklabel'+i; })
+	        .attr("x", 0)
+			.attr("y", 0)
+	        .text(function(d,i) {
+				return d3.values(dataset.steps[d.target].input_connections)[output_input_con_file_link(d)[1]].output_name;
+			})
+			.style("pointer-events", "none")
+			.call(append_text_rect);*/
 }
 
