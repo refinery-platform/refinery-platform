@@ -4,19 +4,11 @@
  * (c) Stefan Luger 2013
  */
 
-
-
-/* TABLE STYLESHEETS */
-
-.workflowtbl thead td, body td {
-	border: 1px solid gray;
-	/*font-family: sans-serif;
-	font-size: 12px;*/
-}
+/* DOCKED WINDOW STYLESHEETS */
 
 #selectionDetails { 
 	position: fixed; 
-	bottom:	110px; 
+	bottom:	130px; 
 	right: 50px;
 	width: 300px;
 }
@@ -27,6 +19,8 @@
 	right: 50px;
 	width: 300px;
 }
+
+/* TABLE STYLESHEETS */
 
 
 

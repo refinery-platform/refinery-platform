@@ -27,6 +27,32 @@ layout_translation = {
 };
 
 
+/*
+ * fits the current workflow to the window
+ */
+function fit_wf_to_window () {
+	/*var min = [],
+		max = [],
+		delta = [],
+		factor = [];
+
+	min = [d3.min(dataset.nodes, function(d) { return d.x; }), 
+				d3.min(dataset.nodes, function(d) { return d.y; })];
+	max = [d3.max(dataset.nodes, function(d) { return d.x; }), 
+				d3.max(dataset.nodes, function(d) { return d.y; })];
+	delta = [max[0]-min[0], max[1]-min[1]];
+	factor = [shape_dim.window.width/delta[0],shape_dim.window.height/delta[1]];*/
+
+	canvas
+          .transition()
+          .duration(1000)
+          .attr("transform", "translate(" + 0  + "," + 0 + ")scale(" + 1 + ")");
+
+	zoom.scale(1);
+	zoom.translate([0,0]);
+}
+
+
 
 // #################################################################
 // ########## HELPERS ##############################################
@@ -75,7 +101,7 @@ function calc_columns (node) {
  * yscale: scaled y axis
  */
 function draw_layout_grid (xscale, yscale) {
-	var vertical_grid_line	= zoom_canvas.selectAll(".verticalGridLine");
+	var vertical_grid_line	= canvas.selectAll(".verticalGridLine");
 	vertical_grid_line = vertical_grid_line
 		.data(dataset.columns)
 		.enter()
@@ -96,7 +122,7 @@ function draw_layout_grid (xscale, yscale) {
 			.attr("stroke", "green")
 			.attr("stroke-width", 1);
 
-	var horizontal_grid_line	= zoom_canvas.selectAll(".horizontalGridLine");
+	var horizontal_grid_line	= canvas.selectAll(".horizontalGridLine");
 	horizontal_grid_line = horizontal_grid_line
 		.data(function (d) {
 			var data = [],
@@ -817,7 +843,7 @@ function src_elem_in_arr(arr, node_id) {
  * adds zoom behavior to the top svg root element
  */
 function geometric_zoom () {
-	zoom_canvas.attr("transform", "translate(" + d3.event.translate[0]  + "," + d3.event.translate[1] + ")scale(" + (d3.event.scale) + ")");
+	canvas.attr("transform", "translate(" + d3.event.translate[0]  + "," + d3.event.translate[1] + ")scale(" + (d3.event.scale) + ")");
 }
 
 
@@ -837,7 +863,7 @@ function dragstart(d) {
  * d: node which gets dragged
  */
 function dragend(d) {
-	d3.event.sourceEvent.stopPropagation();
+	
 }
 
 
@@ -1104,7 +1130,7 @@ function eval_node_params(tr) {
  */
 function update() {
 	// custom cubic bezier curve links
-	zoom_canvas.selectAll(".link").attr("d", function (d) {
+	canvas.selectAll(".link").attr("d", function (d) {
 
 		// adapt start and end point to detailed view aswell
 		var path = "",
@@ -1163,7 +1189,7 @@ function update() {
 			return "translate(" + parseInt(d.source.x + (d.target.x - d.source.x)/2,10) + "," + parseInt(d.source.y + (d.target.y - d.source.y)/2,10) + ")"; 	});
 	*/
 	// node
-	zoom_canvas.selectAll(".node").attr("transform", function (d) { 
+	canvas.selectAll(".node").attr("transform", function (d) { 
 		return "translate(" + parseInt(d.x,10) + "," + parseInt(d.y,10) + ")"; 
 	});
 }
@@ -1193,7 +1219,6 @@ function visualize_workflow(data, canvas) {
 
 	var xscale 			= {},
         yscale 			= {},
-        force 			= {},
         drag 			= null,
         node_input 		= null,
         node_input_con	= null;
@@ -1201,7 +1226,6 @@ function visualize_workflow(data, canvas) {
         file_icon 		= null,
         node_path 		= null,
         file_icon_path 	= {},
-        zoom 			= null,
         in_nodes 		= null,
         out_nodes 		= null;
 
@@ -1230,7 +1254,7 @@ function visualize_workflow(data, canvas) {
 				.range([shape_dim.node.height+shape_dim.margin.top, shape_dim.window.height-shape_dim.node.height-shape_dim.margin.bottom]);
 		} 
 	} else {
-		// x scale
+			// x scale
 			xscale = d3.scale.linear()
 				.domain([0, shape_dim.window.width])
 				.range([0, shape_dim.window.width]),
@@ -1240,16 +1264,11 @@ function visualize_workflow(data, canvas) {
 				.range([0, shape_dim.window.height]);
 	}
 
-	// zoom
-	zoom_canvas = canvas
-		.call(d3.behavior.zoom()
-		.x(xscale)
-		.y(yscale)
-		.size([shape_dim.window.width, shape_dim.window.height])
-		.scaleExtent([0.25, 8]).on("zoom", geometric_zoom)).on("dblclick.zoom", null)
-		.append("g");
+	// zoom behavior
+	zoom = d3.behavior.zoom();
+	d3.select("svg").call(zoom.on("zoom", geometric_zoom)).on("dblclick.zoom", null)
 
-	zoom_canvas.append("rect")
+	canvas.append("g").append("rect")
 			.attr("class", "overlay")
 			.attr("x", -shape_dim.window.width/2)
 			.attr("y", -shape_dim.window.height/2)
@@ -1522,8 +1541,8 @@ function visualize_workflow(data, canvas) {
 	// -----------------------------------------------------------------
 
 	// force layout links and nodes
-	var link 		= zoom_canvas.selectAll(".link"),
-		node 		= zoom_canvas.selectAll(".node");
+	var link 		= canvas.selectAll(".link"),
+		node 		= canvas.selectAll(".node");
 
 	// link represented as line (with arrow)
 	link = link
@@ -1681,7 +1700,18 @@ function visualize_workflow(data, canvas) {
 	// ------------------- EVENTS --------------------------------------
 	// -----------------------------------------------------------------
 
-	// ------------------- SUBGRAPH HIGHLIGHTING SELECTED PATHS WITH TOGGLE -------------------
+
+
+	// -----------------------------------------------------------------
+	// ------------------- FIT WORKFLOW TO WINDOW ----------------------
+	// -----------------------------------------------------------------
+	d3.select(".overlay").on("dblclick", function (x) {
+		fit_wf_to_window();
+	});
+
+	// -----------------------------------------------------------------
+	// ------------------- HIGHLIGHTING PATHS WITH TOGGLE --------------
+	// -----------------------------------------------------------------
 	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("mouseover", function (x) {
 		d3.select(this).select(".inputConRect")
 			.attr("fill", "orange");
@@ -1749,8 +1779,6 @@ function visualize_workflow(data, canvas) {
 		// suppress after dragend
 		if (d3.event.defaultPrevented) return;
 
-
-
 		// -----------------------------------------------------------------
 		// ------------------- TABLE ---------------------------------------
 		// -----------------------------------------------------------------
@@ -1759,12 +1787,9 @@ function visualize_workflow(data, canvas) {
 		d3.select("#workflowtbl").remove();
 		
 		// add new table on click
-		table = d3.select("#node_table").append("g")
-			.attr("id", "workflowtbl");
+		table = d3.select("#node_table");
 		
-		var prop_tbl 			= table.append("table"),
-			tableHeadColumns	= ["Property", "Value"],
-			thead 				= prop_tbl.append("thead"),
+		var prop_tbl 			= table.append("table").attr("id", "workflowtbl").classed("table-bordered", true),
 			tbody 				= prop_tbl.append("tbody"),
 			tableEntries 		= [],
 			tr 					= {},
