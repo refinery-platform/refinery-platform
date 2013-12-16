@@ -6,50 +6,26 @@
 
 /* TABLE STYLESHEETS */
 
-.workflowtbl {
-	border-collapse: collapse;
-}
+
+
 
 .workflowtbl thead td, body td{
 	border: 1px solid gray;
-	font-family: sans-serif;
-	font-size: 12px;
+	/*font-family: sans-serif;
+	font-size: 12px;*/
 }
 
-.workflowtbl thead  td {
-	background-color: steelblue;
-	color: white;
-	font-weight: bold;
-}
-
-.workflowtbl tbody, tr:nth-child(odd) { 
-	background-color: white; 
-	color: black;
-}
-.workflowtbl tbody, tr:nth-child(even) { 
-	background-color: lightsteelblue; 
-	color: black;
-}
-
-.workflowtbl tbody, tr:hover td {
-	background-color: steelblue;
-	color: white;
-}
-
-.workflownestedtbl {
-	border-collapse: collapse;
-}
-
-.workflownestedtbl thead td, body td{
-	border: 1px solid gray;
-	font-family: sans-serif;
-	font-size: 12px;
+#container { 
+	position: fixed; 
+	bottom:	50px; 
+	right: 50px;
+	width: 300px;
 }
 
 /* WORKFLOW VISUALIZATION STYLESHEETS */
 
 .overlay {
-  fill: white;
+  fill: none;
   pointer-events: all;
 }
 

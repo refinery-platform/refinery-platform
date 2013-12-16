@@ -999,79 +999,50 @@ function create_nested_annotation_table(parent) {
  */
 function eval_node_params(tr) {
 	tr.each(function(d) {
-		var td = d3.select(this);
-		
+		var td = null; 
 		if (this.cellIndex == 0) {
-			td.text(d.toUpperCase());
+			switch(d) {
+				case "name": 
+					td = d3.select(this).text("Name"); 
+					break;
+				case "id": 
+					td = d3.select(this).text("ID"); 
+					break;
+				case "tool_id": 		
+					td = d3.select(this).text("Tool ID"); 
+					break;
+				case "tool_version":  	
+					td = d3.select(this).text("Tool Version"); 
+					break;
+				case "tool_state":  	
+					td = d3.select(this).text("Parameters"); 
+					break;
+				case "annotation": 	
+					td = d3.select(this).text("Annotation"); 
+					break;
+			};
 		} else if (this.cellIndex == 1) {
-			
 			if (this.__data__) {
-				// annotation
-				if (this.parentNode.__data__[0] == "annotation") {
-// TODO: only works for the first file
-					td.text(d.match(/"(\S*)":/)[1]+":");
-					td.call(create_nested_annotation_table);
-				}
-				// id
-				if (this.parentNode.__data__[0] == "id") {
-					td.text(d);
-				}
-				// input_connections
-				else if (this.parentNode.__data__[0] == "input_connections") {
-					td.call(create_nested_table);
-				}
-				// inputs
-				else if (this.parentNode.__data__[0] == "inputs") {
-					td.call(create_nested_table);
-				}
-				// name
-				else if (this.parentNode.__data__[0] == "name") {
-					td.text(d);
-				}
-				// outputs
-				else if (this.parentNode.__data__[0] == "outputs") {
-					td.call(create_nested_table);
-				}
-				// position
-				else if (this.parentNode.__data__[0] == "position") {
-					td.call(create_nested_pos_table);
-					//return "x: " + this.__data__.left + "<br/>y: " + this.__data__.top;
-				} 
-				// post_job_actions
-				else if (this.parentNode.__data__[0] == "post_job_actions") {
-					td.text(function() {
-						return d = {} ? "" : d;
-					});
-				}
-				// tool_errors
-				else if (this.parentNode.__data__[0] == "tool_errors") {
-					td.text(d);
-				}
-				// tool_id
-				else if (this.parentNode.__data__[0] == "tool_id") {
-					td.text(d);
-				}
-				// tool_state
-				else if (this.parentNode.__data__[0] == "tool_state") {
-					td.call(create_nested_tool_state_table);
-				}
-				// tool_version
-				else if (this.parentNode.__data__[0] == "tool_version") {
-					td.text(d);
-				}
-				// type
-				else if (this.parentNode.__data__[0] == "type") {
-					td.text(d);
-				}
-				// user_outputs
-				else if (this.parentNode.__data__[0] == "user_outputs") {
-					td.text(d);
-				}
-				/* else {
-					td.text(d);
-				} */
-			} else {
-				td.text(d); 
+				switch(this.parentNode.__data__[0]) {
+					case "name":
+					case "id":
+					case "tool_version": 	
+						td = d3.select(this).text(d);
+						break;
+// TODO: break lines
+					case "tool_id":
+						td = d3.select(this).text(d);
+						break;
+					case "tool_state":  
+						td = d3.select(this).call(create_nested_tool_state_table);
+						break;					
+// TODO: only works for the first file					
+					case "annotation": 		
+						td = d3.select(this);
+						td.text(d.match(/"(\S*)":/)[1]+":");
+						td.call(create_nested_annotation_table);
+						break;
+				};
 			}
 		}
 	});
@@ -1235,7 +1206,9 @@ function visualize_workflow(data, canvas) {
 			.attr("x", -shape_dim.window.width/2)
 			.attr("y", -shape_dim.window.height/2)
 			.attr("width", shape_dim.window.width*2)
-			.attr("height", shape_dim.window.height*2);
+			.attr("height", shape_dim.window.height*2)
+			.attr("fill","none")
+			.attr("pointer-events", "all");
 
 	// force layout definition
 	force = d3.layout.force()
@@ -1667,10 +1640,14 @@ function visualize_workflow(data, canvas) {
 	});
 
 	// reset path highlighting when clicking on the background rectangle
+	// also delete table
 	d3.select(".overlay").on("click", function (x) {
 
 		// suppress after dragend
 		if (d3.event.defaultPrevented) return;
+
+		// remove old table on click
+		d3.select("#workflowtbl").remove();
 
 		var sel_path = []
 			sel_node_rect = null,
@@ -1718,6 +1695,7 @@ function visualize_workflow(data, canvas) {
 			sel_path = sel_path.concat.apply(sel_path, x.subgraph[i]);
 		});
 		
+// DEBUG: TypeError: sel_path[0] is undefined @ http://192.168.50.50:8000/static/js/refinery/core/workflow_visualization.js:1693
 		// when path beginning with this node is not highlighted yet
 		if (sel_path[0].highlighted === false) {
 			dye_path(sel_path, sel_node_rect, sel_path_rect, "orange", 5, "orange", true);
@@ -2015,7 +1993,7 @@ function visualize_workflow(data, canvas) {
 		// add new table on click
 		table = d3.select("#node_table").append("g")
 			.attr("id", "workflowtbl");
-			
+		
 		var prop_tbl 			= table.append("table"),
 			tableHeadColumns	= ["Property", "Value"],
 			thead 				= prop_tbl.append("thead"),
@@ -2023,21 +2001,19 @@ function visualize_workflow(data, canvas) {
 			tableEntries 		= [],
 			tr 					= {},
 			td 					= {};
-		
-		//add class needed for css file
-		prop_tbl.classed("workflowtbl",true);
-	
-		// append the header row
-		thead.append("tr")
-			.selectAll("td")
-			.data(tableHeadColumns)
-			.enter()
-			.append("td")
-				.text(function(column) { return column; });
 	
 		// generate two-dimensional array dataset
 		d3.entries(dataset.steps[x.id]).forEach(function(y,i) {
-			tableEntries.push([y.key, y.value])
+			switch(y.key) {
+				case "name":
+				case "tool_id":
+				case "tool_version":
+				case "id":
+				case "tool_state":
+				case "annotation":
+					tableEntries.push([y.key, y.value]);
+					break;
+			};
 		});
 			
 		// nested tr-td selection for actual entries
@@ -2055,7 +2031,9 @@ function visualize_workflow(data, canvas) {
 
 
 
-	// REMOVED: they don't look good on bezier curves
+
+
+// REMOVED: they don't look good on bezier curves
 	// marker arrow
 	/*canvas.append("svg:defs")
 		.selectAll(".marker")
@@ -2073,7 +2051,7 @@ function visualize_workflow(data, canvas) {
 				.attr("d", "M0,-5L10,0L0,5")
 				.attr("fill","gray");*/
 
-	// REMOVED: currently disabled the icons
+// REMOVED: currently disabled the icons
 	// file icon path
 	/*file_icon_path =  "M " + 2.5 + "," + "0"
 						+ "V " + 2.5
@@ -2085,7 +2063,7 @@ function visualize_workflow(data, canvas) {
 						+ "l " + 2.5 + "," + 2.5;*/
 
 
-	// REMOVED: temporarily disabled linklabels
+// REMOVED: temporarily disabled linklabels
 	// link label
     /*linklabel = linklabel
         .data(dataset.links)
@@ -2105,3 +2083,4 @@ function visualize_workflow(data, canvas) {
 		.style("pointer-events", "none")
 		.call(append_text_rect);*/
 }
+
