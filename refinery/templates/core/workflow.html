@@ -47,20 +47,6 @@
 		</div>
 		<p>{% if workflow.slug %} {{ workflow.slug }} {% else %} <i>None provided.</i>{% endif %}</p>
 
-		<div class="refinery-subheader"> 
-			<h4>Visualization Toolbar</h4>
-		</div>
-		<form action="#" class="form-horizontal" role="form">
-  			<div class="form-group">
-				<select id="cb_layout_kind">
-					<option value="0" onclick="reload_workflow()">Galaxy Layout</option>
-					<option value="1" onclick="reload_workflow()" selected>Custom Layout</option>
-					<option value="2" onclick="reload_workflow()">Force-directed Layout</option>
-				</select> 
-	      		<input id="cb_scale_wf" type="checkbox" onclick="reload_workflow()" checked> <i> Scale </i>
-			</div>
-		</form>
-
 		<div class="refinery-subheader">
 			<h4>Structure</h4>
 		</div>
@@ -120,13 +106,37 @@
 	    <p>No valid workflow.</p>
 	{% endif %}
 	</div>
-	<!-- Selected Node Table -->
-	<div id="container">
+
+	<!-- docked visualization toolbar-->
+	<div id="toolbarDetails">
+		<div class="refinery-subheader"> 
+				<!--<a href="#" onclick="toggle_visibility('toolbar_container');"><h4>Visualization Toolbar &raquo; </h4></a>-->
+				<h4>Visualization Toolbar &raquo; </h4>
+		</div>
+
+		<div id="toolbar_container" style="display:block;">
+			<form action="#" class="form-horizontal" role="form">
+	  			<div class="form-group">
+					<select id="cb_layout_kind">
+						<option value="0" onclick="reload_workflow()">Galaxy Layout</option>
+						<option value="1" onclick="reload_workflow()" selected>Custom Layout</option>
+						<option value="2" onclick="reload_workflow()">Force-directed Layout</option>
+					</select> 
+		      		<input id="cb_scale_wf" type="checkbox" onclick="reload_workflow()" checked> <i> Scale </i>
+				</div>
+			</form>
+		</div>
+
+	</div>
+
+	<!-- docked and selected tool (node) table -->
+	<div id="selectionDetails">
 		<div class="refinery-subheader">
 			<a href="#" onclick="toggle_visibility('node_table');"><h4>Toggle Selection Details &raquo; </h4></a>
 		</div>
 		<div id="node_table" style="display:block;">
     </div>
+
 </div>
 {% endblock %}
 
@@ -191,12 +201,12 @@
 		 * id: id of the div element to be toggled
 		 */
 		function toggle_visibility (id) {
-			var table = document.getElementById(id);
+			var element = document.getElementById(id);
 		
-			if(table.style.display == "block")
-				table.style.display = "none";
+			if(element.style.display == "block")
+				element.style.display = "none";
 			else
-				table.style.display = "block";
+				element.style.display = "block";
 	   	}
 
 

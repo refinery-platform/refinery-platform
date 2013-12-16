@@ -15,9 +15,16 @@
 	font-size: 12px;*/
 }
 
-#container { 
+#selectionDetails { 
 	position: fixed; 
-	bottom:	50px; 
+	bottom:	110px; 
+	right: 50px;
+	width: 300px;
+}
+
+#toolbarDetails { 
+	position: fixed; 
+	bottom:	30px; 
 	right: 50px;
 	width: 300px;
 }
