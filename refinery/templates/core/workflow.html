@@ -53,12 +53,11 @@
 		<form action="#" class="form-horizontal" role="form">
   			<div class="form-group">
 				<select id="cb_layout_kind">
-					<option value="0" >Galaxy Layout</option>
-					<option value="1" selected>Custom Layout</option>
-					<option value="2">Force-directed Layout</option>
+					<option value="0" onclick="reload_workflow()">Galaxy Layout</option>
+					<option value="1" onclick="reload_workflow()" selected>Custom Layout</option>
+					<option value="2" onclick="reload_workflow()">Force-directed Layout</option>
 				</select> 
-	      		<input id="cb_scale_wf" type="checkbox" checked> <i> Scale </i>
-				<button onclick="reload_workflow()"> Reload workflow </button>
+	      		<input id="cb_scale_wf" type="checkbox" onclick="reload_workflow()" checked> <i> Scale </i>
 			</div>
 		</form>
 
@@ -137,13 +136,17 @@
 
 	<script>
 
+
+
 // TODO: encapsulate into namespace as well as a separate file	
-		// ########## TOOLBAR ############################################################
+		// #################################################################
+		// ########## TOOLBAR RELATED ######################################
+		// #################################################################
 
 		/*
 		 * deletes the svg elements and current displayed table
 		 */
-		function clear_svg() {
+		function clear_svg () {
 			if (canvas) {
 				d3.selectAll(".link").remove();
 				d3.selectAll(".node").remove();
@@ -163,10 +166,11 @@
 			// shape_dim = null;
 		}
 
+
 		/*
 		 * reloads the whole workflow visualization from scratch through the visualize_workflow function
 		 */
-		function reload_workflow() {
+		function reload_workflow () {
 			clear_svg();
 
 			canvas 		= init_canvas("#vis_workflow", document.documentElement.clientWidth, document.documentElement.clientHeight);
@@ -186,16 +190,20 @@
 		 * 
 		 * id: id of the div element to be toggled
 		 */
-		function toggle_visibility(id) {
+		function toggle_visibility (id) {
 			var table = document.getElementById(id);
 		
 			if(table.style.display == "block")
 				table.style.display = "none";
 			else
 				table.style.display = "block";
-	   }
+	   	}
 
-		// ########## MAIN ############################################################
+
+
+	   	// #################################################################
+		// ########## MAIN #################################################
+		// #################################################################
 
 		// globals
 		var canvas 		= null,
