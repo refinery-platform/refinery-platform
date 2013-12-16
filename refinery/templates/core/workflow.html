@@ -52,6 +52,18 @@
 			<h4>Visualization Toolbar</h4>
 		</div>
 		<p>
+		<div id="vis_toolbar">
+			<select id="cb_layout_kind">
+				<option value="0" >Galaxy Layout</option>
+				<option value="1" selected>Custom Layout</option>
+				<option value="2">Force-directed Layout</option>
+			</select> 
+	  		<input id="cb_scale_wf" type="checkbox" checked> <i> Scale </i>
+			<button onclick="reload_workflow()"> Reload workflow </button>
+		</div>
+
+<!-- DEBUG: form overwrites non-default selections -->
+<!--
 		<form class="form-horizontal" role="form">
   			<div class="form-group">
 				<select id="cb_layout_kind">
@@ -62,6 +74,8 @@
 	      		<input id="cb_scale_wf" type="checkbox" checked> <i> Scale </i>
 				<button onclick="reload_workflow()"> Reload workflow </button>
 			</div>
+		</form>
+-->
 		</p>
 
 		<div class="refinery-subheader"> 
@@ -138,6 +152,7 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/workflow_visualization.js"></script>
 
 	<script>
+
 // TODO: encapsulate into namespace as well as a separate file	
 		// ########## TOOLBAR ############################################################
 
@@ -158,8 +173,8 @@
 		    layout_prop = null,
 		    table 		= null, // properties table
 		    dataset 	= null, // actual dataset
-		    layout 		= document.getElementById('cb_layout_kind').value,
-		    scale_wf	= document.getElementById('cb_scale_wf').checked;
+		    layout 		= document.getElementById("cb_layout_kind").value,
+		    scale_wf	= document.getElementById("cb_scale_wf").checked;
 			// null typeError in console if uncommented
 			// shape_dim = null;
 		}
