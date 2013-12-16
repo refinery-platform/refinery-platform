@@ -1157,7 +1157,7 @@ function update() {
 		return path;
 	});
 	
-	// REMOVED: temporarily disabled linklabels
+// REMOVED: temporarily disabled linklabels
 		// link label
 	/*	linklabel.attr("transform", function (d) { 
 			return "translate(" + parseInt(d.source.x + (d.target.x - d.source.x)/2,10) + "," + parseInt(d.source.y + (d.target.y - d.source.y)/2,10) + ")"; 	});
@@ -1504,14 +1504,6 @@ function visualize_workflow(data, canvas) {
 
 
 
-// DEBUG: grid lines for layout
-	// -----------------------------------------------------------------
-	// ------------------- DEBUG GRID LINES FOR LAYOUT -----------------
-	// -----------------------------------------------------------------
-	//draw_layout_grid(xscale, yscale);
-
-
-
 	// -----------------------------------------------------------------
 	// ------------------- FORCE LAYOUT COORDINATES --------------------
 	// -----------------------------------------------------------------
@@ -1551,7 +1543,6 @@ function visualize_workflow(data, canvas) {
 		.append("g")
 			.attr("class", "node")
 			.attr("id", function (d) { return "node_" + d.id; })
-			//.classed("fixed", function (d) { return fixed == true;})
 			.call(drag);
 	
 	node_g = node.append("g")
@@ -1758,7 +1749,7 @@ function visualize_workflow(data, canvas) {
 		// suppress after dragend
 		if (d3.event.defaultPrevented) return;
 
-		
+
 
 		// -----------------------------------------------------------------
 		// ------------------- TABLE ---------------------------------------
@@ -2118,8 +2109,23 @@ function visualize_workflow(data, canvas) {
 
 
 
+	// #################################################################
+	// ################### TEMPORARILY UNUSED SOURCE ###################
+	// #################################################################
+
+
+
+	// REMOVED: grid lines for layout
 	// -----------------------------------------------------------------
-	// --------------------TEMPORARILY UNUSED SOURCE -------------------
+	// ------------------- DEBUG GRID LINES FOR LAYOUT -----------------
+	// -----------------------------------------------------------------
+
+	//draw_layout_grid(xscale, yscale);
+
+
+
+	// -----------------------------------------------------------------
+	// ------------------- LINK ARROWS AND LABELS ----------------------
 	// -----------------------------------------------------------------
 
 	// REMOVED: they don't look good on bezier curves
@@ -2139,18 +2145,6 @@ function visualize_workflow(data, canvas) {
 				.append("svg:path")
 					.attr("d", "M0,-5L10,0L0,5")
 					.attr("fill","gray");*/
-
-	// REMOVED: currently disabled the icons
-		// file icon path
-		/*file_icon_path =  "M " + 2.5 + "," + "0"
-							+ "V " + 2.5
-							+ "h " + 2.5
-							+ "v " + 7.5
-							+ "h " + -7.5
-							+ "v " + -10
-							+ "h " + 5
-							+ "l " + 2.5 + "," + 2.5;*/
-
 
 	// REMOVED: temporarily disabled linklabels
 		// link label

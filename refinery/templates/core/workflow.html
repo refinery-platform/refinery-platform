@@ -183,7 +183,7 @@
 		function reload_workflow () {
 			clear_svg();
 
-			canvas 		= init_canvas("#vis_workflow", document.documentElement.clientWidth, document.documentElement.clientHeight);
+			canvas 		= init_canvas("#vis_workflow", document.documentElement.clientWidth-100, document.documentElement.clientHeight-100);
 			shape_dim 	= init_dimensions(60, 30, 50, 11, 50, 6);	
 			layout_prop = init_force_layout(100, 1, 0.9, -100, 0.8, 0.0);	
 
@@ -226,7 +226,7 @@
 	        scale_wf	= document.getElementById('cb_scale_wf').checked;
 
 		// initialize svg to body
-		canvas 		= init_canvas("#vis_workflow", document.documentElement.clientWidth, document.documentElement.clientHeight);
+		canvas 		= init_canvas("#vis_workflow", document.documentElement.clientWidth-100, document.documentElement.clientHeight-100);
 		
 		// initialize window and shape dimensions
 		shape_dim 	= init_dimensions(60, 30, 50, 11, 50, 6);	

@@ -1,15 +1,14 @@
 /*
  * Refinery Workflow visualization 
- * style sheet
+ * custom style sheets
  * (c) Stefan Luger 2013
  */
 
+
+
 /* TABLE STYLESHEETS */
 
-
-
-
-.workflowtbl thead td, body td{
+.workflowtbl thead td, body td {
 	border: 1px solid gray;
 	/*font-family: sans-serif;
 	font-size: 12px;*/
@@ -29,41 +28,28 @@
 	width: 300px;
 }
 
-/* WORKFLOW VISUALIZATION STYLESHEETS */
+
+
+/* SVG ELEMENT STYLESHEETS */
 
 .overlay {
-  fill: none;
-  pointer-events: all;
+	fill: none;
+	pointer-events: all;
 }
 
 .fileIconOutput, .fileIconInputCon, .fileIconInput {
-	/*fill: white;*/
 	stroke: gray;
 	stroke-width: 1;
 }
 
-.wf_name, .wf_annotation {
-	font-family: sans-serif;
-	font-size: 12px;
-}
-
 .link {
 	fill: none;
- 	/*stroke: gray;*/
-  	/*stroke-width: 1.5;*/
 }
 
 .fileIconLink {
 	fill: none;
  	stroke: gray;
   	stroke-width: 1;
-}
-
-.node .nodeRect{
-	  cursor: move;
-	  /*fill: lightsteelblue;*/
-	  /*stroke: gray;
-	  stroke-width: 1.5;*/
 }
 
 .node .nodeTitle {
@@ -78,16 +64,10 @@
 	fill: black;
 }
 
-.inRectTitle, .outRectTitle, .linkTitle, .inputConRectTitle, .ioLabel {
+.inRectTitle, .outRectTitle, .inputConRectTitle {
 	font-family: sans-serif;
 	font-size: 8px;
 	fill: black;
-}
-
-.node .inputRect, .inputConRect, .outputRect {
-/*	font-family: sans-serif;
-	font-size: 8px;
-	fill: none;*/
 }
 
 .node .inRect, .outRect {
@@ -96,20 +76,16 @@
 	fill: none;
 }
 
-.textBorder {
-	stroke-width: 1;
-	stroke: lightsteelblue;
-	fill: lightsteelblue;
-	opacity: 0.3;
+/* SET CURSORS */
+
+.overlay, .outputRect, .inputRect, .outRectTitle, .inputRectTitle {
+	cursor: default;
 }
 
-.textRect {
-	fill: lightsteelblue;
-	stroke: gray;
-	stroke-width: 1;
-	opacity: 0.3;
+.inputConRect, .inputConRectTitle, .fileIconInputConCircle, .fileIconOutputCircle, .fileIconInputCircle {
+	cursor: pointer;
 }
 
-.node.fixed .nodeRect {
-
+.nodeRect, .nodeTitle {
+	cursor: move;
 }
