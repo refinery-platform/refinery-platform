@@ -243,7 +243,7 @@ class WorkflowResource(ModelResource):
 
     class Meta:
         queryset = Workflow.objects.filter(is_active=True)
-        detail_resource_name = 'workflow' 
+        detail_resource_name = 'workflow'
         resource_name = 'workflow'
         detail_uri_name = 'uuid'
         allowed_methods = ['get']
@@ -256,8 +256,9 @@ class WorkflowResource(ModelResource):
             try:
                 bundle.data['graph'] = json.loads(bundle.obj.graph)
             except ValueError:
-                logger.error( "Failed to decode workflow graph into dictionary for workflow " + str( bundle.obj ) + "." )
+                logger.error("Failed to decode workflow graph into dictionary for workflow " + str(bundle.obj) + ".")
                 # don't include in response if error occurs
+        bundle.data['author'] = bundle.obj.get_owner()
         return bundle
 
         
