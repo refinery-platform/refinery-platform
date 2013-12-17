@@ -32,15 +32,17 @@
         <option value=""></option>  <!-- required for showing placeholder text -->
         <option ng-repeat="w in workflowList" value="{{$index}}">{{w.name}}</option>
       </select>
-      <div>
+      <div ng-cloak>
         <strong>Name:</strong><br/>
-        {{workflowList[index].name}}
-      </div>
-      <div>
+        {{workflowList[index].name}}<br/>
         <strong>Inputs:</strong><br/>
         Sample mapping: {{workflowList[index].input_relationships[0].category}}<br/>
         {{workflowList[index].input_relationships[0].set1}}<br/>
         {{workflowList[index].input_relationships[0].set2}}<br/>
+        <strong>Description:</strong><br/>
+        {{workflowList[index].description}}<br/>
+        <strong>Author:</strong><br/>
+        {{workflowList[index].author}}<br/>
       </div>
     </div>
     {% endverbatim %}
@@ -48,9 +50,6 @@
 {% endblock %}
 
 {% block script %}
-<!--
-  <script type="text/javascript" src="{% static "vendor/jquery/jquery.js" %}"></script>
--->
   <!-- Note that jquery must be loaded before angular so that it doesn't use jqLite internally -->
   <script type="text/javascript" src="{% static "vendor/angular/angular.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/select2/select2.js" %}"></script>
