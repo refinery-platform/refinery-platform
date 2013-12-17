@@ -31,25 +31,41 @@ layout_translation = {
  * fits the current workflow to the window
  */
 function fit_wf_to_window () {
-	/*var min = [],
-		max = [],
-		delta = [],
-		factor = [];
+	var min 	= [],
+		max 	= [],
+		delta 	= [],
+		factor 	= [],
+		new_pos = [],
+		new_scale = [];
 
 	min = [d3.min(dataset.nodes, function(d) { return d.x; }), 
 				d3.min(dataset.nodes, function(d) { return d.y; })];
+
 	max = [d3.max(dataset.nodes, function(d) { return d.x; }), 
 				d3.max(dataset.nodes, function(d) { return d.y; })];
+
 	delta = [max[0]-min[0], max[1]-min[1]];
-	factor = [shape_dim.window.width/delta[0],shape_dim.window.height/delta[1]];*/
+	
+	factor = [(shape_dim.window.width-shape_dim.margin.left*4)/delta[0],
+		(shape_dim.window.height-shape_dim.margin.top*4)/delta[1]];
+
+	old_pos = zoom.translate();
+	
+	new_scale = d3.min(factor);
+	
+	new_pos = [((shape_dim.window.width-shape_dim.margin.left-delta[0]*new_scale)/2), 
+			((shape_dim.window.height-shape_dim.margin.left-delta[1]*new_scale)/2)];
+
+	new_pos[0] -= min[0]*new_scale;
+	new_pos[1] -= min[1]*new_scale;
 
 	canvas
           .transition()
           .duration(1000)
-          .attr("transform", "translate(" + 0  + "," + 0 + ")scale(" + 1 + ")");
-
-	zoom.scale(1);
-	zoom.translate([0,0]);
+          .attr("transform", "translate(" + new_pos + ")scale(" + new_scale + ")");
+	
+	zoom.translate(new_pos);
+	zoom.scale(new_scale);
 }
 
 
@@ -1836,13 +1852,14 @@ function visualize_workflow(data, canvas) {
 			sel_path = sel_path.concat.apply(sel_path, x.subgraph[i]);
 		});
 		
-// DEBUG: TypeError: sel_path[0] is undefined @ http://192.168.50.50:8000/static/js/refinery/core/workflow_visualization.js:1693
-		// when path beginning with this node is not highlighted yet
-		if (sel_path[0].highlighted === false) {
-			dye_path(sel_path, sel_node_rect, sel_path_rect, "orange", 5, "orange", true);
-		} else {
-			dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
-		}	
+		if (typeof sel_path[0] !== "undefined") {
+			// when path beginning with this node is not highlighted yet
+			if (sel_path[0].highlighted === false) {
+				dye_path(sel_path, sel_node_rect, sel_path_rect, "orange", 5, "orange", true);
+			} else {
+				dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
+			}	
+		}
 	});
 
 
