@@ -1005,43 +1005,52 @@ function create_nested_pos_table(parent) {
  * parent: html table cell element (parent table)
  */
 function create_nested_tool_state_table(parent) {
-	var p_page				= /(__page__)\":\s(\d),/,
-        p_stdout			= /(stdout)\":\s\"\\\"(False|True)/,
-        p_exitcode			= /(exit_code)\":\s\"\\\"(\d)/,
-        p_sleeptime			= /(sleep_time)\":\s\"\\\"(\d)/,
-        p_fail				= /(p_fail)\":\s\"\\\"(\d\.\d)/,
-        p_emptyoutfile		= /(empty_outfile)\":\s\"\\\"(False|True)/,
-        p_stderr			= /(stderr)\":\s\"\\\"(False|True)/,
-	
-// TODO: generalize file occurences
-        p_inputfile1		= /(input_file1)\":\s\"(null|\S+\.\S+)\"/,
-        p_inputfile2		= /(input_file2)\":\s\"(null|\S+\.\S+)\"/,
-        p_inputfile3		= /(input_file3)\":\s\"(null|\S+\.\S+)\"/,
-        patterns 			= [],
-        toolStateProperties = [];
+	var text 				= "",
+		split_text			= [],
+		re 					= null,
+		toolStateProperties	= [], 
+	    match 				= [], 
+	    json_data			= null,
+	    val 				= "",
+	    json_data			= null,
+	    obj					= null;
 
-	patterns.push(p_page, p_stdout, p_exitcode, p_sleeptime, p_fail, p_emptyoutfile, p_stderr, p_inputfile1, p_inputfile2, p_inputfile3);
+	text = parent[0][0].__data__;
+
+	// prepare json
+	text = text.replace(/\\/g, "");
+	text = text.replace(/\"\{\"/g, "\{\"");
+	text = text.replace(/\"\}\"/g, "\"\}");
+	text = text.replace(/\"\"/g, "\"");
+	text = text.replace(/\}\",/g, "\},");
+	text = text.replace(/\}\"/g, "\}");
+
+	// transform to json object
+	json_data = JSON.parse (text);
+	obj = d3.entries(json_data);
+
+	console.log(obj);
+
+
 	
-	patterns.forEach(function (p,i) {
-		if (parent[0][0].__data__.match(p)) {
-			toolStateProperties.push({key: parent[0][0].__data__.match(p)[1], value: parent[0][0].__data__.match(p)[2]});
-		}
-	});
-			
+
+// TODO: create recursive table
+// DEBUG: don't show borders in nested table			
 	parent.append("table")
-	.classed("workflowtbl",true)
-	.append("tbody").selectAll("tr")
-		.data(toolStateProperties)
-		.enter()
-		.append("tr")
-			.selectAll("td")
-			.data(function(d) { return [d.key, d.value]; })
+		.classed("table table-condensed", true)
+		.classed("table-bordered", false)
+		.append("tbody").selectAll("tr")
+			.data(obj)
 			.enter()
-			.append("td")
-				.text(function(d) { return d; });
+			.append("tr")
+				.selectAll("td")
+				.data(function(d) { return [d.key, d.value]; })
+				.enter()
+				.append("td")
+					.text(function(d) { return d; });
 }
 
-
+// TODO: fix table width / overflow
 /*
  * appends a table to its parent element
  * for annotation node element
@@ -1049,22 +1058,31 @@ function create_nested_tool_state_table(parent) {
  * parent: html table cell element (parent table)
  */
 function create_nested_annotation_table(parent) {
-	var pName			= /(name)\":\"(\S*)\",/,
-	    pDesc 			= /(description)\":\"(\S*)\",/,
-	    pType 			= /(type)\":\"(\S*)\"/,
-	    patterns 		= [],
-	    annoProperties 	= [];
+	var text 			= "",
+		re 				= null,
+		annoProperties 	= [], 
+	    match 			= [], 
+	    val 			= "";
+
+	text = parent[0][0].__data__;
+	re = new RegExp(/\"(\S*)\":\s{1}{\"name\":\s{1}\"(\S*)\",\s{1}\"description\":\s{1}\"(\S*)\",\s{1}\"type\":\s{1}\"(\S*)\"/g);
 	
-// TODO: bug, not working
-	patterns.push(pName, pDesc, pType);
-	patterns.forEach(function (p,i) {
-		if (parent[0][0].__data__.match(p)) {
-			annoProperties.push({key: parent[0][0].__data__.match(p)[1], value: parent[0][0].__data__.match(p)[2]});
+	while (match = re.exec(text)) {
+		val = match[2];
+
+		if (match[4] !== "") {
+			val += "." + match[4];
+		}  
+		if (match[3] !== "") {
+			val += "\n" + match[3];
 		}
-	});
-			
+
+		annoProperties.push({key: match[1], value: val});
+	}
+
 	parent.append("table")
-		.classed("workflowtbl",true)
+		.classed("table table-condensed", true)
+		.classed("table-bordered", false)
 		.append("tbody").selectAll("tr")
 			.data(annoProperties)
 			.enter()
@@ -1123,12 +1141,12 @@ function eval_node_params(tr) {
 						td = d3.select(this).call(create_nested_tool_state_table);
 						break;					
 // TODO: only works for the first file					
-					case "annotation": 		
-						td = d3.select(this);
-						td.text(d.match(/"(\S*)":/)[1]+":");
-						td.call(create_nested_annotation_table);
+					case "annotation":	
+						td = d3.select(this).call(create_nested_annotation_table);
 						break;
 				};
+			} else {
+				td = d3.select(this).text("-");
 			}
 		}
 	});
@@ -1723,7 +1741,7 @@ function visualize_workflow(data, canvas) {
 	// -----------------------------------------------------------------
 	d3.select(".overlay").on("dblclick", function (x) {
 		fit_wf_to_window();
-	});
+	}).on("click", null);
 
 	// -----------------------------------------------------------------
 	// ------------------- HIGHLIGHTING PATHS WITH TOGGLE --------------
@@ -1805,7 +1823,7 @@ function visualize_workflow(data, canvas) {
 		// add new table on click
 		table = d3.select("#node_table");
 		
-		var prop_tbl 			= table.append("table").attr("id", "workflowtbl").classed("table-bordered", true),
+		var prop_tbl 			= table.append("table").attr("id", "workflowtbl").classed("table table-bordered table-condensed table-responsive", true),
 			tbody 				= prop_tbl.append("tbody"),
 			tableEntries 		= [],
 			tr 					= {},
