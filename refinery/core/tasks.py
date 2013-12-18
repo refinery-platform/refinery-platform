@@ -15,7 +15,7 @@ from data_set_manager.tasks import annotate_nodes
 from file_store.models import is_permanent
 from file_store.tasks import create, read, import_file
 from amqplib.client_0_8.exceptions import AMQPChannelException
-from celery.exceptions import TimeLimitExceeded
+from celery.exceptions import TimeLimitExceeded, TaskRevokedError
 from datetime import datetime, timedelta
 import logging, requests
 
@@ -266,19 +266,33 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     return dataset_copy
 
 
-@task(time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.SOLR_TOOL_NAME], expires=4)
-def check_solr_running():
-    requests.get(settings.REFINERY_SOLR_BASE_URL + "core/admin/ping")
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.CELERY_TOOL_NAME]), expires=(int(ExternalToolStatus.TIMEOUT[ExternalToolStatus.CELERY_TOOL_NAME]) - 1), time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.CELERY_TOOL_NAME])
+def check_for_celery():
+    celery, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.CELERY_TOOL_NAME)
+    try:
+        array = ping() #pings celery to see if it's alive
+        if len(array) == 0:
+            celery.status = ExternalToolStatus.FAILURE_STATUS #celery is gone, get error thrown
+        else:
+            celery.status = ExternalToolStatus.SUCCESS_STATUS #celery is alive
+    except AMQPChannelException:
+        logger.error("AMQPChannelException raised by ping(). Is RabbitMQ available?")
+    except:
+        logger.exception("core.tasks.check_for_celery: Something went wrong, check the stack trace below for what")
+        celery.status = ExternalToolStatus.FAILURE_STATUS
+    #set last time check to now
+    celery.last_time_check = datetime.now()
+    #save status
+    celery.save()
 
 
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.SOLR_TOOL_NAME]), expires=4)
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.SOLR_TOOL_NAME]), expires=(int(ExternalToolStatus.TIMEOUT[ExternalToolStatus.SOLR_TOOL_NAME]) - 1))
 def check_for_solr():
     solr, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.SOLR_TOOL_NAME)
 
     if solr.is_active:
         try: #actually check now
-            result = check_solr_running.delay()
-            result.get()
+            requests.get(settings.REFINERY_SOLR_BASE_URL + "core/admin/ping")
             solr.status = ExternalToolStatus.SUCCESS_STATUS #successfully reached solr
         except requests.ConnectionError as e:
             logger.exception("core.tasks.check_for_solr: Could not connect to Solr")
@@ -287,19 +301,17 @@ def check_for_solr():
             logger.exception("core.tasks.check_for_solr: Pinging Solr timed out after %s" % ExternalToolStatus.TIMEOUT[ExternalToolStatus.SOLR_TOOL_NAME])
             solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         except TaskRevokedError as e:
-            logger.exception("core.tasks.check_for_galaxy: task was revoked because it took too long to get dispatched")
+            logger.info("core.tasks.check_for_galaxy: task was revoked because it took too long to get dispatched")
+        except:
+                logger.exception("core.tasks.check_for_solr: Something went wrong, check the stack trace below for what")
+                solr.status = ExternalToolStatus.FAILURE_STATUS
         #set last time check to now
         solr.last_time_check = datetime.now()
         #save status
         solr.save()
 
 
-@task(time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME], expires=4)
-def check_galaxy_running(instance):
-    instance.get_galaxy_connection().get_histories()
-
-
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.GALAXY_TOOL_NAME]), expires=4)
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.GALAXY_TOOL_NAME]), expires=(int(ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME]) - 1), time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME])
 def check_for_galaxy():
     workflow_engines = WorkflowEngine.objects.all()
     for workflow_engine in workflow_engines:
@@ -307,17 +319,19 @@ def check_for_galaxy():
         galaxy, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.GALAXY_TOOL_NAME, unique_instance_identifier=instance.api_key)
         if galaxy.is_active:
             try:
-                result = check_galaxy_running.delay(instance)
-                result.get()
+                instance.get_galaxy_connection().get_histories()
                 galaxy.status = ExternalToolStatus.SUCCESS_STATUS #galaxy running properly
             except TimeLimitExceeded as e:
                 logger.exception("core.tasks.check_for_galaxy: Pinging Galaxy timed out after %s" % ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME])
                 galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
             except TaskRevokedError as e:
-                logger.exception("core.tasks.check_for_galaxy: task was revoked because it took too long to get dispatched")
+                logger.info("core.tasks.check_for_galaxy: task was revoked because it took too long to get dispatched")
             except RuntimeError as e:
                 logger.exception("core.tasks.check_for_galaxy: Could not connect to Galaxy")
                 galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
+            except:
+                logger.exception("core.tasks.check_for_galaxy: Something went wrong, check the stack trace below for what")
+                galaxy.status = ExternalToolStatus.FAILURE_STATUS
             #set last time check to now
             galaxy.last_time_check = datetime.now()
             #save status
@@ -325,13 +339,6 @@ def check_for_galaxy():
 
 
 def check_tool_status(tool_name, tool_unique_instance_identifier=None):
-    try:
-        array = ping() #pings celery to see if it's alive
-        if len(array) == 0:
-            return (True, ExternalToolStatus.CELERY_DOWN_STATUS) #celery is gone, get error thrown
-    except AMQPChannelException:
-        logger.error("AMQPChannelException raised by ping(). Is RabbitMQ available?")
-
     try:
         tool = ExternalToolStatus.objects.get(name=tool_name, unique_instance_identifier=tool_unique_instance_identifier)
     except ExternalToolStatus.DoesNotExist:
