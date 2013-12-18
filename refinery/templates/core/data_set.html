@@ -5,9 +5,9 @@
 {% load static %}
 
 {% block head_html %}
-  <link rel="stylesheet" href="{% static "styles/css/tipsy/tipsy.css" %}" />
-  <link rel="stylesheet" href="{% static "js/select2/select2.css" %}" />
-  
+  <link rel="stylesheet" href="{% static "vendor/tipsy/src/stylesheets/tipsy.css" %}" />
+  <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />  
+
   <style type="text/css">
   svg {
   	background-color: none;
@@ -495,7 +495,7 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-tastypie/backbone-tastypie.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-marionette/backbone.marionette.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-ajaxcommands/backbone.ajaxcommands.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/select2/select2.min.js"></script>
+	<script type="text/javascript" src="{% static "vendor/select2/select2.js" %}"></script>
     <!-- <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/node_pairing_analysis.js"></script> -->
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
 
@@ -556,7 +556,8 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_analysis_view.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_document_count_view.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_pivot_matrix.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/tipsy/jquery.tipsy.js"></script>
+    <script type="text/javascript" src="{% static "vendor/tipsy/src/javascripts/jquery.tipsy.js" %}"></script>
+
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js">var query;</script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/data_set_manager/data_set_configurator.js"></script>
@@ -572,6 +573,10 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TimelineMax.min.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/workflow_node_relationship.js"></script>
 
+ 	<script type="text/javascript" src="{% static "vendor/angular/angular.js" %}"></script>
+  	<script type="text/javascript" src="{% static "vendor/select2/select2.js" %}"></script>
+  	<script type="text/javascript" src="{% static "vendor/angular-ui-select2/src/select2.js" %}"></script>
+  	<script type="text/javascript" src="{% static "vendor/angular-resource/angular-resource.js" %}"></script>
 
 
 	<script type="application/javascript">

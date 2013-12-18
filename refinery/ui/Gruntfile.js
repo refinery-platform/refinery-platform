@@ -15,16 +15,20 @@ module.exports = function(grunt) {
     vendor_files: {
       js: [
         'select2/select2.js',
-        'jquery/jquery.js',
+        'jQuery/jquery.js',
         'angular/angular.js',
         'angular-ui-select2/src/select2.js',
         'angular-resource/angular-resource.js',
+        'tipsy/src/javascripts/jquery.tipsy.js',
       ],
       css: [
         'select2/select2.css',
+        'tipsy/src/stylesheets/tipsy.css',
       ],
       img: [
-        'select2/select2.png', 'select2/select2-spinner.gif',
+        'select2/select2.png',
+        'select2/select2-spinner.gif',
+        'tipsy/src/images/tipsy.gif',
       ],
     },
 
