@@ -240,26 +240,25 @@ class NodeRelationshipResource(ModelResource):
 
 class WorkflowResource(ModelResource):
     input_relationships = fields.ToManyField("core.api.WorkflowInputRelationshipsResource", 'input_relationships', full=True)
-    
+
     class Meta:
-        queryset = Workflow.objects.filter( is_active=True )
-        detail_resource_name = 'workflow' 
+        queryset = Workflow.objects.filter(is_active=True)
+        detail_resource_name = 'workflow'
         resource_name = 'workflow'
         detail_uri_name = 'uuid'
-        allowed_methods = ["get" ]        
-        fields = ['name', 'uuid' ]  
+        allowed_methods = ['get']
+        fields = ['name', 'uuid', 'description']
 
     def dehydrate(self, bundle):
         # detect if detail
         if self.get_resource_uri(bundle) == bundle.request.path:
-            # detail detected, add graph as json        
-            try:        
-                bundle.data['graph'] = json.loads( bundle.obj.graph )
+            # detail detected, add graph as json
+            try:
+                bundle.data['graph'] = json.loads(bundle.obj.graph)
             except ValueError:
-                logger.error( "Failed to decode workflow graph into dictionary for workflow " + str( bundle.obj ) + "." )
+                logger.error("Failed to decode workflow graph into dictionary for workflow " + str(bundle.obj) + ".")
                 # don't include in response if error occurs
-                pass
-            
+        bundle.data['author'] = bundle.obj.get_owner()
         return bundle
 
         
