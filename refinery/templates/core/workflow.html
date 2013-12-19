@@ -235,12 +235,7 @@
 	layout_prop = init_force_layout(100, 1, 0.9, -100, 0.8, 0.0);
 	
 	// process and visualize workflow data from JSON file
-	/*d3.json("{% url 'download_workflow' workflow.uuid %}", function(error, data) {
-		visualize_workflow(data, canvas)
-	});*/
-
-// DEBUG: more complex workflows local at static/test_workflows/
-	d3.json("{{ STATIC_URL }}test_workflows/Galaxy-Workflow-MACS_SPP_ChIP-Seq___groomer___bowtie___spp_(toolshed)____cut___igvtools__zv9.ga", function(error, data) {
+	d3.json("{% url 'download_workflow' workflow.uuid %}", function(error, data) {
 		visualize_workflow(data, canvas)
 	});
 
