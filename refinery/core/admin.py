@@ -42,6 +42,8 @@ class DiskQuotaAdmin(GuardedModelAdmin):
 class DownloadAdmin(GuardedModelAdmin,ForeignKeyAutocompleteAdmin):
     pass
 
+class ExternalToolStatusAdmin(admin.ModelAdmin):
+    readonly_fields = ('last_time_check', )
 
 admin.site.register(UserProfile)
 admin.site.register(ExtendedGroup)
@@ -54,7 +56,7 @@ admin.site.register(WorkflowDataInput)
 admin.site.register(WorkflowDataInputMap)
 admin.site.register(Analysis,AnalysisAdmin)
 admin.site.register(Download,DownloadAdmin)
-admin.site.register(ExternalToolStatus)
+admin.site.register(ExternalToolStatus, ExternalToolStatusAdmin)
 admin.site.register(AnalysisResult)
 admin.site.register(AnalysisNodeConnection,AnalysisNodeConnectionAdmin)
 admin.site.register(DiskQuota,DiskQuotaAdmin)
