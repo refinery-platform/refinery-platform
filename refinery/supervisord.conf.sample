@@ -24,7 +24,7 @@ serverurl = http://localhost:9001 ; use an http:// url to specify an inet socket
 supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 
 [program:solr]
-command = java -Dlog4j.configuration=file://%(here)s/solr/solr_jetty_logging.properties -Djava.awt.headless=true -Dsolr.solr.home=%(here)s/solr/ -jar start.jar
+command = java -Dlog4j.configuration=file://%(here)s/solr/log4j.properties -Djava.awt.headless=true -Dsolr.solr.home=%(here)s/solr/ -jar start.jar
 directory = /opt/solr/example
 stdout_logfile = %(here)s/solr.log
 stdout_logfile_maxbytes = 1MB
