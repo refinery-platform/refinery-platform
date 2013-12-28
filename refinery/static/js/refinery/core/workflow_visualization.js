@@ -1279,10 +1279,30 @@ function visualize_workflow(data, canvas) {
 		.domain([0, shape_dim.window.height])
 		.range([0, shape_dim.window.height]);
 
-	// zoom behavior
+	// zoom behavior (only with ctrl key down)
 	zoom = d3.behavior.zoom();
-	d3.select("svg").call(zoom.on("zoom", geometric_zoom)).on("dblclick.zoom", null)
+	d3.select("svg").call(zoom.on("zoom", geometric_zoom))
+		.on("dblclick.zoom", null)
+		.on("mousewheel.zoom", null)
+      	.on("DOMMouseScroll.zoom", null)
+      	.on("wheel.zoom", null);
 
+    // zoom is allowed with ctrl-key down only
+	d3.select("body").on("keydown", function () {
+		if (d3.event.ctrlKey)
+			d3.select("svg").call(zoom.on("zoom", geometric_zoom));
+	});
+
+	// on zoomend, disable zoom behavior again
+	zoom.on("zoomend", function () {
+		d3.select("svg").call(zoom.on("zoom", geometric_zoom))
+				.on("dblclick.zoom", null)
+				.on("mousewheel.zoom", null)
+		      	.on("DOMMouseScroll.zoom", null)
+		      	.on("wheel.zoom", null);
+	});
+			
+	// overlay rect for zoom	
 	canvas.append("g").append("rect")
 			.attr("class", "overlay")
 			.attr("x", -shape_dim.window.width/2)
