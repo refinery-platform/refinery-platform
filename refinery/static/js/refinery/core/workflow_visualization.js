@@ -13,8 +13,7 @@
 // supported layouts
 layout_kind = {
 	GALAXY: "0",
-	CUSTOM: "1",
-	FORCE: 	"2"
+	REFINERY: "1"
 };
 
 
@@ -124,16 +123,20 @@ function draw_layout_grid (xscale, yscale) {
 		.append("line")
 			.attr("class", "gridLine")
 			.attr("x1", function (d,i) {
-				return scale_wf ? xscale(i*shape_dim.column.width) : xscale(i*shape_dim.column.width + shape_dim.margin.left);
+				//return scale_wf ? xscale(i*shape_dim.column.width) : xscale(i*shape_dim.column.width + shape_dim.margin.left);
+				return xscale(i*shape_dim.column.width + shape_dim.margin.left);
 			})
 			.attr("y1", function (d,i) {
-				return scale_wf ? yscale(0) : yscale(shape_dim.margin.top);
+				//return scale_wf ? yscale(0) : yscale(shape_dim.margin.top);
+				return yscale(shape_dim.margin.top);
 			})
 			.attr("x2", function (d,i) {
-				return scale_wf ? xscale(i*shape_dim.column.width) : xscale(i*shape_dim.column.width + shape_dim.margin.left);
+				//return scale_wf ? xscale(i*shape_dim.column.width) : xscale(i*shape_dim.column.width + shape_dim.margin.left);
+				return xscale(i*shape_dim.column.width + shape_dim.margin.left);
 			})
 			.attr("y2", function (d,i) {
-				return scale_wf ? yscale(shape_dim.row.height*(dataset.graph_rows-1)) : yscale(shape_dim.row.height*(dataset.graph_rows-1) + shape_dim.margin.top);
+				//return scale_wf ? yscale(shape_dim.row.height*(dataset.graph_rows-1)) : yscale(shape_dim.row.height*(dataset.graph_rows-1) + shape_dim.margin.top);
+				return yscale(shape_dim.row.height*(dataset.graph_rows-1) + shape_dim.margin.top);
 			})
 			.attr("stroke", "green")
 			.attr("stroke-width", 1);
@@ -150,16 +153,20 @@ function draw_layout_grid (xscale, yscale) {
 		.append("line")
 			.attr("class", "gridLine")
 			.attr("x1", function (d,i) {
-				return scale_wf ? xscale(0) : xscale(shape_dim.margin.left);
+				//return scale_wf ? xscale(0) : xscale(shape_dim.margin.left);
+				return xscale(shape_dim.margin.left);
 			})
 			.attr("y1", function (d,i) {
-				return scale_wf ? yscale(i*shape_dim.row.height) : yscale(i*shape_dim.row.height + shape_dim.margin.top);
+				//return scale_wf ? yscale(i*shape_dim.row.height) : yscale(i*shape_dim.row.height + shape_dim.margin.top);
+				return yscale(i*shape_dim.row.height + shape_dim.margin.top);
 			})
 			.attr("x2", function (d,i) {
-				return scale_wf ? xscale(shape_dim.column.width*(dataset.graph_depth-1)) : xscale(shape_dim.column.width*(dataset.graph_depth-1) + shape_dim.margin.left);
+				//return scale_wf ? xscale(shape_dim.column.width*(dataset.graph_depth-1)) : xscale(shape_dim.column.width*(dataset.graph_depth-1) + shape_dim.margin.left);
+				return xscale(shape_dim.column.width*(dataset.graph_depth-1) + shape_dim.margin.left);
 			})
 			.attr("y2", function (d,i) {
-				return scale_wf ? yscale(i*shape_dim.row.height) : yscale(i*shape_dim.row.height + shape_dim.margin.top);
+				//return scale_wf ? yscale(i*shape_dim.row.height) : yscale(i*shape_dim.row.height + shape_dim.margin.top);
+				return yscale(i*shape_dim.row.height + shape_dim.margin.top);
 			})
 			.attr("stroke", "green")
 			.attr("stroke-width", 1);
@@ -1263,40 +1270,14 @@ function visualize_workflow(data, canvas) {
         in_nodes 		= null,
         out_nodes 		= null;
 
-// TODO: do we really want to scale the galaxy and custom layout to the svg canvas window?
-    // scales
-    if (scale_wf) {
-	    if (layout === layout_kind.GALAXY) {
-			// x scale
-			xscale = d3.scale.linear()
-				.domain([d3.min(dataset.steps, function(d) { return d.position.left; }), 
-					d3.max(dataset.steps, function(d) { return d.position.left; })])
-				.range([shape_dim.node.width+shape_dim.margin.left, shape_dim.window.width-shape_dim.node.width-shape_dim.margin.right]),
-			// y scale
-			yscale = d3.scale.linear()
-				.domain([d3.min(dataset.steps, function(d) { return d.position.top; }), 
-					d3.max(dataset.steps, function(d) { return d.position.top; })])
-				.range([shape_dim.node.height+shape_dim.margin.top, shape_dim.window.height-shape_dim.node.height-shape_dim.margin.bottom]);
-		} else if (layout === layout_kind.CUSTOM || layout === layout_kind.FORCE) {
-			// x scale
-			xscale = d3.scale.linear()
-				.domain([0, shape_dim.window.width])
-				.range([shape_dim.node.width+shape_dim.margin.left, shape_dim.window.width-shape_dim.node.width-shape_dim.margin.right]),
-			// y scale
-			yscale = d3.scale.linear()
-				.domain([0, shape_dim.window.height])
-				.range([shape_dim.node.height+shape_dim.margin.top, shape_dim.window.height-shape_dim.node.height-shape_dim.margin.bottom]);
-		} 
-	} else {
-			// x scale
-			xscale = d3.scale.linear()
-				.domain([0, shape_dim.window.width])
-				.range([0, shape_dim.window.width]),
-			// y scale
-			yscale = d3.scale.linear()
-				.domain([0, shape_dim.window.height])
-				.range([0, shape_dim.window.height]);
-	}
+	// x scale
+	xscale = d3.scale.linear()
+		.domain([0, shape_dim.window.width])
+		.range([0, shape_dim.window.width]),
+	// y scale
+	yscale = d3.scale.linear()
+		.domain([0, shape_dim.window.height])
+		.range([0, shape_dim.window.height]);
 
 	// zoom behavior
 	zoom = d3.behavior.zoom();
@@ -1433,9 +1414,9 @@ function visualize_workflow(data, canvas) {
 
 // TODO: still in debug state
 	// -----------------------------------------------------------------
-	// ------------------- CUSTOM LAYOUT COORDINATES -------------------
+	// ------------------- REFINERY LAYOUT COORDINATES -------------------
 	// -----------------------------------------------------------------
-	else if (layout === layout_kind.CUSTOM) {
+	else if (layout === layout_kind.REFINERY) {
 		
 
 		// init rows for inputs first
@@ -1541,30 +1522,14 @@ function visualize_workflow(data, canvas) {
 		//console.log(max_row)
 		dataset.graph_rows = max_row+1;
 
-		// layout to grid, BFS
-		if (scale_wf) {
-			shape_dim.column.width = shape_dim.window.width/dataset.graph_depth;
-			shape_dim.row.height = shape_dim.window.height/dataset.graph_rows;
-		}
-
 		// set coordinates for nodes
 		for (var i = 0; i < dataset.graph_depth; i++) {
 			get_nodes_by_col(i).forEach( function (cur,j) {
-				cur.x = scale_wf ? xscale(cur.column*shape_dim.column.width) : xscale(shape_dim.margin.left + cur.column*shape_dim.column.width);
-				cur.y = scale_wf ? yscale(cur.row*shape_dim.row.height) : yscale(shape_dim.margin.top + cur.row*shape_dim.row.height);
+				cur.x = xscale(shape_dim.margin.left + cur.column*shape_dim.column.width);
+				cur.y = yscale(shape_dim.margin.top + cur.row*shape_dim.row.height);
 			});
 		}
 
-
-
-	// -----------------------------------------------------------------
-	// ------------------- FORCE LAYOUT COORDINATES --------------------
-	// -----------------------------------------------------------------
-	} else if (layout === layout_kind.FORCE) {
-		dataset.nodes.forEach ( function (d) {
-			// no coords are set for the force layout
-			dataset.nodes[d.id].fixed = false;
-		});
 	} else {
 		console.log("ERROR: No layout chosen!")
 	}
@@ -1904,7 +1869,7 @@ function visualize_workflow(data, canvas) {
 			d3.select(this.parentNode).selectAll(".nodeInputConG").selectAll(".inputConRect").remove();
 			x.expanded_in_con = false;
 			dataset.columns[x.column].inputs -= 1;
-			if (dataset.columns[x.column].inputs === 0 && (layout === layout_kind.CUSTOM || layout === layout_kind.GALAXY)) {
+			if (dataset.columns[x.column].inputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
 				update_column_translation(x.column, layout_translation.COLLAPSE_LEFT);
 			}
 
@@ -1913,7 +1878,7 @@ function visualize_workflow(data, canvas) {
 		} else {
 			x.expanded_in_con = true;
 			dataset.columns[x.column].inputs += 1;
-			if (dataset.columns[x.column].inputs === 1 && (layout === layout_kind.CUSTOM || layout === layout_kind.GALAXY)) {
+			if (dataset.columns[x.column].inputs === 1 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
 				update_column_translation(x.column, layout_translation.EXPAND_LEFT);
 			}
 
@@ -1986,7 +1951,7 @@ function visualize_workflow(data, canvas) {
 			d3.select(this.parentNode).select(".nodeOutput").selectAll(".outputRefImport").remove();
 			x.expanded_out = false;
 			dataset.columns[x.column].outputs -= 1;
-			if (dataset.columns[x.column].outputs === 0 && (layout === layout_kind.CUSTOM || layout === layout_kind.GALAXY)) {
+			if (dataset.columns[x.column].outputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
 				update_column_translation(x.column, layout_translation.COLLAPSE_RIGHT);
 			}
 
@@ -1995,7 +1960,7 @@ function visualize_workflow(data, canvas) {
 		} else {
 			x.expanded_out = true;
 			dataset.columns[x.column].outputs += 1;
-			if (dataset.columns[x.column].outputs === 1 && (layout === layout_kind.CUSTOM || layout === layout_kind.GALAXY)) {
+			if (dataset.columns[x.column].outputs === 1 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
 				update_column_translation(x.column, layout_translation.EXPAND_RIGHT);
 			}
 			output_rect = d3.select(this.parentNode).select(".nodeOutput").selectAll(".outRectTitle");
@@ -2089,7 +2054,7 @@ function visualize_workflow(data, canvas) {
 			d3.select(this.parentNode).select(".nodeInput").selectAll(".inputRefImport").remove();
 			x.expanded_out = false;
 			dataset.columns[x.column].outputs -= 1;
-			if (dataset.columns[x.column].outputs === 0 && (layout === layout_kind.CUSTOM || layout === layout_kind.GALAXY)) {
+			if (dataset.columns[x.column].outputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
 				update_column_translation(x.column, layout_translation.COLLAPSE_RIGHT);
 			}
 
@@ -2098,7 +2063,7 @@ function visualize_workflow(data, canvas) {
 		} else {
 			x.expanded_out = true;
 			dataset.columns[x.column].outputs += 1;
-			if (dataset.columns[x.column].outputs === 1 && (layout === layout_kind.CUSTOM || layout === layout_kind.GALAXY)) {
+			if (dataset.columns[x.column].outputs === 1 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
 				update_column_translation(x.column, layout_translation.EXPAND_RIGHT);
 			}
 			input_rect = d3.select(this.parentNode).select(".nodeInput").selectAll(".inputRectTitle");
