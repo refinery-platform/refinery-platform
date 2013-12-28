@@ -1693,6 +1693,9 @@ function visualize_workflow(data, canvas) {
 // DEBUG: uncomment if only i force iterations are desired
 		//for (var i = 0; i < 1; ++i) force.tick();
 	
+	// initial fit to window call
+	fit_wf_to_window();
+
 
 
 	// -----------------------------------------------------------------

@@ -52,20 +52,19 @@
 		</div>
 		<p><div id="vis_workflow"></div></p>
 
+		<!-- image of original refinery layout-->
 		<!--<p><img src="{{ workflow_graph_url }}"></a></p>-->
 
 		<div class="refinery-subheader">
 			<h4>Layout</h4>
 		</div>
 		<p>
-			<form action="#" class="form-horizontal" role="form">
-	  			<div class="form-group">
-					<select id="cb_layout_kind">
-						<option value="0" onclick="reload_workflow()">Galaxy</option>
-						<option value="1" onclick="reload_workflow()" selected>Refinery</option>
-					</select> 
-				</div>
-			</form>
+			<label class="radio">
+				<input type="radio" name="optionsRadios" id="cb_layout_kind_refinery" value="1" onclick="reload_workflow()" checked> Refinery
+			</label>
+			<label class="radio">
+				<input type="radio" name="optionsRadios" id="cb_layout_kind_galaxy" onclick="reload_workflow()" value="0"> Galaxy
+			</label>
 		</p>
 
 		<div class="refinery-header">
@@ -161,7 +160,8 @@
 		    layout_prop = null,
 		    table 		= null, // properties table
 		    dataset 	= null, // actual dataset
-		    layout 		= document.getElementById("cb_layout_kind").value;
+		    layout 		= document.getElementById("cb_layout_kind_refinery").checked ? "1" : "0";
+		    console.log(layout)
 			// null typeError in console if uncommented
 			// shape_dim = null;
 		}
@@ -212,7 +212,7 @@
 	        layout_prop = null,
 	        table 		= null, // properties table
 	        dataset 	= null, // actual dataset  
-	        layout 		= document.getElementById('cb_layout_kind').value;
+	        layout 		= document.getElementById("cb_layout_kind_refinery").checked ? "1" : "0";
 
 		// initialize svg to body
 		canvas 		= init_canvas("#vis_workflow", document.documentElement.clientWidth-100, document.documentElement.clientHeight-100);
