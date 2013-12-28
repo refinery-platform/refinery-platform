@@ -1835,7 +1835,6 @@ function visualize_workflow(data, canvas) {
 				case "name":
 				case "tool_id":
 				case "tool_version":
-				case "id":
 				case "tool_state":
 				case "annotation":
 					tableEntries.push([y.key, y.value]);
