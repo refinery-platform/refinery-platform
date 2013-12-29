@@ -1725,13 +1725,6 @@ function visualize_workflow(data, canvas) {
 
 
 	// -----------------------------------------------------------------
-	// ------------------- FIT WORKFLOW TO WINDOW ----------------------
-	// -----------------------------------------------------------------
-	d3.select(".overlay").on("dblclick", function (x) {
-		fit_wf_to_window();
-	}).on("click", null);
-
-	// -----------------------------------------------------------------
 	// ------------------- HIGHLIGHTING PATHS WITH TOGGLE --------------
 	// -----------------------------------------------------------------
 	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("mouseover", function (x) {
@@ -1748,13 +1741,26 @@ function visualize_workflow(data, canvas) {
 		}
 	});
 
-	// reset path highlighting when clicking on the background rectangle
-	// also delete table
-	d3.select(".overlay").on("click", function (x) {
+	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("click", function (x) {
+		// get selected node
+		var sel_path = d3.select(this.parentNode.parentNode)[0][0].__data__.subgraph[+d3.select(this).attr("id")[14]],
+			sel_node_rect = d3.select(this.parentNode.parentNode).select(".nodeRect"),
+			sel_path_rect = d3.select(this).select(".inputConRect");
 
-		// suppress after dragend
-		if (d3.event.defaultPrevented) return;
+		// when path beginning with this node is not highlighted yet
+		if (sel_path[0].highlighted === false) {
+			dye_path(sel_path, sel_node_rect, sel_path_rect, "orange", 5, "orange", true);
+		} else {
+			dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
+		}
+	});
 
+
+
+	// -----------------------------------------------------------------
+	// ------------------- CLEAR HIGHLIGHTING AND REMOVE TABLE ---------
+	// -----------------------------------------------------------------
+	var	overlay_on_click = function () {
 		// remove old table on click
 		d3.select("#workflowtbl").remove();
 
@@ -1773,20 +1779,48 @@ function visualize_workflow(data, canvas) {
 		out_nodes.forEach( function (y) {
 			dye_node(y, "gray", 1.5, "lightsteelblue", false);
 		});
+	}
+
+
+
+	// -----------------------------------------------------------------
+	// ------------------- FIT WORKFLOW TO WINDOW ----------------------
+	// -----------------------------------------------------------------
+	var overlay_on_dblclick = function () {
+		fit_wf_to_window();
+	}
+
+
+
+	// -----------------------------------------------------------------
+	// ------------------- CLICK DBLCLICK SEPARATION -------------------
+	// -----------------------------------------------------------------
+	var firing = false,
+		timer,
+		overlay_action = overlay_on_click;	// default action
+
+	d3.select(".overlay").on("click", function (x) {
+		// suppress after dragend
+		if (d3.event.defaultPrevented) return;
+
+		// if dblclick, break
+		if (firing) {
+			return;
+		}
+
+		firing = true;
+		// function overlay_action is called after a certain amount of time
+		timer = setTimeout ( function () { 
+	    	overlay_action();	// called always
+
+	    	overlay_action = overlay_on_click; // set back click action to single
+	        firing = false;
+	    }, 150); // timeout value
 	});
 
-	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("click", function (x) {
-		// get selected node
-		var sel_path = d3.select(this.parentNode.parentNode)[0][0].__data__.subgraph[+d3.select(this).attr("id")[14]],
-			sel_node_rect = d3.select(this.parentNode.parentNode).select(".nodeRect"),
-			sel_path_rect = d3.select(this).select(".inputConRect");
-
-		// when path beginning with this node is not highlighted yet
-		if (sel_path[0].highlighted === false) {
-			dye_path(sel_path, sel_node_rect, sel_path_rect, "orange", 5, "orange", true);
-		} else {
-			dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
-		}
+	// if dblclick, the single click action is overwritten
+	d3.select(".overlay").on("dblclick", function (x) {
+		overlay_action = overlay_on_dblclick;
 	});
 
 
