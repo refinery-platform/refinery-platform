@@ -17,6 +17,9 @@
 /* TABLE STYLESHEETS */
 /* inherited from bootstrap css */
 
+#node_table {
+	background-color: white;
+}
 
 
 /* SVG ELEMENT STYLESHEETS */
@@ -71,7 +74,7 @@
 	cursor: default;
 }
 
-.inputConRect, .inputConRectTitle, .fileIconInputConCircle, .fileIconOutputCircle, .fileIconInputCircle {
+.inputConRect, .inputConRectTitle, .fileIconInputConCircle, .fileIconOutputCircle, .fileIconInputCircle, .outRectCircle {
 	cursor: pointer;
 }
 
