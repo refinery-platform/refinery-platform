@@ -35,14 +35,15 @@ layout_translation = {
  * g_str: class name for the group element
  * element: the circle svg element appended
  * str: class name for the element
+ * x_trans: translation in x direction
  *
  * returns the group element
  */
-function create_node_circle (g_element, node, g_str, element, str) {
+function create_node_circle (g_element, node, g_str, element, str, x_trans) {
 
 	// group element
 	g_element = node.append("g").attr("transform", function (d) { 
-			return "translate(" + parseInt((shape_dim.node.width/2),10) + "," + 0 + ")";})
+			return "translate(" + parseInt((x_trans),10) + "," + 0 + ")";})
 		.attr("class", g_str);
 
 	// circle element
@@ -66,22 +67,41 @@ function check_stored_outputs (output) {
 		cur_node 		= 0,
 		annoProperties  = [],
 		child_circles   = [],
-		node_circle 	= [];
-
+		node_circle 	= [],
+		keys 			= [],
+		values 			= [],
+		index 			= -1;
 
 	cur_node_id = this[0].parentNode.__data__.id
 	cur_node = dataset.steps[cur_node_id];
 	annoProperties = parse_node_annotation(cur_node.annotation);
 	child_circles = d3.select("#node_" + cur_node_id).select(".nodeOutput").selectAll(".outRectCircle");
 	node_circle = d3.select("#node_" + cur_node_id).select(".nodeOutputCircle");
+	keys = annoProperties.map(function (k) { return k.key; });
+	values = annoProperties.map(function (v) { return v.value; })
 
 	// fill stored outputs
-	output.attr("fill", function (d) {
-		return (annoProperties.map(function (k) { return k.key; }).indexOf(d.name) !== -1) ? "steelblue" : "lightsteelblue";
+	output.attr("fill", function (d,i) {
+		return (keys.indexOf(d.name) !== -1) ? "steelblue" : "lightsteelblue";
 	});
 
 	// hide output circle
 	node_circle.attr("opacity", 0);
+
+	// rename files and stylize them italic
+	output.each( function (d,i) {
+		index = keys.indexOf(d.name);
+
+		if (index !== -1) {
+			// rename and stylize italic
+			d3.select(this.parentNode.parentNode).select("#outRectTitle_" +i).text(cut_io_file_name(values[index])).attr("font-style", "italic");
+
+			// add to tooltip
+			d3.select(this.parentNode.parentNode).select("#outRectTitle_" +i).attr("title", function (x) {
+				return d3.select("#outRectTitle_" +i).attr("title") + "\n" + "stored as: " + values[index] + "";
+			});
+		}
+	});
 }
 
 /*
@@ -1180,7 +1200,8 @@ function create_nested_tool_state_table(parent) {
 	json_data = JSON.parse (text);
 	obj = d3.entries(json_data);
 
-	console.log(obj);
+
+//	console.log(obj);
 
 
 	
@@ -1773,24 +1794,14 @@ function visualize_workflow(data, canvas) {
 		.append("title") // add tooltip
 		.text(function (d) { return dataset.steps[d.id].name; });
 
-// TODO: consider changing node shapes
+
 	// node inputs
 	node_input = node.append("g").attr("transform", function (d) { 
 			return "translate(" + parseInt((shape_dim.node.width/2),10) + "," + 0 + ")";})
 		.attr("class", "nodeInput");
 
-	// node input circle
-	node_input_circle = node.append("g").attr("transform", function (d) { 
-			return "translate(" + parseInt((shape_dim.node.width/2),10) + "," + 0 + ")";})
-		.attr("class", "nodeInputCircle");
-
-	// node input file icon
-	file_icon_input_circle = node_input_circle.append("circle")
-		.attr("class", "fileIconInputCircle")
-		.attr("r", shape_dim.circle.r)
-		.attr("stroke", "gray")
-		.attr("stroke-width", 1.5)
-		.attr("fill", "lightsteelblue");
+	// create input circle
+	node_input_circle = create_node_circle (node_input_circle, node, "nodeInputCircle", file_icon_input_circle, "fileIconInputCircle", shape_dim.node.width/2);
 
 	// node input_con
 	node_input_con = node.append("g").attr("transform", function (d) { 
@@ -1805,27 +1816,16 @@ function visualize_workflow(data, canvas) {
 			.attr("class", "nodeInputConG")
 			.attr("id", function (d,i) { return "nodeInputConG_" + i;});
 
-	// node input_con circle
-	node_input_con_circle = node.append("g").attr("transform", function (d) { 
-			return "translate(" + parseInt((-shape_dim.node.width/2),10) + "," + 0 + ")";})
-		.attr("class", "nodeInputConCircle");
-
-	// node input_con file icon
-	file_icon_input_con_circle = node_input_con_circle.append("circle")
-		.attr("class", "fileIconInputConCircle")
-		.attr("r", shape_dim.circle.r)
-		.attr("stroke", "gray")
-		.attr("stroke-width", 1.5)
-		.attr("fill", "lightsteelblue");
-
+	// create input con circle
+	node_input_con_circle = create_node_circle (node_input_con_circle, node, "nodeInputConCircle", file_icon_input_con_circle, "fileIconInputConCircle", -shape_dim.node.width/2);
 
 	// node outputs
 	node_output = node.append("g").attr("transform", function (d) { 
 			return "translate(" + parseInt((shape_dim.node.width/2),10) + "," + 0 + ")";})
 		.attr("class", "nodeOutput");
 
-	// create circle
-	node_output_circle = create_node_circle (node_output_circle, node, "nodeOutputCircle", file_icon_output_circle, "fileIconOutputCircle");
+	// create output circle
+	node_output_circle = create_node_circle (node_output_circle, node, "nodeOutputCircle", file_icon_output_circle, "fileIconOutputCircle", shape_dim.node.width/2);
 
 	
 
@@ -1851,9 +1851,9 @@ function visualize_workflow(data, canvas) {
 		if(d3.values(dataset.steps[d.id].outputs).length === 0) {
 			d3.select(this).select(".nodeOutputCircle").remove();
 		}
-		// remove node rect for input nodes
+		// change node rect for input nodes
 		if(d3.values(dataset.steps[d.id].input_connections).length === 0) {
-			d3.select(this).select(".nodeRect").remove();
+			d3.select(this).select(".nodeRect").attr("fill", "white");
 		}
 	});
 
@@ -2031,21 +2031,107 @@ function visualize_workflow(data, canvas) {
 	// -----------------------------------------------------------------
 	node_input_con_circle.on("mouseover", function (x) {	
 		d3.select(this).select(".fileIconInputConCircle")
-				.attr("stroke", "steelblue");
+			.attr("stroke", "steelblue");
 	});
 	
 	node_input_con_circle.on("mouseout", function (x) {	
 		d3.select(this).select(".fileIconInputConCircle")
-				.attr("stroke", "gray");
+			.attr("stroke", "gray");
 	});
 
 	node_input_con_circle.on("click", function (x) {	
 		var input_con_rect 	= null;
 
-		// toggle input_con files view on click
-		if (d3.select(this.parentNode).selectAll(".nodeInputConG").selectAll(".inputConRectTitle")[0].length > 0) {
-			d3.select(this.parentNode).selectAll(".nodeInputConG").selectAll(".inputConRectTitle").remove();
-			d3.select(this.parentNode).selectAll(".nodeInputConG").selectAll(".inputConRect").remove();
+
+		x.expanded_in_con = true;
+		dataset.columns[x.column].inputs += 1;
+
+		if (dataset.columns[x.column].inputs === 1 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
+			update_column_translation(x.column, layout_translation.EXPAND_LEFT);
+		}
+
+		d3.select(this.parentNode).selectAll(".nodeInputConG").each( function (d,j) {
+		
+			d3.select(this).append("rect")
+				.attr("class", "inputConRect")
+				.attr("x", function(d) {
+					return -shape_dim.node_io.offset-shape_dim.node_io.width ;
+				})
+				.attr("y", function (d,i) { 
+					return (shape_dim.node_io.height+2)*(j+1)
+					- get_input_conns_length(this.parentNode.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2 - shape_dim.node_io.height; 
+				})
+				.attr("width", shape_dim.node_io.width)
+				.attr("height", shape_dim.node_io.height)
+				.attr("rx", 1)
+				.attr("ry", 1)
+				.attr("fill", "lightsteelblue")
+				.attr("stroke", "gray")
+				.attr("stroke-width", 1);
+
+			// when path was highlighted before, fill rectangle orange
+			var sel_path = d3.select(this.parentNode.parentNode)[0][0].__data__.subgraph[+d3.select(this).attr("id")[14]];
+			if (sel_path[0].highlighted) {
+				d3.select(this).selectAll(".inputConRect")
+					.attr("fill", "orange");
+			}
+
+			// add file name
+			d3.select(this).append("text")
+				.attr("class", "inputConRectTitle")
+				.text(function (d) { return cut_io_file_name(d.output_name); })
+				.attr("x", function(d) {
+					return -shape_dim.node_io.offset-shape_dim.node_io.width+2+shape_dim.circle.r ;
+				})
+				.attr("y", function (d,i) { 
+					return (shape_dim.node_io.height+2)*(j+1)
+					- get_input_conns_length(this.parentNode.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2-3; 
+				})
+				.attr("title", function (d) { return "id: " + d.id + "\n" + "output_name: " + d.output_name; });
+
+
+			// create moving anchors
+			d3.select(this.parentNode).append("g")
+				.attr("class", "inputConRectCircleG")
+				.attr("transform", function (d,i) { 
+					return "translate(" 
+						+ parseInt(-shape_dim.node_io.offset-shape_dim.node_io.width,10) + "," 
+						+ parseInt((shape_dim.node_io.height+2)*(j+1)
+					- get_input_conns_length(this.parentNode.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2 - shape_dim.node_io.height/2,10) + ")" })
+				.append("circle")
+				.attr("class", "inputConRectCircle")
+				.attr("r", shape_dim.circle.r)
+				.attr("stroke", "gray")
+				.attr("stroke-width", 1.5)
+				.attr("fill", "lightsteelblue");
+
+		});
+
+		d3.selectAll(".inputConRectCircleG").on("mouseover", function (x) {
+			d3.select(this).select(".inputConRectCircle")
+				.attr("stroke", "steelblue");
+		});
+
+		d3.selectAll(".inputConRectCircleG").on("mouseout", function (x) {
+			d3.select(this).select(".inputConRectCircle")
+				.attr("stroke", "gray");
+		});
+
+
+		// hide input circle
+		d3.select("#node_" + this.parentNode.__data__.id).select(".nodeInputConCircle").attr("opacity", 0);	
+	
+		force.resume();
+		update();
+
+
+		// -----------------------------------------------------------------
+		// ------------------- INPUT CON FILES REMOVE EVENT -------------------
+		// -----------------------------------------------------------------
+		d3.selectAll(".nodeInputCon").selectAll(".inputConRectCircleG").on("click", function (z) {
+			var node_circle = null,
+				cur_node_id = 0;
+
 			x.expanded_in_con = false;
 			dataset.columns[x.column].inputs -= 1;
 
@@ -2053,53 +2139,23 @@ function visualize_workflow(data, canvas) {
 				update_column_translation(x.column, layout_translation.COLLAPSE_LEFT);
 			}
 
-		} else {
-			x.expanded_in_con = true;
-			dataset.columns[x.column].inputs += 1;
+			// show input con circle again
+			cur_node_id = this.parentNode.parentNode.__data__.id;
+			node_circle = d3.select("#node_" + cur_node_id).select(".nodeInputConCircle");
+			node_circle.attr("opacity", 1);
 
-			if (dataset.columns[x.column].inputs === 1 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
-				update_column_translation(x.column, layout_translation.EXPAND_LEFT);
-			}
+			console.log(d3.select(this.parentNode))
 
-			d3.select(this.parentNode).selectAll(".nodeInputConG").each( function (d,j) {
-			
-				d3.select(this).append("rect")
-					.attr("class", "inputConRect")
-					.attr("x", function(d) {
-						return -shape_dim.node_io.offset-shape_dim.node_io.width ;
-					})
-					.attr("y", function (d,i) { 
-						return (shape_dim.node_io.height+2)*(j+1)
-						- get_input_conns_length(this.parentNode.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2 - shape_dim.node_io.height; 
-					})
-					.attr("width", shape_dim.node_io.width)
-					.attr("height", shape_dim.node_io.height)
-					.attr("rx", 1)
-					.attr("ry", 1)
-					.attr("fill", "lightsteelblue")
-					.attr("stroke", "gray")
-					.attr("stroke-width", 1);
+			// remove expanded files
+			d3.select(this.parentNode).selectAll(".nodeInputConG").selectAll(".inputConRectTitle").remove();
+			d3.select(this.parentNode).selectAll(".nodeInputConG").selectAll(".inputConRect").remove();
+			d3.select(this.parentNode).selectAll(".inputConRectCircleG").remove();
 
-				// when path was highlighted before, fill rectangle orange
-				var sel_path = d3.select(this.parentNode.parentNode)[0][0].__data__.subgraph[+d3.select(this).attr("id")[14]];
-				if (sel_path[0].highlighted) {
-					d3.select(this).selectAll(".inputConRect")
-						.attr("fill", "orange");
-				}
-
-				d3.select(this).append("text")
-					.attr("class", "inputConRectTitle")
-					.text(function (d) { return cut_io_file_name(d.output_name); })
-					.attr("x", function(d) {
-						return -shape_dim.node_io.offset-shape_dim.node_io.width+2 ;
-					})
-					.attr("y", function (d,i) { 
-						return (shape_dim.node_io.height+2)*(j+1)
-						- get_input_conns_length(this.parentNode.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2-3; 
-					})
-					.attr("title", function (d) { return "id: " + d.id + "\n" + "output_name: " + d.output_name; });
-			});
-		}
+			force.resume();
+			update();
+		});
+// DEBUG: sometimes, the links won't update after collapsing an output section
+// therefore another resume and updated was added
 		force.resume();
 		update();
 	});
@@ -2163,6 +2219,7 @@ function visualize_workflow(data, canvas) {
 		output_rect.data(function (d) { return dataset.steps[d.id].outputs; })
 		.enter()
 		.append("text")
+			.attr("id", function (d,i) { return "outRectTitle_" + i;})
 			.attr("class", "outRectTitle")
 			.text(function (d) { return cut_io_file_name(d.name); })
 			.attr("x", shape_dim.node_io.offset+2)
@@ -2173,8 +2230,9 @@ function visualize_workflow(data, canvas) {
 			.attr("title", function (d) { return "name: " + d.name + "\n" + "type: " + d.type; });
 
 
-		// files imported back to refinery
+		// create moving anchors
 
+		// files imported back to refinery
 		// when name is key element of annotation properties,
 		// rename it to its value element and display it in italic style
 		// and add a steelblue filled circle to the right of the rect
@@ -2195,6 +2253,16 @@ function visualize_workflow(data, canvas) {
 				.attr("stroke", "gray")
 				.attr("stroke-width", 1.5)
 				.call(check_stored_outputs);		
+
+		d3.selectAll(".outRectCircleG").on("mouseover", function (x) {
+			d3.select(this).select(".outRectCircle")
+				.attr("stroke", "steelblue");
+		});
+
+		d3.selectAll(".outRectCircleG").on("mouseout", function (x) {
+			d3.select(this).select(".outRectCircle")
+				.attr("stroke", "gray");
+		});
 
 		force.resume();
 		update();
@@ -2229,6 +2297,8 @@ function visualize_workflow(data, canvas) {
 		});
 // DEBUG: sometimes, the links won't update after collapsing an output section
 // therefore another resume and updated was added
+		force.resume();
+		update();
 	});
 
 	
@@ -2249,11 +2319,97 @@ function visualize_workflow(data, canvas) {
 	node_input_circle.on("click", function (x) {	
 		var input_rect = null;
 
-		// toggle input files view on click
-		if (d3.select(this.parentNode).select(".nodeInput").selectAll(".inputRectTitle")[0].length > 0) {
-			d3.select(this.parentNode).select(".nodeInput").selectAll(".inputRectTitle").remove();
-			d3.select(this.parentNode).select(".nodeInput").selectAll(".inputRect").remove();
-			d3.select(this.parentNode).select(".nodeInput").selectAll(".inputRefImport").remove();
+		x.expanded_out = true;
+		dataset.columns[x.column].outputs += 1;
+
+		if (dataset.columns[x.column].outputs === 1 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
+			update_column_translation(x.column, layout_translation.EXPAND_RIGHT);
+		}
+		input_rect = d3.select(this.parentNode).select(".nodeInput").selectAll(".inputRectTitle");
+		
+		input_rect.data(function (d) { return dataset.steps[d.id].inputs; })
+		.enter()
+		.append("rect")
+			.attr("class", "inputRect")
+			.attr("id", function (d,i) { return "inputRect_" + i;})
+			.attr("x", shape_dim.node_io.offset)
+			.attr("y", function (d,i) { 
+				return (shape_dim.node_io.height+2)*(i+1)
+				- get_inputs_length(this.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2 - shape_dim.node_io.height; 
+			})
+			.attr("width", shape_dim.node_io.width)
+			.attr("height", shape_dim.node_io.height)
+			.attr("rx", 1)
+			.attr("ry", 1)
+			.attr("fill", "lightsteelblue")
+			.attr("stroke", "gray")
+			.attr("stroke-width", 1);
+
+		// when path was highlighted before, fill rectangle orange
+		// get links via source id and for each link
+		get_succ_links_by_node_id(x.id).forEach( function (l) {
+			if (l.highlighted) {
+				d3.select("#node_"+l.source.id).select(".nodeInput").select("#inputRect_" + output_input_con_file_link(l)[0])
+					.attr("fill", "orange");
+			}
+		});
+
+		// add file name
+		input_rect.data(function (d) { return dataset.steps[d.id].inputs; })
+		.enter()
+		.append("text")
+			.attr("class", "inputRectTitle")
+			.text(function (d) { return cut_io_file_name(d.name); })
+			.attr("x", shape_dim.node_io.offset+2)
+			.attr("y", function (d,i) { 
+				return (shape_dim.node_io.height+2)*(i+1)
+				- get_inputs_length(this.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2-3; 
+			})
+			.attr("title", function (d) { return "description: " + d.description + "\n" + "name: " + d.name; });
+
+
+		// create moving anchors
+		input_rect.data(function (d) { return dataset.steps[d.id].inputs; })
+		.enter()
+		.append("g")
+			.attr("class", "inRectCircleG")
+			.attr("transform", function (d,i) { 
+				return "translate(" 
+					+ parseInt(shape_dim.node_io.offset + shape_dim.node_io.width,10) + "," 
+					+ parseInt((shape_dim.node_io.height+2)*(i+1) 
+						- get_inputs_length(this.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2 
+						- shape_dim.node_io.height/2,10) + ")" })
+			.append("circle")
+
+				.attr("class", "inRectCircle")
+				.attr("r", shape_dim.circle.r)
+				.attr("stroke", "gray")
+				.attr("stroke-width", 1.5)
+				.attr("fill", "lightsteelblue")
+
+		// hide input circle
+		d3.select("#node_" + this.parentNode.__data__.id).select(".nodeInputCircle").attr("opacity", 0);
+
+		d3.selectAll(".inRectCircleG").on("mouseover", function (x) {
+			d3.select(this).select(".inRectCircle")
+				.attr("stroke", "steelblue");
+		});
+
+		d3.selectAll(".inRectCircleG").on("mouseout", function (x) {
+			d3.select(this).select(".inRectCircle")
+				.attr("stroke", "gray");
+		});	
+	
+		force.resume();
+		update();
+
+		// -----------------------------------------------------------------
+		// ------------------- INPUT FILES REMOVE EVENT -------------------
+		// -----------------------------------------------------------------
+		d3.selectAll(".nodeInput").selectAll(".inRectCircleG").on("click", function (z) {
+			var node_circle = null,
+				cur_node_id = 0;
+
 			x.expanded_out = false;
 			dataset.columns[x.column].outputs -= 1;
 
@@ -2261,54 +2417,22 @@ function visualize_workflow(data, canvas) {
 				update_column_translation(x.column, layout_translation.COLLAPSE_RIGHT);
 			}
 
-		} else {
-			x.expanded_out = true;
-			dataset.columns[x.column].outputs += 1;
+			// show input circle again
+			cur_node_id = this.parentNode.__data__.id;
+			node_circle = d3.select("#node_" + cur_node_id).select(".nodeInputCircle");
+			node_circle.attr("opacity", 1);
 
-			if (dataset.columns[x.column].outputs === 1 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
-				update_column_translation(x.column, layout_translation.EXPAND_RIGHT);
-			}
-			input_rect = d3.select(this.parentNode).select(".nodeInput").selectAll(".inputRectTitle");
-			
-			input_rect.data(function (d) { return dataset.steps[d.id].inputs; })
-			.enter()
-			.append("rect")
-				.attr("class", "inputRect")
-				.attr("id", function (d,i) { return "inputRect_" + i;})
-				.attr("x", shape_dim.node_io.offset)
-				.attr("y", function (d,i) { 
-					return (shape_dim.node_io.height+2)*(i+1)
-					- get_inputs_length(this.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2 - shape_dim.node_io.height; 
-				})
-				.attr("width", shape_dim.node_io.width)
-				.attr("height", shape_dim.node_io.height)
-				.attr("rx", 1)
-				.attr("ry", 1)
-				.attr("fill", "lightsteelblue")
-				.attr("stroke", "gray")
-				.attr("stroke-width", 1);
+			// remove expanded files
+			d3.select(this.parentNode).selectAll(".inputRectTitle").remove();
+			d3.select(this.parentNode).selectAll(".inputRect").remove();
+			d3.select(this.parentNode).selectAll(".inputRefImport").remove();
+			d3.select(this.parentNode).selectAll(".inRectCircleG").remove();
 
-			// when path was highlighted before, fill rectangle orange
-			// get links via source id and for each link
-			get_succ_links_by_node_id(x.id).forEach( function (l) {
-				if (l.highlighted) {
-					d3.select("#node_"+l.source.id).select(".nodeInput").select("#inputRect_" + output_input_con_file_link(l)[0])
-						.attr("fill", "orange");
-				}
-			});
-
-			input_rect.data(function (d) { return dataset.steps[d.id].inputs; })
-			.enter()
-			.append("text")
-				.attr("class", "inputRectTitle")
-				.text(function (d) { return cut_io_file_name(d.name); })
-				.attr("x", shape_dim.node_io.offset+2)
-				.attr("y", function (d,i) { 
-					return (shape_dim.node_io.height+2)*(i+1)
-					- get_inputs_length(this.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2-3; 
-				})
-				.attr("title", function (d) { return "description: " + d.description + "\n" + "name: " + d.name; });
-		}
+			force.resume();
+			update();
+		});
+// DEBUG: sometimes, the links won't update after collapsing an output section
+// therefore another resume and updated was added
 		force.resume();
 		update();
 	});
