@@ -26,6 +26,73 @@ layout_translation = {
 };
 
 
+
+/*
+ * creates a table on click
+ * 
+ * node: node datastructure of dataset after the force layout is executed
+ */
+function create_table (node) {
+	// add new table on click
+	table = d3.select("#node_table");
+	
+	var prop_tbl 			= table.append("table").attr("id", "workflowtbl").classed("table table-bordered table-condensed table-responsive", true),
+		tbody 				= prop_tbl.append("tbody"),
+		tableEntries 		= [],
+		tr 					= {},
+		td 					= {};
+
+	// generate two-dimensional array dataset
+	d3.entries(dataset.steps[node.id]).forEach(function(y,i) {
+		switch(y.key) {
+			case "name":
+			case "tool_id":
+			case "tool_version":
+			case "tool_state":
+			case "annotation":
+				tableEntries.push([y.key, y.value]);
+				break;
+		};
+	});
+		
+	// nested tr-td selection for actual entries
+	tr = tbody.selectAll("tr")
+		.data(tableEntries)
+		.enter()
+		.append("tr");
+		
+	td = tr.selectAll("td")
+		.data(function(d) { return d; })
+		.enter()
+		.append("td")
+			.call(eval_node_params);
+}
+
+
+/*
+ * clears highlighted links, nodes and inputcon rects
+ *
+ * link: link datastructure after the force layout is executed
+ */
+ function clear_highlighting (link) {
+ 	var sel_path = []
+		sel_node_rect = null,
+		sel_path_rect = null;
+
+	link.each( function (l) {
+		sel_path.push(l);
+	});
+	
+	// for every link
+	dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
+
+	// for each out_node
+	out_nodes.forEach( function (y) {
+		dye_node(y, "gray", 1.5, "lightsteelblue", false);
+	});
+ }
+
+
 /*
  * fits the current workflow to the window
  */
@@ -1224,11 +1291,6 @@ function update() {
 		return path;
 	});
 	
-// REMOVED: temporarily disabled linklabels
-		// link label
-	/*	linklabel.attr("transform", function (d) { 
-			return "translate(" + parseInt(d.source.x + (d.target.x - d.source.x)/2,10) + "," + parseInt(d.source.y + (d.target.y - d.source.y)/2,10) + ")"; 	});
-	*/
 	// node
 	canvas.selectAll(".node").attr("transform", function (d) { 
 		return "translate(" + parseInt(d.x,10) + "," + parseInt(d.y,10) + ")"; 
@@ -1610,7 +1672,7 @@ function visualize_workflow(data, canvas) {
 		.append("title") // add tooltip
 		.text(function (d) { return dataset.steps[d.id].name; });
 
-// TODO: consider chaning node shapes
+// TODO: consider changing node shapes
 	// node inputs
 	node_input = node.append("g").attr("transform", function (d) { 
 			return "translate(" + parseInt((shape_dim.node.width/2),10) + "," + 0 + ")";})
@@ -1730,22 +1792,8 @@ function visualize_workflow(data, canvas) {
 	var	overlay_on_click = function () {
 		// remove old table on click
 		d3.select("#workflowtbl").remove();
-
-		var sel_path = []
-			sel_node_rect = null,
-			sel_path_rect = null;
-
-		link.each( function (l) {
-			sel_path.push(l);
-		});
 		
-		// for every link
-		dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
-
-		// for each out_node
-		out_nodes.forEach( function (y) {
-			dye_node(y, "gray", 1.5, "lightsteelblue", false);
-		});
+		clear_highlighting(link);
 	}
 
 
@@ -1811,12 +1859,16 @@ function visualize_workflow(data, canvas) {
 
 	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("click", function (x) {
 		// get selected node
-		var sel_path = d3.select(this.parentNode.parentNode)[0][0].__data__.subgraph[+d3.select(this).attr("id")[14]],
+		var sel_node = d3.select(this.parentNode.parentNode)[0][0].__data__,
+			sel_path = sel_node.subgraph[+d3.select(this).attr("id")[14]],
 			sel_node_rect = d3.select(this.parentNode.parentNode).select(".nodeRect"),
 			sel_path_rect = d3.select(this).select(".inputConRect");
 
 		// clear previous highlighting
 		overlay_on_click();
+
+		// create table
+		create_table(sel_node);
 
 		// when path beginning with this node is not highlighted yet
 		if (sel_path[0].highlighted === false) {
@@ -1837,47 +1889,6 @@ function visualize_workflow(data, canvas) {
 
 		// suppress after dragend
 		if (d3.event.defaultPrevented) return;
-
-		// -----------------------------------------------------------------
-		// ------------------- TABLE ---------------------------------------
-		// -----------------------------------------------------------------
-
-		// remove old table on click
-		d3.select("#workflowtbl").remove();
-		
-		// add new table on click
-		table = d3.select("#node_table");
-		
-		var prop_tbl 			= table.append("table").attr("id", "workflowtbl").classed("table table-bordered table-condensed table-responsive", true),
-			tbody 				= prop_tbl.append("tbody"),
-			tableEntries 		= [],
-			tr 					= {},
-			td 					= {};
-	
-		// generate two-dimensional array dataset
-		d3.entries(dataset.steps[x.id]).forEach(function(y,i) {
-			switch(y.key) {
-				case "name":
-				case "tool_id":
-				case "tool_version":
-				case "tool_state":
-				case "annotation":
-					tableEntries.push([y.key, y.value]);
-					break;
-			};
-		});
-			
-		// nested tr-td selection for actual entries
-		tr = tbody.selectAll("tr")
-			.data(tableEntries)
-			.enter()
-			.append("tr");
-			
-		td = tr.selectAll("td")
-			.data(function(d) { return d; })
-			.enter()
-			.append("td")
-				.call(eval_node_params);
 
 
 
@@ -1905,6 +1916,14 @@ function visualize_workflow(data, canvas) {
 				dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
 			}	
 		}
+
+
+
+		// -----------------------------------------------------------------
+		// ------------------- TABLE ---------------------------------------
+		// -----------------------------------------------------------------
+
+		create_table(x);
 	});
 
 
