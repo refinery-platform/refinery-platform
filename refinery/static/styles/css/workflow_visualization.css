@@ -74,7 +74,7 @@
 	cursor: default;
 }
 
-.inputConRect, .inputConRectTitle, .fileIconInputConCircle, .fileIconOutputCircle, .fileIconInputCircle, .outRectCircle {
+.inputConRect, .inputConRectTitle, .fileIconInputConCircle, .fileIconOutputCircle, .fileIconInputCircle, .outRectCircleG, .inRectCircleG, .inputConRectCircleG {
 	cursor: pointer;
 }
 
