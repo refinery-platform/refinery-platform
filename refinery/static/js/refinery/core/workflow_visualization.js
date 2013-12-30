@@ -1168,6 +1168,49 @@ function create_nested_pos_table(parent) {
 
 
 /*
+ * resolve nested object within the tool state elemlents
+ *
+ * parent: the parent cell 
+ */
+function create_nested_recursive_tool_state_table(parent, properties) {
+	var table 	= null,
+		obj 	= null,
+		td 		= null;
+
+	obj = d3.entries(properties);
+
+	console.log("parent: ")
+	console.log(parent);
+
+	console.log("obj: ")
+	console.log(obj);
+
+	td = table = parent.append("table")
+		.classed("table table-condensed", true)
+		.classed("table-bordered", false)
+		.append("tbody").selectAll("tr")
+			.data(obj)
+			.enter()
+			.append("tr")
+				.selectAll("td")
+				.data(function(d) { return [d.key, d.value]; })
+				.enter()
+				.append("td");
+
+	// if data data contains another nested object, call recursively
+	// if not, just add the text to td
+	td.each( function (d) {
+		if (typeof d === "object") { 
+			return create_nested_recursive_tool_state_table(d3.select(this), d)
+		} else {
+			d3.select(this).text( function (d) { return d;});
+		}		
+	});		
+
+	return table;
+}
+
+/*
  * appends a table to its parent element
  * for tool state node element
  *
@@ -1182,7 +1225,8 @@ function create_nested_tool_state_table(parent) {
 	    json_data			= null,
 	    val 				= "",
 	    json_data			= null,
-	    obj					= null;
+	    obj					= null,
+	    td 					= null;
 
 	text = parent[0][0].__data__;
 
@@ -1197,34 +1241,38 @@ function create_nested_tool_state_table(parent) {
 	// transform to json object
 	json_data = JSON.parse (text);
 	obj = d3.entries(json_data);
-
-
-	console.log(obj);
-
-
 	
-
-// TODO: create flattened cells for recursive elements
-// DEBUG: don't show borders in nested table			
-	parent.append("table")
+	// add nested table	
+	td = parent.append("table")
 		.classed("table table-condensed", true)
 		.classed("table-bordered", false)
 		.append("tbody").selectAll("tr")
 			.data(obj)
 			.enter()
+			// add table row
 			.append("tr")
 				.selectAll("td")
-				.data(function(d) { return [d.key, d.value]; })
+				.data(function(d) { return [d.key, d.value]})
 				.enter()
-				.append("td")
-					.text(function(d) { return d; });
+				// add table data
+				.append("td");
+
+	// if data data contains another nested object, call recursively
+	// if not, just add the text to td
+	td.each( function (d) {
+		if (typeof d === "object") { 
+			return create_nested_recursive_tool_state_table(d3.select(this), d)
+		} else {
+			d3.select(this).text( function (d) { return d;});
+		}		
+	});				
 }
 
 
 /*
  * parses a string for its annotation parameters via regex
  *
- * 
+ * text: string
  */
 function parse_node_annotation(text) {
 	var re 				= null,
