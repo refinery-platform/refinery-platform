@@ -6,14 +6,6 @@
 
 /* DOCKED WINDOW STYLESHEETS */
 
-#selectionDetails { 
-	position: fixed; 
-	bottom:	30px; 
-	right: 50px;
-	width: 300px;
-}
-
-
 /* TABLE STYLESHEETS */
 /* inherited from bootstrap css */
 

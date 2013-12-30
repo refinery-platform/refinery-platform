@@ -129,48 +129,6 @@ function dye_circles (node_id) {
 
 
 /*
- * creates a table on click
- * 
- * node: node datastructure of dataset after the force layout is executed
- */
-function create_table (node) {
-	// add new table on click
-	table = d3.select("#node_table");
-	
-	var prop_tbl 			= table.append("table").attr("id", "workflowtbl").classed("table table-bordered table-condensed table-responsive", true),
-		tbody 				= prop_tbl.append("tbody"),
-		tableEntries 		= [],
-		tr 					= {},
-		td 					= {};
-
-	// generate two-dimensional array dataset
-	d3.entries(dataset.steps[node.id]).forEach(function(y,i) {
-		switch(y.key) {
-			case "name":
-			case "tool_id":
-			case "tool_version":
-			case "tool_state":
-			case "annotation":
-				tableEntries.push([y.key, y.value]);
-				break;
-		};
-	});
-		
-	// nested tr-td selection for actual entries
-	tr = tbody.selectAll("tr")
-		.data(tableEntries)
-		.enter()
-		.append("tr");
-		
-	td = tr.selectAll("td")
-		.data(function(d) { return d; })
-		.enter()
-		.append("td")
-			.call(eval_node_params);
-}
-
-
-/*
  * clears highlighted links, nodes and inputcon rects
  *
  * link: link datastructure after the force layout is executed
@@ -1122,6 +1080,48 @@ function init_force_layout(link_distance, link_strength, friction, charge, theta
 // #################################################################
 
 /*
+ * creates a table on click
+ * 
+ * node: node datastructure of dataset after the force layout is executed
+ */
+function create_table (node) {
+	// add new table on click
+	table = d3.select("#node_table");
+	
+	var prop_tbl 			= table.append("table").attr("id", "workflowtbl").classed("table table-bordered table-condensed table-responsive", true),
+		tbody 				= prop_tbl.append("tbody"),
+		tableEntries 		= [],
+		tr 					= {},
+		td 					= {};
+
+	// generate two-dimensional array dataset
+	d3.entries(dataset.steps[node.id]).forEach(function(y,i) {
+		switch(y.key) {
+			case "name":
+			case "tool_id":
+			case "tool_version":
+			case "tool_state":
+			case "annotation":
+				tableEntries.push([y.key, y.value]);
+				break;
+		};
+	});
+		
+	// nested tr-td selection for actual entries
+	tr = tbody.selectAll("tr")
+		.data(tableEntries)
+		.enter()
+		.append("tr");
+		
+	td = tr.selectAll("td")
+		.data(function(d) { return d; })
+		.enter()
+		.append("td")
+			.call(eval_node_params);
+}
+
+
+/*
  * appends a table to its parent element
  * for simple node parameters
  *
@@ -1179,12 +1179,6 @@ function create_nested_recursive_tool_state_table(parent, properties) {
 
 	obj = d3.entries(properties);
 
-	console.log("parent: ")
-	console.log(parent);
-
-	console.log("obj: ")
-	console.log(obj);
-
 	td = table = parent.append("table")
 		.classed("table table-condensed", true)
 		.classed("table-bordered", false)
@@ -1201,13 +1195,11 @@ function create_nested_recursive_tool_state_table(parent, properties) {
 	// if not, just add the text to td
 	td.each( function (d) {
 		if (typeof d === "object") { 
-			return create_nested_recursive_tool_state_table(d3.select(this), d)
+			create_nested_recursive_tool_state_table(d3.select(this), d);
 		} else {
 			d3.select(this).text( function (d) { return d;});
 		}		
 	});		
-
-	return table;
 }
 
 /*
@@ -1226,7 +1218,8 @@ function create_nested_tool_state_table(parent) {
 	    val 				= "",
 	    json_data			= null,
 	    obj					= null,
-	    td 					= null;
+	    td 					= null,
+	    nested_table 		= null;
 
 	text = parent[0][0].__data__;
 
@@ -1261,11 +1254,11 @@ function create_nested_tool_state_table(parent) {
 	// if not, just add the text to td
 	td.each( function (d) {
 		if (typeof d === "object") { 
-			return create_nested_recursive_tool_state_table(d3.select(this), d)
+			create_nested_recursive_tool_state_table(d3.select(this), d);
 		} else {
 			d3.select(this).text( function (d) { return d;});
 		}		
-	});				
+	});			
 }
 
 
@@ -1360,22 +1353,24 @@ function eval_node_params(tr) {
 					td = d3.select(this).text("Annotation"); 
 					break;
 			};
+			//td.attr("class", "span3");
 		} else if (this.cellIndex == 1) {
 			if (this.__data__) {
+				//td = d3.select(this).attr("class", "span9");
 				switch(this.parentNode.__data__[0]) {
 					case "name":
 					case "id":
 					case "tool_version": 	
 						td = d3.select(this).text(d);
 						break;
-// TODO: break lines
 					case "tool_id":
 						td = d3.select(this).text(d);
 						break;
 					case "tool_state":  
-						td = d3.select(this).call(create_nested_tool_state_table);
-						break;					
-// TODO: only works for the first file					
+// TODO: restrict inner table width and height to the dynamic span length of the outer table
+						td = d3.select(this).append("div").attr("class","nestedTable").call(create_nested_tool_state_table);
+						td.style({"max-height": String(shape_dim.window.height*0.7)+"px", "max-width": String(shape_dim.window.width*0.25*0.75)+"px", "overflow": "auto"})
+						break;									
 					case "annotation":	
 						td = d3.select(this).call(create_nested_annotation_table);
 						break;
