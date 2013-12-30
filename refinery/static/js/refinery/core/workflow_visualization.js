@@ -27,6 +27,10 @@ layout_translation = {
 
 
 
+// #################################################################
+// ########## HELPERS ##############################################
+// #################################################################
+
 /*
  * create a circle left and right to the node for interaction purposes
  *
@@ -230,12 +234,6 @@ function fit_wf_to_window () {
 	zoom.translate(new_pos);
 	zoom.scale(new_scale);
 }
-
-
-
-// #################################################################
-// ########## HELPERS ##############################################
-// #################################################################
 
 // TODO: generalize for all attributes
 /*
@@ -1201,12 +1199,12 @@ function create_nested_tool_state_table(parent) {
 	obj = d3.entries(json_data);
 
 
-//	console.log(obj);
+	console.log(obj);
 
 
 	
 
-// TODO: create recursive table
+// TODO: create flattened cells for recursive elements
 // DEBUG: don't show borders in nested table			
 	parent.append("table")
 		.classed("table table-condensed", true)

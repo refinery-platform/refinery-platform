@@ -50,7 +50,19 @@
 		<div class="refinery-subheader">
 			<h4>Structure</h4>
 		</div>
-		<p><div id="vis_workflow"></div></p>
+		<p>
+			<div>
+					<div class="row-fluid">
+						<div id="vis_workflow" class="span9"></div>
+						<div class="span3">
+							<div class="refinery-subheader">
+								<a href="#" onclick="toggle_visibility('node_table');"><h4>Toggle Selection Details &raquo; </h4></a>
+							</div>
+							<div id="node_table" style="display:block;">
+						</div>
+					</div>
+			</div>
+		</p>
 
 		<!-- image of original refinery layout-->
 		<!--<p><img src="{{ workflow_graph_url }}"></a></p>-->
@@ -121,13 +133,14 @@
 	</div>
 
 	<!-- docked and selected tool (node) table -->
+	<!--
 	<div id="selectionDetails">
 		<div class="refinery-subheader">
 			<a href="#" onclick="toggle_visibility('node_table');"><h4>Toggle Selection Details &raquo; </h4></a>
 		</div>
 		<div id="node_table" style="display:block;">
     </div>
-
+	-->
 </div>
 {% endblock %}
 
