@@ -434,6 +434,7 @@ def workflow(request, uuid):
         
     nx.draw_networkx_labels(graph, positions, labels={graph.nodes()[i]:graph.node[graph.nodes()[i]]['name'] for i in range(0,len(graph.nodes()))},font_color="black")    
     nx.draw_networkx_edge_labels(graph, positions, labels=["("+graph[id[0]][id[1]]["name"]+")" for id in graph.edges()],font_size=12)    
+    #TODO: handle OSError when temp file creation fails
     tempfile = NamedTemporaryFile(dir=get_temp_dir(), delete=False)
     tempfile_name = tempfile.name + ".png";
     plt.axis('off')
