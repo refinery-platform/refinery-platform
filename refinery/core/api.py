@@ -247,7 +247,7 @@ class WorkflowResource(ModelResource):
         resource_name = 'workflow'
         detail_uri_name = 'uuid'
         allowed_methods = ['get']
-        fields = ['name', 'uuid', 'description']
+        fields = ['name', 'uuid', 'summary']
 
     def dehydrate(self, bundle):
         # detect if detail
