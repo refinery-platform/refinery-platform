@@ -20,20 +20,14 @@ angular.module('refineryApp', [
     $scope.workflowList = Workflows.objects;
   });
 
-  $scope.isWorkflowSelected = function() {
-    return $scope.workflowIndex === '0' ? true : $scope.workflowIndex;
+  $scope.updateCurrentWorkflow = function() {
+    $scope.currentWorkflow = $scope.workflowList[$scope.workflowIndex];
   };
 
-  $scope.getWorkflowInputRelationship = function() {
-    if ($scope.workflowList && $scope.workflowIndex) {
-      return $scope.workflowList[$scope.workflowIndex].input_relationships[0];
-    } else {
-      return '';
+  $scope.isCurrentWorkflowSingleInput = function() {
+    if ($scope.currentWorkflow) {
+      return $scope.currentWorkflow.input_relationships[0].set2 ? false : true;
     }
-  };
-
-  $scope.isWorkflowSingleInput = function() {
-    return $scope.getWorkflowInputRelationship().set2 ? false : true;
   };
 })
 
