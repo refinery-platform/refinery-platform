@@ -52,16 +52,23 @@
 		</div>
 		<p>
 			<div>
-					<div class="row-fluid">
-						<div id="vis_workflow" class="span9"></div>
-						<div class="span3">
-							<div class="refinery-subheader">
-								<a href="#" onclick="toggle_visibility('node_table');"><h4>Toggle Selection Details &raquo; </h4></a>
-							</div>
-							<div id="node_table" width="auto">
+				<div class="row-fluid">
+					<div id="vis_workflow" class="span12"></div>
+					<div class="span12">
+						<!-- <div class="refinery-subheader">
+							<a href="#" onclick="toggle_visibility('node_table');"><h4>Toggle Selection Details &raquo; </h4></a>
 						</div>
+						<div id="node_table"> -->
 					</div>
+				</div>
 			</div>
+		</p>
+
+		<div class="refinery-subheader">
+			<a href="#" onclick="toggle_visibility('node_table');"><h4>Toggle Selection Details &raquo; </h4></a>
+		</div>
+		<p>
+			<div id="node_table"></div>
 		</p>
 
 		<!-- image of original refinery layout-->
@@ -174,7 +181,6 @@
 		    table 		= null, // properties table
 		    dataset 	= null, // actual dataset
 		    layout 		= document.getElementById("cb_layout_kind_refinery").checked ? "1" : "0";
-		    console.log(layout)
 			// null typeError in console if uncommented
 			// shape_dim = null;
 		}
@@ -186,7 +192,8 @@
 		function reload_workflow () {
 			clear_svg();
 
-			canvas 		= init_canvas("#vis_workflow", document.documentElement.clientWidth-100, document.documentElement.clientHeight-100);
+			//canvas 		= init_canvas("#vis_workflow", document.documentElement.clientWidth-100, document.documentElement.clientHeight-100);
+			canvas 		= init_canvas("#vis_workflow");
 			shape_dim 	= init_dimensions(60, 30, 50, 11, 50, 6);	
 			layout_prop = init_force_layout(100, 1, 0.9, -100, 0.8, 0.0);	
 
@@ -228,7 +235,7 @@
 	        layout 		= document.getElementById("cb_layout_kind_refinery").checked ? "1" : "0";
 
 		// initialize svg to body
-		canvas 		= init_canvas("#vis_workflow", document.documentElement.clientWidth-100, document.documentElement.clientHeight-100);
+		canvas 		= init_canvas("#vis_workflow");
 		
 		// initialize window and shape dimensions
 		shape_dim 	= init_dimensions(60, 30, 50, 11, 50, 6);	

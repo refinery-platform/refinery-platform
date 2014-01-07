@@ -31,6 +31,49 @@ layout_translation = {
 // ########## HELPERS ##############################################
 // #################################################################
 
+
+/*
+ * adds responsiveness on window resize to the visualization
+ *
+ */ 
+function resize() {
+	var new_width = 0,
+		new_height = 0;
+
+	// calc new width after resize
+	new_width = parseInt(d3.select("#vis_workflow").style("width"),10);
+// DEBUG: magically the the height gets expanded by x when resizing the width or height of the window
+	new_height = parseInt(d3.select("#vis_workflow").style("height"),10);
+
+	console.log(d3.select("#vis_workflow"));
+
+	// set svg
+	d3.select("svg")
+		.attr("width", new_width + "px")
+		.attr("height", new_height + "px");
+
+	// set canvas
+	canvas
+		.attr("width", new_width + "px")
+		.attr("height", new_height + "px");
+
+	// update globals
+	shape_dim.window.width = new_width;
+	shape_dim.window.height = new_height;
+
+	console.log(new_width + " x " + new_height);
+
+	// update visualization
+	fit_wf_to_window(0);
+
+	// update overlay
+	d3.select(".overlay")
+		.attr("x", -new_width + "px")
+		.attr("y", -new_height + "px")
+		.attr("width", new_width*4 + "px")
+		.attr("height", new_height*4 + "px");
+}
+
 /*
  * create a circle left and right to the node for interaction purposes
  *
@@ -154,8 +197,10 @@ function dye_circles (node_id) {
 
 /*
  * fits the current workflow to the window
+ *
+ * transitionTime: specify the ms when a transition occurs, with 0 no transition is executed
  */
-function fit_wf_to_window () {
+function fit_wf_to_window (transitionTime) {
 	var min 	= [],
 		max 	= [],
 		delta 	= [],
@@ -184,10 +229,15 @@ function fit_wf_to_window () {
 	new_pos[0] -= min[0]*new_scale;
 	new_pos[1] -= min[1]*new_scale;
 
-	canvas
-          .transition()
-          .duration(1000)
-          .attr("transform", "translate(" + new_pos + ")scale(" + new_scale + ")");
+
+	if (transitionTime !== 0) {
+		canvas
+	          .transition()
+	          .duration(1000)
+	          .attr("transform", "translate(" + new_pos + ")scale(" + new_scale + ")");
+	} else {
+		canvas.attr("transform", "translate(" + new_pos + ")scale(" + new_scale + ")");
+	}
 	
 	zoom.translate(new_pos);
 	zoom.scale(new_scale);
@@ -1023,10 +1073,16 @@ function dragend(d) {
  * width, height: proportions
  * returns the actual generated svg canvas
  */
-function init_canvas(div_id, width, height) {
+function init_canvas(div_id) {
 	var canvas 	= d3.select(div_id).append("svg")
-		.attr("width", width)
-		.attr("height", height)
+		/*.attr("width","1000")
+		.attr("height","500")
+		.attr("viewBox","0 0 1000 500")
+		.attr("preserveAspectRatio","xMinYMin meet")*/
+		.attr("width", d3.select("#vis_workflow").style("width"))
+		.attr("height", "500px")		
+		//.attr("min-height", "500px")
+		//.attr("height", "auto")
 		.append("g");
 	
 	return canvas;
@@ -1043,7 +1099,7 @@ function init_canvas(div_id, width, height) {
  */
 function init_dimensions(node_width, node_height, io_width, io_height, margin, io_offset) {
 	return {
-		window: 	{width: +d3.select("svg").attr("width"), height: +d3.select("svg").attr("height")},
+		window: 	{width: parseInt(d3.select("#vis_workflow").style("width"),10), height: parseInt(d3.select("#vis_workflow").style("height"),10)},
 		node: 		{width: node_width, height: node_height, title_margin: 30}, 
 		node_io: 	{width: io_width, height: io_height, offset: io_offset},
 		margin: 	{left: margin, top: margin, right: margin, bottom: margin},
@@ -1369,7 +1425,7 @@ function eval_node_params(tr) {
 					case "tool_state":  
 // TODO: restrict inner table width and height to the dynamic span length of the outer table
 						td = d3.select(this).append("div").attr("class","nestedTable").call(create_nested_tool_state_table);
-						td.style({"max-height": String(shape_dim.window.height*0.7)+"px", "max-width": String(shape_dim.window.width*0.25*0.75)+"px", "overflow": "auto"})
+						//td.style({"max-height": String(shape_dim.window.height*0.7)+"px", "max-width": String(shape_dim.window.width*0.25*0.75)+"px", "overflow": "auto"})
 						break;									
 					case "annotation":	
 						td = d3.select(this).call(create_nested_annotation_table);
@@ -1530,10 +1586,10 @@ function visualize_workflow(data, canvas) {
 	// overlay rect for zoom	
 	canvas.append("g").append("rect")
 			.attr("class", "overlay")
-			.attr("x", -shape_dim.window.width/2)
-			.attr("y", -shape_dim.window.height/2)
-			.attr("width", shape_dim.window.width*2)
-			.attr("height", shape_dim.window.height*2)
+			.attr("x", -shape_dim.window.width)
+			.attr("y", -shape_dim.window.height)
+			.attr("width", shape_dim.window.width*4)
+			.attr("height", shape_dim.window.height*4)
 			.attr("fill","none")
 			.attr("pointer-events", "all");
 
@@ -1915,7 +1971,7 @@ function visualize_workflow(data, canvas) {
 		//for (var i = 0; i < 1; ++i) force.tick();
 	
 	// initial fit to window call
-	fit_wf_to_window();
+	fit_wf_to_window(0);
 
 
 
@@ -1941,7 +1997,7 @@ function visualize_workflow(data, canvas) {
 	// ------------------- FIT WORKFLOW TO WINDOW ----------------------
 	// -----------------------------------------------------------------
 	var overlay_on_dblclick = function () {
-		fit_wf_to_window();
+		fit_wf_to_window(1000);
 	}
 
 
@@ -2478,6 +2534,12 @@ function visualize_workflow(data, canvas) {
 		update();
 	});
 
+
+	// -----------------------------------------------------------------
+	// ------------------- WINDOW RESIZE -------------------------------
+	// -----------------------------------------------------------------
+	d3.select(window).on("resize", resize);
+	
 
 
 	// #################################################################
