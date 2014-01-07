@@ -28,21 +28,29 @@
     </div>
     {% verbatim %}
     <div ng-controller="WorkflowListApiCtrl">
-      <select ui-select2 ng-model="index" style="width:25%" data-placeholder="Select a workflow">
+      <select ui-select2 ng-model="workflowIndex" style="width:25%" data-placeholder="Select a workflow">
         <option value=""></option>  <!-- required for showing placeholder text -->
-        <option ng-repeat="w in workflowList" value="{{$index}}">{{w.name}}</option>
+        <option ng-repeat="workflow in workflowList" value="{{$index}}">{{workflow.name}}</option>
       </select>
-      <div ng-cloak ng-show="workflowSelected()">
+      <div ng-cloak ng-show="isWorkflowSelected()">
         <p><strong>Name:</strong></p>
-        <p>{{workflowList[index].name}}</p>
+        <p>{{workflowList[workflowIndex].name}}</p>
         <p><strong>Inputs:</strong></p>
         Sample mapping: {{getWorkflowInputRelationship().category}}<br/>
         {{getWorkflowInputRelationship().set1}}<br/>
         {{getWorkflowInputRelationship().set2}}<br/>
         <strong>Summary:</strong><br/>
-        <p>{{workflowList[index].summary}}</p>
+        <p>{{workflowList[workflowIndex].summary}}</p>
         <strong>Author:</strong>
-        <p>{{workflowList[index].author}}</p>
+        <p>{{workflowList[workflowIndex].author}}</p>
+        <hr />
+        <div ng-controller="NodeSetListApiCtrl" ng-show="isWorkflowSingleInput()">
+          <h4>Sets</h4>
+          <select ui-select2 ng-model="nodesetIndex" style="width:25%" data-placeholder="Choose input set">
+            <option value=""></option>  <!-- required for showing placeholder text -->
+            <option ng-repeat="nodeset in nodesetList" value="{{$index}}">{{nodeset.name}}</option>
+          </select>
+        </div>
       </div>
     </div>
     {% endverbatim %}
