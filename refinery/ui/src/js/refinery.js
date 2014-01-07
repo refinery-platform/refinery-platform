@@ -19,6 +19,20 @@ angular.module('refineryApp', [
   var Workflows = Workflow.get(function() {
     $scope.workflowList = Workflows.objects;
   });
+
+  $scope.workflowSelected = function() {
+    return $scope.index === '0' ? true : $scope.index;
+    // return $scope.index;
+  };
+
+  $scope.getWorkflowInputRelationship = function() {
+    if ($scope.workflowList && $scope.index) {
+      return $scope.workflowList[$scope.index].input_relationships[0];
+    } else {
+      return '';
+    }
+  };
+
 });
 
 //var refineryControllers = angular.module('refineryControllers', []);
