@@ -35,5 +35,6 @@ def download_workflow (request, workflow_uuid):
     """Returns a specified workflow_id as a dictionary object.
 
     """
+    #TODO: handle DoesNotExist - use get_object_or_404()?
     workflow = Workflow.objects.filter(uuid=workflow_uuid).get()
     return HttpResponse(workflow.graph)
