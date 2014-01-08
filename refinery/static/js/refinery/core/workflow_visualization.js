@@ -45,7 +45,7 @@ function resize() {
 // DEBUG: magically the the height gets expanded by x when resizing the width or height of the window
 	new_height = parseInt(d3.select("#vis_workflow").style("height"),10);
 
-	console.log(d3.select("#vis_workflow"));
+	//console.log(d3.select("#vis_workflow"));
 
 	// set svg
 	d3.select("svg")
@@ -61,7 +61,7 @@ function resize() {
 	shape_dim.window.width = new_width;
 	shape_dim.window.height = new_height;
 
-	console.log(new_width + " x " + new_height);
+	//console.log(new_width + " x " + new_height);
 
 	// update visualization
 	fit_wf_to_window(0);
@@ -119,7 +119,7 @@ function check_stored_outputs (output) {
 		values 			= [],
 		index 			= -1;
 
-	cur_node_id = this[0].parentNode.__data__.id
+	cur_node_id = output[0][0].parentNode.parentNode.parentNode.__data__.id;
 	cur_node = dataset.steps[cur_node_id];
 	annoProperties = parse_node_annotation(cur_node.annotation);
 	child_circles = d3.select("#node_" + cur_node_id).select(".nodeOutput").selectAll(".outRectCircle");
@@ -1073,6 +1073,7 @@ function dragend(d) {
  * width, height: proportions
  * returns the actual generated svg canvas
  */
+// DEBUG: MAGIC fixed height
 function init_canvas(div_id) {
 	var canvas 	= d3.select(div_id).append("svg")
 		/*.attr("width","1000")
@@ -1080,7 +1081,7 @@ function init_canvas(div_id) {
 		.attr("viewBox","0 0 1000 500")
 		.attr("preserveAspectRatio","xMinYMin meet")*/
 		.attr("width", d3.select("#vis_workflow").style("width"))
-		.attr("height", "500px")		
+		.attr("height", function () { return window.innerHeight*0.8 + "px"})		
 		//.attr("min-height", "500px")
 		//.attr("height", "auto")
 		.append("g");
@@ -1897,8 +1898,17 @@ function visualize_workflow(data, canvas) {
 			return "translate(" + parseInt((shape_dim.node.width/2),10) + "," + 0 + ")";})
 		.attr("class", "nodeInput");
 
+	// add groups for title rect pairs
+	node_input.selectAll("nodeInputG")
+		.data(function (d) { return d3.values(dataset.steps[d.id].inputs); })
+		.enter()
+		.append("g")
+			.attr("class", "nodeInputG")
+			.attr("id", function (d,i) { return "nodeInputG_" + i;});
+
 	// create input circle
 	node_input_circle = create_node_circle (node_input_circle, node, "nodeInputCircle", file_icon_input_circle, "fileIconInputCircle", shape_dim.node.width/2);
+
 
 	// node input_con
 	node_input_con = node.append("g").attr("transform", function (d) { 
@@ -1906,7 +1916,7 @@ function visualize_workflow(data, canvas) {
 		.attr("class", "nodeInputCon");
 
 	// add groups for title rect pairs - without the interaction is not possible
-	node_input_con_g = node_input_con.selectAll("nodeInputConG")
+	node_input_con.selectAll("nodeInputConG")
 		.data(function (d) { return d3.values(dataset.steps[d.id].input_connections); })
 		.enter()
 		.append("g")
@@ -1916,10 +1926,19 @@ function visualize_workflow(data, canvas) {
 	// create input con circle
 	node_input_con_circle = create_node_circle (node_input_con_circle, node, "nodeInputConCircle", file_icon_input_con_circle, "fileIconInputConCircle", -shape_dim.node.width/2);
 
+
 	// node outputs
 	node_output = node.append("g").attr("transform", function (d) { 
 			return "translate(" + parseInt((shape_dim.node.width/2),10) + "," + 0 + ")";})
 		.attr("class", "nodeOutput");
+
+	// add groups for title rect pairs
+	node_output.selectAll("nodeOutputG")
+		.data(function (d) { return d3.values(dataset.steps[d.id].outputs); })
+		.enter()
+		.append("g")
+			.attr("class", "nodeOutputG")
+			.attr("id", function (d,i) { return "nodeOutputG_" + i;});
 
 	// create output circle
 	node_output_circle = create_node_circle (node_output_circle, node, "nodeOutputCircle", file_icon_output_circle, "fileIconOutputCircle", shape_dim.node.width/2);
@@ -2036,46 +2055,6 @@ function visualize_workflow(data, canvas) {
 
 
 	// -----------------------------------------------------------------
-	// ------------------- HIGHLIGHTING PATHS WITH TOGGLE --------------
-	// -----------------------------------------------------------------
-	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("mouseover", function (x) {
-		d3.select(this).select(".inputConRect")
-			.attr("fill", "orange");
-	});
-
-	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("mouseout", function (x) {
-		var sel_path = d3.select(this.parentNode.parentNode)[0][0].__data__.subgraph[+d3.select(this).attr("id")[14]];
-
-		if (sel_path[0].highlighted === false) {
-			d3.select(this).select(".inputConRect")
-				.attr("fill", "lightsteelblue");
-		}
-	});
-
-	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("click", function (x) {
-		// get selected node
-		var sel_node = d3.select(this.parentNode.parentNode)[0][0].__data__,
-			sel_path = sel_node.subgraph[+d3.select(this).attr("id")[14]],
-			sel_node_rect = d3.select(this.parentNode.parentNode).select(".nodeRect"),
-			sel_path_rect = d3.select(this).select(".inputConRect");
-
-		// clear previous highlighting
-		overlay_on_click();
-
-		// create table
-		create_table(sel_node);
-
-		// when path beginning with this node is not highlighted yet
-		if (sel_path[0].highlighted === false) {
-			dye_path(sel_path, sel_node_rect, sel_path_rect, "orange", 5, "orange", true);
-		} else {
-			dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
-		}
-	});
-
-
-
-	// -----------------------------------------------------------------
 	// ------------------- TABLE AND PATH HIGHLIGHTING -----------------
 	// -----------------------------------------------------------------
 
@@ -2128,12 +2107,14 @@ function visualize_workflow(data, canvas) {
 	// -----------------------------------------------------------------
 	node_input_con_circle.on("mouseover", function (x) {	
 		d3.select(this).select(".fileIconInputConCircle")
-			.attr("stroke", "steelblue");
+			.attr("stroke", "steelblue")
+			.attr("stroke-width", 2);
 	});
 	
 	node_input_con_circle.on("mouseout", function (x) {	
 		d3.select(this).select(".fileIconInputConCircle")
-			.attr("stroke", "gray");
+			.attr("stroke", "gray")
+			.attr("stroke-width", 1.5);
 	});
 
 	node_input_con_circle.on("click", function (x) {	
@@ -2204,72 +2185,76 @@ function visualize_workflow(data, canvas) {
 
 		});
 
-		d3.selectAll(".inputConRectCircleG").on("mouseover", function (x) {
-			d3.select(this).select(".inputConRectCircle")
-				.attr("stroke", "steelblue");
-		});
-
-		d3.selectAll(".inputConRectCircleG").on("mouseout", function (x) {
-			d3.select(this).select(".inputConRectCircle")
-				.attr("stroke", "gray");
-		});
-
-
 		// hide input circle
 		d3.select("#node_" + this.parentNode.__data__.id).select(".nodeInputConCircle").attr("opacity", 0);	
 	
 		force.resume();
 		update();
+	});
 
 
-		// -----------------------------------------------------------------
-		// ------------------- INPUT CON FILES REMOVE EVENT -------------------
-		// -----------------------------------------------------------------
-		d3.selectAll(".nodeInputCon").selectAll(".inputConRectCircleG").on("click", function (z) {
-			var node_circle = null,
-				cur_node_id = 0;
 
-			x.expanded_in_con = false;
-			dataset.columns[x.column].inputs -= 1;
+	// -----------------------------------------------------------------
+	// ------------------- INPUT CON FILES REMOVE EVENT ----------------
+	// -----------------------------------------------------------------
+	d3.selectAll(".nodeInputConG").on("mouseover", function (x) {
+		d3.select(this).select(".inputConRectCircle")
+			.attr("stroke", "steelblue")
+			.attr("stroke-width", 2);		
+		d3.select(this).select(".inputConRect")
+			.attr("stroke", "steelblue")
+			.attr("stroke-width", 2);
+	});
 
-			if (dataset.columns[x.column].inputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
-				update_column_translation(x.column, layout_translation.COLLAPSE_LEFT);
-			}
+	d3.selectAll(".nodeInputConG").on("mouseout", function (x) {
+		d3.select(this).select(".inputConRectCircle")
+			.attr("stroke", "gray")
+			.attr("stroke-width", 1);		
+		d3.select(this).select(".inputConRect")
+			.attr("stroke", "gray")
+			.attr("stroke-width", 1);
+	});
 
-			// show input con circle again
-			cur_node_id = this.parentNode.parentNode.__data__.id;
-			node_circle = d3.select("#node_" + cur_node_id).select(".nodeInputConCircle");
-			node_circle.attr("opacity", 1);
+	d3.selectAll(".nodeInputCon").on("click", function (x) {
+		var node_circle = null,
+			cur_node_id = 0;
 
-			console.log(d3.select(this.parentNode))
+		x.expanded_in_con = false;
+		dataset.columns[x.column].inputs -= 1;
 
-			// remove expanded files
-			d3.select(this.parentNode).selectAll(".nodeInputConG").selectAll(".inputConRectTitle").remove();
-			d3.select(this.parentNode).selectAll(".nodeInputConG").selectAll(".inputConRect").remove();
-			d3.select(this.parentNode).selectAll(".inputConRectCircleG").remove();
+		if (dataset.columns[x.column].inputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
+			update_column_translation(x.column, layout_translation.COLLAPSE_LEFT);
+		}
 
-			force.resume();
-			update();
-		});
-// DEBUG: sometimes, the links won't update after collapsing an output section
-// therefore another resume and updated was added
+		// show input con circle again
+		cur_node_id = this.parentNode.__data__.id;
+		node_circle = d3.select("#node_" + cur_node_id).select(".nodeInputConCircle");
+		node_circle.attr("opacity", 1);
+
+		// remove expanded files
+		d3.select(this.parentNode).selectAll(".inputConRectTitle").remove();
+		d3.select(this.parentNode).selectAll(".inputConRect").remove();
+		d3.select(this.parentNode).selectAll(".inputConRectCircleG").remove();
+
 		force.resume();
 		update();
 	});
 
 
-
+	
 	// -----------------------------------------------------------------
 	// ------------------- OUTPUT FILES --------------------------------
 	// -----------------------------------------------------------------
 	node_output_circle.on("mouseover", function (x) {	
 		d3.select(this).select(".fileIconOutputCircle")
-				.attr("stroke", "steelblue");
+				.attr("stroke", "steelblue")
+				.attr("stroke-width", 2);
 	});
 	
 	node_output_circle.on("mouseout", function (x) {	
 		d3.select(this).select(".fileIconOutputCircle")
-				.attr("stroke", "gray");
+				.attr("stroke", "gray")
+				.attr("stroke-width", 1.5);
 	});
 
 	node_output_circle.on("click", function (x) {	
@@ -2283,117 +2268,109 @@ function visualize_workflow(data, canvas) {
 			update_column_translation(x.column, layout_translation.EXPAND_RIGHT);
 		}
 
-		output_rect = d3.select(this.parentNode).select(".nodeOutput").selectAll(".outRectTitle");
-		
-		output_rect.data(function (d) { return dataset.steps[d.id].outputs; })
-		.enter()
-		.append("rect")
-			.attr("class", "outputRect")
-			.attr("id", function (d,i) { return "outputRect_" + i;})
-			.attr("x", shape_dim.node_io.offset)
-			.attr("y", function (d,i) { 
-				return (shape_dim.node_io.height+2)*(i+1)
-				- get_outputs_length(this.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2 - shape_dim.node_io.height; 
-			})
-			.attr("width", shape_dim.node_io.width)
-			.attr("height", shape_dim.node_io.height)
-			.attr("rx", 1)
-			.attr("ry", 1)
-			.attr("fill", "lightsteelblue")
-			.attr("stroke", "gray")
-			.attr("stroke-width", 1);
-
-		// when path was highlighted before, fill rectangle orange
-		// get links via source id and for each link
-		get_succ_links_by_node_id(x.id).forEach( function (l) {
-			if (l.highlighted) {
-				d3.select("#node_"+l.source.id).select(".nodeOutput").select("#outputRect_" + output_input_con_file_link(l)[0])
-					.attr("fill", "orange");
-			}
-		});
-
-		// add file name
-		output_rect.data(function (d) { return dataset.steps[d.id].outputs; })
-		.enter()
-		.append("text")
-			.attr("id", function (d,i) { return "outRectTitle_" + i;})
-			.attr("class", "outRectTitle")
-			.text(function (d) { return cut_io_file_name(d.name); })
-			.attr("x", shape_dim.node_io.offset+2)
-			.attr("y", function (d,i) { 
-				return (shape_dim.node_io.height+2)*(i+1)
-				- get_outputs_length(this.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2-3; 
-			})
-			.attr("title", function (d) { return "name: " + d.name + "\n" + "type: " + d.type; });
-
-
-		// create moving anchors
-
-		// files imported back to refinery
-		// when name is key element of annotation properties,
-		// rename it to its value element and display it in italic style
-		// and add a steelblue filled circle to the right of the rect
-		output_rect.data(function (d) { return dataset.steps[d.id].outputs; })
-		.enter()
-		.append("g")
-			.attr("class", "outRectCircleG")
-			.attr("transform", function (d,i) { 
-				return "translate(" 
-					+ parseInt(shape_dim.node_io.offset + shape_dim.node_io.width,10) + "," 
-					+ parseInt((shape_dim.node_io.height+2)*(i+1) 
-						- get_outputs_length(this.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2 
-						- shape_dim.node_io.height/2,10) + ")" })
-			.append("circle")
-
-				.attr("class", "outRectCircle")
-				.attr("r", shape_dim.circle.r)
+		d3.select(this.parentNode).selectAll(".nodeOutputG").each( function (d,j) {
+			d3.select(this).append("rect")
+				.attr("class", "outputRect")
+				.attr("x", function(d) {
+					return shape_dim.node_io.offset;
+				})
+				.attr("y", function (d,i) { 
+					return (shape_dim.node_io.height+2)*(j+1)
+					- get_outputs_length(this.parentNode.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2 - shape_dim.node_io.height; 
+				})
+				.attr("width", shape_dim.node_io.width)
+				.attr("height", shape_dim.node_io.height)
+				.attr("rx", 1)
+				.attr("ry", 1)
+				.attr("fill", "lightsteelblue")
 				.attr("stroke", "gray")
-				.attr("stroke-width", 1.5)
-				.call(check_stored_outputs);		
+				.attr("stroke-width", 1);
 
-		d3.selectAll(".outRectCircleG").on("mouseover", function (x) {
-			d3.select(this).select(".outRectCircle")
-				.attr("stroke", "steelblue");
-		});
+			// when path was highlighted before, fill rectangle orange
+			// get links via source id and for each link
+			get_succ_links_by_node_id(this.parentNode.parentNode.__data__.id).forEach( function (l) {
+				if (l.highlighted) {
+					d3.select("#node_"+l.source.id).select(".nodeOutput").select("#outputRect_" + output_input_con_file_link(l)[0])
+						.attr("fill", "orange");
+				}
+			});
 
-		d3.selectAll(".outRectCircleG").on("mouseout", function (x) {
-			d3.select(this).select(".outRectCircle")
-				.attr("stroke", "gray");
+			// add file name
+			d3.select(this).append("text")
+				.attr("id", function (d,i) { return "outRectTitle_" + i;})
+				.attr("class", "outRectTitle")
+				.text(function (d) { return cut_io_file_name(d.name); })
+				.attr("x", shape_dim.node_io.offset+2)
+				.attr("y", function (d,i) { 
+					return (shape_dim.node_io.height+2)*(j+1)
+					- get_outputs_length(this.parentNode.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2-3; 
+				})
+				.attr("title", function (d) { return "name: " + d.name + "\n" + "type: " + d.type; });
+
+
+			// create moving anchors
+
+			// files imported back to refinery
+			// when name is key element of annotation properties,
+			// rename it to its value element and display it in italic style
+			// and add a steelblue filled circle to the right of the rect
+			d3.select(this).append("g")
+				.attr("class", "outRectCircleG")
+				.attr("transform", function (d,i) { 
+					return "translate(" 
+						+ parseInt(shape_dim.node_io.offset + shape_dim.node_io.width,10) + "," 
+						+ parseInt((shape_dim.node_io.height+2)*(j+1) 
+							- get_outputs_length(this.parentNode.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2 
+							- shape_dim.node_io.height/2,10) + ")" })
+				.append("circle")
+					.attr("class", "outRectCircle")
+					.attr("r", shape_dim.circle.r)
+					.attr("stroke", "gray")
+					.attr("stroke-width", 1.5)
+					.call(check_stored_outputs);
 		});
 
 		force.resume();
 		update();
+	});
 
-		// -----------------------------------------------------------------
-		// ------------------- OUTPUT FILES REMOVE EVENT -------------------
-		// -----------------------------------------------------------------
-		d3.selectAll(".nodeOutput").selectAll(".outRectCircleG").on("click", function (z) {
-			var node_circle = null,
-				cur_node_id = 0;
+	// -----------------------------------------------------------------
+	// ------------------- OUTPUT FILES REMOVE EVENT -------------------
+	// -----------------------------------------------------------------
+	d3.selectAll(".nodeOutputG").on("mouseover", function (x) {
+		d3.select(this).selectAll(".outputRect")
+			.attr("stroke", "steelblue")
+			.attr("stroke-width", 2);
+	});
 
-			x.expanded_out = false;
-			dataset.columns[x.column].outputs -= 1;
-			
-			if (dataset.columns[x.column].outputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
-				update_column_translation(x.column, layout_translation.COLLAPSE_RIGHT);
-			}
+	d3.selectAll(".nodeOutputG").on("mouseout", function (x) {
+		d3.select(this).selectAll(".outputRect")
+			.attr("stroke", "gray")
+			.attr("stroke-width", 1);
+	});
 
-			// show output circle again
-			cur_node_id = this.parentNode.__data__.id;
-			node_circle = d3.select("#node_" + cur_node_id).select(".nodeOutputCircle");
-			node_circle.attr("opacity", 1);
-			
-			// remove expanded files
-			d3.select(this.parentNode).selectAll(".outRectTitle").remove();
-			d3.select(this.parentNode).selectAll(".outputRect").remove();
-			d3.select(this.parentNode).selectAll(".outputRefImport").remove();
-			d3.select(this.parentNode).selectAll(".outRectCircleG").remove();
+	d3.selectAll(".nodeOutput").on("click", function (x) {
+		var node_circle = null,
+			cur_node_id = 0;
 
-			force.resume();
-			update();
-		});
-// DEBUG: sometimes, the links won't update after collapsing an output section
-// therefore another resume and updated was added
+		x.expanded_out = false;
+		dataset.columns[x.column].outputs -= 1;
+		
+		if (dataset.columns[x.column].outputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
+			update_column_translation(x.column, layout_translation.COLLAPSE_RIGHT);
+		}
+
+		// show output circle again
+		cur_node_id = this.parentNode.__data__.id;
+		node_circle = d3.select("#node_" + cur_node_id).select(".nodeOutputCircle");
+		node_circle.attr("opacity", 1);
+		
+		// remove expanded files
+		d3.select(this.parentNode).selectAll(".outRectTitle").remove();
+		d3.select(this.parentNode).selectAll(".outputRect").remove();
+		d3.select(this.parentNode).selectAll(".outputRefImport").remove();
+		d3.select(this.parentNode).selectAll(".outRectCircleG").remove();
+
 		force.resume();
 		update();
 	});
@@ -2405,12 +2382,14 @@ function visualize_workflow(data, canvas) {
 	// -----------------------------------------------------------------
 	node_input_circle.on("mouseover", function (x) {	
 		d3.select(this).select(".fileIconInputCircle")
-				.attr("stroke", "steelblue");
+				.attr("stroke", "steelblue")
+				.attr("stroke-width", 2);
 	});
 
 	node_input_circle.on("mouseout", function (x) {	
 		d3.select(this).select(".fileIconInputCircle")
-				.attr("stroke", "gray");
+				.attr("stroke", "gray")
+				.attr("stroke-width", 1.5);
 	});
 
 	node_input_circle.on("click", function (x) {	
@@ -2486,50 +2465,50 @@ function visualize_workflow(data, canvas) {
 
 		// hide input circle
 		d3.select("#node_" + this.parentNode.__data__.id).select(".nodeInputCircle").attr("opacity", 0);
-
-		d3.selectAll(".inRectCircleG").on("mouseover", function (x) {
-			d3.select(this).select(".inRectCircle")
-				.attr("stroke", "steelblue");
-		});
-
-		d3.selectAll(".inRectCircleG").on("mouseout", function (x) {
-			d3.select(this).select(".inRectCircle")
-				.attr("stroke", "gray");
-		});	
 	
 		force.resume();
 		update();
+	});
 
-		// -----------------------------------------------------------------
-		// ------------------- INPUT FILES REMOVE EVENT -------------------
-		// -----------------------------------------------------------------
-		d3.selectAll(".nodeInput").selectAll(".inRectCircleG").on("click", function (z) {
-			var node_circle = null,
-				cur_node_id = 0;
 
-			x.expanded_out = false;
-			dataset.columns[x.column].outputs -= 1;
 
-			if (dataset.columns[x.column].outputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
-				update_column_translation(x.column, layout_translation.COLLAPSE_RIGHT);
-			}
+	// -----------------------------------------------------------------
+	// ------------------- INPUT FILES REMOVE EVENT -------------------
+	// -----------------------------------------------------------------
+	d3.selectAll(".nodeInput").on("mouseover", function (x) {
+		d3.select(this).select(".inputRect")
+			.attr("stroke", "steelblue")
+			.attr("stroke-width", 2);
+	});
 
-			// show input circle again
-			cur_node_id = this.parentNode.__data__.id;
-			node_circle = d3.select("#node_" + cur_node_id).select(".nodeInputCircle");
-			node_circle.attr("opacity", 1);
+	d3.selectAll(".nodeInput").on("mouseout", function (x) {
+		d3.select(this).select(".inputRect")
+			.attr("stroke", "gray")
+			.attr("stroke-width", 1);
+	});	
 
-			// remove expanded files
-			d3.select(this.parentNode).selectAll(".inputRectTitle").remove();
-			d3.select(this.parentNode).selectAll(".inputRect").remove();
-			d3.select(this.parentNode).selectAll(".inputRefImport").remove();
-			d3.select(this.parentNode).selectAll(".inRectCircleG").remove();
+	d3.selectAll(".nodeInput").on("click", function (x) {
+		var node_circle = null,
+			cur_node_id = 0;
 
-			force.resume();
-			update();
-		});
-// DEBUG: sometimes, the links won't update after collapsing an output section
-// therefore another resume and updated was added
+		x.expanded_out = false;
+		dataset.columns[x.column].outputs -= 1;
+
+		if (dataset.columns[x.column].outputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
+			update_column_translation(x.column, layout_translation.COLLAPSE_RIGHT);
+		}
+
+		// show input circle again
+		cur_node_id = this.parentNode.__data__.id;
+		node_circle = d3.select("#node_" + cur_node_id).select(".nodeInputCircle");
+		node_circle.attr("opacity", 1);
+
+		// remove expanded files
+		d3.select(this.parentNode).selectAll(".inputRectTitle").remove();
+		d3.select(this.parentNode).selectAll(".inputRect").remove();
+		d3.select(this.parentNode).selectAll(".inputRefImport").remove();
+		d3.select(this.parentNode).selectAll(".inRectCircleG").remove();
+
 		force.resume();
 		update();
 	});
@@ -2548,11 +2527,12 @@ function visualize_workflow(data, canvas) {
 
 
 
-	// REMOVED: grid lines for layout
+	
 	// -----------------------------------------------------------------
 	// ------------------- DEBUG GRID LINES FOR LAYOUT -----------------
 	// -----------------------------------------------------------------
 
+	// REMOVED: grid lines for layout
 	//draw_layout_grid(xscale, yscale);
 
 
@@ -2598,5 +2578,46 @@ function visualize_workflow(data, canvas) {
 			})
 			.style("pointer-events", "none")
 			.call(append_text_rect);*/
+
+
+	// -----------------------------------------------------------------
+	// ------------------- HIGHLIGHTING PATHS WITH TOGGLE --------------
+	// -----------------------------------------------------------------
+
+	// REMOVED: cause a problem in combination with anchor toggle
+	/*d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("mouseover", function (x) {
+		d3.select(this).select(".inputConRect")
+			.attr("fill", "orange");
+	});
+
+	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("mouseout", function (x) {
+		var sel_path = d3.select(this.parentNode.parentNode)[0][0].__data__.subgraph[+d3.select(this).attr("id")[14]];
+
+		if (sel_path[0].highlighted === false) {
+			d3.select(this).select(".inputConRect")
+				.attr("fill", "lightsteelblue");
+		}
+	});
+
+	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("click", function (x) {
+		// get selected node
+		var sel_node = d3.select(this.parentNode.parentNode)[0][0].__data__,
+			sel_path = sel_node.subgraph[+d3.select(this).attr("id")[14]],
+			sel_node_rect = d3.select(this.parentNode.parentNode).select(".nodeRect"),
+			sel_path_rect = d3.select(this).select(".inputConRect");
+
+		// clear previous highlighting
+		overlay_on_click();
+
+		// create table
+		create_table(sel_node);
+
+		// when path beginning with this node is not highlighted yet
+		if (sel_path[0].highlighted === false) {
+			dye_path(sel_path, sel_node_rect, sel_path_rect, "orange", 5, "orange", true);
+		} else {
+			dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
+		}
+	});*/
 }
 
