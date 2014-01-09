@@ -133,9 +133,9 @@ function node_output_circle_event (x) {
 
 		d3.select(this.parentNode).selectAll(".nodeOutputG").each( function (z,j) {
 			d3.select(this).append("rect")
-				.attr("id", function (d) { return "outputRect_" + j;})
+				.attr("id", function () { return "outputRect_" + j;})
 				.attr("class", "outputRect")
-				.attr("x", function(d) {
+				.attr("x", function() {
 					return shape_dim.node_io.offset;
 				})
 				.attr("y", function (d,i) { 
@@ -146,7 +146,16 @@ function node_output_circle_event (x) {
 				.attr("height", shape_dim.node_io.height)
 				.attr("rx", 1)
 				.attr("ry", 1)
-				.attr("fill", "lightsteelblue")
+				.attr("fill", function () {
+					var color = "lightsteelblue";
+					// when path was highlighted before, fill rectangle orange
+					get_succ_links_by_node_id(this.parentNode.parentNode.__data__.id).forEach( function (l) {
+						if (l.highlighted && output_input_con_file_link(l)[0] === j) {
+							color = "orange";
+						} 
+					});
+					return color;
+				})
 				.attr("stroke", "gray")
 				.attr("stroke-width", 1);
 
@@ -182,16 +191,6 @@ function node_output_circle_event (x) {
 					.attr("stroke", "gray")
 					.attr("stroke-width", 1.5)
 					.call(check_stored_outputs);
-		});
-
-		// when path was highlighted before, fill rectangle orange
-		// get links via source id and for each link
-		get_succ_links_by_node_id(x.id).forEach( function (l) {
-			if (l.highlighted) {
-				var numeric_link = output_input_con_file_link(l)[0];
-				d3.select("#node_"+l.source.id).select(".nodeOutput").select("#nodeOutputG_" + output_input_con_file_link(l)[0]). select("#outputRect_" + output_input_con_file_link(l)[0])
-					.attr("fill", "orange");
-			}
 		});
 
 		force.resume();
@@ -392,13 +391,15 @@ function check_stored_outputs (output) {
 	index = keys.indexOf(output[0][0].__data__.name);
 	node_output_g = d3.select(output[0][0].parentNode.parentNode);
 
+	// if current output file is stored in the key-value array
 	if (index !== -1) {
+
 		// rename and stylize italic
-		node_output_g.select("#outRectTitle_" +index).text(cut_io_file_name(values[index])).attr("font-style", "italic");
+		node_output_g.select(".outRectTitle").text(cut_io_file_name(values[index])).attr("font-style", "italic");
 
 		// add to tooltip
-		node_output_g.select("#outRectTitle_" +index).attr("title", function (x) {
-			return d3.select("#outRectTitle_" +index).attr("title") + "\n" + "stored as: " + values[index] + "";
+		node_output_g.select(".outRectTitle").attr("title", function (x) {
+			return node_output_g.select(".outRectTitle").attr("title") + "\n" + "stored as: " + values[index] + "";
 		});
 	}
 }
@@ -2478,8 +2479,6 @@ function visualize_workflow(data, canvas) {
 		
 		force.resume();
 		update();
-
-
 	});
 
 	
@@ -2651,4 +2650,5 @@ function visualize_workflow(data, canvas) {
 		}
 	});*/
 }
+
 
