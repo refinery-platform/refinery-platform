@@ -1264,6 +1264,27 @@ function output_input_con_file_link (link) {
 	return [iSrcOut, jTarIn];
 }
 
+/*
+ * similar to output_input_con_file_link but for links where the source node is of type input
+ *
+ * link: contains source and target node
+ * returns the linked index pair of input elem and input_connections elem
+ */
+function input_input_con_file_link (link) {
+	var iSrcOut = 0,
+		jTarIn 	= 0;
+
+	if (typeof link.source.id !== "undefined" && typeof dataset.steps[link.source.id] !== "undefined") {
+			d3.values(dataset.steps[link.target.id].input_connections).some( function (y,j) {	// target node
+				if (link.source.id == y.id) {
+					jTarIn 	= j;
+				}
+			});
+	}
+	
+	return [iSrcOut, jTarIn];
+}
+
 
 /*
  * checks whether an array contains a given integer element 
@@ -1723,6 +1744,10 @@ function update() {
 			src_y_exp = (shape_dim.node_io.height+2)*(output_input_con_file_link(d)[0]+1) 
 						- get_inputs_length(d.source.id)*(shape_dim.node_io.height+2)/2 
 						- shape_dim.node_io.height + shape_dim.node_io.height/2;
+
+			tar_y_exp 	= (shape_dim.node_io.height+2)*(input_input_con_file_link(d)[1]+1)
+							- get_input_conns_length(d.target.id)*(shape_dim.node_io.height+2)/2 
+							- shape_dim.node_io.height + shape_dim.node_io.height/2;
 		}
 
 		// both source and target are collapsed
