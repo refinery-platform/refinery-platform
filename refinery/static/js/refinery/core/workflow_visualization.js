@@ -912,7 +912,12 @@ function node_title (d) {
 	var text_size = [],
 		node_name = [],
 		char_size = [],
-		chars_per_row = [];
+		chars_per_row = [],
+		delimiter = [],
+		delimiter_pos_char = 0,
+		line_break_pos = 0;
+
+	delimiter = [' ','-', '\/', '\\', ':', '.', '_', ',', ';']
 
 	// create a svg element for the full string
 	this[0].forEach(function (x, i) {
@@ -925,7 +930,7 @@ function node_title (d) {
 		})
 	});
 
-	// break first line if necessary
+	// break first line if necessary with line breaks on 
 	this[0].forEach(function (x, i) {
 		d3.select(x).select(".nodeTitle1")
 		.text(function (d) { 
@@ -933,16 +938,40 @@ function node_title (d) {
 			node_name[i] = dataset.steps[d.id].name,
 			char_size[i] = text_size[i]/node_name[i].length,
 			chars_per_row[i] = parseInt(Math.floor(shape_dim.node.width/char_size[i]),10);
+			line_break_pos = chars_per_row[i];
 
-			if (text_size[i] > shape_dim.node.width) {
-				return node_name[i].substring(0,chars_per_row[i]);
+			if (node_name[i].length > chars_per_row[i]+1) {
+				delimiter_pos_char = node_name[i][parseInt(chars_per_row[i],10)]
+
+				// check for linebreak
+				if (node_name[i].length > chars_per_row[i]+1 && (delimiter.indexOf(delimiter_pos_char) === -1)) {
+					
+					var cur = 0,
+						max = 0;
+					delimiter.forEach( function (c) {
+						cur = node_name[i].substring(0,chars_per_row[i]).lastIndexOf(c);
+						if (cur > max) {
+							max = cur;
+						}
+					})
+					line_break_pos = max;
+
+					if (line_break_pos === 0) {
+						line_break_pos = chars_per_row[i];
+						return node_name[i].substring(0,chars_per_row[i]+1) + '-';
+					} else {
+						return node_name[i].substring(0,line_break_pos+1);
+					}
+				} else {
+					return node_name[i].substring(0,chars_per_row[i]+1);
+				}
 			} else {
 				return node_name[i];
 			}
 		})
 		.attr("text-anchor", "middle")
 		.attr("y", function (d) {
-			if (text_size[i] > shape_dim.node.width) {
+			if (node_name[i].length > chars_per_row[i]+1) {
 				return "12";
 			} else {
 				return shape_dim.node.height/2+4;
@@ -950,17 +979,17 @@ function node_title (d) {
 		})
 
 		// add a second line if necessary
-		if (text_size[i] > shape_dim.node.width) {
+		if (node_name[i].length > chars_per_row[i]+1) {
 			d3.select(x).append("text")
 			.attr("class", "nodeTitle2")
 			.attr("x",0)
 			.attr("y",12)
 			.text(function (d) {
-				if (text_size[i] < shape_dim.node.width*2) {
-					return node_name[i].substring(chars_per_row[i], node_name[i].length);
+				if ((node_name[i].length - (line_break_pos+1)) < chars_per_row[i]) {
+					return node_name[i].substring(line_break_pos+1, node_name[i].length);
 				} else {
 					// if string is still too long, add points
-					return node_name[i].substring(chars_per_row[i], chars_per_row[i]*2) + "..";
+					return node_name[i].substring(line_break_pos+1, line_break_pos + chars_per_row[i]-1) + "..";
 				}
 			})
 			.attr("text-anchor", "middle")
