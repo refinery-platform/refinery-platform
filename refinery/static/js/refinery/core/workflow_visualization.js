@@ -1591,6 +1591,10 @@ function create_nested_tool_state_table(parent) {
 	text = text.replace(/\}\",/g, "\},");
 	text = text.replace(/\}\"/g, "\}");
 
+	// eliminate __xxxx__ parameters	
+	text = text.replace(/\"__(\S*)__\":\s{1}\d*(,\s{1})?/g, "");
+	text = text.replace(/,\s{1}\}/g, "\}");
+
 	// transform to json object
 	json_data = JSON.parse (text);
 	obj = d3.entries(json_data);
