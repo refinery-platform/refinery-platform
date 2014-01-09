@@ -1019,7 +1019,21 @@ def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
 
 
 @login_required
-def angular_test(request):
+def angular_test(request, uuid=None):
+    if uuid:
+        data_set = get_object_or_404(DataSet, uuid=uuid)
+        investigation = data_set.get_investigation()
+        studies = investigation.study_set.all()
+        study_uuid = studies[0].uuid
+        assay_uuid = studies[0].assay_set.all()[0].uuid
+    else:
+        data_set = None
+
     return render_to_response('core/angular_test.html',
-                              {'site_name': get_current_site(request).name},
+                              {
+                                'site_name': get_current_site(request).name,
+                                'data_set': data_set,
+                                "study_uuid": study_uuid,
+                                "assay_uuid": assay_uuid,
+                               },
                               context_instance=RequestContext(request))
