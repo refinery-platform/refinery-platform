@@ -6,6 +6,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
 
     source_dir: 'src',
+    vendor_dir: 'bower_components',
     release_dir: 'app',
 
     source_files: {
@@ -19,6 +20,7 @@ module.exports = function(grunt) {
         'angular/angular.js',
         'angular-ui-select2/src/select2.js',
         'angular-resource/angular-resource.js',
+        'angular-route/angular-route.js',
       ],
       css: [
         'select2/select2.css',
@@ -92,13 +94,19 @@ module.exports = function(grunt) {
     },
 
     watch: {
-      scripts: {
+      app_scripts: {
         files: ['<%= source_dir %>/<%= source_files.js %>'],
         tasks: ['jshint', 'clean:app_scripts', 'copy:app_scripts'],
       },
-      styles: {
+      app_styles: {
         files: ['<%= source_dir %>/<%= source_files.css %>'],
         tasks: ['clean:app_styles', 'copy:app_styles'],
+      },
+      vendor_assets: {
+        files: ['<%= vendor_dir %>/<%= vendor_files.js %>',
+                '<%= vendor_dir %>/<%= vendor_files.css %>',
+                '<%= vendor_dir %>/<%= vendor_files.img %>'],
+        tasks: ['copy:vendor_assets'],
       },
     },
   });
