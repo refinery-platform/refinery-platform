@@ -41,7 +41,8 @@ urlpatterns = patterns('core.views',
     url(r'^data_sets/(?P<ds_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/samples/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/solr$', 'samples_solr', name="samples"),
 
     # test Angular integration
-    url(r'^angular_test/$', 'angular_test', name='angular_test')
+    url(r'^angular_test/$', 'angular_test', name='angular_test'),
+    url(r'^angular_test/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'angular_test', name='angular_test'),
 )
 
 

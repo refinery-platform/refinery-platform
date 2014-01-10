@@ -8,8 +8,7 @@ angular.module('refineryApp', [
   'use strict';
 
   return $resource(
-    "/api/v1/workflow/:Id/",
-    {Id: "@Id", format: "json"}
+    "/api/v1/workflow/", {format: "json"}
   );
 })
 
@@ -31,20 +30,21 @@ angular.module('refineryApp', [
   };
 })
 
-.factory("NodeSet", function($resource) {
+.factory("NodeSetList", function($resource) {
   'use strict';
 
   return $resource(
-    "/api/v1/nodeset/:Id/",
-    {Id: "@Id", format: "json"}
+    "/api/v1/nodesetlist/", {format: "json"}
   );
 })
 
-.controller('NodeSetListApiCtrl', function($scope, NodeSet) {
+.controller('NodeSetListApiCtrl', function($scope, NodeSetList) {
   'use strict';
 
-  var NodeSets = NodeSet.get(function() {
-    $scope.nodesetList = NodeSets.objects;
+  var NodeSets = NodeSetList.get(
+    {study__uuid: externalStudyUuid, assay__uuid: externalAssayUuid},
+    function() {
+      $scope.nodesetList = NodeSets.objects;
   });
 });
 
