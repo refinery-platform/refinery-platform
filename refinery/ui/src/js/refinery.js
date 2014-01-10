@@ -4,4 +4,12 @@ angular.module('refineryApp', [
   'ngRoute',
   'refineryControllers',
   'refineryServices',
-]);
+])
+
+.config(['$routeProvider', function($routeProvider) {
+  $routeProvider.
+    when('/analyze', {
+      templateUrl: '/static/partials/workflows.html',
+      controller: 'WorkflowListApiCtrl'
+    });
+}]);
