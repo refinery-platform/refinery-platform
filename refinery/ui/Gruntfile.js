@@ -12,6 +12,7 @@ module.exports = function(grunt) {
     source_files: {
       js: ['**/*.js'],
       css: ['**/*.css'],
+      html: ['**/*.html'],
     },
     vendor_files: {
       js: [
@@ -71,6 +72,16 @@ module.exports = function(grunt) {
           },
         ],
       },
+      app_templates: {
+        files: [
+          {
+            expand: true,
+            cwd: '<%= source_dir %>/',
+            src: ['<%= source_files.html %>'],
+            dest: '<%= release_dir %>/',
+          },
+        ],
+      },
       vendor_assets: {
         files: [
           {
@@ -90,6 +101,7 @@ module.exports = function(grunt) {
     clean: {
       app_scripts: ['<%= release_dir %>/js'],
       app_styles: ['<%= release_dir %>/styles'],
+      app_templates: ['<%= release_dir %>/partials'],
       vendor_assets: ['<%= release_dir %>/vendor'],
     },
 
@@ -101,6 +113,10 @@ module.exports = function(grunt) {
       app_styles: {
         files: ['<%= source_dir %>/<%= source_files.css %>'],
         tasks: ['clean:app_styles', 'copy:app_styles'],
+      },
+      app_templates: {
+        files: ['<%= source_dir %>/<%= source_files.html %>'],
+        tasks: ['clean:app_templates', 'copy:app_templates'],
       },
       vendor_assets: {
         files: ['<%= vendor_dir %>/<%= vendor_files.js %>',
