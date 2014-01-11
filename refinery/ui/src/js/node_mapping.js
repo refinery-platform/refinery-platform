@@ -51,7 +51,12 @@ angular.module('refineryApp', [
   });
   
   $rootScope.$on('$routeChangeSuccess', function(e) {
-    $scope.current_partial = $route.current.templateUrl;
+    if ( $route.current ) {
+      $scope.current_partial = $route.current.templateUrl;
+    }
+    else {
+     $scope.current_partial = undefined; 
+    }
     console.log( "Hello! Route Change Success!");
   });
 })
@@ -80,19 +85,19 @@ angular.module('refineryApp', [
   */
     
   $routeProvider.when('/analyze', {
-    templateUrl: '/static/views/data_set_ui_mode_analyze.html',
+    templateUrl: '/static/partials/data_set_ui_mode_analyze.html',
     controller: AnalyzeCtrl,
     reloadOnSearch: false,
   });
 
   $routeProvider.when('/visualize', {
-    templateUrl: '/static/views/data_set_ui_mode_visualize.html',
+    templateUrl: '/static/partials/data_set_ui_mode_visualize.html',
     controller: VisualizeCtrl,    
     reloadOnSearch: false,
   });
 
   $routeProvider.when('/browse', {
-    templateUrl: '/static/views/data_set_ui_mode_browse.html',
+    templateUrl: '/static/partials/data_set_ui_mode_browse.html',
     controller: BrowseCtrl,    
     reloadOnSearch: false,
   });

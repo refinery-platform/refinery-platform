@@ -6,6 +6,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
 
     source_dir: 'src',
+    vendor_dir: 'bower_components',
     release_dir: 'app',
 
     source_files: {
@@ -53,7 +54,6 @@ module.exports = function(grunt) {
         ext: '.min.js',
       },
     },
-
     copy: {
       app_scripts: {
         files: [
@@ -75,7 +75,7 @@ module.exports = function(grunt) {
           },
         ],
       },
-      app_views: {
+      app_templates: {
         files: [
           {
             expand: true,
@@ -104,22 +104,28 @@ module.exports = function(grunt) {
     clean: {
       app_scripts: ['<%= release_dir %>/js'],
       app_styles: ['<%= release_dir %>/styles'],
-      app_views: ['<%= release_dir %>/views'],
+      app_templates: ['<%= release_dir %>/partials'],
       vendor_assets: ['<%= release_dir %>/vendor'],
     },
 
     watch: {
-      scripts: {
+      app_scripts: {
         files: ['<%= source_dir %>/<%= source_files.js %>'],
         tasks: ['jshint', 'clean:app_scripts', 'copy:app_scripts'],
       },
-      styles: {
+      app_styles: {
         files: ['<%= source_dir %>/<%= source_files.css %>'],
         tasks: ['clean:app_styles', 'copy:app_styles'],
       },
-      views: {
+      app_templates: {
         files: ['<%= source_dir %>/<%= source_files.html %>'],
-        tasks: ['clean:app_views', 'copy:app_views'],
+        tasks: ['clean:app_templates', 'copy:app_templates'],
+      },
+      vendor_assets: {
+        files: ['<%= vendor_dir %>/<%= vendor_files.js %>',
+                '<%= vendor_dir %>/<%= vendor_files.css %>',
+                '<%= vendor_dir %>/<%= vendor_files.img %>'],
+        tasks: ['copy:vendor_assets'],
       },
     },
   });
