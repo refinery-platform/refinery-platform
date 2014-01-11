@@ -1,5 +1,5 @@
     <div ng-controller="WorkflowListApiCtrl">
-      <select ui-select2 ng-model="workflowIndex" ng-change="updateCurrentWorkflow()" style="width:25%" data-placeholder="Select a workflow">
+      <select ui-select2 ng-model="workflowIndex" ng-change="updateCurrentWorkflow()" style="width:100%" data-placeholder="Select a workflow">
         <option value=""></option>  <!-- required for showing placeholder text -->
         <option ng-repeat="workflow in workflowList" value="{{$index}}">{{workflow.name}}</option>
       </select>
@@ -17,7 +17,7 @@
         <hr />
         <div ng-controller="NodeSetListApiCtrl" ng-show="isCurrentWorkflowSingleInput()">
           <h4>Sets</h4>
-          <select ui-select2 ng-model="nodesetIndex" style="width:25%" data-placeholder="Choose input set">
+          <select ui-select2 ng-model="nodesetIndex" style="width:100%" data-placeholder="Choose input set">
             <option value=""></option>  <!-- required for showing placeholder text -->
             <option ng-repeat="nodeset in nodesetList" value="{{$index}}">{{nodeset.name}}</option>
           </select>

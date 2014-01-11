@@ -8,7 +8,8 @@ angular.module('refineryApp', [
   'ui.select2',
   'ngResource',
   'ngRoute',
-//  'refineryControllers',
+  'refineryControllers',
+  'refineryServices',
 ])
 
 .controller('DataSetUiModeCtrl', function($scope, $location, $rootScope, $route) {
@@ -41,13 +42,20 @@ angular.module('refineryApp', [
   $scope.updateCurrentDataSetUiMode = function() {
     $scope.currentDataSetUiMode = $scope.newDataSetUiMode;
 
-    console.log("currentDataSetUiMode:", currentDataSetUiMode );    
+    if ( $scope.currentDataSetUiMode === DATA_SET_UI_MODE_VISUALIZE ||
+         $scope.currentDataSetUiMode === DATA_SET_UI_MODE_ANALYZE ) {
+      $rootScope.showCtrlTab = true;
+      $rootScope.mainTabSpanSize = "span10";
+    }
+    else {
+      $rootScope.showCtrlTab = false;
+      $rootScope.mainTabSpanSize = "span12";
+    }
   }
   
   //listen for resolve in routeProvider failing (triggers error callback)
   $rootScope.$on('$routeChangeError', function(e) {
-    //$location.path('access-denied');
-    console.log( "Hello! Route Change Failed!");
+    console.log( "Route Change Failed!");
   });
   
   $rootScope.$on('$routeChangeSuccess', function(e) {
@@ -57,7 +65,6 @@ angular.module('refineryApp', [
     else {
      $scope.current_partial = undefined; 
     }
-    console.log( "Hello! Route Change Success!");
   });
 })
 
@@ -86,7 +93,8 @@ angular.module('refineryApp', [
     
   $routeProvider.when('/analyze', {
     templateUrl: '/static/partials/data_set_ui_mode_analyze.html',
-    controller: AnalyzeCtrl,
+    //templateUrl: '/static/partials/workflows.html',
+    controller: 'WorkflowListApiCtrl',
     reloadOnSearch: false,
   });
 
@@ -108,23 +116,12 @@ angular.module('refineryApp', [
   //$locationProvider.html5Mode(true);
 }]);
 
-
-function AnalyzeCtrl($scope, $rootScope, $routeParams) {
-    console.log( "AnalyzeCtrl");
-    $rootScope.showCtrlTab = true;
-    $rootScope.mainTabSpanSize = "span10";
-}
-
   function VisualizeCtrl($scope, $rootScope, $routeParams) {
     console.log( "VisualizeCtrl");
-    $rootScope.showCtrlTab = true;
-    $rootScope.mainTabSpanSize = "span10";
   }
 
   function BrowseCtrl($scope, $rootScope, $routeParams) {
     console.log( "BrowseCtrl");
-    $rootScope.showCtrlTab = false;
-    $rootScope.mainTabSpanSize = "span12";
   }  
 
 
