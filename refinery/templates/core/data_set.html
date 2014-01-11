@@ -154,7 +154,7 @@
 {% verbatim %}
 <div class="span2" ng-show="showCtrlTab" ng-cloak>
 	<div class="refinery-panel refinery-panel-content scrollable">
-		<div class="row-fluid" class="form-inline">
+		<div class="row-fluid">
 			<div ng-view>
 			</div>
 		</div>
@@ -571,8 +571,8 @@
 		var REFINERY_BASE_URL = document.location.host;
 		var REFINERY_API_BASE_URL = document.location.protocol + "//" + REFINERY_BASE_URL + "/api/v1/";
 		var REFINERY_SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}";
-		var externalStudyUuid = "{{ assay_uuid }}";
-		var externalAssayUuid = "{{ study_uuid }}";
+		var externalAssayUuid = "{{ assay_uuid }}";
+		var externalStudyUuid = "{{ study_uuid }}";
 		var dataSetUuid = "{{ data_set.uuid }}";
 
 		{% if REFINERY_REPOSITORY_MODE %}
@@ -625,6 +625,9 @@
   	<script type="text/javascript" src="{% static "vendor/angular-route/angular-route.js" %}"></script>
 	<script type="text/javascript" src="{% static "js/refinery.js" %}"></script>
 	<script type="text/javascript" src="{% static "js/node_mapping.js" %}"></script>
+	<script type="text/javascript" src="{% static "js/controllers.js" %}"></script>
+ 	<script type="text/javascript" src="{% static "js/services.js" %}"></script>
+
 
 
 	<script type="application/javascript">

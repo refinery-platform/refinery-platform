@@ -24,7 +24,7 @@ var currentStudyUuid = externalStudyUuid;
 var currentAssayUuid = externalAssayUuid;
 
 $(document).ready(function() {
-	configurator = new DataSetConfigurator( externalAssayUuid, externalStudyUuid, "configurator-panel", REFINERY_API_BASE_URL, csrf_token );
+	configurator = new DataSetConfigurator( externalStudyUuid, externalAssayUuid, "configurator-panel", REFINERY_API_BASE_URL, csrf_token );
 	configurator.initialize();
 
 	// event handling
@@ -85,7 +85,7 @@ $(document).ready(function() {
 			solrSelectEndpoint,
 			csrf_token,
 			"django_ct:data_set_manager.node",
-			"(study_uuid:" + currentAssayUuid + " AND assay_uuid:" + currentStudyUuid + ")",
+			"(study_uuid:" + currentStudyUuid + " AND assay_uuid:" + currentAssayUuid + ")",
 			clientCommands );
 
 		queryCommands.addHandler( SOLR_QUERY_DESERIALIZED_COMMAND, function( arguments ){
@@ -299,7 +299,7 @@ $(document).ready(function() {
 		// ---------------------------		
 		if ( $("#" + "node-set-manager-controls").length > 0 ) {
 		
-			nodeSetManager = new NodeSetManager( externalAssayUuid, externalStudyUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, csrf_token );
+			nodeSetManager = new NodeSetManager( externalStudyUuid, externalAssayUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, csrf_token );
 			nodeSetManager.initialize();
 	
 			nodeSetManager.setLoadSelectionCallback( function( nodeSet ) {
