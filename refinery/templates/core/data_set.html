@@ -4,6 +4,9 @@
 {% load markup %}
 {% load static %}
 
+{% block ng_app %}refineryApp{% endblock %}
+
+
 {% block head_html %}
   <link rel="stylesheet" href="{% static "vendor/tipsy/src/stylesheets/tipsy.css" %}" />
   <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />  
@@ -111,24 +114,60 @@
 {% block content %}
 	<!-- tab headers -->
 
+<div ng-controller="DataSetUiModeCtrl">		    
+
 <div class="refinery-panel-tabs">
 
 	<div class="row-fluid">
-	    <ul class="nav nav-tabs" id="tabs">
-  			<li class="active"><a href="#content" data-toggle="tab">Samples</a></li>
-  			{% if has_change_dataset_permission %}
-  			<li><a href="#configuration" data-toggle="tab">Attributes</a></li>
-  			{% endif %}
-  			{% if has_change_dataset_permission %}
-  			<li><a href="#analyses" data-toggle="tab">Analyses</a></li>
-  			{% endif %}
-  			<li><a href="#downloads" data-toggle="tab">Downloads</a></li>
-  			<li><a href="#details" data-toggle="tab">Details</a></li>
-  			<li><a href="#sharing" data-toggle="tab">Sharing</a></li>
-  	    </ul>
+
+		<div class="span2">
+				<select ui-select2 style="width:100%" ng-change="updateCurrentDataSetUiMode()" ng-model="newDataSetUiMode">
+			        <option value="browse">Browse</option>
+					<option value="analyze">Analyze</option>
+					<option value="visualize">Visualize</option>
+				</select>
+				<!--
+				<a ng-click="currentDataSetUiMode='browse'">Browse</a>
+				<a ng-click="currentDataSetUiMode='visualize'">Visualize</a>
+				<a ng-click="currentDataSetUiMode='analyze'">Analyze</a>
+				-->
+		</div>
+
+		<div class="span10">
+		    <ul class="nav nav-pills" id="tabs">	    
+	  			<li class="active"><a href="#content" data-toggle="tab">Samples</a></li>
+	  			{% if has_change_dataset_permission %}
+	  			<li><a href="#configuration" data-toggle="tab">Attributes</a></li>
+	  			{% endif %}
+	  			{% if has_change_dataset_permission %}
+	  			<li><a href="#analyses" data-toggle="tab">Analyses</a></li>
+	  			{% endif %}
+	  			<li><a href="#downloads" data-toggle="tab">Downloads</a></li>
+	  			<li><a href="#details" data-toggle="tab">Details</a></li>
+	  			<li><a href="#sharing" data-toggle="tab">Sharing</a></li>
+	  	    </ul>
+	  	</div>
   	</div>
 
 </div>
+
+{% verbatim %}
+<div class="span2" ng-show="showCtrlTab" ng-cloak>
+	<div class="refinery-panel refinery-panel-content scrollable">
+		<div class="row-fluid" class="form-inline">
+			<div ng-view>
+			</div>
+		</div>
+	</div>
+</div>
+{% endverbatim %}
+
+
+
+{% verbatim %}
+<div class="{{ mainTabSpanSize }}">
+{% endverbatim %}
+
 <div class="refinery-panel refinery-panel-content scrollable">
 
 	{% if data_set %}
@@ -197,21 +236,25 @@
 					</span>
 					{% endif %}
 
+
 				</div>
 			</div>
+
 			</form>
 
-			<div class="row-fluid">				
+			<div class="row-fluid">
+  	    		<a href="/angular_test/{{ data_set.uuid }}">Test View </a>
+  	    	</div>
 
+			<div class="row-fluid">				
 			 	<div class="span2">
 						<ul class="nav nav-pills" id="navigation-tabs">
-						  <li class="active"><a href="#solr-facet-view" data-toggle="pill">Facets</a></li>
+							<li class="active"><a href="#solr-facet-view" data-toggle="pill">Facets</a></li>
 						</ul>
 
 						<div id="solr-facet-view" class="accordion"></div>
 						<hr>
 						<div id="solr-analysis-view" class="accordion"></div>
-
 			 	</div>
 
 				<div class="span10" id="main-area">
@@ -289,9 +332,8 @@
 
 				</div>
 
-				</div>
-				</form>
-				</div>
+			</div>
+	</div>
 
 	{% if has_change_dataset_permission %}
   	<div class="tab-pane" id="configuration">
@@ -484,6 +526,7 @@
 
 </div>
 
+</div>
 {% endblock %}
 
 {% block script %}
@@ -573,10 +616,16 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TimelineMax.min.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/workflow_node_relationship.js"></script>
 
+
+  <!-- Note that jquery must be loaded before angular so that it doesn't use jqLite internally -->
  	<script type="text/javascript" src="{% static "vendor/angular/angular.js" %}"></script>
   	<script type="text/javascript" src="{% static "vendor/select2/select2.js" %}"></script>
   	<script type="text/javascript" src="{% static "vendor/angular-ui-select2/src/select2.js" %}"></script>
   	<script type="text/javascript" src="{% static "vendor/angular-resource/angular-resource.js" %}"></script>
+  	<script type="text/javascript" src="{% static "vendor/angular-route/angular-route.js" %}"></script>
+	<script type="text/javascript" src="{% static "js/refinery.js" %}"></script>
+	<script type="text/javascript" src="{% static "js/node_mapping.js" %}"></script>
+  	<script type="text/javascript" src="{% static "js/controllers/workflows.js" %}"></script>
 
 
 	<script type="application/javascript">

@@ -15,7 +15,11 @@
   "dependencies": {
     "angular-ui-select2": "~0.0.4",
     "angular-resource": "~1.2.4",
+    "angular-route": "~1.2.4",
     "jQuery": "~2.0.3",
     "tipsy": "~0.1.7"
+  },
+  "resolutions": {
+    "angular": "1.2.4"
   }
 }

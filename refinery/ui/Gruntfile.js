@@ -11,6 +11,7 @@ module.exports = function(grunt) {
     source_files: {
       js: ['**/*.js'],
       css: ['**/*.css'],
+      html: ['**/*.html'],
     },
     vendor_files: {
       js: [
@@ -19,6 +20,7 @@ module.exports = function(grunt) {
         'angular/angular.js',
         'angular-ui-select2/src/select2.js',
         'angular-resource/angular-resource.js',
+        'angular-route/angular-route.js',
         'tipsy/src/javascripts/jquery.tipsy.js',
       ],
       css: [
@@ -73,6 +75,16 @@ module.exports = function(grunt) {
           },
         ],
       },
+      app_views: {
+        files: [
+          {
+            expand: true,
+            cwd: '<%= source_dir %>/',
+            src: ['<%= source_files.html %>'],
+            dest: '<%= release_dir %>/',
+          },
+        ],
+      },
       vendor_assets: {
         files: [
           {
@@ -92,6 +104,7 @@ module.exports = function(grunt) {
     clean: {
       app_scripts: ['<%= release_dir %>/js'],
       app_styles: ['<%= release_dir %>/styles'],
+      app_views: ['<%= release_dir %>/views'],
       vendor_assets: ['<%= release_dir %>/vendor'],
     },
 
@@ -103,6 +116,10 @@ module.exports = function(grunt) {
       styles: {
         files: ['<%= source_dir %>/<%= source_files.css %>'],
         tasks: ['clean:app_styles', 'copy:app_styles'],
+      },
+      views: {
+        files: ['<%= source_dir %>/<%= source_files.html %>'],
+        tasks: ['clean:app_views', 'copy:app_views'],
       },
     },
   });
