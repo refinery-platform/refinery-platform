@@ -8,6 +8,7 @@ module.exports = function(grunt) {
     source_dir: 'src',
     vendor_dir: 'bower_components',
     release_dir: 'app',
+    styles_dir: '../static/styles',
 
     source_files: {
       js: ['**/*.js'],
@@ -35,6 +36,28 @@ module.exports = function(grunt) {
       ],
     },
 
+    less: {
+      development: {
+        options: {
+          compress: true,
+          yuicompress: true,
+          ieCompat: false,
+          optimization: 2,
+          paths: ["<%= styles_dir %>/less", "../static/js/bootstrap/less"]
+        },
+        files: {
+          // target.css file: source.less file
+          "<%= styles_dir %>/css/font-awesome.css": "<%= styles_dir %>/less/font-awesome.less",
+          "<%= styles_dir %>/css/font-awesome-ie7.css": "<%= styles_dir %>/less/font-awesome-ie7.less",
+          "<%= styles_dir %>/css/variables.css": "<%= styles_dir %>/less/variables.less",
+          "<%= styles_dir %>/css/refinery-style.css": "<%= styles_dir %>/less/refinery-style.less",
+          // the following fail to compile:
+          //"<%= styles_dir %>/css/refinery-style-bootstrap.css": "<%= styles_dir %>/less/refinery-style-bootstrap.less",
+          //"<%= styles_dir %>/css/refinery-style-bootstrap-responsive.css": "<%= styles_dir %>/less/refinery-style-bootstrap-responsive.less",
+        }
+      }
+    },
+
     jshint: {
       files: [
         'Gruntfile.js',
@@ -54,6 +77,7 @@ module.exports = function(grunt) {
         ext: '.min.js',
       },
     },
+
     copy: {
       app_scripts: {
         files: [
@@ -125,8 +149,15 @@ module.exports = function(grunt) {
         files: ['<%= vendor_dir %>/<%= vendor_files.js %>',
                 '<%= vendor_dir %>/<%= vendor_files.css %>',
                 '<%= vendor_dir %>/<%= vendor_files.img %>'],
-        tasks: ['copy:vendor_assets'],
+        tasks: ['copy:vendor_assets'],        
       },
+      styles: {
+        files: ['<%= styles_dir %>/less/*.less'],
+        tasks: ['less'],
+        options: {
+          nospawn: true
+        }
+      }      
     },
   });
 
@@ -136,8 +167,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-copy');
-
+  grunt.loadNpmTasks('grunt-contrib-less');  
+  
   // Default task(s).
-  grunt.registerTask('default', ['jshint', 'clean', 'copy', 'uglify']);
+  grunt.registerTask('default', ['jshint', 'clean', 'copy', 'uglify', 'less']);
 
 };
