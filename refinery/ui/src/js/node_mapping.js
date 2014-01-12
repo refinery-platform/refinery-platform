@@ -20,10 +20,6 @@ angular.module('refineryApp', [
   $scope.$watch("currentDataSetUiMode", function(mode){
     
     currentDataSetUiMode = mode;
-    console.log( $route );
-
-
-    console.log("currentDataSetUiMode:", currentDataSetUiMode + "  mode: " + mode );
     
     if($scope.currentDataSetUiMode === DATA_SET_UI_MODE_BROWSE){
       $location.path( 'browse');
@@ -46,10 +42,12 @@ angular.module('refineryApp', [
          $scope.currentDataSetUiMode === DATA_SET_UI_MODE_ANALYZE ) {
       $rootScope.showCtrlTab = true;
       $rootScope.mainTabSpanSize = "span10";
+      $rootScope.ctrlTabSpanSize = "span2";
     }
     else {
       $rootScope.showCtrlTab = false;
       $rootScope.mainTabSpanSize = "span12";
+      $rootScope.ctrlTabSpanSize = "span2";
     }
   }
   

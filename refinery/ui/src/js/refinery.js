@@ -9,7 +9,7 @@ angular.module('refineryApp', [
 .config(['$routeProvider', function($routeProvider) {
   $routeProvider.
     when('/analyze', {
-      templateUrl: '/static/partials/workflows.html',
+      templateUrl: '/static/partials/data_set_ui_mode_analyze.html',
       controller: 'WorkflowListApiCtrl'
     });
 }]);
