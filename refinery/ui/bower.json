@@ -17,7 +17,7 @@
     "angular-ui-select2": "~0.0.5",
     "angular-resource": "~1.2.7",
     "angular-route": "~1.2.7",
-    "angular": "~1.2.7"
+    "angular": "~1.2.7",
     "tipsy": "~0.1.7"
   },
   "resolutions": {

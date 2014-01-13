@@ -51,7 +51,7 @@ angular.module('refineryApp', [
       $rootScope.showCtrlTab = false;
       $rootScope.mainTabSpanSize = "span12";
     }
-  }
+  };
   
   //listen for resolve in routeProvider failing (triggers error callback)
   $rootScope.$on('$routeChangeError', function(e) {
