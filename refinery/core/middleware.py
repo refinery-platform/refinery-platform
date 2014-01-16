@@ -37,7 +37,7 @@ class ExternalToolErrorMiddleware(object):
                 elif celery_tuple[1] == ExternalToolStatus.UNKNOWN_STATUS:
                     context_dict = {
                                     'external_tool_name': "Unknown",
-                                    'message_start': "Something, we know not what,"
+                                    'message_start': "Something in Celery, we know not what,"
                                     }
                     response = render_to_response('external_tool_down.html', context_dict)
                     response.status_code = 500
@@ -68,7 +68,7 @@ class ExternalToolErrorMiddleware(object):
                 elif solr_tuple[1] == ExternalToolStatus.UNKNOWN_STATUS:
                     context_dict = {
                                     'external_tool_name': "Unknown",
-                                    'message_start': "Something, we know not what,"
+                                    'message_start': "Something in Solr, we know not what,"
                                     }
                     response = render_to_response('external_tool_down.html', context_dict)
                     response.status_code = 500
@@ -101,7 +101,7 @@ class ExternalToolErrorMiddleware(object):
                     elif galaxy_tuple[1] == ExternalToolStatus.UNKNOWN_STATUS:
                         context_dict = {
                                         'external_tool_name': "Unknown",
-                                        'message_start': "Something, we know not what,"
+                                        'message_start': "Something in Galaxy, we know not what,"
                                         }
                         response = render_to_response('external_tool_down.html', context_dict)
                         response.status_code = 500
