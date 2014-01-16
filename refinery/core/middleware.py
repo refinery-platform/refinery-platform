@@ -24,15 +24,34 @@ class ExternalToolErrorMiddleware(object):
         if not re.search('/admin/', request.path):
             #check celery
             celery_tuple = check_tool_status(ExternalToolStatus.CELERY_TOOL_NAME)
-            if celery_tuple[1] != ExternalToolStatus.SUCCESS_STATUS:
-                context_dict = {
-                                'external_tool_name': "Celery",
-                                'message_start': "Our task dispatcher"
-                                }
-                response = render_to_response('external_tool_down.html', context_dict)
-                response.status_code = 500
-                response.reason_phrase = "Celery Problem"
-                return response
+            if celery_tuple[0]:
+                if celery_tuple[1] == ExternalToolStatus.TIMEOUT_STATUS:
+                    context_dict = {
+                                    'external_tool_name': "Timeout",
+                                    'message_start': "Our database has not been updated with the status of Celery recently leading us to believe that something"
+                                    }
+                    response = render_to_response('external_tool_down.html', context_dict)
+                    response.status_code = 500
+                    response.reason_phrase = "Timeout Problem"
+                    return response
+                elif celery_tuple[1] == ExternalToolStatus.UNKNOWN_STATUS:
+                    context_dict = {
+                                    'external_tool_name': "Unknown",
+                                    'message_start': "Something, we know not what,"
+                                    }
+                    response = render_to_response('external_tool_down.html', context_dict)
+                    response.status_code = 500
+                    response.reason_phrase = "Unknown Problem"
+                    return response
+                elif celery_tuple[1] != ExternalToolStatus.SUCCESS_STATUS:
+                    context_dict = {
+                                    'external_tool_name': "Celery",
+                                    'message_start': "Our task dispatcher"
+                                    }
+                    response = render_to_response('external_tool_down.html', context_dict)
+                    response.status_code = 500
+                    response.reason_phrase = "Celery Problem"
+                    return response
 
             #check solr
             solr_tuple = check_tool_status(ExternalToolStatus.SOLR_TOOL_NAME)
@@ -40,7 +59,7 @@ class ExternalToolErrorMiddleware(object):
                 if solr_tuple[1] == ExternalToolStatus.TIMEOUT_STATUS:
                     context_dict = {
                                     'external_tool_name': "Timeout",
-                                    'message_start': "Our database has not been updated with the status of one of our external tools recently leading us to believe that something"
+                                    'message_start': "Our database has not been updated with the status of Solr recently leading us to believe that something"
                                     }
                     response = render_to_response('external_tool_down.html', context_dict)
                     response.status_code = 500
@@ -73,7 +92,7 @@ class ExternalToolErrorMiddleware(object):
                     if galaxy_tuple[1] == ExternalToolStatus.TIMEOUT_STATUS:
                         context_dict = {
                                         'external_tool_name': "Timeout",
-                                        'message_start': "Our database has not been updated with the status of one of our external tools recently leading us to believe that something"
+                                        'message_start': "Our database has not been updated with the status of Galaxy recently leading us to believe that something"
                                         }
                         response = render_to_response('external_tool_down.html', context_dict)
                         response.status_code = 500
