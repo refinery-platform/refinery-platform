@@ -342,8 +342,12 @@ def check_for_galaxy(instance, galaxy):
 
 def check_tool_status(tool_name, tool_unique_instance_identifier=None):
     try:
-        tool = ExternalToolStatus.objects.get(name=tool_name, unique_instance_identifier=tool_unique_instance_identifier)
+        if tool_unique_instance_identifier is not None:
+            tool = ExternalToolStatus.objects.get(name=tool_name, unique_instance_identifier=tool_unique_instance_identifier)
+        else:
+            tool = ExternalToolStatus.objects.get(name=tool_name)            
     except ExternalToolStatus.DoesNotExist:
+        logger.error( "External Tool Status does not exist for " + tool_name + "and " + str(tool_unique_instance_identifier) )
         return (True, ExternalToolStatus.UNKNOWN_STATUS)
     
     if (datetime.now() - tool.last_time_check) > timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[tool_name]):
