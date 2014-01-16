@@ -269,22 +269,23 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
 @periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.CELERY_TOOL_NAME]), expires=(int(ExternalToolStatus.TIMEOUT[ExternalToolStatus.CELERY_TOOL_NAME]) - 1), time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.CELERY_TOOL_NAME])
 def check_for_celery():
     celery, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.CELERY_TOOL_NAME)
-    try:
-        array = ping() #pings celery to see if it's alive
-        if len(array) == 0:
-            celery.status = ExternalToolStatus.FAILURE_STATUS #celery is gone, get error thrown
-        else:
-            celery.status = ExternalToolStatus.SUCCESS_STATUS #celery is alive
-    except AMQPChannelException:
-        logger.error("AMQPChannelException raised by ping(). Is RabbitMQ available?")
-        celery.status = ExternalToolStatus.SUCCESS_STATUS
-    except:
-        logger.exception("core.tasks.check_for_celery: Something went wrong, check the stack trace below for what")
-        celery.status = ExternalToolStatus.FAILURE_STATUS
-    #set last time check to now
-    celery.last_time_check = datetime.now()
-    #save status
-    celery.save()
+    if celery.is_active:
+        try:
+            array = ping() #pings celery to see if it's alive
+            if len(array) == 0:
+                celery.status = ExternalToolStatus.FAILURE_STATUS #celery is gone, get error thrown
+            else:
+                celery.status = ExternalToolStatus.SUCCESS_STATUS #celery is alive
+        except AMQPChannelException:
+            logger.error("AMQPChannelException raised by ping(). Is RabbitMQ available?")
+            celery.status = ExternalToolStatus.SUCCESS_STATUS
+        except:
+            logger.exception("core.tasks.check_for_celery: Something went wrong, check the stack trace below for what")
+            celery.status = ExternalToolStatus.FAILURE_STATUS
+        #set last time check to now
+        celery.last_time_check = datetime.now()
+        #save status
+        celery.save()
 
 
 @periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.SOLR_TOOL_NAME]), expires=(int(ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.SOLR_TOOL_NAME]) - 1), time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.SOLR_TOOL_NAME])
