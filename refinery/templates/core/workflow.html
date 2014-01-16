@@ -1,6 +1,17 @@
 {% extends "base.html" %}
 {% load markup %}
 
+{% load static %}
+{% block head_html %}
+	<!-- Le styles -->
+    {% for css_file in REFINERY_CSS %}
+    <link href="{{ STATIC_URL }}{{ css_file }}" rel="stylesheet">
+   	{% endfor %}
+
+   	<!-- custom visualization styles -->
+	<link rel="stylesheet" type="text/css" href="{% static "styles/css/workflow_visualization.css" %}" />
+{% endblock %}
+
 {% block title %}
 {{ block.super }} - Workflow {{ workflow.name }}
 {% endblock %}
@@ -39,7 +50,41 @@
 		<div class="refinery-subheader">
 			<h4>Structure</h4>
 		</div>
-		<p><img src="{{ workflow_graph_url }}"></a></p>
+		<p>
+			<div>
+				<div class="row-fluid">
+					<div id="vis_workflow" class="span12"></div>
+					<div class="span12">
+						<!-- <div class="refinery-subheader">
+							<a href="#" onclick="toggle_visibility('node_table');"><h4>Toggle Selection Details &raquo; </h4></a>
+						</div>
+						<div id="node_table"> -->
+					</div>
+				</div>
+			</div>
+		</p>
+
+		<div class="refinery-subheader">
+			<a href="#" onclick="toggle_visibility('node_table');"><h4>Toggle Selection Details &raquo; </h4></a>
+		</div>
+		<p>
+			<div id="node_table"></div>
+		</p>
+
+		<!-- image of original refinery layout-->
+		<!--<p><img src="{{ workflow_graph_url }}"></a></p>-->
+
+		<div class="refinery-subheader">
+			<h4>Layout</h4>
+		</div>
+		<p>
+			<label class="radio">
+				<input type="radio" name="optionsRadios" id="cb_layout_kind_refinery" value="1" onclick="reload_workflow()" checked> Refinery
+			</label>
+			<label class="radio">
+				<input type="radio" name="optionsRadios" id="cb_layout_kind_galaxy" onclick="reload_workflow()" value="0"> Galaxy
+			</label>
+		</p>
 
 		<div class="refinery-header">
 			<span class="refinery-header-left">
@@ -93,5 +138,115 @@
 	    <p>No valid workflow.</p>
 	{% endif %}
 	</div>
+
+	<!-- docked and selected tool (node) table -->
+	<!--
+	<div id="selectionDetails">
+		<div class="refinery-subheader">
+			<a href="#" onclick="toggle_visibility('node_table');"><h4>Toggle Selection Details &raquo; </h4></a>
+		</div>
+		<div id="node_table" style="display:block;">
+    </div>
+	-->
 </div>
+{% endblock %}
+
+{% block script %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v3.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/workflow_visualization.js"></script>
+	<script>
+
+// TODO: encapsulate into namespace as well as a separate file	
+		
+		// #################################################################
+		// ########## TOOLBAR RELATED ######################################
+		// #################################################################
+
+		/*
+		 * deletes the svg elements and current displayed table
+		 */
+		function clear_svg () {
+			if (canvas) {
+				d3.selectAll(".link").remove();
+				d3.selectAll(".node").remove();
+				d3.selectAll("svg").remove();		
+			}
+			d3.select("#workflowtbl").remove();
+			
+			canvas 		= null,
+			force 		= {},
+			zoom 		= null,
+		    shape_dim 	= null,
+		    layout_prop = null,
+		    table 		= null, // properties table
+		    dataset 	= null, // actual dataset
+		    layout 		= document.getElementById("cb_layout_kind_refinery").checked ? "1" : "0";
+			// null typeError in console if uncommented
+			// shape_dim = null;
+		}
+
+
+		/*
+		 * reloads the whole workflow visualization from scratch through the visualize_workflow function
+		 */
+		function reload_workflow () {
+			clear_svg();
+
+			//canvas 		= init_canvas("#vis_workflow", document.documentElement.clientWidth-100, document.documentElement.clientHeight-100);
+			canvas 		= init_canvas("#vis_workflow");
+			shape_dim 	= init_dimensions(60, 30, 50, 11, 50, 6);	
+			layout_prop = init_force_layout(100, 1, 0.9, -100, 0.8, 0.0);	
+
+			d3.json("{% url 'download_workflow' workflow.uuid %}", function(error, data) {
+				visualize_workflow(data, canvas)
+			});
+
+			return false;
+		}
+
+
+		/*
+		 * toogle visibility of table via button click
+		 * 
+		 * id: id of the div element to be toggled
+		 */
+		function toggle_visibility (id) {
+			var element = document.getElementById(id);
+
+			if(element.style.display == "block")
+				element.style.display = "none";
+			else
+				element.style.display = "block";
+		}
+
+
+	   	// #################################################################
+		// ########## MAIN #################################################
+		// #################################################################
+
+		// globals
+		var canvas 		= null,
+			zoom 		= null,
+			force 		= {},
+	        shape_dim 	= null,
+	        layout_prop = null,
+	        table 		= null, // properties table
+	        dataset 	= null, // actual dataset  
+	        layout 		= document.getElementById("cb_layout_kind_refinery").checked ? "1" : "0";
+
+		// initialize svg to body
+		canvas 		= init_canvas("#vis_workflow");
+		
+		// initialize window and shape dimensions
+		shape_dim 	= init_dimensions(60, 30, 50, 11, 50, 6);	
+
+		// initialize force layout properties
+		layout_prop = init_force_layout(100, 1, 0.9, -100, 0.8, 0.0);
+		
+		// process and visualize workflow data from JSON file
+		d3.json("{% url 'download_workflow' workflow.uuid %}", function(error, data) {
+			visualize_workflow(data, canvas)
+		});
+
+	</script>
 {% endblock %}

@@ -74,7 +74,7 @@ file { [ "/vagrant/media", "/vagrant/static", "/vagrant/isa-tab" ]:
 }
 
 exec { "syncdb":
-  command => "${project_root}/manage.py syncdb --migrate --noinput",
+  command => "python ${project_root}/manage.py syncdb --migrate --noinput",
   path => $venvpath,
   user => $appuser,
   group => $appuser,
@@ -86,7 +86,7 @@ exec { "syncdb":
 }
 ->
 exec { "init_refinery":
-  command => "${project_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
+  command => "python ${project_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
   path => $venvpath,
   user => $appuser,
   group => $appuser,
@@ -94,13 +94,13 @@ exec { "init_refinery":
 ->
 exec {
   "build_core_schema":
-    command => "${project_root}/manage.py build_solr_schema --using=core > solr/core/conf/schema.xml",
+    command => "python ${project_root}/manage.py build_solr_schema --using=core > solr/core/conf/schema.xml",
     cwd => $project_root,
     path => $venvpath,
     user => $appuser,
     group => $appuser;
   "build_data_set_manager_schema":
-    command => "${project_root}/manage.py build_solr_schema --using=data_set_manager > solr/data_set_manager/conf/schema.xml",
+    command => "python ${project_root}/manage.py build_solr_schema --using=data_set_manager > solr/data_set_manager/conf/schema.xml",
     cwd => $project_root,
     path => $venvpath,
     user => $appuser,
