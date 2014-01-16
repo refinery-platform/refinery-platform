@@ -1,0 +1,80 @@
+<div class="span2">
+  <div ng-controller="NodeMappingListApiCtrl" ng-if="!isCurrentWorkflowSingleInput()">
+    <select ui-select2 ng-model="nodemappingIndex" ng-change="updateCurrentNodeMapping()" style="width:100%">
+      <option value="">Current Mapping</option>
+      <option ng-repeat="nodemapping in nodemappingList" value="{{$index}}">{{nodemapping.name}}</option>
+    </select>
+    <a class="btn btn-mini" >Save</a>
+    <a class="btn btn-mini" >Reset</a>
+    <a class="btn btn-mini" >Done</a>
+    <div>
+      <p>
+      </p>
+    </div>
+  </div>        
+</div>
+<div class="span10">
+  <div class="row-fluid">
+    <div class="span4">
+      <label class="control-label" style="float: left; margin-top: 3px;">
+        <b>1</b> of <b>1</b> relationships | <b>1</b> incomplete
+      </label>
+      <a href="#" id="help-mapping-statistics-button" style="height: 20px; width: 20px;">
+        <i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 10px; position: relative; top: 5px;"></i>
+      </a>
+
+    </div>            
+
+    <div class="span8">
+      <div style="float: right; display: block;">
+        <label style="dispaly: inline; float:left; margin-top: 3px; margin-right: 5px;">Mapping </label>
+        <div class="btn-group">
+          <button class="btn active">Manual</button>
+          <button class="btn">Automatic</button>                  
+        </div>
+        <a href="#" id="help-mapping-mode-button" style="height: 20px; width: 20px;">
+          <i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 0px; position: relative; top: 5px;"></i>
+        </a>
+      </div>
+
+      <div style="float: right; display: block;">
+        <label style="dispaly: inline; float:left; margin-top: 3px; margin-right: 5px;">Mode </label>
+        <div class="btn-group">
+          <button class="btn active">Edit</button>
+          <button class="btn">Overview</button>                 
+        </div>
+        <a href="#" id="help-mapping-view-button" style="height: 20px; width: 20px;">
+          <i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 10px; position: relative; top: 5px;"></i>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="row-fluid">
+    <div class="span6">
+      <div>
+        <button class="btn btn-mini"><i class="icon-backward"></i></button>
+        <button class="btn btn-mini">New</button>
+        <button class="btn btn-mini">Delete</button>
+        <button class="btn btn-mini"><i class="icon-forward"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row-fluid">
+    <p>
+    </p>
+  </div>                        
+
+  <div class="row-fluid">
+    <div class="well" style="border-color: #6A41AE; border-style: dashed;">
+      <label style="color: #6A41AE; text-align: center;">Drag file from the table below and drop here to assign as <b><i>input_file</i></b>.</label>
+    </div>
+  </div>
+  <div class="row-fluid">
+    <div class="well" style="border-color: #278F63; border-style: dashed;">
+      <label style="color: #278F63; text-align: center;">Drag file from the table below and drop here to assign as <b><i>exp_file</i></b>.</label>
+    </div>
+  </div>
+</div>

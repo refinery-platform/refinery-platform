@@ -61,7 +61,7 @@ SolrFacetView.prototype.render = function ( solrResponse ) {
 	// clear parent element
 	$( "#" + self._parentElementId ).html("");
 	
-	$( "#" + self._parentElementId ).append( "<a id=\"clear-facets\" href=\"#\" class=\"btn btn-mini\" data-placement=\"bottom\" data-html=\"true\" rel=\"tooltip\" data-original-title=\"Click to clear facet selection.\"><i class=\"icon-remove-sign\"></i>&nbsp;&nbsp;Reset All</a><br>&nbsp;<br>" );
+	//$( "#" + self._parentElementId ).append( "<a id=\"clear-facets\" href=\"#\" class=\"btn btn-mini\" data-placement=\"bottom\" data-html=\"true\" rel=\"tooltip\" data-original-title=\"Click to clear facet selection.\"><i class=\"icon-remove-sign\"></i>&nbsp;&nbsp;Reset All</a><br>&nbsp;<br>" );
    	
    	$( "#clear-facets" ).click( function( event ) {
 		// clear facet selection

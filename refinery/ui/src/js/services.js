@@ -14,4 +14,12 @@ angular.module('refineryServices', [])
   return $resource(
     "/api/v1/nodesetlist/", {format: "json"}
   );
+})
+
+.factory("NodeMappingList", function($resource) {
+  'use strict';
+
+  return $resource(
+    "/api/v1/noderelationship/", {format: "json"}
+  );
 });

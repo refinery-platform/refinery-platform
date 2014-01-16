@@ -261,7 +261,6 @@ $(document).ready(function() {
 
 		var facetSelectionUpdated = function( arguments ) {
 			console.log( 'facetSelectionUpdated' + ' executed' );
-			console.log( arguments );
 
 			query.clearDocumentSelection();
 			query.setDocumentSelectionBlacklistMode( true );

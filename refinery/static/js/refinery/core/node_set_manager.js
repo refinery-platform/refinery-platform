@@ -111,9 +111,9 @@ NodeSetManager.prototype.renderList = function () {
 	code += '</select>'
 	//code += '</div>'		
 
-  	code += '<a id="' + nodeSetSaveSelectionButtonElementId + '"class="btn btn-warning" href="#">';
-    code += 'Save';
-    code += '</a>';
+  	//code += '<a id="' + nodeSetSaveSelectionButtonElementId + '"class="btn btn-warning" href="#">';
+    //code += 'Save';
+    //code += '</a>';
 	
 	$( "#" + self.elementId ).html( code );
 

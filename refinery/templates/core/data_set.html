@@ -114,27 +114,22 @@
 {% block content %}
 	<!-- tab headers -->
 
-<div ng-controller="DataSetUiModeCtrl">		    
+<div ng-controller="DataSetUiModeCtrl">
 
 <div class="refinery-panel-tabs">
 
 	<div class="row-fluid">
 
 		<div class="span2">
-				<select ui-select2 style="width:100%" ng-change="updateCurrentDataSetUiMode()" ng-model="newDataSetUiMode">
-			        <option value="browse">Browse</option>
-					<option value="analyze">Analyze</option>
-					<option value="visualize">Visualize</option>
-				</select>
-				<!--
-				<a ng-click="currentDataSetUiMode='browse'">Browse</a>
-				<a ng-click="currentDataSetUiMode='visualize'">Visualize</a>
-				<a ng-click="currentDataSetUiMode='analyze'">Analyze</a>
-				-->
+			<div class="btn-group">
+		        <a type="button" class="btn btn-warning" ng-class="{active: $root.mode==='browse'}" ui-sref="browse">Browse</a>
+		        <a type="button" class="btn btn-warning" ng-class="{active: $root.mode==='analyze'}" ui-sref="analyze">Analyze</a>
+		        <a type="button" class="btn btn-warning" ng-class="{active: $root.mode==='visualize'}" ui-sref="visualize">Visualize</a>
+		    </div>		
 		</div>
 
 		<div class="span10">
-		    <ul class="nav nav-pills" id="tabs">	    
+		    <ul class="nav nav-tabs" id="tabs" style="float: right;">	    
 	  			<li class="active"><a href="#content" data-toggle="tab">Files</a></li>
 	  			{% if has_change_dataset_permission %}
 	  			<li><a href="#configuration" data-toggle="tab">Attributes</a></li>
@@ -155,81 +150,101 @@
 
 	{% if data_set %}
 	<!-- tabs -->
+	<form id="sampleForm" method="post" class="form-inline" hidden>
+		{% csrf_token %}
+		<!-- pass study information into the receiving view when posting -->
+		<input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
+	</form>
 
 	<div class="tab-content">
-
   		<div class="tab-pane fade active in" id="content">
-			<form id="sampleForm" method="post" class="form-inline">
-				{% csrf_token %}
-
-				<!-- pass study information into the receiving view when posting -->
-				<input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
-			</form>
 
 			<div class="row-fluid">				
 
 				{% verbatim %}
-				<div class="{{ $root.ctrlTabSpanSize }}" ng-init="$root.ctrlTabSpanSize='span2'" ng-if="showCtrlTab" style="background: red;" ng-cloak>
-					<div ng-view></div>
+				<div class="{{ $root.ctrlTabSpanSize }}" ng-init="$root.ctrlTabSpanSize='span2'" ng-show="showCtrlTab" ng-cloak style="background-color: #eaeaea; padding: 10px;">
+					<!-- <div ui-view="data-set-ui-mode-controls"></div> -->
+					<div ui-view></div>
 				</div>
 				{% endverbatim %}
 
 				{% verbatim %}
-				<div class="{{ $root.mainTabSpanSize }}" ng-init="$root.mainTabSpanSize='span12'" >
+				<div class="{{ $root.mainTabSpanSize }}" ng-init="$root.mainTabSpanSize='span12'" ng-cloak>
 				{% endverbatim %}
+
+				<div class="row-fluid" ng-if="$root.mode==='analyze'">
+					<div ng-include="'/static/partials/data_set_ui_node_mapping.html'"></div>
+					<!-- <div ui-view="data-set-ui-mapping-controls"></div>-->
+					<div ui-view></div>
+					<div>
+						<hr>
+					</div>					
+				</div>
+
 				<div class="row-fluid">				
-				 	<div class="span2" style="background: green;" >
+				 	<div class="span2">
+						<div class="row-fluid" style="margin-bottom: 5px;">
+							<div class="span12">
+							{% if not REFINERY_REPOSITORY_MODE %}
+								{% if user.is_authenticated %}
+								<span id="node-set-manager-panel">
+				 					<!-- <label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Selection</label> -->
+									<span id="node-set-manager-controls"></span>
+			  					</span>			  					
+			  					{% endif %}			  	
+			  				</div>				
+			  			</div>
 
-						{% if not REFINERY_REPOSITORY_MODE %}
-							{% if user.is_authenticated %}
-							<span id="node-set-manager-panel">
-			 					<!-- <label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Selection</label> -->
-								<span id="node-set-manager-controls"></span>
-		  					</span>
-
+						<div class="row-fluid" style="margin-bottom: 5px;">
+							<div class="span12">
+			  					<div style="width: 100%;">
+			  						<div id="node-set-save-button" class="btn btn-mini">Save</div>
+			  						<div id="clear-facets" class="btn btn-mini">Reset</div>
+			  						<div id="" class="btn btn-mini">Download</div>
+			  					</div>
+								
+								<!--
+								{% if user.is_authenticated %}
+								<span id="analysis-manager-panel">
+				 					<label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Analysis</label>
+									<span id="analysis-manager-controls"></span>
+			  					</span>
+			  					{% endif %}
+			  					-->
 		  					{% endif %}
-							
-							<!--
-							{% if user.is_authenticated %}
-							<span id="analysis-manager-panel">
-			 					<label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Analysis</label>
-								<span id="analysis-manager-controls"></span>
-		  					</span>
-		  					{% endif %}
-		  					-->
-	  					{% endif %}
+		  					</div>
+	  					</div>
 
-
+	  						<!--
 							<ul class="nav nav-pills" id="navigation-tabs">
 								<li class="active"><a href="#solr-facet-view" data-toggle="pill">Facets</a></li>
 							</ul>
-
-							<div id="solr-facet-view" class="accordion"></div>
-							<hr>
-							<div id="solr-analysis-view" class="accordion"></div>
+							-->
+						<div class="row-fluid">
+							<div class="span12">
+								<label style="font-style: italic; color: darkgray;">Attribute Filter</label>
+								<div id="solr-facet-view" class="accordion"></div>
+							</div>
+						</div>
+						<div class="row-fluid">
+							<div class="span12">
+								<label style="font-style: italic; color: darkgray;">Analysis Filter</label>
+								<div id="solr-analysis-view" class="accordion"></div>
+							</div>
+						</div>
 				 	</div>
 
 					{% verbatim %}
-					<div class="span10" id="main-area" style="background: lightblue;" >
+					<div class="span10" id="main-area">
 					{% endverbatim %}
 
-						<!--<div class="row-fluid" class="form-inline">-->
-			  					<span class="controls">
-				 					<label class="control-label" id="solr-document-count-view" style="float: left; top: 3px;"></label>
-				 					<div class="tabbable">
-									<ul class="nav nav-pills" id="navigation-tabs" style="float:right;">
-										<li class="active">
-											<a href="#table-view-tab" data-toggle="pill">List</a>
-										</li>
-										<li>
-											<a href="#pivot-view-tab" data-toggle="pill">Matrix</a>
-										</li>
-									</ul>
-									</div>
-				 				</span>
+						<div class="row-fluid" style="margin-bottom: 5px;">
+							<div class="span3">
+			 					<label class="control-label" id="solr-document-count-view" style="float: left; margin-top: 3px;"></label>
+			 					<a href="#" id="help-selection-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
+				 			</div>
 
-
-
+							<div class="span9">
 			  					<!--
 			  					<a id="igv-multi-species" href="#" role="button" style="margin-left: 5px" class="btn btn-warning" data-toggle="modal" rel="tooltip" data-placement="bottom" data-html="true" title="Launch IGV with<br>current selection."><i class="icon-bar-chart"></i>&nbsp;&nbsp;View in IGV</a>
 								<a href="#" id="help-igv-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
@@ -246,14 +261,38 @@
 
 								{% endif %}
 
-			 					<label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Showing</label>
-			  					<span class="controls">
-									<div class="btn-group annotation-buttons" data-toggle="buttons-radio">
-									  	<button type="button" id="data-button" data-toggle="button" class="btn btn-warning active"  rel="tooltip" data-placement="bottom" data-html="true" title="View (primary) data files<br>included in this data set.">Data</button>
-									  	<button type="button" id="annotation-button" data-toggle="button" class="btn btn-warning" rel="tooltip" data-placement="bottom" data-html="true" title="View annotation files<br>associated with this data set.">Annotation</button>
+								<div style="float:right; display: block;">
+									<label style="dispaly: inline; float:left; margin-top: 3px; margin-right: 5px;">Display </label>
+									<select id="view-selector" style="display: inline; float:left;">
+										<option value="table-view-tab">Table</option>
+									<option value="pivot-view-tab">Matrix</option>
+									</select>
+									<a href="#" id="help-view-selector-button" style="height: 20px; width: 20px;">
+										<i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 0px; position: relative; top: 5px;"></i>
+									</a>
+								</div>
+
+								<!-- the original tab pills: now remote controlled by the select2 -->
+				 				<div class="tabbable" hidden>
+									<ul class="nav nav-pills" id="navigation-tabs">
+										<li class="active">
+											<a href="#table-view-tab" data-toggle="pill">List</a>
+										</li>
+										<li>
+											<a href="#pivot-view-tab" data-toggle="pill">Matrix</a>
+										</li>
+									</ul>
+								</div>
+
+								<div style="float:right; display: block;">
+									<label style="dispaly: inline; float:left; margin-top: 3px; margin-right: 5px;">View </label>
+
+									<div class="btn-group annotation-buttons" data-toggle="buttons-radio" >
+									  	<button type="button" id="data-button" data-toggle="button" class="btn active"  rel="tooltip" data-placement="bottom" data-html="true" title="View (primary) data files<br>included in this data set.">Data</button>
+									  	<button type="button" id="annotation-button" data-toggle="button" class="btn" rel="tooltip" data-placement="bottom" data-html="true" title="View annotation files<br>associated with this data set.">Annotation</button>
 									</div>
-									<a href="#" id="help-data-annotation-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
-			  					</span>
+									<a href="#" id="help-data-annotation-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 15px; position: relative; top: 5px;"></i></a>
+								</div>
 
 			  					<!--
 								{% if user.is_authenticated %}
@@ -265,21 +304,26 @@
 								</span>
 								{% endif %}
 								-->
-						<!--</div>-->
+							</div>
 
-						<div class="tabbable">
-							<div class="tab-content">
-								<div class="tab-pane active fade in" id="table-view-tab">
-									<div id="solr-table-view"></div>
-								</div>
-								<div class="tab-pane fade in" id="pivot-view-tab">
-									<div id="pivot-view"></div>
-									<div id="solr-pivot-matrix">
-										<!-- the matrix -->
+
+						</div>
+
+						<div class="row-fluid">
+								<div class="tabbable">
+									<div class="tab-content">
+										<div class="tab-pane active fade in" id="table-view-tab">
+											<div id="solr-table-view"></div>
+										</div>
+										<div class="tab-pane fade in" id="pivot-view-tab">
+											<div id="pivot-view"></div>
+											<div id="solr-pivot-matrix">
+												<!-- the matrix -->
+											</div>
+										</div>
 									</div>
 								</div>
-							</div>
-						</div>
+						</div>						
 
 					</div>
 
@@ -620,10 +664,12 @@
 
   <!-- Note that jquery must be loaded before angular so that it doesn't use jqLite internally -->
  	<script type="text/javascript" src="{% static "vendor/angular/angular.js" %}"></script>
+  	<script type="text/javascript" src="{% static "vendor/angular-bootstrap/ui-bootstrap-tpls.js" %}"></script>
   	<script type="text/javascript" src="{% static "vendor/select2/select2.js" %}"></script>
   	<script type="text/javascript" src="{% static "vendor/angular-ui-select2/src/select2.js" %}"></script>
   	<script type="text/javascript" src="{% static "vendor/angular-resource/angular-resource.js" %}"></script>
-  	<script type="text/javascript" src="{% static "vendor/angular-route/angular-route.js" %}"></script>
+  	<!--<script type="text/javascript" src="{% static "vendor/angular-route/angular-route.js" %}"></script>-->
+  	<script type="text/javascript" src="{% static "vendor/angular-ui-router/release/angular-ui-router.js" %}"></script>
 	<script type="text/javascript" src="{% static "js/refinery.js" %}"></script>
 	<script type="text/javascript" src="{% static "js/node_mapping.js" %}"></script>
 	<script type="text/javascript" src="{% static "js/controllers.js" %}"></script>
@@ -634,6 +680,12 @@
 	<script type="application/javascript">
 
 		$(document).ready(function () {
+			$( "#view-selector" ).select2({minimumResultsForSearch: -1});
+			$( "#view-selector" ).on("change", function(event) { 
+					console.log( event.added.element[0].value );
+					$( '#navigation-tabs a[href="#' + event.added.element[0].value + '"]').tab('show');
+				});
+
 	    	$("[rel=tooltip]").tooltip();
 
 	    	$("#help-igv-button").click( function(event) {
@@ -677,6 +729,23 @@
 				);
 			});
 
+	    	$("#help-view-selector-button").click( function(event) {
+   				bootbox.alert(
+	   				"<h3>Select File Display Mode</h3>" +
+					"<p>" +
+					"The collection of files in this data set can be displayed using different representations." +
+					"</p>"
+				);
+			});
+
+	    	$("#help-selection-button").click( function(event) {
+   				bootbox.alert(
+	   				"<h3>Current File Selection</h3>" +
+					"<p>" +
+					"The number of files currently selected. Use facet attribute filters and individual file selection check boxes to modify the current selection." +
+					"</p>"
+				);
+			});
 
 	  	});
 	</script>
