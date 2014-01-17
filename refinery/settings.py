@@ -175,7 +175,6 @@ INSTALLED_APPS = (
     # NG: added for API
     "tastypie",
     'guardian',
-    'raven.contrib.django',
     'djangular',
     'galaxy_connector',
     'core',
@@ -253,11 +252,6 @@ LOGGING = {
         },
         'django.db.backends': {
             'level': 'ERROR',
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        'raven': {
-            'level': 'DEBUG',
             'handlers': ['console'],
             'propagate': False,
         },

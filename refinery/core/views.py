@@ -28,8 +28,6 @@ import logging
 import os.path
 import settings
 import urllib2
-import networkx as nx
-import matplotlib.pyplot as plt
 from tempfile import NamedTemporaryFile
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem, get_temp_dir, file_path, FILE_STORE_BASE_DIR
@@ -416,36 +414,8 @@ def workflow(request, uuid):
 
     # load graph dictionary from Galaxy
     workflow = Workflow.objects.filter( uuid=uuid ).get()
-        
-    # parse workflow into graph data structure
-    graph = create_workflow_graph( json.loads( workflow.graph ) )
-       
-    # draw graph
-    plt.figure(figsize=(32,9))
-    positions = {node_id:graph.node[node_id]['position'] for node_id in graph.nodes()}
-    tool_nodes = [node_id for node_id in graph.nodes() if graph.node[node_id]['type'] == "tool"]
-    input_nodes = [node_id for node_id in graph.nodes() if graph.node[node_id]['type'] == "data_input"]
-    output_nodes = [node_id for node_id in graph.nodes() if graph.node[node_id]['type'] == "output"]
-    
-    nx.draw_networkx_edges(graph, positions, alpha=0.1)    
-    nx.draw_networkx_nodes(graph, positions, node_shape='o', nodelist=output_nodes, node_size=300,node_color='orange',alpha=0.4)    
-    nx.draw_networkx_nodes(graph, positions, node_shape='<', nodelist=input_nodes, node_size=300,node_color='orange',alpha=0.4)    
-    nx.draw_networkx_nodes(graph, positions, node_shape='s', nodelist=tool_nodes, node_size=500,node_color='yellow')
-        
-    nx.draw_networkx_labels(graph, positions, labels={graph.nodes()[i]:graph.node[graph.nodes()[i]]['name'] for i in range(0,len(graph.nodes()))},font_color="black")    
-    nx.draw_networkx_edge_labels(graph, positions, labels=["("+graph[id[0]][id[1]]["name"]+")" for id in graph.edges()],font_size=12)    
-    tempfile = NamedTemporaryFile(dir=get_temp_dir(), delete=False)
-    tempfile_name = tempfile.name + ".png";
-    plt.axis('off')
-    plt.savefig(tempfile_name, dpi=72)
-    plt.close()
-    
-    graph_file_uuid = create(tempfile_name, permanent=True)
-    import_file(graph_file_uuid, refresh=True, permanent=True)
-    
-    workflow_graph_url = FileStoreItem.objects.get( uuid=graph_file_uuid ).get_full_url()
             
-    return render_to_response('core/workflow.html', { 'workflow': workflow, 'workflow_graph_url': workflow_graph_url }, context_instance=RequestContext( request ) )
+    return render_to_response('core/workflow.html', { 'workflow': workflow }, context_instance=RequestContext( request ) )
 
 
 def graph_node_shape(node_type):
