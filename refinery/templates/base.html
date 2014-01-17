@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 {% load humanize %}
-
+{% load static %}
 
 <html lang="en">
 <head>
@@ -11,7 +11,7 @@
 
     <!-- Le styles -->
     {% for css_file in REFINERY_CSS %}
-    <link href="{{ STATIC_URL }}{{ css_file }}" rel="stylesheet">
+    <link href="{% static css_file %}" rel="stylesheet">
    	{% endfor %}
     
     <style type="text/css">
@@ -63,7 +63,7 @@
 	              	
           <a class="brand" href="{% url "home" %}">
           {% if REFINERY_MAIN_LOGO != "" %}
-          	<img style="height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px" src="{{ STATIC_URL }}{{ REFINERY_MAIN_LOGO }}"/>&nbsp;&nbsp;
+          	<img style="height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px" src="{% static REFINERY_MAIN_LOGO %}"/>&nbsp;&nbsp;
           {% endif %}
           {{REFINERY_INSTANCE_NAME}}</a>
 
@@ -135,10 +135,10 @@
 	</div>
     
 	<!-- 3rd party libraries -->                       
-	<script src="{{ STATIC_URL }}js/jquery/jquery-1.8.3.min.js"></script>
-    <script src="{{ STATIC_URL }}js/jquery-ui/jquery-ui-1.10.0.custom.min.js"></script>
+	<script src="{% static "js/jquery/jquery-1.8.3.min.js" %}"></script>
+    <script src="{% static "js/jquery-ui/jquery-ui-1.10.0.custom.min.js" %}"></script>
 
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap/bootstrap.min.js"></script>
+    <script type="text/javascript" src="{% static "js/bootstrap/bootstrap.min.js" %}"></script>
         
 	{% block script %}
 	{% endblock %}
