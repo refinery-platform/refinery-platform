@@ -8,12 +8,9 @@ $project_root = "/vagrant/refinery"
 class venvdeps {
   package { 'build-essential': }
   package { 'libncurses5-dev': }
-  package { 'libfreetype6': }      # required by matplotlib
-  package { 'libfreetype6-dev': }  # required by matplotlib
-  package { 'libpng12-dev': }      # required by matplotlib
   package { 'libldap2-dev': }
   package { 'libsasl2-dev': }
-  package { 'postgresql-server-dev-9.1': }
+#  package { 'postgresql-server-dev-9.1': }
 }
 include venvdeps
 
@@ -28,8 +25,9 @@ class { 'postgresql::globals':
   encoding => 'UTF8',
   locale => 'en_US.utf8',
 }
-->
 class { 'postgresql::server':
+}
+class { 'postgresql::lib::devel':
 }
 postgresql::server::db { 'refinery':
   user => $appuser,
@@ -42,29 +40,14 @@ class { 'python':
   dev => true,
   virtualenv => true,
 }
+~>
 # create virtualenv
 python::virtualenv { $virtualenv:
   ensure => present,
-  #requirements => $requirements,  # creates a dependency cycle
+  requirements => $requirements,
   owner => $appuser,
   group => $appuser,
-}
-->
-# a workaround for a bug in matplotlib installation
-# python::pip doesn't work because it creates a dependency cycle
-exec { "numpy":
-  command => "pip install numpy==1.7.0",
-  path => $venvpath,
-  user => $appuser,
-  group => $appuser,
-  require => Class["venvdeps"],
-}
-~>
-# install packages from requirements.txt
-python::requirements { $requirements:
-  virtualenv => $virtualenv,
-  owner => $appuser,
-  group => $appuser,
+  require => Class['venvdeps'],
 }
 
 file { [ "/vagrant/media", "/vagrant/static", "/vagrant/isa-tab" ]:
@@ -80,7 +63,7 @@ exec { "syncdb":
   group => $appuser,
   require => [
                File["/vagrant/media"],
-               Python::Requirements[$requirements],
+               Python::Virtualenv[$virtualenv],
                Postgresql::Server::Db["refinery"]
              ],
 }
@@ -114,6 +97,7 @@ exec { "solr_wget":
   command => "wget ${solr_url} -O /usr/src/${solr_archive}",
   creates => "/usr/src/${solr_archive}",
   path => "/usr/bin:/bin",
+  timeout => 600,
 }
 ->
 exec { "solr_unpack":
