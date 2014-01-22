@@ -35,8 +35,8 @@ autorestart = true
 startsecs = 10
 
 [program:celeryd]
-command = %(here)s/manage.py celeryd -E --purge --discard
-environment = PATH=/home/vagrant/.virtualenvs/refinery-platform/bin
+command = python %(here)s/manage.py celeryd -E --purge --discard
+environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
 stdout_logfile = %(here)s/celeryd.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
@@ -51,8 +51,8 @@ stopasgroup = true
 priority = 995
 
 [program:celerycam]
-command = %(here)s/manage.py celerycam
-environment = PATH=/home/vagrant/.virtualenvs/refinery-platform/bin
+command = python %(here)s/manage.py celerycam
+environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
 stdout_logfile = %(here)s/celerycam.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
@@ -63,8 +63,8 @@ startsecs = 3
 priority= 994
 
 [program:celerybeat]
-command = %(here)s/manage.py celerybeat
-environment = PATH=/home/vagrant/.virtualenvs/refinery-platform/bin
+command = python %(here)s/manage.py celerybeat
+environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
 stdout_logfile = %(here)s/celerybeat.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
@@ -75,8 +75,8 @@ startsecs = 3
 priority= 996
 
 [program:runserver]
-command = %(here)s/manage.py runserver 0.0.0.0:8000 --noreload
-environment = PATH=/home/vagrant/.virtualenvs/refinery-platform/bin
+command = python %(here)s/manage.py runserver 0.0.0.0:8000 --noreload
+environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
 stdout_logfile = %(here)s/refinery.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4

@@ -56,8 +56,8 @@ deployment/.librarian/
 deployment/.tmp/
 deployment/modules/
 deployment/Puppetfile.lock
-media/
-static/
+/media/
+/static/
 refinery/celerybeat-schedule*
 *.sublime-*
 refinery/ui/app/

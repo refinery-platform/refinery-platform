@@ -5,6 +5,7 @@
 
 <html lang="en">
 <head>
+<<<<<<< HEAD
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="">
   <meta name="author" content="">
@@ -42,6 +43,48 @@
       </script>
     {% endif %}
   {% endblock tracking %}
+=======
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    {% for css_file in REFINERY_CSS %}
+    <link href="{% static css_file %}" rel="stylesheet">
+   	{% endfor %}
+    
+    <style type="text/css">
+      body {
+        /*padding-top: {{ REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;*/
+        /*padding-bottom: 40px;*/
+         /*position: relative;*/
+      }
+    </style>
+    
+    {% block head_html %}
+    {% endblock %}
+    
+    <title>{{REFINERY_INSTANCE_NAME}} {% block title %}{% endblock %}</title>
+        
+    {% block tracking %}
+    
+	    {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}    
+			<script type="text/javascript">
+			
+			  var _gaq = _gaq || [];
+			  _gaq.push(['_setAccount', '{{ REFINERY_GOOGLE_ANALYTICS_ID }}']);
+			  _gaq.push(['_trackPageview']);
+			
+			  (function() {
+			    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+			  })();
+			</script>
+		{% endif %}    
+	    
+    {% endblock %}
+>>>>>>> develop
 </head>
 
 <body ng-app="{% block ng_app %}{% endblock %}">
@@ -132,6 +175,7 @@
   </div>
 
 
+<<<<<<< HEAD
   <!-- 3rd party libraries handled by bower and grunt -->                       
   <script type="text/javascript" src="{% static "vendor/jquery/jquery.js" %}"></script>
 
@@ -160,6 +204,49 @@
         });
       }
     }
+=======
+	<div class="container-fluid">
+		
+		<div class="row-fluid" hidden id="warning-ie-not-supported">
+			<div class="alert alert-error">
+				<b>Notice</b>&nbsp;
+				We currently do not support <i>Microsoft Internet Explorer</i> and strongly recommend that you continue browsing
+				this site with <a href="http://www.google.com/chrome/">Chrome</a>, <a href="http://www.apple.com/safari/">Safari</a> or <a href="http://www.mozilla.org/firefox/">Firefox</a>.
+			</div>
+		</div>
+			
+		{% block content %}
+		{% endblock %}							
+	</div>
+    
+	<!-- 3rd party libraries -->                       
+	<script src="{% static "js/jquery/jquery-1.8.3.min.js" %}"></script>
+    <script src="{% static "js/jquery-ui/jquery-ui-1.10.0.custom.min.js" %}"></script>
+
+    <script type="text/javascript" src="{% static "js/bootstrap/bootstrap.min.js" %}"></script>
+        
+	{% block script %}
+	{% endblock %}
+
+	<script type="text/javascript">
+		// activate bootstrap tooltips
+	    $('a[rel=tooltip]').tooltip();
+	
+		function sizing() {
+		    var windowwidth=$(window).width();
+		    if(windowwidth<=767) {
+		    	$('.scrollable').css('height', 'inherit' );      
+		    }
+		    else {
+			    $('.scrollable').map( function() {
+			    	var targetHeight = ( $(window).height() - $(this).offset().top - 40 );
+			    	var minHeight = parseInt( $('.scrollable').css( "min-height" ) );
+			    	var newHeight = Math.max( targetHeight, minHeight );
+			    	$(this).css('height', newHeight + 'px');  
+		    	});
+	    	}
+		}
+>>>>>>> develop
 		$(window).resize(sizing);
 
 		$(document).ready( function(){

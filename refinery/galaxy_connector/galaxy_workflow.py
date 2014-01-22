@@ -8,7 +8,6 @@ from datetime import datetime
 import ast
 import copy
 import logging
-import matplotlib.pyplot as plt
 import networkx as nx
 import simplejson
 

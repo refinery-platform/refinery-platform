@@ -11,7 +11,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 djcelery.setup_loader()
 
 # Required when DEBUG = False
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.50.50']
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -176,7 +176,6 @@ INSTALLED_APPS = (
     # NG: added for API
     "tastypie",
     'guardian',
-    'raven.contrib.django',
     'djangular',
     'galaxy_connector',
     'core',
@@ -254,11 +253,6 @@ LOGGING = {
         },
         'django.db.backends': {
             'level': 'ERROR',
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        'raven': {
-            'level': 'DEBUG',
             'handlers': ['console'],
             'propagate': False,
         },
