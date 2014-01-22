@@ -10,7 +10,6 @@ class venvdeps {
   package { 'libncurses5-dev': }
   package { 'libldap2-dev': }
   package { 'libsasl2-dev': }
-#  package { 'postgresql-server-dev-9.1': }
 }
 include venvdeps
 
@@ -20,6 +19,10 @@ package { 'java':
 package { 'curl': }  # required by rabbitmq installer
 package { 'virtualenvwrapper': }
 
+# temp workaround from https://github.com/puppetlabs/puppetlabs-postgresql/issues/348
+class { 'concat::setup':
+  before => Class['postgresql::server'],
+}
 class { 'postgresql::globals':
   version => '9.1',
   encoding => 'UTF8',
@@ -41,13 +44,15 @@ class { 'python':
   virtualenv => true,
 }
 ~>
-# create virtualenv
 python::virtualenv { $virtualenv:
   ensure => present,
   requirements => $requirements,
   owner => $appuser,
   group => $appuser,
-  require => Class['venvdeps'],
+  require => [
+               Class['venvdeps'],
+               Class['postgresql::lib::devel'],
+             ]
 }
 
 file { [ "/vagrant/media", "/vagrant/static", "/vagrant/isa-tab" ]:
