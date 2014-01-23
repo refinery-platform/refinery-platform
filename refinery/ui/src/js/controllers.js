@@ -17,8 +17,6 @@ angular.module('refineryControllers', [])
       else {      
         $scope.currentWorkflow.input_relationships[0].category = $scope.currentWorkflow.input_relationships[0].category + " File Mapping";
       }
-    }
-
       $rootScope.$emit( "workflowChangedEvent", $scope.currentWorkflow );
     }
   };
