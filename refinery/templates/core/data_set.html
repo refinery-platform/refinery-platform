@@ -174,11 +174,12 @@
 
 				<div class="row-fluid" ng-if="$root.mode==='analyze'">
 					<div ng-include="'/static/partials/data_set_ui_node_mapping.html'"></div>
-					<!-- <div ui-view="data-set-ui-mapping-controls"></div>-->
-					<div ui-view></div>
-					<div>
+					<div ui-view="data-set-ui-mapping-controls"></div>
+					<!-- <div ui-view></div> -->
+					<div class="row"><div class="span12">
 						<hr>
-					</div>					
+					</div>		
+					</div>			
 				</div>
 
 				<div class="row-fluid">				

@@ -1,3 +1,4 @@
+<div ng-controller="WorkflowListApiCtrl">
 <div class="span2">
   <div ng-controller="NodeMappingListApiCtrl" ng-if="!isCurrentWorkflowSingleInput()">
     <select ui-select2 ng-model="nodemappingIndex" ng-change="updateCurrentNodeMapping()" style="width:100%">
@@ -64,6 +65,8 @@
 
   <div class="row-fluid">
     <p>
+      <label style="color: #6A41AE;"><b><i>{{currentWorkflow.input_relationships[0].set1}}<br/></i></b></label>
+      <label style="color: #278F63;" ng-if="!isCurrentWorkflowSingleInput()"><b><i>{{currentWorkflow.input_relationships[0].set2}}<br/></i></b></label>    
     </p>
   </div>                        
 
@@ -77,4 +80,5 @@
       <label style="color: #278F63; text-align: center;">Drag file from the table below and drop here to assign as <b><i>exp_file</i></b>.</label>
     </div>
   </div>
+</div>
 </div>

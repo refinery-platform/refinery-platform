@@ -1,53 +1,53 @@
-    <div ng-controller="WorkflowListApiCtrl">
-      <select ui-select2 ng-model="workflowIndex" ng-change="updateCurrentWorkflow()" style="width:100%" data-placeholder="Select a workflow">
-        <option value=""></option>  <!-- required for showing placeholder text -->
-        <option ng-repeat="workflow in workflowList" value="{{$index}}">{{workflow.name}}</option>
-      </select>
-      <div ng-cloak ng-if="currentWorkflow">
-        
-        <div class="refinery-subheader">
-          <h4>Name</h4>
-        </div>
-        <p>{{currentWorkflow.name}}</p>
-
-        <div ng-if="currentWorkflow.summary">
-        <div class="refinery-subheader">
-          <h4>Summary</h4>
-        </div>
-        <p>{{currentWorkflow.summary}}</p>
-        </div>
-
-        <div class="refinery-subheader">
-          <h4>Inputs ({{currentWorkflow.input_relationships[0].category}})</h4>
-        </div>
-        <div>
-          <label style="color: #6A41AE;"><b><i>{{currentWorkflow.input_relationships[0].set1}}<br/></i></b></label>
-          <label style="color: #278F63;" ng-if="!isCurrentWorkflowSingleInput()"><b><i>{{currentWorkflow.input_relationships[0].set2}}<br/></i></b></label>
-        </div>
-        <div ng-controller="NodeSetListApiCtrl" ng-if="isCurrentWorkflowSingleInput()">
-          <select ui-select2 ng-model="nodesetIndex" ng-change="updateCurrentNodeSet()" style="width:100%" data-placeholder="Choose a {{currentWorkflow.input_relationships[0].category}}">
-            <option value=""></option>  <!-- required for showing placeholder text -->
-            <option value="current_selection">Current Selection</option>  <!-- required for showing placeholder text -->
-            <option ng-repeat="nodeset in nodesetList" value="{{$index}}">{{nodeset.name}}</option>
-          </select>
-          <div>
-            <p>
-            </p>
-          </div>
-          <button class="btn btn-warning" ng-disabled="!currentNodeSet" style="width: 100%">Launch Analysis</button>                    
-        </div>        
-        <div ng-controller="NodeMappingListApiCtrl" ng-if="!isCurrentWorkflowSingleInput()">
-          <select ui-select2 ng-model="nodemappingIndex" ng-change="updateCurrentNodeMapping()" style="width:100%" data-placeholder="Choose a {{currentWorkflow.input_relationships[0].category}}">
-            <option value=""></option>  <!-- required for showing placeholder text -->
-            <option value="current_mapping">Current Mapping</option>  <!-- required for showing placeholder text -->
-            <option ng-repeat="nodemapping in nodemappingList" value="{{$index}}">{{nodemapping.name}}</option>
-          </select>
-          <a class="btn btn-mini" >New</a>
-          <div>
-            <p>
-            </p>
-          </div>
-          <button class="btn btn-warning" ng-disabled="!currentNodeMapping" style="width: 100%">Launch Analysis</button>          
-        </div>        
-      </div>
+<div ng-controller="WorkflowListApiCtrl">
+  <select ui-select2 ng-model="workflowIndex" ng-change="updateCurrentWorkflow()" style="width:100%" data-placeholder="Select a workflow">
+    <option value=""></option>  <!-- required for showing placeholder text -->
+    <option ng-repeat="workflow in workflowList" value="{{$index}}">{{workflow.name}}</option>
+  </select>
+  <div ng-cloak ng-if="currentWorkflow">
+    
+    <div class="refinery-subheader">
+      <h4>Name</h4>
     </div>
+    <p>{{currentWorkflow.name}}</p>
+
+    <div ng-if="currentWorkflow.summary">
+    <div class="refinery-subheader">
+      <h4>Summary</h4>
+    </div>
+    <p>{{currentWorkflow.summary}}</p>
+    </div>
+
+    <div class="refinery-subheader">
+      <h4>Inputs ({{currentWorkflow.input_relationships[0].category}})</h4>
+    </div>
+    <div>
+      <label style="color: #6A41AE;"><b><i>{{currentWorkflow.input_relationships[0].set1}}<br/></i></b></label>
+      <label style="color: #278F63;" ng-if="!isCurrentWorkflowSingleInput()"><b><i>{{currentWorkflow.input_relationships[0].set2}}<br/></i></b></label>
+    </div>
+    <div ng-controller="NodeSetListApiCtrl" ng-if="isCurrentWorkflowSingleInput()">
+      <select ui-select2 ng-model="nodesetIndex" ng-change="updateCurrentNodeSet()" style="width:100%" data-placeholder="Choose a {{currentWorkflow.input_relationships[0].category}}">
+        <option value=""></option>  <!-- required for showing placeholder text -->
+        <option value="current_selection">Current Selection</option>  <!-- required for showing placeholder text -->
+        <option ng-repeat="nodeset in nodesetList" value="{{$index}}">{{nodeset.name}}</option>
+      </select>
+      <div>
+        <p>
+        </p>
+      </div>
+      <button class="btn btn-warning" ng-disabled="!currentNodeSet" style="width: 100%">Launch Analysis</button>                    
+    </div>        
+    <div ng-controller="NodeMappingListApiCtrl" ng-if="!isCurrentWorkflowSingleInput()">
+      <select ui-select2 ng-model="nodemappingIndex" ng-change="updateCurrentNodeMapping()" style="width:100%" data-placeholder="Choose a {{currentWorkflow.input_relationships[0].category}}">
+        <option value=""></option>  <!-- required for showing placeholder text -->
+        <option value="current_mapping">Current Mapping</option>  <!-- required for showing placeholder text -->
+        <option ng-repeat="nodemapping in nodemappingList" value="{{$index}}">{{nodemapping.name}}</option>
+      </select>
+      <a class="btn btn-mini" >New</a>
+      <div>
+        <p>
+        </p>
+      </div>
+      <button class="btn btn-warning" ng-disabled="!currentNodeMapping" style="width: 100%">Launch Analysis</button>          
+    </div>        
+  </div>
+</div>
