@@ -996,7 +996,7 @@ def angular_test(request, uuid=None):
         study_uuid = studies[0].uuid
         assay_uuid = studies[0].assay_set.all()[0].uuid
     else:
-        data_set = None
+        data_set = study_uuid = assay_uuid = None
 
     return render_to_response('core/angular_test.html',
                               {
