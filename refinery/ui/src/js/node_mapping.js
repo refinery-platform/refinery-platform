@@ -14,9 +14,24 @@ angular.module('refineryApp', [
   'refineryServices',
 ])
 
-.controller('DataSetUiModeCtrl', function($scope, $location, $rootScope) {
-  $rootScope.mode = 'visualize';
-})
+
+.config(['$provide', function($provide) {
+    // http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
+    $provide.decorator('$rootScope', ['$delegate', function($delegate){
+
+        Object.defineProperty($delegate.constructor.prototype, '$onRootScope', {
+            value: function(name, listener){
+                var unsubscribe = $delegate.$on(name, listener);
+                this.$on('$destroy', unsubscribe);
+            },
+            enumerable: false
+        });
+
+
+        return $delegate;
+    }]);
+}])
+
 
 .config(['$stateProvider', function($stateProvider, $rootScope, $scope) {
   //
@@ -39,18 +54,6 @@ angular.module('refineryApp', [
 
   $stateProvider
     .state('analyze', {
-      templateUrl: "/static/partials/data_set_ui_mode_analyze.html",
-      //url: '/analyze',      
-      controller: function($scope,$rootScope) {
-        $rootScope.mode = "analyze";
-        $rootScope.showCtrlTab = true;
-        $rootScope.mainTabSpanSize = "span10";
-        $rootScope.ctrlTabSpanSize = "span2";
-      }
-    });
-
-  $stateProvider
-    .state('analyze-mapping', {
       templateUrl: "/static/partials/data_set_ui_mode_analyze.html",
       //url: '/analyze',      
       controller: function($scope,$rootScope) {

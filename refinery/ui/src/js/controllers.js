@@ -1,6 +1,6 @@
 angular.module('refineryControllers', [])
 
-.controller('WorkflowListApiCtrl', function($scope, Workflow) {
+.controller('WorkflowListApiCtrl', function($scope, $rootScope, Workflow) {
   'use strict';
 
   var Workflows = Workflow.get(function() {
@@ -10,13 +10,16 @@ angular.module('refineryControllers', [])
   $scope.updateCurrentWorkflow = function() {
     $scope.currentWorkflow = $scope.workflowList[$scope.workflowIndex];
 
-    if ( $scope.isCurrentWorkflowSingleInput() ) {
-      $scope.currentWorkflow.input_relationships[0].category = "File Set";
-    }
-    else {      
-      $scope.currentWorkflow.input_relationships[0].category = $scope.currentWorkflow.input_relationships[0].category + " File Mapping";
-    }
+    if ( $scope.currentWorkflow ) {
+      if ( $scope.isCurrentWorkflowSingleInput() ) {
+        $scope.currentWorkflow.input_relationships[0].category = "File Set";
+      }
+      else {      
+        $scope.currentWorkflow.input_relationships[0].category = $scope.currentWorkflow.input_relationships[0].category + " File Mapping";
+      }
 
+      $rootScope.$emit( "workflowChangedEvent", $scope.currentWorkflow );
+    }
   };
 
   $scope.isCurrentWorkflowSingleInput = function() {
@@ -51,6 +54,25 @@ angular.module('refineryControllers', [])
 
   $scope.updateCurrentNodeMapping = function() {
     $scope.currentNodeMapping = $scope.nodemappingList[$scope.nodemappingIndex];  
+
+    
   };  
+})
+
+.controller('DataSetUiModeCtrl', function($scope, $location, $rootScope) {
+  $rootScope.mode = DATA_SET_UI_MODE_BROWSE;
+
+  $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
+    $scope.currentWorkflow = currentWorkflow;
+    console.log( "Data Set UI Mode Controller: New workflow: " + $scope.currentWorkflow.name );
+  });  
+})
+
+.controller('FileMappingCtrl', function($scope, $location, $rootScope) {
+  $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
+    $scope.currentWorkflow = currentWorkflow;
+    console.log( "File Mapping Controller: New workflow: " + $scope.currentWorkflow.name );
+  });  
 });
+
 
