@@ -14,7 +14,6 @@ angular.module('refineryApp', [
   'refineryServices',
 ])
 
-
 .config(['$provide', function($provide) {
     // http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
     $provide.decorator('$rootScope', ['$delegate', function($delegate){
@@ -78,11 +77,68 @@ angular.module('refineryApp', [
 
 }])
 
+.controller('FileMappingCtrl', function($scope, $location, $rootScope) {
+  $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
+    $scope.currentWorkflow = currentWorkflow;
+    console.log( "File Mapping Controller: New workflow: " + $scope.currentWorkflow.name );
+  });  
+})
+
+.controller('NodeSetListApiCtrl', function($scope, NodeSetList) {
+  'use strict';
+
+  var NodeSets = NodeSetList.get(
+    {study__uuid: externalStudyUuid, assay__uuid: externalAssayUuid},
+    function() {
+      $scope.nodesetList = NodeSets.objects;
+  });
+
+  $scope.updateCurrentNodeSet = function() {
+    $scope.currentNodeSet = $scope.nodesetList[$scope.nodesetIndex];  
+  };
+})
+
+.controller('NodeMappingListApiCtrl', function($scope, NodeMappingList) {
+  'use strict';
+
+  var NodeMappings = NodeMappingList.get(
+    {study__uuid: externalStudyUuid, assay__uuid: externalAssayUuid},
+    function() {
+      $scope.nodemappingList = NodeMappings.objects;
+  });
+
+  $scope.updateCurrentNodeMapping = function() {
+    $scope.currentNodeMapping = $scope.nodemappingList[$scope.nodemappingIndex];  
+
+    
+  };  
+})
+
+.controller('DataSetUiModeCtrl', function($scope, $location, $rootScope) {
+  $rootScope.mode = DATA_SET_UI_MODE_BROWSE;
+
+  $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
+    $scope.currentWorkflow = currentWorkflow;
+    console.log( "Data Set UI Mode Controller: New workflow: " + $scope.currentWorkflow.name );
+  });  
+})
+
+.factory("NodeSetList", function($resource) {
+  'use strict';
+
+  return $resource(
+    "/api/v1/nodesetlist/", {format: "json"}
+  );
+})
+
+.factory("NodeMappingList", function($resource) {
+  'use strict';
+
+  return $resource(
+    "/api/v1/noderelationship/", {format: "json"}
+  );
+})
+
 .run(['$state', function ($state,$scope) {
    $state.transitionTo('browse');
-}])
-
-.config(['$locationProvider', function($locationProvider){
-  //$locationProvider.html5Mode(true);
 }]);
-
