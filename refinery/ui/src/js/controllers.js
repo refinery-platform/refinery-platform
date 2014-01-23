@@ -10,13 +10,14 @@ angular.module('refineryControllers', [])
   $scope.updateCurrentWorkflow = function() {
     $scope.currentWorkflow = $scope.workflowList[$scope.workflowIndex];
 
-    if ( $scope.currentWorkflow ) {
-      if ( $scope.isCurrentWorkflowSingleInput() ) {
+    if ($scope.currentWorkflow) {
+      if ($scope.isCurrentWorkflowSingleInput()) {
         $scope.currentWorkflow.input_relationships[0].category = "File Set";
       }
       else {      
         $scope.currentWorkflow.input_relationships[0].category = $scope.currentWorkflow.input_relationships[0].category + " File Mapping";
       }
+    }
 
       $rootScope.$emit( "workflowChangedEvent", $scope.currentWorkflow );
     }
