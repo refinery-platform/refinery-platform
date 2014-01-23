@@ -19,7 +19,7 @@
     "angular-resource": "~1.2.7",
     "angular-route": "~1.2.7",
     "angular": "~1.2.7",
-    "angular-ui-router": "~0.2.7",
+    "angular-ui-router": "0.2.7",
     "tipsy": "~0.1.7"
   },
   "resolutions": {
