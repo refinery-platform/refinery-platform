@@ -159,6 +159,7 @@
 		<div class="tab-content">
 	  		<div class="tab-pane fade active in" id="content">
 
+				<div ng-controller="FileMappingCtrl">
 				<div class="row-fluid">				
 
 					{% verbatim %}
@@ -314,7 +315,9 @@
 									<div class="tabbable">
 										<div class="tab-content">
 											<div class="tab-pane active fade in" id="table-view-tab">
-												<div id="solr-table-view"></div>
+												<dynamic>
+													<div id="solr-table-view"></div>
+												</dynamic>
 											</div>
 											<div class="tab-pane fade in" id="pivot-view-tab">
 												<div id="pivot-view"></div>
@@ -379,6 +382,7 @@
 					</div>
 					</div>
 				</div>
+				</div> <!-- FileMappingCtrl -->
 		</div>
 
 		{% if has_change_dataset_permission %}
@@ -669,7 +673,6 @@
   	<script type="text/javascript" src="{% static "vendor/select2/select2.js" %}"></script>
   	<script type="text/javascript" src="{% static "vendor/angular-ui-select2/src/select2.js" %}"></script>
   	<script type="text/javascript" src="{% static "vendor/angular-resource/angular-resource.js" %}"></script>
-  	<!--<script type="text/javascript" src="{% static "vendor/angular-route/angular-route.js" %}"></script>-->
   	<script type="text/javascript" src="{% static "vendor/angular-ui-router/release/angular-ui-router.js" %}"></script>
 	<script type="text/javascript" src="{% static "js/refinery.js" %}"></script>
 	<script type="text/javascript" src="{% static "js/node_mapping.js" %}"></script>

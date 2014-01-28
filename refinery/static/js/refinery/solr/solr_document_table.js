@@ -111,6 +111,8 @@ SolrDocumentTable.prototype.render = function ( solrResponse ) {
 	// clear parent element
 	$( "#" + self._parentElementId ).html("");		
 	self._renderTable( solrResponse );
+
+
 	
 	//$( "#" + self._parentElementId ).html( code );		
 	
@@ -205,9 +207,7 @@ SolrDocumentTable.prototype._renderTable = function( solrResponse ) {
 		
 		self._commands.execute( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, { 'event': event } );				
 	});
-	
-	
-	
+
 	$( ".document-checkbox-select" ).on( "click", function( event ) {				
 		var uuid = $( event.target ).data( "uuid" );		
 		var uuidIndex = self._query._documentSelection.indexOf( uuid );
@@ -227,6 +227,12 @@ SolrDocumentTable.prototype._renderTable = function( solrResponse ) {
 
 		self._commands.execute( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, { 'uuid': uuid, 'event': event } );		
 	});	
+
+
+	$( ".refinery-dnd-handle" ).on( "dragstart", function( event ) {				
+		var uuid = event.srcElement.attributes['node-uuid'].value;
+		event.originalEvent.dataTransfer.setData('text/plain', JSON.stringify( { uuid: uuid, html: '<table class="table table-striped table-condensed" style="margin-bottom: 0px;">' + this.parentElement.parentElement.innerHTML + '</table>' } ) );
+	});	
 		
 }
 	
@@ -240,7 +246,10 @@ SolrDocumentTable.prototype._generateTableBody = function( solrResponse ) {
 	for ( var i = 0; i < documents.length; ++i ) {		
 		var document = documents[i];
 		
-		var s = "<tr>";
+		var s = '<tr>';
+
+		// drag marker		
+		s += '<td>' + '<span class="refinery-dnd-handle"><i class="icon-reorder" data-uuid="' + document["uuid"] + '" node-draggable draggable="true" node-uuid="'+ document["uuid"] +'" style="-khtml-user-drag: element;"></i></span>' + '</td>';
 		
 		// selection column
 		var isDocumentSelected = self._query.isDocumentSelected( document.uuid );				
@@ -283,6 +292,8 @@ SolrDocumentTable.prototype._generateTableHead = function( solrResponse ) {
 	
 	var nodeSelectionModeCheckbox = '<label><input id="node-selection-mode" type=\"checkbox\" ' + ( self._query.getDocumentSelectionBlacklistMode() ? "checked" : "" ) + '></label>';
 	//$( "#" + "node-selection-column-header" ).html( nodeSelectionModeCheckbox );	
+
+	row.push( '<th align="left" width="0">'+ '</th>' );
 
 	row.push( '<th align="left" width="0" id="node-selection-column-header">'+ nodeSelectionModeCheckbox + '</th>' );
 	

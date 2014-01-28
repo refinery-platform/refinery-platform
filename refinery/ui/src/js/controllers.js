@@ -17,15 +17,28 @@ angular.module('refineryControllers', [])
       else {      
         $scope.currentWorkflow.input_relationships[0].category = $scope.currentWorkflow.input_relationships[0].category + " File Mapping";
       }
-      $rootScope.$emit( "workflowChangedEvent", $scope.currentWorkflow );
     }
+
+    $rootScope.$emit( "workflowChangedEvent", $scope.currentWorkflow );    
   };
 
   $scope.isCurrentWorkflowSingleInput = function() {
     if ($scope.currentWorkflow) {
       return $scope.currentWorkflow.input_relationships[0].set2 ? false : true;
     }
+
+    return true;
   };
+
+  $scope.getCurrentWorkflowInputCount = function() {
+    if ($scope.currentWorkflow) {
+      console.log( $scope.currentWorkflow.input_relationships[0].set2 ? 2 : 1 );
+      return $scope.currentWorkflow.input_relationships[0].set2 ? 2 : 1;
+    }
+
+    return null;
+  };
+
 });
 
 
