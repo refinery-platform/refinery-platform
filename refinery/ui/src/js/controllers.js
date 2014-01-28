@@ -3,9 +3,12 @@ angular.module('refineryControllers', [])
 .controller('WorkflowListApiCtrl', function($scope, $rootScope, Workflow) {
   'use strict';
 
-  var Workflows = Workflow.get(function() {
-    $scope.workflowList = Workflows.objects;
-  });
+  $scope.getWorkflowList = function() {
+    console.log("Getting the workflow list");
+    var Workflows = Workflow.get(function() {
+      $scope.workflowList = Workflows.objects;
+    });
+  };
 
   $scope.updateCurrentWorkflow = function() {
     $scope.currentWorkflow = $scope.workflowList[$scope.workflowIndex];
