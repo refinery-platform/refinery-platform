@@ -219,6 +219,9 @@ class NodePairResource(ModelResource):
         detail_resource_name = 'nodepair' 
         resource_name = 'nodepair'
         detail_uri_name = 'uuid'  
+        authentication = SessionAuthentication()
+        authorization = GuardianAuthorization()        
+
  
 class NodeRelationshipResource(ModelResource):
     name = fields.CharField(attribute='name', null=True)
