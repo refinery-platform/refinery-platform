@@ -216,7 +216,6 @@ angular.module('refineryApp', [
 
       // save node pair?
       if ( $scope.nodeDropzones[0].uuid && $scope.nodeDropzones[1].uuid ) {
-        console.log( "Creating new node pair ..." );
         var nodePair = new NodePair( { node1: "/api/v1/node/" + $scope.nodeDropzones[0].uuid + "/", node2: "/api/v1/node/" + $scope.nodeDropzones[1].uuid + "/" } );
         $scope.$apply();
 
