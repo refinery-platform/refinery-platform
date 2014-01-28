@@ -10,6 +10,8 @@ angular.module('refineryControllers', [])
     });
   };
 
+  $scope.getWorkflowList();
+
   $scope.updateCurrentWorkflow = function() {
     $scope.currentWorkflow = $scope.workflowList[$scope.workflowIndex];
 
