@@ -10,6 +10,7 @@ angular.module('ngResource').config(['$provide', '$httpProvider',
 
         $provide.decorator('$resource', function($delegate) {
             return function() {
+                'use strict';
                 if (arguments.length > 0) {  // URL
                     arguments[0] = arguments[0].replace(/\/$/, '\\/');
                 }
