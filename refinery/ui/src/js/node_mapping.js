@@ -45,8 +45,7 @@ angular.module('refineryApp', [
   'ui.bootstrap',
   'ui.router',
   'ngResource',
-  'refineryControllers',
-  'refineryServices',
+  'refineryWorkflows',
 ])
 
 

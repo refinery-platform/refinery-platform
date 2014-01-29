@@ -1,4 +1,4 @@
-angular.module('refineryControllers', [])
+angular.module('refineryWorkflows', [])
 
 .controller('WorkflowListApiCtrl', function($scope, $rootScope, Workflow) {
   'use strict';
@@ -44,6 +44,12 @@ angular.module('refineryControllers', [])
     return null;
   };
 
+})
+
+.factory("Workflow", function($resource) {
+  'use strict';
+
+  return $resource(
+    "/api/v1/workflow/", {format: "json"}
+  );
 });
-
-
