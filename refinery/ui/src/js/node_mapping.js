@@ -40,7 +40,7 @@ angular.module('ngResource').config(['$provide', '$httpProvider',
     }
 ]);
 
-angular.module('refineryApp', [
+angular.module('refineryNodeMapping', [
   'ui.select2',
   'ui.bootstrap',
   'ui.router',
