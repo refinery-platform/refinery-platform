@@ -215,12 +215,15 @@ class NodePairResource(ModelResource):
     group = fields.CharField(attribute='group', null=True)
     
     class Meta:
+        detail_allowed_methods = [ 'get', 'post', 'delete', 'put', 'patch' ]
         queryset = NodePair.objects.all()
         detail_resource_name = 'nodepair' 
         resource_name = 'nodepair'
         detail_uri_name = 'uuid'  
         authentication = SessionAuthentication()
-        authorization = GuardianAuthorization()        
+        authorization = Authorization()        
+        # for use with AngularJS $resources: returns newly created object upon POST (in addition to the location response header)
+        always_return_data = True
 
  
 class NodeRelationshipResource(ModelResource):
@@ -231,10 +234,15 @@ class NodeRelationshipResource(ModelResource):
     assay = fields.ToOneField(AssayResource, 'assay')
     
     class Meta:
+        detail_allowed_methods = [ 'get', 'post', 'delete', 'put', 'patch' ]
         queryset = NodeRelationship.objects.all()
         detail_resource_name = 'noderelationship' 
         resource_name = 'noderelationship'
         detail_uri_name = 'uuid'  
+        authentication = SessionAuthentication()
+        authorization = Authorization()
+        # for use with AngularJS $resources: returns newly created object upon POST (in addition to the location response header)
+        always_return_data = True
         
         #fields = ['type', 'study', 'assay', 'node_pairs']
         ordering = ['type', 'node_pairs']

@@ -6,10 +6,10 @@ var currentDataSetUiMode = DATA_SET_UI_MODE_BROWSE;
 
 // Angular monkey patch to address removal of trailing slashes by $resource: https://github.com/angular/angular.js/issues/992
 angular.module('ngResource').config(['$provide', '$httpProvider',
-    function($provide, $httpProvider) {
-
+    function($provide, $httpProvider) {        
         $provide.decorator('$resource', function($delegate) {
             return function() {
+                'use strict';
                 if (arguments.length > 0) {  // URL
                     arguments[0] = arguments[0].replace(/\/$/, '\\/');
                 }
@@ -53,7 +53,6 @@ angular.module('refineryApp', [
   // use Django XSRF/CSRF lingo to enable communication with API
   $httpProvider.defaults.xsrfCookieName = 'csrftoken';
   $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';      
-
 }])
 
 
@@ -143,28 +142,135 @@ angular.module('refineryApp', [
   };
 })
 
-.controller('FileMappingCtrl', function($scope, $location, $rootScope, $sce, NodePair) {
+.controller('FileMappingCtrl', function($scope, $location, $rootScope, $sce, $http, NodePair, NodeRelationship) {
 
-  $scope.nodeDropzones = {
-    "0": {
-      "name": "",
-      "color": "purple",
-      "preview": null,
-      "uuid": null
-    },
-    "1": {
-      "name": "",
-      "color": "green",
-      "preview": null,
-      "uuid": null
-    }
-  };
-
-  $scope.nodePairSaved = false;
+  $scope.nodeDropzones = null;
+  $scope.currentNodePair = null;
+  $scope.currentNodePairIndex = 0;
+  $scope.currentNodeRelationship = null;
 
   $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
     $scope.currentWorkflow = currentWorkflow;
   });  
+
+  $scope.$onRootScope('nodeRelationshipChangedEvent', function( event, currentNodeRelationship ) {
+    $scope.currentNodeRelationship = currentNodeRelationship;
+    $scope.currentNodePairIndex = 0;
+
+    $scope.loadMapping( $scope.currentNodePairIndex );
+    /*
+    if ( $scope.currentNodeRelationship.node_pairs.length > 0 ) {
+        console.log( $scope.currentNodeRelationship.node_pairs[0] );
+        $scope.currentNodePair = NodePair.load_from_uri( { uri: decodeURIComponent( $scope.currentNodeRelationship.node_pairs[0].substring(1) ) },
+          function( response, responseHeaders ) {            
+            console.log( response );
+          },
+          function( error ) {
+            console.log( error );
+          });
+
+        console.log( $scope.currentNodePair );
+        //$scope.currentNodePair = $scope.currentNodeRelationship.node_pairs[0];
+    }
+    */
+
+    console.log( $scope.currentNodeRelationship );
+  });  
+
+  $scope.initializeNodeDropzones = function() {
+    $scope.nodeDropzones = {
+        "0": {
+          "name": "",
+          "color": "purple",
+          "preview": null,
+          "uuid": null
+        },
+        "1": {
+          "name": "",
+          "color": "green",
+          "preview": null,
+          "uuid": null
+        }
+      };    
+  };
+
+  $scope.initializeNodeDropzones();
+
+  $scope.isPending = function() {
+    //return ( ( $scope.nodeDropzones[0].uuid !== null || $scope.nodeDropzones[1].uuid !== null ) && $scope.currentNodePair === null );
+    return ( $scope.currentNodePair === null );
+  };
+
+
+  $scope.createNodeRelationship = function( name, summary, type ) {
+    console.log( "Creating node relationship ... ");
+
+    var nodeRelationship = new NodeRelationship( {study: "/api/v1/study/" + externalStudyUuid + "/", assay: "/api/v1/assay/" + externalAssayUuid + "/", node_pairs: [], name: name, summary: summary, type: type } );
+
+    nodeRelationship.$save( 
+      function( response ) {
+        console.log( "Created node relationship ... ");
+        console.log( response );
+
+        $scope.currentNodeRelationship = response;
+      });
+  };
+
+  $scope.createMapping = function() {
+    console.log( "Creating ... ");
+    $scope.initializeNodeDropzones();
+    $scope.currentNodePair = null;    
+    $scope.currentNodePairIndex = $scope.currentNodeRelationship.node_pairs.length;
+  };
+
+  //$scope.createMapping();
+
+  $scope.deleteMapping = function() {
+    console.log( "Deleting ... ");
+
+    if ( $scope.currentNodePair ) {
+      // update node relationship
+      $scope.currentNodeRelationship.node_pairs.splice( $scope.currentNodePairIndex, 1 );
+      NodeRelationship.update( { uuid: $scope.currentNodeRelationship.uuid }, $scope.currentNodeRelationship );
+
+      // delete node pair
+      NodePair.delete( { uuid: $scope.currentNodePair.uuid } );
+
+      $scope.currentNodePair = null;
+    }
+    $scope.initializeNodeDropzones();
+  };
+
+  $scope.loadMapping = function( index ) {
+    if ( $scope.currentNodeRelationship.node_pairs.length > index ) {      
+      $scope.currentNodePair = NodePair.load_from_uri( { uri: decodeURIComponent( $scope.currentNodeRelationship.node_pairs[index].substring(1) ) }, function ( data ) {
+        console.log( data );
+        $scope.updateNodeDropzone( 0, data.node1.split("/").reverse()[1], data.node1 );
+        $scope.updateNodeDropzone( 1, data.node2.split("/").reverse()[1], data.node2 );
+      }, function ( error ) {
+        $scope.currentNodePair = null;        
+        alert( "failed to load mapping" );
+      } );
+    } 
+    else {
+      $scope.initializeNodeDropzones();
+      $scope.currentNodePair = null;
+    }
+  };
+
+  $scope.loadNextMapping = function() {
+    if ( $scope.currentNodeRelationship.node_pairs.length <= ++$scope.currentNodePairIndex ) {
+      $scope.currentNodePairIndex = 0;
+    }
+    $scope.loadMapping( $scope.currentNodePairIndex );
+  };
+
+  $scope.loadPreviousMapping = function() {
+    if ( 0 > --$scope.currentNodePairIndex ) {
+      $scope.currentNodePairIndex = $scope.currentNodeRelationship.node_pairs.length - 1;
+    }
+    $scope.loadMapping( $scope.currentNodePairIndex );      
+  };
 
   $scope.updateNodeDropzone = function(dropzoneIndex, uuid, preview ) {
       $scope.nodeDropzones[dropzoneIndex].uuid = uuid;
@@ -212,17 +318,15 @@ angular.module('refineryApp', [
 
       // update dropzone
       $scope.updateNodeDropzone( dropzoneIndex, data.uuid, data.html );
-      $scope.nodePairSaved = false;
 
       // save node pair?
       if ( $scope.nodeDropzones[0].uuid && $scope.nodeDropzones[1].uuid ) {
-        var nodePair = new NodePair( { node1: "/api/v1/node/" + $scope.nodeDropzones[0].uuid + "/", node2: "/api/v1/node/" + $scope.nodeDropzones[1].uuid + "/" } );
-        $scope.$apply();
+        $scope.currentNodePair = new NodePair( { node1: "/api/v1/node/" + $scope.nodeDropzones[0].uuid + "/", node2: "/api/v1/node/" + $scope.nodeDropzones[1].uuid + "/" } );
 
-        nodePair.$save(function(u, responseHeaders) {
-          $scope.nodePairSaved = true;
-          //u => saved user object
-          //responseHeaders => $http header getter
+        $scope.currentNodePair.$save( function( response, responseHeaders) {
+          $scope.currentNodePair = response;
+          $scope.currentNodeRelationship.node_pairs.push( $scope.currentNodePair.resource_uri );
+          NodeRelationship.update( { uuid: $scope.currentNodeRelationship.uuid }, $scope.currentNodeRelationship );
         });
       }
 
@@ -266,24 +370,32 @@ angular.module('refineryApp', [
   });
 
   $scope.updateCurrentNodeSet = function() {
-    $scope.currentNodeSet = $scope.nodesetList[$scope.nodesetIndex];  
+    $scope.currentNodeSet = $scope.nodesetList[$scope.nodesetIndex];      
   };
 })
 
-.controller('NodeMappingListApiCtrl', function($scope, NodeMappingList) {
+.controller('NodeRelationshipListCtrl', function($scope, $rootScope, $element, NodeRelationship) {
   'use strict';
 
-  var NodeMappings = NodeMappingList.get(
+  var NodeRelationshipList = NodeRelationship.get(
     {study__uuid: externalStudyUuid, assay__uuid: externalAssayUuid},
-    function() {
-      $scope.nodemappingList = NodeMappings.objects;
+    function( response ) {
+      console.log( response );
+      $scope.nodeRelationshipList = response.objects;
+      console.log( $scope.nodeRelationshipList.length );
   });
 
-  $scope.updateCurrentNodeMapping = function() {
-    $scope.currentNodeMapping = $scope.nodemappingList[$scope.nodemappingIndex];  
+  $scope.updateCurrentNodeRelationship = function() {
+    $scope.currentNodeRelationship = $scope.nodeRelationshipList[$scope.nodeRelationshipIndex];  
 
-    
+    $rootScope.$emit( "nodeRelationshipChangedEvent", $scope.currentNodeRelationship, $scope.nodeRelationshipIndex );
   };  
+
+  $scope.$onRootScope('nodeRelationshipChangedEvent', function( event, currentNodeRelationship, index ) {
+    //alert( index );
+    $scope.nodeRelationshipIndex = index;
+  });
+
 })
 
 .controller('DataSetUiModeCtrl', function($scope, $location, $rootScope) {
@@ -292,6 +404,11 @@ angular.module('refineryApp', [
   $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
     $scope.currentWorkflow = currentWorkflow;  
   });  
+
+  $scope.$onRootScope('nodeRelationshipChangedEvent', function( event, currentNodeRelationship ) {
+    $scope.currentNodeRelationship = currentNodeRelationship;
+  });  
+
 })
 
 .factory("NodeSetList", function($resource) {
@@ -302,11 +419,16 @@ angular.module('refineryApp', [
   );
 })
 
-.factory("NodeMappingList", function($resource) {
+.factory("NodeRelationship", function($resource) {
   'use strict';
 
   return $resource(
-    "/api/v1/noderelationship/", {format: "json"}
+    "/api/v1/noderelationship/:uuid/", {
+      format: "json",
+    }, {
+      'update': { method:'PUT' },
+      'update_partial': { method:'PATCH' }
+    }
   );
 })
 
@@ -314,8 +436,12 @@ angular.module('refineryApp', [
   'use strict';
 
   return $resource(
-    "/api/v1/nodepair/", {
-      format: "json",
+    '/api/v1/nodepair/:uuid/', {
+      format: 'json'
+    },
+    {
+      // use different url (from: https://github.com/angular/angular.js/pull/2054) - 
+      'load_from_uri': { method: 'GET', url: "/:uri", params: { "format": "json" } }
     }
   );
 })
@@ -324,3 +450,4 @@ angular.module('refineryApp', [
 .run(['$state', function ($state,$scope) {
    $state.transitionTo('browse');
 }]);
+

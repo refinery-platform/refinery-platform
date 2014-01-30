@@ -3,6 +3,7 @@
     <option value=""></option>  <!-- required for showing placeholder text -->
     <option ng-repeat="workflow in workflowList" value="{{$index}}">{{workflow.name}}</option>
   </select>
+
   <div ng-cloak ng-if="currentWorkflow">
     
     <div class="refinery-subheader">
@@ -35,13 +36,12 @@
       </div>
       <button class="btn btn-warning" ng-disabled="!currentNodeSet" style="width: 100%">Launch Analysis</button>                    
     </div>        
-    <div ng-controller="NodeMappingListApiCtrl" ng-if="!isCurrentWorkflowSingleInput()">
-      <select ui-select2 ng-model="nodemappingIndex" ng-change="updateCurrentNodeMapping()" style="width:100%" data-placeholder="Choose a {{currentWorkflow.input_relationships[0].category}}">
-        <option value=""></option>  <!-- required for showing placeholder text -->
-        <option value="current_mapping">Current Mapping</option>  <!-- required for showing placeholder text -->
-        <option ng-repeat="nodemapping in nodemappingList" value="{{$index}}">{{nodemapping.name}}</option>
+    <div ng-controller="NodeRelationshipListCtrl" ng-if="!isCurrentWorkflowSingleInput()">
+      <select ui-select2 ng-model="nodeRelationshipIndex" ng-change="updateCurrentNodeRelationship()" style="width:100%">
+        <option value="">Current Mapping</option>
+        <option ng-repeat="nodeRelationship in nodeRelationshipList" value="{{$index}}">{{nodeRelationship.name}}</option>
       </select>
-      <a class="btn btn-mini" >New</a>
+      <a class="btn btn-mini" ng-click='createNodeRelationship( "Nils 1", "Test", "1-N" )'>New</a>
       <div>
         <p>
         </p>
