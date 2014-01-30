@@ -640,46 +640,42 @@
 		var csrf_token = "{{csrf_token }}";
 	</script>
 
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_utilities.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_client.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_query.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_response.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_document_table.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_facet_view.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_analysis_view.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_document_count_view.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_pivot_matrix.js"></script>
-    <script type="text/javascript" src="{% static "vendor/tipsy/src/javascripts/jquery.tipsy.js" %}"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_utilities.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_client.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_query.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_response.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_document_table.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_facet_view.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_analysis_view.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_document_count_view.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_pivot_matrix.js"></script>
+  <script type="text/javascript" src="{% static "vendor/tipsy/src/javascripts/jquery.tipsy.js" %}"></script>
 
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js">var query;</script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/data_set_manager/data_set_configurator.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/node_set_manager.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/analysis_api_client.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/data_set_monitor.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js">var query;</script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/data_set_manager/data_set_configurator.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/node_set_manager.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/analysis_api_client.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/data_set_monitor.js"></script>
 
 	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TweenMax.min.js"></script>
-  	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/jquery.gsap.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/easing/EasePack.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/plugins/CSSPlugin.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/plugins/ScrollToPlugin.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TimelineMax.min.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/jquery.gsap.min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/easing/EasePack.min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/plugins/CSSPlugin.min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/plugins/ScrollToPlugin.min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TimelineMax.min.js"></script>
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/workflow_node_relationship.js"></script>
-
 
   <!-- Note that jquery must be loaded before angular so that it doesn't use jqLite internally -->
  	<script type="text/javascript" src="{% static "vendor/angular/angular.js" %}"></script>
-  	<script type="text/javascript" src="{% static "vendor/angular-bootstrap/ui-bootstrap-tpls.js" %}"></script>
-  	<script type="text/javascript" src="{% static "vendor/select2/select2.js" %}"></script>
-  	<script type="text/javascript" src="{% static "vendor/angular-ui-select2/src/select2.js" %}"></script>
-  	<script type="text/javascript" src="{% static "vendor/angular-resource/angular-resource.js" %}"></script>
-  	<script type="text/javascript" src="{% static "vendor/angular-ui-router/release/angular-ui-router.js" %}"></script>
+	<script type="text/javascript" src="{% static "vendor/angular-bootstrap/ui-bootstrap-tpls.js" %}"></script>
+	<script type="text/javascript" src="{% static "vendor/select2/select2.js" %}"></script>
+	<script type="text/javascript" src="{% static "vendor/angular-ui-select2/src/select2.js" %}"></script>
+	<script type="text/javascript" src="{% static "vendor/angular-resource/angular-resource.js" %}"></script>
+	<script type="text/javascript" src="{% static "vendor/angular-ui-router/release/angular-ui-router.js" %}"></script>
 	<script type="text/javascript" src="{% static "js/refinery.js" %}"></script>
 	<script type="text/javascript" src="{% static "js/node_mapping.js" %}"></script>
-	<script type="text/javascript" src="{% static "js/controllers.js" %}"></script>
- 	<script type="text/javascript" src="{% static "js/services.js" %}"></script>
-
-
+	<script type="text/javascript" src="{% static "js/workflows.js" %}"></script>
 
 	<script type="application/javascript">
 
