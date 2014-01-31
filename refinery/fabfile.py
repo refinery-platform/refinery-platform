@@ -26,7 +26,7 @@ import os
 import sys
 from fabric.api import settings, abort, run, env, sudo, execute
 from fabric.contrib import django
-from fabric.context_managers import hide, prefix
+from fabric.context_managers import hide, prefix, cd
 from fabric.contrib.files import exists, upload_template
 from fabric.decorators import task, with_settings
 from fabric.operations import require, open_shell
@@ -545,11 +545,15 @@ def update_refinery():
     '''
     #TODO: refactor to move each operation to a separate task
     puts("Updating Refinery")
-    with prefix("workon {refinery_virtualenv_name}".format(**env)):
+    with cd(os.path.join(env.refinery_project_dir)):
         run("git pull")
+    with cd(os.path.join(env.refinery_project_dir, "ui")):
+        run("grunt")
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("./manage.py syncdb --migrate")
         run("./manage.py collectstatic --noinput")
         run("supervisorctl restart celeryd celerycam celerybeat")
+    with cd(os.path.join(env.refinery_project_dir)):
         run("touch wsgi.py")
 
 
