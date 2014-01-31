@@ -141,12 +141,13 @@ angular.module('refineryNodeMapping', [
   };
 })
 
-.controller('FileMappingCtrl', function($scope, $location, $rootScope, $sce, $http, NodePair, NodeRelationship) {
+.controller('FileMappingCtrl', function($scope, $location, $rootScope, $sce, $http, NodePair, NodeRelationship, AttributeOrder, Solr ) {
 
   $scope.nodeDropzones = null;
   $scope.currentNodePair = null;
   $scope.currentNodePairIndex = 0;
   $scope.currentNodeRelationship = null;
+  $scope.attributeOrderList = null;
 
   $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
     $scope.currentWorkflow = currentWorkflow;
@@ -181,13 +182,13 @@ angular.module('refineryNodeMapping', [
         "0": {
           "name": "",
           "color": "purple",
-          "preview": null,
+          "attributes": null,
           "uuid": null
         },
         "1": {
           "name": "",
           "color": "green",
-          "preview": null,
+          "attributes": null,
           "uuid": null
         }
       };    
@@ -244,8 +245,8 @@ angular.module('refineryNodeMapping', [
     if ( $scope.currentNodeRelationship.node_pairs.length > index ) {      
       $scope.currentNodePair = NodePair.load_from_uri( { uri: decodeURIComponent( $scope.currentNodeRelationship.node_pairs[index].substring(1) ) }, function ( data ) {
         console.log( data );
-        $scope.updateNodeDropzone( 0, data.node1.split("/").reverse()[1], data.node1 );
-        $scope.updateNodeDropzone( 1, data.node2.split("/").reverse()[1], data.node2 );
+        $scope.updateNodeDropzone( 0, data.node1.split("/").reverse()[1] );
+        $scope.updateNodeDropzone( 1, data.node2.split("/").reverse()[1] );
       }, function ( error ) {
         $scope.currentNodePair = null;        
         alert( "failed to load mapping" );
@@ -271,9 +272,24 @@ angular.module('refineryNodeMapping', [
     $scope.loadMapping( $scope.currentNodePairIndex );      
   };
 
-  $scope.updateNodeDropzone = function(dropzoneIndex, uuid, preview ) {
+  $scope.updateNodeDropzone = function(dropzoneIndex, uuid ) {
       $scope.nodeDropzones[dropzoneIndex].uuid = uuid;
-      $scope.nodeDropzones[dropzoneIndex].preview = $sce.trustAsHtml( preview );
+
+      $scope.loadNodeAttributes( uuid, $scope.attributeOrderList, function( data ) {
+        var attributes = [];
+        if ( data.response.docs.length == 1 ) {
+          angular.forEach( $scope.attributeOrderList, function( attribute ) {
+            attributes.push( { "name": attribute, "value": data.response.docs[0][attribute] } );
+          });          
+        }
+        else {
+          attributes = null;
+        }
+
+        $scope.nodeDropzones[dropzoneIndex].attributes = attributes;
+      }, function( error ) {
+        $scope.nodeDropzones[dropzoneIndex].attributes = null;
+      } );
   };
 
   $scope.handleNodeDragStart = function(event){
@@ -316,7 +332,7 @@ angular.module('refineryNodeMapping', [
       }
 
       // update dropzone
-      $scope.updateNodeDropzone( dropzoneIndex, data.uuid, data.html );
+      $scope.updateNodeDropzone( dropzoneIndex, data.uuid );
 
       // save node pair?
       if ( $scope.nodeDropzones[0].uuid && $scope.nodeDropzones[1].uuid ) {
@@ -356,8 +372,30 @@ angular.module('refineryNodeMapping', [
 
       return false;
   };  
+
+  $scope.loadNodeAttributes = function( uuid, attributeList, success, error ) {
+      Solr.get({ "nodeUuid": uuid, "attributeList": attributeList.join() }, function( data ) { success( data ); }, function( data ) { error( data ); } );
+  };
+
+  var AttributeOrderList = AttributeOrder.get(
+    {study__uuid: externalStudyUuid, assay__uuid: externalAssayUuid},
+    function( response ) {
+      $scope.attributeOrderList = [];
+      for ( var i = 0; i < response.objects.length; ++i ) {
+        $scope.attributeOrderList.push( response.objects[i].solr_field );
+      }
+  });
 })
 
+.directive('AttributeList', function() {
+  return {
+    restrict: 'E',
+    scope: {
+      attributes: '=attributes'
+    },
+    templateUrl: '/static/partials/attribute_list.html'
+  };
+})
 
 .controller('NodeSetListApiCtrl', function($scope, NodeSetList) {
   'use strict';
@@ -407,7 +445,6 @@ angular.module('refineryNodeMapping', [
   $scope.$onRootScope('nodeRelationshipChangedEvent', function( event, currentNodeRelationship ) {
     $scope.currentNodeRelationship = currentNodeRelationship;
   });  
-
 })
 
 .factory("NodeSetList", function($resource) {
@@ -444,6 +481,28 @@ angular.module('refineryNodeMapping', [
     }
   );
 })
+
+.factory("AttributeOrder", function($resource) {
+  'use strict';
+
+  return $resource(
+    '/api/v1/attributeorder/', {
+      format: 'json',
+    }
+  );
+})
+
+.factory("Solr", function($resource) {
+  'use strict';
+
+  return $resource(
+    '/solr/data_set_manager/select/?q=django_ct\\:data_set_manager.node&wt=json&start=0&rows=20&fq=(uuid::nodeUuid%20AND%20study_uuid::studyUuid%20AND%20assay_uuid::assayUuid)&fq=type:(%22Raw%20Data%20File%22%20OR%20%22Derived%20Data%20File%22%20OR%20%22Array%20Data%20File%22%20OR%20%22Derived%20Array%20Data%20File%22%20OR%20%22Array%20Data%20Matrix%20File%22%20OR%20%22Derived%20Array%20Data%20Matrix%20File%22)&fl=:attributeList', {
+      studyUuid: externalStudyUuid,
+      assayUuid: externalAssayUuid
+    }
+  );
+})
+// http://192.168.50.50:8000/solr/data_set_manager/select/?q=django_ct:data_set_manager.node&wt=json&start=0&rows=20&fq=(uuid:d21d9614-61e2-11e3-8888-080027129698%20AND%20study_uuid:d13e1cfa-61e2-11e3-8888-080027129698%20AND%20assay_uuid:d143e950-61e2-11e3-8888-080027129698)&fq=type:(%22Raw%20Data%20File%22%20OR%20%22Derived%20Data%20File%22%20OR%20%22Array%20Data%20File%22%20OR%20%22Derived%20Array%20Data%20File%22%20OR%20%22Array%20Data%20Matrix%20File%22%20OR%20%22Derived%20Array%20Data%20Matrix%20File%22)&fl=uuid,name,Author_Characteristics_2_1_s,REFINERY_NAME_2_1_s,REFINERY_ANALYSIS_UUID_2_1_s,Title_Characteristics_2_1_s,file_uuid,Year_Characteristics_2_1_s,is_annotation,Month_Characteristics_2_1_s,study_uuid,assay_uuid,type,REFINERY_TYPE_2_1_s
 
 
 .run(['$state', function ($state,$scope) {

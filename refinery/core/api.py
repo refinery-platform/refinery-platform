@@ -102,7 +102,6 @@ class NodeResource(ModelResource):
                 name="api_dispatch_detail"),
         ]
 
-
     def dehydrate(self, bundle):
         # return download URL of file if a file is associated with the node
         

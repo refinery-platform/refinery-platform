@@ -72,10 +72,11 @@
       <div class="row-fluid" ng-if="currentWorkflow">
         <div node-dropzone-index="0" class="well refinery-dnd-dropzone refinery-workflow-input-{{nodeDropzones[0].color}}" ng-class="" node-droppable droppable="true">
           <div><b><i node-dropzone-index="1" node-droppable droppable="true">{{currentWorkflow.input_relationships[0].set1}}</i></b></div>
-          <div ng-if="nodeDropzones[0].preview">
-            <div ng-bind-html="nodeDropzones[0].preview"></div>             
+          <div ng-if="nodeDropzones[0].attributes">
+            <!-- <attribute-list attributes="nodeDropzones[0].attributes"></attribute-list> -->
+            <ul><li ng-repeat="attribute in nodeDropzones[1].attributes"><b>{{attribute.name}}</b>: {{attribute.value}}</li></ul>
           </div>
-          <div ng-if="!nodeDropzones[0].preview">          
+          <div ng-if="!nodeDropzones[0].attributes">          
             <div node-dropzone-index="1" node-droppable droppable="true">Drag file from the table below and drop here to assign.</div>
           </div>
         </div>
@@ -83,10 +84,11 @@
       <div class="row-fluid" ng-if="currentWorkflow && currentWorkflow.input_relationships[0].set2 != null">
         <div node-dropzone-index="1" class="well refinery-dnd-dropzone refinery-workflow-input-{{nodeDropzones[1].color}}" ng-class="" node-droppable droppable="true">
           <div><b><i node-dropzone-index="1" node-droppable droppable="true">{{currentWorkflow.input_relationships[0].set2}}</i></b></div>
-          <div node-dropzone-index="1" node-droppable droppable="true" ng-if="nodeDropzones[1].preview">
-            <div ng-bind-html="nodeDropzones[1].preview"></div>             
+          <div node-dropzone-index="1" node-droppable droppable="true" ng-if="nodeDropzones[1].attributes">
+            <!-- <attribute-list attributes="nodeDropzones[1].attributes"></attribute-list> -->
+            <ul><li ng-repeat="attribute in nodeDropzones[1].attributes"><b>{{attribute.name}}</b>: {{attribute.value}}</li></ul>
           </div>
-          <div ng-if="!nodeDropzones[1].preview">          
+          <div ng-if="!nodeDropzones[1].attributes">          
             <div node-dropzone-index="1" node-droppable droppable="true">Drag file from the table below and drop here to assign.</div>
           </div>
         </div>

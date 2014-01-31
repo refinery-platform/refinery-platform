@@ -30,7 +30,6 @@ class AssayResource(ModelResource):
         filtering = { "uuid": ALL }
         fields = [ "uuid" ]
 
-
 class AttributeOrderResource(ModelResource):
     study = fields.ToOneField(StudyResource, "study")
     assay = fields.ToOneField(AssayResource, "assay")
