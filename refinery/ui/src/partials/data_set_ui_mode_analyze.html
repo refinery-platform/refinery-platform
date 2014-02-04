@@ -12,11 +12,12 @@
     <p>{{currentWorkflow.name}}</p>
 
     <div ng-if="currentWorkflow.summary">
-    <div class="refinery-subheader">
-      <h4>Summary</h4>
+      <div class="refinery-subheader">
+        <h4>Summary</h4>
+      </div>
+      <p>{{currentWorkflow.summary}}</p>
     </div>
-    <p>{{currentWorkflow.summary}}</p>
-
+ 
     <div class="refinery-subheader">
       <h4>Inputs ({{currentWorkflow.input_relationships[0].category}})</h4>
     </div>
