@@ -62,4 +62,5 @@ deployment/Puppetfile.lock
 /media/
 /static/
 refinery/celerybeat-schedule*
+refinery/static/styles/css/font-awesome*.css
 *.sublime-*
