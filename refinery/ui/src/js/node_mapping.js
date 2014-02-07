@@ -151,6 +151,8 @@ angular.module('refineryNodeMapping', [
 
   $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
     $scope.currentWorkflow = currentWorkflow;
+    $scope.nodeDropzones["0"].name = $scope.currentWorkflow.input_relationships[0].set1;
+    $scope.nodeDropzones["1"].name = $scope.currentWorkflow.input_relationships[0].set2;
   });  
 
   $scope.$onRootScope('nodeRelationshipChangedEvent', function( event, currentNodeRelationship ) {
@@ -173,6 +175,9 @@ angular.module('refineryNodeMapping', [
         //$scope.currentNodePair = $scope.currentNodeRelationship.node_pairs[0];
     }
     */
+
+    $scope.nodeDropzones["0"].name = $scope.currentWorkflow.input_relationships[0].set1;
+    $scope.nodeDropzones["1"].name = $scope.currentWorkflow.input_relationships[0].set2;
 
     console.log( $scope.currentNodeRelationship );
   });  
@@ -272,6 +277,79 @@ angular.module('refineryNodeMapping', [
     $scope.loadMapping( $scope.currentNodePairIndex );      
   };
 
+
+  $scope.prettifySolrFieldName = function( name, isTitle )
+  { 
+    isTitle = isTitle || false;
+    
+    var position;
+
+    position = name.indexOf( "_Characteristics_" );
+    if ( position !== -1 ) {
+      name = name.substr( 0, position );
+    } 
+
+    position = name.indexOf( "_Factor_" );
+    if ( position !== -1 ) {
+      name = name.substr( 0, position );
+    }
+    
+    position = name.indexOf( "_Comment_" );
+    if ( position !== -1 ) {
+      name = name.substr( 0, position );
+    }
+
+    position = name.indexOf( "Material_Type_" );
+    if ( position !== -1 ) {
+      name = "Material Type";
+    }
+
+    position = name.indexOf( "Label_" );
+    if ( position !== -1 ) {
+      name = "Label";
+    }
+
+    position = name.indexOf( "REFINERY_TYPE_" );
+    if ( position === 0 ) {
+      name = "Type";
+    }
+
+    position = name.indexOf( "REFINERY_FILETYPE_" );
+    if ( position === 0 ) {
+      name = "File Type";
+    }
+
+    position = name.indexOf( "REFINERY_NAME_" );
+    if ( position === 0 ) {
+      name = "Name";
+    }
+
+    position = name.indexOf( "REFINERY_ANALYSIS_UUID_" );
+    if ( position === 0 ) {
+      name = "Analysis";
+    }
+
+    position = name.indexOf( "REFINERY_SUBANALYSIS_" );
+    if ( position === 0 ) {
+      name = "Subanalysis";
+    }
+
+    position = name.indexOf( "REFINERY_WORKFLOW_OUTPUT_" );
+    if ( position === 0 ) {
+      name = "Output Type";
+    }
+
+    name = name.replace( /\_/g, " " );
+    
+    if ( isTitle )
+    {
+      name = name.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+    }
+
+    return name;  
+  };
+
+
   $scope.updateNodeDropzone = function(dropzoneIndex, uuid ) {
       $scope.nodeDropzones[dropzoneIndex].uuid = uuid;
 
@@ -279,7 +357,7 @@ angular.module('refineryNodeMapping', [
         var attributes = [];
         if ( data.response.docs.length == 1 ) {
           angular.forEach( $scope.attributeOrderList, function( attribute ) {
-            attributes.push( { "name": attribute, "value": data.response.docs[0][attribute] } );
+            attributes.push( { "name": prettifySolrFieldName( attribute, true ), "value": data.response.docs[0][attribute] } );
           });          
         }
         else {
@@ -387,13 +465,60 @@ angular.module('refineryNodeMapping', [
   });
 })
 
-.directive('AttributeList', function() {
+.directive('attributeList', function() {
   return {
-    restrict: 'E',
+    template: '<ul><li ng-repeat="attribute in attributes">{{attribute.name}}: <b>{{attribute.value}}</b></li></ul>',
+    restrict: 'A',
     scope: {
-      attributes: '=attributes'
+      attributes: '='
     },
-    templateUrl: '/static/partials/attribute_list.html'
+    //templateUrl: '/static/partials/attribute_list.html',
+  };
+})
+
+.directive('diffAttributeList', function() {
+  return {
+    //template: '<ul><li ng-repeat="attribute in diffAttributes">{{attribute.name}}: <b>{{attribute.valueSetA}}</b> vs <b>{{attribute.valueSetB}}</b></li></ul><ul><li ng-repeat="attribute in commonAttributes">{{attribute.name}}: <b>{{attribute.value}}</b></li></ul>',
+    restrict: 'A',
+    scope: {
+      setA: '=',
+      setB: '='
+    },
+    templateUrl: '/static/partials/diff_attribute_list.html',
+    link: function (scope, elem, attrs) {        
+
+        var updateDiff = function() {
+          scope.diffAttributes = [];
+          scope.commonAttributes = [];
+
+          for ( var i = 0; i < scope.setA.attributes.length; ++i ) {
+            if ( scope.setA.attributes[i].name === scope.setB.attributes[i].name ) {
+              if ( scope.setA.attributes[i].value === scope.setB.attributes[i].value ) {
+                scope.commonAttributes.push( { name: scope.setA.attributes[i].name, value: scope.setA.attributes[i].value });
+              }
+              else {
+                scope.diffAttributes.push( { name: scope.setA.attributes[i].name, valueSetA: scope.setA.attributes[i].value, valueSetB: scope.setB.attributes[i].value });
+              }
+            }
+          }           
+        };
+
+        scope.$watch('setA.attributes', function( oldVal, newVal ) {
+             if(newVal) {
+               console.log( "setA changed" );
+               console.log( newVal );
+               updateDiff();
+             }
+         });        
+
+        scope.$watch('setB.attributes', function( oldVal, newVal ) {
+             if(newVal) {
+               console.log( "setB changed" );
+               console.log( newVal );
+               updateDiff();
+             }
+         });        
+    }    
   };
 })
 
@@ -488,6 +613,8 @@ angular.module('refineryNodeMapping', [
   return $resource(
     '/api/v1/attributeorder/', {
       format: 'json',
+      is_internal: 'false',
+      is_exposed: 'true',
     }
   );
 })

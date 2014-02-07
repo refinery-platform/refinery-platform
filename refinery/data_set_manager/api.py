@@ -41,5 +41,5 @@ class AttributeOrderResource(ModelResource):
         # TODO: replace with session or api key authentication and internal authorization 
         authentication = Authentication()
         authorization = Authorization()
-        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS, "subtype": ALL }
+        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS, "subtype": ALL, "is_exposed": ALL, "is_internal": ALL }
         excludes = []

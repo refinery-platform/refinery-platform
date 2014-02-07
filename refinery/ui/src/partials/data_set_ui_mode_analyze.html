@@ -39,10 +39,11 @@
     </div>        
     <div ng-controller="NodeRelationshipListCtrl" ng-if="!isCurrentWorkflowSingleInput()">
       <select ui-select2 ng-model="nodeRelationshipIndex" ng-change="updateCurrentNodeRelationship()" style="width:100%">
-        <option value="">Current Mapping</option>
+        <!-- <option value="">Current Mapping</option> -->
         <option ng-repeat="nodeRelationship in nodeRelationshipList" value="{{$index}}">{{nodeRelationship.name}}</option>
       </select>
-      <a class="btn btn-mini" ng-click='createNodeRelationship( "Nils 1", "Test", "1-N" )'>New</a>
+      <a class="btn btn-mini" ng-click='createNodeRelationship( "Nils 1", "Test", "1-N" )'>New ...</a>
+      <a class="btn btn-mini" ng-click='alert( "Test" )'>Delete</a>
       <div>
         <p>
         </p>
