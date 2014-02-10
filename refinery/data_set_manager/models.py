@@ -197,7 +197,7 @@ class Assay(models.Model):
     technology_accession = models.TextField(blank=True, null=True)    
     technology_source = models.TextField(blank=True, null=True)
     platform = models.TextField(blank=True, null=True)
-    file_name = models.TextField()    
+    file_name = models.TextField()
 
     def __unicode__(self):
         retstr = ""

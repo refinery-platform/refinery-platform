@@ -133,35 +133,27 @@ angular.module('refineryNodeMapping', [
 
   $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
     $scope.currentWorkflow = currentWorkflow;
+
+    if ( !$scope.currentWorkflow ) {
+      return;
+    }
+
     $scope.nodeDropzones["0"].name = $scope.currentWorkflow.input_relationships[0].set1;
-    $scope.nodeDropzones["1"].name = $scope.currentWorkflow.input_relationships[0].set2;
+    $scope.nodeDropzones["1"].name = $scope.currentWorkflow.input_relationships[0].set2;      
   });  
 
   $scope.$onRootScope('nodeRelationshipChangedEvent', function( event, currentNodeRelationship ) {
     $scope.currentNodeRelationship = currentNodeRelationship;
-    $scope.currentNodePairIndex = 0;
 
-    $scope.loadMapping( $scope.currentNodePairIndex );
-    /*
-    if ( $scope.currentNodeRelationship.node_pairs.length > 0 ) {
-        console.log( $scope.currentNodeRelationship.node_pairs[0] );
-        $scope.currentNodePair = NodePair.load_from_uri( { uri: decodeURIComponent( $scope.currentNodeRelationship.node_pairs[0].substring(1) ) },
-          function( response, responseHeaders ) {            
-            console.log( response );
-          },
-          function( error ) {
-            console.log( error );
-          });
-
-        console.log( $scope.currentNodePair );
-        //$scope.currentNodePair = $scope.currentNodeRelationship.node_pairs[0];
+    if ( !$scope.currentNodeRelationship ) {
+      return;
     }
-    */
+    
+    $scope.currentNodePairIndex = 0;
+    $scope.loadMapping( $scope.currentNodePairIndex );
 
     $scope.nodeDropzones["0"].name = $scope.currentWorkflow.input_relationships[0].set1;
     $scope.nodeDropzones["1"].name = $scope.currentWorkflow.input_relationships[0].set2;
-
-    console.log( $scope.currentNodeRelationship );
   });  
 
   $scope.initializeNodeDropzones = function() {
@@ -188,28 +180,12 @@ angular.module('refineryNodeMapping', [
     return ( $scope.currentNodePair === null );
   };
 
-
-  $scope.createNodeRelationship = function( name, summary, type ) {
-    console.log( "Creating node relationship ... ");
-
-    var nodeRelationship = new NodeRelationship( {study: "/api/v1/study/" + externalStudyUuid + "/", assay: "/api/v1/assay/" + externalAssayUuid + "/", node_pairs: [], name: name, summary: summary, type: type } );
-
-    nodeRelationship.$save( 
-      function( response ) {
-        console.log( "Created node relationship ... ");
-        console.log( response );
-
-        $scope.currentNodeRelationship = response;
-      });
-  };
-
   $scope.createMapping = function() {
     console.log( "Creating ... ");
     $scope.initializeNodeDropzones();
     $scope.currentNodePair = null;    
     $scope.currentNodePairIndex = $scope.currentNodeRelationship.node_pairs.length;
   };
-
   //$scope.createMapping();
 
   $scope.deleteMapping = function() {
@@ -236,7 +212,7 @@ angular.module('refineryNodeMapping', [
         $scope.updateNodeDropzone( 1, data.node2.split("/").reverse()[1] );
       }, function ( error ) {
         $scope.currentNodePair = null;        
-        alert( "failed to load mapping" );
+        console.error( "Failed to load mapping." );
       } );
     } 
     else {
@@ -323,8 +299,7 @@ angular.module('refineryNodeMapping', [
 
     name = name.replace( /\_/g, " " );
     
-    if ( isTitle )
-    {
+    if ( isTitle ) {
       name = name.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
     }
 
@@ -488,7 +463,6 @@ angular.module('refineryNodeMapping', [
         scope.$watch('setA.attributes', function( oldVal, newVal ) {
              if(newVal) {
                console.log( "setA changed" );
-               console.log( newVal );
                updateDiff();
              }
          });        
@@ -496,7 +470,6 @@ angular.module('refineryNodeMapping', [
         scope.$watch('setB.attributes', function( oldVal, newVal ) {
              if(newVal) {
                console.log( "setB changed" );
-               console.log( newVal );
                updateDiff();
              }
          });        
@@ -527,13 +500,63 @@ angular.module('refineryNodeMapping', [
 .controller('NodeRelationshipListCtrl', function($scope, $rootScope, $element, NodeRelationship, analysisConfig) {
   'use strict';
 
-  var NodeRelationshipList = NodeRelationship.get(
-    {study__uuid: externalStudyUuid, assay__uuid: externalAssayUuid},
-    function( response ) {
-      console.log( response );
-      $scope.nodeRelationshipList = response.objects;
-      console.log( $scope.nodeRelationshipList.length );
-  });
+  $scope.loadNodeRelationshipList = function( studyUuid, assayUuid ) {
+    return NodeRelationship.get(
+        {study__uuid: studyUuid, assay__uuid: assayUuid, order_by: [ "-is_current", "name" ] },
+        function( response ) {
+          // check if there is a "current mapping" in the list (this would be the first entry due to the ordering)
+          if ( ( ( response.objects.length > 0 ) && ( !response.objects[0].is_current ) ) || ( response.objects.length === 0 ) ) {
+            $scope.createCurrentNodeRelationship( "Current Mapping", "1-N" );
+          }
+
+          $scope.nodeRelationshipList = response.objects;
+          console.log( "# of node relationships: " + $scope.nodeRelationshipList.length );
+      });    
+  };
+
+  var NodeRelationshipList =  $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid );
+
+  $scope.createCurrentNodeRelationship = function( name, type ) {
+    $scope._createNodeRelationship( name, type, "", true );
+  };
+
+  $scope.createNodeRelationship = function( name, summary, type ) {
+    $scope._createNodeRelationship( name, summary, type, false );
+  };
+
+  $scope._createNodeRelationship = function( name, summary, type, is_current ) {
+    //internal method -- call createNodeRelationship or createCurrentNodeRelationship
+
+    var nodeRelationship = new NodeRelationship( {study: "/api/v1/study/" + externalStudyUuid + "/", assay: "/api/v1/assay/" + externalAssayUuid + "/", node_pairs: [], name: name, summary: summary, type: type, is_current: is_current } );
+
+    nodeRelationship.$save( 
+      function( response ) {
+        // add new current mapping to list
+        $scope.nodeRelationshipList.unshift( response );
+        $scope.currentNodeRelationship = response;
+        $scope.nodeRelationshipIndex = 0;
+        // update the current node relationship (fires event)
+        $scope.updateCurrentNodeRelationship();
+      });
+  };
+
+  $scope.deleteNodeRelationship = function( nodeRelationship ) {
+    console.log( "deleting node relatnsiophns" );
+    console.log( nodeRelationship );
+    if ( nodeRelationship.is_current ) {
+      alert( "Cannot delete current node relationship" );
+    }
+    else {
+      NodeRelationship.delete( { uuid: nodeRelationship.uuid },
+        function( response ) {
+          alert( "Successfully deleted " + nodeRelationship );
+          $scope.currentNodeRelationship = null;
+          $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid );
+          // update the current node relationship (fires event)
+          $scope.updateCurrentNodeRelationship();
+        });      
+    }
+  };
 
   $scope.updateCurrentNodeRelationship = function() {
     $scope.currentNodeRelationship = $scope.nodeRelationshipList[$scope.nodeRelationshipIndex];  
@@ -547,7 +570,6 @@ angular.module('refineryNodeMapping', [
   };  
 
   $scope.$onRootScope('nodeRelationshipChangedEvent', function( event, currentNodeRelationship, index ) {
-    //alert( index );
     $scope.nodeRelationshipIndex = index;
   });
 
@@ -579,7 +601,8 @@ angular.module('refineryNodeMapping', [
   return $resource(
     "/api/v1/noderelationship/:uuid/", {
       format: "json",
-    }, {
+    }, 
+    {
       'update': { method:'PUT' },
       'update_partial': { method:'PATCH' }
     }
@@ -622,8 +645,6 @@ angular.module('refineryNodeMapping', [
     }
   );
 })
-// http://192.168.50.50:8000/solr/data_set_manager/select/?q=django_ct:data_set_manager.node&wt=json&start=0&rows=20&fq=(uuid:d21d9614-61e2-11e3-8888-080027129698%20AND%20study_uuid:d13e1cfa-61e2-11e3-8888-080027129698%20AND%20assay_uuid:d143e950-61e2-11e3-8888-080027129698)&fq=type:(%22Raw%20Data%20File%22%20OR%20%22Derived%20Data%20File%22%20OR%20%22Array%20Data%20File%22%20OR%20%22Derived%20Array%20Data%20File%22%20OR%20%22Array%20Data%20Matrix%20File%22%20OR%20%22Derived%20Array%20Data%20Matrix%20File%22)&fl=uuid,name,Author_Characteristics_2_1_s,REFINERY_NAME_2_1_s,REFINERY_ANALYSIS_UUID_2_1_s,Title_Characteristics_2_1_s,file_uuid,Year_Characteristics_2_1_s,is_annotation,Month_Characteristics_2_1_s,study_uuid,assay_uuid,type,REFINERY_TYPE_2_1_s
-
 
 .run(['$state', function ($state,$scope) {
    $state.transitionTo('browse');

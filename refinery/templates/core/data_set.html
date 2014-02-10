@@ -159,7 +159,7 @@
 		<div class="tab-content">
 	  		<div class="tab-pane fade active in" id="content">
 
-				<div ng-controller="FileMappingCtrl">
+				<!-- <div ng-controller="FileMappingCtrl"> -->
 				<div class="row-fluid">				
 
 					{% verbatim %}
@@ -177,10 +177,6 @@
 						<div ng-include="'/static/partials/data_set_ui_node_mapping.html'"></div>
 						<div ui-view="data-set-ui-mapping-controls"></div>
 						<!-- <div ui-view></div> -->
-						<div class="row"><div class="span12">
-							<hr>
-						</div>		
-						</div>			
 					</div>
 
 					<div class="row-fluid">				
@@ -382,7 +378,7 @@
 					</div>
 					</div>
 				</div>
-				</div> <!-- FileMappingCtrl -->
+				<!-- </div> --> <!-- FileMappingCtrl -->
 		</div>
 
 		{% if has_change_dataset_permission %}

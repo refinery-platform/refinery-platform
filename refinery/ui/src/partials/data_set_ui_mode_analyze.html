@@ -34,16 +34,18 @@
       </select>
     </div>
     <div ng-controller="NodeRelationshipListCtrl" ng-if="!isCurrentWorkflowSingleInput()">
-      <select ui-select2 ng-model="nodeRelationshipIndex" ng-change="updateCurrentNodeRelationship()" style="width:100%">
-        <!-- <option value="">Current Mapping</option> -->
+      <select ui-select2 ng-model="nodeRelationshipIndex" ng-change="updateCurrentNodeRelationship()" style="width:100%" data-placeholder="Choose a {{currentWorkflow.input_relationships[0].category}} file mapping">
+        <option value=""></option>  <!-- required for showing placeholder text -->
         <option ng-repeat="nodeRelationship in nodeRelationshipList" value="{{$index}}">{{nodeRelationship.name}}</option>
       </select>
       <a class="btn btn-mini" ng-click='createNodeRelationship( "Nils 1", "Test", "1-N" )'>New ...</a>
-      <a class="btn btn-mini" ng-click='alert( "Test" )'>Delete</a>
-    </div>
-    <p></p>
-    <div ng-controller="AnalysisCtrl">
-      <button class="btn btn-warning" ng-click="launchAnalysis()" style="width: 100%">Launch Analysis</button>          
-    </div>
+      <a class="btn btn-mini" ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current )" ng-click='deleteNodeRelationship( currentNodeRelationship )'>Delete</a>
+      <div>
+        <p>
+        </p>
+      </div>
+      <div ng-controller="AnalysisCtrl">
+        <button class="btn btn-warning" ng-click="launchAnalysis()" ng-disabled="!(currentNodeRelationship && currentNodeRelationship.node_pairs.length > 0)" style="width: 100%">Launch Analysis</button>          
+      </div>
   </div>
 </div>
