@@ -27,6 +27,7 @@ from registration.signals import user_registered, user_activated
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
+from django.core.exceptions import MultipleObjectsReturned
 
 
 logger = logging.getLogger(__name__)
@@ -276,7 +277,6 @@ class DataSet(SharableResource):
     file_count = models.IntegerField(blank=True, null=True, default=0)
     # total number of bytes of all files in this data set
     file_size = models.BigIntegerField(blank=True, null=True, default=0)
-
     
     def set_investigation(self,investigation,message=""):
         '''
@@ -563,6 +563,9 @@ class Analysis(OwnableResource):
     # output_nodes = models.ManyToManyField(Nodes, blank=True)
     # protocol = i.e. protocol node created when the analysis is created
 
+    class Meta:
+        verbose_name_plural = "analyses"
+
     def __unicode__(self):
         return self.name + " - " + self.summary
 
@@ -769,12 +772,29 @@ class NodeSet(SharableResource, TemporaryResource):
     study = models.ForeignKey(Study)
     assay = models.ForeignKey(Assay)
 
+    # is this the "current selection" node set for the associated study/assay?
+    is_current = models.BooleanField(default=False)
+
     class Meta:
         verbose_name = "nodeset"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
+
+
+def get_current_node_set( study_uuid, assay_uuid ):
+    '''
+    Retrieve current node set. Create current node set if does not exist.
+    '''
+    node_set = None
+
+    try:
+        node_set = NodeSet.objects.get_or_create(study__uuid=study_uuid, assay__uuid=assay_uuid, is_implicit=True, is_current=True)
+    except MultipleObjectsReturned:
+        logger.error("Multiple current node sets for study " + study_uuid + "/assay " + assay_uuid + "." )
+    finally:
+        return node_set
 
 
 @transaction.commit_manually()
@@ -884,7 +904,7 @@ class NodePair(models.Model):
     node2 = models.ForeignKey(Node, related_name="node2", blank=True, null=True)
     # defines a grouping of node relationships i.e. replicate
     group = models.IntegerField(blank=True, null=True)
-    
+
     
 class NodeRelationship(BaseResource):
     '''A collection of Nodes NodePair, representing connections between data files i.e. input/chip pairs
@@ -903,6 +923,23 @@ class NodeRelationship(BaseResource):
     
     study = models.ForeignKey(Study)
     assay = models.ForeignKey(Assay)
+
+    # is this the "current mapping" node set for the associated study/assay?
+    is_current = models.BooleanField(default=False)
+
+
+def get_current_node_relationship( study_uuid, assay_uuid ):
+    '''
+    Retrieve current node relationship. Create current node relationship if does not exist.
+    '''
+    relationship = None
+
+    try:
+        relationship = NodeRelationship.objects.get_or_create(study__uuid=study_uuid, assay__uuid=assay_uuid, is_current=True)
+    except MultipleObjectsReturned:
+        logger.error("Multiple current node relationships for study " + study_uuid + "/assay " + assay_uuid + "." )
+    finally:
+        return relationship
 
 
 class RefineryLDAPBackend(LDAPBackend):

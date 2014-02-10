@@ -133,7 +133,7 @@ class NodeSetResource(ModelResource):
 
     class Meta:
         # create node count attribute on the fly - node_count field has to be defined on resource
-        queryset = NodeSet.objects.all()
+        queryset = NodeSet.objects.all().order_by( '-is_current', 'name') 
         resource_name = 'nodeset'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
@@ -191,7 +191,7 @@ class NodeSetListResource(ModelResource):
 
     class Meta:
         # create node count attribute on the fly - node_count field has to be defined on resource
-        queryset = NodeSet.objects.all()
+        queryset = NodeSet.objects.all().order_by( '-is_current', 'name') 
         detail_resource_name = 'nodeset' # NG: introduced to get correct resource ids
         resource_name = 'nodesetlist'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
@@ -200,7 +200,7 @@ class NodeSetListResource(ModelResource):
         fields = ['name', 'summary', 'assay', 'study', 'uuid' ]
         allowed_methods = ["get" ]
         filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
-        ordering = [ 'name', 'node_count' ];
+        ordering = [ '-is_current', 'name', 'node_count' ];
     
     def dehydrate(self, bundle):
         # replace resource URI to point to the nodeset resource instead of the nodesetlist resource        
@@ -234,7 +234,7 @@ class NodeRelationshipResource(ModelResource):
     
     class Meta:
         detail_allowed_methods = [ 'get', 'post', 'delete', 'put', 'patch' ]
-        queryset = NodeRelationship.objects.all()
+        queryset = NodeRelationship.objects.all().order_by( '-is_current', 'name') 
         detail_resource_name = 'noderelationship' 
         resource_name = 'noderelationship'
         detail_uri_name = 'uuid'  
@@ -244,15 +244,15 @@ class NodeRelationshipResource(ModelResource):
         always_return_data = True
         
         #fields = ['type', 'study', 'assay', 'node_pairs']
-        ordering = ['type', 'node_pairs']
-        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
+        ordering = [ 'is_current', 'name', 'type', 'node_pairs']
+        filtering = { 'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS }
 
 
 class WorkflowResource(ModelResource):
     input_relationships = fields.ToManyField("core.api.WorkflowInputRelationshipsResource", 'input_relationships', full=True)
 
     class Meta:
-        queryset = Workflow.objects.filter(is_active=True)
+        queryset = Workflow.objects.filter(is_active=True).order_by('name')
         detail_resource_name = 'workflow'
         resource_name = 'workflow'
         detail_uri_name = 'uuid'

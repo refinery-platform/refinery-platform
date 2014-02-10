@@ -62,3 +62,4 @@ refinery/ui/app/
 refinery/ui/bower_components/
 refinery/ui/node_modules/
 refinery/static/styles/css/font-awesome*.css
+media/
