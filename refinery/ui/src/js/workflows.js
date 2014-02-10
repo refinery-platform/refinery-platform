@@ -1,11 +1,11 @@
 angular.module('refineryWorkflows', [])
 
-.controller('WorkflowListApiCtrl', function($scope, $rootScope, Workflow) {
+.controller('WorkflowListApiCtrl', function($scope, $rootScope, workflowApi, analysisConfig) {
   'use strict';
 
   $scope.getWorkflowList = function() {
     console.log("Getting the workflow list");
-    var Workflows = Workflow.get(function() {
+    var Workflows = workflowApi.get(function() {
       $scope.workflowList = Workflows.objects;
     });
   };
@@ -22,9 +22,9 @@ angular.module('refineryWorkflows', [])
       else {      
         $scope.currentWorkflow.input_relationships[0].category = $scope.currentWorkflow.input_relationships[0].category + " File Mapping";
       }
+      analysisConfig.workflowUuid = $scope.currentWorkflow.uuid;
+      $rootScope.$emit( "workflowChangedEvent", $scope.currentWorkflow );    
     }
-
-    $rootScope.$emit( "workflowChangedEvent", $scope.currentWorkflow );    
   };
 
   $scope.isCurrentWorkflowSingleInput = function() {
@@ -46,7 +46,7 @@ angular.module('refineryWorkflows', [])
 
 })
 
-.factory("Workflow", function($resource) {
+.factory("workflowApi", function($resource) {
   'use strict';
 
   return $resource(

@@ -25,18 +25,14 @@
       <label style="color: #6A41AE;"><b><i>{{currentWorkflow.input_relationships[0].set1}}<br/></i></b></label>
       <label style="color: #278F63;" ng-if="!isCurrentWorkflowSingleInput()"><b><i>{{currentWorkflow.input_relationships[0].set2}}<br/></i></b></label>
     </div>
+
     <div ng-controller="NodeSetListApiCtrl" ng-if="isCurrentWorkflowSingleInput()">
       <select ui-select2 ng-model="nodesetIndex" ng-change="updateCurrentNodeSet()" style="width:100%" data-placeholder="Choose a {{currentWorkflow.input_relationships[0].category}}">
         <option value=""></option>  <!-- required for showing placeholder text -->
         <option value="current_selection">Current Selection</option>  <!-- required for showing placeholder text -->
         <option ng-repeat="nodeset in nodesetList" value="{{$index}}">{{nodeset.name}}</option>
       </select>
-      <div>
-        <p>
-        </p>
-      </div>
-      <button class="btn btn-warning" ng-disabled="!currentNodeSet" style="width: 100%">Launch Analysis</button>                    
-    </div>        
+    </div>
     <div ng-controller="NodeRelationshipListCtrl" ng-if="!isCurrentWorkflowSingleInput()">
       <select ui-select2 ng-model="nodeRelationshipIndex" ng-change="updateCurrentNodeRelationship()" style="width:100%" data-placeholder="Choose a {{currentWorkflow.input_relationships[0].category}} file mapping">
         <option value=""></option>  <!-- required for showing placeholder text -->
@@ -48,7 +44,8 @@
         <p>
         </p>
       </div>
-      <button class="btn btn-warning" ng-disabled="!(currentNodeRelationship && currentNodeRelationship.node_pairs.length > 0)" style="width: 100%">Launch Analysis</button>          
-    </div>        
+      <div ng-controller="AnalysisCtrl">
+        <button class="btn btn-warning" ng-click="launchAnalysis()" ng-disabled="!(currentNodeRelationship && currentNodeRelationship.node_pairs.length > 0)" style="width: 100%">Launch Analysis</button>          
+      </div>
   </div>
 </div>
