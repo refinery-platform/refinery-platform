@@ -55,24 +55,6 @@ angular.module('refineryNodeMapping', [
 }])
 
 
-.config(['$provide', function($provide) {
-    // http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
-    $provide.decorator('$rootScope', ['$delegate', function($delegate){
-
-        Object.defineProperty($delegate.constructor.prototype, '$onRootScope', {
-            value: function(name, listener){
-                var unsubscribe = $delegate.$on(name, listener);
-                this.$on('$destroy', unsubscribe);
-            },
-            enumerable: false
-        });
-
-
-        return $delegate;
-    }]);
-}])
-
-
 .config(['$stateProvider', function($stateProvider, $rootScope, $scope) {
   //
   // For any unmatched url, redirect to /state1
@@ -522,7 +504,7 @@ angular.module('refineryNodeMapping', [
   };
 })
 
-.controller('NodeSetListApiCtrl', function($scope, NodeSetList) {
+.controller('NodeSetListApiCtrl', function($scope, NodeSetList, analysisConfig) {
   'use strict';
 
   var NodeSets = NodeSetList.get(
@@ -533,10 +515,16 @@ angular.module('refineryNodeMapping', [
 
   $scope.updateCurrentNodeSet = function() {
     $scope.currentNodeSet = $scope.nodesetList[$scope.nodesetIndex];      
+    // FIXME: temp workaround - this should be handled through the event bus
+    if ($scope.currentNodeSet) {
+      // console.log($scope.currentNodeSet);
+      analysisConfig.nodeSetUuid = $scope.currentNodeSet.uuid;
+      analysisConfig.nodeRelationshipUuid = null;
+    }
   };
 })
 
-.controller('NodeRelationshipListCtrl', function($scope, $rootScope, $element, NodeRelationship) {
+.controller('NodeRelationshipListCtrl', function($scope, $rootScope, $element, NodeRelationship, analysisConfig) {
   'use strict';
 
   var NodeRelationshipList = NodeRelationship.get(
@@ -549,8 +537,13 @@ angular.module('refineryNodeMapping', [
 
   $scope.updateCurrentNodeRelationship = function() {
     $scope.currentNodeRelationship = $scope.nodeRelationshipList[$scope.nodeRelationshipIndex];  
-
     $rootScope.$emit( "nodeRelationshipChangedEvent", $scope.currentNodeRelationship, $scope.nodeRelationshipIndex );
+    // FIXME: temp workaround - this should be handled through the event bus
+    if ($scope.currentNodeRelationship) {
+      // console.log($scope.currentNodeRelationship);
+      analysisConfig.nodeRelationshipUuid = $scope.currentNodeRelationship.uuid;
+      analysisConfig.nodeSetUuid = null;
+    }
   };  
 
   $scope.$onRootScope('nodeRelationshipChangedEvent', function( event, currentNodeRelationship, index ) {

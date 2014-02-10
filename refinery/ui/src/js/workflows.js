@@ -22,8 +22,9 @@ angular.module('refineryWorkflows', [])
       else {      
         $scope.currentWorkflow.input_relationships[0].category = $scope.currentWorkflow.input_relationships[0].category + " File Mapping";
       }
+      $rootScope.$emit("workflowChangedEvent", $scope.currentWorkflow);
+      // FIXME: temp workaround - this should be handled through the event bus
       analysisConfig.workflowUuid = $scope.currentWorkflow.uuid;
-      $rootScope.$emit( "workflowChangedEvent", $scope.currentWorkflow );    
     }
   };
 
