@@ -415,6 +415,8 @@ def run_nodeset(request):
         
         ret_url = request.build_absolute_uri(reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,)) )
         return HttpResponse(simplejson.dumps(ret_url), mimetype='application/json')
+    else:
+        return HttpResponseBadRequest()
 
     
 def run_noderelationship(request):
@@ -479,7 +481,7 @@ def run_noderelationship(request):
         # How to create a simple analysis object
         temp_name = curr_workflow.name + " " + str( datetime.now() )
         summary_name = "None provided."
-        
+
         analysis = Analysis( summary=summary_name, name=temp_name, project=request.user.get_profile().catch_all_project, data_set=data_set, workflow=curr_workflow, time_start=datetime.now() )
         analysis.save()   
     
@@ -518,6 +520,8 @@ def run_noderelationship(request):
         
         ret_url = request.build_absolute_uri(reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,)) )
         return HttpResponse(simplejson.dumps(ret_url), mimetype='application/json')
+    else:
+        return HttpResponseBadRequest()
 
 
 def create_noderelationship(request):
