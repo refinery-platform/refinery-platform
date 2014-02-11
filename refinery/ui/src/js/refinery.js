@@ -2,6 +2,7 @@ angular.module('refineryApp', [
   'refineryWorkflows',
   'refineryNodeMapping',
   'refineryAnalysis',
+  'refinerySolr'
 ])
 
 .config(['$provide', function($provide) {
