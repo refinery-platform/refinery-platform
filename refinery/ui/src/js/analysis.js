@@ -1,6 +1,6 @@
 angular.module('refineryAnalysis', [])
 
-.controller('AnalysisCtrl', function($scope, $rootScope, $http, analysisConfig) {
+.controller('AnalysisCtrl', function($scope, $rootScope, $http, $window, analysisConfig) {
   'use strict';
 
   // FIXME: workflowChangedEvent is not received when a workflow is selected
@@ -23,23 +23,22 @@ angular.module('refineryAnalysis', [])
     // POST request to either
     // /analysis_manager/run_nodeset/ or
     // /analysis_manager/run_noderelationship/
+    // http://stackoverflow.com/questions/18599764/redirect-to-a-different-page-after-post-using-angular
     $http({
       method: 'POST',
       url: '/analysis_manager/run_nodeset/',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      },
       data: {
         'study_uuid': analysisConfig.studyUuid,
         'workflow_id': analysisConfig.workflowUuid,
         'node_set_uuid': analysisConfig.nodeSetUuid,
-        },
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8'
-        }
+      },
     }).success(function(data) {
-      console.log("Redirecting to: " + data);
-      $window.location.href(data);
+      $window.location.assign(data);
     }).error(function(data, status) {
-      console.log("Request failed: " + data);
-      console.log("Status: " + status);
+      console.log("Request failed: error " + status);
     });
   };
 })

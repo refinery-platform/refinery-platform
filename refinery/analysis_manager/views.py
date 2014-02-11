@@ -346,21 +346,19 @@ def run_nodeset(request):
     """ 
     ajax function for running an analysis w/ a single input with a given nodeset
     """
-    logger.debug( "analysis_manager.views.run_nodeset called" )
-    logger.debug( simplejson.dumps(request.POST, indent=4) )
-    
-    if request.is_ajax():
-        #print "is ajax"
-        
-        # gets workflow_uuid
-        workflow_uuid = request.POST.getlist('workflow_id')[0]
-        
-        # get study uuid
-        study_uuid = request.POST.getlist('study_uuid')[0]
-        
-        node_set_uuid = request.POST.getlist('node_set_uuid')[0]
-        node_set_field = request.POST.getlist('node_set_field')[0]
-        
+    logger.debug("analysis_manager.views.run_nodeset called")
+
+    if request.is_ajax() and request.method == 'POST':
+
+        data = simplejson.loads(request.body)
+        workflow_uuid = data['workflow_id']
+        study_uuid = data['study_uuid']
+        node_set_uuid = data['node_set_uuid']
+        logger.info("Workflow UUID received: '{}'".format(workflow_uuid))
+        logger.info("Study UUID received: '{}'".format(study_uuid))
+        logger.info("NodeSet UUID received: '{}'".format(node_set_uuid))
+
+        #TODO: error handling
         curr_node_set = NodeSet.objects.get(uuid=node_set_uuid)
         curr_node_dict = curr_node_set.solr_query_components
         curr_node_dict = simplejson.loads(curr_node_dict)
@@ -410,11 +408,8 @@ def run_nodeset(request):
         # call function via analysis_manager
         run_analysis.delay(analysis, 5.0)
         
-        #import pdb; pdb.set_trace()
-        logger.debug(request.build_absolute_uri(reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,)) ))
-        
-        ret_url = request.build_absolute_uri(reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,)) )
-        return HttpResponse(simplejson.dumps(ret_url), mimetype='application/json')
+        ret_url = reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,))
+        return HttpResponse(ret_url)
     else:
         return HttpResponseBadRequest()
 

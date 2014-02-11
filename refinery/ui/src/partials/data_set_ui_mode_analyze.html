@@ -40,12 +40,13 @@
       </select>
       <a class="btn btn-mini" ng-click='createNodeRelationship( "Nils 1", "Test", "1-N" )'>New ...</a>
       <a class="btn btn-mini" ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current )" ng-click='deleteNodeRelationship( currentNodeRelationship )'>Delete</a>
-      <div>
-        <p>
-        </p>
-      </div>
-      <div ng-controller="AnalysisCtrl">
-        <button class="btn btn-warning" ng-click="launchAnalysis()" ng-disabled="!(currentNodeRelationship && currentNodeRelationship.node_pairs.length > 0)" style="width: 100%">Launch Analysis</button>          
-      </div>
+    </div>
+    <div>
+      <p>
+      </p>
+    </div>
+    <div ng-controller="AnalysisCtrl">
+      <button class="btn btn-warning" ng-click="launchAnalysis()" style="width: 100%">Launch Analysis</button>          
+    </div>
   </div>
 </div>
