@@ -262,12 +262,11 @@ SolrDocumentTable.prototype._generateTableBody = function( solrResponse ) {
 			s += '<td>' + column['formatter']( document ) + '</td>';
 		}	
 							
-
 		for ( entry in fields ) {
 			if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible && !fields[entry].isInternal  && !( self._hiddenFieldNames.indexOf( entry ) >= 0 ) ) {				
 				if ( document.hasOwnProperty( entry ) ) {
-					s += "<td>";
-					s += document[entry];
+					s += "<td title=\"" + document[entry] + "\">";
+					s += self._trimDocumentEntry( document[entry], 25 );
 					s += "</td>";				
 				}
 				else { // this field does not exist in this result
@@ -283,6 +282,17 @@ SolrDocumentTable.prototype._generateTableBody = function( solrResponse ) {
 		
 	return rows.join('\n');
 }
+
+SolrDocumentTable.prototype._trimDocumentEntry = function( string, length, indicator ) {
+
+	indicator = indicator || "...";
+
+	if ( string.length > length ) {
+		return string.substring( 0, length ) + "<span style=\"border-radius: 2px; background:lightgray; padding: 2px; font-face: bold; color:gray; display:inline-block; margin-top: -2px; margin-bottom: -2px; margin-left: 2px; margin-right: 2px; vertical-align: bottom;\">" + indicator + "</span>";
+	}
+
+	return string;
+} 
 
 
 SolrDocumentTable.prototype._generateTableHead = function( solrResponse ) {	
