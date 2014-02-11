@@ -14,24 +14,14 @@ angular.module('refineryAnalysis', [])
   // });
 
   $scope.launchAnalysis = function() {
-
-    console.log("Study UUID: " + analysisConfig.studyUuid);
-    console.log("Workflow UUID: " + analysisConfig.workflowUuid);
-    console.log("NodeSet UUID: " + analysisConfig.nodeSetUuid);
-    console.log("NodeRelationship UUID: " + analysisConfig.nodeRelationshipUuid);
-
-    // POST request to either
-    // /analysis_manager/run_nodeset/ or
-    // /analysis_manager/run_noderelationship/
-    // http://stackoverflow.com/questions/18599764/redirect-to-a-different-page-after-post-using-angular
     $http({
       method: 'POST',
       url: '/analysis_manager/run/',
       headers: {'X-Requested-With': 'XMLHttpRequest'},
       data: analysisConfig,
-    }).success(function(data) {
-      $window.location.assign(data);
-    }).error(function(data, status) {
+    }).success(function(response) {
+      $window.location.assign(response);
+    }).error(function(response, status) {
       console.log("Request failed: error " + status);
     });
   };
@@ -46,10 +36,4 @@ angular.module('refineryAnalysis', [])
     nodeSetUuid: null,
     nodeRelationshipUuid: null
   };
-})
-
-.factory('analysisLaunch', function($http) {
-  'use strict';
-
-  return {};
 });
