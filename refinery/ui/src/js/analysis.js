@@ -26,15 +26,9 @@ angular.module('refineryAnalysis', [])
     // http://stackoverflow.com/questions/18599764/redirect-to-a-different-page-after-post-using-angular
     $http({
       method: 'POST',
-      url: '/analysis_manager/run_nodeset/',
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      data: {
-        'study_uuid': analysisConfig.studyUuid,
-        'workflow_id': analysisConfig.workflowUuid,
-        'node_set_uuid': analysisConfig.nodeSetUuid,
-      },
+      url: '/analysis_manager/run/',
+      headers: {'X-Requested-With': 'XMLHttpRequest'},
+      data: analysisConfig,
     }).success(function(data) {
       $window.location.assign(data);
     }).error(function(data, status) {
