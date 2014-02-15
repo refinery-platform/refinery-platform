@@ -14,10 +14,11 @@ from data_set_manager.models import Investigation, Study
 from data_set_manager.tasks import annotate_nodes
 from file_store.models import is_permanent
 from file_store.tasks import create, read, import_file
-from amqplib.client_0_8.exceptions import AMQPChannelException
+from amqplib.client_0_8.exceptions import AMQPChannelException, AMQPConnectionException
 from celery.exceptions import TimeLimitExceeded, TaskRevokedError
 from datetime import datetime, timedelta
-import logging, requests
+#from kombu.connection.Connection.Consumer import ConnectionError
+import logging, requests, socket
 
 """get logger for all tasks"""
 logger = logging.getLogger(__name__)
@@ -266,7 +267,7 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     return dataset_copy
 
 
-@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.CELERY_TOOL_NAME]), expires=(int(ExternalToolStatus.TIMEOUT[ExternalToolStatus.CELERY_TOOL_NAME]) - 1), time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.CELERY_TOOL_NAME])
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.CELERY_TOOL_NAME]), expires=(int(ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.CELERY_TOOL_NAME]) - 1), time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.CELERY_TOOL_NAME])
 def check_for_celery():
     celery, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.CELERY_TOOL_NAME)
     if celery.is_active:
@@ -276,11 +277,20 @@ def check_for_celery():
                 celery.status = ExternalToolStatus.FAILURE_STATUS #celery is gone, get error thrown
             else:
                 celery.status = ExternalToolStatus.SUCCESS_STATUS #celery is alive
+        except IOError:
+            logger.info("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
+            celery.status = ExternalToolStatus.FAILURE_STATUS #quit with error
+        except AMQPConnectionException:
+            logger.info("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
+            celery.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         except AMQPChannelException:
-            logger.error("AMQPChannelException raised by ping(). Is RabbitMQ available?")
+            logger.error("AMQPChannelException raised by ping(). Is your broker (e.g. RabbitMQ) available?")
             celery.status = ExternalToolStatus.SUCCESS_STATUS
+        except socket.error as e:
+            logger.info("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
+            celery.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         except:
-            logger.exception("core.tasks.check_for_celery: Something went wrong, check the stack trace below for what")
+            logger.info("core.tasks.check_for_celery: Something went wrong, check the stack trace below for what")
             celery.status = ExternalToolStatus.FAILURE_STATUS
         #set last time check to now
         celery.last_time_check = datetime.now()
@@ -297,7 +307,7 @@ def check_for_solr():
             requests.get(settings.REFINERY_SOLR_BASE_URL + "core/admin/ping")
             solr.status = ExternalToolStatus.SUCCESS_STATUS #successfully reached solr
         except requests.ConnectionError as e:
-            logger.exception("core.tasks.check_for_solr: Could not connect to Solr")
+            logger.info("core.tasks.check_for_solr: Could not connect to Solr")
             solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         except:
                 logger.exception("core.tasks.check_for_solr: Something went wrong, check the stack trace below for what")
@@ -350,8 +360,9 @@ def check_tool_status(tool_name, tool_unique_instance_identifier=None):
         logger.error( "External Tool Status does not exist for " + tool_name + "and " + str(tool_unique_instance_identifier) )
         return (True, ExternalToolStatus.UNKNOWN_STATUS)
     
-    if (datetime.now() - tool.last_time_check) > timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[tool_name]):
-        logger.error("%s's database entry hasn't been updated recently; check to see if it's running" % tool_name)
-        return (tool.is_active, ExternalToolStatus.TIMEOUT_STATUS)
+    if tool.is_active:
+        if (datetime.now() - tool.last_time_check) > timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[tool_name]):
+            logger.error("%s's database entry hasn't been updated recently; check to see if it's running" % tool_name)
+            return (tool.is_active, ExternalToolStatus.TIMEOUT_STATUS)
         
     return (tool.is_active, tool.status)
