@@ -57,6 +57,7 @@ deployment/.tmp/
 deployment/modules/
 deployment/Puppetfile.lock
 refinery/celerybeat-schedule*
+refinery/static/styles/css/font-awesome*.css
 *.sublime-*
 refinery/ui/app/
 refinery/ui/bower_components/
