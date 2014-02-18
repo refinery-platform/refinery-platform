@@ -6,9 +6,10 @@ Created on May 4, 2012
 
 from GuardianTastypieAuthz import GuardianAuthorization
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, \
-    WorkflowInputRelationships, Analysis, DataSet
+    WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
+from core.tasks import check_tool_status
 from django.conf.urls.defaults import url
 from django.core.serializers import json
 from django.db.models.aggregates import Count
@@ -280,4 +281,19 @@ class WorkflowInputRelationshipsResource(ModelResource):
         detail_resource_name = 'workflowrelationships' 
         resource_name = 'workflowrelationships'
         #detail_uri_name = 'uuid'   
-        fields = ['category', 'set1', 'set2', 'workflow']  
+        fields = ['category', 'set1', 'set2', 'workflow']
+        
+
+class ExternalToolStatusResource(ModelResource):
+    class Meta:
+        queryset = ExternalToolStatus.objects.all()
+        resource_name = 'externaltoolstatus'
+        authentication = Authentication()
+        authorization = Authorization()
+        allowed_methods = ["get" ]
+        fields = ['name', 'is_active', 'unique_instance_identifier']
+        
+    def dehydrate(self, bundle):        
+        bundle.data['status'] = check_tool_status(bundle.data['name'])[1] # call to method
+
+        return bundle
