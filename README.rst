@@ -54,4 +54,4 @@ Troubleshooting
 ~~~~~~~~~~~~~~~
 
 * Refinery deployment requires a lot of external dependencies. You might have to run ``vagrant provision`` repeatedly to install all dependencies successfully. *Any errors* in the output of ``vagrant provision`` indicate that you have to re-run the command.
-* If you have a VPN connection running, you may need to disconnect and reconnect before you can access the VM.  In some cases you may have to reboot your the machine.
+* If you have a VPN connection running, you may need to disconnect and reconnect before you can access the VM.  In some cases you may have to reboot the host machine.
