@@ -356,10 +356,13 @@ def run(request):
         return HttpResponseNotAllowed(allowed_methods)  # 405
 
     analysis_config = simplejson.loads(request.body)
-    workflow_uuid = analysis_config['workflowUuid']
-    study_uuid = analysis_config['studyUuid']
-    node_set_uuid = analysis_config['nodeSetUuid']
-    node_relationship_uuid = analysis_config['nodeRelationshipUuid']
+    try:
+        workflow_uuid = analysis_config['workflowUuid']
+        study_uuid = analysis_config['studyUuid']
+        node_set_uuid = analysis_config['nodeSetUuid']
+        node_relationship_uuid = analysis_config['nodeRelationshipUuid']
+    except KeyError:
+        return HttpResponseBadRequest()  # 400
     # must provide workflow and study UUIDs,
     # and either node set UUID or node relationship UUID
     if not (workflow_uuid and study_uuid and (node_set_uuid or node_relationship_uuid)):

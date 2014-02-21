@@ -406,7 +406,7 @@ angular.module('refineryNodeMapping', [
   };
 })
 
-.controller('NodeSetListApiCtrl', function($scope, NodeSetList, analysisConfig) {
+.controller('NodeSetListApiCtrl', function($scope, $rootScope, NodeSetList) {
   'use strict';
 
   var NodeSets = NodeSetList.get(
@@ -416,17 +416,18 @@ angular.module('refineryNodeMapping', [
   });
 
   $scope.updateCurrentNodeSet = function() {
-    $scope.currentNodeSet = $scope.nodesetList[$scope.nodesetIndex];      
+    $scope.currentNodeSet = $scope.nodesetList[$scope.nodesetIndex];
     // FIXME: temp workaround - this should be handled through the event bus
     if ($scope.currentNodeSet) {
+      $rootScope.$emit("nodeSetChangedEvent", $scope.currentNodeSet);
       // console.log($scope.currentNodeSet);
-      analysisConfig.nodeSetUuid = $scope.currentNodeSet.uuid;
-      analysisConfig.nodeRelationshipUuid = null;
+      // analysisConfig.nodeSetUuid = $scope.currentNodeSet.uuid;
+      // analysisConfig.nodeRelationshipUuid = null;
     }
   };
 })
 
-.controller('NodeRelationshipListCtrl', function($scope, $rootScope, $element, NodeRelationship, analysisConfig) {
+.controller('NodeRelationshipListCtrl', function($scope, $rootScope, $element, NodeRelationship) {
   'use strict';
 
   $scope.loadNodeRelationshipList = function( studyUuid, assayUuid ) {
@@ -489,12 +490,12 @@ angular.module('refineryNodeMapping', [
 
   $scope.updateCurrentNodeRelationship = function() {
     $scope.currentNodeRelationship = $scope.nodeRelationshipList[$scope.nodeRelationshipIndex];  
-    $rootScope.$emit( "nodeRelationshipChangedEvent", $scope.currentNodeRelationship, $scope.nodeRelationshipIndex );
     // FIXME: temp workaround - this should be handled through the event bus
     if ($scope.currentNodeRelationship) {
+      $rootScope.$emit("nodeRelationshipChangedEvent", $scope.currentNodeRelationship, $scope.nodeRelationshipIndex);
       // console.log($scope.currentNodeRelationship);
-      analysisConfig.nodeRelationshipUuid = $scope.currentNodeRelationship.uuid;
-      analysisConfig.nodeSetUuid = null;
+      // analysisConfig.nodeRelationshipUuid = $scope.currentNodeRelationship.uuid;
+      // analysisConfig.nodeSetUuid = null;
     }
   };  
 
