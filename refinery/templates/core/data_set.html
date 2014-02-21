@@ -6,7 +6,6 @@
 
 {% block ng_app %}refineryApp{% endblock %}
 
-
 {% block head_html %}
   <link rel="stylesheet" href="{% static "vendor/tipsy/src/stylesheets/tipsy.css" %}" />
   <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />  
@@ -663,7 +662,8 @@
 	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/workflow_node_relationship.js"></script>
 
   <!-- Note that jquery must be loaded before angular so that it doesn't use jqLite internally -->
- 	<script type="text/javascript" src="{% static "vendor/angular/angular.js" %}"></script>
+  <!--
+ 	<script type="text/javascript" src="{% static "vendor/angular/angular.js" %}"></script> 	
 	<script type="text/javascript" src="{% static "vendor/angular-bootstrap/ui-bootstrap-tpls.js" %}"></script>
 	<script type="text/javascript" src="{% static "vendor/select2/select2.js" %}"></script>
 	<script type="text/javascript" src="{% static "vendor/angular-ui-select2/src/select2.js" %}"></script>
@@ -674,6 +674,8 @@
 	<script type="text/javascript" src="{% static "js/workflows.js" %}"></script>
 	<script type="text/javascript" src="{% static "js/analysis.js" %}"></script>
 	<script type="text/javascript" src="{% static "js/solr.js" %}"></script>
+	<script type="text/javascript" src="{% static "js/external_tool_status.js" %}"></script>
+-->
 
 	<script type="application/javascript">
 
