@@ -124,24 +124,13 @@ angular.module('refineryNodeMapping', [
   };
 })
 
-.controller('FileMappingCtrl', function($scope, $location, $rootScope, $sce, $http, NodePair, NodeRelationship, AttributeOrder, solrFactory, solrService ) {
+.controller('FileMappingCtrl', function($log, $scope, $location, $rootScope, $sce, $http, NodePair, NodeRelationship, AttributeOrder, solrFactory, solrService ) {
 
   $scope.nodeDropzones = null;
   $scope.currentNodePair = null;
   $scope.currentNodePairIndex = 0;
   $scope.currentNodeRelationship = null;
   $scope.attributeOrderList = null;
-
-  $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
-    $scope.currentWorkflow = currentWorkflow;
-
-    if ( !$scope.currentWorkflow ) {
-      return;
-    }
-
-    $scope.nodeDropzones["0"].name = $scope.currentWorkflow.input_relationships[0].set1;
-    $scope.nodeDropzones["1"].name = $scope.currentWorkflow.input_relationships[0].set2;      
-  });  
 
   $scope.$onRootScope('nodeRelationshipChangedEvent', function( event, currentNodeRelationship ) {
     $scope.currentNodeRelationship = currentNodeRelationship;
@@ -153,20 +142,22 @@ angular.module('refineryNodeMapping', [
     $scope.currentNodePairIndex = 0;
     $scope.loadMapping( $scope.currentNodePairIndex );
 
-    $scope.nodeDropzones["0"].name = $scope.currentWorkflow.input_relationships[0].set1;
-    $scope.nodeDropzones["1"].name = $scope.currentWorkflow.input_relationships[0].set2;
+    $scope.initializeNodeDropzones( $scope.currentWorkflow.input_relationships[0].set1, $scope.currentWorkflow.input_relationships[0].set2 );
   });  
 
-  $scope.initializeNodeDropzones = function() {
+  $scope.initializeNodeDropzones = function( name0, name1 ) {
+    name0 = name0 || "";
+    name1 = name1 || "";
+
     $scope.nodeDropzones = {
         "0": {
-          "name": "",
+          "name": name0,
           "color": "purple",
           "attributes": null,
           "uuid": null
         },
         "1": {
-          "name": "",
+          "name": name1,
           "color": "green",
           "attributes": null,
           "uuid": null
@@ -182,33 +173,68 @@ angular.module('refineryNodeMapping', [
   };
 
   $scope.createMapping = function() {
-    console.log( "Creating ... ");
-    $scope.initializeNodeDropzones();
-    $scope.currentNodePair = null;    
+    $log.debug( "Creating pair ... ");
+    $scope.initializeNodeDropzones( $scope.currentWorkflow.input_relationships[0].set1, $scope.currentWorkflow.input_relationships[0].set2 );
+    $scope.currentNodePair = null;
     $scope.currentNodePairIndex = $scope.currentNodeRelationship.node_pairs.length;
   };
-  //$scope.createMapping();
 
   $scope.deleteMapping = function() {
-    console.log( "Deleting ... ");
+    $log.debug( "Deleting pair ... ");
 
     if ( $scope.currentNodePair ) {
       // update node relationship
       $scope.currentNodeRelationship.node_pairs.splice( $scope.currentNodePairIndex, 1 );
-      NodeRelationship.update( { uuid: $scope.currentNodeRelationship.uuid }, $scope.currentNodeRelationship );
+      NodeRelationship.update({uuid: $scope.currentNodeRelationship.uuid}, $scope.currentNodeRelationship, function(){
+        $log.debug("Removed pair from node mapping.");
+        if ($scope.hasNextMapping()) {
+          $scope.loadPreviousMapping();
+        }
+        else {
+          $scope.createMapping();
+        }        
+      }, function() {
+        $log.error( "Unable to remove pair " + $scope.currentNodeRelationship.uuid + " from mapping " + $scope.currentNodeRelationship.name );
+        // TODO: show error message
+      });
 
       // delete node pair
-      NodePair.delete( { uuid: $scope.currentNodePair.uuid } );
-
-      $scope.currentNodePair = null;
+      NodePair.delete({uuid: $scope.currentNodePair.uuid}, function(){
+        $log.debug( "Deleted pair." );
+      });
     }
-    $scope.initializeNodeDropzones();
+    $scope.initializeNodeDropzones( $scope.currentWorkflow.input_relationships[0].set1, $scope.currentWorkflow.input_relationships[0].set2 );
+  };
+
+  $scope.deleteAllMappings = function() {
+    $log.debug( "Deleting mappings ... ");
+
+    var nodePairsForDeletion = $scope.currentNodeRelationship.node_pairs;
+
+    // update node relationship
+    $scope.currentNodeRelationship.node_pairs = [];
+    NodeRelationship.update({uuid: $scope.currentNodeRelationship.uuid}, $scope.currentNodeRelationship, function(){
+      $log.debug("Removed all pairs from node mapping.");
+      $scope.createMapping();
+    }, function() {
+      $log.error( "Unable to remove all pairs from mapping " + $scope.currentNodeRelationship.name );
+      // TODO: show error message
+    });
+
+    // delete node pairs
+    // TODO: handle errors
+    for ( var i = 0; i < nodePairsForDeletion.length; ++i ) {
+      NodePair.delete({uuid: nodePairsForDeletion[i].split("/").reverse()[1] });
+    }
+
+    $scope.initializeNodeDropzones( $scope.currentWorkflow.input_relationships[0].set1, $scope.currentWorkflow.input_relationships[0].set2 );
   };
 
   $scope.loadMapping = function( index ) {
+    $log.debug( "Loading pair " + index + "... ");
+
     if ( $scope.currentNodeRelationship.node_pairs.length > index ) {      
       $scope.currentNodePair = NodePair.load_from_uri( { uri: decodeURIComponent( $scope.currentNodeRelationship.node_pairs[index].substring(1) ) }, function ( data ) {
-        console.log( data );
         $scope.updateNodeDropzone( 0, data.node1.split("/").reverse()[1] );
         $scope.updateNodeDropzone( 1, data.node2.split("/").reverse()[1] );
       }, function ( error ) {
@@ -222,7 +248,19 @@ angular.module('refineryNodeMapping', [
     }
   };
 
+  $scope.hasNextMapping = function () {
+    if ( $scope.currentNodeRelationship.node_pairs.length < 1 ) {
+      return false;
+    }    
+
+    return true;
+  };
+
   $scope.loadNextMapping = function() {
+    if ( !$scope.hasNextMapping() ) {
+      return;
+    }
+
     if ( $scope.currentNodeRelationship.node_pairs.length <= ++$scope.currentNodePairIndex ) {
       $scope.currentNodePairIndex = 0;
     }
@@ -230,6 +268,10 @@ angular.module('refineryNodeMapping', [
   };
 
   $scope.loadPreviousMapping = function() {
+    if ( !$scope.hasNextMapping() ) {
+      return;
+    }
+
     if ( 0 > --$scope.currentNodePairIndex ) {
       $scope.currentNodePairIndex = $scope.currentNodeRelationship.node_pairs.length - 1;
     }
@@ -351,54 +393,80 @@ angular.module('refineryNodeMapping', [
   });
 })
 
-.directive('attributeList', function() {
+.directive('diffAttributeList', function($log) {
   return {
-    template: '<ul><li ng-repeat="attribute in attributes">{{attribute.name}}: <b>{{attribute.value}}</b></li></ul>',
-    restrict: 'A',
-    scope: {
-      attributes: '='
-    },
-    //templateUrl: '/static/partials/attribute_list.html',
-  };
-})
-
-.directive('diffAttributeList', function() {
-  return {
-    //template: '<ul><li ng-repeat="attribute in diffAttributes">{{attribute.name}}: <b>{{attribute.valueSetA}}</b> vs <b>{{attribute.valueSetB}}</b></li></ul><ul><li ng-repeat="attribute in commonAttributes">{{attribute.name}}: <b>{{attribute.value}}</b></li></ul>',
+    templateUrl: '/static/partials/diff_attribute_list.html',
     restrict: 'A',
     scope: {
       setA: '=',
       setB: '='
     },
-    templateUrl: '/static/partials/diff_attribute_list.html',
     link: function (scope, elem, attrs) {        
 
         var updateDiff = function() {
           scope.diffAttributes = [];
           scope.commonAttributes = [];
+          
+          var i = 0;
 
-          for ( var i = 0; i < scope.setA.attributes.length; ++i ) {
-            if ( scope.setA.attributes[i].name === scope.setB.attributes[i].name ) {
-              if ( scope.setA.attributes[i].value === scope.setB.attributes[i].value ) {
-                scope.commonAttributes.push( { name: scope.setA.attributes[i].name, value: scope.setA.attributes[i].value });
+          $log.debug( "Updating diff lists ..." );
+
+          if ( scope.setA.attributes === null && scope.setB.attributes === null ) {
+            $log.debug( "Both sets empty" );            
+            return;
+          }
+
+          if ( scope.setB.attributes !== null && scope.setA.attributes !== null ) {
+            for ( i = 0; i < scope.setA.attributes.length; ++i ) {
+              if ( scope.setA.attributes[i].name === scope.setB.attributes[i].name ) {
+                if ( scope.setA.attributes[i].value === scope.setB.attributes[i].value ) {
+                  scope.commonAttributes.push( { name: scope.setA.attributes[i].name, value: scope.setA.attributes[i].value });
+                }
+                else {
+                  scope.diffAttributes.push( { name: scope.setA.attributes[i].name, valueSetA: scope.setA.attributes[i].value, valueSetB: scope.setB.attributes[i].value });
+                }
               }
-              else {
-                scope.diffAttributes.push( { name: scope.setA.attributes[i].name, valueSetA: scope.setA.attributes[i].value, valueSetB: scope.setB.attributes[i].value });
-              }
-            }
+            }          
+
+            return;
           }           
+
+          if ( scope.setA.attributes === null ) {
+            for ( i = 0; i < scope.setB.attributes.length; ++i ) {
+                  scope.commonAttributes.push( { name: scope.setB.attributes[i].name, value: scope.setB.attributes[i].value });
+            }      
+
+            return;                 
+          }
+          
+          if ( scope.setB.attributes === null ) {
+            for ( i = 0; i < scope.setA.attributes.length; ++i ) {
+                  scope.commonAttributes.push( { name: scope.setA.attributes[i].name, value: scope.setA.attributes[i].value });
+            }      
+
+            return;                 
+          }
+
         };
 
         scope.$watch('setA.attributes', function( oldVal, newVal ) {
+             if( oldVal && !newVal ) {
+               $log.debug( "Attribute setA initialized" );
+               updateDiff();
+             }
              if(newVal) {
-               console.log( "setA changed" );
+               $log.debug( "Attribute setA changed" );
                updateDiff();
              }
          });        
 
         scope.$watch('setB.attributes', function( oldVal, newVal ) {
+             if( oldVal && !newVal ) {
+               $log.debug( "Attribute setB initialized" );
+               updateDiff();
+             }
              if(newVal) {
-               console.log( "setB changed" );
+               $log.debug( "Attribute setB changed" );
                updateDiff();
              }
          });        
@@ -429,6 +497,15 @@ angular.module('refineryNodeMapping', [
 
 .controller('NodeRelationshipListCtrl', function($scope, $rootScope, $element, NodeRelationship) {
   'use strict';
+
+  $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
+    $scope.currentWorkflow = currentWorkflow;
+
+    $scope.currentNodeRelationship = null;
+
+    $rootScope.$emit("nodeRelationshipChangedEvent", $scope.currentNodeRelationship, undefined );
+  });  
+
 
   $scope.loadNodeRelationshipList = function( studyUuid, assayUuid ) {
     return NodeRelationship.get(
@@ -493,9 +570,6 @@ angular.module('refineryNodeMapping', [
     // FIXME: temp workaround - this should be handled through the event bus
     if ($scope.currentNodeRelationship) {
       $rootScope.$emit("nodeRelationshipChangedEvent", $scope.currentNodeRelationship, $scope.nodeRelationshipIndex);
-      // console.log($scope.currentNodeRelationship);
-      // analysisConfig.nodeRelationshipUuid = $scope.currentNodeRelationship.uuid;
-      // analysisConfig.nodeSetUuid = null;
     }
   };  
 

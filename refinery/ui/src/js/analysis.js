@@ -15,10 +15,18 @@ angular.module('refineryAnalysis', [])
     $scope.analysisConfig.nodeRelationshipUuid = null;
     $log.debug("new nodeset: " + $scope.analysisConfig.nodeSetUuid);
   });
+
   $scope.$onRootScope('nodeRelationshipChangedEvent', function(event, currentNodeRelationship) {
-    $scope.analysisConfig.nodeRelationshipUuid = currentNodeRelationship.uuid;   
+    if ( !currentNodeRelationship ) {
+      $scope.analysisConfig.nodeRelationshipUuid = null;
+      $log.debug("new noderel undefined" );
+    }
+    else {
+      $scope.analysisConfig.nodeRelationshipUuid = currentNodeRelationship.uuid;
+      $log.debug("new noderel: " + $scope.analysisConfig.nodeRelationshipUuid);
+    }
+
     $scope.analysisConfig.nodeSetUuid = null;
-    $log.debug("new noderel: " + $scope.analysisConfig.nodeRelationshipUuid);
   });
 
   $scope.launchAnalysis = function() {

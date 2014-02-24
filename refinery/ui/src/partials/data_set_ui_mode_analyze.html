@@ -26,7 +26,7 @@
       <label style="color: #278F63;" ng-hide="currentWorkflow.isSingleInput()"><b><i>{{currentWorkflow.getInputSet(2)}}<br/></i></b></label>
     </div>
 
-    <div ng-controller="NodeSetListApiCtrl" ng-show="currentWorkflow.isSingleInput()">
+    <div ng-controller="NodeSetListApiCtrl" ng-if="currentWorkflow.isSingleInput()">
       <select ui-select2 ng-model="nodesetIndex" ng-change="updateCurrentNodeSet()" style="width:100%" data-placeholder="Choose a file set">
         <option value=""></option>  <!-- required for showing placeholder text -->
         <option value="current_selection">Current Selection</option>  <!-- required for showing placeholder text -->
@@ -39,7 +39,7 @@
         <button class="btn btn-warning" ng-click="launchAnalysis()" ng-disabled="!(currentNodeSet && currentNodeSet.node_count > 0)" style="width: 100%">Launch Analysis</button>
       </div>
     </div>
-    <div ng-controller="NodeRelationshipListCtrl" ng-show="!currentWorkflow.isSingleInput()">
+    <div ng-controller="NodeRelationshipListCtrl" ng-if="!currentWorkflow.isSingleInput()">
       <select ui-select2 ng-model="nodeRelationshipIndex" ng-change="updateCurrentNodeRelationship()" style="width:100%" data-placeholder="Choose a file mapping">
         <option value=""></option>  <!-- required for showing placeholder text -->
         <option ng-repeat="nodeRelationship in nodeRelationshipList" value="{{$index}}">{{nodeRelationship.name}}</option>

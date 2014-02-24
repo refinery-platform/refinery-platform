@@ -31,7 +31,7 @@ angular.module('refineryWorkflows', [])
   );
 })
 
-.service("workflow", function() {
+.service("workflow", function($log) {
   'use strict';
 
   this.instance = null;

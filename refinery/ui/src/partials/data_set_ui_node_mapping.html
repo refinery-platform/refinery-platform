@@ -38,18 +38,17 @@
             <i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 10px; position: relative; top: 5px;"></i>
           </a>
         </div>
-
       </div>
     </div>
 
     <div class="row-fluid">
       <div class="span6">
         <div>
-          <button class="btn btn-mini" ng-click="loadPreviousMapping()"><i class="icon-backward"></i></button>
+          <button class="btn btn-mini" ng-disabled="!hasNextMapping()" ng-click="loadPreviousMapping()"><i class="icon-backward"></i></button>
           <button class="btn btn-mini" ng-disabled="currentNodePair == null" ng-click="createMapping()">New</button>
           <button class="btn btn-mini" ng-disabled="currentNodePair == null" ng-click="deleteMapping()">Delete Pair</button>
-          <button class="btn btn-mini" ng-disabled="currentNodePair == null">Delete All Pairs</button>
-          <button class="btn btn-mini "ng-click="loadNextMapping()"><i class="icon-forward"></i></button>
+          <button class="btn btn-mini" ng-disabled="currentNodePair == null" ng-click="deleteAllMappings()">Delete All Pairs</button>
+          <button class="btn btn-mini" ng-disabled="!hasNextMapping()" ng-click="loadNextMapping()"><i class="icon-forward"></i></button>
         </div>
       </div>
     </div>
@@ -59,9 +58,9 @@
       </p>
     </div>                        
 
-    <div class="row-fluid" ng-if="nodeDropzones[0].attributes != null && nodeDropzones[1].attributes != null">
-      <div diff-attribute-list set-a="nodeDropzones[0]" set-b="nodeDropzones[1]"></div>
-    </div>
+    <!-- <div class="row-fluid" ng-show="nodeDropzones[0].attributes != null || nodeDropzones[1].attributes != null"> -->
+    <div diff-attribute-list set-a="nodeDropzones[0]" set-b="nodeDropzones[1]"></div>
+    <!-- </div> -->
     <div class="row-fluid" ng-if="currentWorkflow">
       <div class="span6">      
         <div node-dropzone-index="0" class="well refinery-dnd-dropzone refinery-workflow-input-{{nodeDropzones[0].color}}" ng-class="" node-droppable droppable="true">
