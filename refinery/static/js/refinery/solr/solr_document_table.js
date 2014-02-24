@@ -230,7 +230,7 @@ SolrDocumentTable.prototype._renderTable = function( solrResponse ) {
 
 
 	$( ".refinery-dnd-handle" ).on( "dragstart", function( event ) {				
-		var uuid = event.srcElement.attributes['node-uuid'].value;
+		var uuid = event.originalEvent.srcElement.attributes['node-uuid'].value;
 		event.originalEvent.dataTransfer.setData('text/plain', JSON.stringify( { uuid: uuid, html: '<table class="table table-striped table-condensed" style="margin-bottom: 0px;">' + this.parentElement.parentElement.innerHTML + '</table>' } ) );
 	});	
 		
