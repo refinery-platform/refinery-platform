@@ -43,7 +43,7 @@ angular.module('refineryExternalToolStatus', [])
   return {
     //template: '<div>Workflow Engines: <span ng-if="isGalaxyUp">Up</span><span ng-if="!isGalaxyUp">Down</span>&nbsp;Solr: <span ng-if="isSolrUp">Up</span><span ng-if="!isSolrUp">Down</span>&nbsp;Celery: <span ng-if="isCeleryUp">Up</span><span ng-if="!isCeleryUp">Down</span></div>',
     //template: '<div><b>System Status:</b> {{systemStatus}}</div>',
-    templateUrl: '/static/partials/externaltoolstatus.html',
+    templateUrl: '/static/partials/external_tool_status.html',
     restrict: 'A',
   };
 })
