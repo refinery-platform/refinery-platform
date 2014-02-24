@@ -16,7 +16,7 @@ from django.core.mail import mail_admins, send_mail
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django_extensions.db.fields import UUIDField
@@ -410,8 +410,18 @@ class WorkflowEngine ( OwnableResource, ManageableResource ):
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
         )
+        
+@receiver(post_delete, sender=WorkflowEngine)
+def delete_associated_externaltoolstatus(sender, instance, **kwargs):
+    try:
+        
+        externaltool = ExternalToolStatus.objects.get(unique_instance_identifier=instance.instance.api_key)
+        externaltool.delete()
+    except:
+        logger.error("There's no ExternalToolStatus with that unique instance identifier")
+    
 
-                 
+         
 class DiskQuota ( SharableResource, ManageableResource ):
     # quota is given in bytes
     maximum = models.IntegerField()

@@ -574,17 +574,15 @@
 {% endblock %}
 
 {% block script %}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v3.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/d3/fisheye.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/underscore/underscore-min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/backbone/backbone-min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-relational/backbone-relational.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-tastypie/backbone-tastypie.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-marionette/backbone.marionette.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-ajaxcommands/backbone.ajaxcommands.js"></script>
-	<script type="text/javascript" src="{% static "vendor/select2/select2.js" %}"></script>
-    <!-- <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/node_pairing_analysis.js"></script> -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/d3/d3.v3.min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/d3/fisheye.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/underscore/underscore-min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/backbone/backbone-min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-relational/backbone-relational.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-tastypie/backbone-tastypie.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-marionette/backbone.marionette.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-ajaxcommands/backbone.ajaxcommands.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
 
 	<!-- adding spinner -->
 	<script language="javascript" type="text/javascript" src="{{ STATIC_URL }}js/spin/spin.min.js"></script>
@@ -644,37 +642,21 @@
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_document_count_view.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_pivot_matrix.js"></script>
   <script type="text/javascript" src="{% static "vendor/tipsy/src/javascripts/jquery.tipsy.js" %}"></script>
-
-	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
+  
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents_workflow.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/contents.js">var query;</script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/data_set_manager/data_set_configurator.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/node_set_manager.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/analysis_api_client.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/data_set_monitor.js"></script>
-
-	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TweenMax.min.js"></script>
-	<script type="text/javascript" src="{{ STATIC_URL }}js/gsap/jquery.gsap.min.js"></script>
+  
+  <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TweenMax.min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/jquery.gsap.min.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/easing/EasePack.min.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/plugins/CSSPlugin.min.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/plugins/ScrollToPlugin.min.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/gsap/TimelineMax.min.js"></script>
-	<script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/workflow_node_relationship.js"></script>
-
-  <!-- Note that jquery must be loaded before angular so that it doesn't use jqLite internally -->
-  <!--
- 	<script type="text/javascript" src="{% static "vendor/angular/angular.js" %}"></script> 	
-	<script type="text/javascript" src="{% static "vendor/angular-bootstrap/ui-bootstrap-tpls.js" %}"></script>
-	<script type="text/javascript" src="{% static "vendor/select2/select2.js" %}"></script>
-	<script type="text/javascript" src="{% static "vendor/angular-ui-select2/src/select2.js" %}"></script>
-	<script type="text/javascript" src="{% static "vendor/angular-resource/angular-resource.js" %}"></script>
-	<script type="text/javascript" src="{% static "vendor/angular-ui-router/release/angular-ui-router.js" %}"></script>
-	<script type="text/javascript" src="{% static "js/refinery.js" %}"></script>
-	<script type="text/javascript" src="{% static "js/node_mapping.js" %}"></script>
-	<script type="text/javascript" src="{% static "js/workflows.js" %}"></script>
-	<script type="text/javascript" src="{% static "js/analysis.js" %}"></script>
-	<script type="text/javascript" src="{% static "js/solr.js" %}"></script>
-	<script type="text/javascript" src="{% static "js/external_tool_status.js" %}"></script>
--->
+  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/workflow_node_relationship.js"></script>
 
 	<script type="application/javascript">
 
