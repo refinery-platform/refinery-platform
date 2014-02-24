@@ -19,7 +19,7 @@ module.exports = function(grunt) {
       js: [
         'select2/select2.min.js',
         'jquery/jquery.min.js',
-        'angular/angular.js',
+        'angular/angular.min.js',
         'angular-ui-select2/release/select2.min.js',
         'angular-bootstrap/ui-bootstrap-tpls.js',
         'angular-resource/angular-resource.js',
