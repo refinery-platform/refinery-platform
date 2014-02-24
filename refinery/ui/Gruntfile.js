@@ -22,7 +22,7 @@ module.exports = function(grunt) {
         'angular/angular.min.js',
         'angular-ui-select2/release/select2.min.js',
         'angular-bootstrap/ui-bootstrap-tpls.min.js',
-        'angular-resource/angular-resource.js',
+        'angular-resource/angular-resource.min.js',
         'angular-ui-router/release/angular-ui-router.js',
         'tipsy/src/javascripts/jquery.tipsy.js',
       ],
