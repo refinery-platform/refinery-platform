@@ -44,8 +44,11 @@
         <option value=""></option>  <!-- required for showing placeholder text -->
         <option ng-repeat="nodeRelationship in nodeRelationshipList" value="{{$index}}">{{nodeRelationship.name}}</option>
       </select>
-      <a class="btn btn-mini" ng-click='createNodeRelationship( "Nils 1", "Test", "1-N" )'>New ...</a>
-      <a class="btn btn-mini" ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current )" ng-click='deleteNodeRelationship( currentNodeRelationship )'>Delete</a>
+
+      <a class="btn btn-mini" ng-click="openNewMappingDialog()">New ...</a>
+      <a class="btn btn-mini" ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current )" ng-click="openRenameMappingDialog( currentNodeRelationship )">Rename</a>
+      <!-- <a class="btn btn-mini" ng-click='createNodeRelationship( "Nils 1", "", "1-N" )'>New ...</a> -->
+      <a class="btn btn-mini" ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current )" ng-click='openDeleteMappingDialog( currentNodeRelationship )'>Delete</a> 
       <div>
         <p></p>
       </div>

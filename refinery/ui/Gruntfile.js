@@ -24,6 +24,8 @@ module.exports = function(grunt) {
         'angular-bootstrap/ui-bootstrap-tpls.min.js',
         'angular-resource/angular-resource.min.js',
         'angular-ui-router/release/angular-ui-router.min.js',
+        'angular-bootstrap/ui-bootstrap-tpls.min.js',
+        'angular-bootstrap/ui-bootstrap.min.js',
         'tipsy/src/javascripts/jquery.tipsy.js',
       ],
       css: [

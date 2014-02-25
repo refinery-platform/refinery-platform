@@ -89,7 +89,7 @@ class NodeResource(ModelResource):
         resource_name = 'node'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
-        authorization = GuardianAuthorization()
+        authorization = Authorization() #GuardianAuthorization()
         allowed_methods = ["get" ]
         fields = ['name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay' ]
         filtering = { 'uuid': ALL }
