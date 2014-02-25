@@ -108,30 +108,45 @@ angular.module('refineryNodeRelationship', [
   };
 
   var successCreate = function( response ) {
-    $scope.nodeRelationshipIndex = 0;
-    $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid );
-    $scope.updateCurrentNodeRelationship();
+    $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid, response );
   };
 
   var successUpdate = function( response ) {
-    $scope.nodeRelationshipIndex = 0;
-    $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid );
-    $scope.updateCurrentNodeRelationship();
+    $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid, response );
   };
 
-  $scope.loadNodeRelationshipList = function( studyUuid, assayUuid ) {
+  $scope.loadNodeRelationshipList = function( studyUuid, assayUuid, selectedNodeRelationship ) {
     return nodeRelationshipResource.get(
         {study__uuid: studyUuid, assay__uuid: assayUuid, order_by: [ "-is_current", "name" ] },
         function( response ) {
           // check if there is a "current mapping" in the list (this would be the first entry due to the ordering)
           if ( ( ( response.objects.length > 0 ) && ( !response.objects[0].is_current ) ) || ( response.objects.length === 0 ) ) {
             nodeRelationshipService.createCurrentNodeRelationship( "Current Mapping", "1-N", function() { $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid );
-}, function( response ){ alert( "Error!" ); console.log( response ); } );
+}, function( response ){ $log.error( response ); } );
           }
 
           $scope.nodeRelationshipList = response.objects;
-          $log.debug( "# of node relationships: " + $scope.nodeRelationshipList.length );
+
+          // if a node relationship should be selected: find its index
+          if ( selectedNodeRelationship ) {
+            $scope.nodeRelationshipIndex = $scope.findNodeRelationshipListIndex( selectedNodeRelationship );
+            
+            // if node relationship was found in list: fire update
+            if ( selectedNodeRelationship >= 0 ) {            
+              $scope.updateCurrentNodeRelationship();            
+            }
+          }
       });    
+  };
+
+  $scope.findNodeRelationshipListIndex = function( nodeRelationship ) {
+    for ( var i = 0; i < $scope.nodeRelationshipList.length; ++i ) {
+      if ( $scope.nodeRelationshipList[i].uuid === nodeRelationship.uuid ) {
+        return ( i );
+      }
+    }
+
+    return -1;
   };
 
   $scope.updateCurrentNodeRelationship = function() {
@@ -180,7 +195,8 @@ angular.module('refineryNodeRelationship', [
     modalInstance.result.then(function (val) {
       $scope.val = val;
       nodeRelationship.name = val;
-      nodeRelationshipResource.update({uuid: nodeRelationship.uuid}, nodeRelationship, function( response ){ $log.debug( "Success!" ); $log.debug( response ); }, function( response ){ $log.error( "Error!" ); $log.error( response ); });
+      nodeRelationshipService.updateNodeRelationship( nodeRelationship, successUpdate, function( response ){ $log.error( "Error!" ); $log.error( response ); } );
+
     }, function () {
       $log.info('Modal dismissed at: ' + new Date());
     });
