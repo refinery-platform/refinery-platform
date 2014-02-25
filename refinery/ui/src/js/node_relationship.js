@@ -58,10 +58,23 @@ angular.module('refineryNodeRelationship', [
     }
   };
 
+  var updateNodeRelationship = function( nodeRelationship, success, error ) {
+    $log.debug( 'Updating node relationship ' + nodeRelationship.name + ' ...' );
+    if ( nodeRelationship.is_current ) {
+      $log.error( 'Cannot update "current" node relationship.' );
+    }
+    else {
+      nodeRelationshipResource.update({uuid: nodeRelationship.uuid}, nodeRelationship, success, error );
+    }
+  };
+
+
+
   return ({
     createCurrentNodeRelationship: createCurrentNodeRelationship,
     createNodeRelationship: createNodeRelationship,
-    deleteNodeRelationship: deleteNodeRelationship
+    deleteNodeRelationship: deleteNodeRelationship,
+    updateNodeRelationship: updateNodeRelationship
   });
 })
 
@@ -95,14 +108,15 @@ angular.module('refineryNodeRelationship', [
   };
 
   var successCreate = function( response ) {
-    // add new current mapping to list
-    //$scope.nodeRelationshipList.unshift( response );
-    //$scope.currentNodeRelationship = response;
-    // update the current node relationship (fires event)
     $scope.nodeRelationshipIndex = 0;
     $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid );
     $scope.updateCurrentNodeRelationship();
+  };
 
+  var successUpdate = function( response ) {
+    $scope.nodeRelationshipIndex = 0;
+    $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid );
+    $scope.updateCurrentNodeRelationship();
   };
 
   $scope.loadNodeRelationshipList = function( studyUuid, assayUuid ) {
@@ -111,7 +125,8 @@ angular.module('refineryNodeRelationship', [
         function( response ) {
           // check if there is a "current mapping" in the list (this would be the first entry due to the ordering)
           if ( ( ( response.objects.length > 0 ) && ( !response.objects[0].is_current ) ) || ( response.objects.length === 0 ) ) {
-            $scope.createCurrentNodeRelationship( "Current Mapping", "1-N" );
+            nodeRelationshipService.createCurrentNodeRelationship( "Current Mapping", "1-N", function() { $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid );
+}, function( response ){ alert( "Error!" ); console.log( response ); } );
           }
 
           $scope.nodeRelationshipList = response.objects;

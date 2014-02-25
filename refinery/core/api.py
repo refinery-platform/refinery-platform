@@ -84,6 +84,10 @@ class ProjectResource(ModelResource):
 
 
 class NodeResource(ModelResource):
+    parents = fields.ToManyField( 'core.api.NodeResource', 'parents' )
+    study = fields.ToOneField( 'data_set_manager.api.StudyResource', 'study' )
+    assay = fields.ToOneField( 'data_set_manager.api.AssayResource', 'assay', null=True )
+
     class Meta:
         queryset = Node.objects.all()
         resource_name = 'node'
@@ -91,8 +95,8 @@ class NodeResource(ModelResource):
         authentication = SessionAuthentication()
         authorization = Authorization() #GuardianAuthorization()
         allowed_methods = ["get" ]
-        fields = ['name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay' ]
-        filtering = { 'uuid': ALL }
+        fields = ['name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay', 'children', 'type', 'analysis_uuid' ]
+        filtering = { 'uuid': ALL, 'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS }
         #filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
 
     def prepend_urls(self):
