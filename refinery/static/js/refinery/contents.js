@@ -347,12 +347,6 @@ $(document).ready(function() {
 
 		client.initialize( query, true );
 		client.initialize( annotationQuery, true );
-
-
-		//INITIALIZING node relationship bundle
-		//console.log("after query initialized");
-		nrApp.start();
-
 	});
 
 
