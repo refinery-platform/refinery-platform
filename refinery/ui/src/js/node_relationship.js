@@ -151,7 +151,6 @@ angular.module('refineryNodeRelationship', [
 
   $scope.updateCurrentNodeRelationship = function() {
     $scope.currentNodeRelationship = $scope.nodeRelationshipList[$scope.nodeRelationshipIndex];  
-    // FIXME: temp workaround - this should be handled through the event bus
     if ($scope.currentNodeRelationship) {
       $rootScope.$emit("nodeRelationshipChangedEvent", $scope.currentNodeRelationship, $scope.nodeRelationshipIndex);
     }
