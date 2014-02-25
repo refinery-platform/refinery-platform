@@ -577,7 +577,7 @@ class Analysis(OwnableResource):
         verbose_name_plural = "analyses"
 
     def __unicode__(self):
-        return self.name + " - " + self.summary
+        return self.name + " - " + self.get_owner().username + " - " + self.summary
 
     class Meta:
         verbose_name = "analysis"
