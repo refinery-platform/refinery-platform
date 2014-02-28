@@ -92,4 +92,10 @@ angular.module('refineryWorkflows', [])
       }
     }
   };
+
+  this.getGalaxyInstanceId = function() {
+    if (this.isAvailable()) {
+      return this.instance.galaxy_instance_identifier;
+    }
+  };
 });
