@@ -1,6 +1,6 @@
 angular.module('refineryAnalysis', [])
 
-.controller('AnalysisCtrl', function($scope, $rootScope, $http, $window, $log, workflow) {
+.controller('AnalysisCtrl', function($scope, $rootScope, $http, $window, $log, workflow, externalToolStatusService) {
   'use strict';
 
   $scope.analysisConfig = {
@@ -10,6 +10,10 @@ angular.module('refineryAnalysis', [])
     nodeRelationshipUuid: null
   };
 
+  $scope.checkGalaxyStatus = function() {
+    $scope.galaxyStatus = externalToolStatusService.isGalaxyUp();
+  };
+
   $scope.$onRootScope('nodeSetChangedEvent', function(event, currentNodeSet) {
     $scope.analysisConfig.nodeSetUuid = currentNodeSet.uuid;
     $scope.analysisConfig.nodeRelationshipUuid = null;
@@ -17,9 +21,9 @@ angular.module('refineryAnalysis', [])
   });
 
   $scope.$onRootScope('nodeRelationshipChangedEvent', function(event, currentNodeRelationship) {
-    if ( !currentNodeRelationship ) {
+    if (!currentNodeRelationship) {
       $scope.analysisConfig.nodeRelationshipUuid = null;
-      $log.debug("new noderel undefined" );
+      $log.debug("new noderel undefined");
     }
     else {
       $scope.analysisConfig.nodeRelationshipUuid = currentNodeRelationship.uuid;
@@ -31,7 +35,6 @@ angular.module('refineryAnalysis', [])
 
   $scope.launchAnalysis = function() {
     $scope.analysisConfig.workflowUuid = workflow.getUuid();
-    $log.debug("new workflow: " + $scope.analysisConfig.workflowUuid);
 
     $http({
       method: 'POST',
