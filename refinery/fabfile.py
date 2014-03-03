@@ -548,6 +548,7 @@ def update_refinery():
     with cd(os.path.join(env.refinery_project_dir)):
         run("git pull")
     with cd(os.path.join(env.refinery_project_dir, "ui")):
+        run("bower install")
         run("grunt")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("./manage.py syncdb --migrate")

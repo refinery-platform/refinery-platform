@@ -36,7 +36,10 @@
         <p></p>
       </div>
       <div ng-controller="AnalysisCtrl">
-        <button class="btn btn-warning" ng-click="launchAnalysis()" ng-disabled="!(currentNodeSet && currentNodeSet.node_count > 0)" style="width: 100%">Launch Analysis</button>
+        <button class="btn btn-warning" ng-click="launchAnalysis()" ng-disabled="!(currentNodeSet && currentNodeSet.node_count > 0 && galaxyStatus)" style="width: 100%">Launch Analysis</button>
+        <div ng-hide="galaxyStatus">
+          Galaxy is down!
+        </div>
       </div>
     </div>
     <div ng-controller="NodeRelationshipListCtrl" ng-if="!currentWorkflow.isSingleInput()">
@@ -46,14 +49,17 @@
       </select>
 
       <a class="btn btn-mini" ng-click="openNewMappingDialog()">New ...</a>
-      <a class="btn btn-mini" ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current )" ng-click="openRenameMappingDialog( currentNodeRelationship )">Rename</a>
+      <a class="btn btn-mini" ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current)" ng-click="openRenameMappingDialog(currentNodeRelationship)">Rename</a>
       <!-- <a class="btn btn-mini" ng-click='createNodeRelationship( "Nils 1", "", "1-N" )'>New ...</a> -->
-      <a class="btn btn-mini" ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current )" ng-click='openDeleteMappingDialog( currentNodeRelationship )'>Delete</a> 
+      <a class="btn btn-mini" ng-disabled="!(currentNodeRelationship && !currentNodeRelationship.is_current)" ng-click='openDeleteMappingDialog(currentNodeRelationship)'>Delete</a> 
       <div>
         <p></p>
       </div>
       <div ng-controller="AnalysisCtrl">
-        <button class="btn btn-warning" ng-click="launchAnalysis()" ng-disabled="!(currentNodeRelationship && currentNodeRelationship.node_pairs.length > 0)" style="width: 100%">Launch Analysis</button>
+        <button class="btn btn-warning" ng-click="launchAnalysis()" ng-disabled="!(currentNodeRelationship && currentNodeRelationship.node_pairs.length > 0 && galaxyStatus)" style="width: 100%">Launch Analysis</button>
+        <div ng-hide="galaxyStatus">
+          Galaxy is down!
+        </div>
       </div>
     </div>
   </div>

@@ -306,6 +306,7 @@ class WorkflowResource(ModelResource):
                 logger.error("Failed to decode workflow graph into dictionary for workflow " + str(bundle.obj) + ".")
                 # don't include in response if error occurs
         bundle.data['author'] = bundle.obj.get_owner()
+        bundle.data['galaxy_instance_identifier'] = bundle.obj.workflow_engine.instance.api_key
         return bundle
 
         

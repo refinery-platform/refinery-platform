@@ -265,12 +265,12 @@ def data_set_slug(request,slug):
     return data_set(request,d.uuid)
 
 
-def data_set(request,uuid):    
-    data_set = get_object_or_404( DataSet, uuid=uuid )
+def data_set(request, data_set_uuid, analysis_uuid=None):
+    data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
     public_group = ExtendedGroup.objects.public_group()
-    
-    if not request.user.has_perm( 'core.read_dataset', data_set ):
-        if not 'read_dataset' in get_perms( public_group, data_set ):
+
+    if not request.user.has_perm('core.read_dataset', data_set):
+        if not 'read_dataset' in get_perms(public_group, data_set):
             if request.user.is_authenticated():
                 return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "view this data set"}))
             else:
@@ -295,28 +295,29 @@ def data_set(request,uuid):
     
     try:
         if investigation.isarchive_file is not None:
-            isatab_archive = FileStoreItem.objects.get( uuid=investigation.isarchive_file )
+            isatab_archive = FileStoreItem.objects.get(uuid=investigation.isarchive_file)
     except:
         pass
 
     try:
         if investigation.pre_isarchive_file is not None:
-            pre_isatab_archive = FileStoreItem.objects.get( uuid=investigation.pre_isarchive_file )
+            pre_isatab_archive = FileStoreItem.objects.get(uuid=investigation.pre_isarchive_file)
     except:
         pass
-        
+
     return render_to_response('core/data_set.html', 
                               {
-                                'data_set': data_set, 
+                                "data_set": data_set,
+                                "analysis_uuid": analysis_uuid,
                                 "studies": studies,
                                 "study_uuid": study_uuid,
                                 "assay_uuid": assay_uuid,
-                                "has_change_dataset_permission": 'change_dataset' in get_perms( request.user, data_set ),
+                                "has_change_dataset_permission": 'change_dataset' in get_perms(request.user, data_set),
                                 "workflows": workflows,
                                 "isatab_archive": isatab_archive,
                                 "pre_isatab_archive": pre_isatab_archive,                             
                               },
-                              context_instance=RequestContext( request ) )
+                              context_instance=RequestContext(request))
 
 
 def data_set_edit(request,uuid):    
