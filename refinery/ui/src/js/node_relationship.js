@@ -68,8 +68,6 @@ angular.module('refineryNodeRelationship', [
     }
   };
 
-
-
   return ({
     createCurrentNodeRelationship: createCurrentNodeRelationship,
     createNodeRelationship: createNodeRelationship,
@@ -116,27 +114,31 @@ angular.module('refineryNodeRelationship', [
   };
 
   $scope.loadNodeRelationshipList = function( studyUuid, assayUuid, selectedNodeRelationship ) {
-    return nodeRelationshipResource.get(
-        {study__uuid: studyUuid, assay__uuid: assayUuid, order_by: [ "-is_current", "name" ] },
-        function( response ) {
-          // check if there is a "current mapping" in the list (this would be the first entry due to the ordering)
-          if ( ( ( response.objects.length > 0 ) && ( !response.objects[0].is_current ) ) || ( response.objects.length === 0 ) ) {
-            nodeRelationshipService.createCurrentNodeRelationship( "Current Mapping", "1-N", function() { $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid );
-}, function( response ){ $log.error( response ); } );
-          }
+    return nodeRelationshipResource.get({ 
+        study__uuid: studyUuid,
+        assay__uuid: assayUuid,
+        order_by: [ "-is_current", "name" ]
+      },      
+      function( response ) {
+        // check if there is a "current mapping" in the list (this would be the first entry due to the ordering)
+        if ( ( ( response.objects.length > 0 ) && ( !response.objects[0].is_current ) ) || ( response.objects.length === 0 ) ) {
+          nodeRelationshipService.createCurrentNodeRelationship( "Current Mapping", "1-N", 
+            function() { $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid ); },
+            function( response ){ $log.error( response ); } );
+        }
 
-          $scope.nodeRelationshipList = response.objects;
+        $scope.nodeRelationshipList = response.objects;
 
-          // if a node relationship should be selected: find its index
-          if ( selectedNodeRelationship ) {
-            $scope.nodeRelationshipIndex = $scope.findNodeRelationshipListIndex( selectedNodeRelationship );
-            
-            // if node relationship was found in list: fire update
-            if ( selectedNodeRelationship >= 0 ) {            
-              $scope.updateCurrentNodeRelationship();            
-            }
+        // if a node relationship should be selected: find its index
+        if ( selectedNodeRelationship ) {
+          $scope.nodeRelationshipIndex = $scope.findNodeRelationshipListIndex( selectedNodeRelationship );
+          
+          // if node relationship was found in list: fire update
+          if ( selectedNodeRelationship >= 0 ) {            
+            $scope.updateCurrentNodeRelationship();            
           }
-      });    
+        }
+    });
   };
 
   $scope.findNodeRelationshipListIndex = function( nodeRelationship ) {
