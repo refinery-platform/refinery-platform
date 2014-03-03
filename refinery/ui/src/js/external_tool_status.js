@@ -52,7 +52,7 @@ angular.module('refineryExternalToolStatus', [])
   'use strict';
 
   return $resource(
-    '/api/v1/externaltoolstatus', {
+    '/api/v1/externaltoolstatus/', {
       format: 'json'
     }
   );
