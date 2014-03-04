@@ -146,7 +146,6 @@ NodeSetManager.prototype.createUpdateUrl = function( nodeSet ) {
 	var self = this;
 		
 	var url = self.apiBaseUrl + self.apiEndpoint + "/" + nodeSet.uuid + "/";		
-	console.log( url );
 	return url;		
 };
 
@@ -200,8 +199,6 @@ NodeSetManager.prototype.updateState = function( state, callback ) {
 	 dataType: "json",
   	 processData:  false,     
      success: function( result ) {
-     		console.log( result );
-     		alert( "Put successful!" );     	
 	     	if ( $.isEmptyObject( result ) ) {
 	     		// do nothing
 	     		return;
@@ -242,7 +239,7 @@ NodeSetManager.prototype.getList = function( callback, errorCallback ) {
 	     	
 	     	self.list = result;    	     	     	
 
-	     	if ( self.list.objects[0].is_current ) {
+	     	if ( self.list.objects.length > 0 && self.list.objects[0].is_current ) {
 	     		self.currentSelectionNodeSet = self.list.objects[0];
 	     		console.log( "Current Selection found:" );
 	     		console.log(  self.currentSelectionNodeSet );

@@ -151,13 +151,20 @@ $(document).ready(function() {
 
 
 		clientCommands.addHandler( SOLR_QUERY_UPDATED_COMMAND, function( arguments ){
-			//console.log( SOLR_QUERY_UPDATED_COMMAND + ' executed' );
-			//console.log( arguments );
+			console.log( SOLR_QUERY_UPDATED_COMMAND + ' executed' );
 
 			// update global query strings
 			if ( !showAnnotation ) {
 				dataQueryString = client.createUnpaginatedUrl( query, SOLR_SELECTION_QUERY )
 				annotationQueryString = client.createUnpaginatedUrl( annotationQuery, SOLR_SELECTION_QUERY );
+
+				if ( nodeSetManager.currentSelectionNodeSet != null ) {
+					nodeSetManager.currentSelectionNodeSet.solr_query = client.createUrl( query, SOLR_FULL_QUERY );
+					nodeSetManager.currentSelectionNodeSet.solr_query_components = query.serialize();
+					nodeSetManager.currentSelectionNodeSet.node_count = query.getCurrentDocumentCount();
+					nodeSetManager.updateState( nodeSetManager.currentSelectionNodeSet );
+					console.log( "Updated current selection node set (facet selection).");
+				}
 			}
 			else {
 				dataQueryString = client.createUnpaginatedUrl( dataQuery, SOLR_SELECTION_QUERY );
@@ -196,6 +203,14 @@ $(document).ready(function() {
 			if ( !showAnnotation ) {
 				dataQueryString = client.createUnpaginatedUrl( query, SOLR_SELECTION_QUERY )
 				annotationQueryString = client.createUnpaginatedUrl( annotationQuery, SOLR_SELECTION_QUERY );
+
+				if ( nodeSetManager.currentSelectionNodeSet != null ) {
+					nodeSetManager.currentSelectionNodeSet.solr_query = client.createUrl( query, SOLR_FULL_QUERY );
+					nodeSetManager.currentSelectionNodeSet.solr_query_components = query.serialize();
+					nodeSetManager.currentSelectionNodeSet.node_count = query.getCurrentDocumentCount();
+					nodeSetManager.updateState( nodeSetManager.currentSelectionNodeSet );
+					console.log( "Updated current selection node set (document selection).");
+				}
 			}
 			else {
 				dataQueryString = client.createUnpaginatedUrl( dataQuery, SOLR_SELECTION_QUERY );
@@ -263,19 +278,6 @@ $(document).ready(function() {
 			query.clearDocumentSelection();
 			query.setDocumentSelectionBlacklistMode( true );
 			client.run( query, SOLR_FULL_QUERY );
-
-			if ( nodeSetManager.currentSelectionNodeSet != null ) {
-				var solr_query_components = query.serialize();
-				var solr_query = client.createUrl( query, SOLR_FULL_QUERY );
-
-				nodeSetManager.currentSelectionNodeSet.query = solr_query;
-				nodeSetManager.currentSelectionNodeSet.queryComponents = solr_query_components;
-				nodeSetManager.currentSelectionNodeSet.node_count = query.getCurrentDocumentCount();
-
-				nodeSetManager.updateState( nodeSetManager.currentSelectionNodeSet );
-				console.log( "Updated current selection node set.");
-				console.log( nodeSetManager.currentSelectionNodeSet);
-			}
 
 			// clone query to update pivot matrix view
 			pivotQuery = query.clone();
