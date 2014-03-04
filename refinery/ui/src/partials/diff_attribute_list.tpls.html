@@ -1,0 +1,24 @@
+<table class="table table-striped table-condensed">
+	<tr ng-if="setA.attributes.length > 0 && !setB.attributes ">
+		<td></td>
+		<td colspan=2 class="refinery-dnd-dropzone refinery-workflow-input-{{setA.color}}"><b>{{setA["name"]}}</b></td>
+	</tr>
+	<tr ng-if="setB.attributes.length > 0 && !setA.attributes ">
+		<td></td>
+		<td colspan=2 class="refinery-dnd-dropzone refinery-workflow-input-{{setB.color}}"><b>{{setB["name"]}}</b></td>
+	</tr>
+	<tr ng-if="diffAttributes.length > 0">
+		<td></td>
+		<td class="refinery-dnd-dropzone refinery-workflow-input-{{setA.color}}"><b>{{setA["name"]}}</b></td>
+		<td class="refinery-dnd-dropzone refinery-workflow-input-{{setB.color}}"><b>{{setB["name"]}}</b></td>
+	</tr>
+	<tr ng-if="diffAttributes.length > 0" ng-repeat="attribute in diffAttributes">
+		<td>{{attribute.name}}</td>
+		<td><b>{{attribute.valueSetA}}</b></td>
+		<td><b>{{attribute.valueSetB}}</b></td>
+	</tr>
+	<tr ng-if="commonAttributes.length > 0">
+		<td>Shared</td>
+		<td colspan="2"> <span ng-repeat="attribute in commonAttributes">{{attribute.name}}: <b>{{attribute.value}}</b>,&nbsp;</span>
+	</tr>
+</table>
