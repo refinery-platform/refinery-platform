@@ -179,9 +179,9 @@
 			    <tr>
 			    	<td>
 			    		{% if analysis.status == "SUCCESS" %}
-			    		<a href="{% url "data_set_analysis" analysis.data_set.uuid analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
+				    		<a href="{% url "data_set_analysis" analysis.data_set.uuid analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
 			    		{% else %}
-			    		<a href="{% url "analysis_status" analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
+				    		<a href="{% url "analysis_status" analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
 			    		{% endif %}
 			    	</td>
 			    	<td>
@@ -214,8 +214,11 @@
 			{% for analysis in project.analyses.all %}
 			    <tr>
 			    	<td>
-			    		<!-- <a href="projects/{{ project.uuid }}/analyses/{{ analysis.uuid }}">{{ analysis.name }}</a> - {{analysis.summary}} -->
-			    		<a href="{% url "analysis_status" analysis.uuid %}">{{ analysis.name }}</a> - {{analysis.summary}}
+			    		{% if analysis.status == "SUCCESS" %}
+				    		<a href="{% url "data_set_analysis" analysis.data_set.uuid analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
+			    		{% else %}
+				    		<a href="{% url "analysis_status" analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
+			    		{% endif %}
 			    	</td>
 				    <td>
 						<span id="status-{{ analysis.uuid }}"></span>
@@ -314,7 +317,7 @@
 						$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge badge-info\"><i class=\"icon-ok\"></i></span>" );
 					}
 					else {
-						$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge badge-important\"><i class=\"icon-warning-sign\"></i></span>" );						
+						$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge badge-info\"><i class=\"icon-warning-sign\"></i></span>" );						
 					}
 					
 					// analysis has finished successfully - no more monitoring required
