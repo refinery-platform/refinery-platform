@@ -3,8 +3,6 @@ angular.module('refineryExternalToolStatus', [])
 
 .controller('ExternalToolStatusController', function(externalToolStatusService, $scope, $timeout, $log) {
 
-  //console.log( externalToolStatusService );
-
   (function tick() {
       $scope.isSolrUp = externalToolStatusService.isSolrUp();
       $scope.isCeleryUp = externalToolStatusService.isCeleryUp();
@@ -41,9 +39,7 @@ angular.module('refineryExternalToolStatus', [])
 
 .directive('externaltoolstatus', function(externalToolStatusService, $log) {
   return {
-    //template: '<div>Workflow Engines: <span ng-if="isGalaxyUp">Up</span><span ng-if="!isGalaxyUp">Down</span>&nbsp;Solr: <span ng-if="isSolrUp">Up</span><span ng-if="!isSolrUp">Down</span>&nbsp;Celery: <span ng-if="isCeleryUp">Up</span><span ng-if="!isCeleryUp">Down</span></div>',
-    //template: '<div><b>System Status:</b> {{systemStatus}}</div>',
-    templateUrl: '/static/partials/external_tool_status.html',
+    templateUrl: '/static/partials/external_tool_status.tpls.html',
     restrict: 'A',
   };
 })
