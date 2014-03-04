@@ -178,7 +178,11 @@
 			{% for analysis in unassigned_analyses.all %}
 			    <tr>
 			    	<td>
+			    		{% if analysis.status == "SUCCESS" %}
+			    		<a href="{% url "data_set_analysis" analysis.data_set.uuid analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
+			    		{% else %}
 			    		<a href="{% url "analysis_status" analysis.uuid %}">{{ analysis.name }} {{analysis.workflow.type}}</a>
+			    		{% endif %}
 			    	</td>
 			    	<td>
 			    		<span id="analysis-{{ analysis.uuid }}-status"></span>
@@ -304,8 +308,14 @@
 				
 				callbacks["{{ analysis.uuid }}"] = function(){ monitors["{{ analysis.uuid }}"].getAnalysisProgress( function( percentDone ) {
 					$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge\"><i class=\"icon-cog icon-spin\"></i>&nbsp;" + percentDone + "</span>" );
-				}, function() {
-					$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge badge-info\"><i class=\"icon-ok\"></i></span>" );
+				}, function( result ) {
+					console.log( result );
+					if ( result.overall === 'SUCCESS' ) {
+						$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge badge-info\"><i class=\"icon-ok\"></i></span>" );
+					}
+					else {
+						$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge badge-important\"><i class=\"icon-warning-sign\"></i></span>" );						
+					}
 					
 					// analysis has finished successfully - no more monitoring required
 					clearInterval( intervalIds["{{ analysis.uuid }}"] );
