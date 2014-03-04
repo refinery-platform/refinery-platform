@@ -19,9 +19,11 @@ var dataSetNodeTypes = ['"Raw Data File"', '"Derived Data File"', '"Array Data F
 var dataQueryString = undefined;
 var annotationQueryString = undefined;
 
-
 var currentStudyUuid = externalStudyUuid;
+var currentStudyId = externalStudyId;
 var currentAssayUuid = externalAssayUuid;
+var currentAssayId = externalAssayId;
+var currentAnalysisUuid = analysisUuid;
 
 $(document).ready(function() {
 	configurator = new DataSetConfigurator( externalStudyUuid, externalAssayUuid, "configurator-panel", REFINERY_API_BASE_URL, csrf_token );
@@ -43,6 +45,14 @@ $(document).ready(function() {
 	configurator.initialize( function() {
 		query = new SolrQuery( configurator, queryCommands );
 		query.initialize();
+
+		if ( analysisUuid != 'None' ) {
+			console.log( "Setting analysis UUID to " + analysisUuid );
+			query.updateFacetSelection( 'REFINERY_ANALYSIS_UUID_' + externalStudyId + '_' + externalAssayId + '_s', analysisUuid, true );
+		}
+		else {
+			console.log( "No analysis UUID provided." );
+		}
 		
 		dataSetMonitor = new DataSetMonitor( dataSetUuid, REFINERY_API_BASE_URL, csrf_token, dataSetMonitorCommands );
 		dataSetMonitor.initialize();
@@ -358,8 +368,9 @@ $(document).ready(function() {
 			client.run( query, SOLR_FULL_QUERY );
 		});
 
-		client.initialize( query, true );
-		client.initialize( annotationQuery, true );
+		// do not reset query before execution (otherwise presets such as analysis UUID are lost)
+		client.initialize( query, false );
+		client.initialize( annotationQuery, false );
 	});
 
 

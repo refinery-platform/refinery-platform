@@ -287,7 +287,9 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
         workflows = Workflow.objects.all()
     
     study_uuid = studies[0].uuid
+    study_id = studies[0].id # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
     assay_uuid = studies[0].assay_set.all()[0].uuid
+    assay_id = studies[0].assay_set.all()[0].id # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
     
     # TODO: catch errors
     isatab_archive = None
@@ -311,7 +313,9 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
                                 "analysis_uuid": analysis_uuid,
                                 "studies": studies,
                                 "study_uuid": study_uuid,
+                                "study_id": study_id,
                                 "assay_uuid": assay_uuid,
+                                "assay_id": assay_id,
                                 "has_change_dataset_permission": 'change_dataset' in get_perms(request.user, data_set),
                                 "workflows": workflows,
                                 "isatab_archive": isatab_archive,
