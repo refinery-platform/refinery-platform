@@ -96,7 +96,7 @@
 			}
 		})();		
 				
-		monitor = new AnalysisMonitor("{{ uuid }}", document.location.protocol + "//" + document.location.host, "{% url 'analysis' statuses.analysis.uuid %}", "{{ csrf_token }}");
+		monitor = new AnalysisMonitor("{{ uuid }}", document.location.protocol + "//" + document.location.host, "{% url 'data_set_analysis' statuses.analysis.data_set.uuid statuses.analysis.uuid %}", "{{ csrf_token }}");
 		monitor.getUpdate();
 		
 		var timerId = setInterval( function(){ monitor.getUpdate(); }, 3000 );
