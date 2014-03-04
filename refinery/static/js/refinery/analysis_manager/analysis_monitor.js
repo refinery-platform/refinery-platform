@@ -293,7 +293,7 @@ AnalysisMonitor.prototype.getAnalysisProgress = function( callbackRunning, callb
 				}
 				else {
     	            if (result.overall == 'FAILURE') {
-    	                callbackFinished();
+    	                callbackFinished( result );
     	            }
     	            else {
     	                callbackRunning("0%");
@@ -301,7 +301,7 @@ AnalysisMonitor.prototype.getAnalysisProgress = function( callbackRunning, callb
 				}
 			}
 			else {
-				callbackFinished();
+				callbackFinished( result );
 			}
     	}
 	});
