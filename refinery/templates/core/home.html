@@ -312,7 +312,6 @@
 				callbacks["{{ analysis.uuid }}"] = function(){ monitors["{{ analysis.uuid }}"].getAnalysisProgress( function( percentDone ) {
 					$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge\"><i class=\"icon-cog icon-spin\"></i>&nbsp;" + percentDone + "</span>" );
 				}, function( result ) {
-					console.log( result );
 					if ( result.overall === 'SUCCESS' ) {
 						$( "#analysis-{{ analysis.uuid }}-status" ).html( "<span class=\"badge badge-info\"><i class=\"icon-ok\"></i></span>" );
 					}

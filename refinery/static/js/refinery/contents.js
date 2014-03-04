@@ -46,12 +46,10 @@ $(document).ready(function() {
 		query = new SolrQuery( configurator, queryCommands );
 		query.initialize();
 
-		if ( analysisUuid != 'None' ) {
-			console.log( "Setting analysis UUID to " + analysisUuid );
+		if ( analysisUuid !== 'None' ) {
 			query.updateFacetSelection( 'REFINERY_ANALYSIS_UUID_' + externalStudyId + '_' + externalAssayId + '_s', analysisUuid, true );
 		}
 		else {
-			console.log( "No analysis UUID provided." );
 		}
 		
 		dataSetMonitor = new DataSetMonitor( dataSetUuid, REFINERY_API_BASE_URL, csrf_token, dataSetMonitorCommands );
