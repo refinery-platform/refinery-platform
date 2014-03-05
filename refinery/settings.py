@@ -408,6 +408,32 @@ REFINERY_EXTERNAL_AUTH = False
 # Message to display on password management pages when REFINERY_EXTERNAL_AUTH is set to True
 REFINERY_EXTERNAL_AUTH_MESSAGE = ''
 
+#external tool status settings
+'''If adding a new tool, user needs to fill out TOOL_NAME, INTERVAL_BETWEEN_CHECKS, 
+TIMEOUT, STATUS_CHOICES, and TOOL_NAME_CHOICES
+'''
+CELERY_TOOL_NAME = "CELERY"
+SOLR_TOOL_NAME = "SOLR"
+GALAXY_TOOL_NAME = "GALAXY"    
+
+INTERVAL_BETWEEN_CHECKS = {
+                            CELERY_TOOL_NAME: 4.0,
+                            SOLR_TOOL_NAME: 5.0,
+                            GALAXY_TOOL_NAME: 5.0,
+                            }
+    
+TIMEOUT = {
+           CELERY_TOOL_NAME: 1.5,
+           SOLR_TOOL_NAME: 2.5,
+           GALAXY_TOOL_NAME: 2.0,
+           }
+
+TOOL_NAME_CHOICES = (
+                     (CELERY_TOOL_NAME, "Celery"),
+                     (SOLR_TOOL_NAME, "Solr"),
+                     (GALAXY_TOOL_NAME, "Galaxy")
+                    )
+
 # import local settings
 try:
     from settings_local import *

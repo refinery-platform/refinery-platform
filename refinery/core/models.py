@@ -954,45 +954,18 @@ class ExternalToolStatus(models.Model):
     SUCCESS_STATUS = "SUCCESS"
     FAILURE_STATUS = "FAILURE"
     UNKNOWN_STATUS = "UNKNOWN"
-    CELERY_DOWN_STATUS = "CELERY_DOWN"
     TIMEOUT_STATUS = "TIMEOUT"
 
-    '''If adding a new tool, user needs to fill out TOOL_NAME, INTERVAL_BETWEEN_CHECKS, TIMEOUT, 
-    STATUS_CHOICES, and TOOL_NAME_CHOICES
-    '''
-    CELERY_TOOL_NAME = "CELERY"
-    SOLR_TOOL_NAME = "SOLR"
-    GALAXY_TOOL_NAME = "GALAXY"
-    
-    INTERVAL_BETWEEN_CHECKS = {
-                               CELERY_TOOL_NAME: 4.0,
-                               SOLR_TOOL_NAME: 5.0,
-                               GALAXY_TOOL_NAME: 5.0,
-                                }
-    
-    TIMEOUT = {
-               CELERY_TOOL_NAME: 2.0,
-               SOLR_TOOL_NAME: 2.5,
-               GALAXY_TOOL_NAME: 2.0,
-               }
-    
     STATUS_CHOICES = ( 
                      (SUCCESS_STATUS, "Tool is running"),
                      (FAILURE_STATUS, "Tool is not running"),
                      (UNKNOWN_STATUS, "Cannot reach tool"),
-                     (CELERY_DOWN_STATUS, "Celery workers cannot be reached"),
                      (TIMEOUT_STATUS, "It's been too long since the database was last updated"),
                     )
 
-    TOOL_NAME_CHOICES = (
-                         (CELERY_TOOL_NAME, "Celery"),
-                         (SOLR_TOOL_NAME, "Solr"), 
-                         (GALAXY_TOOL_NAME, "Galaxy")
-                         )
-
     status = models.TextField(default=UNKNOWN_STATUS, choices=STATUS_CHOICES, blank=True, null=True)
     last_time_check = models.DateTimeField(auto_now_add=True)
-    name = models.TextField(choices=TOOL_NAME_CHOICES, blank=True, null=True)
+    name = models.TextField(choices=settings.TOOL_NAME_CHOICES, blank=True, null=True)
     unique_instance_identifier = models.CharField(max_length=256, blank=True, null=True, default=None)
     is_active = models.BooleanField(default=True)
 
