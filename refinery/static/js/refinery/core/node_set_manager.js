@@ -241,14 +241,16 @@ NodeSetManager.prototype.getList = function( callback, errorCallback ) {
 
 	     	if ( self.list.objects.length > 0 && self.list.objects[0].is_current ) {
 	     		self.currentSelectionNodeSet = self.list.objects[0];
-	     		console.log( "Current Selection found:" );
-	     		console.log(  self.currentSelectionNodeSet );
+	     		console.log( '"' + self.currentSelectionNodeSetName  + '" found.' );
+
+	     		callback( result );										
 	     	}
 	     	else {
-	     		console.log( "Current Selection not found." );
+	     		console.log( '"' + self.currentSelectionNodeSetName  + '" not found. Creating "' + self.currentSelectionNodeSetName + '"' );
+
+	     		// create empty selection and reload list
+	     		self.createCurrentSelection( function() { self.getList( callback, errorCallback ); }, function() {  console.error( "Failed to create current selection!" ); } );
 	     	}
-			// callback
-			callback( result );										
     	},
     error: function ( result ) {
     		if ( errorCallback ) {
@@ -257,6 +259,12 @@ NodeSetManager.prototype.getList = function( callback, errorCallback ) {
     	}
 	});
 };
+
+NodeSetManager.prototype.createCurrentSelection = function( callback, errorCallback ) {
+	var self = this;
+
+	self.postState( self.currentSelectionNodeSetName, "", "", {}, 0, callback, true );
+}
 
 NodeSetManager.prototype.createGetDetailUrl = function( uuid ) {
 	var self = this;
@@ -348,7 +356,8 @@ NodeSetManager.prototype.postState = function( name, summary, solr_query, solr_q
 		"node_count": node_count,
 		"solr_query": solr_query,
 		"solr_query_components": solr_query_components,
-		"uuid": null
+		"uuid": null,
+		"is_current": is_current
 		};
 		
 	$.ajax({
@@ -357,14 +366,19 @@ NodeSetManager.prototype.postState = function( name, summary, solr_query, solr_q
      data: JSON.stringify( data ),
 	 contentType: "application/json",
 	 dataType: "json",
-  	 processData: false,     
-     success: function( result, status, jqXHR ) {
+  	 processData: false
+	})
+	.done( function( result, status, jqXHR ) {
      		callback();
-     		
+
 	     	if ( $.isEmptyObject( result ) ) {
 	     		// do nothing
 	     		return;
 	     	}	     		     	 
     	}
-	});
+	)
+	.fail( function() { 
+			console.error( "Creation of node set failed." );
+		}
+	);
 };
