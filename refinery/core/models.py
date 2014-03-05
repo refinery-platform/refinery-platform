@@ -963,6 +963,12 @@ class ExternalToolStatus(models.Model):
                      (TIMEOUT_STATUS, "It's been too long since the database was last updated"),
                     )
 
+    TOOL_NAME_CHOICES = (
+                     (settings.CELERY_TOOL_NAME, "Celery"),
+                     (settings.SOLR_TOOL_NAME, "Solr"),
+                     (settings.GALAXY_TOOL_NAME, "Galaxy")
+                    )
+
     status = models.TextField(default=UNKNOWN_STATUS, choices=STATUS_CHOICES, blank=True, null=True)
     last_time_check = models.DateTimeField(auto_now_add=True)
     name = models.TextField(choices=settings.TOOL_NAME_CHOICES, blank=True, null=True)

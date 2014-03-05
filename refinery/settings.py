@@ -410,7 +410,7 @@ REFINERY_EXTERNAL_AUTH_MESSAGE = ''
 
 #external tool status settings
 '''If adding a new tool, user needs to fill out TOOL_NAME, INTERVAL_BETWEEN_CHECKS, 
-TIMEOUT, STATUS_CHOICES, and TOOL_NAME_CHOICES
+TIMEOUT, STATUS_CHOICES, and TOOL_NAME_CHOICES in core/models.py
 '''
 CELERY_TOOL_NAME = "CELERY"
 SOLR_TOOL_NAME = "SOLR"
@@ -428,11 +428,6 @@ TIMEOUT = {
            GALAXY_TOOL_NAME: 2.0,
            }
 
-TOOL_NAME_CHOICES = (
-                     (CELERY_TOOL_NAME, "Celery"),
-                     (SOLR_TOOL_NAME, "Solr"),
-                     (GALAXY_TOOL_NAME, "Galaxy")
-                    )
 
 # import local settings
 try:
