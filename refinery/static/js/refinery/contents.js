@@ -503,7 +503,6 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 					speciesString = "<p>" + "You selected samples from " + ret_buttons.length + " different genome builds. To view the samples, open IGV with the corresponding genome."
 				}
 
-
 				$("#myModalBody").append( speciesString );
 				$("#myModalBody").append( "<div class=\"btn-group\" style=\"align: center;\" id=\"launch-button-group\">" );
 				for (var counter = 0; counter < ret_buttons.length; ++counter) {
