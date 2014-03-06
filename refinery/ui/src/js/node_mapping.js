@@ -517,6 +517,16 @@ angular.module('refineryNodeMapping', [
 })
 
 
+.factory("NodeSetFactory", function($resource) {
+  'use strict';
+
+  return $resource(
+    "/api/v1/nodeset/", {format: "json"}
+  );
+})
+
+
+
 .factory("AttributeOrder", function($resource) {
   'use strict';
 
