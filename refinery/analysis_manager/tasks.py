@@ -374,6 +374,7 @@ def monitor_analysis_execution(analysis):
     '''monitor workflow execution
 
     '''
+    # get a fresh copy of analysis to avoid potential issues with parallel execution
     try:
         analysis = Analysis.objects.get(uuid=analysis.uuid)
     except Analysis.DoesNotExist:
@@ -384,60 +385,59 @@ def monitor_analysis_execution(analysis):
 
     if analysis.failed():
         return
-    else:
-        try:
-            analysis_status = AnalysisStatus.objects.get(analysis=analysis)
-        except AnalysisStatus.DoesNotExist:
-            monitor_analysis_execution.update_state(state=celery.states.FAILURE)
-            logger.error(
-                "AnalysisStatus object does not exist for analysis '{}'" +
-                " - unable to monitor".format(analysis_status))
-            return
-        # number of galaxy steps associated with this analysis
-        analysis_steps = analysis.workflow_steps_num
-        # start monitoring task
-        if analysis_status.execution_monitor_task_id is None:
-            analysis_status.execution_monitor_task_id = \
-                monitor_analysis_execution.request.id
-            analysis_status.save()
 
-        connection = analysis.get_galaxy_connection()
+    try:
+        analysis_status = AnalysisStatus.objects.get(analysis=analysis)
+    except AnalysisStatus.DoesNotExist:
+        monitor_analysis_execution.update_state(state=celery.states.FAILURE)
+        logger.error(
+            "AnalysisStatus object does not exist for analysis '{}'" +
+            " - unable to monitor".format(analysis_status))
+        return
 
-        try:
-            progress = connection.get_progress(analysis.history_id)
-        except (ConnectionError, TimeoutError) as e:
-            error_msg = "Unable to get progress for " + \
-                        "history {} of analysis {}: {}".format(
-                            analysis.history_id, analysis.name, e.message)
-            analysis.set_status(Analysis.UNKNOWN_STATUS, error_msg)
-            logger.warning(error_msg)
-            monitor_analysis_execution.retry(countdown=5)
-        except RuntimeError as e:
-            # if this is not just a connection error,
-            # analysis has probably failed
-            error_msg = "Unable to get progress for " + \
-                        "history {} of analysis {}: {}".format(
-                            analysis.history_id, analysis.name, e.message) 
-            monitor_analysis_execution.update_state(state=celery.states.FAILURE)
-            analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-            logger.error(error_msg)
-            return
+    # start monitoring task
+    if analysis_status.execution_monitor_task_id is None:
+        analysis_status.execution_monitor_task_id = \
+            monitor_analysis_execution.request.id
+        analysis_status.save()
 
-        monitor_analysis_execution.update_state(state="PROGRESS", meta=progress)
-
-        if progress["workflow_state"] == "error":
-            # Setting state of analysis to failure
-            analysis.set_status(Analysis.FAILURE_STATUS)
-            logger.debug("analysis status: %s" % analysis.get_status())
-            return
-        elif progress["workflow_state"] == "ok":
-            min_dataset_number = analysis.workflow_data_input_maps.all().count()
-            logger.debug("workflow message OK:  %s", progress["message"]["ok"])
-            logger.debug("min_dataset_number: {}".format(min_dataset_number))
-            if progress["message"]["ok"] > min_dataset_number:
-                return
-        # keep monitoring analysis status until it's finished
+    connection = analysis.get_galaxy_connection()
+    try:
+        progress = connection.get_progress(analysis.history_id)
+    except (ConnectionError, TimeoutError) as e:
+        error_msg = "Unable to get progress for " + \
+                    "history {} of analysis {}: {}".format(
+                        analysis.history_id, analysis.name, e.message)
+        analysis.set_status(Analysis.UNKNOWN_STATUS, error_msg)
+        logger.warning(error_msg)
         monitor_analysis_execution.retry(countdown=5)
+    except RuntimeError as e:
+        # if this is not just a connection error, analysis has probably failed
+        error_msg = "Unable to get progress for " + \
+                    "history {} of analysis {}: {}".format(
+                        analysis.history_id, analysis.name, e.message) 
+        monitor_analysis_execution.update_state(state=celery.states.FAILURE)
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        logger.error(error_msg)
+        return
+
+    if progress["workflow_state"] == "error":
+        # Setting state of analysis to failure
+        analysis.set_status(Analysis.FAILURE_STATUS)
+        logger.debug("analysis status: %s" % analysis.get_status())
+        return
+    elif progress["workflow_state"] == "ok":
+        min_dataset_number = analysis.workflow_data_input_maps.all().count()
+        logger.debug("ok dataset number:  %s", progress["message"]["ok"])
+        logger.debug("min_dataset_number: {}".format(min_dataset_number))
+        # check if we have more than just the input datasets in history
+        if progress["message"]["ok"] > min_dataset_number:
+            return
+
+    # if we are here then analysis is running
+    monitor_analysis_execution.update_state(state="PROGRESS", meta=progress)
+    # keep monitoring until workflow has finished running
+    monitor_analysis_execution.retry(countdown=5)
 
 
 @task()
