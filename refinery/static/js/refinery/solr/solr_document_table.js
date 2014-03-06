@@ -230,7 +230,23 @@ SolrDocumentTable.prototype._renderTable = function( solrResponse ) {
 
 
 	$( ".refinery-dnd-handle" ).on( "dragstart", function( event ) {				
-		var uuid = event.originalEvent.srcElement.attributes['node-uuid'].value;
+		var uuid = null;
+
+		// here we have to deal with browser specific differences in the dragstart event data structure
+
+		if ( event.originalEvent.srcElement ) {
+			// safari, chrome
+			uuid = event.originalEvent.srcElement.attributes['node-uuid'].value;
+		}
+		else if ( event.target ) {
+			// firefox
+			uuid = event.target.attributes['node-uuid'].value;
+		}
+		else {
+			// this browser doesn't seem to support any dragstart known to us
+			console.error( "Unable to obtain node UUID of draggable.");
+		}
+
 		event.originalEvent.dataTransfer.setData('text/plain', JSON.stringify( { uuid: uuid, html: '<table class="table table-striped table-condensed" style="margin-bottom: 0px;">' + this.parentElement.parentElement.innerHTML + '</table>' } ) );
 	});	
 		
@@ -248,8 +264,8 @@ SolrDocumentTable.prototype._generateTableBody = function( solrResponse ) {
 		
 		var s = '<tr>';
 
-		// drag marker		
-		s += '<td>' + '<span class="refinery-dnd-handle"><i class="icon-reorder" data-uuid="' + document["uuid"] + '" node-draggable draggable="true" node-uuid="'+ document["uuid"] +'" style="-khtml-user-drag: element;"></i></span>' + '</td>';
+		// drag marker (can't be wrapped in span - otherwise Safari won't show the image of dragged content)
+		s += '<td>' + '<i class="icon-reorder refinery-dnd-handle" data-uuid="' + document["uuid"] + '" node-draggable draggable="true" node-uuid="'+ document["uuid"] +'" style="-khtml-user-drag: element;"></i>' + '</td>';
 		
 		// selection column
 		var isDocumentSelected = self._query.isDocumentSelected( document.uuid );				

@@ -324,7 +324,19 @@ angular.module('refineryNodeMapping', [
       // get dropzone index
       var dropzoneIndex = null;
       try {        
-        dropzoneIndex = e.srcElement.attributes['node-dropzone-index'].value;
+        // here we have to deal with browser specific differences in the dropevent event data structure
+        if ( e.srcElement ) {
+          // safari, chrome
+          dropzoneIndex = e.srcElement.attributes['node-dropzone-index'].value;
+        }
+        else if ( e.originalTarget ) {
+          // firefox
+          dropzoneIndex = e.originalTarget.attributes['node-dropzone-index'].value;
+        }
+        else {
+          // this browser doesn't seem to support any dragstart known to us
+          console.error( "Unable to obtain dropzone index of droppable.");
+        }
       }
       catch( exception ) {
         console.error( "No dropzone index." );
