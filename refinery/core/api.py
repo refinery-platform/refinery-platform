@@ -146,7 +146,7 @@ class NodeSetResource(ModelResource):
         fields = [ 'is_current', 'name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
         ordering = [ 'is_current', 'name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
         allowed_methods = ["get", "post", "put" ]
-        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
+        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS, "uuid": ALL }
         always_return_data = True # otherwise JQuery treats a 201 as an error for data type "JSON"
 
     def prepend_urls(self):
