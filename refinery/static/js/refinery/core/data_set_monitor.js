@@ -74,3 +74,22 @@ DataSetMonitor.prototype._refreshAnalyses = function () {
 		 
 	return null;	
 };
+
+
+DataSetMonitor.prototype.getAnalysisLabel = function( analysisUuid ) {	
+	var self = this;
+	
+	var analyses = self.analyses;
+	
+	if ( analyses == null ) {
+		return analysisUuid;
+	}
+	
+	for ( var i = 0; i < analyses.objects.length; ++i ) {
+		if ( analysisUuid == analyses.objects[i].uuid ) {
+			return ( analyses.objects[i].name );
+		} 
+	}
+		
+	return ( analysisUuid );	
+}

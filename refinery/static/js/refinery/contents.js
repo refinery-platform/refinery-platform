@@ -116,7 +116,7 @@ $(document).ready(function() {
 			//console.log( SOLR_QUERY_INITIALIZED_COMMAND + ' executed' );
 			//console.log( arguments );
 
-			tableView = new SolrDocumentTable( "solr-table-view", "solrdoctab1", query, client, configurator, documentTableCommands );
+			tableView = new SolrDocumentTable( "solr-table-view", "solrdoctab1", query, client, configurator, documentTableCommands, dataSetMonitor );
 			tableView.setDocumentsPerPage( 20 );
 
 			analysisView = new SolrAnalysisView( "solr-analysis-view", "solranalysis1", query, configurator, analysisViewCommands, dataSetMonitor );
@@ -307,8 +307,11 @@ $(document).ready(function() {
 
 
 		dataSetMonitorCommands.addHandler( DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND, function( arguments ){
-			//console.log( SOLR_PIVOT_MATRIX_FACETS_UPDATED_COMMAND + ' executed' );
-			//console.log( arguments );
+			console.log( DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND + ' executed' );
+			console.log( arguments );
+			console.log( "Updating tables ..." );
+			analysisView.render(lastSolrResponse);
+			tableView.render(lastSolrResponse);
 
 			//client.run( query, SOLR_FULL_QUERY );
 		});

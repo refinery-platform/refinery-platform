@@ -22,7 +22,7 @@ SOLR_FIELD_VISIBILITY_UPDATED_COMMAND = 'solr_field_visibility_updated';
 SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND = 'solr_document_table_page_changed_command';
 
 
-SolrDocumentTable = function( parentElementId, idPrefix, solrQuery, solrClient, configurator, commands ) {
+SolrDocumentTable = function( parentElementId, idPrefix, solrQuery, solrClient, configurator, commands, dataSetMonitor ) {
   	
   	var self = this;
 	
@@ -35,6 +35,8 @@ SolrDocumentTable = function( parentElementId, idPrefix, solrQuery, solrClient, 
   	// Solr interaction 
   	self._query = solrQuery;
   	self._client = solrClient;
+
+  	self._dataSetMonitor = dataSetMonitor;
   	
   	// data set configuration
   	self.configurator = configurator;
@@ -112,8 +114,6 @@ SolrDocumentTable.prototype.render = function ( solrResponse ) {
 	$( "#" + self._parentElementId ).html("");		
 	self._renderTable( solrResponse );
 
-
-	
 	//$( "#" + self._parentElementId ).html( code );		
 	
 	// attach event listeners
@@ -258,6 +258,7 @@ SolrDocumentTable.prototype._generateTableBody = function( solrResponse ) {
 	var documents = solrResponse.getDocumentList();
 	var fields = self._query._fields;
 	var rows = [];
+	var analyses = self._dataSetMonitor.analyses;
 	
 	for ( var i = 0; i < documents.length; ++i ) {		
 		var document = documents[i];
@@ -274,16 +275,30 @@ SolrDocumentTable.prototype._generateTableBody = function( solrResponse ) {
 		// additional columns
 		for ( var j = 0; j < self._additionalColumns.length; ++j ) {
 			var column = self._additionalColumns[j];
-			//s += '<td>' + column["formatter"]( document ) + '</td>';
 			s += '<td>' + column['formatter']( document ) + '</td>';
 		}	
 							
 		for ( entry in fields ) {
 			if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible && !fields[entry].isInternal  && !( self._hiddenFieldNames.indexOf( entry ) >= 0 ) ) {				
 				if ( document.hasOwnProperty( entry ) ) {
-					s += "<td title=\"" + document[entry] + "\">";
-					s += self._trimDocumentEntry( document[entry], 25 );
-					s += "</td>";				
+
+					if ( entry.indexOf( "REFINERY_ANALYSIS_" ) === 0 ) {
+					  	if ( analyses !== null) {
+							s += "<td title=\"" + document[entry] + "\">";
+							s += self._trimDocumentEntry( self._dataSetMonitor.getAnalysisLabel( document[entry] ), 25 );
+							s += "</td>";				
+					  	} 
+					  	else {
+							s += "<td title=\"Analysis " + document[entry] + "\">";
+							s += '<i class="icon-refresh icon-spin" style="padding: 2px"></i>';
+							s += "</td>";											  		
+					  	}						
+					}
+					else {
+						s += "<td title=\"" + document[entry] + "\">";
+						s += self._trimDocumentEntry( document[entry], 25 );
+						s += "</td>";				
+					}
 				}
 				else { // this field does not exist in this result
 					s += "<td>";
