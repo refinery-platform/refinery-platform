@@ -431,8 +431,10 @@ def monitor_analysis_execution(analysis):
             logger.debug("analysis status: %s" % analysis.get_status())
             return
         elif progress["workflow_state"] == "ok":
-            logger.debug("workflow message OK:  %s", progress["message"]["ok"] )
-            if progress["message"]["ok"] >= analysis_steps:
+            min_dataset_number = analysis.workflow_data_input_maps.all().count()
+            logger.debug("workflow message OK:  %s", progress["message"]["ok"])
+            logger.debug("min_dataset_number: {}".format(min_dataset_number))
+            if progress["message"]["ok"] > min_dataset_number:
                 return
         # keep monitoring analysis status until it's finished
         monitor_analysis_execution.retry(countdown=5)
