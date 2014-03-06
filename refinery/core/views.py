@@ -841,41 +841,23 @@ def solr_igv(request):
     # copy querydict to make it editable
     if request.is_ajax():
         #logger.debug("solr_igv called: request is ajax")
-        #logger.debug(simplejson.dumps(request.POST, indent=4))
+        #logger.debug(simplejson.dumps(request, indent=4))
+
+        igv_config = simplejson.loads( request.body );
+
+        logger.debug(simplejson.dumps( igv_config, indent=4))
         
-        logger.debug( 'IGV data query: ' + request.POST['query'] )
-        logger.debug( 'IGV annotation query: ' + request.POST['annot'] )
+        logger.debug( 'IGV data query: ' + igv_config['query'] )
+        logger.debug( 'IGV annotation query: ' + igv_config['annotation'] )
         
         # attributes associated with node selection from interface
-        node_selection_blacklist_mode = request.POST['node_selection_blacklist_mode']
-        if node_selection_blacklist_mode == 'true':
-            node_selection_blacklist_mode = True
-        else:
-            node_selection_blacklist_mode = False
+        node_selection_blacklist_mode = igv_config['node_selection_blacklist_mode']
+        node_selection = igv_config['node_selection']
         
-        node_selection = request.POST.getlist('node_selection[]')
+        solr_results = get_solr_results(igv_config['query'], selected_mode=node_selection_blacklist_mode, selected_nodes=node_selection)
         
-        #logger.debug("node_selection_blacklist_mode")
-        #logger.debug(node_selection_blacklist_mode)
-        #logger.debug(node_selection)
-        
-        # extracting solr query from request 
-        for i, val in request.POST.iteritems():
-            # for solr query for data
-            if i == 'query':
-                solr_query = val
-                solr_results = get_solr_results(
-                    solr_query, selected_mode=node_selection_blacklist_mode,
-                    selected_nodes=node_selection
-                    )
-                #logger.debug("solr_results")
-                #logger.debug(simplejson.dumps(solr_results, indent=4))
-        
-            # for solr query for annotation files 
-            elif i == 'annot':
-                solr_annot = get_solr_results(val)
-                #logger.debug("solr_annot")
-                #logger.debug(simplejson.dumps(solr_annot, indent=4))
+        if igv_config['annotation'] is not None:
+            solr_annot = get_solr_results(igv_config['annotation'])
         
         # if solr query returns results
         if solr_results:
