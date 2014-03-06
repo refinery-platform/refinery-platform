@@ -314,6 +314,11 @@ body {
 
 .refinery-dnd-dropzone {
   text-align: center;
+  border-style: dashed; 
+  border-width: 1px;
+  height: 50px;
+  width: 50px;
+  border-radius: 100px;
 
   &-over {
     opacity: 0.5;
@@ -334,12 +339,19 @@ body {
   border-color: @green;
 }
 
+.refinery-workflow-input-label-green {
+  color: @green;
+}
+
 .refinery-workflow-input-purple {
   background-color: fade( lighten( @purple, 30% ), 25% );
   color: @purple;
   border-color: @purple;
 }
 
+.refinery-workflow-input-label-purple {
+  color: @purple;
+}
 
 .refinery-tooltip {
   background-color: fade( @black, 80% );
