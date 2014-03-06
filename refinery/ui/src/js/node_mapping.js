@@ -347,7 +347,7 @@ angular.module('refineryNodeMapping', [
         data = JSON.parse( dataString );
       } 
       catch ( exception ) {
-        console.error( "Parsing error: " + exception );
+        console.error("Parsing error: " + exception);
       }
 
       // update dropzone
@@ -355,13 +355,26 @@ angular.module('refineryNodeMapping', [
 
       // save node pair?
       if ( $scope.nodeDropzones[0].uuid && $scope.nodeDropzones[1].uuid ) {
-        $scope.currentNodePair = new nodePairResource( { node1: "/api/v1/node/" + $scope.nodeDropzones[0].uuid + "/", node2: "/api/v1/node/" + $scope.nodeDropzones[1].uuid + "/" } );
+        if ( $scope.isPending() ) {
+          $log.debug("Saving new file pair ...");
+          $scope.currentNodePair = new nodePairResource( { node1: "/api/v1/node/" + $scope.nodeDropzones[0].uuid + "/", node2: "/api/v1/node/" + $scope.nodeDropzones[1].uuid + "/" } );
+  
+          $scope.currentNodePair.$save( function( response, responseHeaders) {
+            $scope.currentNodePair = response;
+            $scope.currentNodeRelationship.node_pairs.push( $scope.currentNodePair.resource_uri );
+            nodeRelationshipResource.update( { uuid: $scope.currentNodeRelationship.uuid }, $scope.currentNodeRelationship );
+            $log.debug("New file pair saved.");
+          });
+        }
+        else {
+          $log.debug("Updating existing file pair ...");
 
-        $scope.currentNodePair.$save( function( response, responseHeaders) {
-          $scope.currentNodePair = response;
-          $scope.currentNodeRelationship.node_pairs.push( $scope.currentNodePair.resource_uri );
-          nodeRelationshipResource.update( { uuid: $scope.currentNodeRelationship.uuid }, $scope.currentNodeRelationship );
-        });
+          $scope.currentNodePair.$save( function( response, responseHeaders) {
+            $scope.currentNodePair = response;
+            $log.debug("Existing file pair updated.");
+          });
+        }
+
       }
 
       $scope.$apply();
