@@ -67,7 +67,7 @@ SolrAnalysisView.prototype.render = function ( solrResponse ) {
 	self._currentSolrResponse = solrResponse;
 	analyses = self._dataSetMonitor.analyses;
 
-  	if ( analyses !== null) {
+  	if ( analyses !== null && self._currentSolrResponse !== null ) {
   		$( "#" + self._parentElementId ).html('');
 		self._renderTree( self._currentSolrResponse );  		
   	} 
