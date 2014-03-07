@@ -408,24 +408,17 @@ REFINERY_EXTERNAL_AUTH = False
 # Message to display on password management pages when REFINERY_EXTERNAL_AUTH is set to True
 REFINERY_EXTERNAL_AUTH_MESSAGE = ''
 
-#external tool status settings
-'''If adding a new tool, user needs to fill out TOOL_NAME, INTERVAL_BETWEEN_CHECKS, 
-TIMEOUT, STATUS_CHOICES, and TOOL_NAME_CHOICES in core/models.py
-'''
-CELERY_TOOL_NAME = "CELERY"
-SOLR_TOOL_NAME = "SOLR"
-GALAXY_TOOL_NAME = "GALAXY"    
-
+#external tool status settings 
 INTERVAL_BETWEEN_CHECKS = {
-                            CELERY_TOOL_NAME: 4.0,
-                            SOLR_TOOL_NAME: 5.0,
-                            GALAXY_TOOL_NAME: 5.0,
+                            "CELERY": 4.0,
+                            "SOLR": 5.0,
+                            "GALAXY": 5.0,
                             }
     
 TIMEOUT = {
-           CELERY_TOOL_NAME: 1.5,
-           SOLR_TOOL_NAME: 2.5,
-           GALAXY_TOOL_NAME: 2.0,
+           "CELERY": 1.5,
+           "SOLR": 2.5,
+           "GALAXY": 2.0,
            }
 
 

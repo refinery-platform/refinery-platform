@@ -267,9 +267,9 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     return dataset_copy
 
 
-@periodic_task(run_every=timedelta(seconds=settings.INTERVAL_BETWEEN_CHECKS[settings.CELERY_TOOL_NAME]), expires=(int(settings.INTERVAL_BETWEEN_CHECKS[settings.CELERY_TOOL_NAME]) - 1), time_limit=settings.TIMEOUT[settings.CELERY_TOOL_NAME])
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.CELERY_TOOL_NAME]), expires=(int(ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.CELERY_TOOL_NAME]) - 1), time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.CELERY_TOOL_NAME])
 def check_for_celery():
-    celery, created = ExternalToolStatus.objects.get_or_create(name=settings.CELERY_TOOL_NAME)
+    celery, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.CELERY_TOOL_NAME)
     if celery.is_active:
         try:
             array = ping() #pings celery to see if it's alive
@@ -298,9 +298,9 @@ def check_for_celery():
         celery.save()
 
 
-@periodic_task(run_every=timedelta(seconds=settings.INTERVAL_BETWEEN_CHECKS[settings.SOLR_TOOL_NAME]), expires=(int(settings.INTERVAL_BETWEEN_CHECKS[settings.SOLR_TOOL_NAME]) - 1), time_limit=settings.TIMEOUT[settings.SOLR_TOOL_NAME])
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.SOLR_TOOL_NAME]), expires=(int(ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.SOLR_TOOL_NAME]) - 1), time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.SOLR_TOOL_NAME])
 def check_for_solr():
-    solr, created = ExternalToolStatus.objects.get_or_create(name=settings.SOLR_TOOL_NAME)
+    solr, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.SOLR_TOOL_NAME)
 
     if solr.is_active:
         try: #actually check now
@@ -318,22 +318,22 @@ def check_for_solr():
         solr.save()
 
 
-@periodic_task(run_every=timedelta(seconds=settings.INTERVAL_BETWEEN_CHECKS[settings.GALAXY_TOOL_NAME]), expires=(int(settings.INTERVAL_BETWEEN_CHECKS[settings.GALAXY_TOOL_NAME]) - 1), time_limit=settings.TIMEOUT[settings.GALAXY_TOOL_NAME])
+@periodic_task(run_every=timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.GALAXY_TOOL_NAME]), expires=(int(ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.GALAXY_TOOL_NAME]) - 1), time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME])
 def dispatch_galaxy_checks():
     workflow_engines = WorkflowEngine.objects.all()
     for workflow_engine in workflow_engines:
         instance = workflow_engine.instance
-        galaxy, created = ExternalToolStatus.objects.get_or_create(name=settings.GALAXY_TOOL_NAME, unique_instance_identifier=instance.api_key)
+        galaxy, created = ExternalToolStatus.objects.get_or_create(name=ExternalToolStatus.GALAXY_TOOL_NAME, unique_instance_identifier=instance.api_key)
         if galaxy.is_active:
             try:
                 check_for_galaxy.delay(instance, galaxy) #pass the workflow instance and the galaxy model instance
             except TimeLimitExceeded as e:
-                logger.error("core.tasks.check_for_galaxy: Pinging Galaxy timed out after %s" % settings.TIMEOUT[settings.GALAXY_TOOL_NAME])
+                logger.error("core.tasks.check_for_galaxy: Pinging Galaxy timed out after %s" % ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME])
             except TaskRevokedError as e:
                 logger.info("core.tasks.check_for_galaxy: task was revoked because it took too long to get dispatched")
 
 
-@task(expires=(int(settings.INTERVAL_BETWEEN_CHECKS[settings.GALAXY_TOOL_NAME]) - 1), time_limit=settings.TIMEOUT[settings.GALAXY_TOOL_NAME])
+@task(expires=(int(ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.GALAXY_TOOL_NAME]) - 1), time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME])
 def check_for_galaxy(instance, galaxy):
     try:
         instance.get_galaxy_connection().get_histories()
@@ -361,7 +361,7 @@ def check_tool_status(tool_name, tool_unique_instance_identifier=None):
         return (True, ExternalToolStatus.UNKNOWN_STATUS)
     
     if tool.is_active:
-        if (datetime.now() - tool.last_time_check) > timedelta(seconds=settings.INTERVAL_BETWEEN_CHECKS[tool_name]):
+        if (datetime.now() - tool.last_time_check) > timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[tool_name]):
             logger.error("%s's database entry hasn't been updated recently; check to see if it's running" % tool_name)
             return (tool.is_active, ExternalToolStatus.TIMEOUT_STATUS)
         
