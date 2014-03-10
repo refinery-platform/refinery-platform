@@ -125,7 +125,7 @@ angular.module('refineryNodeMapping', [
   };
 })
 
-.controller('FileMappingCtrl', function($log, $scope, $location, $rootScope, $sce, $http, nodePairResource, nodeRelationshipResource, AttributeOrder, solrFactory, solrService ) {
+.controller('FileMappingCtrl', function($resource, $log, $scope, $location, $rootScope, $sce, $http, nodePairResource, nodeRelationshipResource, AttributeOrder, solrFactory, solrService ) {
 
   $scope.nodeDropzones = null;
   $scope.currentNodePair = null;
@@ -235,7 +235,7 @@ angular.module('refineryNodeMapping', [
     $log.debug( "Loading pair " + index + "... ");
 
     if ( $scope.currentNodeRelationship.node_pairs.length > index ) {      
-      $scope.currentNodePair = nodePairResource.load_from_uri( { uri: decodeURIComponent( $scope.currentNodeRelationship.node_pairs[index].substring(1) ) }, function ( data ) {
+      $scope.currentNodePair = $resource( $scope.currentNodeRelationship.node_pairs[index], { format: 'json' } ).get( {}, function ( data ) {
         $scope.updateNodeDropzone( 0, data.node1.split("/").reverse()[1] );
         $scope.updateNodeDropzone( 1, data.node2.split("/").reverse()[1] );
       }, function ( error ) {

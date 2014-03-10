@@ -22,10 +22,6 @@ angular.module('refineryNodeRelationship', [
   return $resource(
     '/api/v1/nodepair/:uuid/', {
       format: 'json'
-    },
-    {
-      // use different url (from: https://github.com/angular/angular.js/pull/2054) - 
-      'load_from_uri': { method: 'GET', url: "/:uri", params: { "format": "json" } }
     }
   );
 })
