@@ -156,7 +156,7 @@ package { 'nodejs':
 }
 ->
 exec { "npm_global_modules":
-  command => "/usr/bin/npm install -g bower grunt jshint grunt-cli",
+  command => "/usr/bin/npm install -g bower@1.2.8 jshint@2.4.4 grunt-cli@0.1.13",
   logoutput => on_failure,
 }
 ->
@@ -183,4 +183,28 @@ exec { "grunt":
   logoutput => on_failure,
   user => $appuser,
   group => $appuser,
+}
+->
+exec { "collectstatic":
+  command => "python ${project_root}/manage.py collectstatic --noinput",
+  path => $venvpath,
+  user => $appuser,
+  group => $appuser,
+}
+
+package { 'libapache2-mod-wsgi': }
+->
+file { "/etc/apache2/sites-available/refinery":
+  ensure => file,
+  content => template("/vagrant/deployment/apache.conf"),
+}
+->
+file { "/etc/apache2/sites-enabled/001-refinery":
+  ensure => link,
+  target => "../sites-available/refinery",
+}
+~>
+service { 'apache2':
+  ensure => running,
+  hasrestart => true,
 }
