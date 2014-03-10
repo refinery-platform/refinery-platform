@@ -3,6 +3,7 @@ $virtualenv = "/home/${appuser}/.virtualenvs/refinery-platform"
 $venvpath = "${virtualenv}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/opt/vagrant_ruby/bin"
 $requirements = "/vagrant/requirements.txt"
 $project_root = "/vagrant/refinery"
+$ui_app_root = "${project_root}/ui"
 
 #TODO: peg packages to specific versions
 class venvdeps {
@@ -142,5 +143,44 @@ file { "${project_root}/supervisord.conf":
   ensure => file,
   source => "${project_root}/supervisord.conf.sample",
   owner => $appuser,
+  group => $appuser,
+}
+
+include apt
+# need a version of Node that's more recent than one included with system
+apt::ppa { 'ppa:chris-lea/node.js': }
+
+package { 'nodejs':
+  name => 'nodejs',
+  require => Apt::Ppa['ppa:chris-lea/node.js'],
+}
+->
+exec { "npm_global_modules":
+  command => "/usr/bin/npm install -g bower grunt jshint grunt-cli",
+  logoutput => on_failure,
+}
+->
+exec { "npm_local_modules":
+  command => "/usr/bin/npm install",
+  cwd => $ui_app_root,
+  logoutput => on_failure,
+  user => $appuser,
+  group => $appuser,
+}
+->
+exec { "bower_modules":
+  command => "/usr/bin/bower install",
+  cwd => $ui_app_root,
+  logoutput => on_failure,
+  user => $appuser,
+  group => $appuser,
+  environment => ["HOME=/home/${appuser}"],
+}
+->
+exec { "grunt":
+  command => "/usr/bin/grunt",
+  cwd => $ui_app_root,
+  logoutput => on_failure,
+  user => $appuser,
   group => $appuser,
 }
