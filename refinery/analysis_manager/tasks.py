@@ -434,6 +434,7 @@ def monitor_analysis_execution(analysis):
         if progress["message"]["ok"] > min_dataset_number:
             return
 
+    analysis.set_status(Analysis.RUNNING_STATUS)
     # if we are here then analysis is running
     monitor_analysis_execution.update_state(state="PROGRESS", meta=progress)
     # keep monitoring until workflow has finished running
