@@ -432,6 +432,7 @@ def monitor_analysis_execution(analysis):
         logger.debug("min_dataset_number: {}".format(min_dataset_number))
         # check if we have more than just the input datasets in history
         if progress["message"]["ok"] > min_dataset_number:
+            analysis.set_status(Analysis.SUCCESS_STATUS)
             return
 
     analysis.set_status(Analysis.RUNNING_STATUS)
