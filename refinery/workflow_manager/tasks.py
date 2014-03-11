@@ -528,10 +528,10 @@ def check_workflow_inputs( workflow_dictionary ):
             
             # TEST: test if category is defined and referring to a declared input relationship category
             if 'category' in input_relationship.keys():
-                category = input_relationship['category'] 
+                category = input_relationship['category']
                 if category not in GALAXY_INPUT_RELATIONSHIP_CATEGORIES:
-                     input_relationship_issues.append( 'Undefined category "' + category + '". Allowed categories are ' + ", ".join( GALAXY_INPUT_RELATIONSHIP_CATEGORIES ) + "." )
-                     category = None
+                    input_relationship_issues.append('Undefined category "' + category + '". Allowed categories are ' + ", ".join(GALAXY_INPUT_RELATIONSHIP_CATEGORIES) + ".")
+                    category = None
             else:
                 input_relationship_issues.append( 'Input relationship does not define a category.' )
                 
