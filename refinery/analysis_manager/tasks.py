@@ -5,11 +5,12 @@ Created on Apr 5, 2012
 '''
 
 import ast
+import celery
 import copy
 from datetime import datetime
+import json
 import logging
 import socket
-import celery
 from celery.task import task
 from celery.task.chords import Chord
 from celery.task.sets import subtask, TaskSet
@@ -378,6 +379,7 @@ def monitor_analysis_execution(analysis):
     try:
         analysis = Analysis.objects.get(uuid=analysis.uuid)
     except Analysis.DoesNotExist:
+        #TODO: check if updating state is necessary, remove if not
         monitor_analysis_execution.update_state(state=celery.states.FAILURE)
         logger.error(
             "Analysis '{}' does not exist - unable to monitor".format(analysis))
@@ -389,6 +391,7 @@ def monitor_analysis_execution(analysis):
     try:
         analysis_status = AnalysisStatus.objects.get(analysis=analysis)
     except AnalysisStatus.DoesNotExist:
+        #TODO: check if updating state is necessary, remove if not
         monitor_analysis_execution.update_state(state=celery.states.FAILURE)
         logger.error(
             "AnalysisStatus object does not exist for analysis '{}'" +
@@ -415,7 +418,8 @@ def monitor_analysis_execution(analysis):
         # if this is not just a connection error, analysis has probably failed
         error_msg = "Unable to get progress for " + \
                     "history {} of analysis {}: {}".format(
-                        analysis.history_id, analysis.name, e.message) 
+                        analysis.history_id, analysis.name, e.message)
+        #TODO: check if updating state is necessary, remove if not
         monitor_analysis_execution.update_state(state=celery.states.FAILURE)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         logger.error(error_msg)
@@ -427,16 +431,16 @@ def monitor_analysis_execution(analysis):
         logger.debug("analysis status: %s" % analysis.get_status())
         return
     elif progress["workflow_state"] == "ok":
-        min_dataset_number = analysis.workflow_data_input_maps.all().count()
-        logger.debug("ok dataset number:  %s", progress["message"]["ok"])
-        logger.debug("min_dataset_number: {}".format(min_dataset_number))
-        # check if we have more than just the input datasets in history
-        if progress["message"]["ok"] > min_dataset_number:
+        # number of steps in the workflow
+        min_dataset_number = len(json.loads(analysis.workflow.graph)['steps'])
+        # check if we have enough datasets in history
+        if progress["message"]["ok"] >= min_dataset_number:
             analysis.set_status(Analysis.SUCCESS_STATUS)
             return
 
-    analysis.set_status(Analysis.RUNNING_STATUS)
     # if we are here then analysis is running
+    analysis.set_status(Analysis.RUNNING_STATUS)
+    #TODO: check if updating state is necessary, remove if not
     monitor_analysis_execution.update_state(state="PROGRESS", meta=progress)
     # keep monitoring until workflow has finished running
     monitor_analysis_execution.retry(countdown=5)

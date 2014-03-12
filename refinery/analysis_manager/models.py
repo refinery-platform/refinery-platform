@@ -2,6 +2,7 @@ from celery.result import AsyncResult
 from core.models import Analysis
 from django.db import models
 from django_extensions.db.fields import UUIDField
+import json
 import logging
 
 
@@ -54,9 +55,13 @@ class AnalysisStatus( models.Model ):
             return None
 
         if history:
+            # number of steps in the workflow
+            min_datasets = len(json.loads(self.analysis.workflow.graph)['steps'])
             total_datasets = sum(history['state_details'].itervalues())
             processed_datasets = history['state_details']['ok']
-            if total_datasets > 0:
+            # don't report progress until Galaxy history has at least the
+            # minimum number of datasets to avoid moving the progress bar backward
+            if total_datasets >= min_datasets:
                 percent_complete = 100 * processed_datasets / total_datasets
             else:
                 percent_complete = 0

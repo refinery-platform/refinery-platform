@@ -166,9 +166,9 @@ AnalysisMonitor.prototype.printProgressBars = function ( parentElementId, mode, 
 		code += "			<div class=\"bar\" id=\"bar_" + taskId + "\" style=\"width:" + percentDone + ";\"></div>";
 		code += "		</div>";
 		code += "	</div>";
-		code += "	<div class=\"span2\">";
-		code += "		<strong id=\"progress_" + taskId + "\">" + percentDone + "</strong>";
-		code += "	</div>";
+		// code += "	<div class=\"span2\">";
+		// code += "		<strong id=\"progress_" + taskId + "\">" + percentDone + "</strong>";
+		// code += "	</div>";
 		code += "	</div>";
 	}
 
