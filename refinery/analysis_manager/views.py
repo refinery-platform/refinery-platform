@@ -1,12 +1,6 @@
-# Create your views here.
-
-from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import run_analysis
-from core.models import Analysis, Workflow, WorkflowEngine, WorkflowDataInputMap, \
-    InvestigationLink, NodeSet, NodeRelationship, NodePair
-from core.views import get_solr_results, custom_error_page
-from data_set_manager.models import Study, Assay, Node
+import copy
 from datetime import datetime
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.urlresolvers import reverse
@@ -16,9 +10,14 @@ from django.http import HttpResponse, HttpResponseRedirect, \
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils import simplejson
-from workflow_manager.tasks import get_workflow_inputs, get_workflows
-import copy
 import logging
+from workflow_manager.tasks import get_workflow_inputs, get_workflows
+from analysis_manager.models import AnalysisStatus
+from analysis_manager.tasks import run_analysis
+from core.models import Analysis, Workflow, WorkflowEngine, \
+    WorkflowDataInputMap, InvestigationLink, NodeSet, NodeRelationship, NodePair
+from core.views import get_solr_results, custom_error_page
+from data_set_manager.models import Study, Assay, Node
 
 
 logger = logging.getLogger(__name__)
@@ -57,7 +56,11 @@ def analysis_status(request, uuid):
             ret_json['execution'] = statuses.execution_status()
             ret_json['postprocessing'] = statuses.postprocessing_status()
             ret_json['cleanup'] = statuses.cleanup_status()
-            ret_json['overall'] = analysis.status
+            ret_json['overall'] = analysis.get_status()
+        if analysis.get_status() == Analysis.FAILURE_STATUS:
+            msg = "Analysis '{}' failed. No results were added to your data set."\
+                  .format(analysis.name)
+            messages.error(request, msg, extra_tags="alert alert-error")
         return HttpResponse(simplejson.dumps(ret_json),
                             mimetype='application/javascript')
     else:
@@ -65,6 +68,7 @@ def analysis_status(request, uuid):
             'analysis_manager/analysis_status.html',
             {'uuid':uuid, 'statuses': statuses, 'analysis': analysis},
             context_instance=RequestContext(request))
+
 
 @login_required
 def analysis_cancel(request):

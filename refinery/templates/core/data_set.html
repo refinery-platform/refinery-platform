@@ -7,7 +7,7 @@
 
 {% block head_html %}
   <link rel="stylesheet" href="{% static "vendor/tipsy/src/stylesheets/tipsy.css" %}" />
-  <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />  
+  <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
 
   <style type="text/css">
   svg {
@@ -111,6 +111,14 @@
 
 {% block content %}
 	<!-- tab headers -->
+
+{% if messages %}
+    {% for message in messages %}
+    <p {% if message.tags %} class="{{ message.tags }} text-center"{% endif %}>
+      {{ message }}
+    </p>
+    {% endfor %}
+{% endif %}
 
 <div ng-controller="DataSetUiModeCtrl">
 
