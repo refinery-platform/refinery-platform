@@ -14,7 +14,7 @@
 <div class="refinery-panel refinery-panel-content scrollable">
 	<div class="row-fluid">		
 	
-	{% if statuses %}
+	{% if status %}
 	
 		<div class="row-fluid">
 			<div class="span12">
@@ -27,9 +27,7 @@
 				</p>
 				{% else %}
 				<p>
-					<i class="icon-cog"></i>&nbsp;<a href="{% url 'workflow' statuses.analysis.workflow.uuid %}">{{ statuses.analysis.workflow.name }}</a> started on {{ statuses.analysis.modification_date }}.
-										
-					<!-- <i class="icon-file"></i>&nbsp;<a href="{% url 'data_set' statuses.analysis.data_set.uuid %}">{{ statuses.analysis.data_set.name }}</a> -->
+					<i class="icon-cog"></i>&nbsp;<a href="{% url 'workflow' status.analysis.workflow.uuid %}">{{ status.analysis.workflow.name }}</a> started on {{ status.analysis.modification_date }}.
 				</p>
 				
 				<p>
@@ -96,7 +94,12 @@
 			}
 		})();		
 				
-		monitor = new AnalysisMonitor("{{ uuid }}", document.location.protocol + "//" + document.location.host, "{% url 'data_set_analysis' statuses.analysis.data_set.uuid statuses.analysis.uuid %}", "{{ csrf_token }}");
+    monitor = new AnalysisMonitor(
+      "{{ uuid }}",
+      document.location.protocol + "//" + document.location.host,
+      "{% url 'data_set_analysis' status.analysis.data_set.uuid status.analysis.uuid %}",
+      "{{ csrf_token }}"
+    );
 		monitor.getUpdate();
 		
 		var timerId = setInterval( function(){ monitor.getUpdate(); }, 3000 );
@@ -112,7 +115,7 @@
 							monitor.cancelAnalysis( 
 								function( result ) {
 									alert( "Successfully canceled analysis." );
-									window.location = "{% url 'data_set' statuses.analysis.data_set.uuid %}";
+									window.location = "{% url 'data_set' status.analysis.data_set.uuid %}";
 									// redirect to dataset page?
 								},
 								function( result ) {
@@ -125,7 +128,7 @@
 			});		
 
 		$("#view-in-galaxy-button").click( function(event) {
-				window.location = "{{ statuses.analysis.workflow.workflow_engine.instance.base_url }}/history/view?id=" + history_id;
+				window.location = "{{ status.analysis.workflow.workflow_engine.instance.base_url }}/history/view?id=" + history_id;
 			});
 	});    		
 	</script>

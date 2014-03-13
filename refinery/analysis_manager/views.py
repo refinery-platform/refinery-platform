@@ -79,7 +79,7 @@ def analysis_status(request, uuid):
     else:
         return render_to_response(
             'analysis_manager/analysis_status.html',
-            {'uuid':uuid, 'status': status, 'analysis': analysis},
+            {'uuid': uuid, 'status': status, 'analysis': analysis},
             context_instance=RequestContext(request))
 
 
