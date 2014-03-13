@@ -110,11 +110,12 @@
 {% endblock %}
 
 {% block content %}
-	<!-- tab headers -->
+<!-- tab headers -->
 
+<!-- analysis status messages -->
 {% if messages %}
     {% for message in messages %}
-    <p {% if message.tags %} class="{{ message.tags }} text-center"{% endif %}>
+    <p {% if message.tags %} class="alert alert-{{ message.tags }} text-center"{% endif %}>
       {{ message }}
     </p>
     {% endfor %}

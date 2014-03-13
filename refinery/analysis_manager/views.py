@@ -49,6 +49,19 @@ def analysis_status(request, uuid):
         return HttpResponse(custom_error_page(request, '500.html', {}),
                             status='500')
 
+    # clear messages to avoid message duplication
+    storage = messages.get_messages(request)
+    storage.used = True
+    # add analysis status message
+    if analysis.get_status() == Analysis.FAILURE_STATUS:
+        msg = "Analysis '{}' failed.  No results were added to your data set."\
+              .format(analysis.name)
+        messages.error(request, msg)
+    elif analysis.get_status() == Analysis.SUCCESS_STATUS:
+        msg = "Analysis '{}' finished successfully.  View the results in the file browser."\
+              .format(analysis.name)
+        messages.success(request, msg)
+
     if request.is_ajax():
         ret_json = {}
         if statuses:
@@ -57,10 +70,6 @@ def analysis_status(request, uuid):
             ret_json['postprocessing'] = statuses.postprocessing_status()
             ret_json['cleanup'] = statuses.cleanup_status()
             ret_json['overall'] = analysis.get_status()
-        if analysis.get_status() == Analysis.FAILURE_STATUS:
-            msg = "Analysis '{}' failed. No results were added to your data set."\
-                  .format(analysis.name)
-            messages.error(request, msg, extra_tags="alert alert-error")
         return HttpResponse(simplejson.dumps(ret_json),
                             mimetype='application/javascript')
     else:
