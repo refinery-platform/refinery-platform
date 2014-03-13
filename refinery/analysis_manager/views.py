@@ -52,7 +52,6 @@ def analysis_status(request, uuid):
 
     # add analysis status message if request came from this view
     referer_path = urlparse(request.META.get('HTTP_REFERER', '')).path
-    logger.debug(referer_path + ' - ' + request.path)
     if referer_path == request.path:
         # clear messages to avoid message duplication
         storage = messages.get_messages(request)
