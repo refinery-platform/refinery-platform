@@ -113,7 +113,7 @@
 <!-- tab headers -->
 
 <!-- analysis status messages -->
-{% if messages %}
+{% if analysis_uuid and messages %}
     {% for message in messages %}
     <p {% if message.tags %} class="alert alert-{{ message.tags }} text-center"{% endif %}>
       {{ message }}

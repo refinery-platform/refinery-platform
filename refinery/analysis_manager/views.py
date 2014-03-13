@@ -11,13 +11,14 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils import simplejson
 import logging
-from workflow_manager.tasks import get_workflow_inputs, get_workflows
+from urlparse import urlparse
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import run_analysis
 from core.models import Analysis, Workflow, WorkflowEngine, \
     WorkflowDataInputMap, InvestigationLink, NodeSet, NodeRelationship, NodePair
 from core.views import get_solr_results, custom_error_page
 from data_set_manager.models import Study, Assay, Node
+from workflow_manager.tasks import get_workflow_inputs, get_workflows
 
 
 logger = logging.getLogger(__name__)
@@ -49,18 +50,22 @@ def analysis_status(request, uuid):
         return HttpResponse(custom_error_page(request, '500.html', {}),
                             status='500')
 
-    # clear messages to avoid message duplication
-    storage = messages.get_messages(request)
-    storage.used = True
-    # add analysis status message
-    if analysis.get_status() == Analysis.FAILURE_STATUS:
-        msg = "Analysis '{}' failed.  No results were added to your data set."\
-              .format(analysis.name)
-        messages.error(request, msg)
-    elif analysis.get_status() == Analysis.SUCCESS_STATUS:
-        msg = "Analysis '{}' finished successfully.  View the results in the file browser."\
-              .format(analysis.name)
-        messages.success(request, msg)
+    # add analysis status message if request came from this view
+    referer_path = urlparse(request.META.get('HTTP_REFERER', '')).path
+    logger.debug(referer_path + ' - ' + request.path)
+    if referer_path == request.path:
+        # clear messages to avoid message duplication
+        storage = messages.get_messages(request)
+        storage.used = True
+        # add analysis status message
+        if analysis.get_status() == Analysis.FAILURE_STATUS:
+            msg = "Analysis '{}' failed.  No results were added to your data set."\
+                  .format(analysis.name)
+            messages.error(request, msg)
+        elif analysis.get_status() == Analysis.SUCCESS_STATUS:
+            msg = "Analysis '{}' finished successfully.  View the results in the file browser."\
+                  .format(analysis.name)
+            messages.success(request, msg)
 
     if request.is_ajax():
         ret_json = {}
