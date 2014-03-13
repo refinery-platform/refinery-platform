@@ -43,7 +43,7 @@ def analysis_status(request, uuid):
 
     #TODO: handle MultipleObjectsReturned exception
     try:
-        statuses = AnalysisStatus.objects.get(analysis=analysis)
+        status = AnalysisStatus.objects.get(analysis=analysis)
     except AnalysisStatus.DoesNotExist:
         logger.error("AnalysisStatus object does not exist for Analysis '{}'"
                      .format(analysis.name))
@@ -68,18 +68,18 @@ def analysis_status(request, uuid):
 
     if request.is_ajax():
         ret_json = {}
-        if statuses:
-            ret_json['preprocessing'] = statuses.preprocessing_status()
-            ret_json['execution'] = statuses.execution_status()
-            ret_json['postprocessing'] = statuses.postprocessing_status()
-            ret_json['cleanup'] = statuses.cleanup_status()
+        if status:
+            ret_json['preprocessing'] = status.preprocessing_status()
+            ret_json['execution'] = status.execution_status()
+            ret_json['postprocessing'] = status.postprocessing_status()
+            ret_json['cleanup'] = status.cleanup_status()
             ret_json['overall'] = analysis.get_status()
         return HttpResponse(simplejson.dumps(ret_json),
                             mimetype='application/javascript')
     else:
         return render_to_response(
             'analysis_manager/analysis_status.html',
-            {'uuid':uuid, 'statuses': statuses, 'analysis': analysis},
+            {'uuid':uuid, 'status': status, 'analysis': analysis},
             context_instance=RequestContext(request))
 
 
