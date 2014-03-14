@@ -439,7 +439,6 @@ def monitor_analysis_execution(analysis):
             return
 
     # if we are here then analysis is running
-    analysis.set_status(Analysis.RUNNING_STATUS)
     #TODO: check if updating state is necessary, remove if not
     monitor_analysis_execution.update_state(state="PROGRESS", meta=progress)
     # keep monitoring until workflow has finished running
@@ -505,7 +504,6 @@ def run_analysis_execution(analysis):
                     "Cleanup failed for analysis '{}'".format(analysis.name))
 
 
-@task()
 def rename_analysis_results(analysis):
     """ Task for renaming files in file_store after download
 
@@ -551,12 +549,7 @@ def run_analysis_cleanup(analysis):
         logger.debug("analysis completion status: {}".format(analysis.status))
         send_analysis_email(analysis)
 
-    # Adding task to rename files after downloading results from history
-    logger.debug("before rename_analysis_results called");
-    #task_id = rename_analysis_results.subtask( (analysis,) ) 
-    #cleanup_taskset.append(task_id)
     rename_analysis_results(analysis)
-    logger.debug("after rename_analysis_results called")
 
     try:
         analysis.delete_galaxy_history()
