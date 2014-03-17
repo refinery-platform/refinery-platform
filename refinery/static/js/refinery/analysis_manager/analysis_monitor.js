@@ -273,36 +273,36 @@ AnalysisMonitor.prototype.isAnalysisRunning = function( callbackRunning, callbac
 	});
 };
 
-AnalysisMonitor.prototype.getAnalysisProgress = function( callbackRunning, callbackFinished ) {
-	var self = this;
+AnalysisMonitor.prototype.getAnalysisProgress = function(callbackRunning, callbackFinished) {
+  var self = this;
 
-	$.ajax({
-     url: self.baseUrl + "/analysis_manager/" + self.uuid + "/",
-     type:"POST",
-     dataType: "json",
-     data: { csrfmiddlewaretoken: self.crsfMiddlewareToken },
-     success: function( result ) {
-	     	if ( $.isEmptyObject( result ) ) {
-	     		// do nothing
+  $.ajax({
+    url: self.baseUrl + "/analysis_manager/" + self.uuid + "/",
+    type: "POST",
+    dataType: "json",
+    data: {csrfmiddlewaretoken: self.crsfMiddlewareToken},
+    success: function(result) {
+      if ($.isEmptyObject(result)) {
 	     		return;
-	     	}
-
-			if ( !self.isStageFinished( result.postprocessing ) ) {
-				if ( self.isStageRunning( result.execution ) ) {
-					callbackRunning( Math.floor( result.execution[0].percent_done.replace("%","") ) + "%" );
-				}
-				else {
-    	            if (result.overall == 'FAILURE') {
-    	                callbackFinished( result );
-    	            }
-    	            else {
-    	                callbackRunning("0%");
-    	            }
-				}
-			}
-			else {
-				callbackFinished( result );
-			}
-    	}
-	});
+      }
+      if (!self.isStageFinished(result.postprocessing)) {
+        if (self.isStageRunning(result.execution)) {
+          callbackRunning(
+            Math.floor(result.execution[0].percent_done.replace("%","")) + "%"
+          );
+        }
+        else {
+          if (result.overall == 'FAILURE') {
+            callbackFinished(result);
+          }
+          else {
+            callbackRunning("0%");
+          }
+        }
+      }
+      else {
+        callbackFinished(result);
+      }
+    }
+  });
 };
