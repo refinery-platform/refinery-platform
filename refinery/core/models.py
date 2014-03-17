@@ -481,13 +481,12 @@ class Workflow(SharableResource, ManageableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
-
     
 class Project( SharableResource ):
     is_catch_all = models.BooleanField( default=False )
 
     def __unicode__(self):
-        return self.name + " - " + self.summary
+        return self.name + " - " + self.get_owner().username + " - " + self.summary
     
     class Meta:
         verbose_name = "project"
