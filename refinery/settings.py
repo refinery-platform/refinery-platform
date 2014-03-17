@@ -409,6 +409,20 @@ REFINERY_EXTERNAL_AUTH = False
 # Message to display on password management pages when REFINERY_EXTERNAL_AUTH is set to True
 REFINERY_EXTERNAL_AUTH_MESSAGE = ''
 
+#external tool status settings 
+INTERVAL_BETWEEN_CHECKS = {
+                            "CELERY": 4.0,
+                            "SOLR": 5.0,
+                            "GALAXY": 5.0,
+                            }
+    
+TIMEOUT = {
+           "CELERY": 1.5,
+           "SOLR": 2.5,
+           "GALAXY": 2.0,
+           }
+
+
 # import local settings
 try:
     from settings_local import *

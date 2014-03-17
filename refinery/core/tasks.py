@@ -9,6 +9,7 @@ from django.core.cache import cache
 from django.utils.hashcompat import md5_constructor as md5
 from django.contrib.syndication.views import Feed
 from galaxy_connector.galaxy_workflow import GalaxyWorkflow, GalaxyWorkflowInput
+from galaxy_connector.exceptions import ResourceNameError, ConnectionError
 from core.models import DataSet, InvestigationLink, Workflow, WorkflowDataInput, ExternalToolStatus, WorkflowEngine
 from data_set_manager.models import Investigation, Study
 from data_set_manager.tasks import annotate_nodes
@@ -277,20 +278,28 @@ def check_for_celery():
                 celery.status = ExternalToolStatus.FAILURE_STATUS #celery is gone, get error thrown
             else:
                 celery.status = ExternalToolStatus.SUCCESS_STATUS #celery is alive
+                celery.error_logged = False
         except IOError:
-            logger.info("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
+            if not celery.error_logged:
+                logger.error("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
+                celery.error_logged = True
             celery.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         except AMQPConnectionException:
-            logger.info("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
+            if not celery.error_logged:
+                logger.error("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
+                celery.error_logged = True
             celery.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         except AMQPChannelException:
-            logger.error("AMQPChannelException raised by ping(). Is your broker (e.g. RabbitMQ) available?")
+            logger.info("AMQPChannelException raised by ping(). Is your broker (e.g. RabbitMQ) available?")
             celery.status = ExternalToolStatus.SUCCESS_STATUS
+            celery.error_logged = False
         except socket.error as e:
-            logger.info("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
+            if not celery.error_logged:
+                logger.error("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
+                celery.error_logged = True
             celery.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         except:
-            logger.info("core.tasks.check_for_celery: Something went wrong, check the stack trace below for what")
+            logger.exception("core.tasks.check_for_celery: Something went wrong, check the stack trace below for what")
             celery.status = ExternalToolStatus.FAILURE_STATUS
         #set last time check to now
         celery.last_time_check = datetime.now()
@@ -306,8 +315,11 @@ def check_for_solr():
         try: #actually check now
             requests.get(settings.REFINERY_SOLR_BASE_URL + "core/admin/ping")
             solr.status = ExternalToolStatus.SUCCESS_STATUS #successfully reached solr
+            solr.error_logged = False
         except requests.ConnectionError as e:
-            logger.info("core.tasks.check_for_solr: Could not connect to Solr")
+            if not solr.error_logged:
+                logger.error("core.tasks.check_for_solr: Could not connect to Solr")
+                solr.error_logged = True
             solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         except:
                 logger.exception("core.tasks.check_for_solr: Something went wrong, check the stack trace below for what")
@@ -336,10 +348,17 @@ def dispatch_galaxy_checks():
 @task(expires=(int(ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.GALAXY_TOOL_NAME]) - 1), time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME])
 def check_for_galaxy(instance, galaxy):
     try:
-        instance.get_galaxy_connection().get_histories()
-        galaxy.status = ExternalToolStatus.SUCCESS_STATUS #galaxy running properly
-    except RuntimeError as e:
-        logger.exception("core.tasks.check_for_galaxy: Could not connect to Galaxy")
+        # send a GET request for Galaxy's robots.txt file
+        requests.get("%s/robots.txt" % instance.base_url)
+        galaxy.status = ExternalToolStatus.SUCCESS_STATUS # galaxy running properly
+        galaxy.error_logged = False
+    except ResourceNameError: # galaxy is up and returned a 404 status
+        galaxy.status = ExternalToolStatus.SUCCESS_STATUS # galaxy running, but robots.txt file missing
+        galaxy.error_logged = False
+    except requests.exceptions.ConnectionError as e:
+        if not galaxy.error_logged:
+            logger.error("core.tasks.check_for_galaxy: Could not connect to Galaxy")
+            galaxy.error_logged = True
         galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
     except:
         logger.exception("core.tasks.check_for_galaxy: Something went wrong, check the stack trace below for what")
