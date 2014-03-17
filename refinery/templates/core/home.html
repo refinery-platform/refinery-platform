@@ -185,7 +185,11 @@
 			    		{% endif %}
 			    	</td>
 			    	<td>
-			    		<span id="analysis-{{ analysis.uuid }}-status"></span>
+			    		{% if analysis.status == "SUCCESS" %}
+				    		<span class="badge badge-info"><i class="icon-ok"></i></span>
+			    		{% else %}
+				    		<span id="analysis-{{ analysis.uuid }}-status"></span>
+			    		{% endif %}
 			    	</td>
 			    </tr>
 			{% endfor %}	
@@ -221,7 +225,11 @@
 			    		{% endif %}
 			    	</td>
 				    <td>
-						<span id="status-{{ analysis.uuid }}"></span>
+			    		{% if analysis.status == "SUCCESS" %}
+				    		<span class="badge badge-info"><i class="icon-ok"></i></span>
+			    		{% else %}
+				    		<span id="analysis-{{ analysis.uuid }}-status"></span>
+			    		{% endif %}
 				    </td>
 			    </tr>
 			{% endfor %}
