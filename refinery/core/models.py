@@ -486,8 +486,11 @@ class Project( SharableResource ):
     is_catch_all = models.BooleanField( default=False )
 
     def __unicode__(self):
-        return self.name + " - " + self.get_owner().username + " - " + self.summary
-    
+        if self.get_owner() is not null:
+            return self.name + " - " + self.get_owner().username + " - " + self.summary
+
+        return self.name + " - " + "(no owner assigned)" + " - " + self.summary
+
     class Meta:
         verbose_name = "project"
         permissions = (
