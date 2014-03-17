@@ -486,7 +486,7 @@ class Project( SharableResource ):
     is_catch_all = models.BooleanField( default=False )
 
     def __unicode__(self):
-        if self.get_owner() is not null:
+        if self.get_owner() is not None:
             return self.name + " - " + self.get_owner().username + " - " + self.summary
 
         return self.name + " - " + "(no owner assigned)" + " - " + self.summary
