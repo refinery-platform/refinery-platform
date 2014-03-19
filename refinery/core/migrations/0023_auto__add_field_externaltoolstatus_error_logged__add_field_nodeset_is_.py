@@ -8,10 +8,32 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        pass
+        # Adding field 'ExternalToolStatus.error_logged'
+        db.add_column(u'core_externaltoolstatus', 'error_logged',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
+
+        # Adding field 'NodeSet.is_current'
+        db.add_column(u'core_nodeset', 'is_current',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
+
+        # Adding field 'NodeRelationship.is_current'
+        db.add_column(u'core_noderelationship', 'is_current',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
+
 
     def backwards(self, orm):
-        pass
+        # Deleting field 'ExternalToolStatus.error_logged'
+        db.delete_column(u'core_externaltoolstatus', 'error_logged')
+
+        # Deleting field 'NodeSet.is_current'
+        db.delete_column(u'core_nodeset', 'is_current')
+
+        # Deleting field 'NodeRelationship.is_current'
+        db.delete_column(u'core_noderelationship', 'is_current')
+
 
     models = {
         u'auth.group': {
