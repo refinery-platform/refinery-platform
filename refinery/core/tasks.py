@@ -278,28 +278,20 @@ def check_for_celery():
                 celery.status = ExternalToolStatus.FAILURE_STATUS #celery is gone, get error thrown
             else:
                 celery.status = ExternalToolStatus.SUCCESS_STATUS #celery is alive
-                celery.error_logged = False
         except IOError:
-            if not celery.error_logged:
-                logger.error("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
-                celery.error_logged = True
+            logger.info("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
             celery.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         except AMQPConnectionException:
-            if not celery.error_logged:
-                logger.error("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
-                celery.error_logged = True
+            logger.info("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
             celery.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         except AMQPChannelException:
-            logger.info("AMQPChannelException raised by ping(). Is your broker (e.g. RabbitMQ) available?")
+            logger.error("AMQPChannelException raised by ping(). Is your broker (e.g. RabbitMQ) available?")
             celery.status = ExternalToolStatus.SUCCESS_STATUS
-            celery.error_logged = False
         except socket.error as e:
-            if not celery.error_logged:
-                logger.error("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
-                celery.error_logged = True
+            logger.info("core.tasks.check_for_celery: Celeryd could not connect to the broker (e.g. RabbitMQ). Please restart it.")
             celery.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         except:
-            logger.exception("core.tasks.check_for_celery: Something went wrong, check the stack trace below for what")
+            logger.info("core.tasks.check_for_celery: Something went wrong, check the stack trace below for what")
             celery.status = ExternalToolStatus.FAILURE_STATUS
         #set last time check to now
         celery.last_time_check = datetime.now()
@@ -315,11 +307,8 @@ def check_for_solr():
         try: #actually check now
             requests.get(settings.REFINERY_SOLR_BASE_URL + "core/admin/ping")
             solr.status = ExternalToolStatus.SUCCESS_STATUS #successfully reached solr
-            solr.error_logged = False
         except requests.ConnectionError as e:
-            if not solr.error_logged:
-                logger.error("core.tasks.check_for_solr: Could not connect to Solr")
-                solr.error_logged = True
+            logger.error("core.tasks.check_for_solr: Could not connect to Solr")
             solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         except:
                 logger.exception("core.tasks.check_for_solr: Something went wrong, check the stack trace below for what")
@@ -351,14 +340,10 @@ def check_for_galaxy(instance, galaxy):
         # send a GET request for Galaxy's robots.txt file
         requests.get("%s/robots.txt" % instance.base_url)
         galaxy.status = ExternalToolStatus.SUCCESS_STATUS # galaxy running properly
-        galaxy.error_logged = False
     except ResourceNameError: # galaxy is up and returned a 404 status
         galaxy.status = ExternalToolStatus.SUCCESS_STATUS # galaxy running, but robots.txt file missing
-        galaxy.error_logged = False
     except requests.exceptions.ConnectionError as e:
-        if not galaxy.error_logged:
-            logger.error("core.tasks.check_for_galaxy: Could not connect to Galaxy")
-            galaxy.error_logged = True
+        logger.error("core.tasks.check_for_galaxy: Could not connect to Galaxy")
         galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
     except:
         logger.exception("core.tasks.check_for_galaxy: Something went wrong, check the stack trace below for what")
