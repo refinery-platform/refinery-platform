@@ -1,3 +1,4 @@
+from annotation_server.api import *
 from core.api import AnalysisResource, ProjectResource, NodeSetResource, \
     NodeResource, NodeSetListResource, NodePairResource, NodeRelationshipResource, \
     WorkflowResource, WorkflowInputRelationshipsResource, DataSetResource, ExternalToolStatusResource
@@ -44,6 +45,20 @@ v1_api.register(NodeRelationshipResource())
 v1_api.register(WorkflowResource())
 v1_api.register(WorkflowInputRelationshipsResource())
 v1_api.register(ExternalToolStatusResource())
+v1_api.register(TaxonResource())
+v1_api.register(GenomeBuildResource())
+v1_api.register(CytoBandResource())
+v1_api.register(ChromInfoResource())
+v1_api.register(GeneResource())
+v1_api.register(GapRegionFileResource())
+v1_api.register(WigDescriptionResource())
+v1_api.register(EmpiricalMappabilityResource())
+v1_api.register(TheoreticalMappabilityResource())
+v1_api.register(GCContentResource())
+v1_api.register(ConservationTrackResource())
+v1_api.register(hg19_GenCodeResource())
+v1_api.register(ce10_WormBaseResource())
+v1_api.register(dm3_FlyBaseResource())
 
 #patterns for all of the different applications
 urlpatterns = patterns('',    

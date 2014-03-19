@@ -186,17 +186,17 @@ class Command(BaseCommand):
                         item.delete()
                     except ObjectDoesNotExist:
                         logger.debug("WigDescription does not exist for genome: %s, annotation_type: %s" % (self.GENOME_BUILD, annot_type))
-        
-                    
+
+
                     ret_attr = parse_wig_attribute(line)
                     table_vals = ['name', 'altColor', 'color', 'visibility', 'priority', 'type', 'description']
                     db_string = "WigDescription(genome_build='%s', annotation_type='%s', %s)"
                     db_string = db_string % (self.GENOME_BUILD, annot_type, parse_db_string(ret_attr, table_vals))
-                    
+
                     # saving to wigDescription model
                     item = eval(db_string)
                     item.save()
-                    
+
                 elif t1[0] == 'fixedStep':
                     attr = parse_wig_attribute(line)
                     chrom = attr['chrom']
@@ -205,11 +205,11 @@ class Command(BaseCommand):
                     curr_pos = start
                 else:
                     curr_pos += step
-                    
+
                     # adding to django model
                     wigItem = current_table(annot=item, chrom=chrom, position=curr_pos, value=t1[0])
                     wigItem.save()
-    
+
     def mappabilityTheoretical(self, bed_file):
         '''
         Annotation tracks pertaining to Theoretical Mappability
