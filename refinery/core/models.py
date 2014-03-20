@@ -158,7 +158,13 @@ class OwnableResource ( BaseResource ):
         for user, permission in user_permissions.iteritems():
             if "add_%s" % self._meta.verbose_name in permission:
                 return user
-    
+
+    def get_owner_username(self):
+        if self.get_owner():
+            return self.get_owner().username
+        else:
+            return "(no owner assigned)"
+
     class Meta:
         verbose_name = "ownableresource"
         abstract = True
@@ -486,10 +492,7 @@ class Project( SharableResource ):
     is_catch_all = models.BooleanField( default=False )
 
     def __unicode__(self):
-        if self.get_owner() is not None:
-            return self.name + " - " + self.get_owner().username + " - " + self.summary
-
-        return self.name + " - " + "(no owner assigned)" + " - " + self.summary
+        return self.name + " - " + self.get_owner_username() + " - " + self.summary
 
     class Meta:
         verbose_name = "project"
@@ -579,7 +582,7 @@ class Analysis(OwnableResource):
         verbose_name_plural = "analyses"
 
     def __unicode__(self):
-        return self.name + " - " + self.get_owner().username + " - " + self.summary
+        return self.name + " - " + self.get_owner_username() + " - " + self.summary
 
     class Meta:
         verbose_name = "analysis"
