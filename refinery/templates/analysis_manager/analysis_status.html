@@ -79,7 +79,8 @@
 
 		var history_id = null;
 
-    (function poll() {
+    var getHistoryIntervalID = window.setInterval(getHistoryID, 1000);
+    function getHistoryID() {
       if (history_id == null) {
         $.ajax({
           url: "/api/v1/analysis/{{ uuid }}/?format=json",
@@ -88,14 +89,14 @@
               // a history id has become available
               history_id = data.history_id;
               $("#view-in-galaxy-button").removeAttr("disabled");
+              window.clearInterval(getHistoryIntervalID);
             }
           },
           dataType: "json",
-          complete: poll,
           timeout: 5000
         });
       }
-    })();		
+    }		
 
     monitor = new AnalysisMonitor(
       "{{ uuid }}",
