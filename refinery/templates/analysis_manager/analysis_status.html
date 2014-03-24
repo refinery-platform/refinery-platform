@@ -75,25 +75,28 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
 	
 	<script>
-	$(document).ready(function() {
-		
+  $(document).ready(function() {
+
 		var history_id = null;
-		
-		(function poll(){
-			
-			if ( history_id == null ) {
-			    $.ajax({ url: "/api/v1/analysis/{{ uuid }}/?format=json", success: function(data){
-			    	
-			    	if ( history_id == null && data.history_id != null ) {
-			    		// a history id has become available
-				        history_id = data.history_id;		        						
-						$("#view-in-galaxy-button").removeAttr( "disabled" );			    		
-			    	}			        		        
-			
-			    }, dataType: "json", complete: poll, timeout: 5000 });				
-			}
-		})();		
-				
+
+    (function poll() {
+      if (history_id == null) {
+        $.ajax({
+          url: "/api/v1/analysis/{{ uuid }}/?format=json",
+          success: function(data) {
+			    	if (history_id == null && data.history_id != null) {
+              // a history id has become available
+              history_id = data.history_id;
+              $("#view-in-galaxy-button").removeAttr("disabled");
+            }
+          },
+          dataType: "json",
+          complete: poll,
+          timeout: 5000
+        });
+      }
+    })();		
+
     monitor = new AnalysisMonitor(
       "{{ uuid }}",
       document.location.protocol + "//" + document.location.host,
@@ -133,4 +136,3 @@
 	});    		
 	</script>
 {% endblock %}
-
