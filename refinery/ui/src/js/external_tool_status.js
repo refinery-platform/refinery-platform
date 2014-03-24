@@ -109,7 +109,7 @@ angular.module('refineryExternalToolStatus', [])
 
     for (var key in tools.GALAXY) {
       if (tools.GALAXY.hasOwnProperty(key)) {
-        if (tools.GALAXY[key] === "FAILURE") {
+        if (tools.GALAXY[key] !== "SUCCESS") {
           return false;
         }
       }
