@@ -119,9 +119,9 @@ def analysis_cancel(request):
 
 
 def analysis_run(request):
-    logger.debug( "analysis_manager.views.analysis_run called")
-    logger.debug( simplejson.dumps(request.POST, indent=4) )
-    
+    logger.debug("analysis_manager.views.analysis_run called")
+    logger.debug("POST request content\n" + simplejson.dumps(request.POST, indent=4))
+
     # gets workflow_uuid
     workflow_uuid = request.POST.getlist('workflow_choice')[0]
     
@@ -144,12 +144,9 @@ def analysis_run(request):
     # retrieving workflow based on input workflow_uuid
     annot_inputs = get_workflow_inputs(workflow_uuid)
     len_inputs = len(set(annot_inputs))
-    
-    #print "annot_inputs"
-    #print annot_inputs
-    print "selected_uuids"
-    print selected_uuids
-    
+
+    logger.debug("selected_uuids: " + selected_uuids)
+
     #------------ CONFIGURE INPUT FILES -------------------------- #   
     ret_list = [];
     ret_item = copy.deepcopy(annot_inputs)
@@ -240,10 +237,10 @@ def analysis_run(request):
     #analysis_status = AnalysisStatus.objects.create(analysis_uuid=analysis.uuid)
     analysis_status = AnalysisStatus.objects.create(analysis=analysis)
     analysis_status.save()
-    
+
     # call function via analysis_manager
-    run_analysis.delay(analysis, 5.0)
-    
+    run_analysis.delay(analysis)
+
     return HttpResponseRedirect(reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,)))
 
 def repository_run(request):
@@ -310,7 +307,7 @@ def repository_run(request):
         analysis_status.save()
         
         # call function via analysis_manager
-        run_analysis.delay(analysis, 5.0)
+        run_analysis.delay(analysis)
         
         #import pdb; pdb.set_trace()
         logger.debug(request.build_absolute_uri(reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,)) ))
@@ -538,8 +535,8 @@ def run(request):
     analysis_status.save()
     
     # call function via analysis_manager
-    run_analysis.delay(analysis, 5.0)
-    
+    run_analysis.delay(analysis)
+
     redirect_url = reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,))
     return HttpResponse(redirect_url)
 

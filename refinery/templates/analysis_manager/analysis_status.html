@@ -85,7 +85,7 @@
         $.ajax({
           url: "/api/v1/analysis/{{ uuid }}/?format=json",
           success: function(data) {
-			    	if (history_id == null && data.history_id != null) {
+            if (history_id == null && data.history_id != null) {
               // a history id has become available
               history_id = data.history_id;
               $("#view-in-galaxy-button").removeAttr("disabled");

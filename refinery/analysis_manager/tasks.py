@@ -208,15 +208,15 @@ def chord_cleanup(ret_val, analysis):
 
 
 @task()
-def run_analysis(analysis, interval=5.0):
+def run_analysis(analysis):
     '''Launch analysis (outermost task, calls subtasks that monitor and run
     preprocessing, execution, postprocessing)
 
     '''
     logger.debug("analysis_manager.tasks run_analysis called")
-    analysis_status = AnalysisStatus.objects.get(analysis=analysis)
     # updating status of analysis to running
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+    analysis_status = AnalysisStatus.objects.get(analysis=analysis)
     analysis.set_status(Analysis.RUNNING_STATUS)
     # DOWNLOADING
     # GETTING LIST OF DOWNLOADED REMOTE FILES 
