@@ -180,11 +180,12 @@ class OwnableResource ( BaseResource ):
         abstract = True
         
 
-class SharableResource ( OwnableResource ):
-    '''
-    Abstract base class for core resources that can be shared (projects, data sets, workflows, workflow engines, etc.).
-    
-    IMPORTANT: expects derived classes to have "add/read/change/write_xxx" + "share_xxx" permissions, where "xxx" is the simple_modelname    
+class SharableResource (OwnableResource):
+    '''Abstract base class for core resources that can be shared
+    (projects, data sets, workflows, workflow engines, etc.).
+    IMPORTANT: expects derived classes to have "add/read/change/write_xxx" +
+    "share_xxx" permissions, where "xxx" is the simple_modelname
+
     '''
     def __unicode__(self):
         return self.name
@@ -288,12 +289,21 @@ class ManageableResource:
 class DataSet(SharableResource):
     # TODO: add function to restore earlier version
     # TODO: add collections (of assays in the investigation) and associate those with the versions
-
     # total number of files in this data set
     file_count = models.IntegerField(blank=True, null=True, default=0)
     # total number of bytes of all files in this data set
     file_size = models.BigIntegerField(blank=True, null=True, default=0)
-    
+
+    class Meta:
+        verbose_name = "dataset"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
+            ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
+        )
+
+    def __unicode__(self):
+        return self.name + " - " + self.get_owner_username() + " - " + self.summary
+
     def set_investigation(self,investigation,message=""):
         '''
         Associate this data set with an investigation. If this data set has an association with an investigation this 
@@ -303,16 +313,14 @@ class DataSet(SharableResource):
         link = InvestigationLink(data_set=self, investigation=investigation, version=1, message=message)
         link.save()
         return 1
-        
-        
+
     def update_investigation(self, investigation, message):
         version = self.get_version()        
         if version is None:
             return self.set_investigation(investigation, message)            
         link = InvestigationLink(data_set=self, investigation=investigation, version=version+1, message=message)
         link.save()
-        return version+1       
-
+        return version+1
 
     def get_version(self):
         try:
@@ -320,7 +328,6 @@ class DataSet(SharableResource):
             return version
         except:
             return None
-
 
     def get_version_details(self, version=None ):
         try:
@@ -330,7 +337,6 @@ class DataSet(SharableResource):
             return InvestigationLink.objects.filter( data_set=self, version=version ).get()            
         except:
             return None
-
 
     def get_investigation(self, version=None):
         if version is None:
@@ -345,11 +351,10 @@ class DataSet(SharableResource):
             return il.investigation
         except:
             return None
-        
-        
+
     def get_file_count(self):
-        '''
-        Returns the number of files in the data set.
+        '''Returns the number of files in the data set.
+
         '''
         investigation = self.get_investigation()
         file_count = 0
@@ -359,10 +364,9 @@ class DataSet(SharableResource):
             
         return file_count
 
-
     def get_file_size(self):
-        '''
-        Returns the disk space in bytes used by all files in the data set.
+        '''Returns the disk space in bytes used by all files in the data set.
+
         '''
         investigation = self.get_investigation()
         file_size = 0
@@ -375,20 +379,8 @@ class DataSet(SharableResource):
             for file in files:                
                 size = get_file_size( file["file_uuid"], report_symlinks=include_symlinks )
                 file_size += size
-                            
+
         return file_size
-                    
-    
-    def __unicode__(self):
-        return self.name + " - " + self.summary
-
-
-    class Meta:
-        verbose_name = "dataset"
-        permissions = (
-            ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
-            ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
-        )
 
 
 class InvestigationLink(models.Model):
