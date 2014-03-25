@@ -118,6 +118,7 @@ def analysis_cancel(request):
         return HttpResponseNotAllowed(['POST'])  # 405
 
 
+#TODO: remove this view if no longer in use
 def analysis_run(request):
     logger.debug("analysis_manager.views.analysis_run called")
     logger.debug("POST request content\n" + simplejson.dumps(request.POST, indent=4))
@@ -243,6 +244,8 @@ def analysis_run(request):
 
     return HttpResponseRedirect(reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,)))
 
+
+#TODO: remove this view if no longer in use
 def repository_run(request):
     logger.debug( "analysis_manager.views.repository_run called")
         
