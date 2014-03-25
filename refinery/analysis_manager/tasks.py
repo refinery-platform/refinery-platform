@@ -428,14 +428,19 @@ def monitor_analysis_execution(analysis):
     if progress["workflow_state"] == "error":
         # Setting state of analysis to failure
         analysis.set_status(Analysis.FAILURE_STATUS)
-        logger.debug("analysis status: %s" % analysis.get_status())
+        logger.debug("Analysis '{}' failed execution in Galaxy"\
+                     .format(analysis.uuid))
         return
     elif progress["workflow_state"] == "ok":
         # number of steps in the workflow
-        min_dataset_number = len(json.loads(analysis.workflow.graph)['steps'])
+        workflow_steps = len(json.loads(analysis.workflow.graph)['steps'])
+        logger.debug("workflow_steps: {}, ok datasets: {}"\
+                     .format(workflow_steps, progress["message"]["ok"]))
         # check if we have enough datasets in history
-        if progress["message"]["ok"] >= min_dataset_number:
+        if progress["message"]["ok"] >= workflow_steps:
             analysis.set_status(Analysis.SUCCESS_STATUS)
+            logger.info("Analysis '{}' successfully finished running in Galaxy"\
+                        .format(analysis.uuid))
             return
 
     # if we are here then analysis is running
