@@ -46,7 +46,6 @@ class AnalysisStatus( models.Model ):
             return None
 
         connection = self.analysis.get_galaxy_connection()
-
         try:
             history = connection.get_history(self.analysis.history_id)
         except RuntimeError:
@@ -67,7 +66,6 @@ class AnalysisStatus( models.Model ):
                 percent_complete = 0
             status[0]['percent_done'] = str(percent_complete) + '%'
         return status
-
 
     def postprocessing_status(self):
         return get_payload(self.postprocessing_taskset_id)

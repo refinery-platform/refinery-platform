@@ -129,11 +129,15 @@
 						}
 					}
 				); 				
-			});		
-
-		$("#view-in-galaxy-button").click( function(event) {
-				window.location = "{{ status.analysis.workflow.workflow_engine.instance.base_url }}/history/view?id=" + history_id;
 			});
-	});    		
-	</script>
+
+    $("#view-in-galaxy-button").click(function(event) {
+      // open Galaxy history in a new window
+      galaxyHistoryUrl = "{{ status.analysis.workflow.workflow_engine.instance.base_url }}";
+      galaxyHistoryUrl += "/history/view?id=";
+      galaxyHistoryUrl += history_id;
+      window.open(galaxyHistoryUrl, '_blank');
+    });
+  });    		
+  </script>
 {% endblock %}
