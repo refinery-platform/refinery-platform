@@ -151,17 +151,27 @@ class OwnableResource ( BaseResource ):
         assign( "delete_%s" % self._meta.verbose_name, user, self )
         assign( "change_%s" % self._meta.verbose_name, user, self )
 
-    def get_owner( self ):
+    def get_owner(self):
         # ownership is determined by "add" permission
-        user_permissions = get_users_with_perms( self, attach_perms=True, with_group_users=False )
-        
+        user_permissions = get_users_with_perms(self, attach_perms=True, with_group_users=False)
         for user, permission in user_permissions.iteritems():
             if "add_%s" % self._meta.verbose_name in permission:
                 return user
+        return None
 
     def get_owner_username(self):
         if self.get_owner():
             return self.get_owner().username
+        else:
+            return "(no owner assigned)"
+
+    def get_owner_full_name(self):
+        owner = self.get_owner()
+        if owner:
+            if owner.get_full_name():
+                return owner.get_full_name()
+            else:
+                return owner.username
         else:
             return "(no owner assigned)"
 

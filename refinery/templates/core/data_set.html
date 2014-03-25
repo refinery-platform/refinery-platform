@@ -534,7 +534,14 @@
 				<div class="refinery-subheader">
 					<h4>Owner</h4>
 				</div>
-				<p><i class="icon-user"></i>&nbsp;<a href="{% url "user" data_set.get_owner.get_profile.uuid %}">{% if data_set.get_owner.get_full_name %}{{ data_set.get_owner.get_full_name }}{% else %}{{ data_set.get_owner }}{%endif%}</a></p>
+        <p>
+          <span class="icon-user"></span>&nbsp;
+          {% if data_set.get_owner %}
+            <a href="{% url "user" data_set.get_owner.get_profile.uuid %}">{{ data_set.get_owner_full_name }}</a>
+          {% else %}
+            Unknown owner
+          {% endif %}
+        </p>
 
 				{% if data_set.get_groups|length > 0 %}
 				<div class="refinery-subheader">
