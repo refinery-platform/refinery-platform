@@ -168,10 +168,7 @@ class OwnableResource ( BaseResource ):
     def get_owner_full_name(self):
         owner = self.get_owner()
         if owner:
-            if owner.get_full_name():
-                return owner.get_full_name()
-            else:
-                return owner.username
+            return owner.get_full_name() or owner.username
         else:
             return "(no owner assigned)"
 
