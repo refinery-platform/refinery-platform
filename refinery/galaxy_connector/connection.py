@@ -7,6 +7,7 @@ in the Galaxy API example directory.
 @author: Nils Gehlenborg, Harvard Medical School, nils@hms.harvard.edu
 '''
 
+import httplib
 import logging
 import requests
 import urllib2
@@ -68,6 +69,9 @@ class Connection(object):
         except requests.exceptions.Timeout as e:
             logger.error(e.message)
             raise TimeoutError()
+        except httplib.IncompleteRead as e:
+            logger.error(e)
+            raise ConnectionError()
         # check for HTTP errors
         try:
             response.raise_for_status()

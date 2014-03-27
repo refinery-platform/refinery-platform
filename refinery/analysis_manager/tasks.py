@@ -489,8 +489,10 @@ def run_analysis_execution(analysis):
     # Running workflow
     try:
         result = connection.run_workflow(
-            analysis.workflow_galaxy_id, ret_list,
-            analysis.history_id, analysis.workflow.uuid
+            analysis.workflow_galaxy_id,
+            ret_list,
+            analysis.history_id,
+            analysis.workflow.uuid
             )
     except RuntimeError as e:
         error_msg = "Analysis launch failed: " + \
