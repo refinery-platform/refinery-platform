@@ -100,14 +100,20 @@ class Connection(object):
         url = self.make_url(command)
         # check for connection errors
         try:
-            response = requests.post(url, data=simplejson.dumps(data),
-                                     headers={'Content-Type': 'application/json'})
+            response = requests.post(
+                                     url,
+                                     data=simplejson.dumps(data),
+                                     headers={'Content-Type': 'application/json'}
+                                     )
         except requests.exceptions.ConnectionError as e:
             logger.error(e.message.message)
             raise ConnectionError()
         except requests.exceptions.Timeout as e:
             logger.error(e.message)
             raise TimeoutError()
+        except httplib.IncompleteRead as e:
+            logger.error(e)
+            raise ConnectionError()
         # check for HTTP errors
         try:
             response.raise_for_status()

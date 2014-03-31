@@ -621,7 +621,12 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
                 file_path = curr_filestore.get_absolute_path()
                 if file_path:
                     cur_item["filepath"] = file_path
-                    file_id = connection.put_into_library(library_id, file_path)
+                    try:
+                        file_id = connection.put_into_library(library_id, file_path)
+                    except ConnectionError:
+                        logger.error("Failed adding file '{}' to Galaxy library '{}'")\
+                        .format(curr_file_uuid, library_id)
+                        raise
                     cur_item["id"] = file_id
                 else:
                     raise RuntimeError(
