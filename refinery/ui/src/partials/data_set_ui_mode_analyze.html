@@ -61,10 +61,15 @@
         <p></p>
       </div>
       <div ng-controller="AnalysisCtrl">
+      <!-- using external tool status for Galaxy -->
+      <!--      
         <button class="btn btn-warning" ng-click="launchAnalysis()" ng-disabled="!(currentNodeRelationship && currentNodeRelationship.node_pairs.length > 0 && galaxyStatus)" style="width: 100%">Launch Analysis</button>
         <div ng-hide="galaxyStatus">
           Galaxy is down!
         </div>
+      -->
+      <!-- no external tool status monitoring -->
+        <button class="btn btn-warning" ng-click="launchAnalysis()" ng-disabled="!(currentNodeRelationship && currentNodeRelationship.node_pairs.length > 0 )" style="width: 100%">Launch Analysis</button>
       </div>
     </div>
   </div>
