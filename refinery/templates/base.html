@@ -86,10 +86,12 @@
         {% endif %}
         <i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
         {% endif %}
-       	&nbsp;&nbsp;|&nbsp;&nbsp;
-       	<span ng-controller="ExternalToolStatusController">
-       	  <span externaltoolstatus></span>
-        </span>
+          {% if request.user.is_superuser %}
+         	&nbsp;&nbsp;|&nbsp;&nbsp;
+         	<span ng-controller="ExternalToolStatusController">
+         	  <span externaltoolstatus></span>
+          </span>
+          {% endif %}
         </p>
 
         <div class="nav-collapse collapse">
