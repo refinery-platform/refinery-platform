@@ -425,7 +425,7 @@ def monitor_analysis_execution(analysis):
         logger.error(error_msg)
         return
 
-    if progress["workflow_state"] == "error":
+    if progress["message"]["error"] > 0:
         # Setting state of analysis to failure
         analysis.set_status(Analysis.FAILURE_STATUS)
         logger.debug("Analysis '{}' failed execution in Galaxy"\
