@@ -945,6 +945,10 @@ class NodeRelationship(BaseResource):
     # is this the "current mapping" node set for the associated study/assay?
     is_current = models.BooleanField(default=False)
 
+    def __unicode__(self):
+        return self.name + ( "*" if self.is_current else "" ) + " - " + str(self.study.title)
+
+
 
 def get_current_node_relationship( study_uuid, assay_uuid ):
     '''
