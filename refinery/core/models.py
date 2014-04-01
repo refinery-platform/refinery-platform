@@ -796,6 +796,10 @@ class NodeSet(SharableResource, TemporaryResource):
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
 
+    def __unicode__(self):
+        return self.name + ( "*" if self.is_current else "" ) + " - " + self.get_owner_username() + " - " + str(self.study.title)
+
+
 
 def get_current_node_set( study_uuid, assay_uuid ):
     '''
