@@ -167,7 +167,7 @@ FILE_EXTENSIONS = {
     'fastqsolexa': FASTQSOLEXA,
     'sam': SAM,
     'tabular': TABULAR,
-    'tdf': TDF,
+    'tdf': TDF, 'igv.tdf': TDF,
     'tgz': TGZ,
     'txt': TXT,
     'vcf': VCF,
