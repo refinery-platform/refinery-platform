@@ -507,7 +507,7 @@ class FileStoreItem(models.Model):
             #FIXME: provide a protocol-neutral URL
             return 'http://{}{}'.format(current_site.domain, self.datafile.url)
         else:
-            if os.path.abspath(self.source):
+            if os.path.isabs(self.source):
                 # in case source is a file system path but file doesn't exist on disk
                 return None
             else:
