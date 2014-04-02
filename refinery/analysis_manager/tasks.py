@@ -371,7 +371,7 @@ def run_analysis_preprocessing(analysis):
 
 
 @task(max_retries=None)
-def monitor_analysis_execution(analysis):    
+def monitor_analysis_execution(analysis):
     '''monitor workflow execution
 
     '''
@@ -710,8 +710,7 @@ def download_history_files(analysis) :
 
                 # getting file_store_uuid, 
                 # TODO: when changing permanent=True, fix update of % download of file 
-                filestore_uuid = create(
-                    source=download_url, filetype=file_type, permanent=False)
+                filestore_uuid = create(source=download_url, permanent=False)
 
                 # adding history files to django model 
                 temp_file = AnalysisResult(
