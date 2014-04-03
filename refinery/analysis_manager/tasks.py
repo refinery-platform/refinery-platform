@@ -494,10 +494,10 @@ def run_analysis_execution(analysis):
             analysis.history_id,
             analysis.workflow.uuid
             )
-    except RuntimeError as e:
+    except RuntimeError as exc:
         error_msg = "Analysis launch failed: " + \
                     "error running Galaxy workflow for analysis '{}': {}" \
-                    .format(analysis.name, e.message)
+                    .format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_execution.update_state(state=celery.states.FAILURE)
