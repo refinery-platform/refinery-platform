@@ -45,6 +45,7 @@ v1_api.register(NodeRelationshipResource())
 v1_api.register(WorkflowResource())
 v1_api.register(WorkflowInputRelationshipsResource())
 v1_api.register(ExternalToolStatusResource())
+'''
 v1_api.register(TaxonResource())
 v1_api.register(GenomeBuildResource())
 v1_api.register(CytoBandResource())
@@ -59,6 +60,7 @@ v1_api.register(ConservationTrackResource())
 v1_api.register(hg19_GenCodeResource())
 v1_api.register(ce10_WormBaseResource())
 v1_api.register(dm3_FlyBaseResource())
+'''
 
 #patterns for all of the different applications
 urlpatterns = patterns('',    
