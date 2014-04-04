@@ -31,7 +31,13 @@ angular.module('refineryIgv', [])
     $resource("/api/v1/nodeset/", {format: "json"}).get( { 'uuid': $scope.currentNodeSet.uuid }, function(response) {
         $scope.isLoadingSpecies = true;
 
+        $log.info( response.objects[0].solr_query_components );
+        $log.info( JSON.parse( response.objects[0].solr_query_components ).documentSelection );
+        $log.info( JSON.parse( response.objects[0].solr_query_components ).documentSelectionBlacklistMode );
+
         $scope.igvConfig.query = response.objects[0].solr_query;
+        $scope.igvConfig.node_selection = JSON.parse( response.objects[0].solr_query_components ).documentSelection;
+        $scope.igvConfig.node_selection_blacklist_mode = JSON.parse( response.objects[0].solr_query_components ).documentSelectionBlacklistMode;
         $scope.igvConfig.annotation = null; //response.objects[0].solr_query;
 
         $http({
