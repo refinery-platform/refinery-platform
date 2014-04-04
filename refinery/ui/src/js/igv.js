@@ -32,7 +32,7 @@ angular.module('refineryIgv', [])
         $scope.isLoadingSpecies = true;
 
         $scope.igvConfig.query = response.objects[0].solr_query;
-        $scope.igvConfig.annotation = response.objects[0].solr_query;
+        $scope.igvConfig.annotation = null; //response.objects[0].solr_query;
 
         $http({
           method: 'POST',

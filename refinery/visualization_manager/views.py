@@ -204,7 +204,7 @@ def igv_multi_species(solr_results, solr_annot=None):
     # 4. generate igv files for each species, including phenotype data + paths generated from uuid's
     ui_results = {'species_count':unique_species_num, 'species':{}}
     for k,v in unique_species.items():
-        if solr_annot["response"]["numFound"] > 0:
+        if solr_annot is not None and solr_annot["response"]["numFound"] > 0:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'], unique_annot[k]['solr'])
         else:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'])
@@ -221,7 +221,7 @@ def igv_multi_species(solr_results, solr_annot=None):
                 species_id = species_id[0][0] + '. ' + species_id[1]
             
             # if annotation contains species 
-            if solr_annot["response"]["numFound"] > 0:
+            if solr_annot is not None and solr_annot["response"]["numFound"] > 0:
                 if k in unique_annot:
                     temp_url = createIGVsessionAnnot(k, unique_species[k], annot_uuids=unique_annot[k], samp_file=sampleFile)
             else:
@@ -446,7 +446,8 @@ def addIGVResource(uuidlist, xml_res, xml_doc):
         # gets filestore item
          
         curr_name, curr_url = get_file_name( node_uuid )
-        #logger.debug("addIGVResource: name = %s, curr_url = %s" % (curr_name, curr_url))
+
+        logger.debug("addIGVResource: name = %s, curr_url = %s" % (curr_name, curr_url))
         
         # What to do if fs does not exist? 
         if (curr_url):

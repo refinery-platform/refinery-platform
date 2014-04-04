@@ -851,8 +851,8 @@ def solr_igv(request):
 
         logger.debug(simplejson.dumps( igv_config, indent=4))
         
-        logger.debug( 'IGV data query: ' + igv_config['query'] )
-        logger.debug( 'IGV annotation query: ' + igv_config['annotation'] )
+        logger.debug( 'IGV data query: ' + str( igv_config['query'] ) )
+        logger.debug( 'IGV annotation query: ' + str( igv_config['annotation'] ) )
         
         # attributes associated with node selection from interface
         node_selection_blacklist_mode = igv_config['node_selection_blacklist_mode']
@@ -862,6 +862,8 @@ def solr_igv(request):
         
         if igv_config['annotation'] is not None:
             solr_annot = get_solr_results(igv_config['annotation'])
+        else:
+            solr_annot = None
         
         # if solr query returns results
         if solr_results:
