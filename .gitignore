@@ -55,7 +55,6 @@ refinery/fabric/*
 supervisord.conf
 codekit-config.json
 .vagrant/
-deployment/.librarian/
 deployment/.tmp/
 deployment/modules/
 deployment/Puppetfile.lock
