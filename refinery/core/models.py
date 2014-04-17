@@ -27,6 +27,7 @@ from registration.signals import user_registered, user_activated
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
+from django.core.exceptions import MultipleObjectsReturned
 
 
 logger = logging.getLogger(__name__)
@@ -150,24 +151,38 @@ class OwnableResource ( BaseResource ):
         assign( "delete_%s" % self._meta.verbose_name, user, self )
         assign( "change_%s" % self._meta.verbose_name, user, self )
 
-    def get_owner( self ):
+    def get_owner(self):
         # ownership is determined by "add" permission
-        user_permissions = get_users_with_perms( self, attach_perms=True, with_group_users=False )
-        
+        user_permissions = get_users_with_perms(self, attach_perms=True, with_group_users=False)
         for user, permission in user_permissions.iteritems():
             if "add_%s" % self._meta.verbose_name in permission:
                 return user
-    
+        return None
+
+    def get_owner_username(self):
+        if self.get_owner():
+            return self.get_owner().username
+        else:
+            return "(no owner assigned)"
+
+    def get_owner_full_name(self):
+        owner = self.get_owner()
+        if owner:
+            return owner.get_full_name() or owner.username
+        else:
+            return "(no owner assigned)"
+
     class Meta:
         verbose_name = "ownableresource"
         abstract = True
         
 
-class SharableResource ( OwnableResource ):
-    '''
-    Abstract base class for core resources that can be shared (projects, data sets, workflows, workflow engines, etc.).
-    
-    IMPORTANT: expects derived classes to have "add/read/change/write_xxx" + "share_xxx" permissions, where "xxx" is the simple_modelname    
+class SharableResource (OwnableResource):
+    '''Abstract base class for core resources that can be shared
+    (projects, data sets, workflows, workflow engines, etc.).
+    IMPORTANT: expects derived classes to have "add/read/change/write_xxx" +
+    "share_xxx" permissions, where "xxx" is the simple_modelname
+
     '''
     def __unicode__(self):
         return self.name
@@ -271,13 +286,21 @@ class ManageableResource:
 class DataSet(SharableResource):
     # TODO: add function to restore earlier version
     # TODO: add collections (of assays in the investigation) and associate those with the versions
-
     # total number of files in this data set
     file_count = models.IntegerField(blank=True, null=True, default=0)
     # total number of bytes of all files in this data set
     file_size = models.BigIntegerField(blank=True, null=True, default=0)
 
-    
+    class Meta:
+        verbose_name = "dataset"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
+            ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
+        )
+
+    def __unicode__(self):
+        return self.name + " - " + self.get_owner_username() + " - " + self.summary
+
     def set_investigation(self,investigation,message=""):
         '''
         Associate this data set with an investigation. If this data set has an association with an investigation this 
@@ -287,16 +310,14 @@ class DataSet(SharableResource):
         link = InvestigationLink(data_set=self, investigation=investigation, version=1, message=message)
         link.save()
         return 1
-        
-        
+
     def update_investigation(self, investigation, message):
         version = self.get_version()        
         if version is None:
             return self.set_investigation(investigation, message)            
         link = InvestigationLink(data_set=self, investigation=investigation, version=version+1, message=message)
         link.save()
-        return version+1       
-
+        return version+1
 
     def get_version(self):
         try:
@@ -304,7 +325,6 @@ class DataSet(SharableResource):
             return version
         except:
             return None
-
 
     def get_version_details(self, version=None ):
         try:
@@ -314,7 +334,6 @@ class DataSet(SharableResource):
             return InvestigationLink.objects.filter( data_set=self, version=version ).get()            
         except:
             return None
-
 
     def get_investigation(self, version=None):
         if version is None:
@@ -329,11 +348,10 @@ class DataSet(SharableResource):
             return il.investigation
         except:
             return None
-        
-        
+
     def get_file_count(self):
-        '''
-        Returns the number of files in the data set.
+        '''Returns the number of files in the data set.
+
         '''
         investigation = self.get_investigation()
         file_count = 0
@@ -343,10 +361,9 @@ class DataSet(SharableResource):
             
         return file_count
 
-
     def get_file_size(self):
-        '''
-        Returns the disk space in bytes used by all files in the data set.
+        '''Returns the disk space in bytes used by all files in the data set.
+
         '''
         investigation = self.get_investigation()
         file_size = 0
@@ -359,20 +376,8 @@ class DataSet(SharableResource):
             for file in files:                
                 size = get_file_size( file["file_uuid"], report_symlinks=include_symlinks )
                 file_size += size
-                            
+
         return file_size
-                    
-    
-    def __unicode__(self):
-        return self.name + " - " + self.summary
-
-
-    class Meta:
-        verbose_name = "dataset"
-        permissions = (
-            ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
-            ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
-        )
 
 
 class InvestigationLink(models.Model):
@@ -481,14 +486,13 @@ class Workflow(SharableResource, ManageableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
-
     
 class Project( SharableResource ):
     is_catch_all = models.BooleanField( default=False )
 
     def __unicode__(self):
-        return self.name + " - " + self.summary
-    
+        return self.name + " - " + self.get_owner_username() + " - " + self.summary
+
     class Meta:
         verbose_name = "project"
         permissions = (
@@ -573,8 +577,11 @@ class Analysis(OwnableResource):
     # output_nodes = models.ManyToManyField(Nodes, blank=True)
     # protocol = i.e. protocol node created when the analysis is created
 
+    class Meta:
+        verbose_name_plural = "analyses"
+
     def __unicode__(self):
-        return self.name + " - " + self.summary
+        return self.name + " - " + self.get_owner_username() + " - " + self.summary
 
     class Meta:
         verbose_name = "analysis"
@@ -779,12 +786,33 @@ class NodeSet(SharableResource, TemporaryResource):
     study = models.ForeignKey(Study)
     assay = models.ForeignKey(Assay)
 
+    # is this the "current selection" node set for the associated study/assay?
+    is_current = models.BooleanField(default=False)
+
     class Meta:
         verbose_name = "nodeset"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
+
+    def __unicode__(self):
+        return self.name + ( "*" if self.is_current else "" ) + " - " + self.get_owner_username() + " - " + str(self.study.title)
+
+
+
+def get_current_node_set( study_uuid, assay_uuid ):
+    '''
+    Retrieve current node set. Create current node set if does not exist.
+    '''
+    node_set = None
+
+    try:
+        node_set = NodeSet.objects.get_or_create(study__uuid=study_uuid, assay__uuid=assay_uuid, is_implicit=True, is_current=True)
+    except MultipleObjectsReturned:
+        logger.error("Multiple current node sets for study " + study_uuid + "/assay " + assay_uuid + "." )
+    finally:
+        return node_set
 
 
 @transaction.commit_manually()
@@ -894,7 +922,7 @@ class NodePair(models.Model):
     node2 = models.ForeignKey(Node, related_name="node2", blank=True, null=True)
     # defines a grouping of node relationships i.e. replicate
     group = models.IntegerField(blank=True, null=True)
-    
+
     
 class NodeRelationship(BaseResource):
     '''A collection of Nodes NodePair, representing connections between data files i.e. input/chip pairs
@@ -913,6 +941,27 @@ class NodeRelationship(BaseResource):
     
     study = models.ForeignKey(Study)
     assay = models.ForeignKey(Assay)
+
+    # is this the "current mapping" node set for the associated study/assay?
+    is_current = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return self.name + ( "*" if self.is_current else "" ) + " - " + str(self.study.title)
+
+
+
+def get_current_node_relationship( study_uuid, assay_uuid ):
+    '''
+    Retrieve current node relationship. Create current node relationship if does not exist.
+    '''
+    relationship = None
+
+    try:
+        relationship = NodeRelationship.objects.get_or_create(study__uuid=study_uuid, assay__uuid=assay_uuid, is_current=True)
+    except MultipleObjectsReturned:
+        logger.error("Multiple current node relationships for study " + study_uuid + "/assay " + assay_uuid + "." )
+    finally:
+        return relationship
 
 
 class RefineryLDAPBackend(LDAPBackend):

@@ -84,15 +84,19 @@ class ProjectResource(ModelResource):
 
 
 class NodeResource(ModelResource):
+    parents = fields.ToManyField( 'core.api.NodeResource', 'parents' )
+    study = fields.ToOneField( 'data_set_manager.api.StudyResource', 'study' )
+    assay = fields.ToOneField( 'data_set_manager.api.AssayResource', 'assay', null=True )
+
     class Meta:
         queryset = Node.objects.all()
         resource_name = 'node'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
-        authorization = GuardianAuthorization()
+        authorization = Authorization() #GuardianAuthorization()
         allowed_methods = ["get" ]
-        fields = ['name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay' ]
-        filtering = { 'uuid': ALL }
+        fields = ['name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay', 'children', 'type', 'analysis_uuid' ]
+        filtering = { 'uuid': ALL, 'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS }
         #filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
 
     def prepend_urls(self):
@@ -102,7 +106,6 @@ class NodeResource(ModelResource):
                 self.wrap_view('dispatch_detail'),
                 name="api_dispatch_detail"),
         ]
-
 
     def dehydrate(self, bundle):
         # return download URL of file if a file is associated with the node
@@ -135,15 +138,16 @@ class NodeSetResource(ModelResource):
 
     class Meta:
         # create node count attribute on the fly - node_count field has to be defined on resource
-        queryset = NodeSet.objects.all()
+        queryset = NodeSet.objects.all().order_by( '-is_current', 'name') 
         resource_name = 'nodeset'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
-        fields = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
-        ordering = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
-        allowed_methods = ["get", "post" ]
-        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
+        fields = [ 'is_current', 'name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
+        ordering = [ 'is_current', 'name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
+        allowed_methods = ["get", "post", "put" ]
+        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS, "uuid": ALL }
+        always_return_data = True # otherwise JQuery treats a 201 as an error for data type "JSON"
 
     def prepend_urls(self):
         return [
@@ -193,16 +197,16 @@ class NodeSetListResource(ModelResource):
 
     class Meta:
         # create node count attribute on the fly - node_count field has to be defined on resource
-        queryset = NodeSet.objects.all()
+        queryset = NodeSet.objects.all().order_by( '-is_current', 'name') 
         detail_resource_name = 'nodeset' # NG: introduced to get correct resource ids
         resource_name = 'nodesetlist'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
-        fields = ['name', 'summary', 'assay', 'study', 'uuid' ]
+        fields = [ 'is_current', 'name', 'summary', 'assay', 'study', 'uuid' ]
         allowed_methods = ["get" ]
         filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
-        ordering = [ 'name', 'node_count' ];
+        ordering = [ 'is_current', 'name', 'node_count' ];
     
     def dehydrate(self, bundle):
         # replace resource URI to point to the nodeset resource instead of the nodesetlist resource        
@@ -216,10 +220,16 @@ class NodePairResource(ModelResource):
     group = fields.CharField(attribute='group', null=True)
     
     class Meta:
+        detail_allowed_methods = [ 'get', 'post', 'delete', 'put', 'patch' ]
         queryset = NodePair.objects.all()
         detail_resource_name = 'nodepair' 
         resource_name = 'nodepair'
         detail_uri_name = 'uuid'  
+        authentication = SessionAuthentication()
+        authorization = Authorization()        
+        # for use with AngularJS $resources: returns newly created object upon POST (in addition to the location response header)
+        always_return_data = True
+
  
 class NodeRelationshipResource(ModelResource):
     name = fields.CharField(attribute='name', null=True)
@@ -229,38 +239,43 @@ class NodeRelationshipResource(ModelResource):
     assay = fields.ToOneField(AssayResource, 'assay')
     
     class Meta:
-        queryset = NodeRelationship.objects.all()
+        detail_allowed_methods = [ 'get', 'post', 'delete', 'put', 'patch' ]
+        queryset = NodeRelationship.objects.all().order_by( '-is_current', 'name') 
         detail_resource_name = 'noderelationship' 
         resource_name = 'noderelationship'
         detail_uri_name = 'uuid'  
+        authentication = SessionAuthentication()
+        authorization = Authorization()
+        # for use with AngularJS $resources: returns newly created object upon POST (in addition to the location response header)
+        always_return_data = True
         
         #fields = ['type', 'study', 'assay', 'node_pairs']
-        ordering = ['type', 'node_pairs']
-        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
+        ordering = [ 'is_current', 'name', 'type', 'node_pairs']
+        filtering = { 'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS }
 
 
 class WorkflowResource(ModelResource):
     input_relationships = fields.ToManyField("core.api.WorkflowInputRelationshipsResource", 'input_relationships', full=True)
-    
+
     class Meta:
-        queryset = Workflow.objects.filter( is_active=True )
-        detail_resource_name = 'workflow' 
+        queryset = Workflow.objects.filter(is_active=True).order_by('name')
+        detail_resource_name = 'workflow'
         resource_name = 'workflow'
         detail_uri_name = 'uuid'
-        allowed_methods = ["get" ]        
-        fields = ['name', 'uuid' ]  
+        allowed_methods = ['get']
+        fields = ['name', 'uuid', 'summary']
 
     def dehydrate(self, bundle):
         # detect if detail
         if self.get_resource_uri(bundle) == bundle.request.path:
-            # detail detected, add graph as json        
-            try:        
-                bundle.data['graph'] = json.loads( bundle.obj.graph )
+            # detail detected, add graph as json
+            try:
+                bundle.data['graph'] = json.loads(bundle.obj.graph)
             except ValueError:
-                logger.error( "Failed to decode workflow graph into dictionary for workflow " + str( bundle.obj ) + "." )
+                logger.error("Failed to decode workflow graph into dictionary for workflow " + str(bundle.obj) + ".")
                 # don't include in response if error occurs
-                pass
-            
+        bundle.data['author'] = bundle.obj.get_owner()
+        bundle.data['galaxy_instance_identifier'] = bundle.obj.workflow_engine.instance.api_key
         return bundle
 
         

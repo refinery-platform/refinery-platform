@@ -615,9 +615,11 @@ def getStepOptions(step_annot):
     #logger.debug(ret_dict)     
     return ret_dict
 
+
 def countWorkflowSteps(workflow):
-    """
-    Helper function for counting number of workflow steps from a galaxy workflow. Number of steps in workflow is not reflective of the actual number of workflows created by galaxy when run
+    """Helper function for counting number of workflow steps from a galaxy workflow.
+    Number of steps in workflow is not reflective of the actual number of workflows created by galaxy when run
+
     """
     logger.debug("galaxy_connector.galaxy_workflow countWorkflowSteps called") 
     

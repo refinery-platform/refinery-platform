@@ -50,9 +50,10 @@ SolrDocumentCountView.prototype.render = function ( solrResponse ) {
 	$( "#" + self._parentElementId ).html("");
 	
 	$( "#" + self._parentElementId ).append(
-		self._query.getCurrentDocumentCount() +
+		'<b>' + self._query.getCurrentDocumentCount() + '</b>' +
 		' of ' +
-		self._query.getTotalDocumentCount() );
+		'<b>' + self._query.getTotalDocumentCount() + '</b>' +
+		' files selected' );
    		
 	// attach event listeners
 	// ..

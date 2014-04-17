@@ -361,12 +361,13 @@ def check_tool_status(tool_name, tool_unique_instance_identifier=None):
         else:
             tool = ExternalToolStatus.objects.get(name=tool_name)            
     except ExternalToolStatus.DoesNotExist:
-        logger.error( "External Tool Status does not exist for " + tool_name + "and " + str(tool_unique_instance_identifier) )
+        logger.error("External Tool Status does not exist for " + tool_name + "and " + str(tool_unique_instance_identifier))
         return (True, ExternalToolStatus.UNKNOWN_STATUS)
-    
+
     if tool.is_active:
         if (datetime.now() - tool.last_time_check) > timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[tool_name]):
-            logger.error("%s's database entry hasn't been updated recently; check to see if it's running" % tool_name)
+            logger.error("{}'s database entry hasn't been updated since {}; check to see if it's running"
+                         .format(tool_name, tool.last_time_check))
             return (tool.is_active, ExternalToolStatus.TIMEOUT_STATUS)
-        
+
     return (tool.is_active, tool.status)

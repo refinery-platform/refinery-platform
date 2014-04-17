@@ -22,7 +22,7 @@ SOLR_FIELD_VISIBILITY_UPDATED_COMMAND = 'solr_field_visibility_updated';
 SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND = 'solr_document_table_page_changed_command';
 
 
-SolrDocumentTable = function( parentElementId, idPrefix, solrQuery, solrClient, configurator, commands ) {
+SolrDocumentTable = function( parentElementId, idPrefix, solrQuery, solrClient, configurator, commands, dataSetMonitor ) {
   	
   	var self = this;
 	
@@ -35,6 +35,8 @@ SolrDocumentTable = function( parentElementId, idPrefix, solrQuery, solrClient, 
   	// Solr interaction 
   	self._query = solrQuery;
   	self._client = solrClient;
+
+  	self._dataSetMonitor = dataSetMonitor;
   	
   	// data set configuration
   	self.configurator = configurator;
@@ -111,7 +113,7 @@ SolrDocumentTable.prototype.render = function ( solrResponse ) {
 	// clear parent element
 	$( "#" + self._parentElementId ).html("");		
 	self._renderTable( solrResponse );
-	
+
 	//$( "#" + self._parentElementId ).html( code );		
 	
 	// attach event listeners
@@ -205,9 +207,7 @@ SolrDocumentTable.prototype._renderTable = function( solrResponse ) {
 		
 		self._commands.execute( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, { 'event': event } );				
 	});
-	
-	
-	
+
 	$( ".document-checkbox-select" ).on( "click", function( event ) {				
 		var uuid = $( event.target ).data( "uuid" );		
 		var uuidIndex = self._query._documentSelection.indexOf( uuid );
@@ -227,6 +227,28 @@ SolrDocumentTable.prototype._renderTable = function( solrResponse ) {
 
 		self._commands.execute( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, { 'uuid': uuid, 'event': event } );		
 	});	
+
+
+	$( ".refinery-dnd-handle" ).on( "dragstart", function( event ) {				
+		var uuid = null;
+
+		// here we have to deal with browser specific differences in the dragstart event data structure
+
+		if ( event.originalEvent.srcElement ) {
+			// safari, chrome
+			uuid = event.originalEvent.srcElement.attributes['node-uuid'].value;
+		}
+		else if ( event.target ) {
+			// firefox
+			uuid = event.target.attributes['node-uuid'].value;
+		}
+		else {
+			// this browser doesn't seem to support any dragstart known to us
+			console.error( "Unable to obtain node UUID of draggable.");
+		}
+
+		event.originalEvent.dataTransfer.setData('text/plain', JSON.stringify( { uuid: uuid, html: '<table class="table table-striped table-condensed" style="margin-bottom: 0px;">' + this.parentElement.parentElement.innerHTML + '</table>' } ) );
+	});	
 		
 }
 	
@@ -236,11 +258,15 @@ SolrDocumentTable.prototype._generateTableBody = function( solrResponse ) {
 	var documents = solrResponse.getDocumentList();
 	var fields = self._query._fields;
 	var rows = [];
+	var analyses = self._dataSetMonitor.analyses;
 	
 	for ( var i = 0; i < documents.length; ++i ) {		
 		var document = documents[i];
 		
-		var s = "<tr>";
+		var s = '<tr>';
+
+		// drag marker (can't be wrapped in span - otherwise Safari won't show the image of dragged content)
+		s += '<td>' + '<i class="icon-reorder refinery-dnd-handle" data-uuid="' + document["uuid"] + '" node-draggable draggable="true" node-uuid="'+ document["uuid"] +'" style="-khtml-user-drag: element;"></i>' + '</td>';
 		
 		// selection column
 		var isDocumentSelected = self._query.isDocumentSelected( document.uuid );				
@@ -249,17 +275,30 @@ SolrDocumentTable.prototype._generateTableBody = function( solrResponse ) {
 		// additional columns
 		for ( var j = 0; j < self._additionalColumns.length; ++j ) {
 			var column = self._additionalColumns[j];
-			//s += '<td>' + column["formatter"]( document ) + '</td>';
 			s += '<td>' + column['formatter']( document ) + '</td>';
 		}	
 							
-
 		for ( entry in fields ) {
 			if ( fields.hasOwnProperty( entry ) && fields[entry].isVisible && !fields[entry].isInternal  && !( self._hiddenFieldNames.indexOf( entry ) >= 0 ) ) {				
 				if ( document.hasOwnProperty( entry ) ) {
-					s += "<td>";
-					s += document[entry];
-					s += "</td>";				
+
+					if ( entry.indexOf( "REFINERY_ANALYSIS_" ) === 0 ) {
+					  	if ( analyses !== null) {
+							s += "<td title=\"" + document[entry] + "\">";
+							s += self._trimDocumentEntry( self._dataSetMonitor.getAnalysisLabel( document[entry] ), 25 );
+							s += "</td>";				
+					  	} 
+					  	else {
+							s += "<td title=\"Analysis " + document[entry] + "\">";
+							s += '<i class="icon-refresh icon-spin" style="padding: 2px"></i>';
+							s += "</td>";											  		
+					  	}						
+					}
+					else {
+						s += "<td title=\"" + document[entry] + "\">";
+						s += self._trimDocumentEntry( document[entry], 25 );
+						s += "</td>";				
+					}
 				}
 				else { // this field does not exist in this result
 					s += "<td>";
@@ -275,6 +314,17 @@ SolrDocumentTable.prototype._generateTableBody = function( solrResponse ) {
 	return rows.join('\n');
 }
 
+SolrDocumentTable.prototype._trimDocumentEntry = function( string, length, indicator ) {
+
+	indicator = indicator || "...";
+
+	if ( string.length > length ) {
+		return string.substring( 0, length ) + "<span style=\"border-radius: 2px; background:lightgray; padding: 2px; font-face: bold; color:gray; display:inline-block; margin-top: -2px; margin-bottom: -2px; margin-left: 2px; margin-right: 2px; vertical-align: bottom;\">" + indicator + "</span>";
+	}
+
+	return string;
+} 
+
 
 SolrDocumentTable.prototype._generateTableHead = function( solrResponse ) {	
 	var self = this;	
@@ -283,6 +333,8 @@ SolrDocumentTable.prototype._generateTableHead = function( solrResponse ) {
 	
 	var nodeSelectionModeCheckbox = '<label><input id="node-selection-mode" type=\"checkbox\" ' + ( self._query.getDocumentSelectionBlacklistMode() ? "checked" : "" ) + '></label>';
 	//$( "#" + "node-selection-column-header" ).html( nodeSelectionModeCheckbox );	
+
+	row.push( '<th align="left" width="0">'+ '</th>' );
 
 	row.push( '<th align="left" width="0" id="node-selection-column-header">'+ nodeSelectionModeCheckbox + '</th>' );
 	

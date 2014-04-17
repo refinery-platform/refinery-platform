@@ -93,7 +93,8 @@ ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
-    os.path.join( BASE_DIR, "static" ),
+    os.path.join(BASE_DIR, "static"),
+    os.path.join(BASE_DIR, "ui/app")
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -136,7 +137,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     #'core.middleware.ExternalToolErrorMiddleware',
-    #'core.middleware.DatabaseFailureMiddleware',
+    'core.middleware.DatabaseFailureMiddleware',
 )
 
 ROOT_URLCONF = 'refinery.urls'

@@ -312,6 +312,47 @@ body {
   text-shadow: 0 0px 10px @blueLight;
 }
 
+.refinery-dnd-dropzone {
+  text-align: center;
+  border-style: dashed; 
+  border-width: 1px;
+  height: 50px;
+  width: 100px;
+  border-radius: 100px;
+
+  &-over {
+    opacity: 0.5;
+  }
+
+  &-filled {
+    border-style: solid; 
+  }
+
+  &-empty {
+    border-style: dashed; 
+  }  
+}
+
+.refinery-workflow-input-green {
+  background-color: fade( lighten( @green, 30% ), 25% );
+  color: @green;
+  border-color: @green;
+}
+
+.refinery-workflow-input-label-green {
+  color: @green;
+}
+
+.refinery-workflow-input-purple {
+  background-color: fade( lighten( @purple, 30% ), 25% );
+  color: @purple;
+  border-color: @purple;
+}
+
+.refinery-workflow-input-label-purple {
+  color: @purple;
+}
+
 .refinery-tooltip {
   background-color: fade( @black, 80% );
   color: @white;

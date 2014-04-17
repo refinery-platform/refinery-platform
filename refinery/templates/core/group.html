@@ -7,31 +7,31 @@
 
 {% block subheader %}
 <div class="page-header">
-	<h1>Group&nbsp;<small>{{ group.name }}</small></h1>	
+  <h1>Group&nbsp;<small>{{ group.name }}</small></h1>	
 </div>
 {% endblock %}
 
-
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable">
-	<div class="row-fluid">		
-		
-		<div class="refinery-header">
-			<span class="refinery-header-left">
-				<h3>Name</h3>				
-			</span>			
-		</div>		
-		<p>{{ group.name }}</p>
+  <div class="row-fluid">		
 
-		<div class="refinery-header">
-			<span class="refinery-header-left">
-				<h3>Members</h3>				
-			</span>			
-		</div>		
-		<p>
-		{% for member in group.user_set.all %}
-			<a href="{% url 'user' member.get_profile.uuid %}">{{ member.get_full_name }}</a>&nbsp;(Last login: {{ member.last_login|naturaltime }})</br>
-		{% endfor %}
-		</p>
+    <div class="refinery-header">
+      <span class="refinery-header-left"><h3>Name</h3></span>
+    </div>
+    <p>{{ group.name }}</p>
+
+    <div class="refinery-header">
+      <span class="refinery-header-left"><h3>Members</h3></span>
+    </div>
+    <p>
+    {% for member in group.user_set.all %}
+      {% if member.get_profile %}
+        <a href="{% url 'user' member.get_profile.uuid %}">{{ member.get_full_name }}</a>
+      {% else %}
+        {{ member.get_full_name }}
+      {% endif %}
+      &nbsp;(Last login: {{ member.last_login|naturaltime }})<br/>
+    {% endfor %}
+    </p>
 
 {% endblock %}

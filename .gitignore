@@ -48,10 +48,7 @@ docs/_static/*
 *.conflict
 refinery/*.pid
 refinery/solr/*/data
-refinery/refinery/*
-refinery/middleware.py
-refinery/fabric
-refinery/fabric/*
+refinery/fabric/
 supervisord.conf
 codekit-config.json
 .vagrant/
@@ -59,8 +56,11 @@ deployment/.librarian/
 deployment/.tmp/
 deployment/modules/
 deployment/Puppetfile.lock
-/media/
-/static/
 refinery/celerybeat-schedule*
-refinery/static/styles/css/font-awesome*.css
 *.sublime-*
+refinery/ui/app/
+refinery/ui/bower_components/
+refinery/ui/node_modules/
+refinery/static/styles/css/font-awesome*.css
+media/
+static/
