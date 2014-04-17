@@ -1,25 +1,23 @@
-from core.api import AnalysisResource, ProjectResource, NodeSetResource, \
-    NodeResource, NodeSetListResource, NodePairResource, NodeRelationshipResource, \
-    WorkflowResource, WorkflowInputRelationshipsResource, DataSetResource, ExternalToolStatusResource
-from core.forms import RegistrationFormTermsOfServiceUniqueEmail
-from core.models import DataSet
-from core.views import admin_test_data
-from data_set_manager.api import AttributeOrderResource, StudyResource, \
-    AssayResource
-from data_set_manager.views import search_typeahead
 from django.conf.urls.defaults import patterns, include, url
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.contrib.sites.models import Site
 from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
 from registration.forms import RegistrationFormUniqueEmail
 from registration.views import ActivationView
 from registration.views import RegistrationView
-from settings import MEDIA_ROOT, MEDIA_URL, STATIC_URL
 from tastypie.api import Api
-from workflow_manager.views import import_workflows
+from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
+    NodeResource, NodeSetListResource, NodePairResource,\
+    NodeRelationshipResource, WorkflowResource,\
+    WorkflowInputRelationshipsResource, DataSetResource,\
+    ExternalToolStatusResource
+from core.models import DataSet
+from data_set_manager.api import AttributeOrderResource, StudyResource,\
+    AssayResource
+from data_set_manager.views import search_typeahead
+from settings import MEDIA_ROOT, MEDIA_URL
 
 
 # NG: facets for Haystack
