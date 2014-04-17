@@ -61,6 +61,9 @@ refinery/celerybeat-schedule*
 refinery/ui/app/
 refinery/ui/bower_components/
 refinery/ui/node_modules/
-refinery/static/styles/css/font-awesome*.css
 media/
 static/
+
+# to be moved into refinery/ui/app/
+refinery/static/styles/css/font-awesome*.css
+refinery/static/styles/css/refinery-style.css
