@@ -1,4 +1,3 @@
-from annotation_server.api import *
 from core.api import AnalysisResource, ProjectResource, NodeSetResource, \
     NodeResource, NodeSetListResource, NodePairResource, NodeRelationshipResource, \
     WorkflowResource, WorkflowInputRelationshipsResource, DataSetResource, ExternalToolStatusResource
