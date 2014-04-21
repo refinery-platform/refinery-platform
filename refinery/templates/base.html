@@ -47,7 +47,7 @@
     {% endblock %}
 </head>
 
-<body ng-app="{% block ng_app %}{% endblock %}">
+<body ng-app="{% block ng_app %}refineryApp{% endblock %}">
   <!-- header navigation bar -->
   <div class="navbar navbar-fixed-top">
     <div class="navbar-inner">
@@ -85,7 +85,13 @@
           <a rel="tooltip" data-placement="left" title="Sign Up" href="{{registration_url}}">Register</a>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
         {% endif %}
         <i class="icon-signin"></i>&nbsp;<a rel="tooltip" data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
-        {% endif %}		
+        {% endif %}
+          {% if request.user.is_superuser %}
+         	&nbsp;&nbsp;|&nbsp;&nbsp;
+         	<span ng-controller="ExternalToolStatusController">
+         	  <span externaltoolstatus></span>
+          </span>
+          {% endif %}
         </p>
 
         <div class="nav-collapse collapse">
@@ -134,13 +140,28 @@
     {% endblock %}							
   </div>
 
-    
-	<!-- 3rd party libraries -->                       
-	<script src="{% static "js/jquery/jquery-1.8.3.min.js" %}"></script>
-    <script src="{% static "js/jquery-ui/jquery-ui-1.10.0.custom.min.js" %}"></script>
+  <!-- 3rd party libraries -->
+  <script src="{% static "vendor/jquery/jquery.min.js" %}"></script>
+  <script src="{% static "js/jquery-ui/jquery-ui-1.10.0.custom.min.js" %}"></script>
 
-    <script type="text/javascript" src="{% static "js/bootstrap/bootstrap.min.js" %}"></script>
-        
+ 	<script type="text/javascript" src="{% static "vendor/angular/angular.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/select2/select2.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/angular-ui-select2/release/select2.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/angular-resource/angular-resource.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/angular-ui-router/release/angular-ui-router.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/angular-bootstrap/ui-bootstrap.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/angular-bootstrap/ui-bootstrap-tpls.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/refinery.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/node_mapping.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/workflows.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/analysis.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/solr.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/external_tool_status.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/node_relationship.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/igv.js" %}"></script>
+
+  <script type="text/javascript" src="{% static "js/bootstrap/bootstrap.min.js" %}"></script>
+
 	{% block script %}
 	{% endblock %}
 
@@ -203,7 +224,7 @@
 			    
 			}());
 			
-			// jQuery > 1.9.0 no longer supports UA sniffing
+	  // jQuery > 1.9.0 no longer supports UA sniffing
       // if ( ie !== undefined || $.browser.msie ) {
       if ( ie !== undefined ) {  
 				// detected IE

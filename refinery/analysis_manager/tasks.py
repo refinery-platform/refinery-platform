@@ -5,11 +5,12 @@ Created on Apr 5, 2012
 '''
 
 import ast
+import celery
 import copy
 from datetime import datetime
+import json
 import logging
 import socket
-import celery
 from celery.task import task
 from celery.task.chords import Chord
 from celery.task.sets import subtask, TaskSet
@@ -207,15 +208,15 @@ def chord_cleanup(ret_val, analysis):
 
 
 @task()
-def run_analysis(analysis, interval=5.0):
+def run_analysis(analysis):
     '''Launch analysis (outermost task, calls subtasks that monitor and run
     preprocessing, execution, postprocessing)
 
     '''
     logger.debug("analysis_manager.tasks run_analysis called")
-    analysis_status = AnalysisStatus.objects.get(analysis=analysis)
     # updating status of analysis to running
     analysis = Analysis.objects.filter(uuid=analysis.uuid)[0]
+    analysis_status = AnalysisStatus.objects.get(analysis=analysis)
     analysis.set_status(Analysis.RUNNING_STATUS)
     # DOWNLOADING
     # GETTING LIST OF DOWNLOADED REMOTE FILES 
@@ -370,13 +371,15 @@ def run_analysis_preprocessing(analysis):
 
 
 @task(max_retries=None)
-def monitor_analysis_execution(analysis):    
+def monitor_analysis_execution(analysis):
     '''monitor workflow execution
 
     '''
+    # get a fresh copy of analysis to avoid potential issues with parallel execution
     try:
         analysis = Analysis.objects.get(uuid=analysis.uuid)
     except Analysis.DoesNotExist:
+        #TODO: check if updating state is necessary, remove if not
         monitor_analysis_execution.update_state(state=celery.states.FAILURE)
         logger.error(
             "Analysis '{}' does not exist - unable to monitor".format(analysis))
@@ -384,58 +387,67 @@ def monitor_analysis_execution(analysis):
 
     if analysis.failed():
         return
-    else:
-        try:
-            analysis_status = AnalysisStatus.objects.get(analysis=analysis)
-        except AnalysisStatus.DoesNotExist:
-            monitor_analysis_execution.update_state(state=celery.states.FAILURE)
-            logger.error(
-                "AnalysisStatus object does not exist for analysis '{}'" +
-                " - unable to monitor".format(analysis_status))
-            return
-        # number of galaxy steps associated with this analysis
-        analysis_steps = analysis.workflow_steps_num
-        # start monitoring task
-        if analysis_status.execution_monitor_task_id is None:
-            analysis_status.execution_monitor_task_id = \
-                monitor_analysis_execution.request.id
-            analysis_status.save()
 
-        connection = analysis.get_galaxy_connection()
+    try:
+        analysis_status = AnalysisStatus.objects.get(analysis=analysis)
+    except AnalysisStatus.DoesNotExist:
+        #TODO: check if updating state is necessary, remove if not
+        monitor_analysis_execution.update_state(state=celery.states.FAILURE)
+        logger.error(
+            "AnalysisStatus object does not exist for analysis '{}'" +
+            " - unable to monitor".format(analysis_status))
+        return
 
-        try:
-            progress = connection.get_progress(analysis.history_id)
-        except (ConnectionError, TimeoutError) as e:
-            error_msg = "Unable to get progress for " + \
-                        "history {} of analysis {}: {}".format(
-                            analysis.history_id, analysis.name, e.message)
-            analysis.set_status(Analysis.UNKNOWN_STATUS, error_msg)
-            logger.warning(error_msg)
-            monitor_analysis_execution.retry(countdown=5)
-        except RuntimeError as e:
-            # if this is not just a connection error,
-            # analysis has probably failed
-            error_msg = "Unable to get progress for " + \
-                        "history {} of analysis {}: {}".format(
-                            analysis.history_id, analysis.name, e.message) 
-            monitor_analysis_execution.update_state(state=celery.states.FAILURE)
-            analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-            logger.error(error_msg)
-            return
+    # start monitoring task
+    if analysis_status.execution_monitor_task_id is None:
+        analysis_status.execution_monitor_task_id = \
+            monitor_analysis_execution.request.id
+        analysis_status.save()
 
-        monitor_analysis_execution.update_state(state="PROGRESS", meta=progress)
-
-        if progress["workflow_state"] == "error":
-            # Setting state of analysis to failure
-            analysis.set_status(Analysis.FAILURE_STATUS)
-            logger.debug("analysis status: %s" % analysis.get_status())
-            return
-        elif progress["workflow_state"] == "ok":
-            logger.debug("workflow message OK:  %s", progress["message"]["ok"] )
-            if progress["message"]["ok"] >= analysis_steps:
-                return
-        # keep monitoring analysis status until it's finished
+    connection = analysis.get_galaxy_connection()
+    try:
+        progress = connection.get_progress(analysis.history_id)
+    except (ConnectionError, TimeoutError) as e:
+        error_msg = "Unable to get progress for " + \
+                    "history {} of analysis {}: {}".format(
+                        analysis.history_id, analysis.name, e.message)
+        analysis.set_status(Analysis.UNKNOWN_STATUS, error_msg)
+        logger.warning(error_msg)
         monitor_analysis_execution.retry(countdown=5)
+    except RuntimeError as e:
+        # if this is not just a connection error, analysis has probably failed
+        error_msg = "Unable to get progress for " + \
+                    "history {} of analysis {}: {}".format(
+                        analysis.history_id, analysis.name, e.message)
+        #TODO: check if updating state is necessary, remove if not
+        monitor_analysis_execution.update_state(state=celery.states.FAILURE)
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        logger.error(error_msg)
+        return
+
+    if progress["message"]["error"] > 0:
+        # Setting state of analysis to failure
+        analysis.set_status(Analysis.FAILURE_STATUS)
+        logger.debug("Analysis '{}' failed execution in Galaxy"\
+                     .format(analysis.uuid))
+        return
+    elif progress["workflow_state"] == "ok":
+        # number of steps in the workflow
+        workflow_steps = len(json.loads(analysis.workflow.graph)['steps'])
+        logger.debug("workflow_steps: {}, ok datasets: {}"\
+                     .format(workflow_steps, progress["message"]["ok"]))
+        # check if we have enough datasets in history
+        if progress["message"]["ok"] >= workflow_steps:
+            analysis.set_status(Analysis.SUCCESS_STATUS)
+            logger.info("Analysis '{}' successfully finished running in Galaxy"\
+                        .format(analysis.uuid))
+            return
+
+    # if we are here then analysis is running
+    #TODO: check if updating state is necessary, remove if not
+    monitor_analysis_execution.update_state(state="PROGRESS", meta=progress)
+    # keep monitoring until workflow has finished running
+    monitor_analysis_execution.retry(countdown=5)
 
 
 @task()
@@ -477,13 +489,15 @@ def run_analysis_execution(analysis):
     # Running workflow
     try:
         result = connection.run_workflow(
-            analysis.workflow_galaxy_id, ret_list,
-            analysis.history_id, analysis.workflow.uuid
+            analysis.workflow_galaxy_id,
+            ret_list,
+            analysis.history_id,
+            analysis.workflow.uuid
             )
-    except RuntimeError as e:
+    except RuntimeError as exc:
         error_msg = "Analysis launch failed: " + \
                     "error running Galaxy workflow for analysis '{}': {}" \
-                    .format(analysis.name, e.message)
+                    .format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_execution.update_state(state=celery.states.FAILURE)
@@ -497,7 +511,6 @@ def run_analysis_execution(analysis):
                     "Cleanup failed for analysis '{}'".format(analysis.name))
 
 
-@task()
 def rename_analysis_results(analysis):
     """ Task for renaming files in file_store after download
 
@@ -543,12 +556,7 @@ def run_analysis_cleanup(analysis):
         logger.debug("analysis completion status: {}".format(analysis.status))
         send_analysis_email(analysis)
 
-    # Adding task to rename files after downloading results from history
-    logger.debug("before rename_analysis_results called");
-    #task_id = rename_analysis_results.subtask( (analysis,) ) 
-    #cleanup_taskset.append(task_id)
     rename_analysis_results(analysis)
-    logger.debug("after rename_analysis_results called")
 
     try:
         analysis.delete_galaxy_history()
@@ -613,7 +621,12 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
                 file_path = curr_filestore.get_absolute_path()
                 if file_path:
                     cur_item["filepath"] = file_path
-                    file_id = connection.put_into_library(library_id, file_path)
+                    try:
+                        file_id = connection.put_into_library(library_id, file_path)
+                    except ConnectionError:
+                        logger.error("Failed adding file '{}' to Galaxy library '{}'")\
+                        .format(curr_file_uuid, library_id)
+                        raise
                     cur_item["id"] = file_id
                 else:
                     raise RuntimeError(
@@ -698,7 +711,10 @@ def download_history_files(analysis) :
                 # getting file_store_uuid, 
                 # TODO: when changing permanent=True, fix update of % download of file 
                 filestore_uuid = create(
-                    source=download_url, filetype=file_type, permanent=False)
+                    source=download_url,
+                    filetype=file_type,
+                    permanent=False
+                )
 
                 # adding history files to django model 
                 temp_file = AnalysisResult(

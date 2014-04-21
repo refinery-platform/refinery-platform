@@ -54,7 +54,11 @@ def home(request):
         unassigned_analyses = []
     else:
         projects = get_objects_for_user( request.user, "core.read_project" ).filter( is_catch_all=False )
-        unassigned_analyses = request.user.get_profile().catch_all_project.analyses.all().order_by( "-time_start" )
+        try:
+            unassigned_analyses = request.user.get_profile().catch_all_project.analyses.all().order_by( "-time_start" )
+        except:
+            unassigned_analyses = []
+            logger.warning( "User " + request.user + " does not have a \"catch all\" project." )
         workflow_engines = get_objects_for_user( request.user, "core.read_workflowengine" )
         workflows = get_objects_for_user( request.user, "core.read_workflow" ).filter( is_active=True )
         data_sets = get_objects_for_user( request.user, "core.read_dataset" )
@@ -265,12 +269,12 @@ def data_set_slug(request,slug):
     return data_set(request,d.uuid)
 
 
-def data_set(request,uuid):    
-    data_set = get_object_or_404( DataSet, uuid=uuid )
+def data_set(request, data_set_uuid, analysis_uuid=None):
+    data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
     public_group = ExtendedGroup.objects.public_group()
-    
-    if not request.user.has_perm( 'core.read_dataset', data_set ):
-        if not 'read_dataset' in get_perms( public_group, data_set ):
+
+    if not request.user.has_perm('core.read_dataset', data_set):
+        if not 'read_dataset' in get_perms(public_group, data_set):
             if request.user.is_authenticated():
                 return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "view this data set"}))
             else:
@@ -287,7 +291,9 @@ def data_set(request,uuid):
         workflows = Workflow.objects.all()
     
     study_uuid = studies[0].uuid
+    study_id = studies[0].id # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
     assay_uuid = studies[0].assay_set.all()[0].uuid
+    assay_id = studies[0].assay_set.all()[0].id # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
     
     # TODO: catch errors
     isatab_archive = None
@@ -295,28 +301,31 @@ def data_set(request,uuid):
     
     try:
         if investigation.isarchive_file is not None:
-            isatab_archive = FileStoreItem.objects.get( uuid=investigation.isarchive_file )
+            isatab_archive = FileStoreItem.objects.get(uuid=investigation.isarchive_file)
     except:
         pass
 
     try:
         if investigation.pre_isarchive_file is not None:
-            pre_isatab_archive = FileStoreItem.objects.get( uuid=investigation.pre_isarchive_file )
+            pre_isatab_archive = FileStoreItem.objects.get(uuid=investigation.pre_isarchive_file)
     except:
         pass
-        
+
     return render_to_response('core/data_set.html', 
                               {
-                                'data_set': data_set, 
+                                "data_set": data_set,
+                                "analysis_uuid": analysis_uuid,
                                 "studies": studies,
                                 "study_uuid": study_uuid,
+                                "study_id": study_id,
                                 "assay_uuid": assay_uuid,
-                                "has_change_dataset_permission": 'change_dataset' in get_perms( request.user, data_set ),
+                                "assay_id": assay_id,
+                                "has_change_dataset_permission": 'change_dataset' in get_perms(request.user, data_set),
                                 "workflows": workflows,
                                 "isatab_archive": isatab_archive,
                                 "pre_isatab_archive": pre_isatab_archive,                             
                               },
-                              context_instance=RequestContext( request ) )
+                              context_instance=RequestContext(request))
 
 
 def data_set_edit(request,uuid):    
@@ -836,41 +845,25 @@ def solr_igv(request):
     # copy querydict to make it editable
     if request.is_ajax():
         #logger.debug("solr_igv called: request is ajax")
-        #logger.debug(simplejson.dumps(request.POST, indent=4))
+        #logger.debug(simplejson.dumps(request, indent=4))
+
+        igv_config = simplejson.loads( request.body );
+
+        logger.debug(simplejson.dumps( igv_config, indent=4))
         
-        logger.debug( 'IGV data query: ' + request.POST['query'] )
-        logger.debug( 'IGV annotation query: ' + request.POST['annot'] )
+        logger.debug( 'IGV data query: ' + str( igv_config['query'] ) )
+        logger.debug( 'IGV annotation query: ' + str( igv_config['annotation'] ) )
         
         # attributes associated with node selection from interface
-        node_selection_blacklist_mode = request.POST['node_selection_blacklist_mode']
-        if node_selection_blacklist_mode == 'true':
-            node_selection_blacklist_mode = True
+        node_selection_blacklist_mode = igv_config['node_selection_blacklist_mode']
+        node_selection = igv_config['node_selection']
+        
+        solr_results = get_solr_results(igv_config['query'], selected_mode=node_selection_blacklist_mode, selected_nodes=node_selection)
+        
+        if igv_config['annotation'] is not None:
+            solr_annot = get_solr_results(igv_config['annotation'])
         else:
-            node_selection_blacklist_mode = False
-        
-        node_selection = request.POST.getlist('node_selection[]')
-        
-        #logger.debug("node_selection_blacklist_mode")
-        #logger.debug(node_selection_blacklist_mode)
-        #logger.debug(node_selection)
-        
-        # extracting solr query from request 
-        for i, val in request.POST.iteritems():
-            # for solr query for data
-            if i == 'query':
-                solr_query = val
-                solr_results = get_solr_results(
-                    solr_query, selected_mode=node_selection_blacklist_mode,
-                    selected_nodes=node_selection
-                    )
-                #logger.debug("solr_results")
-                #logger.debug(simplejson.dumps(solr_results, indent=4))
-        
-            # for solr query for annotation files 
-            elif i == 'annot':
-                solr_annot = get_solr_results(val)
-                #logger.debug("solr_annot")
-                #logger.debug(simplejson.dumps(solr_annot, indent=4))
+            solr_annot = None
         
         # if solr query returns results
         if solr_results:

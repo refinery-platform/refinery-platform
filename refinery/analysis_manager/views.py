@@ -1,12 +1,6 @@
-# Create your views here.
-
-from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import run_analysis
-from core.models import Analysis, Workflow, WorkflowEngine, WorkflowDataInputMap, \
-    InvestigationLink, NodeSet, NodeRelationship, NodePair
-from core.views import get_solr_results, custom_error_page
-from data_set_manager.models import Study, Assay, Node
+import copy
 from datetime import datetime
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.urlresolvers import reverse
@@ -16,9 +10,15 @@ from django.http import HttpResponse, HttpResponseRedirect, \
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils import simplejson
-from workflow_manager.tasks import get_workflow_inputs, get_workflows
-import copy
 import logging
+from urlparse import urlparse
+from analysis_manager.models import AnalysisStatus
+from analysis_manager.tasks import run_analysis
+from core.models import Analysis, Workflow, WorkflowEngine, \
+    WorkflowDataInputMap, InvestigationLink, NodeSet, NodeRelationship, NodePair
+from core.views import get_solr_results, custom_error_page
+from data_set_manager.models import Study, Assay, Node
+from workflow_manager.tasks import get_workflow_inputs, get_workflows
 
 
 logger = logging.getLogger(__name__)
@@ -43,28 +43,47 @@ def analysis_status(request, uuid):
 
     #TODO: handle MultipleObjectsReturned exception
     try:
-        statuses = AnalysisStatus.objects.get(analysis=analysis)
+        status = AnalysisStatus.objects.get(analysis=analysis)
     except AnalysisStatus.DoesNotExist:
         logger.error("AnalysisStatus object does not exist for Analysis '{}'"
                      .format(analysis.name))
         return HttpResponse(custom_error_page(request, '500.html', {}),
                             status='500')
 
+    # add analysis status message if request came from this view
+    referer_path = urlparse(request.META.get('HTTP_REFERER', '')).path
+    if referer_path == request.path:
+        # clear messages to avoid message duplication
+        storage = messages.get_messages(request)
+        storage.used = True
+        # add analysis status message
+        if analysis.get_status() == Analysis.FAILURE_STATUS:
+            msg = "Analysis '{}' failed.  No results were added to your data set."\
+                  .format(analysis.name)
+            messages.error(request, msg)
+        elif analysis.get_status() == Analysis.SUCCESS_STATUS:
+            msg = "Analysis '{}' finished successfully.  View the results in the file browser."\
+                  .format(analysis.name)
+            messages.success(request, msg)
+
     if request.is_ajax():
         ret_json = {}
-        if statuses:
-            ret_json['preprocessing'] = statuses.preprocessing_status()
-            ret_json['execution'] = statuses.execution_status()
-            ret_json['postprocessing'] = statuses.postprocessing_status()
-            ret_json['cleanup'] = statuses.cleanup_status()
-            ret_json['overall'] = analysis.status
+        if status:
+            ret_json['preprocessing'] = status.preprocessing_status()
+            ret_json['execution'] = status.execution_status()
+            ret_json['postprocessing'] = status.postprocessing_status()
+            ret_json['cleanup'] = status.cleanup_status()
+            ret_json['overall'] = analysis.get_status()
+        logger.debug("Analysis: '{}'".format(analysis.name))
+        logger.debug(simplejson.dumps(ret_json, indent=2))
         return HttpResponse(simplejson.dumps(ret_json),
                             mimetype='application/javascript')
     else:
         return render_to_response(
             'analysis_manager/analysis_status.html',
-            {'uuid':uuid, 'statuses': statuses, 'analysis': analysis},
+            {'uuid': uuid, 'status': status, 'analysis': analysis},
             context_instance=RequestContext(request))
+
 
 @login_required
 def analysis_cancel(request):
@@ -101,10 +120,11 @@ def analysis_cancel(request):
         return HttpResponseNotAllowed(['POST'])  # 405
 
 
+#TODO: remove this view if no longer in use
 def analysis_run(request):
-    logger.debug( "analysis_manager.views.analysis_run called")
-    logger.debug( simplejson.dumps(request.POST, indent=4) )
-    
+    logger.debug("analysis_manager.views.analysis_run called")
+    logger.debug("POST request content\n" + simplejson.dumps(request.POST, indent=4))
+
     # gets workflow_uuid
     workflow_uuid = request.POST.getlist('workflow_choice')[0]
     
@@ -127,12 +147,9 @@ def analysis_run(request):
     # retrieving workflow based on input workflow_uuid
     annot_inputs = get_workflow_inputs(workflow_uuid)
     len_inputs = len(set(annot_inputs))
-    
-    #print "annot_inputs"
-    #print annot_inputs
-    print "selected_uuids"
-    print selected_uuids
-    
+
+    logger.debug("selected_uuids: " + selected_uuids)
+
     #------------ CONFIGURE INPUT FILES -------------------------- #   
     ret_list = [];
     ret_item = copy.deepcopy(annot_inputs)
@@ -223,12 +240,14 @@ def analysis_run(request):
     #analysis_status = AnalysisStatus.objects.create(analysis_uuid=analysis.uuid)
     analysis_status = AnalysisStatus.objects.create(analysis=analysis)
     analysis_status.save()
-    
+
     # call function via analysis_manager
-    run_analysis.delay(analysis, 5.0)
-    
+    run_analysis.delay(analysis)
+
     return HttpResponseRedirect(reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,)))
 
+
+#TODO: remove this view if no longer in use
 def repository_run(request):
     logger.debug( "analysis_manager.views.repository_run called")
         
@@ -293,7 +312,7 @@ def repository_run(request):
         analysis_status.save()
         
         # call function via analysis_manager
-        run_analysis.delay(analysis, 5.0)
+        run_analysis.delay(analysis)
         
         #import pdb; pdb.set_trace()
         logger.debug(request.build_absolute_uri(reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,)) ))
@@ -356,10 +375,13 @@ def run(request):
         return HttpResponseNotAllowed(allowed_methods)  # 405
 
     analysis_config = simplejson.loads(request.body)
-    workflow_uuid = analysis_config['workflowUuid']
-    study_uuid = analysis_config['studyUuid']
-    node_set_uuid = analysis_config['nodeSetUuid']
-    node_relationship_uuid = analysis_config['nodeRelationshipUuid']
+    try:
+        workflow_uuid = analysis_config['workflowUuid']
+        study_uuid = analysis_config['studyUuid']
+        node_set_uuid = analysis_config['nodeSetUuid']
+        node_relationship_uuid = analysis_config['nodeRelationshipUuid']
+    except KeyError:
+        return HttpResponseBadRequest()  # 400
     # must provide workflow and study UUIDs,
     # and either node set UUID or node relationship UUID
     if not (workflow_uuid and study_uuid and (node_set_uuid or node_relationship_uuid)):
@@ -518,8 +540,8 @@ def run(request):
     analysis_status.save()
     
     # call function via analysis_manager
-    run_analysis.delay(analysis, 5.0)
-    
+    run_analysis.delay(analysis)
+
     redirect_url = reverse('analysis_manager.views.analysis_status', args=(analysis.uuid,))
     return HttpResponse(redirect_url)
 

@@ -83,7 +83,7 @@ def createIGVsession(genome, uuids, is_file_uuid=False):
         </Resources>
     </Global>
     """
-    logger.info("visualization_manager.createIGVsession called")
+    logger.debug("visualization_manager.createIGVsession called")
     
     # Create the minidom document
     doc = Document()
@@ -103,6 +103,8 @@ def createIGVsession(genome, uuids, is_file_uuid=False):
     for samp in uuids:
         # gets filestore item 
         curr_name, curr_url = get_file_name(samp, is_file_uuid=is_file_uuid)
+
+        logger.debug( 'New resource: ' + curr_name + ' - ' +  curr_url )
         
         # What to do if fs does not exist? 
         if (curr_name):
@@ -202,11 +204,13 @@ def igv_multi_species(solr_results, solr_annot=None):
     # 4. generate igv files for each species, including phenotype data + paths generated from uuid's
     ui_results = {'species_count':unique_species_num, 'species':{}}
     for k,v in unique_species.items():
-        if solr_annot["response"]["numFound"] > 0:
+        if solr_annot is not None and solr_annot["response"]["numFound"] > 0:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'], unique_annot[k]['solr'])
         else:
             sampleFile = addIGVSamples(fields, unique_species[k]['solr'])
         
+        logger.debug( 'Sample File: ' + sampleFile );
+
         # if node_uuids generated for given species
         # generate igv session file 
         if "node_uuid" in v:
@@ -217,7 +221,7 @@ def igv_multi_species(solr_results, solr_annot=None):
                 species_id = species_id[0][0] + '. ' + species_id[1]
             
             # if annotation contains species 
-            if solr_annot["response"]["numFound"] > 0:
+            if solr_annot is not None and solr_annot["response"]["numFound"] > 0:
                 if k in unique_annot:
                     temp_url = createIGVsessionAnnot(k, unique_species[k], annot_uuids=unique_annot[k], samp_file=sampleFile)
             else:
@@ -442,13 +446,19 @@ def addIGVResource(uuidlist, xml_res, xml_doc):
         # gets filestore item
          
         curr_name, curr_url = get_file_name( node_uuid )
-        #logger.debug("createIGVsession: name = %s, curr_url = %s" % (curr_name, curr_url))
+
+        logger.debug("addIGVResource: name = %s, curr_url = %s" % (curr_name, curr_url))
         
         # What to do if fs does not exist? 
-        if (curr_name):
+        if (curr_url):
             # creates Resource element 
             res = xml_doc.createElement("Resource")
-            res.setAttribute("name", curr_name)
+
+            if ( curr_name ):
+                res.setAttribute("name", curr_name)
+            else:
+                res.setAttribute("name", curr_url)
+
             res.setAttribute("path", curr_url)
             xml_res.appendChild(res)
             
@@ -515,9 +525,6 @@ def addIGVSamples(fields, results_samp, annot_samples=None):
     # full path to selected UUID File
     curr_url = curr_fs.get_full_url()
     
-    #print "curr_url"
-    #print curr_url
-    
     # delete temp file
     os.unlink(tempsampname.name)
     
@@ -554,9 +561,6 @@ def get_file_name(nodeuuid, sampFile=None, is_file_uuid=False):
     # full path to selected UUID File
     temp_url = temp_fs.get_full_url()
     
-    #logger.debug("temp_url")
-    #logger.debug(temp_url)
-    
     # IGV SEG FILE HACK
     if (sampFile):
         if (temp_name.startswith("metaData")):
@@ -573,9 +577,7 @@ def get_sample_lines(fields, results):
     :type fields: Dictionary
     :returns: a string of the matrix to be included in the IGV sample information file 
     """
-    
-    logger.debug("visualization_manager.views get_sample_lines called")
-    
+        
     output_mat = ""
     
     # iterating over samples

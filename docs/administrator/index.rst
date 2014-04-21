@@ -12,3 +12,4 @@ This section of the Refinery Platform documentation is intended for administrato
    upgrade
    preparing_galaxy_workflows
    importing_galaxy_workflows
+   add_new_genomebuild

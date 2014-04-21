@@ -38,7 +38,7 @@ NodeSetManager = function( studyUuid, assayUuid, elementId, apiBaseUrl, crsfMidd
   	// current list
   	self.list = null
 
-  	self.currentSelectionNodeSetId = "current_selection_node_set";
+  	self.currentSelectionNodeSet = null;
   	self.currentSelectionNodeSetName = "Current Selection";  	
   	
   	self.loadSelectionCallback = null;
@@ -61,7 +61,12 @@ NodeSetManager.prototype.setSaveSelectionCallback = function ( callback ) {
 NodeSetManager.prototype.initialize = function () {
 	var self = this;
 	
-	self.getList( function() { self.renderList(); }, function() { /* do nothing in case of error */ } );
+	if ( self.elementId != null ) {
+		self.getList( function() { self.renderList(); }, function() { /* do nothing in case of error */ } );
+	}
+	else {
+		self.getList( function() { console.log( "Successfully retrieved node set list."); }, function() { console.log( "Failed to retrieve node set list."); } );		
+	}	
 	 
 	return null;	
 };
@@ -95,8 +100,6 @@ NodeSetManager.prototype.renderList = function () {
   	//code += '</a>';
   	//code += '<ul id="' + nodeSetListElementId + '" class="dropdown-menu" style="' +  nodeSetListElementStyle + '">';
   	code += '<select id="' + nodeSetListElementId + '" style="width:100%">';
-
-    code += '<option id="' + self.currentSelectionNodeSetId + '" data-uuid="' + self.currentSelectionNodeSetId + '" data-resource-uri="' + "undefined" + '">' + self.currentSelectionNodeSetName + '</option>'
 	
 	for ( var i = 0; i < self.list.objects.length; ++i ) {
 		var object = self.list.objects[i];
@@ -139,12 +142,10 @@ NodeSetManager.prototype.renderList = function () {
 };
 
 
-
-NodeSetManager.prototype.createUpdateUrl = function() {
+NodeSetManager.prototype.createUpdateUrl = function( nodeSet ) {
 	var self = this;
 		
-	var url = self.apiBaseUrl + self.apiEndpoint + "/";		
-	console.log( url );
+	var url = self.apiBaseUrl + self.apiEndpoint + "/" + nodeSet.uuid + "/";		
 	return url;		
 };
 
@@ -188,20 +189,16 @@ NodeSetManager.prototype.updateState = function( state, callback ) {
 	// --- END: set correct CSRF token via cookie ---
 
 
-	var data = { "objects": state };
-	
-	console.log( data );
-	
+	var data = state;
+		
 	$.ajax({
-     url: self.createUpdateUrl(),
-     type: "PATCH",
+     url: self.createUpdateUrl( state ),
+     type: "PUT",
      data: JSON.stringify( data ),
 	 contentType: "application/json",
 	 dataType: "json",
   	 processData:  false,     
      success: function( result ) {
-     		console.log( result );
-     		alert( "Patch successful!" );     	
 	     	if ( $.isEmptyObject( result ) ) {
 	     		// do nothing
 	     		return;
@@ -217,6 +214,7 @@ NodeSetManager.prototype.createGetListUrl = function() {
 	var url = self.apiBaseUrl + self.apiEndpointList +
 		"?" + "format=json" +
 		"&" + "limit=0" +
+		"&" + "order_by=-is_current" +
 		"&" + "order_by=name" +
 		"&" + "study__uuid=" + self.studyUuid +
 		"&" + "assay__uuid=" + self.assayUuid;
@@ -240,8 +238,19 @@ NodeSetManager.prototype.getList = function( callback, errorCallback ) {
 	     	} 
 	     	
 	     	self.list = result;    	     	     	
-			// callback
-			callback( result );										
+
+	     	if ( self.list.objects.length > 0 && self.list.objects[0].is_current ) {
+	     		self.currentSelectionNodeSet = self.list.objects[0];
+	     		console.log( '"' + self.currentSelectionNodeSetName  + '" found.' );
+
+	     		callback( result );										
+	     	}
+	     	else {
+	     		console.log( '"' + self.currentSelectionNodeSetName  + '" not found. Creating "' + self.currentSelectionNodeSetName + '"' );
+
+	     		// create empty selection and reload list
+	     		self.createCurrentSelection( function() { self.getList( callback, errorCallback ); }, function() {  console.error( "Failed to create current selection!" ); } );
+	     	}
     	},
     error: function ( result ) {
     		if ( errorCallback ) {
@@ -250,6 +259,12 @@ NodeSetManager.prototype.getList = function( callback, errorCallback ) {
     	}
 	});
 };
+
+NodeSetManager.prototype.createCurrentSelection = function( callback, errorCallback ) {
+	var self = this;
+
+	self.postState( self.currentSelectionNodeSetName, "", "", {}, 0, callback, true );
+}
 
 NodeSetManager.prototype.createGetDetailUrl = function( uuid ) {
 	var self = this;
@@ -293,8 +308,10 @@ NodeSetManager.prototype.createPostUrl = function() {
 };
 
 
-NodeSetManager.prototype.postState = function( name, summary, solr_query, solr_query_components, node_count, callback ) {
+NodeSetManager.prototype.postState = function( name, summary, solr_query, solr_query_components, node_count, callback, is_current ) {
 	var self = this;
+
+	is_current = false | is_current;
 
 	// --- START: set correct CSRF token via cookie ---
 	// https://docs.djangoproject.com/en/1.4/ref/contrib/csrf/#ajax
@@ -339,7 +356,8 @@ NodeSetManager.prototype.postState = function( name, summary, solr_query, solr_q
 		"node_count": node_count,
 		"solr_query": solr_query,
 		"solr_query_components": solr_query_components,
-		"uuid": null
+		"uuid": null,
+		"is_current": is_current
 		};
 		
 	$.ajax({
@@ -348,14 +366,19 @@ NodeSetManager.prototype.postState = function( name, summary, solr_query, solr_q
      data: JSON.stringify( data ),
 	 contentType: "application/json",
 	 dataType: "json",
-  	 processData: false,     
-     success: function( result, status, jqXHR ) {
+  	 processData: false
+	})
+	.done( function( result, status, jqXHR ) {
      		callback();
-     		
+
 	     	if ( $.isEmptyObject( result ) ) {
 	     		// do nothing
 	     		return;
 	     	}	     		     	 
     	}
-	});
+	)
+	.fail( function() { 
+			console.error( "Creation of node set failed." );
+		}
+	);
 };

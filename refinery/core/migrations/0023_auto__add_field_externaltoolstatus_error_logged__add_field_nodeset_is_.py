@@ -8,6 +8,11 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        # Adding field 'ExternalToolStatus.error_logged'
+        db.add_column(u'core_externaltoolstatus', 'error_logged',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
+
         # Adding field 'NodeSet.is_current'
         db.add_column(u'core_nodeset', 'is_current',
                       self.gf('django.db.models.fields.BooleanField')(default=False),
@@ -20,6 +25,9 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
+        # Deleting field 'ExternalToolStatus.error_logged'
+        db.delete_column(u'core_externaltoolstatus', 'error_logged')
+
         # Deleting field 'NodeSet.is_current'
         db.delete_column(u'core_nodeset', 'is_current')
 
@@ -160,6 +168,7 @@ class Migration(SchemaMigration):
         },
         u'core.externaltoolstatus': {
             'Meta': {'unique_together': "(('name', 'unique_instance_identifier'),)", 'object_name': 'ExternalToolStatus'},
+            'error_logged': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'last_time_check': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),

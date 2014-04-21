@@ -19,9 +19,11 @@ var dataSetNodeTypes = ['"Raw Data File"', '"Derived Data File"', '"Array Data F
 var dataQueryString = undefined;
 var annotationQueryString = undefined;
 
-
 var currentStudyUuid = externalStudyUuid;
+var currentStudyId = externalStudyId;
 var currentAssayUuid = externalAssayUuid;
+var currentAssayId = externalAssayId;
+var currentAnalysisUuid = analysisUuid;
 
 $(document).ready(function() {
 	configurator = new DataSetConfigurator( externalStudyUuid, externalAssayUuid, "configurator-panel", REFINERY_API_BASE_URL, csrf_token );
@@ -43,6 +45,12 @@ $(document).ready(function() {
 	configurator.initialize( function() {
 		query = new SolrQuery( configurator, queryCommands );
 		query.initialize();
+
+		if ( analysisUuid !== 'None' ) {
+			query.updateFacetSelection( 'REFINERY_ANALYSIS_UUID_' + externalStudyId + '_' + externalAssayId + '_s', analysisUuid, true );
+		}
+		else {
+		}
 		
 		dataSetMonitor = new DataSetMonitor( dataSetUuid, REFINERY_API_BASE_URL, csrf_token, dataSetMonitorCommands );
 		dataSetMonitor.initialize();
@@ -108,7 +116,7 @@ $(document).ready(function() {
 			//console.log( SOLR_QUERY_INITIALIZED_COMMAND + ' executed' );
 			//console.log( arguments );
 
-			tableView = new SolrDocumentTable( "solr-table-view", "solrdoctab1", query, client, configurator, documentTableCommands );
+			tableView = new SolrDocumentTable( "solr-table-view", "solrdoctab1", query, client, configurator, documentTableCommands, dataSetMonitor );
 			tableView.setDocumentsPerPage( 20 );
 
 			analysisView = new SolrAnalysisView( "solr-analysis-view", "solranalysis1", query, configurator, analysisViewCommands, dataSetMonitor );
@@ -151,13 +159,20 @@ $(document).ready(function() {
 
 
 		clientCommands.addHandler( SOLR_QUERY_UPDATED_COMMAND, function( arguments ){
-			//console.log( SOLR_QUERY_UPDATED_COMMAND + ' executed' );
-			//console.log( arguments );
+			console.log( SOLR_QUERY_UPDATED_COMMAND + ' executed' );
 
 			// update global query strings
 			if ( !showAnnotation ) {
 				dataQueryString = client.createUnpaginatedUrl( query, SOLR_SELECTION_QUERY )
 				annotationQueryString = client.createUnpaginatedUrl( annotationQuery, SOLR_SELECTION_QUERY );
+
+				if ( nodeSetManager.currentSelectionNodeSet != null ) {
+					nodeSetManager.currentSelectionNodeSet.solr_query = client.createUrl( query, SOLR_FULL_QUERY );
+					nodeSetManager.currentSelectionNodeSet.solr_query_components = query.serialize();
+					nodeSetManager.currentSelectionNodeSet.node_count = query.getCurrentDocumentCount();
+					nodeSetManager.updateState( nodeSetManager.currentSelectionNodeSet );
+					console.log( "Updated current selection node set (facet selection).");
+				}
 			}
 			else {
 				dataQueryString = client.createUnpaginatedUrl( dataQuery, SOLR_SELECTION_QUERY );
@@ -189,13 +204,21 @@ $(document).ready(function() {
 		});
 
 		documentTableCommands.addHandler( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, function( arguments ){
-			//console.log( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND + ' executed' );
+			console.log( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND + ' executed' );
 			//console.log( arguments );
 
 			// update global query strings
 			if ( !showAnnotation ) {
 				dataQueryString = client.createUnpaginatedUrl( query, SOLR_SELECTION_QUERY )
 				annotationQueryString = client.createUnpaginatedUrl( annotationQuery, SOLR_SELECTION_QUERY );
+
+				if ( nodeSetManager.currentSelectionNodeSet != null ) {
+					nodeSetManager.currentSelectionNodeSet.solr_query = client.createUrl( query, SOLR_FULL_QUERY );
+					nodeSetManager.currentSelectionNodeSet.solr_query_components = query.serialize();
+					nodeSetManager.currentSelectionNodeSet.node_count = query.getCurrentDocumentCount();
+					nodeSetManager.updateState( nodeSetManager.currentSelectionNodeSet );
+					console.log( "Updated current selection node set (document selection).");
+				}
 			}
 			else {
 				dataQueryString = client.createUnpaginatedUrl( dataQuery, SOLR_SELECTION_QUERY );
@@ -260,8 +283,6 @@ $(document).ready(function() {
 
 
 		var facetSelectionUpdated = function( arguments ) {
-			console.log( 'facetSelectionUpdated' + ' executed' );
-
 			query.clearDocumentSelection();
 			query.setDocumentSelectionBlacklistMode( true );
 			client.run( query, SOLR_FULL_QUERY );
@@ -286,8 +307,11 @@ $(document).ready(function() {
 
 
 		dataSetMonitorCommands.addHandler( DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND, function( arguments ){
-			//console.log( SOLR_PIVOT_MATRIX_FACETS_UPDATED_COMMAND + ' executed' );
-			//console.log( arguments );
+			console.log( DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND + ' executed' );
+			console.log( arguments );
+			console.log( "Updating tables ..." );
+			analysisView.render(lastSolrResponse);
+			tableView.render(lastSolrResponse);
 
 			//client.run( query, SOLR_FULL_QUERY );
 		});
@@ -345,14 +369,9 @@ $(document).ready(function() {
 			client.run( query, SOLR_FULL_QUERY );
 		});
 
-		client.initialize( query, true );
-		client.initialize( annotationQuery, true );
-
-
-		//INITIALIZING node relationship bundle
-		//console.log("after query initialized");
-		nrApp.start();
-
+		// do not reset query before execution (otherwise presets such as analysis UUID are lost)
+		client.initialize( query, false );
+		client.initialize( annotationQuery, false );
 	});
 
 
@@ -486,7 +505,6 @@ $( "#igv-multi-species" ).on( "click", function(e) {
 				else {
 					speciesString = "<p>" + "You selected samples from " + ret_buttons.length + " different genome builds. To view the samples, open IGV with the corresponding genome."
 				}
-
 
 				$("#myModalBody").append( speciesString );
 				$("#myModalBody").append( "<div class=\"btn-group\" style=\"align: center;\" id=\"launch-button-group\">" );

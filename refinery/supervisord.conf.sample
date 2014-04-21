@@ -35,7 +35,7 @@ autorestart = true
 startsecs = 10
 
 [program:celeryd]
-command = python %(here)s/manage.py celeryd -E --purge --discard
+command = python %(here)s/manage.py celeryd --events
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
 stdout_logfile = %(here)s/celeryd.log
 stdout_logfile_maxbytes = 1MB

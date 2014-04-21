@@ -126,12 +126,13 @@ SolrQuery = function( configurator, commands ) {
 };	
 
 
-SolrQuery.prototype.initialize = function () {
+SolrQuery.prototype.initialize = function ( facetPresets ) {
 	var self = this;	
 
 	var defaultSortFieldFound = false;
 		
 	for ( var i = 0; i < self._configurator.state.objects.length; ++i ) {
+		// facets
 		var attribute = self._configurator.state.objects[i];
 		
 		if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal ) {
@@ -140,8 +141,8 @@ SolrQuery.prototype.initialize = function () {
 		
 		if ( isRequiredFacet( attribute.solr_field ) ) {
 			self.addFacet( attribute.solr_field )
-		}											
-											
+		}		
+
 		// fields
 		if ( self._ignoredFieldNames.indexOf( attribute.solr_field ) < 0 ) {
 			if ( attribute.is_internal ) {
@@ -620,8 +621,14 @@ SolrQuery.prototype.updateFacetSelection = function ( name, value, isSelected ) 
 	var self = this;
 	
 	isSelected = typeof isSelected !== 'undefined' ? isSelected : false;			
-		
-	self._facetSelection[name][value] = { isSelected: isSelected };
+	
+	if ( typeof self._facetSelection[name] === 'undefined' ) {
+		self._facetSelection[name] = {};
+		self._facetSelection[name][value] = { isSelected: isSelected };
+	}
+	else {
+		self._facetSelection[name][value] = { isSelected: isSelected };
+	}
 	
 	return self;	
 };

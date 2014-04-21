@@ -66,8 +66,8 @@ SolrAnalysisView.prototype.render = function ( solrResponse ) {
 	// clear parent element
 	self._currentSolrResponse = solrResponse;
 	analyses = self._dataSetMonitor.analyses;
-	
-  	if ( analyses != null ) {
+
+  	if ( analyses !== null && self._currentSolrResponse !== null ) {
   		$( "#" + self._parentElementId ).html('');
 		self._renderTree( self._currentSolrResponse );  		
   	} 
@@ -75,8 +75,6 @@ SolrAnalysisView.prototype.render = function ( solrResponse ) {
 		$( "#" + self._parentElementId ).html('<i class="icon-refresh icon-spin" style="padding: 2px"></i>');  		
   	}
 };
-
-
 
 
 SolrAnalysisView.prototype._renderTree = function( solrResponse ) {
@@ -186,7 +184,7 @@ SolrAnalysisView.prototype._generateTree = function( solrResponse ) {
 						facetValue = "undefined";
 					}
 					else {
-						analysisName = self._getAnalysisLabel( facetValue, analyses );
+						analysisName = self._dataSetMonitor.getAnalysisLabel( facetValue, analyses );
 					}
 					
 					if ( self._query._facetSelection[facet][facetValue] === undefined ) {					
@@ -211,25 +209,6 @@ SolrAnalysisView.prototype._generateTree = function( solrResponse ) {
 			$( "#" + self._composeFacetId( facet + "___inactive" ) ).html( "<table class=\"\"><tbody>" + unselectedItems.join('') + "</tbody></table>" );
 		}		
     }
-}
-
-
-SolrAnalysisView.prototype._getAnalysisLabel = function( analysisUuid ) {	
-	var self = this;
-	
-	var analyses = self._dataSetMonitor.analyses;
-	
-	if ( analyses == null ) {
-		return analysisUuid;
-	}
-	
-	for ( var i = 0; i < analyses.objects.length; ++i ) {
-		if ( analysisUuid == analyses.objects[i].uuid ) {
-			return ( analyses.objects[i].name );
-		} 
-	}
-		
-	return ( analysisUuid );	
 }
 
 

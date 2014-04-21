@@ -17,14 +17,15 @@ module.exports = function(grunt) {
     },
     vendor_files: {
       js: [
-        'select2/select2.js',
-        'jQuery/jquery.js',
-        'angular/angular.js',
-        'angular-ui-select2/src/select2.js',
-        'angular-bootstrap/ui-bootstrap-tpls.js',
-        'angular-resource/angular-resource.js',
-        'angular-route/angular-route.js',
-        'angular-ui-router/release/angular-ui-router.js',
+        'select2/select2.min.js',
+        'jquery/jquery.min.js',
+        'angular/angular.min.js',
+        'angular-ui-select2/release/select2.min.js',
+        'angular-bootstrap/ui-bootstrap-tpls.min.js',
+        'angular-resource/angular-resource.min.js',
+        'angular-ui-router/release/angular-ui-router.min.js',
+        'angular-bootstrap/ui-bootstrap-tpls.min.js',
+        'angular-bootstrap/ui-bootstrap.min.js',
         'tipsy/src/javascripts/jquery.tipsy.js',
       ],
       css: [
@@ -71,12 +72,24 @@ module.exports = function(grunt) {
       options: {
         banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
       },
-      files: {
-        expand: true,
-        cwd: '<%= source_dir %>/',
-        src: '<%= source_files.js %>',
-        dest: '<%= release_dir %>/',
-        ext: '.min.js',
+      app_files: {
+        files: [
+          {
+            expand: true,
+            cwd: '<%= source_dir %>/',
+            src: '<%= source_files.js %>',
+            dest: '<%= release_dir %>/',
+            ext: '.min.js',
+          },
+        ]
+      },
+      vendor_files: {
+        files: [
+          {
+            '<%= vendor_dir %>/angular-ui-select2/release/select2.min.js':
+            ['<%= vendor_dir %>/angular-ui-select2/src/select2.js']
+          },
+        ]
       },
     },
 
@@ -172,6 +185,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-less');  
   
   // Default task(s).
-  grunt.registerTask('default', ['jshint', 'clean', 'copy', 'uglify', 'less']);
+  grunt.registerTask('default', ['jshint', 'clean', 'uglify', 'less', 'copy']);
 
 };

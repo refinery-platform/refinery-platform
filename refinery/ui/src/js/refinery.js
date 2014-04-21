@@ -2,7 +2,10 @@ angular.module('refineryApp', [
   'refineryWorkflows',
   'refineryNodeMapping',
   'refineryAnalysis',
-  'refinerySolr'
+  'refinerySolr',
+  'refineryExternalToolStatus',
+  'refineryNodeRelationship',
+  'refineryIgv'  
 ])
 
 .config(['$provide', function($provide) {

@@ -84,15 +84,19 @@ class ProjectResource(ModelResource):
 
 
 class NodeResource(ModelResource):
+    parents = fields.ToManyField( 'core.api.NodeResource', 'parents' )
+    study = fields.ToOneField( 'data_set_manager.api.StudyResource', 'study' )
+    assay = fields.ToOneField( 'data_set_manager.api.AssayResource', 'assay', null=True )
+
     class Meta:
         queryset = Node.objects.all()
         resource_name = 'node'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
-        authorization = GuardianAuthorization()
+        authorization = Authorization() #GuardianAuthorization()
         allowed_methods = ["get" ]
-        fields = ['name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay' ]
-        filtering = { 'uuid': ALL }
+        fields = ['name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay', 'children', 'type', 'analysis_uuid' ]
+        filtering = { 'uuid': ALL, 'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS }
         #filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
 
     def prepend_urls(self):
@@ -139,10 +143,11 @@ class NodeSetResource(ModelResource):
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
-        fields = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
-        ordering = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
-        allowed_methods = ["get", "post" ]
-        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
+        fields = [ 'is_current', 'name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
+        ordering = [ 'is_current', 'name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
+        allowed_methods = ["get", "post", "put" ]
+        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS, "uuid": ALL }
+        always_return_data = True # otherwise JQuery treats a 201 as an error for data type "JSON"
 
     def prepend_urls(self):
         return [
@@ -198,10 +203,10 @@ class NodeSetListResource(ModelResource):
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
-        fields = ['name', 'summary', 'assay', 'study', 'uuid' ]
+        fields = [ 'is_current', 'name', 'summary', 'assay', 'study', 'uuid' ]
         allowed_methods = ["get" ]
         filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
-        ordering = [ '-is_current', 'name', 'node_count' ];
+        ordering = [ 'is_current', 'name', 'node_count' ];
     
     def dehydrate(self, bundle):
         # replace resource URI to point to the nodeset resource instead of the nodesetlist resource        
@@ -270,6 +275,7 @@ class WorkflowResource(ModelResource):
                 logger.error("Failed to decode workflow graph into dictionary for workflow " + str(bundle.obj) + ".")
                 # don't include in response if error occurs
         bundle.data['author'] = bundle.obj.get_owner()
+        bundle.data['galaxy_instance_identifier'] = bundle.obj.workflow_engine.instance.api_key
         return bundle
 
         

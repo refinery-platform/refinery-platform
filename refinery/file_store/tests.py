@@ -93,14 +93,23 @@ class FileStoreItemTest(SimpleTestCase):
         self.path_source = os.path.join('/example/path', self.filename)
         self.url_source = urljoin('http://example.org/', self.filename)
 
+    def test_get_full_url_remote_file(self):
+        '''Check if the source URL is returned for files that have not been imported
+
+        '''
+        # create FileStoreItem instances without any disk operations
+        item_from_url = FileStoreItem.objects.create(source=self.url_source,
+                                                     sharename=self.sharename)
+        self.assertEqual(item_from_url.get_full_url(), item_from_url.source)
+
     def test_get_file_extension(self):
         '''Check that the correct file extension is returned.
 
         '''
         # create FileStoreItem instances without any disk operations
-        item_from_url = FileStoreItem.objects.create(source=self.path_source,
+        item_from_url = FileStoreItem.objects.create(source=self.url_source,
                                                      sharename=self.sharename)
-        item_from_path = FileStoreItem.objects.create(source=self.url_source,
+        item_from_path = FileStoreItem.objects.create(source=self.path_source,
                                                       sharename=self.sharename)
         # data file doesn't exist on disk and source is an abs file system path
         self.assertEqual(item_from_path.get_file_extension(), os.path.splitext(self.filename)[1])

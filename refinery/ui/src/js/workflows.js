@@ -1,10 +1,9 @@
 angular.module('refineryWorkflows', [])
 
-.controller('WorkflowListApiCtrl', function($scope, $rootScope, workflowApi, analysisConfig) {
+.controller('WorkflowListApiCtrl', function($scope, $rootScope, $log, workflowApi, workflow) {
   'use strict';
 
   $scope.getWorkflowList = function() {
-    console.log("Getting the workflow list");
     var Workflows = workflowApi.get(function() {
       $scope.workflowList = Workflows.objects;
     });
@@ -12,37 +11,14 @@ angular.module('refineryWorkflows', [])
 
   $scope.getWorkflowList();
 
+  $scope.currentWorkflow = workflow;
+
   $scope.updateCurrentWorkflow = function() {
-    $scope.currentWorkflow = $scope.workflowList[$scope.workflowIndex];
+    workflow.set($scope.workflowList[$scope.workflowIndex]);
 
-    if ($scope.currentWorkflow) {
-      if ($scope.isCurrentWorkflowSingleInput()) {
-        $scope.currentWorkflow.input_relationships[0].category = "File Set";
-      }
-      else {      
-        $scope.currentWorkflow.input_relationships[0].category = $scope.currentWorkflow.input_relationships[0].category + " File Mapping";
-      }
-      $rootScope.$emit("workflowChangedEvent", $scope.currentWorkflow);
-      // FIXME: temp workaround - this should be handled through the event bus
-      analysisConfig.workflowUuid = $scope.currentWorkflow.uuid;
+    if (workflow.isAvailable()) {
+      $rootScope.$emit("workflowChangedEvent", workflow.get());
     }
-  };
-
-  $scope.isCurrentWorkflowSingleInput = function() {
-    if ($scope.currentWorkflow) {
-      return $scope.currentWorkflow.input_relationships[0].set2 ? false : true;
-    }
-
-    return true;
-  };
-
-  $scope.getCurrentWorkflowInputCount = function() {
-    if ($scope.currentWorkflow) {
-      console.log( $scope.currentWorkflow.input_relationships[0].set2 ? 2 : 1 );
-      return $scope.currentWorkflow.input_relationships[0].set2 ? 2 : 1;
-    }
-
-    return null;
   };
 
 })
@@ -53,4 +29,73 @@ angular.module('refineryWorkflows', [])
   return $resource(
     "/api/v1/workflow/", {format: "json"}
   );
+})
+
+.service("workflow", function($log) {
+  'use strict';
+
+  this.instance = null;
+
+  this.isAvailable = function() {
+    return this.instance ? true : false;
+  };
+
+  this.get = function() {
+    return this.instance;
+  };
+
+  this.set = function(instance) {
+    this.instance = instance;
+  };
+
+  this.isSingleInput = function() {
+    if (this.instance) {
+      if (this.getInputSet(2)) {
+        return false;
+      }
+      else {
+        return true;
+      }
+    }
+    else {
+      // is this necessary?
+      return true;
+    }
+  };
+
+  this.getUuid = function() {
+    if (this.isAvailable()) {return this.instance.uuid;}
+  };
+
+  this.getSummary = function() {
+    if (this.isAvailable()) {return this.instance.summary;}
+  };
+
+  this.getName = function() {
+    if (this.isAvailable()) {return this.instance.name;}
+  };
+
+  this.getCategory = function() {
+    if (this.isSingleInput()) {
+      return "File Set";
+    }
+    else {
+      return this.instance.input_relationships[0].category + " File Mapping";
+    }
+  };
+
+  this.getInputSet = function(number) {
+    if (this.isAvailable()) {
+      switch(number) {
+        case 1: return this.instance.input_relationships[0].set1;
+        case 2: return this.instance.input_relationships[0].set2;
+      }
+    }
+  };
+
+  this.getGalaxyInstanceId = function() {
+    if (this.isAvailable()) {
+      return this.instance.galaxy_instance_identifier;
+    }
+  };
 });

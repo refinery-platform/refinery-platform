@@ -82,9 +82,7 @@ SolrClient.prototype.run = function ( query, queryComponents, callback ) {
 	
 	var self = this;	
 	var url = self.createUrl( query, queryComponents );
-	
-	//console.log( url );
-	
+		
 	$.ajax( { type: "GET", dataType: "jsonp", url: url, success: function(data) {
 				
 		var response = new SolrResponse( query );		
@@ -109,6 +107,6 @@ SolrClient.prototype.createUrl = function( query, queryComponents ) {
 
 SolrClient.prototype.createUnpaginatedUrl = function( query, queryComponents ) {
 	var self = this;
-	
+
 	return  self._createBaseUrl( query.getDocumentIndex(), query.getTotalDocumentCount() ) + query.create( queryComponents );		
 }

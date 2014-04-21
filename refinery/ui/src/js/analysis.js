@@ -1,55 +1,56 @@
 angular.module('refineryAnalysis', [])
 
-.controller('AnalysisCtrl', function($scope, $rootScope, $http, $window, analysisConfig) {
+.controller('AnalysisCtrl', function($scope, $rootScope, $http, $window, $log, $timeout, workflow, externalToolStatusService) {
   'use strict';
 
-  // FIXME: workflowChangedEvent is not received when a workflow is selected
-  // for the very first time
-  // $scope.$onRootScope('workflowChangedEvent', function(event, currentWorkflow) {
-    // console.log("Updating workflow UUID");
-    // analysisConfig.workflowUuid = currentWorkflow.uuid;  
-  // });
-  // $scope.$onRootScope('nodeRelationshipChangedEvent', function(event, currentNodeRelationship) {
-    // $scope.currentNodeRelationship = currentNodeRelationship;
-  // });
-
-  $scope.launchAnalysis = function() {
-
-    console.log("Study UUID: " + analysisConfig.studyUuid);
-    console.log("Workflow UUID: " + analysisConfig.workflowUuid);
-    console.log("NodeSet UUID: " + analysisConfig.nodeSetUuid);
-    console.log("NodeRelationship UUID: " + analysisConfig.nodeRelationshipUuid);
-
-    // POST request to either
-    // /analysis_manager/run_nodeset/ or
-    // /analysis_manager/run_noderelationship/
-    // http://stackoverflow.com/questions/18599764/redirect-to-a-different-page-after-post-using-angular
-    $http({
-      method: 'POST',
-      url: '/analysis_manager/run/',
-      headers: {'X-Requested-With': 'XMLHttpRequest'},
-      data: analysisConfig,
-    }).success(function(data) {
-      $window.location.assign(data);
-    }).error(function(data, status) {
-      console.log("Request failed: error " + status);
-    });
-  };
-})
-
-.factory('analysisConfig', function() {
-  'use strict';
-
-  return {
-    studyUuid: externalStudyUuid,
+  $scope.analysisConfig = {
+    studyUuid: $window.externalStudyUuid,
     workflowUuid: null,
     nodeSetUuid: null,
     nodeRelationshipUuid: null
   };
-})
 
-.factory('analysisLaunch', function($http) {
-  'use strict';
+  // get Galaxy instance status for a particular workflow
+  (function tick() {
+    $scope.galaxyStatus = externalToolStatusService.isGalaxyInstanceUp(workflow.getGalaxyInstanceId());
+    $timeout(tick, 1000);
+  })();
 
-  return {};
+  $scope.$onRootScope('nodeSetChangedEvent', function(event, currentNodeSet) {
+    $scope.analysisConfig.nodeSetUuid = currentNodeSet.uuid;
+    $scope.analysisConfig.nodeRelationshipUuid = null;
+    $log.debug("new nodeset: " + $scope.analysisConfig.nodeSetUuid);
+  });
+
+  $scope.$onRootScope('nodeRelationshipChangedEvent', function(event, currentNodeRelationship) {
+    if (!currentNodeRelationship) {
+      $scope.analysisConfig.nodeRelationshipUuid = null;
+      $log.debug("new noderel undefined");
+    }
+    else {
+      $scope.analysisConfig.nodeRelationshipUuid = currentNodeRelationship.uuid;
+      $log.debug("new noderel: " + $scope.analysisConfig.nodeRelationshipUuid);
+    }
+
+    $scope.analysisConfig.nodeSetUuid = null;
+  });
+
+  $scope.launchAnalysis = function() {
+    $scope.analysisConfig.workflowUuid = workflow.getUuid();
+
+    $http({
+      method: 'POST',
+      url: '/analysis_manager/run/',
+      headers: {'X-Requested-With': 'XMLHttpRequest'},
+      data: $scope.analysisConfig,
+    }).success(function(response) {
+      $log.debug("Launching analysis with config:");
+      $log.debug("Workflow: " + $scope.analysisConfig.workflowUuid);
+      $log.debug("NodeSET: " + $scope.analysisConfig.nodeSetUuid);
+      $log.debug("NodeREL: " + $scope.analysisConfig.nodeRelationshipUuid);
+      $window.location.assign(response);
+    }).error(function(response, status) {
+      $log.debug("Request failed: error " + status);
+    });
+  };
 });

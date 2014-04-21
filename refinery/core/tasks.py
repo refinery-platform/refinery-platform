@@ -9,6 +9,7 @@ from django.core.cache import cache
 from django.utils.hashcompat import md5_constructor as md5
 from django.contrib.syndication.views import Feed
 from galaxy_connector.galaxy_workflow import GalaxyWorkflow, GalaxyWorkflowInput
+from galaxy_connector.exceptions import ResourceNameError, ConnectionError
 from core.models import DataSet, InvestigationLink, Workflow, WorkflowDataInput, ExternalToolStatus, WorkflowEngine
 from data_set_manager.models import Investigation, Study
 from data_set_manager.tasks import annotate_nodes
@@ -307,7 +308,7 @@ def check_for_solr():
             requests.get(settings.REFINERY_SOLR_BASE_URL + "core/admin/ping")
             solr.status = ExternalToolStatus.SUCCESS_STATUS #successfully reached solr
         except requests.ConnectionError as e:
-            logger.info("core.tasks.check_for_solr: Could not connect to Solr")
+            logger.error("core.tasks.check_for_solr: Could not connect to Solr")
             solr.status = ExternalToolStatus.FAILURE_STATUS #quit with error
         except:
                 logger.exception("core.tasks.check_for_solr: Something went wrong, check the stack trace below for what")
@@ -336,10 +337,13 @@ def dispatch_galaxy_checks():
 @task(expires=(int(ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[ExternalToolStatus.GALAXY_TOOL_NAME]) - 1), time_limit=ExternalToolStatus.TIMEOUT[ExternalToolStatus.GALAXY_TOOL_NAME])
 def check_for_galaxy(instance, galaxy):
     try:
-        instance.get_galaxy_connection().get_histories()
-        galaxy.status = ExternalToolStatus.SUCCESS_STATUS #galaxy running properly
-    except RuntimeError as e:
-        logger.exception("core.tasks.check_for_galaxy: Could not connect to Galaxy")
+        # send a GET request for Galaxy's robots.txt file
+        requests.get("%s/robots.txt" % instance.base_url)
+        galaxy.status = ExternalToolStatus.SUCCESS_STATUS # galaxy running properly
+    except ResourceNameError: # galaxy is up and returned a 404 status
+        galaxy.status = ExternalToolStatus.SUCCESS_STATUS # galaxy running, but robots.txt file missing
+    except requests.exceptions.ConnectionError as e:
+        logger.error("core.tasks.check_for_galaxy: Could not connect to Galaxy")
         galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
     except:
         logger.exception("core.tasks.check_for_galaxy: Something went wrong, check the stack trace below for what")
@@ -357,12 +361,13 @@ def check_tool_status(tool_name, tool_unique_instance_identifier=None):
         else:
             tool = ExternalToolStatus.objects.get(name=tool_name)            
     except ExternalToolStatus.DoesNotExist:
-        logger.error( "External Tool Status does not exist for " + tool_name + "and " + str(tool_unique_instance_identifier) )
+        logger.error("External Tool Status does not exist for " + tool_name + "and " + str(tool_unique_instance_identifier))
         return (True, ExternalToolStatus.UNKNOWN_STATUS)
-    
+
     if tool.is_active:
         if (datetime.now() - tool.last_time_check) > timedelta(seconds=ExternalToolStatus.INTERVAL_BETWEEN_CHECKS[tool_name]):
-            logger.error("%s's database entry hasn't been updated recently; check to see if it's running" % tool_name)
+            logger.error("{}'s database entry hasn't been updated since {}; check to see if it's running"
+                         .format(tool_name, tool.last_time_check))
             return (tool.is_active, ExternalToolStatus.TIMEOUT_STATUS)
-        
+
     return (tool.is_active, tool.status)
