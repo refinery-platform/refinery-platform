@@ -58,6 +58,14 @@ class ServerError(RuntimeError):
         super(ServerError, self).__init__("Miscellaneous Galaxy error")
 
 
+class ServiceError(RuntimeError):
+    '''HTTP status code 503
+
+    '''
+    def __init__(self):
+        super(ServerError, self).__init__("Galaxy service temporarily unavailable")
+
+
 class UnknownResponseError(RuntimeError):
     '''Any HTTP status code except 2xx, 403, 404, 416 or 500
     Example: 501 is returned for certain API endpoints like /api/datasets

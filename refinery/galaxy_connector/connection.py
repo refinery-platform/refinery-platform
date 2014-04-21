@@ -87,6 +87,8 @@ class Connection(object):
                 raise DatasetError()
             elif response.status_code == 500:
                 raise ServerError()
+            elif response.status_code == 503:
+                raise ServiceError()
             else:
                 raise UnknownResponseError()
         # check for response content errors
@@ -129,6 +131,8 @@ class Connection(object):
                 raise DatasetError()
             elif response.status_code == 500:
                 raise ServerError()
+            elif response.status_code == 503:
+                raise ServiceError()
             else:
                 raise UnknownResponseError()
         # check for response content errors

@@ -407,10 +407,9 @@ def monitor_analysis_execution(analysis):
     connection = analysis.get_galaxy_connection()
     try:
         progress = connection.get_progress(analysis.history_id)
-    except (ConnectionError, TimeoutError) as e:
-        error_msg = "Unable to get progress for " + \
-                    "history {} of analysis {}: {}".format(
-                        analysis.history_id, analysis.name, e.message)
+    except (ConnectionError, TimeoutError, ServiceError) as e:
+        error_msg = "Unable to get progress for history '{}'".format(analysis.history_id)
+        error_msg += "of analysis {}: {}".format(analysis.name, e.message)
         analysis.set_status(Analysis.UNKNOWN_STATUS, error_msg)
         logger.warning(error_msg)
         monitor_analysis_execution.retry(countdown=5)
