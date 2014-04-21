@@ -6,6 +6,17 @@ class ConnectionError(RuntimeError):
         super(ConnectionError, self).__init__(
             "Could not connect to Galaxy instance")
 
+
+class ResponseError(RuntimeError):
+    '''Galaxy sent less bytes than specified by Content-Length.
+    This can happen when Galaxy is overloaded.
+
+    '''
+    def __init__(self):
+        super(ResponseError, self).__init__(
+            "Galaxy sent less bytes than specified by Content-Length")
+
+
 class ResourceError(RuntimeError):
     '''HTTP status code 400
     returned for invalid workflow and history IDs, and Galaxy misconfiguration?
@@ -14,12 +25,14 @@ class ResourceError(RuntimeError):
     def __init__(self):
         super(ResourceError, self).__init__("Galaxy request error")
 
+
 class AuthError(RuntimeError):
     '''HTTP status code 403
 
     '''
     def __init__(self):
         super(AuthError, self).__init__("Incorrect Galaxy API key")
+
 
 class ResourceNameError(RuntimeError):
     '''HTTP status code 404
@@ -28,6 +41,7 @@ class ResourceNameError(RuntimeError):
     def __init__(self):
         super(ResourceNameError, self).__init__("Galaxy URL not found")
 
+
 class DatasetError(RuntimeError):
     '''HTTP status code 416 (returned when using an invalid dataset IDs)
 
@@ -35,12 +49,14 @@ class DatasetError(RuntimeError):
     def __init__(self):
         super(DatasetError, self).__init__("Invalid Galaxy dataset ID")
 
+
 class ServerError(RuntimeError):
     '''HTTP status code 500
 
     '''
     def __init__(self):
         super(ServerError, self).__init__("Miscellaneous Galaxy error")
+
 
 class UnknownResponseError(RuntimeError):
     '''Any HTTP status code except 2xx, 403, 404, 416 or 500
@@ -51,6 +67,7 @@ class UnknownResponseError(RuntimeError):
         super(UnknownResponseError, self).__init__(
             "Unknown response code from Galaxy instance")
 
+
 class TimeoutError(RuntimeError):
     '''Galaxy connection timed out
 
@@ -58,6 +75,7 @@ class TimeoutError(RuntimeError):
     def __init__(self):
         super(TimeoutError, self).__init__(
             "Galaxy instance is taking too long to respond")
+
 
 class InvalidResponseError(RuntimeError):
     '''Received invalid JSON response
@@ -69,6 +87,7 @@ class InvalidResponseError(RuntimeError):
         super(InvalidResponseError, self).__init__(
             "Invalid response from Galaxy instance")
 
+
 class MalformedResourceID(RuntimeError):
     '''Workflow, history or history content ID is None or not a string
 
@@ -76,6 +95,7 @@ class MalformedResourceID(RuntimeError):
     def __init__(self, resource_id):
         super(MalformedResourceID, self).__init__(
             "Malformed Galaxy resource id '{}' specified".format(resource_id))
+
 
 class TestError(Exception):
     def __init__(self, msg="TestError exception"):

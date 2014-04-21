@@ -71,7 +71,7 @@ class Connection(object):
             raise TimeoutError()
         except httplib.IncompleteRead as e:
             logger.error(e)
-            raise ConnectionError()
+            raise ResponseError()
         # check for HTTP errors
         try:
             response.raise_for_status()
@@ -113,7 +113,7 @@ class Connection(object):
             raise TimeoutError()
         except httplib.IncompleteRead as e:
             logger.error(e)
-            raise ConnectionError()
+            raise ResponseError()
         # check for HTTP errors
         try:
             response.raise_for_status()
