@@ -37,6 +37,8 @@ class DataSetResource(ModelResource):
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         allowed_methods = ['get']
         resource_name = 'data_set'
+        authentication = SessionAuthentication()
+        authorization = GuardianAuthorization()        
         filtering = {'uuid': ALL}
         fields = ['uuid']
 
