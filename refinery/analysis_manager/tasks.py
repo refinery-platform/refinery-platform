@@ -322,7 +322,7 @@ def run_analysis_preprocessing(analysis):
         error_msg = (
             "Pre-processing failed: " +
             "error importing workflow into Galaxy for analysis '{}': {}"
-            ).format(analysis.name, e.message)
+            ).format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
