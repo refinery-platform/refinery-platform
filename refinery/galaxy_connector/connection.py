@@ -41,7 +41,7 @@ class Connection(object):
 
     # =========================================================================================================
                 
-    def make_url( self, command, args=None, is_data=False, key=True ):
+    def make_url(self, command, args=None, is_data=False, key=True):
         # Adds the API Key to the URL if it's not already there.
         if args is None:
             args = []
@@ -51,7 +51,8 @@ class Connection(object):
             if key:
                 return self.base_url + '/' + self.data_url + '/' + command + argsep + '&'.join( [ '='.join( t ) for t in args ] )
             else:
-                return self.base_url + '/' + self.data_url + '/' + command  + argsep + "to_ext=txt"
+                # to download HTML files and linked resources as zip archives
+                return self.base_url + '/' + self.data_url + '/' + command + '/display' + argsep + "to_ext=txt"
         else:
             return self.base_url + '/' + self.api_url + '/' + command + argsep + '&'.join( [ '='.join( t ) for t in args ] )
 

@@ -91,6 +91,7 @@ ELAND = 'eland'
 GFF = 'gff'
 GTF = 'gtf'
 GZ = 'gz'
+HTML = 'html'
 IDF = 'idf'
 FASTA = 'fasta'
 FASTQ = 'fastq'
@@ -98,6 +99,7 @@ FASTQCSANGER = 'fastqcsanger'
 FASTQILLUMINA = 'fastqillumina'
 FASTQSANGER = 'fastqsanger'
 FASTQSOLEXA = 'fastqsolexa'
+PDF = 'pdf'
 SAM = 'sam'
 SEG = 'seg'
 TABULAR = 'tabular'
@@ -124,6 +126,7 @@ FILE_TYPES = (
     (GFF, 'GFF file'),
     (GTF, 'GTF file'),
     (GZ, 'Gzip compressed archive'),
+    (HTML, 'Hypertext Markup Language'),
     (IDF, 'IDF file'),
     (FASTA, 'FASTA file'),
     (FASTQ, 'FASTQ file'),
@@ -131,6 +134,7 @@ FILE_TYPES = (
     (FASTQILLUMINA, 'FASTQ Illumina'),
     (FASTQSANGER, 'FASTQ Sanger'),
     (FASTQSOLEXA, 'FASTQ Solexa'),
+    (PDF, 'Portable Document Format'),
     (SAM, 'Sequence Alignment/Map'),
     (SEG, 'Segmented Data File'), # http://broadinstitute.org/software/igv/SEG
     (TABULAR, 'Tabular file'),
@@ -165,6 +169,8 @@ FILE_EXTENSIONS = {
     'fastqillumina': FASTQILLUMINA,
     'fastqsanger': FASTQSANGER,
     'fastqsolexa': FASTQSOLEXA,
+    'html': HTML,
+    'pdf': PDF,
     'sam': SAM,
     'tabular': TABULAR,
     'tdf': TDF, 'igv.tdf': TDF,

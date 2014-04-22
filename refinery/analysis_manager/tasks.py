@@ -694,23 +694,26 @@ def download_history_files(analysis) :
 
             if curr_file_id in dl_dict:
                 curr_dl_dict = dl_dict[curr_file_id]
-
                 result_name = curr_dl_dict['filename'] + '.' + file_type
-
                 # size of file defined by galaxy
                 file_size = results['file_size']
 
                 # Determing tag if galaxy results should be download through http or copying files directly
                 local_download = analysis.workflow.workflow_engine.instance.local_download
 
-                # URL to download
-                if local_download:
+                # to retrieve HTML files as zip archives via dataset URL
+                if local_download and file_type != 'html':
                     download_url = results['file_name']
                 else:
                     download_url = connection.make_url(
                         str(results['dataset_id']), is_data=True, key=False)
 
-                # getting file_store_uuid, 
+                # workaround to set the correct file type for zip archives of
+                # reports produced by FASTQC
+                if file_type == 'html':
+                    file_type = 'zip'
+
+                # getting file_store_uuid,
                 # TODO: when changing permanent=True, fix update of % download of file 
                 filestore_uuid = create(
                     source=download_url,
