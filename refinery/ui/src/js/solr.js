@@ -1,7 +1,7 @@
 angular.module('refinerySolr', [])
 
 
-.factory("solrFactory", function($resource) {
+.factory("solrFactory", function($resource, $window) {
   'use strict';
 
   return $resource(
