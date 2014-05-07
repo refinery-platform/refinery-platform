@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load markup %}
 
 {% block title %}
 {{ block.super }} - Edit Workflow
@@ -28,7 +27,7 @@
 			<p>{{ form.name }}</p>
 
 			<div class="refinery-subheader">
-				<h4>Summary (Supports Markdown)</h4>
+				<h4>Summary</h4>
 			</div>
 			{% if form.summary.errors %}
 				<p class="errors">{{ form.summary.errors.as_text }}</p>
