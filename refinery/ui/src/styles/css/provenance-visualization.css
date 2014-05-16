@@ -3,23 +3,23 @@
  * css adapated of mbostock force layout example
  */
 .node {
-	stroke: #fff;
-	stroke-width: 1.5px;
-	fill: gray;
+  stroke: #fff;
+  stroke-width: 1.5px;
+  fill: gray;
 }
 
 .inputNode {
-	stroke: #fff;
-	stroke-width: 1.5px;
-	fill: rgb(237, 116, 7);
+  stroke: #fff;
+  stroke-width: 1.5px;
+  fill: rgb(237, 116, 7);
 }
 
 .link {
-	stroke: gray;
-	stroke-width: 1.5px;
-	stroke-opacity: .7;
+  stroke: gray;
+  stroke-width: 1.5px;
+  stroke-opacity: .7;
 }
 
 .brect {
-	fill: #fff;
+  fill: #fff;
 }
