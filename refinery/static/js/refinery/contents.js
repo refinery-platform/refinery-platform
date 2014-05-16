@@ -133,6 +133,12 @@ $(document).ready(function() {
 			  }
 			})
 
+			$('a[data-toggle="pill"]').on('shown', function (event) {
+			  if ( event.target.href.split( "#" )[1] == "provenance-view-tab" ) {
+			  	runProvenanceVisualization( currentStudyUuid );
+			  }
+			})
+
 			query.setDocumentIndex( 0 );
 			query.setDocumentCount( tableView.getDocumentsPerPage() );
 

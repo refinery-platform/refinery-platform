@@ -6,9 +6,10 @@
 
 
 {% block head_html %}
+  <link ref="stylesheet" href="{% static "styles/css/provenance-visualization.css" %}" />
   <link rel="stylesheet" href="{% static "vendor/tipsy/src/stylesheets/tipsy.css" %}" />
   <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
-
+  
   <style type="text/css">
   svg {
   	background-color: none;
@@ -97,7 +98,34 @@
   .facet-title {
   	margin-top: 10px;
   }
-  </style>
+
+/*
+ * (c) Stefan Luger 2014
+ * css adapated of mbostock force layout example
+ */
+.node {
+	stroke: #fff;
+	stroke-width: 1.5px;
+	fill: gray;
+}
+
+.inputNode {
+	stroke: #fff;
+	stroke-width: 1.5px;
+	fill: rgb(237, 116, 7);
+}
+
+.link {
+	stroke: gray;
+	stroke-width: 1.5px;
+	stroke-opacity: .7;
+}
+
+.brect {
+	fill: #fff;
+}
+
+</style>
 {% endblock head_html %}
 
 {% block title %} - Data Set {{ data_set.name }}{% endblock %}
@@ -259,7 +287,8 @@
 										<label style="dispaly: inline; float:left; margin-top: 3px; margin-right: 5px;">Display </label>
 										<select id="view-selector" style="display: inline; float:left;">
 											<option value="table-view-tab">Table</option>
-										<option value="pivot-view-tab">Matrix</option>
+											<option value="pivot-view-tab">Matrix</option>
+											<option value="provenance-view-tab">Provenance</option>
 										</select>
 										<a href="#" id="help-view-selector-button" style="height: 20px; width: 20px;">
 											<i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 0px; position: relative; top: 5px;"></i>
@@ -274,6 +303,9 @@
 											</li>
 											<li>
 												<a href="#pivot-view-tab" data-toggle="pill">Matrix</a>
+											</li>
+											<li>
+												<a href="#provenance-view-tab" data-toggle="pill">Provenance</a>
 											</li>
 										</ul>
 									</div>
@@ -320,6 +352,11 @@
 												<div id="pivot-view"></div>
 												<div id="solr-pivot-matrix">
 													<!-- the matrix -->
+												</div>
+											</div>
+											<div class="tab-pane fade in" id="provenance-view-tab">
+												<div id="provenance-graph">
+													<!-- the provenance graph -->
 												</div>
 											</div>
 										</div>
@@ -664,6 +701,9 @@
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/analysis_api_client.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/data_set_monitor.js"></script>
   
+  <!-- provenance visualization -->
+  <script type="text/javascript" src="{{ STATIC_URL }}js/provenance_visualization.js"></script>
+ 
 
 	<script type="application/javascript">
 
