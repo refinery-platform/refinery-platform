@@ -116,6 +116,10 @@ $(document).ready(function() {
       //console.log( SOLR_QUERY_INITIALIZED_COMMAND + ' executed' );
       //console.log( arguments );
 
+      if ( arguments.query && !(arguments.query instanceof SolrQuery) ) {
+        return;
+      }
+
       tableView = new SolrDocumentTable( "solr-table-view", "solrdoctab1", query, client, configurator, documentTableCommands, dataSetMonitor );
       tableView.setDocumentsPerPage( 20 );
 
@@ -128,13 +132,13 @@ $(document).ready(function() {
       // render pivot matrix upon activation of tab (otherwise the labels will be missing because their
       // width cannot be determined while the matrix is not visible (getBBox and getBoundingClientRect don't work)
       $('a[data-toggle="pill"]').on('shown', function (event) {
-        if ( event.target.href.split( "#" )[1] == "pivot-view-tab" ) {
+        if ( event.target.href.split( "#" )[1] === "pivot-view-tab" ) {
           pivotMatrixView.render();
         }
       })
 
       $('a[data-toggle="pill"]').on('shown', function (event) {
-        if ( event.target.href.split( "#" )[1] == "provenance-view-tab" ) {
+        if ( event.target.href.split( "#" )[1] === "provenance-view-tab" ) {
           runProvenanceVisualization( currentStudyUuid );
         }
       })
