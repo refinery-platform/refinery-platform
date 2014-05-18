@@ -1,5 +1,5 @@
-// Adapted the mbostock examle (see http://bl.ocks.org/mbostock/4062045#miserables.json)
-// For zoom and pan support with force layouts: http://stackoverflow.com/questions/7871425/is-there-a-way-to-zoom-into-a-d3-force-layout-graph
+// author: https://github.com/sluger
+// title: prototype implementation for the refinery provenance visualization api
 
 // canvas dimensions
 var width = window.innerWidth - 50,
@@ -18,15 +18,12 @@ var nodes = [],
     selNodeHash = [],
     getSelLinkSourceHash = [],
     getSelLinkTargetHash = [],
-    breadth = -1,
-    depth = -1,
     selInputNodes = [],
     selNormalNodes = [],
     topNodes = [],
     cgtNodes = [];
 
 // main canvas drawing area
-//var canvas = d3.select(".vis")
 var canvas = d3.select("#provenance-graph")
     .append("svg:svg")
     .attr("width", width)
@@ -45,7 +42,6 @@ var rect = canvas.append('svg:rect')
 // primitive dimensions
 var r = 6;
 
-
 // initialize force layout
 var force = d3.layout.force()
     .charge(-120)
@@ -57,7 +53,7 @@ drag = force.drag()
     .on("dragstart", dragstart)
     .on("dragend", dragend);
 
-
+// shift right amount of the graph for a specific node by an amount of rows (shiftAmount)
 function traverseShift(selNodeId, shiftAmount) {
     var cur = { o: selNodes[selNodeId],
         succ: getSelLinkTargetHash[selNodeId]
@@ -73,7 +69,7 @@ function traverseShift(selNodeId, shiftAmount) {
     }
 }
 
-
+// group nodes into 2d array
 function groupNodesByCol(tNodes) {
     var layer = 10,
         cgtNodes = [],
@@ -99,7 +95,7 @@ function groupNodesByCol(tNodes) {
     return cgtNodes;
 }
 
-
+// deep copy node data structure
 function copyNode(node) {
     var newNode = {name: "", nodeType: "", uuid: "", study: "", assay: "", fixed: false, row: -1, col: -1, parents: [], id: -1};
 
@@ -120,7 +116,7 @@ function copyNode(node) {
     return newNode;
 }
 
-
+// layout node columns
 function placeNodes(lgNodes) {
     var layer = 10,
         row = 0,
@@ -128,7 +124,6 @@ function placeNodes(lgNodes) {
 
     // from right to left
     lgNodes.forEach(function (lg) {
-        console.log("Layer: " + layer + ", Nodes: " + lg.length);
 
         lg.forEach(function (n) {
             var cur = { id: selNodeHash[n.uuid],
@@ -137,7 +132,6 @@ function placeNodes(lgNodes) {
                 succ: getSelLinkTargetHash[selNodeHash[n.uuid]],
                 neighbors: []
             };
-            console.log(cur);
 
             // for each successor get pred (= neighbors)
             var neighbors = [];
@@ -287,7 +281,7 @@ function placeNodes(lgNodes) {
     });
 }
 
-
+// layering
 function coffmanGrahamLayering(tNodes) {
     var layer = 10,
         succ = [],
@@ -317,7 +311,7 @@ function coffmanGrahamLayering(tNodes) {
 }
 
 
-// http://en.wikipedia.org/wiki/Topological_sorting
+// topology sort (inspired by http://en.wikipedia.org/wiki/Topological_sorting)
 function topSort(inputs) {
     var s = [],
         l = [],
@@ -365,8 +359,8 @@ function topSort(inputs) {
     return l;
 }
 
-
-function ddClick(val) {
+// main d3 visualization function
+function visualize(val) {
     var selStudy = val;
 
     // fade out
@@ -517,11 +511,10 @@ function ddClick(val) {
     }, 500);
 }
 
-
+// refinery injection for the provenance visualization
 function runProvenanceVisualization(studyUuid) {
     var url = "/api/v1/node?study__uuid=" + studyUuid + "&format=json&limit=0";
 
-    console.log(url);
     nodes = [];
     d3.json(url, function (error, data) {
         // parse json file; extract raw node objects
@@ -530,7 +523,7 @@ function runProvenanceVisualization(studyUuid) {
         // extract nodes
         d3.values(obj.value).forEach(function (x, i) {
             var nodeType;
-            console.log(x.parents);
+
             if (x.parents.length === 0) {
                 nodeType = "input";
             } else {
@@ -570,19 +563,14 @@ function runProvenanceVisualization(studyUuid) {
             }
         });
 
-        console.log("nodes " + nodes.length);
-        console.log(nodes);
-        console.log("links " + links.length);
-        console.log(links);
-
-        ddClick(studyUuid);
+        visualize(studyUuid);
     });
 
 }
 
 // geometric zoom
 function redraw() {
-    // tranlation and scaling
+    // translation and scaling
     canvas.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
     // fix for rectangle getting translated too, doesn't work after window resize
     rect.attr("transform", "translate(" + (-d3.event.translate[0] / d3.event.scale) + "," + (-d3.event.translate[1] / d3.event.scale) + ")" + " scale(" + (+1 / d3.event.scale) + ")");
@@ -611,10 +599,11 @@ function update() {
         });
 }
 
-// drag support for nodes in force layout
+// drag start listener support for nodes in force layout
 function dragstart() {
     d3.event.sourceEvent.stopPropagation();
 }
 
+// drag end listener
 function dragend() {
 }
