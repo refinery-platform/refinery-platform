@@ -394,7 +394,7 @@ function visualize(val) {
                 n.id = k;
                 selNodes.push(n);
                 selNodeHash[n.uuid] = j;
-                if (n.nodeType == "input") {
+                if (n.nodeType == "raw") {
                     selInputNodes.push(n);
                 } else {
                     selNormalNodes.push(n);
@@ -482,18 +482,30 @@ function visualize(val) {
         // draw nodes
         node = canvas.selectAll(".node")
             .data(selNodes)
-            .enter().append("circle")
-            .classed({
-                "inputNode": (function (d) {
-                    return d.nodeType === "input";
+            .enter().append("g").each(function (d) {
+                if (d.nodeType === "raw" || d.nodeType === "processed") {
+                    d3.select(this).append("circle").attr("r", r);
+                } else {
+                    d3.select(this).append("rect").attr("width", r*2)
+                        .attr("height", r*2);
+                }
+            }).classed({
+                "node": true,
+                "rawNode": (function (d) {
+                    return d.nodeType == "raw";
                 }),
-                "node": (function (d) {
-                    return d.nodeType !== "input";
+                "specialNode": (function (d) {
+                    return d.nodeType == "special";
+                }),
+                "processedNode": (function (d) {
+                    return d.nodeType == "processed";
                 })
-            })
-            .attr("r", r)
-            .style("opacity", 0.0)
-            .call(drag);
+            });
+
+        node.each(function () {
+            d3.select(this).style("opacity", 0.0)
+                .call(drag);
+        });
 
         // add tooltip
         node.append("title")
@@ -507,7 +519,6 @@ function visualize(val) {
         // fade in
         d3.selectAll(".link").transition().duration(500).style("opacity", 0.7);
         d3.selectAll(".node").transition().duration(500).style("opacity", 1.0);
-        d3.selectAll(".inputNode").transition().duration(500).style("opacity", 1.0);
     }, 500);
 }
 
@@ -522,12 +533,24 @@ function runProvenanceVisualization(studyUuid) {
 
         // extract nodes
         d3.values(obj.value).forEach(function (x, i) {
-            var nodeType;
+            var nodeType = "";
 
+            // assign node types
             if (x.parents.length === 0) {
-                nodeType = "input";
+                nodeType = "raw";
             } else {
-                nodeType = "normal";
+                // TODO: node types
+
+                switch(x.type) {
+                    case "Source Name":
+                    case "Sample Name":
+                    case "Assay Name":
+                        nodeType = "special";
+                        break;
+                    default:
+                        nodeType = "processed";
+                        break;
+                }
             }
 
             nodes.push({
@@ -579,8 +602,8 @@ function redraw() {
 // update function for node dragging
 function update() {
     link.attr("x1", function (d) {
-        return d.source.x;
-    })
+            return d.source.x;
+        })
         .attr("y1", function (d) {
             return d.source.y;
         })
@@ -591,11 +614,14 @@ function update() {
             return d.target.y;
         });
 
-    node.attr("cx", function (d) {
-        return d.x;
-    })
-        .attr("cy", function (d) {
-            return d.y;
+    node.attr("transform", function (d) {
+            switch(d.nodeType) {
+                case "raw":
+                case "processed":
+                    return "translate(" + d.x + "," + d.y + ")";
+                case "special":
+                    return "translate(" + (d.x-r) + "," + (d.y-r) + ")";
+            }
         });
 }
 
