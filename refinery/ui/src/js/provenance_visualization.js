@@ -28,6 +28,14 @@ provenanceVisualizationModule = function () {
     // primitive dimensions
     var r = 6;
 
+    // geometric zoom
+    var redraw = function () {
+        // translation and scaling
+        canvas.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
+        // fix for rectangle getting translated too, doesn't work after window resize
+        rect.attr("transform", "translate(" + (-d3.event.translate[0] / d3.event.scale) + "," + (-d3.event.translate[1] / d3.event.scale) + ")" + " scale(" + (+1 / d3.event.scale) + ")");
+    };
+
     // main canvas drawing area
     var canvas = d3.select("#provenance-graph")
         .append("svg:svg")
@@ -50,13 +58,21 @@ provenanceVisualizationModule = function () {
         .linkDistance(30)
         .size([width, height]);
 
+    // drag start listener support for nodes in force layout
+    var dragstart = function () {
+        d3.event.sourceEvent.stopPropagation();
+    };
+
+    // drag end listener
+    var dragend = function () {};
+
     // drag and drop node enabled
-    drag = force.drag()
+    var drag = force.drag()
         .on("dragstart", dragstart)
         .on("dragend", dragend);
 
     // shift right amount of the graph for a specific node by an amount of rows (shiftAmount)
-    function traverseShift(nodeId, shiftAmount) {
+    var traverseShift = function (nodeId, shiftAmount) {
         var cur = { o: nodes[nodeId],
             succ: tarLinkHash[nodeId]
         };
@@ -69,10 +85,10 @@ provenanceVisualizationModule = function () {
                 traverseShift(s, shiftAmount);
             });
         }
-    }
+    };
 
     // group nodes by layers into a 2d array
-    function groupNodesByCol(tNodes) {
+    var groupNodesByCol = function (tNodes) {
         var layer = 10,
             cgtNodes = [],
             rtNodes = [];
@@ -95,10 +111,10 @@ provenanceVisualizationModule = function () {
         });
 
         return cgtNodes;
-    }
+    };
 
     // deep copy node data structure
-    function copyNode(node) {
+    var copyNode = function (node) {
         var newNode = {name: "", nodeType: "", uuid: "", study: "", assay: "", fixed: false, row: -1, col: -1, parents: [], id: -1, visited: false};
 
         newNode.name = node.name;
@@ -116,11 +132,11 @@ provenanceVisualizationModule = function () {
         });
 
         return newNode;
-    }
+    };
 
     // TODO: rewrite row layering
     // layout node columns
-    function placeNodes(lgNodes) {
+    var placeNodes = function (lgNodes) {
         var layer = 10,
             row = 0,
             curRow = 0;
@@ -282,11 +298,11 @@ provenanceVisualizationModule = function () {
             layer--;
             row = 0;
         });
-    }
+    };
 
     // TODO: handle graph width
     // layering
-    function coffmanGrahamLayering(tNodes) {
+    var coffmanGrahamLayering = function (tNodes) {
         var layer = 10,
             succ = [],
             rtNodes = [];
@@ -312,12 +328,11 @@ provenanceVisualizationModule = function () {
                 n.col = maxSuccLayer - 1;
             }
         });
-    }
-
+    };
 
     // TODO: lexicographic sort for each layer
     // topology sort (inspired by http://en.wikipedia.org/wiki/Topological_sorting)
-    function topSort(inputs) {
+    var topSort = function (inputs) {
         var s = [],
             l = [],
             cnodes = [],
@@ -362,10 +377,10 @@ provenanceVisualizationModule = function () {
         }
 
         return l;
-    }
+    };
 
     // main d3 visualization function
-    function visualize() {
+    var visualize = function () {
 
         // short delay
         setTimeout(function () {
@@ -432,10 +447,10 @@ provenanceVisualizationModule = function () {
             d3.selectAll(".link").transition().duration(500).style("opacity", 0.7);
             d3.selectAll(".node").transition().duration(500).style("opacity", 1.0);
         }, 500);
-    }
+    };
 
     // layout graph
-    function layout() {
+    var layout = function () {
         // toplogical order
         var topNodes = topSort(inputNodes);
 
@@ -447,18 +462,10 @@ provenanceVisualizationModule = function () {
 
         // place vertices
         placeNodes(layeredTopNodes);
-    }
-
-    // geometric zoom
-    function redraw() {
-        // translation and scaling
-        canvas.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
-        // fix for rectangle getting translated too, doesn't work after window resize
-        rect.attr("transform", "translate(" + (-d3.event.translate[0] / d3.event.scale) + "," + (-d3.event.translate[1] / d3.event.scale) + ")" + " scale(" + (+1 / d3.event.scale) + ")");
-    }
+    };
 
     // update function for node dragging
-    function update() {
+    var update = function () {
         // links
         link.attr("x1", function (d) {
             return d.source.x;
@@ -483,16 +490,7 @@ provenanceVisualizationModule = function () {
                     return "translate(" + (d.x - r) + "," + (d.y - r) + ")";
             }
         });
-    }
-
-    // drag start listener support for nodes in force layout
-    function dragstart() {
-        d3.event.sourceEvent.stopPropagation();
-    }
-
-    // drag end listener
-    function dragend() {
-    }
+    };
 
     // refinery injection for the provenance visualization
     var runProvenanceVisualizationPrivate = function (studyUuid) {
