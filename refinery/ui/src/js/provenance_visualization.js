@@ -1,27 +1,30 @@
 // author: https://github.com/sluger
 // title: prototype implementation for the refinery provenance visualization api
 
+// initializations
+
+// node-link arrays
+var nodes = [],
+    inputNodes = [],
+    links = [];
+
+// dom elements
+var node = null,
+    link = null;
+
+// look up hashes
+var nodeHash = [],
+    studyHash = [],
+    studyAssayHash = [],
+    srcLinkHash = [],
+    tarLinkHash = [];
+
 // canvas dimensions
 var width = window.innerWidth - 50,
     height = window.innerHeight - 50;
 
-// initializations
-var nodes = [],
-    links = [],
-    node = null,
-    link = null,
-    nodeHash = [],
-    studyHash = [],
-    studyAssays = [],
-    selNodes = [],
-    selLinks = [],
-    selNodeHash = [],
-    getSelLinkSourceHash = [],
-    getSelLinkTargetHash = [],
-    selInputNodes = [],
-    selNormalNodes = [],
-    topNodes = [],
-    cgtNodes = [];
+// primitive dimensions
+var r = 6;
 
 // main canvas drawing area
 var canvas = d3.select("#provenance-graph")
@@ -39,9 +42,6 @@ var rect = canvas.append('svg:rect')
     .attr("height", height)
     .classed("brect", true);
 
-// primitive dimensions
-var r = 6;
-
 // initialize force layout
 var force = d3.layout.force()
     .charge(-120)
@@ -54,22 +54,22 @@ drag = force.drag()
     .on("dragend", dragend);
 
 // shift right amount of the graph for a specific node by an amount of rows (shiftAmount)
-function traverseShift(selNodeId, shiftAmount) {
-    var cur = { o: selNodes[selNodeId],
-        succ: getSelLinkTargetHash[selNodeId]
+function traverseShift(nodeId, shiftAmount) {
+    var cur = { o: nodes[nodeId],
+        succ: tarLinkHash[nodeId]
     };
 
-    cur.o.row = selNodes[selNodeId].row + shiftAmount;
+    cur.o.row = nodes[nodeId].row + shiftAmount;
 
     // DFS for each successor
     if (typeof cur.succ !== "undefined") {
-        getSelLinkTargetHash[selNodeId].forEach(function (s) {
+        tarLinkHash[nodeId].forEach(function (s) {
             traverseShift(s, shiftAmount);
         });
     }
 }
 
-// group nodes into 2d array
+// group nodes by layers into a 2d array
 function groupNodesByCol(tNodes) {
     var layer = 10,
         cgtNodes = [],
@@ -82,13 +82,13 @@ function groupNodesByCol(tNodes) {
     cgtNodes.push([]);
     var i = 0;
     rtNodes.reverse().forEach(function (n) {
-        if (selNodes[n.id].col === layer) {
-            cgtNodes[i].push(selNodes[n.id]);
+        if (nodes[n.id].col === layer) {
+            cgtNodes[i].push(nodes[n.id]);
         } else {
             i++;
             layer--;
             cgtNodes.push([]);
-            cgtNodes[i].push(selNodes[n.id]);
+            cgtNodes[i].push(nodes[n.id]);
         }
     });
 
@@ -97,7 +97,7 @@ function groupNodesByCol(tNodes) {
 
 // deep copy node data structure
 function copyNode(node) {
-    var newNode = {name: "", nodeType: "", uuid: "", study: "", assay: "", fixed: false, row: -1, col: -1, parents: [], id: -1};
+    var newNode = {name: "", nodeType: "", uuid: "", study: "", assay: "", fixed: false, row: -1, col: -1, parents: [], id: -1, visited: false};
 
     newNode.name = node.name;
     newNode.nodeType = node.nodeType;
@@ -108,7 +108,7 @@ function copyNode(node) {
     newNode.row = node.row;
     newNode.col = node.col;
     newNode.id = node.id;
-
+    newNode.visited = node.visited;
     node.parents.forEach(function (p, i) {
         newNode.parents[i] = p;
     });
@@ -116,6 +116,7 @@ function copyNode(node) {
     return newNode;
 }
 
+// TODO: rewrite row layering
 // layout node columns
 function placeNodes(lgNodes) {
     var layer = 10,
@@ -126,10 +127,10 @@ function placeNodes(lgNodes) {
     lgNodes.forEach(function (lg) {
 
         lg.forEach(function (n) {
-            var cur = { id: selNodeHash[n.uuid],
-                o: selNodes[selNodeHash[n.uuid]],
-                pred: getSelLinkSourceHash[selNodeHash[n.uuid]],
-                succ: getSelLinkTargetHash[selNodeHash[n.uuid]],
+            var cur = { id: nodeHash[n.uuid],
+                o: nodes[nodeHash[n.uuid]],
+                pred: srcLinkHash[nodeHash[n.uuid]],
+                succ: tarLinkHash[nodeHash[n.uuid]],
                 neighbors: []
             };
 
@@ -137,9 +138,9 @@ function placeNodes(lgNodes) {
             var neighbors = [];
             if (typeof cur.succ !== "undefined") {
                 cur.succ.forEach(function (s) {
-                    selNodes[s].parents.forEach(function (p) {
-                        if (selNodes[selNodeHash[p]].id !== cur.id) {
-                            neighbors.push(selNodeHash[p]);
+                    nodes[s].parents.forEach(function (p) {
+                        if (nodes[nodeHash[p]].id !== cur.id) {
+                            neighbors.push(nodeHash[p]);
                         }
                     });
                 });
@@ -177,31 +178,31 @@ function placeNodes(lgNodes) {
                     if (cur.pred.length === 1 && cur.succ.length === 1) {
                         // 0 NEIGHBORS
                         if (cur.neighbors.length === 0) {
-                            curRow = selNodes[cur.succ[0]].row;
+                            curRow = nodes[cur.succ[0]].row;
                         } else {
                             // n NEIGHBORS
                             // check neighbors visited
                             visited = 0;
                             cur.neighbors.forEach(function (nb) {
-                                if (selNodes[nb].visited) {
+                                if (nodes[nb].visited) {
                                     visited++;
                                 }
                             });
-                            curRow = selNodes[cur.succ[0]].row - (cur.neighbors.length / 2) + visited;
+                            curRow = nodes[cur.succ[0]].row - (cur.neighbors.length / 2) + visited;
                         }
                     }
                     // 1 PRED n SUCC
                     else if (cur.pred.length === 1 && cur.succ.length > 1) {
-                        minRow = selNodes[cur.succ[0]].row;
+                        minRow = nodes[cur.succ[0]].row;
                         maxRow = -1;
 
                         // get min and max row for SPLIT BRANCH
                         cur.succ.forEach(function (s) {
-                            if (selNodes[s].row < minRow) {
-                                minRow = selNodes[s].row;
+                            if (nodes[s].row < minRow) {
+                                minRow = nodes[s].row;
                             }
-                            if (selNodes[s].row > maxRow) {
-                                maxRow = selNodes[s].row;
+                            if (nodes[s].row > maxRow) {
+                                maxRow = nodes[s].row;
                             }
                         });
                         if ((minRow + (maxRow - minRow) / 2) === curRow) {
@@ -212,23 +213,23 @@ function placeNodes(lgNodes) {
                     }
                     // n PRED 1 SUCC
                     else if (cur.pred.length > 1 && cur.succ.length === 1) {
-                        curRow = selNodes[cur.succ[0]].row + cur.pred.length / 2;
+                        curRow = nodes[cur.succ[0]].row + cur.pred.length / 2;
 
                         // traverse graph and shift succs by row_shift
                         traverseShift(cur.succ[0], cur.pred.length / 2);
                     }
                     // n PRED n SUCC
                     else {
-                        minRow = selNodes[cur.succ[0]].row;
+                        minRow = nodes[cur.succ[0]].row;
                         maxRow = -1;
 
                         // get min and max row for SPLIT BRANCH
                         cur.succ.forEach(function (s) {
-                            if (selNodes[s].row < minRow) {
-                                minRow = selNodes[s].row;
+                            if (nodes[s].row < minRow) {
+                                minRow = nodes[s].row;
                             }
-                            if (selNodes[s].row > maxRow) {
-                                maxRow = selNodes[s].row;
+                            if (nodes[s].row > maxRow) {
+                                maxRow = nodes[s].row;
                             }
                         });
 
@@ -240,11 +241,11 @@ function placeNodes(lgNodes) {
                             // check neighbors visited
                             visited = 0;
                             cur.neighbors.forEach(function (nb) {
-                                if (selNodes[nb].visited) {
+                                if (nodes[nb].visited) {
                                     visited++;
                                 }
                             });
-                            curRow = selNodes[cur.succ[0]].row - (cur.neighbors.length / 2) + visited;
+                            curRow = nodes[cur.succ[0]].row - (cur.neighbors.length / 2) + visited;
                         }
                     }
                 }
@@ -252,20 +253,20 @@ function placeNodes(lgNodes) {
                 else {
                     // 1 SUCC
                     if (cur.succ.length === 1) {
-                        curRow = selNodes[cur.succ[0]].row;
+                        curRow = nodes[cur.succ[0]].row;
                     }
                     // n SUCC
                     else {
-                        minRow = selNodes[cur.succ[0]].row;
+                        minRow = nodes[cur.succ[0]].row;
                         maxRow = -1;
 
                         // get min and max row for SPLIT BRANCH
                         cur.succ.forEach(function (s) {
-                            if (selNodes[s].row < minRow) {
-                                minRow = selNodes[s].row;
+                            if (nodes[s].row < minRow) {
+                                minRow = nodes[s].row;
                             }
-                            if (selNodes[s].row > maxRow) {
-                                maxRow = selNodes[s].row;
+                            if (nodes[s].row > maxRow) {
+                                maxRow = nodes[s].row;
                             }
                         });
 
@@ -273,7 +274,7 @@ function placeNodes(lgNodes) {
                     }
                 }
             }
-            selNodes[n.id].row = curRow;
+            nodes[n.id].row = curRow;
             cur.o.visited = true;
         });
         layer--;
@@ -281,6 +282,7 @@ function placeNodes(lgNodes) {
     });
 }
 
+// TODO: handle graph width
 // layering
 function coffmanGrahamLayering(tNodes) {
     var layer = 10,
@@ -293,24 +295,25 @@ function coffmanGrahamLayering(tNodes) {
 
     rtNodes.reverse().forEach(function (n) {
         // get outgoing neighbor
-        succ = getSelLinkTargetHash[selNodeHash[n.uuid]];
+        succ = tarLinkHash[nodeHash[n.uuid]];
         if (typeof succ === "undefined") {
-            selNodes[n.id].col = layer;
+            nodes[n.id].col = layer;
             n.col = 10;
         } else {
             var maxSuccLayer = layer;
             succ.forEach(function (s) {
-                if (selNodes[s].col < maxSuccLayer) {
-                    maxSuccLayer = selNodes[s].col;
+                if (nodes[s].col < maxSuccLayer) {
+                    maxSuccLayer = nodes[s].col;
                 }
             });
-            selNodes[n.id].col = maxSuccLayer - 1;
+            nodes[n.id].col = maxSuccLayer - 1;
             n.col = maxSuccLayer - 1;
         }
     });
 }
 
 
+// TODO: lexicographic sort for each layer
 // topology sort (inspired by http://en.wikipedia.org/wiki/Topological_sorting)
 function topSort(inputs) {
     var s = [],
@@ -323,7 +326,7 @@ function topSort(inputs) {
     inputs.forEach(function (inNode) {
         s.push(copyNode(inNode));
     });
-    selNodes.forEach(function (selNode) {
+    nodes.forEach(function (selNode) {
         cnodes.push(copyNode(selNode));
     });
 
@@ -349,7 +352,7 @@ function topSort(inputs) {
         l.push(n);
 
         // n (src) -> m (tar)
-        succ = getSelLinkTargetHash[selNodeHash[n.uuid]];
+        succ = tarLinkHash[nodeHash[n.uuid]];
 
         if (typeof succ !== "undefined") {
             succ.forEach(handleUndefined);
@@ -360,119 +363,26 @@ function topSort(inputs) {
 }
 
 // main d3 visualization function
-function visualize(val) {
-    var selStudy = val;
+function visualize() {
 
-    // fade out
-    d3.selectAll(".link").transition().duration(500).style("opacity", 0.0);
-    d3.selectAll(".node").transition().duration(500).style("opacity", 0.0);
-    d3.selectAll(".inputNode").transition().duration(500).style("opacity", 0.0);
-
-    //document.getElementById("activeStudyLabel").innerHTML = index.toString() + " <span class=\"caret\"></span>";
-
+    // short delay
     setTimeout(function () {
 
-        d3.selectAll(".link").remove();
-        d3.selectAll(".node").remove();
-        d3.selectAll(".inputNode").remove();
-
-        // reset
-        selNodes = [];
-        selLinks = [];
-        getSelLinkSourceHash = [];
-        getSelLinkTargetHash = [];
-        selInputNodes = [];
-        selNormalNodes = [];
-        selNodeHash = [];
-
-        // extract nodes
-        var j = 0,
-            k = 0;
-
-        nodes.forEach(function (n, i) {
-            if (studyHash[i] == selStudy) {
-                n.id = k;
-                selNodes.push(n);
-                selNodeHash[n.uuid] = j;
-                if (n.nodeType == "raw") {
-                    selInputNodes.push(n);
-                } else {
-                    selNormalNodes.push(n);
-                }
-                j++;
-                k++;
-            }
-        });
-
-        // extract links
-        selNodes.forEach(function (n, i) {
-            if (typeof n.uuid !== "undefined" && typeof n.parents !== "undefined" && n.parents.length > 0) {
-
-                var sourceIds = [];
-                // for each parent entry
-                n.parents.forEach(function (z) {
-                    selLinks.push({
-                        source: selNodeHash[z],
-                        target: i
-                    });
-                    sourceIds.push(selNodeHash[z]);
-                    if (getSelLinkTargetHash.hasOwnProperty(selNodeHash[z])) {
-                        getSelLinkTargetHash[selNodeHash[z]] = getSelLinkTargetHash[selNodeHash[z]].concat([i]);
-                    } else {
-                        getSelLinkTargetHash[selNodeHash[z]] = [i];
-                    }
-                });
-
-                getSelLinkSourceHash[i] = sourceIds;
-            }
-        });
-
-        // set columns for nodes
-        selInputNodes.forEach(function (d) {
-            d.col = 0;
-            d.visited = true;
-        });
-
-        // init rows for inputs first
-        selInputNodes.forEach(function (d, i) {
-            d.row = i;
-        });
-
-
-        // layout
-        // set all nodes to unvisted
-        selNodes.forEach(function (d) {
-            d.visited = false;
-        });
-
-        // toplogical order
-        topNodes = topSort(selInputNodes);
-
-        // coffman-graham layering
-        coffmanGrahamLayering(topNodes);
-
-        // group nodes by layer
-        cgtNodes = groupNodesByCol(topNodes);
-
-        // place vertices
-        placeNodes(cgtNodes);
-
-
         // set coordinates for nodes
-        selNodes.forEach(function (d) {
+        nodes.forEach(function (d) {
             d.x = d.col * 50 + 100;
             d.y = d.row * 50 + 100;
         });
 
         // start force layout
         force
-            .nodes(selNodes)
-            .links(selLinks)
+            .nodes(nodes)
+            .links(links)
             .start();
 
         // draw links
         link = canvas.selectAll(".link")
-            .data(selLinks)
+            .data(links)
             .enter().append("line")
             .classed({
                 "link": true
@@ -481,13 +391,13 @@ function visualize(val) {
 
         // draw nodes
         node = canvas.selectAll(".node")
-            .data(selNodes)
+            .data(nodes)
             .enter().append("g").each(function (d) {
                 if (d.nodeType === "raw" || d.nodeType === "processed") {
                     d3.select(this).append("circle").attr("r", r);
                 } else {
-                    d3.select(this).append("rect").attr("width", r*2)
-                        .attr("height", r*2);
+                    d3.select(this).append("rect").attr("width", r * 2)
+                        .attr("height", r * 2);
                 }
             }).classed({
                 "node": true,
@@ -522,13 +432,29 @@ function visualize(val) {
     }, 500);
 }
 
+// layout graph
+function layout() {
+    // toplogical order
+    var topNodes = topSort(inputNodes);
+
+    // coffman-graham layering
+    coffmanGrahamLayering(topNodes);
+
+    // group nodes by layer
+    var layeredTopNodes = groupNodesByCol(topNodes);
+
+    // place vertices
+    placeNodes(layeredTopNodes);
+}
+
 // refinery injection for the provenance visualization
 function runProvenanceVisualization(studyUuid) {
     var url = "/api/v1/node?study__uuid=" + studyUuid + "&format=json&limit=0";
 
-    nodes = [];
+    // parse json
     d3.json(url, function (error, data) {
-        // parse json file; extract raw node objects
+
+        // extract raw objects
         var obj = d3.entries(data)[1];
 
         // extract nodes
@@ -539,9 +465,7 @@ function runProvenanceVisualization(studyUuid) {
             if (x.parents.length === 0) {
                 nodeType = "raw";
             } else {
-                // TODO: node types
-
-                switch(x.type) {
+                switch (x.type) {
                     case "Source Name":
                     case "Sample Name":
                     case "Assay Name":
@@ -553,6 +477,7 @@ function runProvenanceVisualization(studyUuid) {
                 }
             }
 
+            // node data structure
             nodes.push({
                 name: x.name,
                 nodeType: nodeType,
@@ -565,28 +490,49 @@ function runProvenanceVisualization(studyUuid) {
                 fixed: true,
                 row: -1,
                 col: -1,
-                id: i
+                id: i,
+                visited: false
             });
+
+            // build hashes
             nodeHash[x.uuid] = i;
             studyHash[i] = x.study.replace(/\/api\/v1\/study\//g, "").replace(/\//g, "");
             if (x.assay !== null)
-                studyAssays[x.study.replace(/\/api\/v1\/study\//g, "").replace(/\//g, "")] = x.assay.replace(/\/api\/v1\/assay\//g, "").replace(/\//g, "");
+                studyAssayHash[x.study.replace(/\/api\/v1\/study\//g, "").replace(/\//g, "")] = x.assay.replace(/\/api\/v1\/assay\//g, "").replace(/\//g, "");
+            if (nodeType == "raw") {
+                inputNodes.push(nodes[i]);
+            }
         });
 
         // extract links
-        nodes.forEach(function (x) { // x may be parent of y
+        nodes.forEach(function (x, i) { // x may be parent of y
             if (typeof x.uuid !== "undefined" && typeof x.parents !== "undefined") {
+                var sourceIds = [];
+
                 // for each parent entry
                 x.parents.forEach(function (z, k) {
                     links.push({
                         source: nodeHash[x.parents[k]],
                         target: nodeHash[x.uuid]
                     });
+
+                    // there might be multiple source ids
+                    sourceIds.push(nodeHash[z]);
+                    if (tarLinkHash.hasOwnProperty(nodeHash[z])) {
+                        tarLinkHash[nodeHash[z]] = tarLinkHash[nodeHash[z]].concat([i]);
+                    } else {
+                        tarLinkHash[nodeHash[z]] = [i];
+                    }
                 });
+                srcLinkHash[i] = sourceIds;
             }
         });
 
-        visualize(studyUuid);
+        // calculate layout
+        layout();
+
+        // call d3 visualization
+        visualize();
     });
 
 }
@@ -601,9 +547,10 @@ function redraw() {
 
 // update function for node dragging
 function update() {
+    // links
     link.attr("x1", function (d) {
-            return d.source.x;
-        })
+        return d.source.x;
+    })
         .attr("y1", function (d) {
             return d.source.y;
         })
@@ -614,15 +561,16 @@ function update() {
             return d.target.y;
         });
 
+    // nodes
     node.attr("transform", function (d) {
-            switch(d.nodeType) {
-                case "raw":
-                case "processed":
-                    return "translate(" + d.x + "," + d.y + ")";
-                case "special":
-                    return "translate(" + (d.x-r) + "," + (d.y-r) + ")";
-            }
-        });
+        switch (d.nodeType) {
+            case "raw":
+            case "processed":
+                return "translate(" + d.x + "," + d.y + ")";
+            case "special":
+                return "translate(" + (d.x - r) + "," + (d.y - r) + ")";
+        }
+    });
 }
 
 // drag start listener support for nodes in force layout
