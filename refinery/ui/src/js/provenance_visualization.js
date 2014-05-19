@@ -115,10 +115,11 @@ provenanceVisualizationModule = function () {
 
     // deep copy node data structure
     var copyNode = function (node) {
-        var newNode = {name: "", nodeType: "", uuid: "", study: "", assay: "", fixed: false, row: -1, col: -1, parents: [], id: -1, visited: false};
+        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", fixed: false, row: -1, col: -1, parents: [], id: -1, visited: false};
 
         newNode.name = node.name;
         newNode.nodeType = node.nodeType;
+        newNode.fileType = node.fileType;
         newNode.uuid = node.uuid;
         newNode.study = node.study;
         newNode.assay = node.assay;
@@ -437,7 +438,7 @@ provenanceVisualizationModule = function () {
             // add tooltip
             node.append("title")
                 .text(function (d) {
-                    return d.index;
+                    return "#" + d.index + " : " + d.fileType + " : " + d.name;
                 });
 
             // update function for node dragging
@@ -495,7 +496,6 @@ provenanceVisualizationModule = function () {
     // refinery injection for the provenance visualization
     var runProvenanceVisualizationPrivate = function (studyUuid) {
         var url = "/api/v1/node?study__uuid=" + studyUuid + "&format=json&limit=0";
-
         // parse json
         d3.json(url, function (error, data) {
 
@@ -507,9 +507,11 @@ provenanceVisualizationModule = function () {
                 var nodeType = "";
 
                 // assign node types
+                /*
                 if (x.parents.length === 0) {
                     nodeType = "raw";
                 } else {
+                */
                     switch (x.type) {
                         case "Source Name":
                         case "Sample Name":
@@ -520,11 +522,12 @@ provenanceVisualizationModule = function () {
                             nodeType = "processed";
                             break;
                     }
-                }
+                //}
 
                 // node data structure
                 nodes.push({
                     name: x.name,
+                    fileType: x.type,
                     nodeType: nodeType,
                     uuid: x.uuid,
                     study: (x.study !== null) ? x.study.replace(/\/api\/v1\/study\//g, "").replace(/\//g, "") : "",
@@ -544,7 +547,7 @@ provenanceVisualizationModule = function () {
                 studyHash[i] = x.study.replace(/\/api\/v1\/study\//g, "").replace(/\//g, "");
                 if (x.assay !== null)
                     studyAssayHash[x.study.replace(/\/api\/v1\/study\//g, "").replace(/\//g, "")] = x.assay.replace(/\/api\/v1\/assay\//g, "").replace(/\//g, "");
-                if (nodeType == "raw") {
+                if (x.type == "Source Name") {
                     inputNodes.push(nodes[i]);
                 }
             });
