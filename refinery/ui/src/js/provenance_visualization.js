@@ -98,18 +98,19 @@ provenanceVisualizationModule = function () {
         });
 
         cgtNodes.push([]);
-        var i = 0;
+        var k = 0;
         rtNodes.reverse().forEach(function (n) {
             if (nodes[n.id].col === layer) {
-                cgtNodes[i].push(nodes[n.id]);
+                cgtNodes[k].push(nodes[n.id]);
+            } else if (nodes[n.id].col > layer) {
+                cgtNodes[10 - nodes[n.id].col].push(nodes[n.id]);
             } else {
-                i++;
+                k++;
                 layer--;
                 cgtNodes.push([]);
-                cgtNodes[i].push(nodes[n.id]);
+                cgtNodes[k].push(nodes[n.id]);
             }
         });
-
         return cgtNodes;
     };
 
@@ -315,9 +316,10 @@ provenanceVisualizationModule = function () {
         rtNodes.reverse().forEach(function (n) {
             // get outgoing neighbor
             succ = tarLinkHash[nodeHash[n.uuid]];
+
             if (typeof succ === "undefined") {
                 nodes[n.id].col = layer;
-                n.col = 10;
+                n.col = layer;
             } else {
                 var maxSuccLayer = layer;
                 succ.forEach(function (s) {
@@ -334,9 +336,9 @@ provenanceVisualizationModule = function () {
     // TODO: lexicographic sort for each layer
     // topology sort (inspired by http://en.wikipedia.org/wiki/Topological_sorting)
     var topSort = function (inputs) {
-        var s = [],
-            l = [],
-            cnodes = [],
+        var s = [], // input set
+            l = [], // result set for sorted elements
+            cnodes = [],// deep copy nodes, because we have to delete links from the graph
             n = null,
             succ = [];
 
@@ -349,27 +351,33 @@ provenanceVisualizationModule = function () {
         });
 
         // to avoid definition of function in while loop below (added by NG)
+        // for each successor
         var handleUndefined = function (m) {
             // delete parent with p.uuid == n.uuid
             var index = -1;
+            // for each parent (predecessor)
             cnodes[m].parents.forEach(function (p, i) {
                 if (p == n.uuid) {
                     index = i;
                 }
             });
+            // if parent of successor equals n, delete edge
             if (index > -1) {
                 cnodes[m].parents.splice(index, 1);
             }
+            // if there are no edges left,
             if (cnodes[m].parents.length === 0) {
                 s.push(cnodes[m]);
             }
+            // else, current successor has other parents to be processed first
         };
 
+        // while the input set is not empty
         while (s.length > 0) {
-            n = s.shift();
-            l.push(n);
+            n = s.shift(); // remove first item n
+            l.push(n); // and push it into result set
 
-            // n (src) -> m (tar)
+            // get successor set for n
             succ = tarLinkHash[nodeHash[n.uuid]];
 
             if (typeof succ !== "undefined") {
