@@ -99,46 +99,52 @@
     margin-top: 10px;
   }
 
-/*
- * Provenance Visualization CSS Styles
- */
-.node {
+  /*
+   * Provenance Visualization CSS Styles
+   */
+  .node {
+      stroke: #fff;
+  }
 
-}
+  .rawNode {
+      stroke-width: 1.5px;
+      fill: #fa9b30;
+  }
 
-.rawNode {
-  stroke: #fff;
-  stroke-width: 1.5px;
-  fill: rgb(237, 116, 7);
-}
-
-.specialNode {
-  stroke: #fff;
-  stroke-width: 1.5px;
-  fill: #136382;
-}
+  .specialNode {
+      stroke-width: 1.5px;
+      fill: #136382;
+  }
 
   .dtNode {
-      stroke: #fff;
       stroke-width: 1.5px;
       fill: #136382;
   }
 
   .processedNode {
-  stroke: #fff;
-  stroke-width: 1.5px;
-  fill: gray;
-}
+      stroke-width: 1.5px;
+      fill: gray;
+  }
 
-.link {
-  stroke: gray;
-  stroke-width: 1.5px;
-  stroke-opacity: .7;
-}
+  .highlightedNode {
+      stroke: #fa9b30;
+      stroke-width: 2.5px;
+  }
 
-.brect {
-  fill: #fff;
-}
+  .link {
+      stroke: gray;
+      stroke-width: 1.5px;
+      stroke-opacity: 1;
+  }
+
+  .highlightedLink {
+      stroke: #fa9b30;
+      stroke-width: 2.5px;
+  }
+
+  .brect {
+      fill: #fff;
+  }
 
 </style>
 {% endblock head_html %}

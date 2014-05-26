@@ -19,7 +19,9 @@ provenanceVisualizationModule = function () {
         studyHash = [],
         studyAssayHash = [],
         srcLinkHash = [],
-        tarLinkHash = [];
+        tarLinkHash = [],
+        srcNodeLinkHash = [],
+        tarNodeLinkHash = [];
 
     // canvas dimensions
     var width = window.innerWidth - 50,
@@ -71,6 +73,33 @@ provenanceVisualizationModule = function () {
     var drag = force.drag()
         .on("dragstart", dragstart)
         .on("dragend", dragend);
+
+    var clearHighlighting = function () {
+        d3.selectAll(".node").each(function () {
+            d3.select(this).classed({"highlightedNode": false});
+        });
+        d3.selectAll(".link").each(function () {
+            d3.select(this).classed({"highlightedLink": false});
+        });
+    };
+
+    // get involved nodes for highlighting the path by current node selection
+    var highlightInvolvedPath = function (nodeId, highlighted) {
+
+        // for each predecessor
+        srcLinkHash[nodeId].forEach(function (p) {
+
+            // get svg node element
+            d3.select("#nodeId-" + p).classed({"highlightedNode": highlighted});
+
+            // get svg link element
+            srcNodeLinkHash[p].forEach(function (l) {
+                d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
+            });
+
+            highlightInvolvedPath(p, highlighted);
+        });
+    };
 
     // shift right amount of the graph for a specific node by an amount of rows (shiftAmount)
     var traverseShift = function (nodeId, shiftAmount) {
@@ -415,7 +444,10 @@ provenanceVisualizationModule = function () {
                 .classed({
                     "link": true
                 })
-                .style("opacity", 0.0);
+                .style("opacity", 0.0)
+                .attr("id", function (d, i) {
+                    return "linkId-" + i;
+                });
 
             // draw nodes
             node = canvas.selectAll(".node")
@@ -449,6 +481,8 @@ provenanceVisualizationModule = function () {
                     "processedNode": (function (d) {
                         return d.nodeType == "processed";
                     })
+                }).attr("id", function (d) {
+                    return "nodeId-" + d.id;
                 });
 
             node.each(function () {
@@ -468,6 +502,37 @@ provenanceVisualizationModule = function () {
             // fade in
             d3.selectAll(".link").transition().duration(500).style("opacity", 0.7);
             d3.selectAll(".node").transition().duration(500).style("opacity", 1.0);
+
+
+            // event listeners
+
+            // path highlighting
+            d3.selectAll(".node").on("click", function (x) {
+                var highlighted = true;
+
+                // suppress after dragend
+                if (d3.event.defaultPrevented) return;
+
+                // clear any highlighting
+                clearHighlighting();
+
+                // highlight selected node and links
+                d3.select(this).classed({"highlightedNode": true});
+                srcNodeLinkHash[x.id].forEach(function (l) {
+                    d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
+                });
+
+                // highlight path
+                highlightInvolvedPath(x.id, highlighted);
+            });
+
+            // clear highlighting
+            d3.select(".brect").on("click", function () {
+                // suppress after dragend
+                if (d3.event.defaultPrevented) return;
+
+                clearHighlighting();
+            });
         }, 500);
     };
 
@@ -574,26 +639,34 @@ provenanceVisualizationModule = function () {
             });
 
             // extract links
+            var linkId = 0;
             nodes.forEach(function (x, i) { // x may be parent of y
                 if (typeof x.uuid !== "undefined" && typeof x.parents !== "undefined") {
-                    var sourceIds = [];
+                    var srcNodeIds = [],
+                        srcLinkIds = [];
 
                     // for each parent entry
                     x.parents.forEach(function (z, k) {
                         links.push({
                             source: nodeHash[x.parents[k]],
-                            target: nodeHash[x.uuid]
+                            target: nodeHash[x.uuid],
+                            id: linkId
                         });
 
-                        // there might be multiple source ids
-                        sourceIds.push(nodeHash[z]);
+                        // build hashes - there might be multiple source ids
+                        srcNodeIds.push(nodeHash[z]);
+                        srcLinkIds.push(linkId);
                         if (tarLinkHash.hasOwnProperty(nodeHash[z])) {
                             tarLinkHash[nodeHash[z]] = tarLinkHash[nodeHash[z]].concat([i]);
+                            tarNodeLinkHash[nodeHash[z]] = tarNodeLinkHash[nodeHash[z]].concat([linkId]);
                         } else {
                             tarLinkHash[nodeHash[z]] = [i];
+                            tarNodeLinkHash[nodeHash[z]] = [linkId];
                         }
+                        linkId++;
                     });
-                    srcLinkHash[i] = sourceIds;
+                    srcNodeLinkHash[i] = srcLinkIds;
+                    srcLinkHash[i] = srcNodeIds;
                 }
             });
 
