@@ -26,7 +26,7 @@ provenanceVisualizationModule = function () {
         height = window.innerHeight - 50;
 
     // primitive dimensions
-    var r = 6;
+    var r = 7;
 
     // geometric zoom
     var redraw = function () {
@@ -64,7 +64,8 @@ provenanceVisualizationModule = function () {
     };
 
     // drag end listener
-    var dragend = function () {};
+    var dragend = function () {
+    };
 
     // drag and drop node enabled
     var drag = force.drag()
@@ -132,6 +133,7 @@ provenanceVisualizationModule = function () {
         node.parents.forEach(function (p, i) {
             newNode.parents[i] = p;
         });
+        newNode.analysis = node.analysis;
 
         return newNode;
     };
@@ -422,8 +424,16 @@ provenanceVisualizationModule = function () {
                     if (d.nodeType === "raw" || d.nodeType === "processed") {
                         d3.select(this).append("circle").attr("r", r);
                     } else {
-                        d3.select(this).append("rect").attr("width", r * 2)
-                            .attr("height", r * 2);
+                        if (d.nodeType === "dt") {
+                            d3.select(this).append("rect").attr("width", r * 1.5)
+                                .attr("height", r * 1.5)
+                                .attr("transform", function () {
+                                    return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
+                                });
+                        } else {
+                            d3.select(this).append("rect").attr("width", r * 2)
+                                .attr("height", r * 2);
+                        }
                     }
                 }).classed({
                     "node": true,
@@ -432,6 +442,9 @@ provenanceVisualizationModule = function () {
                     }),
                     "specialNode": (function (d) {
                         return d.nodeType == "special";
+                    }),
+                    "dtNode": (function (d) {
+                        return d.nodeType == "dt";
                     }),
                     "processedNode": (function (d) {
                         return d.nodeType == "processed";
@@ -497,6 +510,8 @@ provenanceVisualizationModule = function () {
                     return "translate(" + d.x + "," + d.y + ")";
                 case "special":
                     return "translate(" + (d.x - r) + "," + (d.y - r) + ")";
+                case "dt":
+                    return "translate(" + (d.x - r * 0.75) + "," + (d.y - r * 0.75) + ")";
             }
         });
     };
@@ -515,22 +530,19 @@ provenanceVisualizationModule = function () {
                 var nodeType = "";
 
                 // assign node types
-                /*
-                if (x.parents.length === 0) {
-                    nodeType = "raw";
-                } else {
-                */
-                    switch (x.type) {
-                        case "Source Name":
-                        case "Sample Name":
-                        case "Assay Name":
-                            nodeType = "special";
-                            break;
-                        default:
-                            nodeType = "processed";
-                            break;
-                    }
-                //}
+                switch (x.type) {
+                    case "Source Name":
+                    case "Sample Name":
+                    case "Assay Name":
+                        nodeType = "special";
+                        break;
+                    case "Data Transformation Name":
+                        nodeType = "dt";
+                        break;
+                    default:
+                        nodeType = "processed";
+                        break;
+                }
 
                 // node data structure
                 nodes.push({
@@ -547,7 +559,8 @@ provenanceVisualizationModule = function () {
                     row: -1,
                     col: -1,
                     id: i,
-                    visited: false
+                    visited: false,
+                    analysis: (x.analysis_uuid !== null) ? x.analysis_uuid : ""
                 });
 
                 // build hashes
