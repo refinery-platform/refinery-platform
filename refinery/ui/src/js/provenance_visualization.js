@@ -12,7 +12,8 @@ provenanceVisualizationModule = function () {
 
     // dom elements
     var node = null,
-        link = null;
+        link = null,
+        analysis = null;
 
     // look up hashes
     var nodeHash = [],
@@ -513,7 +514,7 @@ provenanceVisualizationModule = function () {
             col: -1,
             id: nodeIndex,
             visited: false,
-            analysis: (nodeObj.analysis_uuid !== null) ? nodeObj.analysis_uuid : ""
+            analysis: (nodeObj.analysis_uuid !== null) ? nodeObj.analysis_uuid : "dataset"
         });
     };
 
@@ -548,6 +549,9 @@ provenanceVisualizationModule = function () {
                 workflowAnalysisHash[a.workflow__uuid] = [a.uuid];
             }
         });
+        // TODO: DEBUG
+        // add dataset entry for the raw dataset where analysis is null
+        // workflowAnalysisHash["dataset"] = "dataset";
     };
 
     // set coordinates for nodes
@@ -572,8 +576,79 @@ provenanceVisualizationModule = function () {
             });
     };
 
+// TODO: group nodes by analyses and then by workflows
+// TODO: create super nodes, which contain aggregated raw nodes
+    var createAnalysisLayers = function () {
+        var flattenAnalyses = [].concat.apply(["dataset"], d3.values(workflowAnalysisHash));
+
+        // add analyses dom groups
+        analysis = canvas.selectAll(".analysis")
+            .data(flattenAnalyses)
+            .enter().append("g")
+            .classed("analysis", true)
+            .attr("id", function (d) {
+                return d;
+            });
+    };
+
+// TODO: in debug state
+    // check node belonging to analyis
+    var nodeBelongsToAnalysis = function (value, index, ar) {
+        return value.analysis == "dataset";
+    };
+
+// TODO: in debug state
     // draw nodes
     var drawNodes = function () {
+        /*
+         node = [];
+         console.log(analysis);
+         analysis.each(function () {
+         console.log(d3.select(this));
+         var curAnalysis = d3.select(this).selectAll(".node")
+         .data(nodes.filter(nodeBelongsToAnalysis))
+         .enter().append("g").each(function (d) {
+         if (d.nodeType === "raw" || d.nodeType === "processed") {
+         d3.select(this).append("circle").attr("r", r);
+         } else {
+         if (d.nodeType === "dt") {
+         d3.select(this).append("rect").attr("width", r * 1.5)
+         .attr("height", r * 1.5)
+         .attr("transform", function () {
+         return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
+         });
+         } else {
+         d3.select(this).append("rect").attr("width", r * 2)
+         .attr("height", r * 2);
+         }
+         }
+         }).classed({
+         "node": true,
+         "rawNode": (function (d) {
+         return d.nodeType == "raw";
+         }),
+         "specialNode": (function (d) {
+         return d.nodeType == "special";
+         }),
+         "dtNode": (function (d) {
+         return d.nodeType == "dt";
+         }),
+         "processedNode": (function (d) {
+         return d.nodeType == "processed";
+         })
+         }).attr("id", function (d) {
+         return "nodeId-" + d.id;
+         });
+         console.log(curAnalysis);
+         if (curAnalysis !== null) {
+         //node = node.concat(curAnalysis);
+         //node = node.concat.apply(curAnalysis);
+         node.push(curAnalysis);
+         }
+         });
+         console.log("node");
+         console.log(node);
+         */
         node = canvas.selectAll(".node")
             .data(nodes)
             .enter().append("g").each(function (d) {
@@ -609,6 +684,7 @@ provenanceVisualizationModule = function () {
                 return "nodeId-" + d.id;
             });
 
+
         node.each(function () {
             d3.select(this).style("opacity", 0.0)
                 .call(drag);
@@ -619,6 +695,8 @@ provenanceVisualizationModule = function () {
             .text(function (d) {
                 return "#" + d.index + " : " + d.fileType + " : " + d.name;
             });
+
+        //console.log(node);
     };
 
     // path highlighting
@@ -679,6 +757,9 @@ provenanceVisualizationModule = function () {
 
             // draw links
             drawLinks();
+
+            // create analysis group layers
+            createAnalysisLayers();
 
             // draw nodes
             drawNodes();
