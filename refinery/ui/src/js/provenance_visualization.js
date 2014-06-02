@@ -21,7 +21,8 @@ provenanceVisualizationModule = function () {
         srcLinkHash = [],
         tarLinkHash = [],
         srcNodeLinkHash = [],
-        tarNodeLinkHash = [];
+        tarNodeLinkHash = [],
+        analysisHash = [];
 
     // canvas dimensions
     var width = window.innerWidth - 50,
@@ -630,9 +631,9 @@ provenanceVisualizationModule = function () {
 
                 // build hashes
                 nodeHash[x.uuid] = i;
-                studyHash[i] = x.study.replace(/\/api\/v1\/study\//g, "").replace(/\//g, "");
-                if (x.assay !== null)
-                    studyAssayHash[x.study.replace(/\/api\/v1\/study\//g, "").replace(/\//g, "")] = x.assay.replace(/\/api\/v1\/assay\//g, "").replace(/\//g, "");
+                studyHash[i] = nodes[i].study;
+                studyAssayHash[nodes[i].study] = nodes[i].assay;
+                analysisHash[i] = nodes[i].analysis;
                 if (x.type == "Source Name") {
                     inputNodes.push(nodes[i]);
                 }
