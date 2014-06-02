@@ -169,7 +169,7 @@ provenanceVisualizationModule = function () {
         return newNode;
     };
 
-    // TODO: rewrite row layering
+    // TODO: rewrite row layering, keywords: vertex ordering, and y-coordinate assignment (see hierarchical.pdf)
     // layout node columns
     var placeNodes = function (lgNodes) {
         var layer = 10,
@@ -541,17 +541,126 @@ provenanceVisualizationModule = function () {
         return nodeTypeClass;
     };
 
+    // set coordinates for nodes
+    var assignGridCoordinates = function () {
+        nodes.forEach(function (d) {
+            d.x = d.col * 50 + 100;
+            d.y = d.row * 50 + 100;
+        });
+    };
+
+    // draw links
+    var drawLinks = function () {
+        link = canvas.selectAll(".link")
+            .data(links)
+            .enter().append("line")
+            .classed({
+                "link": true
+            })
+            .style("opacity", 0.0)
+            .attr("id", function (d, i) {
+                return "linkId-" + i;
+            });
+    };
+
+    // draw nodes
+    var drawNodes = function () {
+        node = canvas.selectAll(".node")
+            .data(nodes)
+            .enter().append("g").each(function (d) {
+                if (d.nodeType === "raw" || d.nodeType === "processed") {
+                    d3.select(this).append("circle").attr("r", r);
+                } else {
+                    if (d.nodeType === "dt") {
+                        d3.select(this).append("rect").attr("width", r * 1.5)
+                            .attr("height", r * 1.5)
+                            .attr("transform", function () {
+                                return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
+                            });
+                    } else {
+                        d3.select(this).append("rect").attr("width", r * 2)
+                            .attr("height", r * 2);
+                    }
+                }
+            }).classed({
+                "node": true,
+                "rawNode": (function (d) {
+                    return d.nodeType == "raw";
+                }),
+                "specialNode": (function (d) {
+                    return d.nodeType == "special";
+                }),
+                "dtNode": (function (d) {
+                    return d.nodeType == "dt";
+                }),
+                "processedNode": (function (d) {
+                    return d.nodeType == "processed";
+                })
+            }).attr("id", function (d) {
+                return "nodeId-" + d.id;
+            });
+
+        node.each(function () {
+            d3.select(this).style("opacity", 0.0)
+                .call(drag);
+        });
+
+        // add tooltip
+        node.append("title")
+            .text(function (d) {
+                return "#" + d.index + " : " + d.fileType + " : " + d.name;
+            });
+    };
+
+    // path highlighting
+    var handlePathHighlighting = function () {
+        d3.selectAll(".node").on("click", function (x) {
+            var highlighted = true;
+
+            // suppress after dragend
+            if (d3.event.defaultPrevented) return;
+
+            // clear any highlighting
+            clearHighlighting();
+
+            // highlight selected node and links
+            d3.select(this).classed({"highlightedNode": true});
+            srcNodeLinkHash[x.id].forEach(function (l) {
+                d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
+            });
+
+            // highlight path
+            highlightInvolvedPath(x.id, highlighted);
+        });
+    };
+
+    // clear highlighting
+    var handleClearHighlighting = function () {
+        d3.select(".brect").on("click", function () {
+            // suppress after dragend
+            if (d3.event.defaultPrevented) return;
+
+            clearHighlighting();
+        });
+    };
+
+    // event listeners
+    var handleEvents = function () {
+        // path highlighting
+        handlePathHighlighting();
+
+        // clear highlighting
+        handleClearHighlighting();
+    };
+
     // main d3 visualization function
-    var visualize = function () {
+    var drawGraph = function () {
 
         // short delay
         setTimeout(function () {
 
             // set coordinates for nodes
-            nodes.forEach(function (d) {
-                d.x = d.col * 50 + 100;
-                d.y = d.row * 50 + 100;
-            });
+            assignGridCoordinates();
 
             // start force layout
             force
@@ -560,63 +669,10 @@ provenanceVisualizationModule = function () {
                 .start();
 
             // draw links
-            link = canvas.selectAll(".link")
-                .data(links)
-                .enter().append("line")
-                .classed({
-                    "link": true
-                })
-                .style("opacity", 0.0)
-                .attr("id", function (d, i) {
-                    return "linkId-" + i;
-                });
+            drawLinks();
 
             // draw nodes
-            node = canvas.selectAll(".node")
-                .data(nodes)
-                .enter().append("g").each(function (d) {
-                    if (d.nodeType === "raw" || d.nodeType === "processed") {
-                        d3.select(this).append("circle").attr("r", r);
-                    } else {
-                        if (d.nodeType === "dt") {
-                            d3.select(this).append("rect").attr("width", r * 1.5)
-                                .attr("height", r * 1.5)
-                                .attr("transform", function () {
-                                    return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
-                                });
-                        } else {
-                            d3.select(this).append("rect").attr("width", r * 2)
-                                .attr("height", r * 2);
-                        }
-                    }
-                }).classed({
-                    "node": true,
-                    "rawNode": (function (d) {
-                        return d.nodeType == "raw";
-                    }),
-                    "specialNode": (function (d) {
-                        return d.nodeType == "special";
-                    }),
-                    "dtNode": (function (d) {
-                        return d.nodeType == "dt";
-                    }),
-                    "processedNode": (function (d) {
-                        return d.nodeType == "processed";
-                    })
-                }).attr("id", function (d) {
-                    return "nodeId-" + d.id;
-                });
-
-            node.each(function () {
-                d3.select(this).style("opacity", 0.0)
-                    .call(drag);
-            });
-
-            // add tooltip
-            node.append("title")
-                .text(function (d) {
-                    return "#" + d.index + " : " + d.fileType + " : " + d.name;
-                });
+            drawNodes();
 
             // update function for node dragging
             force.on("tick", update);
@@ -625,36 +681,8 @@ provenanceVisualizationModule = function () {
             d3.selectAll(".link").transition().duration(500).style("opacity", 0.7);
             d3.selectAll(".node").transition().duration(500).style("opacity", 1.0);
 
-
             // event listeners
-
-            // path highlighting
-            d3.selectAll(".node").on("click", function (x) {
-                var highlighted = true;
-
-                // suppress after dragend
-                if (d3.event.defaultPrevented) return;
-
-                // clear any highlighting
-                clearHighlighting();
-
-                // highlight selected node and links
-                d3.select(this).classed({"highlightedNode": true});
-                srcNodeLinkHash[x.id].forEach(function (l) {
-                    d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
-                });
-
-                // highlight path
-                highlightInvolvedPath(x.id, highlighted);
-            });
-
-            // clear highlighting
-            d3.select(".brect").on("click", function () {
-                // suppress after dragend
-                if (d3.event.defaultPrevented) return;
-
-                clearHighlighting();
-            });
+            handleEvents();
         }, 500);
     };
 
@@ -723,7 +751,7 @@ provenanceVisualizationModule = function () {
             layout();
 
             // call d3 visualization
-            visualize();
+            drawGraph();
         });
     };
 
