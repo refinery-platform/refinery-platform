@@ -75,6 +75,7 @@ provenanceVisualizationModule = function () {
         .on("dragstart", dragstart)
         .on("dragend", dragend);
 
+    // reset css for all nodes
     var clearHighlighting = function () {
         d3.selectAll(".node").each(function () {
             d3.select(this).classed({"highlightedNode": false});
@@ -420,6 +421,126 @@ provenanceVisualizationModule = function () {
         return l;
     };
 
+    // extract nodes
+    var extractNodes = function (datasetJsonObj) {
+        d3.values(datasetJsonObj.value).forEach(function (x, i) {
+
+            // assign class string for node types
+            var nodeType = assignCSSNodeType(x.type);
+
+            // extract node properties from api
+            extractNodeProperties(x, nodeType, i);
+
+            // build node hashes
+            createNodeHashes(x, i);
+
+            // set input nodes
+            if (x.type == "Source Name") {
+                inputNodes.push(nodes[i]);
+            }
+        });
+    };
+
+    // extract links
+    var extractLinks = function () {
+        var linkId = 0;
+        nodes.forEach(function (x, i) { // x may be parent of y
+            if (typeof x.uuid !== "undefined" && typeof x.parents !== "undefined") {
+                var srcNodeIds = [],
+                    srcLinkIds = [];
+
+                // for each parent entry
+                x.parents.forEach(function (z, k) {
+
+                    // extractLinkProperties
+                    extractLinkProperties(x, linkId, k);
+
+                    // build link hashes
+                    createLinkHashes(z, linkId, i, srcNodeIds, srcLinkIds);
+                    linkId++;
+
+                });
+                srcNodeLinkHash[i] = srcLinkIds;
+                srcLinkHash[i] = srcNodeIds;
+            }
+        });
+    };
+
+    // extractLinkProperties
+    var extractLinkProperties = function (nodeElem, linkId, parentIndex) {
+        links.push({
+            source: nodeHash[nodeElem.parents[parentIndex]],
+            target: nodeHash[nodeElem.uuid],
+            id: linkId
+        });
+    };
+
+    // build link hashes
+    var createLinkHashes = function (parentNodeElem, linkId, nodeId, srcNodeIds, srcLinkIds) {
+        srcNodeIds.push(nodeHash[parentNodeElem]);
+        srcLinkIds.push(linkId);
+
+        if (tarLinkHash.hasOwnProperty(nodeHash[parentNodeElem])) {
+            tarLinkHash[nodeHash[parentNodeElem]] = tarLinkHash[nodeHash[parentNodeElem]].concat([nodeId]);
+            tarNodeLinkHash[nodeHash[parentNodeElem]] = tarNodeLinkHash[nodeHash[parentNodeElem]].concat([linkId]);
+        } else {
+            tarLinkHash[nodeHash[parentNodeElem]] = [nodeId];
+            tarNodeLinkHash[nodeHash[parentNodeElem]] = [linkId];
+        }
+
+        //return [srcNodeIds, srcLinkIds];
+    };
+
+    // build node hashes
+    var createNodeHashes = function (x, nodeIndex) {
+        nodeHash[x.uuid] = nodeIndex;
+        studyHash[nodeIndex] = nodes[nodeIndex].study;
+        studyAssayHash[nodes[nodeIndex].study] = nodes[nodeIndex].assay;
+        analysisHash[nodeIndex] = nodes[nodeIndex].analysis;
+    };
+
+    // extract node api properties
+    var extractNodeProperties = function (nodeObj, nodeType, nodeIndex) {
+        nodes.push({
+            name: nodeObj.name,
+            fileType: nodeObj.type,
+            nodeType: nodeType,
+            uuid: nodeObj.uuid,
+            study: (nodeObj.study !== null) ? nodeObj.study.replace(/\/api\/v1\/study\//g, "").replace(/\//g, "") : "",
+            assay: (nodeObj.assay !== null) ? nodeObj.assay.replace(/\/api\/v1\/assay\//g, "").replace(/\//g, "") : "",
+            parents: nodeObj.parents.map(function (y) {
+                return y.replace(/\/api\/v1\/node\//g, "").replace(/\//g, "");
+            }),
+            fixed: true,
+            row: -1,
+            col: -1,
+            id: nodeIndex,
+            visited: false,
+            analysis: (nodeObj.analysis_uuid !== null) ? nodeObj.analysis_uuid : ""
+        });
+    };
+
+    // assign CSS class for node types
+    var assignCSSNodeType = function (nodeType) {
+        var nodeTypeClass = "";
+
+        switch (nodeType) {
+            case "Source Name":
+            case "Sample Name":
+            case "Assay Name":
+                nodeTypeClass = "special";
+                break;
+            case "Data Transformation Name":
+                nodeTypeClass = "dt";
+                break;
+            default:
+                nodeTypeClass = "processed";
+                break;
+        }
+
+        return nodeTypeClass;
+    };
+
     // main d3 visualization function
     var visualize = function () {
 
@@ -585,91 +706,18 @@ provenanceVisualizationModule = function () {
     // refinery injection for the provenance visualization
     var runProvenanceVisualizationPrivate = function (studyUuid) {
         var url = "/api/v1/node?study__uuid=" + studyUuid + "&format=json&limit=0";
+
         // parse json
         d3.json(url, function (error, data) {
 
             // extract raw objects
             var obj = d3.entries(data)[1];
 
-            // extract nodes
-            d3.values(obj.value).forEach(function (x, i) {
-                var nodeType = "";
+            // create node collection
+            extractNodes(obj);
 
-                // assign node types
-                switch (x.type) {
-                    case "Source Name":
-                    case "Sample Name":
-                    case "Assay Name":
-                        nodeType = "special";
-                        break;
-                    case "Data Transformation Name":
-                        nodeType = "dt";
-                        break;
-                    default:
-                        nodeType = "processed";
-                        break;
-                }
-
-                // node data structure
-                nodes.push({
-                    name: x.name,
-                    fileType: x.type,
-                    nodeType: nodeType,
-                    uuid: x.uuid,
-                    study: (x.study !== null) ? x.study.replace(/\/api\/v1\/study\//g, "").replace(/\//g, "") : "",
-                    assay: (x.assay !== null) ? x.assay.replace(/\/api\/v1\/assay\//g, "").replace(/\//g, "") : "",
-                    parents: x.parents.map(function (y) {
-                        return y.replace(/\/api\/v1\/node\//g, "").replace(/\//g, "");
-                    }),
-                    fixed: true,
-                    row: -1,
-                    col: -1,
-                    id: i,
-                    visited: false,
-                    analysis: (x.analysis_uuid !== null) ? x.analysis_uuid : ""
-                });
-
-                // build hashes
-                nodeHash[x.uuid] = i;
-                studyHash[i] = nodes[i].study;
-                studyAssayHash[nodes[i].study] = nodes[i].assay;
-                analysisHash[i] = nodes[i].analysis;
-                if (x.type == "Source Name") {
-                    inputNodes.push(nodes[i]);
-                }
-            });
-
-            // extract links
-            var linkId = 0;
-            nodes.forEach(function (x, i) { // x may be parent of y
-                if (typeof x.uuid !== "undefined" && typeof x.parents !== "undefined") {
-                    var srcNodeIds = [],
-                        srcLinkIds = [];
-
-                    // for each parent entry
-                    x.parents.forEach(function (z, k) {
-                        links.push({
-                            source: nodeHash[x.parents[k]],
-                            target: nodeHash[x.uuid],
-                            id: linkId
-                        });
-
-                        // build hashes - there might be multiple source ids
-                        srcNodeIds.push(nodeHash[z]);
-                        srcLinkIds.push(linkId);
-                        if (tarLinkHash.hasOwnProperty(nodeHash[z])) {
-                            tarLinkHash[nodeHash[z]] = tarLinkHash[nodeHash[z]].concat([i]);
-                            tarNodeLinkHash[nodeHash[z]] = tarNodeLinkHash[nodeHash[z]].concat([linkId]);
-                        } else {
-                            tarLinkHash[nodeHash[z]] = [i];
-                            tarNodeLinkHash[nodeHash[z]] = [linkId];
-                        }
-                        linkId++;
-                    });
-                    srcNodeLinkHash[i] = srcLinkIds;
-                    srcLinkHash[i] = srcNodeIds;
-                }
-            });
+            // create link collection
+            extractLinks();
 
             // calculate layout
             layout();
