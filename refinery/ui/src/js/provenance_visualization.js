@@ -22,7 +22,7 @@ provenanceVisualizationModule = function () {
         tarLinkHash = [],
         srcNodeLinkHash = [],
         tarNodeLinkHash = [],
-        analysisHash = [];
+        workflowAnalysisHash = [];
 
     // canvas dimensions
     var width = window.innerWidth - 50,
@@ -487,16 +487,13 @@ provenanceVisualizationModule = function () {
             tarLinkHash[nodeHash[parentNodeElem]] = [nodeId];
             tarNodeLinkHash[nodeHash[parentNodeElem]] = [linkId];
         }
-
-        //return [srcNodeIds, srcLinkIds];
     };
 
     // build node hashes
-    var createNodeHashes = function (x, nodeIndex) {
-        nodeHash[x.uuid] = nodeIndex;
+    var createNodeHashes = function (nodeObj, nodeIndex) {
+        nodeHash[nodeObj.uuid] = nodeIndex;
         studyHash[nodeIndex] = nodes[nodeIndex].study;
         studyAssayHash[nodes[nodeIndex].study] = nodes[nodeIndex].assay;
-        analysisHash[nodeIndex] = nodes[nodeIndex].analysis;
     };
 
     // extract node api properties
@@ -539,6 +536,18 @@ provenanceVisualizationModule = function () {
         }
 
         return nodeTypeClass;
+    };
+
+    // extract workflows from analyses
+    // a workflow might be executed by multiple analyses
+    var createWorkflowAnalysisMapping = function () {
+        analyses.objects.forEach(function (a) {
+            if (workflowAnalysisHash.hasOwnProperty(a.workflow__uuid)) {
+                workflowAnalysisHash[a.workflow__uuid] = workflowAnalysisHash[a.workflow__uuid].concat([a.uuid]);
+            } else {
+                workflowAnalysisHash[a.workflow__uuid] = [a.uuid];
+            }
+        });
     };
 
     // set coordinates for nodes
@@ -746,6 +755,9 @@ provenanceVisualizationModule = function () {
 
             // create link collection
             extractLinks();
+
+            // create analyses and workflow hashes
+            createWorkflowAnalysisMapping();
 
             // calculate layout
             layout();
