@@ -600,6 +600,65 @@ provenanceVisualizationModule = function () {
 // TODO: in debug state
     // draw nodes
     var drawNodes = function () {
+
+        node = canvas.selectAll(".node")
+            .data(nodes)
+            .enter().append("g").each(function (d) {
+                if (d.nodeType === "raw" || d.nodeType === "processed") {
+                    d3.select(this).append("circle").attr("r", r);
+                } else {
+                    if (d.nodeType === "dt") {
+                        d3.select(this).append("rect").attr("width", r * 1.5)
+                            .attr("height", r * 1.5)
+                            .attr("transform", function () {
+                                return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
+                            });
+                    } else {
+                        d3.select(this).append("rect").attr("width", r * 2)
+                            .attr("height", r * 2);
+                    }
+                }
+            }).classed({
+                "node": true,
+                "rawNode": (function (d) {
+                    return d.nodeType == "raw";
+                }),
+                "specialNode": (function (d) {
+                    return d.nodeType == "special";
+                }),
+                "dtNode": (function (d) {
+                    return d.nodeType == "dt";
+                }),
+                "processedNode": (function (d) {
+                    return d.nodeType == "processed";
+                })
+            }).attr("id", function (d) {
+                return "nodeId-" + d.id;
+            });
+
+
+        node.each(function () {
+            d3.select(this).style("opacity", 0.0)
+                .call(drag);
+        });
+
+        // create d3-tip tooltips
+        var tip = d3.tip()
+            .attr("class", "d3-tip")
+            .offset([-10, 0])
+            .html(function (d) {
+                return "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.index + "</span><br>" +
+                    "<strong>Name:</strong> <span style='color:#fa9b30'>" + d.name + "</span><br>" +
+                    "<strong>Type:</strong> <span style='color:#fa9b30'>" + d.fileType + "</span>";
+            });
+
+        // invoke tooltip on dom element
+        node.call(tip);
+
+        node.on("mouseover", tip.show)
+            .on("mouseout", tip.hide);
+
+// TODO: in debug state
         /*
          node = [];
          console.log(analysis);
@@ -649,54 +708,6 @@ provenanceVisualizationModule = function () {
          console.log("node");
          console.log(node);
          */
-        node = canvas.selectAll(".node")
-            .data(nodes)
-            .enter().append("g").each(function (d) {
-                if (d.nodeType === "raw" || d.nodeType === "processed") {
-                    d3.select(this).append("circle").attr("r", r);
-                } else {
-                    if (d.nodeType === "dt") {
-                        d3.select(this).append("rect").attr("width", r * 1.5)
-                            .attr("height", r * 1.5)
-                            .attr("transform", function () {
-                                return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
-                            });
-                    } else {
-                        d3.select(this).append("rect").attr("width", r * 2)
-                            .attr("height", r * 2);
-                    }
-                }
-            }).classed({
-                "node": true,
-                "rawNode": (function (d) {
-                    return d.nodeType == "raw";
-                }),
-                "specialNode": (function (d) {
-                    return d.nodeType == "special";
-                }),
-                "dtNode": (function (d) {
-                    return d.nodeType == "dt";
-                }),
-                "processedNode": (function (d) {
-                    return d.nodeType == "processed";
-                })
-            }).attr("id", function (d) {
-                return "nodeId-" + d.id;
-            });
-
-
-        node.each(function () {
-            d3.select(this).style("opacity", 0.0)
-                .call(drag);
-        });
-
-        // add tooltip
-        node.append("title")
-            .text(function (d) {
-                return "#" + d.index + " : " + d.fileType + " : " + d.name;
-            });
-
-        //console.log(node);
     };
 
     // path highlighting
@@ -758,8 +769,9 @@ provenanceVisualizationModule = function () {
             // draw links
             drawLinks();
 
+// TODO: in debug state
             // create analysis group layers
-            createAnalysisLayers();
+            // createAnalysisLayers();
 
             // draw nodes
             drawNodes();
