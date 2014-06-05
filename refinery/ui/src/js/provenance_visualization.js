@@ -1,5 +1,5 @@
 // author: https://github.com/sluger
-// title: prototype implementation for the refinery provenance visualization api
+// title: in-progress development for the refinery provenance graph visualization
 
 // js module pattern
 provenanceVisualizationModule = function () {
@@ -55,26 +55,6 @@ provenanceVisualizationModule = function () {
         .attr("width", width)
         .attr("height", height)
         .classed("brect", true);
-
-    // initialize force layout
-    var force = d3.layout.force()
-        .charge(-120)
-        .linkDistance(30)
-        .size([width, height]);
-
-    // drag start listener support for nodes in force layout
-    var dragstart = function () {
-        d3.event.sourceEvent.stopPropagation();
-    };
-
-    // drag end listener
-    var dragend = function () {
-    };
-
-    // drag and drop node enabled
-    var drag = force.drag()
-        .on("dragstart", dragstart)
-        .on("dragend", dragend);
 
     // reset css for all nodes
     var clearHighlighting = function () {
@@ -562,20 +542,6 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // draw links
-    var drawLinks = function () {
-        link = canvas.selectAll(".link")
-            .data(links)
-            .enter().append("line")
-            .classed({
-                "link": true
-            })
-            .style("opacity", 0.0)
-            .attr("id", function (d, i) {
-                return "linkId-" + i;
-            });
-    };
-
 // TODO: group nodes by analyses and then by workflows
 // TODO: create super nodes, which contain aggregated raw nodes
     var createAnalysisLayers = function () {
@@ -597,25 +563,113 @@ provenanceVisualizationModule = function () {
         return value.analysis == "dataset";
     };
 
+    // drag start listener support for nodes
+    var dragStart = function () {
+        d3.event.sourceEvent.stopPropagation();
+    };
+
+    // drag listener
+    var dragging = function (d) {
+        // drag selected node
+        d3.select(this).attr("transform", function (n) {
+            switch (n.nodeType) {
+                case "raw":
+                case "processed":
+                    return "translate(" + d3.event.x + "," + d3.event.y + ")";
+                case "special":
+                    return "translate(" + (d3.event.x - r) + "," + (d3.event.y - r) + ")";
+                case "dt":
+                    return "translate(" + (d3.event.x - r * 0.75) + "," + (d3.event.y - r * 0.75) + ")";
+            }
+        });
+
+        // drag adjacent links
+
+        // get input links
+        // update coords for x2 and y2
+        srcNodeLinkHash[d.id].forEach(function (l) {
+            d3.select("#linkId-" + l).attr("x2", d3.event.x);
+            d3.select("#linkId-" + l).attr("y2", d3.event.y);
+        });
+
+        // get output links
+        // update coords for x1 and y1
+        tarNodeLinkHash[d.id].forEach(function (l) {
+            d3.select("#linkId-" + l).attr("x1", d3.event.x);
+            d3.select("#linkId-" + l).attr("y1", d3.event.y);
+        });
+    };
+
+    // drag end listener
+    var dragEnd = function () {
+    };
+
+    var applyDragBehavior = function () {
+        // drag and drop node enabled
+        var drag = d3.behavior.drag()
+            .on("dragstart", dragStart)
+            .on("drag", dragging)
+            .on("dragend", dragEnd);
+
+        // invoke dragging behavior on nodes
+        d3.selectAll(".node").call(drag);
+    };
+
+    // draw links
+    var drawLinks = function () {
+        link = canvas.selectAll(".link")
+            .data(links)
+            .enter().append("line")
+            .attr("x1", function (l) {
+                return nodes[l.source].x;
+            })
+            .attr("y1", function (l) {
+                return nodes[l.source].y;
+            })
+            .attr("x2", function (l) {
+                return nodes[l.target].x;
+            })
+            .attr("y2", function (l) {
+                return nodes[l.target].y;
+            })
+            .classed({
+                "link": true
+            })
+            .style("opacity", 0.0)
+            .attr("id", function (d, i) {
+                return "linkId-" + i;
+            });
+    };
+
 // TODO: in debug state
     // draw nodes
     var drawNodes = function () {
-
         node = canvas.selectAll(".node")
             .data(nodes)
-            .enter().append("g").each(function (d) {
+            .enter().append("g")
+            .each(function (d) {
                 if (d.nodeType === "raw" || d.nodeType === "processed") {
-                    d3.select(this).append("circle").attr("r", r);
+                    d3.select(this)
+                        .attr("transform", "translate(" + d.x + "," + d.y + ")")
+                        .append("circle")
+                        .attr("r", r);
                 } else {
+                    if (d.nodeType === "special") {
+                        d3.select(this)
+                            .attr("transform", "translate(" + (d.x - r) + "," + (d.y - r) + ")")
+                            .append("rect")
+                            .attr("width", r * 2)
+                            .attr("height", r * 2);
+                    }
                     if (d.nodeType === "dt") {
-                        d3.select(this).append("rect").attr("width", r * 1.5)
+                        d3.select(this)
+                            .attr("transform", "translate(" + (d.x - r * 0.75) + "," + (d.y - r * 0.75) + ")")
+                            .append("rect")
+                            .attr("width", r * 1.5)
                             .attr("height", r * 1.5)
                             .attr("transform", function () {
                                 return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
                             });
-                    } else {
-                        d3.select(this).append("rect").attr("width", r * 2)
-                            .attr("height", r * 2);
                     }
                 }
             }).classed({
@@ -636,18 +690,12 @@ provenanceVisualizationModule = function () {
                 return "nodeId-" + d.id;
             });
 
-
-        node.each(function () {
-            d3.select(this).style("opacity", 0.0)
-                .call(drag);
-        });
-
         // create d3-tip tooltips
         var tip = d3.tip()
             .attr("class", "d3-tip")
             .offset([-10, 0])
             .html(function (d) {
-                return "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.index + "</span><br>" +
+                return "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.id + "</span><br>" +
                     "<strong>Name:</strong> <span style='color:#fa9b30'>" + d.name + "</span><br>" +
                     "<strong>Type:</strong> <span style='color:#fa9b30'>" + d.fileType + "</span>";
             });
@@ -760,31 +808,25 @@ provenanceVisualizationModule = function () {
             // set coordinates for nodes
             assignGridCoordinates();
 
-            // start force layout
-            force
-                .nodes(nodes)
-                .links(links)
-                .start();
-
-            // draw links
-            drawLinks();
-
 // TODO: in debug state
             // create analysis group layers
             // createAnalysisLayers();
 
+            // draw links
+            drawLinks();
+
             // draw nodes
             drawNodes();
 
-            // update function for node dragging
-            force.on("tick", update);
+            // add dragging behavior to nodes
+            applyDragBehavior();
+
+            // event listeners
+            handleEvents();
 
             // fade in
             d3.selectAll(".link").transition().duration(500).style("opacity", 0.7);
             d3.selectAll(".node").transition().duration(500).style("opacity", 1.0);
-
-            // event listeners
-            handleEvents();
         }, 500);
     };
 
@@ -801,36 +843,6 @@ provenanceVisualizationModule = function () {
 
         // place vertices
         placeNodes(layeredTopNodes);
-    };
-
-    // update function for node dragging
-    var update = function () {
-        // links
-        link.attr("x1", function (d) {
-            return d.source.x;
-        })
-            .attr("y1", function (d) {
-                return d.source.y;
-            })
-            .attr("x2", function (d) {
-                return d.target.x;
-            })
-            .attr("y2", function (d) {
-                return d.target.y;
-            });
-
-        // nodes
-        node.attr("transform", function (d) {
-            switch (d.nodeType) {
-                case "raw":
-                case "processed":
-                    return "translate(" + d.x + "," + d.y + ")";
-                case "special":
-                    return "translate(" + (d.x - r) + "," + (d.y - r) + ")";
-                case "dt":
-                    return "translate(" + (d.x - r * 0.75) + "," + (d.y - r * 0.75) + ")";
-            }
-        });
     };
 
     // refinery injection for the provenance visualization
