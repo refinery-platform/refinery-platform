@@ -179,8 +179,6 @@
 		    table 		= null, // properties table
 		    dataset 	= null, // actual dataset
 		    layout 		= document.getElementById("cb_layout_kind_refinery").checked ? "1" : "0";
-			// null typeError in console if uncommented
-			// shape_dim = null;
 		}
 
 
@@ -202,10 +200,9 @@
 			return false;
 		}
 
-
 		/*
-		 * toogle visibility of table via button click
-		 * 
+         * toggle visibility of table via button click
+         *
 		 * id: id of the div element to be toggled
 		 */
 		function toggle_visibility (id) {
