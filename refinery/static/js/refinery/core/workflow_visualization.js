@@ -34,6 +34,30 @@ layout_translation = {
 
 
 /*
+ * create custom tooltips
+ */
+function createTooltip(args, tt_id) {
+    return d3.tip()
+        .attr("class", "file-tt")
+        .attr("id", tt_id)
+        .offset([-10, 0])
+        .html(function () {
+            var content = "";
+            args.forEach(function (tt) {
+                content = content.concat("<strong>" + tt.name + "</strong> <span style='color:#fa9b30'>" + tt.value + "</span><br>");
+            });
+            return content;
+        });
+}
+
+/*
+ * remove global d3-tip tooltip
+ */
+function removeGlobalTooltip(node_selector) {
+    d3.select("body").selectAll(node_selector).remove();
+}
+
+/*
  * event for expanding the left side of a node
  * 
  * x: the anchor circle svg element
@@ -50,8 +74,7 @@ function node_input_con_circle_event (x) {
 		}
 
 		d3.select(this.parentNode).selectAll(".nodeInputConG").each( function (d,j) {
-		
-			d3.select(this).append("rect")
+            d3.select(this).append("rect")
 				.attr("class", "inputConRect")
 				.attr("x", function(d) {
 					return -shape_dim.node_io.offset-shape_dim.node_io.width ;
@@ -84,10 +107,8 @@ function node_input_con_circle_event (x) {
 				})
 				.attr("y", function (d,i) { 
 					return (shape_dim.node_io.height+2)*(j+1)
-					- get_input_conns_length(this.parentNode.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2-3; 
-				})
-				.attr("title", function (d) { return "id: " + d.id + "\n" + "output_name: " + d.output_name; });
-
+					- get_input_conns_length(this.parentNode.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2-3;
+                });
 
 			// create moving anchors
 			d3.select(this.parentNode).append("g")
@@ -104,6 +125,18 @@ function node_input_con_circle_event (x) {
 				.attr("stroke-width", 1.5)
 				.attr("fill", "lightsteelblue");
 
+            // create tooltip
+            var args = [];
+            args.push({name: "id:", value: d.id});
+            args.push({name: "output_name:", value: d.output_name});
+
+            // create d3-tip tooltips
+            var tip = createTooltip(args, "tt_id-" + x.id);
+
+            // invoke tooltip on dom element
+            d3.select(this.parentNode).call(tip);
+            d3.select(this.parentNode).on("mouseover", tip.show)
+                .on("mouseout", tip.hide);
 		});
 
 		// hide input circle
@@ -167,9 +200,8 @@ function node_output_circle_event (x) {
 				.attr("x", shape_dim.node_io.offset+2)
 				.attr("y", function (d,i) { 
 					return (shape_dim.node_io.height+2)*(j+1)
-					- get_outputs_length(this.parentNode.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2-3; 
-				})
-				.attr("title", function (d) { return "name: " + d.name + "\n" + "type: " + d.type; });
+					- get_outputs_length(this.parentNode.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2-3;
+                });
 
 			// create moving anchors
 
@@ -177,20 +209,38 @@ function node_output_circle_event (x) {
 			// when name is key element of annotation properties,
 			// rename it to its value element and display it in italic style
 			// and add a steelblue filled circle to the right of the rect
-			d3.select(this).append("g")
+            var anchor = d3.select(this).append("g")
 				.attr("class", "outRectCircleG")
 				.attr("transform", function (d,i) { 
 					return "translate(" 
 						+ parseInt(shape_dim.node_io.offset + shape_dim.node_io.width,10) + "," 
 						+ parseInt((shape_dim.node_io.height+2)*(j+1) 
-							- get_outputs_length(this.parentNode.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2 
-							- shape_dim.node_io.height/2,10) + ")" })
-				.append("circle")
+							- get_outputs_length(this.parentNode.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2
+                            - shape_dim.node_io.height / 2, 10) + ")"
+                });
+            var anchor_circle = anchor.append("circle")
 					.attr("class", "outRectCircle")
 					.attr("r", shape_dim.circle.r)
 					.attr("stroke", "gray")
-					.attr("stroke-width", 1.5)
-					.call(check_stored_outputs);
+                .attr("stroke-width", 1.5);
+
+            var stored_output = check_stored_outputs(anchor_circle);
+
+            // create tooltip
+            var args = [];
+            args.push({name: "name:", value: z.name});
+            args.push({name: "type:", value: z.type});
+            if (stored_output !== "undefined") {
+                args.push({name: "stored as:", value: stored_output});
+            }
+
+            // create d3-tip tooltips
+            var tip = createTooltip(args, "tt_id-" + x.id);
+
+            // invoke tooltip on dom element
+            d3.select(this).call(tip);
+            d3.select(this).on("mouseover", tip.show)
+                .on("mouseout", tip.hide);
 		});
 
 		force.resume();
@@ -214,16 +264,20 @@ function node_input_circle_event (x) {
 			update_column_translation(x.column, layout_translation.EXPAND_RIGHT);
 		}
 		input_rect = d3.select(this.parentNode).select(".nodeInput").selectAll(".inputRectTitle");
-		
-		input_rect.data(function (d) { return dataset.steps[d.id].inputs; })
+
+        var input_rect_g = input_rect.data(function (d) {
+            return dataset.steps[d.id].inputs;
+        })
 		.enter()
-		.append("rect")
+            .append("g");
+
+        input_rect_g.append("rect")
 			.attr("class", "inputRect")
 			.attr("id", function (d,i) { return "inputRect_" + i;})
 			.attr("x", shape_dim.node_io.offset)
-			.attr("y", function (d,i) { 
+            .attr("y", function (d, i) {
 				return (shape_dim.node_io.height+2)*(i+1)
-				- get_inputs_length(this.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2 - shape_dim.node_io.height; 
+                    - get_inputs_length(this.parentNode.parentNode.parentNode.__data__.id) * (shape_dim.node_io.height + 2) / 2 - shape_dim.node_io.height;
 			})
 			.attr("width", shape_dim.node_io.width)
 			.attr("height", shape_dim.node_io.height)
@@ -243,29 +297,25 @@ function node_input_circle_event (x) {
 		});
 
 		// add file name
-		input_rect.data(function (d) { return dataset.steps[d.id].inputs; })
-		.enter()
+        input_rect_g
 		.append("text")
 			.attr("class", "inputRectTitle")
 			.text(function (d) { return cut_io_file_name(d.name); })
 			.attr("x", shape_dim.node_io.offset+2)
 			.attr("y", function (d,i) { 
 				return (shape_dim.node_io.height+2)*(i+1)
-				- get_inputs_length(this.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2-3; 
-			})
-			.attr("title", function (d) { return "description: " + d.description + "\n" + "name: " + d.name; });
-
+                    - get_inputs_length(this.parentNode.parentNode.parentNode.__data__.id) * (shape_dim.node_io.height + 2) / 2 - 3;
+            });
 
 		// create moving anchors
-		input_rect.data(function (d) { return dataset.steps[d.id].inputs; })
-		.enter()
+        input_rect_g
 		.append("g")
 			.attr("class", "inRectCircleG")
 			.attr("transform", function (d,i) { 
 				return "translate(" 
 					+ parseInt(shape_dim.node_io.offset + shape_dim.node_io.width,10) + "," 
-					+ parseInt((shape_dim.node_io.height+2)*(i+1) 
-						- get_inputs_length(this.parentNode.__data__.id)*(shape_dim.node_io.height+2)/2 
+					+ parseInt((shape_dim.node_io.height+2)*(i+1)
+                        - get_inputs_length(this.parentNode.parentNode.parentNode.__data__.id) * (shape_dim.node_io.height + 2) / 2
 						- shape_dim.node_io.height/2,10) + ")" })
 			.append("circle")
 
@@ -273,7 +323,22 @@ function node_input_circle_event (x) {
 				.attr("r", shape_dim.circle.r)
 				.attr("stroke", "gray")
 				.attr("stroke-width", 1.5)
-				.attr("fill", "lightsteelblue")
+            .attr("fill", "lightsteelblue");
+
+        // create tooltip
+        input_rect_g.each(function (d) {
+            var args = [];
+            args.push({name: "description:", value: d.description});
+            args.push({name: "name:", value: d.name});
+
+            // create d3-tip tooltips
+            var tip = createTooltip(args, "tt_id-" + x.id);
+
+            // invoke tooltip on dom element
+            d3.select(this).call(tip);
+            d3.select(this).on("mouseover", tip.show)
+                .on("mouseout", tip.hide);
+        });
 
 		// hide input circle
 		d3.select("#node_" + this.parentNode.__data__.id).select(".nodeInputCircle").attr("opacity", 0);
@@ -401,7 +466,10 @@ function check_stored_outputs (output) {
 		node_output_g.select(".outRectTitle").attr("title", function (x) {
 			return node_output_g.select(".outRectTitle").attr("title") + "\n" + "stored as: " + values[index] + "";
 		});
-	}
+        return values[index];
+    } else {
+        return "undefined";
+    }
 }
 
 /*
@@ -1842,20 +1910,20 @@ function update() {
  * canvas: visualization svg canvas
  */
 function visualize_workflow(data, canvas) {
-	// extracted workflow dataset
-	dataset = {steps: d3.values(data.steps), links: [], nodes: [], name: "", annotation: {}, graph_depth: 0, graph_width: 0, columns: []};
+    // extracted workflow dataset
+    dataset = {steps: d3.values(data.steps), links: [], nodes: [], name: "", annotation: {}, graph_depth: 0, graph_width: 0, columns: []};
 
-	var xscale 			= {},
-        yscale 			= {},
-        drag 			= null,
-        node_input 		= null,
-        node_input_con	= null;
-        node_output 	= null,
-        file_icon 		= null,
-        node_path 		= null,
-        file_icon_path 	= {},
-        in_nodes 		= null,
-        out_nodes 		= null,
+    var xscale = {},
+        yscale = {},
+        drag = null,
+        node_input = null,
+        node_input_con = null;
+    node_output = null,
+        file_icon = null,
+        node_path = null,
+        file_icon_path = {},
+        in_nodes = null,
+        out_nodes = null,
 
         node_output_circle = null,
         file_icon_output_circle = null,
@@ -1864,850 +1932,738 @@ function visualize_workflow(data, canvas) {
         node_input_circle = null,
         file_icon_input_circle = null;
 
-	// x scale
-	xscale = d3.scale.linear()
-		.domain([0, shape_dim.window.width])
-		.range([0, shape_dim.window.width]),
-	// y scale
-	yscale = d3.scale.linear()
-		.domain([0, shape_dim.window.height])
-		.range([0, shape_dim.window.height]);
+    // x scale
+    xscale = d3.scale.linear()
+        .domain([0, shape_dim.window.width])
+        .range([0, shape_dim.window.width]),
+        // y scale
+        yscale = d3.scale.linear()
+            .domain([0, shape_dim.window.height])
+            .range([0, shape_dim.window.height]);
 
-	// zoom behavior (only with ctrl key down)
-	zoom = d3.behavior.zoom();
-	d3.select("svg").call(zoom.on("zoom", geometric_zoom))
-		.on("dblclick.zoom", null)
-		.on("mousewheel.zoom", null)
-      	.on("DOMMouseScroll.zoom", null)
-      	.on("wheel.zoom", null);
+    // zoom behavior (only with ctrl key down)
+    zoom = d3.behavior.zoom();
+    d3.select("svg").call(zoom.on("zoom", geometric_zoom))
+        .on("dblclick.zoom", null)
+        .on("mousewheel.zoom", null)
+        .on("DOMMouseScroll.zoom", null)
+        .on("wheel.zoom", null);
 
     // zoom is allowed with ctrl-key down only
-	d3.select("body").on("keydown", function () {
-		if (d3.event.ctrlKey)
-			d3.select("svg").call(zoom.on("zoom", geometric_zoom));
-	});
+    d3.select("body").on("keydown", function () {
+        if (d3.event.ctrlKey)
+            d3.select("svg").call(zoom.on("zoom", geometric_zoom));
+    });
 
-	// on zoomend, disable zoom behavior again
-	zoom.on("zoomend", function () {
-		d3.select("svg").call(zoom.on("zoom", geometric_zoom))
-				.on("dblclick.zoom", null)
-				.on("mousewheel.zoom", null)
-		      	.on("DOMMouseScroll.zoom", null)
-		      	.on("wheel.zoom", null);
-	});
-			
-	// overlay rect for zoom	
-	canvas.append("g").append("rect")
-			.attr("class", "overlay")
-			.attr("x", -shape_dim.window.width)
-			.attr("y", -shape_dim.window.height)
-			.attr("width", shape_dim.window.width*4)
-			.attr("height", shape_dim.window.height*4)
-			.attr("fill","none")
-			.attr("pointer-events", "all");
+    // on zoomend, disable zoom behavior again
+    zoom.on("zoomend", function () {
+        d3.select("svg").call(zoom.on("zoom", geometric_zoom))
+            .on("dblclick.zoom", null)
+            .on("mousewheel.zoom", null)
+            .on("DOMMouseScroll.zoom", null)
+            .on("wheel.zoom", null);
+    });
 
-	// force layout definition
-	force = d3.layout.force()
-		.size(layout_prop.size)
-		.linkDistance(layout_prop.link_distance)
-		.linkStrength(layout_prop.link_strength)
-		.friction(layout_prop.friction)
-		.charge(layout_prop.charge)
-		.theta(layout_prop.theta)
-		.gravity(layout_prop.gravity)
-		.on("tick", update);
-	
-	// workflow name
-/*
-	dataset.name = data.name;
-	if (d3.select("#wf_name")[0][0].childElementCount === 1) {
-		d3.select("#wf_name").append("text")
-			.attr("class", "wf_name")
-			.text(dataset.name);
-	}
+    // overlay rect for zoom
+    canvas.append("g").append("rect")
+        .attr("class", "overlay")
+        .attr("x", -shape_dim.window.width)
+        .attr("y", -shape_dim.window.height)
+        .attr("width", shape_dim.window.width * 4)
+        .attr("height", shape_dim.window.height * 4)
+        .attr("fill", "none")
+        .attr("pointer-events", "all");
 
-	// workflow annotation
-	dataset.annotation = extract_wf_annotation(data.annotation);
-	if (d3.select("#wf_annotation")[0][0].childElementCount === 1) {
-		dataset.annotation.forEach(
-			function (d) {
-				d3.select("#wf_annotation").append("text")
-					.attr("class", "wf_annotation")
-					.text(d.key + ": " + d.value);
-			}
-		);
+    // force layout definition
+    force = d3.layout.force()
+        .size(layout_prop.size)
+        .linkDistance(layout_prop.link_distance)
+        .linkStrength(layout_prop.link_strength)
+        .friction(layout_prop.friction)
+        .charge(layout_prop.charge)
+        .theta(layout_prop.theta)
+        .gravity(layout_prop.gravity)
+        .on("tick", update);
 
-// TODO: encapsulate in table (wait for refinery integration)
-	}
-*/
-	// drag and drop node enabled
-	drag = force.drag()
-		.on("dragstart", dragstart)
-		.on("dragend", dragend);
-	
-	// extract links via input connections
-	dataset.steps.forEach( 
-		function (y) {
-			if (y.input_connections != null) {
-				d3.values(y.input_connections).forEach( function (x) {
-					dataset.links.push({source: +x.id, target: +y.id, id: ("link_" + x.id + "_" + y.id), highlighted: false});
-				});
-			}
-		}
-	);
+    // workflow name
+    /*
+     dataset.name = data.name;
+     if (d3.select("#wf_name")[0][0].childElementCount === 1) {
+     d3.select("#wf_name").append("text")
+     .attr("class", "wf_name")
+     .text(dataset.name);
+     }
 
-	// extract nodes from steps
-	dataset.steps.forEach( function (d) {
-		if (d3.values(d.input_connections).length == 0) {
-			dataset.nodes.push({id: d.id, fixed: true, type: "input"});
-		} 
-		else if (!src_elem_in_arr(dataset.links, d.id)) {
-			dataset.nodes.push({id: d.id, fixed: true, type: "output"});
-		}
-		else {
-			dataset.nodes.push({id: d.id, fixed: true});
-		}
-		dataset.nodes[d.id].highlighted = 		false;
-		dataset.nodes[d.id].expanded_out = 		false;
-		dataset.nodes[d.id].expanded_in_con = 	false;
-		dataset.nodes[d.id].visited = 			false;
-	});	
+     // workflow annotation
+     dataset.annotation = extract_wf_annotation(data.annotation);
+     if (d3.select("#wf_annotation")[0][0].childElementCount === 1) {
+     dataset.annotation.forEach(
+     function (d) {
+     d3.select("#wf_annotation").append("text")
+     .attr("class", "wf_annotation")
+     .text(d.key + ": " + d.value);
+     }
+     );
 
-	// add graph metrics
-	in_nodes = get_input_nodes();
-	out_nodes = get_output_nodes();
+     // TODO: encapsulate in table (wait for refinery integration)
+     }
+     */
+    // drag and drop node enabled
+    drag = force.drag()
+        .on("dragstart", dragstart)
+        .on("dragend", dragend);
 
-	// set columns for nodes
-	in_nodes.forEach( function (d) {
-		d.column = 0;
-		d.visited = true;
-	});
+    // extract links via input connections
+    dataset.steps.forEach(
+        function (y) {
+            if (y.input_connections != null) {
+                d3.values(y.input_connections).forEach(function (x) {
+                    dataset.links.push({source: +x.id, target: +y.id, id: ("link_" + x.id + "_" + y.id), highlighted: false});
+                });
+            }
+        }
+    );
 
-	in_nodes.forEach( function (d) {
-		calc_columns (d);
-	});
+    // extract nodes from steps
+    dataset.steps.forEach(function (d) {
+        if (d3.values(d.input_connections).length == 0) {
+            dataset.nodes.push({id: d.id, fixed: true, type: "input"});
+        }
+        else if (!src_elem_in_arr(dataset.links, d.id)) {
+            dataset.nodes.push({id: d.id, fixed: true, type: "output"});
+        }
+        else {
+            dataset.nodes.push({id: d.id, fixed: true});
+        }
+        dataset.nodes[d.id].highlighted = false;
+        dataset.nodes[d.id].expanded_out = false;
+        dataset.nodes[d.id].expanded_in_con = false;
+        dataset.nodes[d.id].visited = false;
+    });
 
-	set_graph_width();
-	set_graph_depth();
+    // add graph metrics
+    in_nodes = get_input_nodes();
+    out_nodes = get_output_nodes();
 
-	// add column expansion logic
-	for (var i = 0; i < dataset.graph_depth; i++) {
-		dataset.columns.push({inputs: 0, outputs: 0});	//number of inputs and outputs of nodes expanded initially set to 0
-	}
+    // set columns for nodes
+    in_nodes.forEach(function (d) {
+        d.column = 0;
+        d.visited = true;
+    });
 
-	// save subgraph for each node
-	dataset.nodes.forEach(function (d,i) {
-		var sel_node_id = d.id,
-			subgraph = [],
-			graph_index = -1;
+    in_nodes.forEach(function (d) {
+        calc_columns(d);
+    });
 
-		get_subgraph_by_id(sel_node_id, subgraph, graph_index, sel_node_id, 0);
-		
-		if (subgraph.length === 0) {
-			dataset.nodes[i].subgraph = [];
-		} else {
-			dataset.nodes[i].subgraph = subgraph; 
-		}
-	});
+    set_graph_width();
+    set_graph_depth();
+
+    // add column expansion logic
+    for (var i = 0; i < dataset.graph_depth; i++) {
+        dataset.columns.push({inputs: 0, outputs: 0});	//number of inputs and outputs of nodes expanded initially set to 0
+    }
+
+    // save subgraph for each node
+    dataset.nodes.forEach(function (d, i) {
+        var sel_node_id = d.id,
+            subgraph = [],
+            graph_index = -1;
+
+        get_subgraph_by_id(sel_node_id, subgraph, graph_index, sel_node_id, 0);
+
+        if (subgraph.length === 0) {
+            dataset.nodes[i].subgraph = [];
+        } else {
+            dataset.nodes[i].subgraph = subgraph;
+        }
+    });
 
 
-
-	// -----------------------------------------------------------------
-	// ------------------- GALAXY LAYOUT COORDINATES -------------------
-	// -----------------------------------------------------------------
-	if (layout === layout_kind.GALAXY) {
-		dataset.steps.forEach ( function (d) {
-			if (d.position != null) {
-				dataset.nodes[d.id].x = xscale(d.position.left);
-				dataset.nodes[d.id].y = yscale(d.position.top);
-			}
-		});
-	}
+    // -----------------------------------------------------------------
+    // ------------------- GALAXY LAYOUT COORDINATES -------------------
+    // -----------------------------------------------------------------
+    if (layout === layout_kind.GALAXY) {
+        dataset.steps.forEach(function (d) {
+            if (d.position != null) {
+                dataset.nodes[d.id].x = xscale(d.position.left);
+                dataset.nodes[d.id].y = yscale(d.position.top);
+            }
+        });
+    }
 
 
 
 // TODO: still in debug state
-	// -----------------------------------------------------------------
-	// ------------------- REFINERY LAYOUT COORDINATES -------------------
-	// -----------------------------------------------------------------
-	else if (layout === layout_kind.REFINERY) {
-		
-
-		// init rows for inputs first
-		in_nodes.forEach( function (d,i) {
-			d.row = i;
-		});
-
-		// set all nodes to unvisted
-		dataset.nodes.forEach( function (d) {
-			d.visited = false;
-		})
-
-		// process layout
-		for (var i = 0; i < dataset.graph_depth; i++) {
-
-			// for each column
-			get_nodes_by_col(i).forEach( function (cur,j) {
-				// get successors for column nodes
-				var succ_nodes = get_succ_nodes_by_node_id(cur.id);
-
-				/*console.log("===================")
-				console.log("id: " + cur.id)
-				console.log("row : " + cur.row)
-				console.log("col: " + cur.column)*/
-
-				// branch -> new rows to add before and after
-				if (succ_nodes.length > 1) {
-
-					// successors already visited
-					var visited = get_number_of_visited_nodes_by_arr (succ_nodes);
-					//console.log("visisted " + visited)
-
-					var row_shift = parseInt(succ_nodes.length / 2,10);
-					//console.log("row shift: " + row_shift)
-
-					// shift nodes before and after
-					// only if there are more than one successor
-					if (succ_nodes.length - visited > 1) {
-						//console.log("cur row before: " + cur.row)
-						shift_nodes_by_rows (row_shift, cur.column, cur.row);
-						//console.log("cur row after: " + cur.row)
-						shift_nodes_by_rows (row_shift, cur.column, cur.row+1);	
-						//console.log("cur row after2: " + cur.row)
-					}
-					
-					//console.log("succ len: " + succ_nodes.length)
-					var succ_row = cur.row-row_shift+visited;
-					//console.log("succ row start: " + succ_row)
-					//console.log("cur row: " + cur.row)
-					succ_nodes.forEach( function (succ) {
-						if (succ_nodes.length % 2 === 0 && succ_row === cur.row) {
-							succ_row++;
-						}
-
-						//console.log("visited flag: " + dataset.nodes[succ].visited)
-						if (dataset.nodes[succ].visited === false) {
-							dataset.nodes[succ].row = succ_row;	
-							dataset.nodes[succ].visited = true;
-							//console.log("added to: " + dataset.nodes[succ].row)
-							succ_row++;
-						}
-					});
-				} else {
-					succ_nodes.forEach( function (succ) {
-						dataset.nodes[succ].row = dataset.nodes[cur.id].row;
-					});
-				}
-			});
-		}
+    // -----------------------------------------------------------------
+    // ------------------- REFINERY LAYOUT COORDINATES -------------------
+    // -----------------------------------------------------------------
+    else if (layout === layout_kind.REFINERY) {
 
 
-		// get number of rows
-		/*var graph_rows = 0;
-		graph_rows = in_nodes.length;
-		for (var i = 0; i < dataset.graph_depth; i++) {
-			get_nodes_by_col(i).forEach( function (cur,j) {
-				// if there are more than one successor nodes
-				var succ_nodes = get_succ_nodes_by_node_id(cur.id);
-				if (succ_nodes.length > 1) {
-					var visited = get_number_of_visited_nodes_by_arr (succ_nodes);
-					if (succ_nodes.length % 2 === 0) {
-						graph_rows += succ_nodes.length - visited;
-					} else {
-						graph_rows += succ_nodes.length - 1 - visited;
-					}
-					succ_nodes.forEach( function (succ) {
-						dataset.nodes[succ].visited = true;
-					});
-				}
-			});
-		}
-		dataset.graph_rows = graph_rows;
+        // init rows for inputs first
+        in_nodes.forEach(function (d, i) {
+            d.row = i;
+        });
 
-		console.log("graph rows" + dataset.graph_rows)*/
+        // set all nodes to unvisted
+        dataset.nodes.forEach(function (d) {
+            d.visited = false;
+        })
+
+        // process layout
+        for (var i = 0; i < dataset.graph_depth; i++) {
+
+            // for each column
+            get_nodes_by_col(i).forEach(function (cur, j) {
+                // get successors for column nodes
+                var succ_nodes = get_succ_nodes_by_node_id(cur.id);
+
+                /*console.log("===================")
+                 console.log("id: " + cur.id)
+                 console.log("row : " + cur.row)
+                 console.log("col: " + cur.column)*/
+
+                // branch -> new rows to add before and after
+                if (succ_nodes.length > 1) {
+
+                    // successors already visited
+                    var visited = get_number_of_visited_nodes_by_arr(succ_nodes);
+                    //console.log("visisted " + visited)
+
+                    var row_shift = parseInt(succ_nodes.length / 2, 10);
+                    //console.log("row shift: " + row_shift)
+
+                    // shift nodes before and after
+                    // only if there are more than one successor
+                    if (succ_nodes.length - visited > 1) {
+                        //console.log("cur row before: " + cur.row)
+                        shift_nodes_by_rows(row_shift, cur.column, cur.row);
+                        //console.log("cur row after: " + cur.row)
+                        shift_nodes_by_rows(row_shift, cur.column, cur.row + 1);
+                        //console.log("cur row after2: " + cur.row)
+                    }
+
+                    //console.log("succ len: " + succ_nodes.length)
+                    var succ_row = cur.row - row_shift + visited;
+                    //console.log("succ row start: " + succ_row)
+                    //console.log("cur row: " + cur.row)
+                    succ_nodes.forEach(function (succ) {
+                        if (succ_nodes.length % 2 === 0 && succ_row === cur.row) {
+                            succ_row++;
+                        }
+
+                        //console.log("visited flag: " + dataset.nodes[succ].visited)
+                        if (dataset.nodes[succ].visited === false) {
+                            dataset.nodes[succ].row = succ_row;
+                            dataset.nodes[succ].visited = true;
+                            //console.log("added to: " + dataset.nodes[succ].row)
+                            succ_row++;
+                        }
+                    });
+                } else {
+                    succ_nodes.forEach(function (succ) {
+                        dataset.nodes[succ].row = dataset.nodes[cur.id].row;
+                    });
+                }
+            });
+        }
+
+
+        // get number of rows
+        /*var graph_rows = 0;
+         graph_rows = in_nodes.length;
+         for (var i = 0; i < dataset.graph_depth; i++) {
+         get_nodes_by_col(i).forEach( function (cur,j) {
+         // if there are more than one successor nodes
+         var succ_nodes = get_succ_nodes_by_node_id(cur.id);
+         if (succ_nodes.length > 1) {
+         var visited = get_number_of_visited_nodes_by_arr (succ_nodes);
+         if (succ_nodes.length % 2 === 0) {
+         graph_rows += succ_nodes.length - visited;
+         } else {
+         graph_rows += succ_nodes.length - 1 - visited;
+         }
+         succ_nodes.forEach( function (succ) {
+         dataset.nodes[succ].visited = true;
+         });
+         }
+         });
+         }
+         dataset.graph_rows = graph_rows;
+
+         console.log("graph rows" + dataset.graph_rows)*/
 
 //DEBUG: consider max rows
-		var max_row = 0;
-		dataset.nodes.forEach( function (d) {
-			if (d.row > max_row) {
-				max_row = d.row;
-			}
-		});
-		//console.log(max_row)
-		dataset.graph_rows = max_row+1;
+        var max_row = 0;
+        dataset.nodes.forEach(function (d) {
+            if (d.row > max_row) {
+                max_row = d.row;
+            }
+        });
+        //console.log(max_row)
+        dataset.graph_rows = max_row + 1;
 
-		// set coordinates for nodes
-		for (var i = 0; i < dataset.graph_depth; i++) {
-			get_nodes_by_col(i).forEach( function (cur,j) {
-				cur.x = xscale(shape_dim.margin.left + cur.column*shape_dim.column.width);
-				cur.y = yscale(shape_dim.margin.top + cur.row*shape_dim.row.height);
-			});
-		}
+        // set coordinates for nodes
+        for (var i = 0; i < dataset.graph_depth; i++) {
+            get_nodes_by_col(i).forEach(function (cur, j) {
+                cur.x = xscale(shape_dim.margin.left + cur.column * shape_dim.column.width);
+                cur.y = yscale(shape_dim.margin.top + cur.row * shape_dim.row.height);
+            });
+        }
 
-	} else {
-		console.log("ERROR: No layout chosen!")
-	}
-
-
-	// -----------------------------------------------------------------
-	// ------------------- SVG ELEMENTS --------------------------------
-	// -----------------------------------------------------------------
-
-	// force layout links and nodes
-	var link 		= canvas.selectAll(".link"),
-		node 		= canvas.selectAll(".node");
-
-	// link represented as line (with arrow)
-	link = link
-		.data(dataset.links)
-		.enter()
-		.append("path")
-			//.attr("marker-end", "url(#end)") // REMOVED: they don't look good on bezier curves
-			.attr("class", "link")
-			.attr("id", function (d) { return "link_" + d.source + "_" + d.target; })
-			.attr("stroke", "gray")
-			.attr("stroke-width", 1.5);
-	
-	// node represented as a group
-	node = node
-		.data(dataset.nodes)
-		.enter()
-		.append("g")
-			.attr("class", "node")
-			.attr("id", function (d) { return "node_" + d.id; })
-			.call(drag);
-	
-	node_g = node.append("g")
-		.attr("class", "nodeG")
-
-	// node shape
-	node_g.append("rect")
-		.attr("class", "nodeRect")
-		.attr("width", shape_dim.node.width)
-		.attr("height", shape_dim.node.height)
-		.attr("x", -shape_dim.node.width/2)
-		.attr("y", -shape_dim.node.height/2)
-		.attr("rx", 3)
-		.attr("ry", 3)
-		.attr("fill", "lightsteelblue")
-		.attr("stroke", "gray")
-		.attr("stroke-width", 1.5)
-		.append("title") // add tooltip
-		.text(function (d) { return dataset.steps[d.id].name; });
-		
-	// node title	
-	node_g.append("g")
-		.attr("transform", function (d) { 
-			return "translate(" + 0 + "," + parseInt(-shape_dim.node.height/2,10) + ")";})
-		.attr("class", "nodeTitle")
-		.call(node_title)
-		.append("title") // add tooltip
-		.text(function (d) { return dataset.steps[d.id].name; });
+    } else {
+        console.log("ERROR: No layout chosen!")
+    }
 
 
-	// node inputs
-	node_input = node.append("g").attr("transform", function (d) { 
-			return "translate(" + parseInt((shape_dim.node.width/2),10) + "," + 0 + ")";})
-		.attr("class", "nodeInput");
+    // -----------------------------------------------------------------
+    // ------------------- SVG ELEMENTS --------------------------------
+    // -----------------------------------------------------------------
 
-	// add groups for title rect pairs
-	node_input.selectAll("nodeInputG")
-		.data(function (d) { return d3.values(dataset.steps[d.id].inputs); })
-		.enter()
-		.append("g")
-			.attr("class", "nodeInputG")
-			.attr("id", function (d,i) { return "nodeInputG_" + i;});
+    // force layout links and nodes
+    var link = canvas.selectAll(".link"),
+        node = canvas.selectAll(".node");
 
-	// create input circle
-	node_input_circle = create_node_circle (node_input_circle, node, "nodeInputCircle", file_icon_input_circle, "fileIconInputCircle", shape_dim.node.width/2);
+    // link represented as line (with arrow)
+    link = link
+        .data(dataset.links)
+        .enter()
+        .append("path")
+        //.attr("marker-end", "url(#end)") // REMOVED: they don't look good on bezier curves
+        .attr("class", "link")
+        .attr("id", function (d) {
+            return "link_" + d.source + "_" + d.target;
+        })
+        .attr("stroke", "gray")
+        .attr("stroke-width", 1.5);
 
+    // node represented as a group
+    node = node
+        .data(dataset.nodes)
+        .enter()
+        .append("g")
+        .attr("class", "node")
+        .attr("id", function (d) {
+            return "node_" + d.id;
+        })
+        .call(drag);
 
-	// node input_con
-	node_input_con = node.append("g").attr("transform", function (d) { 
-			return "translate(" + parseInt((-shape_dim.node.width/2),10) + "," + 0 + ")";})
-		.attr("class", "nodeInputCon");
+    node_g = node.append("g")
+        .attr("class", "nodeG")
 
-	// add groups for title rect pairs - without the interaction is not possible
-	node_input_con.selectAll("nodeInputConG")
-		.data(function (d) { return d3.values(dataset.steps[d.id].input_connections); })
-		.enter()
-		.append("g")
-			.attr("class", "nodeInputConG")
-			.attr("id", function (d,i) { return "nodeInputConG_" + i;});
+    // node shape
+    node_g.append("rect")
+        .attr("class", "nodeRect")
+        .attr("width", shape_dim.node.width)
+        .attr("height", shape_dim.node.height)
+        .attr("x", -shape_dim.node.width / 2)
+        .attr("y", -shape_dim.node.height / 2)
+        .attr("rx", 3)
+        .attr("ry", 3)
+        .attr("fill", "lightsteelblue")
+        .attr("stroke", "gray")
+        .attr("stroke-width", 1.5)
+        .append("title") // add tooltip
+        .text(function (d) {
+            return dataset.steps[d.id].name;
+        });
 
-	// create input con circle
-	node_input_con_circle = create_node_circle (node_input_con_circle, node, "nodeInputConCircle", file_icon_input_con_circle, "fileIconInputConCircle", -shape_dim.node.width/2);
-
-
-	// node outputs
-	node_output = node.append("g").attr("transform", function (d) { 
-			return "translate(" + parseInt((shape_dim.node.width/2),10) + "," + 0 + ")";})
-		.attr("class", "nodeOutput");
-
-	// add groups for title rect pairs
-	node_output.selectAll("nodeOutputG")
-		.data(function (d) { return d3.values(dataset.steps[d.id].outputs); })
-		.enter()
-		.append("g")
-			.attr("class", "nodeOutputG")
-			.attr("id", function (d,i) { return "nodeOutputG_" + i;});
-
-	// create output circle
-	node_output_circle = create_node_circle (node_output_circle, node, "nodeOutputCircle", file_icon_output_circle, "fileIconOutputCircle", shape_dim.node.width/2);
-
-	
-
-	// dye circles when they contain at least one stored output
-	node.each (function (d) {
-		dye_circles (d.id);
-	});
-
-
-	// remove unused svg elements (node specific)
-	node.each( function (d) {
-		// remove input svg group from nodes without inputs
-		if(d3.values(dataset.steps[d.id].inputs).length === 0) {
-			d3.select(this).select(".nodeInputCircle").remove();
-			d3.select(this).select(".nodeInput").remove();
-		}
-		// remove input_cons icons and selectable node path
-		if(d3.values(dataset.steps[d.id].input_connections).length === 0) {
-			d3.select(this).select(".nodeInputConCircle").remove();
-			d3.select(this).select(".nodePath").remove();
-		}
-		// remove output icons
-		if(d3.values(dataset.steps[d.id].outputs).length === 0) {
-			d3.select(this).select(".nodeOutputCircle").remove();
-		}
-		// change node rect for input nodes
-		if(d3.values(dataset.steps[d.id].input_connections).length === 0) {
-			d3.select(this).select(".nodeRect").attr("fill", "white");
-		}
-	});
+    // node title
+    node_g.append("g")
+        .attr("transform", function (d) {
+            return "translate(" + 0 + "," + parseInt(-shape_dim.node.height / 2, 10) + ")";
+        })
+        .attr("class", "nodeTitle")
+        .call(node_title);
+    /*
+     .append("title") // add tooltip
+     .text(function (d) { return dataset.steps[d.id].name; });
+     */
 
 
+    // create tooltip
+    // create d3-tip tooltips
+    node_g.each(function (d) {
+        var tip = d3.tip()
+            .attr("class", "d3-tip")
+            .offset([-10, 0])
+            .html(function (d) {
+                return "<span style='color:#fa9b30'>" + dataset.steps[d.id].name;
+                +"</span>";
+            });
 
-	// -----------------------------------------------------------------
-	// ------------------- FORCE LAYOUT START --------------------------
-	// -----------------------------------------------------------------
+        // invoke tooltip on dom element
+        d3.select(this).call(tip);
+        d3.select(this).on("mouseover", tip.show)
+            .on("mouseout", tip.hide);
+    });
 
-	// execute force layout
-	// attention: after executing the force layout, 
-	// link.source and link.target obtain the node data structures instead of simple integer ids
-	force
-		.nodes(dataset.nodes)
-		.links(dataset.links)
-		.start();
+    // node inputs
+    node_input = node.append("g").attr("transform", function (d) {
+        return "translate(" + parseInt((shape_dim.node.width / 2), 10) + "," + 0 + ")";
+    })
+        .attr("class", "nodeInput");
+
+    // add groups for title rect pairs
+    node_input.selectAll("nodeInputG")
+        .data(function (d) {
+            return d3.values(dataset.steps[d.id].inputs);
+        })
+        .enter()
+        .append("g")
+        .attr("class", "nodeInputG")
+        .attr("id", function (d, i) {
+            return "nodeInputG_" + i;
+        });
+
+    // create input circle
+    node_input_circle = create_node_circle(node_input_circle, node, "nodeInputCircle", file_icon_input_circle, "fileIconInputCircle", shape_dim.node.width / 2);
+
+
+    // node input_con
+    node_input_con = node.append("g").attr("transform", function (d) {
+        return "translate(" + parseInt((-shape_dim.node.width / 2), 10) + "," + 0 + ")";
+    })
+        .attr("class", "nodeInputCon");
+
+    // add groups for title rect pairs - without the interaction is not possible
+    node_input_con.selectAll("nodeInputConG")
+        .data(function (d) {
+            return d3.values(dataset.steps[d.id].input_connections);
+        })
+        .enter()
+        .append("g")
+        .attr("class", "nodeInputConG")
+        .attr("id", function (d, i) {
+            return "nodeInputConG_" + i;
+        });
+
+    // create input con circle
+    node_input_con_circle = create_node_circle(node_input_con_circle, node, "nodeInputConCircle", file_icon_input_con_circle, "fileIconInputConCircle", -shape_dim.node.width / 2);
+
+
+    // node outputs
+    node_output = node.append("g").attr("transform", function (d) {
+        return "translate(" + parseInt((shape_dim.node.width / 2), 10) + "," + 0 + ")";
+    })
+        .attr("class", "nodeOutput");
+
+    // add groups for title rect pairs
+    node_output.selectAll("nodeOutputG")
+        .data(function (d) {
+            return d3.values(dataset.steps[d.id].outputs);
+        })
+        .enter()
+        .append("g")
+        .attr("class", "nodeOutputG")
+        .attr("id", function (d, i) {
+            return "nodeOutputG_" + i;
+        });
+
+    // create output circle
+    node_output_circle = create_node_circle(node_output_circle, node, "nodeOutputCircle", file_icon_output_circle, "fileIconOutputCircle", shape_dim.node.width / 2);
+
+
+    // dye circles when they contain at least one stored output
+    node.each(function (d) {
+        dye_circles(d.id);
+    });
+
+
+    // remove unused svg elements (node specific)
+    node.each(function (d) {
+        // remove input svg group from nodes without inputs
+        if (d3.values(dataset.steps[d.id].inputs).length === 0) {
+            d3.select(this).select(".nodeInputCircle").remove();
+            d3.select(this).select(".nodeInput").remove();
+        }
+        // remove input_cons icons and selectable node path
+        if (d3.values(dataset.steps[d.id].input_connections).length === 0) {
+            d3.select(this).select(".nodeInputConCircle").remove();
+            d3.select(this).select(".nodePath").remove();
+        }
+        // remove output icons
+        if (d3.values(dataset.steps[d.id].outputs).length === 0) {
+            d3.select(this).select(".nodeOutputCircle").remove();
+        }
+        // change node rect for input nodes
+        if (d3.values(dataset.steps[d.id].input_connections).length === 0) {
+            d3.select(this).select(".nodeRect").attr("fill", "white");
+        }
+    });
+
+
+    // -----------------------------------------------------------------
+    // ------------------- FORCE LAYOUT START --------------------------
+    // -----------------------------------------------------------------
+
+    // execute force layout
+    // attention: after executing the force layout,
+    // link.source and link.target obtain the node data structures instead of simple integer ids
+    force
+        .nodes(dataset.nodes)
+        .links(dataset.links)
+        .start();
 // DEBUG: uncomment if only i force iterations are desired
-		//for (var i = 0; i < 1; ++i) force.tick();
-	
-	// initial fit to window call
-	fit_wf_to_window(0);
+    //for (var i = 0; i < 1; ++i) force.tick();
+
+    // initial fit to window call
+    fit_wf_to_window(0);
 
 
-
-	// -----------------------------------------------------------------
-	// ------------------- EVENTS --------------------------------------
-	// -----------------------------------------------------------------
-
+    // -----------------------------------------------------------------
+    // ------------------- EVENTS --------------------------------------
+    // -----------------------------------------------------------------
 
 
-	// -----------------------------------------------------------------
-	// ------------------- CLEAR HIGHLIGHTING AND REMOVE TABLE ---------
-	// -----------------------------------------------------------------
-	var	overlay_on_click = function () {
-		// remove old table on click
-		d3.select("#workflowtbl").remove();
-		
-		clear_highlighting(link);
-	}
+    // -----------------------------------------------------------------
+    // ------------------- CLEAR HIGHLIGHTING AND REMOVE TABLE ---------
+    // -----------------------------------------------------------------
+    var overlay_on_click = function () {
+        // remove old table on click
+        d3.select("#workflowtbl").remove();
+
+        clear_highlighting(link);
+    }
 
 
-
-	// -----------------------------------------------------------------
-	// ------------------- FIT WORKFLOW TO WINDOW ----------------------
-	// -----------------------------------------------------------------
-	var overlay_on_dblclick = function () {
-		fit_wf_to_window(1000);
-	}
-
+    // -----------------------------------------------------------------
+    // ------------------- FIT WORKFLOW TO WINDOW ----------------------
+    // -----------------------------------------------------------------
+    var overlay_on_dblclick = function () {
+        fit_wf_to_window(1000);
+    }
 
 
-	// -----------------------------------------------------------------
-	// ------------------- CLICK DBLCLICK SEPARATION -------------------
-	// -----------------------------------------------------------------
-	var firing = false,
-		timer,
-		overlay_action = overlay_on_click;	// default action
+    // -----------------------------------------------------------------
+    // ------------------- CLICK DBLCLICK SEPARATION -------------------
+    // -----------------------------------------------------------------
+    var firing = false,
+        timer,
+        overlay_action = overlay_on_click;	// default action
 
-	d3.select(".overlay").on("click", function (x) {
-		// suppress after dragend
-		if (d3.event.defaultPrevented) return;
+    d3.select(".overlay").on("click", function (x) {
+        // suppress after dragend
+        if (d3.event.defaultPrevented) return;
 
-		// if dblclick, break
-		if (firing) {
-			return;
-		}
+        // if dblclick, break
+        if (firing) {
+            return;
+        }
 
-		firing = true;
-		// function overlay_action is called after a certain amount of time
-		timer = setTimeout ( function () { 
-	    	overlay_action();	// called always
+        firing = true;
+        // function overlay_action is called after a certain amount of time
+        timer = setTimeout(function () {
+            overlay_action();	// called always
 
-	    	overlay_action = overlay_on_click; // set back click action to single
-	        firing = false;
-	    }, 150); // timeout value
-	});
+            overlay_action = overlay_on_click; // set back click action to single
+            firing = false;
+        }, 150); // timeout value
+    });
 
-	// if dblclick, the single click action is overwritten
-	d3.select(".overlay").on("dblclick", function (x) {
-		overlay_action = overlay_on_dblclick;
-	});
-
-
-
-	// -----------------------------------------------------------------
-	// ------------------- TABLE AND PATH HIGHLIGHTING -----------------
-	// -----------------------------------------------------------------
-
-	// update table data with properties of selected node
-	node.select(".nodeG").on("click", function (x) {	
-
-		// suppress after dragend
-		if (d3.event.defaultPrevented) return;
+    // if dblclick, the single click action is overwritten
+    d3.select(".overlay").on("dblclick", function (x) {
+        overlay_action = overlay_on_dblclick;
+    });
 
 
+    // -----------------------------------------------------------------
+    // ------------------- TABLE AND PATH HIGHLIGHTING -----------------
+    // -----------------------------------------------------------------
 
-		// -----------------------------------------------------------------
-		// ------------------- PATH HIGHLIGHTING ---------------------------
-		// -----------------------------------------------------------------
+    // update table data with properties of selected node
+    node.select(".nodeG").on("click", function (x) {
 
-		// get selected node
-		var sel_path = [],
-			sel_node_rect = d3.select(this).select(".nodeRect"),
-			sel_path_rect = d3.select(this.parentNode).selectAll(".inputConRect");
-
-		x.subgraph.forEach( function (d,i) { 
-			sel_path = sel_path.concat.apply(sel_path, x.subgraph[i]);
-		});
-
-		// clear previous highlighting
-		overlay_on_click();
-		
-		if (typeof sel_path[0] !== "undefined") {
-			// when path beginning with this node is not highlighted yet
-			if (sel_path[0].highlighted === false) {
-				dye_path(sel_path, sel_node_rect, sel_path_rect, "orange", 5, "orange", true);
-			} else {
-				dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
-			}	
-		}
+        // suppress after dragend
+        if (d3.event.defaultPrevented) return;
 
 
+        // -----------------------------------------------------------------
+        // ------------------- PATH HIGHLIGHTING ---------------------------
+        // -----------------------------------------------------------------
 
-		// -----------------------------------------------------------------
-		// ------------------- TABLE ---------------------------------------
-		// -----------------------------------------------------------------
+        // get selected node
+        var sel_path = [],
+            sel_node_rect = d3.select(this).select(".nodeRect"),
+            sel_path_rect = d3.select(this.parentNode).selectAll(".inputConRect");
 
-		create_table(x);
-	});
+        x.subgraph.forEach(function (d, i) {
+            sel_path = sel_path.concat.apply(sel_path, x.subgraph[i]);
+        });
 
+        // clear previous highlighting
+        overlay_on_click();
 
-
-	// -----------------------------------------------------------------
-	// ------------------- INPUT CON FILES -----------------------------
-	// -----------------------------------------------------------------
-	node_input_con_circle.on("mouseover", function (x) {	
-		d3.select(this).select(".fileIconInputConCircle")
-			.attr("stroke", "steelblue")
-			.attr("stroke-width", 2);
-	});
-	
-	node_input_con_circle.on("mouseout", function (x) {	
-		d3.select(this).select(".fileIconInputConCircle")
-			.attr("stroke", "gray")
-			.attr("stroke-width", 1.5);
-	});
-
-	node_input_con_circle.on("click", node_input_con_circle_event);
+        if (typeof sel_path[0] !== "undefined") {
+            // when path beginning with this node is not highlighted yet
+            if (sel_path[0].highlighted === false) {
+                dye_path(sel_path, sel_node_rect, sel_path_rect, "orange", 5, "orange", true);
+            } else {
+                dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
+            }
+        }
 
 
+        // -----------------------------------------------------------------
+        // ------------------- TABLE ---------------------------------------
+        // -----------------------------------------------------------------
 
-	// -----------------------------------------------------------------
-	// ------------------- INPUT CON FILES REMOVE EVENT ----------------
-	// -----------------------------------------------------------------
-	d3.selectAll(".nodeInputConG").on("mouseover", function (x) {
-		d3.select(this).select(".inputConRectCircle")
-			.attr("stroke", "steelblue")
-			.attr("stroke-width", 2);		
-		d3.select(this).select(".inputConRect")
-			.attr("stroke", "steelblue")
-			.attr("stroke-width", 2);
-	});
+        create_table(x);
+    });
 
-	d3.selectAll(".nodeInputConG").on("mouseout", function (x) {
-		d3.select(this).select(".inputConRectCircle")
-			.attr("stroke", "gray")
-			.attr("stroke-width", 1);		
-		d3.select(this).select(".inputConRect")
-			.attr("stroke", "gray")
-			.attr("stroke-width", 1);
-	});
 
-	d3.selectAll(".nodeInputCon").on("click", function (x) {
-		var node_circle = null,
-			cur_node_id = 0;
+    // -----------------------------------------------------------------
+    // ------------------- INPUT CON FILES -----------------------------
+    // -----------------------------------------------------------------
+    node_input_con_circle.on("mouseover", function (x) {
+        d3.select(this).select(".fileIconInputConCircle")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 2);
+    });
 
-		x.expanded_in_con = false;
-		dataset.columns[x.column].inputs -= 1;
+    node_input_con_circle.on("mouseout", function (x) {
+        d3.select(this).select(".fileIconInputConCircle")
+            .attr("stroke", "gray")
+            .attr("stroke-width", 1.5);
+    });
 
-		if (dataset.columns[x.column].inputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
-			update_column_translation(x.column, layout_translation.COLLAPSE_LEFT);
-		}
+    node_input_con_circle.on("click", node_input_con_circle_event);
 
-		// show input con circle again
-		cur_node_id = this.parentNode.__data__.id;
-		node_circle = d3.select("#node_" + cur_node_id).select(".nodeInputConCircle");
-		node_circle.attr("opacity", 1);
 
-		// remove expanded files
-		d3.select(this.parentNode).selectAll(".inputConRect").remove();
-		d3.select(this.parentNode).selectAll(".inputConRectTitle").remove();
-		d3.select(this.parentNode).selectAll(".inputConRectCircle").remove();
-		d3.select(this.parentNode).selectAll(".inputConRectCircleG").remove();
+    // -----------------------------------------------------------------
+    // ------------------- INPUT CON FILES REMOVE EVENT ----------------
+    // -----------------------------------------------------------------
 
-		force.resume();
-		update();
-	});
+    d3.selectAll(".nodeInputCon").on("click", function (x) {
+        var node_circle = null,
+            cur_node_id = 0;
+
+        x.expanded_in_con = false;
+        dataset.columns[x.column].inputs -= 1;
+
+        if (dataset.columns[x.column].inputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
+            update_column_translation(x.column, layout_translation.COLLAPSE_LEFT);
+        }
+
+        // show input con circle again
+        cur_node_id = this.parentNode.__data__.id;
+        node_circle = d3.select("#node_" + cur_node_id).select(".nodeInputConCircle");
+        node_circle.attr("opacity", 1);
+
+        // remove expanded files
+        removeGlobalTooltip("#tt_id-" + cur_node_id);
+        d3.select(this.parentNode).selectAll(".inputConRect").remove();
+        d3.select(this.parentNode).selectAll(".inputConRectTitle").remove();
+        d3.select(this.parentNode).selectAll(".inputConRectCircle").remove();
+        d3.select(this.parentNode).selectAll(".inputConRectCircleG").remove();
+
+        force.resume();
+        update();
+    });
 
 
 // TODO: fix multiple clickings on node	
-	// -----------------------------------------------------------------
-	// ------------------- OUTPUT FILES --------------------------------
-	// -----------------------------------------------------------------
-	node_output_circle.on("mouseover", function (x) {	
-		d3.select(this).select(".fileIconOutputCircle")
-				.attr("stroke", "steelblue")
-				.attr("stroke-width", 2);
-	});
-	
-	node_output_circle.on("mouseout", function (x) {	
-		d3.select(this).select(".fileIconOutputCircle")
-				.attr("stroke", "gray")
-				.attr("stroke-width", 1.5);
-	});
+    // -----------------------------------------------------------------
+    // ------------------- OUTPUT FILES --------------------------------
+    // -----------------------------------------------------------------
+    node_output_circle.on("mouseover", function (x) {
+        d3.select(this).select(".fileIconOutputCircle")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 2);
+    });
 
-	node_output_circle.on("click", node_output_circle_event);
+    node_output_circle.on("mouseout", function (x) {
+        d3.select(this).select(".fileIconOutputCircle")
+            .attr("stroke", "gray")
+            .attr("stroke-width", 1.5);
+    });
 
-	// -----------------------------------------------------------------
-	// ------------------- OUTPUT FILES REMOVE EVENT -------------------
-	// -----------------------------------------------------------------
-	d3.selectAll(".nodeOutputG").on("mouseover", function (x) {
-		d3.select(this).selectAll(".outputRect")
-			.attr("stroke", "steelblue")
-			.attr("stroke-width", 2);
-	});
+    node_output_circle.on("click", node_output_circle_event);
 
-	d3.selectAll(".nodeOutputG").on("mouseout", function (x) {
-		d3.select(this).selectAll(".outputRect")
-			.attr("stroke", "gray")
-			.attr("stroke-width", 1);
-	});
+    // -----------------------------------------------------------------
+    // ------------------- OUTPUT FILES REMOVE EVENT -------------------
+    // -----------------------------------------------------------------
 
-	d3.selectAll(".nodeOutput").on("click", function (x) {
-		var node_circle = null,
-			cur_node_id = 0;
+    d3.selectAll(".nodeOutput").on("click", function (x) {
+        var node_circle = null,
+            cur_node_id = 0;
 
-		x.expanded_out = false;
-		dataset.columns[x.column].outputs -= 1;
-		
-		if (dataset.columns[x.column].outputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
-			update_column_translation(x.column, layout_translation.COLLAPSE_RIGHT);
-		}
+        x.expanded_out = false;
+        dataset.columns[x.column].outputs -= 1;
 
-		// show output circle again
-		cur_node_id = this.parentNode.__data__.id;
-		node_circle = d3.select("#node_" + cur_node_id).select(".nodeOutputCircle");
-		node_circle.attr("opacity", 1);
-		
-		// remove expanded files
-		d3.select(this.parentNode).selectAll(".outputRect").remove();
-		d3.select(this.parentNode).selectAll(".outRectTitle").remove();
-		d3.select(this.parentNode).selectAll(".outRectCircle").remove();
-		d3.select(this.parentNode).selectAll(".outRectCircleG").remove();
-		
-		force.resume();
-		update();
-	});
+        if (dataset.columns[x.column].outputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
+            update_column_translation(x.column, layout_translation.COLLAPSE_RIGHT);
+        }
 
-	
+        // show output circle again
+        cur_node_id = this.parentNode.__data__.id;
+        node_circle = d3.select("#node_" + cur_node_id).select(".nodeOutputCircle");
+        node_circle.attr("opacity", 1);
 
-	// -----------------------------------------------------------------
-	// ------------------- INPUT FILES ---------------------------------
-	// -----------------------------------------------------------------
-	node_input_circle.on("mouseover", function (x) {	
-		d3.select(this).select(".fileIconInputCircle")
-				.attr("stroke", "steelblue")
-				.attr("stroke-width", 2);
-	});
+        // remove expanded files
+        removeGlobalTooltip("#tt_id-" + cur_node_id);
+        d3.select(this.parentNode).selectAll(".outputRect").remove();
+        d3.select(this.parentNode).selectAll(".outRectTitle").remove();
+        d3.select(this.parentNode).selectAll(".outRectCircle").remove();
+        d3.select(this.parentNode).selectAll(".outRectCircleG").remove();
 
-	node_input_circle.on("mouseout", function (x) {	
-		d3.select(this).select(".fileIconInputCircle")
-				.attr("stroke", "gray")
-				.attr("stroke-width", 1.5);
-	});
-
-	node_input_circle.on("click", node_input_circle_event);
+        force.resume();
+        update();
+    });
 
 
+    // -----------------------------------------------------------------
+    // ------------------- INPUT FILES ---------------------------------
+    // -----------------------------------------------------------------
+    node_input_circle.on("mouseover", function (x) {
+        d3.select(this).select(".fileIconInputCircle")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 2);
+    });
 
-	// -----------------------------------------------------------------
-	// ------------------- INPUT FILES REMOVE EVENT -------------------
-	// -----------------------------------------------------------------
-	d3.selectAll(".nodeInput").on("mouseover", function (x) {
-		d3.select(this).select(".inputRect")
-			.attr("stroke", "steelblue")
-			.attr("stroke-width", 2);
-	});
+    node_input_circle.on("mouseout", function (x) {
+        d3.select(this).select(".fileIconInputCircle")
+            .attr("stroke", "gray")
+            .attr("stroke-width", 1.5);
+    });
 
-	d3.selectAll(".nodeInput").on("mouseout", function (x) {
-		d3.select(this).select(".inputRect")
-			.attr("stroke", "gray")
-			.attr("stroke-width", 1);
-	});	
-
-	d3.selectAll(".nodeInput").on("click", function (x) {
-		var node_circle = null,
-			cur_node_id = 0;
-
-		x.expanded_out = false;
-		dataset.columns[x.column].outputs -= 1;
-
-		if (dataset.columns[x.column].outputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
-			update_column_translation(x.column, layout_translation.COLLAPSE_RIGHT);
-		}
-
-		// show input circle again
-		cur_node_id = this.parentNode.__data__.id;
-		node_circle = d3.select("#node_" + cur_node_id).select(".nodeInputCircle");
-		node_circle.attr("opacity", 1);
-
-		// remove expanded files
-		d3.select(this.parentNode).selectAll(".inputRect").remove();
-		d3.select(this.parentNode).selectAll(".inputRectTitle").remove();
-		d3.select(this.parentNode).selectAll(".inRectCircle").remove();
-		d3.select(this.parentNode).selectAll(".inRectCircleG").remove();
-
-		force.resume();
-		update();
-	});
+    node_input_circle.on("click", node_input_circle_event);
 
 
-	// -----------------------------------------------------------------
-	// ------------------- WINDOW RESIZE -------------------------------
-	// -----------------------------------------------------------------
-	d3.select(window).on("resize", resize);
-	
+    // -----------------------------------------------------------------
+    // ------------------- INPUT FILES REMOVE EVENT -------------------
+    // -----------------------------------------------------------------
+
+    d3.selectAll(".nodeInput").on("click", function (x) {
+        var node_circle = null,
+            cur_node_id = 0;
+
+        x.expanded_out = false;
+        dataset.columns[x.column].outputs -= 1;
+
+        if (dataset.columns[x.column].outputs === 0 && (layout === layout_kind.REFINERY || layout === layout_kind.GALAXY)) {
+            update_column_translation(x.column, layout_translation.COLLAPSE_RIGHT);
+        }
+
+        // show input circle again
+        cur_node_id = this.parentNode.__data__.id;
+        node_circle = d3.select("#node_" + cur_node_id).select(".nodeInputCircle");
+        node_circle.attr("opacity", 1);
+
+        // remove expanded files
+        removeGlobalTooltip("#tt_id-" + cur_node_id);
+        d3.select(this.parentNode).selectAll(".inputRect").remove();
+        d3.select(this.parentNode).selectAll(".inputRectTitle").remove();
+        d3.select(this.parentNode).selectAll(".inRectCircle").remove();
+        d3.select(this.parentNode).selectAll(".inRectCircleG").remove();
+
+        force.resume();
+        update();
+    });
 
 
-	// #################################################################
-	// ################### TEMPORARILY UNUSED SOURCE ###################
-	// #################################################################
-
-
-
-	
-	// -----------------------------------------------------------------
-	// ------------------- DEBUG GRID LINES FOR LAYOUT -----------------
-	// -----------------------------------------------------------------
-
-	// REMOVED: grid lines for layout
-	//draw_layout_grid(xscale, yscale);
-
-
-
-	// -----------------------------------------------------------------
-	// ------------------- LINK ARROWS AND LABELS ----------------------
-	// -----------------------------------------------------------------
-
-	// REMOVED: they don't look good on bezier curves
-		// marker arrow
-		/*canvas.append("svg:defs")
-			.selectAll(".marker")
-			.data(["end"])
-			.enter()
-			.append("svg:marker")    
-				.attr("id", String)
-				.attr("viewBox", "0 -5 10 10")
-				.attr("refX", 10)
-				.attr("refY", 0)
-				.attr("markerWidth", 5)
-				.attr("markerHeight", 5)
-				.attr("orient", "auto")
-				.append("svg:path")
-					.attr("d", "M0,-5L10,0L0,5")
-					.attr("fill","gray");*/
-
-	// REMOVED: temporarily disabled linklabels
-		// link label
-	    /*linklabel = linklabel
-	        .data(dataset.links)
-	        .enter()
-	        .append("g")
-	        	.attr("class", "linklabel");*/
-	    
-	    // link label title
-	  /*  linklabel.append("text")
-	        .attr("class","linkTitle")
-	        .attr("id",function(d,i){ return 'linklabel'+i; })
-	        .attr("x", 0)
-			.attr("y", 0)
-	        .text(function(d,i) {
-				return d3.values(dataset.steps[d.target].input_connections)[output_input_con_file_link(d)[1]].output_name;
-			})
-			.style("pointer-events", "none")
-			.call(append_text_rect);*/
-
-
-	// -----------------------------------------------------------------
-	// ------------------- HIGHLIGHTING PATHS WITH TOGGLE --------------
-	// -----------------------------------------------------------------
-
-	// REMOVED: cause a problem in combination with anchor toggle
-	/*d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("mouseover", function (x) {
-		d3.select(this).select(".inputConRect")
-			.attr("fill", "orange");
-	});
-
-	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("mouseout", function (x) {
-		var sel_path = d3.select(this.parentNode.parentNode)[0][0].__data__.subgraph[+d3.select(this).attr("id")[14]];
-
-		if (sel_path[0].highlighted === false) {
-			d3.select(this).select(".inputConRect")
-				.attr("fill", "lightsteelblue");
-		}
-	});
-
-	d3.selectAll(".nodeInputCon").selectAll(".nodeInputConG").on("click", function (x) {
-		// get selected node
-		var sel_node = d3.select(this.parentNode.parentNode)[0][0].__data__,
-			sel_path = sel_node.subgraph[+d3.select(this).attr("id")[14]],
-			sel_node_rect = d3.select(this.parentNode.parentNode).select(".nodeRect"),
-			sel_path_rect = d3.select(this).select(".inputConRect");
-
-		// clear previous highlighting
-		overlay_on_click();
-
-		// create table
-		create_table(sel_node);
-
-		// when path beginning with this node is not highlighted yet
-		if (sel_path[0].highlighted === false) {
-			dye_path(sel_path, sel_node_rect, sel_path_rect, "orange", 5, "orange", true);
-		} else {
-			dye_path(sel_path, sel_node_rect, sel_path_rect, "gray", 1.5, "lightsteelblue", false);
-		}
-	});*/
+    // -----------------------------------------------------------------
+    // ------------------- WINDOW RESIZE -------------------------------
+    // -----------------------------------------------------------------
+    d3.select(window).on("resize", resize);
 }
-
-
