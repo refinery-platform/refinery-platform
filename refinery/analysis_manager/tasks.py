@@ -280,7 +280,7 @@ def run_analysis_preprocessing(analysis):
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        if not isinstance(exc, (ConnectionError, TimeoutError, AuthError)):
+        if not isinstance(exc, (ConnectionError, TimeoutError, AuthenticationError, AuthorizationError)):
             try:
                 analysis.delete_galaxy_library()
             except RuntimeError:
@@ -326,7 +326,7 @@ def run_analysis_preprocessing(analysis):
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        if not isinstance(exc, (ConnectionError, TimeoutError, AuthError)):
+        if not isinstance(exc, (ConnectionError, TimeoutError, AuthenticationError, AuthorizationError)):
             try:
                 analysis.delete_galaxy_library()
             except RuntimeError:
@@ -351,7 +351,7 @@ def run_analysis_preprocessing(analysis):
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        if not isinstance(exc, (ConnectionError, TimeoutError, AuthError)):
+        if not isinstance(exc, (ConnectionError, TimeoutError, AuthenticationError, AuthorizationError)):
             try:
                 analysis.delete_galaxy_library()
                 analysis.delete_galaxy_workflow()
@@ -407,14 +407,15 @@ def monitor_analysis_execution(analysis):
     connection = analysis.get_galaxy_connection()
     try:
         progress = connection.get_progress(analysis.history_id)
-    except (ConnectionError, TimeoutError, ServiceError) as e:
+    except (ConnectionError, TimeoutError, ServiceError, AuthenticationError) as e:
+        # AuthenticationError is a workaround for a random 401 glitch response from Apache/Galaxy
         error_msg = "Unable to get progress for history '{}'".format(analysis.history_id)
         error_msg += "of analysis {}: {}".format(analysis.name, e.message)
         analysis.set_status(Analysis.UNKNOWN_STATUS, error_msg)
         logger.warning(error_msg)
         monitor_analysis_execution.retry(countdown=5)
     except RuntimeError as e:
-        # if this is not just a connection error, analysis has probably failed
+        # if this is not just a random error, analysis has probably failed
         error_msg = "Unable to get progress for " + \
                     "history {} of analysis {}: {}".format(
                         analysis.history_id, analysis.name, e.message)
@@ -476,7 +477,7 @@ def run_analysis_execution(analysis):
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_execution.update_state(state=celery.states.FAILURE)
-        if not isinstance(exc, (ConnectionError, TimeoutError, AuthError)):
+        if not isinstance(exc, (ConnectionError, TimeoutError, AuthenticationError, AuthorizationError)):
             try:
                 analysis.delete_galaxy_library()
                 analysis.delete_galaxy_workflow()
@@ -503,7 +504,7 @@ def run_analysis_execution(analysis):
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_execution.update_state(state=celery.states.FAILURE)
-        if not isinstance(exc, (ConnectionError, TimeoutError, AuthError)):
+        if not isinstance(exc, (ConnectionError, TimeoutError, AuthenticationError, AuthorizationError)):
             try:
                 analysis.delete_galaxy_library()
                 analysis.delete_galaxy_workflow()
@@ -674,7 +675,7 @@ def download_history_files(analysis) :
             "error downloading Galaxy history files for analysis '{}': {}" \
             .format(analysis.name, exc.message)
         logger.error(error_msg)
-        if not isinstance(exc, (ConnectionError, TimeoutError, AuthError)):
+        if not isinstance(exc, (ConnectionError, TimeoutError, AuthenticationError, AuthorizationError)):
             analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
             try:
                 analysis.delete_galaxy_library()

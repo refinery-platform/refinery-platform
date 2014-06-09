@@ -26,12 +26,20 @@ class ResourceError(RuntimeError):
         super(ResourceError, self).__init__("Galaxy request error")
 
 
-class AuthError(RuntimeError):
+class AuthenticationError(RuntimeError):
+    '''HTTP status code 401
+
+    '''
+    def __init__(self):
+        super(AuthenticationError, self).__init__("Invalid authentication")
+
+
+class AuthorizationError(RuntimeError):
     '''HTTP status code 403
 
     '''
     def __init__(self):
-        super(AuthError, self).__init__("Incorrect Galaxy API key")
+        super(AuthorizationError, self).__init__("Authenticated but access forbidden")
 
 
 class ResourceNameError(RuntimeError):
@@ -67,7 +75,7 @@ class ServiceError(RuntimeError):
 
 
 class UnknownResponseError(RuntimeError):
-    '''Any HTTP status code except 2xx, 403, 404, 416 or 500
+    '''Any HTTP status code except errors above
     Example: 501 is returned for certain API endpoints like /api/datasets
 
     '''

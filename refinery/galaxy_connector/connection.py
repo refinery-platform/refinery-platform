@@ -78,10 +78,12 @@ class Connection(object):
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
             logger.error(e.message + ' - ' + e.response.url)
-            if e.response.status_code == 400:
+            if response.status_code == 400:
                 raise ResourceError()
+            elif response.status_code == 401:
+                raise AuthenticationError()
             elif response.status_code == 403:
-                raise AuthError()
+                raise AuthorizationError()
             elif response.status_code == 404:
                 raise ResourceNameError()
             elif response.status_code == 416:
@@ -122,10 +124,12 @@ class Connection(object):
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
             logger.error(e.message + ' - ' + e.response.url)
-            if e.response.status_code == 400:
+            if response.status_code == 400:
                 raise ResourceError()
+            elif response.status_code == 401:
+                raise AuthenticationError()
             elif response.status_code == 403:
-                raise AuthError()
+                raise AuthorizationError()
             elif response.status_code == 404:
                 raise ResourceNameError()
             elif response.status_code == 416:
@@ -160,10 +164,12 @@ class Connection(object):
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
             logger.error(e.message + ' - ' + e.response.url)
-            if e.response.status_code == 400:
+            if response.status_code == 400:
                 raise ResourceError()
+            elif response.status_code == 401:
+                raise AuthenticationError()
             elif response.status_code == 403:
-                raise AuthError()
+                raise AuthorizationError()
             elif response.status_code == 404:
                 raise ResourceNameError()
             elif response.status_code == 416:
