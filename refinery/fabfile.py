@@ -121,7 +121,7 @@ def stage():
     env.hosts = [env.stage_host]
     env.dev_settings_file = "settings_local_stage.py"
     django.settings_module(os.path.splitext(env.dev_settings_file)[0])
-    env.refinery_branch = "develop"
+    env.refinery_branch = "master"
     software_config()
     directory_structure_config()
     # config file templates
@@ -137,6 +137,17 @@ def prod():
     '''
     #TODO: implement using stage() as a template
     # add a warning message/confirmation about changing config on production VM
+    check_env_vars()
+    env.hosts = [env.prod_host]
+    env.dev_settings_file = "settings_local_prod.py"
+    django.settings_module(os.path.splitext(env.dev_settings_file)[0])
+    env.refinery_branch = "master"
+    software_config()
+    directory_structure_config()
+    # config file templates
+    env.local_conf_dir = os.path.join(env.local_template_dir, "prod")
+    env.bash_profile_template = "bash_profile"
+    env.bashrc_template = "bashrc"
 
 
 @task
