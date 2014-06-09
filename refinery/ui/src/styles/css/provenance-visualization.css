@@ -1,0 +1,25 @@
+/*
+ * (c) Stefan Luger 2014
+ * css adapated of mbostock force layout example
+ */
+.node {
+  stroke: #fff;
+  stroke-width: 1.5px;
+  fill: gray;
+}
+
+.inputNode {
+  stroke: #fff;
+  stroke-width: 1.5px;
+  fill: rgb(237, 116, 7);
+}
+
+.link {
+  stroke: gray;
+  stroke-width: 1.5px;
+  stroke-opacity: .7;
+}
+
+.brect {
+  fill: #fff;
+}

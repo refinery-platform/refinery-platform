@@ -1,7 +1,7 @@
 /*
  * Refinery Workflow visualization 
  * custom style sheets
- * (c) Stefan Luger 2013
+ * (c) Stefan Luger 2013 - 2014
  */
 
 /* DOCKED WINDOW STYLESHEETS */
@@ -72,4 +72,34 @@
 
 .nodeRect, .nodeTitle {
 	cursor: move;
+}
+
+/* tooltip example styles by https://github.com/Caged/d3-tip */
+.d3-tip, .file-tt {
+    line-height: 1;
+    font-weight: bold;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    border-radius: 2px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after, .file-tt:after {
+    box-sizing: border-box;
+    display: inline;
+    font-size: 10px;
+    width: 100%;
+    line-height: 1;
+    color: rgba(0, 0, 0, 0.8);
+    content: "\25BC";
+    position: absolute;
+    text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after, .file-tt.n:after {
+    margin: -1px 0 0 0;
+    top: 100%;
+    left: 0;
 }
