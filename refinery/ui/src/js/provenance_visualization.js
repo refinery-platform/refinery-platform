@@ -23,7 +23,8 @@ provenanceVisualizationModule = function () {
         tarLinkHash = [],
         srcNodeLinkHash = [],
         tarNodeLinkHash = [],
-        workflowAnalysisHash = [];
+        workflowAnalysisHash = [],
+        analysisWorkflowHash = [];
 
     // canvas dimensions
     var width = window.innerWidth - 50,
@@ -523,15 +524,16 @@ provenanceVisualizationModule = function () {
     // a workflow might be executed by multiple analyses
     var createWorkflowAnalysisMapping = function () {
         analyses.objects.forEach(function (a) {
+            // workflow -> analysis
             if (workflowAnalysisHash.hasOwnProperty(a.workflow__uuid)) {
                 workflowAnalysisHash[a.workflow__uuid] = workflowAnalysisHash[a.workflow__uuid].concat([a.uuid]);
             } else {
                 workflowAnalysisHash[a.workflow__uuid] = [a.uuid];
             }
+
+            // analysis -> workflow
+            analysisWorkflowHash[a.uuid] = a.workflow__uuid;
         });
-        // TODO: DEBUG
-        // add dataset entry for the raw dataset where analysis is null
-        // workflowAnalysisHash["dataset"] = "dataset";
     };
 
     // set coordinates for nodes
@@ -607,6 +609,30 @@ provenanceVisualizationModule = function () {
 
         // invoke dragging behavior on nodes
         d3.selectAll(".node").call(drag);
+    };
+
+    // dye graph by analyses and its corresponding workflows
+    var dyeWorkflows = function () {
+        var color = d3.scale.category20();
+
+        node.each(function () {
+            d3.select(this).style("fill", function (d) {
+                return color(analysisWorkflowHash[d.analysis]);
+            });
+        });
+
+    };
+
+    // dye graph by analyses
+    var dyeAnalyses = function () {
+        var color = d3.scale.category20();
+
+        node.each(function () {
+            d3.select(this).style("fill", function (d) {
+                return color(d.analysis);
+            });
+        });
+
     };
 
     // draw links
@@ -764,6 +790,11 @@ provenanceVisualizationModule = function () {
             // draw nodes
             drawNodes();
 
+// TODO: (DEBUG) colorize analyses or workflows
+            // colorize graph
+            dyeWorkflows();
+            //dyeAnalyses();
+
             // add dragging behavior to nodes
             applyDragBehavior();
 
@@ -771,7 +802,7 @@ provenanceVisualizationModule = function () {
             handleEvents();
 
             // fade in
-            d3.selectAll(".link").transition().duration(500).style("opacity", 0.7);
+            d3.selectAll(".link").transition().duration(500).style("opacity", 1.0);
             d3.selectAll(".node").transition().duration(500).style("opacity", 1.0);
         }, 500);
     };
