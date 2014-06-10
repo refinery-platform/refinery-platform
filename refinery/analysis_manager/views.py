@@ -75,7 +75,7 @@ def analysis_status(request, uuid):
             ret_json['cleanup'] = status.cleanup_status()
             ret_json['overall'] = analysis.get_status()
         logger.debug("Analysis: '{}'".format(analysis.name))
-        logger.debug(simplejson.dumps(ret_json, indent=2))
+        logger.debug(simplejson.dumps(ret_json))
         return HttpResponse(simplejson.dumps(ret_json),
                             mimetype='application/javascript')
     else:
