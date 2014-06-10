@@ -577,14 +577,12 @@ class Analysis(OwnableResource):
     # output_nodes = models.ManyToManyField(Nodes, blank=True)
     # protocol = i.e. protocol node created when the analysis is created
 
-    class Meta:
-        verbose_name_plural = "analyses"
-
     def __unicode__(self):
         return self.name + " - " + self.get_owner_username() + " - " + self.summary
 
     class Meta:
         verbose_name = "analysis"
+        verbose_name_plural = "analyses"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' %  verbose_name ),
         )
