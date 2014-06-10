@@ -30,6 +30,8 @@ provenanceVisualizationModule = function () {
     var width = window.innerWidth - 50,
         height = window.innerHeight - 50;
 
+    var zoom = null;
+
     // primitive dimensions
     var r = 7;
 
@@ -48,7 +50,7 @@ provenanceVisualizationModule = function () {
         .attr("height", height)
         .attr("pointer-events", "all")
         .append("svg:g")
-        .call(d3.behavior.zoom().on("zoom", redraw))
+        .call(zoom = d3.behavior.zoom().on("zoom", redraw)).on("dblclick.zoom", null)
         .append("svg:g");
 
     // helper rectangle to support pan & zoom
@@ -130,7 +132,7 @@ provenanceVisualizationModule = function () {
 
     // deep copy node data structure
     var copyNode = function (node) {
-        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", fixed: false, row: -1, col: -1, parents: [], id: -1, visited: false};
+        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", fixed: false, row: -1, col: -1, parents: [], id: -1, visited: false, doiFactor: -1};
 
         newNode.name = node.name;
         newNode.nodeType = node.nodeType;
@@ -147,6 +149,7 @@ provenanceVisualizationModule = function () {
             newNode.parents[i] = p;
         });
         newNode.analysis = node.analysis;
+        newNode.doiFactor = node.doiFactor;
 
         return newNode;
     };
@@ -495,7 +498,8 @@ provenanceVisualizationModule = function () {
             col: -1,
             id: nodeIndex,
             visited: false,
-            analysis: (nodeObj.analysis_uuid !== null) ? nodeObj.analysis_uuid : "dataset"
+            analysis: (nodeObj.analysis_uuid !== null) ? nodeObj.analysis_uuid : "dataset",
+            doiFactor: -1
         });
     };
 
@@ -613,10 +617,10 @@ provenanceVisualizationModule = function () {
 
     // dye graph by analyses and its corresponding workflows
     var dyeWorkflows = function () {
-        var color = d3.scale.category20();
+        var color = d3.scale.category10();
 
         node.each(function () {
-            d3.select(this).style("fill", function (d) {
+            d3.select(this).style("stroke", function (d) {
                 return color(analysisWorkflowHash[d.analysis]);
             });
         });
@@ -753,13 +757,73 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // clear highlighting
-    var handleClearHighlighting = function () {
+    // fit visualization onto free windows space
+    var fitGraphToWindow = function (transitionTime) {
+        var min = [d3.min(nodes, function (d) {
+                return d.x;
+            }), d3.min(nodes, function (d) {
+                return d.y;
+            })],
+            max = [d3.max(nodes, function (d) {
+                return d.x;
+            }), d3.max(nodes, function (d) {
+                return d.y;
+            })],
+            delta = [max[0] - min[0], max[1] - min[1]],
+            factor = [(width / delta[0]), (height / delta[1])],
+            newScale = d3.min(factor),
+            newPos = [((width - delta[0] * newScale) / 2),
+                ((height - delta[1] * newScale) / 2)];
+
+        newPos[0] -= min[0] * newScale;
+        newPos[1] -= min[1] * newScale;
+
+        if (transitionTime !== 0) {
+            canvas
+                .transition()
+                .duration(1000)
+                .attr("transform", "translate(" + newPos + ")scale(" + newScale + ")");
+        } else {
+            canvas.attr("transform", "translate(" + newPos + ")scale(" + newScale + ")");
+        }
+
+        zoom.translate(newPos);
+        zoom.scale(newScale);
+    };
+
+    // wrapper function to invoke scale and transformation onto the visualization
+    var handlFitGraphToWindow = function () {
+        fitGraphToWindow(1000);
+    };
+
+    // click and dblclick separation on background rectangle
+    var handleBRectClick = function () {
+        var clickinProgress = false, // click in progress
+            timer = 0,
+            bRectAction = clearHighlighting;	// default action
+
         d3.select(".brect").on("click", function () {
             // suppress after dragend
             if (d3.event.defaultPrevented) return;
 
-            clearHighlighting();
+            // if dblclick, break
+            if (clickinProgress) {
+                return;
+            }
+
+            clickinProgress = true;
+            // single click event is called after timeout unless a dblick action is performed
+            timer = setTimeout(function () {
+                bRectAction();	// called always
+
+                bRectAction = clearHighlighting; // set back click action to single
+                clickinProgress = false;
+            }, 200); // timeout value
+        });
+
+        // if dblclick, the single click action is overwritten
+        d3.select(".brect").on("dblclick", function () {
+            bRectAction = handlFitGraphToWindow;
         });
     };
 
@@ -768,8 +832,8 @@ provenanceVisualizationModule = function () {
         // path highlighting
         handlePathHighlighting();
 
-        // clear highlighting
-        handleClearHighlighting();
+        // handle click separation
+        handleBRectClick();
     };
 
     // main d3 visualization function
@@ -790,10 +854,13 @@ provenanceVisualizationModule = function () {
             // draw nodes
             drawNodes();
 
+            // set initial graph position
+            fitGraphToWindow(0);
+
 // TODO: (DEBUG) colorize analyses or workflows
             // colorize graph
             dyeWorkflows();
-            //dyeAnalyses();
+            dyeAnalyses();
 
             // add dragging behavior to nodes
             applyDragBehavior();
