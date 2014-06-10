@@ -10,7 +10,6 @@ in the Galaxy API example directory.
 import httplib
 import logging
 import requests
-import urllib2
 import simplejson
 import core
 from galaxy_connector.exceptions import *
@@ -189,19 +188,6 @@ class Connection(object):
 
     def get_histories(self):
         return self.get("histories")
-
-    def get_history_id(self, history_name):
-        '''Returns zero or more identifiers for histories with the provided name.
-
-        '''
-        histories = self.get_histories()
-        identifiers = []
-
-        for history in histories:
-            if history['name'] == history_name:
-                identifiers.append(history['id'])
-
-        return identifiers
 
     def get_history(self, history_id):
         try:
