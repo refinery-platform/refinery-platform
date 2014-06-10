@@ -603,7 +603,11 @@ class Analysis(OwnableResource):
     def failed(self):
         return True if self.status == self.FAILURE_STATUS else False
 
+    def galaxy_connection(self):
+        return self.workflow.workflow_engine.instance.galaxy_connection()
+
     def get_galaxy_connection(self):
+        # to be deprecated in favor of galaxy_connection()
         return self.workflow.workflow_engine.instance.get_galaxy_connection()
 
     def delete_galaxy_workflow(self):

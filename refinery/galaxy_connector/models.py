@@ -1,5 +1,6 @@
 from django.db import models
 from galaxy_connector.connection import Connection
+from bioblend.galaxy import GalaxyInstance
 
 
 class Instance(models.Model):
@@ -14,6 +15,10 @@ class Instance(models.Model):
     def __unicode__(self):
         return self.description + " (" + self.api_key + ")"
 
+    def galaxy_connection(self):
+        return GalaxyInstance(url=self.base_url, key=self.api_key)
+
     def get_galaxy_connection(self):
+        # to be deprecated in favor of galaxy_connection()
         return Connection(
             self.base_url, self.data_url, self.api_url, self.api_key)

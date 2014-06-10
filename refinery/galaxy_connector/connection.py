@@ -26,20 +26,17 @@ logger = logging.getLogger(__name__)
 
 class Connection(object):
     '''
-    classdocs
-    '''
 
+    '''
     def __init__(self, base_url, data_url, api_url, api_key ):
-        '''
-        Constructor
+        '''Constructor
+
         '''
         self.base_url = base_url
         self.data_url = data_url
         self.api_url = api_url
         self.api_key = api_key
 
-    # =========================================================================================================
-                
     def make_url(self, command, args=None, is_data=False, key=True):
         # Adds the API Key to the URL if it's not already there.
         if args is None:

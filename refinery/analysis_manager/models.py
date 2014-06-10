@@ -1,3 +1,4 @@
+from bioblend import galaxy
 from celery.result import AsyncResult
 from core.models import Analysis
 from django.db import models
@@ -33,11 +34,14 @@ class AnalysisStatus( models.Model ):
     postprocessing_taskset_id = UUIDField( blank=True, null=True, auto=False )
     cleanup_taskset_id = UUIDField( blank=True, null=True, auto=False )
     execution_monitor_task_id = UUIDField( blank=True, null=True, auto=False )
-    
+
     def preprocessing_status(self):
         return get_payload(self.preprocessing_taskset_id)
-    
+
     def execution_status(self):
+        if not self.analysis.history_id:
+            return None
+
         try:
             status = get_payload(self.execution_monitor_task_id)
         except:
@@ -45,12 +49,13 @@ class AnalysisStatus( models.Model ):
                         .format(self.execution_monitor_task_id))
             return None
 
-        connection = self.analysis.get_galaxy_connection()
+        connection = self.analysis.galaxy_connection()
         try:
-            history = connection.get_history(self.analysis.history_id)
-        except RuntimeError:
-            logger.warn("Unable to get progress for history '{}' of analysis '{}'"
-                        .format(self.analysis.history_id, self.analysis.name))
+            history = connection.histories.show_history(self.analysis.history_id)
+        except galaxy.client.ConnectionError:
+            msg = "Unable to get progress for history '{}' of analysis '{}'"
+            msg = msg.format(self.analysis.history_id, self.analysis.name)
+            logger.warn(msg)
             return None
 
         if history:
