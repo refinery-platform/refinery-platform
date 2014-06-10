@@ -557,12 +557,6 @@ provenanceVisualizationModule = function () {
             });
     };
 
-// TODO: in debug state
-    // check node belonging to analyis
-    var nodeBelongsToAnalysis = function (value, index, ar) {
-        return value.analysis == "dataset";
-    };
-
     // drag start listener support for nodes
     var dragStart = function () {
         d3.event.sourceEvent.stopPropagation();
@@ -641,54 +635,59 @@ provenanceVisualizationModule = function () {
             });
     };
 
-// TODO: in debug state
     // draw nodes
     var drawNodes = function () {
-        node = canvas.selectAll(".node")
-            .data(nodes)
-            .enter().append("g")
-            .each(function (d) {
-                if (d.nodeType === "raw" || d.nodeType === "processed") {
-                    d3.select(this)
-                        .attr("transform", "translate(" + d.x + "," + d.y + ")")
-                        .append("circle")
-                        .attr("r", r);
-                } else {
-                    if (d.nodeType === "special") {
+        analysis.each(function (a) {
+            d3.select(this).selectAll(".node")
+                .data(nodes.filter(function (n) {
+                    return n.analysis == a;
+                }))
+                .enter().append("g").each(function (d) {
+                    if (d.nodeType === "raw" || d.nodeType === "processed") {
                         d3.select(this)
-                            .attr("transform", "translate(" + (d.x - r) + "," + (d.y - r) + ")")
-                            .append("rect")
-                            .attr("width", r * 2)
-                            .attr("height", r * 2);
+                            .attr("transform", "translate(" + d.x + "," + d.y + ")")
+                            .append("circle")
+                            .attr("r", r);
+                    } else {
+                        if (d.nodeType === "special") {
+                            d3.select(this)
+                                .attr("transform", "translate(" + (d.x - r) + "," + (d.y - r) + ")")
+                                .append("rect")
+                                .attr("width", r * 2)
+                                .attr("height", r * 2);
+                        }
+                        if (d.nodeType === "dt") {
+                            d3.select(this)
+                                .attr("transform", "translate(" + (d.x - r * 0.75) + "," + (d.y - r * 0.75) + ")")
+                                .append("rect")
+                                .attr("width", r * 1.5)
+                                .attr("height", r * 1.5)
+                                .attr("transform", function () {
+                                    return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
+                                });
+                        }
                     }
-                    if (d.nodeType === "dt") {
-                        d3.select(this)
-                            .attr("transform", "translate(" + (d.x - r * 0.75) + "," + (d.y - r * 0.75) + ")")
-                            .append("rect")
-                            .attr("width", r * 1.5)
-                            .attr("height", r * 1.5)
-                            .attr("transform", function () {
-                                return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
-                            });
-                    }
-                }
-            }).classed({
-                "node": true,
-                "rawNode": (function (d) {
-                    return d.nodeType == "raw";
-                }),
-                "specialNode": (function (d) {
-                    return d.nodeType == "special";
-                }),
-                "dtNode": (function (d) {
-                    return d.nodeType == "dt";
-                }),
-                "processedNode": (function (d) {
-                    return d.nodeType == "processed";
-                })
-            }).attr("id", function (d) {
-                return "nodeId-" + d.id;
-            });
+                }).classed({
+                    "node": true,
+                    "rawNode": (function (d) {
+                        return d.nodeType == "raw";
+                    }),
+                    "specialNode": (function (d) {
+                        return d.nodeType == "special";
+                    }),
+                    "dtNode": (function (d) {
+                        return d.nodeType == "dt";
+                    }),
+                    "processedNode": (function (d) {
+                        return d.nodeType == "processed";
+                    })
+                }).attr("id", function (d) {
+                    return "nodeId-" + d.id;
+                });
+        });
+
+        // set node dom element
+        node = d3.selectAll(".node");
 
         // create d3-tip tooltips
         var tip = d3.tip()
@@ -702,60 +701,8 @@ provenanceVisualizationModule = function () {
 
         // invoke tooltip on dom element
         node.call(tip);
-
         node.on("mouseover", tip.show)
             .on("mouseout", tip.hide);
-
-// TODO: in debug state
-        /*
-         node = [];
-         console.log(analysis);
-         analysis.each(function () {
-         console.log(d3.select(this));
-         var curAnalysis = d3.select(this).selectAll(".node")
-         .data(nodes.filter(nodeBelongsToAnalysis))
-         .enter().append("g").each(function (d) {
-         if (d.nodeType === "raw" || d.nodeType === "processed") {
-         d3.select(this).append("circle").attr("r", r);
-         } else {
-         if (d.nodeType === "dt") {
-         d3.select(this).append("rect").attr("width", r * 1.5)
-         .attr("height", r * 1.5)
-         .attr("transform", function () {
-         return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
-         });
-         } else {
-         d3.select(this).append("rect").attr("width", r * 2)
-         .attr("height", r * 2);
-         }
-         }
-         }).classed({
-         "node": true,
-         "rawNode": (function (d) {
-         return d.nodeType == "raw";
-         }),
-         "specialNode": (function (d) {
-         return d.nodeType == "special";
-         }),
-         "dtNode": (function (d) {
-         return d.nodeType == "dt";
-         }),
-         "processedNode": (function (d) {
-         return d.nodeType == "processed";
-         })
-         }).attr("id", function (d) {
-         return "nodeId-" + d.id;
-         });
-         console.log(curAnalysis);
-         if (curAnalysis !== null) {
-         //node = node.concat(curAnalysis);
-         //node = node.concat.apply(curAnalysis);
-         node.push(curAnalysis);
-         }
-         });
-         console.log("node");
-         console.log(node);
-         */
     };
 
     // path highlighting
@@ -808,12 +755,11 @@ provenanceVisualizationModule = function () {
             // set coordinates for nodes
             assignGridCoordinates();
 
-// TODO: in debug state
-            // create analysis group layers
-            // createAnalysisLayers();
-
             // draw links
             drawLinks();
+
+            // create analysis group layers
+            createAnalysisLayers();
 
             // draw nodes
             drawNodes();
@@ -832,7 +778,7 @@ provenanceVisualizationModule = function () {
 
     // layout graph
     var layout = function () {
-        // toplogical order
+        // topological order
         var topNodes = topSort(inputNodes);
 
         // coffman-graham layering
