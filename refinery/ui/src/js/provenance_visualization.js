@@ -26,9 +26,12 @@ provenanceVisualizationModule = function () {
         workflowAnalysisHash = [],
         analysisWorkflowHash = [];
 
+    // margin conventions
+    var margin = {top: 20, right: 10, bottom: 20, left: 10};
+
     // canvas dimensions
-    var width = window.innerWidth - 50,
-        height = window.innerHeight - 50;
+    var width = window.innerWidth - margin.left - margin.right,
+        height = window.innerHeight - margin.top - margin.bottom;
 
     var zoom = null;
 
@@ -40,21 +43,22 @@ provenanceVisualizationModule = function () {
         // translation and scaling
         canvas.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
         // fix for rectangle getting translated too, doesn't work after window resize
-        rect.attr("transform", "translate(" + (-d3.event.translate[0] / d3.event.scale) + "," + (-d3.event.translate[1] / d3.event.scale) + ")" + " scale(" + (+1 / d3.event.scale) + ")");
+        rect.attr("transform", "translate(" + (-(d3.event.translate[0] + margin.left) / d3.event.scale) + "," + (-(d3.event.translate[1] + margin.top) / d3.event.scale) + ")" + " scale(" + (+1 / d3.event.scale) + ")");
     };
 
     // main canvas drawing area
     var canvas = d3.select("#provenance-graph")
         .append("svg:svg")
-        .attr("width", width)
-        .attr("height", height)
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+        .attr("viewBox", "0 0 " + (width) + " " + (height))
+        .attr("preserveAspectRatio", "xMinYMin meet")
         .attr("pointer-events", "all")
         .append("svg:g")
         .call(zoom = d3.behavior.zoom().on("zoom", redraw)).on("dblclick.zoom", null)
         .append("svg:g");
 
     // helper rectangle to support pan & zoom
-    var rect = canvas.append('svg:rect')
+    var rect = canvas.append("svg:rect")
         .attr("width", width)
         .attr("height", height)
         .classed("brect", true);
@@ -760,14 +764,14 @@ provenanceVisualizationModule = function () {
     // fit visualization onto free windows space
     var fitGraphToWindow = function (transitionTime) {
         var min = [d3.min(nodes, function (d) {
-                return d.x;
+                return d.x - margin.left;
             }), d3.min(nodes, function (d) {
-                return d.y;
+                return d.y - margin.top;
             })],
             max = [d3.max(nodes, function (d) {
-                return d.x;
+                return d.x + margin.right;
             }), d3.max(nodes, function (d) {
-                return d.y;
+                return d.y + margin.bottom;
             })],
             delta = [max[0] - min[0], max[1] - min[1]],
             factor = [(width / delta[0]), (height / delta[1])],
@@ -789,6 +793,9 @@ provenanceVisualizationModule = function () {
 
         zoom.translate(newPos);
         zoom.scale(newScale);
+
+        // background rectangle fix
+        rect.attr("transform", "translate(" + (-newPos[0] / newScale) + "," + (-newPos[1] / newScale) + ")" + " scale(" + (+1 / newScale) + ")");
     };
 
     // wrapper function to invoke scale and transformation onto the visualization
@@ -857,7 +864,6 @@ provenanceVisualizationModule = function () {
             // set initial graph position
             fitGraphToWindow(0);
 
-// TODO: (DEBUG) colorize analyses or workflows
             // colorize graph
             dyeWorkflows();
             dyeAnalyses();
