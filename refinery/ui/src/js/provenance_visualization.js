@@ -645,28 +645,35 @@ provenanceVisualizationModule = function () {
 
     // draw links
     var drawLinks = function () {
-        link = canvas.selectAll(".link")
-            .data(links)
-            .enter().append("line")
-            .attr("x1", function (l) {
-                return nodes[l.source].x;
-            })
-            .attr("y1", function (l) {
-                return nodes[l.source].y;
-            })
-            .attr("x2", function (l) {
-                return nodes[l.target].x;
-            })
-            .attr("y2", function (l) {
-                return nodes[l.target].y;
-            })
-            .classed({
-                "link": true
-            })
-            .style("opacity", 0.0)
-            .attr("id", function (d, i) {
-                return "linkId-" + i;
-            });
+        analysis.each(function (a) {
+            d3.select(this).selectAll(".link")
+                .data(links.filter(function (l) {
+                    return nodes[l.target].analysis == a;
+                }))
+                .enter().append("line")
+                .attr("x1", function (l) {
+                    return nodes[l.source].x;
+                })
+                .attr("y1", function (l) {
+                    return nodes[l.source].y;
+                })
+                .attr("x2", function (l) {
+                    return nodes[l.target].x;
+                })
+                .attr("y2", function (l) {
+                    return nodes[l.target].y;
+                })
+                .classed({
+                    "link": true
+                })
+                .style("opacity", 0.0)
+                .attr("id", function (l) {
+                    return "linkId-" + l.id;
+                });
+        });
+
+        // set link dom element
+        link = d3.selectAll(".link");
     };
 
     // draw nodes
@@ -739,6 +746,26 @@ provenanceVisualizationModule = function () {
             .on("mouseout", tip.hide);
     };
 
+
+// TODO: DEBUG: IN PROGRESS: - selecting an analysis, collapse it into a single node
+    // collapse analysis
+    var handleCollapseAnalysis = function () {
+        d3.selectAll(".analysis").on("dblclick", function () {
+            d3.select(this).selectAll(".node").style("display", "none");
+            d3.select(this).selectAll(".link").style("display", "none");
+
+            var offset = d3.select(this).select(".node").attr("transform");
+
+            d3.select(this).append("g")
+                .classed({"aggregatedAnalysis": true})
+                .attr("transform", offset)
+                .append("circle")
+                .attr("r", r * 3);
+
+            //d3.select(this).remove().exit();
+        });
+    };
+
     // path highlighting
     var handlePathHighlighting = function () {
         d3.selectAll(".node").on("click", function (x) {
@@ -799,7 +826,7 @@ provenanceVisualizationModule = function () {
     };
 
     // wrapper function to invoke scale and transformation onto the visualization
-    var handlFitGraphToWindow = function () {
+    var handleFitGraphToWindow = function () {
         fitGraphToWindow(1000);
     };
 
@@ -830,7 +857,7 @@ provenanceVisualizationModule = function () {
 
         // if dblclick, the single click action is overwritten
         d3.select(".brect").on("dblclick", function () {
-            bRectAction = handlFitGraphToWindow;
+            bRectAction = handleFitGraphToWindow;
         });
     };
 
@@ -841,6 +868,9 @@ provenanceVisualizationModule = function () {
 
         // handle click separation
         handleBRectClick();
+
+        // handle analysis aggregation
+        handleCollapseAnalysis();
     };
 
     // main d3 visualization function
@@ -852,11 +882,11 @@ provenanceVisualizationModule = function () {
             // set coordinates for nodes
             assignGridCoordinates();
 
-            // draw links
-            drawLinks();
-
             // create analysis group layers
             createAnalysisLayers();
+
+            // draw links
+            drawLinks();
 
             // draw nodes
             drawNodes();
