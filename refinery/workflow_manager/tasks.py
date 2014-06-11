@@ -32,39 +32,38 @@ GALAXY_INPUT_RELATIONSHIP_REQUIRED_FIELDS = [('category',str), ('set1',str), ('s
 GALAXY_INPUT_RELATIONSHIP_OPTIONAL_FIELDS = [] # [(field, type), ...]
 GALAXY_INPUT_RELATIONSHIP_CATEGORIES = [ category[0] for category in NR_TYPES ] 
 
-    
+
 @task()
-def get_workflows( workflow_engine ):
-    
+def get_workflows(workflow_engine):
+
     workflows = []
     issues = []
-    
+
     # obtain a connection to galaxy using the instance information
     try:
         connection = workflow_engine.instance.get_galaxy_connection()
         #get all workflows
-        workflows = connection.get_complete_workflows()
+        workflows = workflow_engine.instance.get_complete_workflows()
     except:
         logger.exception( "Unable to retrieve workflows from " + workflow_engine.instance.base_url + " - skipping ..." )
-    
+
     # make existing workflows for this workflow engine inactive (deleting the workflows would remove provenance information
     # and also lead to the deletion of the corresponding analyses) 
     Workflow.objects.filter( workflow_engine=workflow_engine ).update( is_active=False ) 
-    
+
     #for each workflow, create a core Workflow object and its associated WorkflowDataInput objects
     for workflow in workflows:
         logger.info("Importing workflow %s ...", workflow.name)
         workflow_dictionary = get_workflow_dictionary( connection, workflow.identifier )
         workflow_issues = import_workflow( workflow, workflow_engine, workflow_dictionary )
-        
+
         if len( workflow_issues ) > 0:
             issues.append( '\nUnable to import workflow "' + workflow.name + '" due to the following issues:' )
             issues = issues + workflow_issues
-            
+
     return issues
-                
-        
-        
+
+
 def import_workflow( workflow, workflow_engine, workflow_dictionary ):
     
     issues = []

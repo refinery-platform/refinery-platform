@@ -13,8 +13,6 @@ import requests
 import simplejson
 import core
 from galaxy_connector.exceptions import *
-from galaxy_connector.galaxy_workflow import GalaxyWorkflow
-from galaxy_connector.galaxy_workflow import GalaxyWorkflowInput
 from galaxy_connector.galaxy_history import GalaxyHistory
 from galaxy_connector.galaxy_history import GalaxyHistoryItem
 from galaxy_connector.galaxy_library import GalaxyLibrary
@@ -441,21 +439,6 @@ class Connection(object):
         except TypeError:
             # avoid using ID that's not a string
             raise MalformedResourceID(workflow_id)
-    
-    def get_complete_workflows(self):
-        workflows = []
-        for workflow_entry in self.get_workflows():
-            workflow = GalaxyWorkflow(workflow_entry['name'], workflow_entry['id'])
-            # get workflow inputs
-            for i in range(len(self.get_workflow(workflow.identifier)['inputs'])):
-                input_identifier = \
-                    self.get_workflow(workflow.identifier)['inputs'].keys()[i]
-                workflow_input = GalaxyWorkflowInput(
-                    self.get_workflow(workflow.identifier)['inputs'][input_identifier]['label'],
-                    input_identifier)
-                workflow.add_input(workflow_input)
-            workflows.append(workflow)
-        return workflows
 
     def run_workflow( self, workflow_id, input_map, history_id, workflow_uuid ):
         workflow = self.get_workflow(workflow_id)
