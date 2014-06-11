@@ -284,7 +284,7 @@ def run_analysis_preprocessing(analysis):
         if not isinstance(exc, (ConnectionError, TimeoutError, AuthenticationError, AuthorizationError)):
             try:
                 analysis.delete_galaxy_library()
-            except RuntimeError:
+            except galaxy.client.ConnectionError:
                 logger.error(
                     "Cleanup failed for analysis '{}'".format(analysis.name))
         return
@@ -330,7 +330,7 @@ def run_analysis_preprocessing(analysis):
         if not isinstance(exc, (ConnectionError, TimeoutError, AuthenticationError, AuthorizationError)):
             try:
                 analysis.delete_galaxy_library()
-            except RuntimeError:
+            except galaxy.client.ConnectionError:
                 logger.error(
                     "Cleanup failed for analysis '{}'".format(analysis.name))
         return
@@ -356,7 +356,7 @@ def run_analysis_preprocessing(analysis):
             try:
                 analysis.delete_galaxy_library()
                 analysis.delete_galaxy_workflow()
-            except RuntimeError:
+            except galaxy.client.ConnectionError:
                 logger.error(
                     "Cleanup failed for analysis '{}'".format(analysis.name))
         return
@@ -481,7 +481,7 @@ def run_analysis_execution(analysis):
                 analysis.delete_galaxy_library()
                 analysis.delete_galaxy_workflow()
                 analysis.delete_galaxy_history()
-            except RuntimeError:
+            except galaxy.client.ConnectionError:
                 logger.error(
                     "Cleanup failed for analysis '{}'".format(analysis.name))
         return
@@ -508,7 +508,7 @@ def run_analysis_execution(analysis):
                 analysis.delete_galaxy_library()
                 analysis.delete_galaxy_workflow()
                 analysis.delete_galaxy_history()
-            except RuntimeError:
+            except galaxy.client.ConnectionError:
                 logger.error(
                     "Cleanup failed for analysis '{}'".format(analysis.name))
 
@@ -564,7 +564,7 @@ def run_analysis_cleanup(analysis):
         analysis.delete_galaxy_history()
         analysis.delete_galaxy_workflow()
         analysis.delete_galaxy_library()
-    except RuntimeError:
+    except galaxy.client.ConnectionError:
         logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
 
     return
@@ -680,7 +680,7 @@ def download_history_files(analysis) :
                 analysis.delete_galaxy_library()
                 analysis.delete_galaxy_workflow()
                 analysis.delete_galaxy_history()
-            except RuntimeError:
+            except galaxy.client.ConnectionError:
                 logger.error(
                     "Cleanup failed for analysis '{}'".format(analysis.name))
         return task_list

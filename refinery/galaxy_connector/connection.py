@@ -326,22 +326,6 @@ class Connection(object):
         data['name'] = name
         return self.post("histories", data)["id"]
 
-    def delete_history(self, history_id):
-        """DELETE /api/histories/{history_id}
-        Deletes a specified history
-
-        """
-        data = {}
-        data['purge'] = True
-        try:
-            url = "histories/" + history_id
-        except TypeError:
-            # avoid using ID that's not a string
-            raise MalformedResourceID(history_id)
-        return self.delete(url, data)
-
-    # =========================================================================================================
-
     def get_libraries( self ):            
         return self.get( "libraries" )
 
@@ -435,36 +419,6 @@ class Connection(object):
         
         return libraries
 
-    def delete_library(self, library_id):
-        """DELETE /api/library/{library_id}
-        Deletes a specified library
-
-        """
-        data = {}
-        data['purge'] = True
-        # TODO: Figure out way to purge data library
-        try:
-            url = "libraries/" + library_id
-        except TypeError:
-            # avoid using ID that's not a string
-            raise MalformedResourceID(library_id)
-        return self.delete(url, data)
-
-    # =========================================================================================================
-
-#     def get_progress(self, history_id):            
-#         history = self.get_history(history_id)
-#         if "state_details" not in history:
-#             return ({"percent_complete": 0,
-#                      "workflow_state": history["state"],
-#                      "message": "Preparing ..." })
-#         else:
-#             return ({"percent_complete": 100,
-#                      "workflow_state": history["state"],
-#                      "message": history["state_details"]})
-
-    # =========================================================================================================
-
     def get_workflows(self):            
         return self.get("workflows")
 
@@ -534,7 +488,6 @@ class Connection(object):
 
         return self.post("workflows", data)
 
-
     def get_workflow_dict(self, workflow_id):
         """GET /api/workflows/download/{encoded_workflow_id}
         Returns a selected workflow as a json dictionary.
@@ -545,20 +498,6 @@ class Connection(object):
         except TypeError:
             # avoid using ID that's not a string
             raise MalformedResourceID(workflow_id)
-
-    def delete_workflow(self, workflow_id):
-        """DELETE /api/workflows/{encoded_workflow_id}
-        Deletes a specified workflow
-
-        """
-        data = {}
-        data['purge'] = True
-        try:
-            url = "workflows/" + workflow_id
-        except TypeError:
-            # avoid using ID that's not a string
-            raise MalformedResourceID(workflow_id)
-        return self.delete(url, data)
 
     def import_workflow(self, data):
         """POST /api/workflows

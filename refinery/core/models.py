@@ -4,6 +4,7 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
+from bioblend import galaxy
 from datetime import datetime
 import logging
 import smtplib
@@ -611,30 +612,30 @@ class Analysis(OwnableResource):
         return self.workflow.workflow_engine.instance.get_galaxy_connection()
 
     def delete_galaxy_workflow(self):
-        connection = self.get_galaxy_connection()
+        connection = self.galaxy_connection()
         try:
-            connection.delete_workflow(self.workflow_galaxy_id);
-        except RuntimeError as e:
-            error_msg = "Error deleting Galaxy workflow for analysis '{}': {}" \
-                        .format(self.name, e.message)
+            connection.workflows.delete_workflow(self.workflow_galaxy_id);
+        except galaxy.client.ConnectionError as e:
+            error_msg = "Error deleting Galaxy workflow for analysis '{}': {}"
+            error_msg = error_msg.format(self.name, e.message)
             logger.error(error_msg)
             raise
 
     def delete_galaxy_history(self):
-        connection = self.get_galaxy_connection()
+        connection = self.galaxy_connection()
         try:
-            connection.delete_history(self.history_id)
-        except RuntimeError as e:
+            connection.histories.delete_history(self.history_id)
+        except galaxy.client.ConnectionError as e:
             error_msg = "Error deleting Galaxy history for analysis '{}': {}" \
                         .format(self.name, e.message)
             logger.error(error_msg)
             raise
 
-    def delete_galaxy_library(self):        
-        connection = self.get_galaxy_connection()
+    def delete_galaxy_library(self):
+        connection = self.galaxy_connection()
         try:
-            connection.delete_library(self.library_id)
-        except RuntimeError as e:
+            connection.libraries.delete_library(self.library_id)
+        except galaxy.client.ConnectionError as e:
             error_msg = "Error deleting Galaxy library for analysis '{}': {}" \
                         .format(self.name, e.message)
             logger.error(error_msg)
@@ -662,7 +663,7 @@ class Analysis(OwnableResource):
         try:
             self.delete_galaxy_library()
             self.delete_galaxy_workflow()
-        except RuntimeError:
+        except galaxy.client.ConnectionError:
             logger.error("Cleanup failed for analysis '{}'".format(self.name))
 
 
