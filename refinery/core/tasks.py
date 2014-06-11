@@ -21,45 +21,8 @@ from datetime import datetime, timedelta
 #from kombu.connection.Connection.Consumer import ConnectionError
 import logging, requests, socket
 
-"""get logger for all tasks"""
-logger = logging.getLogger(__name__)
-    
-@task()
-def grab_workflows(instance=None, connection_galaxy=None):
-    
-    # Delete old references to workflows
-    Workflow.objects.all().delete() 
-    
-    # checks to see if an existing galaxy connection, otherwise create a connection
-    if (connection_galaxy is None):
-        print ("instance is none")
-        #get connection
-        instance = Instance.objects.all()[0]
-        connection_galaxy = instance.get_galaxy_connection()
-    #get all your workflows
-    workflows = connection_galaxy.get_complete_workflows()
 
-    #for each workflow, create a core Workflow object and its associated WorkflowDataInput objects
-    for workflow in workflows:
-        workflow_dict = {
-                         'name': workflow.name,
-                         'internal_id': workflow.identifier
-                         #'visibility': 2 #give public visibility for now
-                         }
-        w = Workflow(**workflow_dict)
-        try:
-            w.save()
-            inputs = workflow.inputs
-            for input in inputs:
-                input_dict = {
-                              'name': input.name,
-                              'internal_id': input.identifier
-                              }
-                i = WorkflowDataInput(**input_dict)
-                i.save()
-                w.data_inputs.add(i)
-        except:
-            connection.rollback()
+logger = logging.getLogger(__name__)
 
 
 def copy_file(orig_uuid):
@@ -80,7 +43,6 @@ def copy_file(orig_uuid):
         pass
 
     return newfile_uuid 
-
 
 
 def copy_object(obj, value=None, field=None, duplicate_order=None, copy_files=False):
