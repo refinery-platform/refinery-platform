@@ -31,12 +31,10 @@ class Instance(models.Model):
         for workflow_entry in connection.workflows.get_workflows():
             workflow = GalaxyWorkflow(workflow_entry['name'], workflow_entry['id'])
             # get workflow inputs
-            for i in range(len(connection.workflows.show_workflow(workflow.identifier)['inputs'])):
-                input_identifier = \
-                    connection.workflows.show_workflow(workflow.identifier)['inputs'].keys()[i]
+            workflow_inputs = connection.workflows.show_workflow(workflow.identifier)['inputs']
+            for input_identifier, input_description in workflow_inputs.items():
                 workflow_input = GalaxyWorkflowInput(
-                    connection.workflows.show_workflow(workflow.identifier)['inputs'][input_identifier]['label'],
-                    input_identifier)
+                    input_description['label'], input_identifier)
                 workflow.add_input(workflow_input)
             workflows.append(workflow)
         return workflows
