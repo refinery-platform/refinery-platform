@@ -1,6 +1,6 @@
+from bioblend import galaxy
 from django.db import models
 from galaxy_connector.connection import Connection
-from bioblend.galaxy import GalaxyInstance
 
 
 class Instance(models.Model):
@@ -16,7 +16,7 @@ class Instance(models.Model):
         return self.description + " (" + self.api_key + ")"
 
     def galaxy_connection(self):
-        return GalaxyInstance(url=self.base_url, key=self.api_key)
+        return galaxy.GalaxyInstance(url=self.base_url, key=self.api_key)
 
     def get_galaxy_connection(self):
         # to be deprecated in favor of galaxy_connection()
