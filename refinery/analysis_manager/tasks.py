@@ -5,6 +5,7 @@ Created on Apr 5, 2012
 '''
 
 import ast
+from bioblend import galaxy
 import celery
 import copy
 from datetime import datetime
@@ -404,26 +405,24 @@ def monitor_analysis_execution(analysis):
             monitor_analysis_execution.request.id
         analysis_status.save()
 
-    connection = analysis.get_galaxy_connection()
+    connection = analysis.galaxy_connection()
     try:
-        progress = connection.get_progress(analysis.history_id)
-    except (ConnectionError, TimeoutError, ServiceError, AuthenticationError) as e:
-        # AuthenticationError is a workaround for a random 401 glitch response from Apache/Galaxy
+        history = connection.histories.show_history(analysis.history_id)
+    except galaxy.client.ConnectionError as e:
         error_msg = "Unable to get progress for history '{}'".format(analysis.history_id)
         error_msg += "of analysis {}: {}".format(analysis.name, e.message)
         analysis.set_status(Analysis.UNKNOWN_STATUS, error_msg)
         logger.warning(error_msg)
         monitor_analysis_execution.retry(countdown=5)
-    except RuntimeError as e:
-        # if this is not just a random error, analysis has probably failed
-        error_msg = "Unable to get progress for " + \
-                    "history {} of analysis {}: {}".format(
-                        analysis.history_id, analysis.name, e.message)
-        #TODO: check if updating state is necessary, remove if not
-        monitor_analysis_execution.update_state(state=celery.states.FAILURE)
-        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-        logger.error(error_msg)
-        return
+
+    if history and "state_details" not in history:
+        progress = {"percent_complete": 0,
+                    "workflow_state": history["state"],
+                    "message": "Preparing ..." }
+    else:
+        progress = {"percent_complete": 100,
+                    "workflow_state": history["state"],
+                    "message": history["state_details"]}
 
     if progress["message"]["error"] > 0:
         # Setting state of analysis to failure

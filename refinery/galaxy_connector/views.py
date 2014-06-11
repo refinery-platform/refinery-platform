@@ -1,16 +1,10 @@
 from django.http import HttpResponse
-from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.contrib.sites.models import get_current_site
 from galaxy_connector.models import Instance
-from galaxy_connector.galaxy_workflow import createBaseWorkflow, createSteps, createStepsAnnot
-from galaxy_connector.tasks import monitor_workflow
 import simplejson
 from celery.result import AsyncResult
-from celery import states
-import os
 
 
 def index(request):
@@ -67,9 +61,9 @@ def history(request, history_id):
     return render_to_response( "galaxy_connector/history.html", { "history": connection.get_history( history_id ), "contents": connection.get_history_contents( history_id ), "instance": instance.description, "data_url": instance.base_url + "/" + instance.data_url }, context_instance=RequestContext( request ) )
 
 
-def history_progress(request, history_id):    
-    instance, connection = checkActiveInstance(request);
-    return HttpResponse( simplejson.dumps(connection.get_progress( history_id )) ) 
+# def history_progress(request, history_id):    
+#     instance, connection = checkActiveInstance(request);
+#     return HttpResponse( simplejson.dumps(connection.get_progress( history_id )) ) 
 
 def history_file_list(request, history_id):    
     instance, connection = checkActiveInstance(request);
@@ -97,15 +91,15 @@ def task_progress(request, task_id ):
     return render_to_response('galaxy_connector/task_progress.html', { 'progress': progress }, context_instance=RequestContext( request ) )
 
 
-def run2(request):
-    """
-    Test function for running spp workflow for multiple inputs
-    """
-    instance, connection = checkActiveInstance(request)
-    
-    workflow_task = monitor_workflow.delay( instance, connection, 5.0 ) #, monitor_progress.subtask( (connection, ) ) )
-     
-    return HttpResponseRedirect( reverse( 'task_progress', args=(workflow_task.task_id,) ) )
+# def run2(request):
+#     """
+#     Test function for running spp workflow for multiple inputs
+#     """
+#     instance, connection = checkActiveInstance(request)
+#     
+#     workflow_task = monitor_workflow.delay( instance, connection, 5.0 ) #, monitor_progress.subtask( (connection, ) ) )
+#      
+#     return HttpResponseRedirect( reverse( 'task_progress', args=(workflow_task.task_id,) ) )
 
 
 def workflow_content(request, workflow_id):
