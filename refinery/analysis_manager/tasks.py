@@ -248,19 +248,17 @@ def run_analysis_preprocessing(analysis):
     '''
     logger.debug("analysis_manager.run_analysis_preprocessing called")
 
-    connection = analysis.get_galaxy_connection()
+    connection = analysis.galaxy_connection()
 
     # creates new library in galaxy
+    library_name = "{} Analysis - {} ({})".format(
+        Site.objects.get_current().name, analysis.uuid, datetime.now())
     try:
-        library_id = connection.create_library(
-            "{} Analysis - {} ({})".format(
-                Site.objects.get_current().name, analysis.uuid, datetime.now())
-            )
-    except RuntimeError as exc:
-        error_msg = (
-            "Pre-processing failed: " +
-            "error creating Galaxy library for analysis '{}': {}"
-            ).format(analysis.name, exc.message)
+        library_id = connection.libraries.create_library(library_name)['id']
+    except galaxy.client.ConnectionError as exc:
+        error_msg = "Pre-processing failed: "
+        error_msg += "error creating Galaxy library for analysis '{}': {}"
+        error_msg = error_msg.format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
@@ -269,15 +267,15 @@ def run_analysis_preprocessing(analysis):
     ### generates same ret_list purely based on analysis object ###
     ret_list = get_analysis_config(analysis)
 
+    connection = analysis.get_galaxy_connection()
+
     # getting expanded workflow configured based on input: ret_list
     try:
         new_workflow, history_download, analysis_node_connections = \
             configure_workflow(analysis.workflow, ret_list, connection)
     except RuntimeError as exc:
-        error_msg = (
-            "Pre-processing failed: " +
-            "error configuring Galaxy workflow for analysis '{}': {}"
-            ).format(analysis.name, exc.message)
+        error_msg = "Pre-processing failed: error configuring Galaxy workflow "
+        error_msg += "for analysis '{}': {}".format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)

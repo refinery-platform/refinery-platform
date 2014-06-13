@@ -161,31 +161,27 @@ def import_workflow( workflow, workflow_engine, workflow_dictionary ):
     return issues
     
             
-def configure_workflow(workflow, ret_list, connection_galaxy):
-    """
-    Takes a workflow_uuid and associated data input map to return an expanded workflow 
-    from core.models.workflow and workflow_data_input_map    
+def configure_workflow(workflow, ret_list, galaxy_connection):
+    """Takes a workflow and associated data input map
+    Returns an expanded workflow from core.models.workflow and workflow_data_input_map
+
     """
     logger.debug("workflow.manager configure_workflow called")
 
-    curr_workflow = workflow
     # gets galaxy internal id for specified workflow
-    workflow_galaxy_id = curr_workflow.internal_id
+    workflow_galaxy_id = workflow.internal_id
 
     # gets dictionary version of workflow
-    workflow_dict = connection_galaxy.get_workflow_dict(workflow_galaxy_id)
+    workflow_dict = galaxy_connection.get_workflow_dict(workflow_galaxy_id)
 
-    # number of times to repeat workflow expansion
-    repeat_num = len(ret_list)
-    
     # creating base workflow to replicate input workflow
-    new_workflow = createBaseWorkflow( (workflow_dict["name"]) )
-    
+    new_workflow = createBaseWorkflow(workflow_dict["name"])
+
     # checking to see what kind of workflow exists:
     # does it have  "annotation": "type=COMPACT", in the workflow annotation field
     work_type = getStepOptions(workflow_dict["annotation"])
     COMPACT_WORKFLOW = False
-    
+
     for k,v in work_type.iteritems():
         if k.upper() == 'TYPE':
             try:
@@ -194,16 +190,18 @@ def configure_workflow(workflow, ret_list, connection_galaxy):
             except:
                 logger.exception( "Malformed Workflow tag, cannot parse: %s" % (work_type) )
                 return
-        
+
     # if workflow is tagged w/ type=COMPACT tag, 
     if COMPACT_WORKFLOW:
         logger.debug("workflow_manager.tasks.configure_workflow workflow processing: COMPACT")
-        new_workflow["steps"], history_download, analysis_node_connections = createStepsCompact(ret_list, workflow_dict)
+        new_workflow["steps"], history_download, analysis_node_connections = \
+            createStepsCompact(ret_list, workflow_dict)
     else:
         logger.debug("workflow_manager.tasks.configure_workflow workflow processing: EXPANSION")
         # Updating steps in imported workflow X number of times
-        new_workflow["steps"], history_download, analysis_node_connections = createStepsAnnot(ret_list, workflow_dict);
-          
+        new_workflow["steps"], history_download, analysis_node_connections = \
+            createStepsAnnot(ret_list, workflow_dict);
+
     return new_workflow, history_download, analysis_node_connections
 
 

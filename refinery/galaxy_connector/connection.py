@@ -375,18 +375,6 @@ class Connection(object):
             raise MalformedResourceID(content_id)
         return self.get(url)
 
-    def create_library(self, name):
-        logger.debug("library name: '{}'".format(name))
-        data = {}
-        data['name'] = name
-        ret_val = self.post("libraries", data)
-        # Older galaxy versions return an array,
-        # newer galaxy api's return a single dictionary
-        if type(ret_val) == dict:
-            return ret_val["id"]
-        else:
-            return ret_val[0]["id"]
-
     def put_into_library( self, library_id, filepath ):
         data = {}
         data['folder_id'] = self.get_library_item_id(library_id, "/", "folder")[0]
