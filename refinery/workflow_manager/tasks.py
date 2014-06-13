@@ -161,18 +161,12 @@ def import_workflow( workflow, workflow_engine, workflow_dictionary ):
     return issues
     
             
-def configure_workflow(workflow, ret_list, galaxy_connection):
+def configure_workflow(workflow_dict, ret_list):
     """Takes a workflow and associated data input map
     Returns an expanded workflow from core.models.workflow and workflow_data_input_map
 
     """
     logger.debug("workflow.manager configure_workflow called")
-
-    # gets galaxy internal id for specified workflow
-    workflow_galaxy_id = workflow.internal_id
-
-    # gets dictionary version of workflow
-    workflow_dict = galaxy_connection.get_workflow_dict(workflow_galaxy_id)
 
     # creating base workflow to replicate input workflow
     new_workflow = createBaseWorkflow(workflow_dict["name"])
@@ -188,7 +182,8 @@ def configure_workflow(workflow, ret_list, galaxy_connection):
                 if v[0].upper() == 'COMPACT':
                     COMPACT_WORKFLOW = True
             except:
-                logger.exception( "Malformed Workflow tag, cannot parse: %s" % (work_type) )
+                msg = "Malformed workflow tag, cannot parse: {}".format(work_type)
+                logger.exception(msg)
                 return
 
     # if workflow is tagged w/ type=COMPACT tag, 

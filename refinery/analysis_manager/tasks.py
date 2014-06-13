@@ -266,26 +266,25 @@ def run_analysis_preprocessing(analysis):
 
     ### generates same ret_list purely based on analysis object ###
     ret_list = get_analysis_config(analysis)
-
-    connection = analysis.get_galaxy_connection()
+    workflow_dict = connection.workflows.export_workflow_json(analysis.workflow.internal_id)
 
     # getting expanded workflow configured based on input: ret_list
     try:
         new_workflow, history_download, analysis_node_connections = \
-            configure_workflow(analysis.workflow, ret_list, connection)
-    except RuntimeError as exc:
+            configure_workflow(workflow_dict, ret_list)
+    except galaxy.client.ConnectionError as exc:
         error_msg = "Pre-processing failed: error configuring Galaxy workflow "
         error_msg += "for analysis '{}': {}".format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        if not isinstance(exc, (ConnectionError, TimeoutError, AuthenticationError, AuthorizationError)):
-            try:
-                analysis.delete_galaxy_library()
-            except galaxy.client.ConnectionError:
-                logger.error(
-                    "Cleanup failed for analysis '{}'".format(analysis.name))
+        try:
+            analysis.delete_galaxy_library()
+        except galaxy.client.ConnectionError:
+            logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
         return
+
+    connection = analysis.get_galaxy_connection()
 
     # import connections into database
     for analysis_node_connection in analysis_node_connections:
