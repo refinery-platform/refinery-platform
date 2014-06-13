@@ -284,8 +284,6 @@ def run_analysis_preprocessing(analysis):
             logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
         return
 
-    connection = analysis.get_galaxy_connection()
-
     # import connections into database
     for analysis_node_connection in analysis_node_connections:
         # lookup node object
@@ -315,21 +313,17 @@ def run_analysis_preprocessing(analysis):
 
     # import newly generated workflow
     try:
-        new_workflow_info = connection.import_workflow(new_workflow);
-    except RuntimeError as exc:
-        error_msg = (
-            "Pre-processing failed: " +
-            "error importing workflow into Galaxy for analysis '{}': {}"
-            ).format(analysis.name, exc.message)
+        new_workflow_info = connection.workflows.import_workflow_json(new_workflow)
+    except galaxy.client.ConnectionError as exc:
+        error_msg = "Pre-processing failed: error importing workflow into Galaxy "
+        error_msg += "for analysis '{}': {}".format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        if not isinstance(exc, (ConnectionError, TimeoutError, AuthenticationError, AuthorizationError)):
-            try:
-                analysis.delete_galaxy_library()
-            except galaxy.client.ConnectionError:
-                logger.error(
-                    "Cleanup failed for analysis '{}'".format(analysis.name))
+        try:
+            analysis.delete_galaxy_library()
+        except galaxy.client.ConnectionError:
+            logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
         return
 
     ######### ANALYSIS MODEL 
@@ -337,25 +331,21 @@ def run_analysis_preprocessing(analysis):
     new_workflow_steps = countWorkflowSteps(new_workflow)
 
     # creates new history in galaxy
+    history_name = "{} Analysis - {} ({})".format(
+        Site.objects.get_current().name, analysis.uuid, datetime.now())
     try:
-        history_id = connection.create_history(
-            "{} Analysis - {} ({})".format(
-                Site.objects.get_current().name, analysis.uuid, datetime.now())
-            )
-    except RuntimeError as e:
-        error_msg = "Pre-processing failed: " + \
-                    "error creating Galaxy history for analysis '{}': {}" \
-                    .format(analysis.name, e.message)
+        history_id = connection.histories.create_history(history_name)['id']
+    except galaxy.client.ConnectionError as e:
+        error_msg = "Pre-processing failed: error creating Galaxy history "
+        error_msg += "for analysis '{}': {}".format(analysis.name, e.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        if not isinstance(exc, (ConnectionError, TimeoutError, AuthenticationError, AuthorizationError)):
-            try:
-                analysis.delete_galaxy_library()
-                analysis.delete_galaxy_workflow()
-            except galaxy.client.ConnectionError:
-                logger.error(
-                    "Cleanup failed for analysis '{}'".format(analysis.name))
+        try:
+            analysis.delete_galaxy_library()
+            analysis.delete_galaxy_workflow()
+        except galaxy.client.ConnectionError:
+            logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
         return
 
     # updating analysis object

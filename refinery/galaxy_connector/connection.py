@@ -317,12 +317,6 @@ class Connection(object):
             histories.append(history)
         
         return histories
-        
-        
-    def create_history(self, name):
-        data = {}
-        data['name'] = name
-        return self.post("histories", data)["id"]
 
     def get_libraries( self ):            
         return self.get( "libraries" )
@@ -458,23 +452,3 @@ class Connection(object):
             data["ds_map"][in_key] = { "src": "ld", "id": winput_id }
 
         return self.post("workflows", data)
-
-    def get_workflow_dict(self, workflow_id):
-        """GET /api/workflows/download/{encoded_workflow_id}
-        Returns a selected workflow as a json dictionary.
-
-        """
-        try:
-            return self.get("workflows/download/" + workflow_id)
-        except TypeError:
-            # avoid using ID that's not a string
-            raise MalformedResourceID(workflow_id)
-
-    def import_workflow(self, data):
-        """POST /api/workflows
-        Importing dynamic workflows from the api. Return newly generated workflow id.
-        # currently assumes payload['workflow'] is a json representation of a workflow to be inserted into the database
-        """
-        wdata = {};
-        wdata['workflow'] = data;
-        return self.post("workflows/upload", wdata);
