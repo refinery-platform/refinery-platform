@@ -5,17 +5,18 @@ Created on Mar 31, 2012
 '''
 
 import ast
+from bioblend import galaxy
+from celery.task import task
 import json
 import logging
-from celery.task import task
-from core.models import Workflow, WorkflowDataInput, WorkflowEngine, \
+from core.models import Workflow, WorkflowDataInput, \
     WorkflowInputRelationships, TYPE_1_1, TYPE_REPLICATE, NR_TYPES
-from galaxy_connector.galaxy_workflow import GalaxyWorkflow, GalaxyWorkflowInput, \
-    createBaseWorkflow, createStepsAnnot, createStepsCompact, getStepOptions
+from galaxy_connector.galaxy_workflow import createBaseWorkflow, \
+    createStepsAnnot, createStepsCompact, getStepOptions
 
 
-# get module logger
 logger = logging.getLogger(__name__)
+
 
 GALAXY_WORKFLOW_ANNOTATION = 'annotation'
 GALAXY_WORKFLOW_TYPE = 'refinery_type'
@@ -44,18 +45,20 @@ def get_workflows(workflow_engine):
         connection = workflow_engine.instance.get_galaxy_connection()
         #get all workflows
         workflows = workflow_engine.instance.get_complete_workflows()
-    except:
-        logger.exception( "Unable to retrieve workflows from " + workflow_engine.instance.base_url + " - skipping ..." )
+    except galaxy.client.ConnectionError:
+        msg = "Unable to retrieve workflows from '{}' - skipping ..."
+        msg = msg.format(workflow_engine.instance.base_url)
+        logger.exception(msg)
 
     # make existing workflows for this workflow engine inactive (deleting the workflows would remove provenance information
     # and also lead to the deletion of the corresponding analyses) 
-    Workflow.objects.filter( workflow_engine=workflow_engine ).update( is_active=False ) 
+    Workflow.objects.filter(workflow_engine=workflow_engine).update(is_active=False)
 
     #for each workflow, create a core Workflow object and its associated WorkflowDataInput objects
     for workflow in workflows:
         logger.info("Importing workflow %s ...", workflow.name)
-        workflow_dictionary = get_workflow_dictionary( connection, workflow.identifier )
-        workflow_issues = import_workflow( workflow, workflow_engine, workflow_dictionary )
+        workflow_dictionary = connection.get_workflow_dict(workflow.identifier)
+        workflow_issues = import_workflow(workflow, workflow_engine, workflow_dictionary)
 
         if len( workflow_issues ) > 0:
             issues.append( '\nUnable to import workflow "' + workflow.name + '" due to the following issues:' )
@@ -212,12 +215,6 @@ def get_workflow_inputs(workflow_uuid):
         annot_inputs[input_type] = None
     
     return annot_inputs
-
-
-def get_workflow_dictionary(connection, workflow_uuid):
-    # gets dictionary version of workflow
-    dictionary = connection.get_workflow_dict(workflow_uuid)    
-    return dictionary
 
 
 def get_workflow_annotation( workflow_dictionary ):
