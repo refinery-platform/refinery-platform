@@ -783,6 +783,25 @@ provenanceVisualizationModule = function () {
                         .style("stroke-width", 3);
                 });
         });
+
+        // set node dom element
+        aNode = d3.selectAll(".aNode");
+
+        // create d3-tip tooltips
+        var tip = d3.tip()
+            .attr("class", "d3-tip")
+            .offset([-10, 0])
+            .html(function (d) {
+                return d.id === 0 ? "<span style='color:#fa9b30'>Original Dataset</span><br><strong>Id:</strong> <span style='color:#fa9b30'>" + d.id + "</span><br>" :
+                    "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.id + "</span><br>" +
+                    "<strong>Start:</strong> <span style='color:#fa9b30'>" + analyses.objects[d.id - 1].time_start + "</span><br>" +
+                    "<strong>End:</strong> <span style='color:#fa9b30'>" + analyses.objects[d.id - 1].time_end + "</span>";
+            });
+
+        // invoke tooltip on dom element
+        aNode.call(tip);
+        aNode.on("mouseover", tip.show)
+            .on("mouseout", tip.hide);
     };
 
     // draw nodes
