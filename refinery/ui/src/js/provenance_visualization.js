@@ -40,8 +40,9 @@ provenanceVisualizationModule = function () {
 
     var zoom = null;
 
-    // primitive dimensions
-    var r = 7;
+    // constants
+    var r = 7,
+        color = d3.scale.category20();
 
     // geometric zoom
     var redraw = function () {
@@ -480,7 +481,6 @@ provenanceVisualizationModule = function () {
     // createAnalysisLinks
     var createAnalysisLinks = function () {
 // TODO: create links between nodes and aggregated nodes
-        console.log(analyses);
     };
 
     // build link hashes
@@ -649,6 +649,7 @@ provenanceVisualizationModule = function () {
         d3.select(this).attr("transform", function (n) {
             return "translate(" + d3.event.x + "," + d3.event.y + ")";
         });
+// TODO: adapt links when dragging nodes
         /*
          // drag adjacent links
 
@@ -684,8 +685,6 @@ provenanceVisualizationModule = function () {
 
     // dye graph by analyses and its corresponding workflows
     var dyeWorkflows = function () {
-        var color = d3.scale.category10();
-
         node.each(function () {
             d3.select(this).style("stroke", function (d) {
                 return color(analysisWorkflowHash[d.analysis]);
@@ -696,8 +695,6 @@ provenanceVisualizationModule = function () {
 
     // dye graph by analyses
     var dyeAnalyses = function () {
-        var color = d3.scale.category20();
-
         node.each(function () {
             d3.select(this).style("fill", function (d) {
                 return color(d.analysis);
@@ -775,10 +772,10 @@ provenanceVisualizationModule = function () {
                         .append("circle")
                         .attr("r", r * 2)
                         .style("fill", function () {
-                            return curAnalysis.select(".node").style("fill");
+                            return color(a);
                         })
                         .style("stroke", function () {
-                            return curAnalysis.select(".node").style("stroke");
+                            return color(analysisWorkflowHash[a]);
                         })
                         .style("stroke-width", 3);
                 });
@@ -857,6 +854,8 @@ provenanceVisualizationModule = function () {
 
         // set node dom element
         node = d3.selectAll(".node");
+
+        console.log(node);
 
         // create d3-tip tooltips
         var tip = d3.tip()
