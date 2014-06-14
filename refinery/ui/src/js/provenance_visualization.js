@@ -29,7 +29,8 @@ provenanceVisualizationModule = function () {
         srcNodeLinkHash = [],
         tarNodeLinkHash = [],
         workflowAnalysisHash = [],
-        analysisWorkflowHash = [];
+        analysisWorkflowHash = [],
+        analysisNodeHash = [];
 
     // margin conventions
     var margin = {top: 20, right: 10, bottom: 20, left: 10};
@@ -470,14 +471,16 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // create one node respresenting the whole analysis when aggregated
+    // create one node representing the whole analysis when aggregated
     var createAnalysisNodes = function () {
-        aNodes.push({"analysis": "dataset", "row": -1, "col": -1, "id": 0, "start": -1, "end": -1, "doiFactor": -1, "inputNodes": [], "outputNodes": []});
+        aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "id": 0, "start": -1, "end": -1, "created": -1, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": []});
+
         analyses.objects.forEach(function (a, i) {
-            aNodes.push({"analysis": a.uuid, "row": -1, "col": -1, "id": i, "start": a.time_start, "end": a.time_end, "doiFactor": -1, "inputNodes": [], "outputNodes": []});
+            aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "id": i + 1, "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": []});
         });
 
 // TODO: extract in- and output node list
+
     };
 
     // createAnalysisLinks
@@ -547,6 +550,34 @@ provenanceVisualizationModule = function () {
         }
 
         return nodeTypeClass;
+    };
+
+    // for each analysis the corresponding nodes as well as specifically in- and output nodes are mapped to it
+    var createAnalysisNodeMapping = function () {
+        nodes.forEach(function (n, i) {
+            if (analysisNodeHash.hasOwnProperty(n.analysis)) {
+                analysisNodeHash[n.analysis] = analysisNodeHash[n.analysis].concat([i]);
+            } else {
+                analysisNodeHash[n.analysis] = [i];
+            }
+        });
+
+        aNodes.forEach(function (an) {
+            an.nodes = analysisNodeHash[an.uuid].map(function (d) {
+                return nodes[d]; // flatten nodes objects
+            });
+
+            an.inputNodes = an.nodes.filter(function (n) {
+                return srcLinkHash[n.id].some(function (p) {
+                    return nodes[p].analysis != an.uuid;
+                }) || srcLinkHash[n.id].length === 0;
+            });
+            an.outputNodes = an.nodes.filter(function (n) {
+                return typeof tarLinkHash[n.id] === "undefined" || tarLinkHash[n.id].some(function (s) {
+                    return nodes[s].analysis != an.uuid;
+                });
+            });
+        });
     };
 
     // extract workflows from analyses
@@ -744,27 +775,27 @@ provenanceVisualizationModule = function () {
         analysis.each(function (a) {
             var curAnalysis = d3.select(this);
             d3.select(this).selectAll(".aNode")
-                .data(aNodes.filter(function (n) {
-                    return n.analysis == a;
+                .data(aNodes.filter(function (an) {
+                    return an.uuid == a;
                 }))
-                .enter().append("g").each(function () {
+                .enter().append("g").each(function (an) {
 // TODO: DEBUG: temp coordinate assignment
                     // get min and max column/row of nodes to center new analysis process node
                     var min = [d3.min(nodes.filter(function (n) {
-                            return n.analysis == a;
+                            return n.analysis == an.uuid;
                         }), function (d) {
                             return d.x;
                         }), d3.min(nodes.filter(function (n) {
-                            return n.analysis == a;
+                            return n.analysis == an.uuid;
                         }), function (d) {
                             return d.y;
                         })],
                         max = [d3.max(nodes.filter(function (n) {
-                            return n.analysis == a;
+                            return n.analysis == an.uuid;
                         }), function (d) {
                             return d.x;
                         }), d3.max(nodes.filter(function (n) {
-                            return n.analysis == a;
+                            return n.analysis == an.uuid;
                         }), function (d) {
                             return d.y;
                         })];
@@ -775,10 +806,10 @@ provenanceVisualizationModule = function () {
                         .append("circle")
                         .attr("r", r * 2)
                         .style("fill", function () {
-                            return color(a);
+                            return color(an.uuid);
                         })
                         .style("stroke", function () {
-                            return color(analysisWorkflowHash[a]);
+                            return color(analysisWorkflowHash[an.uuid]);
                         })
                         .style("stroke-width", 3);
                 });
@@ -794,8 +825,8 @@ provenanceVisualizationModule = function () {
             .html(function (d) {
                 return d.id === 0 ? "<span style='color:#fa9b30'>Original Dataset</span><br><strong>Id:</strong> <span style='color:#fa9b30'>" + d.id + "</span><br>" :
                     "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.id + "</span><br>" +
-                    "<strong>Start:</strong> <span style='color:#fa9b30'>" + analyses.objects[d.id - 1].time_start + "</span><br>" +
-                    "<strong>End:</strong> <span style='color:#fa9b30'>" + analyses.objects[d.id - 1].time_end + "</span>";
+                        "<strong>Start:</strong> <span style='color:#fa9b30'>" + d.start + "</span><br>" +
+                        "<strong>End:</strong> <span style='color:#fa9b30'>" + d.end + "</span>";
             });
 
         // invoke tooltip on dom element
@@ -908,7 +939,6 @@ provenanceVisualizationModule = function () {
             var delta = {x: min[0] + (max[0] - min[0]) / 2, y: min[1] + (max[1] - min[1]) / 2};
 
 // TODO: save aggregated nodes in own node-set with datastructure and draw them like links and nodes but hidden unless collapsed
-
 
             curAnalysis.append("g")
                 .classed({"aNode": true, "superANode": true})
@@ -1195,6 +1225,8 @@ provenanceVisualizationModule = function () {
             // extract analysis links
             createAnalysisLinks();
 
+            // create analysis node mapping
+            createAnalysisNodeMapping();
 
             // calculate layout
             layout();
