@@ -472,9 +472,11 @@ provenanceVisualizationModule = function () {
 
     // create one node respresenting the whole analysis when aggregated
     var createAnalysisNodes = function () {
-        flatAnalyses.forEach(function (a, i) {
-            aNodes.push({"analysis": a, "row": -1, "col": -1, "id": i, "inputNodes": [], "outputNodes": []});
+        aNodes.push({"analysis": "dataset", "row": -1, "col": -1, "id": 0, "start": -1, "end": -1, "doiFactor": -1, "inputNodes": [], "outputNodes": []});
+        analyses.objects.forEach(function (a, i) {
+            aNodes.push({"analysis": a.uuid, "row": -1, "col": -1, "id": i, "start": a.time_start, "end": a.time_end, "doiFactor": -1, "inputNodes": [], "outputNodes": []});
         });
+
 // TODO: extract in- and output node list
     };
 
@@ -610,6 +612,7 @@ provenanceVisualizationModule = function () {
 
         // get input links
         // update coordinates for x2 and y2
+// TODO: DEBUG: CONSOLE ERROR MSG
         srcNodeLinkHash[d.id].forEach(function (l) {
             d3.select("#linkId-" + l).attr("x2", d3.event.x);
             d3.select("#linkId-" + l).attr("y2", d3.event.y);
@@ -854,8 +857,6 @@ provenanceVisualizationModule = function () {
 
         // set node dom element
         node = d3.selectAll(".node");
-
-        console.log(node);
 
         // create d3-tip tooltips
         var tip = d3.tip()
