@@ -439,6 +439,7 @@ provenanceVisualizationModule = function () {
         });
     };
 
+// TODO: DEBUG: CHECK: srclinkHash might contain multiple nodes
     // extract links
     var extractLinks = function () {
         var linkId = 0;
@@ -475,10 +476,10 @@ provenanceVisualizationModule = function () {
 
     // create one node representing the whole analysis when aggregated
     var createAnalysisNodes = function () {
-        aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": false, "id": 0, "start": -1, "end": -1, "created": -1, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": []});
+        aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": false, "id": 0, "start": -1, "end": -1, "created": -1, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": []});
 
         analyses.objects.forEach(function (a, i) {
-            aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": false, "id": i + 1, "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": []});
+            aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": false, "id": i + 1, "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": []});
         });
     };
 
@@ -583,18 +584,41 @@ provenanceVisualizationModule = function () {
                 return nodes[d]; // flatten nodes objects
             });
 
-            // filter input nodes
+            // set input nodes
             an.inputNodes = an.nodes.filter(function (n) {
                 return srcLinkHash[n.id].some(function (p) {
                     return nodes[p].analysis != an.uuid;
-                }) || srcLinkHash[n.id].length === 0;
+                }) || srcLinkHash[n.id].length === 0; // if no src analyses exists
             });
 
-            // filter output nodes
+// TODO: DEBUG: not sure if correct, as tarlinkhash contains multiple nodes for a node id
+            // set output nodes
             an.outputNodes = an.nodes.filter(function (n) {
                 return typeof tarLinkHash[n.id] === "undefined" || tarLinkHash[n.id].some(function (s) {
                     return nodes[s].analysis != an.uuid;
                 });
+            });
+        });
+
+        aNodes.forEach(function (an) {
+            // set predecessor analyses
+            if (an.uuid != "dataset") {
+                an.inputNodes.forEach(function (n) {
+                    if (an.predAnalyses.indexOf(nodeAnalysisHash[srcLinkHash[n.id]]) === -1) {
+                        an.predAnalyses.push(nodeAnalysisHash[srcLinkHash[n.id]]);
+                    }
+                });
+            }
+
+            // set successor analyses
+            an.outputNodes.forEach(function (n) {
+                if (typeof tarLinkHash[n.id] !== "undefined") {
+                    tarLinkHash[n.id].forEach(function (s) {
+                        if (an.succAnalyses.indexOf(nodeAnalysisHash[s]) === -1) {
+                            an.succAnalyses.push(nodeAnalysisHash[s]);
+                        }
+                    });
+                }
             });
         });
     };
@@ -699,10 +723,12 @@ provenanceVisualizationModule = function () {
     // drag listener
     var analysisDragging = function (d) {
         // drag selected node
-        d3.select(this).attr("transform", function (n) {
+        d3.select(this).attr("transform", function () {
             return "translate(" + d3.event.x + "," + d3.event.y + ")";
         });
 // TODO: adapt links when dragging nodes
+
+        console.log(d);
         /*
          // drag adjacent links
 
@@ -760,10 +786,6 @@ provenanceVisualizationModule = function () {
     // depends on visibility of predecessor and successor analysis super node
     // when one of them is hidden, connect link directly to the node coordinates
     var drawAnalysisLinks = function () {
-
-        console.log(nodes);
-        console.log(aLinks);
-
         canvas.selectAll(".aLink")
             .data(aLinks)
             .enter().append("line")
