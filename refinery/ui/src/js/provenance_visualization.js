@@ -721,30 +721,37 @@ provenanceVisualizationModule = function () {
     };
 
     // drag listener
-    var analysisDragging = function (d) {
+    var analysisDragging = function (an) {
         // drag selected node
         d3.select(this).attr("transform", function () {
             return "translate(" + d3.event.x + "," + d3.event.y + ")";
         });
 // TODO: adapt links when dragging nodes
+// TODO: call upon collapse, not only at dragging
 
-        console.log(d);
-        /*
-         // drag adjacent links
+        if (!an.hidden) {
+            an.predAnalyses.forEach(function (pan) {
+                aNodes[pan].outputNodes.forEach(function (n) {
+                    if (typeof tarNodeLinkHash[n.id] !== "undefined") {
+                        tarNodeLinkHash[n.id].forEach(function (l) {
+                            if (nodeAnalysisHash[links[l].target] == an.id) {
+                                d3.select("#linkId-" + l).attr("x2", d3.event.x);
+                                d3.select("#linkId-" + l).attr("y2", d3.event.y);
+                            }
+                        });
+                    }
+                });
+            });
 
-         // get input links
-         // update coordinates for x2 and y2
-         srcNodeLinkHash[d.id].forEach(function (l) {
-         d3.select("#linkId-" + l).attr("x2", d3.event.x);
-         d3.select("#linkId-" + l).attr("y2", d3.event.y);
-         });
-
-         // get output links
-         // update coordinates for x1 and y1
-         tarNodeLinkHash[d.id].forEach(function (l) {
-         d3.select("#linkId-" + l).attr("x1", d3.event.x);
-         d3.select("#linkId-" + l).attr("y1", d3.event.y);
-         });*/
+            an.succAnalyses.forEach(function (san) {
+                aNodes[san].inputNodes.forEach(function (n) {
+                    srcNodeLinkHash[n.id].forEach(function (l) {
+                        d3.select("#linkId-" + l).attr("x1", d3.event.x);
+                        d3.select("#linkId-" + l).attr("y1", d3.event.y);
+                    });
+                });
+            });
+        }
     };
 
     // drag end listener
@@ -838,6 +845,8 @@ provenanceVisualizationModule = function () {
                 .style("opacity", 0.0)
                 .attr("id", function (l) {
                     return "linkId-" + l.id;
+                }).append("title").text(function (l) {
+                    return l.id;
                 });
         });
 
@@ -1243,9 +1252,9 @@ provenanceVisualizationModule = function () {
                 an.y = delta.y;
             });
 
-
+// TODO: DEBUG: temporarily disabled
             // draw analysis links
-            drawAnalysisLinks();
+            //drawAnalysisLinks();
 
             // draw analysis nodes
             drawAnalysisNodes();
