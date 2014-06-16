@@ -1,6 +1,5 @@
 from bioblend import galaxy
 from django.db import models
-from galaxy_connector.connection import Connection
 from galaxy_connector.galaxy_workflow import GalaxyWorkflow
 from galaxy_connector.galaxy_workflow import GalaxyWorkflowInput
 
@@ -19,11 +18,6 @@ class Instance(models.Model):
 
     def galaxy_connection(self):
         return galaxy.GalaxyInstance(url=self.base_url, key=self.api_key)
-
-    def get_galaxy_connection(self):
-        # to be deprecated in favor of galaxy_connection()
-        return Connection(
-            self.base_url, self.data_url, self.api_url, self.api_key)
 
     def get_complete_workflows(self):
         connection = self.galaxy_connection()

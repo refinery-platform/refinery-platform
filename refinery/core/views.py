@@ -32,11 +32,11 @@ from tempfile import NamedTemporaryFile
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem, get_temp_dir, file_path, FILE_STORE_BASE_DIR
 from file_store.tasks import create, import_file
-from galaxy_connector.connection import Connection
 import re
 
 
 logger = logging.getLogger(__name__)
+
 
 def home(request):
     if request.user.is_superuser:

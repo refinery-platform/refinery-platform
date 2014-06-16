@@ -607,10 +607,6 @@ class Analysis(OwnableResource):
     def galaxy_connection(self):
         return self.workflow.workflow_engine.instance.galaxy_connection()
 
-    def get_galaxy_connection(self):
-        # to be deprecated in favor of galaxy_connection()
-        return self.workflow.workflow_engine.instance.get_galaxy_connection()
-
     def delete_galaxy_workflow(self):
         connection = self.galaxy_connection()
         try:
