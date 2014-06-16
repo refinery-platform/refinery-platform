@@ -1,6 +1,7 @@
 from celery.task import task, periodic_task
 from celery.task.control import ping
 from psycopg2 import OperationalError
+import urlparse
 from django.conf import settings
 from django.db import connection
 from django.db.models.deletion import Collector
@@ -9,7 +10,6 @@ from django.core.cache import cache
 from django.utils.hashcompat import md5_constructor as md5
 from django.contrib.syndication.views import Feed
 from galaxy_connector.galaxy_workflow import GalaxyWorkflow, GalaxyWorkflowInput
-from galaxy_connector.exceptions import ResourceNameError, ConnectionError
 from core.models import DataSet, InvestigationLink, Workflow, WorkflowDataInput, ExternalToolStatus, WorkflowEngine
 from data_set_manager.models import Investigation, Study
 from data_set_manager.tasks import annotate_nodes
@@ -300,11 +300,15 @@ def dispatch_galaxy_checks():
 def check_for_galaxy(instance, galaxy):
     try:
         # send a GET request for Galaxy's robots.txt file
-        requests.get("%s/robots.txt" % instance.base_url)
+        url = urlparse.urljoin(instance.base_url, "robots.txt")
+        r = requests.get(url)
+        r.raise_for_status()
         galaxy.status = ExternalToolStatus.SUCCESS_STATUS # galaxy running properly
-    except ResourceNameError: # galaxy is up and returned a 404 status
-        galaxy.status = ExternalToolStatus.SUCCESS_STATUS # galaxy running, but robots.txt file missing
-    except requests.exceptions.ConnectionError as e:
+    except requests.exceptions.HTTPError as exc:
+        # galaxy is up and returned a 4xx or 5xx status
+        logger.warn(exc)
+        galaxy.status = ExternalToolStatus.SUCCESS_STATUS
+    except requests.exceptions.ConnectionError:
         logger.error("core.tasks.check_for_galaxy: Could not connect to Galaxy")
         galaxy.status = ExternalToolStatus.FAILURE_STATUS #quit with error
     except:

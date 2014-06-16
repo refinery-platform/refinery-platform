@@ -30,7 +30,6 @@ from data_set_manager.utils import add_annotated_nodes_selection, \
     index_annotated_nodes_selection
 from file_store.models import FileStoreItem, is_local
 from file_store.tasks import import_file, create, rename
-from galaxy_connector.exceptions import *
 from galaxy_connector.galaxy_workflow import countWorkflowSteps, \
     create_expanded_workflow_graph
 from workflow_manager.tasks import configure_workflow
