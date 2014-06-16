@@ -1,25 +1,20 @@
+from datetime import datetime, timedelta
+import logging
+import requests
+import socket
+import urlparse
+from amqplib.client_0_8.exceptions import AMQPChannelException, AMQPConnectionException
+from celery.exceptions import TimeLimitExceeded, TaskRevokedError
 from celery.task import task, periodic_task
 from celery.task.control import ping
-from psycopg2 import OperationalError
-import urlparse
 from django.conf import settings
-from django.db import connection
 from django.db.models.deletion import Collector
 from django.db.models.fields.related import ForeignKey
-from django.core.cache import cache
-from django.utils.hashcompat import md5_constructor as md5
-from django.contrib.syndication.views import Feed
-from galaxy_connector.galaxy_workflow import GalaxyWorkflow, GalaxyWorkflowInput
-from core.models import DataSet, InvestigationLink, Workflow, WorkflowDataInput, ExternalToolStatus, WorkflowEngine
+from core.models import DataSet, InvestigationLink, ExternalToolStatus, WorkflowEngine
 from data_set_manager.models import Investigation, Study
 from data_set_manager.tasks import annotate_nodes
 from file_store.models import is_permanent
 from file_store.tasks import create, read, import_file
-from amqplib.client_0_8.exceptions import AMQPChannelException, AMQPConnectionException
-from celery.exceptions import TimeLimitExceeded, TaskRevokedError
-from datetime import datetime, timedelta
-#from kombu.connection.Connection.Consumer import ConnectionError
-import logging, requests, socket
 
 
 logger = logging.getLogger(__name__)
