@@ -12,6 +12,7 @@ from datetime import datetime
 import json
 import logging
 import socket
+import urlparse
 from celery.task import task
 from celery.task.chords import Chord
 from celery.task.sets import subtask, TaskSet
@@ -685,8 +686,6 @@ def download_history_files(analysis) :
                 "Cleanup failed for analysis '{}'".format(analysis.name))
         return task_list
 
-    # gets current galaxy connection
-    connection = analysis.get_galaxy_connection()
     # Iterating through files in current galaxy history
     for results in download_list:
         # download file if result state is "ok"
@@ -707,15 +706,15 @@ def download_history_files(analysis) :
                 if local_download and file_type != 'html':
                     download_url = results['file_name']
                 else:
-                    download_url = connection.make_url(
-                        str(results['dataset_id']), is_data=True, key=False)
+                    url = 'datasets/' + str(results['dataset_id']) + '/display?to_ext=txt'
+                    download_url = urlparse.urljoin(
+                        analysis.workflow.workflow_engine.instance.base_url, url)
 
                 # workaround to set the correct file type for zip archives of
                 # reports produced by FASTQC
                 if file_type == 'html':
                     file_type = 'zip'
 
-                # getting file_store_uuid,
                 # TODO: when changing permanent=True, fix update of % download of file 
                 filestore_uuid = create(
                     source=download_url,
