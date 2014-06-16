@@ -754,6 +754,8 @@ provenanceVisualizationModule = function () {
                     });
                 });
             });
+        } else {
+// TODO:
         }
     };
 
@@ -792,6 +794,7 @@ provenanceVisualizationModule = function () {
 
     };
 
+// TODO: DEBUG: function might be obsolete
     // draw analysis links
     // depends on visibility of predecessor and successor analysis super node
     // when one of them is hidden, connect link directly to the node coordinates
@@ -822,6 +825,53 @@ provenanceVisualizationModule = function () {
         aLink = d3.selectAll(".aLink");
     };
 
+// TODO: DEBUG: QUICK FIX FOR DEMONSTRATION: as coordinates for anodes do not exist yet without the layout adaption, center it to the analyses
+    // create inital layout for analysis only nodes
+    var initAnalysisLayout = function () {
+        aNodes.forEach(function (an) {
+            // get min and max column/row of nodes to center new analysis process node
+            var min = [d3.min(nodes.filter(function (n) {
+                    return n.analysis == an.uuid;
+                }), function (d) {
+                    return d.x;
+                }), d3.min(nodes.filter(function (n) {
+                    return n.analysis == an.uuid;
+                }), function (d) {
+                    return d.y;
+                })],
+                max = [d3.max(nodes.filter(function (n) {
+                    return n.analysis == an.uuid;
+                }), function (d) {
+                    return d.x;
+                }), d3.max(nodes.filter(function (n) {
+                    return n.analysis == an.uuid;
+                }), function (d) {
+                    return d.y;
+                })];
+            var delta = {x: min[0] + (max[0] - min[0]) / 2, y: min[1] + (max[1] - min[1]) / 2};
+
+            an.x = delta.x;
+            an.y = delta.y;
+        });
+    };
+
+    // set display property of analysis connecting links
+    var initLinkVisibility = function () {
+        aNodes.forEach(function (an) {
+            an.predAnalyses.forEach(function (pan) {
+                aNodes[pan].outputNodes.forEach(function (n) {
+                    if (typeof tarNodeLinkHash[n.id] !== "undefined") {
+                        tarNodeLinkHash[n.id].forEach(function (l) {
+                            if (nodeAnalysisHash[links[l].target] == an.id) {
+                                links[l].hidden = false;
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    };
+
     // draw links
     var drawLinks = function () {
         analysis.each(function (a) {
@@ -831,16 +881,16 @@ provenanceVisualizationModule = function () {
                 }))
                 .enter().append("line")
                 .attr("x1", function (l) {
-                    return nodes[l.source].x;
+                    return l.hidden ? nodes[l.source].x : aNodes[nodeAnalysisHash[l.source]].x;
                 })
                 .attr("y1", function (l) {
-                    return nodes[l.source].y;
+                    return l.hidden ? nodes[l.source].y : aNodes[nodeAnalysisHash[l.source]].y;
                 })
                 .attr("x2", function (l) {
-                    return nodes[l.target].x;
+                    return l.hidden ? nodes[l.target].x : aNodes[nodeAnalysisHash[l.target]].x;
                 })
                 .attr("y2", function (l) {
-                    return nodes[l.target].y;
+                    return l.hidden ? nodes[l.target].y : aNodes[nodeAnalysisHash[l.target]].y;
                 })
                 .classed({
                     "link": true
@@ -848,6 +898,8 @@ provenanceVisualizationModule = function () {
                 .style("opacity", 0.0)
                 .attr("id", function (l) {
                     return "linkId-" + l.id;
+                }).style("display", function (l) {
+                    return l.hidden ? "none" : "block";
                 });
         });
 
@@ -880,7 +932,6 @@ provenanceVisualizationModule = function () {
                     return an.uuid == a;
                 }))
                 .enter().append("g").each(function (an) {
-
                     d3.select(this).classed({"aNode": true, "superANode": true})
                         .attr("transform", "translate(" + an.x + "," + an.y + ")")
                         .append("circle")
@@ -963,6 +1014,8 @@ provenanceVisualizationModule = function () {
                     })
                 }).attr("id", function (d) {
                     return "nodeId-" + d.id;
+                }).style("display", function (d) {
+                    return d.hidden ? "none" : "block";
                 });
         });
 
@@ -989,8 +1042,17 @@ provenanceVisualizationModule = function () {
 // TODO: PROTOTYPE: DEBUG: IN PROGRESS: - selecting an analysis, collapse it into a single node
     // collapse analysis
     var handleCollapseAnalysis = function () {
-        var offset = [0, 0],
-            aNodeIndex = 0;
+
+        d3.selectAll(".analysis").on("dblclick", function (a) {
+            var curAnalysis = d3.select(this);
+
+            console.log(a);
+
+            //d3.select(this).selectAll(".node").style("display", "none");
+        });
+
+        /*var offset = [0, 0],
+         aNodeIndex = 0;
 
         d3.selectAll(".analysis").on("dblclick", function (a) {
             var curAnalysis = d3.select(this);
@@ -1111,7 +1173,7 @@ provenanceVisualizationModule = function () {
             });
 
 // TODO: create links between in- out- and super aNode
-        });
+         });*/
     };
 
     // path highlighting
@@ -1233,41 +1295,14 @@ provenanceVisualizationModule = function () {
             // create analysis group layers
             createAnalysisLayers();
 
+            // create inital layout for analysis only nodes
+            initAnalysisLayout();
+
             // draw links
             drawLinks();
 
             // draw nodes
             drawNodes();
-
-
-// TODO: DEBUG: QUICK FIX FOR DEMONSTRATION: as coordinates for anodes do not exist yet without the layout adaption, center it to the analyses
-            aNodes.forEach(function (an) {
-                // TODO: DEBUG: temp coordinate assignment
-                // get min and max column/row of nodes to center new analysis process node
-                var min = [d3.min(nodes.filter(function (n) {
-                        return n.analysis == an.uuid;
-                    }), function (d) {
-                        return d.x;
-                    }), d3.min(nodes.filter(function (n) {
-                        return n.analysis == an.uuid;
-                    }), function (d) {
-                        return d.y;
-                    })],
-                    max = [d3.max(nodes.filter(function (n) {
-                        return n.analysis == an.uuid;
-                    }), function (d) {
-                        return d.x;
-                    }), d3.max(nodes.filter(function (n) {
-                        return n.analysis == an.uuid;
-                    }), function (d) {
-                        return d.y;
-                    })];
-                var delta = {x: min[0] + (max[0] - min[0]) / 2, y: min[1] + (max[1] - min[1]) / 2};
-
-                // TODO: DEBUG: quick fix
-                an.x = delta.x;
-                an.y = delta.y;
-            });
 
 // TODO: DEBUG: temporarily disabled
             // draw analysis links
@@ -1337,6 +1372,9 @@ provenanceVisualizationModule = function () {
 
             // create analysis node mapping
             createAnalysisNodeMapping();
+
+            // set display property of analysis connecting links
+            initLinkVisibility();
 
 // TODO: DEBUG: temporarily disabled
             // extract analysis links
