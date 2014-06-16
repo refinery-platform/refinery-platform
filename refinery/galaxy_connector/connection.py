@@ -178,21 +178,3 @@ class Connection(object):
         except simplejson.decoder.JSONDecodeError as e:
             logger.error(e.msg)
             raise InvalidResponseError()
-
-    # =========================================================================================================
-
-    def get_workflows(self):            
-        return self.get("workflows")
-
-    def get_workflow_id( self, workflow_name ):
-        '''
-        Returns zero or more identifiers for libraries with the provided name.
-        '''            
-        workflows = self.get_workflows()
-        identifiers = [] 
-        
-        for workflow in workflows:
-            if workflow['name'] == workflow_name:
-                identifiers.append( workflow['id'] )
-        
-        return identifiers
