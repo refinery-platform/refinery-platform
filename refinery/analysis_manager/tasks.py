@@ -448,7 +448,7 @@ def run_analysis_execution(analysis):
     ######################
     ### EXECUTION ###
     ######################
-    connection = analysis.get_galaxy_connection()
+    connection = analysis.galaxy_connection()
 
     ### generates same ret_list purely based on analysis object ###
     ret_list = get_analysis_config(analysis)
@@ -456,22 +456,23 @@ def run_analysis_execution(analysis):
     try:
         ret_list = import_analysis_in_galaxy(
             ret_list, analysis.library_id, connection)
-    except RuntimeError as exc:
-        error_msg = "Analysis execution failed: " + \
-                    "error importing analysis '{}' into Galaxy: {}" \
-                    .format(analysis.name, exc.message)
+    except (RuntimeError, galaxy.client.ConnectionError) as exc:
+        error_msg = "Analysis execution failed:"
+        error_msg += "error importing analysis '{}' into Galaxy: {}"
+        error_msg = error_msg.format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_execution.update_state(state=celery.states.FAILURE)
-        if not isinstance(exc, (ConnectionError, TimeoutError, AuthenticationError, AuthorizationError)):
-            try:
-                analysis.delete_galaxy_library()
-                analysis.delete_galaxy_workflow()
-                analysis.delete_galaxy_history()
-            except galaxy.client.ConnectionError:
-                logger.error(
-                    "Cleanup failed for analysis '{}'".format(analysis.name))
+        try:
+            analysis.delete_galaxy_library()
+            analysis.delete_galaxy_workflow()
+            analysis.delete_galaxy_history()
+        except galaxy.client.ConnectionError:
+            logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
         return
+
+    connection = analysis.get_galaxy_connection()
+
     # Running workflow
     try:
         result = connection.run_workflow(
@@ -611,22 +612,22 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
                 if file_path:
                     cur_item["filepath"] = file_path
                     try:
-                        file_id = connection.put_into_library(library_id, file_path)
-                    except ConnectionError:
-                        logger.error("Failed adding file '{}' to Galaxy library '{}'")\
-                        .format(curr_file_uuid, library_id)
+                        file_id = connection.libraries.upload_file_from_local_path(
+                            library_id, file_path)[0]['id']
+                    except galaxy.client.ConnectionError:
+                        error_msg = "Failed adding file '{}' to Galaxy library '{}'"
+                        error_msg = error_msg.format(curr_file_uuid, library_id)
+                        logger.error(error_msg)
                         raise
                     cur_item["id"] = file_id
                 else:
-                    raise RuntimeError(
-                        "Input file with UUID '{}' is not available"
-                        .format(curr_file_uuid)
-                        )
+                    error_msg = "Input file with UUID '{}' is not available"
+                    error_msg = error_msg.format(curr_file_uuid)
+                    raise RuntimeError(error_msg)
             else:
-                raise RuntimeError(
-                    "Input file with UUID '{}' is not available"
-                    .format(curr_file_uuid)
-                    )
+                error_msg = "Input file with UUID '{}' is not available"
+                error_msg = error_msg.format(curr_file_uuid)
+                raise RuntimeError(error_msg)
     return ret_list
 
 
