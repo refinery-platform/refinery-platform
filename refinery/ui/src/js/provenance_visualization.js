@@ -686,7 +686,6 @@ provenanceVisualizationModule = function () {
 
         // get input links
         // update coordinates for x2 and y2
-// TODO: DEBUG: CONSOLE ERROR MSG
         srcNodeLinkHash[d.id].forEach(function (l) {
             d3.select("#linkId-" + l).attr("x2", d3.event.x);
             d3.select("#linkId-" + l).attr("y2", d3.event.y);
@@ -694,10 +693,12 @@ provenanceVisualizationModule = function () {
 
         // get output links
         // update coordinates for x1 and y1
-        tarNodeLinkHash[d.id].forEach(function (l) {
-            d3.select("#linkId-" + l).attr("x1", d3.event.x);
-            d3.select("#linkId-" + l).attr("y1", d3.event.y);
-        });
+        if (typeof tarNodeLinkHash[d.id] !== "undefined") {
+            tarNodeLinkHash[d.id].forEach(function (l) {
+                d3.select("#linkId-" + l).attr("x1", d3.event.x);
+                d3.select("#linkId-" + l).attr("y1", d3.event.y);
+            });
+        }
     };
 
     // drag end listener
