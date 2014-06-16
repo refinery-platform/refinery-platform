@@ -469,7 +469,8 @@ provenanceVisualizationModule = function () {
         links.push({
             source: nodeHash[nodeElem.parents[parentIndex]],
             target: nodeHash[nodeElem.uuid],
-            id: linkId
+            id: linkId,
+            hidden: true
         });
     };
 
@@ -485,7 +486,7 @@ provenanceVisualizationModule = function () {
     // createAnalysisLinks
     var createAnalysisLinks = function () {
         var linkId = 0;
-        aNodes.forEach(function (an, i) {
+        aNodes.forEach(function (an) {
             an.inputNodes.forEach(function (n) {
                 if (srcLinkHash[n.id].length !== 0) {
                     srcLinkHash[n.id].forEach(function (p) {
@@ -493,7 +494,8 @@ provenanceVisualizationModule = function () {
                         aLinks.push({
                             source: nodes[p].id,
                             target: n.id,
-                            id: linkId
+                            id: linkId,
+                            hidden: false
                         });
                         linkId++;
                     });
@@ -590,7 +592,6 @@ provenanceVisualizationModule = function () {
                 }) || srcLinkHash[n.id].length === 0; // if no src analyses exists
             });
 
-// TODO: DEBUG: not sure if correct, as tarlinkhash contains multiple nodes for a node id
             // set output nodes
             an.outputNodes = an.nodes.filter(function (n) {
                 return typeof tarLinkHash[n.id] === "undefined" || tarLinkHash[n.id].some(function (s) {
@@ -847,19 +848,33 @@ provenanceVisualizationModule = function () {
                 .style("opacity", 0.0)
                 .attr("id", function (l) {
                     return "linkId-" + l.id;
-                }).append("title").text(function (l) {
-                    return l.id;
                 });
         });
 
         // set link dom element
         link = d3.selectAll(".link");
+
+        // create d3-tip tooltips
+        var tip = d3.tip()
+            .attr("class", "d3-tip")
+            .offset([-10, 0])
+            .html(function (l) {
+                return "<strong>Id:</strong> <span style='color:#fa9b30'>" + l.id + "</span><br>" +
+                    "<strong>Source Id:</strong> <span style='color:#fa9b30'>" + l.source + "</span><br>" +
+                    "<strong>Target Id:</strong> <span style='color:#fa9b30'>" + l.target + "</span>";
+            });
+
+        // invoke tooltip on dom element
+        link.call(tip);
+        link.on("mouseover", tip.show)
+            .on("mouseout", tip.hide);
     };
 
     // draw analysis nodes
     var drawAnalysisNodes = function () {
         analysis.each(function (a) {
-            var curAnalysis = d3.select(this);
+            /*var curAnalysis = */
+            d3.select(this);
             d3.select(this).selectAll(".aNode")
                 .data(aNodes.filter(function (an) {
                     return an.uuid == a;
@@ -1056,7 +1071,7 @@ provenanceVisualizationModule = function () {
                             })
                             .style("stroke-width", 3);
                     } else {
-                        // if l.target node analysis is other analysis
+                        // if l.target node analysis is a node of another analysis
                         if (tarLinkHash[nodes[l.target].id].some(function (ai) {
                             return nodes[ai].analysis != a;
                         })) {
@@ -1323,8 +1338,9 @@ provenanceVisualizationModule = function () {
             // create analysis node mapping
             createAnalysisNodeMapping();
 
+// TODO: DEBUG: temporarily disabled
             // extract analysis links
-            createAnalysisLinks();
+            //createAnalysisLinks();
 
             // calculate layout
             layout();
