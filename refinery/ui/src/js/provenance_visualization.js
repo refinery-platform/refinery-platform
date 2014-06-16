@@ -439,7 +439,6 @@ provenanceVisualizationModule = function () {
         });
     };
 
-// TODO: DEBUG: CHECK: srclinkHash might contain multiple nodes
     // extract links
     var extractLinks = function () {
         var linkId = 0;
@@ -604,9 +603,11 @@ provenanceVisualizationModule = function () {
             // set predecessor analyses
             if (an.uuid != "dataset") {
                 an.inputNodes.forEach(function (n) {
-                    if (an.predAnalyses.indexOf(nodeAnalysisHash[srcLinkHash[n.id]]) === -1) {
-                        an.predAnalyses.push(nodeAnalysisHash[srcLinkHash[n.id]]);
-                    }
+                    srcLinkHash[n.id].forEach(function (pn) {
+                        if (an.predAnalyses.indexOf(nodeAnalysisHash[pn]) === -1) {
+                            an.predAnalyses.push(nodeAnalysisHash[pn]);
+                        }
+                    });
                 });
             }
 
