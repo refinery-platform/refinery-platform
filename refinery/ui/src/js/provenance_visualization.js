@@ -653,15 +653,26 @@ provenanceVisualizationModule = function () {
 
     // creates analysis group dom elements which then contain the nodes and links of an analysis
     var createAnalysisLayers = function () {
-
+        var aId = 0;
         // add analyses dom groups
-        analysis = canvas.selectAll(".analysis")
-            .data(flatAnalyses)
-            .enter().append("g")
-            .classed("analysis", true)
-            .attr("id", function (d) {
-                return d;
-            });
+        aNodes.forEach(function () {
+            canvas.append("g")
+                .classed("analysis", true)
+                .attr("id", function () {
+                    return "aId-" + aId;
+                });
+            aId++;
+        });
+        analysis = d3.selectAll(".analysis");
+
+        /*
+         analysis = canvas.selectAll(".analysis")
+         .data(flatAnalyses)
+         .enter().append("g")
+         .classed("analysis", true)
+         .attr("id", function (d,i) {
+         return "aId-" + i;
+         });*/
     };
 
     // drag start listener support for nodes
@@ -729,34 +740,30 @@ provenanceVisualizationModule = function () {
         d3.select(this).attr("transform", function () {
             return "translate(" + d3.event.x + "," + d3.event.y + ")";
         });
-// TODO: adapt links when dragging nodes
-// TODO: call upon collapse, not only at dragging
 
-        if (!an.hidden) {
-            an.predAnalyses.forEach(function (pan) {
-                aNodes[pan].outputNodes.forEach(function (n) {
-                    if (typeof tarNodeLinkHash[n.id] !== "undefined") {
-                        tarNodeLinkHash[n.id].forEach(function (l) {
-                            if (nodeAnalysisHash[links[l].target] == an.id) {
-                                d3.select("#linkId-" + l).attr("x2", d3.event.x);
-                                d3.select("#linkId-" + l).attr("y2", d3.event.y);
-                            }
-                        });
-                    }
-                });
-            });
-
-            an.succAnalyses.forEach(function (san) {
-                aNodes[san].inputNodes.forEach(function (n) {
-                    srcNodeLinkHash[n.id].forEach(function (l) {
-                        d3.select("#linkId-" + l).attr("x1", d3.event.x);
-                        d3.select("#linkId-" + l).attr("y1", d3.event.y);
+        // if (!an.hidden) {
+        an.predAnalyses.forEach(function (pan) {
+            aNodes[pan].outputNodes.forEach(function (n) {
+                if (typeof tarNodeLinkHash[n.id] !== "undefined") {
+                    tarNodeLinkHash[n.id].forEach(function (l) {
+                        if (nodeAnalysisHash[links[l].target] == an.id) {
+                            d3.select("#linkId-" + l).attr("x2", d3.event.x);
+                            d3.select("#linkId-" + l).attr("y2", d3.event.y);
+                        }
                     });
+                }
+            });
+        });
+
+        an.succAnalyses.forEach(function (san) {
+            aNodes[san].inputNodes.forEach(function (n) {
+                srcNodeLinkHash[n.id].forEach(function (l) {
+                    d3.select("#linkId-" + l).attr("x1", d3.event.x);
+                    d3.select("#linkId-" + l).attr("y1", d3.event.y);
                 });
             });
-        } else {
-// TODO:
-        }
+        });
+        //}
     };
 
     // drag end listener
@@ -874,10 +881,12 @@ provenanceVisualizationModule = function () {
 
     // draw links
     var drawLinks = function () {
-        analysis.each(function (a) {
+        //var analysisId = 0;
+        analysis.each(function (d, i) {
             d3.select(this).selectAll(".link")
                 .data(links.filter(function (l) {
-                    return nodes[l.target].analysis == a /*&& nodes[l.source].analysis == a*/;
+                    //return nodes[l.target].analysis == a /*&& nodes[l.source].analysis == a*/;
+                    return nodeAnalysisHash[l.target] == i;
                 }))
                 .enter().append("line")
                 .attr("x1", function (l) {
@@ -899,8 +908,9 @@ provenanceVisualizationModule = function () {
                 .attr("id", function (l) {
                     return "linkId-" + l.id;
                 }).style("display", function (l) {
-                    return l.hidden ? "none" : "block";
+                    return l.hidden ? "none" : "inline";
                 });
+            //analysisId++;
         });
 
         // set link dom element
@@ -924,16 +934,17 @@ provenanceVisualizationModule = function () {
 
     // draw analysis nodes
     var drawAnalysisNodes = function () {
-        analysis.each(function (a) {
-            /*var curAnalysis = */
-            d3.select(this);
+        analysis.each(function (d, i) {
             d3.select(this).selectAll(".aNode")
                 .data(aNodes.filter(function (an) {
-                    return an.uuid == a;
+                    return an.id == i;
                 }))
                 .enter().append("g").each(function (an) {
                     d3.select(this).classed({"aNode": true, "superANode": true})
                         .attr("transform", "translate(" + an.x + "," + an.y + ")")
+                        .attr("id", function () {
+                            return "aNodeId-" + an.id;
+                        })
                         .append("circle")
                         .attr("r", r * 2)
                         .style("fill", function () {
@@ -968,10 +979,10 @@ provenanceVisualizationModule = function () {
 
     // draw nodes
     var drawNodes = function () {
-        analysis.each(function (a) {
+        analysis.each(function (a, i) {
             d3.select(this).selectAll(".node")
                 .data(nodes.filter(function (n) {
-                    return n.analysis == a;
+                    return nodeAnalysisHash[n.id] == i;
                 }))
                 .enter().append("g").each(function (d) {
                     if (d.nodeType === "raw" || d.nodeType === "processed") {
@@ -1015,7 +1026,7 @@ provenanceVisualizationModule = function () {
                 }).attr("id", function (d) {
                     return "nodeId-" + d.id;
                 }).style("display", function (d) {
-                    return d.hidden ? "none" : "block";
+                    return d.hidden ? "none" : "inline";
                 });
         });
 
@@ -1039,141 +1050,89 @@ provenanceVisualizationModule = function () {
     };
 
 
-// TODO: PROTOTYPE: DEBUG: IN PROGRESS: - selecting an analysis, collapse it into a single node
-    // collapse analysis
-    var handleCollapseAnalysis = function () {
+// TODO: code cleanup
+    // collapse and expand analysis
+    var handleCollapseExpandAnalysis = function () {
+        d3.selectAll(".analysis").on("dblclick", function () {
+            var an = aNodes[+d3.select(this).attr("id").replace(/(aId-)/g, "")];
 
-        d3.selectAll(".analysis").on("dblclick", function (a) {
-            var curAnalysis = d3.select(this);
+            // expand
+            if (!an.hidden) {
+                d3.select(this).selectAll(".node").style("display", "inline");
+                d3.select(this).selectAll(".link").style("display", "inline");
+                d3.select(this).select(".aNode").style("display", "none");
 
-            console.log(a);
+                // set node visibility
+                an.hidden = true;
+                an.nodes.forEach(function (n) {
+                    n.hidden = false;
+                });
 
-            //d3.select(this).selectAll(".node").style("display", "none");
-        });
-
-        /*var offset = [0, 0],
-         aNodeIndex = 0;
-
-        d3.selectAll(".analysis").on("dblclick", function (a) {
-            var curAnalysis = d3.select(this);
-
-            d3.select(this).selectAll(".node").style("display", "none");
-
-            // get min and max column/row of nodes to center new analysis process node
-            var min = [d3.min(nodes.filter(function (n) {
-                    return n.analysis == a;
-                }), function (d) {
-                    return d.x;
-                }), d3.min(nodes.filter(function (n) {
-                    return n.analysis == a;
-                }), function (d) {
-                    return d.y;
-                })],
-                max = [d3.max(nodes.filter(function (n) {
-                    return n.analysis == a;
-                }), function (d) {
-                    return d.x;
-                }), d3.max(nodes.filter(function (n) {
-                    return n.analysis == a;
-                }), function (d) {
-                    return d.y;
-                })];
-            var delta = {x: min[0] + (max[0] - min[0]) / 2, y: min[1] + (max[1] - min[1]) / 2};
-
-// TODO: save aggregated nodes in own node-set with datastructure and draw them like links and nodes but hidden unless collapsed
-
-            curAnalysis.append("g")
-                .classed({"aNode": true, "superANode": true})
-                .attr("transform", "translate(" + delta.x + "," + delta.y + ")")
-                .append("circle")
-                .attr("r", r * 2)
-                .style("fill", function () {
-                    return curAnalysis.select(".node").style("fill");
-                })
-                .style("stroke", function () {
-                    return curAnalysis.select(".node").style("stroke");
-                })
-                .style("stroke-width", 3);
-
-            // hide all links except the ones connecting to different analyses
-            d3.select(this).selectAll(".link").each(function (l) {
-                if (nodes[l.source].analysis == a && nodes[l.target].analysis == a) {
-                    d3.select(this).style("display", "none");
-
-                    // if l.source node has no link source
-                    if (srcLinkHash[nodes[l.source].id].length === 0) {
-                        offset = [d3.select(this).attr("x1"), d3.select(this).attr("y1")];
-                        curAnalysis.append("g")
-                            .classed({"aNode": true, "inANode": true})
-                            .attr("transform", "translate(" + offset[0] + "," + offset[1] + ")")
-                            .append("circle")
-                            .attr("r", r * 2)
-                            .style("fill", function () {
-                                return curAnalysis.select(".node").style("fill");
-                            })
-                            .style("stroke", function () {
-                                return curAnalysis.select(".node").style("stroke");
-                            })
-                            .style("stroke-width", 3);
-                    }
-
-                    // if l.target node has no link target
-                    if (!tarLinkHash[nodes[l.target].id]) {
-                        offset = [d3.select(this).attr("x2"), d3.select(this).attr("y2")];
-                        curAnalysis.append("g")
-                            .classed({"aNode": true, "outANode": true})
-                            .attr("transform", "translate(" + offset[0] + "," + offset[1] + ")")
-                            .append("circle")
-                            .attr("r", r * 2)
-                            .style("fill", function () {
-                                return curAnalysis.select(".node").style("fill");
-                            })
-                            .style("stroke", function () {
-                                return curAnalysis.select(".node").style("stroke");
-                            })
-                            .style("stroke-width", 3);
-                    } else {
-                        // if l.target node analysis is a node of another analysis
-                        if (tarLinkHash[nodes[l.target].id].some(function (ai) {
-                            return nodes[ai].analysis != a;
-                        })) {
-                            offset = [d3.select(this).attr("x2"), d3.select(this).attr("y2")];
-                            curAnalysis.append("g")
-                                .classed({"aNode": true, "outANode": true})
-                                .attr("transform", "translate(" + offset[0] + "," + offset[1] + ")")
-                                .append("circle")
-                                .attr("r", r * 2)
-                                .style("fill", function () {
-                                    return curAnalysis.select(".node").style("fill");
-                                })
-                                .style("stroke", function () {
-                                    return curAnalysis.select(".node").style("stroke");
-                                })
-                                .style("stroke-width", 3);
+                // adapt incoming links
+                an.predAnalyses.forEach(function (pan) {
+                    aNodes[pan].outputNodes.forEach(function (n) {
+                        if (typeof tarNodeLinkHash[n.id] !== "undefined") {
+                            tarNodeLinkHash[n.id].forEach(function (l) {
+                                if (nodeAnalysisHash[links[l].target] == an.id) {
+                                    d3.select("#linkId-" + l).style("display", "inline").attr("x2", nodes[links[l].target].x);
+                                    d3.select("#linkId-" + l).style("display", "inline").attr("y2", nodes[links[l].target].y);
+                                }
+                            });
                         }
-                    }
-                }
+                    });
+                });
 
-                // for the connecting link, create a new analysis node
-                else {
-                    offset = [d3.select(this).attr("x2"), d3.select(this).attr("y2")];
-                    curAnalysis.append("g")
-                        .classed({"aNode": true, "inANode": true})
-                        .attr("transform", "translate(" + offset[0] + "," + offset[1] + ")")
-                        .append("circle")
-                        .attr("r", r * 2)
-                        .style("fill", function () {
-                            return curAnalysis.select(".node").style("fill");
-                        })
-                        .style("stroke", function () {
-                            return curAnalysis.select(".node").style("stroke");
-                        })
-                        .style("stroke-width", 3);
-                }
-            });
+                // adapt outgoing links
+                an.succAnalyses.forEach(function (san) {
+                    aNodes[san].inputNodes.forEach(function (n) {
+                        srcNodeLinkHash[n.id].forEach(function (l) {
+                            if (nodeAnalysisHash[links[l].source] == an.id) {
+                                d3.select("#linkId-" + l).style("display", "inline").attr("x1", nodes[links[l].source].x);
+                                d3.select("#linkId-" + l).style("display", "inline").attr("y1", nodes[links[l].source].y);
+                            }
+                        });
+                    });
+                });
 
-// TODO: create links between in- out- and super aNode
-         });*/
+                // collapse
+            } else {
+                d3.select(this).selectAll(".node").style("display", "none");
+                d3.select(this).selectAll(".link").style("display", "none");
+                d3.select(this).select(".aNode").style("display", "inline");
+
+                an.hidden = false;
+                an.nodes.forEach(function (n) {
+                    n.hidden = true;
+                });
+
+                // adapt incoming links
+                an.predAnalyses.forEach(function (pan) {
+                    aNodes[pan].outputNodes.forEach(function (n) {
+                        if (typeof tarNodeLinkHash[n.id] !== "undefined") {
+                            tarNodeLinkHash[n.id].forEach(function (l) {
+                                if (nodeAnalysisHash[links[l].target] == an.id) {
+                                    d3.select("#linkId-" + l).style("display", "inline").attr("x2", an.x);
+                                    d3.select("#linkId-" + l).style("display", "inline").attr("y2", an.y);
+                                }
+                            });
+                        }
+                    });
+                });
+
+                // adapt outgoing links
+                an.succAnalyses.forEach(function (san) {
+                    aNodes[san].inputNodes.forEach(function (n) {
+                        srcNodeLinkHash[n.id].forEach(function (l) {
+                            if (nodeAnalysisHash[links[l].source] == an.id) {
+                                d3.select("#linkId-" + l).style("display", "inline").attr("x1", an.x);
+                                d3.select("#linkId-" + l).style("display", "inline").attr("y1", an.y);
+                            }
+                        });
+                    });
+                });
+
+            }
+        });
     };
 
     // path highlighting
@@ -1280,7 +1239,7 @@ provenanceVisualizationModule = function () {
         handleBRectClick();
 
         // handle analysis aggregation
-        handleCollapseAnalysis();
+        handleCollapseExpandAnalysis();
     };
 
     // main d3 visualization function
