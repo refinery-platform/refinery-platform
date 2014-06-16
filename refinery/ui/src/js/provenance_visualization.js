@@ -7,13 +7,18 @@ provenanceVisualizationModule = function () {
 
     // node-link arrays
     var nodes = [],
+        links = [],
         inputNodes = [],
-        links = [];
+        flatAnalyses = [],
+        aNodes = [],
+        aLinks = [];
 
     // dom elements
     var node = null,
         link = null,
-        analysis = null;
+        analysis = null,
+        aNode = null,
+        aLink = null;
 
     // look up hashes
     var nodeHash = [],
@@ -23,35 +28,45 @@ provenanceVisualizationModule = function () {
         tarLinkHash = [],
         srcNodeLinkHash = [],
         tarNodeLinkHash = [],
-        workflowAnalysisHash = [];
+        workflowAnalysisHash = [],
+        analysisWorkflowHash = [],
+        analysisNodeHash = [],
+        nodeAnalysisHash = [];
+
+    // margin conventions
+    var margin = {top: 20, right: 10, bottom: 20, left: 10};
 
     // canvas dimensions
-    var width = window.innerWidth - 50,
-        height = window.innerHeight - 50;
+    var width = window.innerWidth - margin.left - margin.right,
+        height = window.innerHeight - margin.top - margin.bottom;
 
-    // primitive dimensions
-    var r = 7;
+    var zoom = null;
+
+    // constants
+    var r = 7,
+        color = d3.scale.category20();
 
     // geometric zoom
     var redraw = function () {
         // translation and scaling
         canvas.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
         // fix for rectangle getting translated too, doesn't work after window resize
-        rect.attr("transform", "translate(" + (-d3.event.translate[0] / d3.event.scale) + "," + (-d3.event.translate[1] / d3.event.scale) + ")" + " scale(" + (+1 / d3.event.scale) + ")");
+        rect.attr("transform", "translate(" + (-(d3.event.translate[0] + margin.left) / d3.event.scale) + "," + (-(d3.event.translate[1] + margin.top) / d3.event.scale) + ")" + " scale(" + (+1 / d3.event.scale) + ")");
     };
 
     // main canvas drawing area
     var canvas = d3.select("#provenance-graph")
         .append("svg:svg")
-        .attr("width", width)
-        .attr("height", height)
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+        .attr("viewBox", "0 0 " + (width) + " " + (height))
+        .attr("preserveAspectRatio", "xMinYMin meet")
         .attr("pointer-events", "all")
         .append("svg:g")
-        .call(d3.behavior.zoom().on("zoom", redraw))
+        .call(zoom = d3.behavior.zoom().on("zoom", redraw)).on("dblclick.zoom", null)
         .append("svg:g");
 
     // helper rectangle to support pan & zoom
-    var rect = canvas.append('svg:rect')
+    var rect = canvas.append("svg:rect")
         .attr("width", width)
         .attr("height", height)
         .classed("brect", true);
@@ -129,7 +144,7 @@ provenanceVisualizationModule = function () {
 
     // deep copy node data structure
     var copyNode = function (node) {
-        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", fixed: false, row: -1, col: -1, parents: [], id: -1, visited: false};
+        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", fixed: false, row: -1, col: -1, parents: [], id: -1, visited: false, doiFactor: -1, hidden: true};
 
         newNode.name = node.name;
         newNode.nodeType = node.nodeType;
@@ -146,6 +161,8 @@ provenanceVisualizationModule = function () {
             newNode.parents[i] = p;
         });
         newNode.analysis = node.analysis;
+        newNode.doiFactor = node.doiFactor;
+        newNode.hidden = node.hidden;
 
         return newNode;
     };
@@ -452,7 +469,38 @@ provenanceVisualizationModule = function () {
         links.push({
             source: nodeHash[nodeElem.parents[parentIndex]],
             target: nodeHash[nodeElem.uuid],
-            id: linkId
+            id: linkId,
+            hidden: true
+        });
+    };
+
+    // create one node representing the whole analysis when aggregated
+    var createAnalysisNodes = function () {
+        aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": false, "id": 0, "start": -1, "end": -1, "created": -1, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": []});
+
+        analyses.objects.forEach(function (a, i) {
+            aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": false, "id": i + 1, "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": []});
+        });
+    };
+
+    // createAnalysisLinks
+    var createAnalysisLinks = function () {
+        var linkId = 0;
+        aNodes.forEach(function (an) {
+            an.inputNodes.forEach(function (n) {
+                if (srcLinkHash[n.id].length !== 0) {
+                    srcLinkHash[n.id].forEach(function (p) {
+                        // link connects output node of predecessor analysis and input node of current analysis
+                        aLinks.push({
+                            source: nodes[p].id,
+                            target: n.id,
+                            id: linkId,
+                            hidden: false
+                        });
+                        linkId++;
+                    });
+                }
+            });
         });
     };
 
@@ -494,7 +542,9 @@ provenanceVisualizationModule = function () {
             col: -1,
             id: nodeIndex,
             visited: false,
-            analysis: (nodeObj.analysis_uuid !== null) ? nodeObj.analysis_uuid : "dataset"
+            analysis: (nodeObj.analysis_uuid !== null) ? nodeObj.analysis_uuid : "dataset",
+            doiFactor: -1,
+            hidden: true
         });
     };
 
@@ -519,19 +569,78 @@ provenanceVisualizationModule = function () {
         return nodeTypeClass;
     };
 
+    // for each analysis the corresponding nodes as well as specifically in- and output nodes are mapped to it
+    var createAnalysisNodeMapping = function () {
+        nodes.forEach(function (n, i) {
+            if (analysisNodeHash.hasOwnProperty(n.analysis)) {
+                analysisNodeHash[n.analysis] = analysisNodeHash[n.analysis].concat([i]);
+            } else {
+                analysisNodeHash[n.analysis] = [i];
+            }
+        });
+
+        aNodes.forEach(function (an) {
+            an.nodes = analysisNodeHash[an.uuid].map(function (d) {
+                nodeAnalysisHash[d] = an.id;
+                return nodes[d]; // flatten nodes objects
+            });
+
+            // set input nodes
+            an.inputNodes = an.nodes.filter(function (n) {
+                return srcLinkHash[n.id].some(function (p) {
+                    return nodes[p].analysis != an.uuid;
+                }) || srcLinkHash[n.id].length === 0; // if no src analyses exists
+            });
+
+            // set output nodes
+            an.outputNodes = an.nodes.filter(function (n) {
+                return typeof tarLinkHash[n.id] === "undefined" || tarLinkHash[n.id].some(function (s) {
+                    return nodes[s].analysis != an.uuid;
+                });
+            });
+        });
+
+        aNodes.forEach(function (an) {
+            // set predecessor analyses
+            if (an.uuid != "dataset") {
+                an.inputNodes.forEach(function (n) {
+                    srcLinkHash[n.id].forEach(function (pn) {
+                        if (an.predAnalyses.indexOf(nodeAnalysisHash[pn]) === -1) {
+                            an.predAnalyses.push(nodeAnalysisHash[pn]);
+                        }
+                    });
+                });
+            }
+
+            // set successor analyses
+            an.outputNodes.forEach(function (n) {
+                if (typeof tarLinkHash[n.id] !== "undefined") {
+                    tarLinkHash[n.id].forEach(function (s) {
+                        if (an.succAnalyses.indexOf(nodeAnalysisHash[s]) === -1) {
+                            an.succAnalyses.push(nodeAnalysisHash[s]);
+                        }
+                    });
+                }
+            });
+        });
+    };
+
     // extract workflows from analyses
     // a workflow might be executed by multiple analyses
     var createWorkflowAnalysisMapping = function () {
         analyses.objects.forEach(function (a) {
+            // workflow -> analysis
             if (workflowAnalysisHash.hasOwnProperty(a.workflow__uuid)) {
                 workflowAnalysisHash[a.workflow__uuid] = workflowAnalysisHash[a.workflow__uuid].concat([a.uuid]);
             } else {
                 workflowAnalysisHash[a.workflow__uuid] = [a.uuid];
             }
+
+            // analysis -> workflow
+            analysisWorkflowHash[a.uuid] = a.workflow__uuid;
         });
-        // TODO: DEBUG
-        // add dataset entry for the raw dataset where analysis is null
-        // workflowAnalysisHash["dataset"] = "dataset";
+
+        flatAnalyses = [].concat.apply(["dataset"], d3.values(workflowAnalysisHash));
     };
 
     // set coordinates for nodes
@@ -542,25 +651,28 @@ provenanceVisualizationModule = function () {
         });
     };
 
-// TODO: group nodes by analyses and then by workflows
-// TODO: create super nodes, which contain aggregated raw nodes
+    // creates analysis group dom elements which then contain the nodes and links of an analysis
     var createAnalysisLayers = function () {
-        var flattenAnalyses = [].concat.apply(["dataset"], d3.values(workflowAnalysisHash));
-
+        var aId = 0;
         // add analyses dom groups
-        analysis = canvas.selectAll(".analysis")
-            .data(flattenAnalyses)
-            .enter().append("g")
-            .classed("analysis", true)
-            .attr("id", function (d) {
-                return d;
-            });
-    };
+        aNodes.forEach(function () {
+            canvas.append("g")
+                .classed("analysis", true)
+                .attr("id", function () {
+                    return "aId-" + aId;
+                });
+            aId++;
+        });
+        analysis = d3.selectAll(".analysis");
 
-// TODO: in debug state
-    // check node belonging to analyis
-    var nodeBelongsToAnalysis = function (value, index, ar) {
-        return value.analysis == "dataset";
+        /*
+         analysis = canvas.selectAll(".analysis")
+         .data(flatAnalyses)
+         .enter().append("g")
+         .classed("analysis", true)
+         .attr("id", function (d,i) {
+         return "aId-" + i;
+         });*/
     };
 
     // drag start listener support for nodes
@@ -586,18 +698,20 @@ provenanceVisualizationModule = function () {
         // drag adjacent links
 
         // get input links
-        // update coords for x2 and y2
+        // update coordinates for x2 and y2
         srcNodeLinkHash[d.id].forEach(function (l) {
             d3.select("#linkId-" + l).attr("x2", d3.event.x);
             d3.select("#linkId-" + l).attr("y2", d3.event.y);
         });
 
         // get output links
-        // update coords for x1 and y1
-        tarNodeLinkHash[d.id].forEach(function (l) {
-            d3.select("#linkId-" + l).attr("x1", d3.event.x);
-            d3.select("#linkId-" + l).attr("y1", d3.event.y);
-        });
+        // update coordinates for x1 and y1
+        if (typeof tarNodeLinkHash[d.id] !== "undefined") {
+            tarNodeLinkHash[d.id].forEach(function (l) {
+                d3.select("#linkId-" + l).attr("x1", d3.event.x);
+                d3.select("#linkId-" + l).attr("y1", d3.event.y);
+            });
+        }
     };
 
     // drag end listener
@@ -615,80 +729,309 @@ provenanceVisualizationModule = function () {
         d3.selectAll(".node").call(drag);
     };
 
-    // draw links
-    var drawLinks = function () {
-        link = canvas.selectAll(".link")
-            .data(links)
-            .enter().append("line")
-            .attr("x1", function (l) {
-                return nodes[l.source].x;
-            })
-            .attr("y1", function (l) {
-                return nodes[l.source].y;
-            })
-            .attr("x2", function (l) {
-                return nodes[l.target].x;
-            })
-            .attr("y2", function (l) {
-                return nodes[l.target].y;
-            })
-            .classed({
-                "link": true
-            })
-            .style("opacity", 0.0)
-            .attr("id", function (d, i) {
-                return "linkId-" + i;
-            });
+    // drag start listener support for nodes
+    var analysisDragStart = function () {
+        d3.event.sourceEvent.stopPropagation();
     };
 
-// TODO: in debug state
+    // drag listener
+    var analysisDragging = function (an) {
+        // drag selected node
+        d3.select(this).attr("transform", function () {
+            return "translate(" + d3.event.x + "," + d3.event.y + ")";
+        });
+
+        // if (!an.hidden) {
+        an.predAnalyses.forEach(function (pan) {
+            aNodes[pan].outputNodes.forEach(function (n) {
+                if (typeof tarNodeLinkHash[n.id] !== "undefined") {
+                    tarNodeLinkHash[n.id].forEach(function (l) {
+                        if (nodeAnalysisHash[links[l].target] == an.id) {
+                            d3.select("#linkId-" + l).attr("x2", d3.event.x);
+                            d3.select("#linkId-" + l).attr("y2", d3.event.y);
+                        }
+                    });
+                }
+            });
+        });
+
+        an.succAnalyses.forEach(function (san) {
+            aNodes[san].inputNodes.forEach(function (n) {
+                srcNodeLinkHash[n.id].forEach(function (l) {
+                    d3.select("#linkId-" + l).attr("x1", d3.event.x);
+                    d3.select("#linkId-" + l).attr("y1", d3.event.y);
+                });
+            });
+        });
+        //}
+    };
+
+    // drag end listener
+    var analysisDragEnd = function () {
+    };
+
+    var applyAnalysisDragBehavior = function () {
+        // drag and drop node enabled
+        var analysisDrag = d3.behavior.drag()
+            .on("dragstart", analysisDragStart)
+            .on("drag", analysisDragging)
+            .on("dragend", analysisDragEnd);
+
+        // invoke dragging behavior on nodes
+        d3.selectAll(".aNode").call(analysisDrag);
+    };
+
+    // dye graph by analyses and its corresponding workflows
+    var dyeWorkflows = function () {
+        node.each(function () {
+            d3.select(this).style("stroke", function (d) {
+                return color(analysisWorkflowHash[d.analysis]);
+            });
+        });
+
+    };
+
+    // dye graph by analyses
+    var dyeAnalyses = function () {
+        node.each(function () {
+            d3.select(this).style("fill", function (d) {
+                return color(d.analysis);
+            });
+        });
+
+    };
+
+// TODO: DEBUG: function might be obsolete
+    // draw analysis links
+    // depends on visibility of predecessor and successor analysis super node
+    // when one of them is hidden, connect link directly to the node coordinates
+    var drawAnalysisLinks = function () {
+        canvas.selectAll(".aLink")
+            .data(aLinks)
+            .enter().append("line")
+            .attr("x1", function (l) {
+                return nodes[l.source].hidden ? aNodes[nodeAnalysisHash[l.source]].x : nodes[l.source].x;
+            })
+            .attr("y1", function (l) {
+                return nodes[l.source].hidden ? aNodes[nodeAnalysisHash[l.source]].y : nodes[l.source].y;
+            })
+            .attr("x2", function (l) {
+                return nodes[l.target].hidden ? aNodes[nodeAnalysisHash[l.target]].x : nodes[l.target].x;
+            })
+            .attr("y2", function (l) {
+                return nodes[l.target].hidden ? aNodes[nodeAnalysisHash[l.target]].y : nodes[l.target].y;
+            })
+            .classed({
+                "aLink": true
+            })
+            .attr("id", function (l) {
+                return "aLinkId-" + l.id;
+            });
+
+        // set analysis link dom element
+        aLink = d3.selectAll(".aLink");
+    };
+
+// TODO: DEBUG: QUICK FIX FOR DEMONSTRATION: as coordinates for anodes do not exist yet without the layout adaption, center it to the analyses
+    // create inital layout for analysis only nodes
+    var initAnalysisLayout = function () {
+        aNodes.forEach(function (an) {
+            // get min and max column/row of nodes to center new analysis process node
+            var min = [d3.min(nodes.filter(function (n) {
+                    return n.analysis == an.uuid;
+                }), function (d) {
+                    return d.x;
+                }), d3.min(nodes.filter(function (n) {
+                    return n.analysis == an.uuid;
+                }), function (d) {
+                    return d.y;
+                })],
+                max = [d3.max(nodes.filter(function (n) {
+                    return n.analysis == an.uuid;
+                }), function (d) {
+                    return d.x;
+                }), d3.max(nodes.filter(function (n) {
+                    return n.analysis == an.uuid;
+                }), function (d) {
+                    return d.y;
+                })];
+            var delta = {x: min[0] + (max[0] - min[0]) / 2, y: min[1] + (max[1] - min[1]) / 2};
+
+            an.x = delta.x;
+            an.y = delta.y;
+        });
+    };
+
+    // set display property of analysis connecting links
+    var initLinkVisibility = function () {
+        aNodes.forEach(function (an) {
+            an.predAnalyses.forEach(function (pan) {
+                aNodes[pan].outputNodes.forEach(function (n) {
+                    if (typeof tarNodeLinkHash[n.id] !== "undefined") {
+                        tarNodeLinkHash[n.id].forEach(function (l) {
+                            if (nodeAnalysisHash[links[l].target] == an.id) {
+                                links[l].hidden = false;
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    };
+
+    // draw links
+    var drawLinks = function () {
+        //var analysisId = 0;
+        analysis.each(function (d, i) {
+            d3.select(this).selectAll(".link")
+                .data(links.filter(function (l) {
+                    //return nodes[l.target].analysis == a /*&& nodes[l.source].analysis == a*/;
+                    return nodeAnalysisHash[l.target] == i;
+                }))
+                .enter().append("line")
+                .attr("x1", function (l) {
+                    return l.hidden ? nodes[l.source].x : aNodes[nodeAnalysisHash[l.source]].x;
+                })
+                .attr("y1", function (l) {
+                    return l.hidden ? nodes[l.source].y : aNodes[nodeAnalysisHash[l.source]].y;
+                })
+                .attr("x2", function (l) {
+                    return l.hidden ? nodes[l.target].x : aNodes[nodeAnalysisHash[l.target]].x;
+                })
+                .attr("y2", function (l) {
+                    return l.hidden ? nodes[l.target].y : aNodes[nodeAnalysisHash[l.target]].y;
+                })
+                .classed({
+                    "link": true
+                })
+                .style("opacity", 0.0)
+                .attr("id", function (l) {
+                    return "linkId-" + l.id;
+                }).style("display", function (l) {
+                    return l.hidden ? "none" : "inline";
+                });
+            //analysisId++;
+        });
+
+        // set link dom element
+        link = d3.selectAll(".link");
+
+        // create d3-tip tooltips
+        var tip = d3.tip()
+            .attr("class", "d3-tip")
+            .offset([-10, 0])
+            .html(function (l) {
+                return "<strong>Id:</strong> <span style='color:#fa9b30'>" + l.id + "</span><br>" +
+                    "<strong>Source Id:</strong> <span style='color:#fa9b30'>" + l.source + "</span><br>" +
+                    "<strong>Target Id:</strong> <span style='color:#fa9b30'>" + l.target + "</span>";
+            });
+
+        // invoke tooltip on dom element
+        link.call(tip);
+        link.on("mouseover", tip.show)
+            .on("mouseout", tip.hide);
+    };
+
+    // draw analysis nodes
+    var drawAnalysisNodes = function () {
+        analysis.each(function (d, i) {
+            d3.select(this).selectAll(".aNode")
+                .data(aNodes.filter(function (an) {
+                    return an.id == i;
+                }))
+                .enter().append("g").each(function (an) {
+                    d3.select(this).classed({"aNode": true, "superANode": true})
+                        .attr("transform", "translate(" + an.x + "," + an.y + ")")
+                        .attr("id", function () {
+                            return "aNodeId-" + an.id;
+                        })
+                        .append("circle")
+                        .attr("r", r * 2)
+                        .style("fill", function () {
+                            return color(an.uuid);
+                        })
+                        .style("stroke", function () {
+                            return color(analysisWorkflowHash[an.uuid]);
+                        })
+                        .style("stroke-width", 3);
+                });
+        });
+
+        // set node dom element
+        aNode = d3.selectAll(".aNode");
+
+        // create d3-tip tooltips
+        var tip = d3.tip()
+            .attr("class", "d3-tip")
+            .offset([-10, 0])
+            .html(function (d) {
+                return d.id === 0 ? "<span style='color:#fa9b30'>Original Dataset</span><br><strong>Id:</strong> <span style='color:#fa9b30'>" + d.id + "</span><br>" :
+                    "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.id + "</span><br>" +
+                        "<strong>Start:</strong> <span style='color:#fa9b30'>" + d.start + "</span><br>" +
+                        "<strong>End:</strong> <span style='color:#fa9b30'>" + d.end + "</span>";
+            });
+
+        // invoke tooltip on dom element
+        aNode.call(tip);
+        aNode.on("mouseover", tip.show)
+            .on("mouseout", tip.hide);
+    };
+
     // draw nodes
     var drawNodes = function () {
-        node = canvas.selectAll(".node")
-            .data(nodes)
-            .enter().append("g")
-            .each(function (d) {
-                if (d.nodeType === "raw" || d.nodeType === "processed") {
-                    d3.select(this)
-                        .attr("transform", "translate(" + d.x + "," + d.y + ")")
-                        .append("circle")
-                        .attr("r", r);
-                } else {
-                    if (d.nodeType === "special") {
+        analysis.each(function (a, i) {
+            d3.select(this).selectAll(".node")
+                .data(nodes.filter(function (n) {
+                    return nodeAnalysisHash[n.id] == i;
+                }))
+                .enter().append("g").each(function (d) {
+                    if (d.nodeType === "raw" || d.nodeType === "processed") {
                         d3.select(this)
-                            .attr("transform", "translate(" + (d.x - r) + "," + (d.y - r) + ")")
-                            .append("rect")
-                            .attr("width", r * 2)
-                            .attr("height", r * 2);
+                            .attr("transform", "translate(" + d.x + "," + d.y + ")")
+                            .append("circle")
+                            .attr("r", r);
+                    } else {
+                        if (d.nodeType === "special") {
+                            d3.select(this)
+                                .attr("transform", "translate(" + (d.x - r) + "," + (d.y - r) + ")")
+                                .append("rect")
+                                .attr("width", r * 2)
+                                .attr("height", r * 2);
+                        }
+                        if (d.nodeType === "dt") {
+                            d3.select(this)
+                                .attr("transform", "translate(" + (d.x - r * 0.75) + "," + (d.y - r * 0.75) + ")")
+                                .append("rect")
+                                .attr("width", r * 1.5)
+                                .attr("height", r * 1.5)
+                                .attr("transform", function () {
+                                    return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
+                                });
+                        }
                     }
-                    if (d.nodeType === "dt") {
-                        d3.select(this)
-                            .attr("transform", "translate(" + (d.x - r * 0.75) + "," + (d.y - r * 0.75) + ")")
-                            .append("rect")
-                            .attr("width", r * 1.5)
-                            .attr("height", r * 1.5)
-                            .attr("transform", function () {
-                                return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
-                            });
-                    }
-                }
-            }).classed({
-                "node": true,
-                "rawNode": (function (d) {
-                    return d.nodeType == "raw";
-                }),
-                "specialNode": (function (d) {
-                    return d.nodeType == "special";
-                }),
-                "dtNode": (function (d) {
-                    return d.nodeType == "dt";
-                }),
-                "processedNode": (function (d) {
-                    return d.nodeType == "processed";
-                })
-            }).attr("id", function (d) {
-                return "nodeId-" + d.id;
-            });
+                }).classed({
+                    "node": true,
+                    "rawNode": (function (d) {
+                        return d.nodeType == "raw";
+                    }),
+                    "specialNode": (function (d) {
+                        return d.nodeType == "special";
+                    }),
+                    "dtNode": (function (d) {
+                        return d.nodeType == "dt";
+                    }),
+                    "processedNode": (function (d) {
+                        return d.nodeType == "processed";
+                    })
+                }).attr("id", function (d) {
+                    return "nodeId-" + d.id;
+                }).style("display", function (d) {
+                    return d.hidden ? "none" : "inline";
+                });
+        });
+
+        // set node dom element
+        node = d3.selectAll(".node");
 
         // create d3-tip tooltips
         var tip = d3.tip()
@@ -702,60 +1045,94 @@ provenanceVisualizationModule = function () {
 
         // invoke tooltip on dom element
         node.call(tip);
-
         node.on("mouseover", tip.show)
             .on("mouseout", tip.hide);
+    };
 
-// TODO: in debug state
-        /*
-         node = [];
-         console.log(analysis);
-         analysis.each(function () {
-         console.log(d3.select(this));
-         var curAnalysis = d3.select(this).selectAll(".node")
-         .data(nodes.filter(nodeBelongsToAnalysis))
-         .enter().append("g").each(function (d) {
-         if (d.nodeType === "raw" || d.nodeType === "processed") {
-         d3.select(this).append("circle").attr("r", r);
-         } else {
-         if (d.nodeType === "dt") {
-         d3.select(this).append("rect").attr("width", r * 1.5)
-         .attr("height", r * 1.5)
-         .attr("transform", function () {
-         return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
-         });
-         } else {
-         d3.select(this).append("rect").attr("width", r * 2)
-         .attr("height", r * 2);
-         }
-         }
-         }).classed({
-         "node": true,
-         "rawNode": (function (d) {
-         return d.nodeType == "raw";
-         }),
-         "specialNode": (function (d) {
-         return d.nodeType == "special";
-         }),
-         "dtNode": (function (d) {
-         return d.nodeType == "dt";
-         }),
-         "processedNode": (function (d) {
-         return d.nodeType == "processed";
-         })
-         }).attr("id", function (d) {
-         return "nodeId-" + d.id;
-         });
-         console.log(curAnalysis);
-         if (curAnalysis !== null) {
-         //node = node.concat(curAnalysis);
-         //node = node.concat.apply(curAnalysis);
-         node.push(curAnalysis);
-         }
-         });
-         console.log("node");
-         console.log(node);
-         */
+
+// TODO: code cleanup
+    // collapse and expand analysis
+    var handleCollapseExpandAnalysis = function () {
+        d3.selectAll(".analysis").on("dblclick", function () {
+            var an = aNodes[+d3.select(this).attr("id").replace(/(aId-)/g, "")];
+
+            // expand
+            if (!an.hidden) {
+                d3.select(this).selectAll(".node").style("display", "inline");
+                d3.select(this).selectAll(".link").style("display", "inline");
+                d3.select(this).select(".aNode").style("display", "none");
+
+                // set node visibility
+                an.hidden = true;
+                an.nodes.forEach(function (n) {
+                    n.hidden = false;
+                });
+
+                // adapt incoming links
+                an.predAnalyses.forEach(function (pan) {
+                    aNodes[pan].outputNodes.forEach(function (n) {
+                        if (typeof tarNodeLinkHash[n.id] !== "undefined") {
+                            tarNodeLinkHash[n.id].forEach(function (l) {
+                                if (nodeAnalysisHash[links[l].target] == an.id) {
+                                    d3.select("#linkId-" + l).style("display", "inline").attr("x2", nodes[links[l].target].x);
+                                    d3.select("#linkId-" + l).style("display", "inline").attr("y2", nodes[links[l].target].y);
+                                }
+                            });
+                        }
+                    });
+                });
+
+                // adapt outgoing links
+                an.succAnalyses.forEach(function (san) {
+                    aNodes[san].inputNodes.forEach(function (n) {
+                        srcNodeLinkHash[n.id].forEach(function (l) {
+                            if (nodeAnalysisHash[links[l].source] == an.id) {
+                                d3.select("#linkId-" + l).style("display", "inline").attr("x1", nodes[links[l].source].x);
+                                d3.select("#linkId-" + l).style("display", "inline").attr("y1", nodes[links[l].source].y);
+                            }
+                        });
+                    });
+                });
+
+                // collapse
+            } else {
+                d3.select(this).selectAll(".node").style("display", "none");
+                d3.select(this).selectAll(".link").style("display", "none");
+                d3.select(this).select(".aNode").style("display", "inline");
+
+                an.hidden = false;
+                an.nodes.forEach(function (n) {
+                    n.hidden = true;
+                });
+
+                // adapt incoming links
+                an.predAnalyses.forEach(function (pan) {
+                    aNodes[pan].outputNodes.forEach(function (n) {
+                        if (typeof tarNodeLinkHash[n.id] !== "undefined") {
+                            tarNodeLinkHash[n.id].forEach(function (l) {
+                                if (nodeAnalysisHash[links[l].target] == an.id) {
+                                    d3.select("#linkId-" + l).style("display", "inline").attr("x2", an.x);
+                                    d3.select("#linkId-" + l).style("display", "inline").attr("y2", an.y);
+                                }
+                            });
+                        }
+                    });
+                });
+
+                // adapt outgoing links
+                an.succAnalyses.forEach(function (san) {
+                    aNodes[san].inputNodes.forEach(function (n) {
+                        srcNodeLinkHash[n.id].forEach(function (l) {
+                            if (nodeAnalysisHash[links[l].source] == an.id) {
+                                d3.select("#linkId-" + l).style("display", "inline").attr("x1", an.x);
+                                d3.select("#linkId-" + l).style("display", "inline").attr("y1", an.y);
+                            }
+                        });
+                    });
+                });
+
+            }
+        });
     };
 
     // path highlighting
@@ -780,13 +1157,76 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // clear highlighting
-    var handleClearHighlighting = function () {
+    // fit visualization onto free windows space
+    var fitGraphToWindow = function (transitionTime) {
+        var min = [d3.min(nodes, function (d) {
+                return d.x - margin.left;
+            }), d3.min(nodes, function (d) {
+                return d.y - margin.top;
+            })],
+            max = [d3.max(nodes, function (d) {
+                return d.x + margin.right;
+            }), d3.max(nodes, function (d) {
+                return d.y + margin.bottom;
+            })],
+            delta = [max[0] - min[0], max[1] - min[1]],
+            factor = [(width / delta[0]), (height / delta[1])],
+            newScale = d3.min(factor),
+            newPos = [((width - delta[0] * newScale) / 2),
+                ((height - delta[1] * newScale) / 2)];
+
+        newPos[0] -= min[0] * newScale;
+        newPos[1] -= min[1] * newScale;
+
+        if (transitionTime !== 0) {
+            canvas
+                .transition()
+                .duration(1000)
+                .attr("transform", "translate(" + newPos + ")scale(" + newScale + ")");
+        } else {
+            canvas.attr("transform", "translate(" + newPos + ")scale(" + newScale + ")");
+        }
+
+        zoom.translate(newPos);
+        zoom.scale(newScale);
+
+        // background rectangle fix
+        rect.attr("transform", "translate(" + (-newPos[0] / newScale) + "," + (-newPos[1] / newScale) + ")" + " scale(" + (+1 / newScale) + ")");
+    };
+
+    // wrapper function to invoke scale and transformation onto the visualization
+    var handleFitGraphToWindow = function () {
+        fitGraphToWindow(1000);
+    };
+
+    // click and dblclick separation on background rectangle
+    var handleBRectClick = function () {
+        var clickinProgress = false, // click in progress
+            timer = 0,
+            bRectAction = clearHighlighting;	// default action
+
         d3.select(".brect").on("click", function () {
             // suppress after dragend
             if (d3.event.defaultPrevented) return;
 
-            clearHighlighting();
+            // if dblclick, break
+            if (clickinProgress) {
+                return;
+            }
+
+            clickinProgress = true;
+            // single click event is called after timeout unless a dblick action is performed
+            timer = setTimeout(function () {
+                bRectAction();	// called always
+
+                bRectAction = clearHighlighting; // set back click action to single
+                clickinProgress = false;
+            }, 200); // timeout value
+        });
+
+        // if dblclick, the single click action is overwritten
+        d3.select(".brect").on("dblclick", function () {
+            bRectAction = handleFitGraphToWindow;
         });
     };
 
@@ -795,8 +1235,11 @@ provenanceVisualizationModule = function () {
         // path highlighting
         handlePathHighlighting();
 
-        // clear highlighting
-        handleClearHighlighting();
+        // handle click separation
+        handleBRectClick();
+
+        // handle analysis aggregation
+        handleCollapseExpandAnalysis();
     };
 
     // main d3 visualization function
@@ -808,9 +1251,11 @@ provenanceVisualizationModule = function () {
             // set coordinates for nodes
             assignGridCoordinates();
 
-// TODO: in debug state
             // create analysis group layers
-            // createAnalysisLayers();
+            createAnalysisLayers();
+
+            // create inital layout for analysis only nodes
+            initAnalysisLayout();
 
             // draw links
             drawLinks();
@@ -818,21 +1263,38 @@ provenanceVisualizationModule = function () {
             // draw nodes
             drawNodes();
 
+// TODO: DEBUG: temporarily disabled
+            // draw analysis links
+            //drawAnalysisLinks();
+
+            // draw analysis nodes
+            drawAnalysisNodes();
+
+            // set initial graph position
+            fitGraphToWindow(0);
+
+            // colorize graph
+            dyeWorkflows();
+            dyeAnalyses();
+
             // add dragging behavior to nodes
             applyDragBehavior();
+
+            // add dragging behavior to analysis nodes
+            applyAnalysisDragBehavior();
 
             // event listeners
             handleEvents();
 
             // fade in
-            d3.selectAll(".link").transition().duration(500).style("opacity", 0.7);
+            d3.selectAll(".link").transition().duration(500).style("opacity", 1.0);
             d3.selectAll(".node").transition().duration(500).style("opacity", 1.0);
         }, 500);
     };
 
     // layout graph
     var layout = function () {
-        // toplogical order
+        // topological order
         var topNodes = topSort(inputNodes);
 
         // coffman-graham layering
@@ -863,6 +1325,19 @@ provenanceVisualizationModule = function () {
 
             // create analyses and workflow hashes
             createWorkflowAnalysisMapping();
+
+            // extract analysis nodes
+            createAnalysisNodes();
+
+            // create analysis node mapping
+            createAnalysisNodeMapping();
+
+            // set display property of analysis connecting links
+            initLinkVisibility();
+
+// TODO: DEBUG: temporarily disabled
+            // extract analysis links
+            //createAnalysisLinks();
 
             // calculate layout
             layout();

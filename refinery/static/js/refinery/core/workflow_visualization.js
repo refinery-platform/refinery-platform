@@ -2101,7 +2101,7 @@ workflowVisualizationModule = function () {
 
         // if dblclick, the single click action is overwritten
         d3.select(".overlay").on("dblclick", function () {
-            overlay_action = overlay_on_dblclick();
+            overlay_action = overlay_on_dblclick;
         });
 
         // -----------------------------------------------------------------
