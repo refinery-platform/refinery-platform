@@ -657,7 +657,8 @@ def download_history_files(analysis) :
     analysis = Analysis.objects.get(uuid=analysis.uuid)
     dl_files = analysis.workflow_dl_files
 
-    ### creating dictionary based on files to download predetermined by workflow w/ keep operators
+    # creating dictionary based on files to download predetermined by workflow
+    # w/ keep operators
     dl_dict = {}
     for dl in dl_files.all():
         temp_dict = {}
@@ -666,26 +667,26 @@ def download_history_files(analysis) :
         dl_dict[str(dl.step_id)] = temp_dict
 
     task_list = []
-    # gets current galaxy connection
-    connection = analysis.get_galaxy_connection()
     try:
-        download_list = connection.get_history_file_list(analysis.history_id)
-    except RuntimeError as exc:
-        error_msg = "Post-processing failed: " + \
-            "error downloading Galaxy history files for analysis '{}': {}" \
-            .format(analysis.name, exc.message)
+        download_list =\
+            analysis.workflow.workflow_engine.instance.get_history_file_list(
+                analysis.history_id)
+    except galaxy.client.ConnectionError as exc:
+        error_msg = "Post-processing failed: error downloading Galaxy history files "
+        error_msg += "for analysis '{}': {}".format(analysis.name, exc.message)
         logger.error(error_msg)
-        if not isinstance(exc, (ConnectionError, TimeoutError, AuthenticationError, AuthorizationError)):
-            analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-            try:
-                analysis.delete_galaxy_library()
-                analysis.delete_galaxy_workflow()
-                analysis.delete_galaxy_history()
-            except galaxy.client.ConnectionError:
-                logger.error(
-                    "Cleanup failed for analysis '{}'".format(analysis.name))
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        try:
+            analysis.delete_galaxy_library()
+            analysis.delete_galaxy_workflow()
+            analysis.delete_galaxy_history()
+        except galaxy.client.ConnectionError:
+            logger.error(
+                "Cleanup failed for analysis '{}'".format(analysis.name))
         return task_list
 
+    # gets current galaxy connection
+    connection = analysis.get_galaxy_connection()
     # Iterating through files in current galaxy history
     for results in download_list:
         # download file if result state is "ok"
