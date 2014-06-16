@@ -445,9 +445,6 @@ def run_analysis_execution(analysis):
     #TODO: handle DoesNotExist exception
     analysis = Analysis.objects.get(uuid=analysis.uuid)
 
-    ######################
-    ### EXECUTION ###
-    ######################
     connection = analysis.galaxy_connection()
 
     ### generates same ret_list purely based on analysis object ###
@@ -471,34 +468,50 @@ def run_analysis_execution(analysis):
             logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
         return
 
-    connection = analysis.get_galaxy_connection()
+    workflow = connection.workflows.show_workflow(analysis.workflow_galaxy_id)
+    data = {}
+    data["workflow_id"] = analysis.workflow_galaxy_id
+    data["history"] = "hist_id={}".format(analysis.history_id)
+    data["ds_map"] = {}
+
+    # retrieving workflow based on input workflow_uuid
+    #TODO: handle DoesNotExist and MultipleObjectsReturned exceptions
+    curr_workflow = Workflow.objects.get(uuid=analysis.workflow.uuid)
+    # getting distinct workflow inputs
+    workflow_data_inputs = curr_workflow.data_inputs.all()
+    annot_inputs = {}
+    annot_counts = {}
+    for data_input in workflow_data_inputs:
+        input_type = data_input.name
+        annot_inputs[input_type] = []
+        annot_counts[input_type] = 0
+    # configure input files
+    for in_key, input_details in workflow["inputs"].iteritems():
+        inType = workflow['inputs'][in_key]['label']
+        if inType in annot_inputs:
+            temp_count = annot_counts[inType]
+            winput_id = ret_list[temp_count][inType]['id']
+            annot_counts[inType] = temp_count + 1
+        data["ds_map"][in_key] = {"id": winput_id, "src": "ld"}
 
     # Running workflow
     try:
-        result = connection.run_workflow(
-            analysis.workflow_galaxy_id,
-            ret_list,
-            analysis.history_id,
-            analysis.workflow.uuid
-            )
-    except ResponseError as exc:
-        warn_msg = "Analysis '{}' - ".format(analysis.name)
-        warn_msg += "invalid HTTP response from Galaxy: {}".format(exc.message)
-        logger.warn(warn_msg)
-    except RuntimeError as exc:
+        result = connection.workflows.run_workflow(
+             workflow_id=analysis.workflow_galaxy_id,
+             dataset_map=data["ds_map"],
+             history_id=analysis.history_id)
+    except galaxy.client.ConnectionError as exc:
         error_msg = "Analysis launch failed: error running Galaxy workflow "
         error_msg += "for analysis '{}': {}".format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_execution.update_state(state=celery.states.FAILURE)
-        if not isinstance(exc, (ConnectionError, TimeoutError, AuthenticationError, AuthorizationError)):
-            try:
-                analysis.delete_galaxy_library()
-                analysis.delete_galaxy_workflow()
-                analysis.delete_galaxy_history()
-            except galaxy.client.ConnectionError:
-                logger.error(
-                    "Cleanup failed for analysis '{}'".format(analysis.name))
+        try:
+            analysis.delete_galaxy_library()
+            analysis.delete_galaxy_workflow()
+            analysis.delete_galaxy_history()
+        except galaxy.client.ConnectionError:
+            logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
 
 
 def rename_analysis_results(analysis):
