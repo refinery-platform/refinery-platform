@@ -1,38 +1,24 @@
-from collections import defaultdict
+from datetime import datetime
+import os.path
+import re
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User, Group
+from django.contrib.sites.models import get_current_site
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.urlresolvers import reverse
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
+from django.shortcuts import render_to_response, get_object_or_404
+from django.template import RequestContext, loader
+from guardian.shortcuts import get_objects_for_group, get_objects_for_user, get_perms
 from core.forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 from core.models import ExtendedGroup, Project, DataSet, Workflow, UserProfile, \
     WorkflowEngine, Analysis, get_shared_groups
 from data_set_manager.models import *
 from data_set_manager.utils import get_matrix
-from datetime import datetime
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User, Group
-from django.contrib.sites.models import get_current_site
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.core.urlresolvers import resolve, reverse
-from django.http import HttpResponse, HttpResponseForbidden, \
-    HttpResponseRedirect
-from django.shortcuts import render_to_response, get_object_or_404
-from django.template import RequestContext, loader
-from django.utils import simplejson
-from file_store.models import FileStoreItem, FileStoreItem
 from galaxy_connector.models import Instance
-from guardian.shortcuts import get_objects_for_group, get_objects_for_user, \
-    get_perms, get_objects_for_group, get_objects_for_user, get_perms, \
-    get_users_with_perms
-from haystack.query import SearchQuerySet
 from visualization_manager.views import igv_multi_species
-from galaxy_connector.galaxy_workflow import create_workflow_graph
-import json
-import logging
-import os.path
-import settings
-import urllib2
-from tempfile import NamedTemporaryFile
 from annotation_server.models import GenomeBuild
-from file_store.models import FileStoreItem, get_temp_dir, file_path, FILE_STORE_BASE_DIR
-from file_store.tasks import create, import_file
-import re
+from file_store.models import FileStoreItem, file_path
 
 
 logger = logging.getLogger(__name__)
