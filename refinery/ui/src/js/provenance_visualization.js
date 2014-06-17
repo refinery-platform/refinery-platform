@@ -887,8 +887,18 @@ provenanceVisualizationModule = function () {
                         .attr("id", function () {
                             return "aNodeId-" + an.id;
                         })
-                        .append("circle")
-                        .attr("r", r * 2)
+                        /*.append("ellipse")
+                         .attr("rx", r * 3)
+                         .attr("ry", r * 2)*/
+                        .append("polygon")
+                        .attr("points", function () {
+                            return "0," + (-2 * r) + " " +
+                                (2 * r) + "," + (-r) + " " +
+                                (2 * r) + "," + (r) + " " +
+                                "0" + "," + (2 * r) + " " +
+                                (-2 * r) + "," + (r) + " " +
+                                (-2 * r) + "," + (-r);
+                        })
                         .style("fill", function () {
                             return color(an.uuid);
                         })
