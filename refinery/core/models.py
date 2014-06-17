@@ -13,6 +13,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.signals import user_logged_in
+from django.core.exceptions import MultipleObjectsReturned
 from django.core.mail import mail_admins, send_mail
 from django.db import models, transaction
 from django.db.models import Max
@@ -28,7 +29,6 @@ from registration.signals import user_registered, user_activated
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
-from django.core.exceptions import MultipleObjectsReturned
 
 
 logger = logging.getLogger(__name__)
@@ -47,8 +47,9 @@ NR_TYPES = (
             )
 
 class UserProfile ( models.Model ):
-    '''
-    Extends Django user model: https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
+    '''Extends Django user model:
+    https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
+
     '''
     uuid = UUIDField( unique=True, auto=True )
 
@@ -138,10 +139,12 @@ class BaseResource ( models.Model ):
 
 
 class OwnableResource ( BaseResource ):
-    '''
-    Abstract base class for core resources that can be owned (projects, data sets, workflows, workflow engines, etc.).
+    '''Abstract base class for core resources that can be owned
+    (projects, data sets, workflows, workflow engines, etc.).
     
-    IMPORTANT: expects derived classes to have "add/read/change/write_xxx" permissions, where "xxx" is the simple_modelname
+    IMPORTANT: expects derived classes to have "add/read/change/write_xxx"
+    permissions, where "xxx" is the simple_modelname
+
     '''
     def __unicode__( self ):
         return self.name
@@ -258,8 +261,9 @@ class TemporaryResource:
 
 
 class ManageableResource:
-    '''
-    Abstract base class for manageable resources such as disk space and workflow engines.    
+    '''Abstract base class for manageable resources such as disk space and
+    workflow engines.
+
     '''
 
     def __unicode__(self):
@@ -303,9 +307,11 @@ class DataSet(SharableResource):
         return self.name + " - " + self.get_owner_username() + " - " + self.summary
 
     def set_investigation(self,investigation,message=""):
-        '''
-        Associate this data set with an investigation. If this data set has an association with an investigation this 
-        association will be cleared first. Use update_investigation() to add a new version of the current investigation.
+        '''Associate this data set with an investigation. If this data set has
+        an association with an investigation this association will be cleared
+        first. Use update_investigation() to add a new version of the current
+        investigation.
+
         ''' 
         self.investigationlink_set.filter( data_set=self ).delete()        
         link = InvestigationLink(data_set=self, investigation=investigation, version=1, message=message)
@@ -416,7 +422,8 @@ class WorkflowEngine ( OwnableResource, ManageableResource ):
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
         )
-        
+
+
 @receiver(post_delete, sender=WorkflowEngine)
 def delete_associated_externaltoolstatus(sender, instance, **kwargs):
     try:
@@ -425,14 +432,13 @@ def delete_associated_externaltoolstatus(sender, instance, **kwargs):
         externaltool.delete()
     except:
         logger.error("There's no ExternalToolStatus with that unique instance identifier")
-    
 
-         
-class DiskQuota ( SharableResource, ManageableResource ):
+
+class DiskQuota(SharableResource, ManageableResource):
     # quota is given in bytes
     maximum = models.IntegerField()
     current = models.IntegerField()
-    
+
     def __unicode__(self):
         return self.name + " - Quota: " + str(self.current/(1024*1024*1024)) + " of " + str(self.maximum/(1024*1024*1024)) + "GB available"
 
@@ -442,6 +448,7 @@ class DiskQuota ( SharableResource, ManageableResource ):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
+
 
 class WorkflowInputRelationships(models.Model):
     '''
@@ -487,8 +494,9 @@ class Workflow(SharableResource, ManageableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name ),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
-    
-class Project( SharableResource ):
+
+
+class Project(SharableResource):
     is_catch_all = models.BooleanField( default=False )
 
     def __unicode__(self):
@@ -501,19 +509,17 @@ class Project( SharableResource ):
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name ),
         )
 
+
 class WorkflowFilesDL( models.Model ):
     step_id = models.TextField()
     pair_id = models.TextField()
     filename = models.TextField()
-    #template_num = models.IntegerField(blank=True, null=True)
-    #input_nodes = models.ManyToManyField(Node, blank=True)
-    #[{'step_id': '1', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '2', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '4', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '6', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '12', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}, {'step_id': '19', 'pair_id': '0', 'name': u'c157386e-99fa-11e1-8a4c-70cd60f26e14,dummy_tool,input_file,output_file'}]
-    
+
     def __unicode__(self):
         return str( self.step_id) + " <-> " + str(self.pair_id) + "<->" + self.filename
 
+
 class WorkflowDataInputMap( models.Model ):
-    #workflow_data_input_internal_id = models.IntegerField()
     workflow_data_input_name = models.CharField( max_length=200 )    
     data_uuid = UUIDField( auto=False )
     pair_id = models.IntegerField(blank=True, null=True)
@@ -522,8 +528,7 @@ class WorkflowDataInputMap( models.Model ):
         return str( self.workflow_data_input_name ) + " <-> " + self.data_uuid
 
 
-
-class AnalysisResult (models.Model):
+class AnalysisResult(models.Model):
     analysis_uuid = UUIDField( auto=False )
     file_store_uuid = UUIDField( auto=False )
     file_name = models.TextField()
@@ -734,7 +739,8 @@ class ExtendedGroupManager(models.Manager):
         except:
             return None
 
-class ExtendedGroup ( Group ):
+
+class ExtendedGroup(Group):
     ''' Extends the default Django Group in auth with a group of users that own and manage manageable resources for the group.'''    
     manager_group = models.ForeignKey( "self", related_name="managed_group", blank=True, null=True )
     uuid = UUIDField(unique=True, auto=True)
@@ -769,7 +775,8 @@ post_save.connect(create_manager_group, sender=ExtendedGroup)
 
 class NodeSet(SharableResource, TemporaryResource):
     '''A collection of Nodes representing data files.
-    Used to save selection state between sessions and to map data files to workflow inputs.
+    Used to save selection state between sessions and to map data files to
+    workflow inputs.
 
     '''
     #: Solr query representing a list of Nodes
@@ -799,10 +806,9 @@ class NodeSet(SharableResource, TemporaryResource):
         return self.name + ( "*" if self.is_current else "" ) + " - " + self.get_owner_username() + " - " + str(self.study.title)
 
 
-
 def get_current_node_set( study_uuid, assay_uuid ):
-    '''
-    Retrieve current node set. Create current node set if does not exist.
+    '''Retrieve current node set. Create current node set if does not exist.
+
     '''
     node_set = None
 
@@ -912,7 +918,8 @@ def delete_nodeset(uuid):
 
    
 class NodePair(models.Model):
-    '''Linking of specific node relationships for a given node relationship 
+    '''Linking of specific node relationships for a given node relationship
+
     '''
     uuid = UUIDField( unique=True, auto=True )
     #: specific file node 
@@ -924,10 +931,11 @@ class NodePair(models.Model):
 
     
 class NodeRelationship(BaseResource):
-    '''A collection of Nodes NodePair, representing connections between data files i.e. input/chip pairs
-    Used to define a collection of connections between data files for a specified data set 
+    '''A collection of Nodes NodePair, representing connections between data
+    files, i.e. input/chip pairs. Used to define a collection of connections
+    between data files for a specified data set.
+
     '''
-    
     #: must refer to type from noderelationshiptype 
     type = models.CharField(max_length=15, choices=NR_TYPES, blank=True)
     
@@ -948,10 +956,10 @@ class NodeRelationship(BaseResource):
         return self.name + ( "*" if self.is_current else "" ) + " - " + str(self.study.title)
 
 
-
 def get_current_node_relationship( study_uuid, assay_uuid ):
-    '''
-    Retrieve current node relationship. Create current node relationship if does not exist.
+    '''Retrieve current node relationship. Create current node relationship if
+    does not exist.
+
     '''
     relationship = None
 
@@ -994,10 +1002,11 @@ class RefineryLDAPBackend(LDAPBackend):
             except socket.error as e:
                 logger.error("Cannot send welcome email to: {}: {}".format(email_address_list, e))
         return user, created
-    
-    
+
+
 class ExternalToolStatus(models.Model):
     '''Model to keep track of the status of external tools Refinery uses
+
     '''
     SUCCESS_STATUS = "SUCCESS"
     FAILURE_STATUS = "FAILURE"
