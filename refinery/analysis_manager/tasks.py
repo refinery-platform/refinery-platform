@@ -454,7 +454,7 @@ def run_analysis_execution(analysis):
         ret_list = import_analysis_in_galaxy(
             ret_list, analysis.library_id, connection)
     except (RuntimeError, galaxy.client.ConnectionError) as exc:
-        error_msg = "Analysis execution failed:"
+        error_msg = "Analysis execution failed: "
         error_msg += "error importing analysis '{}' into Galaxy: {}"
         error_msg = error_msg.format(analysis.name, exc.message)
         logger.error(error_msg)
@@ -468,7 +468,12 @@ def run_analysis_execution(analysis):
             logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
         return
 
-    workflow = connection.workflows.show_workflow(analysis.workflow_galaxy_id)
+    try:
+        workflow = connection.workflows.show_workflow(analysis.workflow_galaxy_id)
+    except galaxy.client.ConnectionError:
+        error_msg = "Analysis execution failed: "
+        error_msg += "error getting information for workflow '%s' from Galaxy"
+        logger.error(error_msg, analysis.workflow_galaxy_id)
 
     ds_map = {}
     annot_inputs = {}
