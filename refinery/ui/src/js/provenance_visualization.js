@@ -712,6 +712,10 @@ provenanceVisualizationModule = function () {
                 d3.select("#linkId-" + l).attr("y1", d3.event.y);
             });
         }
+
+        // update data
+        d.x = d3.event.x;
+        d.y = d3.event.y;
     };
 
     // drag end listener
@@ -741,7 +745,7 @@ provenanceVisualizationModule = function () {
             return "translate(" + d3.event.x + "," + d3.event.y + ")";
         });
 
-        // if (!an.hidden) {
+        // update dom element
         an.predAnalyses.forEach(function (pan) {
             aNodes[pan].outputNodes.forEach(function (n) {
                 if (typeof tarNodeLinkHash[n.id] !== "undefined") {
@@ -763,7 +767,10 @@ provenanceVisualizationModule = function () {
                 });
             });
         });
-        //}
+
+        // update data
+        an.x = d3.event.x;
+        an.y = d3.event.y;
     };
 
     // drag end listener
