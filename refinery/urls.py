@@ -59,7 +59,7 @@ v1_api.register(ExternalToolStatusResource())
 
 
 #patterns for all of the different applications
-urlpatterns = patterns('',    
+urlpatterns = patterns('',
     #links in core urls
     url(r'^', include('core.urls')),
 
@@ -69,16 +69,6 @@ urlpatterns = patterns('',
     url(r'^data_set_manager/', include('data_set_manager.urls')),
     url(r'^visualization_manager/', include('visualization_manager.urls')),
     url(r'^file_server/', include('file_server.urls')),
-
-    #links in galaxy_connector urls 
-    url(r'^galaxy_connector/', include('galaxy_connector.urls')),
-
-    # Examples:
-    # url(r'^$', 'refinery.views.home', name='home'),
-    # url(r'^refinery/', include('refinery.foo.urls')),
-
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     url(r'^tasks/', include('djcelery.urls')),
 
