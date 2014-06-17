@@ -469,36 +469,29 @@ def run_analysis_execution(analysis):
         return
 
     workflow = connection.workflows.show_workflow(analysis.workflow_galaxy_id)
-    data = {}
-    data["workflow_id"] = analysis.workflow_galaxy_id
-    data["history"] = "hist_id={}".format(analysis.history_id)
-    data["ds_map"] = {}
 
-    # retrieving workflow based on input workflow_uuid
-    #TODO: handle DoesNotExist and MultipleObjectsReturned exceptions
-    curr_workflow = Workflow.objects.get(uuid=analysis.workflow.uuid)
-    # getting distinct workflow inputs
-    workflow_data_inputs = curr_workflow.data_inputs.all()
+    ds_map = {}
     annot_inputs = {}
     annot_counts = {}
-    for data_input in workflow_data_inputs:
+    # iterate over distinct workflow inputs
+    for data_input in analysis.workflow.data_inputs.all():
         input_type = data_input.name
         annot_inputs[input_type] = []
         annot_counts[input_type] = 0
     # configure input files
-    for in_key, input_details in workflow["inputs"].iteritems():
-        inType = workflow['inputs'][in_key]['label']
+    for in_key, input_details in workflow['inputs'].iteritems():
+        inType = input_details['label']
         if inType in annot_inputs:
             temp_count = annot_counts[inType]
             winput_id = ret_list[temp_count][inType]['id']
             annot_counts[inType] = temp_count + 1
-        data["ds_map"][in_key] = {"id": winput_id, "src": "ld"}
+        ds_map[in_key] = {"id": winput_id, "src": "ld"}
 
     # Running workflow
     try:
         result = connection.workflows.run_workflow(
              workflow_id=analysis.workflow_galaxy_id,
-             dataset_map=data["ds_map"],
+             dataset_map=ds_map,
              history_id=analysis.history_id)
     except galaxy.client.ConnectionError as exc:
         error_msg = "Analysis launch failed: error running Galaxy workflow "
