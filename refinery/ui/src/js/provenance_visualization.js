@@ -483,27 +483,6 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // createAnalysisLinks
-    var createAnalysisLinks = function () {
-        var linkId = 0;
-        aNodes.forEach(function (an) {
-            an.inputNodes.forEach(function (n) {
-                if (srcLinkHash[n.id].length !== 0) {
-                    srcLinkHash[n.id].forEach(function (p) {
-                        // link connects output node of predecessor analysis and input node of current analysis
-                        aLinks.push({
-                            source: nodes[p].id,
-                            target: n.id,
-                            id: linkId,
-                            hidden: false
-                        });
-                        linkId++;
-                    });
-                }
-            });
-        });
-    };
-
     // build link hashes
     var createLinkHashes = function (parentNodeElem, linkId, nodeId, srcNodeIds, srcLinkIds) {
         srcNodeIds.push(nodeHash[parentNodeElem]);
@@ -623,6 +602,12 @@ provenanceVisualizationModule = function () {
                 }
             });
         });
+
+        aNodes.forEach(function (an) {
+            an.links = links.filter(function (l) {
+                return nodeAnalysisHash[l.target] == an.id;
+            });
+        });
     };
 
     // extract workflows from analyses
@@ -664,15 +649,6 @@ provenanceVisualizationModule = function () {
             aId++;
         });
         analysis = d3.selectAll(".analysis");
-
-        /*
-         analysis = canvas.selectAll(".analysis")
-         .data(flatAnalyses)
-         .enter().append("g")
-         .classed("analysis", true)
-         .attr("id", function (d,i) {
-         return "aId-" + i;
-         });*/
     };
 
     // drag start listener support for nodes
@@ -808,37 +784,6 @@ provenanceVisualizationModule = function () {
 
     };
 
-// TODO: DEBUG: function might be obsolete
-    // draw analysis links
-    // depends on visibility of predecessor and successor analysis super node
-    // when one of them is hidden, connect link directly to the node coordinates
-    var drawAnalysisLinks = function () {
-        canvas.selectAll(".aLink")
-            .data(aLinks)
-            .enter().append("line")
-            .attr("x1", function (l) {
-                return nodes[l.source].hidden ? aNodes[nodeAnalysisHash[l.source]].x : nodes[l.source].x;
-            })
-            .attr("y1", function (l) {
-                return nodes[l.source].hidden ? aNodes[nodeAnalysisHash[l.source]].y : nodes[l.source].y;
-            })
-            .attr("x2", function (l) {
-                return nodes[l.target].hidden ? aNodes[nodeAnalysisHash[l.target]].x : nodes[l.target].x;
-            })
-            .attr("y2", function (l) {
-                return nodes[l.target].hidden ? aNodes[nodeAnalysisHash[l.target]].y : nodes[l.target].y;
-            })
-            .classed({
-                "aLink": true
-            })
-            .attr("id", function (l) {
-                return "aLinkId-" + l.id;
-            });
-
-        // set analysis link dom element
-        aLink = d3.selectAll(".aLink");
-    };
-
 // TODO: DEBUG: QUICK FIX FOR DEMONSTRATION: as coordinates for anodes do not exist yet without the layout adaption, center it to the analyses
     // create inital layout for analysis only nodes
     var initAnalysisLayout = function () {
@@ -886,43 +831,33 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // draw links
+// TODO: draw links before analyses
     var drawLinks = function () {
-        //var analysisId = 0;
-        analysis.each(function (d, i) {
-            d3.select(this).selectAll(".link")
-                .data(links.filter(function (l) {
-                    //return nodes[l.target].analysis == a /*&& nodes[l.source].analysis == a*/;
-                    return nodeAnalysisHash[l.target] == i;
-                }))
-                .enter().append("line")
-                .attr("x1", function (l) {
-                    return l.hidden ? nodes[l.source].x : aNodes[nodeAnalysisHash[l.source]].x;
-                })
-                .attr("y1", function (l) {
-                    return l.hidden ? nodes[l.source].y : aNodes[nodeAnalysisHash[l.source]].y;
-                })
-                .attr("x2", function (l) {
-                    return l.hidden ? nodes[l.target].x : aNodes[nodeAnalysisHash[l.target]].x;
-                })
-                .attr("y2", function (l) {
-                    return l.hidden ? nodes[l.target].y : aNodes[nodeAnalysisHash[l.target]].y;
-                })
-                .classed({
-                    "link": true
-                })
-                .style("opacity", 0.0)
-                .attr("id", function (l) {
-                    return "linkId-" + l.id;
-                }).style("display", function (l) {
-                    return l.hidden ? "none" : "inline";
-                });
-            //analysisId++;
-        });
-
-        // set link dom element
-        link = d3.selectAll(".link");
-
+        link = canvas.selectAll(".link")
+            .data(links)
+            .enter().append("line")
+            .attr("x1", function (l) {
+                return l.hidden ? nodes[l.source].x : aNodes[nodeAnalysisHash[l.source]].x;
+            })
+            .attr("y1", function (l) {
+                return l.hidden ? nodes[l.source].y : aNodes[nodeAnalysisHash[l.source]].y;
+            })
+            .attr("x2", function (l) {
+                return l.hidden ? nodes[l.target].x : aNodes[nodeAnalysisHash[l.target]].x;
+            })
+            .attr("y2", function (l) {
+                return l.hidden ? nodes[l.target].y : aNodes[nodeAnalysisHash[l.target]].y;
+            })
+            .classed({
+                "link": true
+            })
+            .style("opacity", 0.0)
+            .attr("id", function (l) {
+                return "linkId-" + l.id;
+            }).style("display", function (l) {
+                return l.hidden ? "none" : "inline";
+            });
+// TODO: FIX: in certain cases, tooltips collide with canvas bounding box
         // create d3-tip tooltips
         var tip = d3.tip()
             .attr("class", "d3-tip")
@@ -1058,7 +993,6 @@ provenanceVisualizationModule = function () {
 
 
 // TODO: code cleanup
-    // collapse and expand analysis
     var handleCollapseExpandAnalysis = function () {
         d3.selectAll(".analysis").on("dblclick", function () {
             var an = aNodes[+d3.select(this).attr("id").replace(/(aId-)/g, "")];
@@ -1066,7 +1000,9 @@ provenanceVisualizationModule = function () {
             // expand
             if (!an.hidden) {
                 d3.select(this).selectAll(".node").style("display", "inline");
-                d3.select(this).selectAll(".link").style("display", "inline");
+                an.links.forEach(function (l) {
+                    d3.select("#linkId-" + l.id).style("display", "inline");
+                });
                 d3.select(this).select(".aNode").style("display", "none");
 
                 // set node visibility
@@ -1104,7 +1040,9 @@ provenanceVisualizationModule = function () {
                 // collapse
             } else {
                 d3.select(this).selectAll(".node").style("display", "none");
-                d3.select(this).selectAll(".link").style("display", "none");
+                an.links.forEach(function (l) {
+                    d3.select("#linkId-" + l.id).style("display", "none");
+                });
                 d3.select(this).select(".aNode").style("display", "inline");
 
                 an.hidden = false;
@@ -1206,32 +1144,33 @@ provenanceVisualizationModule = function () {
         fitGraphToWindow(1000);
     };
 
-    // click and dblclick separation on background rectangle
+// TODO: FIX: on double click, click action is executed
+    // click and double click separation on background rectangle
     var handleBRectClick = function () {
-        var clickinProgress = false, // click in progress
+        var clickInProgress = false, // click in progress
             timer = 0,
             bRectAction = clearHighlighting;	// default action
 
         d3.select(".brect").on("click", function () {
-            // suppress after dragend
+            // suppress after drag end
             if (d3.event.defaultPrevented) return;
 
-            // if dblclick, break
-            if (clickinProgress) {
+            // if double click, break
+            if (clickInProgress) {
                 return;
             }
 
-            clickinProgress = true;
+            clickInProgress = true;
             // single click event is called after timeout unless a dblick action is performed
             timer = setTimeout(function () {
                 bRectAction();	// called always
 
                 bRectAction = clearHighlighting; // set back click action to single
-                clickinProgress = false;
+                clickInProgress = false;
             }, 200); // timeout value
         });
 
-        // if dblclick, the single click action is overwritten
+        // if double click, the single click action is overwritten
         d3.select(".brect").on("dblclick", function () {
             bRectAction = handleFitGraphToWindow;
         });
@@ -1258,21 +1197,17 @@ provenanceVisualizationModule = function () {
             // set coordinates for nodes
             assignGridCoordinates();
 
-            // create analysis group layers
-            createAnalysisLayers();
-
-            // create inital layout for analysis only nodes
+            // create initial layout for analysis only nodes
             initAnalysisLayout();
 
             // draw links
             drawLinks();
 
+            // create analysis group layers
+            createAnalysisLayers();
+
             // draw nodes
             drawNodes();
-
-// TODO: DEBUG: temporarily disabled
-            // draw analysis links
-            //drawAnalysisLinks();
 
             // draw analysis nodes
             drawAnalysisNodes();
@@ -1341,10 +1276,6 @@ provenanceVisualizationModule = function () {
 
             // set display property of analysis connecting links
             initLinkVisibility();
-
-// TODO: DEBUG: temporarily disabled
-            // extract analysis links
-            //createAnalysisLinks();
 
             // calculate layout
             layout();
