@@ -10,10 +10,6 @@ def index(request):
     return HttpResponse("%s Galaxy Connector" % (get_current_site(request).name))
 
 
-def api(request, api_key):
-    return HttpResponse("%s Galaxy Connector<br><br>API Key: %s" % (get_current_site(request).name, api_key))
-
-
 def obtain_instance(request, index=0 ):
     # NOTE: this is no a real login - all one needs to do is to is call this url to add a Galaxy instance object to the session 
     # create an instance

@@ -1,10 +1,7 @@
-from django.conf.urls.defaults import patterns, include, url
+from django.conf.urls.defaults import patterns, url
 
-#galaxy_connector pages
 urlpatterns = patterns('galaxy_connector.views',
     url(r'^$', 'index'),
-    #url(r'^(?P<api_key>[a-z0-9]+)/$', 'api'),
-    #url(r'^(?P<api_key>[a-z0-9]+)/history$', 'history'),
 
     url(r'^login/(\d{1})/$', 'obtain_instance'),
     url(r'^login/$', 'obtain_instance'),

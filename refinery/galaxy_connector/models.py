@@ -1,13 +1,12 @@
 from bioblend import galaxy
 from django.db import models
-from galaxy_connector.galaxy_workflow import GalaxyWorkflow
-from galaxy_connector.galaxy_workflow import GalaxyWorkflowInput
+from galaxy_connector.galaxy_workflow import GalaxyWorkflow, GalaxyWorkflowInput
 
 
 class Instance(models.Model):
     base_url = models.CharField(max_length=2000)
     data_url = models.CharField(max_length=100, default="datasets")
-    api_url = models.CharField( max_length=100, default="api")
+    api_url = models.CharField(max_length=100, default="api")
     api_key = models.CharField(max_length=50)
     description = models.CharField(max_length=500, default="",
                                    null=True, blank=True)
