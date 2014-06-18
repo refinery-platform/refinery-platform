@@ -474,6 +474,15 @@ def run_analysis_execution(analysis):
         error_msg = "Analysis execution failed: "
         error_msg += "error getting information for workflow '%s' from Galaxy"
         logger.error(error_msg, analysis.workflow_galaxy_id)
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        run_analysis_execution.update_state(state=celery.states.FAILURE)
+        try:
+            analysis.delete_galaxy_library()
+            analysis.delete_galaxy_workflow()
+            analysis.delete_galaxy_history()
+        except galaxy.client.ConnectionError:
+            logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
+        return
 
     ds_map = {}
     annot_inputs = {}
