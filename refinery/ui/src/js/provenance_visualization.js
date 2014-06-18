@@ -172,7 +172,8 @@ provenanceVisualizationModule = function () {
     var placeNodes = function (lgNodes) {
         var layer = 10,
             row = 0,
-            curRow = 0;
+            curRow = 0,
+            lastRow = 0;
 
         // from right to left
         lgNodes.forEach(function (lg) {
@@ -227,6 +228,8 @@ provenanceVisualizationModule = function () {
 
                         // 1 PRED 1 SUCC
                         if (cur.pred.length === 1 && cur.succ.length === 1) {
+                            console.log("1 x 1");
+                            console.log(n.id);
                             // 0 NEIGHBORS
                             if (cur.neighbors.length === 0) {
                                 curRow = nodes[cur.succ[0]].row;
@@ -246,6 +249,9 @@ provenanceVisualizationModule = function () {
                         else if (cur.pred.length === 1 && cur.succ.length > 1) {
                             minRow = nodes[cur.succ[0]].row;
                             maxRow = -1;
+                            console.log("1 x n");
+                            console.log(n.id);
+
 
                             // get min and max row for SPLIT BRANCH
                             cur.succ.forEach(function (s) {
@@ -256,10 +262,33 @@ provenanceVisualizationModule = function () {
                                     maxRow = nodes[s].row;
                                 }
                             });
+
+                            console.log("min " + minRow + " max " + maxRow);
                             if ((minRow + (maxRow - minRow) / 2) === curRow) {
-                                curRow += curRow;
+                                curRow += (minRow + (maxRow - minRow) / 2);
                             } else {
                                 curRow = minRow + (maxRow - minRow) / 2;
+                            }
+                            // quick fix
+
+                            // 0 NEIGHBORS
+                            if (cur.neighbors.length === 0) {
+                                curRow = minRow + (maxRow - minRow) / 2;
+                            } else {
+                                // n NEIGHBORS
+                                // check neighbors visited
+                                visited = 0;
+                                cur.neighbors.forEach(function (nb) {
+                                    if (nodes[nb].visited) {
+                                        visited++;
+                                    }
+                                });
+                                curRow = nodes[cur.succ[0]].row - (cur.neighbors.length / 2) + visited;
+                            }
+
+                            if (curRow === lastRow) {
+                                console.log("colision");
+                                curRow += 1;
                             }
                         }
                         // n PRED 1 SUCC
@@ -267,12 +296,13 @@ provenanceVisualizationModule = function () {
                             curRow = nodes[cur.succ[0]].row + cur.pred.length / 2;
 
                             // traverse graph and shift succs by row_shift
-                            traverseShift(cur.succ[0], cur.pred.length / 2);
+                            traverseShift(cur.succ[0], cur.pred.length / 2 + 2);
                         }
                         // n PRED n SUCC
                         else {
                             minRow = nodes[cur.succ[0]].row;
                             maxRow = -1;
+                            console.log("n x n");
 
                             // get min and max row for SPLIT BRANCH
                             cur.succ.forEach(function (s) {
@@ -325,8 +355,10 @@ provenanceVisualizationModule = function () {
                         }
                     }
                 }
+                console.log(nodes[n.id].row + "<-" + curRow);
                 nodes[n.id].row = curRow;
                 cur.o.visited = true;
+                lastRow = curRow;
             });
             layer--;
             row = 0;
