@@ -277,11 +277,8 @@ def run_analysis_preprocessing(analysis):
         error_msg += "for analysis '{}': {}".format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        analysis.cleanup()
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        try:
-            analysis.delete_galaxy_library()
-        except galaxy.client.ConnectionError:
-            logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
         return
 
     # import connections into database
@@ -319,14 +316,10 @@ def run_analysis_preprocessing(analysis):
         error_msg += "for analysis '{}': {}".format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        analysis.cleanup()
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        try:
-            analysis.delete_galaxy_library()
-        except galaxy.client.ConnectionError:
-            logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
         return
 
-    ######### ANALYSIS MODEL 
     # getting number of steps for current workflow
     new_workflow_steps = countWorkflowSteps(new_workflow)
 
@@ -340,12 +333,8 @@ def run_analysis_preprocessing(analysis):
         error_msg += "for analysis '{}': {}".format(analysis.name, e.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        analysis.cleanup()
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
-        try:
-            analysis.delete_galaxy_library()
-            analysis.delete_galaxy_workflow()
-        except galaxy.client.ConnectionError:
-            logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
         return
 
     # updating analysis object
@@ -459,13 +448,8 @@ def run_analysis_execution(analysis):
         error_msg = error_msg.format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        analysis.cleanup()
         run_analysis_execution.update_state(state=celery.states.FAILURE)
-        try:
-            analysis.delete_galaxy_library()
-            analysis.delete_galaxy_workflow()
-            analysis.delete_galaxy_history()
-        except galaxy.client.ConnectionError:
-            logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
         return
 
     try:
@@ -475,13 +459,8 @@ def run_analysis_execution(analysis):
         error_msg += "error getting information for workflow '%s' from Galaxy"
         logger.error(error_msg, analysis.workflow_galaxy_id)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        analysis.cleanup()
         run_analysis_execution.update_state(state=celery.states.FAILURE)
-        try:
-            analysis.delete_galaxy_library()
-            analysis.delete_galaxy_workflow()
-            analysis.delete_galaxy_history()
-        except galaxy.client.ConnectionError:
-            logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
         return
 
     ds_map = {}
@@ -512,13 +491,8 @@ def run_analysis_execution(analysis):
         error_msg += "for analysis '{}': {}".format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        analysis.cleanup()
         run_analysis_execution.update_state(state=celery.states.FAILURE)
-        try:
-            analysis.delete_galaxy_library()
-            analysis.delete_galaxy_workflow()
-            analysis.delete_galaxy_history()
-        except galaxy.client.ConnectionError:
-            logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
 
 
 def rename_analysis_results(analysis):
@@ -567,14 +541,7 @@ def run_analysis_cleanup(analysis):
         send_analysis_email(analysis)
 
     rename_analysis_results(analysis)
-
-    try:
-        analysis.delete_galaxy_history()
-        analysis.delete_galaxy_workflow()
-        analysis.delete_galaxy_library()
-    except galaxy.client.ConnectionError:
-        logger.error("Cleanup failed for analysis '{}'".format(analysis.name))
-
+    analysis.cleanup()
     return
 
 
@@ -683,13 +650,7 @@ def download_history_files(analysis) :
         error_msg += "for analysis '{}': {}".format(analysis.name, exc.message)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-        try:
-            analysis.delete_galaxy_library()
-            analysis.delete_galaxy_workflow()
-            analysis.delete_galaxy_history()
-        except galaxy.client.ConnectionError:
-            logger.error(
-                "Cleanup failed for analysis '{}'".format(analysis.name))
+        analysis.cleanup()
         return task_list
 
     # Iterating through files in current galaxy history

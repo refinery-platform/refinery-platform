@@ -612,35 +612,30 @@ class Analysis(OwnableResource):
     def galaxy_connection(self):
         return self.workflow.workflow_engine.instance.galaxy_connection()
 
-    def delete_galaxy_workflow(self):
-        connection = self.galaxy_connection()
-        try:
-            connection.workflows.delete_workflow(self.workflow_galaxy_id);
-        except galaxy.client.ConnectionError as e:
-            error_msg = "Error deleting Galaxy workflow for analysis '{}': {}"
-            error_msg = error_msg.format(self.name, e.message)
-            logger.error(error_msg)
-            raise
+    def cleanup(self):
+        '''Delete library, workflow and history from Galaxy if they exist
 
-    def delete_galaxy_history(self):
+        '''
         connection = self.galaxy_connection()
-        try:
-            connection.histories.delete_history(self.history_id)
-        except galaxy.client.ConnectionError as e:
-            error_msg = "Error deleting Galaxy history for analysis '{}': {}" \
-                        .format(self.name, e.message)
-            logger.error(error_msg)
-            raise
+        error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
 
-    def delete_galaxy_library(self):
-        connection = self.galaxy_connection()
-        try:
-            connection.libraries.delete_library(self.library_id)
-        except galaxy.client.ConnectionError as e:
-            error_msg = "Error deleting Galaxy library for analysis '{}': {}" \
-                        .format(self.name, e.message)
-            logger.error(error_msg)
-            raise
+        if self.library_id:
+            try:
+                connection.libraries.delete_library(self.library_id)
+            except galaxy.client.ConnectionError as e:
+                logger.error(error_msg, 'library', self.name, e.message)
+
+        if self.workflow_galaxy_id:
+            try:
+                connection.workflows.delete_workflow(self.workflow_galaxy_id);
+            except galaxy.client.ConnectionError as e:
+                logger.error(error_msg, 'workflow', self.name, e.message)
+
+        if self.history_id:
+            try:
+                connection.histories.delete_history(self.history_id)
+            except galaxy.client.ConnectionError as e:
+                logger.error(error_msg, 'history', self.name, e.message)
 
     def cancel(self):
         # mark analysis as canceled
@@ -661,17 +656,14 @@ class Analysis(OwnableResource):
                   .format(history_url)
         mail_admins(subject, message)
         self.set_status(Analysis.FAILURE_STATUS, "Cancelled at user's request")
-        try:
-            self.delete_galaxy_library()
-            self.delete_galaxy_workflow()
-        except galaxy.client.ConnectionError:
-            logger.error("Cleanup failed for analysis '{}'".format(self.name))
+        self.cleanup()
 
 
 #: Defining available relationship types
 INPUT_CONNECTION = 'in'
 OUTPUT_CONNECTION = 'out'
-WORKFLOW_NODE_CONNECTION_TYPES = ((INPUT_CONNECTION, 'in'),
+WORKFLOW_NODE_CONNECTION_TYPES = (
+                                  (INPUT_CONNECTION, 'in'),
                                   (OUTPUT_CONNECTION, 'out'),
                                   )
 
