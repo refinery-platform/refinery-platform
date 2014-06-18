@@ -113,11 +113,15 @@ def send_analysis_email(analysis):
     context = Context(context_dict)
     try:    
         user.email_user(email_subj, temp_loader.render(context))
-        logger.info('Emailed completion message with status \"%s\" to %s for analysis %s with UUID %s.' % (analysis.status, user.email, name, analysis.uuid))    
+        logger.info(
+            "Emailed completion message with status '%s' to '%s' for analysis '%s' with UUID '%s'",
+            analysis.status, user.email, name, analysis.uuid)
     except socket.error:
-        logger.error('Email server error: status \"%s\" to %s for analysis %s with UUID %s.' % (analysis.status, user.email, name, analysis.uuid))
-    
-    
+        logger.error(
+            "Email server error: status '%s' to '%s' for analysis '%s' with UUID '%s'",
+            analysis.status, user.email, name, analysis.uuid)
+
+
 # example from: http://www.manasupo.com/2012/03/chord-progress-in-celery.html
 class progress_chord(object):
     Chord = Chord
@@ -249,6 +253,7 @@ def run_analysis_preprocessing(analysis):
     logger.debug("analysis_manager.run_analysis_preprocessing called")
 
     connection = analysis.galaxy_connection()
+    error_msg = "Pre-processing failed: "
 
     # creates new library in galaxy
     library_name = "{} Analysis - {} ({})".format(
@@ -256,10 +261,8 @@ def run_analysis_preprocessing(analysis):
     try:
         library_id = connection.libraries.create_library(library_name)['id']
     except galaxy.client.ConnectionError as exc:
-        error_msg = "Pre-processing failed: "
-        error_msg += "error creating Galaxy library for analysis '{}': {}"
-        error_msg = error_msg.format(analysis.name, exc.message)
-        logger.error(error_msg)
+        error_msg += "error creating Galaxy library for analysis '%s': %s"
+        logger.error(error_msg, analysis.name, exc.message)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
         return
@@ -273,9 +276,8 @@ def run_analysis_preprocessing(analysis):
         new_workflow, history_download, analysis_node_connections = \
             configure_workflow(workflow_dict, ret_list)
     except galaxy.client.ConnectionError as exc:
-        error_msg = "Pre-processing failed: error configuring Galaxy workflow "
-        error_msg += "for analysis '{}': {}".format(analysis.name, exc.message)
-        logger.error(error_msg)
+        error_msg += "error configuring Galaxy workflow for analysis '%s': %s"
+        logger.error(error_msg, analysis.name, exc.message)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.cleanup()
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
@@ -312,9 +314,8 @@ def run_analysis_preprocessing(analysis):
     try:
         new_workflow_info = connection.workflows.import_workflow_json(new_workflow)
     except galaxy.client.ConnectionError as exc:
-        error_msg = "Pre-processing failed: error importing workflow into Galaxy "
-        error_msg += "for analysis '{}': {}".format(analysis.name, exc.message)
-        logger.error(error_msg)
+        error_msg += "error importing workflow into Galaxy for analysis '%s': %s"
+        logger.error(error_msg, analysis.name, exc.message)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.cleanup()
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
@@ -329,9 +330,8 @@ def run_analysis_preprocessing(analysis):
     try:
         history_id = connection.histories.create_history(history_name)['id']
     except galaxy.client.ConnectionError as e:
-        error_msg = "Pre-processing failed: error creating Galaxy history "
-        error_msg += "for analysis '{}': {}".format(analysis.name, e.message)
-        logger.error(error_msg)
+        error_msg += "error creating Galaxy history for analysis '%s': %s"
+        logger.error(error_msg, analysis.name, e.message)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.cleanup()
         run_analysis_preprocessing.update_state(state=celery.states.FAILURE)
@@ -358,8 +358,8 @@ def monitor_analysis_execution(analysis):
     except Analysis.DoesNotExist:
         #TODO: check if updating state is necessary, remove if not
         monitor_analysis_execution.update_state(state=celery.states.FAILURE)
-        logger.error(
-            "Analysis '{}' does not exist - unable to monitor".format(analysis))
+        logger.error("Analysis '%s' does not exist - unable to monitor",
+                     analysis)
         return
 
     if analysis.failed():
@@ -371,8 +371,8 @@ def monitor_analysis_execution(analysis):
         #TODO: check if updating state is necessary, remove if not
         monitor_analysis_execution.update_state(state=celery.states.FAILURE)
         logger.error(
-            "AnalysisStatus object does not exist for analysis '{}'" +
-            " - unable to monitor".format(analysis_status))
+            "AnalysisStatus object does not exist for analysis '%s' - unable to monitor",
+            analysis_status)
         return
 
     # start monitoring task
@@ -385,10 +385,9 @@ def monitor_analysis_execution(analysis):
     try:
         history = connection.histories.show_history(analysis.history_id)
     except galaxy.client.ConnectionError as e:
-        error_msg = "Unable to get progress for history '{}'".format(analysis.history_id)
-        error_msg += "of analysis {}: {}".format(analysis.name, e.message)
+        error_msg = "Unable to get progress for history '%s' of analysis %s: %s"
+        logger.warning(error_msg, analysis.history_id, analysis.name, e.message)
         analysis.set_status(Analysis.UNKNOWN_STATUS, error_msg)
-        logger.warning(error_msg)
         monitor_analysis_execution.retry(countdown=5)
 
     if history and "state_details" not in history:
@@ -403,19 +402,18 @@ def monitor_analysis_execution(analysis):
     if progress["message"]["error"] > 0:
         # Setting state of analysis to failure
         analysis.set_status(Analysis.FAILURE_STATUS)
-        logger.debug("Analysis '{}' failed execution in Galaxy"\
-                     .format(analysis.uuid))
+        logger.debug("Analysis '%s' failed execution in Galaxy", analysis.uuid)
         return
     elif progress["workflow_state"] == "ok":
         # number of steps in the workflow
         workflow_steps = len(json.loads(analysis.workflow.graph)['steps'])
-        logger.debug("workflow_steps: {}, ok datasets: {}"\
-                     .format(workflow_steps, progress["message"]["ok"]))
+        logger.debug("workflow_steps: %s, ok datasets: %s",
+                     workflow_steps, progress["message"]["ok"])
         # check if we have enough datasets in history
         if progress["message"]["ok"] >= workflow_steps:
             analysis.set_status(Analysis.SUCCESS_STATUS)
-            logger.info("Analysis '{}' successfully finished running in Galaxy"\
-                        .format(analysis.uuid))
+            logger.info("Analysis '%s' successfully finished running in Galaxy",
+                        analysis.uuid)
             return
 
     # if we are here then analysis is running
@@ -435,6 +433,7 @@ def run_analysis_execution(analysis):
     analysis = Analysis.objects.get(uuid=analysis.uuid)
 
     connection = analysis.galaxy_connection()
+    error_msg = "Analysis execution failed: "
 
     ### generates same ret_list purely based on analysis object ###
     ret_list = get_analysis_config(analysis)
@@ -443,10 +442,8 @@ def run_analysis_execution(analysis):
         ret_list = import_analysis_in_galaxy(
             ret_list, analysis.library_id, connection)
     except (RuntimeError, galaxy.client.ConnectionError) as exc:
-        error_msg = "Analysis execution failed: "
-        error_msg += "error importing analysis '{}' into Galaxy: {}"
-        error_msg = error_msg.format(analysis.name, exc.message)
-        logger.error(error_msg)
+        error_msg += "error importing analysis '%s' into Galaxy: %s"
+        logger.error(error_msg, analysis.name, exc.message)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.cleanup()
         run_analysis_execution.update_state(state=celery.states.FAILURE)
@@ -455,7 +452,6 @@ def run_analysis_execution(analysis):
     try:
         workflow = connection.workflows.show_workflow(analysis.workflow_galaxy_id)
     except galaxy.client.ConnectionError:
-        error_msg = "Analysis execution failed: "
         error_msg += "error getting information for workflow '%s' from Galaxy"
         logger.error(error_msg, analysis.workflow_galaxy_id)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
@@ -487,9 +483,8 @@ def run_analysis_execution(analysis):
              dataset_map=ds_map,
              history_id=analysis.history_id)
     except galaxy.client.ConnectionError as exc:
-        error_msg = "Analysis launch failed: error running Galaxy workflow "
-        error_msg += "for analysis '{}': {}".format(analysis.name, exc.message)
-        logger.error(error_msg)
+        error_msg += "error running Galaxy workflow for analysis '%s': %s"
+        logger.error(error_msg, analysis.name, exc.message)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.cleanup()
         run_analysis_execution.update_state(state=celery.states.FAILURE)
@@ -526,21 +521,16 @@ def run_analysis_cleanup(analysis):
     elif analysis.workflow.type == Workflow.DOWNLOAD_TYPE:
         attach_outputs_downloads(analysis)
     else:
-        logger.warning('Unknown workflow type "' + analysis.workflow.type +
-                       '" in analysis "' + analysis.name + '".' )
-
-    # saving when analysis is finished
-    analysis.time_end = datetime.now()
+        logger.warning("Unknown workflow type '%s' in analysis '%s'",
+                       analysis.workflow.type, analysis.name)
 
     # if analysis was declared failure, do not send completion email
-    if analysis.status != Analysis.FAILURE_STATUS:
-        analysis.status = Analysis.SUCCESS_STATUS
-        # save state of analysis
-        analysis.save()
-        logger.debug("analysis completion status: {}".format(analysis.status))
+    if not analysis.failed():
+        analysis.set_status(Analysis.SUCCESS_STATUS)
+        logger.debug("analysis completion status: '%s'", analysis.status)
         send_analysis_email(analysis)
+        rename_analysis_results(analysis)
 
-    rename_analysis_results(analysis)
     analysis.cleanup()
     return
 
