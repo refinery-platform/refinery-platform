@@ -562,6 +562,8 @@ def update_refinery():
         run("bower install")
         run("grunt")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
+        run("pip install -r ../requirements.txt")
+        run("find . -name '*.pyc' -delete")
         run("./manage.py syncdb --migrate")
         run("./manage.py collectstatic --noinput")
         run("supervisorctl restart celeryd celerycam celerybeat")
