@@ -111,14 +111,15 @@ def send_analysis_email(analysis):
         temp_loader = loader.get_template('analysis_manager/analysis_email_full.txt')
         
     context = Context(context_dict)
-    try:    
+    try:
         user.email_user(email_subj, temp_loader.render(context))
-        logger.info(
-            "Emailed completion message with status '%s' to '%s' for analysis '%s' with UUID '%s'",
-            analysis.status, user.email, name, analysis.uuid)
     except socket.error:
         logger.error(
             "Email server error: status '%s' to '%s' for analysis '%s' with UUID '%s'",
+            analysis.status, user.email, name, analysis.uuid)
+    else:
+        logger.info(
+            "Emailed completion message with status '%s' to '%s' for analysis '%s' with UUID '%s'",
             analysis.status, user.email, name, analysis.uuid)
 
 
