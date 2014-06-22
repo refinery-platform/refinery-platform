@@ -18,6 +18,7 @@ provenanceVisualizationModule = function () {
         analysis = Object.create(null),
         aNode = Object.create(null);
 
+// TODO: rewrite for simple maps (https://github.com/mbostock/d3/wiki/Arrays#d3_map)
     // look up hashes
     var nodeMap = d3.map(),             // node.uuid -> node.id
         studyMap = d3.map(),
@@ -398,58 +399,61 @@ provenanceVisualizationModule = function () {
     };
 
     // TODO: lexicographic sort for each layer
-    // topology sort (inspired by http://en.wikipedia.org/wiki/Topological_sorting)
+    // linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting)
     var topSort = function (inputs) {
-        var s = [], // input set
-            l = [], // result set for sorted elements
-            cnodes = [],// deep copy nodes, because we have to delete links from the graph
-            n = null,
-            succ = [];
+        var s = [],     // input set
+            l = [],     // result set for sorted elements
+            cNodes = [],// deep copy nodes, because we have to delete links from the graph
+            n = Object.create(null);
 
         // deep copy arrays by value
         inputs.forEach(function (inNode) {
             s.push(copyNode(inNode));
         });
         nodes.forEach(function (selNode) {
-            cnodes.push(copyNode(selNode));
+            cNodes.push(copyNode(selNode));
         });
 
         // to avoid definition of function in while loop below (added by NG)
-        // for each successor
+        // for each successor (an edge from n to m)
         var handleUndefined = function (m) {
             // delete parent with p.uuid == n.uuid
             var index = -1;
-            // for each parent (predecessor)
-            cnodes[m].parents.forEach(function (p, i) {
+            // for each parent (predecessor), remove edge n->m
+            cNodes[m].parents.forEach(function (p, i) {
                 if (p == n.uuid) {
                     index = i;
                 }
             });
             // if parent of successor equals n, delete edge
             if (index > -1) {
-                cnodes[m].parents.splice(index, 1);
+                cNodes[m].parents.splice(index, 1);
             }
-            // if there are no edges left,
-            if (cnodes[m].parents.length === 0) {
-                s.push(cnodes[m]);
+            // if there are no edges left, insert m into s
+            if (cNodes[m].parents.length === 0) {
+                s.push(cNodes[m]);
             }
             // else, current successor has other parents to be processed first
         };
 
         // while the input set is not empty
         while (s.length > 0) {
-            n = s.shift(); // remove first item n
-            l.push(n); // and push it into result set
+            n = s.shift();  // remove first item n
+            l.push(n);      // and push it into result set
 
-            // get successor set for n
-            succ = nodeSuccMap[nodeMap[n.uuid]];
+            // get successor node set for n
+            var succ = nodeSuccMap[nodeMap[n.uuid]];
 
             if (typeof succ !== "undefined") {
                 succ.forEach(handleUndefined);
             }
         }
 
-        return l;
+        if (s.length > 0) {
+            return null;
+        } else {
+            return l;
+        }
     };
 
     // extract nodes
@@ -1281,14 +1285,18 @@ provenanceVisualizationModule = function () {
         // topological order
         var topNodes = topSort(inputNodes);
 
-        // coffman-graham layering
-        coffmanGrahamLayering(topNodes);
+        if (topNodes !== null) {
+            // coffman-graham layering
+            coffmanGrahamLayering(topNodes);
 
-        // group nodes by layer
-        var layeredTopNodes = groupNodesByCol(topNodes);
+            // group nodes by layer
+            var layeredTopNodes = groupNodesByCol(topNodes);
 
-        // place vertices
-        placeNodes(layeredTopNodes);
+            // place vertices
+            placeNodes(layeredTopNodes);
+        } else {
+            console.log("Error: Graph is not acyclic!");
+        }
     };
 
     // refinery injection for the provenance visualization
