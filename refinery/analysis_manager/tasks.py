@@ -385,21 +385,21 @@ def monitor_analysis_execution(analysis):
 
     connection = analysis.galaxy_connection()
     try:
-        history = connection.histories.show_history(analysis.history_id)
+        history_status = connection.histories.get_status(analysis.history_id)
     except galaxy.client.ConnectionError as e:
         error_msg = "Unable to get progress for history '%s' of analysis %s: %s"
         logger.warning(error_msg, analysis.history_id, analysis.name, e.message)
         analysis.set_status(Analysis.UNKNOWN_STATUS, error_msg)
         monitor_analysis_execution.retry(countdown=5)
 
-    if history and "state_details" not in history:
+    if history_status and "state_details" not in history_status:
         progress = {"percent_complete": 0,
-                    "workflow_state": history["state"],
+                    "workflow_state": history_status["state"],
                     "message": "Preparing ..." }
     else:
         progress = {"percent_complete": 100,
-                    "workflow_state": history["state"],
-                    "message": history["state_details"]}
+                    "workflow_state": history_status["state"],
+                    "message": history_status["state_details"]}
 
     if progress["message"]["error"] > 0:
         # Setting state of analysis to failure

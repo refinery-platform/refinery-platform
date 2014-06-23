@@ -627,7 +627,7 @@ class Analysis(OwnableResource):
 
         if self.workflow_galaxy_id:
             try:
-                connection.workflows.delete_workflow(self.workflow_galaxy_id);
+                connection.workflows.delete_workflow(self.workflow_galaxy_id)
             except galaxy.client.ConnectionError as e:
                 logger.error(error_msg, 'workflow', self.name, e.message)
 
