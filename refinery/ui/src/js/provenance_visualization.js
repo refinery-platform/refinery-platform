@@ -10,28 +10,27 @@ provenanceVisualizationModule = function () {
         links = [],
         inputNodes = [],
         flatAnalyses = [],
-        aNodes = [],
-        aLinks = [];
+        aNodes = [];
 
     // dom elements
-    var node = null,
-        link = null,
-        analysis = null,
-        aNode = null,
-        aLink = null;
+    var node = Object.create(null),
+        link = Object.create(null),
+        analysis = Object.create(null),
+        aNode = Object.create(null);
 
+// TODO: rewrite for simple maps (https://github.com/mbostock/d3/wiki/Arrays#d3_map)
     // look up hashes
-    var nodeHash = [],
-        studyHash = [],
-        studyAssayHash = [],
-        srcLinkHash = [],
-        tarLinkHash = [],
-        srcNodeLinkHash = [],
-        tarNodeLinkHash = [],
-        workflowAnalysisHash = [],
-        analysisWorkflowHash = [],
-        analysisNodeHash = [],
-        nodeAnalysisHash = [];
+    var nodeMap = d3.map(),             // node.uuid -> node.id
+        studyMap = d3.map(),
+        studyAssayMap = d3.map(),
+        nodePredMap = d3.map(),         // node.id -> predecessor node ids
+        nodeSuccMap = d3.map(),         // node.id -> successor node ids
+        nodeLinkPredMap = d3.map(),     // node.id -> predecessor link ids
+        nodeLinkSuccMap = d3.map(),     // node.id -> successor link ids
+        workflowAnalysisMap = d3.map(),
+        analysisWorkflowMap = d3.map(),
+        analysisNodeMap = d3.map(),
+        nodeAnalysisMap = d3.map();
 
     // margin conventions
     var margin = {top: 20, right: 10, bottom: 20, left: 10};
@@ -40,7 +39,7 @@ provenanceVisualizationModule = function () {
     var width = window.innerWidth - margin.left - margin.right,
         height = window.innerHeight - margin.top - margin.bottom;
 
-    var zoom = null;
+    var zoom = Object.create(null);
 
     // constants
     var r = 7,
@@ -85,13 +84,13 @@ provenanceVisualizationModule = function () {
     var highlightInvolvedPath = function (nodeId, highlighted) {
 
         // for each predecessor
-        srcLinkHash[nodeId].forEach(function (p) {
+        nodePredMap[nodeId].forEach(function (p) {
 
             // get svg node element
             d3.select("#nodeId-" + p).classed({"highlightedNode": highlighted});
 
             // get svg link element
-            srcNodeLinkHash[p].forEach(function (l) {
+            nodeLinkPredMap[p].forEach(function (l) {
                 d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
             });
 
@@ -102,14 +101,14 @@ provenanceVisualizationModule = function () {
     // shift right amount of the graph for a specific node by an amount of rows (shiftAmount)
     var traverseShift = function (nodeId, shiftAmount) {
         var cur = { o: nodes[nodeId],
-            succ: tarLinkHash[nodeId]
+            succ: nodeSuccMap[nodeId]
         };
 
         cur.o.row = nodes[nodeId].row + shiftAmount;
 
         // DFS for each successor
         if (typeof cur.succ !== "undefined") {
-            tarLinkHash[nodeId].forEach(function (s) {
+            nodeSuccMap[nodeId].forEach(function (s) {
                 traverseShift(s, shiftAmount);
             });
         }
@@ -144,7 +143,7 @@ provenanceVisualizationModule = function () {
 
     // deep copy node data structure
     var copyNode = function (node) {
-        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", fixed: false, row: -1, col: -1, parents: [], id: -1, visited: false, doiFactor: -1, hidden: true};
+        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, visited: false, doiFactor: -1, hidden: true};
 
         newNode.name = node.name;
         newNode.nodeType = node.nodeType;
@@ -152,7 +151,6 @@ provenanceVisualizationModule = function () {
         newNode.uuid = node.uuid;
         newNode.study = node.study;
         newNode.assay = node.assay;
-        newNode.fixed = node.fixed;
         newNode.row = node.row;
         newNode.col = node.col;
         newNode.id = node.id;
@@ -167,32 +165,107 @@ provenanceVisualizationModule = function () {
         return newNode;
     };
 
-    // TODO: rewrite row layering, keywords: vertex ordering, and y-coordinate assignment (see hierarchical.pdf)
+    // init row placement
+    var initRowPlacement = function (lgNodes) {
+        lgNodes.forEach(function (lg) {
+            lg.forEach(function (n, i) {
+                nodes[n.id].row = i;
+            });
+        });
+    };
+
+// TODO: in debug state (prototype)
+    // minimize edge crossings
+    var kLayerCrossingMinimisation = function (lgNodes) {
+
+        // for each layer, reorder nodes to minimize crossings
+        lgNodes.forEach(function (lg) {
+
+            var predMaxRow = -1;
+            // for each node check potential crossing
+            lg.forEach(function (n, i) {
+
+                console.log("#########################");
+                console.log("#" + n.id + " (" + n.col + "," + n.row + ")");
+                console.log("Preds: ");
+                console.log(nodePredMap[n.id]);
+                console.log("Succs: ");
+                console.log(nodeSuccMap[n.id]);
+                console.log("");
+
+                // for each node, check pred row
+                if (nodePredMap[n.id].length > 0) {
+                    console.log("Preds: ");
+
+                    nodePredMap[n.id].forEach(function (p) {
+                        console.log("#" + nodes[p].id + " (" + nodes[p].col + "," + nodes[p].row + ")");
+
+                        if (nodes[p].row >= predMaxRow) {
+                            console.log("CHECK: " + nodes[p].row + " > " + predMaxRow);
+                            predMaxRow = nodes[p].row;
+                        } else {
+                            console.log("CROSSING " + nodes[p].row + " > " + predMaxRow);
+                        }
+                    });
+                }
+                console.log("");
+
+            });
+        });
+    };
+
+// TODO: to implement
+    // set row placement
+    var setRowPlacement = function (lgNodes) {
+
+    };
+
+// TODO:
     // layout node columns
     var placeNodes = function (lgNodes) {
+
+        // init row placement
+        initRowPlacement(lgNodes);
+
+        // minimize edge crossings
+        kLayerCrossingMinimisation(lgNodes);
+
+        // update row placements
+        setRowPlacement(lgNodes);
+    };
+
+// TODO: remove obsolete custom layout
+    // layout node columns
+    var placeNodesPrototype = function (lgNodes) {
         var layer = 10,
             row = 0,
             curRow = 0,
             lastRow = 0;
 
+        console.log(lgNodes);
+
         // from right to left
         lgNodes.forEach(function (lg) {
 
             lg.forEach(function (n) {
-                var cur = { id: nodeHash[n.uuid],
-                    o: nodes[nodeHash[n.uuid]],
-                    pred: srcLinkHash[nodeHash[n.uuid]],
-                    succ: tarLinkHash[nodeHash[n.uuid]],
+                var cur = { id: nodeMap[n.uuid],
+                    o: nodes[nodeMap[n.uuid]],
+                    pred: nodePredMap[nodeMap[n.uuid]],
+                    succ: nodeSuccMap[nodeMap[n.uuid]],
                     neighbors: []
                 };
 
+                console.log("nodeInfo");
+                console.log(cur.id);
+                console.log(cur.pred);
+
                 // for each successor get pred (= neighbors)
                 var neighbors = [];
-                if (typeof cur.succ !== "undefined") {
+                if (typeof cur.succ !== "undefined" && cur.succ.length !== 0) {
                     cur.succ.forEach(function (s) {
                         nodes[s].parents.forEach(function (p) {
-                            if (nodes[nodeHash[p]].id !== cur.id) {
-                                neighbors.push(nodeHash[p]);
+                            if (nodes[nodeMap[p]].id !== cur.id) {
+                                neighbors.push(nodeMap[p]);
                             }
                         });
                     });
@@ -252,7 +325,6 @@ provenanceVisualizationModule = function () {
                             console.log("1 x n");
                             console.log(n.id);
 
-
                             // get min and max row for SPLIT BRANCH
                             cur.succ.forEach(function (s) {
                                 if (nodes[s].row < minRow) {
@@ -287,7 +359,7 @@ provenanceVisualizationModule = function () {
                             }
 
                             if (curRow === lastRow) {
-                                console.log("colision");
+                                console.log("collision");
                                 curRow += 1;
                             }
                         }
@@ -365,9 +437,114 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // TODO: handle graph width
+// TODO: code cleanup
+    // add dummy vertices
+    var addDummyVertices = function () {
+        links.forEach(function (l) {
+            // when the link is longer than one column, add dummy vertices
+            var gapLength = nodes[l.target].col - nodes[l.source].col;
+
+            if (gapLength > 1) {
+
+                // dummy nodes are affiliated with the source node of the link in context
+                var newNodeId = nodes.length,
+                    newLinkId = links.length,
+                    predNode = l.source,
+                    curCol = nodes[l.source].col,
+                    curAnalysis = nodes[l.source].analysis,
+                    curStudy = nodes[l.source].study,
+                    curAssay = nodes[l.source].assay;
+
+                // insert nodes
+                var i = 0;
+                while (i < gapLength - 1) {
+
+                    // add node
+                    nodes.push({
+                        name: "dummyNode-" + (newNodeId + i),
+                        fileType: "dummy",
+                        nodeType: "dummy",
+                        uuid: "dummyNode-" + (newNodeId + i),
+                        study: curStudy,
+                        assay: curAssay,
+                        parents: (i === 0) ? [nodes[l.source].uuid] : ["dummyNode-" + predNode],
+                        row: -1,
+                        col: curCol + 1,
+                        id: newNodeId + i,
+                        visited: false,
+                        analysis: curAnalysis,
+                        doiFactor: -1,
+                        hidden: true
+                    });
+
+                    // update node maps
+                    createNodeHashes(nodes[newNodeId + i], newNodeId + i);
+
+                    //analysisNodeMap = ,
+                    nodeAnalysisMap[newNodeId + i] = curAnalysis;
+
+                    predNode = newNodeId + i;
+                    curCol++;
+                    i++;
+                }
+
+                // update parents for original target node
+                nodes[l.target].parents = nodes[l.target].parents.concat([nodes[predNode].uuid]);
+                nodes[l.target].parents.splice(nodes[l.target].parents.indexOf(nodes[l.source].uuid), 1);
+
+                // insert links (one link more than nodes)
+                predNode = l.source;
+                curCol = nodes[l.source].col;
+
+                // update original link source
+                nodeLinkSuccMap[l.source] = nodeLinkSuccMap[l.source].concat([newLinkId]);
+                nodeLinkSuccMap[l.source].splice(nodeLinkSuccMap[l.source].indexOf(l.id), 1);
+                nodeSuccMap[l.source] = nodeSuccMap[l.source].concat([newNodeId]);
+                nodeSuccMap[l.source].splice(nodeSuccMap[l.source].indexOf(l.target), 1);
+
+                // insert links
+                var j = 0;
+                while (j < gapLength) {
+
+                    // add link
+                    links.push({
+                        source: predNode,
+                        target: (j === gapLength - 1) ? l.target : newNodeId + j,
+                        id: newLinkId + j,
+                        hidden: true
+                    });
+
+                    // update link maps
+                    if (j < gapLength - 1) {
+                        nodePredMap[newNodeId + j] = [predNode];
+                        nodeLinkPredMap[newNodeId + j] = [newLinkId + j];
+                        nodeLinkSuccMap[newNodeId + j] = [newLinkId + j + 1];
+                    }
+
+                    // update nodes before target
+                    if (j < gapLength - 2) {
+                        nodeSuccMap[newNodeId + j] = [newNodeId + j + 1];
+                    } else if (j === gapLength - 2) {
+                        nodeSuccMap[newNodeId + j] = [l.target];
+                    }
+
+                    predNode = newNodeId + j;
+                    curCol++;
+                    j++;
+                }
+                nodeLinkPredMap[l.target] = nodeLinkPredMap[l.target].concat([newLinkId + j - 1]);
+                nodeLinkPredMap[l.target].splice(nodeLinkPredMap[l.target].indexOf(l.id), 1);
+                nodePredMap[l.target] = nodePredMap[l.target].concat([newNodeId + j - 2]);
+                nodePredMap[l.target].splice(nodePredMap[l.target].indexOf(l.source), 1);
+
+                // delete original link
+                links[l.id] = null;
+            }
+        });
+    };
+
     // layering
-    var coffmanGrahamLayering = function (tNodes) {
+    var assignLayers = function (tNodes) {
         var layer = 10,
             succ = [],
             rtNodes = [];
@@ -378,7 +555,7 @@ provenanceVisualizationModule = function () {
 
         rtNodes.reverse().forEach(function (n) {
             // get outgoing neighbor
-            succ = tarLinkHash[nodeHash[n.uuid]];
+            succ = nodeSuccMap[nodeMap[n.uuid]];
 
             if (typeof succ === "undefined") {
                 nodes[n.id].col = layer;
@@ -397,20 +574,19 @@ provenanceVisualizationModule = function () {
     };
 
     // TODO: lexicographic sort for each layer
-    // topology sort (inspired by http://en.wikipedia.org/wiki/Topological_sorting)
-    var topSort = function (inputs) {
-        var s = [], // input set
-            l = [], // result set for sorted elements
-            cnodes = [],// deep copy nodes, because we have to delete links from the graph
-            n = null,
-            succ = [];
+    // linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting)
+    var sortTopological = function (inputs) {
+        var s = [],     // input set
+            l = [],     // result set for sorted elements
+            cNodes = [],// deep copy nodes, because we have to delete links from the graph
+            n = Object.create(null);
 
         // deep copy arrays by value
         inputs.forEach(function (inNode) {
             s.push(copyNode(inNode));
         });
         nodes.forEach(function (selNode) {
-            cnodes.push(copyNode(selNode));
+            cNodes.push(copyNode(selNode));
         });
 
         // to avoid definition of function in while loop below (added by NG)
@@ -418,37 +594,42 @@ provenanceVisualizationModule = function () {
         var handleUndefined = function (m) {
             // delete parent with p.uuid == n.uuid
             var index = -1;
-            // for each parent (predecessor)
-            cnodes[m].parents.forEach(function (p, i) {
+            // for each parent (predecessor), remove edge n->m
+            cNodes[m].parents.forEach(function (p, i) {
                 if (p == n.uuid) {
                     index = i;
                 }
             });
             // if parent of successor equals n, delete edge
             if (index > -1) {
-                cnodes[m].parents.splice(index, 1);
+                cNodes[m].parents.splice(index, 1);
             }
-            // if there are no edges left,
-            if (cnodes[m].parents.length === 0) {
-                s.push(cnodes[m]);
+            // if there are no edges left, insert m into s
+            if (cNodes[m].parents.length === 0) {
+                s.push(cNodes[m]);
             }
             // else, current successor has other parents to be processed first
         };
 
         // while the input set is not empty
         while (s.length > 0) {
-            n = s.shift(); // remove first item n
-            l.push(n); // and push it into result set
+            n = s.shift();  // remove first item n
+            l.push(n);      // and push it into result set
 
-            // get successor set for n
-            succ = tarLinkHash[nodeHash[n.uuid]];
+            // get successor node set for n
+            var succ = nodeSuccMap[nodeMap[n.uuid]];
 
             if (typeof succ !== "undefined") {
                 succ.forEach(handleUndefined);
             }
         }
 
-        return l;
+        // handle non-acyclic graphs
+        if (s.length > 0) {
+            return null;
+        } else {
+            return l;
+        }
     };
 
     // extract nodes
@@ -464,7 +645,7 @@ provenanceVisualizationModule = function () {
             // build node hashes
             createNodeHashes(x, i);
 
-            // set input nodes
+            // sorted set of input nodes
             if (x.type == "Source Name") {
                 inputNodes.push(nodes[i]);
             }
@@ -490,8 +671,8 @@ provenanceVisualizationModule = function () {
                     linkId++;
 
                 });
-                srcNodeLinkHash[i] = srcLinkIds;
-                srcLinkHash[i] = srcNodeIds;
+                nodeLinkPredMap[i] = srcLinkIds;
+                nodePredMap[i] = srcNodeIds;
             }
         });
     };
@@ -499,8 +680,8 @@ provenanceVisualizationModule = function () {
     // extractLinkProperties
     var extractLinkProperties = function (nodeElem, linkId, parentIndex) {
         links.push({
-            source: nodeHash[nodeElem.parents[parentIndex]],
-            target: nodeHash[nodeElem.uuid],
+            source: nodeMap[nodeElem.parents[parentIndex]],
+            target: nodeMap[nodeElem.uuid],
             id: linkId,
             hidden: true
         });
@@ -517,23 +698,23 @@ provenanceVisualizationModule = function () {
 
     // build link hashes
     var createLinkHashes = function (parentNodeElem, linkId, nodeId, srcNodeIds, srcLinkIds) {
-        srcNodeIds.push(nodeHash[parentNodeElem]);
+        srcNodeIds.push(nodeMap[parentNodeElem]);
         srcLinkIds.push(linkId);
 
-        if (tarLinkHash.hasOwnProperty(nodeHash[parentNodeElem])) {
-            tarLinkHash[nodeHash[parentNodeElem]] = tarLinkHash[nodeHash[parentNodeElem]].concat([nodeId]);
-            tarNodeLinkHash[nodeHash[parentNodeElem]] = tarNodeLinkHash[nodeHash[parentNodeElem]].concat([linkId]);
+        if (nodeSuccMap.hasOwnProperty(nodeMap[parentNodeElem])) {
+            nodeSuccMap[nodeMap[parentNodeElem]] = nodeSuccMap[nodeMap[parentNodeElem]].concat([nodeId]);
+            nodeLinkSuccMap[nodeMap[parentNodeElem]] = nodeLinkSuccMap[nodeMap[parentNodeElem]].concat([linkId]);
         } else {
-            tarLinkHash[nodeHash[parentNodeElem]] = [nodeId];
-            tarNodeLinkHash[nodeHash[parentNodeElem]] = [linkId];
+            nodeSuccMap[nodeMap[parentNodeElem]] = [nodeId];
+            nodeLinkSuccMap[nodeMap[parentNodeElem]] = [linkId];
         }
     };
 
     // build node hashes
     var createNodeHashes = function (nodeObj, nodeIndex) {
-        nodeHash[nodeObj.uuid] = nodeIndex;
-        studyHash[nodeIndex] = nodes[nodeIndex].study;
-        studyAssayHash[nodes[nodeIndex].study] = nodes[nodeIndex].assay;
+        nodeMap[nodeObj.uuid] = nodeIndex;
+        studyMap[nodeIndex] = nodes[nodeIndex].study;
+        studyAssayMap[nodes[nodeIndex].study] = nodes[nodeIndex].assay;
     };
 
     // extract node api properties
@@ -548,7 +729,6 @@ provenanceVisualizationModule = function () {
             parents: nodeObj.parents.map(function (y) {
                 return y.replace(/\/api\/v1\/node\//g, "").replace(/\//g, "");
             }),
-            fixed: true,
             row: -1,
             col: -1,
             id: nodeIndex,
@@ -583,29 +763,29 @@ provenanceVisualizationModule = function () {
     // for each analysis the corresponding nodes as well as specifically in- and output nodes are mapped to it
     var createAnalysisNodeMapping = function () {
         nodes.forEach(function (n, i) {
-            if (analysisNodeHash.hasOwnProperty(n.analysis)) {
-                analysisNodeHash[n.analysis] = analysisNodeHash[n.analysis].concat([i]);
+            if (analysisNodeMap.hasOwnProperty(n.analysis)) {
+                analysisNodeMap[n.analysis] = analysisNodeMap[n.analysis].concat([i]);
             } else {
-                analysisNodeHash[n.analysis] = [i];
+                analysisNodeMap[n.analysis] = [i];
             }
         });
 
         aNodes.forEach(function (an) {
-            an.nodes = analysisNodeHash[an.uuid].map(function (d) {
-                nodeAnalysisHash[d] = an.id;
+            an.nodes = analysisNodeMap[an.uuid].map(function (d) {
+                nodeAnalysisMap[d] = an.id;
                 return nodes[d]; // flatten nodes objects
             });
 
             // set input nodes
             an.inputNodes = an.nodes.filter(function (n) {
-                return srcLinkHash[n.id].some(function (p) {
+                return nodePredMap[n.id].some(function (p) {
                     return nodes[p].analysis != an.uuid;
-                }) || srcLinkHash[n.id].length === 0; // if no src analyses exists
+                }) || nodePredMap[n.id].length === 0; // if no src analyses exists
             });
 
             // set output nodes
             an.outputNodes = an.nodes.filter(function (n) {
-                return typeof tarLinkHash[n.id] === "undefined" || tarLinkHash[n.id].some(function (s) {
+                return typeof nodeSuccMap[n.id] === "undefined" || nodeSuccMap[n.id].some(function (s) {
                     return nodes[s].analysis != an.uuid;
                 });
             });
@@ -615,9 +795,9 @@ provenanceVisualizationModule = function () {
             // set predecessor analyses
             if (an.uuid != "dataset") {
                 an.inputNodes.forEach(function (n) {
-                    srcLinkHash[n.id].forEach(function (pn) {
-                        if (an.predAnalyses.indexOf(nodeAnalysisHash[pn]) === -1) {
-                            an.predAnalyses.push(nodeAnalysisHash[pn]);
+                    nodePredMap[n.id].forEach(function (pn) {
+                        if (an.predAnalyses.indexOf(nodeAnalysisMap[pn]) === -1) {
+                            an.predAnalyses.push(nodeAnalysisMap[pn]);
                         }
                     });
                 });
@@ -625,10 +805,10 @@ provenanceVisualizationModule = function () {
 
             // set successor analyses
             an.outputNodes.forEach(function (n) {
-                if (typeof tarLinkHash[n.id] !== "undefined") {
-                    tarLinkHash[n.id].forEach(function (s) {
-                        if (an.succAnalyses.indexOf(nodeAnalysisHash[s]) === -1) {
-                            an.succAnalyses.push(nodeAnalysisHash[s]);
+                if (typeof nodeSuccMap[n.id] !== "undefined") {
+                    nodeSuccMap[n.id].forEach(function (s) {
+                        if (an.succAnalyses.indexOf(nodeAnalysisMap[s]) === -1 && nodeAnalysisMap[s] !== an.id) {
+                            an.succAnalyses.push(nodeAnalysisMap[s]);
                         }
                     });
                 }
@@ -637,7 +817,7 @@ provenanceVisualizationModule = function () {
 
         aNodes.forEach(function (an) {
             an.links = links.filter(function (l) {
-                return nodeAnalysisHash[l.target] == an.id;
+                return l !== null && nodeAnalysisMap[l.target] == an.id;
             });
         });
     };
@@ -647,17 +827,17 @@ provenanceVisualizationModule = function () {
     var createWorkflowAnalysisMapping = function () {
         analyses.objects.forEach(function (a) {
             // workflow -> analysis
-            if (workflowAnalysisHash.hasOwnProperty(a.workflow__uuid)) {
-                workflowAnalysisHash[a.workflow__uuid] = workflowAnalysisHash[a.workflow__uuid].concat([a.uuid]);
+            if (workflowAnalysisMap.hasOwnProperty(a.workflow__uuid)) {
+                workflowAnalysisMap[a.workflow__uuid] = workflowAnalysisMap[a.workflow__uuid].concat([a.uuid]);
             } else {
-                workflowAnalysisHash[a.workflow__uuid] = [a.uuid];
+                workflowAnalysisMap[a.workflow__uuid] = [a.uuid];
             }
 
             // analysis -> workflow
-            analysisWorkflowHash[a.uuid] = a.workflow__uuid;
+            analysisWorkflowMap[a.uuid] = a.workflow__uuid;
         });
 
-        flatAnalyses = [].concat.apply(["dataset"], d3.values(workflowAnalysisHash));
+        flatAnalyses = [].concat.apply(["dataset"], d3.values(workflowAnalysisMap));
     };
 
     // set coordinates for nodes
@@ -693,6 +873,7 @@ provenanceVisualizationModule = function () {
         // drag selected node
         d3.select(this).attr("transform", function (n) {
             switch (n.nodeType) {
+                case "dummy":
                 case "raw":
                 case "processed":
                     return "translate(" + d3.event.x + "," + d3.event.y + ")";
@@ -707,15 +888,15 @@ provenanceVisualizationModule = function () {
 
         // get input links
         // update coordinates for x2 and y2
-        srcNodeLinkHash[d.id].forEach(function (l) {
+        nodeLinkPredMap[d.id].forEach(function (l) {
             d3.select("#linkId-" + l).attr("x2", d3.event.x);
             d3.select("#linkId-" + l).attr("y2", d3.event.y);
         });
 
         // get output links
         // update coordinates for x1 and y1
-        if (typeof tarNodeLinkHash[d.id] !== "undefined") {
-            tarNodeLinkHash[d.id].forEach(function (l) {
+        if (typeof nodeLinkSuccMap[d.id] !== "undefined") {
+            nodeLinkSuccMap[d.id].forEach(function (l) {
                 d3.select("#linkId-" + l).attr("x1", d3.event.x);
                 d3.select("#linkId-" + l).attr("y1", d3.event.y);
             });
@@ -756,9 +937,9 @@ provenanceVisualizationModule = function () {
         // update dom element
         an.predAnalyses.forEach(function (pan) {
             aNodes[pan].outputNodes.forEach(function (n) {
-                if (typeof tarNodeLinkHash[n.id] !== "undefined") {
-                    tarNodeLinkHash[n.id].forEach(function (l) {
-                        if (nodeAnalysisHash[links[l].target] == an.id) {
+                if (typeof nodeLinkSuccMap[n.id] !== "undefined") {
+                    nodeLinkSuccMap[n.id].forEach(function (l) {
+                        if (nodeAnalysisMap[links[l].target] == an.id) {
                             d3.select("#linkId-" + l).attr("x2", d3.event.x);
                             d3.select("#linkId-" + l).attr("y2", d3.event.y);
                         }
@@ -769,9 +950,11 @@ provenanceVisualizationModule = function () {
 
         an.succAnalyses.forEach(function (san) {
             aNodes[san].inputNodes.forEach(function (n) {
-                srcNodeLinkHash[n.id].forEach(function (l) {
-                    d3.select("#linkId-" + l).attr("x1", d3.event.x);
-                    d3.select("#linkId-" + l).attr("y1", d3.event.y);
+                nodeLinkPredMap[n.id].forEach(function (l) {
+                    if (nodeAnalysisMap[links[l].source] === an.id) {
+                        d3.select("#linkId-" + l).attr("x1", d3.event.x);
+                        d3.select("#linkId-" + l).attr("y1", d3.event.y);
+                    }
                 });
             });
         });
@@ -798,9 +981,9 @@ provenanceVisualizationModule = function () {
 
     // dye graph by analyses and its corresponding workflows
     var dyeWorkflows = function () {
-        node.each(function () {
+        d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").each(function () {
             d3.select(this).style("stroke", function (d) {
-                return color(analysisWorkflowHash[d.analysis]);
+                return color(analysisWorkflowMap[d.analysis]);
             });
         });
 
@@ -808,7 +991,7 @@ provenanceVisualizationModule = function () {
 
     // dye graph by analyses
     var dyeAnalyses = function () {
-        node.each(function () {
+        d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").each(function () {
             d3.select(this).style("fill", function (d) {
                 return color(d.analysis);
             });
@@ -851,9 +1034,9 @@ provenanceVisualizationModule = function () {
         aNodes.forEach(function (an) {
             an.predAnalyses.forEach(function (pan) {
                 aNodes[pan].outputNodes.forEach(function (n) {
-                    if (typeof tarNodeLinkHash[n.id] !== "undefined") {
-                        tarNodeLinkHash[n.id].forEach(function (l) {
-                            if (nodeAnalysisHash[links[l].target] == an.id) {
+                    if (typeof nodeLinkSuccMap[n.id] !== "undefined") {
+                        nodeLinkSuccMap[n.id].forEach(function (l) {
+                            if (nodeAnalysisMap[links[l].target] == an.id) {
                                 links[l].hidden = false;
                             }
                         });
@@ -863,22 +1046,24 @@ provenanceVisualizationModule = function () {
         });
     };
 
-// TODO: draw links before analyses
+    // draw links
     var drawLinks = function () {
         link = canvas.selectAll(".link")
-            .data(links)
+            .data(links.filter(function (l) {
+                return l !== null;
+            }))
             .enter().append("line")
             .attr("x1", function (l) {
-                return l.hidden ? nodes[l.source].x : aNodes[nodeAnalysisHash[l.source]].x;
+                return l.hidden ? nodes[l.source].x : aNodes[nodeAnalysisMap[l.source]].x;
             })
             .attr("y1", function (l) {
-                return l.hidden ? nodes[l.source].y : aNodes[nodeAnalysisHash[l.source]].y;
+                return l.hidden ? nodes[l.source].y : aNodes[nodeAnalysisMap[l.source]].y;
             })
             .attr("x2", function (l) {
-                return l.hidden ? nodes[l.target].x : aNodes[nodeAnalysisHash[l.target]].x;
+                return l.hidden ? nodes[l.target].x : aNodes[nodeAnalysisMap[l.target]].x;
             })
             .attr("y2", function (l) {
-                return l.hidden ? nodes[l.target].y : aNodes[nodeAnalysisHash[l.target]].y;
+                return l.hidden ? nodes[l.target].y : aNodes[nodeAnalysisMap[l.target]].y;
             })
             .classed({
                 "link": true
@@ -935,7 +1120,7 @@ provenanceVisualizationModule = function () {
                             return color(an.uuid);
                         })
                         .style("stroke", function () {
-                            return color(analysisWorkflowHash[an.uuid]);
+                            return color(analysisWorkflowMap[an.uuid]);
                         })
                         .style("stroke-width", 3);
                 });
@@ -966,7 +1151,7 @@ provenanceVisualizationModule = function () {
         analysis.each(function (a, i) {
             d3.select(this).selectAll(".node")
                 .data(nodes.filter(function (n) {
-                    return nodeAnalysisHash[n.id] == i;
+                    return nodeAnalysisMap[n.id] == i;
                 }))
                 .enter().append("g").each(function (d) {
                     if (d.nodeType === "raw" || d.nodeType === "processed") {
@@ -974,6 +1159,11 @@ provenanceVisualizationModule = function () {
                             .attr("transform", "translate(" + d.x + "," + d.y + ")")
                             .append("circle")
                             .attr("r", r);
+                    } else if (d.nodeType === "dummy") {
+                        d3.select(this)
+                            .attr("transform", "translate(" + d.x + "," + d.y + ")")
+                            .append("circle")
+                            .attr("r", r / 2);
                     } else {
                         if (d.nodeType === "special") {
                             d3.select(this)
@@ -981,8 +1171,7 @@ provenanceVisualizationModule = function () {
                                 .append("rect")
                                 .attr("width", r * 2)
                                 .attr("height", r * 2);
-                        }
-                        if (d.nodeType === "dt") {
+                        } else if (d.nodeType === "dt") {
                             d3.select(this)
                                 .attr("transform", "translate(" + (d.x - r * 0.75) + "," + (d.y - r * 0.75) + ")")
                                 .append("rect")
@@ -997,6 +1186,9 @@ provenanceVisualizationModule = function () {
                     "node": true,
                     "rawNode": (function (d) {
                         return d.nodeType == "raw";
+                    }),
+                    "dummyNode": (function (d) {
+                        return d.nodeType == "dummy";
                     }),
                     "specialNode": (function (d) {
                         return d.nodeType == "special";
@@ -1056,9 +1248,9 @@ provenanceVisualizationModule = function () {
                 // adapt incoming links
                 an.predAnalyses.forEach(function (pan) {
                     aNodes[pan].outputNodes.forEach(function (n) {
-                        if (typeof tarNodeLinkHash[n.id] !== "undefined") {
-                            tarNodeLinkHash[n.id].forEach(function (l) {
-                                if (nodeAnalysisHash[links[l].target] == an.id) {
+                        if (typeof nodeLinkSuccMap[n.id] !== "undefined") {
+                            nodeLinkSuccMap[n.id].forEach(function (l) {
+                                if (nodeAnalysisMap[links[l].target] == an.id) {
                                     d3.select("#linkId-" + l).style("display", "inline").attr("x2", nodes[links[l].target].x);
                                     d3.select("#linkId-" + l).style("display", "inline").attr("y2", nodes[links[l].target].y);
                                 }
@@ -1070,8 +1262,8 @@ provenanceVisualizationModule = function () {
                 // adapt outgoing links
                 an.succAnalyses.forEach(function (san) {
                     aNodes[san].inputNodes.forEach(function (n) {
-                        srcNodeLinkHash[n.id].forEach(function (l) {
-                            if (nodeAnalysisHash[links[l].source] == an.id) {
+                        nodeLinkPredMap[n.id].forEach(function (l) {
+                            if (nodeAnalysisMap[links[l].source] == an.id) {
                                 d3.select("#linkId-" + l).style("display", "inline").attr("x1", nodes[links[l].source].x);
                                 d3.select("#linkId-" + l).style("display", "inline").attr("y1", nodes[links[l].source].y);
                             }
@@ -1095,9 +1287,9 @@ provenanceVisualizationModule = function () {
                 // adapt incoming links
                 an.predAnalyses.forEach(function (pan) {
                     aNodes[pan].outputNodes.forEach(function (n) {
-                        if (typeof tarNodeLinkHash[n.id] !== "undefined") {
-                            tarNodeLinkHash[n.id].forEach(function (l) {
-                                if (nodeAnalysisHash[links[l].target] == an.id) {
+                        if (typeof nodeLinkSuccMap[n.id] !== "undefined") {
+                            nodeLinkSuccMap[n.id].forEach(function (l) {
+                                if (nodeAnalysisMap[links[l].target] == an.id) {
                                     d3.select("#linkId-" + l).style("display", "inline").attr("x2", an.x);
                                     d3.select("#linkId-" + l).style("display", "inline").attr("y2", an.y);
                                 }
@@ -1109,8 +1301,8 @@ provenanceVisualizationModule = function () {
                 // adapt outgoing links
                 an.succAnalyses.forEach(function (san) {
                     aNodes[san].inputNodes.forEach(function (n) {
-                        srcNodeLinkHash[n.id].forEach(function (l) {
-                            if (nodeAnalysisHash[links[l].source] == an.id) {
+                        nodeLinkPredMap[n.id].forEach(function (l) {
+                            if (nodeAnalysisMap[links[l].source] == an.id) {
                                 d3.select("#linkId-" + l).style("display", "inline").attr("x1", an.x);
                                 d3.select("#linkId-" + l).style("display", "inline").attr("y1", an.y);
                             }
@@ -1135,7 +1327,7 @@ provenanceVisualizationModule = function () {
 
             // highlight selected node and links
             d3.select(this).classed({"highlightedNode": true});
-            srcNodeLinkHash[x.id].forEach(function (l) {
+            nodeLinkPredMap[x.id].forEach(function (l) {
                 d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
             });
 
@@ -1276,21 +1468,6 @@ provenanceVisualizationModule = function () {
         }, 500);
     };
 
-    // layout graph
-    var layout = function () {
-        // topological order
-        var topNodes = topSort(inputNodes);
-
-        // coffman-graham layering
-        coffmanGrahamLayering(topNodes);
-
-        // group nodes by layer
-        var layeredTopNodes = groupNodesByCol(topNodes);
-
-        // place vertices
-        placeNodes(layeredTopNodes);
-    };
-
     // refinery injection for the provenance visualization
     var runProvenanceVisualizationPrivate = function (studyUuid) {
         var url = "/api/v1/node?study__uuid=" + studyUuid + "&format=json&limit=0";
@@ -1313,17 +1490,33 @@ provenanceVisualizationModule = function () {
             // extract analysis nodes
             createAnalysisNodes();
 
-            // create analysis node mapping
-            createAnalysisNodeMapping();
+            // topological order
+            var topNodes = sortTopological(inputNodes);
 
-            // set display property of analysis connecting links
-            initLinkVisibility();
+            if (topNodes !== null) {
+                // assign layers
+                assignLayers(topNodes);
 
-            // calculate layout
-            layout();
+                // add dummy vertices and links
+                addDummyVertices();
 
-            // call d3 visualization
-            drawGraph();
+                // create analysis node mapping
+                createAnalysisNodeMapping();
+
+                // set display property of analysis connecting links
+                initLinkVisibility();
+
+                // group nodes by layer
+                var layeredTopNodes = groupNodesByCol(topNodes);
+
+                // place vertices
+                placeNodes(layeredTopNodes);
+
+                // call d3 visualization
+                drawGraph();
+            } else {
+                console.log("Error: Graph is not acyclic!");
+            }
         });
     };
 
