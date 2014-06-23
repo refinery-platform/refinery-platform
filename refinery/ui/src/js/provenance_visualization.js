@@ -174,7 +174,7 @@ provenanceVisualizationModule = function () {
         });
     };
 
-// TODO:
+// TODO: in debug state (prototype)
     // minimize edge crossings
     var kLayerCrossingMinimisation = function (lgNodes) {
 
@@ -214,14 +214,15 @@ provenanceVisualizationModule = function () {
         });
     };
 
-// TODO:
+// TODO: to implement
     // set row placement
     var setRowPlacement = function (lgNodes) {
 
     };
 
+// TODO:
     // layout node columns
-    var placeNodesPrototype = function (lgNodes) {
+    var placeNodes = function (lgNodes) {
 
         // init row placement
         initRowPlacement(lgNodes);
@@ -233,9 +234,9 @@ provenanceVisualizationModule = function () {
         setRowPlacement(lgNodes);
     };
 
-    // TODO: rewrite row layering, keywords: vertex ordering, and y-coordinate assignment (see hierarchical.pdf)
+// TODO: remove obsolete custom layout
     // layout node columns
-    var placeNodes = function (lgNodes) {
+    var placeNodesPrototype = function (lgNodes) {
         var layer = 10,
             row = 0,
             curRow = 0,
@@ -501,15 +502,9 @@ provenanceVisualizationModule = function () {
                 nodeSuccMap[l.source] = nodeSuccMap[l.source].concat([newNodeId]);
                 nodeSuccMap[l.source].splice(nodeSuccMap[l.source].indexOf(l.target), 1);
 
-                /*console.log("source: " + l.source);
-                 console.log("target: " + l.target);*/
-
+                // insert links
                 var j = 0;
                 while (j < gapLength) {
-                    /*console.log("j: " + j);
-                     console.log("predNode: " + predNode);
-                     console.log("newNodeId: " + (newNodeId + j));
-                     console.log("newLinkId: " + (newLinkId + j));*/
 
                     // add link
                     links.push({
@@ -544,15 +539,6 @@ provenanceVisualizationModule = function () {
 
                 // delete original link
                 links[l.id] = null;
-
-                /*console.log("REMOVE LINK HASH DEPENDENCIES");
-                 console.log(nodeLinkPredMap);
-                 console.log(nodeLinkSuccMap);
-                 console.log(nodePredMap);
-                 console.log(nodeSuccMap);
-
-                 console.log("links");
-                 console.log(links);*/
             }
         });
     };
@@ -585,11 +571,6 @@ provenanceVisualizationModule = function () {
                 n.col = maxSuccLayer - 1;
             }
         });
-        /*        var str = "";
-         rtNodes.forEach(function (ll) {
-         str += nodes[ll.id].id + "(" + nodes[ll.id].col + ") ";
-         });
-         console.log("layering: " + str);*/
     };
 
     // TODO: lexicographic sort for each layer
@@ -642,11 +623,7 @@ provenanceVisualizationModule = function () {
                 succ.forEach(handleUndefined);
             }
         }
-        /*var str = "";
-         l.forEach(function (ll) {
-         str += ll.id + " ";
-         });
-         console.log("TopSort: " + str);*/
+
         // handle non-acyclic graphs
         if (s.length > 0) {
             return null;
@@ -830,7 +807,7 @@ provenanceVisualizationModule = function () {
             an.outputNodes.forEach(function (n) {
                 if (typeof nodeSuccMap[n.id] !== "undefined") {
                     nodeSuccMap[n.id].forEach(function (s) {
-                        if (an.succAnalyses.indexOf(nodeAnalysisMap[s]) === -1) {
+                        if (an.succAnalyses.indexOf(nodeAnalysisMap[s]) === -1 && nodeAnalysisMap[s] !== an.id) {
                             an.succAnalyses.push(nodeAnalysisMap[s]);
                         }
                     });
@@ -974,8 +951,10 @@ provenanceVisualizationModule = function () {
         an.succAnalyses.forEach(function (san) {
             aNodes[san].inputNodes.forEach(function (n) {
                 nodeLinkPredMap[n.id].forEach(function (l) {
-                    d3.select("#linkId-" + l).attr("x1", d3.event.x);
-                    d3.select("#linkId-" + l).attr("y1", d3.event.y);
+                    if (nodeAnalysisMap[links[l].source] === an.id) {
+                        d3.select("#linkId-" + l).attr("x1", d3.event.x);
+                        d3.select("#linkId-" + l).attr("y1", d3.event.y);
+                    }
                 });
             });
         });
@@ -1489,26 +1468,6 @@ provenanceVisualizationModule = function () {
         }, 500);
     };
 
-// TODO: remove/rewrite
-    // layout graph
-    var layout = function () {
-        // topological order
-        var topNodes = sortTopological(inputNodes);
-
-        if (topNodes !== null) {
-            // assign layers
-            assignLayers(topNodes);
-
-            // group nodes by layer
-            var layeredTopNodes = groupNodesByCol(topNodes);
-
-            // place vertices
-            placeNodesPrototype(layeredTopNodes);
-        } else {
-            console.log("Error: Graph is not acyclic!");
-        }
-    };
-
     // refinery injection for the provenance visualization
     var runProvenanceVisualizationPrivate = function (studyUuid) {
         var url = "/api/v1/node?study__uuid=" + studyUuid + "&format=json&limit=0";
@@ -1531,7 +1490,6 @@ provenanceVisualizationModule = function () {
             // extract analysis nodes
             createAnalysisNodes();
 
-// TODO: add dummy vertices and links
             // topological order
             var topNodes = sortTopological(inputNodes);
 
@@ -1552,7 +1510,7 @@ provenanceVisualizationModule = function () {
                 var layeredTopNodes = groupNodesByCol(topNodes);
 
                 // place vertices
-                placeNodesPrototype(layeredTopNodes);
+                placeNodes(layeredTopNodes);
 
                 // call d3 visualization
                 drawGraph();
