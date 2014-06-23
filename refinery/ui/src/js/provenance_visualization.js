@@ -165,6 +165,74 @@ provenanceVisualizationModule = function () {
         return newNode;
     };
 
+    // init row placement
+    var initRowPlacement = function (lgNodes) {
+        lgNodes.forEach(function (lg) {
+            lg.forEach(function (n, i) {
+                nodes[n.id].row = i;
+            });
+        });
+    };
+
+// TODO:
+    // minimize edge crossings
+    var kLayerCrossingMinimisation = function (lgNodes) {
+
+        // for each layer, reorder nodes to minimize crossings
+        lgNodes.forEach(function (lg) {
+
+            var predMaxRow = -1;
+            // for each node check potential crossing
+            lg.forEach(function (n, i) {
+
+                console.log("#########################");
+                console.log("#" + n.id + " (" + n.col + "," + n.row + ")");
+                console.log("Preds: ");
+                console.log(nodePredMap[n.id]);
+                console.log("Succs: ");
+                console.log(nodeSuccMap[n.id]);
+                console.log("");
+
+                // for each node, check pred row
+                if (nodePredMap[n.id].length > 0) {
+                    console.log("Preds: ");
+
+                    nodePredMap[n.id].forEach(function (p) {
+                        console.log("#" + nodes[p].id + " (" + nodes[p].col + "," + nodes[p].row + ")");
+
+                        if (nodes[p].row >= predMaxRow) {
+                            console.log("CHECK: " + nodes[p].row + " > " + predMaxRow);
+                            predMaxRow = nodes[p].row;
+                        } else {
+                            console.log("CROSSING " + nodes[p].row + " > " + predMaxRow);
+                        }
+                    });
+                }
+                console.log("");
+
+            });
+        });
+    };
+
+// TODO:
+    // set row placement
+    var setRowPlacement = function (lgNodes) {
+
+    };
+
+    // layout node columns
+    var placeNodesPrototype = function (lgNodes) {
+
+        // init row placement
+        initRowPlacement(lgNodes);
+
+        // minimize edge crossings
+        kLayerCrossingMinimisation(lgNodes);
+
+        // update row placements
+        setRowPlacement(lgNodes);
+    };
+
     // TODO: rewrite row layering, keywords: vertex ordering, and y-coordinate assignment (see hierarchical.pdf)
     // layout node columns
     var placeNodes = function (lgNodes) {
@@ -172,6 +240,8 @@ provenanceVisualizationModule = function () {
             row = 0,
             curRow = 0,
             lastRow = 0;
+
+        console.log(lgNodes);
 
         // from right to left
         lgNodes.forEach(function (lg) {
@@ -190,7 +260,7 @@ provenanceVisualizationModule = function () {
 
                 // for each successor get pred (= neighbors)
                 var neighbors = [];
-                if (typeof cur.succ !== "undefined") {
+                if (typeof cur.succ !== "undefined" && cur.succ.length !== 0) {
                     cur.succ.forEach(function (s) {
                         nodes[s].parents.forEach(function (p) {
                             if (nodes[nodeMap[p]].id !== cur.id) {
@@ -254,7 +324,6 @@ provenanceVisualizationModule = function () {
                             console.log("1 x n");
                             console.log(n.id);
 
-
                             // get min and max row for SPLIT BRANCH
                             cur.succ.forEach(function (s) {
                                 if (nodes[s].row < minRow) {
@@ -289,7 +358,7 @@ provenanceVisualizationModule = function () {
                             }
 
                             if (curRow === lastRow) {
-                                console.log("colision");
+                                console.log("collision");
                                 curRow += 1;
                             }
                         }
@@ -367,9 +436,128 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // TODO: handle graph width
+// TODO: code cleanup
+    // add dummy vertices
+    var addDummyVertices = function () {
+        links.forEach(function (l) {
+            // when the link is longer than one column, add dummy vertices
+            var gapLength = nodes[l.target].col - nodes[l.source].col;
+
+            if (gapLength > 1) {
+
+                // dummy nodes are affiliated with the source node of the link in context
+                var newNodeId = nodes.length,
+                    newLinkId = links.length,
+                    predNode = l.source,
+                    curCol = nodes[l.source].col,
+                    curAnalysis = nodes[l.source].analysis,
+                    curStudy = nodes[l.source].study,
+                    curAssay = nodes[l.source].assay;
+
+                // insert nodes
+                var i = 0;
+                while (i < gapLength - 1) {
+
+                    // add node
+                    nodes.push({
+                        name: "dummyNode-" + (newNodeId + i),
+                        fileType: "dummy",
+                        nodeType: "dummy",
+                        uuid: "dummyNode-" + (newNodeId + i),
+                        study: curStudy,
+                        assay: curAssay,
+                        parents: (i === 0) ? [nodes[l.source].uuid] : ["dummyNode-" + predNode],
+                        row: -1,
+                        col: curCol + 1,
+                        id: newNodeId + i,
+                        visited: false,
+                        analysis: curAnalysis,
+                        doiFactor: -1,
+                        hidden: true
+                    });
+
+                    // update node maps
+                    createNodeHashes(nodes[newNodeId + i], newNodeId + i);
+
+                    //analysisNodeMap = ,
+                    nodeAnalysisMap[newNodeId + i] = curAnalysis;
+
+                    predNode = newNodeId + i;
+                    curCol++;
+                    i++;
+                }
+
+                // update parents for original target node
+                nodes[l.target].parents = nodes[l.target].parents.concat([nodes[predNode].uuid]);
+                nodes[l.target].parents.splice(nodes[l.target].parents.indexOf(nodes[l.source].uuid), 1);
+
+                // insert links (one link more than nodes)
+                predNode = l.source;
+                curCol = nodes[l.source].col;
+
+                // update original link source
+                nodeLinkSuccMap[l.source] = nodeLinkSuccMap[l.source].concat([newLinkId]);
+                nodeLinkSuccMap[l.source].splice(nodeLinkSuccMap[l.source].indexOf(l.id), 1);
+                nodeSuccMap[l.source] = nodeSuccMap[l.source].concat([newNodeId]);
+                nodeSuccMap[l.source].splice(nodeSuccMap[l.source].indexOf(l.target), 1);
+
+                /*console.log("source: " + l.source);
+                 console.log("target: " + l.target);*/
+
+                var j = 0;
+                while (j < gapLength) {
+                    /*console.log("j: " + j);
+                     console.log("predNode: " + predNode);
+                     console.log("newNodeId: " + (newNodeId + j));
+                     console.log("newLinkId: " + (newLinkId + j));*/
+
+                    // add link
+                    links.push({
+                        source: predNode,
+                        target: (j === gapLength - 1) ? l.target : newNodeId + j,
+                        id: newLinkId + j,
+                        hidden: true
+                    });
+
+                    if (j < gapLength - 1) {
+                        nodePredMap[newNodeId + j] = [predNode];
+                        nodeLinkPredMap[newNodeId + j] = [newLinkId + j];
+                        //nodeSuccMap[newNodeId + j] = [newNodeId + j+1];
+                        nodeLinkSuccMap[newNodeId + j] = [newLinkId + j + 1];
+                    }
+
+                    // update link maps
+                    if (j < gapLength - 2) {
+                        nodeSuccMap[newNodeId + j] = [newNodeId + j + 1];
+                        //nodeLinkSuccMap[newNodeId + j] = [newLinkId + j+1];
+                    }
+
+                    predNode = newNodeId + j;
+                    curCol++;
+                    j++;
+                }
+                nodeLinkPredMap[l.target] = nodeLinkPredMap[l.target].concat([newLinkId + j - 1]);
+                nodeLinkPredMap[l.target].splice(nodeLinkPredMap[l.target].indexOf(l.id), 1);
+                nodePredMap[l.target] = nodePredMap[l.target].concat([newNodeId + j - 2]);
+                nodePredMap[l.target].splice(nodePredMap[l.target].indexOf(l.source), 1);
+
+                // delete original link
+                links[l.id] = null;
+
+                /*console.log("REMOVE LINK HASH DEPENDENCIES");
+                 console.log(nodeLinkPredMap);
+                 console.log(nodeLinkSuccMap);
+                 console.log(nodePredMap);
+                 console.log(nodeSuccMap);
+
+                 console.log("links");
+                 console.log(links);*/
+            }
+        });
+    };
+
     // layering
-    var coffmanGrahamLayering = function (tNodes) {
+    var assignLayers = function (tNodes) {
         var layer = 10,
             succ = [],
             rtNodes = [];
@@ -396,11 +584,16 @@ provenanceVisualizationModule = function () {
                 n.col = maxSuccLayer - 1;
             }
         });
+        /*        var str = "";
+         rtNodes.forEach(function (ll) {
+         str += nodes[ll.id].id + "(" + nodes[ll.id].col + ") ";
+         });
+         console.log("layering: " + str);*/
     };
 
     // TODO: lexicographic sort for each layer
     // linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting)
-    var topSort = function (inputs) {
+    var sortTopological = function (inputs) {
         var s = [],     // input set
             l = [],     // result set for sorted elements
             cNodes = [],// deep copy nodes, because we have to delete links from the graph
@@ -415,7 +608,7 @@ provenanceVisualizationModule = function () {
         });
 
         // to avoid definition of function in while loop below (added by NG)
-        // for each successor (an edge from n to m)
+        // for each successor
         var handleUndefined = function (m) {
             // delete parent with p.uuid == n.uuid
             var index = -1;
@@ -448,7 +641,12 @@ provenanceVisualizationModule = function () {
                 succ.forEach(handleUndefined);
             }
         }
-
+        /*var str = "";
+         l.forEach(function (ll) {
+         str += ll.id + " ";
+         });
+         console.log("TopSort: " + str);*/
+        // handle non-acyclic graphs
         if (s.length > 0) {
             return null;
         } else {
@@ -469,7 +667,7 @@ provenanceVisualizationModule = function () {
             // build node hashes
             createNodeHashes(x, i);
 
-            // set input nodes
+            // sorted set of input nodes
             if (x.type == "Source Name") {
                 inputNodes.push(nodes[i]);
             }
@@ -641,7 +839,7 @@ provenanceVisualizationModule = function () {
 
         aNodes.forEach(function (an) {
             an.links = links.filter(function (l) {
-                return nodeAnalysisMap[l.target] == an.id;
+                return l !== null && nodeAnalysisMap[l.target] == an.id;
             });
         });
     };
@@ -697,6 +895,7 @@ provenanceVisualizationModule = function () {
         // drag selected node
         d3.select(this).attr("transform", function (n) {
             switch (n.nodeType) {
+                case "dummy":
                 case "raw":
                 case "processed":
                     return "translate(" + d3.event.x + "," + d3.event.y + ")";
@@ -802,7 +1001,7 @@ provenanceVisualizationModule = function () {
 
     // dye graph by analyses and its corresponding workflows
     var dyeWorkflows = function () {
-        node.each(function () {
+        d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").each(function () {
             d3.select(this).style("stroke", function (d) {
                 return color(analysisWorkflowMap[d.analysis]);
             });
@@ -812,7 +1011,7 @@ provenanceVisualizationModule = function () {
 
     // dye graph by analyses
     var dyeAnalyses = function () {
-        node.each(function () {
+        d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").each(function () {
             d3.select(this).style("fill", function (d) {
                 return color(d.analysis);
             });
@@ -867,10 +1066,12 @@ provenanceVisualizationModule = function () {
         });
     };
 
-// TODO: draw links before analyses
+    // draw links
     var drawLinks = function () {
         link = canvas.selectAll(".link")
-            .data(links)
+            .data(links.filter(function (l) {
+                return l !== null;
+            }))
             .enter().append("line")
             .attr("x1", function (l) {
                 return l.hidden ? nodes[l.source].x : aNodes[nodeAnalysisMap[l.source]].x;
@@ -978,6 +1179,11 @@ provenanceVisualizationModule = function () {
                             .attr("transform", "translate(" + d.x + "," + d.y + ")")
                             .append("circle")
                             .attr("r", r);
+                    } else if (d.nodeType === "dummy") {
+                        d3.select(this)
+                            .attr("transform", "translate(" + d.x + "," + d.y + ")")
+                            .append("circle")
+                            .attr("r", r / 2);
                     } else {
                         if (d.nodeType === "special") {
                             d3.select(this)
@@ -985,8 +1191,7 @@ provenanceVisualizationModule = function () {
                                 .append("rect")
                                 .attr("width", r * 2)
                                 .attr("height", r * 2);
-                        }
-                        if (d.nodeType === "dt") {
+                        } else if (d.nodeType === "dt") {
                             d3.select(this)
                                 .attr("transform", "translate(" + (d.x - r * 0.75) + "," + (d.y - r * 0.75) + ")")
                                 .append("rect")
@@ -1001,6 +1206,9 @@ provenanceVisualizationModule = function () {
                     "node": true,
                     "rawNode": (function (d) {
                         return d.nodeType == "raw";
+                    }),
+                    "dummyNode": (function (d) {
+                        return d.nodeType == "dummy";
                     }),
                     "specialNode": (function (d) {
                         return d.nodeType == "special";
@@ -1280,20 +1488,21 @@ provenanceVisualizationModule = function () {
         }, 500);
     };
 
+// TODO: remove/rewrite
     // layout graph
     var layout = function () {
         // topological order
-        var topNodes = topSort(inputNodes);
+        var topNodes = sortTopological(inputNodes);
 
         if (topNodes !== null) {
-            // coffman-graham layering
-            coffmanGrahamLayering(topNodes);
+            // assign layers
+            assignLayers(topNodes);
 
             // group nodes by layer
             var layeredTopNodes = groupNodesByCol(topNodes);
 
             // place vertices
-            placeNodes(layeredTopNodes);
+            placeNodesPrototype(layeredTopNodes);
         } else {
             console.log("Error: Graph is not acyclic!");
         }
@@ -1321,17 +1530,34 @@ provenanceVisualizationModule = function () {
             // extract analysis nodes
             createAnalysisNodes();
 
-            // create analysis node mapping
-            createAnalysisNodeMapping();
+// TODO: add dummy vertices and links
+            // topological order
+            var topNodes = sortTopological(inputNodes);
 
-            // set display property of analysis connecting links
-            initLinkVisibility();
+            if (topNodes !== null) {
+                // assign layers
+                assignLayers(topNodes);
 
-            // calculate layout
-            layout();
+                // add dummy vertices and links
+                addDummyVertices();
 
-            // call d3 visualization
-            drawGraph();
+                // create analysis node mapping
+                createAnalysisNodeMapping();
+
+                // set display property of analysis connecting links
+                initLinkVisibility();
+
+                // group nodes by layer
+                var layeredTopNodes = groupNodesByCol(topNodes);
+
+                // place vertices
+                placeNodesPrototype(layeredTopNodes);
+
+                // call d3 visualization
+                drawGraph();
+            } else {
+                console.log("Error: Graph is not acyclic!");
+            }
         });
     };
 
