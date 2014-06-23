@@ -519,17 +519,18 @@ provenanceVisualizationModule = function () {
                         hidden: true
                     });
 
+                    // update link maps
                     if (j < gapLength - 1) {
                         nodePredMap[newNodeId + j] = [predNode];
                         nodeLinkPredMap[newNodeId + j] = [newLinkId + j];
-                        //nodeSuccMap[newNodeId + j] = [newNodeId + j+1];
                         nodeLinkSuccMap[newNodeId + j] = [newLinkId + j + 1];
                     }
 
-                    // update link maps
+                    // update nodes before target
                     if (j < gapLength - 2) {
                         nodeSuccMap[newNodeId + j] = [newNodeId + j + 1];
-                        //nodeLinkSuccMap[newNodeId + j] = [newLinkId + j+1];
+                    } else if (j === gapLength - 2) {
+                        nodeSuccMap[newNodeId + j] = [l.target];
                     }
 
                     predNode = newNodeId + j;
