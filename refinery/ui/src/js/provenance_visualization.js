@@ -177,8 +177,8 @@ provenanceVisualizationModule = function () {
 // TODO: in debug state (prototype)
     // minimize edge crossings
     var kLayerCrossingMinimisation = function (lgNodes) {
-
-        // for each layer, reorder nodes to minimize crossings
+        /*
+         // for each layer, reorder nodes to minimize crossings
         lgNodes.forEach(function (lg) {
 
             var predMaxRow = -1;
@@ -211,7 +211,7 @@ provenanceVisualizationModule = function () {
                 console.log("");
 
             });
-        });
+         });*/
     };
 
 // TODO: to implement
@@ -1499,6 +1499,10 @@ provenanceVisualizationModule = function () {
 
                 // add dummy vertices and links
                 addDummyVertices();
+
+                // recalculate layers including dummy nodes
+                topNodes = sortTopological(inputNodes);
+                assignLayers(topNodes);
 
                 // create analysis node mapping
                 createAnalysisNodeMapping();
