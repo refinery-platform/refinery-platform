@@ -143,7 +143,7 @@ provenanceVisualizationModule = function () {
 
     // deep copy node data structure
     var copyNode = function (node) {
-        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, visited: false, doiFactor: -1, hidden: true};
+        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, visited: false, doiFactor: -1, hidden: true, bcOrder: -1};
 
         newNode.name = node.name;
         newNode.nodeType = node.nodeType;
@@ -161,6 +161,7 @@ provenanceVisualizationModule = function () {
         newNode.analysis = node.analysis;
         newNode.doiFactor = node.doiFactor;
         newNode.hidden = node.hidden;
+        newNode.bcOrder = node.bcOrder;
 
         return newNode;
     };
@@ -174,53 +175,67 @@ provenanceVisualizationModule = function () {
         });
     };
 
-// TODO: in debug state (prototype)
-    // minimize edge crossings
-    var kLayerCrossingMinimisation = function (lgNodes) {
-        /*
-         // for each layer, reorder nodes to minimize crossings
-        lgNodes.forEach(function (lg) {
+// TODO: code cleanup
+    // 1-sided crossing minimization via barycentric heuristic
+    var oneSidedCrossingMinimisation = function (lgNodes) {
+        // for each layer (fixed layer L0), check layer to the left (variable layer L1)
+        lgNodes.forEach(function (lg, i) {
+            // if there is a layer left to the current layer
+            if (typeof lgNodes[i + 1] !== "undefined" && lgNodes[i + 1] !== null) {
+                // for each node within the variable layer
+                lgNodes[i + 1].forEach(function (n) {
+                    var degree = 1,
+                        accRows = 0;
 
-            var predMaxRow = -1;
-            // for each node check potential crossing
-            lg.forEach(function (n, i) {
+                    if (typeof nodeSuccMap[n.id] !== "undefined" && nodeSuccMap[n.id].length !== 0) {
+                        degree = nodeSuccMap[n.id].length;
+                        nodeSuccMap[n.id].forEach(function (s) {
+                            accRows += (nodes[s].row + 1);
+                        });
+                    }
+// TODO: if any node within the layer has the same barycenter value, increase it by a small value
+                    nodes[n.id].bcOrder = accRows / degree;
+                });
+            }
+        });
 
-                console.log("#########################");
-                console.log("#" + n.id + " (" + n.col + "," + n.row + ")");
-                console.log("Preds: ");
-                console.log(nodePredMap[n.id]);
-                console.log("Succs: ");
-                console.log(nodeSuccMap[n.id]);
-                console.log("");
-
-                // for each node, check pred row
-                if (nodePredMap[n.id].length > 0) {
-                    console.log("Preds: ");
-
-                    nodePredMap[n.id].forEach(function (p) {
-                        console.log("#" + nodes[p].id + " (" + nodes[p].col + "," + nodes[p].row + ")");
-
-                        if (nodes[p].row >= predMaxRow) {
-                            console.log("CHECK: " + nodes[p].row + " > " + predMaxRow);
-                            predMaxRow = nodes[p].row;
-                        } else {
-                            console.log("CROSSING " + nodes[p].row + " > " + predMaxRow);
-                        }
-                    });
+        // reorder nodes within layer
+        var barycenterOrderedNodes = [];
+        lgNodes.forEach(function (lg, i) {
+            barycenterOrderedNodes[i] = [];
+            lg.forEach(function (n, j) {
+                // init most right layer as fixed
+                if (i === 0) {
+                    nodes[n.id].bcOrder = j + 1;
+                    barycenterOrderedNodes[0][j] = nodes[n.id];
+                    // set earlier computed bcOrder
+                } else {
+                    nodes[n.id].bcOrder = nodes[n.id].bcOrder;
+                    barycenterOrderedNodes[i][j] = nodes[n.id];
                 }
-                console.log("");
-
             });
-         });*/
+
+            // reorder by barycentric value
+            barycenterOrderedNodes[i].sort(function (a, b) {
+                return a.bcOrder - b.bcOrder;
+            });
+        });
+
+        return barycenterOrderedNodes;
     };
 
-// TODO: to implement
+// TODO: refine y-coordinate assignment
     // set row placement
-    var setRowPlacement = function (lgNodes) {
+    var setRowPlacement = function (bclgNodes) {
+        bclgNodes.forEach(function (bclg) {
+            bclg.forEach(function (n) {
 
+// TODO: for demonstration purposes, row is overwritten by barcyentric coordinate
+                nodes[n.id].row = nodes[n.id].bcOrder;
+            });
+        });
     };
 
-// TODO:
     // layout node columns
     var placeNodes = function (lgNodes) {
 
@@ -228,213 +243,10 @@ provenanceVisualizationModule = function () {
         initRowPlacement(lgNodes);
 
         // minimize edge crossings
-        kLayerCrossingMinimisation(lgNodes);
+        var bclgNodes = oneSidedCrossingMinimisation(lgNodes);
 
         // update row placements
-        setRowPlacement(lgNodes);
-    };
-
-// TODO: remove obsolete custom layout
-    // layout node columns
-    var placeNodesPrototype = function (lgNodes) {
-        var layer = 10,
-            row = 0,
-            curRow = 0,
-            lastRow = 0;
-
-        console.log(lgNodes);
-
-        // from right to left
-        lgNodes.forEach(function (lg) {
-
-            lg.forEach(function (n) {
-                var cur = { id: nodeMap[n.uuid],
-                    o: nodes[nodeMap[n.uuid]],
-                    pred: nodePredMap[nodeMap[n.uuid]],
-                    succ: nodeSuccMap[nodeMap[n.uuid]],
-                    neighbors: []
-                };
-
-                console.log("nodeInfo");
-                console.log(cur.id);
-                console.log(cur.pred);
-
-                // for each successor get pred (= neighbors)
-                var neighbors = [];
-                if (typeof cur.succ !== "undefined" && cur.succ.length !== 0) {
-                    cur.succ.forEach(function (s) {
-                        nodes[s].parents.forEach(function (p) {
-                            if (nodes[nodeMap[p]].id !== cur.id) {
-                                neighbors.push(nodeMap[p]);
-                            }
-                        });
-                    });
-                    cur.neighbors = neighbors;
-                }
-
-                // SUCC UNDEFINED
-                if (typeof cur.succ === "undefined") {
-                    // PRED DEFINED
-                    if (typeof cur.pred !== "undefined") {
-                        // 1 PRED
-                        if (cur.pred.length === 1) {
-                            curRow = row;
-                            row++;
-                        }
-                        // n PRED
-                        else {
-                        }
-                    }
-                    // PRED UNDEFINED
-                    else {
-                        curRow = row;
-                    }
-                }
-                // SUCC DEFINED
-                else {
-                    var minRow;
-                    var maxRow;
-                    var visited;
-
-                    // PRED DEFINED
-                    if (typeof cur.pred !== "undefined") {
-
-                        // 1 PRED 1 SUCC
-                        if (cur.pred.length === 1 && cur.succ.length === 1) {
-                            console.log("1 x 1");
-                            console.log(n.id);
-                            // 0 NEIGHBORS
-                            if (cur.neighbors.length === 0) {
-                                curRow = nodes[cur.succ[0]].row;
-                            } else {
-                                // n NEIGHBORS
-                                // check neighbors visited
-                                visited = 0;
-                                cur.neighbors.forEach(function (nb) {
-                                    if (nodes[nb].visited) {
-                                        visited++;
-                                    }
-                                });
-                                curRow = nodes[cur.succ[0]].row - (cur.neighbors.length / 2) + visited;
-                            }
-                        }
-                        // 1 PRED n SUCC
-                        else if (cur.pred.length === 1 && cur.succ.length > 1) {
-                            minRow = nodes[cur.succ[0]].row;
-                            maxRow = -1;
-                            console.log("1 x n");
-                            console.log(n.id);
-
-                            // get min and max row for SPLIT BRANCH
-                            cur.succ.forEach(function (s) {
-                                if (nodes[s].row < minRow) {
-                                    minRow = nodes[s].row;
-                                }
-                                if (nodes[s].row > maxRow) {
-                                    maxRow = nodes[s].row;
-                                }
-                            });
-
-                            console.log("min " + minRow + " max " + maxRow);
-                            if ((minRow + (maxRow - minRow) / 2) === curRow) {
-                                curRow += (minRow + (maxRow - minRow) / 2);
-                            } else {
-                                curRow = minRow + (maxRow - minRow) / 2;
-                            }
-                            // quick fix
-
-                            // 0 NEIGHBORS
-                            if (cur.neighbors.length === 0) {
-                                curRow = minRow + (maxRow - minRow) / 2;
-                            } else {
-                                // n NEIGHBORS
-                                // check neighbors visited
-                                visited = 0;
-                                cur.neighbors.forEach(function (nb) {
-                                    if (nodes[nb].visited) {
-                                        visited++;
-                                    }
-                                });
-                                curRow = nodes[cur.succ[0]].row - (cur.neighbors.length / 2) + visited;
-                            }
-
-                            if (curRow === lastRow) {
-                                console.log("collision");
-                                curRow += 1;
-                            }
-                        }
-                        // n PRED 1 SUCC
-                        else if (cur.pred.length > 1 && cur.succ.length === 1) {
-                            curRow = nodes[cur.succ[0]].row + cur.pred.length / 2;
-
-                            // traverse graph and shift succs by row_shift
-                            traverseShift(cur.succ[0], cur.pred.length / 2 + 2);
-                        }
-                        // n PRED n SUCC
-                        else {
-                            minRow = nodes[cur.succ[0]].row;
-                            maxRow = -1;
-                            console.log("n x n");
-
-                            // get min and max row for SPLIT BRANCH
-                            cur.succ.forEach(function (s) {
-                                if (nodes[s].row < minRow) {
-                                    minRow = nodes[s].row;
-                                }
-                                if (nodes[s].row > maxRow) {
-                                    maxRow = nodes[s].row;
-                                }
-                            });
-
-                            // 0 NEIGHBORS
-                            if (cur.neighbors.length === 0) {
-                                curRow = minRow + (maxRow - minRow) / 2;
-                            } else {
-                                // n NEIGHBORS
-                                // check neighbors visited
-                                visited = 0;
-                                cur.neighbors.forEach(function (nb) {
-                                    if (nodes[nb].visited) {
-                                        visited++;
-                                    }
-                                });
-                                curRow = nodes[cur.succ[0]].row - (cur.neighbors.length / 2) + visited;
-                            }
-                        }
-                    }
-                    // PRED UNDEFINED
-                    else {
-                        // 1 SUCC
-                        if (cur.succ.length === 1) {
-                            curRow = nodes[cur.succ[0]].row;
-                        }
-                        // n SUCC
-                        else {
-                            minRow = nodes[cur.succ[0]].row;
-                            maxRow = -1;
-
-                            // get min and max row for SPLIT BRANCH
-                            cur.succ.forEach(function (s) {
-                                if (nodes[s].row < minRow) {
-                                    minRow = nodes[s].row;
-                                }
-                                if (nodes[s].row > maxRow) {
-                                    maxRow = nodes[s].row;
-                                }
-                            });
-
-                            curRow = minRow + (maxRow - minRow) / 2;
-                        }
-                    }
-                }
-                console.log(nodes[n.id].row + "<-" + curRow);
-                nodes[n.id].row = curRow;
-                cur.o.visited = true;
-                lastRow = curRow;
-            });
-            layer--;
-            row = 0;
-        });
+        setRowPlacement(bclgNodes);
     };
 
 // TODO: code cleanup
@@ -735,7 +547,8 @@ provenanceVisualizationModule = function () {
             visited: false,
             analysis: (nodeObj.analysis_uuid !== null) ? nodeObj.analysis_uuid : "dataset",
             doiFactor: -1,
-            hidden: true
+            hidden: true,
+            bcOrder: -1
         });
     };
 
