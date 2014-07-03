@@ -31,7 +31,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   $librarian_puppet_install_script =
 <<SCRIPT
   /usr/bin/apt-get -qq update && /usr/bin/apt-get -y install git
-  gem install librarian-puppet && cd /vagrant/deployment && librarian-puppet install
+  gem install librarian-puppet -v 1.0.4 && cd /vagrant/deployment && librarian-puppet install
 SCRIPT
   config.vm.provision :shell, :inline => $librarian_puppet_install_script
 
