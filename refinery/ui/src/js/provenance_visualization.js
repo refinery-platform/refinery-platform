@@ -286,16 +286,52 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    /* TODO: Refine y-coordinate assignment. */
     /**
-     * Set row placement.
+     * Remove edges that do not lead to an upper median neighbor.
+     * Mark type 0 - , type 1 - and type 2 conflicts.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      */
-    var setRowPlacement = function (bclgNodes) {
+    var verticalAlignment = function (bclgNodes) {
+        console.log(bclgNodes);
+
+        bclgNodes.forEach(function (bclg) {
+
+        });
+    };
+
+    /**
+     * Combine aligned nodes into blocks.
+     * Partition blocks into classes.
+     * @param bclgNodes Barycenter sorted layer grouped array of nodes.
+     */
+    var verticalCompaction = function (bclgNodes) {
+
+    };
+
+    /**
+     * Balance y-coordinates for each layer by the median of the four assignments.
+     * @param bclgNodes Barycenter sorted layer grouped array of nodes.
+     */
+    var balanceLayout = function (bclgNodes) {
+
+    };
+
+    /* TODO: Vertical coordinate assignment. [Brandes and Köpf 2002] */
+    /**
+     * Set row placement for nodes in each layer.
+     * @param bclgNodes Barycenter sorted layer grouped array of nodes.
+     */
+    var verticalCoordAssignment = function (bclgNodes) {
+
+        verticalAlignment(bclgNodes);
+
+        verticalCompaction(bclgNodes);
+
+        balanceLayout(bclgNodes);
+
+        /* TODO: For demonstration purposes, row is overwritten by barcyentric coordinate. */
         bclgNodes.forEach(function (bclg) {
             bclg.forEach(function (n) {
-
-                /* TODO: For demonstration purposes, row is overwritten by barcyentric coordinate. */
                 nodes[n.id].row = nodes[n.id].bcOrder;
             });
         });
@@ -314,7 +350,7 @@ provenanceVisualizationModule = function () {
         var bclgNodes = oneSidedCrossingMinimisation(lgNodes);
 
         /* Update row placements. */
-        setRowPlacement(bclgNodes);
+        verticalCoordAssignment(bclgNodes);
     };
 
     /* TODO: Code cleanup. */
