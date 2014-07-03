@@ -1,25 +1,35 @@
-// author: https://github.com/sluger
-// title: in-progress development for the refinery provenance graph visualization
-
-// js module pattern
+/**
+ * In-progress development for the refinery provenance graph visualization.
+ * Structured w.r.t. the JavaScript module pattern.
+ * @author sluger Stefan Luger https://github.com/sluger
+ * @exports runProvenanceVisualization The published function to invoke the module.
+ */
 provenanceVisualizationModule = function () {
-    // initializations
 
-    // node-link arrays
+    /**
+     * Initialize node-link arrays.
+     *
+     * @type {Array}
+     */
     var nodes = [],
         links = [],
         inputNodes = [],
         flatAnalyses = [],
         aNodes = [];
 
-    // dom elements
+    /**
+     * Initialize dom elements.
+     * @type {null}
+     */
     var node = Object.create(null),
         link = Object.create(null),
         analysis = Object.create(null),
         aNode = Object.create(null);
 
-// TODO: rewrite for simple maps (https://github.com/mbostock/d3/wiki/Arrays#d3_map)
-    // look up hashes
+// TODO: Rewrite for simple maps (https://github.com/mbostock/d3/wiki/Arrays#d3_map).
+    /**
+     * Initialize look up hashes.
+     */
     var nodeMap = d3.map(),             // node.uuid -> node.id
         studyMap = d3.map(),
         studyAssayMap = d3.map(),
@@ -32,20 +42,35 @@ provenanceVisualizationModule = function () {
         analysisNodeMap = d3.map(),
         nodeAnalysisMap = d3.map();
 
-    // margin conventions
+    /**
+     * Initialize margin conventions
+     * @type {{top: number, right: number, bottom: number, left: number}}
+     */
     var margin = {top: 20, right: 10, bottom: 20, left: 10};
 
-    // canvas dimensions
+    /**
+     * Initialize canvas dimensions.
+     * @type {number}
+     */
     var width = window.innerWidth - margin.left - margin.right,
         height = window.innerHeight - margin.top - margin.bottom;
 
+    /**
+     * Initialize zoom support.
+     * @type {null}
+     */
     var zoom = Object.create(null);
 
-    // constants
+    /**
+     * Set primitive drawing constants.
+     * @type {number}
+     */
     var r = 7,
         color = d3.scale.category20();
 
-    // geometric zoom
+    /**
+     * Geometric zoom.
+     */
     var redraw = function () {
         // translation and scaling
         canvas.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
@@ -53,7 +78,9 @@ provenanceVisualizationModule = function () {
         rect.attr("transform", "translate(" + (-(d3.event.translate[0] + margin.left) / d3.event.scale) + "," + (-(d3.event.translate[1] + margin.top) / d3.event.scale) + ")" + " scale(" + (+1 / d3.event.scale) + ")");
     };
 
-    // main canvas drawing area
+    /**
+     * Main canvas drawing area.
+     */
     var canvas = d3.select("#provenance-graph")
         .append("svg:svg")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
@@ -64,13 +91,17 @@ provenanceVisualizationModule = function () {
         .call(zoom = d3.behavior.zoom().on("zoom", redraw)).on("dblclick.zoom", null)
         .append("svg:g");
 
-    // helper rectangle to support pan & zoom
+    /**
+     * Helper rectangle to support pan and zoom.
+     */
     var rect = canvas.append("svg:rect")
         .attr("width", width)
         .attr("height", height)
         .classed("brect", true);
 
-    // reset css for all nodes
+    /**
+     * Reset css for all nodes.
+     */
     var clearHighlighting = function () {
         d3.selectAll(".node").each(function () {
             d3.select(this).classed({"highlightedNode": false});
@@ -80,7 +111,11 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // get involved nodes for highlighting the path by current node selection
+    /**
+     * Get involved nodes for highlighting the path by current node selection.
+     * @param nodeId
+     * @param highlighted
+     */
     var highlightInvolvedPath = function (nodeId, highlighted) {
 
         // for each predecessor
@@ -98,7 +133,12 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // shift right amount of the graph for a specific node by an amount of rows (shiftAmount)
+// TODO: Might be obsolete in future releases.
+    /**
+     * Shift right amount of the graph for a specific node by an amount of rows (shiftAmount).
+     * @param nodeId
+     * @param shiftAmount
+     */
     var traverseShift = function (nodeId, shiftAmount) {
         var cur = { o: nodes[nodeId],
             succ: nodeSuccMap[nodeId]
@@ -114,7 +154,11 @@ provenanceVisualizationModule = function () {
         }
     };
 
-    // group nodes by layers into a 2d array
+    /**
+     * Group nodes by layers into a 2d array.
+     * @param tNodes
+     * @returns {Array}
+     */
     var groupNodesByCol = function (tNodes) {
         var layer = 10,
             cgtNodes = [],
@@ -141,7 +185,12 @@ provenanceVisualizationModule = function () {
         return cgtNodes;
     };
 
-    // deep copy node data structure
+// TODO: Check all parameters.
+    /**
+     * Deep copy node data structure.
+     * @param node
+     * @returns {{name: string, nodeType: string, fileType: string, uuid: string, study: string, assay: string, row: number, col: number, parents: Array, id: number, visited: boolean, doiFactor: number, hidden: boolean, bcOrder: number}}
+     */
     var copyNode = function (node) {
         var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, visited: false, doiFactor: -1, hidden: true, bcOrder: -1};
 
@@ -166,7 +215,10 @@ provenanceVisualizationModule = function () {
         return newNode;
     };
 
-    // init row placement
+    /**
+     * Init row placement.
+     * @param lgNodes
+     */
     var initRowPlacement = function (lgNodes) {
         lgNodes.forEach(function (lg) {
             lg.forEach(function (n, i) {
@@ -175,8 +227,12 @@ provenanceVisualizationModule = function () {
         });
     };
 
-// TODO: code cleanup
-    // 1-sided crossing minimization via barycentric heuristic
+// TODO: Code cleanup.
+    /**
+     * 1-sided crossing minimization via barycentric heuristic.
+     * @param lgNodes
+     * @returns {Array}
+     */
     var oneSidedCrossingMinimisation = function (lgNodes) {
         // for each layer (fixed layer L0), check layer to the left (variable layer L1)
         lgNodes.forEach(function (lg, i) {
@@ -193,7 +249,7 @@ provenanceVisualizationModule = function () {
                             accRows += (nodes[s].row + 1);
                         });
                     }
-// TODO: if any node within the layer has the same barycenter value, increase it by a small value
+// TODO: If any node within the layer has the same barycenter value, increase it by a small value.
                     nodes[n.id].bcOrder = accRows / degree;
                 });
             }
@@ -224,19 +280,25 @@ provenanceVisualizationModule = function () {
         return barycenterOrderedNodes;
     };
 
-// TODO: refine y-coordinate assignment
-    // set row placement
+// TODO: Refine y-coordinate assignment.
+    /**
+     * Set row placement.
+     * @param bclgNodes
+     */
     var setRowPlacement = function (bclgNodes) {
         bclgNodes.forEach(function (bclg) {
             bclg.forEach(function (n) {
 
-// TODO: for demonstration purposes, row is overwritten by barcyentric coordinate
+// TODO: For demonstration purposes, row is overwritten by barcyentric coordinate.
                 nodes[n.id].row = nodes[n.id].bcOrder;
             });
         });
     };
 
-    // layout node columns
+    /**
+     * Layout node columns.
+     * @param lgNodes
+     */
     var placeNodes = function (lgNodes) {
 
         // init row placement
@@ -249,8 +311,10 @@ provenanceVisualizationModule = function () {
         setRowPlacement(bclgNodes);
     };
 
-// TODO: code cleanup
-    // add dummy vertices
+// TODO: Code cleanup.
+    /**
+     * Add dummy vertices.
+     */
     var addDummyVertices = function () {
         links.forEach(function (l) {
             // when the link is longer than one column, add dummy vertices
@@ -355,7 +419,10 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // layering
+    /**
+     * Assign layers.
+     * @param tNodes
+     */
     var assignLayers = function (tNodes) {
         var layer = 10,
             succ = [],
@@ -385,8 +452,11 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // TODO: lexicographic sort for each layer
-    // linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting)
+    /**
+     * Linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
+     * @param inputs
+     * @returns {*}
+     */
     var sortTopological = function (inputs) {
         var s = [],     // input set
             l = [],     // result set for sorted elements
@@ -444,7 +514,10 @@ provenanceVisualizationModule = function () {
         }
     };
 
-    // extract nodes
+    /**
+     * Extract nodes.
+     * @param datasetJsonObj
+     */
     var extractNodes = function (datasetJsonObj) {
         d3.values(datasetJsonObj.value).forEach(function (x, i) {
 
@@ -464,7 +537,9 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // extract links
+    /**
+     * Extract links.
+     */
     var extractLinks = function () {
         var linkId = 0;
         nodes.forEach(function (x, i) { // x may be parent of y
@@ -489,7 +564,12 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // extractLinkProperties
+    /**
+     * Extract link properties.
+     * @param nodeElem
+     * @param linkId
+     * @param parentIndex
+     */
     var extractLinkProperties = function (nodeElem, linkId, parentIndex) {
         links.push({
             source: nodeMap[nodeElem.parents[parentIndex]],
@@ -499,7 +579,9 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // create one node representing the whole analysis when aggregated
+    /**
+     * Create one node representing the whole analysis when aggregated.
+     */
     var createAnalysisNodes = function () {
         aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": false, "id": 0, "start": -1, "end": -1, "created": -1, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": []});
 
@@ -508,7 +590,14 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // build link hashes
+    /**
+     * Build link hashes.
+     * @param parentNodeElem
+     * @param linkId
+     * @param nodeId
+     * @param srcNodeIds
+     * @param srcLinkIds
+     */
     var createLinkHashes = function (parentNodeElem, linkId, nodeId, srcNodeIds, srcLinkIds) {
         srcNodeIds.push(nodeMap[parentNodeElem]);
         srcLinkIds.push(linkId);
@@ -522,14 +611,23 @@ provenanceVisualizationModule = function () {
         }
     };
 
-    // build node hashes
+    /**
+     * Build node hashes.
+     * @param nodeObj
+     * @param nodeIndex
+     */
     var createNodeHashes = function (nodeObj, nodeIndex) {
         nodeMap[nodeObj.uuid] = nodeIndex;
         studyMap[nodeIndex] = nodes[nodeIndex].study;
         studyAssayMap[nodes[nodeIndex].study] = nodes[nodeIndex].assay;
     };
 
-    // extract node api properties
+    /**
+     * Extract node api properties.
+     * @param nodeObj
+     * @param nodeType
+     * @param nodeIndex
+     */
     var extractNodeProperties = function (nodeObj, nodeType, nodeIndex) {
         nodes.push({
             name: nodeObj.name,
@@ -552,7 +650,11 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // assign CSS class for node types
+    /**
+     * Assign CSS class for node types.
+     * @param nodeType Datset specified node type.
+     * @returns {string} The CSS class corresponding the type of the node.
+     */
     var assignCSSNodeType = function (nodeType) {
         var nodeTypeClass = "";
 
@@ -573,7 +675,9 @@ provenanceVisualizationModule = function () {
         return nodeTypeClass;
     };
 
-    // for each analysis the corresponding nodes as well as specifically in- and output nodes are mapped to it
+    /**
+     * For each analysis the corresponding nodes as well as specifically in- and output nodes are mapped to it.
+     */
     var createAnalysisNodeMapping = function () {
         nodes.forEach(function (n, i) {
             if (analysisNodeMap.hasOwnProperty(n.analysis)) {
@@ -635,8 +739,9 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // extract workflows from analyses
-    // a workflow might be executed by multiple analyses
+    /**
+     * Extract workflows from analyses. A workflow might be executed by multiple analyses.
+     */
     var createWorkflowAnalysisMapping = function () {
         analyses.objects.forEach(function (a) {
             // workflow -> analysis
@@ -653,7 +758,9 @@ provenanceVisualizationModule = function () {
         flatAnalyses = [].concat.apply(["dataset"], d3.values(workflowAnalysisMap));
     };
 
-    // set coordinates for nodes
+    /**
+     * Set coordinates for nodes.
+     */
     var assignGridCoordinates = function () {
         nodes.forEach(function (d) {
             d.x = d.col * 50 + 100;
@@ -661,7 +768,9 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // creates analysis group dom elements which then contain the nodes and links of an analysis
+    /**
+     * Creates analysis group dom elements which then contain the nodes and links of an analysis.
+     */
     var createAnalysisLayers = function () {
         var aId = 0;
         // add analyses dom groups
@@ -676,14 +785,19 @@ provenanceVisualizationModule = function () {
         analysis = d3.selectAll(".analysis");
     };
 
-    // drag start listener support for nodes
+    /**
+     * Drag start listener support for nodes.
+     */
     var dragStart = function () {
         d3.event.sourceEvent.stopPropagation();
     };
 
-    // drag listener
+    /**
+     * Drag listener.
+     * @param d Node.
+     */
     var dragging = function (d) {
-        // drag selected node
+        // Drag selected node.
         d3.select(this).attr("transform", function (n) {
             switch (n.nodeType) {
                 case "dummy":
@@ -697,17 +811,14 @@ provenanceVisualizationModule = function () {
             }
         });
 
-        // drag adjacent links
-
-        // get input links
-        // update coordinates for x2 and y2
+        // Drag adjacent links.
+        // Get input links and update coordinates for x2 and y2.
         nodeLinkPredMap[d.id].forEach(function (l) {
             d3.select("#linkId-" + l).attr("x2", d3.event.x);
             d3.select("#linkId-" + l).attr("y2", d3.event.y);
         });
 
-        // get output links
-        // update coordinates for x1 and y1
+        // Get output links and update coordinates for x1 and y1.
         if (typeof nodeLinkSuccMap[d.id] !== "undefined") {
             nodeLinkSuccMap[d.id].forEach(function (l) {
                 d3.select("#linkId-" + l).attr("x1", d3.event.x);
@@ -715,15 +826,20 @@ provenanceVisualizationModule = function () {
             });
         }
 
-        // update data
+        // Update data.
         d.x = d3.event.x;
         d.y = d3.event.y;
     };
 
-    // drag end listener
+    /**
+     * Drag end listener.
+     */
     var dragEnd = function () {
     };
 
+    /**
+     * Sets the drag events for nodes.
+     */
     var applyDragBehavior = function () {
         // drag and drop node enabled
         var drag = d3.behavior.drag()
@@ -735,19 +851,24 @@ provenanceVisualizationModule = function () {
         d3.selectAll(".node").call(drag);
     };
 
-    // drag start listener support for nodes
+    /**
+     * Drag start listener support for nodes.
+     */
     var analysisDragStart = function () {
         d3.event.sourceEvent.stopPropagation();
     };
 
-    // drag listener
+    /**
+     * Dragging listener.
+     * @param an Analysis node.
+     */
     var analysisDragging = function (an) {
-        // drag selected node
+        // Drag selected node.
         d3.select(this).attr("transform", function () {
             return "translate(" + d3.event.x + "," + d3.event.y + ")";
         });
 
-        // update dom element
+        // Update incident dom link elements.
         an.predAnalyses.forEach(function (pan) {
             aNodes[pan].outputNodes.forEach(function (n) {
                 if (typeof nodeLinkSuccMap[n.id] !== "undefined") {
@@ -761,6 +882,7 @@ provenanceVisualizationModule = function () {
             });
         });
 
+        // Update non-incident dom link elements.
         an.succAnalyses.forEach(function (san) {
             aNodes[san].inputNodes.forEach(function (n) {
                 nodeLinkPredMap[n.id].forEach(function (l) {
@@ -777,22 +899,29 @@ provenanceVisualizationModule = function () {
         an.y = d3.event.y;
     };
 
-    // drag end listener
+    /**
+     * Drag end listener.
+     */
     var analysisDragEnd = function () {
     };
 
+    /**
+     * Sets the drag events for analysis nodes.
+     */
     var applyAnalysisDragBehavior = function () {
-        // drag and drop node enabled
+        // Drag and drop node enabled.
         var analysisDrag = d3.behavior.drag()
             .on("dragstart", analysisDragStart)
             .on("drag", analysisDragging)
             .on("dragend", analysisDragEnd);
 
-        // invoke dragging behavior on nodes
+        // Invoke dragging behavior on nodes.
         d3.selectAll(".aNode").call(analysisDrag);
     };
 
-    // dye graph by analyses and its corresponding workflows
+    /**
+     * Dye graph by analyses and its corresponding workflows.
+     */
     var dyeWorkflows = function () {
         d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").each(function () {
             d3.select(this).style("stroke", function (d) {
@@ -802,7 +931,9 @@ provenanceVisualizationModule = function () {
 
     };
 
-    // dye graph by analyses
+    /**
+     * Dye graph by analyses.
+     */
     var dyeAnalyses = function () {
         d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").each(function () {
             d3.select(this).style("fill", function (d) {
@@ -812,8 +943,10 @@ provenanceVisualizationModule = function () {
 
     };
 
-// TODO: DEBUG: QUICK FIX FOR DEMONSTRATION: as coordinates for anodes do not exist yet without the layout adaption, center it to the analyses
-    // create inital layout for analysis only nodes
+// TODO: As coordinates for anodes do not exist yet without the layout adaption, center it to the analyses.
+    /**
+     * Create inital layout for analysis only nodes.
+     */
     var initAnalysisLayout = function () {
         aNodes.forEach(function (an) {
             // get min and max column/row of nodes to center new analysis process node
@@ -842,7 +975,9 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // set display property of analysis connecting links
+    /**
+     * Set display property of analysis connecting links.
+     */
     var initLinkVisibility = function () {
         aNodes.forEach(function (an) {
             an.predAnalyses.forEach(function (pan) {
@@ -859,7 +994,9 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // draw links
+    /**
+     * Draw links.
+     */
     var drawLinks = function () {
         link = canvas.selectAll(".link")
             .data(links.filter(function (l) {
@@ -904,7 +1041,9 @@ provenanceVisualizationModule = function () {
             .on("mouseout", tip.hide);
     };
 
-    // draw analysis nodes
+    /**
+     * Draw analysis nodes.
+     */
     var drawAnalysisNodes = function () {
         analysis.each(function (d, i) {
             d3.select(this).selectAll(".aNode")
@@ -959,7 +1098,9 @@ provenanceVisualizationModule = function () {
             .on("mouseout", tip.hide);
     };
 
-    // draw nodes
+    /**
+     * Draw nodes.
+     */
     var drawNodes = function () {
         analysis.each(function (a, i) {
             d3.select(this).selectAll(".node")
@@ -1039,7 +1180,10 @@ provenanceVisualizationModule = function () {
     };
 
 
-// TODO: code cleanup
+// TODO: Code cleanup.
+    /**
+     * Sets the visibility of links and (a)nodes when collapsing or expanding analyses.
+     */
     var handleCollapseExpandAnalysis = function () {
         d3.selectAll(".analysis").on("dblclick", function () {
             var an = aNodes[+d3.select(this).attr("id").replace(/(aId-)/g, "")];
@@ -1127,7 +1271,9 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // path highlighting
+    /**
+     * Path highlighting.
+     */
     var handlePathHighlighting = function () {
         d3.selectAll(".node").on("click", function (x) {
             var highlighted = true;
@@ -1149,7 +1295,10 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // fit visualization onto free windows space
+    /**
+     * Fit visualization onto free windows space.
+     * @param transitionTime
+     */
     var fitGraphToWindow = function (transitionTime) {
         var min = [d3.min(nodes, function (d) {
                 return d.x - margin.left;
@@ -1186,13 +1335,17 @@ provenanceVisualizationModule = function () {
         rect.attr("transform", "translate(" + (-newPos[0] / newScale) + "," + (-newPos[1] / newScale) + ")" + " scale(" + (+1 / newScale) + ")");
     };
 
-    // wrapper function to invoke scale and transformation onto the visualization
+    /**
+     * Wrapper function to invoke scale and transformation onto the visualization.
+     */
     var handleFitGraphToWindow = function () {
         fitGraphToWindow(1000);
     };
 
-// TODO: FIX: on double click, click action is executed
-    // click and double click separation on background rectangle
+// TODO: BUG: On double click, single-click action still is executed.
+    /**
+     * Click and double click separation on background rectangle.
+     */
     var handleBRectClick = function () {
         var clickInProgress = false, // click in progress
             timer = 0,
@@ -1223,7 +1376,9 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // event listeners
+    /**
+     * Handle event listeners.
+     */
     var handleEvents = function () {
         // path highlighting
         handlePathHighlighting();
@@ -1235,7 +1390,9 @@ provenanceVisualizationModule = function () {
         handleCollapseExpandAnalysis();
     };
 
-    // main d3 visualization function
+    /**
+     * Main d3 visualization function.
+     */
     var drawGraph = function () {
 
         // short delay
@@ -1281,7 +1438,10 @@ provenanceVisualizationModule = function () {
         }, 500);
     };
 
-    // refinery injection for the provenance visualization
+    /**
+     * Refinery injection for the provenance visualization.
+     * @param studyUuid The serialized unique identifier referencing a study.
+     */
     var runProvenanceVisualizationPrivate = function (studyUuid) {
         var url = "/api/v1/node?study__uuid=" + studyUuid + "&format=json&limit=0";
 
@@ -1337,7 +1497,9 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    // publish public function
+    /**
+     * Publish module function.
+     */
     return{
         runProvenanceVisualization: function (studyUuid) {
             runProvenanceVisualizationPrivate(studyUuid);
