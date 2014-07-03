@@ -244,6 +244,48 @@ provenanceVisualizationModule = function () {
         return barycenterOrderedNodes;
     };
 
+    /* TODO: Use function in y-coord assignment. */
+    /**
+     * Compute edge-crossings between two layers.
+     * @param bclgNodes Barycenter sorted layer grouped array of nodes.
+     */
+    var computeCrossings = function (bclgNodes) {
+
+        /* For each layer, check nodes for crossings. */
+        bclgNodes.forEach(function (lg) {
+            var predMaxRow = -1;
+
+            /* For each node check potential crossing. */
+            lg.forEach(function (n) {
+
+                console.log("#########################");
+                console.log("#" + n.id + " (" + n.col + "," + n.row + ")");
+                console.log("Preds: ");
+                console.log(nodePredMap[n.id]);
+                console.log("Succs: ");
+                console.log(nodeSuccMap[n.id]);
+                console.log("");
+
+                /* For each node, check pred row. */
+                if (nodePredMap[n.id].length > 0) {
+                    console.log("Preds: ");
+
+                    nodePredMap[n.id].forEach(function (p) {
+                        console.log("#" + nodes[p].id + " (" + nodes[p].col + "," + nodes[p].row + ")");
+
+                        if (nodes[p].row >= predMaxRow) {
+                            console.log("CHECK: " + nodes[p].row + " > " + predMaxRow);
+                            predMaxRow = nodes[p].row;
+                        } else {
+                            console.log("CROSSING " + nodes[p].row + " > " + predMaxRow);
+                        }
+                    });
+                }
+                console.log("");
+            });
+        });
+    };
+
     /* TODO: Refine y-coordinate assignment. */
     /**
      * Set row placement.
@@ -758,7 +800,7 @@ provenanceVisualizationModule = function () {
     /**
      * Set coordinates for nodes.
      */
-    var assignGridCoordinates = function () {
+    var assignNodeGridCoordinates = function () {
         nodes.forEach(function (d) {
             d.x = d.col * 50 + 100;
             d.y = d.row * 50 + 100;
@@ -946,8 +988,10 @@ provenanceVisualizationModule = function () {
     };
 
     /* TODO: As coordinates for anodes do not exist yet without the layout adaption, center it to the analyses. */
+    /* TODO: Set analysis node to the most right column possible and recompute dynamic layout.
+     */
     /**
-     * Create inital layout for analysis only nodes.
+     * Create initial layout for analysis only nodes.
      */
     var initAnalysisLayout = function () {
         aNodes.forEach(function (an) {
@@ -1406,7 +1450,7 @@ provenanceVisualizationModule = function () {
         setTimeout(function () {
 
             /* Set coordinates for nodes. */
-            assignGridCoordinates();
+            assignNodeGridCoordinates();
 
             /* Create initial layout for analysis only nodes. */
             initAnalysisLayout();
@@ -1443,11 +1487,6 @@ provenanceVisualizationModule = function () {
             d3.selectAll(".link").transition().duration(500).style("opacity", 1.0);
             d3.selectAll(".node").transition().duration(500).style("opacity", 1.0);
         }, 500);
-
-        console.log(nodePredMap);
-        console.log(nodeSuccMap);
-        console.log(nodeLinkPredMap);
-        console.log(nodeLinkSuccMap);
     };
 
     /**
