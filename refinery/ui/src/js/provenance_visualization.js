@@ -287,16 +287,51 @@ provenanceVisualizationModule = function () {
     };
 
     /**
-     * Remove edges that do not lead to an upper median neighbor.
-     * Mark type 0 - , type 1 - and type 2 conflicts.
+     * Remove edges that do not lead to an median neighbor.
+     * @param bclgNodes Barycenter sorted layer grouped array of nodes.
+     */
+    var markCandidates = function (bclgNodes) {
+        var l = 0;
+        while (l < bclgNodes.length) {
+            var i = 0;
+            while (i < bclgNodes[l].length) {
+
+                /* Set neighbor index for node:
+                 the exact median if the length of successor nodes is odd,
+                 else left and right median. */
+                var succs = nodeSuccMap[bclgNodes[l][i].id];
+                if (succs.length !== 0) {
+                    if (succs.length % 2 === 0) {
+                        nodes[bclgNodes[l][i].id].neighbor = [parseInt(succs.length / 2 - 1, 10), parseInt(succs.length / 2, 10)];
+                    } else {
+                        nodes[bclgNodes[l][i].id].neighbor = [parseInt(succs.length / 2, 10)];
+                    }
+                } else {
+                    nodes[bclgNodes[l][i].id].neighbor = [];
+                }
+                i++;
+            }
+            l++;
+        }
+    };
+
+    /**
+     * Mark type 1 - and type 0 conflicts.
+     * @param bclgNodes Barycenter sorted layer grouped array of nodes.
+     */
+    var markConflicts = function (bclgNodes) {
+
+    };
+
+    /**
+     * Align each vertex with its chosen (left|right and upper/under) neighbor.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      */
     var verticalAlignment = function (bclgNodes) {
-        console.log(bclgNodes);
 
-        bclgNodes.forEach(function (bclg) {
+        markCandidates(bclgNodes);
 
-        });
+        markConflicts(bclgNodes);
     };
 
     /**
