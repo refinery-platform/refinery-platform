@@ -1,70 +1,48 @@
 /**
- * In-progress development for the refinery provenance graph visualization.
- * Structured w.r.t. the JavaScript module pattern.
+ * In-progress development for the refinery provenance graph visualization. Structured w.r.t. the JavaScript module pattern.
  * @author sluger Stefan Luger https://github.com/sluger
  * @exports runProvenanceVisualization The published function to invoke the module.
  */
 provenanceVisualizationModule = function () {
 
-    /**
-     * Initialize node-link arrays.
-     *
-     * @type {Array}
-     */
+    /* Initialize node-link arrays. */
     var nodes = [],
         links = [],
         inputNodes = [],
         flatAnalyses = [],
         aNodes = [];
 
-    /**
-     * Initialize dom elements.
-     * @type {null}
-     */
+    /* Initialize dom elements. */
     var node = Object.create(null),
         link = Object.create(null),
         analysis = Object.create(null),
         aNode = Object.create(null);
 
 // TODO: Rewrite for simple maps (https://github.com/mbostock/d3/wiki/Arrays#d3_map).
-    /**
-     * Initialize look up hashes.
-     */
-    var nodeMap = d3.map(),             // node.uuid -> node.id
+    /* Initialize look up hashes. */
+    var nodeMap = d3.map(), /* node.uuid -> node.id */
         studyMap = d3.map(),
         studyAssayMap = d3.map(),
-        nodePredMap = d3.map(),         // node.id -> predecessor node ids
-        nodeSuccMap = d3.map(),         // node.id -> successor node ids
-        nodeLinkPredMap = d3.map(),     // node.id -> predecessor link ids
-        nodeLinkSuccMap = d3.map(),     // node.id -> successor link ids
+        nodePredMap = d3.map(), /* node.id -> predecessor node ids */
+        nodeSuccMap = d3.map(), /* node.id -> successor node ids */
+        nodeLinkPredMap = d3.map(), /* node.id -> predecessor link ids */
+        nodeLinkSuccMap = d3.map(), /* node.id -> successor link ids */
         workflowAnalysisMap = d3.map(),
         analysisWorkflowMap = d3.map(),
         analysisNodeMap = d3.map(),
         nodeAnalysisMap = d3.map();
 
-    /**
-     * Initialize margin conventions
-     * @type {{top: number, right: number, bottom: number, left: number}}
-     */
+    /* Initialize margin conventions */
     var margin = {top: 20, right: 10, bottom: 20, left: 10};
 
-    /**
-     * Initialize canvas dimensions.
-     * @type {number}
-     */
+    /* Initialize canvas dimensions. */
     var width = window.innerWidth - margin.left - margin.right,
         height = window.innerHeight - margin.top - margin.bottom;
 
-    /**
-     * Initialize zoom support.
-     * @type {null}
-     */
+    /* Initialize zoom support. */
     var zoom = Object.create(null);
 
-    /**
-     * Set primitive drawing constants.
-     * @type {number}
-     */
+    /* Set primitive drawing constants. */
     var r = 7,
         color = d3.scale.category20();
 
@@ -78,9 +56,7 @@ provenanceVisualizationModule = function () {
         rect.attr("transform", "translate(" + (-(d3.event.translate[0] + margin.left) / d3.event.scale) + "," + (-(d3.event.translate[1] + margin.top) / d3.event.scale) + ")" + " scale(" + (+1 / d3.event.scale) + ")");
     };
 
-    /**
-     * Main canvas drawing area.
-     */
+    /* Main canvas drawing area. */
     var canvas = d3.select("#provenance-graph")
         .append("svg:svg")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
@@ -91,9 +67,7 @@ provenanceVisualizationModule = function () {
         .call(zoom = d3.behavior.zoom().on("zoom", redraw)).on("dblclick.zoom", null)
         .append("svg:g");
 
-    /**
-     * Helper rectangle to support pan and zoom.
-     */
+    /* Helper rectangle to support pan and zoom. */
     var rect = canvas.append("svg:rect")
         .attr("width", width)
         .attr("height", height)
