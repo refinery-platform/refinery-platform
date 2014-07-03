@@ -11,6 +11,7 @@ provenanceVisualizationModule = function () {
     var nodes = [],
         links = [],
         inputNodes = [],
+        outputNodes = [],
         flatAnalyses = [],
         aNodes = [];
 
@@ -205,7 +206,7 @@ provenanceVisualizationModule = function () {
                     var degree = 1,
                         accRows = 0;
 
-                    if (typeof nodeSuccMap[n.id] !== "undefined" && nodeSuccMap[n.id].length !== 0) {
+                    if (nodeSuccMap[n.id].length !== 0) {
                         degree = nodeSuccMap[n.id].length;
                         nodeSuccMap[n.id].forEach(function (s) {
                             accRows += (nodes[s].row + 1);
@@ -230,7 +231,6 @@ provenanceVisualizationModule = function () {
 
                     /* Set earlier computed bcOrder. */
                 } else {
-                    nodes[n.id].bcOrder = nodes[n.id].bcOrder;
                     barycenterOrderedNodes[i][j] = nodes[n.id];
                 }
             });
@@ -399,7 +399,7 @@ provenanceVisualizationModule = function () {
             /* Get outgoing neighbor. */
             succ = nodeSuccMap[nodeMap[n.uuid]];
 
-            if (typeof succ === "undefined") {
+            if (succ.length === 0) {
                 nodes[n.id].col = layer;
                 n.col = layer;
             } else {
@@ -437,8 +437,7 @@ provenanceVisualizationModule = function () {
 
         /* To avoid definition of function in while loop below (added by NG). */
         /* For each successor. */
-        var handleUndefined = function (m) {
-
+        var handleOutputNodes = function (m) {
             var index = -1;
             /* For each parent (predecessor), remove edge n->m. Delete parent with p.uuid == n.uuid. */
             cNodes[m].parents.forEach(function (p, i) {
@@ -461,16 +460,17 @@ provenanceVisualizationModule = function () {
 
         /* While the input set is not empty. */
         while (s.length > 0) {
-            n = s.shift();
+
             /* Remove first item n. */
-            l.push(n);
+            n = s.shift();
+
             /* And push it into result set. */
+            l.push(n);
 
             /* Get successor node set for n. */
             var succ = nodeSuccMap[nodeMap[n.uuid]];
-
-            if (typeof succ !== "undefined") {
-                succ.forEach(handleUndefined);
+            if (succ.length !== 0) {
+                succ.forEach(handleOutputNodes);
             }
         }
 
@@ -506,28 +506,49 @@ provenanceVisualizationModule = function () {
     };
 
     /**
+     * Set output nodes - nodes not having any successor nodes.
+     */
+    var setOutputNodes = function () {
+        nodes.forEach(function (n) {
+            if (typeof nodeSuccMap[n.id] === "undefined") {
+                outputNodes.push(n);
+
+                /* Set sucessor maps for output nodes to an empty array. */
+                nodeSuccMap[n.id] = [];
+                nodeLinkSuccMap[n.id] = [];
+            }
+        });
+    };
+
+    /**
      * Extract links.
      */
     var extractLinks = function () {
         var linkId = 0;
-        nodes.forEach(function (x, i) { /* x may be parent of y. */
-            if (typeof x.uuid !== "undefined" && typeof x.parents !== "undefined") {
-                var srcNodeIds = [],
-                    srcLinkIds = [];
 
-                /* For each parent entry. */
-                x.parents.forEach(function (z, k) {
+        nodes.forEach(function (n, i) {
+            if (typeof n.uuid !== "undefined") {
+                if (typeof n.parents !== "undefined") {
+                    var srcNodeIds = [],
+                        srcLinkIds = [];
 
-                    /* ExtractLinkProperties. */
-                    extractLinkProperties(x, linkId, k);
+                    /* For each parent entry. */
+                    n.parents.forEach(function (p, j) { /* p is be parent node of n. */
 
-                    /* Build link hashes. */
-                    createLinkHashes(z, linkId, i, srcNodeIds, srcLinkIds);
-                    linkId++;
+                        /* ExtractLinkProperties. */
+                        extractLinkProperties(n, linkId, j);
 
-                });
-                nodeLinkPredMap[i] = srcLinkIds;
-                nodePredMap[i] = srcNodeIds;
+                        /* Build link hashes. */
+                        createLinkHashes(p, linkId, i, srcNodeIds, srcLinkIds);
+                        linkId++;
+                    });
+                    nodeLinkPredMap[i] = srcLinkIds;
+                    nodePredMap[i] = srcNodeIds;
+                } else {
+                    console.log("Error: Parents array of node with uuid= " + n.uuid + " undefined!");
+                }
+            } else {
+                console.log("Error: Node uuid is undefined!");
             }
         });
     };
@@ -560,22 +581,22 @@ provenanceVisualizationModule = function () {
 
     /**
      * Build link hashes.
-     * @param parentNodeElem Predecessor node object.
+     * @param parentNodeObj Predecessor node object.
      * @param linkId Integer identifier for the link.
      * @param nodeId Integer identifier for the node.
      * @param srcNodeIds Integer array containing all node identifiers predecessing the current node.
      * @param srcLinkIds Integer array containing all link identifiers incidenting the current node.
      */
-    var createLinkHashes = function (parentNodeElem, linkId, nodeId, srcNodeIds, srcLinkIds) {
-        srcNodeIds.push(nodeMap[parentNodeElem]);
+    var createLinkHashes = function (parentNodeObj, linkId, nodeId, srcNodeIds, srcLinkIds) {
+        srcNodeIds.push(nodeMap[parentNodeObj]);
         srcLinkIds.push(linkId);
 
-        if (nodeSuccMap.hasOwnProperty(nodeMap[parentNodeElem])) {
-            nodeSuccMap[nodeMap[parentNodeElem]] = nodeSuccMap[nodeMap[parentNodeElem]].concat([nodeId]);
-            nodeLinkSuccMap[nodeMap[parentNodeElem]] = nodeLinkSuccMap[nodeMap[parentNodeElem]].concat([linkId]);
+        if (nodeSuccMap.hasOwnProperty(nodeMap[parentNodeObj])) {
+            nodeSuccMap[nodeMap[parentNodeObj]] = nodeSuccMap[nodeMap[parentNodeObj]].concat([nodeId]);
+            nodeLinkSuccMap[nodeMap[parentNodeObj]] = nodeLinkSuccMap[nodeMap[parentNodeObj]].concat([linkId]);
         } else {
-            nodeSuccMap[nodeMap[parentNodeElem]] = [nodeId];
-            nodeLinkSuccMap[nodeMap[parentNodeElem]] = [linkId];
+            nodeSuccMap[nodeMap[parentNodeObj]] = [nodeId];
+            nodeLinkSuccMap[nodeMap[parentNodeObj]] = [linkId];
         }
     };
 
@@ -676,7 +697,7 @@ provenanceVisualizationModule = function () {
 
             /* Set output nodes. */
             an.outputNodes = an.nodes.filter(function (n) {
-                return typeof nodeSuccMap[n.id] === "undefined" || nodeSuccMap[n.id].some(function (s) {
+                return nodeSuccMap[n.id].length === 0 || nodeSuccMap[n.id].some(function (s) {
                     return nodes[s].analysis != an.uuid;
                 });
             });
@@ -697,7 +718,7 @@ provenanceVisualizationModule = function () {
 
             /* Set successor analyses. */
             an.outputNodes.forEach(function (n) {
-                if (typeof nodeSuccMap[n.id] !== "undefined") {
+                if (nodeSuccMap[n.id].length !== 0) {
                     nodeSuccMap[n.id].forEach(function (s) {
                         if (an.succAnalyses.indexOf(nodeAnalysisMap[s]) === -1 && nodeAnalysisMap[s] !== an.id) {
                             an.succAnalyses.push(nodeAnalysisMap[s]);
@@ -797,7 +818,7 @@ provenanceVisualizationModule = function () {
         });
 
         /* Get output links and update coordinates for x1 and y1. */
-        if (typeof nodeLinkSuccMap[n.id] !== "undefined") {
+        if (typeof nodeLinkSuccMap[n.id].length !== 0) {
             nodeLinkSuccMap[n.id].forEach(function (l) {
                 d3.select("#linkId-" + l).attr("x1", d3.event.x);
                 d3.select("#linkId-" + l).attr("y1", d3.event.y);
@@ -851,7 +872,7 @@ provenanceVisualizationModule = function () {
         /* Update incident dom link elements. */
         an.predAnalyses.forEach(function (pan) {
             aNodes[pan].outputNodes.forEach(function (n) {
-                if (typeof nodeLinkSuccMap[n.id] !== "undefined") {
+                if (nodeLinkSuccMap[n.id].length !== 0) {
                     nodeLinkSuccMap[n.id].forEach(function (l) {
                         if (nodeAnalysisMap[links[l].target] == an.id) {
                             d3.select("#linkId-" + l).attr("x2", d3.event.x);
@@ -964,7 +985,7 @@ provenanceVisualizationModule = function () {
         aNodes.forEach(function (an) {
             an.predAnalyses.forEach(function (pan) {
                 aNodes[pan].outputNodes.forEach(function (n) {
-                    if (typeof nodeLinkSuccMap[n.id] !== "undefined") {
+                    if (nodeLinkSuccMap[n.id].length !== 0) {
                         nodeLinkSuccMap[n.id].forEach(function (l) {
                             if (nodeAnalysisMap[links[l].target] == an.id) {
                                 links[l].hidden = false;
@@ -1185,7 +1206,7 @@ provenanceVisualizationModule = function () {
                 /* Adapt incoming links. */
                 an.predAnalyses.forEach(function (pan) {
                     aNodes[pan].outputNodes.forEach(function (n) {
-                        if (typeof nodeLinkSuccMap[n.id] !== "undefined") {
+                        if (nodeLinkSuccMap[n.id].length !== 0) {
                             nodeLinkSuccMap[n.id].forEach(function (l) {
                                 if (nodeAnalysisMap[links[l].target] == an.id) {
                                     d3.select("#linkId-" + l).style("display", "inline").attr("x2", nodes[links[l].target].x);
@@ -1224,7 +1245,7 @@ provenanceVisualizationModule = function () {
                 /* Adapt incoming links. */
                 an.predAnalyses.forEach(function (pan) {
                     aNodes[pan].outputNodes.forEach(function (n) {
-                        if (typeof nodeLinkSuccMap[n.id] !== "undefined") {
+                        if (nodeLinkSuccMap[n.id].length !== 0) {
                             nodeLinkSuccMap[n.id].forEach(function (l) {
                                 if (nodeAnalysisMap[links[l].target] == an.id) {
                                     d3.select("#linkId-" + l).style("display", "inline").attr("x2", an.x);
@@ -1422,6 +1443,11 @@ provenanceVisualizationModule = function () {
             d3.selectAll(".link").transition().duration(500).style("opacity", 1.0);
             d3.selectAll(".node").transition().duration(500).style("opacity", 1.0);
         }, 500);
+
+        console.log(nodePredMap);
+        console.log(nodeSuccMap);
+        console.log(nodeLinkPredMap);
+        console.log(nodeLinkSuccMap);
     };
 
     /**
@@ -1442,6 +1468,9 @@ provenanceVisualizationModule = function () {
 
             /* Create link collection. */
             extractLinks();
+
+            /* Set output nodes. */
+            setOutputNodes();
 
             /* Create analyses and workflow hashes. */
             createWorkflowAnalysisMapping();
