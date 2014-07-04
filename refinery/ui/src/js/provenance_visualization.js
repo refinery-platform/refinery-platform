@@ -249,51 +249,15 @@ provenanceVisualizationModule = function () {
             barycenterOrderedNodes[i].sort(function (a, b) {
                 return a.bcOrder - b.bcOrder;
             });
+
+            /* Set row attribute after sorting. */
+            barycenterOrderedNodes[i].forEach(function (n, k) {
+                nodes[n.id].row = k;
+            });
+
         });
 
         return barycenterOrderedNodes;
-    };
-
-    /* TODO: Might be obsolete. Remove. */
-    /**
-     * Compute edge-crossings between two layers.
-     * @param bclgNodes Barycenter sorted layer grouped array of nodes.
-     */
-    var computeCrossings = function (bclgNodes) {
-
-        /* For each layer, check nodes for crossings. */
-        bclgNodes.forEach(function (lg) {
-            var predMaxRow = -1;
-
-            /* For each node check potential crossing. */
-            lg.forEach(function (n) {
-
-                console.log("#########################");
-                console.log("#" + n.id + " (" + n.col + "," + n.row + ")");
-                console.log("Preds: ");
-                console.log(nodePredMap[n.id]);
-                console.log("Succs: ");
-                console.log(nodeSuccMap[n.id]);
-                console.log("");
-
-                /* For each node, check pred row. */
-                if (nodePredMap[n.id].length > 0) {
-                    console.log("Preds: ");
-
-                    nodePredMap[n.id].forEach(function (p) {
-                        console.log("#" + nodes[p].id + " (" + nodes[p].col + "," + nodes[p].row + ")");
-
-                        if (nodes[p].row >= predMaxRow) {
-                            console.log("CHECK: " + nodes[p].row + " > " + predMaxRow);
-                            predMaxRow = nodes[p].row;
-                        } else {
-                            console.log("CROSSING " + nodes[p].row + " > " + predMaxRow);
-                        }
-                    });
-                }
-                console.log("");
-            });
-        });
     };
 
     /**
@@ -306,15 +270,18 @@ provenanceVisualizationModule = function () {
             var i = 0;
             while (i < bclgNodes[l].length) {
 
-                /* Set neighbor index for node:
+                /* Mark links as neighbors:
                  the exact median if the length of successor nodes is odd,
-                 else left and right median. */
-                var succs = nodeSuccMap[bclgNodes[l][i].id];
+                 else the middle two. */
+                var succs = nodeLinkSuccMap[bclgNodes[l][i].id];
                 if (succs.length !== 0) {
                     if (succs.length % 2 === 0) {
-                        nodes[bclgNodes[l][i].id].neighbors = [parseInt(succs.length / 2 - 1, 10), parseInt(succs.length / 2, 10)];
+                        /* nodes[bclgNodes[l][i].id].neighbors = [parseInt(succs.length / 2 - 1, 10), parseInt(succs.length / 2, 10)]; */
+                        links[succs[parseInt(succs.length / 2 - 1, 10)]].neighbor = true;
+                        links[succs[parseInt(succs.length / 2, 10)]].neighbor = true;
                     } else {
-                        nodes[bclgNodes[l][i].id].neighbors = [parseInt(succs.length / 2, 10)];
+                        /* nodes[bclgNodes[l][i].id].neighbors = [parseInt(succs.length / 2, 10)]; */
+                        links[succs[parseInt(succs.length / 2, 10)]].neighbor = true;
                     }
                 } else {
                     nodes[bclgNodes[l][i].id].neighbors = [];
@@ -325,59 +292,130 @@ provenanceVisualizationModule = function () {
         }
     };
 
+    /* TODO: TESTING! */
     /**
      * Mark type 1 - and type 0 conflicts.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      */
     var markConflicts = function (bclgNodes) {
 
-        /* Type 1 conflict. */
-        /* For each layer, check nodes for crossings. */
-        bclgNodes.forEach(function (lg) {
-            var succMaxRow = -1,
-                lastLinkSrc = -1,
-                lastSegment = -1;
+        var excludeSharedNodeLinks = function (value) {
+            return value.type0 ? false : true;
+        };
 
-            /* For each node check potential crossing. */
-            lg.forEach(function (n) {
+        var filterNeighbors = function (value) {
+            return links[value].neighbor ? true : false;
+        };
 
-                /* For each node, check successors. */
-                if (nodeLinkSuccMap[n.id].length > 0) { /* TODO: delete? */
-                    nodeLinkSuccMap[n.id].forEach(function (s) {
-                        if (nodes[links[s].target].bcOrder >= succMaxRow) {
-                            succMaxRow = nodes[links[s].target].bcOrder;
+        var btSuccs = [];
+        /* Backtracked successor links. */
+        var backtrackCrossings = function () {
+            btSuccs.forEach(function (bts) {
+                /* Crossing. */
+                if (nodes[links[bts].target].row > jMax) {
+                    /* TODO: HINT: Possible type 2 conflict which should be resolved via barycenter heuristic already. */
+                    s.type1 = true;
+                }
+            });
+        };
 
-                            /* Remember last non-inner segment. */
-                            if (n.nodeType !== "dummy" || nodes[links[s].target].nodeType !== "dummy") {
-                                lastSegment = s;
-                                /* For type 0 conflict. */
+        var markLayerToLayerCrossings = function () {
+
+            /* Resolve shared nodes first. (Type 0 Conflict) */
+            var topMostPredRow = -1,
+                topMostLink = -1;
+            if (cSuccs.length > 1) {
+                topMostPredRow = nodes[links[cSuccs[0]].source].row;
+            }
+
+            /* Get top most link. */
+            cSuccs.forEach(function (s) {
+                if (nodeLinkPredMap[links[s].target].length > 1) {
+                    nodeLinkPredMap[links[s].target].forEach(function (pl) {
+                        if (nodes[links[pl].target].nodeType !== "dummy" || nodes[links[pl].source].nodeType !== "dummy") {
+                            /* Check top most link. */
+                            if (nodes[links[pl].source].row < topMostPredRow) {
+                                topMostPredRow = nodes[links[pl].source].row;
+                                topMostLink = pl;
                             }
-                        } else if (lastLinkSrc !== n.id) {
-                            /* Mark link. */
-                            console.log("src: " + n.id + ", " + "tar: " + nodes[links[s].target].id);
-                            console.log("CROSSING " + nodes[s].bcOrder + " < " + succMaxRow);
-                            console.log(nodeLinkSuccMap[n.id]);
-
-                            /* If link is an inner segment, remove all non-inner segements crossing it. */
-                            if (n.nodeType === "dummy" && nodes[links[s].target].nodeType === "dummy") {
-                                links[lastSegment].type1 = true;
-                                /* Type 1 conflict. */
-                            } else {
-                                links[lastSegment].type1 = false;
-                                s.type1 = true;
-                            }
-
-                            /* TODO: remove all non-inner segments where link.target.row > curLink.target.row
-                             && link.source.row < curLink.source.row, except it is an inner-segment. */
                         }
-                        lastLinkSrc = n.id;
                     });
                 }
             });
-        });
 
-        /* Type 0 conflict. */
+            /* Mark not top most links. */
+            cSuccs.forEach(function (s) {
+                if (nodeLinkPredMap[links[s].target].length > 1) {
+                    nodeLinkPredMap[links[s].target].forEach(function (pl) {
+                        if (pl !== topMostLink) {
+                            links[pl].type0 = true;
+                        }
+                    });
+                }
+            });
 
+            /* Update cSuccs. */
+            cSuccs = cSuccs.filter(excludeSharedNodeLinks);
+
+            /* Resolve crossings. */
+            var curjMax = jMax;
+            cSuccs.forEach(function (s) {
+                if (nodes[links[s].target].row >= jMax) {
+                    if (nodes[links[s].target].row > curjMax) {
+                        curjMax = nodes[links[s].target].row;
+                    }
+                    /* Crossing. */
+                } else {
+                    console.log("src: " + bclgNodes[l][i].id + ", " + "tar: " + nodes[links[s].target].id);
+                    console.log("CROSSING " + nodes[links[s].target].row + " < " + jMax);
+                    console.log("link: " + s);
+
+                    /* Type 0 and 1 conflict: If link is an non-inner segment, mark link to be "removed". */
+                    if (bclgNodes[l][i].nodeType !== "dummy" || nodes[links[s].target].nodeType !== "dummy") {
+                        s.type1 = true;
+
+                        /* If link is an inner segment, remove all non-inner segments before which are crossing it. */
+                    } else {
+                        /* Iterate back in current layer. */
+                        var m = i;
+                        for (m; m > 0; m--) {
+                            if (m < i) {
+                                /* Get successors for m */
+                                btSuccs = nodeLinkSuccMap[bclgNodes[l][m].id].filter(filterNeighbors);
+                                backtrackCrossings();
+                            }
+                        }
+
+                    }
+                }
+            });
+            jMax = curjMax;
+        };
+
+        /* Handle crossing conflicts (Type 0 and 1)*/
+        var l = 1;
+        while (l < bclgNodes.length) {
+            var i = 0,
+                j = 0,
+                jMax = -1,
+                iCur = -1;
+            while (i < bclgNodes[l].length /* || j < bclgNodes[l - 1].length */) {
+                if (typeof bclgNodes[l][i] !== "undefined") {
+                    iCur = i;
+
+                    /* Crossing successor links. */
+                    var cSuccs = nodeLinkSuccMap[bclgNodes[l][i].id].filter(filterNeighbors);
+                    markLayerToLayerCrossings();
+                }
+                /* if (i < bclgNodes[l].length) { */
+                i++;
+                /* }
+                 if (j < bclgNodes[l - 1].length) {
+                 j++;
+                 }*/
+            }
+            l++;
+        }
     };
 
     /**
@@ -392,12 +430,21 @@ provenanceVisualizationModule = function () {
     };
 
     /**
+     * After resolving conflicts, no crossings are left and connected paths are concatenated into blocks.
+     * @param bclgNodes Barycenter sorted layer grouped array of nodes.
+     */
+    var formBlocks = function (bclgNodes) {
+
+    };
+
+    /**
      * Combine aligned nodes into blocks.
      * Partition blocks into classes.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      */
     var verticalCompaction = function (bclgNodes) {
 
+        formBlocks(bclgNodes);
     };
 
     /**
@@ -734,7 +781,10 @@ provenanceVisualizationModule = function () {
             source: nodeMap[nodeElem.parents[parentIndex]],
             target: nodeMap[nodeElem.uuid],
             id: linkId,
-            hidden: true
+            hidden: true,
+            neighbor: false,
+            type0: false,
+            type1: false
         });
     };
 
