@@ -260,6 +260,7 @@ provenanceVisualizationModule = function () {
         return barycenterOrderedNodes;
     };
 
+    /* TODO: Code cleanup. */
     /**
      * Remove edges that do not lead to an median neighbor.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
@@ -278,7 +279,8 @@ provenanceVisualizationModule = function () {
                     if (succs.length % 2 === 0) {
                         /* nodes[bclgNodes[l][i].id].neighbors = [parseInt(succs.length / 2 - 1, 10), parseInt(succs.length / 2, 10)]; */
                         links[succs[parseInt(succs.length / 2 - 1, 10)]].neighbor = true;
-                        links[succs[parseInt(succs.length / 2, 10)]].neighbor = true;
+                        /* TODO: DEBUG: Revise second neighbor when even. */
+                        /* links[succs[parseInt(succs.length / 2, 10)]].neighbor = true; */
                     } else {
                         /* nodes[bclgNodes[l][i].id].neighbors = [parseInt(succs.length / 2, 10)]; */
                         links[succs[parseInt(succs.length / 2, 10)]].neighbor = true;
@@ -292,6 +294,7 @@ provenanceVisualizationModule = function () {
         }
     };
 
+    /* TODO: Code cleanup. */
     /* TODO: TESTING! */
     /**
      * Mark type 1 - and type 0 conflicts.
@@ -300,21 +303,23 @@ provenanceVisualizationModule = function () {
     var markConflicts = function (bclgNodes) {
 
         var excludeSharedNodeLinks = function (value) {
-            return value.type0 ? false : true;
+            return links[value].type0 ? false : true;
         };
 
         var filterNeighbors = function (value) {
             return links[value].neighbor ? true : false;
         };
 
-        var btSuccs = [];
+        var btSuccs = [],
+            cSuccs = [];
         /* Backtracked successor links. */
         var backtrackCrossings = function () {
             btSuccs.forEach(function (bts) {
                 /* Crossing. */
                 if (nodes[links[bts].target].row > jMax) {
                     /* TODO: HINT: Possible type 2 conflict which should be resolved via barycenter heuristic already. */
-                    s.type1 = true;
+                    links[bts].type1 = true;
+                    links[bts].neighbor = true;
                 }
             });
         };
@@ -324,15 +329,14 @@ provenanceVisualizationModule = function () {
             /* Resolve shared nodes first. (Type 0 Conflict) */
             var topMostPredRow = -1,
                 topMostLink = -1;
-            if (cSuccs.length > 1) {
-                topMostPredRow = nodes[links[cSuccs[0]].source].row;
-            }
 
             /* Get top most link. */
             cSuccs.forEach(function (s) {
                 if (nodeLinkPredMap[links[s].target].length > 1) {
+                    topMostPredRow = nodes[links[cSuccs[0]].source].row;
                     nodeLinkPredMap[links[s].target].forEach(function (pl) {
                         if (nodes[links[pl].target].nodeType !== "dummy" || nodes[links[pl].source].nodeType !== "dummy") {
+
                             /* Check top most link. */
                             if (nodes[links[pl].source].row < topMostPredRow) {
                                 topMostPredRow = nodes[links[pl].source].row;
@@ -345,10 +349,11 @@ provenanceVisualizationModule = function () {
 
             /* Mark not top most links. */
             cSuccs.forEach(function (s) {
-                if (nodeLinkPredMap[links[s].target].length > 1) {
+                if (nodeLinkPredMap[links[s].target].length > 1 && topMostLink !== -1) {
                     nodeLinkPredMap[links[s].target].forEach(function (pl) {
                         if (pl !== topMostLink) {
                             links[pl].type0 = true;
+                            links[pl].neighbor = false;
                         }
                     });
                 }
@@ -366,13 +371,10 @@ provenanceVisualizationModule = function () {
                     }
                     /* Crossing. */
                 } else {
-                    console.log("src: " + bclgNodes[l][i].id + ", " + "tar: " + nodes[links[s].target].id);
-                    console.log("CROSSING " + nodes[links[s].target].row + " < " + jMax);
-                    console.log("link: " + s);
 
                     /* Type 0 and 1 conflict: If link is an non-inner segment, mark link to be "removed". */
                     if (bclgNodes[l][i].nodeType !== "dummy" || nodes[links[s].target].nodeType !== "dummy") {
-                        s.type1 = true;
+                        links[s].type1 = true;
 
                         /* If link is an inner segment, remove all non-inner segments before which are crossing it. */
                     } else {
@@ -399,20 +401,15 @@ provenanceVisualizationModule = function () {
                 j = 0,
                 jMax = -1,
                 iCur = -1;
-            while (i < bclgNodes[l].length /* || j < bclgNodes[l - 1].length */) {
+            while (i < bclgNodes[l].length) {
                 if (typeof bclgNodes[l][i] !== "undefined") {
                     iCur = i;
 
                     /* Crossing successor links. */
-                    var cSuccs = nodeLinkSuccMap[bclgNodes[l][i].id].filter(filterNeighbors);
+                    cSuccs = nodeLinkSuccMap[bclgNodes[l][i].id].filter(filterNeighbors);
                     markLayerToLayerCrossings();
                 }
-                /* if (i < bclgNodes[l].length) { */
                 i++;
-                /* }
-                 if (j < bclgNodes[l - 1].length) {
-                 j++;
-                 }*/
             }
             l++;
         }
@@ -423,7 +420,6 @@ provenanceVisualizationModule = function () {
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      */
     var verticalAlignment = function (bclgNodes) {
-
         markCandidates(bclgNodes);
 
         markConflicts(bclgNodes);
@@ -435,6 +431,56 @@ provenanceVisualizationModule = function () {
      */
     var formBlocks = function (bclgNodes) {
 
+        /* Horizontal paths build blocks with its rightmost node being the root.
+         * The root element does not own a neighbor link.
+         * Every child - determined by the neighbor mark of links,
+         * will be placed in the exact same row as its root. */
+
+        var isBlockRoot = function (value) {
+            return links[value].neighbor;
+        };
+
+        var filterNeighbor = function (value) {
+            return links[value].neighbor ? true : false;
+        };
+
+        /* Iterate through graph layer by layer,
+         * if node is root, iterate through block and place nodes into rows. */
+        bclgNodes.forEach(function (lg) {
+            lg.forEach(function (n, j) {
+                var succs = nodeLinkSuccMap[nodes[n.id].id].filter(isBlockRoot);
+
+                if (succs.length === 0) {
+                    nodes[n.id].isBlockRoot = true;
+
+                    /* Follow path through neighbors in predecessors and set row to root row. */
+                    var rootRow = nodes[n.id].row,
+                        curLink = -1,
+                        curNode = n.id;
+
+                    /* If root is not an output node, compute row. */
+                    if (nodeLinkSuccMap[curNode].length !== 0) {
+                        if (j === 0) {
+                            rootRow = 0;
+                        } else {
+                            rootRow = lg[j - 1].row + 1;
+                        }
+                        nodes[curNode].row = rootRow;
+                    }
+
+                    /* Traverse. */
+                    while (curLink !== -2) {
+                        curLink = nodeLinkPredMap[curNode].filter(filterNeighbor);
+                        if (curLink.length === 0) {
+                            curLink = -2;
+                        } else {
+                            nodes[links[curLink[0]].source].row = rootRow;
+                            curNode = links[curLink[0]].source;
+                        }
+                    }
+                }
+            });
+        });
     };
 
     /**
@@ -447,12 +493,85 @@ provenanceVisualizationModule = function () {
         formBlocks(bclgNodes);
     };
 
+    /* Code cleanup. */
     /**
-     * Balance y-coordinates for each layer by the median of the four assignments.
+     * Balance y-coordinates for each layer by median heuristic.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      */
     var balanceLayout = function (bclgNodes) {
 
+        var traverseShift = function (rowStart, shiftAmount) {
+            bclgNodes.forEach(function (lg, i) {
+                lg.forEach(function (n, j) {
+                    if (n.row >= rowStart) {
+                        n.row += shiftAmount;
+                    }
+                });
+            });
+        };
+
+        var sortNodesByRow = function (a, b) {
+            return nodes[a].row - nodes[b].row;
+        };
+
+        bclgNodes.forEach(function (lg, i) {
+            lg.forEach(function (n, j) {
+
+                /* Sort lookup maps first. */
+                nodeSuccMap[n.id].sort(sortNodesByRow);
+                nodeLinkSuccMap[n.id].sort(sortNodesByRow);
+                nodePredMap[n.id].sort(sortNodesByRow);
+                nodeLinkPredMap[n.id].sort(sortNodesByRow);
+            });
+        });
+
+        bclgNodes.forEach(function (lg, i) {
+            lg.forEach(function (n, j) {
+                var degree = 0,
+                    min = 0,
+                    max = 0,
+                    rootRow;
+
+                /* Split right. */
+                if (nodeSuccMap[n.id].length > 1) {
+                    degree = nodeSuccMap[n.id].length;
+                    min = nodes[nodeSuccMap[n.id][0]].row;
+                    max = nodes[nodeSuccMap[n.id][degree - 1]].row;
+                    rootRow = min + (max - min) / 2;
+
+                    /* If any node in the current layer is less than 1 unit near the new position
+                     * add a new row and shift every node in all layers by one row. */
+
+                    /* Check if shift is necessary for the current layer. */
+                    var nearestDist = 1,
+                        conflictRow = -1;
+                    lg.forEach(function (cn, k) {
+                        if (j !== k && Math.abs(cn.row - rootRow) < nearestDist) {
+                            nearestDist = Math.abs(cn.row - rootRow);
+                            conflictRow = cn.row;
+                        }
+                    });
+
+                    if (conflictRow !== -1) {
+                        traverseShift(rootRow, 1);
+                    }
+                    nodes[n.id].row = rootRow;
+                }
+                /* No split left. */
+                if (nodePredMap[n.id].length === 1) {
+                    var curNode = n.id;
+                    rootRow = nodes[curNode].row;
+
+                    while (nodePredMap[curNode].length === 1) {
+                        nodes[curNode].row = rootRow;
+                        curNode = nodePredMap[curNode][0];
+                    }
+                    if (nodePredMap[curNode].length === 0) {
+                        nodes[curNode].row = rootRow;
+                    }
+                }
+            });
+        });
     };
 
     /* TODO: Vertical coordinate assignment. [Brandes and Köpf 2002] */
@@ -467,13 +586,6 @@ provenanceVisualizationModule = function () {
         verticalCompaction(bclgNodes);
 
         balanceLayout(bclgNodes);
-
-        /* TODO: For demonstration purposes, row is overwritten by barcyentric coordinate. */
-        bclgNodes.forEach(function (bclg) {
-            bclg.forEach(function (n) {
-                nodes[n.id].row = nodes[n.id].bcOrder;
-            });
-        });
     };
 
     /**
@@ -566,7 +678,10 @@ provenanceVisualizationModule = function () {
                         source: predNode,
                         target: (j === gapLength - 1) ? l.target : newNodeId + j,
                         id: newLinkId + j,
-                        hidden: true
+                        hidden: true,
+                        neighbor: false,
+                        type0: false,
+                        type1: false
                     });
 
                     /* Update link maps. */
