@@ -197,6 +197,8 @@ provenanceVisualizationModule = function () {
 
         /* For each layer (fixed layer L0), check layer to the left (variable layer L1). */
         lgNodes.forEach(function (lg, i) {
+            var usedCoords = [],
+                delta = 0.01;
 
             /* If there is a layer left to the current layer. */
             if (typeof lgNodes[i + 1] !== "undefined" && lgNodes[i + 1] !== null) {
@@ -212,8 +214,16 @@ provenanceVisualizationModule = function () {
                             accRows += (nodes[s].row + 1);
                         });
                     }
-                    /* TODO: If any node within the layer has the same barycenter value, increase it by a small value. */
-                    nodes[n.id].bcOrder = accRows / degree;
+
+                    /* If any node within the layer has the same barycenter value, increase it by a small value. */
+                    if (usedCoords.indexOf(accRows / degree) === -1) {
+                        nodes[n.id].bcOrder = accRows / degree;
+                        usedCoords.push(accRows / degree);
+                    } else {
+                        nodes[n.id].bcOrder = accRows / degree + delta;
+                        usedCoords.push(accRows / degree + delta);
+                        delta += 0.01;
+                    }
                 });
             }
         });
@@ -244,7 +254,7 @@ provenanceVisualizationModule = function () {
         return barycenterOrderedNodes;
     };
 
-    /* TODO: Use function in y-coord assignment. */
+    /* TODO: Might be obsolete. Remove. */
     /**
      * Compute edge-crossings between two layers.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
@@ -302,12 +312,12 @@ provenanceVisualizationModule = function () {
                 var succs = nodeSuccMap[bclgNodes[l][i].id];
                 if (succs.length !== 0) {
                     if (succs.length % 2 === 0) {
-                        nodes[bclgNodes[l][i].id].neighbor = [parseInt(succs.length / 2 - 1, 10), parseInt(succs.length / 2, 10)];
+                        nodes[bclgNodes[l][i].id].neighbors = [parseInt(succs.length / 2 - 1, 10), parseInt(succs.length / 2, 10)];
                     } else {
-                        nodes[bclgNodes[l][i].id].neighbor = [parseInt(succs.length / 2, 10)];
+                        nodes[bclgNodes[l][i].id].neighbors = [parseInt(succs.length / 2, 10)];
                     }
                 } else {
-                    nodes[bclgNodes[l][i].id].neighbor = [];
+                    nodes[bclgNodes[l][i].id].neighbors = [];
                 }
                 i++;
             }
@@ -320,6 +330,53 @@ provenanceVisualizationModule = function () {
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      */
     var markConflicts = function (bclgNodes) {
+
+        /* Type 1 conflict. */
+        /* For each layer, check nodes for crossings. */
+        bclgNodes.forEach(function (lg) {
+            var succMaxRow = -1,
+                lastLinkSrc = -1,
+                lastSegment = -1;
+
+            /* For each node check potential crossing. */
+            lg.forEach(function (n) {
+
+                /* For each node, check successors. */
+                if (nodeLinkSuccMap[n.id].length > 0) { /* TODO: delete? */
+                    nodeLinkSuccMap[n.id].forEach(function (s) {
+                        if (nodes[links[s].target].bcOrder >= succMaxRow) {
+                            succMaxRow = nodes[links[s].target].bcOrder;
+
+                            /* Remember last non-inner segment. */
+                            if (n.nodeType !== "dummy" || nodes[links[s].target].nodeType !== "dummy") {
+                                lastSegment = s;
+                                /* For type 0 conflict. */
+                            }
+                        } else if (lastLinkSrc !== n.id) {
+                            /* Mark link. */
+                            console.log("src: " + n.id + ", " + "tar: " + nodes[links[s].target].id);
+                            console.log("CROSSING " + nodes[s].bcOrder + " < " + succMaxRow);
+                            console.log(nodeLinkSuccMap[n.id]);
+
+                            /* If link is an inner segment, remove all non-inner segements crossing it. */
+                            if (n.nodeType === "dummy" && nodes[links[s].target].nodeType === "dummy") {
+                                links[lastSegment].type1 = true;
+                                /* Type 1 conflict. */
+                            } else {
+                                links[lastSegment].type1 = false;
+                                s.type1 = true;
+                            }
+
+                            /* TODO: remove all non-inner segments where link.target.row > curLink.target.row
+                             && link.source.row < curLink.source.row, except it is an inner-segment. */
+                        }
+                        lastLinkSrc = n.id;
+                    });
+                }
+            });
+        });
+
+        /* Type 0 conflict. */
 
     };
 
@@ -353,7 +410,7 @@ provenanceVisualizationModule = function () {
 
     /* TODO: Vertical coordinate assignment. [Brandes and Köpf 2002] */
     /**
-     * Set row placement for nodes in each layer.
+     * Set row placement for nodes in each layer. [Brandes and Köpf 2002]
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      */
     var verticalCoordAssignment = function (bclgNodes) {
@@ -612,7 +669,7 @@ provenanceVisualizationModule = function () {
             createNodeHashes(x, i);
 
             /* Sorted set of input nodes. */
-            if (x.type == "Source Name") {
+            if (x.type === "Source Name") {
                 inputNodes.push(nodes[i]);
             }
         });
@@ -1255,19 +1312,19 @@ provenanceVisualizationModule = function () {
                 }).classed({
                     "node": true,
                     "rawNode": (function (d) {
-                        return d.nodeType == "raw";
+                        return d.nodeType === "raw";
                     }),
                     "dummyNode": (function (d) {
-                        return d.nodeType == "dummy";
+                        return d.nodeType === "dummy";
                     }),
                     "specialNode": (function (d) {
-                        return d.nodeType == "special";
+                        return d.nodeType === "special";
                     }),
                     "dtNode": (function (d) {
-                        return d.nodeType == "dt";
+                        return d.nodeType === "dt";
                     }),
                     "processedNode": (function (d) {
-                        return d.nodeType == "processed";
+                        return d.nodeType === "processed";
                     })
                 }).attr("id", function (d) {
                     return "nodeId-" + d.id;
