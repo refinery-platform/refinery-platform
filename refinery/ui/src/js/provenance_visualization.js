@@ -1145,8 +1145,8 @@ provenanceVisualizationModule = function () {
      */
     var assignNodeGridCoordinates = function () {
         nodes.forEach(function (d) {
-            d.x = d.col * 50 + 100;
-            d.y = d.row * 50 + 100;
+            d.x = d.col * r * 3;
+            d.y = d.row * r * 3;
         });
     };
 
@@ -1505,7 +1505,7 @@ provenanceVisualizationModule = function () {
                         d3.select(this)
                             .attr("transform", "translate(" + d.x + "," + d.y + ")")
                             .append("circle")
-                            .attr("r", r / 2);
+                            .attr("r", 0.75);
                     } else {
                         if (d.nodeType === "special") {
                             d3.select(this)
