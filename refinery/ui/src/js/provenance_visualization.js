@@ -511,17 +511,25 @@ provenanceVisualizationModule = function () {
         };
 
         var sortNodesByRow = function (a, b) {
-            return nodes[a].row - nodes[b].row;
+            if (typeof nodes[a] !== "undefined" && typeof nodes[b] !== "undefined") {
+                return nodes[a].row - nodes[b].row;
+            } else {
+                return null;
+            }
         };
 
-        bclgNodes.forEach(function (lg, i) {
-            lg.forEach(function (n, j) {
+        bclgNodes.forEach(function (lg) {
+            lg.forEach(function (n) {
 
                 /* Sort lookup maps first. */
-                nodeSuccMap[n.id].sort(sortNodesByRow);
-                nodeLinkSuccMap[n.id].sort(sortNodesByRow);
-                nodePredMap[n.id].sort(sortNodesByRow);
-                nodeLinkPredMap[n.id].sort(sortNodesByRow);
+                if (nodeSuccMap[n.id].length > 0)
+                    nodeSuccMap[n.id].sort(sortNodesByRow);
+                if (nodeLinkSuccMap[n.id].length > 0)
+                    nodeLinkSuccMap[n.id].sort(sortNodesByRow);
+                if (nodePredMap[n.id].length > 0)
+                    nodePredMap[n.id].sort(sortNodesByRow);
+                if (nodeLinkPredMap[n.id].length > 0)
+                    nodeLinkPredMap[n.id].sort(sortNodesByRow);
             });
         });
 
@@ -568,6 +576,48 @@ provenanceVisualizationModule = function () {
                     }
                     if (nodePredMap[curNode].length === 0) {
                         nodes[curNode].row = rootRow;
+                    }
+
+                    /* TODO: Check paths near to the split and consider shifting. */
+                    /* Split left. */
+                } else if (nodePredMap[n.id].length > 1) {
+                    degree = nodePredMap[n.id].length;
+                    rootRow = n.row;
+
+                    var step = 1,
+                        initialStepEven = 0.5;
+
+                    if (degree % 2 === 0) {
+                        nodes[nodePredMap[n.id][degree / 2 - 1]].row = rootRow - initialStepEven;
+                    } else {
+                        nodes[nodePredMap[n.id][degree / 2]].row = rootRow;
+                    }
+
+                    var i = 0;
+                    for (; i < degree; i++) {
+                        if (degree % 2 === 0) {
+                            if (i === degree / 2 - 1) {
+                                nodes[nodePredMap[n.id][degree / 2 - 1]].row = rootRow - initialStepEven;
+                            } else if (i === degree / 2) {
+                                nodes[nodePredMap[n.id][degree / 2]].row = rootRow + initialStepEven;
+                            } else {
+                                if (i < degree / 2 - 1) {
+                                    nodes[nodePredMap[n.id][i]].row = rootRow - step * (degree / 2 - i - initialStepEven);
+                                } else {
+                                    nodes[nodePredMap[n.id][i]].row = rootRow + step * (initialStepEven + i - degree / 2);
+                                }
+                            }
+                        } else {
+                            if (i === degree / 2) {
+                                nodes[nodePredMap[n.id][degree / 2]].row = rootRow;
+                            } else {
+                                if (i < degree / 2) {
+                                    nodes[nodePredMap[n.id][i]].row = rootRow - step * (degree / 2 - i - initialStepEven);
+                                } else {
+                                    nodes[nodePredMap[n.id][i]].row = rootRow + step * (initialStepEven + i - degree / 2);
+                                }
+                            }
+                        }
                     }
                 }
             });
