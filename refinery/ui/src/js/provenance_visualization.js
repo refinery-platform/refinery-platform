@@ -693,7 +693,7 @@ provenanceVisualizationModule = function () {
                         visited: false,
                         analysis: curAnalysis,
                         doiFactor: -1,
-                        hidden: true
+                        hidden: false
                     });
 
                     /* Update node maps. */
@@ -728,7 +728,7 @@ provenanceVisualizationModule = function () {
                         source: predNode,
                         target: (j === gapLength - 1) ? l.target : newNodeId + j,
                         id: newLinkId + j,
-                        hidden: true,
+                        hidden: false,
                         neighbor: false,
                         type0: false,
                         type1: false
@@ -946,7 +946,7 @@ provenanceVisualizationModule = function () {
             source: nodeMap[nodeElem.parents[parentIndex]],
             target: nodeMap[nodeElem.uuid],
             id: linkId,
-            hidden: true,
+            hidden: false,
             neighbor: false,
             type0: false,
             type1: false
@@ -957,10 +957,10 @@ provenanceVisualizationModule = function () {
      * Create one node representing the whole analysis when aggregated.
      */
     var createAnalysisNodes = function () {
-        aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": false, "id": 0, "start": -1, "end": -1, "created": -1, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": []});
+        aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": true, "id": 0, "start": -1, "end": -1, "created": -1, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": []});
 
         analyses.objects.forEach(function (a, i) {
-            aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": false, "id": i + 1, "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": []});
+            aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": true, "id": i + 1, "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": []});
         });
     };
 
@@ -1019,7 +1019,7 @@ provenanceVisualizationModule = function () {
             visited: false,
             analysis: (nodeObj.analysis_uuid !== null) ? nodeObj.analysis_uuid : "dataset",
             doiFactor: -1,
-            hidden: true,
+            hidden: false,
             bcOrder: -1,
             x: 0,
             y: 0
@@ -1330,7 +1330,6 @@ provenanceVisualizationModule = function () {
 
     };
 
-    /* TODO: As coordinates for anodes do not exist yet without the layout adaption, center it to the analyses. */
     /* TODO: Set analysis node to the most right column possible and recompute dynamic layout.
      */
     /**
@@ -1338,30 +1337,20 @@ provenanceVisualizationModule = function () {
      */
     var initAnalysisLayout = function () {
         aNodes.forEach(function (an) {
+            /* Exclude dummy nodes and center analysis to barycenter columns. */
+            var childNodes = an.nodes.filter(function (n) {
+                return n.nodeType !== "dummy" ? true : false;
+            });
 
-            /* Get min and max column/row of nodes to center new analysis process node. */
-            var min = [d3.min(nodes.filter(function (n) {
-                    return n.analysis == an.uuid;
-                }), function (d) {
-                    return d.x;
-                }), d3.min(nodes.filter(function (n) {
-                    return n.analysis == an.uuid;
-                }), function (d) {
-                    return d.y;
-                })],
-                max = [d3.max(nodes.filter(function (n) {
-                    return n.analysis == an.uuid;
-                }), function (d) {
-                    return d.x;
-                }), d3.max(nodes.filter(function (n) {
-                    return n.analysis == an.uuid;
-                }), function (d) {
-                    return d.y;
-                })];
-            var delta = {x: min[0] + (max[0] - min[0]) / 2, y: min[1] + (max[1] - min[1]) / 2};
+            var accRows = 0,
+                accCols = 0;
 
-            an.x = delta.x;
-            an.y = delta.y;
+            childNodes.forEach(function (n) {
+                accRows += n.row;
+                accCols += n.col;
+            });
+            an.x = (accCols / childNodes.length) * r * 3;
+            an.y = (accRows / childNodes.length) * r * 3;
         });
     };
 
@@ -1394,16 +1383,16 @@ provenanceVisualizationModule = function () {
             }))
             .enter().append("line")
             .attr("x1", function (l) {
-                return l.hidden ? nodes[l.source].x : aNodes[nodeAnalysisMap[l.source]].x;
+                return !l.hidden ? nodes[l.source].x : aNodes[nodeAnalysisMap[l.source]].x;
             })
             .attr("y1", function (l) {
-                return l.hidden ? nodes[l.source].y : aNodes[nodeAnalysisMap[l.source]].y;
+                return !l.hidden ? nodes[l.source].y : aNodes[nodeAnalysisMap[l.source]].y;
             })
             .attr("x2", function (l) {
-                return l.hidden ? nodes[l.target].x : aNodes[nodeAnalysisMap[l.target]].x;
+                return !l.hidden ? nodes[l.target].x : aNodes[nodeAnalysisMap[l.target]].x;
             })
             .attr("y2", function (l) {
-                return l.hidden ? nodes[l.target].y : aNodes[nodeAnalysisMap[l.target]].y;
+                return !l.hidden ? nodes[l.target].y : aNodes[nodeAnalysisMap[l.target]].y;
             })
             .classed({
                 "link": true
@@ -1446,6 +1435,9 @@ provenanceVisualizationModule = function () {
                         .attr("transform", "translate(" + an.x + "," + an.y + ")")
                         .attr("id", function () {
                             return "aNodeId-" + an.id;
+                        })
+                        .style("display", function () {
+                            return an.hidden ? "none" : "inline";
                         })
                         .append("polygon")
                         .attr("points", function () {
@@ -1495,7 +1487,9 @@ provenanceVisualizationModule = function () {
                 .data(nodes.filter(function (n) {
                     return nodeAnalysisMap[n.id] == i;
                 }))
-                .enter().append("g").each(function (d) {
+                .enter().append("g").style("display", function (d) {
+                    return d.hidden ? "none" : "inline";
+                }).each(function (d) {
                     if (d.nodeType === "raw" || d.nodeType === "processed") {
                         d3.select(this)
                             .attr("transform", "translate(" + d.x + "," + d.y + ")")
@@ -1543,8 +1537,6 @@ provenanceVisualizationModule = function () {
                     })
                 }).attr("id", function (d) {
                     return "nodeId-" + d.id;
-                }).style("display", function (d) {
-                    return d.hidden ? "none" : "inline";
                 });
         });
 
@@ -1566,7 +1558,6 @@ provenanceVisualizationModule = function () {
         node.on("mouseover", tip.show)
             .on("mouseout", tip.hide);
     };
-
 
     /* TODO: Code cleanup. */
     /**
@@ -1654,7 +1645,6 @@ provenanceVisualizationModule = function () {
                         });
                     });
                 });
-
             }
         });
     };
@@ -1739,7 +1729,6 @@ provenanceVisualizationModule = function () {
             timer = 0,
             bRectAction = clearHighlighting;
         /* default action. */
-
         d3.select(".brect").on("click", function () {
 
             /* Suppress after drag end. */
@@ -1749,14 +1738,15 @@ provenanceVisualizationModule = function () {
             if (clickInProgress) {
                 return;
             }
-
             clickInProgress = true;
+
             /* Single click event is called after timeout unless a dblick action is performed. */
             timer = setTimeout(function () {
                 bRectAction();
-                /* Called everytime. */
 
+                /* Called every time. */
                 bRectAction = clearHighlighting;
+
                 /* Set back click action to single. */
                 clickInProgress = false;
             }, 200);
@@ -1878,7 +1868,7 @@ provenanceVisualizationModule = function () {
                 createAnalysisNodeMapping();
 
                 /* Set display property of analysis connecting links. */
-                initLinkVisibility();
+                /* initLinkVisibility(); */
 
                 /* Group nodes by layer. */
                 var layeredTopNodes = groupNodesByCol(topNodes);
