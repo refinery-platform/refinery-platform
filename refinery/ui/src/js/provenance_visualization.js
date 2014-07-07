@@ -147,10 +147,10 @@ provenanceVisualizationModule = function () {
     /**
      * Deep copy node data structure.
      * @param node Node object.
-     * @returns {{name: string, nodeType: string, fileType: string, uuid: string, study: string, assay: string, row: number, col: number, parents: Array, id: number, visited: boolean, doiFactor: number, hidden: boolean, bcOrder: number}} Node object.
+     * @returns {{name: string, nodeType: string, fileType: string, uuid: string, study: string, assay: string, row: number, col: number, parents: Array, id: number, doiFactor: number, hidden: boolean, bcOrder: number}} Node object.
      */
     var copyNode = function (node) {
-        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, visited: false, doiFactor: -1, hidden: true, bcOrder: -1, x: 0, y: 0};
+        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, doiFactor: -1, hidden: true, bcOrder: -1, x: 0, y: 0};
 
         newNode.name = node.name;
         newNode.nodeType = node.nodeType;
@@ -161,7 +161,6 @@ provenanceVisualizationModule = function () {
         newNode.row = node.row;
         newNode.col = node.col;
         newNode.id = node.id;
-        newNode.visited = node.visited;
         node.parents.forEach(function (p, i) {
             newNode.parents[i] = p;
         });
@@ -690,7 +689,6 @@ provenanceVisualizationModule = function () {
                         row: -1,
                         col: curCol + 1,
                         id: newNodeId + i,
-                        visited: false,
                         analysis: curAnalysis,
                         doiFactor: -1,
                         hidden: false
@@ -1016,7 +1014,6 @@ provenanceVisualizationModule = function () {
             row: -1,
             col: -1,
             id: nodeId,
-            visited: false,
             analysis: (nodeObj.analysis_uuid !== null) ? nodeObj.analysis_uuid : "dataset",
             doiFactor: -1,
             hidden: false,
@@ -1587,8 +1584,9 @@ provenanceVisualizationModule = function () {
                         if (nodeLinkSuccMap[n.id].length !== 0) {
                             nodeLinkSuccMap[n.id].forEach(function (l) {
                                 if (nodeAnalysisMap[links[l].target] == an.id) {
-                                    d3.select("#linkId-" + l).style("display", "inline").attr("x2", nodes[links[l].target].x);
-                                    d3.select("#linkId-" + l).style("display", "inline").attr("y2", nodes[links[l].target].y);
+                                    d3.select("#linkId-" + l).style("display", "inline")
+                                        .attr("x2", nodes[links[l].target].x)
+                                        .attr("y2", nodes[links[l].target].y);
                                 }
                             });
                         }
@@ -1600,8 +1598,9 @@ provenanceVisualizationModule = function () {
                     aNodes[san].inputNodes.forEach(function (n) {
                         nodeLinkPredMap[n.id].forEach(function (l) {
                             if (nodeAnalysisMap[links[l].source] == an.id) {
-                                d3.select("#linkId-" + l).style("display", "inline").attr("x1", nodes[links[l].source].x);
-                                d3.select("#linkId-" + l).style("display", "inline").attr("y1", nodes[links[l].source].y);
+                                d3.select("#linkId-" + l).style("display", "inline")
+                                    .attr("x1", nodes[links[l].source].x)
+                                    .attr("y1", nodes[links[l].source].y);
                             }
                         });
                     });
@@ -1615,6 +1614,7 @@ provenanceVisualizationModule = function () {
                 });
                 d3.select(this).select(".aNode").style("display", "inline");
 
+                /* Set node visibility. */
                 an.hidden = false;
                 an.nodes.forEach(function (n) {
                     n.hidden = true;
@@ -1626,8 +1626,9 @@ provenanceVisualizationModule = function () {
                         if (nodeLinkSuccMap[n.id].length !== 0) {
                             nodeLinkSuccMap[n.id].forEach(function (l) {
                                 if (nodeAnalysisMap[links[l].target] == an.id) {
-                                    d3.select("#linkId-" + l).style("display", "inline").attr("x2", an.x);
-                                    d3.select("#linkId-" + l).style("display", "inline").attr("y2", an.y);
+                                    d3.select("#linkId-" + l).style("display", "inline")
+                                        .attr("x2", an.x)
+                                        .attr("y2", an.y);
                                 }
                             });
                         }
@@ -1639,8 +1640,9 @@ provenanceVisualizationModule = function () {
                     aNodes[san].inputNodes.forEach(function (n) {
                         nodeLinkPredMap[n.id].forEach(function (l) {
                             if (nodeAnalysisMap[links[l].source] == an.id) {
-                                d3.select("#linkId-" + l).style("display", "inline").attr("x1", an.x);
-                                d3.select("#linkId-" + l).style("display", "inline").attr("y1", an.y);
+                                d3.select("#linkId-" + l).style("display", "inline")
+                                    .attr("x1", an.x)
+                                    .attr("y1", an.y);
                             }
                         });
                     });
