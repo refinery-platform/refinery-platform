@@ -663,7 +663,7 @@ provenanceVisualizationModule = function () {
     var addDummyNodes = function () {
         links.forEach(function (l) {
             /* When the link is longer than one column, add dummy nodes. */
-            var gapLength = nodes[l.target].col - nodes[l.source].col;
+            var gapLength = Math.abs(nodes[l.source].col - nodes[l.target].col);
 
             if (gapLength > 1) {
 
