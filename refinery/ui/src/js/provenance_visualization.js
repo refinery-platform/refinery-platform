@@ -35,6 +35,9 @@ provenanceVisualizationModule = function () {
         analysisNodeMap = d3.map(),
         nodeAnalysisMap = d3.map();
 
+    /* Restore dummy path link. */
+    var dummyPaths = [];
+
     /* Initialize margin conventions */
     var margin = {top: 20, right: 10, bottom: 20, left: 10};
 
@@ -706,6 +709,44 @@ provenanceVisualizationModule = function () {
                     i++;
                 }
 
+                /* Backup link. */
+                dummyPaths.push({
+                    id: l.id,
+                    source: ({
+                        id: l.source,
+                        predNodes: nodePredMap[l.source].map(function (p) {
+                            return p;
+                        }),
+                        predNodeLinks: nodeLinkPredMap[l.source].map(function (p) {
+                            return p;
+                        }),
+                        succNodes: nodeSuccMap[l.source].map(function (s) {
+                            return s;
+                        }),
+                        succNodeLinks: nodeLinkSuccMap[l.source].map(function (s) {
+                            return s;
+                        })
+                    }),
+                    target: ({
+                        id: l.target,
+                        predNodes: nodePredMap[l.target].map(function (p) {
+                            return p;
+                        }),
+                        predNodeLinks: nodeLinkPredMap[l.target].map(function (p) {
+                            return p;
+                        }),
+                        succNodes: nodeSuccMap[l.target].map(function (s) {
+                            return s;
+                        }),
+                        succNodeLinks: nodeLinkSuccMap[l.target].map(function (s) {
+                            return s;
+                        })
+                    }),
+                    parents: nodes[l.target].parents.map(function (p) {
+                        return p;
+                    })
+                });
+
                 /* Update parents for original target node. */
                 nodes[l.target].parents = nodes[l.target].parents.concat([nodes[predNode].uuid]);
                 nodes[l.target].parents.splice(nodes[l.target].parents.indexOf(nodes[l.source].uuid), 1);
@@ -753,13 +794,14 @@ provenanceVisualizationModule = function () {
                     curCol++;
                     j++;
                 }
+                /* Update original link target. */
                 nodeLinkPredMap[l.target] = nodeLinkPredMap[l.target].concat([newLinkId + j - 1]);
                 nodeLinkPredMap[l.target].splice(nodeLinkPredMap[l.target].indexOf(l.id), 1);
                 nodePredMap[l.target] = nodePredMap[l.target].concat([newNodeId + j - 2]);
                 nodePredMap[l.target].splice(nodePredMap[l.target].indexOf(l.source), 1);
 
-                /* Delete original link. */
-                links[l.id] = null;
+                /* Deleting the original link is not necessary as the mappings were removed. */
+                /* links[l.id] = null; */
             }
         });
     };
@@ -817,6 +859,7 @@ provenanceVisualizationModule = function () {
         nodes.forEach(function (selNode) {
             cNodes.push(copyNode(selNode));
         });
+
 
         /* To avoid definition of function in while loop below (added by NG). */
         /* For each successor. */
@@ -1145,7 +1188,7 @@ provenanceVisualizationModule = function () {
      */
     var assignNodeGridCoordinates = function () {
         nodes.forEach(function (d) {
-            d.x = - d.col * cell.width;
+            d.x = -d.col * cell.width;
             d.y = d.row * cell.height;
         });
     };
@@ -1199,11 +1242,11 @@ provenanceVisualizationModule = function () {
         /* Get input links and update coordinates for x2 and y2. */
         nodeLinkPredMap[n.id].forEach(function (l) {
             d3.select("#linkId-" + l).attr("d", function (l) {
-                var pathSegment = " M" + parseInt(nodes[l.source].x,10) + "," + parseInt(nodes[l.source].y,10);
+                var pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
                 if (Math.abs(nodes[l.source].x - nodes[l.target].x) > cell.width) {
-                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(d3.event.y,10) + " L" + parseInt(d3.event.x,10) + "," + parseInt(d3.event.y,10));
+                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(d3.event.y, 10) + " L" + parseInt(d3.event.x, 10) + "," + parseInt(d3.event.y, 10));
                 } else {
-                    pathSegment = pathSegment.concat(" L" + parseInt(d3.event.x,10) + "," + parseInt(d3.event.y,10));
+                    pathSegment = pathSegment.concat(" L" + parseInt(d3.event.x, 10) + "," + parseInt(d3.event.y, 10));
                 }
                 return pathSegment;
             });
@@ -1212,11 +1255,11 @@ provenanceVisualizationModule = function () {
         /* Get output links and update coordinates for x1 and y1. */
         nodeLinkSuccMap[n.id].forEach(function (l) {
             d3.select("#linkId-" + l).attr("d", function (l) {
-                var pathSegment = " M" + parseInt(d3.event.x,10) + "," + parseInt(d3.event.y,10);
+                var pathSegment = " M" + parseInt(d3.event.x, 10) + "," + parseInt(d3.event.y, 10);
                 if (Math.abs(d3.event.x - nodes[l.target].x) > cell.width) {
-                    pathSegment = pathSegment.concat(" L" + parseInt(d3.event.x+cell.width,10) +"," + parseInt(nodes[l.target].y,10) + " L" + parseInt(nodes[l.target].x,10) + " " + parseInt(nodes[l.target].y,10));
+                    pathSegment = pathSegment.concat(" L" + parseInt(d3.event.x + cell.width, 10) + "," + parseInt(nodes[l.target].y, 10) + " L" + parseInt(nodes[l.target].x, 10) + " " + parseInt(nodes[l.target].y, 10));
                 } else {
-                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x,10) + "," + parseInt(nodes[l.target].y,10));
+                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
                 }
                 return pathSegment;
             });
@@ -1363,9 +1406,9 @@ provenanceVisualizationModule = function () {
             var rootCol;
 
             if (an.succAnalyses.length > 0) {
-                    rootCol = aNodes[an.succAnalyses[0]].inputNodes[0].col;
-                an.succAnalyses.forEach( function (san) {
-                    aNodes[san].inputNodes.forEach( function (sanIn) {
+                rootCol = aNodes[an.succAnalyses[0]].inputNodes[0].col;
+                an.succAnalyses.forEach(function (san) {
+                    aNodes[san].inputNodes.forEach(function (sanIn) {
                         if (sanIn.col + 1 > rootCol) {
                             rootCol = sanIn.col + 1;
                         }
@@ -1384,6 +1427,71 @@ provenanceVisualizationModule = function () {
 
             an.x = -an.col * cell.width;
             an.y = (accRows / childNodes.length) * cell.height;
+        });
+    };
+
+    /**
+     * Restore links where dummy nodes where inserted in order to process the layout.
+     */
+    var restoreDataset = function () {
+        /* Clean up links. */
+        for (var i = 0; i < links.length; i++) {
+            var l = links[i];
+
+            /* Clean source. */
+            if (nodes[l.source].nodeType != "dummy" && nodes[l.target].nodeType == "dummy") {
+                nodeSuccMap[l.source].splice(nodeSuccMap[l.source].indexOf(l.target), 1);
+                nodeLinkSuccMap[l.source].splice(nodeLinkSuccMap[l.source].indexOf(l.id), 1);
+                nodeAnalysisMap[l.target] = null;
+                links.splice(i, 1);
+                i--;
+            }
+            /* Clean target. */
+            else if (nodes[l.source].nodeType == "dummy" && nodes[l.target].nodeType != "dummy") {
+                nodes[l.target].parents.splice(nodes[l.target].parents.indexOf(nodes[l.source].uuid), 1);
+                nodePredMap[l.target].splice(nodePredMap[l.target].indexOf(l.source), 1);
+                nodeLinkPredMap[l.target].splice(nodeLinkPredMap[l.target].indexOf(l.id), 1);
+                nodeAnalysisMap[l.source] = null;
+                links.splice(i, 1);
+                i--;
+            }
+            /* Remove pure dummy links. */
+            else if (nodes[l.source].nodeType == "dummy" && nodes[l.target].nodeType == "dummy") {
+                nodePredMap[l.target].splice(nodePredMap[l.target].indexOf(l.source), 1);
+                nodeLinkPredMap[l.target].splice(nodeLinkPredMap[l.target].indexOf(l.id), 1);
+                nodeSuccMap[l.source].splice(nodeSuccMap[l.source].indexOf(l.target), 1);
+                nodeLinkSuccMap[l.source].splice(nodeLinkSuccMap[l.source].indexOf(l.id), 1);
+                nodeAnalysisMap[l.source] = null;
+                links.splice(i, 1);
+                i--;
+            }
+        }
+
+        /* Clean up nodes. */
+        for (var j = 0; j < nodes.length; j++) {
+            var n = nodes[j];
+
+            if (n.nodeType == "dummy") {
+                nodePredMap[n.id] = [];
+                nodeLinkPredMap[n.id] = [];
+                nodeSuccMap[n.id] = [];
+                nodeLinkSuccMap[n.id] = [];
+
+                nodes.splice(j, 1);
+                j--;
+            }
+        }
+
+        /* Restore links. */
+        dummyPaths.forEach(function (dP) {
+            var source = links[dP.id].source,
+                target = links[dP.id].target;
+
+            nodePredMap[target] = nodePredMap[target].concat(dP.target.predNodes);
+            nodeLinkPredMap[target] = nodeLinkPredMap[target].concat(dP.target.predNodeLinks);
+            nodeSuccMap[source] = nodeSuccMap[source].concat(dP.source.succNodes);
+            nodeLinkSuccMap[source] = nodeLinkSuccMap[source].concat(dP.source.succNodeLinks);
+            nodes[target].parents = nodes[target].parents.concat(dP.parents);
         });
     };
 
@@ -1412,18 +1520,18 @@ provenanceVisualizationModule = function () {
     var drawLinks = function () {
         link = canvas.selectAll(".link")
             .data(links.filter(function (l) {
-                return l !== null;
+                return l !== null && typeof l !== "undefined";
             }))
             .enter().append("path")
             .attr("d", function (l) {
-                 var pathSegment = " M" + parseInt(nodes[l.source].x,10) + "," + parseInt(nodes[l.source].y,10);
-                 if (Math.abs(nodes[l.source].x - nodes[l.target].x) > cell.width) {
-                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(nodes[l.target].y,10) + " H" + parseInt(nodes[l.target].x,10));
-                 } else {
-                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x,10) + "," + parseInt(nodes[l.target].y,10));
-                 }
+                var pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
+                if (Math.abs(nodes[l.source].x - nodes[l.target].x) > cell.width) {
+                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(nodes[l.target].y, 10) + " H" + parseInt(nodes[l.target].x, 10));
+                } else {
+                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
+                }
                 return pathSegment;
-             })
+            })
             .classed({
                 "link": true
             })
@@ -1525,11 +1633,11 @@ provenanceVisualizationModule = function () {
                             .attr("transform", "translate(" + d.x + "," + d.y + ")")
                             .append("circle")
                             .attr("r", r);
-                    } else if (d.nodeType === "dummy") {
-                        d3.select(this)
-                            .attr("transform", "translate(" + d.x + "," + d.y + ")")
-                            .append("circle")
-                            .attr("r", 0.75);
+                        /*} else if (d.nodeType === "dummy") {
+                         d3.select(this)
+                         .attr("transform", "translate(" + d.x + "," + d.y + ")")
+                         .append("circle")
+                         .attr("r", 0.75);*/
                     } else {
                         if (d.nodeType === "special") {
                             d3.select(this)
@@ -1911,6 +2019,9 @@ provenanceVisualizationModule = function () {
 
                 /* Place vertices. */
                 placeNodes(layeredTopNodes);
+
+                /* Restore original dataset. */
+                restoreDataset();
 
                 /* Call d3 visualization. */
                 drawGraph();
