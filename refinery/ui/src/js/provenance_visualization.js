@@ -1115,14 +1115,23 @@ provenanceVisualizationModule = function () {
             }
         });
 
+        /* TODO: BUG: Handle Failed analyses. */
+        console.log(analysisNodeMap);
+
         aNodes.forEach(function (an) {
 
             /* Set nodes. */
-            an.nodes = analysisNodeMap[an.uuid].map(function (d) {
-                nodeAnalysisMap[d] = an.id;
-                return nodes[d];
-                /* flatten nodes objects. */
-            });
+            console.log("Analysis# " + an.id + ": " + an.uuid);
+            console.log(analysisNodeMap[an.uuid]);
+
+            /* Handle Undefined. */
+            if (analysisNodeMap.hasOwnProperty(an.uuid) && typeof analysisNodeMap[an.uuid] !== "undefined") {
+                an.nodes = analysisNodeMap[an.uuid].map(function (d) {
+                    nodeAnalysisMap[d] = an.id;
+                    return nodes[d];
+                    /* flatten nodes objects. */
+                });
+            }
 
             /* Set input nodes. */
             an.inputNodes = an.nodes.filter(function (n) {
