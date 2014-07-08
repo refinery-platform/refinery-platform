@@ -1716,6 +1716,72 @@ provenanceVisualizationModule = function () {
             .on("mouseout", tip.hide);
     };
 
+    /**
+     * On collapse/expand, translate layout.
+     */
+    var updateNodes = function () {
+        analysis.each(function (a, i) {
+            d3.select(this).selectAll(".node").select("g")
+                .style("display", function (d) {
+                    return d.hidden ? "none" : "inline";
+                }).each(function (d) {
+                    if (d.nodeType === "raw" || d.nodeType === "processed") {
+                        d3.select(this)
+                            .attr("transform", "translate(" + d.x + "," + d.y + ")")
+                            .append("circle")
+                            .attr("r", r);
+                    } else {
+                        if (d.nodeType === "special") {
+                            d3.select(this)
+                                .attr("transform", "translate(" + (d.x - r) + "," + (d.y - r) + ")")
+                                .append("rect")
+                                .attr("width", r * 2)
+                                .attr("height", r * 2);
+                        } else if (d.nodeType === "dt") {
+                            d3.select(this)
+                                .attr("transform", "translate(" + (d.x - r * 0.75) + "," + (d.y - r * 0.75) + ")")
+                                .append("rect")
+                                .attr("width", r * 1.5)
+                                .attr("height", r * 1.5)
+                                .attr("transform", function () {
+                                    return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
+                                });
+                        }
+                    }
+                });
+        });
+    };
+
+    /**
+     * On collapse/expand, translate layout.
+     */
+    var updateLinks = function () {
+        link = canvas.selectAll(".link")
+            .attr("d", function (l) {
+                var pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
+                if (Math.abs(nodes[l.source].x - nodes[l.target].x) > cell.width) {
+                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(nodes[l.target].y, 10) + " H" + parseInt(nodes[l.target].x, 10));
+                } else {
+                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
+                }
+                return pathSegment;
+            });
+    };
+
+    /**
+     * After the layout was recomputed, update nodes and links.
+     */
+    var updateCanvas = function () {
+
+        /* Set coordinates for nodes. */
+        assignNodeGridCoordinates();
+
+        updateNodes();
+
+        updateLinks();
+
+    };
+
     /* TODO: Code cleanup. */
     /**
      * Sets the visibility of links and (a)nodes when collapsing or expanding analyses.
@@ -1827,6 +1893,33 @@ provenanceVisualizationModule = function () {
                         });
                     });
                 });
+
+
+                /* TODO: on dblclick, recompute layout. */
+                /* Topological order. */
+                var topNodes = sortTopological(inputNodes);
+
+                /* Assign layers. */
+                assignLayers(topNodes);
+
+                /* Add dummy nodes and links. */
+                addDummyNodes();
+
+                /* Recalculate layers including dummy nodes. */
+                topNodes = sortTopological(inputNodes);
+                assignLayers(topNodes);
+
+                /* Group nodes by layer. */
+                var layeredTopNodes = groupNodesByCol(topNodes);
+
+                /* Place vertices. */
+                placeNodes(layeredTopNodes);
+
+                /* Restore original dataset. */
+                restoreDataset();
+
+                /* Update layout. */
+                updateCanvas();
             }
         });
     };
