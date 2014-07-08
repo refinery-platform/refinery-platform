@@ -1325,14 +1325,19 @@ provenanceVisualizationModule = function () {
         /* Update incident dom link elements. */
         an.predAnalyses.forEach(function (pan) {
             nodes[pan].outputNodes.forEach(function (n) {
-                if (nodeLinkSuccMap[n.id].length !== 0) {
                     nodeLinkSuccMap[n.id].forEach(function (l) {
                         if (nodeAnalysisMap[links[l].target] == an.id) {
-                            d3.select("#linkId-" + l).attr("x2", d3.event.x);
-                            d3.select("#linkId-" + l).attr("y2", d3.event.y);
+                            d3.select("#linkId-" + l).attr("d", function (l) {
+                                var pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
+                                if (Math.abs(nodes[l.source].x - d3.event.x) > cell.width) {
+                                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(d3.event.y, 10) + " L" + parseInt(d3.event.x, 10) + "," + parseInt(d3.event.y, 10));
+                                } else {
+                                    pathSegment = pathSegment.concat(" L" + parseInt(d3.event.x, 10) + "," + parseInt(d3.event.y, 10));
+                                }
+                                return pathSegment;
+                            });
                         }
                     });
-                }
             });
         });
 
@@ -1341,8 +1346,15 @@ provenanceVisualizationModule = function () {
             nodes[san].inputNodes.forEach(function (n) {
                 nodeLinkPredMap[n.id].forEach(function (l) {
                     if (nodeAnalysisMap[links[l].source] === an.id) {
-                        d3.select("#linkId-" + l).attr("x1", d3.event.x);
-                        d3.select("#linkId-" + l).attr("y1", d3.event.y);
+                        d3.select("#linkId-" + l).attr("d", function (l) {
+                            var pathSegment = " M" + parseInt(d3.event.x, 10) + "," + parseInt(d3.event.y, 10);
+                            if (Math.abs(d3.event.x - nodes[l.target].x) > cell.width) {
+                                pathSegment = pathSegment.concat(" L" + parseInt(d3.event.x + cell.width, 10) + "," + parseInt(nodes[l.target].y, 10) + " L" + parseInt(nodes[l.target].x, 10) + " " + parseInt(nodes[l.target].y, 10));
+                            } else {
+                                pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
+                            }
+                            return pathSegment;
+                        });
                     }
                 });
             });
@@ -1731,9 +1743,15 @@ provenanceVisualizationModule = function () {
                     nodes[pan].outputNodes.forEach(function (n) {
                         nodeLinkSuccMap[n.id].forEach(function (l) {
                             if (nodeAnalysisMap[links[l].target] == an.id) {
-                                d3.select("#linkId-" + l).style("display", "inline")
-                                    .attr("x2", nodes[links[l].target].x)
-                                    .attr("y2", nodes[links[l].target].y);
+                                d3.select("#linkId-" + l).attr("d", function (l) {
+                                    var pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
+                                    if (Math.abs(nodes[l.source].x - nodes[l.target].x) > cell.width) {
+                                        pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(nodes[l.target].y, 10) + " L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
+                                    } else {
+                                        pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
+                                    }
+                                    return pathSegment;
+                                });
                             }
                         });
                     });
@@ -1744,9 +1762,15 @@ provenanceVisualizationModule = function () {
                     nodes[san].inputNodes.forEach(function (n) {
                         nodeLinkPredMap[n.id].forEach(function (l) {
                             if (nodeAnalysisMap[links[l].source] == an.id) {
-                                d3.select("#linkId-" + l).style("display", "inline")
-                                    .attr("x1", nodes[links[l].source].x)
-                                    .attr("y1", nodes[links[l].source].y);
+                                d3.select("#linkId-" + l).style("display", "inline").attr("d", function (l) {
+                                    var pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
+                                    if (Math.abs(nodes[l.source].x - nodes[l.target].x) > cell.width) {
+                                        pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + cell.width, 10) + "," + parseInt(nodes[l.target].y, 10) + " L" + parseInt(nodes[l.target].x, 10) + " " + parseInt(nodes[l.target].y, 10));
+                                    } else {
+                                        pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
+                                    }
+                                    return pathSegment;
+                                });
                             }
                         });
                     });
@@ -1771,9 +1795,15 @@ provenanceVisualizationModule = function () {
                     nodes[pan].outputNodes.forEach(function (n) {
                         nodeLinkSuccMap[n.id].forEach(function (l) {
                             if (nodeAnalysisMap[links[l].target] == an.id) {
-                                d3.select("#linkId-" + l).style("display", "inline")
-                                    .attr("x2", an.x)
-                                    .attr("y2", an.y);
+                                d3.select("#linkId-" + l).style("display", "inline").attr("d", function (l) {
+                                    var pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
+                                    if (Math.abs(nodes[l.source].x - an.x) > cell.width) {
+                                        pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(an.y, 10) + " L" + parseInt(an.x, 10) + "," + parseInt(an.y, 10));
+                                    } else {
+                                        pathSegment = pathSegment.concat(" L" + parseInt(an.x, 10) + "," + parseInt(an.y, 10));
+                                    }
+                                    return pathSegment;
+                                });
                             }
                         });
                     });
@@ -1784,10 +1814,15 @@ provenanceVisualizationModule = function () {
                     nodes[san].inputNodes.forEach(function (n) {
                         nodeLinkPredMap[n.id].forEach(function (l) {
                             if (nodeAnalysisMap[links[l].source] == an.id) {
-                                d3.select("#linkId-" + l).style("display", "inline");
-                                d3.select("#linkId-" + l)
-                                    .attr("x1", an.x)
-                                    .attr("y1", an.y);
+                                d3.select("#linkId-" + l).style("display", "inline").attr("d", function (l) {
+                                    var pathSegment = " M" + parseInt(an.x, 10) + "," + parseInt(an.y, 10);
+                                    if (Math.abs(an.x - nodes[l.target].x) > cell.width) {
+                                        pathSegment = pathSegment.concat(" L" + parseInt(an.x + cell.width, 10) + "," + parseInt(nodes[l.target].y, 10) + " L" + parseInt(nodes[l.target].x, 10) + " " + parseInt(nodes[l.target].y, 10));
+                                    } else {
+                                        pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
+                                    }
+                                    return pathSegment;
+                                });
                             }
                         });
                     });
@@ -1958,7 +1993,7 @@ provenanceVisualizationModule = function () {
             applyDragBehavior();
 
             /* Add dragging behavior to analysis nodes. */
-            //applyAnalysisDragBehavior();
+            applyAnalysisDragBehavior();
 
             /* Event listeners. */
             $('document').ready(function () {
