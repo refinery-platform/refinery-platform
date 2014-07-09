@@ -1464,22 +1464,17 @@ workflowVisualizationModule = function () {
      * text: string
      */
     function parse_node_annotation(text) {
-        var annoProperties = [],
-            val = "",
-            match,
-            re = new RegExp(/\"(\S*)\":\s{1}{\"name\":\s{1}\"(\S*)\",\s{1}\"description\":\s{1}\"(\S*)\",\s{1}\"type\":\s{1}\"(\S*)\"/g);
+        var annoProperties = [];
 
-        while (match = re.exec(text)) {
-            val = match[2];
+        if (text.length !== 0 && typeof text !== "undefined") {
+            var json_set = JSON.parse(d3.values(text).join("")),
+                kv_set = d3.entries(json_set);
 
-            if (match[4] !== "") {
-                val += "." + match[4];
-            }
-            if (match[3] !== "") {
-                val += "\n" + match[3];
-            }
-            annoProperties.push({key: match[1], value: val});
+            kv_set.forEach(function (a) {
+                annoProperties.push({key: a.key, value: (a.value.name + "." + a.value.type + "\n" + a.value.description).toString()});
+            });
         }
+
         return annoProperties;
     }
 
