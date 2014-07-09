@@ -476,7 +476,7 @@ workflowVisualizationModule = function () {
         shape_dim.window.height = new_height;
 
         // update visualization
-        fit_wf_to_window(0);
+        //fit_wf_to_window(0);
 
         // update overlay
         d3.select(".overlay")
@@ -614,7 +614,7 @@ workflowVisualizationModule = function () {
             factor = [(shape_dim.window.width - shape_dim.margin.left * 4) / delta[0],
                     (shape_dim.window.height - shape_dim.margin.top * 4) / delta[1]],
         // old_pos = zoom.translate(),
-            new_scale = d3.min(factor),
+            new_scale = d3.min(factor.concat([2])),// limit fit to window zoom level to 2.
             new_pos = [((shape_dim.window.width - shape_dim.margin.left - delta[0] * new_scale) / 2),
                 ((shape_dim.window.height - shape_dim.margin.left - delta[1] * new_scale) / 2)];
 
