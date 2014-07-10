@@ -129,12 +129,12 @@ provenanceVisualizationModule = function () {
             rtNodes = [];
 
         tNodes.forEach(function (d) {
-            rtNodes.push(copyNode(d));
+            rtNodes.push(copyNode(nodes[d.id]));
         });
 
         cgtNodes.push([]);
         var k = 0;
-        rtNodes.reverse().forEach(function (n) {
+        rtNodes.forEach(function (n) {
             if (nodes[n.id].col === layer) {
                 cgtNodes[k].push(nodes[n.id]);
             } else if (nodes[n.id].col < layer) {
@@ -142,6 +142,37 @@ provenanceVisualizationModule = function () {
             } else {
                 k++;
                 layer++;
+                cgtNodes.push([]);
+                cgtNodes[k].push(nodes[n.id]);
+            }
+        });
+        return cgtNodes;
+    };
+
+    /**
+     * Group nodes by layers into a 2d array.
+     * @param tNodes Topological sorted nodes.
+     * @returns {Array} Layer grouped array of nodes.
+     */
+    var groupNodesByColLeftToRight = function (tNodes) {
+        var layer = 0,
+            cgtNodes = [],
+            rtNodes = [];
+
+        tNodes.forEach(function (d) {
+            rtNodes.push(copyNode(d));
+        });
+
+        cgtNodes.push([]);
+        var k = 0;
+        rtNodes.forEach(function (n) {
+            if (nodes[n.id].col === layer) {
+                cgtNodes[k].push(nodes[n.id]);
+            } else if (nodes[n.id].col > layer) {
+                cgtNodes[nodes[n.id].col].push(nodes[n.id]);
+            } else {
+                k++;
+                layer--;
                 cgtNodes.push([]);
                 cgtNodes[k].push(nodes[n.id]);
             }
@@ -282,16 +313,9 @@ provenanceVisualizationModule = function () {
                 var succs = nodeLinkSuccMap[bclgNodes[l][i].id];
                 if (succs.length !== 0) {
                     if (succs.length % 2 === 0) {
-                        /* nodes[bclgNodes[l][i].id].neighbors = [parseInt(succs.length / 2 - 1, 10), parseInt(succs.length / 2, 10)]; */
                         links[succs[parseInt(succs.length / 2 - 1, 10)]].neighbor = true;
-                        /* TODO: DEBUG: Revise second neighbor when even. */
-                        /* links[succs[parseInt(succs.length / 2, 10)]].neighbor = true; */
-                    } else {
-                        /* nodes[bclgNodes[l][i].id].neighbors = [parseInt(succs.length / 2, 10)]; */
-                        links[succs[parseInt(succs.length / 2, 10)]].neighbor = true;
                     }
-                } else {
-                    nodes[bclgNodes[l][i].id].neighbors = [];
+                    links[succs[parseInt(succs.length / 2, 10)]].neighbor = true;
                 }
                 i++;
             }
@@ -403,7 +427,6 @@ provenanceVisualizationModule = function () {
         var l = 1;
         while (l < bclgNodes.length) {
             var i = 0,
-                j = 0,
                 jMax = -1,
                 iCur = -1;
             while (i < bclgNodes[l].length) {
@@ -479,6 +502,7 @@ provenanceVisualizationModule = function () {
                         if (curLink.length === 0) {
                             curLink = -2;
                         } else {
+                            /* Greedy choice for neighbor when there exist two. */
                             nodes[links[curLink[0]].source].row = rootRow;
                             curNode = links[curLink[0]].source;
                         }
@@ -500,14 +524,14 @@ provenanceVisualizationModule = function () {
 
     /* Code cleanup. */
     /**
-     * Balance y-coordinates for each layer by median heuristic.
+     * Balance y-coordinates for each layer by mean of in- and outgoing links.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      */
     var balanceLayout = function (bclgNodes) {
 
         var traverseShift = function (rowStart, shiftAmount) {
-            bclgNodes.forEach(function (lg, i) {
-                lg.forEach(function (n, j) {
+            bclgNodes.forEach(function (lg) {
+                lg.forEach(function (n) {
                     if (n.row >= rowStart) {
                         n.row += shiftAmount;
                     }
@@ -522,21 +546,6 @@ provenanceVisualizationModule = function () {
                 return null;
             }
         };
-
-        bclgNodes.forEach(function (lg) {
-            lg.forEach(function (n) {
-
-                /* Sort lookup maps first. */
-                if (nodeSuccMap[n.id].length > 0)
-                    nodeSuccMap[n.id].sort(sortNodesByRow);
-                /*                if (nodeLinkSuccMap[n.id].length > 0)
-                 nodeLinkSuccMap[n.id].sort(sortNodesByRow);*/
-                if (nodePredMap[n.id].length > 0)
-                    nodePredMap[n.id].sort(sortNodesByRow);
-                /*                if (nodeLinkPredMap[n.id].length > 0)
-                 nodeLinkPredMap[n.id].sort(sortNodesByRow);*/
-            });
-        });
 
         bclgNodes.forEach(function (lg, i) {
             lg.forEach(function (n, j) {
@@ -553,7 +562,7 @@ provenanceVisualizationModule = function () {
                     rootRow = min + (max - min) / 2;
 
                     /* If any node in the current layer is less than 1 unit near the new position
-                     * add a new row and shift every node in all layers by one row. */
+                     add a new row and shift every node in all layers by one row. */
 
                     /* Check if shift is necessary for the current layer. */
                     var nearestDist = 1,
@@ -562,12 +571,15 @@ provenanceVisualizationModule = function () {
                         if (j !== k && Math.abs(cn.row - rootRow) < nearestDist) {
                             nearestDist = Math.abs(cn.row - rootRow);
                             conflictRow = cn.row;
+                            rootRow = Math.round(rootRow);
                         }
                     });
 
-                    if (conflictRow !== -1) {
-                        traverseShift(rootRow, 1);
-                    }
+                    /* TODO: Exclude shift for the moment. */
+                    /*if (conflictRow !== -1) {
+                     console.log("TRAVERSE " + rootRow);
+                     traverseShift(rootRow, 1);
+                     }*/
                     nodes[n.id].row = rootRow;
                 }
                 /* No split left. */
@@ -583,47 +595,47 @@ provenanceVisualizationModule = function () {
                         nodes[curNode].row = rootRow;
                     }
 
-                    /* TODO: Check paths near to the split and consider shifting. */
                     /* Split left. */
+                    /* TODO: Exclude for the moment. */
                 } else if (nodePredMap[n.id].length > 1) {
-                    degree = nodePredMap[n.id].length;
-                    rootRow = n.row;
+                    /*degree = nodePredMap[n.id].length;
+                     rootRow = n.row;
 
-                    var step = 1,
-                        initialStepEven = 0.5;
+                     var step = 1,
+                     initialStepEven = 0.5;
 
-                    if (degree % 2 === 0) {
-                        nodes[nodePredMap[n.id][degree / 2 - 1]].row = rootRow - initialStepEven;
-                    } else {
-                        nodes[nodePredMap[n.id][degree / 2]].row = rootRow;
-                    }
+                     if (degree % 2 === 0) {
+                     nodes[nodePredMap[n.id][degree / 2 - 1]].row = rootRow - initialStepEven;
+                     } else {
+                     nodes[nodePredMap[n.id][degree / 2]].row = rootRow;
+                     }
 
-                    var i = 0;
-                    for (; i < degree; i++) {
-                        if (degree % 2 === 0) {
-                            if (i === degree / 2 - 1) {
-                                nodes[nodePredMap[n.id][degree / 2 - 1]].row = rootRow - initialStepEven;
-                            } else if (i === degree / 2) {
-                                nodes[nodePredMap[n.id][degree / 2]].row = rootRow + initialStepEven;
-                            } else {
-                                if (i < degree / 2 - 1) {
-                                    nodes[nodePredMap[n.id][i]].row = rootRow - step * (degree / 2 - i - initialStepEven);
-                                } else {
-                                    nodes[nodePredMap[n.id][i]].row = rootRow + step * (initialStepEven + i - degree / 2);
-                                }
-                            }
-                        } else {
-                            if (i === degree / 2) {
-                                nodes[nodePredMap[n.id][degree / 2]].row = rootRow;
-                            } else {
-                                if (i < degree / 2) {
-                                    nodes[nodePredMap[n.id][i]].row = rootRow - step * (degree / 2 - i - initialStepEven);
-                                } else {
-                                    nodes[nodePredMap[n.id][i]].row = rootRow + step * (initialStepEven + i - degree / 2);
-                                }
-                            }
-                        }
-                    }
+                     var i = 0;
+                     for (; i < degree; i++) {
+                     if (degree % 2 === 0) {
+                     if (i === degree / 2 - 1) {
+                     nodes[nodePredMap[n.id][degree / 2 - 1]].row = rootRow - initialStepEven;
+                     } else if (i === degree / 2) {
+                     nodes[nodePredMap[n.id][degree / 2]].row = rootRow + initialStepEven;
+                     } else {
+                     if (i < degree / 2 - 1) {
+                     nodes[nodePredMap[n.id][i]].row = rootRow - step * (degree / 2 - i - initialStepEven);
+                     } else {
+                     nodes[nodePredMap[n.id][i]].row = rootRow + step * (initialStepEven + i - degree / 2);
+                     }
+                     }
+                     } else {
+                     if (i === degree / 2) {
+                     nodes[nodePredMap[n.id][degree / 2]].row = rootRow;
+                     } else {
+                     if (i < degree / 2) {
+                     nodes[nodePredMap[n.id][i]].row = rootRow - step * (degree / 2 - i - initialStepEven);
+                     } else {
+                     nodes[nodePredMap[n.id][i]].row = rootRow + step * (initialStepEven + i - degree / 2);
+                     }
+                     }
+                     }
+                     }*/
                 }
             });
         });
@@ -647,7 +659,7 @@ provenanceVisualizationModule = function () {
      * Layout node columns.
      * @param lgNodes Layer grouped array of nodes.
      */
-    var placeNodes = function (lgNodes) {
+    var computeLayout = function (lgNodes) {
 
         /* Init row placement. */
         initRowPlacement(lgNodes);
@@ -825,6 +837,40 @@ provenanceVisualizationModule = function () {
             rtNodes = [];
 
         tNodes.forEach(function (d) {
+            rtNodes.push(copyNode(nodes[d.id]));
+        });
+
+        rtNodes.forEach(function (n) {
+
+            /* Get outgoing neighbor. */
+            succ = nodeSuccMap[n.id];
+
+            if (succ.length === 0) {
+                nodes[n.id].col = layer;
+                n.col = layer;
+            } else {
+                var minSuccLayer = layer;
+                succ.forEach(function (s) {
+                    if (nodes[s].col > minSuccLayer) {
+                        minSuccLayer = nodes[s].col;
+                    }
+                });
+                nodes[n.id].col = minSuccLayer + 1;
+                n.col = minSuccLayer + 1;
+            }
+        });
+    };
+
+    /**
+     * Assign layers.
+     * @param tNodes Topology sorted array of nodes.
+     */
+    var assignLayersLeftToRight = function (tNodes) {
+        var layer = 0,
+            succ = [],
+            rtNodes = [];
+
+        tNodes.forEach(function (d) {
             rtNodes.push(copyNode(d));
         });
 
@@ -849,13 +895,94 @@ provenanceVisualizationModule = function () {
         });
     };
 
+
     /* TODO: Instead of copying nodes and deleting items from the collection, rewrite algorithm to only mark affected items. */
     /**
      * Linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
      * @param inputs Nodes which do not have any predecessing nodes.
      * @returns {*} If graph is acyclic, returns null; else returns topology sorted array of nodes.
      */
-    var sortTopological = function (inputs) {
+    var sortTopological = function (outputs) {
+        var s = [], /* Input set. */
+            l = [], /* Result set for sorted elements. */
+            t = [], /* Deep copy nodes, because we have to delete links from the graph. */
+            n = Object.create(null);
+
+        /* Deep copy arrays by value. */
+        outputs.forEach(function (outNode) {
+            var nodePreds = [];
+            nodePredMap[outNode.id].forEach(function (pp) {
+                nodePreds.push(pp);
+            });
+            s.push({id: outNode.id, p: nodePreds, s: []});
+        });
+
+        nodes.forEach(function (selNode) {
+            var nodePreds = [];
+            nodePredMap[selNode.id].forEach(function (pp) {
+                nodePreds.push(pp);
+            });
+            var nodeSuccs = [];
+            nodeSuccMap[selNode.id].forEach(function (ss) {
+                nodeSuccs.push(ss);
+            });
+            t.push({id: selNode.id, p: nodePreds, s: nodeSuccs});
+        });
+
+        /* To avoid definition of function in while loop below (added by NG). */
+        /* For each successor. */
+        var handleInputNodes = function (pred) {
+            var index = -1,
+                succs = t[pred].s;
+
+            /* For each parent (predecessor), remove edge n->m. Delete parent with p.uuid == n.uuid. */
+            succs.forEach(function (ss, k) {
+                if (ss == n.id) {
+                    index = k;
+                }
+            });
+
+            /* If parent of successor equals n, delete edge. */
+            if (index > -1) {
+                succs.splice(index, 1);
+            }
+
+            /* If there are no edges left, insert m into s. */
+            if (succs.length === 0) {
+                s.push(t[pred]);
+            }
+            /* Else, current successor has other parents to be processed first. */
+        };
+
+        /* While the input set is not empty. */
+        while (s.length > 0) {
+
+            /* Remove first item n. */
+            n = s.shift();
+
+            /* And push it into result set. */
+            l.push(n);
+
+            /* Get predecessor node set for n. */
+            n.p.forEach(handleInputNodes);
+        }
+
+        /* Handle cyclic graphs. */
+        if (s.length > 0) {
+            return null;
+        } else {
+            return l;
+        }
+    };
+
+    /* TODO: Instead of copying nodes and deleting items from the collection, rewrite algorithm to only mark affected items. */
+    /**
+     * Linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
+     * @param inputs Nodes which do not have any predecessing nodes.
+     * @returns {*} If graph is acyclic, returns null; else returns topology sorted array of nodes.
+     */
+    var sortTopologicalLeftToRight = function (inputs) {
+
         var s = [], /* Input set. */
             l = [], /* Result set for sorted elements. */
             cNodes = [], /* Deep copy nodes, because we have to delete links from the graph. */
@@ -909,7 +1036,7 @@ provenanceVisualizationModule = function () {
             }
         }
 
-        /* Handle non-acyclic graphs. */
+        /* Handle cyclic graphs. */
         if (s.length > 0) {
             return null;
         } else {
@@ -948,7 +1075,7 @@ provenanceVisualizationModule = function () {
             if (typeof nodeSuccMap[n.id] === "undefined") {
                 outputNodes.push(n);
 
-                /* Set sucessor maps for output nodes to an empty array. */
+                /* Set successor maps for output nodes to an empty array. */
                 nodeSuccMap[n.id] = [];
                 nodeLinkSuccMap[n.id] = [];
             }
@@ -1012,7 +1139,9 @@ provenanceVisualizationModule = function () {
     var createAnalysisNodes = function () {
         aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": true, "id": -1, "start": -1, "end": -1, "created": -1, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": []});
 
-        analyses.objects.forEach(function (a, i) {
+        analyses.objects.filter(function (a) {
+            return a.status === "SUCCESS";
+        }).forEach(function (a, i) {
             aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": true, "id": -i - 2, "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": []});
         });
     };
@@ -1115,23 +1244,13 @@ provenanceVisualizationModule = function () {
             }
         });
 
-        /* TODO: BUG: Handle Failed analyses. */
-        console.log(analysisNodeMap);
-
         aNodes.forEach(function (an) {
-
             /* Set nodes. */
-            console.log("Analysis# " + an.id + ": " + an.uuid);
-            console.log(analysisNodeMap[an.uuid]);
-
-            /* Handle Undefined. */
-            if (analysisNodeMap.hasOwnProperty(an.uuid) && typeof analysisNodeMap[an.uuid] !== "undefined") {
-                an.nodes = analysisNodeMap[an.uuid].map(function (d) {
-                    nodeAnalysisMap[d] = an.id;
-                    return nodes[d];
-                    /* flatten nodes objects. */
-                });
-            }
+            an.nodes = analysisNodeMap[an.uuid].map(function (d) {
+                nodeAnalysisMap[d] = an.id;
+                return nodes[d];
+                /* flatten nodes objects. */
+            });
 
             /* Set input nodes. */
             an.inputNodes = an.nodes.filter(function (n) {
@@ -1189,7 +1308,9 @@ provenanceVisualizationModule = function () {
      * Extract workflows from analyses. A workflow might be executed by multiple analyses.
      */
     var createWorkflowAnalysisMapping = function () {
-        analyses.objects.forEach(function (a) {
+        analyses.objects.filter(function (a) {
+            return a.status === "SUCCESS";
+        }).forEach(function (a) {
 
             /* Workflow -> analysis. */
             if (workflowAnalysisMap.hasOwnProperty(a.workflow__uuid)) {
@@ -1334,19 +1455,19 @@ provenanceVisualizationModule = function () {
         /* Update incident dom link elements. */
         an.predAnalyses.forEach(function (pan) {
             nodes[pan].outputNodes.forEach(function (n) {
-                    nodeLinkSuccMap[n.id].forEach(function (l) {
-                        if (nodeAnalysisMap[links[l].target] == an.id) {
-                            d3.select("#linkId-" + l).attr("d", function (l) {
-                                var pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
-                                if (Math.abs(nodes[l.source].x - d3.event.x) > cell.width) {
-                                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(d3.event.y, 10) + " L" + parseInt(d3.event.x, 10) + "," + parseInt(d3.event.y, 10));
-                                } else {
-                                    pathSegment = pathSegment.concat(" L" + parseInt(d3.event.x, 10) + "," + parseInt(d3.event.y, 10));
-                                }
-                                return pathSegment;
-                            });
-                        }
-                    });
+                nodeLinkSuccMap[n.id].forEach(function (l) {
+                    if (nodeAnalysisMap[links[l].target] == an.id) {
+                        d3.select("#linkId-" + l).attr("d", function (l) {
+                            var pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
+                            if (Math.abs(nodes[l.source].x - d3.event.x) > cell.width) {
+                                pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(d3.event.y, 10) + " L" + parseInt(d3.event.x, 10) + "," + parseInt(d3.event.y, 10));
+                            } else {
+                                pathSegment = pathSegment.concat(" L" + parseInt(d3.event.x, 10) + "," + parseInt(d3.event.y, 10));
+                            }
+                            return pathSegment;
+                        });
+                    }
+                });
             });
         });
 
@@ -1466,7 +1587,7 @@ provenanceVisualizationModule = function () {
     /**
      * Restore links where dummy nodes were inserted in order to process the layout.
      */
-    var restoreDataset = function () {
+    var removeDummyNodes = function () {
         /* Clean up links. */
         for (var i = 0; i < links.length; i++) {
             var l = links[i];
@@ -1526,6 +1647,65 @@ provenanceVisualizationModule = function () {
             nodes[target].parents = dP.parents;
         });
         dummyPaths = [];
+    };
+
+    /* TODO: */
+    /**
+     * Compress analysis horizontally.
+     */
+    var horizontalAnalysisAlignment = function () {
+        aNodes.forEach(function (an) {
+
+            var maxInput = d3.max(an.inputNodes, function (d) {
+                    return d.col;
+                }),
+                minInput = d3.min(an.inputNodes, function (d) {
+                    return d.col;
+                }),
+                maxOutput = d3.max(an.outputNodes, function (d) {
+                    return d.col;
+                }),
+                minOutput = d3.min(an.outputNodes, function (d) {
+                    return d.col;
+                });
+
+            an.outputNodes.filter(function (d) {
+                return d.col < maxOutput;
+            }).forEach(function (ano) {
+                var curNode = ano,
+                    j = 0;
+
+                /* Check for gaps. */
+                while (curNode.col < maxOutput && nodePredMap[curNode.id].length === 1) {
+                    var predNode = nodes[nodePredMap[curNode.id][0]];
+                    if (predNode.col - curNode.col > 1) {
+                        console.log(curNode.id + " -> " + predNode.id);
+
+                        var shiftCurNode = curNode,
+                            shiftEndNode = ano,
+                            colShift = maxOutput + j;
+
+                        /* Shift the gap to align with the maximum output column of this analysis. */
+                        while (shiftCurNode !== shiftEndNode) {
+                            shiftCurNode.col = colShift;
+
+                            shiftCurNode = nodes[nodeSuccMap[shiftCurNode.id]];
+                            colShift--;
+                        }
+                        ano.col = colShift;
+                    }
+                    j++;
+                    curNode = predNode;
+                }
+            });
+        });
+    };
+
+    /**
+     * Optimize layout.
+     */
+    var postprocessLayout = function () {
+        horizontalAnalysisAlignment();
     };
 
     /**
@@ -1716,7 +1896,10 @@ provenanceVisualizationModule = function () {
             .html(function (d) {
                 return "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.id + "</span><br>" +
                     "<strong>Name:</strong> <span style='color:#fa9b30'>" + d.name + "</span><br>" +
-                    "<strong>Type:</strong> <span style='color:#fa9b30'>" + d.fileType + "</span>";
+                    "<strong>Type:</strong> <span style='color:#fa9b30'>" + d.fileType + "</span><br>" +
+                    "<strong>DEBUG: Row:</strong> <span style='color:#fa9b30'>" + d.row + "</span><br>" +
+                    "<strong>DEBUG: Col:</strong> <span style='color:#fa9b30'>" + d.col + "</span><br>" +
+                    "<strong>DEBUG: BCOrder:</strong> <span style='color:#fa9b30'>" + d.bcOrder + "</span><br>";
             });
 
         /* Invoke tooltip on dom element. */
@@ -1906,7 +2089,7 @@ provenanceVisualizationModule = function () {
 
                 /* TODO: on dblclick, recompute layout. */
                 /* Topological order. */
-                var topNodes = sortTopological(inputNodes);
+                var topNodes = sortTopological(outputNodes);
 
                 /* Assign layers. */
                 assignLayers(topNodes);
@@ -1915,17 +2098,17 @@ provenanceVisualizationModule = function () {
                 addDummyNodes();
 
                 /* Recalculate layers including dummy nodes. */
-                topNodes = sortTopological(inputNodes);
+                topNodes = sortTopological(outputNodes);
                 assignLayers(topNodes);
 
                 /* Group nodes by layer. */
                 var layeredTopNodes = groupNodesByCol(topNodes);
 
                 /* Place vertices. */
-                placeNodes(layeredTopNodes);
+                computeLayout(layeredTopNodes);
 
                 /* Restore original dataset. */
-                restoreDataset();
+                removeDummyNodes();
 
                 /* Update layout. */
                 updateCanvas();
@@ -2134,7 +2317,7 @@ provenanceVisualizationModule = function () {
             createWorkflowAnalysisMapping();
 
             /* Topological order. */
-            var topNodes = sortTopological(inputNodes);
+            var topNodes = sortTopological(outputNodes);
 
             if (topNodes !== null) {
                 /* Assign layers. */
@@ -2144,23 +2327,26 @@ provenanceVisualizationModule = function () {
                 addDummyNodes();
 
                 /* Recalculate layers including dummy nodes. */
-                topNodes = sortTopological(inputNodes);
+                topNodes = sortTopological(outputNodes);
                 assignLayers(topNodes);
 
                 /* Group nodes by layer. */
                 var layeredTopNodes = groupNodesByCol(topNodes);
 
                 /* Place vertices. */
-                placeNodes(layeredTopNodes);
+                computeLayout(layeredTopNodes);
 
                 /* Restore original dataset. */
-                restoreDataset();
+                removeDummyNodes();
 
                 /* Extract analysis nodes. */
                 createAnalysisNodes();
 
                 /* Create analysis node mapping. */
                 createAnalysisNodeMapping();
+
+                /* Optimize layout. */
+                postprocessLayout();
 
                 /* Set display property of analysis connecting links. */
                 /* initLinkVisibility(); */
