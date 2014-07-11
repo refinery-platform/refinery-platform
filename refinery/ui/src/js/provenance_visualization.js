@@ -187,7 +187,7 @@ provenanceVisualizationModule = function () {
      * @returns {{name: string, nodeType: string, fileType: string, uuid: string, study: string, assay: string, row: number, col: number, parents: Array, id: number, doiFactor: number, hidden: boolean, bcOrder: number}} Node object.
      */
     var copyNode = function (node) {
-        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, doiFactor: -1, hidden: true, bcOrder: -1, x: 0, y: 0};
+        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, doiFactor: -1, hidden: true, bcOrder: -1, x: 0, y: 0, rowBK: {left: -1, right: -1}};
 
         newNode.name = node.name;
         newNode.nodeType = node.nodeType;
@@ -207,6 +207,8 @@ provenanceVisualizationModule = function () {
         newNode.bcOrder = node.bcOrder;
         newNode.x = node.x;
         newNode.y = node.y;
+        newNode.rowBK.left = node.rowBK.left;
+        newNode.rowBK.right = node.rowBK.right;
 
         return newNode;
     };
@@ -215,10 +217,28 @@ provenanceVisualizationModule = function () {
      * Init row placement.
      * @param lgNodes Layer grouped array of nodes.
      */
-    var initRowPlacement = function (lgNodes) {
+    var initRowPlacementLeft = function (lgNodes) {
         lgNodes.forEach(function (lg) {
             lg.forEach(function (n, i) {
-                nodes[n.id].row = i;
+                //nodes[n.id].row = i;
+                nodes[n.id].rowBK.left = i;
+            });
+        });
+    };
+
+    /**
+     * Init row placement.
+     * @param lgNodes Layer grouped array of nodes.
+     */
+    var initRowPlacementRight = function (lgNodes) {
+        var maxLayerLength = d3.max(lgNodes, function (lg) {
+            return lg.length;
+        });
+
+        lgNodes.forEach(function (lg) {
+            lg.forEach(function (n, i) {
+                //nodes[n.id].row = maxLayerLength - i - 1;
+                nodes[n.id].rowBK.right = maxLayerLength - lg.length + i;
             });
         });
     };
@@ -247,7 +267,7 @@ provenanceVisualizationModule = function () {
                     if (nodeSuccMap[n.id].length !== 0) {
                         degree = nodeSuccMap[n.id].length;
                         nodeSuccMap[n.id].forEach(function (s) {
-                            accRows += (nodes[s].row + 1);
+                            accRows += (nodes[s].rowBK.left + 1);
                         });
                     }
 
@@ -262,6 +282,11 @@ provenanceVisualizationModule = function () {
                     }
                 });
             }
+        });
+
+        /* Compute max layer width. */
+        var maxLayerLength = d3.max(lgNodes, function (lg) {
+            return lg.length;
         });
 
         /* Reorder nodes within layer. */
@@ -288,7 +313,8 @@ provenanceVisualizationModule = function () {
 
             /* Set row attribute after sorting. */
             barycenterOrderedNodes[i].forEach(function (n, k) {
-                nodes[n.id].row = k;
+                nodes[n.id].rowBK.left = k;
+                nodes[n.id].rowBK.right = maxLayerLength - barycenterOrderedNodes[i].length + k;
             });
 
         });
@@ -307,7 +333,7 @@ provenanceVisualizationModule = function () {
             var i = 0;
             while (i < bclgNodes[l].length) {
 
-                /* Mark links as neighbors:
+                /* Mark links as Neighbors:
                  the exact median if the length of successor nodes is odd,
                  else the middle two. */
                 var succs = nodeLinkSuccMap[bclgNodes[l][i].id];
@@ -324,28 +350,28 @@ provenanceVisualizationModule = function () {
     };
 
     /* TODO: Code cleanup. */
-    /* TODO: TESTING! */
     /**
      * Mark type 1 - and type 0 conflicts.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      */
-    var markConflicts = function (bclgNodes) {
+    var markConflictsLeft = function (bclgNodes) {
 
-        var excludeSharedNodeLinks = function (value) {
+        var excludeUpSharedNodeLinks = function (value) {
             return links[value].type0 ? false : true;
         };
 
         var filterNeighbors = function (value) {
-            return links[value].neighbor ? true : false;
+            return links[value].Neighbor ? true : false;
         };
 
-        var btSuccs = [],
-            cSuccs = [];
-        /* Backtracked successor links. */
-        var backtrackCrossings = function () {
-            btSuccs.forEach(function (bts) {
+        var btUpSuccs = [],
+            upSuccs = [];
+
+        /* Backtracked upper successor links. */
+        var backtrackUpCrossings = function () {
+            btUpSuccs.forEach(function (bts) {
                 /* Crossing. */
-                if (nodes[links[bts].target].row > jMax) {
+                if (nodes[links[bts].target].rowBK.left > jMax) {
                     /* TODO: HINT: Possible type 2 conflict which should be resolved via barycenter heuristic already. */
                     links[bts].type1 = true;
                     links[bts].neighbor = true;
@@ -353,34 +379,34 @@ provenanceVisualizationModule = function () {
             });
         };
 
-        var markLayerToLayerCrossings = function () {
+        var markUpCrossings = function () {
 
             /* Resolve shared nodes first. (Type 0 Conflict) */
-            var topMostPredRow = -1,
-                topMostLink = -1;
+            var leftMostPredRow = -1,
+                leftMostLink = -1;
 
-            /* Get top most link. */
-            cSuccs.forEach(function (s) {
-                if (nodeLinkPredMap[links[s].target].length > 1) {
-                    topMostPredRow = nodes[links[cSuccs[0]].source].row;
-                    nodeLinkPredMap[links[s].target].forEach(function (pl) {
+            /* Get left most link. */
+            upSuccs.forEach(function (ups) {
+                if (nodeLinkPredMap[links[ups].target].length > 1) {
+                    leftMostPredRow = nodes[links[upSuccs[0]].source].rowBK.left;
+                    nodeLinkPredMap[links[ups].target].forEach(function (pl) {
                         if (nodes[links[pl].target].nodeType !== "dummy" || nodes[links[pl].source].nodeType !== "dummy") {
 
                             /* Check top most link. */
-                            if (nodes[links[pl].source].row < topMostPredRow) {
-                                topMostPredRow = nodes[links[pl].source].row;
-                                topMostLink = pl;
+                            if (nodes[links[pl].source].rowBK.left < leftMostPredRow) {
+                                leftMostPredRow = nodes[links[pl].source].rowBK.left;
+                                leftMostLink = pl;
                             }
                         }
                     });
                 }
             });
 
-            /* Mark not top most links. */
-            cSuccs.forEach(function (s) {
-                if (nodeLinkPredMap[links[s].target].length > 1 && topMostLink !== -1) {
-                    nodeLinkPredMap[links[s].target].forEach(function (pl) {
-                        if (pl !== topMostLink) {
+            /* Mark all but left most links. */
+            upSuccs.forEach(function (ups) {
+                if (nodeLinkPredMap[links[ups].target].length > 1 && leftMostLink !== -1) {
+                    nodeLinkPredMap[links[ups].target].forEach(function (pl) {
+                        if (pl !== leftMostLink) {
                             links[pl].type0 = true;
                             links[pl].neighbor = false;
                         }
@@ -388,22 +414,21 @@ provenanceVisualizationModule = function () {
                 }
             });
 
-            /* Update cSuccs. */
-            cSuccs = cSuccs.filter(excludeSharedNodeLinks);
+            /* Update upSuccs. */
+            upSuccs = upSuccs.filter(excludeUpSharedNodeLinks);
 
             /* Resolve crossings. */
             var curjMax = jMax;
-            cSuccs.forEach(function (s) {
-                if (nodes[links[s].target].row >= jMax) {
-                    if (nodes[links[s].target].row > curjMax) {
-                        curjMax = nodes[links[s].target].row;
+            upSuccs.forEach(function (ups) {
+                if (nodes[links[ups].target].rowBK.left >= jMax) {
+                    if (nodes[links[ups].target].rowBK.left > curjMax) {
+                        curjMax = nodes[links[ups].target].row;
                     }
                     /* Crossing. */
                 } else {
-
                     /* Type 0 and 1 conflict: If link is an non-inner segment, mark link to be "removed". */
-                    if (bclgNodes[l][i].nodeType !== "dummy" || nodes[links[s].target].nodeType !== "dummy") {
-                        links[s].type1 = true;
+                    if (bclgNodes[upl][i].nodeType !== "dummy" || nodes[links[ups].target].nodeType !== "dummy") {
+                        links[ups].type1 = true;
 
                         /* If link is an inner segment, remove all non-inner segments before which are crossing it. */
                     } else {
@@ -412,8 +437,8 @@ provenanceVisualizationModule = function () {
                         for (m; m > 0; m--) {
                             if (m < i) {
                                 /* Get successors for m */
-                                btSuccs = nodeLinkSuccMap[bclgNodes[l][m].id].filter(filterNeighbors);
-                                backtrackCrossings();
+                                btUpSuccs = nodeLinkSuccMap[bclgNodes[upl][m].id].filter(filterNeighbors);
+                                backtrackUpCrossings();
                             }
                         }
 
@@ -423,45 +448,177 @@ provenanceVisualizationModule = function () {
             jMax = curjMax;
         };
 
-        /* Handle crossing conflicts (Type 0 and 1)*/
-        var l = 1;
-        while (l < bclgNodes.length) {
+
+        /* Handle crossing upper conflicts (Type 0 and 1)*/
+        var upl = 1;
+        while (upl < bclgNodes.length) {
             var i = 0,
                 jMax = -1,
                 iCur = -1;
-            while (i < bclgNodes[l].length) {
-                if (typeof bclgNodes[l][i] !== "undefined") {
+            while (i < bclgNodes[upl].length) {
+                if (typeof bclgNodes[upl][i] !== "undefined") {
                     iCur = i;
 
                     /* Crossing successor links. */
-                    cSuccs = nodeLinkSuccMap[bclgNodes[l][i].id].filter(filterNeighbors);
-                    markLayerToLayerCrossings();
+                    upSuccs = nodeLinkSuccMap[bclgNodes[upl][i].id].filter(filterNeighbors);
+                    markUpCrossings();
                 }
                 i++;
             }
-            l++;
+            upl++;
+        }
+    };
+
+    /* TODO: Code cleanup. */
+    /**
+     * Mark type 1 - and type 0 conflicts.
+     * @param bclgNodes Barycenter sorted layer grouped array of nodes.
+     */
+    var markConflictsRight = function (bclgNodes) {
+
+        var excludeUpSharedNodeLinks = function (value) {
+            return links[value].type0 ? false : true;
+        };
+
+        var filterNeighbors = function (value) {
+            return links[value].neighbor ? true : false;
+        };
+
+        var btUpSuccs = [],
+            upSuccs = [];
+
+        /* Backtracked upper successor links. */
+        var backtrackUpCrossings = function () {
+            btUpSuccs.forEach(function (bts) {
+                /* Crossing. */
+                if (nodes[links[bts].target].rowBK.right > jMax) {
+                    /* TODO: HINT: Possible type 2 conflict which should be resolved via barycenter heuristic already. */
+                    links[bts].type1 = true;
+                    links[bts].neighbor = true;
+                }
+            });
+        };
+
+
+        var markUpCrossings = function () {
+
+            /* Resolve shared nodes first. (Type 0 Conflict) */
+            var rightMostPredRow = -1,
+                rightMostLink = -1;
+
+            /* Get right most link. */
+            upSuccs.forEach(function (ups) {
+                if (nodeLinkPredMap[links[ups].target].length > 1) {
+                    rightMostPredRow = nodes[links[upSuccs[0]].source].rowBK.right;
+                    nodeLinkPredMap[links[ups].target].forEach(function (pl) {
+                        if (nodes[links[pl].target].nodeType !== "dummy" || nodes[links[pl].source].nodeType !== "dummy") {
+
+                            /* Check right most link. */
+                            if (nodes[links[pl].source].rowBK.right > rightMostPredRow) {
+                                rightMostPredRow = nodes[links[pl].source].rowBK.right;
+                                rightMostLink = pl;
+                            }
+                        }
+                    });
+                }
+            });
+
+            /* Mark all but right most links. */
+            upSuccs.forEach(function (ups) {
+                if (nodeLinkPredMap[links[ups].target].length > 1 && rightMostLink !== -1) {
+                    nodeLinkPredMap[links[ups].target].forEach(function (pl) {
+                        if (pl !== rightMostLink) {
+                            links[pl].type0 = true;
+                            links[pl].neighbor = false;
+                        }
+                    });
+                }
+            });
+
+            /* Update upSuccs. */
+            upSuccs = upSuccs.filter(excludeUpSharedNodeLinks);
+
+            /* Resolve crossings. */
+            var curjMax = jMax;
+            upSuccs.forEach(function (ups) {
+                if (nodes[links[ups].target].rowBK.right <= jMax) {
+                    if (nodes[links[ups].target].rowBK.right < curjMax) {
+                        curjMax = nodes[links[ups].target].rowBK.right;
+                    }
+                    /* Crossing. */
+                } else {
+
+                    /* Type 0 and 1 conflict: If link is an non-inner segment, mark link to be "removed". */
+                    if (bclgNodes[upl][i].nodeType !== "dummy" || nodes[links[ups].target].nodeType !== "dummy") {
+                        links[ups].type1 = true;
+
+                        /* If link is an inner segment, remove all non-inner segments before which are crossing it. */
+                    } else {
+                        /* Iterate back in current layer. */
+                        var m = i;
+                        for (m; m < bclgNodes[upl][i].length; m++) {
+                            if (m > i) {
+                                /* Get successors for m */
+                                btUpSuccs = nodeLinkSuccMap[bclgNodes[upl][m].id].filter(filterNeighbors);
+                                backtrackUpCrossings();
+                            }
+                        }
+
+                    }
+                }
+            });
+            jMax = curjMax;
+        };
+
+        /* Handle crossing upper conflicts (Type 0 and 1)*/
+        var upl = 1;
+        while (upl < bclgNodes.length) {
+            var i = bclgNodes[upl].length - 1,
+                jMax = bclgNodes[upl].length,
+                iCur = -1;
+            while (i > 0) {
+                if (typeof bclgNodes[upl][i] !== "undefined") {
+                    iCur = i;
+
+                    /* Crossing successor links. */
+                    upSuccs = nodeLinkSuccMap[bclgNodes[upl][i].id].filter(filterNeighbors);
+                    markUpCrossings();
+                }
+                i--;
+            }
+            upl++;
         }
     };
 
     /**
-     * Align each vertex with its chosen (left|right and upper/under) neighbor.
+     * Align each vertex with its chosen (left|right and upper/under) Neighbor.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      */
     var verticalAlignment = function (bclgNodes) {
         markCandidates(bclgNodes);
 
-        markConflicts(bclgNodes);
+        markConflictsLeft(bclgNodes);
+        formBlocks(bclgNodes, "left");
+        /* Reset conflicts. */
+        bclgNodes.forEach(function (lg) {
+            lg.forEach(function (n) {
+                n.type0 = false;
+                n.type1 = false;
+            });
+        });
+        markConflictsRight(bclgNodes);
+        formBlocks(bclgNodes, "right");
     };
 
     /**
      * After resolving conflicts, no crossings are left and connected paths are concatenated into blocks.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      */
-    var formBlocks = function (bclgNodes) {
+    var formBlocks = function (bclgNodes, alignment) {
 
         /* Horizontal paths build blocks with its rightmost node being the root.
-         * The root element does not own a neighbor link.
-         * Every child - determined by the neighbor mark of links,
+         * The root element does not own a Neighbor link.
+         * Every child - determined by the Neighbor mark of links,
          * will be placed in the exact same row as its root. */
 
         var isBlockRoot = function (value) {
@@ -472,29 +629,21 @@ provenanceVisualizationModule = function () {
             return links[value].neighbor ? true : false;
         };
 
+        /* UPPER */
+
         /* Iterate through graph layer by layer,
          * if node is root, iterate through block and place nodes into rows. */
-        bclgNodes.forEach(function (lg) {
-            lg.forEach(function (n, j) {
-                var succs = nodeLinkSuccMap[nodes[n.id].id].filter(isBlockRoot);
+        for (var l = 0; l < bclgNodes.length; l++) {
+            for (var i = 0; i < bclgNodes[l].length; i++) {
+                var succs = nodeLinkSuccMap[nodes[bclgNodes[l][i].id].id].filter(isBlockRoot);
 
                 if (succs.length === 0) {
-                    nodes[n.id].isBlockRoot = true;
+                    nodes[bclgNodes[l][i].id].isBlockRoot = true;
 
-                    /* Follow path through neighbors in predecessors and set row to root row. */
-                    var rootRow = nodes[n.id].row,
+                    /* Follow path through Neighbors in predecessors and set row to root row. */
+                    var rootRow = alignment === "left" ? nodes[bclgNodes[l][i].id].rowBK.left : nodes[bclgNodes[l][i].id].rowBK.right,
                         curLink = -1,
-                        curNode = n.id;
-
-                    /* If root is not an output node, compute row. */
-                    if (nodeLinkSuccMap[curNode].length !== 0) {
-                        if (j === 0) {
-                            rootRow = 0;
-                        } else {
-                            rootRow = lg[j - 1].row + 1;
-                        }
-                        nodes[curNode].row = rootRow;
-                    }
+                        curNode = bclgNodes[l][i].id;
 
                     /* Traverse. */
                     while (curLink !== -2) {
@@ -502,24 +651,21 @@ provenanceVisualizationModule = function () {
                         if (curLink.length === 0) {
                             curLink = -2;
                         } else {
-                            /* Greedy choice for neighbor when there exist two. */
-                            nodes[links[curLink[0]].source].row = rootRow;
-                            curNode = links[curLink[0]].source;
+                            /* Greedy choice for Neighbor when there exist two. */
+                            if (alignment === "left") {
+                                nodes[links[curLink[0]].source].rowBK.left = rootRow;
+                                //nodes[links[curLink[0]].source].row = rootRow;
+                                curNode = links[curLink[0]].source;
+                            } else {
+                                nodes[links[curLink[curLink.length - 1]].source].rowBK.right = rootRow;
+                                //nodes[links[curLink[curLink.length-1]].source].row = rootRow;
+                                curNode = links[curLink[curLink.length - 1]].source;
+                            }
                         }
                     }
                 }
-            });
-        });
-    };
-
-    /**
-     * Combine aligned nodes into blocks.
-     * Partition blocks into classes.
-     * @param bclgNodes Barycenter sorted layer grouped array of nodes.
-     */
-    var verticalCompaction = function (bclgNodes) {
-
-        formBlocks(bclgNodes);
+            }
+        }
     };
 
     /* Code cleanup. */
@@ -528,117 +674,42 @@ provenanceVisualizationModule = function () {
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      */
     var balanceLayout = function (bclgNodes) {
+        bclgNodes.forEach(function (lg) {
+            lg.forEach(function (n) {
+                var rootRow = -1;
 
-        var traverseShift = function (rowStart, shiftAmount) {
-            bclgNodes.forEach(function (lg) {
-                lg.forEach(function (n) {
-                    if (n.row >= rowStart) {
-                        n.row += shiftAmount;
-                    }
-                });
-            });
-        };
+                if (nodes[n.id].isBlockRoot) {
+                    var curNode = n.id,
+                        minRow = Math.min(nodes[curNode].rowBK.left, nodes[curNode].rowBK.right),
+                        delta = Math.abs(nodes[curNode].rowBK.left - nodes[curNode].rowBK.right) / 2;
 
-        var sortNodesByRow = function (a, b) {
-            if (typeof nodes[a] !== "undefined" && typeof nodes[b] !== "undefined") {
-                return nodes[a].row - nodes[b].row;
-            } else {
-                return null;
-            }
-        };
+                    rootRow = Math.round(minRow + delta);
+                    console.log(n.id + ": " + rootRow + " (" + nodes[curNode].rowBK.left + "," + nodes[curNode].rowBK.right + ")");
 
-        bclgNodes.forEach(function (lg, i) {
-            lg.forEach(function (n, j) {
-                var degree = 0,
-                    min = 0,
-                    max = 0,
-                    rootRow;
-
-                /* Split right. */
-                if (nodeSuccMap[n.id].length > 1) {
-                    degree = nodeSuccMap[n.id].length;
-                    min = nodes[nodeSuccMap[n.id][0]].row;
-                    max = nodes[nodeSuccMap[n.id][degree - 1]].row;
-                    rootRow = min + (max - min) / 2;
-
-                    /* If any node in the current layer is less than 1 unit near the new position
-                     add a new row and shift every node in all layers by one row. */
-
-                    /* Check if shift is necessary for the current layer. */
-                    var nearestDist = 1,
-                        conflictRow = -1;
-                    lg.forEach(function (cn, k) {
-                        if (j !== k && Math.abs(cn.row - rootRow) < nearestDist) {
-                            nearestDist = Math.abs(cn.row - rootRow);
-                            conflictRow = cn.row;
-                            rootRow = Math.round(rootRow);
-                        }
-                    });
-
-                    /* TODO: Exclude shift for the moment. */
-                    /*if (conflictRow !== -1) {
-                     console.log("TRAVERSE " + rootRow);
-                     traverseShift(rootRow, 1);
-                     }*/
-                    nodes[n.id].row = rootRow;
-                }
-                /* No split left. */
-                if (nodePredMap[n.id].length === 1) {
-                    var curNode = n.id;
-                    rootRow = nodes[curNode].row;
-
-                    while (nodePredMap[curNode].length === 1) {
+                    while (nodePredMap[curNode].length !== 0) {
                         nodes[curNode].row = rootRow;
                         curNode = nodePredMap[curNode][0];
                     }
                     if (nodePredMap[curNode].length === 0) {
                         nodes[curNode].row = rootRow;
                     }
-
-                    /* Split left. */
-                    /* TODO: Exclude for the moment. */
-                } else if (nodePredMap[n.id].length > 1) {
-                    /*degree = nodePredMap[n.id].length;
-                     rootRow = n.row;
-
-                     var step = 1,
-                     initialStepEven = 0.5;
-
-                     if (degree % 2 === 0) {
-                     nodes[nodePredMap[n.id][degree / 2 - 1]].row = rootRow - initialStepEven;
-                     } else {
-                     nodes[nodePredMap[n.id][degree / 2]].row = rootRow;
-                     }
-
-                     var i = 0;
-                     for (; i < degree; i++) {
-                     if (degree % 2 === 0) {
-                     if (i === degree / 2 - 1) {
-                     nodes[nodePredMap[n.id][degree / 2 - 1]].row = rootRow - initialStepEven;
-                     } else if (i === degree / 2) {
-                     nodes[nodePredMap[n.id][degree / 2]].row = rootRow + initialStepEven;
-                     } else {
-                     if (i < degree / 2 - 1) {
-                     nodes[nodePredMap[n.id][i]].row = rootRow - step * (degree / 2 - i - initialStepEven);
-                     } else {
-                     nodes[nodePredMap[n.id][i]].row = rootRow + step * (initialStepEven + i - degree / 2);
-                     }
-                     }
-                     } else {
-                     if (i === degree / 2) {
-                     nodes[nodePredMap[n.id][degree / 2]].row = rootRow;
-                     } else {
-                     if (i < degree / 2) {
-                     nodes[nodePredMap[n.id][i]].row = rootRow - step * (degree / 2 - i - initialStepEven);
-                     } else {
-                     nodes[nodePredMap[n.id][i]].row = rootRow + step * (initialStepEven + i - degree / 2);
-                     }
-                     }
-                     }
-                     }*/
                 }
             });
         });
+
+
+        /* TODO: Every analysis has its own root? Especially when a split happens between two different analyses.*/
+
+        /* TODO: When centering at a split, check block-class with occupied rows/cols (Compaction). */
+
+        /* TODO: Form classes for blocks and adjust. */
+
+        /* TODO: Shift right aligned analyses (w/o succ analysis) to the left. */
+
+        /* TODO: Try to compress analyes vertically. */
+
+        /* TODO: For each analysis (having only one predecessor as well as successor analysis) adjust rows for splits. */
+
     };
 
     /* TODO: Vertical coordinate assignment. [Brandes and Köpf 2002] */
@@ -650,8 +721,6 @@ provenanceVisualizationModule = function () {
 
         verticalAlignment(bclgNodes);
 
-        verticalCompaction(bclgNodes);
-
         balanceLayout(bclgNodes);
     };
 
@@ -662,7 +731,10 @@ provenanceVisualizationModule = function () {
     var computeLayout = function (lgNodes) {
 
         /* Init row placement. */
-        initRowPlacement(lgNodes);
+        initRowPlacementLeft(lgNodes);
+
+        /* Init row placement. */
+        initRowPlacementRight(lgNodes);
 
         /* Minimize edge crossings. */
         var bclgNodes = oneSidedCrossingMinimisation(lgNodes);
@@ -752,11 +824,13 @@ provenanceVisualizationModule = function () {
                         assay: curAssay,
                         parents: (i === 0) ? [nodes[l.source].uuid] : ["dummyNode-" + predNode],
                         row: -1,
+                        rowBK: {left: -1, right: -1},
                         col: curCol + 1,
                         id: newNodeId + i,
                         analysis: curAnalysis,
                         doiFactor: -1,
-                        hidden: false
+                        hidden: false,
+                        bcOrder: -1
                     });
 
                     /* Update node maps. */
@@ -1196,6 +1270,7 @@ provenanceVisualizationModule = function () {
                 return y.replace(/\/api\/v1\/node\//g, "").replace(/\//g, "");
             }),
             row: -1,
+            rowBK: {left: -1, right: -1},
             col: -1,
             id: nodeId,
             analysis: (nodeObj.analysis_uuid !== null) ? nodeObj.analysis_uuid : "dataset",
@@ -1679,7 +1754,6 @@ provenanceVisualizationModule = function () {
                 while (curNode.col < maxOutput && nodePredMap[curNode.id].length === 1) {
                     var predNode = nodes[nodePredMap[curNode.id][0]];
                     if (predNode.col - curNode.col > 1) {
-                        console.log(curNode.id + " -> " + predNode.id);
 
                         var shiftCurNode = curNode,
                             shiftEndNode = ano,
