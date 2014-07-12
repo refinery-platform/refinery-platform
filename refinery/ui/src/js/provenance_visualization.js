@@ -736,52 +736,42 @@ provenanceVisualizationModule = function () {
 
             if (gapLength > 1) {
 
-                var backedUp = false;
-                dummyPaths.forEach(function (dP) {
-                    if (dP.source.id === l.source) {
-                        backedUp = true;
-                    }
-                });
-
-                if (!backedUp) {
-                    /* Backup link. */
-                    dummyPaths.push({
-                        id: l.id,
-                        source: ({
-                            id: l.source,
-                            predNodes: nodePredMap[l.source].map(function (p) {
-                                return p;
-                            }),
-                            predNodeLinks: nodeLinkPredMap[l.source].map(function (p) {
-                                return p;
-                            }),
-                            succNodes: nodeSuccMap[l.source].map(function (s) {
-                                return s;
-                            }),
-                            succNodeLinks: nodeLinkSuccMap[l.source].map(function (s) {
-                                return s;
-                            })
-                        }),
-                        target: ({
-                            id: l.target,
-                            predNodes: nodePredMap[l.target].map(function (p) {
-                                return p;
-                            }),
-                            predNodeLinks: nodeLinkPredMap[l.target].map(function (p) {
-                                return p;
-                            }),
-                            succNodes: nodeSuccMap[l.target].map(function (s) {
-                                return s;
-                            }),
-                            succNodeLinks: nodeLinkSuccMap[l.target].map(function (s) {
-                                return s;
-                            })
-                        }),
-                        parents: nodes[l.target].parents.map(function (p) {
+                dummyPaths.push({
+                    id: l.id,
+                    source: ({
+                        id: l.source,
+                        predNodes: nodePredMap[l.source].map(function (p) {
                             return p;
+                        }),
+                        predNodeLinks: nodeLinkPredMap[l.source].map(function (p) {
+                            return p;
+                        }),
+                        succNodes: nodeSuccMap[l.source].map(function (s) {
+                            return s;
+                        }),
+                        succNodeLinks: nodeLinkSuccMap[l.source].map(function (s) {
+                            return s;
                         })
-                    });
-                }
+                    }),
+                    target: ({
+                        id: l.target,
+                        predNodes: nodePredMap[l.target].map(function (p) {
+                            return p;
+                        }),
+                        predNodeLinks: nodeLinkPredMap[l.target].map(function (p) {
+                            return p;
+                        }),
+                        succNodes: nodeSuccMap[l.target].map(function (s) {
+                            return s;
+                        }),
+                        succNodeLinks: nodeLinkSuccMap[l.target].map(function (s) {
+                            return s;
+                        })
+                    }),
+                    parents: nodes[l.target].parents.map(function (p) {
+                        return p;
+                    })
+                });
 
                 /* Dummy nodes are affiliated with the source node of the link in context. */
                 var newNodeId = nodes.length,
@@ -1777,7 +1767,7 @@ provenanceVisualizationModule = function () {
             });
 
             /* Shift when gap. */
-            if (rightMostPredCol - leftMostInputCol > 1) {
+            if (rightMostPredCol - leftMostInputCol > 1 && an.succAnalyses.length === 0) {
                 an.nodes.forEach(function (n) {
                     n.col += rightMostPredCol - leftMostInputCol - 1;
                 });
