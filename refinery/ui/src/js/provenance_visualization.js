@@ -700,6 +700,8 @@ provenanceVisualizationModule = function () {
      * Add dummy vertices.
      */
     var addDummyNodes = function () {
+
+
         links.forEach(function (l) {
             /* When the link is longer than one column, add dummy nodes. */
             var gapLength = Math.abs(nodes[l.source].col - nodes[l.target].col);
@@ -1553,11 +1555,11 @@ provenanceVisualizationModule = function () {
             var source = links[dP.id].source,
                 target = links[dP.id].target;
 
-            nodePredMap[target] = dP.target.predNodes;
-            nodeLinkPredMap[target] = dP.target.predNodeLinks;
-            nodeSuccMap[source] = dP.source.succNodes;
-            nodeLinkSuccMap[source] = dP.source.succNodeLinks;
-            nodes[target].parents = dP.parents;
+            nodePredMap[target] = nodePredMap[target].concat(dP.target.predNodes);
+            nodeLinkPredMap[target] = nodeLinkPredMap[target].concat(dP.target.predNodeLinks);
+            nodeSuccMap[source] = nodeSuccMap[source].concat(dP.source.succNodes);
+            nodeLinkSuccMap[source] = nodeLinkSuccMap[source].concat(dP.source.succNodeLinks);
+            nodes[target].parents = nodes[target].parents.concat(dP.parents);
         });
         dummyPaths = [];
     };
@@ -1612,8 +1614,9 @@ provenanceVisualizationModule = function () {
                 return ain.col;
             });
             var rightMostPredCol = layoutDepth;
-            an.inputNodes.forEach(function (ain) {
 
+
+            an.inputNodes.forEach(function (ain) {
                 var curMin = d3.min(nodePredMap[ain.id].map(function (pn) {
                     return nodes[pn];
                 }), function (ainpn) {
@@ -1631,6 +1634,23 @@ provenanceVisualizationModule = function () {
                     n.col += rightMostPredCol - leftMostInputCol - 1;
                 });
             }
+        });
+    };
+
+    /**
+     * Try to center analysis via grid lookup.
+     */
+    var centerAnalysisOnRightSplit = function () {
+        aNodes.forEach(function (an) {
+            /*console.log(an.id);
+             console.log(an.outputNodes);*/
+            an.outputNodes.forEach(function (ano) {
+
+                /* Split right. */
+                if (nodeSuccMap[ano.id].length > 1) {
+
+                }
+            });
         });
     };
 
@@ -1661,6 +1681,8 @@ provenanceVisualizationModule = function () {
         leftShiftAnalysis();
 
         createNodeGrid();
+
+        centerAnalysisOnRightSplit();
 
         /* TODO: When centering at a split, check block-class with occupied rows/cols (Compaction). */
         /* TODO: Form classes for blocks and rearange analysis. */
