@@ -275,7 +275,7 @@ provenanceVisualizationModule = function () {
             /* Set row attribute after sorting. */
             barycenterOrderedNodes[i].forEach(function (n, k) {
                 nodes[n.id].rowBK.left = k;
-                nodes[n.id].rowBK.right = layoutDepth - barycenterOrderedNodes[i].length + k;
+                nodes[n.id].rowBK.right = layoutWidth - barycenterOrderedNodes[i].length + k;
             });
 
         });
@@ -668,11 +668,11 @@ provenanceVisualizationModule = function () {
      * @param lgNodes Layer grouped array of nodes.
      */
     var setGridLayoutDimensions = function (lgNodes) {
-        layoutDepth = d3.max(lgNodes, function (lg) {
+        layoutWidth = d3.max(lgNodes, function (lg) {
             return lg.length;
         });
 
-        layoutWidth = lgNodes.length;
+        layoutDepth = lgNodes.length;
     };
 
     /**
@@ -1569,8 +1569,8 @@ provenanceVisualizationModule = function () {
         aNodes.forEach(function (an) {
 
             var maxOutput = d3.max(an.outputNodes, function (d) {
-                    return d.col;
-                });
+                return d.col;
+            });
 
             an.outputNodes.filter(function (d) {
                 return d.col < maxOutput;
@@ -1584,11 +1584,10 @@ provenanceVisualizationModule = function () {
                     if (predNode.col - curNode.col > 1) {
 
                         var shiftCurNode = curNode,
-                            shiftEndNode = ano,
                             colShift = maxOutput + j;
 
                         /* Shift the gap to align with the maximum output column of this analysis. */
-                        while (shiftCurNode !== shiftEndNode) {
+                        while (shiftCurNode !== ano) {
                             shiftCurNode.col = colShift;
 
                             shiftCurNode = nodes[nodeSuccMap[shiftCurNode.id]];
@@ -1614,11 +1613,13 @@ provenanceVisualizationModule = function () {
             });
             var rightMostPredCol = layoutDepth;
             an.inputNodes.forEach(function (ain) {
-                var curMin = d3.min(nodePredMap[ain.id].map(function (n) {
-                    return nodes[n];
+
+                var curMin = d3.min(nodePredMap[ain.id].map(function (pn) {
+                    return nodes[pn];
                 }), function (ainpn) {
                     return ainpn.col;
                 });
+
                 if (curMin < rightMostPredCol) {
                     rightMostPredCol = curMin;
                 }
@@ -1637,9 +1638,9 @@ provenanceVisualizationModule = function () {
      * Maps the column/row index to nodes.
      */
     var createNodeGrid = function () {
-        for (var i = 0; i < layoutWidth; i++) {
+        for (var i = 0; i < layoutDepth; i++) {
             nodeGridMap.push([]);
-            for (var j = 0; j < layoutDepth; j++) {
+            for (var j = 0; j < layoutWidth; j++) {
                 nodeGridMap[i].push([]);
                 nodeGridMap[i][j] = "undefined";
             }
