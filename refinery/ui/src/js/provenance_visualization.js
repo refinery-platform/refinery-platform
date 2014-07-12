@@ -154,37 +154,6 @@ provenanceVisualizationModule = function () {
     };
 
     /**
-     * Group nodes by layers into a 2d array.
-     * @param tNodes Topological sorted nodes.
-     * @returns {Array} Layer grouped array of nodes.
-     */
-    var groupNodesByColLeftToRight = function (tNodes) {
-        var layer = firstLayer,
-            cgtNodes = [],
-            rtNodes = [];
-
-        tNodes.forEach(function (d) {
-            rtNodes.push(copyNode(d));
-        });
-
-        cgtNodes.push([]);
-        var k = 0;
-        rtNodes.forEach(function (n) {
-            if (nodes[n.id].col === layer) {
-                cgtNodes[k].push(nodes[n.id]);
-            } else if (nodes[n.id].col > layer) {
-                cgtNodes[nodes[n.id].col].push(nodes[n.id]);
-            } else {
-                k++;
-                layer--;
-                cgtNodes.push([]);
-                cgtNodes[k].push(nodes[n.id]);
-            }
-        });
-        return cgtNodes;
-    };
-
-    /**
      * Deep copy node data structure.
      * @param node Node object.
      * @returns {{name: string, nodeType: string, fileType: string, uuid: string, study: string, assay: string, row: number, col: number, parents: Array, id: number, doiFactor: number, hidden: boolean, bcOrder: number, x: number, y: number, rowBK: {left: number, right: number}, isBlockRoot: boolean}}
@@ -598,8 +567,9 @@ provenanceVisualizationModule = function () {
     };
 
     /**
-     * After resolving conflicts, no crossings are left and connected paths are concatenated into blocks.
+     * * After resolving conflicts, no crossings are left and connected paths are concatenated into blocks.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
+     * @param alignment Left or right aligned layout initialization.
      */
     var formBlocks = function (bclgNodes, alignment) {
 
@@ -909,43 +879,8 @@ provenanceVisualizationModule = function () {
     };
 
     /**
-     * Assign layers.
-     * @param tNodes Topology sorted array of nodes.
-     */
-    var assignLayersLeftToRight = function (tNodes) {
-        var layer = 0,
-            succ = [],
-            rtNodes = [];
-
-        tNodes.forEach(function (d) {
-            rtNodes.push(copyNode(d));
-        });
-
-        rtNodes.reverse().forEach(function (n) {
-
-            /* Get outgoing neighbor. */
-            succ = nodeSuccMap[nodeMap[n.uuid]];
-
-            if (succ.length === 0) {
-                nodes[n.id].col = layer;
-                n.col = layer;
-            } else {
-                var minSuccLayer = layer;
-                succ.forEach(function (s) {
-                    if (nodes[s].col > minSuccLayer) {
-                        minSuccLayer = nodes[s].col;
-                    }
-                });
-                nodes[n.id].col = minSuccLayer + 1;
-                n.col = minSuccLayer + 1;
-            }
-        });
-    };
-
-
-    /**
      * Linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
-     * @param inputs Nodes which do not have any predecessing nodes.
+     * @param outputs Nodes which do not have any successor nodes.
      * @returns {*} If graph is acyclic, returns null; else returns topology sorted array of nodes.
      */
     var sortTopological = function (outputs) {
@@ -1011,74 +946,6 @@ provenanceVisualizationModule = function () {
 
             /* Get predecessor node set for n. */
             n.p.forEach(handleInputNodes);
-        }
-
-        /* Handle cyclic graphs. */
-        if (s.length > 0) {
-            return null;
-        } else {
-            return l;
-        }
-    };
-
-    /**
-     * Linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
-     * @param inputs Nodes which do not have any predecessing nodes.
-     * @returns {*} If graph is acyclic, returns null; else returns topology sorted array of nodes.
-     */
-    var sortTopologicalLeftToRight = function (inputs) {
-
-        var s = [], /* Input set. */
-            l = [], /* Result set for sorted elements. */
-            cNodes = [], /* Deep copy nodes, because we have to delete links from the graph. */
-            n = Object.create(null);
-
-        /* Deep copy arrays by value. */
-        inputs.forEach(function (inNode) {
-            s.push(copyNode(inNode));
-        });
-        nodes.forEach(function (selNode) {
-            cNodes.push(copyNode(selNode));
-        });
-
-
-        /* To avoid definition of function in while loop below (added by NG). */
-        /* For each successor. */
-        var handleOutputNodes = function (m) {
-            var index = -1;
-            /* For each parent (predecessor), remove edge n->m. Delete parent with p.uuid == n.uuid. */
-            cNodes[m].parents.forEach(function (p, i) {
-                if (p == n.uuid) {
-                    index = i;
-                }
-            });
-
-            /* If parent of successor equals n, delete edge. */
-            if (index > -1) {
-                cNodes[m].parents.splice(index, 1);
-            }
-
-            /* If there are no edges left, insert m into s. */
-            if (cNodes[m].parents.length === 0) {
-                s.push(cNodes[m]);
-            }
-            /* Else, current successor has other parents to be processed first. */
-        };
-
-        /* While the input set is not empty. */
-        while (s.length > 0) {
-
-            /* Remove first item n. */
-            n = s.shift();
-
-            /* And push it into result set. */
-            l.push(n);
-
-            /* Get successor node set for n. */
-            var succ = nodeSuccMap[nodeMap[n.uuid]];
-            if (succ.length !== 0) {
-                succ.forEach(handleOutputNodes);
-            }
         }
 
         /* Handle cyclic graphs. */
@@ -1701,16 +1568,7 @@ provenanceVisualizationModule = function () {
     var horizontalAnalysisAlignment = function () {
         aNodes.forEach(function (an) {
 
-            var maxInput = d3.max(an.inputNodes, function (d) {
-                    return d.col;
-                }),
-                minInput = d3.min(an.inputNodes, function (d) {
-                    return d.col;
-                }),
-                maxOutput = d3.max(an.outputNodes, function (d) {
-                    return d.col;
-                }),
-                minOutput = d3.min(an.outputNodes, function (d) {
+            var maxOutput = d3.max(an.outputNodes, function (d) {
                     return d.col;
                 });
 
@@ -1992,7 +1850,7 @@ provenanceVisualizationModule = function () {
      * On collapse/expand, translate layout.
      */
     var updateNodes = function () {
-        analysis.each(function (a, i) {
+        analysis.each(function () {
             d3.select(this).selectAll(".node").select("g")
                 .style("display", function (d) {
                     return d.hidden ? "none" : "inline";
