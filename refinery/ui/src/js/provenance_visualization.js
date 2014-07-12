@@ -33,7 +33,8 @@ provenanceVisualizationModule = function () {
         workflowAnalysisMap = d3.map(),
         analysisWorkflowMap = d3.map(),
         analysisNodeMap = d3.map(),
-        nodeAnalysisMap = d3.map();
+        nodeAnalysisMap = d3.map(),
+        nodeGridMap = [];
 
     /* Restore dummy path link. */
     var dummyPaths = [];
@@ -53,7 +54,10 @@ provenanceVisualizationModule = function () {
         color = d3.scale.category20();
 
     /* Initialize grid-based layout dimensions. */
-    var cell = {width: r * 3, height: r * 3};
+    var cell = {width: r * 3, height: r * 3},
+        layoutDepth = -1,
+        layoutWidth = -1,
+        firstLayer = 0;
 
     /**
      * Geometric zoom.
@@ -124,7 +128,7 @@ provenanceVisualizationModule = function () {
      * @returns {Array} Layer grouped array of nodes.
      */
     var groupNodesByCol = function (tNodes) {
-        var layer = 0,
+        var layer = firstLayer,
             cgtNodes = [],
             rtNodes = [];
 
@@ -155,7 +159,7 @@ provenanceVisualizationModule = function () {
      * @returns {Array} Layer grouped array of nodes.
      */
     var groupNodesByColLeftToRight = function (tNodes) {
-        var layer = 0,
+        var layer = firstLayer,
             cgtNodes = [],
             rtNodes = [];
 
@@ -180,14 +184,13 @@ provenanceVisualizationModule = function () {
         return cgtNodes;
     };
 
-    /* TODO: Check all parameters. */
     /**
      * Deep copy node data structure.
      * @param node Node object.
-     * @returns {{name: string, nodeType: string, fileType: string, uuid: string, study: string, assay: string, row: number, col: number, parents: Array, id: number, doiFactor: number, hidden: boolean, bcOrder: number}} Node object.
+     * @returns {{name: string, nodeType: string, fileType: string, uuid: string, study: string, assay: string, row: number, col: number, parents: Array, id: number, doiFactor: number, hidden: boolean, bcOrder: number, x: number, y: number, rowBK: {left: number, right: number}, isBlockRoot: boolean}}
      */
     var copyNode = function (node) {
-        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, doiFactor: -1, hidden: true, bcOrder: -1, x: 0, y: 0, rowBK: {left: -1, right: -1}};
+        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, doiFactor: -1, hidden: true, bcOrder: -1, x: 0, y: 0, rowBK: {left: -1, right: -1}, isBlockRoot: false};
 
         newNode.name = node.name;
         newNode.nodeType = node.nodeType;
@@ -220,7 +223,6 @@ provenanceVisualizationModule = function () {
     var initRowPlacementLeft = function (lgNodes) {
         lgNodes.forEach(function (lg) {
             lg.forEach(function (n, i) {
-                //nodes[n.id].row = i;
                 nodes[n.id].rowBK.left = i;
             });
         });
@@ -231,19 +233,14 @@ provenanceVisualizationModule = function () {
      * @param lgNodes Layer grouped array of nodes.
      */
     var initRowPlacementRight = function (lgNodes) {
-        var maxLayerLength = d3.max(lgNodes, function (lg) {
-            return lg.length;
-        });
 
         lgNodes.forEach(function (lg) {
             lg.forEach(function (n, i) {
-                //nodes[n.id].row = maxLayerLength - i - 1;
-                nodes[n.id].rowBK.right = maxLayerLength - lg.length + i;
+                nodes[n.id].rowBK.right = layoutDepth - lg.length + i;
             });
         });
     };
 
-    /* TODO: Code cleanup. */
     /**
      * 1-sided crossing minimization via barycentric heuristic.
      * @param lgNodes Layer grouped array of nodes.
@@ -284,11 +281,6 @@ provenanceVisualizationModule = function () {
             }
         });
 
-        /* Compute max layer width. */
-        var maxLayerLength = d3.max(lgNodes, function (lg) {
-            return lg.length;
-        });
-
         /* Reorder nodes within layer. */
         var barycenterOrderedNodes = [];
         lgNodes.forEach(function (lg, i) {
@@ -296,9 +288,9 @@ provenanceVisualizationModule = function () {
             lg.forEach(function (n, j) {
 
                 /* Init most right layer as fixed. */
-                if (i === 0) {
+                if (i === firstLayer) {
                     nodes[n.id].bcOrder = j + 1;
-                    barycenterOrderedNodes[0][j] = nodes[n.id];
+                    barycenterOrderedNodes[firstLayer][j] = nodes[n.id];
 
                     /* Set earlier computed bcOrder. */
                 } else {
@@ -314,7 +306,7 @@ provenanceVisualizationModule = function () {
             /* Set row attribute after sorting. */
             barycenterOrderedNodes[i].forEach(function (n, k) {
                 nodes[n.id].rowBK.left = k;
-                nodes[n.id].rowBK.right = maxLayerLength - barycenterOrderedNodes[i].length + k;
+                nodes[n.id].rowBK.right = layoutDepth - barycenterOrderedNodes[i].length + k;
             });
 
         });
@@ -322,7 +314,6 @@ provenanceVisualizationModule = function () {
         return barycenterOrderedNodes;
     };
 
-    /* TODO: Code cleanup. */
     /**
      * Remove edges that do not lead to an median neighbor.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
@@ -349,7 +340,6 @@ provenanceVisualizationModule = function () {
         }
     };
 
-    /* TODO: Code cleanup. */
     /**
      * Mark type 1 - and type 0 conflicts.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
@@ -372,7 +362,6 @@ provenanceVisualizationModule = function () {
             btUpSuccs.forEach(function (bts) {
                 /* Crossing. */
                 if (nodes[links[bts].target].rowBK.left > jMax) {
-                    /* TODO: HINT: Possible type 2 conflict which should be resolved via barycenter heuristic already. */
                     links[bts].type1 = true;
                     links[bts].neighbor = true;
                 }
@@ -469,7 +458,6 @@ provenanceVisualizationModule = function () {
         }
     };
 
-    /* TODO: Code cleanup. */
     /**
      * Mark type 1 - and type 0 conflicts.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
@@ -492,7 +480,6 @@ provenanceVisualizationModule = function () {
             btUpSuccs.forEach(function (bts) {
                 /* Crossing. */
                 if (nodes[links[bts].target].rowBK.right > jMax) {
-                    /* TODO: HINT: Possible type 2 conflict which should be resolved via barycenter heuristic already. */
                     links[bts].type1 = true;
                     links[bts].neighbor = true;
                 }
@@ -654,11 +641,9 @@ provenanceVisualizationModule = function () {
                             /* Greedy choice for Neighbor when there exist two. */
                             if (alignment === "left") {
                                 nodes[links[curLink[0]].source].rowBK.left = rootRow;
-                                //nodes[links[curLink[0]].source].row = rootRow;
                                 curNode = links[curLink[0]].source;
                             } else {
                                 nodes[links[curLink[curLink.length - 1]].source].rowBK.right = rootRow;
-                                //nodes[links[curLink[curLink.length-1]].source].row = rootRow;
                                 curNode = links[curLink[curLink.length - 1]].source;
                             }
                         }
@@ -684,7 +669,6 @@ provenanceVisualizationModule = function () {
                         delta = Math.abs(nodes[curNode].rowBK.left - nodes[curNode].rowBK.right) / 2;
 
                     rootRow = Math.round(minRow + delta);
-                    console.log(n.id + ": " + rootRow + " (" + nodes[curNode].rowBK.left + "," + nodes[curNode].rowBK.right + ")");
 
                     while (nodePredMap[curNode].length !== 0) {
                         nodes[curNode].row = rootRow;
@@ -696,23 +680,8 @@ provenanceVisualizationModule = function () {
                 }
             });
         });
-
-
-        /* TODO: Every analysis has its own root? Especially when a split happens between two different analyses.*/
-
-        /* TODO: When centering at a split, check block-class with occupied rows/cols (Compaction). */
-
-        /* TODO: Form classes for blocks and adjust. */
-
-        /* TODO: Shift right aligned analyses (w/o succ analysis) to the left. */
-
-        /* TODO: Try to compress analyes vertically. */
-
-        /* TODO: For each analysis (having only one predecessor as well as successor analysis) adjust rows for splits. */
-
     };
 
-    /* TODO: Vertical coordinate assignment. [Brandes and Köpf 2002] */
     /**
      * Set row placement for nodes in each layer. [Brandes and Köpf 2002]
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
@@ -725,10 +694,24 @@ provenanceVisualizationModule = function () {
     };
 
     /**
+     * Set grid layout dimensions.
+     * @param lgNodes Layer grouped array of nodes.
+     */
+    var setGridLayoutDimensions = function (lgNodes) {
+        layoutDepth = d3.max(lgNodes, function (lg) {
+            return lg.length;
+        });
+
+        layoutWidth = lgNodes.length;
+    };
+
+    /**
      * Layout node columns.
      * @param lgNodes Layer grouped array of nodes.
      */
     var computeLayout = function (lgNodes) {
+
+        setGridLayoutDimensions(lgNodes);
 
         /* Init row placement. */
         initRowPlacementLeft(lgNodes);
@@ -743,7 +726,6 @@ provenanceVisualizationModule = function () {
         verticalCoordAssignment(bclgNodes);
     };
 
-    /* TODO: Rewrite. */
     /**
      * Add dummy vertices.
      */
@@ -830,7 +812,8 @@ provenanceVisualizationModule = function () {
                         analysis: curAnalysis,
                         doiFactor: -1,
                         hidden: false,
-                        bcOrder: -1
+                        bcOrder: -1,
+                        isBlockRoot: false
                     });
 
                     /* Update node maps. */
@@ -970,7 +953,6 @@ provenanceVisualizationModule = function () {
     };
 
 
-    /* TODO: Instead of copying nodes and deleting items from the collection, rewrite algorithm to only mark affected items. */
     /**
      * Linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
      * @param inputs Nodes which do not have any predecessing nodes.
@@ -1049,7 +1031,6 @@ provenanceVisualizationModule = function () {
         }
     };
 
-    /* TODO: Instead of copying nodes and deleting items from the collection, rewrite algorithm to only mark affected items. */
     /**
      * Linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
      * @param inputs Nodes which do not have any predecessing nodes.
@@ -1277,6 +1258,7 @@ provenanceVisualizationModule = function () {
             doiFactor: -1,
             hidden: false,
             bcOrder: -1,
+            isBlockRoot: false,
             x: 0,
             y: 0
         });
@@ -1648,8 +1630,7 @@ provenanceVisualizationModule = function () {
                 if (an.outputNodes.length > 0) {
                     rootCol = an.outputNodes[0].col;
                 } else {
-                    /* TODO: Magic number for starting layer. */
-                    an.col = 0;
+                    an.col = firstLayer;
                 }
             }
 
@@ -1724,7 +1705,6 @@ provenanceVisualizationModule = function () {
         dummyPaths = [];
     };
 
-    /* TODO: */
     /**
      * Compress analysis horizontally.
      */
@@ -1776,29 +1756,65 @@ provenanceVisualizationModule = function () {
     };
 
     /**
-     * Optimize layout.
+     * Analyses without successor analyses are shifted left.
      */
-    var postprocessLayout = function () {
-        horizontalAnalysisAlignment();
+    var leftShiftAnalysis = function () {
+        aNodes.forEach(function (an) {
+
+            var leftMostInputCol = d3.max(an.inputNodes, function (ain) {
+                return ain.col;
+            });
+            var rightMostPredCol = layoutDepth;
+            an.inputNodes.forEach(function (ain) {
+                var curMin = d3.min(nodePredMap[ain.id].map(function (n) {
+                    return nodes[n];
+                }), function (ainpn) {
+                    return ainpn.col;
+                });
+                if (curMin < rightMostPredCol) {
+                    rightMostPredCol = curMin;
+                }
+            });
+
+            /* Shift when gap. */
+            if (rightMostPredCol - leftMostInputCol > 1) {
+                an.nodes.forEach(function (n) {
+                    n.col += rightMostPredCol - leftMostInputCol - 1;
+                });
+            }
+        });
     };
 
     /**
-     * Set display property of analysis connecting links.
+     * Maps the column/row index to nodes.
      */
-    var initLinkVisibility = function () {
-        aNodes.forEach(function (an) {
-            an.predAnalyses.forEach(function (pan) {
-                nodes[pan].outputNodes.forEach(function (n) {
-                    if (nodeLinkSuccMap[n.id].length !== 0) {
-                        nodeLinkSuccMap[n.id].forEach(function (l) {
-                            if (nodeAnalysisMap[links[l].target] == an.id) {
-                                links[l].hidden = false;
-                            }
-                        });
-                    }
-                });
-            });
+    var createNodeGrid = function () {
+        for (var i = 0; i < layoutWidth; i++) {
+            nodeGridMap.push([]);
+            for (var j = 0; j < layoutDepth; j++) {
+                nodeGridMap[i].push([]);
+                nodeGridMap[i][j] = "undefined";
+            }
+        }
+
+        nodes.forEach(function (n) {
+            nodeGridMap[n.col][n.row] = n.id;
         });
+    };
+
+    /**
+     * Optimize layout.
+     */
+    var postprocessLayout = function () {
+
+        horizontalAnalysisAlignment();
+
+        leftShiftAnalysis();
+
+        createNodeGrid();
+
+        /* TODO: When centering at a split, check block-class with occupied rows/cols (Compaction). */
+        /* TODO: Form classes for blocks and rearange analysis. */
     };
 
     /**
@@ -2048,7 +2064,7 @@ provenanceVisualizationModule = function () {
 
     };
 
-    /* TODO: Code cleanup. */
+    /* TODO: IN PROGRESS. */
     /**
      * Sets the visibility of links and (a)nodes when collapsing or expanding analyses.
      */
@@ -2161,7 +2177,7 @@ provenanceVisualizationModule = function () {
                 });
 
 
-                /* TODO: on dblclick, recompute layout. */
+                /* TODO: IN PROGRESS: On dblclick, recompute layout. */
                 /* Topological order. */
                 var topNodes = sortTopological(outputNodes);
 
@@ -2421,9 +2437,6 @@ provenanceVisualizationModule = function () {
 
                 /* Optimize layout. */
                 postprocessLayout();
-
-                /* Set display property of analysis connecting links. */
-                /* initLinkVisibility(); */
 
                 /* Call d3 visualization. */
                 drawGraph();
