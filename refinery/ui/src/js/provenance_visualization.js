@@ -1581,24 +1581,39 @@ provenanceVisualizationModule = function () {
                     j = 0;
 
                 /* Check for gaps. */
-                while (curNode.col < maxOutput && nodePredMap[curNode.id].length === 1) {
-                    var predNode = nodes[nodePredMap[curNode.id][0]];
-                    if (predNode.col - curNode.col > 1) {
+                if (curNode.col < maxOutput) {
 
-                        var shiftCurNode = curNode,
-                            colShift = maxOutput + j;
-
-                        /* Shift the gap to align with the maximum output column of this analysis. */
-                        while (shiftCurNode !== ano) {
-                            shiftCurNode.col = colShift;
-
-                            shiftCurNode = nodes[nodeSuccMap[shiftCurNode.id]];
-                            colShift--;
-                        }
-                        ano.col = colShift;
+                    /* Get first node for this block. */
+                    var curBlockNode = curNode;
+                    while (nodePredMap[curBlockNode.id].length === 1 &&
+                        nodes[nodePredMap[curBlockNode.id][0]].analysis === an.uuid &&
+                        nodes[nodePredMap[curBlockNode.id][0]].col - curBlockNode.col === 1) {
+                        curBlockNode = nodes[nodePredMap[curBlockNode.id][0]];
                     }
-                    j++;
-                    curNode = predNode;
+
+                    /* When pred for leading block node is of the same analysis. */
+                    while (curNode.col < maxOutput &&
+                        nodePredMap[curBlockNode.id].length === 1 &&
+                        nodes[nodePredMap[curBlockNode.id][0]].analysis === an.uuid &&
+                        nodePredMap[curNode.id].length === 1) {
+                        var predNode = nodes[nodePredMap[curNode.id][0]];
+                        if (predNode.col - curNode.col > 1) {
+
+                            var shiftCurNode = curNode,
+                                colShift = maxOutput + j;
+
+                            /* Shift the gap to align with the maximum output column of this analysis. */
+                            while (shiftCurNode !== ano) {
+                                shiftCurNode.col = colShift;
+
+                                shiftCurNode = nodes[nodeSuccMap[shiftCurNode.id]];
+                                colShift--;
+                            }
+                            ano.col = colShift;
+                        }
+                        j++;
+                        curNode = predNode;
+                    }
                 }
             });
         });
@@ -1641,17 +1656,11 @@ provenanceVisualizationModule = function () {
      * Try to center analysis via grid lookup.
      */
     var centerAnalysisOnRightSplit = function () {
-        aNodes.forEach(function (an) {
-            /*console.log(an.id);
-             console.log(an.outputNodes);*/
-            an.outputNodes.forEach(function (ano) {
+        /* Iterate from right to left, column-wise. */
 
-                /* Split right. */
-                if (nodeSuccMap[ano.id].length > 1) {
+        /* For each output node in analysis check if there is a split right. */
 
-                }
-            });
-        });
+
     };
 
     /**
