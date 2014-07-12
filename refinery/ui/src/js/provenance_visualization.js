@@ -1033,7 +1033,7 @@ provenanceVisualizationModule = function () {
      * Extract link properties.
      * @param nodeElem Node object.
      * @param linkId Integer identifier for the link.
-     * @param parentIndex Integer index of parrent array.
+     * @param parentIndex Integer index of parent array.
      */
     var extractLinkProperties = function (nodeElem, linkId, parentIndex) {
         links.push({
@@ -1065,8 +1065,8 @@ provenanceVisualizationModule = function () {
      * @param parentNodeObj Predecessor node object.
      * @param linkId Integer identifier for the link.
      * @param nodeId Integer identifier for the node.
-     * @param srcNodeIds Integer array containing all node identifiers predecessing the current node.
-     * @param srcLinkIds Integer array containing all link identifiers incidenting the current node.
+     * @param srcNodeIds Integer array containing all node identifiers preceding the current node.
+     * @param srcLinkIds Integer array containing all link identifiers preceding the current node.
      */
     var createLinkHashes = function (parentNodeObj, linkId, nodeId, srcNodeIds, srcLinkIds) {
         srcNodeIds.push(nodeMap[parentNodeObj]);
@@ -1694,7 +1694,7 @@ provenanceVisualizationModule = function () {
         centerAnalysisOnRightSplit();
 
         /* TODO: When centering at a split, check block-class with occupied rows/cols (Compaction). */
-        /* TODO: Form classes for blocks and rearange analysis. */
+        /* TODO: Form classes for blocks and rearrange analysis. */
     };
 
     /**
@@ -1787,7 +1787,7 @@ provenanceVisualizationModule = function () {
             .attr("class", "d3-tip")
             .offset([-10, 0])
             .html(function (d) {
-                return d.id === -1 ? "<span style='color:#fa9b30'>Original Dataset</span><br><strong>Id:</strong> <span style='color:#fa9b30'>" + d.id + "</span><br>" :
+                return d.id === -1 ? "<span style='color:#fa9b30'>Original dataset</span><br><strong>Id:</strong> <span style='color:#fa9b30'>" + d.id + "</span><br>" :
                     "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.id + "</span><br>" +
                         "<strong>Start:</strong> <span style='color:#fa9b30'>" + d.start + "</span><br>" +
                         "<strong>End:</strong> <span style='color:#fa9b30'>" + d.end + "</span>";
@@ -2177,7 +2177,7 @@ provenanceVisualizationModule = function () {
             }
             clickInProgress = true;
 
-            /* Single click event is called after timeout unless a dblick action is performed. */
+            /* Single click event is called after timeout unless a dblclick action is performed. */
             timer = setTimeout(function () {
                 bRectAction();
 
