@@ -712,35 +712,35 @@ provenanceVisualizationModule = function () {
                     id: l.id,
                     source: ({
                         id: l.source,
-                        predNodes: nodePredMap[l.source].map(function (p) {
-                            return p;
+                        predNodes: nodePredMap[l.source].filter(function (p) {
+                            return nodes[p].nodeType !== "dummy";
                         }),
-                        predNodeLinks: nodeLinkPredMap[l.source].map(function (p) {
-                            return p;
+                        predNodeLinks: nodeLinkPredMap[l.source].filter(function (p) {
+                            return nodes[p].nodeType !== "dummy";
                         }),
-                        succNodes: nodeSuccMap[l.source].map(function (s) {
-                            return s;
+                        succNodes: nodeSuccMap[l.source].filter(function (s) {
+                            return nodes[s].nodeType !== "dummy";
                         }),
-                        succNodeLinks: nodeLinkSuccMap[l.source].map(function (s) {
-                            return s;
+                        succNodeLinks: nodeLinkSuccMap[l.source].filter(function (s) {
+                            return nodes[s].nodeType !== "dummy";
                         })
                     }),
                     target: ({
                         id: l.target,
-                        predNodes: nodePredMap[l.target].map(function (p) {
-                            return p;
+                        predNodes: nodePredMap[l.target].filter(function (p) {
+                            return nodes[p].nodeType !== "dummy";
                         }),
-                        predNodeLinks: nodeLinkPredMap[l.target].map(function (p) {
-                            return p;
+                        predNodeLinks: nodeLinkPredMap[l.target].filter(function (p) {
+                            return nodes[p].nodeType !== "dummy";
                         }),
-                        succNodes: nodeSuccMap[l.target].map(function (s) {
-                            return s;
+                        succNodes: nodeSuccMap[l.target].filter(function (s) {
+                            return nodes[s].nodeType !== "dummy";
                         }),
-                        succNodeLinks: nodeLinkSuccMap[l.target].map(function (s) {
-                            return s;
+                        succNodeLinks: nodeLinkSuccMap[l.target].filter(function (s) {
+                            return nodes[s].nodeType !== "dummy";
                         })
                     }),
-                    parents: nodes[l.target].parents.map(function (p) {
+                    parents: nodes[l.target].parents.filter(function (p) {
                         return p;
                     })
                 });
@@ -1555,11 +1555,21 @@ provenanceVisualizationModule = function () {
             var source = links[dP.id].source,
                 target = links[dP.id].target;
 
-            nodePredMap[target] = nodePredMap[target].concat(dP.target.predNodes);
-            nodeLinkPredMap[target] = nodeLinkPredMap[target].concat(dP.target.predNodeLinks);
-            nodeSuccMap[source] = nodeSuccMap[source].concat(dP.source.succNodes);
-            nodeLinkSuccMap[source] = nodeLinkSuccMap[source].concat(dP.source.succNodeLinks);
-            nodes[target].parents = nodes[target].parents.concat(dP.parents);
+            nodePredMap[target] = nodePredMap[target].concat(dP.target.predNodes.filter(function (pn) {
+                return nodePredMap[target].indexOf(pn) === -1;
+            }));
+            nodeLinkPredMap[target] = nodeLinkPredMap[target].concat(dP.target.predNodeLinks.filter(function (pnl) {
+                return nodeLinkPredMap[target].indexOf(pnl) === -1;
+            }));
+            nodeSuccMap[source] = nodeSuccMap[source].concat(dP.source.succNodes.filter(function (sn) {
+                return nodeSuccMap[source].indexOf(sn) === -1;
+            }));
+            nodeLinkSuccMap[source] = nodeLinkSuccMap[source].concat(dP.source.succNodeLinks.filter(function (snl) {
+                return nodeLinkSuccMap[source].indexOf(snl) === -1;
+            }));
+            nodes[target].parents = nodes[target].parents.concat(dP.parents.filter(function (p) {
+                return nodes[target].parents.indexOf(p) === -1;
+            }));
         });
         dummyPaths = [];
     };
@@ -1658,9 +1668,39 @@ provenanceVisualizationModule = function () {
     var centerAnalysisOnRightSplit = function () {
         /* Iterate from right to left, column-wise. */
 
-        /* For each output node in analysis check if there is a split right. */
+        var isAnotherAnalysis = function (sn) {
+            return nodes[sn].analysis !== nodes[nodeGridMap[i][j]].analysis;
+        };
 
+        var getMedianRow = function (nid) {
+            nodeSuccMap[nid].sort(function (a, b) {
+                return nodes[a].row > nodes[b].row;
+            });
+            return nodes[nodeSuccMap[nid][Math.floor(nodeSuccMap[nid].length / 2)]].row;
+        };
 
+        for (var i = 0; i < layoutDepth; i++) {
+            for (var j = 0; j < layoutWidth; j++) {
+                if (nodeGridMap[i][j] !== "undefined" && nodeSuccMap[nodeGridMap[i][j]].length > 1 && nodeSuccMap[nodeGridMap[i][j]].some(isAnotherAnalysis)) {
+
+                    /* Within this analysis and for each predecessor, traverse back and shift rows. */
+                    var newRow = getMedianRow(nodeGridMap[i][j]),
+                        curNode = nodeGridMap[i][j];
+
+                    while (nodePredMap[curNode].length === 1) {
+                        nodeGridMap[i][j] = "undefined";
+                        nodeGridMap[i][newRow] = curNode;
+                        nodes[curNode].row = newRow;
+                        curNode = nodePredMap[curNode];
+                    }
+                    if (nodePredMap[curNode].length === 0) {
+                        nodeGridMap[i][j] = "undefined";
+                        nodeGridMap[i][newRow] = curNode;
+                        nodes[curNode].row = newRow;
+                    }
+                }
+            }
+        }
     };
 
     /**
