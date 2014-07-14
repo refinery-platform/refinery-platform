@@ -101,11 +101,11 @@ provenanceVisualizationModule = function () {
     };
 
     /**
-     * Get involved nodes for highlighting the path by the current node selection.
+     * Get predecessing nodes for highlighting the path by the current node selection.
      * @param nodeId An Integer id for the node.
      * @param highlighted A Boolean flag whether path should be highlighted or not.
      */
-    var highlightInvolvedPath = function (nodeId, highlighted) {
+    var highlightPredPath = function (nodeId, highlighted) {
 
         /* For each predecessor. */
         nodePredMap[nodeId].forEach(function (p) {
@@ -118,7 +118,29 @@ provenanceVisualizationModule = function () {
                 d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
             });
 
-            highlightInvolvedPath(p, highlighted);
+            highlightPredPath(p, highlighted);
+        });
+    };
+
+    /**
+     * Get succeeding nodes for highlighting the path by the current node selection.
+     * @param nodeId An Integer id for the node.
+     * @param highlighted A Boolean flag whether path should be highlighted or not.
+     */
+    var highlightSuccPath = function (nodeId, highlighted) {
+
+        /* For each predecessor. */
+        nodeSuccMap[nodeId].forEach(function (s) {
+
+            /* Get svg node element. */
+            d3.select("#nodeId-" + s).classed({"highlightedNode": highlighted});
+
+            /* Get svg link element. */
+            nodeLinkSuccMap[s].forEach(function (l) {
+                d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
+            });
+
+            highlightSuccPath(s, highlighted);
         });
     };
 
@@ -2098,30 +2120,47 @@ provenanceVisualizationModule = function () {
 
 
                 /* TODO: IN PROGRESS: On dblclick, recompute layout. */
+                /*
+                 */
                 /* Topological order. */
-                var topNodes = sortTopological(outputNodes);
+                /*
+                 var topNodes = sortTopological(outputNodes);
 
+                 */
                 /* Assign layers. */
-                assignLayers(topNodes);
+                /*
+                 assignLayers(topNodes);
 
+                 */
                 /* Add dummy nodes and links. */
-                addDummyNodes();
+                /*
+                 addDummyNodes();
 
+                 */
                 /* Recalculate layers including dummy nodes. */
-                topNodes = sortTopological(outputNodes);
+                /*
+                 topNodes = sortTopological(outputNodes);
                 assignLayers(topNodes);
 
+                 */
                 /* Group nodes by layer. */
-                var layeredTopNodes = groupNodesByCol(topNodes);
+                /*
+                 var layeredTopNodes = groupNodesByCol(topNodes);
 
+                 */
                 /* Place vertices. */
-                computeLayout(layeredTopNodes);
+                /*
+                 computeLayout(layeredTopNodes);
 
+                 */
                 /* Restore original dataset. */
-                removeDummyNodes();
+                /*
+                 removeDummyNodes();
 
+                 */
                 /* Update layout. */
-                updateCanvas();
+                /*
+                 updateCanvas();*/
             }
         });
     };
@@ -2131,22 +2170,39 @@ provenanceVisualizationModule = function () {
      */
     var handlePathHighlighting = function () {
         d3.selectAll(".node").on("click", function (x) {
-            var highlighted = true;
 
-            /* Suppress after dragend. */
-            if (d3.event.defaultPrevented) return;
+            if (d3.event.ctrlKey || d3.event.shiftKey) {
+                var highlighted = true;
 
-            /* Clear any highlighting. */
-            clearHighlighting();
+                /* Suppress after dragend. */
+                if (d3.event.defaultPrevented) return;
 
-            /* Highlight selected node and links. */
-            d3.select(this).classed({"highlightedNode": true});
-            nodeLinkPredMap[x.id].forEach(function (l) {
-                d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
-            });
+                /* Clear any highlighting. */
+                clearHighlighting();
 
-            /* Highlight path. */
-            highlightInvolvedPath(x.id, highlighted);
+                /* Highlight selected node. */
+                d3.select(this).classed({"highlightedNode": true});
+
+                if (d3.event.ctrlKey) {
+
+                    /* Highlight selected links. */
+                    nodeLinkSuccMap[x.id].forEach(function (l) {
+                        d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
+                    });
+
+                    /* Highlight path. */
+                    highlightSuccPath(x.id, highlighted);
+                } else if (d3.event.shiftKey) {
+
+                    /* Highlight selected links. */
+                    nodeLinkPredMap[x.id].forEach(function (l) {
+                        d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
+                    });
+
+                    /* Highlight path. */
+                    highlightPredPath(x.id, highlighted);
+                }
+            }
         });
     };
 
