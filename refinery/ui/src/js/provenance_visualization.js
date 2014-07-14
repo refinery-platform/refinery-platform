@@ -1300,35 +1300,47 @@ provenanceVisualizationModule = function () {
         d3.event.sourceEvent.stopPropagation();
     };
 
-    /**
-     * Drag listener.
-     * @param n Node object.
-     */
-    var dragging = function (n) {
 
+    /**
+     * Update node through translation while dragging or on dragend.
+     * @param dom Node dom element.
+     * @param n Node object element.
+     * @param x The current x-coordinate for the node.
+     * @param y The current y-coordinate for the node.
+     */
+    var updateNode = function (dom, n, x, y) {
         /* Drag selected node. */
-        d3.select(this).attr("transform", function (d) {
+        dom.attr("transform", function (d) {
             switch (d.nodeType) {
                 case "dummy":
                 case "raw":
                 case "processed":
-                    return "translate(" + d3.event.x + "," + d3.event.y + ")";
+                    return "translate(" + x + "," + y + ")";
                 case "special":
-                    return "translate(" + (d3.event.x - r) + "," + (d3.event.y - r) + ")";
+                    return "translate(" + (x - r) + "," + (y - r) + ")";
                 case "dt":
-                    return "translate(" + (d3.event.x - r * 0.75) + "," + (d3.event.y - r * 0.75) + ")";
+                    return "translate(" + (x - r * 0.75) + "," + (y - r * 0.75) + ")";
             }
         });
+    };
 
+    /**
+     * Update link through translation while dragging or on dragend.
+     * @param dom Link dom element.
+     * @param n Node object element.
+     * @param x The current x-coordinate for the links.
+     * @param y The current y-coordinate for the links.
+     */
+    var updateLink = function (dom, n, x, y) {
         /* Drag adjacent links. */
         /* Get input links and update coordinates for x2 and y2. */
         nodeLinkPredMap[n.id].forEach(function (l) {
             d3.select("#linkId-" + l).attr("d", function (l) {
                 var pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
                 if (Math.abs(nodes[l.source].x - nodes[l.target].x) > cell.width) {
-                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(d3.event.y, 10) + " L" + parseInt(d3.event.x, 10) + "," + parseInt(d3.event.y, 10));
+                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(y, 10) + " L" + parseInt(x, 10) + "," + parseInt(y, 10));
                 } else {
-                    pathSegment = pathSegment.concat(" L" + parseInt(d3.event.x, 10) + "," + parseInt(d3.event.y, 10));
+                    pathSegment = pathSegment.concat(" L" + parseInt(x, 10) + "," + parseInt(y, 10));
                 }
                 return pathSegment;
             });
@@ -1337,32 +1349,54 @@ provenanceVisualizationModule = function () {
         /* Get output links and update coordinates for x1 and y1. */
         nodeLinkSuccMap[n.id].forEach(function (l) {
             d3.select("#linkId-" + l).attr("d", function (l) {
-                var pathSegment = " M" + parseInt(d3.event.x, 10) + "," + parseInt(d3.event.y, 10);
-                if (Math.abs(d3.event.x - nodes[l.target].x) > cell.width) {
-                    pathSegment = pathSegment.concat(" L" + parseInt(d3.event.x + cell.width, 10) + "," + parseInt(nodes[l.target].y, 10) + " L" + parseInt(nodes[l.target].x, 10) + " " + parseInt(nodes[l.target].y, 10));
+                var pathSegment = " M" + parseInt(x, 10) + "," + parseInt(y, 10);
+                if (Math.abs(x - nodes[l.target].x) > cell.width) {
+                    pathSegment = pathSegment.concat(" L" + parseInt(x + cell.width, 10) + "," + parseInt(nodes[l.target].y, 10) + " L" + parseInt(nodes[l.target].x, 10) + " " + parseInt(nodes[l.target].y, 10));
                 } else {
                     pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
                 }
                 return pathSegment;
             });
         });
+    };
+
+    /**
+     * Drag listener.
+     * @param n Node object.
+     */
+    var dragging = function (n) {
+
+        /* Drag selected node. */
+        updateNode(d3.select(this), n, d3.event.x, d3.event.y);
+
+        /* Drag adjacent links. */
+        updateLink(d3.select(this), n, d3.event.x, d3.event.y);
 
         /* Update data. */
-        n.x = d3.event.x;
-        n.y = d3.event.y;
+        n.col = Math.round(d3.event.x / cell.width);
+        n.row = Math.round(d3.event.y / cell.height);
     };
 
     /**
      * Drag end listener.
      */
-    var dragEnd = function () {
+    var dragEnd = function (n) {
+
+        /* Update data. */
+        n.x = n.col * cell.width;
+        n.y = n.row * cell.height;
+
+        /* Align selected node. */
+        updateNode(d3.select(this), n, n.x, n.y);
+
+        /* Align adjacent links. */
+        updateLink(d3.select(this), n, n.x, n.y);
     };
 
     /**
      * Sets the drag events for nodes.
      */
     var applyDragBehavior = function () {
-
         /* Drag and drop node enabled. */
         var drag = d3.behavior.drag()
             .on("dragstart", dragStart)
