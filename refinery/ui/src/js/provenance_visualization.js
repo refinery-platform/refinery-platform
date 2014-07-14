@@ -1336,11 +1336,21 @@ provenanceVisualizationModule = function () {
         /* Get input links and update coordinates for x2 and y2. */
         nodeLinkPredMap[n.id].forEach(function (l) {
             d3.select("#linkId-" + l).attr("d", function (l) {
-                var pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
-                if (Math.abs(nodes[l.source].x - nodes[l.target].x) > cell.width) {
-                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(y, 10) + " L" + parseInt(x, 10) + "," + parseInt(y, 10));
+                var pathSegment = "";
+                if (nodes[l.source].hidden) {
+                    pathSegment = " M" + parseInt(nodes[nodeAnalysisMap[l.source]].x, 10) + "," + parseInt(nodes[nodeAnalysisMap[l.source]].y, 10);
+                    if (Math.abs(nodes[nodeAnalysisMap[l.source]].x - nodes[l.target].x) > cell.width) {
+                        pathSegment = pathSegment.concat(" L" + parseInt(nodes[nodeAnalysisMap[l.source]].x + (cell.width)) + "," + parseInt(y, 10) + " L" + parseInt(x, 10) + "," + parseInt(y, 10));
+                    } else {
+                        pathSegment = pathSegment.concat(" L" + parseInt(x, 10) + "," + parseInt(y, 10));
+                    }
                 } else {
-                    pathSegment = pathSegment.concat(" L" + parseInt(x, 10) + "," + parseInt(y, 10));
+                    pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
+                    if (Math.abs(nodes[l.source].x - nodes[l.target].x) > cell.width) {
+                        pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(y, 10) + " L" + parseInt(x, 10) + "," + parseInt(y, 10));
+                    } else {
+                        pathSegment = pathSegment.concat(" L" + parseInt(x, 10) + "," + parseInt(y, 10));
+                    }
                 }
                 return pathSegment;
             });
@@ -1350,10 +1360,18 @@ provenanceVisualizationModule = function () {
         nodeLinkSuccMap[n.id].forEach(function (l) {
             d3.select("#linkId-" + l).attr("d", function (l) {
                 var pathSegment = " M" + parseInt(x, 10) + "," + parseInt(y, 10);
-                if (Math.abs(x - nodes[l.target].x) > cell.width) {
-                    pathSegment = pathSegment.concat(" L" + parseInt(x + cell.width, 10) + "," + parseInt(nodes[l.target].y, 10) + " L" + parseInt(nodes[l.target].x, 10) + " " + parseInt(nodes[l.target].y, 10));
+                if (nodes[l.target].hidden) {
+                    if (Math.abs(x - nodes[nodeAnalysisMap[l.target]].x) > cell.width) {
+                        pathSegment = pathSegment.concat(" L" + parseInt(x + cell.width, 10) + "," + parseInt(nodes[nodeAnalysisMap[l.target]].y, 10) + " L" + parseInt(nodes[nodeAnalysisMap[l.target]].x, 10) + " " + parseInt(nodes[nodeAnalysisMap[l.target]].y, 10));
+                    } else {
+                        pathSegment = pathSegment.concat(" L" + parseInt(nodes[nodeAnalysisMap[l.target]].x, 10) + "," + parseInt(nodes[nodeAnalysisMap[l.target]].y, 10));
+                    }
                 } else {
-                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
+                    if (Math.abs(x - nodes[l.target].x) > cell.width) {
+                        pathSegment = pathSegment.concat(" L" + parseInt(x + cell.width, 10) + "," + parseInt(nodes[l.target].y, 10) + " L" + parseInt(nodes[l.target].x, 10) + " " + parseInt(nodes[l.target].y, 10));
+                    } else {
+                        pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
+                    }
                 }
                 return pathSegment;
             });
