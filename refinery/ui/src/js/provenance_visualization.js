@@ -13,13 +13,15 @@ provenanceVisualizationModule = function () {
         inputNodes = [],
         outputNodes = [],
         flatAnalyses = [],
-        aNodes = [];
+        aNodes = [],
+        grid = [];
 
     /* Initialize dom elements. */
     var node = Object.create(null),
         link = Object.create(null),
         analysis = Object.create(null),
-        aNode = Object.create(null);
+        aNode = Object.create(null),
+        gridCell = Object.create(null);
 
     /* TODO: Rewrite for simple maps (https://github.com/mbostock/d3/wiki/Arrays#d3_map). */
     /* Initialize look up hashes. */
@@ -33,8 +35,7 @@ provenanceVisualizationModule = function () {
         workflowAnalysisMap = d3.map(),
         analysisWorkflowMap = d3.map(),
         analysisNodeMap = d3.map(),
-        nodeAnalysisMap = d3.map(),
-        nodeGridMap = [];
+        nodeAnalysisMap = d3.map();
 
     /* Restore dummy path link. */
     var dummyPaths = [];
@@ -1267,7 +1268,7 @@ provenanceVisualizationModule = function () {
     /**
      * Set coordinates for nodes.
      */
-    var assignNodeGridCoordinates = function () {
+    var assignCellCoords = function () {
         nodes.forEach(function (d) {
             d.x = -d.col * cell.width;
             d.y = d.row * cell.height;
@@ -1691,7 +1692,7 @@ provenanceVisualizationModule = function () {
         /* Iterate from right to left, column-wise. */
 
         var isAnotherAnalysis = function (sn) {
-            return nodes[sn].analysis !== nodes[nodeGridMap[i][j]].analysis;
+            return nodes[sn].analysis !== nodes[grid[i][j]].analysis;
         };
 
         var getMedianRow = function (nid) {
@@ -1703,21 +1704,21 @@ provenanceVisualizationModule = function () {
 
         for (var i = 0; i < layoutDepth; i++) {
             for (var j = 0; j < layoutWidth; j++) {
-                if (nodeGridMap[i][j] !== "undefined" && nodeSuccMap[nodeGridMap[i][j]].length > 1 && nodeSuccMap[nodeGridMap[i][j]].some(isAnotherAnalysis)) {
+                if (grid[i][j] !== "undefined" && nodeSuccMap[grid[i][j]].length > 1 && nodeSuccMap[grid[i][j]].some(isAnotherAnalysis)) {
 
                     /* Within this analysis and for each predecessor, traverse back and shift rows. */
-                    var newRow = getMedianRow(nodeGridMap[i][j]),
-                        curNode = nodeGridMap[i][j];
+                    var newRow = getMedianRow(grid[i][j]),
+                        curNode = grid[i][j];
 
                     while (nodePredMap[curNode].length === 1) {
-                        nodeGridMap[i][j] = "undefined";
-                        nodeGridMap[i][newRow] = curNode;
+                        grid[i][j] = "undefined";
+                        grid[i][newRow] = curNode;
                         nodes[curNode].row = newRow;
                         curNode = nodePredMap[curNode];
                     }
                     if (nodePredMap[curNode].length === 0) {
-                        nodeGridMap[i][j] = "undefined";
-                        nodeGridMap[i][newRow] = curNode;
+                        grid[i][j] = "undefined";
+                        grid[i][newRow] = curNode;
                         nodes[curNode].row = newRow;
                     }
                 }
@@ -1730,15 +1731,15 @@ provenanceVisualizationModule = function () {
      */
     var createNodeGrid = function () {
         for (var i = 0; i < layoutDepth; i++) {
-            nodeGridMap.push([]);
+            grid.push([]);
             for (var j = 0; j < layoutWidth; j++) {
-                nodeGridMap[i].push([]);
-                nodeGridMap[i][j] = "undefined";
+                grid[i].push([]);
+                grid[i][j] = "undefined";
             }
         }
 
         nodes.forEach(function (n) {
-            nodeGridMap[n.col][n.row] = n.id;
+            grid[n.col][n.row] = n.id;
         });
     };
 
@@ -1998,7 +1999,7 @@ provenanceVisualizationModule = function () {
     var updateCanvas = function () {
 
         /* Set coordinates for nodes. */
-        assignNodeGridCoordinates();
+        assignCellCoords();
 
         updateNodes();
 
@@ -2140,7 +2141,7 @@ provenanceVisualizationModule = function () {
                 /* Recalculate layers including dummy nodes. */
                 /*
                  topNodes = sortTopological(outputNodes);
-                assignLayers(topNodes);
+                 assignLayers(topNodes);
 
                  */
                 /* Group nodes by layer. */
@@ -2165,6 +2166,7 @@ provenanceVisualizationModule = function () {
         });
     };
 
+    /* TODO: D3 BUBBLESET. */
     /**
      * Path highlighting.
      */
@@ -2293,6 +2295,31 @@ provenanceVisualizationModule = function () {
     };
 
     /**
+     * Draws a grid for the grid-based graph layout.
+     */
+    var drawGrid = function () {
+        gridCell = canvas.selectAll(".cell")
+            .data(function () {
+                return [].concat.apply([], grid);
+            })
+            .enter().append("rect")
+            .attr("x", function (d, i) {
+                return -parseInt(i / layoutWidth, 10) * cell.width;
+            })
+            .attr("y", function (d, i) {
+                return (i % layoutWidth) * cell.height;
+            })
+            .attr("width", cell.width)
+            .attr("height", cell.height)
+            .attr("fill", "none")
+            .attr("stroke", "lightgray")
+            .classed({
+                "cell": true
+            })
+            .style("opacity", 1.0);
+    };
+
+    /**
      * Handle event listeners.
      */
     var handleEvents = function () {
@@ -2316,7 +2343,10 @@ provenanceVisualizationModule = function () {
         setTimeout(function () {
 
             /* Set coordinates for nodes. */
-            assignNodeGridCoordinates();
+            assignCellCoords();
+
+            /* Draw grid. */
+            drawGrid();
 
             /* Draw links. */
             drawLinks();
