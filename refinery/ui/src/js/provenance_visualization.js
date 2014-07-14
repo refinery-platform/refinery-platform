@@ -1375,14 +1375,19 @@ provenanceVisualizationModule = function () {
         /* Update data. */
         n.col = Math.round(d3.event.x / cell.width);
         n.row = Math.round(d3.event.y / cell.height);
+
+        n.x = n.col * cell.width;
+        n.y = n.row * cell.height;
     };
 
     /**
      * Drag end listener.
      */
     var dragEnd = function (n) {
-
         /* Update data. */
+        n.col = Math.round(n.x / cell.width);
+        n.row = Math.round(n.y / cell.height);
+
         n.x = n.col * cell.width;
         n.y = n.row * cell.height;
 
