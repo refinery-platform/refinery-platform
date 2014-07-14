@@ -5,15 +5,15 @@ Created on May 11, 2012
 '''
 
 import os
-import shutil
+import simplejson
 from urlparse import urlparse
 from django import forms
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from django.http import Http404, HttpResponseRedirect, HttpResponse
-from django.shortcuts import render_to_response, get_object_or_404
+from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.utils import simplejson
+from django.core.urlresolvers import reverse
 from haystack.query import SearchQuerySet
 from core.models import *
 from data_set_manager.tasks import parse_isatab
@@ -23,17 +23,27 @@ from file_store.models import get_temp_dir
 
 
 def index(request):
-    return HttpResponse( simplejson.dumps( get_nodes(study_id=2, assay_id=2), indent=2 ), mimetype='application/json' )
+    return HttpResponse(
+        simplejson.dumps(get_nodes(study_id=2, assay_id=2), indent=2),
+        mimetype='application/json')
+
 
 def nodes(request, type, study_uuid, assay_uuid=None ):
     start = datetime.now()
     matrix = get_matrix(study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type )
     end = datetime.now()
     print( "Time to retrieve node matrix: " + str(end - start))
-    return HttpResponse( simplejson.dumps( matrix, indent=2 ), mimetype='application/json' )
+    return HttpResponse(simplejson.dumps(matrix, indent=2),
+                        mimetype='application/json')
 
-def node_attributes(request, type, study_uuid, assay_uuid=None ):
-    return HttpResponse( simplejson.dumps( get_node_attributes( study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type ), indent=2 ), mimetype='application/json' )
+
+def node_attributes(request, type, study_uuid, assay_uuid=None):
+    attributes = get_node_attributes(study_uuid=study_uuid,
+                                          assay_uuid=assay_uuid,
+                                          node_type=type)
+    return HttpResponse(simplejson.dumps(attributes, indent=2),
+                        mimetype='application/json')
+
 
 def node_types(request, study_uuid, assay_uuid=None ):
     return HttpResponse( simplejson.dumps( get_node_types( study_uuid=study_uuid, assay_uuid=assay_uuid ), indent=2 ), mimetype='application/json' )
@@ -106,7 +116,8 @@ def import_isa_tab(request):
             f = form.cleaned_data['isa_tab_file']
             url = form.cleaned_data['isa_tab_url']
             if url:
-                #TODO: replace with chain (http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks)
+                #TODO: replace with chain
+                #http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
                 u = urlparse(url)
                 file_name = u.path.split('/')[-1]
                 temp_file_name = os.path.join(get_temp_dir(), file_name)
@@ -116,33 +127,43 @@ def import_isa_tab(request):
                     logger.error("Problem downloading ISA-Tab file. %s", e)
                     error = "Problem downloading ISA-Tab file from: " + url
                     context = RequestContext(request, {'form': form, 'error': error})
-                    return render_to_response('data_set_manager/import.html', context_instance=context)
+                    return render_to_response('data_set_manager/import.html',
+                                              context_instance=context)
             else:
                 temp_file_name = os.path.join(get_temp_dir(), f.name)
                 try:
                     handle_uploaded_file(f, temp_file_name)
                 except IOError as e:
-                    logger.error("Error writing ISA-Tab file to disk\nIOError: %s, file name: %s, error: %s",
-                                 e.errno, e.filename, e.strerror)
+                    error_msg = "Error writing ISA-Tab file to disk."
+                    error_msg += " IOError: %s, file name: %s, error: %s"
+                    logger.error(error_msg, e.errno, e.filename, e.strerror)
                     error = "Error writing ISA-Tab file to disk"
-                    context = RequestContext(request, {'form': form, 'error': error})
-                    return render_to_response('data_set_manager/import.html', context_instance=context)
+                    context = RequestContext(request,
+                                             {'form': form, 'error': error})
+                    return render_to_response('data_set_manager/import.html',
+                                              context_instance=context)
             logger.debug("Temp file name: '%s'", temp_file_name)
-            dataset_uuid = parse_isatab.delay(request.user.username, False, temp_file_name).get()
+            dataset_uuid = parse_isatab.delay(request.user.username,
+                                              False,
+                                              temp_file_name).get()
             os.unlink(temp_file_name)
             if dataset_uuid:
                 #TODO: redirect to the list of analysis samples for the given UUID
-                return HttpResponseRedirect('/data_sets/' + dataset_uuid + '/')
+                return HttpResponseRedirect(
+                    reverse('data_set', args=(dataset_uuid,)))
             else:
                 error = 'Problem parsing ISA-Tab file'
-                context = RequestContext(request, {'form': form, 'error': error})
-                return render_to_response('data_set_manager/import.html', context_instance=context)
+                context = RequestContext(request,
+                                         {'form': form, 'error': error})
+                return render_to_response('data_set_manager/import.html',
+                                          context_instance=context)
         else:   # submitted form is not valid
             context = RequestContext(request, {'form': form})
     else:   # this was not a POST request
         form = ImportISATabFileForm()
         context = RequestContext(request, {'form': form})
-    return render_to_response('data_set_manager/import.html', context_instance=context)
+    return render_to_response('data_set_manager/import.html',
+                              context_instance=context)
 
 
 def handle_uploaded_file(source_file, target_path):
