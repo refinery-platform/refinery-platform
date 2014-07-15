@@ -1188,6 +1188,11 @@ provenanceVisualizationModule = function () {
      * For each analysis the corresponding nodes as well as specifically in- and output nodes are mapped to it.
      */
     var createAnalysisNodeMapping = function () {
+
+        var sortByRow = function (a, b) {
+            return a.row > b.row;
+        };
+
         nodes.forEach(function (n, i) {
             if (analysisNodeMap.hasOwnProperty(n.analysis)) {
                 analysisNodeMap[n.analysis] = analysisNodeMap[n.analysis].concat([i]);
@@ -1202,7 +1207,7 @@ provenanceVisualizationModule = function () {
                 nodeAnalysisMap[d] = an.id;
                 return nodes[d];
                 /* flatten nodes objects. */
-            });
+            }).sort(sortByRow);
 
             /* Set input nodes. */
             an.inputNodes = an.nodes.filter(function (n) {
@@ -1210,14 +1215,14 @@ provenanceVisualizationModule = function () {
                     return nodes[p].analysis != an.uuid;
                 }) || nodePredMap[n.id].length === 0;
                 /* If no src analyses exists. */
-            });
+            }).sort(sortByRow);
 
             /* Set output nodes. */
             an.outputNodes = an.nodes.filter(function (n) {
                 return nodeSuccMap[n.id].length === 0 || nodeSuccMap[n.id].some(function (s) {
                     return nodes[s].analysis != an.uuid;
                 });
-            });
+            }).sort(sortByRow);
         });
 
         aNodes.forEach(function (an) {
@@ -1509,14 +1514,6 @@ provenanceVisualizationModule = function () {
      */
     var initAnalysisLayout = function () {
         aNodes.forEach(function (an) {
-            /* Exclude dummy nodes and center analysis to barycenter columns. */
-            var childNodes = an.nodes,
-                accRows = 0;
-
-            childNodes.forEach(function (n) {
-                accRows += n.row;
-            });
-
             var rootCol;
 
             if (an.succAnalyses.length > 0) {
@@ -1541,7 +1538,9 @@ provenanceVisualizationModule = function () {
 
             an.col = rootCol;
             an.x = -an.col * cell.width;
-            an.row = parseInt(Math.ceil(accRows / childNodes.length), 10);
+            an.row = an.outputNodes.map(function (aon) {
+                return aon.row;
+            })[parseInt(an.outputNodes.length / 2, 10)];
             an.y = an.row * cell.height;
         });
     };
