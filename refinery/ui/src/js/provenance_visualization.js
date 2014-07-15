@@ -2005,9 +2005,8 @@ provenanceVisualizationModule = function () {
                     updateNode(d3.select("#nodeId-" + n.id), n, n.x, n.y);
                     updateLink(d3.select("#nodeId-" + n.id), n, n.x, n.y);
                 });
-
-                /* Collapse. */
             } else {
+                /* Collapse. */
                 d3.select(this).selectAll(".node").style("display", "none");
                 an.links.forEach(function (l) {
                     d3.select("#linkId-" + l.id).style("display", "none");
@@ -2035,7 +2034,6 @@ provenanceVisualizationModule = function () {
         });
     };
 
-    /* TODO: D3 BUBBLESET. */
     /**
      * Path highlighting.
      */
@@ -2061,7 +2059,7 @@ provenanceVisualizationModule = function () {
                     return color(analysisWorkflowMap[x.analysis]);
                 });
 
-
+                /* TODO: Create CSS-classes for highlighted cells to manipulate on highlighting. */
                 if (d3.event.ctrlKey) {
 
                     /* Highlight selected links. */
@@ -2204,14 +2202,18 @@ provenanceVisualizationModule = function () {
      */
     var handleEvents = function () {
 
+        /* TODO: Bubble-set by dividing grid cells into smaller rects and filling them as well as interpolating the border. */
         /* Path highlighting. */
         handlePathHighlighting();
 
         /* Handle click separation. */
         handleBRectClick();
 
+        /* TODO: Minimize layout through minimizing analyses - adapt to collapse/expand. */
         /* Handle analysis aggregation. */
         handleCollapseExpandAnalysis();
+
+        /* TODO: On click on node, enlarge shape to display more info. */
     };
 
     /**
