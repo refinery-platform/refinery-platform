@@ -10,6 +10,7 @@ from django.db.models.query_utils import Q
 from django.db.models.signals import post_save, post_init
 from django.dispatch.dispatcher import receiver
 from django_extensions.db.fields import UUIDField
+from datetime import datetime
 import logging
 import settings
 import simplejson
@@ -40,17 +41,39 @@ class NodeCollection(models.Model):
     
     def __init__(self, *args, **kwargs ):
         # change dates from empty string to None (to pass validation)
-        if "submission_date" in kwargs:
+        if "submission_date" in kwargs:            
             if kwargs["submission_date"] == "":
                 kwargs["submission_date"] = None    
+            else:
+                kwargs["submission_date"] = self.normalize_date( kwargs["submission_date"] )
+
         if "release_date" in kwargs:
             if kwargs["release_date"] == "":
                 kwargs["release_date"] = None
+            else:
+                kwargs["release_date"] = self.normalize_date( kwargs["release_date"] )
                     
         super(NodeCollection, self).__init__( *args, **kwargs )
 
     def __unicode__(self):
         return unicode(self.identifier) + ( ": " + unicode(self.title) if unicode(self.title) != "" else "" ) + ": " + unicode(self.id)
+
+
+    def normalize_date(self, dateString):
+        '''
+        Normalizes date strings in dd/mm/yyyy format to yyyy-mm-dd.
+
+        Returns normalized date string if in expected unnormalized format or unnormalized date string.
+        '''
+        logger.info( "Converting date " + str( dateString ) + " ..." )
+        try:
+            # try reformatting incorrect date format used by Nature Scientific Data
+            return str( datetime.strftime( datetime.strptime( dateString, "%d/%m/%Y"), "%Y-%m-%d" ) )
+        except ValueError:
+            # ignore - date either in correct format or in format not supported (will cause a validation error handled separately)
+            logger.info( "Failed to convert date " + str( dateString ) + "!" )
+            return dateString
+
 
 
 class Publication(models.Model):
