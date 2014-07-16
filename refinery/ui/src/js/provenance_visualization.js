@@ -109,24 +109,16 @@ provenanceVisualizationModule = function () {
      */
     var highlightPredPath = function (nodeId, highlighted) {
 
-        /* For each predecessor. */
-        nodePredMap[nodeId].forEach(function (p) {
+        /* Get svg node element. */
+        d3.select("#nodeId-" + nodeId).classed({"highlightedNode": highlighted});
+        d3.select("#cellId-" + nodes[nodeId].col + "-" + nodes[nodeId].row).style("fill", function () {
+            return color(analysisWorkflowMap[nodes[nodeId].analysis]);
+        });
 
-            /* Get svg node element. */
-            d3.select("#nodeId-" + p).classed({"highlightedNode": highlighted});
-
-            /* Get svg link element. */
-            nodeLinkPredMap[p].forEach(function (l) {
-                d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
-                d3.select("#cellId-" + nodes[p].col + "-" + nodes[p].row).style("fill", function () {
-                    return color(analysisWorkflowMap[nodes[p].analysis]);
-                });
-                d3.select("#cellId-" + nodes[p].col + "-" + parseInt(nodes[p].row - 1, 10)).style("fill", function () {
-                    return color(analysisWorkflowMap[nodes[p].analysis]);
-                });
-            });
-
-            highlightPredPath(p, highlighted);
+        /* Get svg link element, and for each predecessor call recursively. */
+        nodeLinkPredMap[nodeId].forEach(function (l) {
+            d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
+            highlightPredPath(links[l].source, highlighted);
         });
     };
 
@@ -137,24 +129,16 @@ provenanceVisualizationModule = function () {
      */
     var highlightSuccPath = function (nodeId, highlighted) {
 
-        /* For each predecessor. */
-        nodeSuccMap[nodeId].forEach(function (s) {
+        /* Get svg node element. */
+        d3.select("#nodeId-" + nodeId).classed({"highlightedNode": highlighted});
+        d3.select("#cellId-" + nodes[nodeId].col + "-" + nodes[nodeId].row).style("fill", function () {
+            return color(analysisWorkflowMap[nodes[nodeId].analysis]);
+        });
 
-            /* Get svg node element. */
-            d3.select("#nodeId-" + s).classed({"highlightedNode": highlighted});
-
-            /* Get svg link element. */
-            nodeLinkSuccMap[s].forEach(function (l) {
-                d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
-                d3.select("#cellId-" + nodes[s].col + "-" + nodes[s].row).style("fill", function () {
-                    return color(analysisWorkflowMap[nodes[s].analysis]);
-                });
-                d3.select("#cellId-" + nodes[s].col + "-" + parseInt(nodes[s].row - 1, 10)).style("fill", function () {
-                    return color(analysisWorkflowMap[nodes[s].analysis]);
-                });
-            });
-
-            highlightSuccPath(s, highlighted);
+        /* Get svg link element, and for each successor call recursively. */
+        nodeLinkSuccMap[nodeId].forEach(function (l) {
+            d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
+            highlightSuccPath(links[l].target, highlighted);
         });
     };
 
@@ -2055,10 +2039,6 @@ provenanceVisualizationModule = function () {
                     return color(analysisWorkflowMap[x.analysis]);
                 });
 
-                d3.select("#cellId-" + x.col + "-" + parseInt(x.row - 1, 10)).style("fill", function () {
-                    return color(analysisWorkflowMap[x.analysis]);
-                });
-
                 /* TODO: Create CSS-classes for highlighted cells to manipulate on highlighting. */
                 if (d3.event.ctrlKey) {
 
@@ -2179,10 +2159,10 @@ provenanceVisualizationModule = function () {
             })
             .enter().append("rect")
             .attr("x", function (d, i) {
-                return -parseInt(i / layoutWidth, 10) * cell.width;
+                return -cell.width / 2 - parseInt(i / layoutWidth, 10) * cell.width;
             })
             .attr("y", function (d, i) {
-                return (i % layoutWidth) * cell.height;
+                return -cell.height / 2 + (i % layoutWidth) * cell.height;
             })
             .attr("width", cell.width)
             .attr("height", cell.height)
@@ -2191,7 +2171,7 @@ provenanceVisualizationModule = function () {
             .classed({
                 "cell": true
             })
-            .style("opacity", 0.5)
+            .style("opacity", 0.7)
             .attr("id", function (d, i) {
                 return "cellId-" + parseInt(i / layoutWidth, 10) + "-" + (i % layoutWidth);
             });
