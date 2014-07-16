@@ -21,7 +21,9 @@ provenanceVisualizationModule = function () {
         link = Object.create(null),
         analysis = Object.create(null),
         aNode = Object.create(null),
-        gridCell = Object.create(null);
+        gridCell = Object.create(null),
+        hLink = Object.create(null),
+        hNode = Object.create(null);
 
     /* TODO: Rewrite for simple maps (https://github.com/mbostock/d3/wiki/Arrays#d3_map). */
     /* Initialize look up hashes. */
@@ -93,13 +95,9 @@ provenanceVisualizationModule = function () {
      * Reset css for all nodes.
      */
     var clearHighlighting = function () {
-        d3.selectAll(".node").each(function () {
-            d3.select(this).classed({"highlightedNode": false});
+        d3.selectAll(".hLink").each(function () {
+            d3.select(this).style("display", "none");
         });
-        d3.selectAll(".link").each(function () {
-            d3.select(this).classed({"highlightedLink": false});
-        });
-        d3.selectAll(".cell").style("fill", "none");
     };
 
     /**
@@ -108,25 +106,13 @@ provenanceVisualizationModule = function () {
      * @param highlighted A Boolean flag whether path should be highlighted or not.
      */
     var highlightPredPath = function (nodeId, highlighted) {
-
-        /* For each predecessor. */
-        nodePredMap[nodeId].forEach(function (p) {
-
-            /* Get svg node element. */
-            d3.select("#nodeId-" + p).classed({"highlightedNode": highlighted});
-
-            /* Get svg link element. */
-            nodeLinkPredMap[p].forEach(function (l) {
-                d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
-                d3.select("#cellId-" + nodes[p].col + "-" + nodes[p].row).style("fill", function () {
-                    return color(analysisWorkflowMap[nodes[p].analysis]);
-                });
-                d3.select("#cellId-" + nodes[p].col + "-" + parseInt(nodes[p].row - 1, 10)).style("fill", function () {
-                    return color(analysisWorkflowMap[nodes[p].analysis]);
-                });
+        /* Get svg link element, and for each predecessor call recursively. */
+        nodeLinkPredMap[nodeId].forEach(function (l) {
+            d3.select("#hLinkId-" + l).style("display", "inline");
+            d3.select("#hLinkId-" + l).style("stroke", function () {
+                return color(analysisWorkflowMap[nodes[nodeId].analysis]);
             });
-
-            highlightPredPath(p, highlighted);
+            highlightPredPath(links[l].source, highlighted);
         });
     };
 
@@ -136,25 +122,13 @@ provenanceVisualizationModule = function () {
      * @param highlighted A Boolean flag whether path should be highlighted or not.
      */
     var highlightSuccPath = function (nodeId, highlighted) {
-
-        /* For each predecessor. */
-        nodeSuccMap[nodeId].forEach(function (s) {
-
-            /* Get svg node element. */
-            d3.select("#nodeId-" + s).classed({"highlightedNode": highlighted});
-
-            /* Get svg link element. */
-            nodeLinkSuccMap[s].forEach(function (l) {
-                d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
-                d3.select("#cellId-" + nodes[s].col + "-" + nodes[s].row).style("fill", function () {
-                    return color(analysisWorkflowMap[nodes[s].analysis]);
-                });
-                d3.select("#cellId-" + nodes[s].col + "-" + parseInt(nodes[s].row - 1, 10)).style("fill", function () {
-                    return color(analysisWorkflowMap[nodes[s].analysis]);
-                });
+        /* Get svg link element, and for each successor call recursively. */
+        nodeLinkSuccMap[nodeId].forEach(function (l) {
+            d3.select("#hLinkId-" + l).style("display", "inline");
+            d3.select("#hLinkId-" + l).style("stroke", function () {
+                return color(analysisWorkflowMap[nodes[nodeId].analysis]);
             });
-
-            highlightSuccPath(s, highlighted);
+            highlightSuccPath(links[l].target, highlighted);
         });
     };
 
@@ -1358,6 +1332,10 @@ provenanceVisualizationModule = function () {
                     return "translate(" + (x - r * 0.75) + "," + (y - r * 0.75) + ")";
             }
         });
+        /* TODO: Revise potential translation bug. */
+        d3.select("#hNodeId-" + n.id).attr("transform", function (d) {
+            return "translate(" + (x - cell.width / 2) + "," + (y - cell.height / 2) + ")";
+        });
     };
 
     /**
@@ -1371,7 +1349,7 @@ provenanceVisualizationModule = function () {
         /* Drag adjacent links. */
         /* Get input links and update coordinates for x2 and y2. */
         nodeLinkPredMap[n.id].forEach(function (l) {
-            d3.select("#linkId-" + l).attr("d", function (l) {
+            d3.selectAll("#linkId-" + l + ", #hLinkId-" + l).attr("d", function (l) {
                 var pathSegment = "";
                 /* Source is analysis node. */
                 if (nodes[l.source].hidden) {
@@ -1396,7 +1374,7 @@ provenanceVisualizationModule = function () {
 
         /* Get output links and update coordinates for x1 and y1. */
         nodeLinkSuccMap[n.id].forEach(function (l) {
-            d3.select("#linkId-" + l).attr("d", function (l) {
+            d3.selectAll("#linkId-" + l + ", #hLinkId-" + l).attr("d", function (l) {
                 var pathSegment = " M" + parseInt(x, 10) + "," + parseInt(y, 10);
                 /* Target is analysis node. */
                 if (nodes[l.target].hidden) {
@@ -1787,7 +1765,7 @@ provenanceVisualizationModule = function () {
      * Draw links.
      */
     var drawLinks = function () {
-        link = canvas.selectAll(".link")
+        link = canvas.append("g").classed({"links": true}).selectAll(".link")
             .data(links.filter(function (l) {
                 return l !== null && typeof l !== "undefined";
             }))
@@ -2049,31 +2027,22 @@ provenanceVisualizationModule = function () {
                 /* Clear any highlighting. */
                 clearHighlighting();
 
-                /* Highlight selected node. */
-                d3.select(this).classed({"highlightedNode": true});
-                d3.select("#cellId-" + x.col + "-" + x.row).style("fill", function () {
-                    return color(analysisWorkflowMap[x.analysis]);
-                });
-
-                d3.select("#cellId-" + x.col + "-" + parseInt(x.row - 1, 10)).style("fill", function () {
-                    return color(analysisWorkflowMap[x.analysis]);
-                });
-
                 /* TODO: Create CSS-classes for highlighted cells to manipulate on highlighting. */
                 if (d3.event.ctrlKey) {
 
-                    /* Highlight selected links. */
                     nodeLinkSuccMap[x.id].forEach(function (l) {
-                        d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
+                        d3.select("#hLinkId-" + l).style("stroke", function () {
+                            return color(analysisWorkflowMap[x.analysis]);
+                        });
                     });
 
                     /* Highlight path. */
                     highlightSuccPath(x.id, highlighted);
                 } else if (d3.event.shiftKey) {
-
-                    /* Highlight selected links. */
                     nodeLinkPredMap[x.id].forEach(function (l) {
-                        d3.select("#linkId-" + l).classed({"highlightedLink": highlighted});
+                        d3.select("#hLinkId-" + l).style("stroke", function () {
+                            return color(analysisWorkflowMap[x.analysis]);
+                        });
                     });
 
                     /* Highlight path. */
@@ -2173,16 +2142,16 @@ provenanceVisualizationModule = function () {
      * Draws a grid for the grid-based graph layout.
      */
     var drawGrid = function () {
-        gridCell = canvas.selectAll(".cell")
+        gridCell = canvas.append("g").classed({"cells": true}).selectAll(".cell")
             .data(function () {
                 return [].concat.apply([], grid);
             })
             .enter().append("rect")
             .attr("x", function (d, i) {
-                return -parseInt(i / layoutWidth, 10) * cell.width;
+                return -cell.width / 2 - parseInt(i / layoutWidth, 10) * cell.width;
             })
             .attr("y", function (d, i) {
-                return (i % layoutWidth) * cell.height;
+                return -cell.height / 2 + (i % layoutWidth) * cell.height;
             })
             .attr("width", cell.width)
             .attr("height", cell.height)
@@ -2191,9 +2160,51 @@ provenanceVisualizationModule = function () {
             .classed({
                 "cell": true
             })
-            .style("opacity", 0.5)
+            .style("opacity", 0.7)
             .attr("id", function (d, i) {
                 return "cellId-" + parseInt(i / layoutWidth, 10) + "-" + (i % layoutWidth);
+            });
+    };
+
+    /**
+     * Draw simple node/link highlighting shapes.
+     */
+    var drawHighlightingShapes = function () {
+
+        hLink = canvas.append("g").classed({"hLinks": true}).selectAll(".hLink")
+            .data(links.filter(function (l) {
+                return l !== null && typeof l !== "undefined";
+            }))
+            .enter().append("path")
+            .attr("d", function (l) {
+                var pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
+                if (Math.abs(nodes[l.source].x - nodes[l.target].x) > cell.width) {
+                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(nodes[l.target].y, 10) + " H" + parseInt(nodes[l.target].x, 10));
+                } else {
+                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
+                }
+                return pathSegment;
+            })
+            .classed({
+                "hLink": true
+            })
+            .attr("id", function (l) {
+                return "hLinkId-" + l.id;
+            });
+
+
+        hNode = canvas.append("g").classed({"hNodes": true}).selectAll(".hNode")
+            .data(nodes)
+            .enter().append("g")
+            .attr("transform", function (d) {
+                return "translate(" + (d.x - cell.width / 2) + "," + (d.y - cell.height / 2) + ")";
+            })
+            .append("rect")
+            .attr("width", cell.width)
+            .attr("height", cell.height)
+            .classed({"hNode": true})
+            .attr("id", function (d) {
+                return "hNodeId-" + d.id;
             });
     };
 
@@ -2229,6 +2240,9 @@ provenanceVisualizationModule = function () {
 
             /* Draw grid. */
             drawGrid();
+
+            /* Draw simple node/link highlighting shapes. */
+            drawHighlightingShapes();
 
             /* Draw links. */
             drawLinks();
