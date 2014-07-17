@@ -1018,7 +1018,7 @@ provenanceVisualizationModule = function () {
 
                     /* For each parent entry. */
                     n.parents.forEach(function (p, j) { /* p is be parent node of n. */
-                        if (typeof nodeMap[n.parents[j]] !== "undefined") {
+                        if (typeof nodeMap[p] !== "undefined") {
                             /* ExtractLinkProperties. */
                             extractLinkProperties(n, linkId, j);
 
@@ -1026,13 +1026,13 @@ provenanceVisualizationModule = function () {
                             createLinkHashes(p, linkId, i, srcNodeIds, srcLinkIds);
                             linkId++;
                         } else {
-                            console.log("ERROR: Dataset might be corrupt - parent of node with uuid: " + n.uuid + " undefined.");
+                            console.log("ERROR: Dataset might be corrupt - parent: " + p + " of node with uuid: " + n.uuid + " does not exist.");
                         }
                     });
                     nodeLinkPredMap[i] = srcLinkIds;
                     nodePredMap[i] = srcNodeIds;
                 } else {
-                    console.log("Error: Parents array of node with uuid= " + n.uuid + " undefined!");
+                    console.log("Error: Parents array of node with uuid: " + n.uuid + " is undefined!");
                 }
             } else {
                 console.log("Error: Node uuid is undefined!");
