@@ -98,6 +98,9 @@ provenanceVisualizationModule = function () {
         d3.selectAll(".hLink").each(function () {
             d3.select(this).style("display", "none");
         });
+        d3.selectAll(".hNode").each(function () {
+            d3.select(this).style("display", "none");
+        });
     };
 
     /**
@@ -109,9 +112,6 @@ provenanceVisualizationModule = function () {
         /* Get svg link element, and for each predecessor call recursively. */
         nodeLinkPredMap[nodeId].forEach(function (l) {
             d3.select("#hLinkId-" + l).style("display", "inline");
-            d3.select("#hLinkId-" + l).style("stroke", function () {
-                return color(analysisWorkflowMap[nodes[nodeId].analysis]);
-            });
             highlightPredPath(links[l].source, highlighted);
         });
     };
@@ -125,9 +125,6 @@ provenanceVisualizationModule = function () {
         /* Get svg link element, and for each successor call recursively. */
         nodeLinkSuccMap[nodeId].forEach(function (l) {
             d3.select("#hLinkId-" + l).style("display", "inline");
-            d3.select("#hLinkId-" + l).style("stroke", function () {
-                return color(analysisWorkflowMap[nodes[nodeId].analysis]);
-            });
             highlightSuccPath(links[l].target, highlighted);
         });
     };
@@ -2031,20 +2028,9 @@ provenanceVisualizationModule = function () {
                 /* TODO: Create CSS-classes for highlighted cells to manipulate on highlighting. */
                 if (d3.event.ctrlKey) {
 
-                    nodeLinkSuccMap[x.id].forEach(function (l) {
-                        d3.select("#hLinkId-" + l).style("stroke", function () {
-                            return color(analysisWorkflowMap[x.analysis]);
-                        });
-                    });
-
                     /* Highlight path. */
                     highlightSuccPath(x.id, highlighted);
                 } else if (d3.event.shiftKey) {
-                    nodeLinkPredMap[x.id].forEach(function (l) {
-                        d3.select("#hLinkId-" + l).style("stroke", function () {
-                            return color(analysisWorkflowMap[x.analysis]);
-                        });
-                    });
 
                     /* Highlight path. */
                     highlightPredPath(x.id, highlighted);
@@ -2109,7 +2095,7 @@ provenanceVisualizationModule = function () {
             timer = 0,
             bRectAction = clearHighlighting;
         /* default action. */
-        d3.select(".brect").on("click", function () {
+        d3.selectAll(".brect, .cell").on("click", function () {
 
             /* Suppress after drag end. */
             if (d3.event.defaultPrevented) return;
@@ -2134,7 +2120,7 @@ provenanceVisualizationModule = function () {
         });
 
         /* if double click, the single click action is overwritten. */
-        d3.select(".brect").on("dblclick", function () {
+        d3.selectAll(".brect, .cell").on("dblclick", function () {
             bRectAction = handleFitGraphToWindow;
         });
     };
@@ -2191,6 +2177,8 @@ provenanceVisualizationModule = function () {
             })
             .attr("id", function (l) {
                 return "hLinkId-" + l.id;
+            }).style("stroke", function (d) {
+                return color(analysisWorkflowMap[nodes[d.target].analysis]);
             });
 
 
@@ -2206,6 +2194,8 @@ provenanceVisualizationModule = function () {
             .classed({"hNode": true})
             .attr("id", function (d) {
                 return "hNodeId-" + d.id;
+            }).style("fill", function (d) {
+                return color(analysisWorkflowMap[d.analysis]);
             });
     };
 
