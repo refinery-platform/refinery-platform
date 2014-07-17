@@ -1954,7 +1954,7 @@ provenanceVisualizationModule = function () {
             if (!an.hidden) {
                 d3.select(this).selectAll(".node").style("display", "inline");
                 an.links.forEach(function (l) {
-                    d3.selectAll("#linkId-" + l.id + ",#hLinkId-" + l.id).style("display", "inline");
+                    d3.select("#linkId-" + l.id).style("display", "inline");
                 });
                 d3.select(this).select(".aNode").style("display", "none");
 
@@ -1967,7 +1967,7 @@ provenanceVisualizationModule = function () {
                 /* Set link visibility. */
                 an.inputNodes.forEach(function (ain) {
                     nodeLinkPredMap[ain.id].forEach(function (l) {
-                        d3.selectAll("#linkId-" + links[l].id + "#hLinkId-" + links[l].id).style("display", "inline");
+                        d3.select("#linkId-" + links[l].id).style("display", "inline");
                         links[l].hidden = false;
                     });
                 });
@@ -1985,7 +1985,7 @@ provenanceVisualizationModule = function () {
                 /* Collapse. */
                 d3.select(this).selectAll(".node").style("display", "none");
                 an.links.forEach(function (l) {
-                    d3.selectAll("#linkId-" + l.id + ",#hLinkId-" + l.id).style("display", "none");
+                    d3.select("#linkId-" + l.id).style("display", "none");
                 });
                 d3.select(this).select(".aNode").style("display", "inline");
 
@@ -1998,7 +1998,7 @@ provenanceVisualizationModule = function () {
                 /* Set link visibility. */
                 an.inputNodes.forEach(function (ain) {
                     nodeLinkPredMap[ain.id].forEach(function (l) {
-                        d3.selectAll("#linkId-" + links[l].id + ",#hLinkId-" + links[l].id).style("display", "inline");
+                        d3.select("#linkId-" + links[l].id).style("display", "inline");
                         links[l].hidden = false;
                     });
                 });
