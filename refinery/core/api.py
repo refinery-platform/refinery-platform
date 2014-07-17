@@ -98,7 +98,7 @@ class NodeResource(ModelResource):
         authentication = SessionAuthentication()
         authorization = Authorization() #GuardianAuthorization()
         allowed_methods = ["get" ]
-        fields = ['name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay', 'children', 'type', 'analysis_uuid' ]
+        fields = ['name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay', 'children', 'type', 'analysis_uuid', 'subanalysis' ]
         filtering = { 'uuid': ALL, 'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS }
         #filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
 
