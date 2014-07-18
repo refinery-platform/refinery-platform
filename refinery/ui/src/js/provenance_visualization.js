@@ -2056,7 +2056,8 @@ provenanceVisualizationModule = function () {
             })],
             delta = [max[0] - min[0], max[1] - min[1]],
             factor = [(width / delta[0]), (height / delta[1])],
-            newScale = d3.min(factor),
+        /* Maximize scale to factor 3. */
+            newScale = d3.min(factor.concat([3])),
             newPos = [((width - delta[0] * newScale) / 2),
                 ((height - delta[1] * newScale) / 2)];
 
