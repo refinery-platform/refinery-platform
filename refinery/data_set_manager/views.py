@@ -9,11 +9,11 @@ import simplejson
 from urlparse import urlparse
 from django import forms
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
+from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.core.urlresolvers import reverse
+from django.views.generic import View
 from haystack.query import SearchQuerySet
 from core.models import *
 from data_set_manager.tasks import parse_isatab
@@ -85,6 +85,23 @@ def search_typeahead(request):
 #===============================================================================
 # ISA-Tab import
 #===============================================================================
+class ImportISATabView(View):
+    '''Capture ISA archive URL from POST requests submitted from external sites
+
+    '''
+    def post(self, request, *args, **kwargs):
+        try:
+            isa_tab_url = request.POST['isa_tab_url']
+        except KeyError:
+            logger.error("ISA archive URL was not provided")
+            return HttpResponseBadRequest("Please provide an ISA archive URL")
+        else:
+            # set cookie and redirect to process_isa_tab view
+            response = HttpResponseRedirect(reverse('process_isa_tab'))
+            response.set_cookie('isa_tab_url', isa_tab_url)
+            return response
+
+
 class ImportISATabFileForm(forms.Form):
     '''ISA-Tab file upload form
 
@@ -104,39 +121,21 @@ class ImportISATabFileForm(forms.Form):
             raise forms.ValidationError("Please provide either a file or a URL")
 
 
-@csrf_exempt
-def import_isa_tab(request):
-    '''Capture ISA archive URL from POST request submitted from an external site
-
-    '''
-    if request.method == 'POST':
-        try:
-            isa_tab_url = request.POST['isa_tab_url']
-        except KeyError:
-            logger.error("ISA archive URL was not provided")
-            return HttpResponseBadRequest("Please provide an ISA archive URL")
-        else:
-            # set cookie and redirect to process_isa_tab view
-            response = HttpResponseRedirect(reverse('process_isa_tab'))
-            response.set_cookie('isa_tab_url', isa_tab_url)
-            return response
-    else:
-        logger.error("Received '%s' request from '%s' while expecting POST",
-                     request.method, request.META.get('HTTP_REFERER', 'unknown source'))
-        return HttpResponseBadRequest("POST request expected")
-
-
 @login_required
 def process_isa_tab(request):
     '''Process imported ISA-Tab file
 
     '''
-    #TODO: change implementation to a class-based view
+    #TODO: change implementation to a class-based view (FormView?)
     template_name = 'data_set_manager/import.html'
+    success_view_name = 'data_set'
+    # a workaround for automatic ISA archive import after logging in
     try:
         url = request.COOKIES['isa_tab_url']
     except KeyError:
-        pass
+        form = ImportISATabFileForm()
+        context = RequestContext(request, {'form': form})
+        return render_to_response(template_name, context_instance=context)
     else:
         u = urlparse(url)
         file_name = u.path.split('/')[-1]
@@ -159,7 +158,7 @@ def process_isa_tab(request):
         if dataset_uuid:
             #TODO: redirect to the list of analysis samples for the given UUID
             response = HttpResponseRedirect(
-                reverse('data_set', args=(dataset_uuid,)))
+                reverse(success_view_name, args=(dataset_uuid,)))
             response.delete_cookie('isa_tab_url')
             return response
         else:
@@ -210,7 +209,7 @@ def process_isa_tab(request):
             if dataset_uuid:
                 #TODO: redirect to the list of analysis samples for the given UUID
                 return HttpResponseRedirect(
-                    reverse('data_set', args=(dataset_uuid,)))
+                    reverse(success_view_name, args=(dataset_uuid,)))
             else:
                 error = 'Problem parsing ISA-Tab file'
                 context = RequestContext(request,
