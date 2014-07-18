@@ -163,10 +163,10 @@ provenanceVisualizationModule = function () {
     /**
      * Deep copy node data structure.
      * @param node Node object.
-     * @returns {{name: string, nodeType: string, fileType: string, uuid: string, study: string, assay: string, row: number, col: number, parents: Array, id: number, doiFactor: number, hidden: boolean, bcOrder: number, x: number, y: number, rowBK: {left: number, right: number}, isBlockRoot: boolean}}
+     * @returns {{name: string, nodeType: string, fileType: string, uuid: string, study: string, assay: string, row: number, col: number, parents: Array, id: number, doiFactor: number, hidden: boolean, bcOrder: number, x: number, y: number, rowBK: {left: number, right: number}, isBlockRoot: boolean, subanalysis: number}}
      */
     var copyNode = function (node) {
-        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, doiFactor: -1, hidden: true, bcOrder: -1, x: 0, y: 0, rowBK: {left: -1, right: -1}, isBlockRoot: false};
+        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, doiFactor: -1, hidden: true, bcOrder: -1, x: 0, y: 0, rowBK: {left: -1, right: -1}, isBlockRoot: false, subanalysis: -1};
 
         newNode.name = node.name;
         newNode.nodeType = node.nodeType;
@@ -188,6 +188,7 @@ provenanceVisualizationModule = function () {
         newNode.y = node.y;
         newNode.rowBK.left = node.rowBK.left;
         newNode.rowBK.right = node.rowBK.right;
+        newNode.subanalysis = node.subanalysis;
 
         return newNode;
     };
@@ -780,7 +781,8 @@ provenanceVisualizationModule = function () {
                         doiFactor: -1,
                         hidden: false,
                         bcOrder: -1,
-                        isBlockRoot: false
+                        isBlockRoot: false,
+                        subanalysis: -1
                     });
 
                     /* Update node maps. */
@@ -1127,7 +1129,8 @@ provenanceVisualizationModule = function () {
             bcOrder: -1,
             isBlockRoot: false,
             x: 0,
-            y: 0
+            y: 0,
+            subanalysis: nodeObj.subanalysis
         });
     };
 
@@ -1930,6 +1933,7 @@ provenanceVisualizationModule = function () {
             .html(function (d) {
                 return "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.id + "</span><br>" +
                     "<strong>Name:</strong> <span style='color:#fa9b30'>" + d.name + "</span><br>" +
+                    "<strong>Sub Analysis:</strong> <span style='color:#fa9b30'>" + d.subanalysis + "</span><br>" +
                     "<strong>Type:</strong> <span style='color:#fa9b30'>" + d.fileType + "</span><br>" +
                     "<strong>DEBUG: Row:</strong> <span style='color:#fa9b30'>" + d.row + "</span><br>" +
                     "<strong>DEBUG: Col:</strong> <span style='color:#fa9b30'>" + d.col + "</span><br>" +
