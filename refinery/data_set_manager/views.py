@@ -8,7 +8,6 @@ import os
 import simplejson
 from urlparse import urlparse
 from django import forms
-from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render_to_response
@@ -121,52 +120,55 @@ class ImportISATabFileForm(forms.Form):
             raise forms.ValidationError("Please provide either a file or a URL")
 
 
-@login_required
-def process_isa_tab(request):
-    '''Process imported ISA-Tab file
+class ProcessISATabView(View):
+    '''Process ISA-Tab archive
 
     '''
-    #TODO: change implementation to a class-based view (FormView?)
     template_name = 'data_set_manager/import.html'
     success_view_name = 'data_set'
-    # a workaround for automatic ISA archive import after logging in
-    try:
-        url = request.COOKIES['isa_tab_url']
-    except KeyError:
-        form = ImportISATabFileForm()
-        context = RequestContext(request, {'form': form})
-        return render_to_response(template_name, context_instance=context)
-    else:
-        u = urlparse(url)
-        file_name = u.path.split('/')[-1]
-        temp_file_path = os.path.join(get_temp_dir(), file_name)
-        try:
-            #TODO: refactor download_file to take file handle instead of path
-            download_file(url, temp_file_path)
-        except DownloadError as e:
-            logger.error("Problem downloading ISA-Tab file. %s", e)
-            error = "Problem downloading ISA-Tab file from: '{}'".format(url)
-            form = ImportISATabFileForm()
-            context = RequestContext(request, {'form': form, 'error': error})
-            return render_to_response(template_name, context_instance=context)
-        logger.debug("Temp file name: '%s'", temp_file_path)
-        dataset_uuid = parse_isatab.delay(request.user.username,
-                                          False,
-                                          temp_file_path).get()
-        #TODO: exception handling
-        os.unlink(temp_file_path)
-        if dataset_uuid:
-            #TODO: redirect to the list of analysis samples for the given UUID
-            response = HttpResponseRedirect(
-                reverse(success_view_name, args=(dataset_uuid,)))
-            response.delete_cookie('isa_tab_url')
-            return response
-        else:
-            error = 'Problem parsing ISA-Tab file'
-            context = RequestContext(request, {'form': form, 'error': error})
-            return render_to_response(template_name, context_instance=context)
 
-    if request.method == 'POST':
+    # a workaround for automatic ISA archive import after logging in
+    def get(self, request, *args, **kwargs):
+        try:
+            url = request.COOKIES['isa_tab_url']
+        except KeyError:
+            form = ImportISATabFileForm()
+            context = RequestContext(request, {'form': form})
+            return render_to_response(self.template_name,
+                                      context_instance=context)
+        else:
+            u = urlparse(url)
+            file_name = u.path.split('/')[-1]
+            temp_file_path = os.path.join(get_temp_dir(), file_name)
+            try:
+                #TODO: refactor download_file to take file handle instead of path
+                download_file(url, temp_file_path)
+            except DownloadError as e:
+                logger.error("Problem downloading ISA-Tab file. %s", e)
+                error = "Problem downloading ISA-Tab file from: '{}'".format(url)
+                form = ImportISATabFileForm()
+                context = RequestContext(request, {'form': form, 'error': error})
+                return render_to_response(self.template_name,
+                                          context_instance=context)
+            logger.debug("Temp file name: '%s'", temp_file_path)
+            dataset_uuid = parse_isatab.delay(request.user.username,
+                                              False,
+                                              temp_file_path).get()
+            #TODO: exception handling
+            os.unlink(temp_file_path)
+            if dataset_uuid:
+                #TODO: redirect to the list of analysis samples for the given UUID
+                response = HttpResponseRedirect(
+                    reverse(self.success_view_name, args=(dataset_uuid,)))
+                response.delete_cookie('isa_tab_url')
+                return response
+            else:
+                error = 'Problem parsing ISA-Tab file'
+                context = RequestContext(request, {'form': form, 'error': error})
+                return render_to_response(self.template_name,
+                                          context_instance=context)
+
+    def post(self, request, *args, **kwargs):
         form = ImportISATabFileForm(request.POST, request.FILES)
         if form.is_valid():
             f = form.cleaned_data['isa_tab_file']
@@ -186,7 +188,8 @@ def process_isa_tab(request):
                     logger.error("Problem downloading ISA-Tab file. %s", e)
                     error = "Problem downloading ISA-Tab file from: " + url
                     context = RequestContext(request, {'form': form, 'error': error})
-                    return render_to_response(template_name, context)
+                    return render_to_response(self.template_name,
+                                              context_instance=context)
             else:
                 temp_file_path = os.path.join(get_temp_dir(), f.name)
                 try:
@@ -198,30 +201,27 @@ def process_isa_tab(request):
                     error = "Error writing ISA-Tab file to disk"
                     context = RequestContext(request,
                                              {'form': form, 'error': error})
-                    return render_to_response(template_name,
+                    return render_to_response(self.template_name,
                                               context_instance=context)
             logger.debug("Temp file name: '%s'", temp_file_path)
             dataset_uuid = parse_isatab.delay(request.user.username,
-                                              False,
-                                              temp_file_path).get()
+                                              False, temp_file_path).get()
             #TODO: exception handling
             os.unlink(temp_file_path)
             if dataset_uuid:
                 #TODO: redirect to the list of analysis samples for the given UUID
                 return HttpResponseRedirect(
-                    reverse(success_view_name, args=(dataset_uuid,)))
+                    reverse(self.success_view_name, args=(dataset_uuid,)))
             else:
                 error = 'Problem parsing ISA-Tab file'
                 context = RequestContext(request,
                                          {'form': form, 'error': error})
-                return render_to_response(template_name,
+                return render_to_response(self.template_name,
                                           context_instance=context)
         else:   # submitted form is not valid
             context = RequestContext(request, {'form': form})
-    else:   # this was not a POST request
-        form = ImportISATabFileForm()
-        context = RequestContext(request, {'form': form})
-    return render_to_response(template_name, context_instance=context)
+            return render_to_response(self.template_name,
+                                      context_instance=context)
 
 
 def handle_uploaded_file(source_file, target_path):
