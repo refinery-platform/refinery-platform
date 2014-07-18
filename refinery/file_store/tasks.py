@@ -280,6 +280,7 @@ def download_file(url, target_path, file_size=1):
 
     req = urllib2.Request(url)
     # check if source file can be downloaded
+    #TODO: refactor to use requests
     try:
         response = urllib2.urlopen(req)
     except (urllib2.URLError, ValueError) as e:
@@ -288,6 +289,7 @@ def download_file(url, target_path, file_size=1):
     # get remote file size, provide a default value in case Content-Length is missing
     remotefilesize = int(response.info().getheader("Content-Length", file_size))
 
+    #TODO: handle IOError
     with open(target_path, 'wb+') as destination:
         # download and save the file
         localfilesize = 0
