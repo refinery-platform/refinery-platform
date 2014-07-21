@@ -2205,7 +2205,7 @@ provenanceVisualizationModule = function () {
     };
 
     /**
-     * Traverse dataset back when node has two or more predecessors.
+     * Traverse graph back when the node has two or more predecessors.
      * @param n Current node.
      * @param subanalysis Current subanalysis.
      */
@@ -2219,7 +2219,7 @@ provenanceVisualizationModule = function () {
     };
 
     /**
-     * Traverse dataset in a DFS fashion.
+     * Traverse graph in a DFS fashion.
      * @param n Current node.
      * @param subanalysis Current subanalysis.
      */
@@ -2236,9 +2236,16 @@ provenanceVisualizationModule = function () {
 
         if (typeof nodeSuccMap[n.id] !== "undefined") {
             nodeSuccMap[n.id].forEach(function (sn) {
-                if (nodes[sn].analysis === "dataset") {
-                    traverseDataset(nodes[sn], subanalysis);
+                if (nodes[sn].analysis !== "dataset") {
+                    if (nodes[sn].subanalysis === null) {
+                        if (typeof nodeSuccMap[nodes[sn].id][0] !== "undefined") {
+                            subanalysis = nodes[nodeSuccMap[nodes[sn].id][0]].subanalysis;
+                        }
+                    } else {
+                        subanalysis = nodes[sn].subanalysis;
+                    }
                 }
+                traverseDataset(nodes[sn], subanalysis);
             });
         }
     };
@@ -2246,7 +2253,7 @@ provenanceVisualizationModule = function () {
     /**
      * Divide dataset into independent subanalyses.
      */
-    var markDatasetSubanalyses = function () {
+    var markSubanalyses = function () {
         var subanalysis = 0;
         inputNodes.forEach(function (n) {
             if (n.subanalysis === null) {
@@ -2349,8 +2356,8 @@ provenanceVisualizationModule = function () {
             /* Create link collection. */
             extractLinks();
 
-            /* Divide dataset into subanalyses. */
-            markDatasetSubanalyses();
+            /* Divide dataset and analyses into subanalyses. */
+            markSubanalyses();
 
             /* Set output nodes. */
             setOutputNodes();
