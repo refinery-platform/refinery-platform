@@ -139,7 +139,12 @@ class ProcessISATabView(View):
             return render_to_response(self.template_name,
                                       context_instance=context)
         form = ImportISATabFileForm({'isa_tab_url': url_from_cookie})
-        url = form.cleaned_data['isa_tab_url']
+        if form.is_valid():
+            url = form.cleaned_data['isa_tab_url']
+        else:
+            context = RequestContext(request, {'form': form})
+            return render_to_response(self.template_name,
+                                      context_instance=context)
         u = urlparse(url)
         file_name = u.path.split('/')[-1]
         temp_file_path = os.path.join(get_temp_dir(), file_name)
