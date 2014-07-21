@@ -283,8 +283,11 @@ def download_file(url, target_path, file_size=1):
     #TODO: refactor to use requests
     try:
         response = urllib2.urlopen(req)
-    except (urllib2.URLError, ValueError) as e:
-        raise DownloadError("Could not open URL '{}'. Reason: '{}'".format(url, e.reason))
+    except urllib2.URLError as e:
+        raise DownloadError(
+            "Could not open URL '{}'. Reason: '{}'".format(url, e.reason))
+    except ValueError as e:
+        raise DownloadError("Could not open URL '{}'".format(url))
 
     # get remote file size, provide a default value in case Content-Length is missing
     remotefilesize = int(response.info().getheader("Content-Length", file_size))
