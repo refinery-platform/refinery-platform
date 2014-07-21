@@ -2236,7 +2236,9 @@ provenanceVisualizationModule = function () {
 
         if (typeof nodeSuccMap[n.id] !== "undefined") {
             nodeSuccMap[n.id].forEach(function (sn) {
-                traverseDataset(nodes[sn], subanalysis);
+                if (nodes[sn].analysis === "dataset") {
+                    traverseDataset(nodes[sn], subanalysis);
+                }
             });
         }
     };
@@ -2347,9 +2349,8 @@ provenanceVisualizationModule = function () {
             /* Create link collection. */
             extractLinks();
 
-            /* TODO: Mark dataset paths into subanalyses.*/
+            /* Divide dataset into subanalyses. */
             markDatasetSubanalyses();
-            console.log(inputNodes);
 
             /* Set output nodes. */
             setOutputNodes();
