@@ -7,6 +7,7 @@ Created on April 6, 2012
 import logging
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from core.models import Workflow, WorkflowEngine
 from workflow_manager.tasks import get_workflows
 
@@ -35,6 +36,5 @@ def download_workflow (request, workflow_uuid):
     """Returns a specified workflow_id as a dictionary object.
 
     """
-    #TODO: handle DoesNotExist - use get_object_or_404()?
-    workflow = Workflow.objects.filter(uuid=workflow_uuid).get()
+    workflow = get_object_or_404(Workflow, uuid=workflow_uuid)
     return HttpResponse(workflow.graph)
