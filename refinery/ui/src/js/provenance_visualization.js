@@ -2205,11 +2205,60 @@ provenanceVisualizationModule = function () {
     };
 
     /**
+     * Traverse dataset back when node has two or more predecessors.
+     * @param n Current node.
+     * @param subanalysis Current subanalysis.
+     */
+    var traverseBackSubanalysis = function (n, subanalysis) {
+        n.subanalysis = subanalysis;
+        nodePredMap[n.id].forEach(function (pn) {
+            if (nodes[pn].subanalysis === null) {
+                traverseBackSubanalysis(nodes[pn], subanalysis);
+            }
+        });
+    };
+
+    /**
+     * Traverse dataset in a DFS fashion.
+     * @param n Current node.
+     * @param subanalysis Current subanalysis.
+     */
+    var traverseDataset = function (n, subanalysis) {
+        n.subanalysis = subanalysis;
+
+        if (nodePredMap[n.id].length > 1) {
+            nodePredMap[n.id].forEach(function (pn) {
+                if (nodes[pn].subanalysis === null) {
+                    traverseBackSubanalysis(nodes[pn], subanalysis);
+                }
+            });
+        }
+
+        if (typeof nodeSuccMap[n.id] !== "undefined") {
+            nodeSuccMap[n.id].forEach(function (sn) {
+                traverseDataset(nodes[sn], subanalysis);
+            });
+        }
+    };
+
+    /**
+     * Divide dataset into independent subanalyses.
+     */
+    var markDatasetSubanalyses = function () {
+        var subanalysis = 0;
+        inputNodes.forEach(function (n) {
+            if (n.subanalysis === null) {
+                traverseDataset(n, subanalysis);
+                subanalysis++;
+            }
+        });
+    };
+
+    /**
      * Handle event listeners.
      */
     var handleEvents = function () {
 
-        /* TODO: Bubble-set by dividing grid cells into smaller rects and filling them as well as interpolating the border. */
         /* Path highlighting. */
         handlePathHighlighting();
 
@@ -2297,6 +2346,10 @@ provenanceVisualizationModule = function () {
 
             /* Create link collection. */
             extractLinks();
+
+            /* TODO: Mark dataset paths into subanalyses.*/
+            markDatasetSubanalyses();
+            console.log(inputNodes);
 
             /* Set output nodes. */
             setOutputNodes();
