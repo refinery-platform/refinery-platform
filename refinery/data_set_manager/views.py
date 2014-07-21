@@ -130,43 +130,45 @@ class ProcessISATabView(View):
     # a workaround for automatic ISA archive import after logging in
     def get(self, request, *args, **kwargs):
         try:
-            url = request.COOKIES['isa_tab_url']
+            url_from_cookie = request.COOKIES['isa_tab_url']
         except KeyError:
+            error = "ISA-Tab URL was not provided"
+            logger.error(error)
             form = ImportISATabFileForm()
-            context = RequestContext(request, {'form': form})
+            context = RequestContext(request, {'form': form, 'error': error})
             return render_to_response(self.template_name,
                                       context_instance=context)
+        form = ImportISATabFileForm({'isa_tab_url': url_from_cookie})
+        url = form.cleaned_data['isa_tab_url']
+        u = urlparse(url)
+        file_name = u.path.split('/')[-1]
+        temp_file_path = os.path.join(get_temp_dir(), file_name)
+        try:
+            #TODO: refactor download_file to take file handle instead of path
+            download_file(url, temp_file_path)
+        except DownloadError as e:
+            logger.error("Problem downloading ISA-Tab file. %s", e)
+            error = "Problem downloading ISA-Tab file from: '{}'".format(url)
+            context = RequestContext(request, {'form': form, 'error': error})
+            return render_to_response(self.template_name,
+                                      context_instance=context)
+        logger.debug("Temp file name: '%s'", temp_file_path)
+        dataset_uuid = parse_isatab.delay(request.user.username,
+                                          False,
+                                          temp_file_path).get()
+        #TODO: exception handling
+        os.unlink(temp_file_path)
+        if dataset_uuid:
+            #TODO: redirect to the list of analysis samples for the given UUID
+            response = HttpResponseRedirect(
+                reverse(self.success_view_name, args=(dataset_uuid,)))
+            response.delete_cookie('isa_tab_url')
+            return response
         else:
-            u = urlparse(url)
-            file_name = u.path.split('/')[-1]
-            temp_file_path = os.path.join(get_temp_dir(), file_name)
-            try:
-                #TODO: refactor download_file to take file handle instead of path
-                download_file(url, temp_file_path)
-            except DownloadError as e:
-                logger.error("Problem downloading ISA-Tab file. %s", e)
-                error = "Problem downloading ISA-Tab file from: '{}'".format(url)
-                form = ImportISATabFileForm()
-                context = RequestContext(request, {'form': form, 'error': error})
-                return render_to_response(self.template_name,
-                                          context_instance=context)
-            logger.debug("Temp file name: '%s'", temp_file_path)
-            dataset_uuid = parse_isatab.delay(request.user.username,
-                                              False,
-                                              temp_file_path).get()
-            #TODO: exception handling
-            os.unlink(temp_file_path)
-            if dataset_uuid:
-                #TODO: redirect to the list of analysis samples for the given UUID
-                response = HttpResponseRedirect(
-                    reverse(self.success_view_name, args=(dataset_uuid,)))
-                response.delete_cookie('isa_tab_url')
-                return response
-            else:
-                error = 'Problem parsing ISA-Tab file'
-                context = RequestContext(request, {'form': form, 'error': error})
-                return render_to_response(self.template_name,
-                                          context_instance=context)
+            error = "Problem parsing ISA-Tab file"
+            context = RequestContext(request, {'form': form, 'error': error})
+            return render_to_response(self.template_name,
+                                      context_instance=context)
 
     def post(self, request, *args, **kwargs):
         form = ImportISATabFileForm(request.POST, request.FILES)
