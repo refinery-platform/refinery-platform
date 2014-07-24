@@ -14,6 +14,7 @@ provenanceVisualizationModule = function () {
         outputNodes = [],
         flatAnalyses = [],
         aNodes = [],
+        saNodes = [],
         grid = [];
 
     /* Initialize dom elements. */
@@ -21,6 +22,7 @@ provenanceVisualizationModule = function () {
         link = Object.create(null),
         analysis = Object.create(null),
         aNode = Object.create(null),
+        saNode = Object.create(null),
         gridCell = Object.create(null),
         hLink = Object.create(null),
         hNode = Object.create(null);
@@ -907,7 +909,10 @@ provenanceVisualizationModule = function () {
             s.push({id: outNode.id, p: nodePreds, s: []});
         });
 
-        nodes.forEach(function (selNode) {
+        /* Do not consider analysis and subanalysis nodes. */
+        nodes.filter(function (n) {
+            return n.id >= 0;
+        }).forEach(function (selNode) {
             var nodePreds = [];
             nodePredMap[selNode.id].forEach(function (pp) {
                 nodePreds.push(pp);
@@ -1061,12 +1066,12 @@ provenanceVisualizationModule = function () {
      * Create one node representing the whole analysis when aggregated.
      */
     var createAnalysisNodes = function () {
-        aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": true, "id": -1, "nodeType": "analysis", "start": -1, "end": -1, "created": -1, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": []});
+        aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": true, "id": -1, "nodeType": "analysis", "start": -1, "end": -1, "created": -1, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": [], "child": []});
 
         analyses.objects.filter(function (a) {
             return a.status === "SUCCESS";
         }).forEach(function (a, i) {
-            aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": true, "id": -i - 2, "nodeType": "analysis", "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": []});
+            aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": true, "id": -i - 2, "nodeType": "analysis", "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predAnalyses": [], "succAnalyses": [], "child": []});
         });
     };
 
@@ -1168,7 +1173,9 @@ provenanceVisualizationModule = function () {
             return a.row > b.row;
         };
 
-        nodes.forEach(function (n, i) {
+        nodes.filter(function (n) {
+            return n.id >= 0;
+        }).forEach(function (n, i) {
             if (analysisNodeMap.hasOwnProperty(n.analysis)) {
                 analysisNodeMap[n.analysis] = analysisNodeMap[n.analysis].concat([i]);
             } else {
@@ -1225,12 +1232,14 @@ provenanceVisualizationModule = function () {
             });
         });
 
+        /* Set links. */
         aNodes.forEach(function (an) {
             an.links = links.filter(function (l) {
                 return l !== null && nodeAnalysisMap[l.target] == an.id;
             });
         });
 
+        /* Add to nodes. */
         aNodes.forEach(function (an, i) {
             nodes[-i - 1] = aNodes[i];
         });
@@ -1251,6 +1260,24 @@ provenanceVisualizationModule = function () {
                 nodeLinkSuccMap[an.id] = nodeLinkSuccMap[an.id].concat(nodeLinkSuccMap[ain.id]);
             });
         });
+
+        /* TODO: parents derive information of children via composition. */
+
+        /* Create subanalysis node. */
+        var saId = -1 * aNodes.length - 1;
+        aNodes.forEach(function (an) {
+            an.inputNodes.forEach(function (ain) {
+                if (!an.child.hasOwnProperty(ain.subanalysis)) {
+                    var sa = {"analysis": an, "subanalysis": ain.subanalysisId, "row": -1, "col": -1, "hidden": true, "id": saId, "nodeType": "subanalysis", "doiFactor": -1, "nodes": [], "inputNodes": [], "outputNodes": [], "predSubanalyses": [], "succSubanalyses": [], "parent": [an]};
+                    saNodes.push(sa);
+                    an.child.push(sa);
+                    saId--;
+                }
+            });
+        });
+
+
+        console.log(saNodes);
     };
 
     /**
@@ -2251,12 +2278,15 @@ provenanceVisualizationModule = function () {
     };
 
     /**
-     * Divide dataset into independent subanalyses.
+     * Divide analyses into independent subanalyses.
      */
     var markSubanalyses = function () {
         var subanalysis = 0;
+
+        /* For each subanalysis in the dataset. */
         inputNodes.forEach(function (n) {
             if (n.subanalysis === null) {
+
                 traverseDataset(n, subanalysis);
                 subanalysis++;
             }
@@ -2356,7 +2386,10 @@ provenanceVisualizationModule = function () {
             /* Create link collection. */
             extractLinks();
 
-            /* Divide dataset and analyses into subanalyses. */
+            /* Extract analysis nodes. */
+            createAnalysisNodes();
+
+            /* Divide dataset and analyses into sub-analyses. */
             markSubanalyses();
 
             /* Set output nodes. */
@@ -2364,6 +2397,9 @@ provenanceVisualizationModule = function () {
 
             /* Create analyses and workflow hashes. */
             createWorkflowAnalysisMapping();
+
+            /* Create analysis node mapping. */
+            createAnalysisNodeMapping();
 
             /* Topological order. */
             var topNodes = sortTopological(outputNodes);
@@ -2376,8 +2412,8 @@ provenanceVisualizationModule = function () {
                 addDummyNodes();
 
                 /* Recalculate layers including dummy nodes. */
-                topNodes = sortTopological(outputNodes);
-                assignLayers(topNodes);
+                //topNodes = sortTopological(outputNodes);
+                //assignLayers(topNodes);
 
                 /* Group nodes by layer. */
                 var layeredTopNodes = groupNodesByCol(topNodes);
@@ -2388,11 +2424,8 @@ provenanceVisualizationModule = function () {
                 /* Restore original dataset. */
                 removeDummyNodes();
 
-                /* Extract analysis nodes. */
-                createAnalysisNodes();
-
                 /* Create analysis node mapping. */
-                createAnalysisNodeMapping();
+                //createAnalysisNodeMapping();
 
                 /* Optimize layout. */
                 postprocessLayout();
