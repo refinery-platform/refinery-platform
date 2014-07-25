@@ -1453,25 +1453,24 @@ provenanceVisualizationModule = function () {
 
                 if (Math.abs(srcCoords.x - x) > cell.width) {
                     pathSegment = pathSegment.concat(" L" + parseInt(srcCoords.x + (cell.width)) + "," + parseInt(y, 10) + " L" + parseInt(x, 10) + "," + parseInt(y, 10));
-                    } else {
-                        pathSegment = pathSegment.concat(" L" + parseInt(x, 10) + "," + parseInt(y, 10));
-                    }
+                } else {
+                    pathSegment = pathSegment.concat(" L" + parseInt(x, 10) + "," + parseInt(y, 10));
+                }
                 return pathSegment;
             });
         });
 
         /* Get output links and update coordinates for x1 and y1. */
         nodeLinkSuccMap[n.id].forEach(function (l) {
-            console.log(l);
             d3.selectAll("#linkId-" + l + ", #hLinkId-" + l).attr("d", function (l) {
                 var tarCoords = getNodeCoords(l.target),
                     pathSegment = " M" + parseInt(x, 10) + "," + parseInt(y, 10);
 
                 if (Math.abs(x - tarCoords.x) > cell.width) {
                     pathSegment = pathSegment.concat(" L" + parseInt(x + cell.width, 10) + "," + tarCoords.y + " L" + tarCoords.x + " " + tarCoords.y);
-                    } else {
+                } else {
                     pathSegment = pathSegment.concat(" L" + tarCoords.x + "," + tarCoords.y);
-                    }
+                }
                 return pathSegment;
             });
         });
@@ -2166,25 +2165,23 @@ provenanceVisualizationModule = function () {
                 if (nodeType === "subanalysis") {
                     selNode.links.forEach(function (l) {
                         d3.select("#linkId-" + l.id).style("display", "inline");
+                        d3.select("#hLinkId-" + l.id).style("display", "inline");
                     });
                 }
                 selNode.inputs.forEach(function (sain) {
                     nodeLinkPredMap[sain.id].forEach(function (l) {
                         d3.select("#linkId-" + links[l].id).style("display", "inline");
+                        d3.select("#hLinkId-" + links[l].id).style("display", "inline");
                         links[l].hidden = false;
                     });
                 });
 
                 /* Update connections. */
-                selNode.inputs.forEach(function (n) {
-                    updateNode(d3.select("#nodeId-" + n.id), n, n.x, n.y);
-                    updateLink(d3.select("#nodeId-" + n.id), n, n.x, n.y);
+                selNode.children.forEach(function (cn) {
+                    updateNode(d3.select("#nodeId-" + cn.id), cn, cn.x, cn.y);
+                    updateLink(d3.select("#nodeId-" + cn.id), cn, cn.x, cn.y);
                 });
 
-                selNode.outputs.forEach(function (n) {
-                    updateNode(d3.select("#nodeId-" + n.id), n, n.x, n.y);
-                    updateLink(d3.select("#nodeId-" + n.id), n, n.x, n.y);
-                });
             } else if (d3.event.shiftKey && nodeType !== "analysis") {
                 /* Collapse. */
 
@@ -2196,10 +2193,12 @@ provenanceVisualizationModule = function () {
                 /* Set link visibility. */
                 selNode.parent.links.forEach(function (l) {
                     d3.select("#linkId-" + l.id).style("display", "none");
+                    d3.select("#hLinkId-" + l.id).style("display", "none");
                 });
                 selNode.parent.inputs.forEach(function (sain) {
                     nodeLinkPredMap[sain.id].forEach(function (l) {
                         d3.select("#linkId-" + links[l].id).style("display", "inline");
+                        d3.select("#hLinkId-" + links[l].id).style("display", "inline");
                         links[l].hidden = false;
                     });
                 });
@@ -2216,7 +2215,7 @@ provenanceVisualizationModule = function () {
      * Path highlighting.
      */
     var handlePathHighlighting = function () {
-        d3.selectAll(".node").on("click", function (x) {
+        d3.selectAll(".node, .aNode, .saNode").on("click", function (x) {
 
             if (d3.event.ctrlKey || d3.event.shiftKey) {
                 var highlighted = true;
