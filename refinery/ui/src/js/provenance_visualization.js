@@ -888,6 +888,7 @@ provenanceVisualizationModule = function () {
         });
     };
 
+    /* TODO: Revise topsort. */
     /**
      * Linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
      * @param outputs Nodes which do not have any successor nodes.
@@ -2118,6 +2119,7 @@ provenanceVisualizationModule = function () {
                     "<strong>Name:</strong> <span style='color:#fa9b30'>" + d.name + "</span><br>" +
                     "<strong>Sub Analysis:</strong> <span style='color:#fa9b30'>" + d.subanalysis + "</span><br>" +
                     "<strong>Sub Analysis Id:</strong> <span style='color:#fa9b30'>" + d.parent.id + "</span><br>" +
+                    "<strong>Analysis Id:</strong> <span style='color:#fa9b30'>" + d.parent.parent.id + "</span><br>" +
                     "<strong>Type:</strong> <span style='color:#fa9b30'>" + d.fileType + "</span><br>" +
                     "<strong>Row:</strong> <span style='color:#fa9b30'>" + d.row + "</span><br>" +
                     "<strong>Col:</strong> <span style='color:#fa9b30'>" + d.col + "</span><br>" +
@@ -2464,6 +2466,15 @@ provenanceVisualizationModule = function () {
     };
 
     /**
+     * Sort outputnodes by subanalysis and analysis.
+     */
+    var sortOutputNodes = function () {
+        outputNodes.sort(function (a, b) {
+            return b.parent.parent.id - a.parent.parent.id;
+        });
+    };
+
+    /**
      * Handle event listeners.
      */
     var handleEvents = function () {
@@ -2580,6 +2591,9 @@ provenanceVisualizationModule = function () {
             /* Create analysis node mapping. */
             createAnalysisNodeMapping();
 
+            /* Group outputnodes by subanalysis and analysis. */
+            sortOutputNodes();
+
             /* Topological order. */
             var topNodes = sortTopological(outputNodes);
 
@@ -2599,8 +2613,9 @@ provenanceVisualizationModule = function () {
                 /* Restore original dataset. */
                 removeDummyNodes();
 
+                /* TODO: Revise postprocessing. */
                 /* Optimize layout. */
-                postprocessLayout();
+                //postprocessLayout();
 
                 /* Call d3 visualization. */
                 drawGraph();
