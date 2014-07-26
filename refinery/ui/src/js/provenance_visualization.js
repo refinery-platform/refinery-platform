@@ -856,34 +856,27 @@ provenanceVisualizationModule = function () {
 
     /**
      * Assign layers.
-     * @param tNodes Topology sorted array of nodes.
+     * @param tsNodes Topology sorted array of nodes.
      */
-    var assignLayers = function (tNodes) {
+    var assignLayers = function (tsNodes) {
         var layer = 0,
-            succ = [],
-            rtNodes = [];
+            succs = [];
 
-        tNodes.forEach(function (d) {
-            rtNodes.push(copyNode(nodes[d.id]));
-        });
-
-        rtNodes.forEach(function (n) {
+        tsNodes.forEach(function (n) {
 
             /* Get outgoing neighbor. */
-            succ = nodeSuccMap[n.id];
+            succs = nodeSuccMap[n.id];
 
-            if (succ.length === 0) {
+            if (succs.length === 0) {
                 nodes[n.id].col = layer;
-                n.col = layer;
             } else {
                 var minSuccLayer = layer;
-                succ.forEach(function (s) {
+                succs.forEach(function (s) {
                     if (nodes[s].col > minSuccLayer) {
                         minSuccLayer = nodes[s].col;
                     }
                 });
                 nodes[n.id].col = minSuccLayer + 1;
-                n.col = minSuccLayer + 1;
             }
         });
     };
