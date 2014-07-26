@@ -2470,7 +2470,7 @@ provenanceVisualizationModule = function () {
      */
     var sortOutputNodes = function () {
         outputNodes.sort(function (a, b) {
-            return b.parent.parent.id - a.parent.parent.id;
+            return b.parent.id - a.parent.id;
         });
     };
 
