@@ -37,9 +37,7 @@ provenanceVisualizationModule = function () {
         nodeLinkPredMap = d3.map(), /* node.id -> predecessor link ids */
         nodeLinkSuccMap = d3.map(), /* node.id -> successor link ids */
         workflowAnalysisMap = d3.map(),
-        analysisWorkflowMap = d3.map(),
-        analysisNodeMap = d3.map(),
-        nodeAnalysisMap = d3.map();
+        analysisWorkflowMap = d3.map();
 
     /* Restore dummy path link. */
     var dummyPaths = [];
@@ -165,7 +163,7 @@ provenanceVisualizationModule = function () {
     /**
      * Deep copy node data structure.
      * @param node Node object.
-     * @returns {{name: string, nodeType: string, fileType: string, uuid: string, study: string, assay: string, row: number, col: number, parents: Array, id: number, doiFactor: number, hidden: boolean, bcOrder: number, x: number, y: number, rowBK: {left: number, right: number}, isBlockRoot: boolean, subanalysis: number}, parent: Object}
+     * @returns {{name: string, nodeType: string, fileType: string, uuid: string, study: string, assay: string, row: number, col: number, parents: Array, id: number, doiFactor: number, hidden: boolean, bcOrder: number, x: number, y: number, rowBK: {left: number, right: number}, isBlockRoot: boolean, subanalysis: number, parent: {}}}
      */
     var copyNode = function (node) {
         var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, doiFactor: -1, hidden: true, bcOrder: -1, x: 0, y: 0, rowBK: {left: -1, right: -1}, isBlockRoot: false, subanalysis: -1, parent: {}};
@@ -792,7 +790,6 @@ provenanceVisualizationModule = function () {
                     /* Update node maps. */
                     createNodeHashes(nodes[newNodeId + i], newNodeId + i);
 
-                    nodeAnalysisMap[newNodeId + i] = curAnalysis;
                     predNode = newNodeId + i;
                     curCol++;
                     i++;
@@ -859,38 +856,32 @@ provenanceVisualizationModule = function () {
 
     /**
      * Assign layers.
-     * @param tNodes Topology sorted array of nodes.
+     * @param tsNodes Topology sorted array of nodes.
      */
-    var assignLayers = function (tNodes) {
+    var assignLayers = function (tsNodes) {
         var layer = 0,
-            succ = [],
-            rtNodes = [];
+            succs = [];
 
-        tNodes.forEach(function (d) {
-            rtNodes.push(copyNode(nodes[d.id]));
-        });
-
-        rtNodes.forEach(function (n) {
+        tsNodes.forEach(function (n) {
 
             /* Get outgoing neighbor. */
-            succ = nodeSuccMap[n.id];
+            succs = nodeSuccMap[n.id];
 
-            if (succ.length === 0) {
+            if (succs.length === 0) {
                 nodes[n.id].col = layer;
-                n.col = layer;
             } else {
                 var minSuccLayer = layer;
-                succ.forEach(function (s) {
+                succs.forEach(function (s) {
                     if (nodes[s].col > minSuccLayer) {
                         minSuccLayer = nodes[s].col;
                     }
                 });
                 nodes[n.id].col = minSuccLayer + 1;
-                n.col = minSuccLayer + 1;
             }
         });
     };
 
+    /* TODO: Revise topsort. */
     /**
      * Linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
      * @param outputs Nodes which do not have any successor nodes.
@@ -1068,12 +1059,12 @@ provenanceVisualizationModule = function () {
      * Create one node representing the whole analysis when aggregated.
      */
     var createAnalysisNodes = function () {
-        aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": true, "id": -1, "nodeType": "analysis", "start": -1, "end": -1, "created": -1, "doiFactor": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": []});
+        aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": true, "id": -1, "nodeType": "analysis", "start": -1, "end": -1, "created": -1, "doiFactor": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "links": []});
 
         analyses.objects.filter(function (a) {
             return a.status === "SUCCESS";
         }).forEach(function (a, i) {
-            aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": true, "id": -i - 2, "nodeType": "analysis", "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doiFactor": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": []});
+            aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": true, "id": -i - 2, "nodeType": "analysis", "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doiFactor": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "links": []});
         });
     };
 
@@ -1174,17 +1165,19 @@ provenanceVisualizationModule = function () {
      */
     var createAnalysisNodeMapping = function () {
 
+        /* Sub-analysis. */
+
         /* Create sub-analysis node. */
-        var saId = -1 * aNodes.length - 1;
+        var sanId = -1 * aNodes.length - 1;
         aNodes.forEach(function (an) {
             nodes.filter(function (n) {
                 return n.analysis === an.uuid;
             }).forEach(function (n) {
                 if (!an.children.hasOwnProperty(n.subanalysis)) {
-                    var sa = {"id": saId, "subanalysis": n.subanalysis, "nodeType": "subanalysis", "row": -1, "col": -1, "hidden": true, "doiFactor": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "parent": an};
-                    saNodes.push(sa);
-                    an.children[n.subanalysis] = sa;
-                    saId--;
+                    var san = {"id": sanId, "subanalysis": n.subanalysis, "nodeType": "subanalysis", "row": -1, "col": -1, "hidden": true, "doiFactor": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "parent": an};
+                    saNodes.push(san);
+                    an.children[n.subanalysis] = san;
+                    sanId--;
                 }
             });
         });
@@ -1204,7 +1197,7 @@ provenanceVisualizationModule = function () {
             /* Set inputnodes for subanalysis. */
             san.inputs = san.children.filter(function (n) {
                 return nodePredMap[n.id].some(function (p) {
-                    return nodes[p].analysis != san.parent.uuid;
+                    return nodes[p].analysis !== san.parent.uuid;
                 }) || nodePredMap[n.id].length === 0;
                 /* If no src analyses exists. */
             });
@@ -1212,7 +1205,7 @@ provenanceVisualizationModule = function () {
             /* Set outputnodes for subanalysis. */
             san.outputs = san.children.filter(function (n) {
                 return nodeSuccMap[n.id].length === 0 || nodeSuccMap[n.id].some(function (s) {
-                    return nodes[s].analysis != san.parent.uuid;
+                    return nodes[s].analysis !== san.parent.uuid;
                 });
             });
         });
@@ -1272,72 +1265,48 @@ provenanceVisualizationModule = function () {
             return a.row > b.row;
         };
 
-        /* Create analysisNodeMap. */
-        nodes.filter(function (n) {
-            return n.id >= 0;
-        }).forEach(function (n, i) {
-            if (analysisNodeMap.hasOwnProperty(n.analysis)) {
-                analysisNodeMap[n.analysis] = analysisNodeMap[n.analysis].concat([i]);
-            } else {
-                analysisNodeMap[n.analysis] = [i];
-            }
-        });
 
+        /* Analysis. */
         aNodes.forEach(function (an) {
-            /* Set nodes. */
-            /*an.nodes = analysisNodeMap[an.uuid].map(function (d) {
-             nodeAnalysisMap[d] = an.id;
-             return nodes[d];
-             */
-            /*flatten nodes objects. */
-            /*
-             }).sort(sortByRow);*/
+
+            /* Children are set already. */
 
             /* Set input nodes. */
-            an.inputs = an.children.filter(function (n) {
-                return nodePredMap[n.id].some(function (p) {
-                    return nodes[p].analysis != an.uuid;
-                }) || nodePredMap[n.id].length === 0;
-                /* If no src analyses exists. */
-            }).sort(sortByRow);
+            an.children.forEach(function (san) {
+                an.inputs = an.inputs.concat(san.inputs);
+            });
 
             /* Set output nodes. */
-            an.outputs = an.children.filter(function (n) {
-                return nodeSuccMap[n.id].length === 0 || nodeSuccMap[n.id].some(function (s) {
-                    return nodes[s].analysis != an.uuid;
-                });
-            }).sort(sortByRow);
+            an.children.forEach(function (san) {
+                an.outputs = an.outputs.concat(san.outputs);
+            });
         });
 
         aNodes.forEach(function (an) {
 
             /* Set predecessor analyses. */
-            if (an.uuid != "dataset") {
-                an.inputs.forEach(function (n) {
-                    nodePredMap[n.id].forEach(function (pn) {
-                        if (an.preds.indexOf(nodeAnalysisMap[pn]) === -1) {
-                            an.preds.push(nodeAnalysisMap[pn]);
-                        }
-                    });
+            an.children.forEach(function (san) {
+                san.preds.forEach(function (psan) {
+                    if (an.preds.indexOf(psan.parent) === -1) {
+                        an.preds = an.preds.concat(psan.parent);
+                    }
                 });
-            }
+            });
 
             /* Set successor analyses. */
-            an.outputs.forEach(function (n) {
-                if (nodeSuccMap[n.id].length !== 0) {
-                    nodeSuccMap[n.id].forEach(function (s) {
-                        if (an.succs.indexOf(nodeAnalysisMap[s]) === -1 && nodeAnalysisMap[s] !== an.id) {
-                            an.succs.push(nodeAnalysisMap[s]);
-                        }
-                    });
-                }
+            an.children.forEach(function (san) {
+                san.succs.forEach(function (ssan) {
+                    if (an.succs.indexOf(ssan.parent) === -1) {
+                        an.succs = an.succs.concat(ssan.parent);
+                    }
+                });
             });
         });
 
         /* Set links. */
         aNodes.forEach(function (an) {
-            an.links = links.filter(function (l) {
-                return l !== null && nodeAnalysisMap[l.target] == an.id;
+            an.children.forEach(function (san) {
+                an.links = an.links.concat(san.links);
             });
         });
 
@@ -1357,9 +1326,9 @@ provenanceVisualizationModule = function () {
 
             nodeSuccMap[an.id] = [];
             nodeLinkSuccMap[an.id] = [];
-            an.outputs.forEach(function (ain) {
-                nodeSuccMap[an.id] = nodeSuccMap[an.id].concat(nodeSuccMap[ain.id]);
-                nodeLinkSuccMap[an.id] = nodeLinkSuccMap[an.id].concat(nodeLinkSuccMap[ain.id]);
+            an.outputs.forEach(function (aon) {
+                nodeSuccMap[an.id] = nodeSuccMap[an.id].concat(nodeSuccMap[aon.id]);
+                nodeLinkSuccMap[an.id] = nodeLinkSuccMap[an.id].concat(nodeLinkSuccMap[aon.id]);
             });
         });
     };
@@ -1436,6 +1405,7 @@ provenanceVisualizationModule = function () {
                 case "dummy":
                 case "raw":
                 case "analysis":
+                case "subanalysis":
                 case "processed":
                     return "translate(" + x + "," + y + ")";
                 case "special":
@@ -1443,10 +1413,6 @@ provenanceVisualizationModule = function () {
                 case "dt":
                     return "translate(" + (x - r * 0.75) + "," + (y - r * 0.75) + ")";
             }
-        });
-        /* TODO: Revise potential translation bug. */
-        d3.select("#hNodeId-" + n.id).attr("transform", function (d) {
-            return "translate(" + (x - cell.width / 2) + "," + (y - cell.height / 2) + ")";
         });
     };
 
@@ -1459,26 +1425,30 @@ provenanceVisualizationModule = function () {
      */
     var updateLink = function (dom, n, x, y) {
         /* Drag adjacent links. */
+
+        var getNodeCoords = function (nodeId) {
+            var curId = nodeId,
+                coords = {x: -1, y: -1};
+
+            while (nodes[curId].hidden) {
+                curId = nodes[curId].parent.id;
+            }
+            coords.x = nodes[curId].x;
+            coords.y = nodes[curId].y;
+
+            return coords;
+        };
+
         /* Get input links and update coordinates for x2 and y2. */
         nodeLinkPredMap[n.id].forEach(function (l) {
             d3.selectAll("#linkId-" + l + ", #hLinkId-" + l).attr("d", function (l) {
-                var pathSegment = "";
-                /* Source is analysis node. */
-                if (nodes[l.source].hidden) {
-                    pathSegment = " M" + parseInt(nodes[nodeAnalysisMap[l.source]].x, 10) + "," + parseInt(nodes[nodeAnalysisMap[l.source]].y, 10);
-                    if (Math.abs(nodes[nodeAnalysisMap[l.source]].x - x) > cell.width) {
-                        pathSegment = pathSegment.concat(" L" + parseInt(nodes[nodeAnalysisMap[l.source]].x + (cell.width)) + "," + parseInt(y, 10) + " L" + parseInt(x, 10) + "," + parseInt(y, 10));
-                    } else {
-                        pathSegment = pathSegment.concat(" L" + parseInt(x, 10) + "," + parseInt(y, 10));
-                    }
+                var srcCoords = getNodeCoords(l.source),
+                    pathSegment = " M" + srcCoords.x + "," + srcCoords.y;
+
+                if (Math.abs(srcCoords.x - x) > cell.width) {
+                    pathSegment = pathSegment.concat(" L" + parseInt(srcCoords.x + (cell.width)) + "," + parseInt(y, 10) + " L" + parseInt(x, 10) + "," + parseInt(y, 10));
                 } else {
-                    /* Source is node. */
-                    pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
-                    if (Math.abs(nodes[l.source].x - x) > cell.width) {
-                        pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(y, 10) + " L" + parseInt(x, 10) + "," + parseInt(y, 10));
-                    } else {
-                        pathSegment = pathSegment.concat(" L" + parseInt(x, 10) + "," + parseInt(y, 10));
-                    }
+                    pathSegment = pathSegment.concat(" L" + parseInt(x, 10) + "," + parseInt(y, 10));
                 }
                 return pathSegment;
             });
@@ -1487,21 +1457,13 @@ provenanceVisualizationModule = function () {
         /* Get output links and update coordinates for x1 and y1. */
         nodeLinkSuccMap[n.id].forEach(function (l) {
             d3.selectAll("#linkId-" + l + ", #hLinkId-" + l).attr("d", function (l) {
-                var pathSegment = " M" + parseInt(x, 10) + "," + parseInt(y, 10);
-                /* Target is analysis node. */
-                if (nodes[l.target].hidden) {
-                    if (Math.abs(x - nodes[nodeAnalysisMap[l.target]].x) > cell.width) {
-                        pathSegment = pathSegment.concat(" L" + parseInt(x + cell.width, 10) + "," + parseInt(nodes[nodeAnalysisMap[l.target]].y, 10) + " L" + parseInt(nodes[nodeAnalysisMap[l.target]].x, 10) + " " + parseInt(nodes[nodeAnalysisMap[l.target]].y, 10));
-                    } else {
-                        pathSegment = pathSegment.concat(" L" + parseInt(nodes[nodeAnalysisMap[l.target]].x, 10) + "," + parseInt(nodes[nodeAnalysisMap[l.target]].y, 10));
-                    }
+                var tarCoords = getNodeCoords(l.target),
+                    pathSegment = " M" + parseInt(x, 10) + "," + parseInt(y, 10);
+
+                if (Math.abs(x - tarCoords.x) > cell.width) {
+                    pathSegment = pathSegment.concat(" L" + parseInt(x + cell.width, 10) + "," + tarCoords.y + " L" + tarCoords.x + " " + tarCoords.y);
                 } else {
-                    /* Target is node. */
-                    if (Math.abs(x - nodes[l.target].x) > cell.width) {
-                        pathSegment = pathSegment.concat(" L" + parseInt(x + cell.width, 10) + "," + parseInt(nodes[l.target].y, 10) + " L" + parseInt(nodes[l.target].x, 10) + " " + parseInt(nodes[l.target].y, 10));
-                    } else {
-                        pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
-                    }
+                    pathSegment = pathSegment.concat(" L" + tarCoords.x + "," + tarCoords.y);
                 }
                 return pathSegment;
             });
@@ -1574,6 +1536,21 @@ provenanceVisualizationModule = function () {
     };
 
     /**
+     * Sets the drag events for sub-nalysis nodes.
+     */
+    var applySubanalysisDragBehavior = function () {
+
+        /* Drag and drop node enabled. */
+        var subanalysisDrag = d3.behavior.drag()
+            .on("dragstart", dragStart)
+            .on("drag", dragging)
+            .on("dragend", dragEnd);
+
+        /* Invoke dragging behavior on nodes. */
+        d3.selectAll(".saNode").call(subanalysisDrag);
+    };
+
+    /**
      * Dye graph by analyses and its corresponding workflows.
      */
     var dyeWorkflows = function () {
@@ -1606,11 +1583,11 @@ provenanceVisualizationModule = function () {
             var rootCol;
 
             if (an.succs.length > 0) {
-                rootCol = nodes[an.succs[0]].inputs[0].col;
+                rootCol = an.succs[0].inputs[0].col;
 
                 an.succs.forEach(function (san) {
                     if (typeof san !== "undefined" && san !== null) {
-                        nodes[san].inputs.forEach(function (sanIn) {
+                        san.inputs.forEach(function (sanIn) {
                             if (sanIn.col + 1 > rootCol) {
                                 rootCol = sanIn.col + 1;
                             }
@@ -1634,6 +1611,43 @@ provenanceVisualizationModule = function () {
         });
     };
 
+    /* TODO: Dynamic layout compensation. */
+    /**
+     * Create initial layout for sub-analysis only nodes.
+     */
+    var initSubanalysisLayout = function () {
+        saNodes.forEach(function (san) {
+            var rootCol;
+
+            if (san.succs.length > 0) {
+                rootCol = san.succs[0].inputs[0].col;
+
+                san.succs.forEach(function (sasn) {
+                    if (typeof sasn !== "undefined" && sasn !== null) {
+                        sasn.inputs.forEach(function (sasnIn) {
+                            if (sasnIn.col + 1 > rootCol) {
+                                rootCol = sasnIn.col + 1;
+                            }
+                        });
+                    }
+                });
+            } else {
+                if (san.outputs.length > 0) {
+                    rootCol = san.outputs[0].col;
+                } else {
+                    san.col = firstLayer;
+                }
+            }
+
+            san.col = rootCol;
+            san.x = -san.col * cell.width;
+            san.row = san.outputs.map(function (aon) {
+                return aon.row;
+            })[parseInt(san.outputs.length / 2, 10)];
+            san.y = san.row * cell.height;
+        });
+    };
+
     /**
      * Restore links where dummy nodes were inserted in order to process the layout.
      */
@@ -1646,7 +1660,6 @@ provenanceVisualizationModule = function () {
             if (nodes[l.source].nodeType != "dummy" && nodes[l.target].nodeType == "dummy") {
                 nodeSuccMap[l.source].splice(nodeSuccMap[l.source].indexOf(l.target), 1);
                 nodeLinkSuccMap[l.source].splice(nodeLinkSuccMap[l.source].indexOf(l.id), 1);
-                nodeAnalysisMap[l.target] = null;
                 links.splice(i, 1);
                 i--;
             }
@@ -1655,7 +1668,6 @@ provenanceVisualizationModule = function () {
                 nodes[l.target].parents.splice(nodes[l.target].parents.indexOf(nodes[l.source].uuid), 1);
                 nodePredMap[l.target].splice(nodePredMap[l.target].indexOf(l.source), 1);
                 nodeLinkPredMap[l.target].splice(nodeLinkPredMap[l.target].indexOf(l.id), 1);
-                nodeAnalysisMap[l.source] = null;
                 links.splice(i, 1);
                 i--;
             }
@@ -1665,7 +1677,6 @@ provenanceVisualizationModule = function () {
                 nodeLinkPredMap[l.target].splice(nodeLinkPredMap[l.target].indexOf(l.id), 1);
                 nodeSuccMap[l.source].splice(nodeSuccMap[l.source].indexOf(l.target), 1);
                 nodeLinkSuccMap[l.source].splice(nodeLinkSuccMap[l.source].indexOf(l.id), 1);
-                nodeAnalysisMap[l.source] = null;
                 links.splice(i, 1);
                 i--;
             }
@@ -1918,6 +1929,62 @@ provenanceVisualizationModule = function () {
     };
 
     /**
+     * Draw sub-analysis nodes.
+     */
+    var drawSubanalysisNodes = function () {
+        analysis.each(function (d, i) {
+            d3.select(this).selectAll(".saNode")
+                .data(saNodes.filter(function (san) {
+                    return san.parent.id == -i - 1;
+                }))
+                .enter().append("g").each(function (san) {
+                    d3.select(this).classed({"saNode": true})
+                        .attr("transform", "translate(" + san.x + "," + san.y + ")")
+                        .attr("id", function () {
+                            return "nodeId-" + san.id;
+                        })
+                        .style("display", function () {
+                            return san.hidden ? "none" : "inline";
+                        })
+                        .append("polygon")
+                        .attr("points", function () {
+                            return "0," + (-r) + " " +
+                                (r) + "," + (-r / 2) + " " +
+                                (r) + "," + (r / 2) + " " +
+                                "0" + "," + (r) + " " +
+                                (-r) + "," + (r / 2) + " " +
+                                (-r) + "," + (-r / 2);
+                        })
+                        .style("fill", function () {
+                            return color(san.parent.uuid);
+                        })
+                        .style("stroke", function () {
+                            return color(analysisWorkflowMap[san.parent.uuid]);
+                        })
+                        .style("stroke-width", 2);
+                });
+        });
+
+        /* Set node dom element. */
+        saNode = d3.selectAll(".saNode");
+
+        /* Create d3-tip tooltips. */
+        var tip = d3.tip()
+            .attr("class", "d3-tip")
+            .offset([-10, 0])
+            .html(function (d) {
+                return "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.id + "</span><br>" +
+                    "<strong>Row:</strong> <span style='color:#fa9b30'>" + d.row + "</span><br>" +
+                    "<strong>Col:</strong> <span style='color:#fa9b30'>" + d.col + "</span>";
+            });
+
+        /* Invoke tooltip on dom element. */
+        saNode.call(tip);
+        saNode.on("mouseover", tip.show)
+            .on("mouseout", tip.hide);
+    };
+
+    /**
      * Draw analysis nodes.
      */
     var drawAnalysisNodes = function () {
@@ -1927,10 +1994,10 @@ provenanceVisualizationModule = function () {
                     return an.id == -i - 1;
                 }))
                 .enter().append("g").each(function (an) {
-                    d3.select(this).classed({"aNode": true, "superANode": true})
+                    d3.select(this).classed({"aNode": true})
                         .attr("transform", "translate(" + an.x + "," + an.y + ")")
                         .attr("id", function () {
-                            return "aNodeId-" + an.id;
+                            return "nodeId-" + an.id;
                         })
                         .style("display", function () {
                             return an.hidden ? "none" : "inline";
@@ -1966,8 +2033,8 @@ provenanceVisualizationModule = function () {
                     "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.id + "</span><br>" +
                         "<strong>Start:</strong> <span style='color:#fa9b30'>" + d.start + "</span><br>" +
                         "<strong>End:</strong> <span style='color:#fa9b30'>" + d.end + "</span><br>" +
-                        "<strong>DEBUG: Row:</strong> <span style='color:#fa9b30'>" + d.row + "</span><br>" +
-                        "<strong>DEBUG: Col:</strong> <span style='color:#fa9b30'>" + d.col + "</span>";
+                        "<strong>Row:</strong> <span style='color:#fa9b30'>" + d.row + "</span><br>" +
+                        "<strong>Col:</strong> <span style='color:#fa9b30'>" + d.col + "</span>";
             });
 
         /* Invoke tooltip on dom element. */
@@ -1983,7 +2050,7 @@ provenanceVisualizationModule = function () {
         analysis.each(function (a, i) {
             d3.select(this).selectAll(".node")
                 .data(nodes.filter(function (n) {
-                    return nodeAnalysisMap[n.id] == -i - 1;
+                    return n.analysis === nodes[-i - 1].uuid;
                 }))
                 .enter().append("g").style("display", function (d) {
                     return d.hidden ? "none" : "inline";
@@ -2045,10 +2112,11 @@ provenanceVisualizationModule = function () {
                     "<strong>Name:</strong> <span style='color:#fa9b30'>" + d.name + "</span><br>" +
                     "<strong>Sub Analysis:</strong> <span style='color:#fa9b30'>" + d.subanalysis + "</span><br>" +
                     "<strong>Sub Analysis Id:</strong> <span style='color:#fa9b30'>" + d.parent.id + "</span><br>" +
+                    "<strong>Analysis Id:</strong> <span style='color:#fa9b30'>" + d.parent.parent.id + "</span><br>" +
                     "<strong>Type:</strong> <span style='color:#fa9b30'>" + d.fileType + "</span><br>" +
-                    "<strong>DEBUG: Row:</strong> <span style='color:#fa9b30'>" + d.row + "</span><br>" +
-                    "<strong>DEBUG: Col:</strong> <span style='color:#fa9b30'>" + d.col + "</span><br>" +
-                    "<strong>DEBUG: BCOrder:</strong> <span style='color:#fa9b30'>" + d.bcOrder + "</span>";
+                    "<strong>Row:</strong> <span style='color:#fa9b30'>" + d.row + "</span><br>" +
+                    "<strong>Col:</strong> <span style='color:#fa9b30'>" + d.col + "</span><br>" +
+                    "<strong>BCOrder:</strong> <span style='color:#fa9b30'>" + d.bcOrder + "</span>";
             });
 
         /* Invoke tooltip on dom element. */
@@ -2062,64 +2130,77 @@ provenanceVisualizationModule = function () {
      * Sets the visibility of links and (a)nodes when collapsing or expanding analyses.
      */
     var handleCollapseExpandAnalysis = function () {
-        d3.selectAll(".analysis").on("dblclick", function () {
-            var an = nodes[+d3.select(this).attr("id").replace(/(aId-)/g, "")];
+        d3.selectAll(".node, .saNode, .aNode").on("dblclick", function () {
+
+            var hideChildNodes = function (n) {
+                n.children.forEach(function (cn) {
+                    cn.hidden = true;
+                    d3.select("#nodeId-" + cn.id).style("display", "none");
+                    if (typeof cn.children !== "undefined")
+                        hideChildNodes(cn);
+                });
+            };
+
+            var selNode = nodes[+d3.select(this).attr("id").replace(/(nodeId-)/g, "")],
+                nodeType = selNode.nodeType,
+                nodeId = selNode.id;
 
             /* Expand. */
-            if (!an.hidden) {
-                d3.select(this).selectAll(".node").style("display", "inline");
-                an.links.forEach(function (l) {
-                    d3.select("#linkId-" + l.id).style("display", "inline");
-                });
-                d3.select(this).select(".aNode").style("display", "none");
+            if (d3.event.ctrlKey && (nodeType === "analysis" || nodeType === "subanalysis")) {
 
                 /* Set node visibility. */
-                an.hidden = true;
-                an.children.forEach(function (n) {
+                d3.select("#nodeId-" + selNode.id).style("display", "none");
+                selNode.hidden = true;
+                selNode.children.forEach(function (n) {
+                    d3.select("#nodeId-" + n.id).style("display", "inline");
                     n.hidden = false;
                 });
 
                 /* Set link visibility. */
-                an.inputs.forEach(function (ain) {
-                    nodeLinkPredMap[ain.id].forEach(function (l) {
+                if (nodeType === "subanalysis") {
+                    selNode.links.forEach(function (l) {
+                        d3.select("#linkId-" + l.id).style("display", "inline");
+                        d3.select("#hLinkId-" + l.id).style("display", "inline");
+                    });
+                }
+                selNode.inputs.forEach(function (sain) {
+                    nodeLinkPredMap[sain.id].forEach(function (l) {
                         d3.select("#linkId-" + links[l].id).style("display", "inline");
+                        d3.select("#hLinkId-" + links[l].id).style("display", "inline");
                         links[l].hidden = false;
                     });
                 });
 
-                an.inputs.forEach(function (n) {
-                    updateNode(d3.select("#nodeId-" + n.id), n, n.x, n.y);
-                    updateLink(d3.select("#nodeId-" + n.id), n, n.x, n.y);
+                /* Update connections. */
+                selNode.children.forEach(function (cn) {
+                    updateNode(d3.select("#nodeId-" + cn.id), cn, cn.x, cn.y);
+                    updateLink(d3.select("#nodeId-" + cn.id), cn, cn.x, cn.y);
                 });
 
-                an.outputs.forEach(function (n) {
-                    updateNode(d3.select("#nodeId-" + n.id), n, n.x, n.y);
-                    updateLink(d3.select("#nodeId-" + n.id), n, n.x, n.y);
-                });
-            } else {
+            } else if (d3.event.shiftKey && nodeType !== "analysis") {
                 /* Collapse. */
-                d3.select(this).selectAll(".node").style("display", "none");
-                an.links.forEach(function (l) {
-                    d3.select("#linkId-" + l.id).style("display", "none");
-                });
-                d3.select(this).select(".aNode").style("display", "inline");
 
                 /* Set node visibility. */
-                an.hidden = false;
-                an.children.forEach(function (n) {
-                    n.hidden = true;
-                });
+                selNode.parent.hidden = false;
+                d3.select("#nodeId-" + selNode.parent.id).style("display", "inline");
+                hideChildNodes(selNode.parent);
 
                 /* Set link visibility. */
-                an.inputs.forEach(function (ain) {
-                    nodeLinkPredMap[ain.id].forEach(function (l) {
+                selNode.parent.links.forEach(function (l) {
+                    d3.select("#linkId-" + l.id).style("display", "none");
+                    d3.select("#hLinkId-" + l.id).style("display", "none");
+                });
+                selNode.parent.inputs.forEach(function (sain) {
+                    nodeLinkPredMap[sain.id].forEach(function (l) {
                         d3.select("#linkId-" + links[l].id).style("display", "inline");
+                        d3.select("#hLinkId-" + links[l].id).style("display", "inline");
                         links[l].hidden = false;
                     });
                 });
 
-                updateNode(d3.select(this).select(".aNode"), an, an.x, an.y);
-                updateLink(d3.select(this).select(".aNode"), an, an.x, an.y);
+                /* Update connections. */
+                updateNode(d3.select("#nodeId-" + selNode.parent.id), selNode.parent, selNode.parent.x, selNode.parent.y);
+                updateLink(d3.select("#nodeId-" + selNode.parent.id), selNode.parent, selNode.parent.x, selNode.parent.y);
             }
 
         });
@@ -2129,7 +2210,7 @@ provenanceVisualizationModule = function () {
      * Path highlighting.
      */
     var handlePathHighlighting = function () {
-        d3.selectAll(".node").on("click", function (x) {
+        d3.selectAll(".node, .aNode, .saNode").on("click", function (x) {
 
             if (d3.event.ctrlKey || d3.event.shiftKey) {
                 var highlighted = true;
@@ -2378,6 +2459,15 @@ provenanceVisualizationModule = function () {
     };
 
     /**
+     * Sort outputnodes by subanalysis and analysis.
+     */
+    var sortOutputNodes = function () {
+        outputNodes.sort(function (a, b) {
+            return b.parent.id - a.parent.id;
+        });
+    };
+
+    /**
      * Handle event listeners.
      */
     var handleEvents = function () {
@@ -2421,6 +2511,12 @@ provenanceVisualizationModule = function () {
             /* Draw nodes. */
             drawNodes();
 
+            /* Create initial layout for sub-analysis only nodes. */
+            initSubanalysisLayout();
+
+            /* Draw sub-analysis nodes. */
+            drawSubanalysisNodes();
+
             /* Create initial layout for analysis only nodes. */
             initAnalysisLayout();
 
@@ -2439,6 +2535,9 @@ provenanceVisualizationModule = function () {
 
             /* Add dragging behavior to analysis nodes. */
             applyAnalysisDragBehavior();
+
+            /* Add dragging behavior to sub-analysis nodes. */
+            applySubanalysisDragBehavior();
 
             /* Event listeners. */
             $('document').ready(function () {
@@ -2485,6 +2584,9 @@ provenanceVisualizationModule = function () {
             /* Create analysis node mapping. */
             createAnalysisNodeMapping();
 
+            /* Group outputnodes by subanalysis and analysis. */
+            sortOutputNodes();
+
             /* Topological order. */
             var topNodes = sortTopological(outputNodes);
 
@@ -2495,10 +2597,6 @@ provenanceVisualizationModule = function () {
                 /* Add dummy nodes and links. */
                 addDummyNodes();
 
-                /* Recalculate layers including dummy nodes. */
-                //topNodes = sortTopological(outputNodes);
-                //assignLayers(topNodes);
-
                 /* Group nodes by layer. */
                 var layeredTopNodes = groupNodesByCol(topNodes);
 
@@ -2508,11 +2606,9 @@ provenanceVisualizationModule = function () {
                 /* Restore original dataset. */
                 removeDummyNodes();
 
-                /* Create analysis node mapping. */
-                //createAnalysisNodeMapping();
-
+                /* TODO: Revise postprocessing. */
                 /* Optimize layout. */
-                postprocessLayout();
+                //postprocessLayout();
 
                 /* Call d3 visualization. */
                 drawGraph();
