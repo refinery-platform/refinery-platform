@@ -632,7 +632,6 @@ provenanceVisualizationModule = function () {
         }
     };
 
-    /* Code cleanup. */
     /**
      * Balance y-coordinates for each layer by mean of in- and outgoing links.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
@@ -759,7 +758,9 @@ provenanceVisualizationModule = function () {
                     curCol = nodes[l.source].col,
                     curAnalysis = nodes[l.source].analysis,
                     curStudy = nodes[l.source].study,
-                    curAssay = nodes[l.source].assay;
+                    curAssay = nodes[l.source].assay,
+                    curParent = nodes[l.target].parent,
+                    curSubanalysis = nodes[l.target].subanalysis;
 
                 /* Insert nodes. */
                 var i = 0;
@@ -783,8 +784,8 @@ provenanceVisualizationModule = function () {
                         hidden: false,
                         bcOrder: -1,
                         isBlockRoot: false,
-                        subanalysis: -1,
-                        parent: {}
+                        subanalysis: curSubanalysis,
+                        parent: curParent
                     });
 
                     /* Update node maps. */
@@ -1174,7 +1175,7 @@ provenanceVisualizationModule = function () {
                 return n.analysis === an.uuid;
             }).forEach(function (n) {
                 if (!an.children.hasOwnProperty(n.subanalysis)) {
-                    var san = {"id": sanId, "subanalysis": n.subanalysis, "nodeType": "subanalysis", "row": -1, "col": -1, "hidden": true, "doiFactor": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "parent": an};
+                    var san = {"id": sanId, "subanalysis": n.subanalysis, "nodeType": "subanalysis", "row": -1, "col": -1, "hidden": true, "doiFactor": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "parent": an, "isOutputAnalysis": false};
                     saNodes.push(san);
                     an.children[n.subanalysis] = san;
                     sanId--;
@@ -2115,6 +2116,7 @@ provenanceVisualizationModule = function () {
                     "<strong>Analysis Id:</strong> <span style='color:#fa9b30'>" + d.parent.parent.id + "</span><br>" +
                     "<strong>Type:</strong> <span style='color:#fa9b30'>" + d.fileType + "</span><br>" +
                     "<strong>Row:</strong> <span style='color:#fa9b30'>" + d.row + "</span><br>" +
+                    "<strong>RowBK left:</strong> <span style='color:#fa9b30'>" + d.rowBK.left + "</span><br>" +
                     "<strong>Col:</strong> <span style='color:#fa9b30'>" + d.col + "</span><br>" +
                     "<strong>BCOrder:</strong> <span style='color:#fa9b30'>" + d.bcOrder + "</span>";
             });
@@ -2458,13 +2460,206 @@ provenanceVisualizationModule = function () {
         });
     };
 
+    /* TODO: PROTOTYPE: Code cleanup. */
     /**
-     * Sort outputnodes by subanalysis and analysis.
+     * Sort output nodes by sub-analysis and analysis.
+     * Secondly, the distance for every pair of analyses (which are part of the graphs outputnodes) are computed
+     * and prioritized to be aligned together in the most-right and fixed layer of the graph.
+     * @returns {Array} The sorted array of output nodes.
      */
     var sortOutputNodes = function () {
+
+        /* Sort output nodes. */
         outputNodes.sort(function (a, b) {
             return b.parent.id - a.parent.id;
         });
+
+        /* Set analyses as output analyses. */
+        outputNodes.forEach(function (n) {
+            /* Set sub-analysis as output. */
+            n.parent.isOutputAnalysis = true;
+        });
+
+
+        var dist = [],
+            clusters = [],
+            priorities = [],
+            sortedOutputNodes = [];
+
+        /* Initialize n x n distance, cluster and priority matrix. */
+        saNodes.forEach(function (san, i) {
+            dist.push([]);
+            clusters.push([]);
+            priorities.push([]);
+            saNodes.forEach(function (sanj, j) {
+                dist[i][j] = -1;
+                clusters[i][j] = 0;
+            });
+        });
+
+        var curDist = 0,
+            curSa = Object.create(null),
+            origSa = Object.create(null);
+
+
+        var foundNeighbor = function (sa) {
+            if (sa.isOutputAnalysis) {
+                var i = saNodes.indexOf(origSa),
+                    j = saNodes.indexOf(sa);
+
+                if (curDist < dist[i][j] || dist[i][j] === -1) {
+                    dist[i][j] = curDist;
+                }
+            }
+        };
+
+        /* Traverse in successor direction. */
+        var traverseFront = function (sa) {
+            foundNeighbor(sa);
+            curDist++;
+            sa.succs.forEach(traverseFront);
+            curDist--;
+        };
+
+        /* Traverse in predecessor direction. */
+        var traverseBack = function (sa) {
+            foundNeighbor(sa);
+
+            // traverse front
+            var succs = sa.succs.filter(function (ssa) {
+                return ssa.id !== curSa.id;
+            });
+            curSa = sa;
+            curDist++;
+            succs.forEach(function (ssa) {
+                traverseFront(ssa);
+            });
+            sa.preds.forEach(function (psa) {
+                traverseBack(psa);
+            });
+            curDist--;
+        };
+
+        /* Each output subanalysis then has its path length to another output sub-analysis. */
+        var getNeighbors = function (ar, i) {
+            var curMin = d3.max(ar),
+                indices = [];
+            ar.forEach(function (v, j) {
+                if (v !== -1 && i !== j) {
+                    if (v < curMin) {
+                        curMin = v;
+                        indices = [];
+                        indices.push(j);
+                    } else if (v === curMin) {
+                        indices.push(j);
+                    }
+                }
+            });
+            return indices;
+        };
+
+        /* For each neighbors of an output sub-analysis, cluster them with the connecting output subanalyses. */
+        var computeClusters = function () {
+            saNodes.filter(function (d) {
+                return d.isOutputAnalysis;
+            }).forEach(function (sa) {
+                var neighbors = getNeighbors(dist[saNodes.indexOf(sa)], saNodes.indexOf(sa));
+                neighbors.forEach(function (j) {
+                    var i = saNodes.indexOf(sa);
+                    clusters[i][j]++;
+                    //clusters[j][i]++;
+                });
+            });
+        };
+
+        /* Every output sub-analysis has its nearest neighbors. */
+        var setPriorities = function () {
+            var setSa = function (sa, i, j) {
+                clusters[i].forEach(function (d, k) {
+                    if (d === j && sa !== saNodes[k]) {
+                        priorities[i].push(saNodes[k].id);
+                    }
+                });
+            };
+            saNodes.forEach(function (sa, i) {
+                for (var j = d3.max(clusters[i]); j > 0; j--) {
+                    setSa(sa, i, j);
+                }
+            });
+        };
+
+        /* Iterate over output sub-analysis and insert it directly after its nearest neighbor.*/
+        var insertSorted = function (ar, sa) {
+            var tail = [];
+            var bla = "";
+            ar.forEach(function (d) {
+                bla = bla + " " + d.id;
+            });
+            var found = false,
+                cutIndex = 0;
+            for (var i = 0; i < priorities.length && !found; i++) {
+                var p = priorities[saNodes.indexOf(sa)][i];
+                for (var j = 0; j < ar.length && !found; j++) {
+                    var d = ar[j];
+                    if (d.parent.id === p) {
+                        found = true;
+                        cutIndex = j;
+                    }
+                }
+            }
+
+            if (!found) {
+                ar.push.apply(ar, sa.outputs);
+            } else {
+                tail = ar.splice(cutIndex, ar.length - cutIndex);
+                ar.push.apply(ar, sa.outputs);
+                ar.push.apply(ar, tail);
+            }
+        };
+
+        /* Traverse back and forth to find distance with path hops between sub-analyses. */
+        var findConnections = function () {
+            saNodes.forEach(function (sani) {
+                curDist++;
+                curSa = sani;
+                origSa = sani;
+                sani.preds.forEach(function (psa) {
+                    traverseBack(psa);
+                });
+                sani.succs.forEach(function (ssa) {
+                    traverseFront(ssa);
+                });
+                curDist--;
+            });
+        };
+
+        var reorderOutputNodes = function () {
+            /* Set dataset sub-analyses without any successor analyses. */
+            saNodes.filter(function (sa) {
+                return sa.isOutputAnalysis;
+            }).filter(function (sa) {
+                return getNeighbors(dist[saNodes.indexOf(sa)], saNodes.indexOf(sa)).length === 0;
+            }).forEach(function (sa) {
+                sortedOutputNodes.push.apply(sortedOutputNodes, sa.outputs);
+            });
+
+            /* Set remaining clusters. */
+            saNodes.filter(function (sa) {
+                return sa.isOutputAnalysis;
+            }).filter(function (sa) {
+                return getNeighbors(dist[saNodes.indexOf(sa)], saNodes.indexOf(sa)).length !== 0;
+            }).forEach(function (sa) {
+
+                insertSorted(sortedOutputNodes, sa);
+            });
+        };
+
+        findConnections();
+        computeClusters();
+        setPriorities();
+        reorderOutputNodes();
+
+        return sortedOutputNodes;
     };
 
     /**
@@ -2540,7 +2735,7 @@ provenanceVisualizationModule = function () {
             applySubanalysisDragBehavior();
 
             /* Event listeners. */
-            $('document').ready(function () {
+            $(function () {
                 handleEvents();
             });
 
@@ -2584,18 +2779,21 @@ provenanceVisualizationModule = function () {
             /* Create analysis node mapping. */
             createAnalysisNodeMapping();
 
-            /* Group outputnodes by subanalysis and analysis. */
-            sortOutputNodes();
+            /* Group output nodes by sub-analysis and analysis. */
+            outputNodes = sortOutputNodes();
 
             /* Topological order. */
             var topNodes = sortTopological(outputNodes);
-
             if (topNodes !== null) {
                 /* Assign layers. */
                 assignLayers(topNodes);
 
                 /* Add dummy nodes and links. */
                 addDummyNodes();
+
+                /* Recalculate layers including dummy nodes. */
+                topNodes = sortTopological(outputNodes);
+                assignLayers(topNodes);
 
                 /* Group nodes by layer. */
                 var layeredTopNodes = groupNodesByCol(topNodes);
@@ -2608,7 +2806,7 @@ provenanceVisualizationModule = function () {
 
                 /* TODO: Revise postprocessing. */
                 /* Optimize layout. */
-                //postprocessLayout();
+                postprocessLayout();
 
                 /* Call d3 visualization. */
                 drawGraph();
