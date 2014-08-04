@@ -61,6 +61,223 @@ var provenanceVisualizationModule = function () {
         layoutWidth = -1,
         firstLayer = 0;
 
+
+    /**
+     * Constructor function for the super node inherited by Node, Analysis and Subanalysis.
+     *
+     * @param id
+     * @param nodeType
+     * @param col
+     * @param row
+     * @param doi
+     * @param hidden
+     * @param x
+     * @param y
+     * @param parent
+     * @param children
+     * @constructor
+     */
+    var SNode = function (id, nodeType, col, row, doi, hidden, x, y, parent, children) {
+        this.id = id;
+        this.nodeType = nodeType;
+        this.col = col;
+        this.row = row;
+        this.doi = doi;
+        this.hidden = hidden;
+        this.x = x;
+        this.y = y;
+        this.parent = parent;
+        this.children = children;
+
+        /* TODO: Add previous and next SNode references. */
+    };
+
+    /**
+     * Constructor function for the node data structure.
+     *
+     * @param name
+     * @param fileType
+     * @param nodeType
+     * @param uuid
+     * @param study
+     * @param assay
+     * @param parents
+     * @param col
+     * @param row
+     * @param rowBK
+     * @param id
+     * @param analysis
+     * @param doi
+     * @param hidden
+     * @param bcOrder
+     * @param isBlockRoot
+     * @param x
+     * @param y
+     * @param subanalysis
+     * @param parent
+     * @constructor
+     */
+    var Node = function (name, fileType, nodeType, uuid, study, assay, parents, col, row, rowBK, id, analysis, doi, hidden, bcOrder, isBlockRoot, x, y, subanalysis, parent) {
+        this.name = name;
+        this.fileType = fileType;
+        this.nodeType = nodeType;
+        this.uuid = uuid;
+        this.study = study;
+        this.assay = assay;
+        this.parents = parents;
+        this.col = col;
+        this.row = row;
+        this.rowBK = rowBK;
+        this.id = id;
+        this.analysis = analysis;
+        this.doi = doi;
+        this.hidden = hidden;
+        this.bcOrder = bcOrder;
+        this.isBlockRoot = isBlockRoot;
+        this.x = x;
+        this.y = y;
+        this.subanalysis = subanalysis;
+        this.parent = parent;
+
+        /* TODO: Group layout specific properties into sub-property. */
+    };
+
+    /**
+     * Constructor function for the analysis node data structure.
+     *
+     * @param uuid
+     * @param row
+     * @param col
+     * @param hidden
+     * @param id
+     * @param nodeType
+     * @param analysis
+     * @param start
+     * @param end
+     * @param created
+     * @param doi
+     * @param children
+     * @param inputs
+     * @param outputs
+     * @param preds
+     * @param succs
+     * @param links
+     * @constructor
+     */
+    var Analysis = function (uuid, row, col, hidden, id, nodeType, analysis, start, end, created, doi, children, inputs, outputs, preds, succs, links) {
+        this.uuid = uuid;
+        this.row = row;
+        this.col = col;
+        this.hidden = hidden;
+        this.id = id;
+        this.nodeType = nodeType;
+        this.analysis = analysis;
+        this.start = start;
+        this.end = end;
+        this.created = created;
+        this.doi = doi;
+        this.children = children;
+        this.inputs = inputs;
+        this.outputs = outputs;
+        this.preds = preds;
+        this.succs = succs;
+        this.links = links;
+    };
+
+    /**
+     * Constructor function for the analysis node data structure.
+     *
+     * @param id
+     * @param sanId
+     * @param subanalysis
+     * @param nodeType
+     * @param row
+     * @param col
+     * @param hidden
+     * @param doi
+     * @param children
+     * @param inputs
+     * @param outputs
+     * @param preds
+     * @param succs
+     * @param parent
+     * @param isOutputAnalysis
+     * @constructor
+     */
+    var Subanalysis = function (id, sanId, subanalysis, nodeType, row, col, hidden, doi, children, inputs, outputs, preds, succs, parent, isOutputAnalysis) {
+        this.id = id;
+        this.sanId = sanId;
+        this.subanalysis = subanalysis;
+        this.nodeType = nodeType;
+        this.row = row;
+        this.col = col;
+        this.hidden = hidden;
+        this.doi = doi;
+        this.children = children;
+        this.inputs = inputs;
+        this.outputs = outputs;
+        this.preds = preds;
+        this.succs = succs;
+        this.parent = parent;
+        this.isOutputAnalysis = isOutputAnalysis;
+    };
+
+    /**
+     * Constructor function for the link data structure.
+     *
+     * @param source
+     * @param target
+     * @param id
+     * @param hidden
+     * @param neighbor
+     * @param type0
+     * @param type1
+     * @constructor
+     */
+    var Link = function (source, target, id, hidden, neighbor, type0, type1) {
+        this.source = source;
+        this.target = target;
+        this.id = id;
+        this.hidden = hidden;
+        this.neighbor = neighbor;
+        this.type0 = type0;
+        this.type1 = type1;
+    };
+
+    /**
+     * Constructor function for the provenance graph set up by the dataset in context.
+     *
+     * @param dataset
+     * @param url
+     * @param margin
+     * @param width
+     * @param height
+     * @param radius
+     * @param parentDiv
+     * @param color
+     * @constructor
+     */
+    var ProvenancheGraph = function (dataset, url, margin, width, height, radius, parentDiv, color) {
+        this.dataset = dataset;
+        this.url = url;
+        this.margin = margin;
+        this.width = width;
+        this.height = height;
+        this.radius = radius;
+        this.parentDiv = parentDiv;
+        this.color = color;
+
+        /* Generated properties. */
+        this.nodes = [];
+        this.links = [];
+        this.canvas = Object.create(null);
+        this.rect = Object.create(null);
+        this.zoom = Object.create(null);
+
+        /* TODO: Hold globals as they are now: node-link object collections, lookup maps, dom collections. */
+        /* TODO: Encapsulate redraw function as well as initiate modules. */
+    };
+
     /**
      * Geometric zoom.
      */
@@ -99,10 +316,10 @@ var provenanceVisualizationModule = function () {
         /**
          * Deep copy node data structure.
          * @param node Node object.
-         * @returns {{name: string, nodeType: string, fileType: string, uuid: string, study: string, assay: string, row: number, col: number, parents: Array, id: number, doiFactor: number, hidden: boolean, bcOrder: number, x: number, y: number, rowBK: {left: number, right: number}, isBlockRoot: boolean, subanalysis: number, parent: {}}}
+         * @returns {{name: string, nodeType: string, fileType: string, uuid: string, study: string, assay: string, row: number, col: number, parents: Array, id: number, doi: number, hidden: boolean, bcOrder: number, x: number, y: number, rowBK: {left: number, right: number}, isBlockRoot: boolean, subanalysis: number, parent: {}}}
          */
         var copyNode = function (node) {
-            var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, doiFactor: -1, hidden: true, bcOrder: -1, x: 0, y: 0, rowBK: {left: -1, right: -1}, isBlockRoot: false, subanalysis: -1, parent: {}};
+            var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, doi: -1, hidden: true, bcOrder: -1, x: 0, y: 0, rowBK: {left: -1, right: -1}, isBlockRoot: false, subanalysis: -1, parent: {}};
 
             newNode.name = node.name;
             newNode.nodeType = node.nodeType;
@@ -117,7 +334,7 @@ var provenanceVisualizationModule = function () {
                 newNode.parents[i] = p;
             });
             newNode.analysis = node.analysis;
-            newNode.doiFactor = node.doiFactor;
+            newNode.doi = node.doi;
             newNode.hidden = node.hidden;
             newNode.bcOrder = node.bcOrder;
             newNode.x = node.x;
@@ -764,7 +981,7 @@ var provenanceVisualizationModule = function () {
                             col: curCol + 1,
                             id: newNodeId + i,
                             analysis: curAnalysis,
-                            doiFactor: -1,
+                            doi: -1,
                             hidden: false,
                             bcOrder: -1,
                             isBlockRoot: false,
@@ -1467,7 +1684,7 @@ var provenanceVisualizationModule = function () {
                 col: -1,
                 id: nodeId,
                 analysis: (nodeObj.analysis_uuid !== null) ? nodeObj.analysis_uuid : "dataset",
-                doiFactor: -1,
+                doi: -1,
                 hidden: false,
                 bcOrder: -1,
                 isBlockRoot: false,
@@ -1591,12 +1808,12 @@ var provenanceVisualizationModule = function () {
          * Create one node representing the whole analysis when aggregated.
          */
         var createAnalysisNodes = function () {
-            aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": true, "id": -1, "nodeType": "analysis", "start": -1, "end": -1, "created": -1, "doiFactor": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "links": []});
+            aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": true, "id": -1, "nodeType": "analysis", "start": -1, "end": -1, "created": -1, "doi": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "links": []});
 
             analyses.objects.filter(function (a) {
                 return a.status === "SUCCESS";
             }).forEach(function (a, i) {
-                aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": true, "id": -i - 2, "nodeType": "analysis", "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doiFactor": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "links": []});
+                aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": true, "id": -i - 2, "nodeType": "analysis", "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doi": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "links": []});
             });
         };
 
@@ -1714,7 +1931,7 @@ var provenanceVisualizationModule = function () {
                     return n.analysis === an.uuid;
                 }).forEach(function (n) {
                     if (!an.children.hasOwnProperty(n.subanalysis)) {
-                        var san = {"id": sanId, "subanalysis": n.subanalysis, "nodeType": "subanalysis", "row": -1, "col": -1, "hidden": true, "doiFactor": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "parent": an, "isOutputAnalysis": false};
+                        var san = {"id": sanId, "subanalysis": n.subanalysis, "nodeType": "subanalysis", "row": -1, "col": -1, "hidden": true, "doi": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "parent": an, "isOutputAnalysis": false};
                         saNodes.push(san);
                         an.children[n.subanalysis] = san;
                         sanId--;
