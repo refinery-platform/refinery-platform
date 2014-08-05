@@ -67,31 +67,32 @@ var provenanceVisualizationModule = function () {
      *
      * @param _id
      * @param _nodeType
-     * @param _doi
-     * @param _hidden
      * @param _preds
      * @param _succs
      * @param _parent
      * @param _children
-     * @param _col
-     * @param _row
-     * @param _x
-     * @param _y
+     * @param doi
+     * @param hidden
+     * @param col
+     * @param row
+     * @param x
+     * @param y
      * @constructor
      */
-    var BaseNode = function (_id, _nodeType, _doi, _hidden, _preds, _succs, _parent, _children, _col, _row, _x, _y) {
+    var BaseNode = function (_id, _nodeType, _preds, _succs, _parent, _children, doi, hidden, col, row, x, y) {
         this._id = _id;
         this._nodeType = _nodeType;
-        this._doi = _doi;
-        this._hidden = _hidden;
         this._preds = _preds;
         this._succs = _succs;
         this._parent = _parent;
         this._children = _children;
-        this._col = _col;
-        this._row = _row;
-        this._x = _x;
-        this._y = _y;
+
+        this.doi = doi;
+        this.hidden = hidden;
+        this.col = col;
+        this.row = row;
+        this.x = x;
+        this.y = y;
 
         /* TODO: Add previous and next SNode references. */
     };
@@ -101,31 +102,31 @@ var provenanceVisualizationModule = function () {
      *
      * @param _id
      * @param _nodeType
-     * @param _doi
-     * @param _hidden
+     * @param doi
+     * @param hidden
      * @param _preds
      * @param _succs
      * @param _parent
      * @param _children
-     * @param _col
-     * @param _row
-     * @param _x
-     * @param _y
+     * @param col
+     * @param row
+     * @param x
+     * @param y
      * @param _name
      * @param _fileType
      * @param _uuid
      * @param _study
      * @param _assay
      * @param _parents
-     * @param _rowBK
      * @param _analysis
-     * @param _bcOrder
-     * @param _isBlockRoot
      * @param _subanalysis
+     * @param rowBK
+     * @param bcOrder
+     * @param isBlockRoot
      * @constructor
      */
-    var Node = function (_id, _nodeType, _doi, _hidden, _preds, _succs, _parent, _children, _col, _row, _x, _y, _name, _fileType, _uuid, _study, _assay, _parents, _rowBK, _analysis, _bcOrder, _isBlockRoot, _subanalysis) {
-        BaseNode.call(this, _id, _nodeType, _doi, _hidden, _preds, _succs, _parent, _children, _col, _row, _x, _y);
+    var Node = function (_id, _nodeType, doi, hidden, _preds, _succs, _parent, _children, col, row, x, y, _name, _fileType, _uuid, _study, _assay, _parents, _analysis, _subanalysis, rowBK, bcOrder, isBlockRoot) {
+        BaseNode.call(this, _id, _nodeType, _preds, _succs, _parent, _children, doi, hidden, col, row, x, y);
 
         this._name = _name;
         this._fileType = _fileType;
@@ -133,11 +134,12 @@ var provenanceVisualizationModule = function () {
         this._study = _study;
         this._assay = _assay;
         this._parents = _parents;
-        this._rowBK = _rowBK;
         this._analysis = _analysis;
-        this._bcOrder = _bcOrder;
-        this._isBlockRoot = _isBlockRoot;
         this._subanalysis = _subanalysis;
+
+        this.rowBK = rowBK;
+        this.bcOrder = bcOrder;
+        this.isBlockRoot = isBlockRoot;
 
         /* TODO: Group layout specific properties into sub-property. */
     };
@@ -150,16 +152,16 @@ var provenanceVisualizationModule = function () {
      *
      * @param _id
      * @param _nodeType
-     * @param _doi
-     * @param _hidden
      * @param _preds
      * @param _succs
      * @param _parent
      * @param _children
-     * @param _col
-     * @param _row
-     * @param _x
-     * @param _y
+     * @param doi
+     * @param hidden
+     * @param col
+     * @param row
+     * @param x
+     * @param y
      * @param _uuid
      * @param _analysis
      * @param _start
@@ -170,8 +172,8 @@ var provenanceVisualizationModule = function () {
      * @param _links
      * @constructor
      */
-    var Analysis = function (_id, _nodeType, _doi, _hidden, _preds, _succs, _parent, _children, _col, _row, _x, _y, _uuid, _analysis, _start, _end, _created, _inputs, _outputs, _links) {
-        BaseNode.call(this, _id, _nodeType, _doi, _hidden, _preds, _succs, _parent, _children, _col, _row, _x, _y);
+    var Analysis = function (_id, _nodeType, _preds, _succs, _parent, _children, doi, hidden, col, row, x, y, _uuid, _analysis, _start, _end, _created, _inputs, _outputs, _links) {
+        BaseNode.call(this, _id, _nodeType, _preds, _succs, _parent, _children, doi, hidden, col, row, x, y);
 
         this._uuid = _uuid;
         this._analysis = _analysis;
@@ -191,31 +193,32 @@ var provenanceVisualizationModule = function () {
      *
      * @param _id
      * @param _nodeType
-     * @param _doi
-     * @param _hidden
      * @param _preds
      * @param _succs
      * @param _parent
      * @param _children
-     * @param _col
-     * @param _row
-     * @param _x
-     * @param _y
+     * @param doi
+     * @param hidden
+     * @param col
+     * @param row
+     * @param x
+     * @param y
      * @param _sanId
      * @param _subanalysis
      * @param _inputs
      * @param _outputs
-     * @param _isOutputAnalysis
+     * @param isOutputAnalysis
      * @constructor
      */
-    var Subanalysis = function (_id, _nodeType, _doi, _hidden, _preds, _succs, _parent, _children, _col, _row, _x, _y, _sanId, _subanalysis, _inputs, _outputs, _isOutputAnalysis) {
-        BaseNode.call(this, _id, _nodeType, _doi, _hidden, _preds, _succs, _parent, _children, _col, _row, _x, _y);
+    var Subanalysis = function (_id, _nodeType, doi, hidden, _preds, _succs, _parent, _children, col, row, x, y, _sanId, _subanalysis, _inputs, _outputs, isOutputAnalysis) {
+        BaseNode.call(this, _id, _nodeType, _preds, _succs, _parent, _children, doi, hidden, col, row, x, y);
 
         this._sanId = _sanId;
         this._subanalysis = _subanalysis;
         this._inputs = _inputs;
         this._outputs = _outputs;
-        this._isOutputAnalysis = _isOutputAnalysis;
+
+        this.isOutputAnalysis = isOutputAnalysis;
     };
 
     Subanalysis.prototype = Object.create(BaseNode.prototype);
@@ -227,66 +230,71 @@ var provenanceVisualizationModule = function () {
      * @param _id
      * @param _source
      * @param _target
-     * @param _hidden
-     * @param _neighbor
-     * @param _type0
-     * @param _type1
+     * @param hidden
+     * @param neighbor
+     * @param type0
+     * @param type1
      * @constructor
      */
-    var Link = function (_id, _source, _target, _hidden, _neighbor, _type0, _type1) {
+    var Link = function (_id, _source, _target, hidden, neighbor, type0, type1) {
         this._id = _id;
         this._source = _source;
         this._target = _target;
-        this._hidden = _hidden;
-        this._neighbor = _neighbor;
-        this._type0 = _type0;
-        this._type1 = _type1;
+
+        this.hidden = hidden;
+        this.neighbor = neighbor;
+        this.type0 = type0;
+        this.type1 = type1;
     };
 
     /**
      * Constructor function for the provenance visualization.
      *
+     * @param _parentDiv
+     * @param _rect
+     * @param _zoom
      * @param _dataset
      * @param _url
-     * @param _margin
-     * @param _width
-     * @param _height
-     * @param _radius
-     * @param _parentDiv
-     * @param _color
-     * @param _graph
+     * @param canvas
+     * @param margin
+     * @param width
+     * @param height
+     * @param radius
+     * @param color
+     * @param graph
      * @constructor
      */
-    var ProvVis = function (canvas, _rect, _zoom, _dataset, _url, _margin, _width, _height, _radius, _parentDiv, _color, _graph) {
+    var ProvVis = function (_parentDiv, _rect, _zoom, _dataset, _url, canvas, margin, width, height, radius, color, graph) {
 
-        this.canvas = canvas;
+        this._parentDiv = _parentDiv;
         this._rect = _rect;
         this._zoom = _zoom;
         this._dataset = _dataset;
         this._url = _url;
-        this._margin = _margin;
-        this._width = _width;
-        this._height = _height;
-        this._radius = _radius;
-        this._parentDiv = _parentDiv;
-        this._color = _color;
+
+        this.canvas = canvas;
+        this.margin = margin;
+        this.width = width;
+        this.height = height;
+        this.radius = radius;
+        this.color = color;
 
         /* TODO: Encapsulate redraw function as well as initiate modules. */
 
-        this._graph = _graph;
+        this.graph = graph;
     };
 
     /**
      * Constructor function for the provenance graph.
      *
-     * @param _nodes
-     * @param _links
+     * @param nodes
+     * @param links
      * @constructor
      */
-    var ProvGraph = function (_nodes, _links) {
+    var ProvGraph = function (nodes, links) {
 
-        this._nodes = _nodes;
-        this._links = _links;
+        this.nodes = nodes;
+        this.links = links;
 
         /* TODO: Hold globals as they are now: node-link object collections, lookup maps, dom collections. */
     };
@@ -3091,7 +3099,7 @@ var provenanceVisualizationModule = function () {
                 .classed("brect", true);
 
             var graph = new ProvGraph(nodes, links);
-            vis = new ProvVis(canvas, rect, zoom, studyUuid, url, margin, width, height, r, "#provenance-graph", color, graph);
+            vis = new ProvVis("#provenance-graph", rect, zoom, studyUuid, url, canvas, margin, width, height, r, color, graph);
 
             /* Extract graph data. */
             initModule.init(data);
