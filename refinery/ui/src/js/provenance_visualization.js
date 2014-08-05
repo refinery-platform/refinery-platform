@@ -38,30 +38,6 @@ var provenanceVisualizationModule = function () {
         workflowAnalysisMap = d3.map(),
         analysisWorkflowMap = d3.map();
 
-    /* Restore dummy path link. */
-    var dummyPaths = [];
-
-    /* Initialize margin conventions */
-    var margin = {top: 20, right: 10, bottom: 20, left: 10};
-
-    /* Initialize canvas dimensions. */
-    var width = window.innerWidth - margin.left - margin.right,
-        height = window.innerHeight - margin.top - margin.bottom;
-
-
-    /* Set primitive drawing constants. */
-    var r = 7,
-        color = d3.scale.category20();
-
-    /* Initialize grid-based layout dimensions. */
-    var cell = {width: r * 3, height: r * 3},
-        layoutDepth = -1,
-        layoutWidth = -1,
-        firstLayer = 0;
-
-
-    var vis = Object.create(null);
-
     /**
      * Constructor function for the super node inherited by Node, Analysis and Subanalysis.
      *
@@ -251,11 +227,11 @@ var provenanceVisualizationModule = function () {
      * Constructor function for the provenance visualization.
      *
      * @param _parentDiv
-     * @param _rect
-     * @param _zoom
-     * @param _dataset
+     * @param zoom
+     * @param _data
      * @param _url
      * @param canvas
+     * @param rect
      * @param margin
      * @param width
      * @param height
@@ -264,15 +240,15 @@ var provenanceVisualizationModule = function () {
      * @param graph
      * @constructor
      */
-    var ProvVis = function (_parentDiv, _rect, _zoom, _dataset, _url, canvas, margin, width, height, radius, color, graph) {
+    var ProvVis = function (_parentDiv, zoom, _data, _url, canvas, rect, margin, width, height, radius, color, graph) {
 
         this._parentDiv = _parentDiv;
-        this._rect = _rect;
-        this._zoom = _zoom;
-        this._dataset = _dataset;
+        this.zoom = zoom;
+        this._data = _data;
         this._url = _url;
 
         this.canvas = canvas;
+        this.rect = rect;
         this.margin = margin;
         this.width = width;
         this.height = height;
@@ -300,24 +276,20 @@ var provenanceVisualizationModule = function () {
     };
 
     /**
-     * Geometric zoom.
-     */
-    var redraw = function () {
-
-        /* Translation and scaling. */
-        vis.canvas.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
-
-        /* Fix for rectangle getting translated too - doesn't work after window resize. */
-        vis._rect.attr("transform", "translate(" + (-(d3.event.translate[0] + margin.left) / d3.event.scale) + "," + (-(d3.event.translate[1] + margin.top) / d3.event.scale) + ")" + " scale(" + (+1 / d3.event.scale) + ")");
-    };
-
-
-
-
-    /**
      * Sub-module for layout.
      */
     var layoutModule = function () {
+
+        /* Restore dummy path link. */
+        var dummyPaths = [];
+
+        /* The layout is processed from the left (beginning at column/layer 0) to the right. */
+        var firstLayer = 0,
+            layoutWidth = 0,
+            layoutDepth = 0;
+
+        var nodes = Object.create(null),
+            links = Object.create(null);
 
         /**
          * Deep copy node data structure.
@@ -1591,7 +1563,10 @@ var provenanceVisualizationModule = function () {
             /* TODO: Form classes for blocks and rearrange analysis. */
         };
 
-        var runLayoutPrivate = function () {
+        var runLayoutPrivate = function (graph) {
+            nodes = graph.nodes;
+            links = graph.links;
+
             /* Group output nodes by sub-analysis and analysis. */
             outputNodes = sortOutputNodes();
 
@@ -1621,6 +1596,11 @@ var provenanceVisualizationModule = function () {
                 /* Optimize layout. */
                 postprocessLayout();
 
+                graph.nodes = nodes;
+                graph.links = links;
+                graph.width = layoutWidth;
+                graph.depth = layoutDepth;
+
             } else {
                 console.log("Error: Graph is not acyclic!");
             }
@@ -1630,8 +1610,8 @@ var provenanceVisualizationModule = function () {
          * Publish module function.
          */
         return{
-            layout: function () {
-                runLayoutPrivate();
+            layout: function (vis) {
+                runLayoutPrivate(vis);
             }
         };
 
@@ -2091,10 +2071,10 @@ var provenanceVisualizationModule = function () {
         };
 
         /* Main init function. */
-        var runInitPrivate = function (data) {
+        var runInitPrivate = function (vis) {
 
             /* Extract raw objects. */
-            var obj = d3.entries(data)[1];
+            var obj = d3.entries(vis._data)[1];
 
             /* Create node collection. */
             extractNodes(obj);
@@ -2122,8 +2102,8 @@ var provenanceVisualizationModule = function () {
          * Publish module function.
          */
         return{
-            init: function (data) {
-                runInitPrivate(data);
+            init: function (vis) {
+                runInitPrivate(vis);
             },
             createNodeHashes: function (nodeObj, nodeId) {
                 createNodeHashesPrivate(nodeObj, nodeId);
@@ -2135,6 +2115,9 @@ var provenanceVisualizationModule = function () {
      * Sub-module for render.
      */
     var renderModule = function () {
+
+        var vis = Object.create(null),
+            cell = Object.create(null);
 
         /**
          * Drag start listener support for nodes.
@@ -2161,9 +2144,9 @@ var provenanceVisualizationModule = function () {
                     case "processed":
                         return "translate(" + x + "," + y + ")";
                     case "special":
-                        return "translate(" + (x - r) + "," + (y - r) + ")";
+                        return "translate(" + (x - vis.radius) + "," + (y - vis.radius) + ")";
                     case "dt":
-                        return "translate(" + (x - r * 0.75) + "," + (y - r * 0.75) + ")";
+                        return "translate(" + (x - vis.radius * 0.75) + "," + (y - vis.radius * 0.75) + ")";
                 }
             });
         };
@@ -2308,7 +2291,7 @@ var provenanceVisualizationModule = function () {
         var dyeWorkflows = function () {
             d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").each(function () {
                 d3.select(this).style("stroke", function (d) {
-                    return color(analysisWorkflowMap[d.analysis]);
+                    return vis.color(analysisWorkflowMap[d.analysis]);
                 });
             });
 
@@ -2320,7 +2303,7 @@ var provenanceVisualizationModule = function () {
         var dyeAnalyses = function () {
             d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").each(function () {
                 d3.select(this).style("fill", function (d) {
-                    return color(d.analysis);
+                    return vis.color(d.analysis);
                 });
             });
 
@@ -2429,18 +2412,18 @@ var provenanceVisualizationModule = function () {
                             })
                             .append("polygon")
                             .attr("points", function () {
-                                return "0," + (-r) + " " +
-                                    (r) + "," + (-r / 2) + " " +
-                                    (r) + "," + (r / 2) + " " +
-                                    "0" + "," + (r) + " " +
-                                    (-r) + "," + (r / 2) + " " +
-                                    (-r) + "," + (-r / 2);
+                                return "0," + (-vis.radius) + " " +
+                                    (vis.radius) + "," + (-vis.radius / 2) + " " +
+                                    (vis.radius) + "," + (vis.radius / 2) + " " +
+                                    "0" + "," + (vis.radius) + " " +
+                                    (-vis.radius) + "," + (vis.radius / 2) + " " +
+                                    (-vis.radius) + "," + (-vis.radius / 2);
                             })
                             .style("fill", function () {
-                                return color(san.parent.uuid);
+                                return vis.color(san.parent.uuid);
                             })
                             .style("stroke", function () {
-                                return color(analysisWorkflowMap[san.parent.uuid]);
+                                return vis.color(analysisWorkflowMap[san.parent.uuid]);
                             })
                             .style("stroke-width", 2);
                     });
@@ -2485,18 +2468,18 @@ var provenanceVisualizationModule = function () {
                             })
                             .append("polygon")
                             .attr("points", function () {
-                                return "0," + (-2 * r) + " " +
-                                    (2 * r) + "," + (-r) + " " +
-                                    (2 * r) + "," + (r) + " " +
-                                    "0" + "," + (2 * r) + " " +
-                                    (-2 * r) + "," + (r) + " " +
-                                    (-2 * r) + "," + (-r);
+                                return "0," + (-2 * vis.radius) + " " +
+                                    (2 * vis.radius) + "," + (-vis.radius) + " " +
+                                    (2 * vis.radius) + "," + (vis.radius) + " " +
+                                    "0" + "," + (2 * vis.radius) + " " +
+                                    (-2 * vis.radius) + "," + (vis.radius) + " " +
+                                    (-2 * vis.radius) + "," + (-vis.radius);
                             })
                             .style("fill", function () {
-                                return color(an.uuid);
+                                return vis.color(an.uuid);
                             })
                             .style("stroke", function () {
-                                return color(analysisWorkflowMap[an.uuid]);
+                                return vis.color(analysisWorkflowMap[an.uuid]);
                             })
                             .style("stroke-width", 3);
                     });
@@ -2540,22 +2523,22 @@ var provenanceVisualizationModule = function () {
                             d3.select(this)
                                 .attr("transform", "translate(" + d.x + "," + d.y + ")")
                                 .append("circle")
-                                .attr("r", r);
+                                .attr("r", vis.radius);
                         } else {
                             if (d.nodeType === "special") {
                                 d3.select(this)
-                                    .attr("transform", "translate(" + (d.x - r) + "," + (d.y - r) + ")")
+                                    .attr("transform", "translate(" + (d.x - vis.radius) + "," + (d.y - vis.radius) + ")")
                                     .append("rect")
-                                    .attr("width", r * 2)
-                                    .attr("height", r * 2);
+                                    .attr("width", vis.radius * 2)
+                                    .attr("height", vis.radius * 2);
                             } else if (d.nodeType === "dt") {
                                 d3.select(this)
-                                    .attr("transform", "translate(" + (d.x - r * 0.75) + "," + (d.y - r * 0.75) + ")")
+                                    .attr("transform", "translate(" + (d.x - vis.radius * 0.75) + "," + (d.y - vis.radius * 0.75) + ")")
                                     .append("rect")
-                                    .attr("width", r * 1.5)
-                                    .attr("height", r * 1.5)
+                                    .attr("width", vis.radius * 1.5)
+                                    .attr("height", vis.radius * 1.5)
                                     .attr("transform", function () {
-                                        return "rotate(45 " + (r * 0.75) + "," + (r * 0.75) + ")";
+                                        return "rotate(45 " + (vis.radius * 0.75) + "," + (vis.radius * 0.75) + ")";
                                     });
                             }
                         }
@@ -2719,24 +2702,25 @@ var provenanceVisualizationModule = function () {
 
         /**
          * Fit visualization onto free windows space.
+         * @param vis The parent visualization object.
          * @param transitionTime The time in milliseconds for the duration of the animation.
          */
         var fitGraphToWindow = function (transitionTime) {
             var min = [d3.min(nodes, function (d) {
-                    return d.x - margin.left;
+                    return d.x - vis.margin.left;
                 }), d3.min(nodes, function (d) {
-                    return d.y - margin.top;
+                    return d.y - vis.margin.top;
                 })],
                 max = [d3.max(nodes, function (d) {
-                    return d.x + margin.right;
+                    return d.x + vis.margin.right;
                 }), d3.max(nodes, function (d) {
-                    return d.y + margin.bottom;
+                    return d.y + vis.margin.bottom;
                 })],
                 delta = [max[0] - min[0], max[1] - min[1]],
-                factor = [(width / delta[0]), (height / delta[1])],
+                factor = [(vis.width / delta[0]), (height / delta[1])],
             /* Maximize scale to factor 3. */
                 newScale = d3.min(factor.concat([3])),
-                newPos = [((width - delta[0] * newScale) / 2),
+                newPos = [((vis.width - delta[0] * newScale) / 2),
                     ((height - delta[1] * newScale) / 2)];
 
             newPos[0] -= min[0] * newScale;
@@ -2751,11 +2735,11 @@ var provenanceVisualizationModule = function () {
                 vis.canvas.attr("transform", "translate(" + newPos + ")scale(" + newScale + ")");
             }
 
-            vis._zoom.translate(newPos);
-            vis._zoom.scale(newScale);
+            vis.zoom.translate(newPos);
+            vis.zoom.scale(newScale);
 
             /* Background rectangle fix. */
-            vis._rect.attr("transform", "translate(" + (-newPos[0] / newScale) + "," + (-newPos[1] / newScale) + ")" + " scale(" + (+1 / newScale) + ")");
+            vis.rect.attr("transform", "translate(" + (-newPos[0] / newScale) + "," + (-newPos[1] / newScale) + ")" + " scale(" + (+1 / newScale) + ")");
         };
 
         /**
@@ -2814,10 +2798,10 @@ var provenanceVisualizationModule = function () {
                 })
                 .enter().append("rect")
                 .attr("x", function (d, i) {
-                    return -cell.width / 2 - parseInt(i / layoutWidth, 10) * cell.width;
+                    return -cell.width / 2 - parseInt(i / vis.graph.width, 10) * cell.width;
                 })
                 .attr("y", function (d, i) {
-                    return -cell.height / 2 + (i % layoutWidth) * cell.height;
+                    return -cell.height / 2 + (i % vis.graph.width) * cell.height;
                 })
                 .attr("width", cell.width)
                 .attr("height", cell.height)
@@ -2828,7 +2812,7 @@ var provenanceVisualizationModule = function () {
                 })
                 .style("opacity", 0.7)
                 .attr("id", function (d, i) {
-                    return "cellId-" + parseInt(i / layoutWidth, 10) + "-" + (i % layoutWidth);
+                    return "cellId-" + parseInt(i / vis.graph.width, 10) + "-" + (i % vis.graph.width);
                 });
         };
 
@@ -2857,7 +2841,7 @@ var provenanceVisualizationModule = function () {
                 .attr("id", function (l) {
                     return "hLinkId-" + l.id;
                 }).style("stroke", function (d) {
-                    return color(analysisWorkflowMap[nodes[d.target].analysis]);
+                    return vis.color(analysisWorkflowMap[nodes[d.target].analysis]);
                 });
 
 
@@ -2874,7 +2858,7 @@ var provenanceVisualizationModule = function () {
                 .attr("id", function (d) {
                     return "hNodeId-" + d.id;
                 }).style("fill", function (d) {
-                    return color(analysisWorkflowMap[d.analysis]);
+                    return vis.color(analysisWorkflowMap[d.analysis]);
                 });
         };
 
@@ -2998,7 +2982,12 @@ var provenanceVisualizationModule = function () {
             analysis = d3.selectAll(".analysis");
         };
 
-        var runRenderPrivate = function () {
+        var runRenderPrivate = function (provVis) {
+
+            /* Save vis object to module scope. */
+            vis = provVis;
+            cell = {width: vis.radius * 3, height: vis.radius * 3};
+
             /* Short delay. */
             setTimeout(function () {
 
@@ -3063,8 +3052,8 @@ var provenanceVisualizationModule = function () {
          * Publish module function.
          */
         return{
-            render: function () {
-                runRenderPrivate();
+            render: function (vis) {
+                runRenderPrivate(vis);
             }
         };
     }();
@@ -3078,37 +3067,63 @@ var provenanceVisualizationModule = function () {
 
         /* Parse json. */
         d3.json(url, function (error, data) {
-            /* Initialize zoom support. */
-            var zoom = Object.create(null);
+
+            /* Declare d3 specific properties. */
+            var zoom = Object.create(null),
+                canvas = Object.create(null),
+                rect = Object.create(null);
+
+            /* Initialize margin conventions */
+            var margin = {top: 20, right: 10, bottom: 20, left: 10};
+
+            /* Initialize canvas dimensions. */
+            var width = window.innerWidth - margin.left - margin.right,
+                height = window.innerHeight - margin.top - margin.bottom;
+
+            /* Set primitive drawing constants. */
+            var r = 7,
+                color = d3.scale.category20();
+
+            /* Create graph. */
+            var graph = new ProvGraph(nodes, links);
+
+            /* Create vis and add graph. */
+            var vis = new ProvVis("#provenance-graph", zoom, data, url, canvas, rect, margin, width, height, r, color, graph);
+
+            /* Geometric zoom. */
+            var redraw = function () {
+                /* Translation and scaling. */
+                vis.canvas.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
+
+                /* Fix for rectangle getting translated too - doesn't work after window resize. */
+                vis.rect.attr("transform", "translate(" + (-(d3.event.translate[0] + vis.margin.left) / d3.event.scale) + "," + (-(d3.event.translate[1] + vis.margin.top) / d3.event.scale) + ")" + " scale(" + (+1 / d3.event.scale) + ")");
+            };
 
             /* Main canvas drawing area. */
-            var canvas = d3.select("#provenance-graph")
+            vis.canvas = d3.select("#provenance-graph")
                 .append("svg:svg")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                .attr("transform", "translate(" + vis.margin.left + "," + vis.margin.top + ")")
                 .attr("viewBox", "0 0 " + (width) + " " + (height))
                 .attr("preserveAspectRatio", "xMinYMin meet")
                 .attr("pointer-events", "all")
                 .append("svg:g")
-                .call(zoom = d3.behavior.zoom().on("zoom", redraw)).on("dblclick.zoom", null)
+                .call(vis.zoom = d3.behavior.zoom().on("zoom", redraw)).on("dblclick.zoom", null)
                 .append("svg:g");
 
             /* Helper rectangle to support pan and zoom. */
-            var rect = canvas.append("svg:rect")
+            vis.rect = vis.canvas.append("svg:rect")
                 .attr("width", width)
                 .attr("height", height)
                 .classed("brect", true);
 
-            var graph = new ProvGraph(nodes, links);
-            vis = new ProvVis("#provenance-graph", rect, zoom, studyUuid, url, canvas, margin, width, height, r, color, graph);
-
             /* Extract graph data. */
-            initModule.init(data);
+            initModule.init(vis);
 
             /* Compute layout. */
-            layoutModule.layout();
+            layoutModule.layout(vis.graph);
 
             /* Render graph. */
-            renderModule.render();
+            renderModule.render(vis);
         });
     };
 
