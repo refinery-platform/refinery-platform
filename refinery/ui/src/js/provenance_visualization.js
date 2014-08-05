@@ -48,8 +48,6 @@ var provenanceVisualizationModule = function () {
     var width = window.innerWidth - margin.left - margin.right,
         height = window.innerHeight - margin.top - margin.bottom;
 
-    /* Initialize zoom support. */
-    var zoom = Object.create(null);
 
     /* Set primitive drawing constants. */
     var r = 7,
@@ -62,32 +60,38 @@ var provenanceVisualizationModule = function () {
         firstLayer = 0;
 
 
+    var vis = Object.create(null);
+
     /**
      * Constructor function for the super node inherited by Node, Analysis and Subanalysis.
      *
-     * @param id
-     * @param nodeType
-     * @param col
-     * @param row
-     * @param doi
-     * @param hidden
-     * @param x
-     * @param y
-     * @param parent
-     * @param children
+     * @param _id
+     * @param _nodeType
+     * @param _doi
+     * @param _hidden
+     * @param _preds
+     * @param _succs
+     * @param _parent
+     * @param _children
+     * @param _col
+     * @param _row
+     * @param _x
+     * @param _y
      * @constructor
      */
-    var SNode = function (id, nodeType, col, row, doi, hidden, x, y, parent, children) {
-        this.id = id;
-        this.nodeType = nodeType;
-        this.col = col;
-        this.row = row;
-        this.doi = doi;
-        this.hidden = hidden;
-        this.x = x;
-        this.y = y;
-        this.parent = parent;
-        this.children = children;
+    var BaseNode = function (_id, _nodeType, _doi, _hidden, _preds, _succs, _parent, _children, _col, _row, _x, _y) {
+        this._id = _id;
+        this._nodeType = _nodeType;
+        this._doi = _doi;
+        this._hidden = _hidden;
+        this._preds = _preds;
+        this._succs = _succs;
+        this._parent = _parent;
+        this._children = _children;
+        this._col = _col;
+        this._row = _row;
+        this._x = _x;
+        this._y = _y;
 
         /* TODO: Add previous and next SNode references. */
     };
@@ -95,187 +99,196 @@ var provenanceVisualizationModule = function () {
     /**
      * Constructor function for the node data structure.
      *
-     * @param name
-     * @param fileType
-     * @param nodeType
-     * @param uuid
-     * @param study
-     * @param assay
-     * @param parents
-     * @param col
-     * @param row
-     * @param rowBK
-     * @param id
-     * @param analysis
-     * @param doi
-     * @param hidden
-     * @param bcOrder
-     * @param isBlockRoot
-     * @param x
-     * @param y
-     * @param subanalysis
-     * @param parent
+     * @param _id
+     * @param _nodeType
+     * @param _doi
+     * @param _hidden
+     * @param _preds
+     * @param _succs
+     * @param _parent
+     * @param _children
+     * @param _col
+     * @param _row
+     * @param _x
+     * @param _y
+     * @param _name
+     * @param _fileType
+     * @param _uuid
+     * @param _study
+     * @param _assay
+     * @param _parents
+     * @param _rowBK
+     * @param _analysis
+     * @param _bcOrder
+     * @param _isBlockRoot
+     * @param _subanalysis
      * @constructor
      */
-    var Node = function (name, fileType, nodeType, uuid, study, assay, parents, col, row, rowBK, id, analysis, doi, hidden, bcOrder, isBlockRoot, x, y, subanalysis, parent) {
-        this.name = name;
-        this.fileType = fileType;
-        this.nodeType = nodeType;
-        this.uuid = uuid;
-        this.study = study;
-        this.assay = assay;
-        this.parents = parents;
-        this.col = col;
-        this.row = row;
-        this.rowBK = rowBK;
-        this.id = id;
-        this.analysis = analysis;
-        this.doi = doi;
-        this.hidden = hidden;
-        this.bcOrder = bcOrder;
-        this.isBlockRoot = isBlockRoot;
-        this.x = x;
-        this.y = y;
-        this.subanalysis = subanalysis;
-        this.parent = parent;
+    var Node = function (_id, _nodeType, _doi, _hidden, _preds, _succs, _parent, _children, _col, _row, _x, _y, _name, _fileType, _uuid, _study, _assay, _parents, _rowBK, _analysis, _bcOrder, _isBlockRoot, _subanalysis) {
+        BaseNode.call(this, _id, _nodeType, _doi, _hidden, _preds, _succs, _parent, _children, _col, _row, _x, _y);
+
+        this._name = _name;
+        this._fileType = _fileType;
+        this._uuid = _uuid;
+        this._study = _study;
+        this._assay = _assay;
+        this._parents = _parents;
+        this._rowBK = _rowBK;
+        this._analysis = _analysis;
+        this._bcOrder = _bcOrder;
+        this._isBlockRoot = _isBlockRoot;
+        this._subanalysis = _subanalysis;
 
         /* TODO: Group layout specific properties into sub-property. */
     };
 
-    /**
-     * Constructor function for the analysis node data structure.
-     *
-     * @param uuid
-     * @param row
-     * @param col
-     * @param hidden
-     * @param id
-     * @param nodeType
-     * @param analysis
-     * @param start
-     * @param end
-     * @param created
-     * @param doi
-     * @param children
-     * @param inputs
-     * @param outputs
-     * @param preds
-     * @param succs
-     * @param links
-     * @constructor
-     */
-    var Analysis = function (uuid, row, col, hidden, id, nodeType, analysis, start, end, created, doi, children, inputs, outputs, preds, succs, links) {
-        this.uuid = uuid;
-        this.row = row;
-        this.col = col;
-        this.hidden = hidden;
-        this.id = id;
-        this.nodeType = nodeType;
-        this.analysis = analysis;
-        this.start = start;
-        this.end = end;
-        this.created = created;
-        this.doi = doi;
-        this.children = children;
-        this.inputs = inputs;
-        this.outputs = outputs;
-        this.preds = preds;
-        this.succs = succs;
-        this.links = links;
-    };
+    Node.prototype = Object.create(BaseNode.prototype);
+    Node.prototype.constructor = Node;
 
     /**
      * Constructor function for the analysis node data structure.
      *
-     * @param id
-     * @param sanId
-     * @param subanalysis
-     * @param nodeType
-     * @param row
-     * @param col
-     * @param hidden
-     * @param doi
-     * @param children
-     * @param inputs
-     * @param outputs
-     * @param preds
-     * @param succs
-     * @param parent
-     * @param isOutputAnalysis
+     * @param _id
+     * @param _nodeType
+     * @param _doi
+     * @param _hidden
+     * @param _preds
+     * @param _succs
+     * @param _parent
+     * @param _children
+     * @param _col
+     * @param _row
+     * @param _x
+     * @param _y
+     * @param _uuid
+     * @param _analysis
+     * @param _start
+     * @param _end
+     * @param _created
+     * @param _inputs
+     * @param _outputs
+     * @param _links
      * @constructor
      */
-    var Subanalysis = function (id, sanId, subanalysis, nodeType, row, col, hidden, doi, children, inputs, outputs, preds, succs, parent, isOutputAnalysis) {
-        this.id = id;
-        this.sanId = sanId;
-        this.subanalysis = subanalysis;
-        this.nodeType = nodeType;
-        this.row = row;
-        this.col = col;
-        this.hidden = hidden;
-        this.doi = doi;
-        this.children = children;
-        this.inputs = inputs;
-        this.outputs = outputs;
-        this.preds = preds;
-        this.succs = succs;
-        this.parent = parent;
-        this.isOutputAnalysis = isOutputAnalysis;
+    var Analysis = function (_id, _nodeType, _doi, _hidden, _preds, _succs, _parent, _children, _col, _row, _x, _y, _uuid, _analysis, _start, _end, _created, _inputs, _outputs, _links) {
+        BaseNode.call(this, _id, _nodeType, _doi, _hidden, _preds, _succs, _parent, _children, _col, _row, _x, _y);
+
+        this._uuid = _uuid;
+        this._analysis = _analysis;
+        this._start = _start;
+        this._end = _end;
+        this._created = _created;
+        this._inputs = _inputs;
+        this._outputs = _outputs;
+        this._links = _links;
     };
+
+    Analysis.prototype = Object.create(BaseNode.prototype);
+    Analysis.prototype.constructor = Analysis;
+
+    /**
+     * Constructor function for the analysis node data structure.
+     *
+     * @param _id
+     * @param _nodeType
+     * @param _doi
+     * @param _hidden
+     * @param _preds
+     * @param _succs
+     * @param _parent
+     * @param _children
+     * @param _col
+     * @param _row
+     * @param _x
+     * @param _y
+     * @param _sanId
+     * @param _subanalysis
+     * @param _inputs
+     * @param _outputs
+     * @param _isOutputAnalysis
+     * @constructor
+     */
+    var Subanalysis = function (_id, _nodeType, _doi, _hidden, _preds, _succs, _parent, _children, _col, _row, _x, _y, _sanId, _subanalysis, _inputs, _outputs, _isOutputAnalysis) {
+        BaseNode.call(this, _id, _nodeType, _doi, _hidden, _preds, _succs, _parent, _children, _col, _row, _x, _y);
+
+        this._sanId = _sanId;
+        this._subanalysis = _subanalysis;
+        this._inputs = _inputs;
+        this._outputs = _outputs;
+        this._isOutputAnalysis = _isOutputAnalysis;
+    };
+
+    Subanalysis.prototype = Object.create(BaseNode.prototype);
+    Subanalysis.prototype.constructor = Subanalysis;
 
     /**
      * Constructor function for the link data structure.
      *
-     * @param source
-     * @param target
-     * @param id
-     * @param hidden
-     * @param neighbor
-     * @param type0
-     * @param type1
+     * @param _id
+     * @param _source
+     * @param _target
+     * @param _hidden
+     * @param _neighbor
+     * @param _type0
+     * @param _type1
      * @constructor
      */
-    var Link = function (source, target, id, hidden, neighbor, type0, type1) {
-        this.source = source;
-        this.target = target;
-        this.id = id;
-        this.hidden = hidden;
-        this.neighbor = neighbor;
-        this.type0 = type0;
-        this.type1 = type1;
+    var Link = function (_id, _source, _target, _hidden, _neighbor, _type0, _type1) {
+        this._id = _id;
+        this._source = _source;
+        this._target = _target;
+        this._hidden = _hidden;
+        this._neighbor = _neighbor;
+        this._type0 = _type0;
+        this._type1 = _type1;
     };
 
     /**
-     * Constructor function for the provenance graph set up by the dataset in context.
+     * Constructor function for the provenance visualization.
      *
-     * @param dataset
-     * @param url
-     * @param margin
-     * @param width
-     * @param height
-     * @param radius
-     * @param parentDiv
-     * @param color
+     * @param _dataset
+     * @param _url
+     * @param _margin
+     * @param _width
+     * @param _height
+     * @param _radius
+     * @param _parentDiv
+     * @param _color
+     * @param _graph
      * @constructor
      */
-    var ProvenancheGraph = function (dataset, url, margin, width, height, radius, parentDiv, color) {
-        this.dataset = dataset;
-        this.url = url;
-        this.margin = margin;
-        this.width = width;
-        this.height = height;
-        this.radius = radius;
-        this.parentDiv = parentDiv;
-        this.color = color;
+    var ProvVis = function (canvas, _rect, _zoom, _dataset, _url, _margin, _width, _height, _radius, _parentDiv, _color, _graph) {
 
-        /* Generated properties. */
-        this.nodes = [];
-        this.links = [];
-        this.canvas = Object.create(null);
-        this.rect = Object.create(null);
-        this.zoom = Object.create(null);
+        this.canvas = canvas;
+        this._rect = _rect;
+        this._zoom = _zoom;
+        this._dataset = _dataset;
+        this._url = _url;
+        this._margin = _margin;
+        this._width = _width;
+        this._height = _height;
+        this._radius = _radius;
+        this._parentDiv = _parentDiv;
+        this._color = _color;
+
+        /* TODO: Encapsulate redraw function as well as initiate modules. */
+
+        this._graph = _graph;
+    };
+
+    /**
+     * Constructor function for the provenance graph.
+     *
+     * @param _nodes
+     * @param _links
+     * @constructor
+     */
+    var ProvGraph = function (_nodes, _links) {
+
+        this._nodes = _nodes;
+        this._links = _links;
 
         /* TODO: Hold globals as they are now: node-link object collections, lookup maps, dom collections. */
-        /* TODO: Encapsulate redraw function as well as initiate modules. */
     };
 
     /**
@@ -284,28 +297,13 @@ var provenanceVisualizationModule = function () {
     var redraw = function () {
 
         /* Translation and scaling. */
-        canvas.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
+        vis.canvas.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
 
         /* Fix for rectangle getting translated too - doesn't work after window resize. */
-        rect.attr("transform", "translate(" + (-(d3.event.translate[0] + margin.left) / d3.event.scale) + "," + (-(d3.event.translate[1] + margin.top) / d3.event.scale) + ")" + " scale(" + (+1 / d3.event.scale) + ")");
+        vis._rect.attr("transform", "translate(" + (-(d3.event.translate[0] + margin.left) / d3.event.scale) + "," + (-(d3.event.translate[1] + margin.top) / d3.event.scale) + ")" + " scale(" + (+1 / d3.event.scale) + ")");
     };
 
-    /* Main canvas drawing area. */
-    var canvas = d3.select("#provenance-graph")
-        .append("svg:svg")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-        .attr("viewBox", "0 0 " + (width) + " " + (height))
-        .attr("preserveAspectRatio", "xMinYMin meet")
-        .attr("pointer-events", "all")
-        .append("svg:g")
-        .call(zoom = d3.behavior.zoom().on("zoom", redraw)).on("dblclick.zoom", null)
-        .append("svg:g");
 
-    /* Helper rectangle to support pan and zoom. */
-    var rect = canvas.append("svg:rect")
-        .attr("width", width)
-        .attr("height", height)
-        .classed("brect", true);
 
 
     /**
@@ -2362,7 +2360,7 @@ var provenanceVisualizationModule = function () {
          * Draw links.
          */
         var drawLinks = function () {
-            link = canvas.append("g").classed({"links": true}).selectAll(".link")
+            link = vis.canvas.append("g").classed({"links": true}).selectAll(".link")
                 .data(links.filter(function (l) {
                     return l !== null && typeof l !== "undefined";
                 }))
@@ -2737,19 +2735,19 @@ var provenanceVisualizationModule = function () {
             newPos[1] -= min[1] * newScale;
 
             if (transitionTime !== 0) {
-                canvas
+                vis.canvas
                     .transition()
                     .duration(1000)
                     .attr("transform", "translate(" + newPos + ")scale(" + newScale + ")");
             } else {
-                canvas.attr("transform", "translate(" + newPos + ")scale(" + newScale + ")");
+                vis.canvas.attr("transform", "translate(" + newPos + ")scale(" + newScale + ")");
             }
 
-            zoom.translate(newPos);
-            zoom.scale(newScale);
+            vis._zoom.translate(newPos);
+            vis._zoom.scale(newScale);
 
             /* Background rectangle fix. */
-            rect.attr("transform", "translate(" + (-newPos[0] / newScale) + "," + (-newPos[1] / newScale) + ")" + " scale(" + (+1 / newScale) + ")");
+            vis._rect.attr("transform", "translate(" + (-newPos[0] / newScale) + "," + (-newPos[1] / newScale) + ")" + " scale(" + (+1 / newScale) + ")");
         };
 
         /**
@@ -2802,7 +2800,7 @@ var provenanceVisualizationModule = function () {
          * Draws a grid for the grid-based graph layout.
          */
         var drawGrid = function () {
-            gridCell = canvas.append("g").classed({"cells": true}).selectAll(".cell")
+            gridCell = vis.canvas.append("g").classed({"cells": true}).selectAll(".cell")
                 .data(function () {
                     return [].concat.apply([], grid);
                 })
@@ -2831,7 +2829,7 @@ var provenanceVisualizationModule = function () {
          */
         var drawHighlightingShapes = function () {
 
-            hLink = canvas.append("g").classed({"hLinks": true}).selectAll(".hLink")
+            hLink = vis.canvas.append("g").classed({"hLinks": true}).selectAll(".hLink")
                 .data(links.filter(function (l) {
                     return l !== null && typeof l !== "undefined";
                 }))
@@ -2855,7 +2853,7 @@ var provenanceVisualizationModule = function () {
                 });
 
 
-            hNode = canvas.append("g").classed({"hNodes": true}).selectAll(".hNode")
+            hNode = vis.canvas.append("g").classed({"hNodes": true}).selectAll(".hNode")
                 .data(nodes)
                 .enter().append("g")
                 .attr("transform", function (d) {
@@ -2982,7 +2980,7 @@ var provenanceVisualizationModule = function () {
 
             /* Add analyses dom groups. */
             aNodes.forEach(function () {
-                canvas.append("g")
+                vis.canvas.append("g")
                     .classed("analysis", true)
                     .attr("id", function () {
                         return "aId-" + aId;
@@ -3072,6 +3070,29 @@ var provenanceVisualizationModule = function () {
 
         /* Parse json. */
         d3.json(url, function (error, data) {
+            /* Initialize zoom support. */
+            var zoom = Object.create(null);
+
+            /* Main canvas drawing area. */
+            var canvas = d3.select("#provenance-graph")
+                .append("svg:svg")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                .attr("viewBox", "0 0 " + (width) + " " + (height))
+                .attr("preserveAspectRatio", "xMinYMin meet")
+                .attr("pointer-events", "all")
+                .append("svg:g")
+                .call(zoom = d3.behavior.zoom().on("zoom", redraw)).on("dblclick.zoom", null)
+                .append("svg:g");
+
+            /* Helper rectangle to support pan and zoom. */
+            var rect = canvas.append("svg:rect")
+                .attr("width", width)
+                .attr("height", height)
+                .classed("brect", true);
+
+            var graph = new ProvGraph(nodes, links);
+            vis = new ProvVis(canvas, rect, zoom, studyUuid, url, margin, width, height, r, "#provenance-graph", color, graph);
+
             /* Extract graph data. */
             initModule.init(data);
 
