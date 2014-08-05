@@ -6,24 +6,9 @@
  * @exports runProvenanceVisualization The published function to start the visualization.
  */
 var provenanceVisualizationModule = function () {
-    /* Initialize node-link arrays. */
-    var nodes = [],
-        links = [],
-        iNodes = [],
-        oNodes = [],
-        aNodes = [],
-        saNodes = [];
 
-    /* TODO: Rewrite for simple maps (https://github.com/mbostock/d3/wiki/Arrays#d3_map). */
-    /* Initialize look up hashes. */
-    var nodeMap = d3.map(), /* node.uuid -> node.id */
-        nodePredMap = d3.map(), /* node.id -> predecessor node ids */
-        nodeSuccMap = d3.map(), /* node.id -> successor node ids */
-        nodeLinkPredMap = d3.map(), /* node.id -> predecessor link ids */
-        nodeLinkSuccMap = d3.map(), /* node.id -> successor link ids */
-        analysisWorkflowMap = d3.map();
-    /* analysis -> workflow */
 
+    /* TODO: Use the following constructor functions and split modules into separate files. */
     /**
      * Constructor function for the super node inherited by Node, Analysis and Subanalysis.
      *
@@ -251,20 +236,40 @@ var provenanceVisualizationModule = function () {
      *
      * @param nodes
      * @param links
+     * @param iNodes
+     * @param oNodes
+     * @param aNodes
+     * @param saNodes
+     * @param nodeMap
+     * @param nodePredMap
+     * @param nodeSuccMap
+     * @param nodeLinkPredMap
+     * @param nodeLinkSuccMap
+     * @param analysisWorkflowMap
      * @param width
      * @param depth
      * @param grid
      * @constructor
      */
-    var ProvGraph = function (nodes, links, width, depth, grid) {
+    var ProvGraph = function (nodes, links, iNodes, oNodes, aNodes, saNodes, nodeMap, nodePredMap, nodeSuccMap, nodeLinkPredMap, nodeLinkSuccMap, analysisWorkflowMap, width, depth, grid) {
 
         this.nodes = nodes;
         this.links = links;
+        this.iNodes = iNodes;
+        this.oNodes = oNodes;
+        this.aNodes = aNodes;
+        this.saNodes = saNodes;
+
+        this.nodeMap = nodeMap;
+        this.nodePredMap = nodePredMap;
+        this.nodeSuccMap = nodeSuccMap;
+        this.nodeLinkPredMap = nodeLinkPredMap;
+        this.nodeLinkSuccMap = nodeLinkSuccMap;
+        this.analysisWorkflowMap = analysisWorkflowMap;
+
         this.width = width;
         this.depth = depth;
         this.grid = grid;
-
-        /* TODO: Hold globals as they are now: node-link object collections, lookup maps, dom collections. */
     };
 
     /**
@@ -277,12 +282,22 @@ var provenanceVisualizationModule = function () {
 
         /* The layout is processed from the left (beginning at column/layer 0) to the right. */
         var firstLayer = 0,
-            layoutWidth = 0,
-            layoutDepth = 0,
+            width = 0,
+            depth = 0,
             grid = [];
 
         var nodes = [],
-            links = [];
+            links = [],
+            iNodes = [],
+            oNodes = [],
+            aNodes = [],
+            saNodes = [],
+            nodeMap = [],
+            nodePredMap = [],
+            nodeSuccMap = [],
+            nodeLinkPredMap = [],
+            nodeLinkSuccMap = [],
+            analysisWorkflowMap = [];
 
         /**
          * Deep copy node data structure.
@@ -322,9 +337,9 @@ var provenanceVisualizationModule = function () {
          * Maps the column/row index to nodes.
          */
         var createNodeGrid = function () {
-            for (var i = 0; i < layoutDepth; i++) {
+            for (var i = 0; i < depth; i++) {
                 grid.push([]);
-                for (var j = 0; j < layoutWidth; j++) {
+                for (var j = 0; j < width; j++) {
                     grid[i].push([]);
                     grid[i][j] = "undefined";
                 }
@@ -386,7 +401,7 @@ var provenanceVisualizationModule = function () {
 
             lgNodes.forEach(function (lg) {
                 lg.forEach(function (n, i) {
-                    nodes[n.id].rowBK.right = layoutDepth - lg.length + i;
+                    nodes[n.id].rowBK.right = depth - lg.length + i;
                 });
             });
         };
@@ -456,7 +471,7 @@ var provenanceVisualizationModule = function () {
                 /* Set row attribute after sorting. */
                 barycenterOrderedNodes[i].forEach(function (n, k) {
                     nodes[n.id].rowBK.left = k;
-                    nodes[n.id].rowBK.right = layoutWidth - barycenterOrderedNodes[i].length + k;
+                    nodes[n.id].rowBK.right = width - barycenterOrderedNodes[i].length + k;
                 });
 
             });
@@ -848,11 +863,11 @@ var provenanceVisualizationModule = function () {
          * @param lgNodes Layer grouped array of nodes.
          */
         var setGridLayoutDimensions = function (lgNodes) {
-            layoutWidth = d3.max(lgNodes, function (lg) {
+            width = d3.max(lgNodes, function (lg) {
                 return lg.length;
             });
 
-            layoutDepth = lgNodes.length;
+            depth = lgNodes.length;
         };
 
         /**
@@ -874,6 +889,15 @@ var provenanceVisualizationModule = function () {
 
             /* Update row placements. */
             verticalCoordAssignment(bclgNodes);
+        };
+
+        /**
+         * Build node hashes.
+         * @param nodeObj Node object.
+         * @param nodeId Integer identifier for the node.
+         */
+        var createNodeHashes = function (nodeObj, nodeId) {
+            nodeMap[nodeObj.uuid] = nodeId;
         };
 
         /**
@@ -961,7 +985,7 @@ var provenanceVisualizationModule = function () {
                         });
 
                         /* Update node maps. */
-                        initModule.createNodeHashes(nodes[newNodeId + i], newNodeId + i);
+                        createNodeHashes(nodes[newNodeId + i], newNodeId + i);
 
                         predNode = newNodeId + i;
                         curCol++;
@@ -1474,7 +1498,7 @@ var provenanceVisualizationModule = function () {
                 var leftMostInputCol = d3.max(an.inputs, function (ain) {
                     return ain.col;
                 });
-                var rightMostPredCol = layoutDepth;
+                var rightMostPredCol = depth;
 
 
                 an.inputs.forEach(function (ain) {
@@ -1515,8 +1539,8 @@ var provenanceVisualizationModule = function () {
                 return nodes[nodeSuccMap[nid][Math.floor(nodeSuccMap[nid].length / 2)]].row;
             };
 
-            for (var i = 0; i < layoutDepth; i++) {
-                for (var j = 0; j < layoutWidth; j++) {
+            for (var i = 0; i < depth; i++) {
+                for (var j = 0; j < width; j++) {
                     if (grid[i][j] !== "undefined" && nodeSuccMap[grid[i][j]].length > 1 && nodeSuccMap[grid[i][j]].some(isAnotherAnalysis)) {
 
                         /* Within this analysis and for each predecessor, traverse back and shift rows. */
@@ -1559,6 +1583,18 @@ var provenanceVisualizationModule = function () {
         var runLayoutPrivate = function (graph) {
             nodes = graph.nodes;
             links = graph.links;
+            iNodes = graph.iNodes;
+            oNodes = graph.oNodes;
+            aNodes = graph.aNodes;
+            saNodes = graph.saNodes;
+            nodeMap = graph.nodeMap;
+            nodePredMap = graph.nodePredMap;
+            nodeSuccMap = graph.nodeSuccMap;
+            nodeLinkPredMap = graph.nodeLinkPredMap;
+            nodeLinkSuccMap = graph.nodeLinkSuccMap;
+            analysisWorkflowMap = graph.analysisWorkflowMap;
+            width = graph.width;
+            depth = graph.depth;
             grid = graph.grid;
 
             /* Group output nodes by sub-analysis and analysis. */
@@ -1592,10 +1628,19 @@ var provenanceVisualizationModule = function () {
 
                 graph.nodes = nodes;
                 graph.links = links;
-                graph.width = layoutWidth;
-                graph.depth = layoutDepth;
+                graph.iNodes = iNodes;
+                graph.oNodes = oNodes;
+                graph.aNodes = aNodes;
+                graph.saNodes = saNodes;
+                graph.nodeMap = nodeMap;
+                graph.nodePredMap = nodePredMap;
+                graph.nodeSuccMap = nodeSuccMap;
+                graph.nodeLinkPredMap = nodeLinkPredMap;
+                graph.nodeLinkSuccMap = nodeLinkSuccMap;
+                graph.analysisWorkflowMap = analysisWorkflowMap;
+                graph.width = width;
+                graph.depth = depth;
                 graph.grid = grid;
-
             } else {
                 console.log("Error: Graph is not acyclic!");
             }
@@ -1605,8 +1650,8 @@ var provenanceVisualizationModule = function () {
          * Publish module function.
          */
         return{
-            layout: function (vis) {
-                runLayoutPrivate(vis);
+            layout: function (graph) {
+                runLayoutPrivate(graph);
             }
         };
 
@@ -1617,6 +1662,20 @@ var provenanceVisualizationModule = function () {
      * Sub-module for init.
      */
     var initModule = function () {
+
+        /* Initialize node-link arrays. */
+        var nodes = [],
+            links = [],
+            iNodes = [],
+            oNodes = [],
+            aNodes = [],
+            saNodes = [],
+            nodeMap = [],
+            nodePredMap = [],
+            nodeSuccMap = [],
+            nodeLinkPredMap = [],
+            nodeLinkSuccMap = [],
+            analysisWorkflowMap = [];
 
         /**
          * Assign CSS class for node types.
@@ -1681,7 +1740,7 @@ var provenanceVisualizationModule = function () {
          * @param nodeObj Node object.
          * @param nodeId Integer identifier for the node.
          */
-        var createNodeHashesPrivate = function (nodeObj, nodeId) {
+        var createNodeHashes = function (nodeObj, nodeId) {
             nodeMap[nodeObj.uuid] = nodeId;
         };
 
@@ -1699,7 +1758,7 @@ var provenanceVisualizationModule = function () {
                 extractNodeProperties(x, nodeType, i);
 
                 /* Build node hashes. */
-                createNodeHashesPrivate(x, i);
+                createNodeHashes(x, i);
 
                 /* Sorted set of input nodes. */
                 if (x.type === "Source Name") {
@@ -2068,6 +2127,9 @@ var provenanceVisualizationModule = function () {
 
             /* Create analysis node mapping. */
             createAnalysisNodeMapping();
+
+            /* Create graph. */
+            return new ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, nodeMap, nodePredMap, nodeSuccMap, nodeLinkPredMap, nodeLinkSuccMap, analysisWorkflowMap, 0, 0, []);
         };
 
         /**
@@ -2075,10 +2137,7 @@ var provenanceVisualizationModule = function () {
          */
         return{
             init: function (data) {
-                runInitPrivate(data);
-            },
-            createNodeHashes: function (nodeObj, nodeId) {
-                createNodeHashesPrivate(nodeObj, nodeId);
+                return runInitPrivate(data);
             }
         };
     }();
@@ -2100,6 +2159,22 @@ var provenanceVisualizationModule = function () {
             gridCell = Object.create(null),
             hLink = Object.create(null),
             hNode = Object.create(null);
+
+        var nodes = [],
+            links = [],
+            iNodes = [],
+            oNodes = [],
+            aNodes = [],
+            saNodes = [],
+            nodeMap = [],
+            nodePredMap = [],
+            nodeSuccMap = [],
+            nodeLinkPredMap = [],
+            nodeLinkSuccMap = [],
+            analysisWorkflowMap = [],
+            width = 0,
+            depth = 0,
+            grid = [];
 
         /**
          * Drag start listener support for nodes.
@@ -2969,6 +3044,22 @@ var provenanceVisualizationModule = function () {
             vis = provVis;
             cell = {width: vis.radius * 3, height: vis.radius * 3};
 
+            nodes = vis.graph.nodes;
+            links = vis.graph.links;
+            iNodes = vis.graph.iNodes;
+            oNodes = vis.graph.oNodes;
+            aNodes = vis.graph.aNodes;
+            saNodes = vis.graph.saNodes;
+            nodeMap = vis.graph.nodeMap;
+            nodePredMap = vis.graph.nodePredMap;
+            nodeSuccMap = vis.graph.nodeSuccMap;
+            nodeLinkPredMap = vis.graph.nodeLinkPredMap;
+            nodeLinkSuccMap = vis.graph.nodeLinkSuccMap;
+            analysisWorkflowMap = vis.graph.analysisWorkflowMap;
+            width = vis.graph.width;
+            depth = vis.graph.depth;
+            grid = vis.graph.grid;
+
             /* Short delay. */
             setTimeout(function () {
 
@@ -3027,6 +3118,22 @@ var provenanceVisualizationModule = function () {
                 d3.selectAll(".link").transition().duration(500).style("opacity", 1.0);
                 d3.selectAll(".node").transition().duration(500).style("opacity", 1.0);
             }, 500);
+
+            vis.graph.nodes = nodes;
+            vis.graph.links = links;
+            vis.graph.iNodes = iNodes;
+            vis.graph.oNodes = oNodes;
+            vis.graph.aNodes = aNodes;
+            vis.graph.saNodes = saNodes;
+            vis.graph.nodeMap = nodeMap;
+            vis.graph.nodePredMap = nodePredMap;
+            vis.graph.nodeSuccMap = nodeSuccMap;
+            vis.graph.nodeLinkPredMap = nodeLinkPredMap;
+            vis.graph.nodeLinkSuccMap = nodeLinkSuccMap;
+            vis.graph.analysisWorkflowMap = analysisWorkflowMap;
+            vis.graph.width = width;
+            vis.graph.depth = depth;
+            vis.graph.grid = grid;
         };
 
         /**
@@ -3065,12 +3172,8 @@ var provenanceVisualizationModule = function () {
             var r = 7,
                 color = d3.scale.category20();
 
-            var gWidth = 0,
-                gDepth = 0,
-                grid = [];
-
-            /* Create graph. */
-            var graph = new ProvGraph(nodes, links, gWidth, gDepth, grid);
+            /* Declare graph. */
+            var graph = Object.create(null);
 
             /* Create vis and add graph. */
             var vis = new ProvVis("#provenance-graph", zoom, data, url, canvas, rect, margin, width, height, r, color, graph);
@@ -3102,7 +3205,7 @@ var provenanceVisualizationModule = function () {
                 .classed("brect", true);
 
             /* Extract graph data. */
-            initModule.init(data);
+            vis.graph = initModule.init(data);
 
             /* Compute layout. */
             layoutModule.layout(vis.graph);
