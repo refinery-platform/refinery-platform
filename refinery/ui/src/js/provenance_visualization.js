@@ -11,32 +11,19 @@ var provenanceVisualizationModule = function () {
         links = [],
         inputNodes = [],
         outputNodes = [],
-        flatAnalyses = [],
         aNodes = [],
         saNodes = [],
         grid = [];
 
-    /* Initialize dom elements. */
-    var node = Object.create(null),
-        link = Object.create(null),
-        analysis = Object.create(null),
-        aNode = Object.create(null),
-        saNode = Object.create(null),
-        gridCell = Object.create(null),
-        hLink = Object.create(null),
-        hNode = Object.create(null);
-
     /* TODO: Rewrite for simple maps (https://github.com/mbostock/d3/wiki/Arrays#d3_map). */
     /* Initialize look up hashes. */
     var nodeMap = d3.map(), /* node.uuid -> node.id */
-        studyMap = d3.map(),
-        studyAssayMap = d3.map(),
         nodePredMap = d3.map(), /* node.id -> predecessor node ids */
         nodeSuccMap = d3.map(), /* node.id -> successor node ids */
         nodeLinkPredMap = d3.map(), /* node.id -> predecessor link ids */
         nodeLinkSuccMap = d3.map(), /* node.id -> successor link ids */
-        workflowAnalysisMap = d3.map(),
         analysisWorkflowMap = d3.map();
+    /* analysis -> workflow */
 
     /**
      * Constructor function for the super node inherited by Node, Analysis and Subanalysis.
@@ -1688,8 +1675,6 @@ var provenanceVisualizationModule = function () {
          */
         var createNodeHashesPrivate = function (nodeObj, nodeId) {
             nodeMap[nodeObj.uuid] = nodeId;
-            studyMap[nodeId] = nodes[nodeId].study;
-            studyAssayMap[nodes[nodeId].study] = nodes[nodeId].assay;
         };
 
         /**
@@ -1791,19 +1776,6 @@ var provenanceVisualizationModule = function () {
         };
 
         /**
-         * Create one node representing the whole analysis when aggregated.
-         */
-        var createAnalysisNodes = function () {
-            aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": true, "id": -1, "nodeType": "analysis", "start": -1, "end": -1, "created": -1, "doi": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "links": []});
-
-            analyses.objects.filter(function (a) {
-                return a.status === "SUCCESS";
-            }).forEach(function (a, i) {
-                aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": true, "id": -i - 2, "nodeType": "analysis", "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doi": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "links": []});
-            });
-        };
-
-        /**
          * Divide analyses into independent subanalyses.
          */
         var markSubanalyses = function () {
@@ -1881,28 +1853,24 @@ var provenanceVisualizationModule = function () {
         };
 
         /**
-         * Extract workflows from analyses. A workflow might be executed by multiple analyses.
+         * Extracts analyses nodes as well as maps it to their corresponding workflows.
+         *
+         * @param analysesData analyses object extracted from global refinery variable.
          */
-        var createWorkflowAnalysisMapping = function () {
-            analyses.objects.filter(function (a) {
+        var extractAnalyses = function (analysesData) {
+            aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": true, "id": -1, "nodeType": "analysis", "start": -1, "end": -1, "created": -1, "doi": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "links": []});
+            analysesData.filter(function (a) {
                 return a.status === "SUCCESS";
-            }).forEach(function (a) {
+            }).forEach(function (a, i) {
 
-                /* Workflow -> analysis. */
-                if (workflowAnalysisMap.hasOwnProperty(a.workflow__uuid)) {
-                    workflowAnalysisMap[a.workflow__uuid] = workflowAnalysisMap[a.workflow__uuid].concat([a.uuid]);
-                } else {
-                    workflowAnalysisMap[a.workflow__uuid] = [a.uuid];
-                }
+                /* New node. */
+                aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": true, "id": -i - 2, "nodeType": "analysis", "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doi": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "links": []});
 
                 /* Analysis -> workflow. */
                 analysisWorkflowMap[a.uuid] = a.workflow__uuid;
             });
-
-            flatAnalyses = [].concat.apply(["dataset"], d3.values(workflowAnalysisMap));
         };
 
-        /* TODO: For analysis nodes, derive information from subanalysis nodes.*/
         /**
          * For each analysis the corresponding nodes as well as specifically in- and output nodes are mapped to it.
          */
@@ -2082,17 +2050,14 @@ var provenanceVisualizationModule = function () {
             /* Create link collection. */
             extractLinks();
 
-            /* Extract analysis nodes. */
-            createAnalysisNodes();
+            /* Create analysis nodes. */
+            extractAnalyses(analyses.objects);
 
             /* Divide dataset and analyses into sub-analyses. */
             markSubanalyses();
 
             /* Set output nodes. */
             setOutputNodes();
-
-            /* Create analyses and workflow hashes. */
-            createWorkflowAnalysisMapping();
 
             /* Create analysis node mapping. */
             createAnalysisNodeMapping();
@@ -2118,6 +2083,16 @@ var provenanceVisualizationModule = function () {
 
         var vis = Object.create(null),
             cell = Object.create(null);
+
+        /* Initialize dom elements. */
+        var node = Object.create(null),
+            link = Object.create(null),
+            analysis = Object.create(null),
+            aNode = Object.create(null),
+            saNode = Object.create(null),
+            gridCell = Object.create(null),
+            hLink = Object.create(null),
+            hNode = Object.create(null);
 
         /**
          * Drag start listener support for nodes.
@@ -2983,7 +2958,6 @@ var provenanceVisualizationModule = function () {
         };
 
         var runRenderPrivate = function (provVis) {
-
             /* Save vis object to module scope. */
             vis = provVis;
             cell = {width: vis.radius * 3, height: vis.radius * 3};
