@@ -9,11 +9,10 @@ var provenanceVisualizationModule = function () {
     /* Initialize node-link arrays. */
     var nodes = [],
         links = [],
-        inputNodes = [],
-        outputNodes = [],
+        iNodes = [],
+        oNodes = [],
         aNodes = [],
-        saNodes = [],
-        grid = [];
+        saNodes = [];
 
     /* TODO: Rewrite for simple maps (https://github.com/mbostock/d3/wiki/Arrays#d3_map). */
     /* Initialize look up hashes. */
@@ -252,12 +251,18 @@ var provenanceVisualizationModule = function () {
      *
      * @param nodes
      * @param links
+     * @param width
+     * @param depth
+     * @param grid
      * @constructor
      */
-    var ProvGraph = function (nodes, links) {
+    var ProvGraph = function (nodes, links, width, depth, grid) {
 
         this.nodes = nodes;
         this.links = links;
+        this.width = width;
+        this.depth = depth;
+        this.grid = grid;
 
         /* TODO: Hold globals as they are now: node-link object collections, lookup maps, dom collections. */
     };
@@ -273,10 +278,11 @@ var provenanceVisualizationModule = function () {
         /* The layout is processed from the left (beginning at column/layer 0) to the right. */
         var firstLayer = 0,
             layoutWidth = 0,
-            layoutDepth = 0;
+            layoutDepth = 0,
+            grid = [];
 
-        var nodes = Object.create(null),
-            links = Object.create(null);
+        var nodes = [],
+            links = [];
 
         /**
          * Deep copy node data structure.
@@ -1140,12 +1146,12 @@ var provenanceVisualizationModule = function () {
         var sortOutputNodes = function () {
 
             /* Sort output nodes. */
-            outputNodes.sort(function (a, b) {
+            oNodes.sort(function (a, b) {
                 return b.parent.id - a.parent.id;
             });
 
             /* Set analyses as output analyses. */
-            outputNodes.forEach(function (n) {
+            oNodes.forEach(function (n) {
                 /* Set sub-analysis as output. */
                 n.parent.isOutputAnalysis = true;
             });
@@ -1154,7 +1160,7 @@ var provenanceVisualizationModule = function () {
             var dist = [],
                 clusters = [],
                 priorities = [],
-                sortedOutputNodes = [];
+                sortedoNodes = [];
 
             /* Initialize n x n distance, cluster and priority matrix. */
             saNodes.forEach(function (san, i) {
@@ -1310,7 +1316,7 @@ var provenanceVisualizationModule = function () {
                 }).filter(function (sa) {
                     return getNeighbors(dist[saNodes.indexOf(sa)], saNodes.indexOf(sa)).length === 0;
                 }).forEach(function (sa) {
-                    sortedOutputNodes.push.apply(sortedOutputNodes, sa.outputs);
+                    sortedoNodes.push.apply(sortedoNodes, sa.outputs);
                 });
 
                 /* Set remaining clusters. */
@@ -1320,7 +1326,7 @@ var provenanceVisualizationModule = function () {
                     return getNeighbors(dist[saNodes.indexOf(sa)], saNodes.indexOf(sa)).length !== 0;
                 }).forEach(function (sa) {
 
-                    insertSorted(sortedOutputNodes, sa);
+                    insertSorted(sortedoNodes, sa);
                 });
             };
 
@@ -1329,7 +1335,7 @@ var provenanceVisualizationModule = function () {
             setPriorities();
             reorderOutputNodes();
 
-            return sortedOutputNodes;
+            return sortedoNodes;
         };
 
         /**
@@ -1553,12 +1559,13 @@ var provenanceVisualizationModule = function () {
         var runLayoutPrivate = function (graph) {
             nodes = graph.nodes;
             links = graph.links;
+            grid = graph.grid;
 
             /* Group output nodes by sub-analysis and analysis. */
-            outputNodes = sortOutputNodes();
+            oNodes = sortOutputNodes();
 
             /* Topological order. */
-            var topNodes = sortTopological(outputNodes);
+            var topNodes = sortTopological(oNodes);
             if (topNodes !== null) {
                 /* Assign layers. */
                 assignLayers(topNodes);
@@ -1567,7 +1574,7 @@ var provenanceVisualizationModule = function () {
                 addDummyNodes();
 
                 /* Recalculate layers including dummy nodes. */
-                topNodes = sortTopological(outputNodes);
+                topNodes = sortTopological(oNodes);
                 assignLayers(topNodes);
 
                 /* Group nodes by layer. */
@@ -1587,6 +1594,7 @@ var provenanceVisualizationModule = function () {
                 graph.links = links;
                 graph.width = layoutWidth;
                 graph.depth = layoutDepth;
+                graph.grid = grid;
 
             } else {
                 console.log("Error: Graph is not acyclic!");
@@ -1695,7 +1703,7 @@ var provenanceVisualizationModule = function () {
 
                 /* Sorted set of input nodes. */
                 if (x.type === "Source Name") {
-                    inputNodes.push(nodes[i]);
+                    iNodes.push(nodes[i]);
                 }
             });
         };
@@ -1828,7 +1836,7 @@ var provenanceVisualizationModule = function () {
             };
 
             /* For each subanalysis in the dataset. */
-            inputNodes.forEach(function (n) {
+            iNodes.forEach(function (n) {
                 if (n.subanalysis === null) {
 
                     traverseDataset(n, subanalysis);
@@ -1843,7 +1851,7 @@ var provenanceVisualizationModule = function () {
         var setOutputNodes = function () {
             nodes.forEach(function (n) {
                 if (typeof nodeSuccMap[n.id] === "undefined") {
-                    outputNodes.push(n);
+                    oNodes.push(n);
 
                     /* Set successor maps for output nodes to an empty array. */
                     nodeSuccMap[n.id] = [];
@@ -2039,10 +2047,9 @@ var provenanceVisualizationModule = function () {
         };
 
         /* Main init function. */
-        var runInitPrivate = function (vis) {
-
+        var runInitPrivate = function (data) {
             /* Extract raw objects. */
-            var obj = d3.entries(vis._data)[1];
+            var obj = d3.entries(data)[1];
 
             /* Create node collection. */
             extractNodes(obj);
@@ -2067,8 +2074,8 @@ var provenanceVisualizationModule = function () {
          * Publish module function.
          */
         return{
-            init: function (vis) {
-                runInitPrivate(vis);
+            init: function (data) {
+                runInitPrivate(data);
             },
             createNodeHashes: function (nodeObj, nodeId) {
                 createNodeHashesPrivate(nodeObj, nodeId);
@@ -2766,7 +2773,7 @@ var provenanceVisualizationModule = function () {
         /**
          * Draws a grid for the grid-based graph layout.
          */
-        var drawGrid = function () {
+        var drawGrid = function (grid) {
             gridCell = vis.canvas.append("g").classed({"cells": true}).selectAll(".cell")
                 .data(function () {
                     return [].concat.apply([], grid);
@@ -2969,7 +2976,7 @@ var provenanceVisualizationModule = function () {
                 assignCellCoords();
 
                 /* Draw grid. */
-                drawGrid();
+                drawGrid(vis.graph.grid);
 
                 /* Draw simple node/link highlighting shapes. */
                 drawHighlightingShapes();
@@ -3058,8 +3065,12 @@ var provenanceVisualizationModule = function () {
             var r = 7,
                 color = d3.scale.category20();
 
+            var gWidth = 0,
+                gDepth = 0,
+                grid = [];
+
             /* Create graph. */
-            var graph = new ProvGraph(nodes, links);
+            var graph = new ProvGraph(nodes, links, gWidth, gDepth, grid);
 
             /* Create vis and add graph. */
             var vis = new ProvVis("#provenance-graph", zoom, data, url, canvas, rect, margin, width, height, r, color, graph);
@@ -3091,7 +3102,7 @@ var provenanceVisualizationModule = function () {
                 .classed("brect", true);
 
             /* Extract graph data. */
-            initModule.init(vis);
+            initModule.init(data);
 
             /* Compute layout. */
             layoutModule.layout(vis.graph);
