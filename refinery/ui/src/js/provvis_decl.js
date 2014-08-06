@@ -175,20 +175,19 @@ var provvisDecl = function () {
     /**
      * Constructor function for the link data structure.
      *
-     * @param _id
-     * @param _source
-     * @param _target
+     * @param id
+     * @param source
+     * @param target
      * @param hidden
      * @param neighbor
      * @param type0
      * @param type1
      * @constructor
      */
-    var Link = function (_id, _source, _target, hidden, neighbor, type0, type1) {
-        this._id = _id;
-        this._source = _source;
-        this._target = _target;
-
+    var Link = function (id, source, target, hidden, neighbor, type0, type1) {
+        this.id = id;
+        this.source = source;
+        this.target = target;
         this.hidden = hidden;
         this.neighbor = neighbor;
         this.type0 = type0;
