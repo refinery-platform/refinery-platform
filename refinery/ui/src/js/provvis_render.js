@@ -90,7 +90,7 @@ var provvisRender = function () {
         /* Get input links and update coordinates for x2 and y2. */
         nodeLinkPredMap[n.id].forEach(function (l) {
             d3.selectAll("#linkId-" + l + ", #hLinkId-" + l).attr("d", function (l) {
-                var srcCoords = getNodeCoords(l.source),
+                var srcCoords = getNodeCoords(l.source.id),
                     pathSegment = " M" + srcCoords.x + "," + srcCoords.y;
 
                 if (Math.abs(srcCoords.x - x) > cell.width) {
@@ -105,7 +105,7 @@ var provvisRender = function () {
         /* Get output links and update coordinates for x1 and y1. */
         nodeLinkSuccMap[n.id].forEach(function (l) {
             d3.selectAll("#linkId-" + l + ", #hLinkId-" + l).attr("d", function (l) {
-                var tarCoords = getNodeCoords(l.target),
+                var tarCoords = getNodeCoords(l.target.id),
                     pathSegment = " M" + parseInt(x, 10) + "," + parseInt(y, 10);
 
                 if (Math.abs(x - tarCoords.x) > cell.width) {
@@ -238,7 +238,7 @@ var provvisRender = function () {
         /* Get svg link element, and for each predecessor call recursively. */
         nodeLinkPredMap[nodeId].forEach(function (l) {
             d3.select("#hLinkId-" + l).style("display", "inline");
-            highlightPredPath(links[l].source, highlighted);
+            highlightPredPath(links[l].source.id, highlighted);
         });
     };
 
@@ -251,7 +251,7 @@ var provvisRender = function () {
         /* Get svg link element, and for each successor call recursively. */
         nodeLinkSuccMap[nodeId].forEach(function (l) {
             d3.select("#hLinkId-" + l).style("display", "inline");
-            highlightSuccPath(links[l].target, highlighted);
+            highlightSuccPath(links[l].target.id, highlighted);
         });
     };
 
@@ -265,11 +265,11 @@ var provvisRender = function () {
             }))
             .enter().append("path")
             .attr("d", function (l) {
-                var pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
-                if (Math.abs(nodes[l.source].x - nodes[l.target].x) > cell.width) {
-                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(nodes[l.target].y, 10) + " H" + parseInt(nodes[l.target].x, 10));
+                var pathSegment = " M" + parseInt(l.source.x, 10) + "," + parseInt(l.source.y, 10);
+                if (Math.abs(l.source.x - l.target.x) > cell.width) {
+                    pathSegment = pathSegment.concat(" L" + parseInt(l.source.x + (cell.width)) + "," + parseInt(l.target.y, 10) + " H" + parseInt(l.target.x, 10));
                 } else {
-                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
+                    pathSegment = pathSegment.concat(" L" + parseInt(l.target.x, 10) + "," + parseInt(l.target.y, 10));
                 }
                 return pathSegment;
             })
@@ -290,8 +290,8 @@ var provvisRender = function () {
             .offset([-10, 0])
             .html(function (l) {
                 return "<strong>Id:</strong> <span style='color:#fa9b30'>" + l.id + "</span><br>" +
-                    "<strong>Source Id:</strong> <span style='color:#fa9b30'>" + l.source + "</span><br>" +
-                    "<strong>Target Id:</strong> <span style='color:#fa9b30'>" + l.target + "</span>";
+                    "<strong>Source Id:</strong> <span style='color:#fa9b30'>" + l.source.id + "</span><br>" +
+                    "<strong>Target Id:</strong> <span style='color:#fa9b30'>" + l.target.id + "</span>";
             });
 
         /* Invoke tooltip on dom element. */
@@ -596,7 +596,6 @@ var provvisRender = function () {
 
     /**
      * Fit visualization onto free windows space.
-     * @param vis The parent visualization object.
      * @param transitionTime The time in milliseconds for the duration of the animation.
      */
     var fitGraphToWindow = function (transitionTime) {
@@ -684,6 +683,8 @@ var provvisRender = function () {
 
     /**
      * Draws a grid for the grid-based graph layout.
+     *
+     * @param grid An array containing cells.
      */
     var drawGrid = function (grid) {
         gridCell = vis.canvas.append("g").classed({"cells": true}).selectAll(".cell")
@@ -721,11 +722,11 @@ var provvisRender = function () {
             }))
             .enter().append("path")
             .attr("d", function (l) {
-                var pathSegment = " M" + parseInt(nodes[l.source].x, 10) + "," + parseInt(nodes[l.source].y, 10);
-                if (Math.abs(nodes[l.source].x - nodes[l.target].x) > cell.width) {
-                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.source].x + (cell.width)) + "," + parseInt(nodes[l.target].y, 10) + " H" + parseInt(nodes[l.target].x, 10));
+                var pathSegment = " M" + parseInt(l.source.x, 10) + "," + parseInt(l.source.y, 10);
+                if (Math.abs(l.source.x - l.target.x) > cell.width) {
+                    pathSegment = pathSegment.concat(" L" + parseInt(l.source.x + (cell.width)) + "," + parseInt(l.target.y, 10) + " H" + parseInt(l.target.x, 10));
                 } else {
-                    pathSegment = pathSegment.concat(" L" + parseInt(nodes[l.target].x, 10) + "," + parseInt(nodes[l.target].y, 10));
+                    pathSegment = pathSegment.concat(" L" + parseInt(l.target.x, 10) + "," + parseInt(l.target.y, 10));
                 }
                 return pathSegment;
             })
@@ -735,7 +736,7 @@ var provvisRender = function () {
             .attr("id", function (l) {
                 return "hLinkId-" + l.id;
             }).style("stroke", function (d) {
-                return vis.color(analysisWorkflowMap[nodes[d.target].analysis]);
+                return vis.color(analysisWorkflowMap[d.target.analysis]);
             });
 
 
@@ -779,6 +780,8 @@ var provvisRender = function () {
      * Create initial layout for analysis only nodes.
      */
     var initAnalysisLayout = function () {
+        var firstLayer = 0;
+
         aNodes.forEach(function (an) {
             var rootCol;
 
@@ -816,6 +819,7 @@ var provvisRender = function () {
      * Create initial layout for sub-analysis only nodes.
      */
     var initSubanalysisLayout = function () {
+        var firstLayer = 0;
         saNodes.forEach(function (san) {
             var rootCol;
 

@@ -127,8 +127,8 @@ var provvisInit = function () {
      */
     var extractLinkProperties = function (n, lId, parentIndex) {
         links.push({
-            source: nodeMap[n.parents[parentIndex]],
-            target: nodeMap[n.uuid],
+            source: nodes[nodeMap[n.parents[parentIndex]]],
+            target: n,
             id: lId,
             hidden: false,
             neighbor: false,
@@ -381,7 +381,7 @@ var provvisInit = function () {
         /* Set links for subanalysis. */
         saNodes.forEach(function (san) {
             san.links = links.filter(function (l) {
-                return l !== null && san.parent.uuid === nodes[l.target].analysis && nodes[l.target].subanalysis === san.subanalysis;
+                return l !== null && san.parent.uuid === l.target.analysis && l.target.subanalysis === san.subanalysis;
             });
         });
 
