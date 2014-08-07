@@ -122,14 +122,14 @@ var provvisDecl = function () {
     var Analysis = function (id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y, uuid, analysis, start, end, created, inputs, outputs, links) {
         BaseNode.call(this, id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y);
 
-        this._uuid = _uuid;
-        this._analysis = _analysis;
-        this._start = _start;
-        this._end = _end;
-        this._created = _created;
-        this._inputs = _inputs;
-        this._outputs = _outputs;
-        this._links = _links;
+        this.uuid = uuid;
+        this.analysis = analysis;
+        this.start = start;
+        this.end = end;
+        this.created = created;
+        this.inputs = inputs;
+        this.outputs = outputs;
+        this.links = links;
     };
 
     Analysis.prototype = Object.create(BaseNode.prototype);
@@ -160,10 +160,10 @@ var provvisDecl = function () {
     var Subanalysis = function (id, nodeType, doi, hidden, preds, succs, parent, children, col, row, x, y, sanId, subanalysis, inputs, outputs, isOutputAnalysis) {
         BaseNode.call(this, id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y);
 
-        this._sanId = _sanId;
-        this._subanalysis = _subanalysis;
-        this._inputs = _inputs;
-        this._outputs = _outputs;
+        this.sanId = sanId;
+        this.subanalysis = subanalysis;
+        this.inputs = inputs;
+        this.outputs = outputs;
 
         this.isOutputAnalysis = isOutputAnalysis;
     };
@@ -196,10 +196,10 @@ var provvisDecl = function () {
     /**
      * Constructor function for the provenance visualization.
      *
-     * @param _parentDiv
+     * @param parentDiv
      * @param zoom
-     * @param _data
-     * @param _url
+     * @param data
+     * @param url
      * @param canvas
      * @param rect
      * @param margin
@@ -210,11 +210,11 @@ var provvisDecl = function () {
      * @param graph
      * @constructor
      */
-    var ProvVis = function (_parentDiv, zoom, _data, _url, canvas, rect, margin, width, height, radius, color, graph) {
-        this._parentDiv = _parentDiv;
+    var ProvVis = function (parentDiv, zoom, data, url, canvas, rect, margin, width, height, radius, color, graph) {
+        this._parentDiv = parentDiv;
         this.zoom = zoom;
-        this._data = _data;
-        this._url = _url;
+        this._data = data;
+        this._url = url;
 
         this.canvas = canvas;
         this.rect = rect;
