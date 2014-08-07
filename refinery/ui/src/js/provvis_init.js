@@ -88,13 +88,13 @@ var provvisInit = function () {
 
     /**
      * Extract link properties.
-     * @param n Node object.
      * @param lId Integer identifier for the link.
-     * @param puuid The serialized unique identifier for the parent node.
+     * @param source Source node object.
+     * @param target Target node object.
      * @returns {provvisDecl.Link} New Link object.
      */
-    var createLink = function (n, lId, puuid) {
-        return new provvisDecl.Link(lId, nodeMap.get(puuid), n, false, {neighbor: false, type0: false, type1: false});
+    var createLink = function (lId, source, target) {
+        return new provvisDecl.Link(lId, source, target, false, {neighbor: false, type0: false, type1: false});
     };
 
     /**
@@ -133,10 +133,10 @@ var provvisInit = function () {
                         srcLinkIds = [];
 
                     /* For each parent entry. */
-                    n.parents.forEach(function (puuid, j) { /* p is the parent uuid of n. */
+                    n.parents.forEach(function (puuid) { /* p is the parent uuid of n. */
                         if (typeof nodeMap.get(puuid) !== "undefined") {
                             /* ExtractLinkProperties. */
-                            links.push(createLink(n, lId, puuid));
+                            links.push(createLink(lId, nodeMap.get(puuid), n));
 
                             /* Build link hashes. */
                             createLinkHashes(puuid, lId, i, srcNodeIds, srcLinkIds);
