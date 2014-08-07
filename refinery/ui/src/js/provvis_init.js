@@ -11,13 +11,14 @@ var provvisInit = function () {
         aNodes = [],
         saNodes = [],
 
-        nodeMap = [],
+        nodeMap = d3.map(),
 
         nodePredMap = [],
         nodeSuccMap = [],
         nodeLinkPredMap = [],
         nodeLinkSuccMap = [],
-        analysisWorkflowMap = [];
+
+        analysisWorkflowMap = d3.map();
 
     /**
      * Assign node types.
@@ -89,15 +90,6 @@ var provvisInit = function () {
     };
 
     /**
-     * Build node hashes.
-     * @param n Node object.
-     * @param id Integer identifier for the node.
-     */
-    var createNodeHashes = function (n, id) {
-        nodeMap[n.uuid] = id;
-    };
-
-    /**
      * Extract nodes.
      * @param datasetJsonObj Analysis dataset of type JSON.
      */
@@ -111,21 +103,13 @@ var provvisInit = function () {
             extractNodeProperties(n, nodeType, i);
 
             /* Build node hashes. */
-            createNodeHashes(n, i);
+            nodeMap.set(n.uuid, nodes[i]);
 
             /* Sorted set of input nodes. */
             if (n.type === "Source Name") {
                 iNodes.push(nodes[i]);
             }
         });
-    };
-
-    /**
-     * Get node object by uuid.
-     * @param uuid The serialized unique identifier for a node.
-     */
-    var getNodeByUuid = function (uuid) {
-        return nodes[nodeMap[uuid]];
     };
 
     /**
@@ -136,7 +120,7 @@ var provvisInit = function () {
      */
     var extractLinkProperties = function (n, lId, puuid) {
         links.push({
-            source: getNodeByUuid(puuid),
+            source: nodeMap.get(puuid),
             target: n,
             id: lId,
             hidden: false,
@@ -155,7 +139,7 @@ var provvisInit = function () {
      * @param srcLinkIds Integer array containing all link identifiers preceding the current node.
      */
     var createLinkHashes = function (puuid, lId, nId, srcNodeIds, srcLinkIds) {
-        var pnId = getNodeByUuid(puuid).id;
+        var pnId = nodeMap.get(puuid).id;
 
         srcNodeIds.push(pnId);
         srcLinkIds.push(lId);
@@ -183,7 +167,7 @@ var provvisInit = function () {
 
                     /* For each parent entry. */
                     n.parents.forEach(function (puuid, j) { /* p is the parent uuid of n. */
-                        if (typeof getNodeByUuid(puuid) !== "undefined") {
+                        if (typeof nodeMap.get(puuid) !== "undefined") {
                             /* ExtractLinkProperties. */
                             extractLinkProperties(n, lId, puuid);
 
@@ -297,7 +281,7 @@ var provvisInit = function () {
             aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": true, "id": -i - 2, "nodeType": "analysis", "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doi": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "links": []});
 
             /* Analysis -> workflow. */
-            analysisWorkflowMap[a.uuid] = a.workflow__uuid;
+            analysisWorkflowMap.set(a.uuid, a.workflow__uuid);
         });
     };
 

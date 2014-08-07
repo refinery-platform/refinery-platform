@@ -28,7 +28,7 @@ var provvisRender = function () {
         nodeSuccMap = [],
         nodeLinkPredMap = [],
         nodeLinkSuccMap = [],
-        analysisWorkflowMap = [],
+        analysisWorkflowMap = d3.map(),
 
         width = 0,
         depth = 0,
@@ -206,7 +206,7 @@ var provvisRender = function () {
     var dyeWorkflows = function () {
         d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").each(function () {
             d3.select(this).style("stroke", function (d) {
-                return vis.color(analysisWorkflowMap[d.analysis]);
+                return vis.color(analysisWorkflowMap.get(d.analysis));
             });
         });
 
@@ -333,7 +333,7 @@ var provvisRender = function () {
                             return vis.color(san.parent.uuid);
                         })
                         .style("stroke", function () {
-                            return vis.color(analysisWorkflowMap[san.parent.uuid]);
+                            return vis.color(analysisWorkflowMap.get(san.parent.uuid));
                         })
                         .style("stroke-width", 2);
                 });
@@ -389,7 +389,7 @@ var provvisRender = function () {
                             return vis.color(an.uuid);
                         })
                         .style("stroke", function () {
-                            return vis.color(analysisWorkflowMap[an.uuid]);
+                            return vis.color(analysisWorkflowMap.get(an.uuid));
                         })
                         .style("stroke-width", 3);
                 });
@@ -738,7 +738,7 @@ var provvisRender = function () {
             .attr("id", function (l) {
                 return "hLinkId-" + l.id;
             }).style("stroke", function (d) {
-                return vis.color(analysisWorkflowMap[d.target.analysis]);
+                return vis.color(analysisWorkflowMap.get(d.target.analysis));
             });
 
 
@@ -755,7 +755,7 @@ var provvisRender = function () {
             .attr("id", function (d) {
                 return "hNodeId-" + d.id;
             }).style("fill", function (d) {
-                return vis.color(analysisWorkflowMap[d.analysis]);
+                return vis.color(analysisWorkflowMap.get(d.analysis));
             });
     };
 
