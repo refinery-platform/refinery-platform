@@ -42,6 +42,8 @@ var provvisDecl = function () {
         /* TODO: Add previous and next SNode references. */
 
         /* TODO: Add auto instance counter for id. */
+
+        /* TODO: Remove parents field. */
     };
 
     /**
@@ -235,7 +237,6 @@ var provvisDecl = function () {
      * @param oNodes
      * @param aNodes
      * @param saNodes
-     * @param nodeMap
      * @param nodePredMap
      * @param nodeSuccMap
      * @param nodeLinkPredMap
@@ -246,7 +247,7 @@ var provvisDecl = function () {
      * @param grid
      * @constructor
      */
-    var ProvGraph = function (nodes, links, iNodes, oNodes, aNodes, saNodes, nodeMap, nodePredMap, nodeSuccMap, nodeLinkPredMap, nodeLinkSuccMap, analysisWorkflowMap, width, depth, grid) {
+    var ProvGraph = function (nodes, links, iNodes, oNodes, aNodes, saNodes, nodePredMap, nodeSuccMap, nodeLinkPredMap, nodeLinkSuccMap, analysisWorkflowMap, width, depth, grid) {
         this.nodes = nodes;
         this.links = links;
         this.iNodes = iNodes;
@@ -254,7 +255,6 @@ var provvisDecl = function () {
         this.aNodes = aNodes;
         this.saNodes = saNodes;
 
-        this.nodeMap = nodeMap;
         this.nodePredMap = nodePredMap;
         this.nodeSuccMap = nodeSuccMap;
         this.nodeLinkPredMap = nodeLinkPredMap;

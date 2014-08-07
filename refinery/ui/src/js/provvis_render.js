@@ -12,6 +12,7 @@ var provvisRender = function () {
         analysis = Object.create(null),
         aNode = Object.create(null),
         saNode = Object.create(null),
+
         gridCell = Object.create(null),
         hLink = Object.create(null),
         hNode = Object.create(null);
@@ -22,12 +23,13 @@ var provvisRender = function () {
         oNodes = [],
         aNodes = [],
         saNodes = [],
-        nodeMap = [],
+
         nodePredMap = [],
         nodeSuccMap = [],
         nodeLinkPredMap = [],
         nodeLinkSuccMap = [],
         analysisWorkflowMap = [],
+
         width = 0,
         depth = 0,
         grid = [];
@@ -891,12 +893,13 @@ var provvisRender = function () {
         oNodes = vis.graph.oNodes;
         aNodes = vis.graph.aNodes;
         saNodes = vis.graph.saNodes;
-        nodeMap = vis.graph.nodeMap;
+
         nodePredMap = vis.graph.nodePredMap;
         nodeSuccMap = vis.graph.nodeSuccMap;
         nodeLinkPredMap = vis.graph.nodeLinkPredMap;
         nodeLinkSuccMap = vis.graph.nodeLinkSuccMap;
         analysisWorkflowMap = vis.graph.analysisWorkflowMap;
+
         width = vis.graph.width;
         depth = vis.graph.depth;
         grid = vis.graph.grid;
@@ -959,22 +962,6 @@ var provvisRender = function () {
             d3.selectAll(".link").transition().duration(500).style("opacity", 1.0);
             d3.selectAll(".node").transition().duration(500).style("opacity", 1.0);
         }, 500);
-
-        vis.graph.nodes = nodes;
-        vis.graph.links = links;
-        vis.graph.iNodes = iNodes;
-        vis.graph.oNodes = oNodes;
-        vis.graph.aNodes = aNodes;
-        vis.graph.saNodes = saNodes;
-        vis.graph.nodeMap = nodeMap;
-        vis.graph.nodePredMap = nodePredMap;
-        vis.graph.nodeSuccMap = nodeSuccMap;
-        vis.graph.nodeLinkPredMap = nodeLinkPredMap;
-        vis.graph.nodeLinkSuccMap = nodeLinkSuccMap;
-        vis.graph.analysisWorkflowMap = analysisWorkflowMap;
-        vis.graph.width = width;
-        vis.graph.depth = depth;
-        vis.graph.grid = grid;
     };
 
     /**

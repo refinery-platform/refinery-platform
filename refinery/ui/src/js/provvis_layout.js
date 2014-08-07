@@ -18,12 +18,11 @@ var provvisLayout = function () {
         oNodes = [],
         aNodes = [],
         saNodes = [],
-        nodeMap = [],
+
         nodePredMap = [],
         nodeSuccMap = [],
         nodeLinkPredMap = [],
-        nodeLinkSuccMap = [],
-        analysisWorkflowMap = [];
+        nodeLinkSuccMap = [];
 
     /**
      * Deep copy node data structure.
@@ -618,15 +617,6 @@ var provvisLayout = function () {
     };
 
     /**
-     * Build node hashes.
-     * @param nodeObj Node object.
-     * @param nodeId Integer identifier for the node.
-     */
-    var createNodeHashes = function (nodeObj, nodeId) {
-        nodeMap[nodeObj.uuid] = nodeId;
-    };
-
-    /**
      * Add dummy vertices.
      */
     var addDummyNodes = function () {
@@ -709,9 +699,6 @@ var provvisLayout = function () {
                         subanalysis: curSubanalysis,
                         parent: curParent
                     });
-
-                    /* Update node maps. */
-                    createNodeHashes(nodes[newNodeId + i], newNodeId + i);
 
                     predNodeId = newNodeId + i;
                     curCol++;
@@ -1313,12 +1300,12 @@ var provvisLayout = function () {
         oNodes = graph.oNodes;
         aNodes = graph.aNodes;
         saNodes = graph.saNodes;
-        nodeMap = graph.nodeMap;
+
         nodePredMap = graph.nodePredMap;
         nodeSuccMap = graph.nodeSuccMap;
         nodeLinkPredMap = graph.nodeLinkPredMap;
         nodeLinkSuccMap = graph.nodeLinkSuccMap;
-        analysisWorkflowMap = graph.analysisWorkflowMap;
+
         width = graph.width;
         depth = graph.depth;
         grid = graph.grid;
@@ -1358,12 +1345,10 @@ var provvisLayout = function () {
             graph.oNodes = oNodes;
             graph.aNodes = aNodes;
             graph.saNodes = saNodes;
-            graph.nodeMap = nodeMap;
             graph.nodePredMap = nodePredMap;
             graph.nodeSuccMap = nodeSuccMap;
             graph.nodeLinkPredMap = nodeLinkPredMap;
             graph.nodeLinkSuccMap = nodeLinkSuccMap;
-            graph.analysisWorkflowMap = analysisWorkflowMap;
             graph.width = width;
             graph.depth = depth;
             graph.grid = grid;

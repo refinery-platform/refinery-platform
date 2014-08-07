@@ -12,6 +12,7 @@ var provvisInit = function () {
         saNodes = [],
 
         nodeMap = [],
+
         nodePredMap = [],
         nodeSuccMap = [],
         nodeLinkPredMap = [],
@@ -120,14 +121,22 @@ var provvisInit = function () {
     };
 
     /**
+     * Get node object by uuid.
+     * @param uuid The serialized unique identifier for a node.
+     */
+    var getNodeByUuid = function (uuid) {
+        return nodes[nodeMap[uuid]];
+    };
+
+    /**
      * Extract link properties.
      * @param n Node object.
      * @param lId Integer identifier for the link.
-     * @param parentIndex Integer index of parent array.
+     * @param puuid The serialized unique identifier for the parent node.
      */
-    var extractLinkProperties = function (n, lId, parentIndex) {
+    var extractLinkProperties = function (n, lId, puuid) {
         links.push({
-            source: nodes[nodeMap[n.parents[parentIndex]]],
+            source: getNodeByUuid(puuid),
             target: n,
             id: lId,
             hidden: false,
@@ -139,22 +148,24 @@ var provvisInit = function () {
 
     /**
      * Build link hashes.
-     * @param pn Predecessor node object.
+     * @param puuid The serialized unique identifier for the parent node.
      * @param lId Integer identifier for the link.
-     * @param nodeId Integer identifier for the node.
+     * @param nId Integer identifier for the node.
      * @param srcNodeIds Integer array containing all node identifiers preceding the current node.
      * @param srcLinkIds Integer array containing all link identifiers preceding the current node.
      */
-    var createLinkHashes = function (pn, lId, nodeId, srcNodeIds, srcLinkIds) {
-        srcNodeIds.push(nodeMap[pn]);
+    var createLinkHashes = function (puuid, lId, nId, srcNodeIds, srcLinkIds) {
+        var pnId = getNodeByUuid(puuid).id;
+
+        srcNodeIds.push(pnId);
         srcLinkIds.push(lId);
 
-        if (nodeSuccMap.hasOwnProperty(nodeMap[pn])) {
-            nodeSuccMap[nodeMap[pn]] = nodeSuccMap[nodeMap[pn]].concat([nodeId]);
-            nodeLinkSuccMap[nodeMap[pn]] = nodeLinkSuccMap[nodeMap[pn]].concat([lId]);
+        if (nodeSuccMap.hasOwnProperty(pnId)) {
+            nodeSuccMap[pnId] = nodeSuccMap[pnId].concat([nId]);
+            nodeLinkSuccMap[pnId] = nodeLinkSuccMap[pnId].concat([lId]);
         } else {
-            nodeSuccMap[nodeMap[pn]] = [nodeId];
-            nodeLinkSuccMap[nodeMap[pn]] = [lId];
+            nodeSuccMap[pnId] = [nId];
+            nodeLinkSuccMap[pnId] = [lId];
         }
     };
 
@@ -171,16 +182,16 @@ var provvisInit = function () {
                         srcLinkIds = [];
 
                     /* For each parent entry. */
-                    n.parents.forEach(function (p, j) { /* p is be parent node of n. */
-                        if (typeof nodeMap[p] !== "undefined") {
+                    n.parents.forEach(function (puuid, j) { /* p is the parent uuid of n. */
+                        if (typeof getNodeByUuid(puuid) !== "undefined") {
                             /* ExtractLinkProperties. */
-                            extractLinkProperties(n, lId, j);
+                            extractLinkProperties(n, lId, puuid);
 
                             /* Build link hashes. */
-                            createLinkHashes(p, lId, i, srcNodeIds, srcLinkIds);
+                            createLinkHashes(puuid, lId, i, srcNodeIds, srcLinkIds);
                             lId++;
                         } else {
-                            console.log("ERROR: Dataset might be corrupt - parent: " + p + " of node with uuid: " + n.uuid + " does not exist.");
+                            console.log("ERROR: Dataset might be corrupt - parent: " + puuid + " of node with uuid: " + n.uuid + " does not exist.");
                         }
                     });
                     nodeLinkPredMap[i] = srcLinkIds;
@@ -481,7 +492,7 @@ var provvisInit = function () {
         createAnalysisNodeMapping();
 
         /* Create graph. */
-        return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, nodeMap, nodePredMap, nodeSuccMap, nodeLinkPredMap, nodeLinkSuccMap, analysisWorkflowMap, 0, 0, []);
+        return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, nodePredMap, nodeSuccMap, nodeLinkPredMap, nodeLinkSuccMap, analysisWorkflowMap, 0, 0, []);
     };
 
     /**
