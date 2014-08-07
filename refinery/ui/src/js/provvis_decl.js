@@ -21,12 +21,12 @@ var provvisDecl = function () {
      * @constructor
      */
     var BaseNode = function (id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y) {
-        this._id = id;
-        this._nodeType = nodeType;
-        this._preds = preds;
-        this._succs = succs;
-        this._parent = parent;
-        this._children = children;
+        this.id = id;
+        this.nodeType = nodeType;
+        this.preds = preds;
+        this.succs = succs;
+        this.parent = parent;
+        this.children = children;
 
         this.doi = doi;
         this.hidden = hidden;
@@ -77,13 +77,13 @@ var provvisDecl = function () {
     var Node = function (id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y, name, fileType, study, assay, parents, analysis, subanalysis, uuid, rowBK, bcOrder, isBlockRoot) {
         BaseNode.call(this, id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y);
 
-        this._name = name;
-        this._fileType = fileType;
-        this._study = study;
-        this._assay = assay;
-        this._parents = parents;
-        this._analysis = analysis;
-        this._subanalysis = subanalysis;
+        this.name = name;
+        this.fileType = fileType;
+        this.study = study;
+        this.assay = assay;
+        this.parents = parents;
+        this.analysis = analysis;
+        this.subanalysis = subanalysis;
 
         this.uuid = uuid;
         this.rowBK = rowBK;
@@ -112,6 +112,7 @@ var provvisDecl = function () {
      * @param x
      * @param y
      * @param uuid
+     * @param wfUuid
      * @param analysis
      * @param start
      * @param end
@@ -121,10 +122,11 @@ var provvisDecl = function () {
      * @param links
      * @constructor
      */
-    var Analysis = function (id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y, uuid, analysis, start, end, created, inputs, outputs, links) {
+    var Analysis = function (id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y, uuid, wfUuid, analysis, start, end, created, inputs, outputs, links) {
         BaseNode.call(this, id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y);
 
         this.uuid = uuid;
+        this.wfUuid = wfUuid;
         this.analysis = analysis;
         this.start = start;
         this.end = end;

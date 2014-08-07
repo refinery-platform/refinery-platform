@@ -17,7 +17,6 @@ var provvisInit = function () {
         nodeSuccMap = [],
         nodeLinkPredMap = [],
         nodeLinkSuccMap = [],
-
         analysisWorkflowMap = d3.map();
 
     /**
@@ -50,43 +49,18 @@ var provvisInit = function () {
      * @param n Node object.
      * @param type Dataset specified node type.
      * @param id Integer identifier for the node.
+     * @returns {provvisDecl.Node} New Node object.
      */
-    var extractNodeProperties = function (n, type, id) {
-        /*var study = (n.study !== null) ? n.study.replace(/\/api\/v1\/study\//g, "").replace(/\//g, "") : "",
-         assay = (n.assay !== null) ? n.assay.replace(/\/api\/v1\/assay\//g, "").replace(/\//g, "") : "",
-         parents = n.parents.map(function (y) {
-         return y.replace(/\/api\/v1\/node\//g, "").replace(/\//g, "");
-         }),
-         analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : "dataset",
-         rowBK = {left: -1, right: -1};
-
-         nodes.push(new provvisDecl.Node(id, type, -1, false, [], [], Object.create(null), [], -1, -1, -1, -1, n.name, n.type, n.uuid, study, assay, parents, analysis, n.subanalysis, rowBK, -1, false));*/
-
-
-        nodes.push({
-            name: n.name,
-            fileType: n.type,
-            nodeType: type,
-            uuid: n.uuid,
-            study: (n.study !== null) ? n.study.replace(/\/api\/v1\/study\//g, "").replace(/\//g, "") : "",
-            assay: (n.assay !== null) ? n.assay.replace(/\/api\/v1\/assay\//g, "").replace(/\//g, "") : "",
-            parents: n.parents.map(function (y) {
+    var createNode = function (n, type, id) {
+        var study = (n.study !== null) ? n.study.replace(/\/api\/v1\/study\//g, "").replace(/\//g, "") : "",
+            assay = (n.assay !== null) ? n.assay.replace(/\/api\/v1\/assay\//g, "").replace(/\//g, "") : "",
+            parents = n.parents.map(function (y) {
                 return y.replace(/\/api\/v1\/node\//g, "").replace(/\//g, "");
             }),
-            row: -1,
-            rowBK: {left: -1, right: -1},
-            col: -1,
-            id: id,
-            analysis: (n.analysis_uuid !== null) ? n.analysis_uuid : "dataset",
-            doi: -1,
-            hidden: false,
-            bcOrder: -1,
-            isBlockRoot: false,
-            x: 0,
-            y: 0,
-            subanalysis: n.subanalysis,
-            parent: {}
-        });
+            analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : "dataset",
+            rowBK = {left: -1, right: -1};
+
+        return new provvisDecl.Node(id, type, [], [], Object.create(null), [], -1, false, -1, -1, -1, -1, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid, rowBK, -1, false);
     };
 
     /**
@@ -100,7 +74,7 @@ var provvisInit = function () {
             var nodeType = assignNodeType(n.type);
 
             /* Extract node properties from api. */
-            extractNodeProperties(n, nodeType, i);
+            nodes.push(createNode(n, nodeType, i));
 
             /* Build node hashes. */
             nodeMap.set(n.uuid, nodes[i]);
@@ -117,17 +91,11 @@ var provvisInit = function () {
      * @param n Node object.
      * @param lId Integer identifier for the link.
      * @param puuid The serialized unique identifier for the parent node.
+     * @returns {provvisDecl.Link} New Link object.
      */
-    var extractLinkProperties = function (n, lId, puuid) {
-        links.push({
-            source: nodeMap.get(puuid),
-            target: n,
-            id: lId,
-            hidden: false,
-            neighbor: false,
-            type0: false,
-            type1: false
-        });
+    var createLink = function (n, lId, puuid) {
+        return new provvisDecl.Link(lId, nodeMap.get(puuid), n, false, false, false, false);
+        /* TODO: Group layout specific properties in own field. */
     };
 
     /**
@@ -169,7 +137,7 @@ var provvisInit = function () {
                     n.parents.forEach(function (puuid, j) { /* p is the parent uuid of n. */
                         if (typeof nodeMap.get(puuid) !== "undefined") {
                             /* ExtractLinkProperties. */
-                            extractLinkProperties(n, lId, puuid);
+                            links.push(createLink(n, lId, puuid));
 
                             /* Build link hashes. */
                             createLinkHashes(puuid, lId, i, srcNodeIds, srcLinkIds);
@@ -267,22 +235,49 @@ var provvisInit = function () {
     };
 
     /**
+     * Create analysis node.
+     * @param a Analysis.
+     * @param i Index.
+     * @returns {provvisDecl.Analysis} New Analysis object.
+     */
+    var createAnalysisNode = function (a, i) {
+        if (i === -1) {
+            return new provvisDecl.Analysis(-i - 2, "analysis", [], [], Object.create(null), [], -1, true, -1, -1,
+                -1, -1, "dataset", "noworkflow", 0, -1, -1, -1, [], [], []);
+        } else {
+            return new provvisDecl.Analysis(-i - 2, "analysis", [], [], Object.create(null), [], -1, true, -1, -1,
+                -1, -1, a.uuid, a.workflow__uuid, i + 1, a.time_start, a.time_end, a.creation_date, [], [], []);
+        }
+    };
+
+    /**
      * Extracts analyses nodes as well as maps it to their corresponding workflows.
-     *
      * @param analysesData analyses object extracted from global refinery variable.
      */
     var extractAnalyses = function (analysesData) {
-        aNodes.push({"uuid": "dataset", "row": -1, "col": -1, "hidden": true, "id": -1, "nodeType": "analysis", "start": -1, "end": -1, "created": -1, "doi": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "links": []});
-        analysesData.filter(function (a) {
-            return a.status === "SUCCESS";
-        }).forEach(function (a, i) {
 
-            /* New node. */
-            aNodes.push({"uuid": a.uuid, "row": -1, "col": -1, "hidden": true, "id": -i - 2, "nodeType": "analysis", "start": a.time_start, "end": a.time_end, "created": a.creation_date, "doi": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "links": []});
+        /* Create analysis for dataset. */
+        aNodes.push(createAnalysisNode(Object.create(null), -1));
+        analysisWorkflowMap.set("dataset", "noworkflow");
 
-            /* Analysis -> workflow. */
+        /* Create remaining analyses. */
+        analysesData.forEach(function (a, i) {
+
+            aNodes.push(createAnalysisNode(a, i));
             analysisWorkflowMap.set(a.uuid, a.workflow__uuid);
         });
+    };
+
+    /**
+     * Create sub-analysis node.
+     * @param sanId Subanalysis id.
+     * @param an Analysis.
+     * @param i Index.
+     * @param subanalysis
+     * @returns {provvisDecl.Subanalysis} New Subanalysis object.
+     */
+    var createSubanalysisNode = function (sanId, an, i, subanalysis) {
+        return new provvisDecl.Subanalysis(sanId, "subanalysis", -1, true, [], [], an, [], -1, -1, -1, -1, i, subanalysis, [], [], false);
     };
 
     /**
@@ -299,10 +294,12 @@ var provvisInit = function () {
                 return n.analysis === an.uuid;
             }).forEach(function (n) {
                 if (!an.children.hasOwnProperty(n.subanalysis)) {
-                    var san = {"id": sanId, "subanalysis": n.subanalysis, "nodeType": "subanalysis", "row": -1, "col": -1, "hidden": true, "doi": -1, "children": [], "inputs": [], "outputs": [], "preds": [], "succs": [], "parent": an, "isOutputAnalysis": false};
+                    var i = 0;
+                    var san = createSubanalysisNode(sanId, an, i, n.subanalysis);
                     saNodes.push(san);
                     an.children[n.subanalysis] = san;
                     sanId--;
+                    i++;
                 }
             });
         });
@@ -464,7 +461,9 @@ var provvisInit = function () {
         extractLinks();
 
         /* Create analysis nodes. */
-        extractAnalyses(analyses.objects);
+        extractAnalyses(analyses.objects.filter(function (a) {
+            return a.status === "SUCCESS";
+        }));
 
         /* Divide dataset and analyses into sub-analyses. */
         markSubanalyses();
