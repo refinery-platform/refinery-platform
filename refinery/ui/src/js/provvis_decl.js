@@ -10,6 +10,8 @@ var provvisDecl = function () {
      * @param nodeType
      * @param preds
      * @param succs
+     * @param predLinks
+     * @param succLinks
      * @param parent
      * @param children
      * @param doi
@@ -20,11 +22,13 @@ var provvisDecl = function () {
      * @param y
      * @constructor
      */
-    var BaseNode = function (id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y) {
+    var BaseNode = function (id, nodeType, preds, succs, predLinks, succLinks, parent, children, doi, hidden, col, row, x, y) {
         this.id = id;
         this.nodeType = nodeType;
         this.preds = preds;
         this.succs = succs;
+        this.predLinks = predLinks;
+        this.succLinks = succLinks;
         this.parent = parent;
         this.children = children;
 
@@ -53,6 +57,8 @@ var provvisDecl = function () {
      * @param nodeType
      * @param preds
      * @param succs
+     * @param predLinks
+     * @param succLinks
      * @param parent
      * @param children
      * @param doi
@@ -74,8 +80,8 @@ var provvisDecl = function () {
      * @param isBlockRoot
      * @constructor
      */
-    var Node = function (id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y, name, fileType, study, assay, parents, analysis, subanalysis, uuid, rowBK, bcOrder, isBlockRoot) {
-        BaseNode.call(this, id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y);
+    var Node = function (id, nodeType, preds, succs, predLinks, succLinks, parent, children, doi, hidden, col, row, x, y, name, fileType, study, assay, parents, analysis, subanalysis, uuid, rowBK, bcOrder, isBlockRoot) {
+        BaseNode.call(this, id, nodeType, preds, succs, predLinks, succLinks, parent, children, doi, hidden, col, row, x, y);
 
         this.name = name;
         this.fileType = fileType;
@@ -103,6 +109,8 @@ var provvisDecl = function () {
      * @param nodeType
      * @param preds
      * @param succs
+     * @param predLinks
+     * @param succLinks
      * @param parent
      * @param children
      * @param doi
@@ -122,8 +130,8 @@ var provvisDecl = function () {
      * @param links
      * @constructor
      */
-    var Analysis = function (id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y, uuid, wfUuid, analysis, start, end, created, inputs, outputs, links) {
-        BaseNode.call(this, id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y);
+    var Analysis = function (id, nodeType, preds, succs, predLinks, succLinks, parent, children, doi, hidden, col, row, x, y, uuid, wfUuid, analysis, start, end, created, inputs, outputs, links) {
+        BaseNode.call(this, id, nodeType, preds, succs, predLinks, succLinks, parent, children, doi, hidden, col, row, x, y);
 
         this.uuid = uuid;
         this.wfUuid = wfUuid;
@@ -144,12 +152,14 @@ var provvisDecl = function () {
      *
      * @param id
      * @param nodeType
-     * @param doi
-     * @param hidden
      * @param preds
      * @param succs
+     * @param predLinks
+     * @param succLinks
      * @param parent
      * @param children
+     * @param doi
+     * @param hidden
      * @param col
      * @param row
      * @param x
@@ -161,8 +171,8 @@ var provvisDecl = function () {
      * @param isOutputAnalysis
      * @constructor
      */
-    var Subanalysis = function (id, nodeType, doi, hidden, preds, succs, parent, children, col, row, x, y, sanId, subanalysis, inputs, outputs, isOutputAnalysis) {
-        BaseNode.call(this, id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y);
+    var Subanalysis = function (id, nodeType, preds, succs, predLinks, succLinks, parent, children, doi, hidden, col, row, x, y, sanId, subanalysis, inputs, outputs, isOutputAnalysis) {
+        BaseNode.call(this, id, nodeType, preds, succs, predLinks, succLinks, parent, children, doi, hidden, col, row, x, y);
 
         this.sanId = sanId;
         this.subanalysis = subanalysis;

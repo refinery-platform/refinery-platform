@@ -32,6 +32,10 @@ var provvisLayout = function () {
     var copyNode = function (node) {
         var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, doi: -1, hidden: true, bcOrder: -1, x: 0, y: 0, rowBK: {left: -1, right: -1}, isBlockRoot: false, subanalysis: -1, parent: {}};
 
+        // id, nodeType, preds, succs, predLinks, succLinks, parent, children, doi, hidden, col, row, x, y
+
+
+
         newNode.name = node.name;
         newNode.nodeType = node.nodeType;
         newNode.fileType = node.fileType;
@@ -678,8 +682,8 @@ var provvisLayout = function () {
                 while (i < gapLength - 1) {
 
                     /* Add node. */
-                    nodes.push(new provvisDecl.Node(newNodeId + i, "dummy", [], [], Object.create(null), [], -1,
-                        false, curCol + 1, -1, -1, -1, "dummyNode-" + (newNodeId + i), "dummy", curStudy, curAssay,
+                    nodes.push(new provvisDecl.Node(newNodeId + i, "dummy", [], [], [], [], curParent, [], -1, false,
+                            curCol + 1, -1, -1, -1, "dummyNode-" + (newNodeId + i), "dummy", curStudy, curAssay,
                         (i === 0) ? [l.source.uuid] : ["dummyNode-" + predNodeId], curAnalysis, curSubanalysis,
                             "dummyNode-" + (newNodeId + i), {left: -1, right: -1}, -1, false));
 
@@ -743,13 +747,13 @@ var provvisLayout = function () {
 
     /**
      * Assign layers.
-     * @param tsNodes Topology sorted array of nodes.
+     * @param topNodes Topology sorted array of nodes.
      */
-    var assignLayers = function (tsNodes) {
+    var assignLayers = function (topNodes) {
         var layer = 0,
             succs = [];
 
-        tsNodes.forEach(function (n) {
+        topNodes.forEach(function (n) {
 
             /* Get outgoing neighbor. */
             succs = nodeSuccMap[n.id];
@@ -768,26 +772,13 @@ var provvisLayout = function () {
         });
     };
 
-    /* TODO: Revise topsort. */
-    /**
-     * Linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
-     * @param outputs Nodes which do not have any successor nodes.
-     * @returns {*} If graph is acyclic, returns null; else returns topology sorted array of nodes.
-     */
-    var sortTopological = function (outputs) {
-        var s = [], /* Input set. */
-            l = [], /* Result set for sorted elements. */
-            t = [], /* Deep copy nodes, because we have to delete links from the graph. */
-            n = Object.create(null);
 
-        /* Deep copy arrays by value. */
-        outputs.forEach(function (outNode) {
-            var nodePreds = [];
-            nodePredMap[outNode.id].forEach(function (pp) {
-                nodePreds.push(pp);
-            });
-            s.push({id: outNode.id, p: nodePreds, s: []});
-        });
+    /**
+     * Reduces the collection of graph nodes to an object only containing id, preds and succs.
+     * @returns {Array} Returns a reduced collection of graph nodes.
+     */
+    var createReducedGraph = function () {
+        var graphSkeleton = [];
 
         /* Do not consider analysis and subanalysis nodes. */
         nodes.filter(function (n) {
@@ -801,8 +792,42 @@ var provvisLayout = function () {
             nodeSuccMap[selNode.id].forEach(function (ss) {
                 nodeSuccs.push(ss);
             });
-            t.push({id: selNode.id, p: nodePreds, s: nodeSuccs});
+            graphSkeleton.push({id: selNode.id, p: nodePreds, s: nodeSuccs});
         });
+
+        return graphSkeleton;
+    };
+
+    /**
+     * Reduces the collection of output nodes to an object only containing id, preds and succs.
+     * @returns {Array} Returns a reduced collection of output nodes.
+     */
+    var createReducedOutputNodes = function () {
+        var outputNodesSkeleton = [];
+
+        oNodes.forEach(function (outNode) {
+            var nodePreds = [];
+            nodePredMap[outNode.id].forEach(function (pp) {
+                nodePreds.push(pp);
+            });
+            outputNodesSkeleton.push({id: outNode.id, p: nodePreds, s: []});
+        });
+        return outputNodesSkeleton;
+    };
+
+    /* TODO: Revise topsort. */
+    /**
+     * Linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
+     * @returns {*} If graph is acyclic, returns null; else returns topology sorted array of nodes.
+     */
+    var sortTopological = function () {
+        var s = [], /* Input set. */
+            l = [], /* Result set for sorted elements. */
+            t = [], /* Deep copy nodes, because we have to delete links from the graph. */
+            n = Object.create(null);
+
+        s = createReducedOutputNodes();
+        t = createReducedGraph();
 
         /* To avoid definition of function in while loop below (added by NG). */
         /* For each successor. */
@@ -1291,7 +1316,7 @@ var provvisLayout = function () {
         oNodes = sortOutputNodes();
 
         /* Topological order. */
-        var topNodes = sortTopological(oNodes);
+        var topNodes = sortTopological();
         if (topNodes !== null) {
             /* Assign layers. */
             assignLayers(topNodes);
@@ -1300,7 +1325,7 @@ var provvisLayout = function () {
             addDummyNodes();
 
             /* Recalculate layers including dummy nodes. */
-            topNodes = sortTopological(oNodes);
+            topNodes = sortTopological();
             assignLayers(topNodes);
 
             /* Group nodes by layer. */
@@ -1316,6 +1341,7 @@ var provvisLayout = function () {
             /* Optimize layout. */
             postprocessLayout();
 
+            /* TODO: Remove unused properties. */
             graph.nodes = nodes;
             graph.links = links;
             graph.iNodes = iNodes;

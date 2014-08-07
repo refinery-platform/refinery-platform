@@ -60,7 +60,7 @@ var provvisInit = function () {
             analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : "dataset",
             rowBK = {left: -1, right: -1};
 
-        return new provvisDecl.Node(id, type, [], [], Object.create(null), [], -1, false, -1, -1, -1, -1, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid, rowBK, -1, false);
+        return new provvisDecl.Node(id, type, [], [], [], [], Object.create(null), [], -1, false, -1, -1, -1, -1, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid, rowBK, -1, false);
     };
 
     /**
@@ -241,10 +241,10 @@ var provvisInit = function () {
      */
     var createAnalysisNode = function (a, i) {
         if (i === -1) {
-            return new provvisDecl.Analysis(-i - 2, "analysis", [], [], Object.create(null), [], -1, true, -1, -1,
+            return new provvisDecl.Analysis(-i - 2, "analysis", [], [], [], [], Object.create(null), [], -1, true, -1, -1,
                 -1, -1, "dataset", "noworkflow", 0, -1, -1, -1, [], [], []);
         } else {
-            return new provvisDecl.Analysis(-i - 2, "analysis", [], [], Object.create(null), [], -1, true, -1, -1,
+            return new provvisDecl.Analysis(-i - 2, "analysis", [], [], [], [], Object.create(null), [], -1, true, -1, -1,
                 -1, -1, a.uuid, a.workflow__uuid, i + 1, a.time_start, a.time_end, a.creation_date, [], [], []);
         }
     };
@@ -276,7 +276,7 @@ var provvisInit = function () {
      * @returns {provvisDecl.Subanalysis} New Subanalysis object.
      */
     var createSubanalysisNode = function (sanId, an, i, subanalysis) {
-        return new provvisDecl.Subanalysis(sanId, "subanalysis", -1, true, [], [], an, [], -1, -1, -1, -1, i, subanalysis, [], [], false);
+        return new provvisDecl.Subanalysis(sanId, "subanalysis", [], [], [], [], an, [], -1, true, -1, -1, -1, -1, i, subanalysis, [], [], false);
     };
 
     /**
