@@ -1,17 +1,17 @@
 /**
- * Module for decl.
+ * Module for constructor function declaration.
  */
 var provvisDecl = function () {
 
     /**
-     * Constructor function for the super node inherited by Node, Analysis and Subanalysis.
+     * Constructor function of the super node inherited by Node, Analysis and Subanalysis.
      *
-     * @param _id
-     * @param _nodeType
-     * @param _preds
-     * @param _succs
-     * @param _parent
-     * @param _children
+     * @param id
+     * @param nodeType
+     * @param preds
+     * @param succs
+     * @param parent
+     * @param children
      * @param doi
      * @param hidden
      * @param col
@@ -20,13 +20,13 @@ var provvisDecl = function () {
      * @param y
      * @constructor
      */
-    var BaseNode = function (_id, _nodeType, _preds, _succs, _parent, _children, doi, hidden, col, row, x, y) {
-        this._id = _id;
-        this._nodeType = _nodeType;
-        this._preds = _preds;
-        this._succs = _succs;
-        this._parent = _parent;
-        this._children = _children;
+    var BaseNode = function (id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y) {
+        this._id = id;
+        this._nodeType = nodeType;
+        this._preds = preds;
+        this._succs = succs;
+        this._parent = parent;
+        this._children = children;
 
         this.doi = doi;
         this.hidden = hidden;
@@ -47,42 +47,41 @@ var provvisDecl = function () {
     /**
      * Constructor function for the node data structure.
      *
-     * @param _id
-     * @param _nodeType
-     * @param _preds
-     * @param _succs
-     * @param _parent
-     * @param _children
+     * @param id
+     * @param nodeType
+     * @param preds
+     * @param succs
+     * @param parent
+     * @param children
      * @param doi
      * @param hidden
      * @param col
      * @param row
      * @param x
      * @param y
-     * @param _name
-     * @param _fileType
-     * @param _study
-     * @param _assay
-     * @param _parents
-     * @param _analysis
-     * @param _subanalysis
+     * @param name
+     * @param fileType
+     * @param study
+     * @param assay
+     * @param parents
+     * @param analysis
+     * @param subanalysis
      * @param uuid
      * @param rowBK
      * @param bcOrder
      * @param isBlockRoot
      * @constructor
      */
+    var Node = function (id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y, name, fileType, study, assay, parents, analysis, subanalysis, uuid, rowBK, bcOrder, isBlockRoot) {
+        BaseNode.call(this, id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y);
 
-    var Node = function (_id, _nodeType, _preds, _succs, _parent, _children, doi, hidden, col, row, x, y, _name, _fileType, _study, _assay, _parents, _analysis, _subanalysis, uuid, rowBK, bcOrder, isBlockRoot) {
-        BaseNode.call(this, _id, _nodeType, _preds, _succs, _parent, _children, doi, hidden, col, row, x, y);
-
-        this._name = _name;
-        this._fileType = _fileType;
-        this._study = _study;
-        this._assay = _assay;
-        this._parents = _parents;
-        this._analysis = _analysis;
-        this._subanalysis = _subanalysis;
+        this._name = name;
+        this._fileType = fileType;
+        this._study = study;
+        this._assay = assay;
+        this._parents = parents;
+        this._analysis = analysis;
+        this._subanalysis = subanalysis;
 
         this.uuid = uuid;
         this.rowBK = rowBK;
@@ -98,30 +97,30 @@ var provvisDecl = function () {
     /**
      * Constructor function for the analysis node data structure.
      *
-     * @param _id
-     * @param _nodeType
-     * @param _preds
-     * @param _succs
-     * @param _parent
-     * @param _children
+     * @param id
+     * @param nodeType
+     * @param preds
+     * @param succs
+     * @param parent
+     * @param children
      * @param doi
      * @param hidden
      * @param col
      * @param row
      * @param x
      * @param y
-     * @param _uuid
-     * @param _analysis
-     * @param _start
-     * @param _end
-     * @param _created
-     * @param _inputs
-     * @param _outputs
-     * @param _links
+     * @param uuid
+     * @param analysis
+     * @param start
+     * @param end
+     * @param created
+     * @param inputs
+     * @param outputs
+     * @param links
      * @constructor
      */
-    var Analysis = function (_id, _nodeType, _preds, _succs, _parent, _children, doi, hidden, col, row, x, y, _uuid, _analysis, _start, _end, _created, _inputs, _outputs, _links) {
-        BaseNode.call(this, _id, _nodeType, _preds, _succs, _parent, _children, doi, hidden, col, row, x, y);
+    var Analysis = function (id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y, uuid, analysis, start, end, created, inputs, outputs, links) {
+        BaseNode.call(this, id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y);
 
         this._uuid = _uuid;
         this._analysis = _analysis;
@@ -137,29 +136,29 @@ var provvisDecl = function () {
     Analysis.prototype.constructor = Analysis;
 
     /**
-     * Constructor function for the analysis node data structure.
+     * Constructor function for the sub-analysis node data structure.
      *
-     * @param _id
-     * @param _nodeType
-     * @param _preds
-     * @param _succs
-     * @param _parent
-     * @param _children
+     * @param id
+     * @param nodeType
      * @param doi
      * @param hidden
+     * @param preds
+     * @param succs
+     * @param parent
+     * @param children
      * @param col
      * @param row
      * @param x
      * @param y
-     * @param _sanId
-     * @param _subanalysis
-     * @param _inputs
-     * @param _outputs
+     * @param sanId
+     * @param subanalysis
+     * @param inputs
+     * @param outputs
      * @param isOutputAnalysis
      * @constructor
      */
-    var Subanalysis = function (_id, _nodeType, doi, hidden, _preds, _succs, _parent, _children, col, row, x, y, _sanId, _subanalysis, _inputs, _outputs, isOutputAnalysis) {
-        BaseNode.call(this, _id, _nodeType, _preds, _succs, _parent, _children, doi, hidden, col, row, x, y);
+    var Subanalysis = function (id, nodeType, doi, hidden, preds, succs, parent, children, col, row, x, y, sanId, subanalysis, inputs, outputs, isOutputAnalysis) {
+        BaseNode.call(this, id, nodeType, preds, succs, parent, children, doi, hidden, col, row, x, y);
 
         this._sanId = _sanId;
         this._subanalysis = _subanalysis;
@@ -212,7 +211,6 @@ var provvisDecl = function () {
      * @constructor
      */
     var ProvVis = function (_parentDiv, zoom, _data, _url, canvas, rect, margin, width, height, radius, color, graph) {
-
         this._parentDiv = _parentDiv;
         this.zoom = zoom;
         this._data = _data;
@@ -225,9 +223,6 @@ var provvisDecl = function () {
         this.height = height;
         this.radius = radius;
         this.color = color;
-
-        /* TODO: Encapsulate redraw function as well as initiate modules. */
-
         this.graph = graph;
     };
 
@@ -252,7 +247,6 @@ var provvisDecl = function () {
      * @constructor
      */
     var ProvGraph = function (nodes, links, iNodes, oNodes, aNodes, saNodes, nodeMap, nodePredMap, nodeSuccMap, nodeLinkPredMap, nodeLinkSuccMap, analysisWorkflowMap, width, depth, grid) {
-
         this.nodes = nodes;
         this.links = links;
         this.iNodes = iNodes;
@@ -273,9 +267,9 @@ var provvisDecl = function () {
     };
 
     /**
-     * Publish module function.
+     * Publish constructor function declarations.
      */
-    return{
+    return {
         BaseNode: BaseNode,
         Node: Node,
         Analysis: Analysis,

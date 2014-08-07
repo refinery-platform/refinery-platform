@@ -226,12 +226,7 @@ var provvisRender = function () {
      * Reset css for all nodes.
      */
     var clearHighlighting = function () {
-        d3.selectAll(".hLink").each(function () {
-            d3.select(this).style("display", "none");
-        });
-        d3.selectAll(".hNode").each(function () {
-            d3.select(this).style("display", "none");
-        });
+        d3.selectAll(".hNode, .hLink").style("display", "none");
     };
 
     /**
@@ -455,24 +450,10 @@ var provvisRender = function () {
                                 });
                         }
                     }
-                }).classed({
-                    "node": true,
-                    "rawNode": (function (d) {
-                        return d.nodeType === "raw";
-                    }),
-                    "dummyNode": (function (d) {
-                        return d.nodeType === "dummy";
-                    }),
-                    "specialNode": (function (d) {
-                        return d.nodeType === "special";
-                    }),
-                    "dtNode": (function (d) {
-                        return d.nodeType === "dt";
-                    }),
-                    "processedNode": (function (d) {
-                        return d.nodeType === "processed";
-                    })
-                }).attr("id", function (d) {
+                }).attr("class", function (d) {
+                    return "node " + d.nodeType + "Node";
+                })
+                .attr("id", function (d) {
                     return "nodeId-" + d.id;
                 });
         });

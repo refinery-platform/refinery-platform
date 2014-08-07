@@ -1,9 +1,8 @@
 /**
- * In-progress development for the refinery provenance graph visualization.
- * Structured w.r.t. the JavaScript module pattern.
+ * The refinery provenance graph visualization.
  *
  * @author sluger Stefan Luger https://github.com/sluger
- * @exports runProvenanceVisualization The published function to start the visualization.
+ * @exports runProvVis The published function to run the visualization.
  */
 var provvis = function () {
 
@@ -29,7 +28,7 @@ var provvis = function () {
             var width = window.innerWidth - margin.left - margin.right,
                 height = window.innerHeight - margin.top - margin.bottom;
 
-            /* Set primitive drawing constants. */
+            /* Set drawing constants. */
             var r = 7,
                 color = d3.scale.category20();
 
@@ -37,15 +36,20 @@ var provvis = function () {
             var graph = Object.create(null);
 
             /* Create vis and add graph. */
-            var vis = new provvisDecl.ProvVis("#provenance-graph", zoom, data, url, canvas, rect, margin, width, height, r, color, graph);
+            var vis = new provvisDecl.ProvVis("#provenance-graph", zoom, data, url, canvas, rect, margin, width,
+                height, r, color, graph);
 
             /* Geometric zoom. */
             var redraw = function () {
                 /* Translation and scaling. */
-                vis.canvas.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
+                vis.canvas.attr("transform", "translate(" + d3.event.translate + ")" +
+                    " scale(" + d3.event.scale + ")");
 
                 /* Fix for rectangle getting translated too - doesn't work after window resize. */
-                vis.rect.attr("transform", "translate(" + (-(d3.event.translate[0] + vis.margin.left) / d3.event.scale) + "," + (-(d3.event.translate[1] + vis.margin.top) / d3.event.scale) + ")" + " scale(" + (+1 / d3.event.scale) + ")");
+                vis.rect.attr("transform", "translate(" +
+                    (-(d3.event.translate[0] + vis.margin.left) / d3.event.scale) + "," +
+                    (-(d3.event.translate[1] + vis.margin.top) / d3.event.scale) + ")" +
+                    " scale(" + (+1 / d3.event.scale) + ")");
             };
 
             /* Main canvas drawing area. */

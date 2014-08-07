@@ -10,6 +10,7 @@ var provvisInit = function () {
         oNodes = [],
         aNodes = [],
         saNodes = [],
+
         nodeMap = [],
         nodePredMap = [],
         nodeSuccMap = [],
@@ -18,28 +19,28 @@ var provvisInit = function () {
         analysisWorkflowMap = [];
 
     /**
-     * Assign CSS class for node types.
-     * @param nodeType Dataset specified node type.
-     * @returns {string} The CSS class corresponding the type of the node.
+     * Assign node types.
+     * @param fileType Dataset specified node type.
+     * @returns {string} The CSS class corresponding to the type of the node.
      */
-    var assignCSSNodeType = function (nodeType) {
-        var nodeTypeClass = "";
+    var assignNodeType = function (fileType) {
+        var nodeType = "";
 
-        switch (nodeType) {
+        switch (fileType) {
             case "Source Name":
             case "Sample Name":
             case "Assay Name":
-                nodeTypeClass = "special";
+                nodeType = "special";
                 break;
             case "Data Transformation Name":
-                nodeTypeClass = "dt";
+                nodeType = "dt";
                 break;
             default:
-                nodeTypeClass = "processed";
+                nodeType = "processed";
                 break;
         }
 
-        return nodeTypeClass;
+        return nodeType;
     };
 
     /**
@@ -88,11 +89,11 @@ var provvisInit = function () {
 
     /**
      * Build node hashes.
-     * @param nodeObj Node object.
-     * @param nodeId Integer identifier for the node.
+     * @param n Node object.
+     * @param id Integer identifier for the node.
      */
-    var createNodeHashes = function (nodeObj, nodeId) {
-        nodeMap[nodeObj.uuid] = nodeId;
+    var createNodeHashes = function (n, id) {
+        nodeMap[n.uuid] = id;
     };
 
     /**
@@ -100,19 +101,19 @@ var provvisInit = function () {
      * @param datasetJsonObj Analysis dataset of type JSON.
      */
     var extractNodes = function (datasetJsonObj) {
-        d3.values(datasetJsonObj.value).forEach(function (x, i) {
+        d3.values(datasetJsonObj.value).forEach(function (n, i) {
 
             /* Assign class string for node types. */
-            var nodeType = assignCSSNodeType(x.type);
+            var nodeType = assignNodeType(n.type);
 
             /* Extract node properties from api. */
-            extractNodeProperties(x, nodeType, i);
+            extractNodeProperties(n, nodeType, i);
 
             /* Build node hashes. */
-            createNodeHashes(x, i);
+            createNodeHashes(n, i);
 
             /* Sorted set of input nodes. */
-            if (x.type === "Source Name") {
+            if (n.type === "Source Name") {
                 iNodes.push(nodes[i]);
             }
         });
@@ -120,15 +121,15 @@ var provvisInit = function () {
 
     /**
      * Extract link properties.
-     * @param nodeElem Node object.
-     * @param linkId Integer identifier for the link.
+     * @param n Node object.
+     * @param lId Integer identifier for the link.
      * @param parentIndex Integer index of parent array.
      */
-    var extractLinkProperties = function (nodeElem, linkId, parentIndex) {
+    var extractLinkProperties = function (n, lId, parentIndex) {
         links.push({
-            source: nodeMap[nodeElem.parents[parentIndex]],
-            target: nodeMap[nodeElem.uuid],
-            id: linkId,
+            source: nodeMap[n.parents[parentIndex]],
+            target: nodeMap[n.uuid],
+            id: lId,
             hidden: false,
             neighbor: false,
             type0: false,
@@ -138,22 +139,22 @@ var provvisInit = function () {
 
     /**
      * Build link hashes.
-     * @param parentNodeObj Predecessor node object.
-     * @param linkId Integer identifier for the link.
+     * @param pn Predecessor node object.
+     * @param lId Integer identifier for the link.
      * @param nodeId Integer identifier for the node.
      * @param srcNodeIds Integer array containing all node identifiers preceding the current node.
      * @param srcLinkIds Integer array containing all link identifiers preceding the current node.
      */
-    var createLinkHashes = function (parentNodeObj, linkId, nodeId, srcNodeIds, srcLinkIds) {
-        srcNodeIds.push(nodeMap[parentNodeObj]);
-        srcLinkIds.push(linkId);
+    var createLinkHashes = function (pn, lId, nodeId, srcNodeIds, srcLinkIds) {
+        srcNodeIds.push(nodeMap[pn]);
+        srcLinkIds.push(lId);
 
-        if (nodeSuccMap.hasOwnProperty(nodeMap[parentNodeObj])) {
-            nodeSuccMap[nodeMap[parentNodeObj]] = nodeSuccMap[nodeMap[parentNodeObj]].concat([nodeId]);
-            nodeLinkSuccMap[nodeMap[parentNodeObj]] = nodeLinkSuccMap[nodeMap[parentNodeObj]].concat([linkId]);
+        if (nodeSuccMap.hasOwnProperty(nodeMap[pn])) {
+            nodeSuccMap[nodeMap[pn]] = nodeSuccMap[nodeMap[pn]].concat([nodeId]);
+            nodeLinkSuccMap[nodeMap[pn]] = nodeLinkSuccMap[nodeMap[pn]].concat([lId]);
         } else {
-            nodeSuccMap[nodeMap[parentNodeObj]] = [nodeId];
-            nodeLinkSuccMap[nodeMap[parentNodeObj]] = [linkId];
+            nodeSuccMap[nodeMap[pn]] = [nodeId];
+            nodeLinkSuccMap[nodeMap[pn]] = [lId];
         }
     };
 
@@ -161,7 +162,7 @@ var provvisInit = function () {
      * Extract links.
      */
     var extractLinks = function () {
-        var linkId = 0;
+        var lId = 0;
 
         nodes.forEach(function (n, i) {
             if (typeof n.uuid !== "undefined") {
@@ -173,11 +174,11 @@ var provvisInit = function () {
                     n.parents.forEach(function (p, j) { /* p is be parent node of n. */
                         if (typeof nodeMap[p] !== "undefined") {
                             /* ExtractLinkProperties. */
-                            extractLinkProperties(n, linkId, j);
+                            extractLinkProperties(n, lId, j);
 
                             /* Build link hashes. */
-                            createLinkHashes(p, linkId, i, srcNodeIds, srcLinkIds);
-                            linkId++;
+                            createLinkHashes(p, lId, i, srcNodeIds, srcLinkIds);
+                            lId++;
                         } else {
                             console.log("ERROR: Dataset might be corrupt - parent: " + p + " of node with uuid: " + n.uuid + " does not exist.");
                         }
