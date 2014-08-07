@@ -94,8 +94,7 @@ var provvisInit = function () {
      * @returns {provvisDecl.Link} New Link object.
      */
     var createLink = function (n, lId, puuid) {
-        return new provvisDecl.Link(lId, nodeMap.get(puuid), n, false, false, false, false);
-        /* TODO: Group layout specific properties in own field. */
+        return new provvisDecl.Link(lId, nodeMap.get(puuid), n, false, {neighbor: false, type0: false, type1: false});
     };
 
     /**
@@ -257,7 +256,7 @@ var provvisInit = function () {
     var extractAnalyses = function (analysesData) {
 
         /* Create analysis for dataset. */
-        aNodes.push(createAnalysisNode(Object.create(null), -1));
+        aNodes.push(createAnalysisNode(null, -1));
         analysisWorkflowMap.set("dataset", "noworkflow");
 
         /* Create remaining analyses. */

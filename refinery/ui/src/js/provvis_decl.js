@@ -192,9 +192,9 @@ var provvisDecl = function () {
         this.source = source;
         this.target = target;
         this.hidden = hidden;
-        this.neighbor = neighbor;
-        this.type0 = type0;
-        this.type1 = type1;
+        this.l = {neighbor: neighbor,
+            type0: type0,
+            type1: type1};
     };
 
     /**

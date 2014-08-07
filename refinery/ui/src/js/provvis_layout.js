@@ -220,9 +220,9 @@ var provvisLayout = function () {
                 var succs = nodeLinkSuccMap[bclgNodes[l][i].id];
                 if (succs.length !== 0) {
                     if (succs.length % 2 === 0) {
-                        links[succs[parseInt(succs.length / 2 - 1, 10)]].neighbor = true;
+                        links[succs[parseInt(succs.length / 2 - 1, 10)]].l.neighbor = true;
                     }
-                    links[succs[parseInt(succs.length / 2, 10)]].neighbor = true;
+                    links[succs[parseInt(succs.length / 2, 10)]].l.neighbor = true;
                 }
                 i++;
             }
@@ -237,11 +237,11 @@ var provvisLayout = function () {
     var markConflictsLeft = function (bclgNodes) {
 
         var excludeUpSharedNodeLinks = function (value) {
-            return links[value].type0 ? false : true;
+            return links[value].l.type0 ? false : true;
         };
 
         var filterNeighbors = function (value) {
-            return links[value].neighbor ? true : false;
+            return links[value].l.neighbor ? true : false;
         };
 
         var btUpSuccs = [],
@@ -252,8 +252,8 @@ var provvisLayout = function () {
             btUpSuccs.forEach(function (bts) {
                 /* Crossing. */
                 if (links[bts].target.rowBK.left > jMax) {
-                    links[bts].type1 = true;
-                    links[bts].neighbor = true;
+                    links[bts].l.type1 = true;
+                    links[bts].l.neighbor = true;
                 }
             });
         };
@@ -286,8 +286,8 @@ var provvisLayout = function () {
                 if (nodeLinkPredMap[links[ups].target.id].length > 1 && leftMostLink !== -1) {
                     nodeLinkPredMap[links[ups].target.id].forEach(function (pl) {
                         if (pl !== leftMostLink) {
-                            links[pl].type0 = true;
-                            links[pl].neighbor = false;
+                            links[pl].l.type0 = true;
+                            links[pl].l.neighbor = false;
                         }
                     });
                 }
@@ -307,7 +307,7 @@ var provvisLayout = function () {
                 } else {
                     /* Type 0 and 1 conflict: If link is an non-inner segment, mark link to be "removed". */
                     if (bclgNodes[upl][i].nodeType !== "dummy" || links[ups].target.nodeType !== "dummy") {
-                        links[ups].type1 = true;
+                        links[ups].l.type1 = true;
 
                         /* If link is an inner segment, remove all non-inner segments before which are crossing it. */
                     } else {
@@ -355,11 +355,11 @@ var provvisLayout = function () {
     var markConflictsRight = function (bclgNodes) {
 
         var excludeUpSharedNodeLinks = function (value) {
-            return links[value].type0 ? false : true;
+            return links[value].l.type0 ? false : true;
         };
 
         var filterNeighbors = function (value) {
-            return links[value].neighbor ? true : false;
+            return links[value].l.neighbor ? true : false;
         };
 
         var btUpSuccs = [],
@@ -370,8 +370,8 @@ var provvisLayout = function () {
             btUpSuccs.forEach(function (bts) {
                 /* Crossing. */
                 if (links[bts].target.rowBK.right > jMax) {
-                    links[bts].type1 = true;
-                    links[bts].neighbor = true;
+                    links[bts].l.type1 = true;
+                    links[bts].l.neighbor = true;
                 }
             });
         };
@@ -405,8 +405,8 @@ var provvisLayout = function () {
                 if (nodeLinkPredMap[links[ups].target.id].length > 1 && rightMostLink !== -1) {
                     nodeLinkPredMap[links[ups].target.id].forEach(function (pl) {
                         if (pl !== rightMostLink) {
-                            links[pl].type0 = true;
-                            links[pl].neighbor = false;
+                            links[pl].l.type0 = true;
+                            links[pl].l.neighbor = false;
                         }
                     });
                 }
@@ -427,7 +427,7 @@ var provvisLayout = function () {
 
                     /* Type 0 and 1 conflict: If link is an non-inner segment, mark link to be "removed". */
                     if (bclgNodes[upl][i].nodeType !== "dummy" || links[ups].target.nodeType !== "dummy") {
-                        links[ups].type1 = true;
+                        links[ups].l.type1 = true;
 
                         /* If link is an inner segment, remove all non-inner segments before which are crossing it. */
                     } else {
@@ -476,12 +476,11 @@ var provvisLayout = function () {
 
         markConflictsLeft(bclgNodes);
         formBlocks(bclgNodes, "left");
+
         /* Reset conflicts. */
-        bclgNodes.forEach(function (lg) {
-            lg.forEach(function (n) {
-                n.type0 = false;
-                n.type1 = false;
-            });
+        links.forEach(function (l) {
+            l.l.type0 = false;
+            l.l.type1 = false;
         });
         markConflictsRight(bclgNodes);
         formBlocks(bclgNodes, "right");
@@ -500,11 +499,11 @@ var provvisLayout = function () {
          * will be placed in the exact same row as its root. */
 
         var isBlockRoot = function (value) {
-            return links[value].neighbor;
+            return links[value].l.neighbor;
         };
 
         var filterNeighbor = function (value) {
-            return links[value].neighbor ? true : false;
+            return links[value].l.neighbor ? true : false;
         };
 
         /* UPPER */
@@ -679,26 +678,10 @@ var provvisLayout = function () {
                 while (i < gapLength - 1) {
 
                     /* Add node. */
-                    nodes.push({
-                        name: "dummyNode-" + (newNodeId + i),
-                        fileType: "dummy",
-                        nodeType: "dummy",
-                        uuid: "dummyNode-" + (newNodeId + i),
-                        study: curStudy,
-                        assay: curAssay,
-                        parents: (i === 0) ? [l.source.uuid] : ["dummyNode-" + predNodeId],
-                        row: -1,
-                        rowBK: {left: -1, right: -1},
-                        col: curCol + 1,
-                        id: newNodeId + i,
-                        analysis: curAnalysis,
-                        doi: -1,
-                        hidden: false,
-                        bcOrder: -1,
-                        isBlockRoot: false,
-                        subanalysis: curSubanalysis,
-                        parent: curParent
-                    });
+                    nodes.push(new provvisDecl.Node(newNodeId + i, "dummy", [], [], Object.create(null), [], -1,
+                        false, curCol + 1, -1, -1, -1, "dummyNode-" + (newNodeId + i), "dummy", curStudy, curAssay,
+                        (i === 0) ? [l.source.uuid] : ["dummyNode-" + predNodeId], curAnalysis, curSubanalysis,
+                            "dummyNode-" + (newNodeId + i), {left: -1, right: -1}, -1, false));
 
                     predNodeId = newNodeId + i;
                     curCol++;
@@ -724,15 +707,9 @@ var provvisLayout = function () {
                 while (j < gapLength) {
 
                     /* Add link. */
-                    links.push({
-                        source: nodes[predNodeId],
-                        target: (j === gapLength - 1) ? l.target : nodes[newNodeId + j],
-                        id: newLinkId + j,
-                        hidden: false,
-                        neighbor: false,
-                        type0: false,
-                        type1: false
-                    });
+                    links.push(new provvisDecl.Link(newLinkId + j, nodes[predNodeId],
+                        (j === gapLength - 1) ? l.target : nodes[newNodeId + j], false,
+                        {neighbor: false, type0: false, type1: false}));
 
                     /* Update link maps. */
                     if (j < gapLength - 1) {
