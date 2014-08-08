@@ -32,9 +32,6 @@ var provvisLayout = function () {
     var copyNode = function (node) {
         var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, doi: -1, hidden: true, bcOrder: -1, x: 0, y: 0, rowBK: {left: -1, right: -1}, isBlockRoot: false, subanalysis: -1, parent: {}};
 
-        // id, nodeType, preds, succs, predLinks, succLinks, parent, children, doi, hidden, col, row, x, y
-
-
         newNode.name = node.name;
         newNode.nodeType = node.nodeType;
         newNode.fileType = node.fileType;
@@ -681,7 +678,7 @@ var provvisLayout = function () {
                 while (i < gapLength - 1) {
 
                     /* Add node. */
-                    nodes.push(new provvisDecl.Node(newNodeId + i, "dummy", [], [], [], [], curParent, [], -1, false,
+                    nodes.push(new provvisDecl.Node(newNodeId + i, "dummy", curParent, -1, false,
                             curCol + 1, -1, -1, -1, "dummyNode-" + (newNodeId + i), "dummy", curStudy, curAssay,
                         (i === 0) ? [l.source.uuid] : ["dummyNode-" + predNodeId], curAnalysis, curSubanalysis,
                             "dummyNode-" + (newNodeId + i), {left: -1, right: -1}, -1, false));
