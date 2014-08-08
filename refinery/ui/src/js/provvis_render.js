@@ -204,24 +204,18 @@ var provvisRender = function () {
      * Dye graph by analyses and its corresponding workflows.
      */
     var dyeWorkflows = function () {
-        d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").each(function () {
-            d3.select(this).style("stroke", function (d) {
-                return vis.color(analysisWorkflowMap.get(d.analysis));
-            });
+        d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").style("stroke", function (d) {
+            return vis.color(analysisWorkflowMap.get(d.analysis));
         });
-
     };
 
     /**
      * Dye graph by analyses.
      */
     var dyeAnalyses = function () {
-        d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").each(function () {
-            d3.select(this).style("fill", function (d) {
-                return vis.color(d.analysis);
-            });
+        d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").style("fill", function (d) {
+            return vis.color(d.analysis);
         });
-
     };
 
     /**
@@ -787,12 +781,12 @@ var provvisRender = function () {
         aNodes.forEach(function (an) {
             var rootCol;
 
-            if (an.succs.length > 0) {
-                rootCol = an.succs[0].inputs[0].col;
+            if (an.succs.size() > 0) {
+                rootCol = an.succs.values()[0].inputs.values()[0].col;
 
-                an.succs.forEach(function (san) {
+                an.succs.values().forEach(function (san) {
                     if (typeof san !== "undefined" && san !== null) {
-                        san.inputs.forEach(function (sanIn) {
+                        san.inputs.values().forEach(function (sanIn) {
                             if (sanIn.col + 1 > rootCol) {
                                 rootCol = sanIn.col + 1;
                             }
@@ -800,8 +794,8 @@ var provvisRender = function () {
                     }
                 });
             } else {
-                if (an.outputs.length > 0) {
-                    rootCol = an.outputs[0].col;
+                if (an.outputs.size() > 0) {
+                    rootCol = an.outputs.values()[0].col;
                 } else {
                     an.col = firstLayer;
                 }
@@ -809,9 +803,9 @@ var provvisRender = function () {
 
             an.col = rootCol;
             an.x = -an.col * cell.width;
-            an.row = an.outputs.map(function (aon) {
+            an.row = an.outputs.values().map(function (aon) {
                 return aon.row;
-            })[parseInt(an.outputs.length / 2, 10)];
+            })[parseInt(an.outputs.size() / 2, 10)];
             an.y = an.row * cell.height;
         });
     };
@@ -826,11 +820,11 @@ var provvisRender = function () {
             var rootCol;
 
             if (san.succs.length > 0) {
-                rootCol = san.succs[0].inputs[0].col;
+                rootCol = san.succs.values()[0].inputs.values()[0].col;
 
                 san.succs.forEach(function (sasn) {
                     if (typeof sasn !== "undefined" && sasn !== null) {
-                        sasn.inputs.forEach(function (sasnIn) {
+                        sasn.inputs.values().forEach(function (sasnIn) {
                             if (sasnIn.col + 1 > rootCol) {
                                 rootCol = sasnIn.col + 1;
                             }
@@ -838,8 +832,8 @@ var provvisRender = function () {
                     }
                 });
             } else {
-                if (san.outputs.length > 0) {
-                    rootCol = san.outputs[0].col;
+                if (san.outputs.size() > 0) {
+                    rootCol = san.outputs.values()[0].col;
                 } else {
                     san.col = firstLayer;
                 }
@@ -847,9 +841,9 @@ var provvisRender = function () {
 
             san.col = rootCol;
             san.x = -san.col * cell.width;
-            san.row = san.outputs.map(function (aon) {
+            san.row = san.outputs.values().map(function (aon) {
                 return aon.row;
-            })[parseInt(san.outputs.length / 2, 10)];
+            })[parseInt(san.outputs.size() / 2, 10)];
             san.y = san.row * cell.height;
         });
     };

@@ -35,7 +35,6 @@ var provvisLayout = function () {
         // id, nodeType, preds, succs, predLinks, succLinks, parent, children, doi, hidden, col, row, x, y
 
 
-
         newNode.name = node.name;
         newNode.nodeType = node.nodeType;
         newNode.fileType = node.fileType;
@@ -932,7 +931,7 @@ var provvisLayout = function () {
         var traverseFront = function (sa) {
             foundNeighbor(sa);
             curDist++;
-            sa.succs.forEach(traverseFront);
+            sa.succs.values().forEach(traverseFront);
             curDist--;
         };
 
@@ -941,7 +940,7 @@ var provvisLayout = function () {
             foundNeighbor(sa);
 
             // traverse front
-            var succs = sa.succs.filter(function (ssa) {
+            var succs = sa.succs.values().filter(function (ssa) {
                 return ssa.id !== curSa.id;
             });
             curSa = sa;
@@ -949,7 +948,7 @@ var provvisLayout = function () {
             succs.forEach(function (ssa) {
                 traverseFront(ssa);
             });
-            sa.preds.forEach(function (psa) {
+            sa.preds.values().forEach(function (psa) {
                 traverseBack(psa);
             });
             curDist--;
@@ -1024,10 +1023,10 @@ var provvisLayout = function () {
             }
 
             if (!found) {
-                ar.push.apply(ar, sa.outputs);
+                ar.push.apply(ar, sa.outputs.values());
             } else {
                 tail = ar.splice(cutIndex, ar.length - cutIndex);
-                ar.push.apply(ar, sa.outputs);
+                ar.push.apply(ar, sa.outputs.values());
                 ar.push.apply(ar, tail);
             }
         };
@@ -1038,10 +1037,10 @@ var provvisLayout = function () {
                 curDist++;
                 curSa = sani;
                 origSa = sani;
-                sani.preds.forEach(function (psa) {
+                sani.preds.values().forEach(function (psa) {
                     traverseBack(psa);
                 });
-                sani.succs.forEach(function (ssa) {
+                sani.succs.values().forEach(function (ssa) {
                     traverseFront(ssa);
                 });
                 curDist--;
@@ -1055,7 +1054,7 @@ var provvisLayout = function () {
             }).filter(function (sa) {
                 return getNeighbors(dist[saNodes.indexOf(sa)], saNodes.indexOf(sa)).length === 0;
             }).forEach(function (sa) {
-                sortedoNodes.push.apply(sortedoNodes, sa.outputs);
+                sortedoNodes.push.apply(sortedoNodes, sa.outputs.values());
             });
 
             /* Set remaining clusters. */
@@ -1155,11 +1154,11 @@ var provvisLayout = function () {
     var horizontalAnalysisAlignment = function () {
         aNodes.forEach(function (an) {
 
-            var maxOutput = d3.max(an.outputs, function (d) {
+            var maxOutput = d3.max(an.outputs.values(), function (d) {
                 return d.col;
             });
 
-            an.outputs.filter(function (d) {
+            an.outputs.values().filter(function (d) {
                 return d.col < maxOutput;
             }).forEach(function (ano) {
                 var curNode = ano,
@@ -1210,13 +1209,13 @@ var provvisLayout = function () {
     var leftShiftAnalysis = function () {
         aNodes.forEach(function (an) {
 
-            var leftMostInputCol = d3.max(an.inputs, function (ain) {
+            var leftMostInputCol = d3.max(an.inputs.values(), function (ain) {
                 return ain.col;
             });
             var rightMostPredCol = depth;
 
 
-            an.inputs.forEach(function (ain) {
+            an.inputs.values().forEach(function (ain) {
                 var curMin = d3.min(nodePredMap[ain.id].map(function (pn) {
                     return nodes[pn];
                 }), function (ainpn) {
@@ -1229,7 +1228,7 @@ var provvisLayout = function () {
             });
 
             /* Shift when gap. */
-            if (rightMostPredCol - leftMostInputCol > 1 && an.succs.length === 0) {
+            if (rightMostPredCol - leftMostInputCol > 1 && an.succs.empty()) {
                 an.children.forEach(function (n) {
                     n.col += rightMostPredCol - leftMostInputCol - 1;
                 });

@@ -60,7 +60,7 @@ var provvisInit = function () {
             analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : "dataset",
             rowBK = {left: -1, right: -1};
 
-        return new provvisDecl.Node(id, type, [], [], [], [], Object.create(null), [], -1, false, -1, -1, -1, -1, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid, rowBK, -1, false);
+        return new provvisDecl.Node(id, type, d3.map(), d3.map(), d3.map(), d3.map(), Object.create(null), d3.map(), -1, false, -1, -1, -1, -1, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid, rowBK, -1, false);
     };
 
     /**
@@ -78,11 +78,6 @@ var provvisInit = function () {
 
             /* Build node hashes. */
             nodeMap.set(n.uuid, nodes[i]);
-
-            /* Sorted set of input nodes. */
-            if (n.type === "Source Name") {
-                iNodes.push(nodes[i]);
-            }
         });
     };
 
@@ -133,7 +128,7 @@ var provvisInit = function () {
                         srcLinkIds = [];
 
                     /* For each parent entry. */
-                    n.parents.forEach(function (puuid) { /* p is the parent uuid of n. */
+                    n.parents.forEach(function (puuid) { /* n -> target; p -> source */
                         if (typeof nodeMap.get(puuid) !== "undefined") {
                             /* ExtractLinkProperties. */
                             links.push(createLink(lId, nodeMap.get(puuid), n));
@@ -152,6 +147,41 @@ var provvisInit = function () {
                 }
             } else {
                 console.log("Error: Node uuid is undefined!");
+            }
+        });
+    };
+
+
+    /* TODO: Set preds, succs, predLinks and succLinks.*/
+    /**
+     * For each node, set pred nodes, succ nodes, predLinks links as well as succLinks links.
+     */
+    var createNodeLinkMapping = function () {
+        links.forEach(function (l) {
+            l.source.succs.set(l.target.autoId, l.target);
+            l.source.succLinks.set(l.autoId, l);
+            l.target.preds.set(l.source.autoId, l.source);
+            l.target.predLinks.set(l.autoId, l);
+        });
+
+        /* Set input and output nodes. */
+        nodes.forEach(function (n) {
+            if (n.succs.empty()) {
+
+                /* Set output nodes. */
+                oNodes.push(n);
+
+                /* Set output nodes map. */
+                nodeSuccMap[n.id] = [];
+                nodeLinkSuccMap[n.id] = [];
+            } else if (n.preds.empty()) {
+
+                /* Set input nodes. */
+                iNodes.push(n);
+
+                /* Set output nodes map. */
+                nodePredMap[n.id] = [];
+                nodeLinkPredMap[n.id] = [];
             }
         });
     };
@@ -219,21 +249,6 @@ var provvisInit = function () {
     };
 
     /**
-     * Set output nodes - nodes not having any successor nodes.
-     */
-    var setOutputNodes = function () {
-        nodes.forEach(function (n) {
-            if (typeof nodeSuccMap[n.id] === "undefined") {
-                oNodes.push(n);
-
-                /* Set successor maps for output nodes to an empty array. */
-                nodeSuccMap[n.id] = [];
-                nodeLinkSuccMap[n.id] = [];
-            }
-        });
-    };
-
-    /**
      * Create analysis node.
      * @param a Analysis.
      * @param i Index.
@@ -241,11 +256,11 @@ var provvisInit = function () {
      */
     var createAnalysisNode = function (a, i) {
         if (i === -1) {
-            return new provvisDecl.Analysis(-i - 2, "analysis", [], [], [], [], Object.create(null), [], -1, true, -1, -1,
-                -1, -1, "dataset", "noworkflow", 0, -1, -1, -1, [], [], []);
+            return new provvisDecl.Analysis(-i - 2, "analysis", d3.map(), d3.map(), d3.map(), d3.map(), Object.create(null), d3.map(), -1, true, -1, -1,
+                -1, -1, "dataset", "noworkflow", 0, -1, -1, -1, d3.map(), d3.map(), d3.map());
         } else {
-            return new provvisDecl.Analysis(-i - 2, "analysis", [], [], [], [], Object.create(null), [], -1, true, -1, -1,
-                -1, -1, a.uuid, a.workflow__uuid, i + 1, a.time_start, a.time_end, a.creation_date, [], [], []);
+            return new provvisDecl.Analysis(-i - 2, "analysis", d3.map(), d3.map(), d3.map(), d3.map(), Object.create(null), d3.map(), -1, true, -1, -1,
+                -1, -1, a.uuid, a.workflow__uuid, i + 1, a.time_start, a.time_end, a.creation_date, d3.map(), d3.map(), d3.map());
         }
     };
 
@@ -276,7 +291,7 @@ var provvisInit = function () {
      * @returns {provvisDecl.Subanalysis} New Subanalysis object.
      */
     var createSubanalysisNode = function (sanId, an, i, subanalysis) {
-        return new provvisDecl.Subanalysis(sanId, "subanalysis", [], [], [], [], an, [], -1, true, -1, -1, -1, -1, i, subanalysis, [], [], false);
+        return new provvisDecl.Subanalysis(sanId, "subanalysis", d3.map(), d3.map(), d3.map(), d3.map(), an, d3.map(), -1, true, -1, -1, -1, -1, i, subanalysis, d3.map(), d3.map(), false);
     };
 
     /**
@@ -292,11 +307,11 @@ var provvisInit = function () {
             nodes.filter(function (n) {
                 return n.analysis === an.uuid;
             }).forEach(function (n) {
-                if (!an.children.hasOwnProperty(n.subanalysis)) {
+                if (!an.children.has(n.subanalysis)) {
                     var i = 0;
                     var san = createSubanalysisNode(sanId, an, i, n.subanalysis);
                     saNodes.push(san);
-                    an.children[n.subanalysis] = san;
+                    an.children.set(n.subanalysis, san);
                     sanId--;
                     i++;
                 }
@@ -306,47 +321,52 @@ var provvisInit = function () {
         saNodes.forEach(function (san) {
 
             /* Set child nodes for subanalysis. */
-            san.children = nodes.filter(function (n) {
+            nodes.filter(function (n) {
                 return san.parent.uuid === n.analysis && n.subanalysis === san.subanalysis;
+            }).forEach(function (cn) {
+                san.children.set(cn.autoId, cn);
             });
 
-            /* Set subanalysis parent for nodes. */
-            san.children.forEach(function (n) {
+            /* Set sub-analysis parent for nodes. */
+            san.children.values().forEach(function (n) {
                 n.parent = san;
             });
 
-            /* Set inputnodes for subanalysis. */
-            san.inputs = san.children.filter(function (n) {
+            /* Set input nodes for subanalysis. */
+            san.children.values().filter(function (n) {
                 return nodePredMap[n.id].some(function (p) {
                     return nodes[p].analysis !== san.parent.uuid;
                 }) || nodePredMap[n.id].length === 0;
                 /* If no src analyses exists. */
+            }).forEach(function (inn) {
+                san.inputs.set(inn.autoId, inn);
             });
 
-            /* Set outputnodes for subanalysis. */
-            san.outputs = san.children.filter(function (n) {
+            /* Set output nodes for subanalysis. */
+            san.children.values().filter(function (n) {
                 return nodeSuccMap[n.id].length === 0 || nodeSuccMap[n.id].some(function (s) {
                     return nodes[s].analysis !== san.parent.uuid;
                 });
+            }).forEach(function (onn) {
+                san.outputs.set(onn.autoId, onn);
             });
         });
 
         saNodes.forEach(function (san) {
-
             /* Set predecessor subanalyses. */
-            san.inputs.forEach(function (n) {
+            san.inputs.values().forEach(function (n) {
                 nodePredMap[n.id].forEach(function (pn) {
-                    if (san.preds.indexOf(nodes[pn].parent) === -1) {
-                        san.preds.push(nodes[pn].parent);
+                    if (!san.preds.has(nodes[pn].parent.autoId)) {
+                        san.preds.set(nodes[pn].parent.autoId, nodes[pn].parent);
                     }
                 });
             });
 
             /* Set successor subanalyses. */
-            san.outputs.forEach(function (n) {
+            san.outputs.values().forEach(function (n) {
                 nodeSuccMap[n.id].forEach(function (sn) {
-                    if (san.succs.indexOf(nodes[sn].parent) === -1) {
-                        san.succs.push(nodes[sn].parent);
+                    if (!san.succs.has(nodes[sn].parent.autoId)) {
+                        san.succs.set(nodes[sn].parent.autoId, nodes[sn].parent);
                     }
                 });
             });
@@ -371,8 +391,10 @@ var provvisInit = function () {
 
         /* Set links for subanalysis. */
         saNodes.forEach(function (san) {
-            san.links = links.filter(function (l) {
+            links.filter(function (l) {
                 return l !== null && san.parent.uuid === l.target.analysis && l.target.subanalysis === san.subanalysis;
+            }).forEach(function (ll) {
+                san.links.set(ll.autoId, ll);
             });
         });
 
@@ -385,34 +407,35 @@ var provvisInit = function () {
         aNodes.forEach(function (an) {
 
             /* Children are set already. */
+            an.children.values().forEach(function (san) {
+                /* Set input nodes. */
+                san.inputs.entries().forEach(function (sani) {
+                    an.inputs.set(sani.key, sani.value);
+                });
 
-            /* Set input nodes. */
-            an.children.forEach(function (san) {
-                an.inputs = an.inputs.concat(san.inputs);
-            });
-
-            /* Set output nodes. */
-            an.children.forEach(function (san) {
-                an.outputs = an.outputs.concat(san.outputs);
+                /* Set output nodes. */
+                san.outputs.entries().forEach(function (sano) {
+                    an.outputs.set(sano.key, sano.value);
+                });
             });
         });
 
         aNodes.forEach(function (an) {
 
             /* Set predecessor analyses. */
-            an.children.forEach(function (san) {
-                san.preds.forEach(function (psan) {
-                    if (an.preds.indexOf(psan.parent) === -1) {
-                        an.preds = an.preds.concat(psan.parent);
+            an.children.values().forEach(function (san) {
+                san.preds.values().forEach(function (psan) {
+                    if (!an.preds.has(psan.parent.autoId)) {
+                        an.preds.set(psan.parent.autoId, psan.parent);
                     }
                 });
             });
 
             /* Set successor analyses. */
-            an.children.forEach(function (san) {
-                san.succs.forEach(function (ssan) {
-                    if (an.succs.indexOf(ssan.parent) === -1) {
-                        an.succs = an.succs.concat(ssan.parent);
+            an.children.values().forEach(function (san) {
+                san.succs.values().forEach(function (ssan) {
+                    if (!an.succs.has(ssan.parent.autoId)) {
+                        an.succs.set(ssan.parent.autoId, ssan.parent);
                     }
                 });
             });
@@ -420,8 +443,10 @@ var provvisInit = function () {
 
         /* Set links. */
         aNodes.forEach(function (an) {
-            an.children.forEach(function (san) {
-                an.links = an.links.concat(san.links);
+            an.children.values().forEach(function (san) {
+                san.links.values().forEach(function (sanl) {
+                    an.links.set(sanl.autoId, sanl);
+                });
             });
         });
 
@@ -435,15 +460,15 @@ var provvisInit = function () {
             nodePredMap[an.id] = [];
             nodeLinkPredMap[an.id] = [];
             an.inputs.forEach(function (ain) {
-                nodePredMap[an.id] = nodePredMap[an.id].concat(nodePredMap[ain.id]);
-                nodeLinkPredMap[an.id] = nodeLinkPredMap[an.id].concat(nodeLinkPredMap[ain.id]);
+                nodePredMap[an.id].push(nodePredMap[ain.id]);
+                nodeLinkPredMap[an.id].push(nodeLinkPredMap[ain.id]);
             });
 
             nodeSuccMap[an.id] = [];
             nodeLinkSuccMap[an.id] = [];
             an.outputs.forEach(function (aon) {
-                nodeSuccMap[an.id] = nodeSuccMap[an.id].concat(nodeSuccMap[aon.id]);
-                nodeLinkSuccMap[an.id] = nodeLinkSuccMap[an.id].concat(nodeLinkSuccMap[aon.id]);
+                nodeSuccMap[an.id].push(nodeSuccMap[aon.id]);
+                nodeLinkSuccMap[an.id].push(nodeLinkSuccMap[aon.id]);
             });
         });
     };
@@ -459,6 +484,9 @@ var provvisInit = function () {
         /* Create link collection. */
         extractLinks();
 
+        /* Set preds, succs, and predLinks as well as succLinks. */
+        createNodeLinkMapping();
+
         /* Create analysis nodes. */
         extractAnalyses(analyses.objects.filter(function (a) {
             return a.status === "SUCCESS";
@@ -466,9 +494,6 @@ var provvisInit = function () {
 
         /* Divide dataset and analyses into sub-analyses. */
         markSubanalyses();
-
-        /* Set output nodes. */
-        setOutputNodes();
 
         /* Create analysis node mapping. */
         createAnalysisNodeMapping();

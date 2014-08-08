@@ -40,7 +40,6 @@ var provvisDecl = function () {
         this.y = y;
 
         BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
-
         this.autoId = BaseNode.numInstances;
 
         /* TODO: Add previous and next SNode references. */
@@ -178,6 +177,7 @@ var provvisDecl = function () {
         this.subanalysis = subanalysis;
         this.inputs = inputs;
         this.outputs = outputs;
+        this.links = d3.map();
 
         this.isOutputAnalysis = isOutputAnalysis;
     };
@@ -205,6 +205,9 @@ var provvisDecl = function () {
         this.l = {neighbor: neighbor,
             type0: type0,
             type1: type1};
+
+        BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
+        this.autoId = BaseNode.numInstances;
     };
 
     /**
