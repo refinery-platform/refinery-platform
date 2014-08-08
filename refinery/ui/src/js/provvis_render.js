@@ -227,12 +227,12 @@ var provvisRender = function () {
 
     /**
      * Get predecessing nodes for highlighting the path by the current node selection.
-     * @param nodeId An Integer id for the node.
+     * @param n BaseNode extending constructor function.
      * @param highlighted A Boolean flag whether path should be highlighted or not.
      */
-    var highlightPredPath = function (nodeId, highlighted) {
+    var highlightPredPath = function (n, highlighted) {
         /* Get svg link element, and for each predecessor call recursively. */
-        nodeLinkPredMap[nodeId].forEach(function (l) {
+        nodeLinkPredMap[n.id].forEach(function (l) {
             d3.select("#hLinkId-" + l).style("display", "inline");
             highlightPredPath(links[l].source.id, highlighted);
         });
@@ -240,12 +240,12 @@ var provvisRender = function () {
 
     /**
      * Get succeeding nodes for highlighting the path by the current node selection.
-     * @param nodeId An Integer id for the node.
+     * @param n BaseNode extending constructor function.
      * @param highlighted A Boolean flag whether path should be highlighted or not.
      */
-    var highlightSuccPath = function (nodeId, highlighted) {
+    var highlightSuccPath = function (n, highlighted) {
         /* Get svg link element, and for each successor call recursively. */
-        nodeLinkSuccMap[nodeId].forEach(function (l) {
+        nodeLinkSuccMap[n.id].forEach(function (l) {
             d3.select("#hLinkId-" + l).style("display", "inline");
             highlightSuccPath(links[l].target.id, highlighted);
         });
@@ -488,7 +488,7 @@ var provvisRender = function () {
         d3.selectAll(".node, .saNode, .aNode").on("dblclick", function () {
 
             var hideChildNodes = function (n) {
-                n.children.forEach(function (cn) {
+                n.children.values().forEach(function (cn) {
                     cn.hidden = true;
                     d3.select("#nodeId-" + cn.id).style("display", "none");
                     if (typeof cn.children !== "undefined")
@@ -506,28 +506,26 @@ var provvisRender = function () {
                 /* Set node visibility. */
                 d3.select("#nodeId-" + selNode.id).style("display", "none");
                 selNode.hidden = true;
-                selNode.children.forEach(function (n) {
+                selNode.children.values().forEach(function (n) {
                     d3.select("#nodeId-" + n.id).style("display", "inline");
                     n.hidden = false;
                 });
 
                 /* Set link visibility. */
                 if (nodeType === "subanalysis") {
-                    selNode.links.forEach(function (l) {
-                        d3.select("#linkId-" + l.id).style("display", "inline");
-                        d3.select("#hLinkId-" + l.id).style("display", "inline");
+                    selNode.links.values().forEach(function (l) {
+                        d3.selectAll("#linkId-" + l.id + ", #hLinkId-" + l.id).style("display", "inline");
                     });
                 }
-                selNode.inputs.forEach(function (sain) {
+                selNode.inputs.values().forEach(function (sain) {
                     nodeLinkPredMap[sain.id].forEach(function (l) {
-                        d3.select("#linkId-" + links[l].id).style("display", "inline");
-                        d3.select("#hLinkId-" + links[l].id).style("display", "inline");
+                        d3.selectAll("#linkId-" + links[l].id + ", #hLinkId-" + links[l].id).style("display", "inline");
                         links[l].hidden = false;
                     });
                 });
 
                 /* Update connections. */
-                selNode.children.forEach(function (cn) {
+                selNode.children.values().forEach(function (cn) {
                     updateNode(d3.select("#nodeId-" + cn.id), cn, cn.x, cn.y);
                     updateLink(d3.select("#nodeId-" + cn.id), cn, cn.x, cn.y);
                 });
@@ -541,14 +539,12 @@ var provvisRender = function () {
                 hideChildNodes(selNode.parent);
 
                 /* Set link visibility. */
-                selNode.parent.links.forEach(function (l) {
-                    d3.select("#linkId-" + l.id).style("display", "none");
-                    d3.select("#hLinkId-" + l.id).style("display", "none");
+                selNode.parent.links.values().forEach(function (l) {
+                    d3.selectAll("#linkId-" + l.id + ", #hLinkId-" + l.id).style("display", "none");
                 });
-                selNode.parent.inputs.forEach(function (sain) {
+                selNode.parent.inputs.values().forEach(function (sain) {
                     nodeLinkPredMap[sain.id].forEach(function (l) {
-                        d3.select("#linkId-" + links[l].id).style("display", "inline");
-                        d3.select("#hLinkId-" + links[l].id).style("display", "inline");
+                        d3.selectAll("#linkId-" + links[l].id + ", #hLinkId-" + links[l].id).style("display", "inline");
                         links[l].hidden = false;
                     });
                 });
@@ -580,11 +576,11 @@ var provvisRender = function () {
                 if (d3.event.ctrlKey) {
 
                     /* Highlight path. */
-                    highlightSuccPath(x.id, highlighted);
+                    highlightSuccPath(x, highlighted);
                 } else if (d3.event.shiftKey) {
 
                     /* Highlight path. */
-                    highlightPredPath(x.id, highlighted);
+                    highlightPredPath(x, highlighted);
                 }
             }
         });

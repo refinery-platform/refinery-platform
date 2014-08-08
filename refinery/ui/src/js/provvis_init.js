@@ -81,6 +81,8 @@ var provvisInit = function () {
         });
     };
 
+
+    /* TODO: Obsolete after references are incorporated. */
     /**
      * Extract link properties.
      * @param lId Integer identifier for the link.
@@ -376,14 +378,14 @@ var provvisInit = function () {
         saNodes.forEach(function (san) {
             nodePredMap[san.id] = [];
             nodeLinkPredMap[san.id] = [];
-            san.inputs.forEach(function (sain) {
+            san.inputs.values().forEach(function (sain) {
                 nodePredMap[san.id] = nodePredMap[san.id].concat(nodePredMap[sain.id]);
                 nodeLinkPredMap[san.id] = nodeLinkPredMap[san.id].concat(nodeLinkPredMap[sain.id]);
             });
 
             nodeSuccMap[san.id] = [];
             nodeLinkSuccMap[san.id] = [];
-            san.outputs.forEach(function (saon) {
+            san.outputs.values().forEach(function (saon) {
                 nodeSuccMap[san.id] = nodeSuccMap[san.id].concat(nodeSuccMap[saon.id]);
                 nodeLinkSuccMap[san.id] = nodeLinkSuccMap[san.id].concat(nodeLinkSuccMap[saon.id]);
             });
@@ -459,14 +461,14 @@ var provvisInit = function () {
         aNodes.forEach(function (an) {
             nodePredMap[an.id] = [];
             nodeLinkPredMap[an.id] = [];
-            an.inputs.forEach(function (ain) {
+            an.inputs.values().forEach(function (ain) {
                 nodePredMap[an.id].push(nodePredMap[ain.id]);
                 nodeLinkPredMap[an.id].push(nodeLinkPredMap[ain.id]);
             });
 
             nodeSuccMap[an.id] = [];
             nodeLinkSuccMap[an.id] = [];
-            an.outputs.forEach(function (aon) {
+            an.outputs.values().forEach(function (aon) {
                 nodeSuccMap[an.id].push(nodeSuccMap[aon.id]);
                 nodeLinkSuccMap[an.id].push(nodeLinkSuccMap[aon.id]);
             });
