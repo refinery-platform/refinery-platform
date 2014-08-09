@@ -231,10 +231,13 @@ var provvisRender = function () {
      * @param highlighted A Boolean flag whether path should be highlighted or not.
      */
     var highlightPredPath = function (n, highlighted) {
+        while (n.hidden) {
+            n = n.parent;
+        }
         /* Get svg link element, and for each predecessor call recursively. */
         nodeLinkPredMap[n.id].forEach(function (l) {
             d3.select("#hLinkId-" + l).style("display", "inline");
-            highlightPredPath(links[l].source.id, highlighted);
+            highlightPredPath(links[l].source, highlighted);
         });
     };
 
@@ -244,10 +247,13 @@ var provvisRender = function () {
      * @param highlighted A Boolean flag whether path should be highlighted or not.
      */
     var highlightSuccPath = function (n, highlighted) {
+        while (n.hidden) {
+            n = n.parent;
+        }
         /* Get svg link element, and for each successor call recursively. */
         nodeLinkSuccMap[n.id].forEach(function (l) {
             d3.select("#hLinkId-" + l).style("display", "inline");
-            highlightSuccPath(links[l].target.id, highlighted);
+            highlightSuccPath(links[l].target, highlighted);
         });
     };
 

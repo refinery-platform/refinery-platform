@@ -462,15 +462,15 @@ var provvisInit = function () {
             nodePredMap[an.id] = [];
             nodeLinkPredMap[an.id] = [];
             an.inputs.values().forEach(function (ain) {
-                nodePredMap[an.id].push(nodePredMap[ain.id]);
-                nodeLinkPredMap[an.id].push(nodeLinkPredMap[ain.id]);
+                nodePredMap[an.id] = nodePredMap[an.id].concat(nodePredMap[ain.id]);
+                nodeLinkPredMap[an.id] = nodeLinkPredMap[an.id].concat(nodeLinkPredMap[ain.id]);
             });
 
             nodeSuccMap[an.id] = [];
             nodeLinkSuccMap[an.id] = [];
             an.outputs.values().forEach(function (aon) {
-                nodeSuccMap[an.id].push(nodeSuccMap[aon.id]);
-                nodeLinkSuccMap[an.id].push(nodeLinkSuccMap[aon.id]);
+                nodeSuccMap[an.id] = nodeSuccMap[an.id].concat(nodeSuccMap[aon.id]);
+                nodeLinkSuccMap[an.id] = nodeLinkSuccMap[an.id].concat(nodeLinkSuccMap[aon.id]);
             });
         });
     };
