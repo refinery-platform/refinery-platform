@@ -210,17 +210,13 @@ var provvisDecl = function () {
      * @param oNodes
      * @param aNodes
      * @param saNodes
-     * @param nodePredMap
-     * @param nodeSuccMap
-     * @param nodeLinkPredMap
-     * @param nodeLinkSuccMap
      * @param analysisWorkflowMap
      * @param width
      * @param depth
      * @param grid
      * @constructor
      */
-    var ProvGraph = function (nodes, links, iNodes, oNodes, aNodes, saNodes, nodePredMap, nodeSuccMap, nodeLinkPredMap, nodeLinkSuccMap, analysisWorkflowMap, width, depth, grid) {
+    var ProvGraph = function (nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, width, depth, grid) {
         this.nodes = nodes;
         this.links = links;
         this.iNodes = iNodes;
@@ -228,10 +224,6 @@ var provvisDecl = function () {
         this.aNodes = aNodes;
         this.saNodes = saNodes;
 
-        this.nodePredMap = nodePredMap;
-        this.nodeSuccMap = nodeSuccMap;
-        this.nodeLinkPredMap = nodeLinkPredMap;
-        this.nodeLinkSuccMap = nodeLinkSuccMap;
         this.analysisWorkflowMap = analysisWorkflowMap;
 
         this.width = width;

@@ -17,12 +17,7 @@ var provvisLayout = function () {
         iNodes = [],
         oNodes = [],
         aNodes = [],
-        saNodes = [],
-
-        nodePredMap = [],
-        nodeSuccMap = [],
-        nodeLinkPredMap = [],
-        nodeLinkSuccMap = [];
+        saNodes = [];
 
     /**
      * Deep copy node data structure.
@@ -151,10 +146,10 @@ var provvisLayout = function () {
                     var degree = 1,
                         accRows = 0;
 
-                    if (nodeSuccMap[n.id].length !== 0) {
-                        degree = nodeSuccMap[n.id].length;
-                        nodeSuccMap[n.id].forEach(function (s) {
-                            accRows += (nodes[s].rowBK.left + 1);
+                    if (!nodes[n.id].succs.empty()) {
+                        degree = nodes[n.id].succs.size();
+                        nodes[n.id].succs.values().forEach(function (s) {
+                            accRows += (s.rowBK.left + 1);
                         });
                     }
 
@@ -217,12 +212,12 @@ var provvisLayout = function () {
                 /* Mark links as Neighbors:
                  the exact median if the length of successor nodes is odd,
                  else the middle two. */
-                var succs = nodeLinkSuccMap[bclgNodes[l][i].id];
+                var succs = nodes[bclgNodes[l][i].id].succLinks.values();
                 if (succs.length !== 0) {
                     if (succs.length % 2 === 0) {
-                        links[succs[parseInt(succs.length / 2 - 1, 10)]].l.neighbor = true;
+                        links[succs[parseInt(succs.length / 2 - 1, 10)].id].l.neighbor = true;
                     }
-                    links[succs[parseInt(succs.length / 2, 10)]].l.neighbor = true;
+                    links[succs[parseInt(succs.length / 2, 10)].id].l.neighbor = true;
                 }
                 i++;
             }
@@ -258,6 +253,12 @@ var provvisLayout = function () {
             });
         };
 
+        var mapSuccsToIds = function (nodeId) {
+            return nodes[nodeId].succLinks.values().map(function (n) {
+                return n.id;
+            });
+        };
+
         var markUpCrossings = function () {
 
             /* Resolve shared nodes first. (Type 0 Conflict) */
@@ -266,15 +267,15 @@ var provvisLayout = function () {
 
             /* Get left most link. */
             upSuccs.forEach(function (ups) {
-                if (nodeLinkPredMap[links[ups].target.id].length > 1) {
+                if (links[ups].target.predLinks.size() > 1) {
                     leftMostPredRow = links[upSuccs[0]].source.rowBK.left;
-                    nodeLinkPredMap[links[ups].target.id].forEach(function (pl) {
-                        if (links[pl].target.nodeType !== "dummy" || links[pl].source.nodeType !== "dummy") {
+                    links[ups].target.predLinks.values().forEach(function (pl) {
+                        if (pl.target.nodeType !== "dummy" || pl.source.nodeType !== "dummy") {
 
                             /* Check top most link. */
-                            if (links[pl].source.rowBK.left < leftMostPredRow) {
-                                leftMostPredRow = links[pl].source.rowBK.left;
-                                leftMostLink = pl;
+                            if (pl.source.rowBK.left < leftMostPredRow) {
+                                leftMostPredRow = pl.source.rowBK.left;
+                                leftMostLink = pl.id;
                             }
                         }
                     });
@@ -283,11 +284,11 @@ var provvisLayout = function () {
 
             /* Mark all but left most links. */
             upSuccs.forEach(function (ups) {
-                if (nodeLinkPredMap[links[ups].target.id].length > 1 && leftMostLink !== -1) {
-                    nodeLinkPredMap[links[ups].target.id].forEach(function (pl) {
-                        if (pl !== leftMostLink) {
-                            links[pl].l.type0 = true;
-                            links[pl].l.neighbor = false;
+                if (links[ups].target.predLinks.size() > 1 && leftMostLink !== -1) {
+                    links[ups].target.predLinks.values().forEach(function (pl) {
+                        if (pl.id !== leftMostLink) {
+                            pl.l.type0 = true;
+                            pl.l.neighbor = false;
                         }
                     });
                 }
@@ -316,7 +317,7 @@ var provvisLayout = function () {
                         for (m; m > 0; m--) {
                             if (m < i) {
                                 /* Get successors for m */
-                                btUpSuccs = nodeLinkSuccMap[bclgNodes[upl][m].id].filter(filterNeighbors);
+                                btUpSuccs = mapSuccsToIds(bclgNodes[upl][m].id).filter(filterNeighbors);
                                 backtrackUpCrossings();
                             }
                         }
@@ -339,7 +340,7 @@ var provvisLayout = function () {
                     iCur = i;
 
                     /* Crossing successor links. */
-                    upSuccs = nodeLinkSuccMap[bclgNodes[upl][i].id].filter(filterNeighbors);
+                    upSuccs = mapSuccsToIds(bclgNodes[upl][i].id).filter(filterNeighbors);
                     markUpCrossings();
                 }
                 i++;
@@ -376,6 +377,11 @@ var provvisLayout = function () {
             });
         };
 
+        var mapSuccsToIds = function (nodeId) {
+            return nodes[nodeId].succLinks.values().map(function (n) {
+                return n.id;
+            });
+        };
 
         var markUpCrossings = function () {
 
@@ -385,15 +391,15 @@ var provvisLayout = function () {
 
             /* Get right most link. */
             upSuccs.forEach(function (ups) {
-                if (nodeLinkPredMap[links[ups].target.id].length > 1) {
+                if (links[ups].target.predLinks.size() > 1) {
                     rightMostPredRow = links[upSuccs[0]].source.rowBK.right;
-                    nodeLinkPredMap[links[ups].target.id].forEach(function (pl) {
-                        if (links[pl].target.nodeType !== "dummy" || links[pl].source.nodeType !== "dummy") {
+                    links[ups].target.predLinks.values().forEach(function (pl) {
+                        if (pl.target.nodeType !== "dummy" || pl.source.nodeType !== "dummy") {
 
                             /* Check right most link. */
-                            if (links[pl].source.rowBK.right > rightMostPredRow) {
-                                rightMostPredRow = links[pl].source.rowBK.right;
-                                rightMostLink = pl;
+                            if (pl.source.rowBK.right > rightMostPredRow) {
+                                rightMostPredRow = pl.source.rowBK.right;
+                                rightMostLink = pl.id;
                             }
                         }
                     });
@@ -402,11 +408,11 @@ var provvisLayout = function () {
 
             /* Mark all but right most links. */
             upSuccs.forEach(function (ups) {
-                if (nodeLinkPredMap[links[ups].target.id].length > 1 && rightMostLink !== -1) {
-                    nodeLinkPredMap[links[ups].target.id].forEach(function (pl) {
-                        if (pl !== rightMostLink) {
-                            links[pl].l.type0 = true;
-                            links[pl].l.neighbor = false;
+                if (links[ups].target.predLinks.size() > 1 && rightMostLink !== -1) {
+                    links[ups].target.predLinks.values().forEach(function (pl) {
+                        if (pl.id !== rightMostLink) {
+                            pl.l.type0 = true;
+                            pl.l.neighbor = false;
                         }
                     });
                 }
@@ -436,7 +442,7 @@ var provvisLayout = function () {
                         for (m; m < bclgNodes[upl][i].length; m++) {
                             if (m > i) {
                                 /* Get successors for m */
-                                btUpSuccs = nodeLinkSuccMap[bclgNodes[upl][m].id].filter(filterNeighbors);
+                                btUpSuccs = mapSuccsToIds(bclgNodes[upl][m].id).filter(filterNeighbors);
                                 backtrackUpCrossings();
                             }
                         }
@@ -458,7 +464,7 @@ var provvisLayout = function () {
                     iCur = i;
 
                     /* Crossing successor links. */
-                    upSuccs = nodeLinkSuccMap[bclgNodes[upl][i].id].filter(filterNeighbors);
+                    upSuccs = mapSuccsToIds(bclgNodes[upl][i].id).filter(filterNeighbors);
                     markUpCrossings();
                 }
                 i--;
@@ -486,6 +492,8 @@ var provvisLayout = function () {
         formBlocks(bclgNodes, "right");
     };
 
+
+    // TODO: node map refactoring
     /**
      * * After resolving conflicts, no crossings are left and connected paths are concatenated into blocks.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
@@ -506,13 +514,25 @@ var provvisLayout = function () {
             return links[value].l.neighbor ? true : false;
         };
 
+        var createSuccs = function (nodeId) {
+            return nodes[nodeId].succLinks.values().map(function (n) {
+                return n.id;
+            });
+        };
+
+        var createPreds = function (nodeId) {
+            return nodes[nodeId].predLinks.values().map(function (n) {
+                return n.id;
+            });
+        };
+
         /* UPPER */
 
         /* Iterate through graph layer by layer,
          * if node is root, iterate through block and place nodes into rows. */
         for (var l = 0; l < bclgNodes.length; l++) {
             for (var i = 0; i < bclgNodes[l].length; i++) {
-                var succs = nodeLinkSuccMap[nodes[bclgNodes[l][i].id].id].filter(isBlockRoot);
+                var succs = createSuccs(bclgNodes[l][i].id).filter(isBlockRoot);
 
                 if (succs.length === 0) {
                     nodes[bclgNodes[l][i].id].isBlockRoot = true;
@@ -524,7 +544,7 @@ var provvisLayout = function () {
 
                     /* Traverse. */
                     while (curLink !== -2) {
-                        curLink = nodeLinkPredMap[curNodeId].filter(filterNeighbor);
+                        curLink = createPreds(curNodeId).filter(filterNeighbor);
                         if (curLink.length === 0) {
                             curLink = -2;
                         } else {
@@ -559,11 +579,11 @@ var provvisLayout = function () {
 
                     rootRow = Math.round(minRow + delta);
 
-                    while (nodePredMap[curNode].length !== 0) {
+                    while (!nodes[curNode].preds.empty()) {
                         nodes[curNode].row = rootRow;
-                        curNode = nodePredMap[curNode][0];
+                        curNode = nodes[curNode].preds.values()[0].id;
                     }
-                    if (nodePredMap[curNode].length === 0) {
+                    if (nodes[curNode].preds.empty()) {
                         nodes[curNode].row = rootRow;
                     }
                 }
@@ -721,14 +741,10 @@ var provvisLayout = function () {
                 /* Remove successors for original source node. */
                 l.source.succs.remove(l.target.autoId);
                 l.source.succLinks.remove(l.autoId);
-                nodeSuccMap[l.source.id].splice(nodeSuccMap[l.source.id].indexOf(l.target.id), 1);
-                nodeLinkSuccMap[l.source.id].splice(nodeLinkSuccMap[l.source.id].indexOf(l.id), 1);
 
                 /* Remove predecessors for original target node. */
                 l.target.preds.remove(l.source.autoId);
                 l.target.predLinks.remove(l.autoId);
-                nodePredMap[l.target.id].splice(nodePredMap[l.target.id].indexOf(l.source.id), 1);
-                nodeLinkPredMap[l.target.id].splice(nodeLinkPredMap[l.target.id].indexOf(l.id), 1);
 
                 /* Set maps for dummy path. */
                 j = 0;
@@ -738,11 +754,6 @@ var provvisLayout = function () {
                     curLink.source.succLinks.set(curLink.autoId, curLink);
                     curLink.target.preds.set(curLink.source.autoId, curLink.source);
                     curLink.target.predLinks.set(curLink.autoId, curLink);
-
-                    nodeSuccMap[curLink.source.id] = (nodeSuccMap[curLink.source.id] || []).concat([curLink.target.id]);
-                    nodeLinkSuccMap[curLink.source.id] = (nodeLinkSuccMap[curLink.source.id] || []).concat([curLink.id]);
-                    nodePredMap[curLink.target.id] = (nodePredMap[curLink.target.id] || []).concat([curLink.source.id]);
-                    nodeLinkPredMap[curLink.target.id] = (nodeLinkPredMap[curLink.target.id] || []).concat([curLink.id]);
 
                     curLink = links[newLinkId + j + 1];
                     j++;
@@ -1092,8 +1103,6 @@ var provvisLayout = function () {
             var l = links[i];
             /* Clean source. */
             if (l.source.nodeType != "dummy" && l.target.nodeType == "dummy") {
-                nodeSuccMap[l.source.id].splice(nodeSuccMap[l.source.id].indexOf(l.target.id), 1);
-                nodeLinkSuccMap[l.source.id].splice(nodeLinkSuccMap[l.source.id].indexOf(l.id), 1);
                 l.source.succs.remove(l.target.autoId);
                 l.source.succLinks.remove(l.autoId);
                 links.splice(i, 1);
@@ -1102,8 +1111,6 @@ var provvisLayout = function () {
             /* Clean target. */
             else if (l.source.nodeType == "dummy" && l.target.nodeType != "dummy") {
                 l.target.parents.splice(l.target.parents.indexOf(l.source.uuid), 1);
-                nodePredMap[l.target.id].splice(nodePredMap[l.target.id].indexOf(l.source.id), 1);
-                nodeLinkPredMap[l.target.id].splice(nodeLinkPredMap[l.target.id].indexOf(l.id), 1);
                 l.target.preds.remove(l.source.autoId);
                 l.target.predLinks.remove(l.autoId);
                 links.splice(i, 1);
@@ -1111,10 +1118,6 @@ var provvisLayout = function () {
             }
             /* Remove pure dummy links. */
             else if (l.source.nodeType == "dummy" && l.target.nodeType == "dummy") {
-                nodePredMap[l.target.id].splice(nodePredMap[l.target.id].indexOf(l.source.id), 1);
-                nodeLinkPredMap[l.target.id].splice(nodeLinkPredMap[l.target.id].indexOf(l.id), 1);
-                nodeSuccMap[l.source.id].splice(nodeSuccMap[l.source.id].indexOf(l.target.id), 1);
-                nodeLinkSuccMap[l.source.id].splice(nodeLinkSuccMap[l.source.id].indexOf(l.id), 1);
                 l.target.preds.remove(l.source.autoId);
                 l.target.predLinks.remove(l.autoId);
                 l.source.succs.remove(l.target.autoId);
@@ -1129,11 +1132,6 @@ var provvisLayout = function () {
             var n = nodes[j];
 
             if (n.nodeType === "dummy") {
-                nodePredMap[n.id] = [];
-                nodeLinkPredMap[n.id] = [];
-                nodeSuccMap[n.id] = [];
-                nodeLinkSuccMap[n.id] = [];
-
                 n.preds = d3.map();
                 n.succs = d3.map();
                 n.predLinks = d3.map();
@@ -1148,19 +1146,6 @@ var provvisLayout = function () {
         dummyPaths.forEach(function (dP) {
             var sourceId = links[dP.id].source.id,
                 targetId = links[dP.id].target.id;
-
-            nodePredMap[targetId] = nodePredMap[targetId].concat(dP.target.predNodes.filter(function (pn) {
-                return nodePredMap[targetId].indexOf(pn) === -1;
-            }));
-            nodeLinkPredMap[targetId] = nodeLinkPredMap[targetId].concat(dP.target.predNodeLinks.filter(function (pnl) {
-                return nodeLinkPredMap[targetId].indexOf(pnl) === -1;
-            }));
-            nodeSuccMap[sourceId] = nodeSuccMap[sourceId].concat(dP.source.succNodes.filter(function (sn) {
-                return nodeSuccMap[sourceId].indexOf(sn) === -1;
-            }));
-            nodeLinkSuccMap[sourceId] = nodeLinkSuccMap[sourceId].concat(dP.source.succNodeLinks.filter(function (snl) {
-                return nodeLinkSuccMap[sourceId].indexOf(snl) === -1;
-            }));
 
             dP.target.predNodes.forEach(function (pn) {
                 nodes[targetId].preds.set(nodes[pn].autoId, nodes[pn]);
@@ -1181,6 +1166,8 @@ var provvisLayout = function () {
         });
         dummyPaths = [];
     };
+
+    // TODO: CONTINUE REFACTORING NODE MAPS
 
     /**
      * Compress analysis horizontally.
@@ -1203,28 +1190,28 @@ var provvisLayout = function () {
 
                     /* Get first node for this block. */
                     var curBlockNode = curNode;
-                    while (nodePredMap[curBlockNode.id].length === 1 &&
-                        nodes[nodePredMap[curBlockNode.id][0]].analysis === an.uuid &&
-                        nodes[nodePredMap[curBlockNode.id][0]].col - curBlockNode.col === 1) {
-                        curBlockNode = nodes[nodePredMap[curBlockNode.id][0]];
+                    while (nodes[curBlockNode.id].preds.size() === 1 &&
+                        nodes[curBlockNode.id].preds.values()[0].analysis === an.uuid &&
+                        nodes[curBlockNode.id].preds.values()[0].col - curBlockNode.col === 1) {
+                        curBlockNode = nodes[curBlockNode.id].preds.values()[0];
                     }
 
                     /* When pred for leading block node is of the same analysis. */
                     while (curNode.col < maxOutput &&
-                        nodePredMap[curBlockNode.id].length === 1 &&
-                        nodes[nodePredMap[curBlockNode.id][0]].analysis === an.uuid &&
-                        nodePredMap[curNode.id].length === 1) {
-                        var predNode = nodes[nodePredMap[curNode.id][0]];
+                        nodes[curBlockNode.id].preds.size() === 1 &&
+                        nodes[curBlockNode.id].preds.values()[0].analysis === an.uuid &&
+                        nodes[curNode.id].preds.size() === 1) {
+                        var predNode = nodes[curNode.id].preds.values()[0];
                         if (predNode.col - curNode.col > 1) {
 
                             var shiftCurNode = curNode,
                                 colShift = maxOutput + j;
+                            var bla = curNode;
 
                             /* Shift the gap to align with the maximum output column of this analysis. */
                             while (shiftCurNode !== ano) {
                                 shiftCurNode.col = colShift;
-
-                                shiftCurNode = nodes[nodeSuccMap[shiftCurNode.id]];
+                                shiftCurNode = nodes[shiftCurNode.id].succs.values()[0];
                                 colShift--;
                             }
                             ano.col = colShift;
@@ -1250,11 +1237,10 @@ var provvisLayout = function () {
 
 
             an.inputs.values().forEach(function (ain) {
-                var curMin = d3.min(nodePredMap[ain.id].map(function (pn) {
-                    return nodes[pn];
-                }), function (ainpn) {
-                    return ainpn.col;
-                });
+                var curMin = d3.min(nodes[ain.id].preds.values(),
+                    function (ainpn) {
+                        return ainpn.col;
+                    });
 
                 if (curMin < rightMostPredCol) {
                     rightMostPredCol = curMin;
@@ -1277,31 +1263,33 @@ var provvisLayout = function () {
         /* Iterate from right to left, column-wise. */
 
         var isAnotherAnalysis = function (sn) {
-            return nodes[sn].analysis !== nodes[grid[i][j]].analysis;
+            return sn.analysis !== nodes[grid[i][j]].analysis;
         };
 
         var getMedianRow = function (nid) {
-            nodeSuccMap[nid].sort(function (a, b) {
-                return nodes[a].row > nodes[b].row;
+            var medianRow = nodes[nid].succs.values().sort(function (a, b) {
+                return a.row - b.row;
+            }).map(function (n) {
+                return n.row;
             });
-            return nodes[nodeSuccMap[nid][Math.floor(nodeSuccMap[nid].length / 2)]].row;
+            return medianRow[Math.floor(medianRow.length / 2)];
         };
 
         for (var i = 0; i < depth; i++) {
             for (var j = 0; j < width; j++) {
-                if (grid[i][j] !== "undefined" && nodeSuccMap[grid[i][j]].length > 1 && nodeSuccMap[grid[i][j]].some(isAnotherAnalysis)) {
+                if (grid[i][j] !== "undefined" && nodes[grid[i][j]].succs.size() > 1 && nodes[grid[i][j]].succs.values().some(isAnotherAnalysis)) {
 
                     /* Within this analysis and for each predecessor, traverse back and shift rows. */
                     var newRow = getMedianRow(grid[i][j]),
                         curNode = grid[i][j];
 
-                    while (nodePredMap[curNode].length === 1) {
+                    while (nodes[curNode].preds.size() === 1) {
                         grid[i][j] = "undefined";
                         grid[i][newRow] = curNode;
                         nodes[curNode].row = newRow;
-                        curNode = nodePredMap[curNode];
+                        curNode = nodes[curNode].preds.values()[0].id;
                     }
-                    if (nodePredMap[curNode].length === 0) {
+                    if (nodes[curNode].preds.empty()) {
                         grid[i][j] = "undefined";
                         grid[i][newRow] = curNode;
                         nodes[curNode].row = newRow;
@@ -1335,11 +1323,6 @@ var provvisLayout = function () {
         oNodes = graph.oNodes;
         aNodes = graph.aNodes;
         saNodes = graph.saNodes;
-
-        nodePredMap = graph.nodePredMap;
-        nodeSuccMap = graph.nodeSuccMap;
-        nodeLinkPredMap = graph.nodeLinkPredMap;
-        nodeLinkSuccMap = graph.nodeLinkSuccMap;
 
         width = graph.width;
         depth = graph.depth;
@@ -1381,10 +1364,7 @@ var provvisLayout = function () {
             graph.oNodes = oNodes;
             graph.aNodes = aNodes;
             graph.saNodes = saNodes;
-            graph.nodePredMap = nodePredMap;
-            graph.nodeSuccMap = nodeSuccMap;
-            graph.nodeLinkPredMap = nodeLinkPredMap;
-            graph.nodeLinkSuccMap = nodeLinkSuccMap;
+
             graph.width = width;
             graph.depth = depth;
             graph.grid = grid;

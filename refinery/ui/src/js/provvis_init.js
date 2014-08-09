@@ -13,10 +13,6 @@ var provvisInit = function () {
 
         nodeMap = d3.map(),
 
-        nodePredMap = [],
-        nodeSuccMap = [],
-        nodeLinkPredMap = [],
-        nodeLinkSuccMap = [],
         analysisWorkflowMap = d3.map();
 
     /**
@@ -81,8 +77,6 @@ var provvisInit = function () {
         });
     };
 
-
-    /* TODO: Obsolete after references are incorporated. */
     /**
      * Extract link properties.
      * @param lId Integer identifier for the link.
@@ -95,30 +89,6 @@ var provvisInit = function () {
     };
 
     /**
-     * Build link hashes.
-     * @param puuid The serialized unique identifier for the parent node.
-     * @param lId Integer identifier for the link.
-     * @param nId Integer identifier for the node.
-     * @param srcNodeIds Integer array containing all node identifiers preceding the current node.
-     * @param srcLinkIds Integer array containing all link identifiers preceding the current node.
-     */
-    var createLinkHashes = function (puuid, lId, nId, srcNodeIds, srcLinkIds) {
-        var pnId = nodeMap.get(puuid).id;
-
-        srcNodeIds.push(pnId);
-        srcLinkIds.push(lId);
-
-        if (nodeSuccMap.hasOwnProperty(pnId)) {
-            nodeSuccMap[pnId] = nodeSuccMap[pnId].concat([nId]);
-            nodeLinkSuccMap[pnId] = nodeLinkSuccMap[pnId].concat([lId]);
-        } else {
-            nodeSuccMap[pnId] = [nId];
-            nodeLinkSuccMap[pnId] = [lId];
-        }
-    };
-
-    /* TODO: Remove obsolete maps. */
-    /**
      * Extract links.
      */
     var extractLinks = function () {
@@ -127,24 +97,17 @@ var provvisInit = function () {
         nodes.forEach(function (n, i) {
             if (typeof n.uuid !== "undefined") {
                 if (typeof n.parents !== "undefined") {
-                    var srcNodeIds = [],
-                        srcLinkIds = [];
 
                     /* For each parent entry. */
                     n.parents.forEach(function (puuid) { /* n -> target; p -> source */
                         if (typeof nodeMap.get(puuid) !== "undefined") {
                             /* ExtractLinkProperties. */
                             links.push(createLink(lId, nodeMap.get(puuid), n));
-
-                            /* Build link hashes. */
-                            createLinkHashes(puuid, lId, i, srcNodeIds, srcLinkIds);
                             lId++;
                         } else {
                             console.log("ERROR: Dataset might be corrupt - parent: " + puuid + " of node with uuid: " + n.uuid + " does not exist.");
                         }
                     });
-                    nodeLinkPredMap[i] = srcLinkIds;
-                    nodePredMap[i] = srcNodeIds;
                 } else {
                     console.log("Error: Parents array of node with uuid: " + n.uuid + " is undefined!");
                 }
@@ -154,8 +117,6 @@ var provvisInit = function () {
         });
     };
 
-
-    /* TODO: Remove obsolete maps.*/
     /**
      * For each node, set pred nodes, succ nodes, predLinks links as well as succLinks links.
      */
@@ -173,18 +134,10 @@ var provvisInit = function () {
 
                 /* Set output nodes. */
                 oNodes.push(n);
-
-                /* Set output nodes map. */
-                nodeSuccMap[n.id] = [];
-                nodeLinkSuccMap[n.id] = [];
             } else if (n.preds.empty()) {
 
                 /* Set input nodes. */
                 iNodes.push(n);
-
-                /* Set output nodes map. */
-                nodePredMap[n.id] = [];
-                nodeLinkPredMap[n.id] = [];
             }
         });
     };
@@ -296,10 +249,6 @@ var provvisInit = function () {
         return new provvisDecl.Subanalysis(sanId, "subanalysis", an, -1, true, i, subanalysis, d3.map(), d3.map(), false);
     };
 
-
-    /* TODO: Remove obsolete maps. */
-    /* TODO: Set predLinks and succLinks for aNodes and saNodes. */
-
     /**
      * For each analysis the corresponding nodes as well as specifically in- and output nodes are mapped to it.
      */
@@ -340,9 +289,9 @@ var provvisInit = function () {
 
             /* Set input nodes for subanalysis. */
             san.children.values().filter(function (n) {
-                return nodePredMap[n.id].some(function (p) {
-                    return nodes[p].analysis !== san.parent.uuid;
-                }) || nodePredMap[n.id].length === 0;
+                return n.preds.values().some(function (p) {
+                    return p.analysis !== san.parent.uuid;
+                }) || n.preds.empty();
                 /* If no src analyses exists. */
             }).forEach(function (inn) {
                 san.inputs.set(inn.autoId, inn);
@@ -350,8 +299,8 @@ var provvisInit = function () {
 
             /* Set output nodes for subanalysis. */
             san.children.values().filter(function (n) {
-                return nodeSuccMap[n.id].length === 0 || nodeSuccMap[n.id].some(function (s) {
-                    return nodes[s].analysis !== san.parent.uuid;
+                return n.succs.empty() || n.succs.values().some(function (s) {
+                    return s.analysis !== san.parent.uuid;
                 });
             }).forEach(function (onn) {
                 san.outputs.set(onn.autoId, onn);
@@ -361,42 +310,32 @@ var provvisInit = function () {
         saNodes.forEach(function (san) {
             /* Set predecessor subanalyses. */
             san.inputs.values().forEach(function (n) {
-                nodePredMap[n.id].forEach(function (pn) {
-                    if (!san.preds.has(nodes[pn].parent.autoId)) {
-                        san.preds.set(nodes[pn].parent.autoId, nodes[pn].parent);
+                n.preds.values().forEach(function (pn) {
+                    if (!san.preds.has(pn.parent.autoId)) {
+                        san.preds.set(pn.parent.autoId, pn.parent);
                     }
                 });
             });
 
             /* Set successor subanalyses. */
             san.outputs.values().forEach(function (n) {
-                nodeSuccMap[n.id].forEach(function (sn) {
-                    if (!san.succs.has(nodes[sn].parent.autoId)) {
-                        san.succs.set(nodes[sn].parent.autoId, nodes[sn].parent);
+                n.succs.values().forEach(function (sn) {
+                    if (!san.succs.has(sn.parent.autoId)) {
+                        san.succs.set(sn.parent.autoId, sn.parent);
                     }
                 });
             });
         });
 
-        /* Set maps for subanalysis. */
+        /* Set link references for subanalyses. */
         saNodes.forEach(function (san) {
-            nodePredMap[san.id] = [];
-            nodeLinkPredMap[san.id] = [];
             san.inputs.values().forEach(function (sain) {
-                nodePredMap[san.id] = nodePredMap[san.id].concat(nodePredMap[sain.id]);
-                nodeLinkPredMap[san.id] = nodeLinkPredMap[san.id].concat(nodeLinkPredMap[sain.id]);
-
                 sain.predLinks.values().forEach(function (l) {
                     san.predLinks.set(l.autoId, l);
                 });
             });
 
-            nodeSuccMap[san.id] = [];
-            nodeLinkSuccMap[san.id] = [];
             san.outputs.values().forEach(function (saon) {
-                nodeSuccMap[san.id] = nodeSuccMap[san.id].concat(nodeSuccMap[saon.id]);
-                nodeLinkSuccMap[san.id] = nodeLinkSuccMap[san.id].concat(nodeLinkSuccMap[saon.id]);
-
                 saon.succLinks.values().forEach(function (l) {
                     san.succLinks.set(l.autoId, l);
                 });
@@ -469,25 +408,14 @@ var provvisInit = function () {
             nodes[-i - 1] = aNodes[i];
         });
 
-        /* Set maps. */
+        /* Set predLinks and succLinks. */
         aNodes.forEach(function (an) {
-            nodePredMap[an.id] = [];
-            nodeLinkPredMap[an.id] = [];
             an.inputs.values().forEach(function (ain) {
-                nodePredMap[an.id] = nodePredMap[an.id].concat(nodePredMap[ain.id]);
-                nodeLinkPredMap[an.id] = nodeLinkPredMap[an.id].concat(nodeLinkPredMap[ain.id]);
-
                 ain.predLinks.values().forEach(function (l) {
                     an.predLinks.set(l.autoId, l);
                 });
             });
-
-            nodeSuccMap[an.id] = [];
-            nodeLinkSuccMap[an.id] = [];
             an.outputs.values().forEach(function (aon) {
-                nodeSuccMap[an.id] = nodeSuccMap[an.id].concat(nodeSuccMap[aon.id]);
-                nodeLinkSuccMap[an.id] = nodeLinkSuccMap[an.id].concat(nodeLinkSuccMap[aon.id]);
-
                 aon.succLinks.values().forEach(function (l) {
                     an.succLinks.set(l.autoId, l);
                 });
@@ -520,9 +448,8 @@ var provvisInit = function () {
         /* Create analysis node mapping. */
         createAnalysisNodeMapping();
 
-        /* TODO: Remove obsolete maps. */
         /* Create graph. */
-        return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, nodePredMap, nodeSuccMap, nodeLinkPredMap, nodeLinkSuccMap, analysisWorkflowMap, 0, 0, []);
+        return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, 0, 0, []);
     };
 
     /**
