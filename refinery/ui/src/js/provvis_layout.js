@@ -492,8 +492,6 @@ var provvisLayout = function () {
         formBlocks(bclgNodes, "right");
     };
 
-
-    // TODO: node map refactoring
     /**
      * * After resolving conflicts, no crossings are left and connected paths are concatenated into blocks.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
@@ -1167,8 +1165,6 @@ var provvisLayout = function () {
         dummyPaths = [];
     };
 
-    // TODO: CONTINUE REFACTORING NODE MAPS
-
     /**
      * Compress analysis horizontally.
      */
@@ -1357,7 +1353,6 @@ var provvisLayout = function () {
             /* Optimize layout. */
             postprocessLayout();
 
-            /* TODO: Remove unused properties. */
             graph.nodes = nodes;
             graph.links = links;
             graph.iNodes = iNodes;

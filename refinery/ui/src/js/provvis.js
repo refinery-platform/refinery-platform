@@ -4,6 +4,10 @@
  * @author sluger Stefan Luger https://github.com/sluger
  * @exports runProvVis The published function to run the visualization.
  */
+
+/* TODO: Refactor negative subanalysis and analysis ids. */
+/* TODO: Refactor ids in general and completely switch to Node.autoId. */
+
 var provvis = function () {
 
     /**

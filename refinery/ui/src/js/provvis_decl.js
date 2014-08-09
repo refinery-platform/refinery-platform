@@ -33,7 +33,6 @@ var provvisDecl = function () {
         BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
         this.autoId = BaseNode.numInstances;
 
-        /* TODO: Add auto instance counter for id. */
         /* TODO: Group layout specific properties into sub-property. */
         /* TODO: Properties not set initially should be removed from the constructor interface. */
     };
@@ -200,7 +199,6 @@ var provvisDecl = function () {
         this.graph = graph;
     };
 
-    /* TODO: Remove obsolete maps. */
     /**
      * Constructor function for the provenance graph.
      *
