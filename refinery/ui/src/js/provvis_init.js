@@ -60,7 +60,7 @@ var provvisInit = function () {
             analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : "dataset",
             rowBK = {left: -1, right: -1};
 
-        return new provvisDecl.Node(id, type, Object.create(null), -1, false, -1, -1, -1, -1, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid, rowBK, -1, false);
+        return new provvisDecl.Node(id, type, Object.create(null), -1, false, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid, rowBK, -1, false);
     };
 
     /**
@@ -91,7 +91,7 @@ var provvisInit = function () {
      * @returns {provvisDecl.Link} New Link object.
      */
     var createLink = function (lId, source, target) {
-        return new provvisDecl.Link(lId, source, target, false, {neighbor: false, type0: false, type1: false});
+        return new provvisDecl.Link(lId, source, target, false);
     };
 
     /**
@@ -117,6 +117,7 @@ var provvisInit = function () {
         }
     };
 
+    /* TODO: Remove obsolete maps. */
     /**
      * Extract links.
      */
@@ -154,7 +155,7 @@ var provvisInit = function () {
     };
 
 
-    /* TODO: Set preds, succs, predLinks and succLinks.*/
+    /* TODO: Remove obsolete maps.*/
     /**
      * For each node, set pred nodes, succ nodes, predLinks links as well as succLinks links.
      */
@@ -257,11 +258,11 @@ var provvisInit = function () {
      */
     var createAnalysisNode = function (a, i) {
         if (i === -1) {
-            return new provvisDecl.Analysis(-i - 2, "analysis", Object.create(null), -1, true, -1, -1,
-                -1, -1, "dataset", "noworkflow", 0, -1, -1, -1, d3.map(), d3.map(), d3.map());
+            return new provvisDecl.Analysis(-i - 2, "analysis", Object.create(null), -1, true, "dataset", "noworkflow",
+                0, -1, -1, -1, d3.map(), d3.map(), d3.map());
         } else {
-            return new provvisDecl.Analysis(-i - 2, "analysis", Object.create(null), -1, true, -1, -1,
-                -1, -1, a.uuid, a.workflow__uuid, i + 1, a.time_start, a.time_end, a.creation_date, d3.map(), d3.map(), d3.map());
+            return new provvisDecl.Analysis(-i - 2, "analysis", Object.create(null), -1, true, a.uuid,
+                a.workflow__uuid, i + 1, a.time_start, a.time_end, a.creation_date, d3.map(), d3.map(), d3.map());
         }
     };
 
@@ -292,8 +293,12 @@ var provvisInit = function () {
      * @returns {provvisDecl.Subanalysis} New Subanalysis object.
      */
     var createSubanalysisNode = function (sanId, an, i, subanalysis) {
-        return new provvisDecl.Subanalysis(sanId, "subanalysis", an, -1, true, -1, -1, -1, -1, i, subanalysis, d3.map(), d3.map(), false);
+        return new provvisDecl.Subanalysis(sanId, "subanalysis", an, -1, true, i, subanalysis, d3.map(), d3.map(), false);
     };
+
+
+    /* TODO: Remove obsolete maps. */
+    /* TODO: Set predLinks and succLinks for aNodes and saNodes. */
 
     /**
      * For each analysis the corresponding nodes as well as specifically in- and output nodes are mapped to it.
@@ -380,6 +385,10 @@ var provvisInit = function () {
             san.inputs.values().forEach(function (sain) {
                 nodePredMap[san.id] = nodePredMap[san.id].concat(nodePredMap[sain.id]);
                 nodeLinkPredMap[san.id] = nodeLinkPredMap[san.id].concat(nodeLinkPredMap[sain.id]);
+
+                sain.predLinks.values().forEach(function (l) {
+                    san.predLinks.set(l.autoId, l);
+                });
             });
 
             nodeSuccMap[san.id] = [];
@@ -387,6 +396,10 @@ var provvisInit = function () {
             san.outputs.values().forEach(function (saon) {
                 nodeSuccMap[san.id] = nodeSuccMap[san.id].concat(nodeSuccMap[saon.id]);
                 nodeLinkSuccMap[san.id] = nodeLinkSuccMap[san.id].concat(nodeLinkSuccMap[saon.id]);
+
+                saon.succLinks.values().forEach(function (l) {
+                    san.succLinks.set(l.autoId, l);
+                });
             });
         });
 
@@ -463,6 +476,10 @@ var provvisInit = function () {
             an.inputs.values().forEach(function (ain) {
                 nodePredMap[an.id] = nodePredMap[an.id].concat(nodePredMap[ain.id]);
                 nodeLinkPredMap[an.id] = nodeLinkPredMap[an.id].concat(nodeLinkPredMap[ain.id]);
+
+                ain.predLinks.values().forEach(function (l) {
+                    an.predLinks.set(l.autoId, l);
+                });
             });
 
             nodeSuccMap[an.id] = [];
@@ -470,8 +487,14 @@ var provvisInit = function () {
             an.outputs.values().forEach(function (aon) {
                 nodeSuccMap[an.id] = nodeSuccMap[an.id].concat(nodeSuccMap[aon.id]);
                 nodeLinkSuccMap[an.id] = nodeLinkSuccMap[an.id].concat(nodeLinkSuccMap[aon.id]);
+
+                aon.succLinks.values().forEach(function (l) {
+                    an.succLinks.set(l.autoId, l);
+                });
             });
         });
+
+        console.log(aNodes);
     };
 
     /* Main init function. */
@@ -499,6 +522,7 @@ var provvisInit = function () {
         /* Create analysis node mapping. */
         createAnalysisNodeMapping();
 
+        /* TODO: Remove obsolete maps. */
         /* Create graph. */
         return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, nodePredMap, nodeSuccMap, nodeLinkPredMap, nodeLinkSuccMap, analysisWorkflowMap, 0, 0, []);
     };

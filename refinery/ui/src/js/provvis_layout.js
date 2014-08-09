@@ -629,31 +629,47 @@ var provvisLayout = function () {
                     id: l.id,
                     source: ({
                         id: l.source.id,
-                        predNodes: nodePredMap[l.source.id].filter(function (p) {
+                        predNodes: l.source.preds.values().map(function (p) {
+                            return p.id;
+                        }).filter(function (p) {
                             return nodes[p].nodeType !== "dummy";
                         }),
-                        predNodeLinks: nodeLinkPredMap[l.source.id].filter(function (p) {
+                        predNodeLinks: l.source.predLinks.values().map(function (p) {
+                            return p.id;
+                        }).filter(function (p) {
                             return nodes[p].nodeType !== "dummy";
                         }),
-                        succNodes: nodeSuccMap[l.source.id].filter(function (s) {
+                        succNodes: l.source.succs.values().map(function (p) {
+                            return p.id;
+                        }).filter(function (s) {
                             return nodes[s].nodeType !== "dummy";
                         }),
-                        succNodeLinks: nodeLinkSuccMap[l.source.id].filter(function (s) {
+                        succNodeLinks: l.source.succLinks.values().map(function (p) {
+                            return p.id;
+                        }).filter(function (s) {
                             return nodes[s].nodeType !== "dummy";
                         })
                     }),
                     target: ({
                         id: l.target.id,
-                        predNodes: nodePredMap[l.target.id].filter(function (p) {
+                        predNodes: l.target.preds.values().map(function (p) {
+                            return p.id;
+                        }).filter(function (p) {
                             return nodes[p].nodeType !== "dummy";
                         }),
-                        predNodeLinks: nodeLinkPredMap[l.target.id].filter(function (p) {
+                        predNodeLinks: l.target.predLinks.values().map(function (p) {
+                            return p.id;
+                        }).filter(function (p) {
                             return nodes[p].nodeType !== "dummy";
                         }),
-                        succNodes: nodeSuccMap[l.target.id].filter(function (s) {
+                        succNodes: l.target.succs.values().map(function (p) {
+                            return p.id;
+                        }).filter(function (s) {
                             return nodes[s].nodeType !== "dummy";
                         }),
-                        succNodeLinks: nodeLinkSuccMap[l.target.id].filter(function (s) {
+                        succNodeLinks: l.target.succLinks.values().map(function (p) {
+                            return p.id;
+                        }).filter(function (s) {
                             return nodes[s].nodeType !== "dummy";
                         })
                     }),
@@ -679,9 +695,11 @@ var provvisLayout = function () {
 
                     /* Add node. */
                     nodes.push(new provvisDecl.Node(newNodeId + i, "dummy", curParent, -1, false,
-                            curCol + 1, -1, -1, -1, "dummyNode-" + (newNodeId + i), "dummy", curStudy, curAssay,
+                            "dummyNode-" + (newNodeId + i), "dummy", curStudy, curAssay,
                         (i === 0) ? [l.source.uuid] : ["dummyNode-" + predNodeId], curAnalysis, curSubanalysis,
                             "dummyNode-" + (newNodeId + i), {left: -1, right: -1}, -1, false));
+
+                    nodes[newNodeId + i].col = curCol + 1;
 
                     predNodeId = newNodeId + i;
                     curCol++;
@@ -702,14 +720,22 @@ var provvisLayout = function () {
                 nodeSuccMap[l.source.id] = nodeSuccMap[l.source.id].concat([newNodeId]);
                 nodeSuccMap[l.source.id].splice(nodeSuccMap[l.source.id].indexOf(l.target.id), 1);
 
+
+                console.log("old");
+                console.log(nodeLinkSuccMap[l.source.id]);
+                console.log("new");
+                console.log(l.source.succLinks.values().map(function (l) {
+                    return l.id;
+                }));
+                console.log("");
+
                 /* Insert links. */
                 var j = 0;
                 while (j < gapLength) {
 
                     /* Add link. */
                     links.push(new provvisDecl.Link(newLinkId + j, nodes[predNodeId],
-                        (j === gapLength - 1) ? l.target : nodes[newNodeId + j], false,
-                        {neighbor: false, type0: false, type1: false}));
+                        (j === gapLength - 1) ? l.target : nodes[newNodeId + j], false));
 
                     /* Update link maps. */
                     if (j < gapLength - 1) {
@@ -752,15 +778,15 @@ var provvisLayout = function () {
         topNodes.forEach(function (n) {
 
             /* Get outgoing neighbor. */
-            succs = nodeSuccMap[n.id];
+            succs = nodes[n.id].succs.values();
 
             if (succs.length === 0) {
                 nodes[n.id].col = layer;
             } else {
                 var minSuccLayer = layer;
                 succs.forEach(function (s) {
-                    if (nodes[s].col > minSuccLayer) {
-                        minSuccLayer = nodes[s].col;
+                    if (s.col > minSuccLayer) {
+                        minSuccLayer = s.col;
                     }
                 });
                 nodes[n.id].col = minSuccLayer + 1;
@@ -779,16 +805,16 @@ var provvisLayout = function () {
         /* Do not consider analysis and subanalysis nodes. */
         nodes.filter(function (n) {
             return n.id >= 0;
-        }).forEach(function (selNode) {
+        }).forEach(function (n) {
             var nodePreds = [];
-            nodePredMap[selNode.id].forEach(function (pp) {
-                nodePreds.push(pp);
+            n.preds.values().forEach(function (pp) {
+                nodePreds.push(pp.id);
             });
             var nodeSuccs = [];
-            nodeSuccMap[selNode.id].forEach(function (ss) {
-                nodeSuccs.push(ss);
+            n.succs.values().forEach(function (ss) {
+                nodeSuccs.push(ss.id);
             });
-            graphSkeleton.push({id: selNode.id, p: nodePreds, s: nodeSuccs});
+            graphSkeleton.push({id: n.id, p: nodePreds, s: nodeSuccs});
         });
 
         return graphSkeleton;
@@ -801,12 +827,12 @@ var provvisLayout = function () {
     var createReducedOutputNodes = function () {
         var outputNodesSkeleton = [];
 
-        oNodes.forEach(function (outNode) {
+        oNodes.forEach(function (n) {
             var nodePreds = [];
-            nodePredMap[outNode.id].forEach(function (pp) {
-                nodePreds.push(pp);
+            n.preds.values().forEach(function (pp) {
+                nodePreds.push(pp.id);
             });
-            outputNodesSkeleton.push({id: outNode.id, p: nodePreds, s: []});
+            outputNodesSkeleton.push({id: n.id, p: nodePreds, s: []});
         });
         return outputNodesSkeleton;
     };

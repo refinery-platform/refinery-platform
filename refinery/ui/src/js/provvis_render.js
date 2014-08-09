@@ -24,10 +24,6 @@ var provvisRender = function () {
         aNodes = [],
         saNodes = [],
 
-        nodePredMap = [],
-        nodeSuccMap = [],
-        nodeLinkPredMap = [],
-        nodeLinkSuccMap = [],
         analysisWorkflowMap = d3.map(),
 
         width = 0,
@@ -90,8 +86,8 @@ var provvisRender = function () {
         };
 
         /* Get input links and update coordinates for x2 and y2. */
-        nodeLinkPredMap[n.id].forEach(function (l) {
-            d3.selectAll("#linkId-" + l + ", #hLinkId-" + l).attr("d", function (l) {
+        n.predLinks.values().forEach(function (l) {
+            d3.selectAll("#linkId-" + l.id + ", #hLinkId-" + l.id).attr("d", function (l) {
                 var srcCoords = getNodeCoords(l.source.id),
                     pathSegment = " M" + srcCoords.x + "," + srcCoords.y;
 
@@ -105,8 +101,8 @@ var provvisRender = function () {
         });
 
         /* Get output links and update coordinates for x1 and y1. */
-        nodeLinkSuccMap[n.id].forEach(function (l) {
-            d3.selectAll("#linkId-" + l + ", #hLinkId-" + l).attr("d", function (l) {
+        n.succLinks.values().forEach(function (l) {
+            d3.selectAll("#linkId-" + l.id + ", #hLinkId-" + l.id).attr("d", function (l) {
                 var tarCoords = getNodeCoords(l.target.id),
                     pathSegment = " M" + parseInt(x, 10) + "," + parseInt(y, 10);
 
@@ -235,9 +231,9 @@ var provvisRender = function () {
             n = n.parent;
         }
         /* Get svg link element, and for each predecessor call recursively. */
-        nodeLinkPredMap[n.id].forEach(function (l) {
-            d3.select("#hLinkId-" + l).style("display", "inline");
-            highlightPredPath(links[l].source, highlighted);
+        n.predLinks.values().forEach(function (l) {
+            d3.select("#hLinkId-" + l.id).style("display", "inline");
+            highlightPredPath(l.source, highlighted);
         });
     };
 
@@ -251,9 +247,9 @@ var provvisRender = function () {
             n = n.parent;
         }
         /* Get svg link element, and for each successor call recursively. */
-        nodeLinkSuccMap[n.id].forEach(function (l) {
-            d3.select("#hLinkId-" + l).style("display", "inline");
-            highlightSuccPath(links[l].target, highlighted);
+        n.succLinks.values().forEach(function (l) {
+            d3.select("#hLinkId-" + l.id).style("display", "inline");
+            highlightSuccPath(l.target, highlighted);
         });
     };
 
@@ -524,9 +520,9 @@ var provvisRender = function () {
                     });
                 }
                 selNode.inputs.values().forEach(function (sain) {
-                    nodeLinkPredMap[sain.id].forEach(function (l) {
-                        d3.selectAll("#linkId-" + links[l].id + ", #hLinkId-" + links[l].id).style("display", "inline");
-                        links[l].hidden = false;
+                    sain.predLinks.values().forEach(function (l) {
+                        d3.selectAll("#linkId-" + l.id + ", #hLinkId-" + l.id).style("display", "inline");
+                        l.hidden = false;
                     });
                 });
 
@@ -549,9 +545,9 @@ var provvisRender = function () {
                     d3.selectAll("#linkId-" + l.id + ", #hLinkId-" + l.id).style("display", "none");
                 });
                 selNode.parent.inputs.values().forEach(function (sain) {
-                    nodeLinkPredMap[sain.id].forEach(function (l) {
-                        d3.selectAll("#linkId-" + links[l].id + ", #hLinkId-" + links[l].id).style("display", "inline");
-                        links[l].hidden = false;
+                    sain.predLinks.values().forEach(function (l) {
+                        d3.selectAll("#linkId-" + l.id + ", #hLinkId-" + l.id).style("display", "inline");
+                        l.hidden = false;
                     });
                 });
 
@@ -890,10 +886,6 @@ var provvisRender = function () {
         aNodes = vis.graph.aNodes;
         saNodes = vis.graph.saNodes;
 
-        nodePredMap = vis.graph.nodePredMap;
-        nodeSuccMap = vis.graph.nodeSuccMap;
-        nodeLinkPredMap = vis.graph.nodeLinkPredMap;
-        nodeLinkSuccMap = vis.graph.nodeLinkSuccMap;
         analysisWorkflowMap = vis.graph.analysisWorkflowMap;
 
         width = vis.graph.width;

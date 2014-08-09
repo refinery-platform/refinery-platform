@@ -11,13 +11,9 @@ var provvisDecl = function () {
      * @param parent
      * @param doi
      * @param hidden
-     * @param col
-     * @param row
-     * @param x
-     * @param y
      * @constructor
      */
-    var BaseNode = function (id, nodeType, parent, doi, hidden, col, row, x, y) {
+    var BaseNode = function (id, nodeType, parent, doi, hidden) {
         this.id = id;
         this.nodeType = nodeType;
         this.preds = d3.map();
@@ -29,10 +25,10 @@ var provvisDecl = function () {
 
         this.doi = doi;
         this.hidden = hidden;
-        this.col = col;
-        this.row = row;
-        this.x = x;
-        this.y = y;
+        this.col = -1;
+        this.row = -1;
+        this.x = -1;
+        this.y = -1;
 
         BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
         this.autoId = BaseNode.numInstances;
@@ -50,10 +46,6 @@ var provvisDecl = function () {
      * @param parent
      * @param doi
      * @param hidden
-     * @param col
-     * @param row
-     * @param x
-     * @param y
      * @param name
      * @param fileType
      * @param study
@@ -67,8 +59,8 @@ var provvisDecl = function () {
      * @param isBlockRoot
      * @constructor
      */
-    var Node = function (id, nodeType, parent, doi, hidden, col, row, x, y, name, fileType, study, assay, parents, analysis, subanalysis, uuid, rowBK, bcOrder, isBlockRoot) {
-        BaseNode.call(this, id, nodeType, parent, doi, hidden, col, row, x, y);
+    var Node = function (id, nodeType, parent, doi, hidden, name, fileType, study, assay, parents, analysis, subanalysis, uuid, rowBK, bcOrder, isBlockRoot) {
+        BaseNode.call(this, id, nodeType, parent, doi, hidden);
 
         this.name = name;
         this.fileType = fileType;
@@ -95,10 +87,6 @@ var provvisDecl = function () {
      * @param parent
      * @param doi
      * @param hidden
-     * @param col
-     * @param row
-     * @param x
-     * @param y
      * @param uuid
      * @param wfUuid
      * @param analysis
@@ -110,8 +98,8 @@ var provvisDecl = function () {
      * @param links
      * @constructor
      */
-    var Analysis = function (id, nodeType, parent, doi, hidden, col, row, x, y, uuid, wfUuid, analysis, start, end, created, inputs, outputs, links) {
-        BaseNode.call(this, id, nodeType, parent, doi, hidden, col, row, x, y);
+    var Analysis = function (id, nodeType, parent, doi, hidden, uuid, wfUuid, analysis, start, end, created, inputs, outputs, links) {
+        BaseNode.call(this, id, nodeType, parent, doi, hidden);
 
         this.uuid = uuid;
         this.wfUuid = wfUuid;
@@ -135,10 +123,6 @@ var provvisDecl = function () {
      * @param parent
      * @param doi
      * @param hidden
-     * @param col
-     * @param row
-     * @param x
-     * @param y
      * @param sanId
      * @param subanalysis
      * @param inputs
@@ -146,8 +130,8 @@ var provvisDecl = function () {
      * @param isOutputAnalysis
      * @constructor
      */
-    var Subanalysis = function (id, nodeType, parent, doi, hidden, col, row, x, y, sanId, subanalysis, inputs, outputs, isOutputAnalysis) {
-        BaseNode.call(this, id, nodeType, parent, doi, hidden, col, row, x, y);
+    var Subanalysis = function (id, nodeType, parent, doi, hidden, sanId, subanalysis, inputs, outputs, isOutputAnalysis) {
+        BaseNode.call(this, id, nodeType, parent, doi, hidden);
 
         this.sanId = sanId;
         this.subanalysis = subanalysis;
@@ -168,19 +152,16 @@ var provvisDecl = function () {
      * @param source
      * @param target
      * @param hidden
-     * @param neighbor
-     * @param type0
-     * @param type1
      * @constructor
      */
-    var Link = function (id, source, target, hidden, neighbor, type0, type1) {
+    var Link = function (id, source, target, hidden) {
         this.id = id;
         this.source = source;
         this.target = target;
         this.hidden = hidden;
-        this.l = {neighbor: neighbor,
-            type0: type0,
-            type1: type1};
+        this.l = {neighbor: false,
+            type0: false,
+            type1: false};
 
         BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
         this.autoId = BaseNode.numInstances;
@@ -219,6 +200,7 @@ var provvisDecl = function () {
         this.graph = graph;
     };
 
+    /* TODO: Remove obsolete maps. */
     /**
      * Constructor function for the provenance graph.
      *
