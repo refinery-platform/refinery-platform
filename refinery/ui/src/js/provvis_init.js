@@ -201,9 +201,9 @@ var provvisInit = function () {
          */
         var traverseBackSubanalysis = function (n, subanalysis) {
             n.subanalysis = subanalysis;
-            nodePredMap[n.id].forEach(function (pn) {
-                if (nodes[pn].subanalysis === null) {
-                    traverseBackSubanalysis(nodes[pn], subanalysis);
+            n.preds.values().forEach(function (pn) {
+                if (pn.subanalysis === null) {
+                    traverseBackSubanalysis(pn, subanalysis);
                 }
             });
         };
@@ -216,32 +216,31 @@ var provvisInit = function () {
         var traverseDataset = function (n, subanalysis) {
             n.subanalysis = subanalysis;
 
-            if (nodePredMap[n.id].length > 1) {
-                nodePredMap[n.id].forEach(function (pn) {
-                    if (nodes[pn].subanalysis === null) {
-                        traverseBackSubanalysis(nodes[pn], subanalysis);
+            if (n.preds.size() > 1) {
+                n.preds.values().forEach(function (pn) {
+                    if (pn.subanalysis === null) {
+                        traverseBackSubanalysis(pn, subanalysis);
                     }
                 });
             }
 
-            if (typeof nodeSuccMap[n.id] !== "undefined") {
-                nodeSuccMap[n.id].forEach(function (sn) {
-                    if (nodes[sn].analysis !== "dataset") {
-                        if (nodes[sn].subanalysis === null) {
-                            if (typeof nodeSuccMap[nodes[sn].id][0] !== "undefined") {
-                                subanalysis = nodes[nodeSuccMap[nodes[sn].id][0]].subanalysis;
-                            }
-                        } else {
-                            subanalysis = nodes[sn].subanalysis;
+            n.succs.values().forEach(function (sn) {
+                if (sn.analysis !== "dataset") {
+                    if (sn.subanalysis === null) {
+                        if (!sn.succs.empty()) {
+                            subanalysis = sn.succs.values()[0].subanalysis;
                         }
+                    } else {
+                        subanalysis = sn.subanalysis;
                     }
-                    traverseDataset(nodes[sn], subanalysis);
-                });
-            }
+                }
+                traverseDataset(sn, subanalysis);
+            });
         };
 
         /* For each subanalysis in the dataset. */
         iNodes.forEach(function (n) {
+            /* Processed nodes are set to "null" after parsing nodes. */
             if (n.subanalysis === null) {
 
                 traverseDataset(n, subanalysis);

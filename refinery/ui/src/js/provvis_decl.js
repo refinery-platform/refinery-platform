@@ -37,11 +37,9 @@ var provvisDecl = function () {
         BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
         this.autoId = BaseNode.numInstances;
 
-        /* TODO: Add previous and next SNode references. */
-
         /* TODO: Add auto instance counter for id. */
-
-        /* TODO: Remove parents field. */
+        /* TODO: Group layout specific properties into sub-property. */
+        /* TODO: Properties not set initially should be removed from the constructor interface. */
     };
 
     /**
@@ -84,10 +82,6 @@ var provvisDecl = function () {
         this.rowBK = rowBK;
         this.bcOrder = bcOrder;
         this.isBlockRoot = isBlockRoot;
-
-        /* TODO: Group layout specific properties into sub-property. */
-
-        /* TODO: Properties not set initially should be removed from the constructor interface. */
     };
 
     Node.prototype = Object.create(BaseNode.prototype);
