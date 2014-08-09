@@ -253,6 +253,9 @@ var provvisRender = function () {
         });
     };
 
+
+    /* TODO: Add bezier links. (See workflow visualization) */
+    /* TODO: Let user switch between original and bezier links. */
     /**
      * Draw links.
      */

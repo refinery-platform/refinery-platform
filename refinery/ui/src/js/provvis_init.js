@@ -493,8 +493,6 @@ var provvisInit = function () {
                 });
             });
         });
-
-        console.log(aNodes);
     };
 
     /* Main init function. */

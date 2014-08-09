@@ -624,7 +624,6 @@ var provvisLayout = function () {
             var gapLength = Math.abs(l.source.col - l.target.col);
 
             if (gapLength > 1) {
-
                 dummyPaths.push({
                     id: l.id,
                     source: ({
@@ -689,23 +688,18 @@ var provvisLayout = function () {
                     curParent = l.target.parent,
                     curSubanalysis = l.target.subanalysis;
 
-                /* Insert nodes. */
+                /* Insert Nodes. */
                 var i = 0;
                 while (i < gapLength - 1) {
-
-                    /* Add node. */
                     nodes.push(new provvisDecl.Node(newNodeId + i, "dummy", curParent, -1, false,
                             "dummyNode-" + (newNodeId + i), "dummy", curStudy, curAssay,
                         (i === 0) ? [l.source.uuid] : ["dummyNode-" + predNodeId], curAnalysis, curSubanalysis,
                             "dummyNode-" + (newNodeId + i), {left: -1, right: -1}, -1, false));
-
                     nodes[newNodeId + i].col = curCol + 1;
-
                     predNodeId = newNodeId + i;
                     curCol++;
                     i++;
                 }
-
                 /* Update parents for original target node. */
                 l.target.parents = l.target.parents.concat([nodes[predNodeId].uuid]);
                 l.target.parents.splice(l.target.parents.indexOf(l.source.uuid), 1);
@@ -714,55 +708,45 @@ var provvisLayout = function () {
                 predNodeId = l.source.id;
                 curCol = l.source.col;
 
-                /* Update original link source. */
-                nodeLinkSuccMap[l.source.id] = nodeLinkSuccMap[l.source.id].concat([newLinkId]);
-                nodeLinkSuccMap[l.source.id].splice(nodeLinkSuccMap[l.source.id].indexOf(l.id), 1);
-                nodeSuccMap[l.source.id] = nodeSuccMap[l.source.id].concat([newNodeId]);
-                nodeSuccMap[l.source.id].splice(nodeSuccMap[l.source.id].indexOf(l.target.id), 1);
-
-
-                console.log("old");
-                console.log(nodeLinkSuccMap[l.source.id]);
-                console.log("new");
-                console.log(l.source.succLinks.values().map(function (l) {
-                    return l.id;
-                }));
-                console.log("");
-
-                /* Insert links. */
+                /* Insert Links. */
                 var j = 0;
                 while (j < gapLength) {
-
-                    /* Add link. */
                     links.push(new provvisDecl.Link(newLinkId + j, nodes[predNodeId],
                         (j === gapLength - 1) ? l.target : nodes[newNodeId + j], false));
-
-                    /* Update link maps. */
-                    if (j < gapLength - 1) {
-                        nodePredMap[newNodeId + j] = [predNodeId];
-                        nodeLinkPredMap[newNodeId + j] = [newLinkId + j];
-                        nodeLinkSuccMap[newNodeId + j] = [newLinkId + j + 1];
-                    }
-
-                    /* Update nodes before target. */
-                    if (j < gapLength - 2) {
-                        nodeSuccMap[newNodeId + j] = [newNodeId + j + 1];
-                    } else if (j === gapLength - 2) {
-                        nodeSuccMap[newNodeId + j] = [l.target.id];
-                    }
-
                     predNodeId = newNodeId + j;
                     curCol++;
                     j++;
                 }
-                /* Update original link target. */
-                nodeLinkPredMap[l.target.id] = nodeLinkPredMap[l.target.id].concat([newLinkId + j - 1]);
-                nodeLinkPredMap[l.target.id].splice(nodeLinkPredMap[l.target.id].indexOf(l.id), 1);
-                nodePredMap[l.target.id] = nodePredMap[l.target.id].concat([newNodeId + j - 2]);
-                nodePredMap[l.target.id].splice(nodePredMap[l.target.id].indexOf(l.source.id), 1);
 
-                /* Deleting the original link is not necessary as the mappings were removed. */
-                /* links[l.id] = null; */
+                /* Remove successors for original source node. */
+                l.source.succs.remove(l.target.autoId);
+                l.source.succLinks.remove(l.autoId);
+                nodeSuccMap[l.source.id].splice(nodeSuccMap[l.source.id].indexOf(l.target.id), 1);
+                nodeLinkSuccMap[l.source.id].splice(nodeLinkSuccMap[l.source.id].indexOf(l.id), 1);
+
+                /* Remove predecessors for original target node. */
+                l.target.preds.remove(l.source.autoId);
+                l.target.predLinks.remove(l.autoId);
+                nodePredMap[l.target.id].splice(nodePredMap[l.target.id].indexOf(l.source.id), 1);
+                nodeLinkPredMap[l.target.id].splice(nodeLinkPredMap[l.target.id].indexOf(l.id), 1);
+
+                /* Set maps for dummy path. */
+                j = 0;
+                var curLink = links[newLinkId];
+                while (j < gapLength) {
+                    curLink.source.succs.set(curLink.target.autoId, curLink.target);
+                    curLink.source.succLinks.set(curLink.autoId, curLink);
+                    curLink.target.preds.set(curLink.source.autoId, curLink.source);
+                    curLink.target.predLinks.set(curLink.autoId, curLink);
+
+                    nodeSuccMap[curLink.source.id] = (nodeSuccMap[curLink.source.id] || []).concat([curLink.target.id]);
+                    nodeLinkSuccMap[curLink.source.id] = (nodeLinkSuccMap[curLink.source.id] || []).concat([curLink.id]);
+                    nodePredMap[curLink.target.id] = (nodePredMap[curLink.target.id] || []).concat([curLink.source.id]);
+                    nodeLinkPredMap[curLink.target.id] = (nodeLinkPredMap[curLink.target.id] || []).concat([curLink.id]);
+
+                    curLink = links[newLinkId + j + 1];
+                    j++;
+                }
             }
         });
     };
@@ -1106,11 +1090,12 @@ var provvisLayout = function () {
         /* Clean up links. */
         for (var i = 0; i < links.length; i++) {
             var l = links[i];
-
             /* Clean source. */
             if (l.source.nodeType != "dummy" && l.target.nodeType == "dummy") {
                 nodeSuccMap[l.source.id].splice(nodeSuccMap[l.source.id].indexOf(l.target.id), 1);
                 nodeLinkSuccMap[l.source.id].splice(nodeLinkSuccMap[l.source.id].indexOf(l.id), 1);
+                l.source.succs.remove(l.target.autoId);
+                l.source.succLinks.remove(l.autoId);
                 links.splice(i, 1);
                 i--;
             }
@@ -1119,6 +1104,8 @@ var provvisLayout = function () {
                 l.target.parents.splice(l.target.parents.indexOf(l.source.uuid), 1);
                 nodePredMap[l.target.id].splice(nodePredMap[l.target.id].indexOf(l.source.id), 1);
                 nodeLinkPredMap[l.target.id].splice(nodeLinkPredMap[l.target.id].indexOf(l.id), 1);
+                l.target.preds.remove(l.source.autoId);
+                l.target.predLinks.remove(l.autoId);
                 links.splice(i, 1);
                 i--;
             }
@@ -1128,6 +1115,10 @@ var provvisLayout = function () {
                 nodeLinkPredMap[l.target.id].splice(nodeLinkPredMap[l.target.id].indexOf(l.id), 1);
                 nodeSuccMap[l.source.id].splice(nodeSuccMap[l.source.id].indexOf(l.target.id), 1);
                 nodeLinkSuccMap[l.source.id].splice(nodeLinkSuccMap[l.source.id].indexOf(l.id), 1);
+                l.target.preds.remove(l.source.autoId);
+                l.target.predLinks.remove(l.autoId);
+                l.source.succs.remove(l.target.autoId);
+                l.source.succLinks.remove(l.autoId);
                 links.splice(i, 1);
                 i--;
             }
@@ -1137,11 +1128,17 @@ var provvisLayout = function () {
         for (var j = 0; j < nodes.length; j++) {
             var n = nodes[j];
 
-            if (n.nodeType == "dummy") {
+            if (n.nodeType === "dummy") {
                 nodePredMap[n.id] = [];
                 nodeLinkPredMap[n.id] = [];
                 nodeSuccMap[n.id] = [];
                 nodeLinkSuccMap[n.id] = [];
+
+                n.preds = d3.map();
+                n.succs = d3.map();
+                n.predLinks = d3.map();
+                n.succLinks = d3.map();
+
                 nodes.splice(j, 1);
                 j--;
             }
@@ -1164,6 +1161,20 @@ var provvisLayout = function () {
             nodeLinkSuccMap[sourceId] = nodeLinkSuccMap[sourceId].concat(dP.source.succNodeLinks.filter(function (snl) {
                 return nodeLinkSuccMap[sourceId].indexOf(snl) === -1;
             }));
+
+            dP.target.predNodes.forEach(function (pn) {
+                nodes[targetId].preds.set(nodes[pn].autoId, nodes[pn]);
+            });
+            dP.target.predNodeLinks.forEach(function (pnl) {
+                nodes[targetId].predLinks.set(links[pnl].autoId, links[pnl]);
+            });
+            dP.source.succNodes.forEach(function (sn) {
+                nodes[sourceId].succs.set(nodes[sn].autoId, nodes[sn]);
+            });
+            dP.source.succNodeLinks.forEach(function (snl) {
+                nodes[sourceId].succLinks.set(links[snl].autoId, links[snl]);
+            });
+
             nodes[targetId].parents = nodes[targetId].parents.concat(dP.parents.filter(function (p) {
                 return nodes[targetId].parents.indexOf(p) === -1;
             }));
