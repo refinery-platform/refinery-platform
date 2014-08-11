@@ -53,10 +53,9 @@ var provvisInit = function () {
             parents = n.parents.map(function (y) {
                 return y.replace(/\/api\/v1\/node\//g, "").replace(/\//g, "");
             }),
-            analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : "dataset",
-            rowBK = {left: -1, right: -1};
+            analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : "dataset";
 
-        return new provvisDecl.Node(id, type, Object.create(null), -1, false, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid, rowBK, -1, false);
+        return new provvisDecl.Node(id, type, Object.create(null), -1, false, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid);
     };
 
     /**
@@ -210,8 +209,8 @@ var provvisInit = function () {
      * @returns {provvisDecl.Analysis} New Analysis object.
      */
     var createAnalysisNode = function (a, i) {
-        return new provvisDecl.Analysis(i, "analysis", Object.create(null), -1, true, a.uuid,
-            a.workflow__uuid, i + 1, a.time_start, a.time_end, a.creation_date);
+        return new provvisDecl.Analysis(i, Object.create(null), -1, true, a.uuid,
+            a.workflow__uuid, i, a.time_start, a.time_end, a.creation_date);
     };
 
     /**
@@ -221,7 +220,7 @@ var provvisInit = function () {
     var extractAnalyses = function (analysesData) {
 
         /* Create analysis for dataset. */
-        aNodes.push(new provvisDecl.Analysis(0, "analysis", Object.create(null), -1, true, "dataset", "noworkflow",
+        aNodes.push(new provvisDecl.Analysis(0, Object.create(null), -1, true, "dataset", "noworkflow",
             0, -1, -1, -1));
         analysisWorkflowMap.set("dataset", "noworkflow");
 
@@ -236,12 +235,11 @@ var provvisInit = function () {
      * Create subanalysis node.
      * @param sanId Subanalysis id.
      * @param an Analysis.
-     * @param i Index.
      * @param subanalysis
      * @returns {provvisDecl.Subanalysis} New Subanalysis object.
      */
-    var createSubanalysisNode = function (sanId, an, i, subanalysis) {
-        return new provvisDecl.Subanalysis(sanId, "subanalysis", an, -1, true, i, subanalysis, d3.map(), d3.map(), false);
+    var createSubanalysisNode = function (sanId, an, subanalysis) {
+        return new provvisDecl.Subanalysis(sanId, an, -1, true, subanalysis);
     };
 
     /**
@@ -249,21 +247,19 @@ var provvisInit = function () {
      */
     var createAnalysisNodeMapping = function () {
 
-        /* subanalysis. */
+        /* Subanalysis. */
 
         /* Create subanalysis node. */
-        var sanId = -1 * aNodes.length - 1;
+        var sanId = 0;
         aNodes.forEach(function (an) {
             nodes.filter(function (n) {
                 return n.analysis === an.uuid;
             }).forEach(function (n) {
                 if (!an.children.has(n.subanalysis)) {
-                    var i = 0;
-                    var san = createSubanalysisNode(sanId, an, i, n.subanalysis);
+                    var san = createSubanalysisNode(sanId, an, n.subanalysis);
                     saNodes.push(san);
                     an.children.set(n.subanalysis, san);
-                    sanId--;
-                    i++;
+                    sanId++;
                 }
             });
         });

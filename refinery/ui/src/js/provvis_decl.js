@@ -16,15 +16,15 @@ var provvisDecl = function () {
     var BaseNode = function (id, nodeType, parent, doi, hidden) {
         this.id = id;
         this.nodeType = nodeType;
+        this.parent = parent;
+        this.doi = doi;
+        this.hidden = hidden;
+
         this.preds = d3.map();
         this.succs = d3.map();
         this.predLinks = d3.map();
         this.succLinks = d3.map();
-        this.parent = parent;
         this.children = d3.map();
-
-        this.doi = doi;
-        this.hidden = hidden;
         this.col = -1;
         this.row = -1;
         this.x = -1;
@@ -53,12 +53,9 @@ var provvisDecl = function () {
      * @param analysis
      * @param subanalysis
      * @param uuid
-     * @param rowBK
-     * @param bcOrder
-     * @param isBlockRoot
      * @constructor
      */
-    var Node = function (id, nodeType, parent, doi, hidden, name, fileType, study, assay, parents, analysis, subanalysis, uuid, rowBK, bcOrder, isBlockRoot) {
+    var Node = function (id, nodeType, parent, doi, hidden, name, fileType, study, assay, parents, analysis, subanalysis, uuid) {
         BaseNode.call(this, id, nodeType, parent, doi, hidden);
 
         this.name = name;
@@ -68,11 +65,11 @@ var provvisDecl = function () {
         this.parents = parents;
         this.analysis = analysis;
         this.subanalysis = subanalysis;
-
         this.uuid = uuid;
-        this.rowBK = rowBK;
-        this.bcOrder = bcOrder;
-        this.isBlockRoot = isBlockRoot;
+
+        this.rowBK = {left: -1, right: -1};
+        this.bcOrder = -1;
+        this.isBlockRoot = false;
     };
 
     Node.prototype = Object.create(BaseNode.prototype);
@@ -82,7 +79,6 @@ var provvisDecl = function () {
      * Constructor function for the analysis node data structure.
      *
      * @param id
-     * @param nodeType
      * @param parent
      * @param doi
      * @param hidden
@@ -94,8 +90,8 @@ var provvisDecl = function () {
      * @param created
      * @constructor
      */
-    var Analysis = function (id, nodeType, parent, doi, hidden, uuid, wfUuid, analysis, start, end, created) {
-        BaseNode.call(this, id, nodeType, parent, doi, hidden);
+    var Analysis = function (id, parent, doi, hidden, uuid, wfUuid, analysis, start, end, created) {
+        BaseNode.call(this, id, "analysis", parent, doi, hidden);
 
         this.uuid = uuid;
         this.wfUuid = wfUuid;
@@ -103,6 +99,7 @@ var provvisDecl = function () {
         this.start = start;
         this.end = end;
         this.created = created;
+
         this.inputs = d3.map();
         this.outputs = d3.map();
         this.links = d3.map();
@@ -115,27 +112,21 @@ var provvisDecl = function () {
      * Constructor function for the subanalysis node data structure.
      *
      * @param id
-     * @param nodeType
      * @param parent
      * @param doi
      * @param hidden
-     * @param sanId
      * @param subanalysis
-     * @param inputs
-     * @param outputs
-     * @param isOutputAnalysis
      * @constructor
      */
-    var Subanalysis = function (id, nodeType, parent, doi, hidden, sanId, subanalysis, inputs, outputs, isOutputAnalysis) {
-        BaseNode.call(this, id, nodeType, parent, doi, hidden);
+    var Subanalysis = function (id, parent, doi, hidden, subanalysis) {
+        BaseNode.call(this, id, "subanalysis", parent, doi, hidden);
 
-        this.sanId = sanId;
         this.subanalysis = subanalysis;
-        this.inputs = inputs;
-        this.outputs = outputs;
-        this.links = d3.map();
 
-        this.isOutputAnalysis = isOutputAnalysis;
+        this.inputs = d3.map();
+        this.outputs = d3.map();
+        this.links = d3.map();
+        this.isOutputAnalysis = false;
     };
 
     Subanalysis.prototype = Object.create(BaseNode.prototype);

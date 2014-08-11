@@ -713,7 +713,7 @@ var provvisLayout = function () {
                     nodes.push(new provvisDecl.Node(newNodeId + i, "dummy", curParent, -1, false,
                             "dummyNode-" + (newNodeId + i), "dummy", curStudy, curAssay,
                         (i === 0) ? [l.source.uuid] : ["dummyNode-" + predNodeId], curAnalysis, curSubanalysis,
-                            "dummyNode-" + (newNodeId + i), {left: -1, right: -1}, -1, false));
+                            "dummyNode-" + (newNodeId + i)));
                     nodes[newNodeId + i].col = curCol + 1;
                     predNodeId = newNodeId + i;
                     curCol++;
