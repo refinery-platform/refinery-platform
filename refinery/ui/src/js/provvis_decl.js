@@ -149,8 +149,8 @@ var provvisDecl = function () {
             type0: false,
             type1: false};
 
-        BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
-        this.autoId = BaseNode.numInstances;
+        Link.numInstances = (Link.numInstances || 0) + 1;
+        this.autoId = Link.numInstances;
     };
 
     /**
