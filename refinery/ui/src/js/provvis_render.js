@@ -82,11 +82,10 @@ var provvisRender = function () {
                 coords = {x: -1, y: -1};
 
             while (cur.hidden) {
-                cur = cur.parent.autoId;
+                cur = cur.parent;
             }
             coords.x = cur.x;
             coords.y = cur.y;
-
             return coords;
         };
 
