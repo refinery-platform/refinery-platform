@@ -72,15 +72,20 @@ var provvisRender = function () {
     var updateLink = function (dom, n, x, y) {
         /* Drag adjacent links. */
 
-        var getNodeCoords = function (nodeId) {
-            var curId = nodeId,
+        /**
+         * Get x and y coords for BaseNode which is not hidden.
+         * @param d Node.
+         * @returns {{x: number, y: number}} X and y coordinates of node.
+         */
+        var getNodeCoords = function (d) {
+            var cur = d,
                 coords = {x: -1, y: -1};
 
-            while (nodes[curId].hidden) {
-                curId = nodes[curId].parent.id;
+            while (cur.hidden) {
+                cur = cur.parent.id;
             }
-            coords.x = nodes[curId].x;
-            coords.y = nodes[curId].y;
+            coords.x = cur.x;
+            coords.y = cur.y;
 
             return coords;
         };
@@ -88,7 +93,7 @@ var provvisRender = function () {
         /* Get input links and update coordinates for x2 and y2. */
         n.predLinks.values().forEach(function (l) {
             d3.selectAll("#linkId-" + l.id + ", #hLinkId-" + l.id).attr("d", function (l) {
-                var srcCoords = getNodeCoords(l.source.id),
+                var srcCoords = getNodeCoords(l.source),
                     pathSegment = " M" + srcCoords.x + "," + srcCoords.y;
 
                 if (Math.abs(srcCoords.x - x) > cell.width) {
@@ -103,7 +108,7 @@ var provvisRender = function () {
         /* Get output links and update coordinates for x1 and y1. */
         n.succLinks.values().forEach(function (l) {
             d3.selectAll("#linkId-" + l.id + ", #hLinkId-" + l.id).attr("d", function (l) {
-                var tarCoords = getNodeCoords(l.target.id),
+                var tarCoords = getNodeCoords(l.target),
                     pathSegment = " M" + parseInt(x, 10) + "," + parseInt(y, 10);
 
                 if (Math.abs(x - tarCoords.x) > cell.width) {
