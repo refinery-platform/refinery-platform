@@ -72,7 +72,7 @@ var provvisInit = function () {
             /* Extract node properties from api. */
             nodes.push(createNode(n, nodeType, i));
 
-            /* Build node hashes. */
+            /* Build node hash. */
             nodeMap.set(n.uuid, nodes[i]);
         });
     };
@@ -351,9 +351,9 @@ var provvisInit = function () {
         });
 
         /* Add subanalysis to nodes collection. */
-        saNodes.forEach(function (san) {
-            nodes[san.id] = san;
-        });
+        /* saNodes.forEach(function (san) {
+         nodes[san.id] = san;
+         });*/
 
         /* Analysis. */
         aNodes.forEach(function (an) {
@@ -403,9 +403,9 @@ var provvisInit = function () {
         });
 
         /* Add to nodes. */
-        aNodes.forEach(function (an, i) {
-            nodes[-i - 1] = aNodes[i];
-        });
+        /*aNodes.forEach(function (an, i) {
+         nodes[-i - 1] = aNodes[i];
+         });*/
 
         /* Set predLinks and succLinks. */
         aNodes.forEach(function (an) {

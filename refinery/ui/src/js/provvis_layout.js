@@ -49,6 +49,7 @@ var provvisLayout = function () {
         newNode.rowBK.right = node.rowBK.right;
         newNode.subanalysis = node.subanalysis;
         newNode.parent = node.parent;
+        newNode.autoId = node.autoId;
 
         return newNode;
     };
