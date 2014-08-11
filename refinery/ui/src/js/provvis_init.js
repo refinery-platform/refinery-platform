@@ -212,10 +212,10 @@ var provvisInit = function () {
     var createAnalysisNode = function (a, i) {
         if (i === -1) {
             return new provvisDecl.Analysis(-i - 2, "analysis", Object.create(null), -1, true, "dataset", "noworkflow",
-                0, -1, -1, -1, d3.map(), d3.map(), d3.map());
+                0, -1, -1, -1);
         } else {
             return new provvisDecl.Analysis(-i - 2, "analysis", Object.create(null), -1, true, a.uuid,
-                a.workflow__uuid, i + 1, a.time_start, a.time_end, a.creation_date, d3.map(), d3.map(), d3.map());
+                a.workflow__uuid, i + 1, a.time_start, a.time_end, a.creation_date);
         }
     };
 
@@ -231,7 +231,6 @@ var provvisInit = function () {
 
         /* Create remaining analyses. */
         analysesData.forEach(function (a, i) {
-
             aNodes.push(createAnalysisNode(a, i));
             analysisWorkflowMap.set(a.uuid, a.workflow__uuid);
         });

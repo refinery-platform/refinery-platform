@@ -92,12 +92,9 @@ var provvisDecl = function () {
      * @param start
      * @param end
      * @param created
-     * @param inputs
-     * @param outputs
-     * @param links
      * @constructor
      */
-    var Analysis = function (id, nodeType, parent, doi, hidden, uuid, wfUuid, analysis, start, end, created, inputs, outputs, links) {
+    var Analysis = function (id, nodeType, parent, doi, hidden, uuid, wfUuid, analysis, start, end, created) {
         BaseNode.call(this, id, nodeType, parent, doi, hidden);
 
         this.uuid = uuid;
@@ -106,9 +103,9 @@ var provvisDecl = function () {
         this.start = start;
         this.end = end;
         this.created = created;
-        this.inputs = inputs;
-        this.outputs = outputs;
-        this.links = links;
+        this.inputs = d3.map();
+        this.outputs = d3.map();
+        this.links = d3.map();
     };
 
     Analysis.prototype = Object.create(BaseNode.prototype);

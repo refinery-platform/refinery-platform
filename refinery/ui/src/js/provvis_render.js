@@ -314,9 +314,10 @@ var provvisRender = function () {
      */
     var drawSubanalysisNodes = function () {
         analysis.each(function (d, i) {
+            var analysisId = d3.select(this).attr("id");
             d3.select(this).selectAll(".saNode")
                 .data(saNodes.filter(function (san) {
-                    return san.parent.id == -i - 1;
+                    return san.parent.autoId === +analysisId.replace(/(analysisId-)/g, "");
                 }))
                 .enter().append("g").each(function (san) {
                     d3.select(this).classed({"saNode": true})
@@ -370,9 +371,10 @@ var provvisRender = function () {
      */
     var drawAnalysisNodes = function () {
         analysis.each(function (d, i) {
+            var analysisId = d3.select(this).attr("id");
             d3.select(this).selectAll(".aNode")
                 .data(aNodes.filter(function (an) {
-                    return an.id == -i - 1;
+                    return an.autoId === +analysisId.replace(/(analysisId-)/g, "");
                 }))
                 .enter().append("g").each(function (an) {
                     d3.select(this).classed({"aNode": true})
@@ -428,10 +430,11 @@ var provvisRender = function () {
      * Draw nodes.
      */
     var drawNodes = function () {
-        analysis.each(function (a, i) {
+        analysis.each(function () {
+            var analysisId = d3.select(this).attr("id");
             d3.select(this).selectAll(".node")
                 .data(nodes.filter(function (n) {
-                    return n.analysis === nodes[-i - 1].uuid;
+                    return n.parent.parent.autoId === +analysisId.replace(/(analysisId-)/g, "");
                 }))
                 .enter().append("g").style("display", function (d) {
                     return d.hidden ? "none" : "inline";
@@ -868,19 +871,16 @@ var provvisRender = function () {
     };
 
     /**
-     * Creates analysis group dom elements which then contain the nodes and links of an analysis.
+     * Creates analysis group dom elements which then contain the nodes of an analysis.
      */
     var createAnalysisLayers = function () {
-        var aId = -1;
-
         /* Add analyses dom groups. */
-        aNodes.forEach(function () {
+        aNodes.forEach(function (an) {
             vis.canvas.append("g")
                 .classed("analysis", true)
                 .attr("id", function () {
-                    return "aId-" + aId;
+                    return "analysisId-" + an.autoId;
                 });
-            aId--;
         });
         analysis = d3.selectAll(".analysis");
     };
