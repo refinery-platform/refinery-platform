@@ -892,7 +892,7 @@ var provvisLayout = function () {
 
     /* TODO: PROTOTYPE: Code cleanup. */
     /**
-     * Sort output nodes by sub-analysis and analysis.
+     * Sort output nodes by subanalysis and analysis.
      * Secondly, the distance for every pair of analyses (which are part of the graphs outputnodes) are computed
      * and prioritized to be aligned together in the most-right and fixed layer of the graph.
      * @returns {Array} The sorted array of output nodes.
@@ -906,7 +906,7 @@ var provvisLayout = function () {
 
         /* Set analyses as output analyses. */
         oNodes.forEach(function (n) {
-            /* Set sub-analysis as output. */
+            /* Set subanalysis as output. */
             n.parent.isOutputAnalysis = true;
         });
 
@@ -970,7 +970,7 @@ var provvisLayout = function () {
             curDist--;
         };
 
-        /* Each output subanalysis then has its path length to another output sub-analysis. */
+        /* Each output subanalysis then has its path length to another output subanalysis. */
         var getNeighbors = function (ar, i) {
             var curMin = d3.max(ar),
                 indices = [];
@@ -988,7 +988,7 @@ var provvisLayout = function () {
             return indices;
         };
 
-        /* For each neighbors of an output sub-analysis, cluster them with the connecting output subanalyses. */
+        /* For each neighbors of an output subanalysis, cluster them with the connecting output subanalyses. */
         var computeClusters = function () {
             saNodes.filter(function (d) {
                 return d.isOutputAnalysis;
@@ -1002,7 +1002,7 @@ var provvisLayout = function () {
             });
         };
 
-        /* Every output sub-analysis has its nearest neighbors. */
+        /* Every output subanalysis has its nearest neighbors. */
         var setPriorities = function () {
             var setSa = function (sa, i, j) {
                 clusters[i].forEach(function (d, k) {
@@ -1018,7 +1018,7 @@ var provvisLayout = function () {
             });
         };
 
-        /* Iterate over output sub-analysis and insert it directly after its nearest neighbor.*/
+        /* Iterate over output subanalysis and insert it directly after its nearest neighbor.*/
         var insertSorted = function (ar, sa) {
             var tail = [];
             var bla = "";
@@ -1047,7 +1047,7 @@ var provvisLayout = function () {
             }
         };
 
-        /* Traverse back and forth to find distance with path hops between sub-analyses. */
+        /* Traverse back and forth to find distance with path hops between subanalyses. */
         var findConnections = function () {
             saNodes.forEach(function (sani) {
                 curDist++;
@@ -1064,7 +1064,7 @@ var provvisLayout = function () {
         };
 
         var reorderOutputNodes = function () {
-            /* Set dataset sub-analyses without any successor analyses. */
+            /* Set dataset subanalyses without any successor analyses. */
             saNodes.filter(function (sa) {
                 return sa.isOutputAnalysis;
             }).filter(function (sa) {
@@ -1324,7 +1324,7 @@ var provvisLayout = function () {
         depth = graph.depth;
         grid = graph.grid;
 
-        /* Group output nodes by sub-analysis and analysis. */
+        /* Group output nodes by subanalysis and analysis. */
         oNodes = sortOutputNodes();
 
         /* Topological order. */

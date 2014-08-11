@@ -238,7 +238,7 @@ var provvisInit = function () {
     };
 
     /**
-     * Create sub-analysis node.
+     * Create subanalysis node.
      * @param sanId Subanalysis id.
      * @param an Analysis.
      * @param i Index.
@@ -254,9 +254,9 @@ var provvisInit = function () {
      */
     var createAnalysisNodeMapping = function () {
 
-        /* Sub-analysis. */
+        /* subanalysis. */
 
-        /* Create sub-analysis node. */
+        /* Create subanalysis node. */
         var sanId = -1 * aNodes.length - 1;
         aNodes.forEach(function (an) {
             nodes.filter(function (n) {
@@ -282,7 +282,7 @@ var provvisInit = function () {
                 san.children.set(cn.autoId, cn);
             });
 
-            /* Set sub-analysis parent for nodes. */
+            /* Set subanalysis parent for nodes. */
             san.children.values().forEach(function (n) {
                 n.parent = san;
             });
@@ -442,7 +442,7 @@ var provvisInit = function () {
             return a.status === "SUCCESS";
         }));
 
-        /* Divide dataset and analyses into sub-analyses. */
+        /* Divide dataset and analyses into subanalyses. */
         markSubanalyses();
 
         /* Create analysis node mapping. */

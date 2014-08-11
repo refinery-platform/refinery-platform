@@ -152,6 +152,9 @@ var provvisRender = function () {
         updateLink(d3.select(this), n, n.x, n.y);
     };
 
+
+    /* TODO: Unify drag behavior for BaseNode extended constructor function. */
+
     /**
      * Sets the drag events for nodes.
      */
@@ -302,7 +305,7 @@ var provvisRender = function () {
     };
 
     /**
-     * Draw sub-analysis nodes.
+     * Draw subanalysis nodes.
      */
     var drawSubanalysisNodes = function () {
         analysis.each(function (d, i) {
@@ -813,7 +816,7 @@ var provvisRender = function () {
 
     /* TODO: Dynamic layout compensation. */
     /**
-     * Create initial layout for sub-analysis only nodes.
+     * Create initial layout for subanalysis only nodes.
      */
     var initSubanalysisLayout = function () {
         var firstLayer = 0;
@@ -916,10 +919,10 @@ var provvisRender = function () {
             /* Draw nodes. */
             drawNodes();
 
-            /* Create initial layout for sub-analysis only nodes. */
+            /* Create initial layout for subanalysis only nodes. */
             initSubanalysisLayout();
 
-            /* Draw sub-analysis nodes. */
+            /* Draw subanalysis nodes. */
             drawSubanalysisNodes();
 
             /* Create initial layout for analysis only nodes. */
@@ -941,7 +944,7 @@ var provvisRender = function () {
             /* Add dragging behavior to analysis nodes. */
             applyAnalysisDragBehavior();
 
-            /* Add dragging behavior to sub-analysis nodes. */
+            /* Add dragging behavior to subanalysis nodes. */
             applySubanalysisDragBehavior();
 
             /* Event listeners. */

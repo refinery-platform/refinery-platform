@@ -115,7 +115,7 @@ var provvisDecl = function () {
     Analysis.prototype.constructor = Analysis;
 
     /**
-     * Constructor function for the sub-analysis node data structure.
+     * Constructor function for the subanalysis node data structure.
      *
      * @param id
      * @param nodeType
