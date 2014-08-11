@@ -210,13 +210,8 @@ var provvisInit = function () {
      * @returns {provvisDecl.Analysis} New Analysis object.
      */
     var createAnalysisNode = function (a, i) {
-        if (i === -1) {
-            return new provvisDecl.Analysis(-i - 2, "analysis", Object.create(null), -1, true, "dataset", "noworkflow",
-                0, -1, -1, -1);
-        } else {
-            return new provvisDecl.Analysis(-i - 2, "analysis", Object.create(null), -1, true, a.uuid,
-                a.workflow__uuid, i + 1, a.time_start, a.time_end, a.creation_date);
-        }
+        return new provvisDecl.Analysis(i, "analysis", Object.create(null), -1, true, a.uuid,
+            a.workflow__uuid, i + 1, a.time_start, a.time_end, a.creation_date);
     };
 
     /**
@@ -226,12 +221,13 @@ var provvisInit = function () {
     var extractAnalyses = function (analysesData) {
 
         /* Create analysis for dataset. */
-        aNodes.push(createAnalysisNode(null, -1));
+        aNodes.push(new provvisDecl.Analysis(0, "analysis", Object.create(null), -1, true, "dataset", "noworkflow",
+            0, -1, -1, -1));
         analysisWorkflowMap.set("dataset", "noworkflow");
 
         /* Create remaining analyses. */
         analysesData.forEach(function (a, i) {
-            aNodes.push(createAnalysisNode(a, i));
+            aNodes.push(createAnalysisNode(a, i + 1));
             analysisWorkflowMap.set(a.uuid, a.workflow__uuid);
         });
     };

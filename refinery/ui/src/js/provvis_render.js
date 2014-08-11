@@ -156,9 +156,6 @@ var provvisRender = function () {
         updateLink(d3.select(this), n, n.x, n.y);
     };
 
-
-    /* TODO: Unify drag behavior for BaseNode extended constructor function. */
-
     /**
      * Sets the drag events for nodes.
      */
@@ -170,37 +167,7 @@ var provvisRender = function () {
             .on("dragend", dragEnd);
 
         /* Invoke dragging behavior on nodes. */
-        d3.selectAll(".node").call(drag);
-    };
-
-    /**
-     * Sets the drag events for analysis nodes.
-     */
-    var applyAnalysisDragBehavior = function () {
-
-        /* Drag and drop node enabled. */
-        var analysisDrag = d3.behavior.drag()
-            .on("dragstart", dragStart)
-            .on("drag", dragging)
-            .on("dragend", dragEnd);
-
-        /* Invoke dragging behavior on nodes. */
-        d3.selectAll(".aNode").call(analysisDrag);
-    };
-
-    /**
-     * Sets the drag events for sub-nalysis nodes.
-     */
-    var applySubanalysisDragBehavior = function () {
-
-        /* Drag and drop node enabled. */
-        var subanalysisDrag = d3.behavior.drag()
-            .on("dragstart", dragStart)
-            .on("drag", dragging)
-            .on("dragend", dragEnd);
-
-        /* Invoke dragging behavior on nodes. */
-        d3.selectAll(".saNode").call(subanalysisDrag);
+        d3.selectAll(".node, .aNode, .saNode").call(drag);
     };
 
     /**
@@ -932,12 +899,6 @@ var provvisRender = function () {
 
             /* Add dragging behavior to nodes. */
             applyDragBehavior();
-
-            /* Add dragging behavior to analysis nodes. */
-            applyAnalysisDragBehavior();
-
-            /* Add dragging behavior to subanalysis nodes. */
-            applySubanalysisDragBehavior();
 
             /* Event listeners. */
             $(function () {

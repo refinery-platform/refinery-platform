@@ -796,10 +796,7 @@ var provvisLayout = function () {
     var createReducedGraph = function () {
         var graphSkeleton = [];
 
-        /* Do not consider analysis and subanalysis nodes. */
-        nodes.filter(function (n) {
-            return n.id >= 0;
-        }).forEach(function (n) {
+        nodes.forEach(function (n) {
             var nodePreds = [];
             n.preds.values().forEach(function (pp) {
                 nodePreds.push(pp.id);
