@@ -139,8 +139,7 @@
 
                 $('a[data-toggle="pill"]').on('shown', function (event) {
                     if (event.target.href.split("#")[1] === "provenance-view-tab") {
-                        //runProvenanceVisualization( currentStudyUuid );
-                        provvis.runProvVis(currentStudyUuid);
+                        provvis.runProvVis(currentStudyUuid, analyses.objects);
                     }
                 })
 

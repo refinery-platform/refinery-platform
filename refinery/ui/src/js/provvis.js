@@ -14,9 +14,13 @@ var provvis = function () {
     /**
      * Refinery injection for the provenance visualization.
      * @param studyUuid The serialized unique identifier referencing a study.
+     * @param studyAnalyses Analyses objects from the refinery scope.
      */
-    var runProvVisPrivate = function (studyUuid) {
-        var url = "/api/v1/node?study__uuid=" + studyUuid + "&format=json&limit=0";
+    var runProvVisPrivate = function (studyUuid, studyAnalyses) {
+        var url = "/api/v1/node?study__uuid=" + studyUuid + "&format=json&limit=0",
+            analysesData = studyAnalyses.filter(function (a) {
+                return a.status === "SUCCESS";
+            });
 
         /* Parse json. */
         d3.json(url, function (error, data) {
@@ -75,7 +79,7 @@ var provvis = function () {
                 .classed("brect", true);
 
             /* Extract graph data. */
-            vis.graph = provvisInit.runInit(data);
+            vis.graph = provvisInit.runInit(data, analysesData);
 
             /* Compute layout. */
             provvisLayout.runLayout(vis.graph);
@@ -89,8 +93,8 @@ var provvis = function () {
      * Publish module function.
      */
     return{
-        runProvVis: function (studyUuid) {
-            runProvVisPrivate(studyUuid);
+        runProvVis: function (studyUuid, studyAnalyses) {
+            runProvVisPrivate(studyUuid, studyAnalyses);
         }
     };
 }();

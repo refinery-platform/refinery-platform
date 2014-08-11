@@ -350,11 +350,6 @@ var provvisInit = function () {
             });
         });
 
-        /* Add subanalysis to nodes collection. */
-        /* saNodes.forEach(function (san) {
-         nodes[san.id] = san;
-         });*/
-
         /* Analysis. */
         aNodes.forEach(function (an) {
 
@@ -402,11 +397,6 @@ var provvisInit = function () {
             });
         });
 
-        /* Add to nodes. */
-        /*aNodes.forEach(function (an, i) {
-         nodes[-i - 1] = aNodes[i];
-         });*/
-
         /* Set predLinks and succLinks. */
         aNodes.forEach(function (an) {
             an.inputs.values().forEach(function (ain) {
@@ -423,7 +413,7 @@ var provvisInit = function () {
     };
 
     /* Main init function. */
-    var runInitPrivate = function (data) {
+    var runInitPrivate = function (data, analysesData) {
         /* Extract raw objects. */
         var obj = d3.entries(data)[1];
 
@@ -437,9 +427,7 @@ var provvisInit = function () {
         createNodeLinkMapping();
 
         /* Create analysis nodes. */
-        extractAnalyses(analyses.objects.filter(function (a) {
-            return a.status === "SUCCESS";
-        }));
+        extractAnalyses(analysesData);
 
         /* Divide dataset and analyses into subanalyses. */
         markSubanalyses();
@@ -455,8 +443,8 @@ var provvisInit = function () {
      * Publish module function.
      */
     return{
-        runInit: function (data) {
-            return runInitPrivate(data);
+        runInit: function (data, analysesData) {
+            return runInitPrivate(data, analysesData);
         }
     };
 }();
