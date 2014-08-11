@@ -268,9 +268,7 @@ var provvisRender = function () {
      */
     var drawLinks = function () {
         link = vis.canvas.append("g").classed({"links": true}).selectAll(".link")
-            .data(links.filter(function (l) {
-                return l !== null && typeof l !== "undefined";
-            }))
+            .data(links)
             .enter().append("path")
             .attr("d", function (l) {
                 var pathSegment = " M" + parseInt(l.source.x, 10) + "," + parseInt(l.source.y, 10);
@@ -506,7 +504,7 @@ var provvisRender = function () {
                 n.children.values().forEach(function (cn) {
                     cn.hidden = true;
                     d3.select("#nodeId-" + cn.autoId).style("display", "none");
-                    if (typeof cn.children !== "undefined")
+                    if (!cn.children.empty())
                         hideChildNodes(cn);
                 });
             };
@@ -720,9 +718,7 @@ var provvisRender = function () {
     var drawHighlightingShapes = function () {
 
         hLink = vis.canvas.append("g").classed({"hLinks": true}).selectAll(".hLink")
-            .data(links.filter(function (l) {
-                return l !== null && typeof l !== "undefined";
-            }))
+            .data(links)
             .enter().append("path")
             .attr("d", function (l) {
                 var pathSegment = " M" + parseInt(l.source.x, 10) + "," + parseInt(l.source.y, 10);
@@ -792,13 +788,11 @@ var provvisRender = function () {
                 rootCol = an.succs.values()[0].inputs.values()[0].col;
 
                 an.succs.values().forEach(function (san) {
-                    if (typeof san !== "undefined" && san !== null) {
-                        san.inputs.values().forEach(function (sanIn) {
-                            if (sanIn.col + 1 > rootCol) {
-                                rootCol = sanIn.col + 1;
-                            }
-                        });
-                    }
+                    san.inputs.values().forEach(function (sanIn) {
+                        if (sanIn.col + 1 > rootCol) {
+                            rootCol = sanIn.col + 1;
+                        }
+                    });
                 });
             } else {
                 if (an.outputs.size() > 0) {
@@ -830,13 +824,11 @@ var provvisRender = function () {
                 rootCol = san.succs.values()[0].inputs.values()[0].col;
 
                 san.succs.forEach(function (sasn) {
-                    if (typeof sasn !== "undefined" && sasn !== null) {
-                        sasn.inputs.values().forEach(function (sasnIn) {
-                            if (sasnIn.col + 1 > rootCol) {
-                                rootCol = sasnIn.col + 1;
-                            }
-                        });
-                    }
+                    sasn.inputs.values().forEach(function (sasnIn) {
+                        if (sasnIn.col + 1 > rootCol) {
+                            rootCol = sasnIn.col + 1;
+                        }
+                    });
                 });
             } else {
                 if (san.outputs.size() > 0) {
