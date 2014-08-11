@@ -13,11 +13,7 @@ var provvisLayout = function () {
         grid = [];
 
     var nodes = [],
-        links = [],
-        iNodes = [],
-        oNodes = [],
-        aNodes = [],
-        saNodes = [];
+        links = [];
 
     /**
      * Deep copy node data structure.
@@ -813,9 +809,10 @@ var provvisLayout = function () {
 
     /**
      * Reduces the collection of output nodes to an object only containing id, preds and succs.
+     * @param oNodes Output nodes.
      * @returns {Array} Returns a reduced collection of output nodes.
      */
-    var createReducedOutputNodes = function () {
+    var createReducedOutputNodes = function (oNodes) {
         var outputNodesSkeleton = [];
 
         oNodes.forEach(function (n) {
@@ -831,15 +828,16 @@ var provvisLayout = function () {
     /* TODO: Revise topsort. */
     /**
      * Linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
+     * @param oNodes Output nodes.
      * @returns {*} If graph is acyclic, returns null; else returns topology sorted array of nodes.
      */
-    var sortTopological = function () {
+    var sortTopological = function (oNodes) {
         var s = [], /* Input set. */
             l = [], /* Result set for sorted elements. */
             t = [], /* Deep copy nodes, because we have to delete links from the graph. */
             n = Object.create(null);
 
-        s = createReducedOutputNodes();
+        s = createReducedOutputNodes(oNodes);
         t = createReducedGraph();
 
         /* To avoid definition of function in while loop below (added by NG). */
@@ -893,9 +891,11 @@ var provvisLayout = function () {
      * Sort output nodes by subanalysis and analysis.
      * Secondly, the distance for every pair of analyses (which are part of the graphs outputnodes) are computed
      * and prioritized to be aligned together in the most-right and fixed layer of the graph.
+     * @param oNodes Output nodes.
+     * @param saNodes Subanalysis nodes.
      * @returns {Array} The sorted array of output nodes.
      */
-    var sortOutputNodes = function () {
+    var sortOutputNodes = function (oNodes, saNodes) {
 
         /* Sort output nodes. */
         oNodes.sort(function (a, b) {
@@ -1165,8 +1165,9 @@ var provvisLayout = function () {
 
     /**
      * Compress analysis horizontally.
+     * @param aNodes Analysis nodes.
      */
-    var horizontalAnalysisAlignment = function () {
+    var horizontalAnalysisAlignment = function (aNodes) {
         aNodes.forEach(function (an) {
 
             var maxOutput = d3.max(an.outputs.values(), function (d) {
@@ -1220,8 +1221,9 @@ var provvisLayout = function () {
 
     /**
      * Analyses without successor analyses are shifted left.
+     * @param aNodes Analysis nodes.
      */
-    var leftShiftAnalysis = function () {
+    var leftShiftAnalysis = function (aNodes) {
         aNodes.forEach(function (an) {
 
             var leftMostInputCol = d3.max(an.inputs.values(), function (ain) {
@@ -1295,12 +1297,14 @@ var provvisLayout = function () {
 
     /**
      * Optimize layout.
+     * @param saNodes Subanalysis nodes.
+     * @param aNodes Analysis nodes.
      */
-    var postprocessLayout = function () {
+    var postprocessLayout = function (saNodes, aNodes) {
 
-        horizontalAnalysisAlignment();
+        horizontalAnalysisAlignment(saNodes);
 
-        leftShiftAnalysis();
+        leftShiftAnalysis(aNodes);
 
         createNodeGrid();
 
@@ -1310,23 +1314,23 @@ var provvisLayout = function () {
         /* TODO: Form classes for blocks and rearrange analysis. */
     };
 
+    /**
+     * Main layout module function.
+     * @param graph The main graph object of the provenance visualization.
+     */
     var runLayoutPrivate = function (graph) {
         nodes = graph.nodes;
         links = graph.links;
-        iNodes = graph.iNodes;
-        oNodes = graph.oNodes;
-        aNodes = graph.aNodes;
-        saNodes = graph.saNodes;
 
         width = graph.width;
         depth = graph.depth;
         grid = graph.grid;
 
         /* Group output nodes by subanalysis and analysis. */
-        oNodes = sortOutputNodes();
+        graph.oNodes = sortOutputNodes(graph.oNodes, graph.saNodes);
 
         /* Topological order. */
-        var topNodes = sortTopological();
+        var topNodes = sortTopological(graph.oNodes);
         if (topNodes !== null) {
             /* Assign layers. */
             assignLayers(topNodes);
@@ -1335,7 +1339,7 @@ var provvisLayout = function () {
             addDummyNodes();
 
             /* Recalculate layers including dummy nodes. */
-            topNodes = sortTopological();
+            topNodes = sortTopological(graph.oNodes);
             assignLayers(topNodes);
 
             /* Group nodes by layer. */
@@ -1349,14 +1353,10 @@ var provvisLayout = function () {
 
             /* TODO: Revise postprocessing. */
             /* Optimize layout. */
-            postprocessLayout();
+            postprocessLayout(graph.saNodes, graph.aNodes);
 
             graph.nodes = nodes;
             graph.links = links;
-            graph.iNodes = iNodes;
-            graph.oNodes = oNodes;
-            graph.aNodes = aNodes;
-            graph.saNodes = saNodes;
 
             graph.width = width;
             graph.depth = depth;

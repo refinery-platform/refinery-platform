@@ -5,7 +5,6 @@
  * @exports runProvVis The published function to run the visualization.
  */
 
-/* TODO: Refactor negative subanalysis and analysis ids. */
 /* TODO: Refactor ids in general and completely switch to Node.autoId. */
 /* TODO: Refactor nodes, links, aNodes, saNodes, iNodes and oNodes to d3.maps(). */
 

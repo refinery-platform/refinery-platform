@@ -68,11 +68,12 @@ var provvisInit = function () {
             /* Assign class string for node types. */
             var nodeType = assignNodeType(n.type);
 
-            /* Extract node properties from api. */
-            nodes.push(createNode(n, nodeType, i));
+            /* Extract node properties from api and create Node. */
+            var newNode = createNode(n, nodeType, i);
+            nodes.push(newNode);
 
             /* Build node hash. */
-            nodeMap.set(n.uuid, nodes[i]);
+            nodeMap.set(n.uuid, newNode);
         });
     };
 
@@ -404,7 +405,12 @@ var provvisInit = function () {
         });
     };
 
-    /* Main init function. */
+    /**
+     * Main init module function.
+     * @param data Dataset holding the information for nodes and links.
+     * @param analysesData Collection holding the information for analysis - node mapping.
+     * @returns {provvisDecl.ProvGraph} The main graph object of the provenance visualization.
+     */
     var runInitPrivate = function (data, analysesData) {
         /* Extract raw objects. */
         var obj = d3.entries(data)[1];

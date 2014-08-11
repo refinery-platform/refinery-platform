@@ -19,10 +19,6 @@ var provvisRender = function () {
 
     var nodes = [],
         links = [],
-        iNodes = [],
-        oNodes = [],
-        aNodes = [],
-        saNodes = [],
 
         analysisWorkflowMap = d3.map(),
 
@@ -275,8 +271,9 @@ var provvisRender = function () {
 
     /**
      * Draw subanalysis nodes.
+     * @param saNodes Subanalysis nodes.
      */
-    var drawSubanalysisNodes = function () {
+    var drawSubanalysisNodes = function (saNodes) {
         analysis.each(function (d, i) {
             var analysisId = d3.select(this).attr("id");
             d3.select(this).selectAll(".saNode")
@@ -332,8 +329,9 @@ var provvisRender = function () {
 
     /**
      * Draw analysis nodes.
+     * @param aNodes Analysis nodes.
      */
-    var drawAnalysisNodes = function () {
+    var drawAnalysisNodes = function (aNodes) {
         analysis.each(function (d, i) {
             var analysisId = d3.select(this).attr("id");
             d3.select(this).selectAll(".aNode")
@@ -744,8 +742,9 @@ var provvisRender = function () {
     /* TODO: Dynamic layout compensation. */
     /**
      * Create initial layout for analysis only nodes.
+     * @param aNodes Analysis nodes.
      */
-    var initAnalysisLayout = function () {
+    var initAnalysisLayout = function (aNodes) {
         var firstLayer = 0;
 
         aNodes.forEach(function (an) {
@@ -781,8 +780,9 @@ var provvisRender = function () {
     /* TODO: Dynamic layout compensation. */
     /**
      * Create initial layout for subanalysis only nodes.
+     * @param saNodes Subanalysis nodes.
      */
-    var initSubanalysisLayout = function () {
+    var initSubanalysisLayout = function (saNodes) {
         var firstLayer = 0;
         saNodes.forEach(function (san) {
             var rootCol;
@@ -826,8 +826,9 @@ var provvisRender = function () {
 
     /**
      * Creates analysis group dom elements which then contain the nodes of an analysis.
+     * @param aNodes Analysis nodes.
      */
-    var createAnalysisLayers = function () {
+    var createAnalysisLayers = function (aNodes) {
         /* Add analyses dom groups. */
         aNodes.forEach(function (an) {
             vis.canvas.append("g")
@@ -839,6 +840,10 @@ var provvisRender = function () {
         analysis = d3.selectAll(".analysis");
     };
 
+    /**
+     * Main render module function.
+     * @param provVis The provenance visualization root object.
+     */
     var runRenderPrivate = function (provVis) {
         /* Save vis object to module scope. */
         vis = provVis;
@@ -846,10 +851,6 @@ var provvisRender = function () {
 
         nodes = vis.graph.nodes;
         links = vis.graph.links;
-        iNodes = vis.graph.iNodes;
-        oNodes = vis.graph.oNodes;
-        aNodes = vis.graph.aNodes;
-        saNodes = vis.graph.saNodes;
 
         analysisWorkflowMap = vis.graph.analysisWorkflowMap;
 
@@ -873,22 +874,23 @@ var provvisRender = function () {
             drawLinks();
 
             /* Create analysis group layers. */
-            createAnalysisLayers();
+            createAnalysisLayers(vis.graph.aNodes);
 
             /* Draw nodes. */
             drawNodes();
 
-            /* Create initial layout for subanalysis only nodes. */
-            initSubanalysisLayout();
 
+            /* Create initial layout for subanalysis only nodes. */
+            initSubanalysisLayout(vis.graph.saNodes);
             /* Draw subanalysis nodes. */
-            drawSubanalysisNodes();
+            drawSubanalysisNodes(vis.graph.saNodes);
+
 
             /* Create initial layout for analysis only nodes. */
-            initAnalysisLayout();
-
+            initAnalysisLayout(vis.graph.aNodes);
             /* Draw analysis nodes. */
-            drawAnalysisNodes();
+            drawAnalysisNodes(vis.graph.aNodes);
+
 
             /* Set initial graph position. */
             fitGraphToWindow(0);
