@@ -34,7 +34,6 @@ var provvisDecl = function () {
         this.autoId = BaseNode.numInstances;
 
         /* TODO: Group layout specific properties into sub-property. */
-        /* TODO: Properties not set initially should be removed from the constructor interface. */
     };
 
     /**

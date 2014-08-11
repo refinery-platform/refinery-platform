@@ -458,7 +458,6 @@ var provvisRender = function () {
             .on("mouseout", tip.hide);
     };
 
-    /* TODO: IN PROGRESS. */
     /**
      * Sets the visibility of links and (a)nodes when collapsing or expanding analyses.
      */
@@ -546,7 +545,6 @@ var provvisRender = function () {
                 /* Clear any highlighting. */
                 clearHighlighting();
 
-                /* TODO: Create CSS-classes for highlighted cells to manipulate on highlighting. */
                 if (d3.event.ctrlKey) {
 
                     /* Highlight path. */

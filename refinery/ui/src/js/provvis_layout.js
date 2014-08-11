@@ -16,41 +16,6 @@ var provvisLayout = function () {
         links = [];
 
     /**
-     * Deep copy node data structure.
-     * @param node Node object.
-     * @returns {{name: string, nodeType: string, fileType: string, uuid: string, study: string, assay: string, row: number, col: number, parents: Array, id: number, doi: number, hidden: boolean, bcOrder: number, x: number, y: number, rowBK: {left: number, right: number}, isBlockRoot: boolean, subanalysis: number, parent: {}}}
-     */
-    var copyNode = function (node) {
-        var newNode = {name: "", nodeType: "", fileType: "", uuid: "", study: "", assay: "", row: -1, col: -1, parents: [], id: -1, doi: -1, hidden: true, bcOrder: -1, x: 0, y: 0, rowBK: {left: -1, right: -1}, isBlockRoot: false, subanalysis: -1, parent: {}};
-
-        newNode.name = node.name;
-        newNode.nodeType = node.nodeType;
-        newNode.fileType = node.fileType;
-        newNode.uuid = node.uuid;
-        newNode.study = node.study;
-        newNode.assay = node.assay;
-        newNode.row = node.row;
-        newNode.col = node.col;
-        newNode.id = node.id;
-        node.parents.forEach(function (p, i) {
-            newNode.parents[i] = p;
-        });
-        newNode.analysis = node.analysis;
-        newNode.doi = node.doi;
-        newNode.hidden = node.hidden;
-        newNode.bcOrder = node.bcOrder;
-        newNode.x = node.x;
-        newNode.y = node.y;
-        newNode.rowBK.left = node.rowBK.left;
-        newNode.rowBK.right = node.rowBK.right;
-        newNode.subanalysis = node.subanalysis;
-        newNode.parent = node.parent;
-        newNode.autoId = node.autoId;
-
-        return newNode;
-    };
-
-    /**
      * Maps the column/row index to nodes.
      */
     var createNodeGrid = function () {
@@ -63,39 +28,35 @@ var provvisLayout = function () {
         }
 
         nodes.forEach(function (n) {
-            grid[n.col][n.row] = n.id;
+            grid[n.col][n.row] = n;
         });
     };
 
     /**
      * Group nodes by layers into a 2d array.
-     * @param tNodes Topological sorted nodes.
+     * @param topNodes Topological sorted nodes.
      * @returns {Array} Layer grouped array of nodes.
      */
-    var groupNodesByCol = function (tNodes) {
+    var groupNodesByLayer = function (topNodes) {
         var layer = firstLayer,
-            cgtNodes = [],
-            rtNodes = [];
+            lgNodes = []; /* Layer-grouped and topology sorted nodes. */
 
-        tNodes.forEach(function (d) {
-            rtNodes.push(copyNode(nodes[d.id]));
-        });
-
-        cgtNodes.push([]);
+        lgNodes.push([]);
         var k = 0;
-        rtNodes.forEach(function (n) {
+        topNodes.forEach(function (n) {
             if (nodes[n.id].col === layer) {
-                cgtNodes[k].push(nodes[n.id]);
+                lgNodes[k].push(nodes[n.id]);
             } else if (nodes[n.id].col < layer) {
-                cgtNodes[nodes[n.id].col].push(nodes[n.id]);
+                lgNodes[nodes[n.id].col].push(nodes[n.id]);
             } else {
                 k++;
                 layer++;
-                cgtNodes.push([]);
-                cgtNodes[k].push(nodes[n.id]);
+                lgNodes.push([]);
+                lgNodes[k].push(nodes[n.id]);
             }
         });
-        return cgtNodes;
+
+        return lgNodes;
     };
 
     /**
@@ -105,7 +66,7 @@ var provvisLayout = function () {
     var initRowPlacementLeft = function (lgNodes) {
         lgNodes.forEach(function (lg) {
             lg.forEach(function (n, i) {
-                nodes[n.id].rowBK.left = i;
+                n.rowBK.left = i;
             });
         });
     };
@@ -118,7 +79,7 @@ var provvisLayout = function () {
 
         lgNodes.forEach(function (lg) {
             lg.forEach(function (n, i) {
-                nodes[n.id].rowBK.right = depth - lg.length + i;
+                n.rowBK.right = depth - lg.length + i;
             });
         });
     };
@@ -143,19 +104,19 @@ var provvisLayout = function () {
                     var degree = 1,
                         accRows = 0;
 
-                    if (!nodes[n.id].succs.empty()) {
-                        degree = nodes[n.id].succs.size();
-                        nodes[n.id].succs.values().forEach(function (s) {
-                            accRows += (s.rowBK.left + 1);
+                    if (!n.succs.empty()) {
+                        degree = n.succs.size();
+                        n.succs.values().forEach(function (sn) {
+                            accRows += (sn.rowBK.left + 1);
                         });
                     }
 
                     /* If any node within the layer has the same barycenter value, increase it by a small value. */
                     if (usedCoords.indexOf(accRows / degree) === -1) {
-                        nodes[n.id].bcOrder = accRows / degree;
+                        n.bcOrder = accRows / degree;
                         usedCoords.push(accRows / degree);
                     } else {
-                        nodes[n.id].bcOrder = accRows / degree + delta;
+                        n.bcOrder = accRows / degree + delta;
                         usedCoords.push(accRows / degree + delta);
                         delta += 0.01;
                     }
@@ -171,12 +132,12 @@ var provvisLayout = function () {
 
                 /* Init most right layer as fixed. */
                 if (i === firstLayer) {
-                    nodes[n.id].bcOrder = j + 1;
-                    barycenterOrderedNodes[firstLayer][j] = nodes[n.id];
+                    n.bcOrder = j + 1;
+                    barycenterOrderedNodes[firstLayer][j] = n;
 
                     /* Set earlier computed bcOrder. */
                 } else {
-                    barycenterOrderedNodes[i][j] = nodes[n.id];
+                    barycenterOrderedNodes[i][j] = n;
                 }
             });
 
@@ -187,10 +148,9 @@ var provvisLayout = function () {
 
             /* Set row attribute after sorting. */
             barycenterOrderedNodes[i].forEach(function (n, k) {
-                nodes[n.id].rowBK.left = k;
-                nodes[n.id].rowBK.right = width - barycenterOrderedNodes[i].length + k;
+                n.rowBK.left = k;
+                n.rowBK.right = width - barycenterOrderedNodes[i].length + k;
             });
-
         });
 
         return barycenterOrderedNodes;
@@ -209,7 +169,7 @@ var provvisLayout = function () {
                 /* Mark links as Neighbors:
                  the exact median if the length of successor nodes is odd,
                  else the middle two. */
-                var succs = nodes[bclgNodes[l][i].id].succLinks.values();
+                var succs = bclgNodes[l][i].succLinks.values();
                 if (succs.length !== 0) {
                     if (succs.length % 2 === 0) {
                         links[succs[parseInt(succs.length / 2 - 1, 10)].id].l.neighbor = true;
@@ -250,8 +210,8 @@ var provvisLayout = function () {
             });
         };
 
-        var mapSuccsToIds = function (nodeId) {
-            return nodes[nodeId].succLinks.values().map(function (n) {
+        var mapSuccsToIds = function (d) {
+            return d.succLinks.values().map(function (n) {
                 return n.id;
             });
         };
@@ -314,7 +274,7 @@ var provvisLayout = function () {
                         for (m; m > 0; m--) {
                             if (m < i) {
                                 /* Get successors for m */
-                                btUpSuccs = mapSuccsToIds(bclgNodes[upl][m].id).filter(filterNeighbors);
+                                btUpSuccs = mapSuccsToIds(bclgNodes[upl][m]).filter(filterNeighbors);
                                 backtrackUpCrossings();
                             }
                         }
@@ -337,7 +297,7 @@ var provvisLayout = function () {
                     iCur = i;
 
                     /* Crossing successor links. */
-                    upSuccs = mapSuccsToIds(bclgNodes[upl][i].id).filter(filterNeighbors);
+                    upSuccs = mapSuccsToIds(bclgNodes[upl][i]).filter(filterNeighbors);
                     markUpCrossings();
                 }
                 i++;
@@ -374,8 +334,8 @@ var provvisLayout = function () {
             });
         };
 
-        var mapSuccsToIds = function (nodeId) {
-            return nodes[nodeId].succLinks.values().map(function (n) {
+        var mapSuccsToIds = function (d) {
+            return d.succLinks.values().map(function (n) {
                 return n.id;
             });
         };
@@ -439,7 +399,7 @@ var provvisLayout = function () {
                         for (m; m < bclgNodes[upl][i].length; m++) {
                             if (m > i) {
                                 /* Get successors for m */
-                                btUpSuccs = mapSuccsToIds(bclgNodes[upl][m].id).filter(filterNeighbors);
+                                btUpSuccs = mapSuccsToIds(bclgNodes[upl][m]).filter(filterNeighbors);
                                 backtrackUpCrossings();
                             }
                         }
@@ -461,7 +421,7 @@ var provvisLayout = function () {
                     iCur = i;
 
                     /* Crossing successor links. */
-                    upSuccs = mapSuccsToIds(bclgNodes[upl][i].id).filter(filterNeighbors);
+                    upSuccs = mapSuccsToIds(bclgNodes[upl][i]).filter(filterNeighbors);
                     markUpCrossings();
                 }
                 i--;
@@ -509,14 +469,14 @@ var provvisLayout = function () {
             return links[value].l.neighbor ? true : false;
         };
 
-        var createSuccs = function (nodeId) {
-            return nodes[nodeId].succLinks.values().map(function (n) {
+        var createSuccs = function (d) {
+            return d.succLinks.values().map(function (n) {
                 return n.id;
             });
         };
 
-        var createPreds = function (nodeId) {
-            return nodes[nodeId].predLinks.values().map(function (n) {
+        var createPreds = function (d) {
+            return d.predLinks.values().map(function (n) {
                 return n.id;
             });
         };
@@ -527,29 +487,29 @@ var provvisLayout = function () {
          * if node is root, iterate through block and place nodes into rows. */
         for (var l = 0; l < bclgNodes.length; l++) {
             for (var i = 0; i < bclgNodes[l].length; i++) {
-                var succs = createSuccs(bclgNodes[l][i].id).filter(isBlockRoot);
+                var succs = createSuccs(bclgNodes[l][i]).filter(isBlockRoot);
 
                 if (succs.length === 0) {
-                    nodes[bclgNodes[l][i].id].isBlockRoot = true;
+                    bclgNodes[l][i].isBlockRoot = true;
 
                     /* Follow path through Neighbors in predecessors and set row to root row. */
-                    var rootRow = alignment === "left" ? nodes[bclgNodes[l][i].id].rowBK.left : nodes[bclgNodes[l][i].id].rowBK.right,
+                    var rootRow = alignment === "left" ? bclgNodes[l][i].rowBK.left : bclgNodes[l][i].rowBK.right,
                         curLink = -1,
-                        curNodeId = bclgNodes[l][i].id;
+                        curNode = bclgNodes[l][i];
 
                     /* Traverse. */
                     while (curLink !== -2) {
-                        curLink = createPreds(curNodeId).filter(filterNeighbor);
+                        curLink = createPreds(curNode).filter(filterNeighbor);
                         if (curLink.length === 0) {
                             curLink = -2;
                         } else {
                             /* Greedy choice for Neighbor when there exist two. */
                             if (alignment === "left") {
                                 links[curLink[0]].source.rowBK.left = rootRow;
-                                curNodeId = links[curLink[0]].source.id;
+                                curNode = links[curLink[0]].source;
                             } else {
                                 links[curLink[curLink.length - 1]].source.rowBK.right = rootRow;
-                                curNodeId = links[curLink[curLink.length - 1]].source.id;
+                                curNode = links[curLink[curLink.length - 1]].source;
                             }
                         }
                     }
@@ -567,19 +527,19 @@ var provvisLayout = function () {
             lg.forEach(function (n) {
                 var rootRow = -1;
 
-                if (nodes[n.id].isBlockRoot) {
-                    var curNode = n.id,
-                        minRow = Math.min(nodes[curNode].rowBK.left, nodes[curNode].rowBK.right),
-                        delta = Math.abs(nodes[curNode].rowBK.left - nodes[curNode].rowBK.right) / 2;
+                if (n.isBlockRoot) {
+                    var curNode = n,
+                        minRow = Math.min(curNode.rowBK.left, curNode.rowBK.right),
+                        delta = Math.abs(curNode.rowBK.left - curNode.rowBK.right) / 2;
 
                     rootRow = Math.round(minRow + delta);
 
-                    while (!nodes[curNode].preds.empty()) {
-                        nodes[curNode].row = rootRow;
-                        curNode = nodes[curNode].preds.values()[0].id;
+                    while (!curNode.preds.empty()) {
+                        curNode.row = rootRow;
+                        curNode = curNode.preds.values()[0];
                     }
-                    if (nodes[curNode].preds.empty()) {
-                        nodes[curNode].row = rootRow;
+                    if (curNode.preds.empty()) {
+                        curNode.row = rootRow;
                     }
                 }
             });
@@ -832,9 +792,9 @@ var provvisLayout = function () {
      * @returns {*} If graph is acyclic, returns null; else returns topology sorted array of nodes.
      */
     var sortTopological = function (oNodes) {
-        var s = [], /* Input set. */
+        var s = [], /* Copy of output nodes array. */
             l = [], /* Result set for sorted elements. */
-            t = [], /* Deep copy nodes, because we have to delete links from the graph. */
+            t = [], /* Copy nodes array, because we have to delete links from the graph. */
             n = Object.create(null);
 
         s = createReducedOutputNodes(oNodes);
@@ -1185,28 +1145,27 @@ var provvisLayout = function () {
 
                     /* Get first node for this block. */
                     var curBlockNode = curNode;
-                    while (nodes[curBlockNode.id].preds.size() === 1 &&
-                        nodes[curBlockNode.id].preds.values()[0].analysis === an.uuid &&
-                        nodes[curBlockNode.id].preds.values()[0].col - curBlockNode.col === 1) {
-                        curBlockNode = nodes[curBlockNode.id].preds.values()[0];
+                    while (curBlockNode.preds.size() === 1 &&
+                        curBlockNode.preds.values()[0].analysis === an.uuid &&
+                        curBlockNode.preds.values()[0].col - curBlockNode.col === 1) {
+                        curBlockNode = curBlockNode.preds.values()[0];
                     }
 
                     /* When pred for leading block node is of the same analysis. */
                     while (curNode.col < maxOutput &&
-                        nodes[curBlockNode.id].preds.size() === 1 &&
-                        nodes[curBlockNode.id].preds.values()[0].analysis === an.uuid &&
-                        nodes[curNode.id].preds.size() === 1) {
-                        var predNode = nodes[curNode.id].preds.values()[0];
+                        curBlockNode.preds.size() === 1 &&
+                        curBlockNode.preds.values()[0].analysis === an.uuid &&
+                        curNode.preds.size() === 1) {
+                        var predNode = curNode.preds.values()[0];
                         if (predNode.col - curNode.col > 1) {
 
                             var shiftCurNode = curNode,
                                 colShift = maxOutput + j;
-                            var bla = curNode;
 
                             /* Shift the gap to align with the maximum output column of this analysis. */
                             while (shiftCurNode !== ano) {
                                 shiftCurNode.col = colShift;
-                                shiftCurNode = nodes[shiftCurNode.id].succs.values()[0];
+                                shiftCurNode = shiftCurNode.succs.values()[0];
                                 colShift--;
                             }
                             ano.col = colShift;
@@ -1233,7 +1192,7 @@ var provvisLayout = function () {
 
 
             an.inputs.values().forEach(function (ain) {
-                var curMin = d3.min(nodes[ain.id].preds.values(),
+                var curMin = d3.min(ain.preds.values(),
                     function (ainpn) {
                         return ainpn.col;
                     });
@@ -1259,11 +1218,11 @@ var provvisLayout = function () {
         /* Iterate from right to left, column-wise. */
 
         var isAnotherAnalysis = function (sn) {
-            return sn.analysis !== nodes[grid[i][j]].analysis;
+            return sn.analysis !== grid[i][j].analysis;
         };
 
-        var getMedianRow = function (nid) {
-            var medianRow = nodes[nid].succs.values().sort(function (a, b) {
+        var getMedianRow = function (d) {
+            var medianRow = d.succs.values().sort(function (a, b) {
                 return a.row - b.row;
             }).map(function (n) {
                 return n.row;
@@ -1273,22 +1232,22 @@ var provvisLayout = function () {
 
         for (var i = 0; i < depth; i++) {
             for (var j = 0; j < width; j++) {
-                if (grid[i][j] !== "undefined" && nodes[grid[i][j]].succs.size() > 1 && nodes[grid[i][j]].succs.values().some(isAnotherAnalysis)) {
+                if (grid[i][j] !== "undefined" && grid[i][j].succs.size() > 1 && grid[i][j].succs.values().some(isAnotherAnalysis)) {
 
                     /* Within this analysis and for each predecessor, traverse back and shift rows. */
                     var newRow = getMedianRow(grid[i][j]),
                         curNode = grid[i][j];
 
-                    while (nodes[curNode].preds.size() === 1) {
+                    while (curNode.preds.size() === 1) {
                         grid[i][j] = "undefined";
                         grid[i][newRow] = curNode;
-                        nodes[curNode].row = newRow;
-                        curNode = nodes[curNode].preds.values()[0].id;
+                        curNode.row = newRow;
+                        curNode = curNode.preds.values()[0];
                     }
-                    if (nodes[curNode].preds.empty()) {
+                    if (curNode.preds.empty()) {
                         grid[i][j] = "undefined";
                         grid[i][newRow] = curNode;
-                        nodes[curNode].row = newRow;
+                        curNode.row = newRow;
                     }
                 }
             }
@@ -1343,10 +1302,10 @@ var provvisLayout = function () {
             assignLayers(topNodes);
 
             /* Group nodes by layer. */
-            var layeredTopNodes = groupNodesByCol(topNodes);
+            var lgNodes = groupNodesByLayer(topNodes);
 
             /* Place vertices. */
-            computeLayout(layeredTopNodes);
+            computeLayout(lgNodes);
 
             /* Restore original dataset. */
             removeDummyNodes();
