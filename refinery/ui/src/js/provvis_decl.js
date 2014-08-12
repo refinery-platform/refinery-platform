@@ -4,20 +4,61 @@
 var provvisDecl = function () {
 
     /**
+     * Constructor function representing the degree-of-interest (DOI) components for BaseNode.
+     * @constructor
+     */
+    var DoiComponents = function () {
+        this.time = "";
+        this.change = {wfParams: d3.map(), files: d3.map(), topology: d3.map()};
+        this.relationship = Object.create(null);
+
+        this.filtered = false;
+        this.searched = false;
+        this.highlighted = false;
+        this.selected = false;
+        this.dragged = false;
+        this.expanded = false;
+        this.collapsed = false;
+        this.alligned = false;
+        this.aggregated = false;
+        this.layered = false;
+        this.stratified = false;
+
+        this.distFactor = -1;
+
+        this.doiMinMax = -1;
+        this.doiWeightedSum = -1;
+    };
+
+    /**
+     * Calculates the dominant doi component.
+     */
+    DoiComponents.prototype.computeMinMax = function () {
+        /* TODO: Based on heuristics, find dominant component.*/
+        this.doiMinMax = -1;
+    };
+
+    /**
+     * Calculates a weighted doi value among all doi components considering component weights.
+     */
+    DoiComponents.prototype.computeWeightedSum = function () {
+        /* TODO: Specify component weights within method params and compute a mean among all components. */
+        this.doiWeightedSum = -1;
+    };
+
+    /**
      * Constructor function of the super node inherited by Node, Analysis and Subanalysis.
      *
      * @param id
      * @param nodeType
      * @param parent
-     * @param doi
      * @param hidden
      * @constructor
      */
-    var BaseNode = function (id, nodeType, parent, doi, hidden) {
+    var BaseNode = function (id, nodeType, parent, hidden) {
         this.id = id;
         this.nodeType = nodeType;
         this.parent = parent;
-        this.doi = doi;
         this.hidden = hidden;
 
         this.preds = d3.map();
@@ -33,6 +74,8 @@ var provvisDecl = function () {
         BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
         this.autoId = BaseNode.numInstances;
 
+        this.doi = new DoiComponents();
+
         /* TODO: Group layout specific properties into sub-property. */
     };
 
@@ -42,7 +85,6 @@ var provvisDecl = function () {
      * @param id
      * @param nodeType
      * @param parent
-     * @param doi
      * @param hidden
      * @param name
      * @param fileType
@@ -54,8 +96,8 @@ var provvisDecl = function () {
      * @param uuid
      * @constructor
      */
-    var Node = function (id, nodeType, parent, doi, hidden, name, fileType, study, assay, parents, analysis, subanalysis, uuid) {
-        BaseNode.call(this, id, nodeType, parent, doi, hidden);
+    var Node = function (id, nodeType, parent, hidden, name, fileType, study, assay, parents, analysis, subanalysis, uuid) {
+        BaseNode.call(this, id, nodeType, parent, hidden);
 
         this.name = name;
         this.fileType = fileType;
@@ -79,7 +121,6 @@ var provvisDecl = function () {
      *
      * @param id
      * @param parent
-     * @param doi
      * @param hidden
      * @param uuid
      * @param wfUuid
@@ -89,8 +130,8 @@ var provvisDecl = function () {
      * @param created
      * @constructor
      */
-    var Analysis = function (id, parent, doi, hidden, uuid, wfUuid, analysis, start, end, created) {
-        BaseNode.call(this, id, "analysis", parent, doi, hidden);
+    var Analysis = function (id, parent, hidden, uuid, wfUuid, analysis, start, end, created) {
+        BaseNode.call(this, id, "analysis", parent, hidden);
 
         this.uuid = uuid;
         this.wfUuid = wfUuid;
@@ -112,13 +153,12 @@ var provvisDecl = function () {
      *
      * @param id
      * @param parent
-     * @param doi
      * @param hidden
      * @param subanalysis
      * @constructor
      */
-    var Subanalysis = function (id, parent, doi, hidden, subanalysis) {
-        BaseNode.call(this, id, "subanalysis", parent, doi, hidden);
+    var Subanalysis = function (id, parent, hidden, subanalysis) {
+        BaseNode.call(this, id, "subanalysis", parent, hidden);
 
         this.subanalysis = subanalysis;
 
@@ -220,6 +260,7 @@ var provvisDecl = function () {
      * Publish constructor function declarations.
      */
     return {
+        DoiComponents: DoiComponents,
         BaseNode: BaseNode,
         Node: Node,
         Analysis: Analysis,

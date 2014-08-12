@@ -666,7 +666,7 @@ var provvisLayout = function () {
                 /* Insert Nodes. */
                 var i = 0;
                 while (i < gapLength - 1) {
-                    nodes.push(new provvisDecl.Node(newNodeId + i, "dummy", curParent, -1, false,
+                    nodes.push(new provvisDecl.Node(newNodeId + i, "dummy", curParent, false,
                             "dummyNode-" + (newNodeId + i), "dummy", curStudy, curAssay,
                         (i === 0) ? [l.source.uuid] : ["dummyNode-" + predNodeId], curAnalysis, curSubanalysis,
                             "dummyNode-" + (newNodeId + i)));
