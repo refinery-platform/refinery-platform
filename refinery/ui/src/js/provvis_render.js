@@ -194,32 +194,30 @@ var provvisRender = function () {
     /**
      * Get predecessing nodes for highlighting the path by the current node selection.
      * @param n BaseNode extending constructor function.
-     * @param highlighted A Boolean flag whether path should be highlighted or not.
      */
-    var highlightPredPath = function (n, highlighted) {
+    var highlightPredPath = function (n) {
         while (n.hidden) {
             n = n.parent;
         }
         /* Get svg link element, and for each predecessor call recursively. */
         n.predLinks.values().forEach(function (l) {
             d3.select("#hLinkId-" + l.autoId).style("display", "inline");
-            highlightPredPath(l.source, highlighted);
+            highlightPredPath(l.source);
         });
     };
 
     /**
      * Get succeeding nodes for highlighting the path by the current node selection.
      * @param n BaseNode extending constructor function.
-     * @param highlighted A Boolean flag whether path should be highlighted or not.
      */
-    var highlightSuccPath = function (n, highlighted) {
+    var highlightSuccPath = function (n) {
         while (n.hidden) {
             n = n.parent;
         }
         /* Get svg link element, and for each successor call recursively. */
         n.succLinks.values().forEach(function (l) {
             d3.select("#hLinkId-" + l.autoId).style("display", "inline");
-            highlightSuccPath(l.target, highlighted);
+            highlightSuccPath(l.target);
         });
     };
 
@@ -537,7 +535,6 @@ var provvisRender = function () {
         d3.selectAll(".node, .aNode, .saNode").on("click", function (x) {
 
             if (d3.event.ctrlKey || d3.event.shiftKey) {
-                var highlighted = true;
 
                 /* Suppress after dragend. */
                 if (d3.event.defaultPrevented) return;
@@ -548,11 +545,11 @@ var provvisRender = function () {
                 if (d3.event.ctrlKey) {
 
                     /* Highlight path. */
-                    highlightSuccPath(x, highlighted);
+                    highlightSuccPath(x);
                 } else if (d3.event.shiftKey) {
 
                     /* Highlight path. */
-                    highlightPredPath(x, highlighted);
+                    highlightPredPath(x);
                 }
             }
         });
