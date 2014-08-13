@@ -232,12 +232,19 @@ var provvisRender = function () {
             .data(links)
             .enter().append("path")
             .attr("d", function (l) {
-                var pathSegment = " M" + parseInt(l.source.x, 10) + "," + parseInt(l.source.y, 10);
-                if (Math.abs(l.source.x - l.target.x) > cell.width) {
+                /*var pathSegment = " M" + parseInt(l.source.x, 10) + "," + parseInt(l.source.y, 10);
+                 if (Math.abs(l.source.x - l.target.x) > cell.width) {
                     pathSegment = pathSegment.concat(" L" + parseInt(l.source.x + (cell.width)) + "," + parseInt(l.target.y, 10) + " H" + parseInt(l.target.x, 10));
                 } else {
                     pathSegment = pathSegment.concat(" L" + parseInt(l.target.x, 10) + "," + parseInt(l.target.y, 10));
                 }
+                 return pathSegment;*/
+
+                var pathSegment = "M" + l.source.x + "," + l.source.y;
+                pathSegment = pathSegment.concat(" C" + (l.source.x + cell.width / 3) + "," + (l.source.y) + " " +
+                    (l.source.x + cell.width / 2) + "," + (l.source.y + (l.target.y - l.source.y) / 2) + " " +
+                    "T" + (l.source.x + cell.width) + "," + l.target.y) +
+                    " H" + l.target.x;
                 return pathSegment;
             })
             .classed({
