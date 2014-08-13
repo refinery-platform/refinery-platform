@@ -241,7 +241,7 @@ var provvisRender = function () {
                  return pathSegment;*/
 
                 var pathSegment = "M" + l.source.x + "," + l.source.y;
-                pathSegment = pathSegment.concat(" C" + (l.source.x + cell.width / 3) + "," + (l.source.y) + " " +
+                pathSegment = pathSegment.concat(" Q" + (l.source.x + cell.width / 3) + "," + (l.source.y) + " " +
                     (l.source.x + cell.width / 2) + "," + (l.source.y + (l.target.y - l.source.y) / 2) + " " +
                     "T" + (l.source.x + cell.width) + "," + l.target.y) +
                     " H" + l.target.x;
