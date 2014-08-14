@@ -236,12 +236,13 @@ var provvisDecl = function () {
      * @param aNodes
      * @param saNodes
      * @param analysisWorkflowMap
+     * @param nodeMap
      * @param width
      * @param depth
      * @param grid
      * @constructor
      */
-    var ProvGraph = function (nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, width, depth, grid) {
+    var ProvGraph = function (nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, width, depth, grid) {
         this.nodes = nodes;
         this.links = links;
         this.iNodes = iNodes;
@@ -250,6 +251,7 @@ var provvisDecl = function () {
         this.saNodes = saNodes;
 
         this.analysisWorkflowMap = analysisWorkflowMap;
+        this.nodeMap = nodeMap;
 
         this.width = width;
         this.depth = depth;

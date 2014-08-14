@@ -434,7 +434,7 @@ var provvisInit = function () {
         createAnalysisNodeMapping();
 
         /* Create graph. */
-        return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, 0, 0, []);
+        return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, 0, 0, []);
     };
 
     /**

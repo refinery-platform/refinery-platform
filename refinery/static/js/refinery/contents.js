@@ -141,7 +141,6 @@
 
                 $('a[data-toggle="pill"]').on('shown', function (event) {
                     if (event.target.href.split("#")[1] === "provenance-view-tab") {
-                        console.log(provvis.getProvVis() instanceof provvisDecl.ProvVis === false);
                         if (provvis.getProvVis() instanceof provvisDecl.ProvVis === false) {
                             provvis.runProvVis(currentStudyUuid, analyses.objects);
                         } else {

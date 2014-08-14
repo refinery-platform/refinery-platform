@@ -1,6 +1,8 @@
 /**
  * Module for render.
  */
+
+/* TODO: Tooltips like in solr_pivot_matrix.js. */
 var provvisRender = function () {
 
     var vis = Object.create(null),
@@ -942,14 +944,34 @@ var provvisRender = function () {
         }, 500);
     };
 
+    /* TODO: PROTOTYPE: Quick implementation. */
     /**
      * On attribute filter change, the provenance visualization will be updated.
      * @param vis The provenance visualization root object.
      * @param solrResponse Query response object holding information about attribute filter changed.
      */
     var runRenderUpdatePrivate = function (vis, solrResponse) {
-        console.log(vis);
-        console.log(solrResponse);
+
+        nodes.forEach(function (n) {
+            n.hidden = true;
+            d3.select("#nodeId-" + n.autoId).style("display", "none");
+        });
+        links.forEach(function (l) {
+            l.hidden = true;
+            d3.select("#linkId-" + l.autoId).style("display", "none");
+        });
+
+        solrResponse.getDocumentList().forEach(function (d) {
+            var selNode = vis.graph.nodeMap.get(d.uuid);
+            selNode.parent.children.values().forEach(function (cn) {
+                cn.hidden = false;
+                d3.select("#nodeId-" + cn.autoId).style("display", "inline");
+            });
+            selNode.parent.links.values().forEach(function (cl) {
+                cl.hidden = false;
+                d3.select("#linkId-" + cl.autoId).style("display", "inline");
+            });
+        });
     };
 
     /**
