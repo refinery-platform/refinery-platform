@@ -42,6 +42,8 @@
 
         var showAnnotation = false;
 
+        var provVisView = Object.create(null);
+
         configurator.initialize(function () {
             query = new SolrQuery(configurator, queryCommands);
             query.initialize();
@@ -211,6 +213,11 @@
                     pivotMatrixView.updateMatrix(arguments.response);
                 }
 
+                provVisView = provvis.getProvVis();
+                if (provVisView instanceof provvisDecl.ProvVis === true) {
+                    /* TODO: Update Provenance Visualization by filtered nodeset. */
+                    provVisView.runRenderUpdate(vis, arguments.response);
+                }
             });
 
             documentTableCommands.addHandler(SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, function (arguments) {

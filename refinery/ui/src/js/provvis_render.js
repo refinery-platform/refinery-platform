@@ -234,10 +234,10 @@ var provvisRender = function () {
             .attr("d", function (l) {
                 /*var pathSegment = " M" + parseInt(l.source.x, 10) + "," + parseInt(l.source.y, 10);
                  if (Math.abs(l.source.x - l.target.x) > cell.width) {
-                    pathSegment = pathSegment.concat(" L" + parseInt(l.source.x + (cell.width)) + "," + parseInt(l.target.y, 10) + " H" + parseInt(l.target.x, 10));
-                } else {
-                    pathSegment = pathSegment.concat(" L" + parseInt(l.target.x, 10) + "," + parseInt(l.target.y, 10));
-                }
+                 pathSegment = pathSegment.concat(" L" + parseInt(l.source.x + (cell.width)) + "," + parseInt(l.target.y, 10) + " H" + parseInt(l.target.x, 10));
+                 } else {
+                 pathSegment = pathSegment.concat(" L" + parseInt(l.target.x, 10) + "," + parseInt(l.target.y, 10));
+                 }
                  return pathSegment;*/
 
                 var pathSegment = "M" + l.source.x + "," + l.source.y;
@@ -440,28 +440,35 @@ var provvisRender = function () {
         /* Set node dom element. */
         node = d3.selectAll(".node");
 
+        /* */
         /* Create d3-tip tooltips. */
-        var tip = d3.tip()
-            .attr("class", "d3-tip")
-            .offset([-10, 0])
-            .html(function (d) {
-                return "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.autoId + "</span><br>" +
-                    "<strong>Name:</strong> <span style='color:#fa9b30'>" + d.name + "</span><br>" +
-                    "<strong>Sub Analysis:</strong> <span style='color:#fa9b30'>" + d.subanalysis + "</span><br>" +
-                    "<strong>Sub Analysis Id:</strong> <span style='color:#fa9b30'>" + d.parent.autoId + "</span><br>" +
-                    "<strong>Analysis Id:</strong> <span style='color:#fa9b30'>" + d.parent.parent.autoId + "</span><br>" +
-                    "<strong>Type:</strong> <span style='color:#fa9b30'>" + d.fileType + "</span><br>" +
-                    "<strong>Row:</strong> <span style='color:#fa9b30'>" + d.row + "</span><br>" +
-                    "<strong>RowBK left:</strong> <span style='color:#fa9b30'>" + d.rowBK.left + "</span><br>" +
-                    "<strong>Col:</strong> <span style='color:#fa9b30'>" + d.col + "</span><br>" +
-                    "<strong>BCOrder:</strong> <span style='color:#fa9b30'>" + d.bcOrder + "</span>";
-            });
+        /*
+         var tip = d3.tip()
+         .attr("class", "d3-tip")
+         .offset([-10, 0])
+         .html(function (d) {
+         return "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.autoId + "</span><br>" +
+         "<strong>Name:</strong> <span style='color:#fa9b30'>" + d.name + "</span><br>" +
+         "<strong>Sub Analysis:</strong> <span style='color:#fa9b30'>" + d.subanalysis + "</span><br>" +
+         "<strong>Sub Analysis Id:</strong> <span style='color:#fa9b30'>" + d.parent.autoId + "</span><br>" +
+         "<strong>Analysis Id:</strong> <span style='color:#fa9b30'>" + d.parent.parent.autoId + "</span><br>" +
+         "<strong>Type:</strong> <span style='color:#fa9b30'>" + d.fileType + "</span><br>" +
+         "<strong>Row:</strong> <span style='color:#fa9b30'>" + d.row + "</span><br>" +
+         "<strong>RowBK left:</strong> <span style='color:#fa9b30'>" + d.rowBK.left + "</span><br>" +
+         "<strong>Col:</strong> <span style='color:#fa9b30'>" + d.col + "</span><br>" +
+         "<strong>BCOrder:</strong> <span style='color:#fa9b30'>" + d.bcOrder + "</span>";
+         });
 
+         */
         /* Invoke tooltip on dom element. */
-        node.call(tip);
-        node.on("mouseover", tip.show)
-            .on("mouseout", tip.hide);
+        /*
+         node.call(tip);
+         node.on("mouseover", tip.show)
+         .on("mouseout", tip.hide);*/
+
+
     };
+
 
     /**
      * Sets the visibility of links and (a)nodes when collapsing or expanding analyses.
@@ -728,6 +735,17 @@ var provvisRender = function () {
      */
     var handleEvents = function () {
 
+        function showTooltip(label, event) {
+            tooltip.html(label);
+            tooltip.style("visibility", "visible");
+            tooltip.style("top", (event.pageY - 10) + "px");
+            tooltip.style("left", (event.pageX + 10) + "px");
+        }
+
+        function hideTooltip() {
+            tooltip.style("visibility", "hidden");
+        }
+
         /* Path highlighting. */
         handlePathHighlighting();
 
@@ -737,6 +755,15 @@ var provvisRender = function () {
         /* TODO: Minimize layout through minimizing analyses - adapt to collapse/expand. */
         /* Handle analysis aggregation. */
         handleCollapseExpandNode();
+
+        d3.selectAll(".node").on("mouseover", function (p) {
+
+            showTooltip(p.name, event);
+        }).on("mousemove", function (p) {
+            showTooltip(p.name, event);
+        }).on("mouseout", function (p) {
+            hideTooltip();
+        });
 
         /* TODO: On click on node, enlarge shape to display more info. */
     };
@@ -916,11 +943,23 @@ var provvisRender = function () {
     };
 
     /**
+     * On attribute filter change, the provenance visualization will be updated.
+     * @param vis The provenance visualization root object.
+     * @param solrResponse Query response object holding information about attribute filter changed.
+     */
+    var runRenderUpdatePrivate = function (vis, solrResponse) {
+        console.log(vis);
+        console.log(solrResponse);
+    };
+
+    /**
      * Publish module function.
      */
     return{
         runRender: function (vis) {
             runRenderPrivate(vis);
+        }, runRenderUpdate: function (vis, solrResponse) {
+            runRenderUpdatePrivate(vis, solrResponse);
         }
     };
 }();
