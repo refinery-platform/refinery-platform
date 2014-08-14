@@ -42,8 +42,6 @@
 
         var showAnnotation = false;
 
-        var provVisView = Object.create(null);
-
         configurator.initialize(function () {
             query = new SolrQuery(configurator, queryCommands);
             query.initialize();
@@ -67,6 +65,8 @@
             annotationQuery.addFilter("is_annotation", true);
 
             var pivotQuery;
+
+            var provVisQuery;
 
             // =====================================
 
@@ -141,7 +141,13 @@
 
                 $('a[data-toggle="pill"]').on('shown', function (event) {
                     if (event.target.href.split("#")[1] === "provenance-view-tab") {
-                        provvis.runProvVis(currentStudyUuid, analyses.objects);
+                        console.log(provvis.getProvVis() instanceof provvisDecl.ProvVis === false);
+                        if (provvis.getProvVis() instanceof provvisDecl.ProvVis === false) {
+                            provvis.runProvVis(currentStudyUuid, analyses.objects);
+                        } else {
+                            facetSelectionUpdated(arguments);
+                            provvisRender.runRenderUpdate(provvis.getProvVis(), arguments.response)
+                        }
                     }
                 })
 
@@ -213,10 +219,9 @@
                     pivotMatrixView.updateMatrix(arguments.response);
                 }
 
-                provVisView = provvis.getProvVis();
-                if (provVisView instanceof provvisDecl.ProvVis === true) {
-                    /* TODO: Update Provenance Visualization by filtered nodeset. */
-                    provVisView.runRenderUpdate(vis, arguments.response);
+                /* Update Provenance Visualization by filtered nodeset. */
+                if (($('.nav-pills li.active a').attr('href').split("#")[1] === 'provenance-view-tab') && arguments.query == provVisQuery && provvis.getProvVis() instanceof provvisDecl.ProvVis) {
+                    provvisRender.runRenderUpdate(provvis.getProvVis(), arguments.response);
                 }
             });
 
@@ -309,6 +314,14 @@
                 pivotQuery.clearFacetSelection(pivotMatrixView.getFacet1());
                 pivotQuery.clearFacetSelection(pivotMatrixView.getFacet2());
                 client.run(pivotQuery, SOLR_FULL_QUERY);
+
+                /* ProvVis hook for update. */
+                if (($('.nav-pills li.active a').attr('href').split("#")[1] === 'provenance-view-tab') && provvis.getProvVis() instanceof provvisDecl.ProvVis) {
+                    provVisQuery = query.clone();
+                    provVisQuery.setDocumentCount(provVisQuery.getTotalDocumentCount());
+                    provVisQuery.setDocumentIndex(0);
+                    client.run(provVisQuery, SOLR_FULL_QUERY);
+                }
             };
 
             facetViewCommands.addHandler(SOLR_FACET_SELECTION_UPDATED_COMMAND, facetSelectionUpdated);
