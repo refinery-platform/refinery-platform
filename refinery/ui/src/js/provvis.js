@@ -68,6 +68,7 @@ var provvis = function () {
                     .attr("viewBox", "0 0 " + (width) + " " + (height))
                     .attr("preserveAspectRatio", "xMinYMin meet")
                     .attr("pointer-events", "all")
+                    .classed("canvas", true)
                     .append("svg:g")
                     .call(vis.zoom = d3.behavior.zoom().on("zoom", redraw)).on("dblclick.zoom", null)
                     .append("svg:g");

@@ -166,6 +166,8 @@ var provvisDecl = function () {
         this.outputs = d3.map();
         this.links = d3.map();
         this.isOutputAnalysis = false;
+
+        /* TODO: Workflow field. */
     };
 
     Subanalysis.prototype = Object.create(BaseNode.prototype);

@@ -3,6 +3,7 @@
  */
 
 /* TODO: Tooltips like in solr_pivot_matrix.js. */
+/* TODO: Add toolbar to let user switch between bezier and edgy links. */
 var provvisRender = function () {
 
     var vis = Object.create(null),
@@ -26,6 +27,33 @@ var provvisRender = function () {
         width = 0,
         depth = 0,
         grid = [];
+
+    /* Simple tooltips by NG. */
+    var tooltip = d3.select("body")
+        .append( "div" )
+        .attr( "class", "refinery-tooltip" )
+        .style( "position", "absolute" )
+        .style( "z-index", "10" )
+        .style( "visibility", "hidden" );
+
+    /**
+     * Make tooltip visible.
+     * @param label Inner html code appended to the tooltip.
+     * @param event E.g. mouse event.
+     */
+    var showTooltip = function (label, event) {
+        tooltip.html(label);
+        tooltip.style("visibility", "visible");
+        tooltip.style("top", (event.pageY - 10) + "px");
+        tooltip.style("left", (event.pageX + 10) + "px");
+    };
+
+    /**
+     * Hide tooltip again.
+     */
+    var hideTooltip = function() {
+        tooltip.style("visibility", "hidden");
+    };
 
     /**
      * Drag start listener support for nodes.
@@ -257,22 +285,6 @@ var provvisRender = function () {
             }).style("display", function (l) {
                 return l.hidden ? "none" : "inline";
             });
-
-        /* TODO: FIX: in certain cases, tooltips collide with canvas bounding box */
-        /* Create d3-tip tooltips. */
-        var tip = d3.tip()
-            .attr("class", "d3-tip")
-            .offset([-10, 0])
-            .html(function (l) {
-                return "<strong>Id:</strong> <span style='color:#fa9b30'>" + l.autoId + "</span><br>" +
-                    "<strong>Source Id:</strong> <span style='color:#fa9b30'>" + l.source.autoId + "</span><br>" +
-                    "<strong>Target Id:</strong> <span style='color:#fa9b30'>" + l.target.autoId + "</span>";
-            });
-
-        /* Invoke tooltip on dom element. */
-        link.call(tip);
-        link.on("mouseover", tip.show)
-            .on("mouseout", tip.hide);
     };
 
     /**
@@ -316,21 +328,6 @@ var provvisRender = function () {
 
         /* Set node dom element. */
         saNode = d3.selectAll(".saNode");
-
-        /* Create d3-tip tooltips. */
-        var tip = d3.tip()
-            .attr("class", "d3-tip")
-            .offset([-10, 0])
-            .html(function (d) {
-                return "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.autoId + "</span><br>" +
-                    "<strong>Row:</strong> <span style='color:#fa9b30'>" + d.row + "</span><br>" +
-                    "<strong>Col:</strong> <span style='color:#fa9b30'>" + d.col + "</span>";
-            });
-
-        /* Invoke tooltip on dom element. */
-        saNode.call(tip);
-        saNode.on("mouseover", tip.show)
-            .on("mouseout", tip.hide);
     };
 
     /**
@@ -374,24 +371,6 @@ var provvisRender = function () {
 
         /* Set node dom element. */
         aNode = d3.selectAll(".aNode");
-
-        /* Create d3-tip tooltips. */
-        var tip = d3.tip()
-            .attr("class", "d3-tip")
-            .offset([-10, 0])
-            .html(function (d) {
-                return d.autoId === -1 ? "<span style='color:#fa9b30'>Original dataset</span><br><strong>Id:</strong> <span style='color:#fa9b30'>" + d.autoId + "</span><br>" :
-                    "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.autoId + "</span><br>" +
-                    "<strong>Start:</strong> <span style='color:#fa9b30'>" + d.start + "</span><br>" +
-                    "<strong>End:</strong> <span style='color:#fa9b30'>" + d.end + "</span><br>" +
-                    "<strong>Row:</strong> <span style='color:#fa9b30'>" + d.row + "</span><br>" +
-                    "<strong>Col:</strong> <span style='color:#fa9b30'>" + d.col + "</span>";
-            });
-
-        /* Invoke tooltip on dom element. */
-        aNode.call(tip);
-        aNode.on("mouseover", tip.show)
-            .on("mouseout", tip.hide);
     };
 
     /**
@@ -440,34 +419,6 @@ var provvisRender = function () {
 
         /* Set node dom element. */
         node = d3.selectAll(".node");
-
-        /* */
-        /* Create d3-tip tooltips. */
-        /*
-         var tip = d3.tip()
-         .attr("class", "d3-tip")
-         .offset([-10, 0])
-         .html(function (d) {
-         return "<strong>Id:</strong> <span style='color:#fa9b30'>" + d.autoId + "</span><br>" +
-         "<strong>Name:</strong> <span style='color:#fa9b30'>" + d.name + "</span><br>" +
-         "<strong>Sub Analysis:</strong> <span style='color:#fa9b30'>" + d.subanalysis + "</span><br>" +
-         "<strong>Sub Analysis Id:</strong> <span style='color:#fa9b30'>" + d.parent.autoId + "</span><br>" +
-         "<strong>Analysis Id:</strong> <span style='color:#fa9b30'>" + d.parent.parent.autoId + "</span><br>" +
-         "<strong>Type:</strong> <span style='color:#fa9b30'>" + d.fileType + "</span><br>" +
-         "<strong>Row:</strong> <span style='color:#fa9b30'>" + d.row + "</span><br>" +
-         "<strong>RowBK left:</strong> <span style='color:#fa9b30'>" + d.rowBK.left + "</span><br>" +
-         "<strong>Col:</strong> <span style='color:#fa9b30'>" + d.col + "</span><br>" +
-         "<strong>BCOrder:</strong> <span style='color:#fa9b30'>" + d.bcOrder + "</span>";
-         });
-
-         */
-        /* Invoke tooltip on dom element. */
-        /*
-         node.call(tip);
-         node.on("mouseover", tip.show)
-         .on("mouseout", tip.hide);*/
-
-
     };
 
 
@@ -658,6 +609,56 @@ var provvisRender = function () {
     };
 
     /**
+     * Adds tooltips to nodes.
+     */
+    var handleTooltips = function () {
+
+        /**
+         * Helper function for tooltip creation.
+         * @param key Property name.
+         * @param value Property value.
+         * @returns {string} Inner html code.
+         */
+        var createHTMLKeyValuePair = function (key, value) {
+            return "<b>" + key + ": " + "</b>" + value;
+        };
+
+        node.on("mouseover", function (d) {
+            showTooltip(createHTMLKeyValuePair("Node", d.uuid) + "<br>" +
+                createHTMLKeyValuePair("Name", d.name) + "<br>" +
+                createHTMLKeyValuePair("Type", d.fileType) + "<br>", event);
+        }).on("mousemove", function (d) {
+            showTooltip(createHTMLKeyValuePair("Uuid", d.uuid) + "<br>" +
+                createHTMLKeyValuePair("Name", d.name) + "<br>" +
+                createHTMLKeyValuePair("Type", d.fileType) + "<br>", event);
+        }).on("mouseout", function () {
+            hideTooltip();
+        });
+
+        saNode.on("mouseover", function (d) {
+            showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis), event);
+        }).on("mousemove", function (d) {
+            showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis), event);
+        }).on("mouseout", function () {
+            hideTooltip();
+        });
+
+        aNode.on("mouseover", function (d) {
+            showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
+                createHTMLKeyValuePair("Created", d.created) + "<br>" +
+                createHTMLKeyValuePair("Start", d.start) + "<br>" +
+                createHTMLKeyValuePair("End", d.end) + "<br>", event);
+        }).on("mousemove", function (d) {
+            showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
+                createHTMLKeyValuePair("Created", d.created) + "<br>" +
+                createHTMLKeyValuePair("Start", d.start) + "<br>" +
+                createHTMLKeyValuePair("End", d.end) + "<br>", event);
+        }).on("mouseout", function () {
+            hideTooltip();
+        });
+    };
+
+    /**
      * Draws a grid for the grid-based graph layout.
      *
      * @param grid An array containing cells.
@@ -718,17 +719,6 @@ var provvisRender = function () {
      */
     var handleEvents = function () {
 
-        function showTooltip(label, event) {
-            tooltip.html(label);
-            tooltip.style("visibility", "visible");
-            tooltip.style("top", (event.pageY - 10) + "px");
-            tooltip.style("left", (event.pageX + 10) + "px");
-        }
-
-        function hideTooltip() {
-            tooltip.style("visibility", "hidden");
-        }
-
         /* Path highlighting. */
         handlePathHighlighting();
 
@@ -739,14 +729,7 @@ var provvisRender = function () {
         /* Handle analysis aggregation. */
         handleCollapseExpandNode();
 
-        d3.selectAll(".node").on("mouseover", function (p) {
-
-            showTooltip(p.name, event);
-        }).on("mousemove", function (p) {
-            showTooltip(p.name, event);
-        }).on("mouseout", function (p) {
-            hideTooltip();
-        });
+        handleTooltips();
 
         /* TODO: On click on node, enlarge shape to display more info. */
     };
