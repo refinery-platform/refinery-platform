@@ -16,8 +16,7 @@ var provvisRender = function () {
         saNode = Object.create(null),
 
         gridCell = Object.create(null),
-        hLink = Object.create(null),
-        hNode = Object.create(null);
+        hLink = Object.create(null);
 
     var nodes = [],
         links = [],
@@ -190,7 +189,7 @@ var provvisRender = function () {
      * Reset css for all nodes.
      */
     var clearHighlighting = function () {
-        d3.selectAll(".hNode, .hLink").style("display", "none");
+        d3.selectAll(".hLink").style("display", "none");
     };
 
     /**
@@ -692,7 +691,6 @@ var provvisRender = function () {
      * Draw simple node/link highlighting shapes.
      */
     var drawHighlightingShapes = function () {
-
         hLink = vis.canvas.append("g").classed({"hLinks": true}).selectAll(".hLink")
             .data(links)
             .enter().append("path")
@@ -712,23 +710,6 @@ var provvisRender = function () {
                 return "hLinkId-" + l.autoId;
             }).style("stroke", function (d) {
                 return vis.color(analysisWorkflowMap.get(d.target.analysis));
-            });
-
-
-        hNode = vis.canvas.append("g").classed({"hNodes": true}).selectAll(".hNode")
-            .data(nodes)
-            .enter().append("g")
-            .attr("transform", function (d) {
-                return "translate(" + (d.x - cell.width / 2) + "," + (d.y - cell.height / 2) + ")";
-            })
-            .append("rect")
-            .attr("width", cell.width)
-            .attr("height", cell.height)
-            .classed({"hNode": true})
-            .attr("id", function (d) {
-                return "hNodeId-" + d.autoId;
-            }).style("fill", function (d) {
-                return vis.color(analysisWorkflowMap.get(d.analysis));
             });
     };
 
