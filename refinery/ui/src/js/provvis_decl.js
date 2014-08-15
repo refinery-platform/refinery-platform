@@ -162,6 +162,7 @@ var provvisDecl = function () {
 
         this.subanalysis = subanalysis;
 
+        this.wfUuid = "";
         this.inputs = d3.map();
         this.outputs = d3.map();
         this.links = d3.map();

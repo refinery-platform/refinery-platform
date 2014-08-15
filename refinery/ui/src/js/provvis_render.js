@@ -36,8 +36,15 @@ var provvisRender = function () {
         .style( "z-index", "10" )
         .style( "visibility", "hidden" );
 
+    var detailTooltip = d3.select("body")
+        .append( "div" )
+        .attr( "class", "detail-tooltip" )
+        .style( "position", "absolute" )
+        .style( "z-index", "10" )
+        .style( "visibility", "hidden" );
+
     /**
-     * Make tooltip visible.
+     * Make tooltip visible and align it to the events position.
      * @param label Inner html code appended to the tooltip.
      * @param event E.g. mouse event.
      */
@@ -46,6 +53,27 @@ var provvisRender = function () {
         tooltip.style("visibility", "visible");
         tooltip.style("top", (event.pageY - 10) + "px");
         tooltip.style("left", (event.pageX + 10) + "px");
+    };
+
+    /**
+     * Show node details.
+     * @param label
+     * @param node
+     */
+    var showNodeDetails = function (label, node) {
+        var absPos = document.getElementById("nodeId-" + node.autoId).getScreenCTM();
+
+        detailTooltip.html(label);
+        detailTooltip.style("visibility", "visible");
+        detailTooltip.style("top", (absPos.f - 30) + "px");
+        detailTooltip.style("left", (absPos.e + 10) + "px");
+    };
+
+    /**
+     * Hide node details again.
+     */
+    var hideNodeDetails = function() {
+        detailTooltip.style("visibility", "hidden");
     };
 
     /**
@@ -609,6 +637,15 @@ var provvisRender = function () {
     };
 
     /**
+     * Left click on a node to reveal additional details.
+     */
+    var handleNodeSelection = function () {
+        saNode.on("click", function (d) {
+            showNodeDetails("<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", d);
+        });
+    };
+
+    /**
      * Adds tooltips to nodes.
      */
     var handleTooltips = function () {
@@ -636,20 +673,26 @@ var provvisRender = function () {
         });
 
         saNode.on("mouseover", function (d) {
-            showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis), event);
+            showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
+                createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
+                "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);
         }).on("mousemove", function (d) {
-            showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis), event);
+            showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
+                createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
+                "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);
         }).on("mouseout", function () {
             hideTooltip();
         });
 
         aNode.on("mouseover", function (d) {
             showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
+                createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
                 createHTMLKeyValuePair("Created", d.created) + "<br>" +
                 createHTMLKeyValuePair("Start", d.start) + "<br>" +
                 createHTMLKeyValuePair("End", d.end) + "<br>", event);
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
+                createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
                 createHTMLKeyValuePair("Created", d.created) + "<br>" +
                 createHTMLKeyValuePair("Start", d.start) + "<br>" +
                 createHTMLKeyValuePair("End", d.end) + "<br>", event);
@@ -729,7 +772,11 @@ var provvisRender = function () {
         /* Handle analysis aggregation. */
         handleCollapseExpandNode();
 
+        /* Handle tooltips. */
         handleTooltips();
+
+        /* Handle node selection. */
+        handleNodeSelection();
 
         /* TODO: On click on node, enlarge shape to display more info. */
     };

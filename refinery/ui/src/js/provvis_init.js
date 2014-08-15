@@ -357,6 +357,9 @@ var provvisInit = function () {
                 san.outputs.entries().forEach(function (sano) {
                     an.outputs.set(sano.key, sano.value);
                 });
+
+                /* Set subanalysis wfUuid. */
+                san.wfUuid = an.wfUuid;
             });
         });
 
