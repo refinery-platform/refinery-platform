@@ -61,6 +61,11 @@ var provvis = function () {
                         " scale(" + (+1 / d3.event.scale) + ")");
                 };
 
+                /* Toolbar. */
+                $('<div/>', {'class': '', 'id': "provenance-controls", 'html': ''}).appendTo('#' + "provenance-graph");
+                $("<button/>", { "id": "prov-ctrl-collapse-click", "type": "button", "class": 'btn btn-mini', "rel": "tooltip", "data-placement": "bottom", "html": "Collapse All", "data-html": "true", "title": "Collapse"}).appendTo("#" + "provenance-controls");
+                $("<button/>", { "id": "prov-ctrl-expand-click", "type": "button", "class": 'btn btn-mini', "rel": "tooltip", "data-placement": "bottom", "html": "Expand All", "data-html": "true", "title": "Expand"}).appendTo("#" + "provenance-controls");
+
                 /* Main canvas drawing area. */
                 vis.canvas = d3.select("#provenance-graph")
                     .append("svg:svg")

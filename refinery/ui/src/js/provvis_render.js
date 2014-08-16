@@ -30,18 +30,18 @@ var provvisRender = function () {
 
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
-        .append( "div" )
-        .attr( "class", "refinery-tooltip" )
-        .style( "position", "absolute" )
-        .style( "z-index", "10" )
-        .style( "visibility", "hidden" );
+        .append("div")
+        .attr("class", "refinery-tooltip")
+        .style("position", "absolute")
+        .style("z-index", "10")
+        .style("visibility", "hidden");
 
     var detailTooltip = d3.select("body")
-        .append( "div" )
-        .attr( "class", "detail-tooltip" )
-        .style( "position", "absolute" )
-        .style( "z-index", "10" )
-        .style( "visibility", "hidden" );
+        .append("div")
+        .attr("class", "detail-tooltip")
+        .style("position", "absolute")
+        .style("z-index", "10")
+        .style("visibility", "hidden");
 
     /**
      * Make tooltip visible and align it to the events position.
@@ -72,14 +72,14 @@ var provvisRender = function () {
     /**
      * Hide node details again.
      */
-    var hideNodeDetails = function() {
+    var hideNodeDetails = function () {
         detailTooltip.style("visibility", "hidden");
     };
 
     /**
      * Hide tooltip again.
      */
-    var hideTooltip = function() {
+    var hideTooltip = function () {
         tooltip.style("visibility", "hidden");
     };
 
@@ -758,9 +758,82 @@ var provvisRender = function () {
     };
 
     /**
-     * Handle event listeners.
+     * Handle interaction controls.
+     * @param graph Provenance graph object.
      */
-    var handleEvents = function () {
+    var handleToolbar = function (graph) {
+
+        $("#prov-ctrl-expand-click").click(function () {
+
+
+            graph.saNodes.forEach(function (san) {
+                san.hidden = true;
+                d3.selectAll("#nodeId-" + san.autoId).style("display", "none");
+            });
+
+            graph.aNodes.forEach(function (an) {
+                an.hidden = true;
+                d3.selectAll("#nodeId-" + an.autoId).style("display", "none");
+            });
+
+            links.forEach(function (l) {
+                d3.selectAll("#linkId-" + l.autoId).style("display", "inline");
+                l.hidden = false;
+            });
+
+            graph.nodes.forEach(function (d) {
+                /* Set node visibility. */
+                d.hidden = false;
+                d3.select("#nodeId-" + d.autoId).style("display", "inline");
+
+                /* Update connections. */
+                updateNode(d3.select("#nodeId-" + d.autoId), d, d.x, d.y);
+                updateLink(d3.select("#nodeId-" + d.autoId), d, d.x, d.y);
+            });
+
+
+        });
+
+        $("#prov-ctrl-collapse-click").click(function () {
+
+            var hideChildNodes = function (n) {
+                n.children.values().forEach(function (cn) {
+                    cn.hidden = true;
+                    d3.select("#nodeId-" + cn.autoId).style("display", "none");
+                    if (!cn.children.empty())
+                        hideChildNodes(cn);
+                });
+            };
+
+            graph.saNodes.forEach(function (d) {
+                /* Set node visibility. */
+                d.hidden = false;
+                d3.select("#nodeId-" + d.autoId).style("display", "inline");
+                hideChildNodes(d);
+
+                /* Set link visibility. */
+                d.links.values().forEach(function (l) {
+                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).style("display", "none");
+                });
+                d.inputs.values().forEach(function (sain) {
+                    sain.predLinks.values().forEach(function (l) {
+                        d3.selectAll("#linkId-" + l.autoId).style("display", "inline");
+                        l.hidden = false;
+                    });
+                });
+
+                /* Update connections. */
+                updateNode(d3.select("#nodeId-" + d.autoId), d, d.x, d.y);
+                updateLink(d3.select("#nodeId-" + d.autoId), d, d.x, d.y);
+            });
+        });
+    };
+
+    /**
+     * Handle events.
+     * @param graph Provenance graph object.
+     */
+    var handleEvents = function (graph) {
 
         /* Path highlighting. */
         handlePathHighlighting();
@@ -777,6 +850,8 @@ var provvisRender = function () {
 
         /* Handle node selection. */
         handleNodeSelection();
+
+        handleToolbar(graph);
 
         /* TODO: On click on node, enlarge shape to display more info. */
     };
@@ -946,7 +1021,7 @@ var provvisRender = function () {
 
             /* Event listeners. */
             $(function () {
-                handleEvents();
+                handleEvents(vis.graph);
             });
 
             /* Fade in. */
