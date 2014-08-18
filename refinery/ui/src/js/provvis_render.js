@@ -36,13 +36,6 @@ var provvisRender = function () {
         .style("z-index", "10")
         .style("visibility", "hidden");
 
-    var detailTooltip = d3.select("body")
-        .append("div")
-        .attr("class", "detail-tooltip")
-        .style("position", "absolute")
-        .style("z-index", "10")
-        .style("visibility", "hidden");
-
     /**
      * Make tooltip visible and align it to the events position.
      * @param label Inner html code appended to the tooltip.
@@ -53,27 +46,6 @@ var provvisRender = function () {
         tooltip.style("visibility", "visible");
         tooltip.style("top", (event.pageY - 10) + "px");
         tooltip.style("left", (event.pageX + 10) + "px");
-    };
-
-    /**
-     * Show node details.
-     * @param label
-     * @param node
-     */
-    var showNodeDetails = function (label, node) {
-        var absPos = document.getElementById("nodeId-" + node.autoId).getScreenCTM();
-
-        detailTooltip.html(label);
-        detailTooltip.style("visibility", "visible");
-        detailTooltip.style("top", (absPos.f - 30) + "px");
-        detailTooltip.style("left", (absPos.e + 10) + "px");
-    };
-
-    /**
-     * Hide node details again.
-     */
-    var hideNodeDetails = function () {
-        detailTooltip.style("visibility", "hidden");
     };
 
     /**
@@ -99,20 +71,7 @@ var provvisRender = function () {
      */
     var updateNode = function (dom, n, x, y) {
         /* Drag selected node. */
-        dom.attr("transform", function (d) {
-            switch (d.nodeType) {
-                case "dummy":
-                case "raw":
-                case "analysis":
-                case "subanalysis":
-                case "processed":
-                    return "translate(" + x + "," + y + ")";
-                case "special":
-                    return "translate(" + (x - vis.radius) + "," + (y - vis.radius) + ")";
-                case "dt":
-                    return "translate(" + (x - vis.radius * 0.75) + "," + (y - vis.radius * 0.75) + ")";
-            }
-        });
+        dom.attr("transform", "translate(" + x + "," + y + ")");
     };
 
     /**
@@ -413,28 +372,29 @@ var provvisRender = function () {
                 }))
                 .enter().append("g").style("display", function (d) {
                     return d.hidden ? "none" : "inline";
-                }).each(function (d) {
+                }).attr("transform", function (d) {
+                    return "translate(" + d.x + "," + d.y + ")";
+                })
+                .each(function (d) {
                     if (d.nodeType === "raw" || d.nodeType === "processed") {
                         d3.select(this)
-                            .attr("transform", "translate(" + d.x + "," + d.y + ")")
                             .append("circle")
                             .attr("r", vis.radius);
                     } else {
                         if (d.nodeType === "special") {
                             d3.select(this)
-                                .attr("transform", "translate(" + (d.x - vis.radius) + "," + (d.y - vis.radius) + ")")
                                 .append("rect")
+                                .attr("transform", "translate(" + ( - vis.radius) + "," + (- vis.radius) + ")")
                                 .attr("width", vis.radius * 2)
                                 .attr("height", vis.radius * 2);
                         } else if (d.nodeType === "dt") {
                             d3.select(this)
-                                .attr("transform", "translate(" + (d.x - vis.radius * 0.75) + "," + (d.y - vis.radius * 0.75) + ")")
                                 .append("rect")
-                                .attr("width", vis.radius * 1.5)
-                                .attr("height", vis.radius * 1.5)
                                 .attr("transform", function () {
-                                    return "rotate(45 " + (vis.radius * 0.75) + "," + (vis.radius * 0.75) + ")";
-                                });
+                                    return "translate(" + (- vis.radius * 0.75) + "," + (- vis.radius * 0.75) + ")" + "rotate(45 " + (vis.radius * 0.75) + "," + (vis.radius * 0.75) + ")";
+                                })
+                                .attr("width", vis.radius * 1.5)
+                                .attr("height", vis.radius * 1.5);
                         }
                     }
                 }).attr("class", function (d) {
@@ -640,8 +600,188 @@ var provvisRender = function () {
      * Left click on a node to reveal additional details.
      */
     var handleNodeSelection = function () {
-        saNode.on("click", function (d) {
-            showNodeDetails("<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", d);
+
+        d3.selectAll(".node, .saNode, .aNode").on("click", function (d) {
+
+            /* Suppress after dragend. */
+           if (d3.event.defaultPrevented) return;
+
+            /* Update selection. */
+            if (d.selected) {
+                d.selected = false;
+            } else {
+                d.selected = true;
+            }
+
+            /* Update node size. */
+            if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {
+                if (d.selected) {
+                    if (d.nodeType === "raw" || d.nodeType === "processed") {
+                        d3.select(this).select("circle").attr("r", vis.radius * 2);
+                    } else if (d.nodeType === "special") {
+                        d3.select(this)
+                            .select("rect")
+                            .attr("transform", "translate(" + (- vis.radius*2) + "," + (- vis.radius*2) + ")")
+                            .attr("width", vis.radius * 4)
+                            .attr("height", vis.radius * 4);
+                    } else if (d.nodeType === "dt") {
+                        d3.select(this)
+                            .select("rect")
+                            .attr("transform", function () {
+                                return "translate(" + (- vis.radius * 1.5) + "," + (- vis.radius * 1.5) + ")" +
+                                    "rotate(45 " + (vis.radius * 1.5) + "," + (vis.radius * 1.5) + ")";
+                            })
+                            .attr("width", vis.radius * 3)
+                            .attr("height", vis.radius * 3);
+                    }
+
+                } else {
+                    if (d.nodeType === "raw" || d.nodeType === "processed") {
+                        d3.select(this).select("circle").attr("r", vis.radius);
+                    } else if (d.nodeType === "special") {
+                        d3.select(this)
+                            .select("rect")
+                            .attr("transform", "translate(" + (- vis.radius) + "," + (- vis.radius) + ")")
+                            .attr("width", vis.radius * 2)
+                            .attr("height", vis.radius * 2);
+                    } else if (d.nodeType === "dt") {
+                        d3.select(this)
+                            .select("rect")
+                            .attr("transform", function () {
+                                return "translate(" + (- vis.radius * 0.75) + "," + (- vis.radius * 0.75) + ")" +
+                                    "rotate(45 " + (vis.radius * 0.75) + "," + (vis.radius * 0.75) + ")";
+                            })
+                            .attr("width", vis.radius * 1.5)
+                            .attr("height", vis.radius * 1.5);
+                    }
+                }
+            } else if (d.nodeType === "subanalysis") {
+                if (d.selected) {
+                    console.log(d3.select(this));
+                    d3.select(this).select("polygon")
+                        .attr("points", function () {
+                            return "0," + (-vis.radius*2) + " " +
+                                (vis.radius*2) + "," + (-vis.radius) + " " +
+                                (vis.radius*2) + "," + (vis.radius) + " " +
+                                "0" + "," + (vis.radius*2) + " " +
+                                (-vis.radius*2) + "," + (vis.radius) + " " +
+                                (-vis.radius*2) + "," + (-vis.radius);
+                        });
+                } else {
+                    d3.select(this).select("polygon")
+                        .attr("points", function () {
+                            return "0," + (-vis.radius) + " " +
+                                (vis.radius) + "," + (-vis.radius / 2) + " " +
+                                (vis.radius) + "," + (vis.radius / 2) + " " +
+                                "0" + "," + (vis.radius) + " " +
+                                (-vis.radius) + "," + (vis.radius / 2) + " " +
+                                (-vis.radius) + "," + (-vis.radius / 2);
+                        });
+                }
+
+            } else if (d.nodeType === "analysis") {
+                if (d.selected) {
+                    d3.select(this).select("polygon")
+                        .attr("points", function () {
+                            return "0," + (-4 * vis.radius) + " " +
+                                (4 * vis.radius) + "," + (-vis.radius*2) + " " +
+                                (4 * vis.radius) + "," + (vis.radius*2) + " " +
+                                "0" + "," + (4 * vis.radius) + " " +
+                                (-4 * vis.radius) + "," + (vis.radius*2) + " " +
+                                (-4 * vis.radius) + "," + (-vis.radius*2);
+                        });
+                } else {
+                    d3.select(this).select("polygon")
+                        .attr("points", function () {
+                            return "0," + (-2 * vis.radius) + " " +
+                                (2 * vis.radius) + "," + (-vis.radius) + " " +
+                                (2 * vis.radius) + "," + (vis.radius) + " " +
+                                "0" + "," + (2 * vis.radius) + " " +
+                                (-2 * vis.radius) + "," + (vis.radius) + " " +
+                                (-2 * vis.radius) + "," + (-vis.radius);
+                        });
+                }
+            }
+/*
+            *//* Update grid. *//*
+            if (d.selected) {
+                d3.select("#cellId-" + d.col + "-" + d.row)
+                    .attr("x", -cell.width - d.col * cell.width)
+                    .attr("y", -cell.height + d.row * cell.height)
+                    .attr("width", cell.width*2)
+                    .attr("height", cell.height*2)
+                    .attr("stroke", "black");
+
+                gridCell.each( function (gc,i) {
+                    var col = parseInt(i / vis.graph.width, 10),
+                        row = i % vis.graph.width,
+                        xTrans = 0,
+                        yTrans = 0;
+
+
+                        if (col > d.col) {
+                            xTrans = -cell.width -col * cell.width;
+                        } else if (col < d.col) {
+                            xTrans = -col * cell.width;
+                        } else {
+                            xTrans = 0;
+                        }
+
+                        if (row < d.row) {
+                            yTrans = - cell.height + row * cell.height;
+                        } else if (row > d.row) {
+                            yTrans = row * cell.height;
+                        } else {
+                            yTrans = 0;
+                        }
+
+                        d3.select("#cellId-" + col + "-" + row)
+                            .attr("x", xTrans)
+                            .attr("y", yTrans);
+
+                        d3.select("#nodeId-" + gc.autoId)
+                            .attr("transform", "translate(" + xTrans + "," + yTrans + ")");
+
+                });
+            } else {
+                d3.select("#cellId-" + d.col + "-" + d.row)
+                    .attr("x", - cell.width/2 - d.col * cell.width)
+                    .attr("y", - cell.height/2 + d.row * cell.height)
+                    .attr("width", cell.width)
+                    .attr("height", cell.height)
+                    .attr("stroke", "black");
+
+                gridCell.each( function (gc,i) {
+                    var col = parseInt(i / vis.graph.width, 10),
+                        row = i % vis.graph.width,
+                        xTrans = 0,
+                        yTrans = 0;
+
+                    if (col !== d.col || row !== d.row) {
+                        if (col > d.col) {
+                            xTrans = -cell.width / 2 - col * cell.width;
+
+
+                        } else if (col < d.col) {
+                            xTrans = - col * cell.width;
+                        }
+
+                        if (row < d.row) {
+                            yTrans = row * cell.height;
+
+                        } else if (row > d.row) {
+                            yTrans = -cell.height / 2 + row * cell.height;
+                        }
+
+                        d3.select("#cellId-" + col + "-" + row)
+                            .attr("x", xTrans)
+                            .attr("y", yTrans);
+
+                        d3.select("#nodeId-" + gc.autoId)
+                            .attr("transform", "translate(" + xTrans + "," + yTrans + ")");
+                    }
+                });
+            }*/
         });
     };
 
@@ -660,6 +800,7 @@ var provvisRender = function () {
             return "<b>" + key + ": " + "</b>" + value;
         };
 
+        /* Node tooltips. */
         node.on("mouseover", function (d) {
             showTooltip(createHTMLKeyValuePair("Node", d.uuid) + "<br>" +
                 createHTMLKeyValuePair("Name", d.name) + "<br>" +
@@ -672,6 +813,7 @@ var provvisRender = function () {
             hideTooltip();
         });
 
+        /* Subanalysis tooltips. */
         saNode.on("mouseover", function (d) {
             showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
@@ -684,6 +826,7 @@ var provvisRender = function () {
             hideTooltip();
         });
 
+        /* Analysis tolltips. */
         aNode.on("mouseover", function (d) {
             showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
@@ -764,8 +907,7 @@ var provvisRender = function () {
     var handleToolbar = function (graph) {
 
         $("#prov-ctrl-expand-click").click(function () {
-
-
+            /* Set node visibility. */
             graph.saNodes.forEach(function (san) {
                 san.hidden = true;
                 d3.selectAll("#nodeId-" + san.autoId).style("display", "none");
@@ -776,6 +918,7 @@ var provvisRender = function () {
                 d3.selectAll("#nodeId-" + an.autoId).style("display", "none");
             });
 
+            /* Set link visibility. */
             links.forEach(function (l) {
                 d3.selectAll("#linkId-" + l.autoId).style("display", "inline");
                 l.hidden = false;
@@ -790,12 +933,9 @@ var provvisRender = function () {
                 updateNode(d3.select("#nodeId-" + d.autoId), d, d.x, d.y);
                 updateLink(d3.select("#nodeId-" + d.autoId), d, d.x, d.y);
             });
-
-
         });
 
         $("#prov-ctrl-collapse-click").click(function () {
-
             var hideChildNodes = function (n) {
                 n.children.values().forEach(function (cn) {
                     cn.hidden = true;

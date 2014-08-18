@@ -75,6 +75,7 @@ var provvisDecl = function () {
         this.autoId = BaseNode.numInstances;
 
         this.doi = new DoiComponents();
+        this.selected = false;
 
         /* TODO: Group layout specific properties into sub-property. */
     };
