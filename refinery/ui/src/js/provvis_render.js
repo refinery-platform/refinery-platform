@@ -104,29 +104,51 @@ var provvisRender = function () {
         n.predLinks.values().forEach(function (l) {
             d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).attr("d", function (l) {
                 var srcCoords = getNodeCoords(l.source),
+                pathSegment = "";
+                if ($( "#prov-ctrl-link-style option:selected" ).attr( "value" ) === "bezier") {
+                    pathSegment = "M" + srcCoords.x + "," + srcCoords.y;
+                    pathSegment = pathSegment.concat(" Q" + (srcCoords.x + cell.width / 3) + "," + (srcCoords.y) + " " +
+                        (srcCoords.x + cell.width / 2) + "," + (srcCoords.y + (y - srcCoords.y) / 2) + " " +
+                        "T" + (srcCoords.x + cell.width) + "," + y) +
+                        " H" + x;
+                    return pathSegment;
+                } else {
                     pathSegment = " M" + srcCoords.x + "," + srcCoords.y;
 
-                if (Math.abs(srcCoords.x - x) > cell.width) {
-                    pathSegment = pathSegment.concat(" L" + parseInt(srcCoords.x + (cell.width)) + "," + parseInt(y, 10) + " L" + parseInt(x, 10) + "," + parseInt(y, 10));
-                } else {
-                    pathSegment = pathSegment.concat(" L" + parseInt(x, 10) + "," + parseInt(y, 10));
+                    if (Math.abs(srcCoords.x - x) > cell.width) {
+                        pathSegment = pathSegment.concat(" L" + parseInt(srcCoords.x + (cell.width)) + "," + parseInt(y, 10) + " L" + parseInt(x, 10) + "," + parseInt(y, 10));
+                    } else {
+                        pathSegment = pathSegment.concat(" L" + parseInt(x, 10) + "," + parseInt(y, 10));
+                    }
+                    return pathSegment;
                 }
-                return pathSegment;
             });
         });
 
         /* Get output links and update coordinates for x1 and y1. */
         n.succLinks.values().forEach(function (l) {
             d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).attr("d", function (l) {
+
                 var tarCoords = getNodeCoords(l.target),
+                    pathSegment = "";
+
+                if ($( "#prov-ctrl-link-style option:selected" ).attr( "value" ) === "bezier") {
+                    pathSegment = "M" + x + "," + y;
+                    pathSegment = pathSegment.concat(" Q" + (x + cell.width / 3) + "," + (y) + " " +
+                        (x + cell.width / 2) + "," + (y + (tarCoords.y - y) / 2) + " " +
+                        "T" + (x + cell.width) + "," + tarCoords.y) +
+                        " H" + tarCoords.x;
+                    return pathSegment;
+                } else {
                     pathSegment = " M" + parseInt(x, 10) + "," + parseInt(y, 10);
 
-                if (Math.abs(x - tarCoords.x) > cell.width) {
-                    pathSegment = pathSegment.concat(" L" + parseInt(x + cell.width, 10) + "," + tarCoords.y + " L" + tarCoords.x + " " + tarCoords.y);
-                } else {
-                    pathSegment = pathSegment.concat(" L" + tarCoords.x + "," + tarCoords.y);
+                    if (Math.abs(x - tarCoords.x) > cell.width) {
+                        pathSegment = pathSegment.concat(" L" + parseInt(x + cell.width, 10) + "," + tarCoords.y + " L" + tarCoords.x + " " + tarCoords.y);
+                    } else {
+                        pathSegment = pathSegment.concat(" L" + tarCoords.x + "," + tarCoords.y);
+                    }
+                    return pathSegment;
                 }
-                return pathSegment;
             });
         });
     };
@@ -247,20 +269,23 @@ var provvisRender = function () {
             .data(links)
             .enter().append("path")
             .attr("d", function (l) {
-                /*var pathSegment = " M" + parseInt(l.source.x, 10) + "," + parseInt(l.source.y, 10);
-                 if (Math.abs(l.source.x - l.target.x) > cell.width) {
-                 pathSegment = pathSegment.concat(" L" + parseInt(l.source.x + (cell.width)) + "," + parseInt(l.target.y, 10) + " H" + parseInt(l.target.x, 10));
-                 } else {
-                 pathSegment = pathSegment.concat(" L" + parseInt(l.target.x, 10) + "," + parseInt(l.target.y, 10));
-                 }
-                 return pathSegment;*/
-
-                var pathSegment = "M" + l.source.x + "," + l.source.y;
-                pathSegment = pathSegment.concat(" Q" + (l.source.x + cell.width / 3) + "," + (l.source.y) + " " +
-                    (l.source.x + cell.width / 2) + "," + (l.source.y + (l.target.y - l.source.y) / 2) + " " +
-                    "T" + (l.source.x + cell.width) + "," + l.target.y) +
-                    " H" + l.target.x;
-                return pathSegment;
+                var pathSegment = "";
+                if ($( "#prov-ctrl-link-style option:selected" ).attr( "value" ) === "bezier") {
+                    pathSegment = "M" + l.source.x + "," + l.source.y;
+                    pathSegment = pathSegment.concat(" Q" + (l.source.x + cell.width / 3) + "," + (l.source.y) + " " +
+                        (l.source.x + cell.width / 2) + "," + (l.source.y + (l.target.y - l.source.y) / 2) + " " +
+                        "T" + (l.source.x + cell.width) + "," + l.target.y) +
+                        " H" + l.target.x;
+                    return pathSegment;
+                } else {
+                    pathSegment = " M" + parseInt(l.source.x, 10) + "," + parseInt(l.source.y, 10);
+                    if (Math.abs(l.source.x - l.target.x) > cell.width) {
+                        pathSegment = pathSegment.concat(" L" + parseInt(l.source.x + (cell.width)) + "," + parseInt(l.target.y, 10) + " H" + parseInt(l.target.x, 10));
+                    } else {
+                        pathSegment = pathSegment.concat(" L" + parseInt(l.target.x, 10) + "," + parseInt(l.target.y, 10));
+                    }
+                    return pathSegment;
+                }
             })
             .classed({
                 "link": true
@@ -613,7 +638,7 @@ var provvisRender = function () {
                         .attr("width", vis.radius * 4)
                         .attr("height", vis.radius * 4);
                 } else if (d.nodeType === "dt") {
-                    d3.select(this)
+                    d3.select("#nodeId-" + d.autoId)
                         .select("rect")
                         .attr("transform", function () {
                             return "translate(" + (-vis.radius * 1.5) + "," + (-vis.radius * 1.5) + ")" +
@@ -886,6 +911,28 @@ var provvisRender = function () {
                 /* Update connections. */
                 updateNode(d3.select("#nodeId-" + d.autoId), d, d.x, d.y);
                 updateLink(d3.select("#nodeId-" + d.autoId), d, d.x, d.y);
+            });
+        });
+
+        /* TODO: IN PROGRESS: Hook for switching link styles. */
+        console.log($( "#prov-ctrl-link-style option:selected" ).attr( "value" ));
+        $( "#prov-ctrl-link-style" ).change( function( ) {
+
+            /* TODO: Join arrays into a single collection. */
+            node.each( function (n) {
+                if (!n.hidden) {
+                    updateLink(d3.select(this), n, n.x, n.y);
+                }
+            });
+            aNode.each( function (n) {
+                if (!n.hidden) {
+                    updateLink(d3.select(this), n, n.x, n.y);
+                }
+            });
+            saNode.each( function (n) {
+                if (!n.hidden) {
+                    updateLink(d3.select(this), n, n.x, n.y);
+                }
             });
         });
     };
