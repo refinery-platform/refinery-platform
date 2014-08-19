@@ -16,7 +16,6 @@ var provvisRender = function () {
         aNode = Object.create(null),
         saNode = Object.create(null),
 
-        gridCell = Object.create(null),
         hLink = Object.create(null);
 
     var nodes = [],
@@ -384,14 +383,14 @@ var provvisRender = function () {
                         if (d.nodeType === "special") {
                             d3.select(this)
                                 .append("rect")
-                                .attr("transform", "translate(" + ( - vis.radius) + "," + (- vis.radius) + ")")
+                                .attr("transform", "translate(" + ( -vis.radius) + "," + (-vis.radius) + ")")
                                 .attr("width", vis.radius * 2)
                                 .attr("height", vis.radius * 2);
                         } else if (d.nodeType === "dt") {
                             d3.select(this)
                                 .append("rect")
                                 .attr("transform", function () {
-                                    return "translate(" + (- vis.radius * 0.75) + "," + (- vis.radius * 0.75) + ")" + "rotate(45 " + (vis.radius * 0.75) + "," + (vis.radius * 0.75) + ")";
+                                    return "translate(" + (-vis.radius * 0.75) + "," + (-vis.radius * 0.75) + ")" + "rotate(45 " + (vis.radius * 0.75) + "," + (vis.radius * 0.75) + ")";
                                 })
                                 .attr("width", vis.radius * 1.5)
                                 .attr("height", vis.radius * 1.5);
@@ -413,100 +412,92 @@ var provvisRender = function () {
     /**
      * Sets the visibility of links and (a)nodes when collapsing or expanding analyses.
      */
-    var handleCollapseExpandNode = function () {
-        d3.selectAll(".node, .saNode, .aNode").on("dblclick", function (d) {
+    var handleCollapseExpandNode = function (d) {
 
-            var hideChildNodes = function (n) {
-                n.children.values().forEach(function (cn) {
-                    cn.hidden = true;
-                    d3.select("#nodeId-" + cn.autoId).style("display", "none");
-                    if (!cn.children.empty())
-                        hideChildNodes(cn);
+        var hideChildNodes = function (n) {
+            n.children.values().forEach(function (cn) {
+                cn.hidden = true;
+                d3.select("#nodeId-" + cn.autoId).style("display", "none");
+                if (!cn.children.empty())
+                    hideChildNodes(cn);
+            });
+        };
+
+        /* Expand. */
+        if (d3.event.ctrlKey && (d.nodeType === "analysis" || d.nodeType === "subanalysis")) {
+
+            /* Set node visibility. */
+            d3.select("#nodeId-" + d.autoId).style("display", "none");
+            d.hidden = true;
+            d.children.values().forEach(function (cn) {
+                d3.select("#nodeId-" + cn.autoId).style("display", "inline");
+                cn.hidden = false;
+            });
+
+            /* Set link visibility. */
+            if (d.nodeType === "subanalysis") {
+                d.links.values().forEach(function (l) {
+                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).style("display", "inline");
                 });
-            };
-
-            /* Expand. */
-            if (d3.event.ctrlKey && (d.nodeType === "analysis" || d.nodeType === "subanalysis")) {
-
-                /* Set node visibility. */
-                d3.select("#nodeId-" + d.autoId).style("display", "none");
-                d.hidden = true;
-                d.children.values().forEach(function (cn) {
-                    d3.select("#nodeId-" + cn.autoId).style("display", "inline");
-                    cn.hidden = false;
-                });
-
-                /* Set link visibility. */
-                if (d.nodeType === "subanalysis") {
-                    d.links.values().forEach(function (l) {
-                        d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).style("display", "inline");
-                    });
-                }
-                d.inputs.values().forEach(function (sain) {
-                    sain.predLinks.values().forEach(function (l) {
-                        d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).style("display", "inline");
-                        l.hidden = false;
-                    });
-                });
-
-                /* Update connections. */
-                d.children.values().forEach(function (cn) {
-                    updateNode(d3.select("#nodeId-" + cn.autoId), cn, cn.x, cn.y);
-                    updateLink(d3.select("#nodeId-" + cn.autoId), cn, cn.x, cn.y);
-                });
-
-            } else if (d3.event.shiftKey && d.nodeType !== "analysis") {
-                /* Collapse. */
-
-                /* Set node visibility. */
-                d.parent.hidden = false;
-                d3.select("#nodeId-" + d.parent.autoId).style("display", "inline");
-                hideChildNodes(d.parent);
-
-                /* Set link visibility. */
-                d.parent.links.values().forEach(function (l) {
-                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).style("display", "none");
-                });
-                d.parent.inputs.values().forEach(function (sain) {
-                    sain.predLinks.values().forEach(function (l) {
-                        d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).style("display", "inline");
-                        l.hidden = false;
-                    });
-                });
-
-                /* Update connections. */
-                updateNode(d3.select("#nodeId-" + d.parent.autoId), d.parent, d.parent.x, d.parent.y);
-                updateLink(d3.select("#nodeId-" + d.parent.autoId), d.parent, d.parent.x, d.parent.y);
             }
+            d.inputs.values().forEach(function (sain) {
+                sain.predLinks.values().forEach(function (l) {
+                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).style("display", "inline");
+                    l.hidden = false;
+                });
+            });
 
-        });
+            /* Update connections. */
+            d.children.values().forEach(function (cn) {
+                updateNode(d3.select("#nodeId-" + cn.autoId), cn, cn.x, cn.y);
+                updateLink(d3.select("#nodeId-" + cn.autoId), cn, cn.x, cn.y);
+            });
+
+        } else if (d3.event.shiftKey && d.nodeType !== "analysis") {
+            /* Collapse. */
+
+            /* Set node visibility. */
+            d.parent.hidden = false;
+            d3.select("#nodeId-" + d.parent.autoId).style("display", "inline");
+            hideChildNodes(d.parent);
+
+            /* Set link visibility. */
+            d.parent.links.values().forEach(function (l) {
+                d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).style("display", "none");
+            });
+            d.parent.inputs.values().forEach(function (sain) {
+                sain.predLinks.values().forEach(function (l) {
+                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).style("display", "inline");
+                    l.hidden = false;
+                });
+            });
+
+            /* Update connections. */
+            updateNode(d3.select("#nodeId-" + d.parent.autoId), d.parent, d.parent.x, d.parent.y);
+            updateLink(d3.select("#nodeId-" + d.parent.autoId), d.parent, d.parent.x, d.parent.y);
+        }
+
     };
 
     /**
      * Path highlighting.
      */
-    var handlePathHighlighting = function () {
-        d3.selectAll(".node, .aNode, .saNode").on("click", function (x) {
+    var handlePathHighlighting = function (d) {
+        /* Suppress after dragend. */
+        if (d3.event.defaultPrevented) return;
 
-            if (d3.event.ctrlKey || d3.event.shiftKey) {
+        /* Clear any highlighting. */
+        clearHighlighting();
 
-                /* Suppress after dragend. */
-                if (d3.event.defaultPrevented) return;
+        if (d3.event.ctrlKey) {
 
-                /* Clear any highlighting. */
-                clearHighlighting();
+            /* Highlight path. */
+            highlightSuccPath(d);
+        } else if (d3.event.shiftKey) {
 
-                if (d3.event.ctrlKey) {
-
-                    /* Highlight path. */
-                    highlightSuccPath(x);
-                } else if (d3.event.shiftKey) {
-
-                    /* Highlight path. */
-                    highlightPredPath(x);
-                }
-            }
-        });
+            /* Highlight path. */
+            highlightPredPath(d);
+        }
     };
 
     /**
@@ -566,7 +557,7 @@ var provvisRender = function () {
             timer = 0,
             bRectAction = clearHighlighting;
         /* default action. */
-        d3.selectAll(".brect, .cell").on("click", function () {
+        d3.selectAll(".brect, .vLine, .hLine").on("click", function () {
 
             /* Suppress after drag end. */
             if (d3.event.defaultPrevented) return;
@@ -599,190 +590,105 @@ var provvisRender = function () {
     /**
      * Left click on a node to reveal additional details.
      */
-    var handleNodeSelection = function () {
+    var handleNodeSelection = function (d) {
+        /* Suppress after dragend. */
+        if (d3.event.defaultPrevented) return;
 
-        d3.selectAll(".node, .saNode, .aNode").on("click", function (d) {
+        /* Update selection. */
+        if (d.selected) {
+            d.selected = false;
+        } else {
+            d.selected = true;
+        }
 
-            /* Suppress after dragend. */
-           if (d3.event.defaultPrevented) return;
-
-            /* Update selection. */
+        /* Update node size. */
+        if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {
             if (d.selected) {
-                d.selected = false;
+                if (d.nodeType === "raw" || d.nodeType === "processed") {
+                    d3.select("#nodeId-" + d.autoId).select("circle").attr("r", vis.radius * 2);
+                } else if (d.nodeType === "special") {
+                    d3.select("#nodeId-" + d.autoId)
+                        .select("rect")
+                        .attr("transform", "translate(" + (-vis.radius * 2) + "," + (-vis.radius * 2) + ")")
+                        .attr("width", vis.radius * 4)
+                        .attr("height", vis.radius * 4);
+                } else if (d.nodeType === "dt") {
+                    d3.select(this)
+                        .select("rect")
+                        .attr("transform", function () {
+                            return "translate(" + (-vis.radius * 1.5) + "," + (-vis.radius * 1.5) + ")" +
+                                "rotate(45 " + (vis.radius * 1.5) + "," + (vis.radius * 1.5) + ")";
+                        })
+                        .attr("width", vis.radius * 3)
+                        .attr("height", vis.radius * 3);
+                }
+
             } else {
-                d.selected = true;
-            }
-
-            /* Update node size. */
-            if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {
-                if (d.selected) {
-                    if (d.nodeType === "raw" || d.nodeType === "processed") {
-                        d3.select(this).select("circle").attr("r", vis.radius * 2);
-                    } else if (d.nodeType === "special") {
-                        d3.select(this)
-                            .select("rect")
-                            .attr("transform", "translate(" + (- vis.radius*2) + "," + (- vis.radius*2) + ")")
-                            .attr("width", vis.radius * 4)
-                            .attr("height", vis.radius * 4);
-                    } else if (d.nodeType === "dt") {
-                        d3.select(this)
-                            .select("rect")
-                            .attr("transform", function () {
-                                return "translate(" + (- vis.radius * 1.5) + "," + (- vis.radius * 1.5) + ")" +
-                                    "rotate(45 " + (vis.radius * 1.5) + "," + (vis.radius * 1.5) + ")";
-                            })
-                            .attr("width", vis.radius * 3)
-                            .attr("height", vis.radius * 3);
-                    }
-
-                } else {
-                    if (d.nodeType === "raw" || d.nodeType === "processed") {
-                        d3.select(this).select("circle").attr("r", vis.radius);
-                    } else if (d.nodeType === "special") {
-                        d3.select(this)
-                            .select("rect")
-                            .attr("transform", "translate(" + (- vis.radius) + "," + (- vis.radius) + ")")
-                            .attr("width", vis.radius * 2)
-                            .attr("height", vis.radius * 2);
-                    } else if (d.nodeType === "dt") {
-                        d3.select(this)
-                            .select("rect")
-                            .attr("transform", function () {
-                                return "translate(" + (- vis.radius * 0.75) + "," + (- vis.radius * 0.75) + ")" +
-                                    "rotate(45 " + (vis.radius * 0.75) + "," + (vis.radius * 0.75) + ")";
-                            })
-                            .attr("width", vis.radius * 1.5)
-                            .attr("height", vis.radius * 1.5);
-                    }
-                }
-            } else if (d.nodeType === "subanalysis") {
-                if (d.selected) {
-                    console.log(d3.select(this));
-                    d3.select(this).select("polygon")
-                        .attr("points", function () {
-                            return "0," + (-vis.radius*2) + " " +
-                                (vis.radius*2) + "," + (-vis.radius) + " " +
-                                (vis.radius*2) + "," + (vis.radius) + " " +
-                                "0" + "," + (vis.radius*2) + " " +
-                                (-vis.radius*2) + "," + (vis.radius) + " " +
-                                (-vis.radius*2) + "," + (-vis.radius);
-                        });
-                } else {
-                    d3.select(this).select("polygon")
-                        .attr("points", function () {
-                            return "0," + (-vis.radius) + " " +
-                                (vis.radius) + "," + (-vis.radius / 2) + " " +
-                                (vis.radius) + "," + (vis.radius / 2) + " " +
-                                "0" + "," + (vis.radius) + " " +
-                                (-vis.radius) + "," + (vis.radius / 2) + " " +
-                                (-vis.radius) + "," + (-vis.radius / 2);
-                        });
-                }
-
-            } else if (d.nodeType === "analysis") {
-                if (d.selected) {
-                    d3.select(this).select("polygon")
-                        .attr("points", function () {
-                            return "0," + (-4 * vis.radius) + " " +
-                                (4 * vis.radius) + "," + (-vis.radius*2) + " " +
-                                (4 * vis.radius) + "," + (vis.radius*2) + " " +
-                                "0" + "," + (4 * vis.radius) + " " +
-                                (-4 * vis.radius) + "," + (vis.radius*2) + " " +
-                                (-4 * vis.radius) + "," + (-vis.radius*2);
-                        });
-                } else {
-                    d3.select(this).select("polygon")
-                        .attr("points", function () {
-                            return "0," + (-2 * vis.radius) + " " +
-                                (2 * vis.radius) + "," + (-vis.radius) + " " +
-                                (2 * vis.radius) + "," + (vis.radius) + " " +
-                                "0" + "," + (2 * vis.radius) + " " +
-                                (-2 * vis.radius) + "," + (vis.radius) + " " +
-                                (-2 * vis.radius) + "," + (-vis.radius);
-                        });
+                if (d.nodeType === "raw" || d.nodeType === "processed") {
+                    d3.select("#nodeId-" + d.autoId).select("circle").attr("r", vis.radius);
+                } else if (d.nodeType === "special") {
+                    d3.select("#nodeId-" + d.autoId)
+                        .select("rect")
+                        .attr("transform", "translate(" + (-vis.radius) + "," + (-vis.radius) + ")")
+                        .attr("width", vis.radius * 2)
+                        .attr("height", vis.radius * 2);
+                } else if (d.nodeType === "dt") {
+                    d3.select("#nodeId-" + d.autoId)
+                        .select("rect")
+                        .attr("transform", function () {
+                            return "translate(" + (-vis.radius * 0.75) + "," + (-vis.radius * 0.75) + ")" +
+                                "rotate(45 " + (vis.radius * 0.75) + "," + (vis.radius * 0.75) + ")";
+                        })
+                        .attr("width", vis.radius * 1.5)
+                        .attr("height", vis.radius * 1.5);
                 }
             }
-/*
-            *//* Update grid. *//*
+        } else if (d.nodeType === "subanalysis") {
             if (d.selected) {
-                d3.select("#cellId-" + d.col + "-" + d.row)
-                    .attr("x", -cell.width - d.col * cell.width)
-                    .attr("y", -cell.height + d.row * cell.height)
-                    .attr("width", cell.width*2)
-                    .attr("height", cell.height*2)
-                    .attr("stroke", "black");
-
-                gridCell.each( function (gc,i) {
-                    var col = parseInt(i / vis.graph.width, 10),
-                        row = i % vis.graph.width,
-                        xTrans = 0,
-                        yTrans = 0;
-
-
-                        if (col > d.col) {
-                            xTrans = -cell.width -col * cell.width;
-                        } else if (col < d.col) {
-                            xTrans = -col * cell.width;
-                        } else {
-                            xTrans = 0;
-                        }
-
-                        if (row < d.row) {
-                            yTrans = - cell.height + row * cell.height;
-                        } else if (row > d.row) {
-                            yTrans = row * cell.height;
-                        } else {
-                            yTrans = 0;
-                        }
-
-                        d3.select("#cellId-" + col + "-" + row)
-                            .attr("x", xTrans)
-                            .attr("y", yTrans);
-
-                        d3.select("#nodeId-" + gc.autoId)
-                            .attr("transform", "translate(" + xTrans + "," + yTrans + ")");
-
-                });
+                d3.select("#nodeId-" + d.autoId).select("polygon")
+                    .attr("points", function () {
+                        return "0," + (-vis.radius * 2) + " " +
+                            (vis.radius * 2) + "," + (-vis.radius) + " " +
+                            (vis.radius * 2) + "," + (vis.radius) + " " +
+                            "0" + "," + (vis.radius * 2) + " " +
+                            (-vis.radius * 2) + "," + (vis.radius) + " " +
+                            (-vis.radius * 2) + "," + (-vis.radius);
+                    });
             } else {
-                d3.select("#cellId-" + d.col + "-" + d.row)
-                    .attr("x", - cell.width/2 - d.col * cell.width)
-                    .attr("y", - cell.height/2 + d.row * cell.height)
-                    .attr("width", cell.width)
-                    .attr("height", cell.height)
-                    .attr("stroke", "black");
+                d3.select("#nodeId-" + d.autoId).select("polygon")
+                    .attr("points", function () {
+                        return "0," + (-vis.radius) + " " +
+                            (vis.radius) + "," + (-vis.radius / 2) + " " +
+                            (vis.radius) + "," + (vis.radius / 2) + " " +
+                            "0" + "," + (vis.radius) + " " +
+                            (-vis.radius) + "," + (vis.radius / 2) + " " +
+                            (-vis.radius) + "," + (-vis.radius / 2);
+                    });
+            }
 
-                gridCell.each( function (gc,i) {
-                    var col = parseInt(i / vis.graph.width, 10),
-                        row = i % vis.graph.width,
-                        xTrans = 0,
-                        yTrans = 0;
-
-                    if (col !== d.col || row !== d.row) {
-                        if (col > d.col) {
-                            xTrans = -cell.width / 2 - col * cell.width;
-
-
-                        } else if (col < d.col) {
-                            xTrans = - col * cell.width;
-                        }
-
-                        if (row < d.row) {
-                            yTrans = row * cell.height;
-
-                        } else if (row > d.row) {
-                            yTrans = -cell.height / 2 + row * cell.height;
-                        }
-
-                        d3.select("#cellId-" + col + "-" + row)
-                            .attr("x", xTrans)
-                            .attr("y", yTrans);
-
-                        d3.select("#nodeId-" + gc.autoId)
-                            .attr("transform", "translate(" + xTrans + "," + yTrans + ")");
-                    }
-                });
-            }*/
-        });
+        } else if (d.nodeType === "analysis") {
+            if (d.selected) {
+                d3.select("#nodeId-" + d.autoId).select("polygon")
+                    .attr("points", function () {
+                        return "0," + (-4 * vis.radius) + " " +
+                            (4 * vis.radius) + "," + (-vis.radius * 2) + " " +
+                            (4 * vis.radius) + "," + (vis.radius * 2) + " " +
+                            "0" + "," + (4 * vis.radius) + " " +
+                            (-4 * vis.radius) + "," + (vis.radius * 2) + " " +
+                            (-4 * vis.radius) + "," + (-vis.radius * 2);
+                    });
+            } else {
+                d3.select("#nodeId-" + d.autoId).select("polygon")
+                    .attr("points", function () {
+                        return "0," + (-2 * vis.radius) + " " +
+                            (2 * vis.radius) + "," + (-vis.radius) + " " +
+                            (2 * vis.radius) + "," + (vis.radius) + " " +
+                            "0" + "," + (2 * vis.radius) + " " +
+                            (-2 * vis.radius) + "," + (vis.radius) + " " +
+                            (-2 * vis.radius) + "," + (-vis.radius);
+                    });
+            }
+        }
     };
 
     /**
@@ -850,27 +756,42 @@ var provvisRender = function () {
      * @param grid An array containing cells.
      */
     var drawGrid = function (grid) {
-        gridCell = vis.canvas.append("g").classed({"cells": true}).selectAll(".cell")
+        vis.canvas.append("g").classed({"grid": true})
+            .selectAll(".vLine")
             .data(function () {
-                return [].concat.apply([], grid);
+                return grid.map(function (d, i) {
+                    return i;
+                });
+            }).enter().append("line")
+            .attr("x1", function (d, i) {
+                return cell.width / 2 - parseInt(i % vis.graph.depth, 10) * cell.width;
+            }).attr("y1", -cell.height / 2)
+            .attr("x2", function (d, i) {
+                return cell.width / 2 - parseInt(i % vis.graph.depth, 10) * cell.width;
+            }).attr("y2", -cell.height / 2 + (vis.graph.width) * cell.height)
+            .classed({"vLine": true})
+            .attr("id", function (d) {
+                return "vLine-" + d;
+            });
+
+        vis.canvas.select(".grid")
+            .selectAll(".hLine")
+            .data(function () {
+                return grid[0].map(function (d, i) {
+                    return i;
+                });
+            }).enter().append("line")
+            .attr("x1", cell.width / 2)
+            .attr("y1", function (d, i) {
+                return -cell.height / 2 + parseInt(i % vis.graph.width, 10) * cell.height;
             })
-            .enter().append("rect")
-            .attr("x", function (d, i) {
-                return -cell.width / 2 - parseInt(i / vis.graph.width, 10) * cell.width;
+            .attr("x2", cell.width / 2 - vis.graph.depth * cell.width)
+            .attr("y2", function (d, i) {
+                return -cell.height / 2 + parseInt(i % vis.graph.width, 10) * cell.height;
             })
-            .attr("y", function (d, i) {
-                return -cell.height / 2 + (i % vis.graph.width) * cell.height;
-            })
-            .attr("width", cell.width)
-            .attr("height", cell.height)
-            .attr("fill", "none")
-            .attr("stroke", "lightgray")
-            .classed({
-                "cell": true
-            })
-            .style("opacity", 0.7)
-            .attr("id", function (d, i) {
-                return "cellId-" + parseInt(i / vis.graph.width, 10) + "-" + (i % vis.graph.width);
+            .classed({"hLine": true})
+            .attr("id", function (d) {
+                return "hLine-" + d;
             });
     };
 
@@ -975,25 +896,27 @@ var provvisRender = function () {
      */
     var handleEvents = function (graph) {
 
-        /* Path highlighting. */
-        handlePathHighlighting();
+        handleToolbar(graph);
+
+        d3.selectAll(".node, .saNode, .aNode").on("click", function (d) {
+            if (d3.event.ctrlKey || d3.event.shiftKey) {
+                handlePathHighlighting(d);
+            } else {
+                handleNodeSelection(d);
+            }
+        });
+
+        d3.selectAll(".node, .saNode, .aNode").on("dblclick", function (d) {
+            /* TODO: Minimize layout through minimizing analyses - adapt to collapse/expand. */
+            /* Handle analysis aggregation. */
+            handleCollapseExpandNode(d);
+        });
 
         /* Handle click separation. */
         handleBRectClick();
 
-        /* TODO: Minimize layout through minimizing analyses - adapt to collapse/expand. */
-        /* Handle analysis aggregation. */
-        handleCollapseExpandNode();
-
         /* Handle tooltips. */
         handleTooltips();
-
-        /* Handle node selection. */
-        handleNodeSelection();
-
-        handleToolbar(graph);
-
-        /* TODO: On click on node, enlarge shape to display more info. */
     };
 
     /* TODO: Dynamic layout compensation. */
