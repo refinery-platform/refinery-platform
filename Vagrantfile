@@ -22,6 +22,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # that's installed on the host, set $GALAXY_DATABSE_DIR environment
   # variable to the absolute path of the $GALAXY_ROOT/database folder
   if ENV['GALAXY_DATABASE_DIR']
+    puts("INFO: Using host directory #{ENV['GALAXY_DATABASE_DIR']} to exchange data with Galaxy.")
     config.vm.synced_folder ENV['GALAXY_DATABASE_DIR'], ENV['GALAXY_DATABASE_DIR']
   else
    puts("WARNING: $GALAXY_DATABASE_DIR is not set: copying files from local Galaxy instance will not work.")
@@ -32,7 +33,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # variable to the absolute path of the $GALAXY_ROOT/database folder
   if ENV['REFINERY_VM_TRANSFER_DIR']
     config.vm.synced_folder ENV['REFINERY_VM_TRANSFER_DIR'], "/vagrant/transfer"
-    puts("INFO: Using #{ENV['REFINERY_VM_TRANSFER_DIR']} to import datasets.")
+    puts("INFO: Using host directory #{ENV['REFINERY_VM_TRANSFER_DIR']} to import datasets.")
   else
    puts("WARNING: $REFINERY_VM_TRANSFER_DIR is not set: importing datasets from the command line will not work.")
   end
