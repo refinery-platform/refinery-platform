@@ -918,18 +918,7 @@ var provvisRender = function () {
         console.log($( "#prov-ctrl-link-style option:selected" ).attr( "value" ));
         $( "#prov-ctrl-link-style" ).change( function( ) {
 
-            /* TODO: Join arrays into a single collection. */
-            node.each( function (n) {
-                if (!n.hidden) {
-                    updateLink(d3.select(this), n, n.x, n.y);
-                }
-            });
-            aNode.each( function (n) {
-                if (!n.hidden) {
-                    updateLink(d3.select(this), n, n.x, n.y);
-                }
-            });
-            saNode.each( function (n) {
+            d3.selectAll(".node, .aNode, .saNode").each( function (n) {
                 if (!n.hidden) {
                     updateLink(d3.select(this), n, n.x, n.y);
                 }
