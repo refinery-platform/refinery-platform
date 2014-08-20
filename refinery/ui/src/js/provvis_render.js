@@ -2,8 +2,6 @@
  * Module for render.
  */
 
-/* TODO: Tooltips like in solr_pivot_matrix.js. */
-/* TODO: Add toolbar to let user switch between bezier and edgy links. */
 var provvisRender = function () {
 
     var vis = Object.create(null),
@@ -104,8 +102,8 @@ var provvisRender = function () {
         n.predLinks.values().forEach(function (l) {
             d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).attr("d", function (l) {
                 var srcCoords = getNodeCoords(l.source),
-                pathSegment = "";
-                if ($( "#prov-ctrl-link-style option:selected" ).attr( "value" ) === "bezier") {
+                    pathSegment = "";
+                if ($("#prov-ctrl-link-style option:selected").attr("value") === "bezier") {
                     pathSegment = "M" + srcCoords.x + "," + srcCoords.y;
                     pathSegment = pathSegment.concat(" Q" + (srcCoords.x + cell.width / 3) + "," + (srcCoords.y) + " " +
                         (srcCoords.x + cell.width / 2) + "," + (srcCoords.y + (y - srcCoords.y) / 2) + " " +
@@ -132,7 +130,7 @@ var provvisRender = function () {
                 var tarCoords = getNodeCoords(l.target),
                     pathSegment = "";
 
-                if ($( "#prov-ctrl-link-style option:selected" ).attr( "value" ) === "bezier") {
+                if ($("#prov-ctrl-link-style option:selected").attr("value") === "bezier") {
                     pathSegment = "M" + x + "," + y;
                     pathSegment = pathSegment.concat(" Q" + (x + cell.width / 3) + "," + (y) + " " +
                         (x + cell.width / 2) + "," + (y + (tarCoords.y - y) / 2) + " " +
@@ -258,9 +256,6 @@ var provvisRender = function () {
         });
     };
 
-
-    /* TODO: Add bezier links. (See workflow visualization) */
-    /* TODO: Let user switch between original and bezier links. */
     /**
      * Draw links.
      */
@@ -270,7 +265,7 @@ var provvisRender = function () {
             .enter().append("path")
             .attr("d", function (l) {
                 var pathSegment = "";
-                if ($( "#prov-ctrl-link-style option:selected" ).attr( "value" ) === "bezier") {
+                if ($("#prov-ctrl-link-style option:selected").attr("value") === "bezier") {
                     pathSegment = "M" + l.source.x + "," + l.source.y;
                     pathSegment = pathSegment.concat(" Q" + (l.source.x + cell.width / 3) + "," + (l.source.y) + " " +
                         (l.source.x + cell.width / 2) + "," + (l.source.y + (l.target.y - l.source.y) / 2) + " " +
@@ -436,8 +431,9 @@ var provvisRender = function () {
 
     /**
      * Sets the visibility of links and (a)nodes when collapsing or expanding analyses.
+     * @param keyStroke Keystroke being pressed at mouse click.
      */
-    var handleCollapseExpandNode = function (d) {
+    var handleCollapseExpandNode = function (d, keyStroke) {
 
         var hideChildNodes = function (n) {
             n.children.values().forEach(function (cn) {
@@ -449,7 +445,7 @@ var provvisRender = function () {
         };
 
         /* Expand. */
-        if (d3.event.ctrlKey && (d.nodeType === "analysis" || d.nodeType === "subanalysis")) {
+        if (keyStroke.ctrl && (d.nodeType === "analysis" || d.nodeType === "subanalysis")) {
 
             /* Set node visibility. */
             d3.select("#nodeId-" + d.autoId).style("display", "none");
@@ -478,7 +474,7 @@ var provvisRender = function () {
                 updateLink(d3.select("#nodeId-" + cn.autoId), cn, cn.x, cn.y);
             });
 
-        } else if (d3.event.shiftKey && d.nodeType !== "analysis") {
+        } else if (keyStroke.shift && d.nodeType !== "analysis") {
             /* Collapse. */
 
             /* Set node visibility. */
@@ -506,19 +502,19 @@ var provvisRender = function () {
 
     /**
      * Path highlighting.
+     * @param d Node.
+     * @param keyStroke Keystroke being pressed at mouse click.
      */
-    var handlePathHighlighting = function (d) {
-        /* Suppress after dragend. */
-        if (d3.event.defaultPrevented) return;
+    var handlePathHighlighting = function (d, keyStroke) {
 
         /* Clear any highlighting. */
         clearHighlighting();
 
-        if (d3.event.ctrlKey) {
+        if (keyStroke.ctrl) {
 
             /* Highlight path. */
             highlightSuccPath(d);
-        } else if (d3.event.shiftKey) {
+        } else if (keyStroke.shift) {
 
             /* Highlight path. */
             highlightPredPath(d);
@@ -573,51 +569,12 @@ var provvisRender = function () {
         fitGraphToWindow(1000);
     };
 
-    /* TODO: BUG: On double click, single-click action still is executed. */
-    /**
-     * Click and double click separation on background rectangle.
-     */
-    var handleBRectClick = function () {
-        var clickInProgress = false, /* click in progress. */
-            timer = 0,
-            bRectAction = clearHighlighting;
-        /* default action. */
-        d3.selectAll(".brect, .vLine, .hLine").on("click", function () {
-
-            /* Suppress after drag end. */
-            if (d3.event.defaultPrevented) return;
-
-            /* If double click, break. */
-            if (clickInProgress) {
-                return;
-            }
-            clickInProgress = true;
-
-            /* Single click event is called after timeout unless a dblclick action is performed. */
-            timer = setTimeout(function () {
-                bRectAction();
-
-                /* Called every time. */
-                bRectAction = clearHighlighting;
-
-                /* Set back click action to single. */
-                clickInProgress = false;
-            }, 200);
-            /* Timeout value. */
-        });
-
-        /* if double click, the single click action is overwritten. */
-        d3.selectAll(".brect, .cell").on("dblclick", function () {
-            bRectAction = handleFitGraphToWindow;
-        });
-    };
-
     /**
      * Left click on a node to reveal additional details.
+     * @param d Node
+     * @param d3Event Mouse event.
      */
-    var handleNodeSelection = function (d) {
-        /* Suppress after dragend. */
-        if (d3.event.defaultPrevented) return;
+    var handleNodeSelection = function (d, d3Event) {
 
         /* Update selection. */
         if (d.selected) {
@@ -914,11 +871,9 @@ var provvisRender = function () {
             });
         });
 
-        /* TODO: IN PROGRESS: Hook for switching link styles. */
-        console.log($( "#prov-ctrl-link-style option:selected" ).attr( "value" ));
-        $( "#prov-ctrl-link-style" ).change( function( ) {
-
-            d3.selectAll(".node, .aNode, .saNode").each( function (n) {
+        /* Switch link styles. */
+        $("#prov-ctrl-link-style").change(function () {
+            d3.selectAll(".node, .aNode, .saNode").each(function (n) {
                 if (!n.hidden) {
                     updateLink(d3.select(this), n, n.x, n.y);
                 }
@@ -926,6 +881,9 @@ var provvisRender = function () {
         });
     };
 
+    /* TODO: Minimize layout through minimizing analyses - adapt to collapse/expand. */
+    /* TODO: Handle analysis aggregation. */
+    /* TODO: Preserve highlighting on collapse/expand. */
     /**
      * Handle events.
      * @param graph Provenance graph object.
@@ -934,22 +892,51 @@ var provvisRender = function () {
 
         handleToolbar(graph);
 
+        var keyEvent = Object.create(null);
         d3.selectAll(".node, .saNode, .aNode").on("click", function (d) {
+            keyEvent = {"alt": d3.event.altKey, "shift": d3.event.shiftKey, "ctrl": d3.event.ctrlKey};
+
+            if (d3.event.defaultPrevented) return;
+            clearTimeout(this.clickTimeout);
+
             if (d3.event.ctrlKey || d3.event.shiftKey) {
-                handlePathHighlighting(d);
+                this.clickTimeout = setTimeout(function () {
+                    handlePathHighlighting(d, keyEvent);
+                }, 200);
             } else {
-                handleNodeSelection(d);
+                this.clickTimeout = setTimeout(function () {
+                    handleNodeSelection(d, keyEvent);
+                }, 200);
             }
         });
 
         d3.selectAll(".node, .saNode, .aNode").on("dblclick", function (d) {
-            /* TODO: Minimize layout through minimizing analyses - adapt to collapse/expand. */
-            /* Handle analysis aggregation. */
-            handleCollapseExpandNode(d);
+            keyEvent = {"alt": d3.event.altKey, "shift": d3.event.shiftKey, "ctrl": d3.event.ctrlKey};
+            if (d3.event.defaultPrevented) return;
+            clearTimeout(this.clickTimeout);
+
+            /* Fire double click event. */
+            handleCollapseExpandNode(d, keyEvent);
         });
 
         /* Handle click separation. */
-        handleBRectClick();
+        d3.selectAll(".brect, .link, .hLink, .vLine, .hLine").on("click", function () {
+            if (d3.event.defaultPrevented) return;
+            clearTimeout(this.clickTimeout);
+
+            /* Click event is executed after 200ms unless the double click event below clears the click event timeout.*/
+            this.clickTimeout = setTimeout(function () {
+                clearHighlighting();
+            }, 200);
+        });
+
+        d3.selectAll(".brect, .link, .hLink, .vLine, .hLine, .cell").on("dblclick", function () {
+            if (d3.event.defaultPrevented) return;
+            clearTimeout(this.clickTimeout);
+
+            /* Double click event is executed when this event is triggered before the click timeout has finished. */
+            handleFitGraphToWindow();
+        });
 
         /* Handle tooltips. */
         handleTooltips();
