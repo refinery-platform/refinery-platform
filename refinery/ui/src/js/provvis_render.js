@@ -20,7 +20,9 @@ var provvisRender = function () {
 
         width = 0,
         depth = 0,
-        grid = [];
+        grid = [],
+        cols = d3.map(),
+        rows = d3.map();
 
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
@@ -692,6 +694,85 @@ var provvisRender = function () {
                     });
             }
         }
+
+        /* TODO: Check for negative cols and rows. */
+        var shiftCols = function (col, shiftAmount, selected) {
+            for (var i = 0; i < depth; i++) {
+                    if (i < col) {
+                        cols.get(i).x = cols.get(i).x + shiftAmount;
+                    } else if (i > col) {
+                        cols.get(i).x = cols.get(i).x - shiftAmount;
+                    }
+
+                    if ( i === col) {
+                        d3.select("#vLine-" + i)
+                            .attr("x1", cols.get(i).x+ shiftAmount*1.5)
+                            .attr("x2", cols.get(i).x+ shiftAmount*1.5);
+                    } else {
+                        d3.select("#vLine-" + i)
+                            .attr("x1", cols.get(i).x+ shiftAmount/2)
+                            .attr("x2", cols.get(i).x+ shiftAmount/2);
+                    }
+            }
+            cols.get(col).expanded = selected ? true : false;
+        };
+        var shiftRows = function (row, shiftAmount, selected) {
+            for (var i = 0; i < width; i++) {
+
+                    if (i < row) {
+                        rows.get(i).y = rows.get(i).y - shiftAmount;
+                    } else if (i > row) {
+                        rows.get(i).y = rows.get(i).y + shiftAmount;
+                    }
+
+                    if (i === row) {
+                        d3.select("#hLine-" + i)
+                            .attr("y1", rows.get(i).y+ shiftAmount*1.5)
+                            .attr("y2", rows.get(i).y+ shiftAmount*1.5);
+                    } else {
+                        d3.select("#hLine-" + i)
+                            .attr("y1", rows.get(i).y+ shiftAmount/2)
+                            .attr("y2", rows.get(i).y+ shiftAmount/2);
+                    }
+            }
+            rows.get(row).expanded = selected ? true : false;
+        };
+
+        if (d.selected) {
+            /* Expand row and/or column. */
+            if (!cols.get(d.col).expanded) {
+                shiftCols(d.col, cell.width, d.selected);
+            }
+            if (!rows.get(d.row).expanded) {
+                shiftRows(d.row, cell.height, d.selected);
+            }
+
+            d3.selectAll(".node, .saNode, aNode").each(function (n) {
+                if (n.row < d.row || n.row > d.row || n.col > d.col || n.col < d.col) {
+                    n.x = cols.get(n.col).x;
+                    n.y = rows.get(n.row).y;
+                    updateNode(d3.select(this), n, n.x, n.y);
+                    updateLink(d3.select(this), n, n.x, n.y);
+                }
+            });
+        } else if (!d.selected) {
+            /* Expand row and/or column. */
+            if (cols.get(d.col).expanded) {
+                shiftCols(d.col, -cell.width, d.selected);
+            }
+            if (rows.get(d.row).expanded) {
+                shiftRows(d.row, -cell.height, d.selected);
+            }
+
+            d3.selectAll(".node, .saNode, aNode").each(function (n) {
+                if (n.row < d.row || n.row > d.row || n.col > d.col || n.col < d.col) {
+                    n.x = cols.get(n.col).x;
+                    n.y = rows.get(n.row).y;
+                    updateNode(d3.select(this), n, n.x, n.y);
+                    updateLink(d3.select(this), n, n.x, n.y);
+                }
+            });
+        }
     };
 
     /**
@@ -1063,13 +1144,22 @@ var provvisRender = function () {
     };
 
     /**
-     * Set coordinates for nodes.
+     * Set coordinates for columns and rows as well as nodes.
      * @param nodes All nodes within the graph.
+     * @param width Graph width in rows.
+     * @param depth Graph depth in cols.
      */
-    var assignCellCoords = function (nodes) {
-        nodes.forEach(function (d) {
-            d.x = -d.col * cell.width;
-            d.y = d.row * cell.height;
+    var assignCellCoords = function (nodes, width, depth) {
+        for (var i = 0; i < depth; i++) {
+            cols.set(i, {"x": -i * cell.width, "expanded": false});
+        }
+        for (i = 0; i < width; i++) {
+            rows.set(i, {"y": i * cell.height, "expanded": false});
+        }
+
+        nodes.forEach(function (n) {
+            n.x = cols.get(n.col).x;
+            n.y = rows.get(n.row).y;
         });
     };
 
@@ -1108,7 +1198,7 @@ var provvisRender = function () {
         setTimeout(function () {
 
             /* Set coordinates for nodes. */
-            assignCellCoords(vis.graph.nodes);
+            assignCellCoords(vis.graph.nodes, vis.graph.width, vis.graph.depth);
 
             /* Draw grid. */
             drawGrid(vis.graph.grid);
