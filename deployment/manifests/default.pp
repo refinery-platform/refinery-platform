@@ -156,7 +156,7 @@ package { 'nodejs':
 }
 ->
 exec { "npm_global_modules":
-  command => "/usr/bin/npm install -g bower@1.2.8 jshint@2.4.4 grunt-cli@0.1.13",
+  command => "/usr/bin/npm install -g bower@1.3.9 jshint@2.4.4 grunt-cli@0.1.13",
   logoutput => on_failure,
 }
 ->
