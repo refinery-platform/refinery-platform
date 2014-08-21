@@ -314,15 +314,34 @@ var provvisRender = function () {
                     return san.parent.autoId === +analysisId.replace(/(analysisId-)/g, "");
                 }))
                 .enter().append("g").each(function (san) {
-                    d3.select(this).classed({"saNode": true})
+                    var g = d3.select(this).classed({"saNode": true})
                         .attr("transform", "translate(" + san.x + "," + san.y + ")")
                         .attr("id", function () {
                             return "nodeId-" + san.autoId;
                         })
                         .style("display", function () {
                             return san.hidden ? "none" : "inline";
+                        });
+
+                    /* TODO: PROTOTYPE: Implementation for node menu. */
+                    var saMenu = [0, 1, 2, 3];
+                    var arcMenuItem = d3.svg.arc()
+                        .innerRadius(vis.radius)
+                        .outerRadius(vis.radius * 3)
+                        .startAngle(function (d, i) {
+                            return i * (2 / saMenu.length) * Math.PI;
                         })
-                        .append("polygon")
+                        .endAngle(function (d, i) {
+                            return ((i + 1) * (2 / saMenu.length) * Math.PI);
+                        });
+
+                    g.append("g").classed({"saMenu": true}).style("display", "none").selectAll("path")
+                        .data(saMenu)
+                        .enter()
+                        .append("path")
+                        .attr("d", arcMenuItem).style("opacity", 0.3);
+
+                    g.append("g").classed({"saGlyph": true}).append("polygon")
                         .attr("points", function () {
                             return "0," + (-vis.radius) + " " +
                                 (vis.radius) + "," + (-vis.radius / 2) + " " +
@@ -698,42 +717,42 @@ var provvisRender = function () {
         /* TODO: Check for negative cols and rows. */
         var shiftCols = function (col, shiftAmount, selected) {
             for (var i = 0; i < depth; i++) {
-                    if (i < col) {
-                        cols.get(i).x = cols.get(i).x + shiftAmount;
-                    } else if (i > col) {
-                        cols.get(i).x = cols.get(i).x - shiftAmount;
-                    }
+                if (i < col) {
+                    cols.get(i).x = cols.get(i).x + shiftAmount;
+                } else if (i > col) {
+                    cols.get(i).x = cols.get(i).x - shiftAmount;
+                }
 
-                    if ( i === col) {
-                        d3.select("#vLine-" + i)
-                            .attr("x1", cols.get(i).x+ shiftAmount*1.5)
-                            .attr("x2", cols.get(i).x+ shiftAmount*1.5);
-                    } else {
-                        d3.select("#vLine-" + i)
-                            .attr("x1", cols.get(i).x+ shiftAmount/2)
-                            .attr("x2", cols.get(i).x+ shiftAmount/2);
-                    }
+                if (i === col) {
+                    d3.select("#vLine-" + i)
+                        .attr("x1", cols.get(i).x + shiftAmount * 1.5)
+                        .attr("x2", cols.get(i).x + shiftAmount * 1.5);
+                } else {
+                    d3.select("#vLine-" + i)
+                        .attr("x1", cols.get(i).x + shiftAmount / 2)
+                        .attr("x2", cols.get(i).x + shiftAmount / 2);
+                }
             }
             cols.get(col).expanded = selected ? true : false;
         };
         var shiftRows = function (row, shiftAmount, selected) {
             for (var i = 0; i < width; i++) {
 
-                    if (i < row) {
-                        rows.get(i).y = rows.get(i).y - shiftAmount;
-                    } else if (i > row) {
-                        rows.get(i).y = rows.get(i).y + shiftAmount;
-                    }
+                if (i < row) {
+                    rows.get(i).y = rows.get(i).y - shiftAmount;
+                } else if (i > row) {
+                    rows.get(i).y = rows.get(i).y + shiftAmount;
+                }
 
-                    if (i === row) {
-                        d3.select("#hLine-" + i)
-                            .attr("y1", rows.get(i).y+ shiftAmount*1.5)
-                            .attr("y2", rows.get(i).y+ shiftAmount*1.5);
-                    } else {
-                        d3.select("#hLine-" + i)
-                            .attr("y1", rows.get(i).y+ shiftAmount/2)
-                            .attr("y2", rows.get(i).y+ shiftAmount/2);
-                    }
+                if (i === row) {
+                    d3.select("#hLine-" + i)
+                        .attr("y1", rows.get(i).y + shiftAmount * 1.5)
+                        .attr("y2", rows.get(i).y + shiftAmount * 1.5);
+                } else {
+                    d3.select("#hLine-" + i)
+                        .attr("y1", rows.get(i).y + shiftAmount / 2)
+                        .attr("y2", rows.get(i).y + shiftAmount / 2);
+                }
             }
             rows.get(row).expanded = selected ? true : false;
         };
@@ -804,16 +823,23 @@ var provvisRender = function () {
         });
 
         /* Subanalysis tooltips. */
-        saNode.on("mouseover", function (d) {
+        console.log(saNode);
+        console.log(saNode.select(".saGlyph"));
+        saNode.select(".saGlyph").on("mouseover", function (d) {
             showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
                 "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);
+
+            d3.select(this.parentNode).select(".saMenu").style("display", "inline");
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
                 "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);
+
+            d3.select(this.parentNode).select(".saMenu").style("display", "inline");
         }).on("mouseout", function () {
             hideTooltip();
+            /*d3.select(this.parentNode).select(".saMenu").style("display", "none");*/
         });
 
         /* Analysis tolltips. */
@@ -831,6 +857,21 @@ var provvisRender = function () {
                 createHTMLKeyValuePair("End", d.end) + "<br>", event);
         }).on("mouseout", function () {
             hideTooltip();
+        });
+
+
+        saNode.select(".saMenu").selectAll("path").on("mouseover", function () {
+            d3.select(this).style("opacity", 0.7);
+        });
+        saNode.select(".saMenu").selectAll("path").on("mousemove", function () {
+            d3.select(this).style("opacity", 0.7);
+        });
+        saNode.select(".saMenu").selectAll("path").on("mouseout", function () {
+            d3.select(this).style("opacity", 0.3);
+        });
+
+        saNode.select(".saMenu").on("mouseout", function () {
+            d3.select(this).select(".saMenu").style("display", "none");
         });
     };
 
@@ -1018,7 +1059,7 @@ var provvisRender = function () {
         var keyEvent = Object.create(null),
             nodeClickTimeout;
 
-        d3.selectAll(".node, .saNode, .aNode").on("click", function (d) {
+        d3.selectAll(".node, .saGlyph, .aNode").on("click", function (d) {
             if (d3.event.defaultPrevented) return;
             clearTimeout(nodeClickTimeout);
 
@@ -1030,10 +1071,9 @@ var provvisRender = function () {
                     handleNodeSelection(d, keyEvent);
                 }
             }, 200);
-
         });
 
-        d3.selectAll(".node, .saNode, .aNode").on("dblclick", function (d) {
+        d3.selectAll(".node, .saGlyph, .aNode").on("dblclick", function (d) {
             if (d3.event.defaultPrevented) return;
             clearTimeout(nodeClickTimeout);
 

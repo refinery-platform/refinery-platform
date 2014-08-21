@@ -1,3 +1,5 @@
+/* TODO: Add a "Reset layout" to the toolbar. */
+
 /**
  * Module for init.
  */
