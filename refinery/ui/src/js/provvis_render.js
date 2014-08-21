@@ -154,6 +154,8 @@ var provvisRender = function () {
      */
     var dragging = function (n) {
 
+        hideTooltip();
+
         /* Drag selected node. */
         updateNode(d3.select(this), n, d3.event.x, d3.event.y);
 
@@ -171,6 +173,7 @@ var provvisRender = function () {
      * Drag end listener.
      */
     var dragEnd = function (n) {
+
         /* Update data. */
         n.col = Math.round(-1 * n.x / cell.width);
         n.row = Math.round(n.y / cell.height);
