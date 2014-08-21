@@ -189,6 +189,7 @@ var provvisDecl = function () {
         this.source = source;
         this.target = target;
         this.hidden = hidden;
+        this.highlighted = false;
         this.l = {neighbor: false,
             type0: false,
             type1: false};

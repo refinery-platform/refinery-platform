@@ -16,10 +16,7 @@ var provvisRender = function () {
 
         hLink = Object.create(null);
 
-    var nodes = [],
-        links = [],
-
-        analysisWorkflowMap = d3.map(),
+    var analysisWorkflowMap = d3.map(),
 
         width = 0,
         depth = 0,
@@ -114,9 +111,9 @@ var provvisRender = function () {
                     pathSegment = " M" + srcCoords.x + "," + srcCoords.y;
 
                     if (Math.abs(srcCoords.x - x) > cell.width) {
-                        pathSegment = pathSegment.concat(" L" + parseInt(srcCoords.x + (cell.width)) + "," + parseInt(y, 10) + " L" + parseInt(x, 10) + "," + parseInt(y, 10));
+                        pathSegment = pathSegment.concat(" L" + (srcCoords.x + cell.width) + "," + y + " L" + x + "," + y);
                     } else {
-                        pathSegment = pathSegment.concat(" L" + parseInt(x, 10) + "," + parseInt(y, 10));
+                        pathSegment = pathSegment.concat(" L" + x + "," + y);
                     }
                     return pathSegment;
                 }
@@ -138,10 +135,10 @@ var provvisRender = function () {
                         " H" + tarCoords.x;
                     return pathSegment;
                 } else {
-                    pathSegment = " M" + parseInt(x, 10) + "," + parseInt(y, 10);
+                    pathSegment = " M" + x + "," + y;
 
                     if (Math.abs(x - tarCoords.x) > cell.width) {
-                        pathSegment = pathSegment.concat(" L" + parseInt(x + cell.width, 10) + "," + tarCoords.y + " L" + tarCoords.x + " " + tarCoords.y);
+                        pathSegment = pathSegment.concat(" L" + (x + cell.width) + "," + tarCoords.y + " L" + tarCoords.x + " " + tarCoords.y);
                     } else {
                         pathSegment = pathSegment.concat(" L" + tarCoords.x + "," + tarCoords.y);
                     }
@@ -220,10 +217,14 @@ var provvisRender = function () {
     };
 
     /**
-     * Reset css for all nodes.
+     * Reset css for all links.
+     * @param links All links within the graph.
      */
-    var clearHighlighting = function () {
+    var clearHighlighting = function (links) {
         d3.selectAll(".hLink").style("display", "none");
+        links.forEach(function (l) {
+            l.highlighted = false;
+        });
     };
 
     /**
@@ -236,6 +237,7 @@ var provvisRender = function () {
         }
         /* Get svg link element, and for each predecessor call recursively. */
         n.predLinks.values().forEach(function (l) {
+            l.highlighted = true;
             d3.select("#hLinkId-" + l.autoId).style("display", "inline");
             highlightPredPath(l.source);
         });
@@ -251,6 +253,7 @@ var provvisRender = function () {
         }
         /* Get svg link element, and for each successor call recursively. */
         n.succLinks.values().forEach(function (l) {
+            l.highlighted = true;
             d3.select("#hLinkId-" + l.autoId).style("display", "inline");
             highlightSuccPath(l.target);
         });
@@ -258,8 +261,9 @@ var provvisRender = function () {
 
     /**
      * Draw links.
+     * @param links All links within the graph.
      */
-    var drawLinks = function () {
+    var drawLinks = function (links) {
         link = vis.canvas.append("g").classed({"links": true}).selectAll(".link")
             .data(links)
             .enter().append("path")
@@ -273,11 +277,11 @@ var provvisRender = function () {
                         " H" + l.target.x;
                     return pathSegment;
                 } else {
-                    pathSegment = " M" + parseInt(l.source.x, 10) + "," + parseInt(l.source.y, 10);
+                    pathSegment = " M" + l.source.x + "," + l.source.y;
                     if (Math.abs(l.source.x - l.target.x) > cell.width) {
-                        pathSegment = pathSegment.concat(" L" + parseInt(l.source.x + (cell.width)) + "," + parseInt(l.target.y, 10) + " H" + parseInt(l.target.x, 10));
+                        pathSegment = pathSegment.concat(" L" + (l.source.x + cell.width) + "," + l.target.y + " H" + l.target.x);
                     } else {
-                        pathSegment = pathSegment.concat(" L" + parseInt(l.target.x, 10) + "," + parseInt(l.target.y, 10));
+                        pathSegment = pathSegment.concat(" L" + l.target.x + "," + l.target.y);
                     }
                     return pathSegment;
                 }
@@ -341,7 +345,7 @@ var provvisRender = function () {
      * @param aNodes Analysis nodes.
      */
     var drawAnalysisNodes = function (aNodes) {
-        analysis.each(function (d, i) {
+        analysis.each(function () {
             var analysisId = d3.select(this).attr("id");
             d3.select(this).selectAll(".aNode")
                 .data(aNodes.filter(function (an) {
@@ -379,10 +383,12 @@ var provvisRender = function () {
         aNode = d3.selectAll(".aNode");
     };
 
+    /* TODO: Draw nodes according to analysis creation time. */
     /**
      * Draw nodes.
+     * @param nodes All nodes within the graph.
      */
-    var drawNodes = function () {
+    var drawNodes = function (nodes) {
         analysis.each(function () {
             var analysisId = d3.select(this).attr("id");
             d3.select(this).selectAll(".node")
@@ -428,7 +434,6 @@ var provvisRender = function () {
         node = d3.selectAll(".node");
     };
 
-
     /**
      * Sets the visibility of links and (a)nodes when collapsing or expanding analyses.
      * @param keyStroke Keystroke being pressed at mouse click.
@@ -458,12 +463,18 @@ var provvisRender = function () {
             /* Set link visibility. */
             if (d.nodeType === "subanalysis") {
                 d.links.values().forEach(function (l) {
-                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).style("display", "inline");
+                    d3.selectAll("#linkId-" + l.autoId).style("display", "inline");
+                    if (l.highlighted) {
+                        d3.selectAll("#hLinkId-" + l.autoId).style("display", "inline");
+                    }
                 });
             }
             d.inputs.values().forEach(function (sain) {
                 sain.predLinks.values().forEach(function (l) {
-                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).style("display", "inline");
+                    d3.selectAll("#linkId-" + l.autoId).style("display", "inline");
+                    if (l.highlighted) {
+                        d3.selectAll("#hLinkId-" + l.autoId).style("display", "inline");
+                    }
                     l.hidden = false;
                 });
             });
@@ -489,7 +500,10 @@ var provvisRender = function () {
             });
             d.parent.inputs.values().forEach(function (sain) {
                 sain.predLinks.values().forEach(function (l) {
-                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).style("display", "inline");
+                    d3.selectAll("#linkId-" + l.autoId).style("display", "inline");
+                    if (l.highlighted) {
+                        d3.selectAll("#hLinkId-" + l.autoId).style("display", "inline");
+                    }
                     l.hidden = false;
                 });
             });
@@ -505,11 +519,12 @@ var provvisRender = function () {
      * Path highlighting.
      * @param d Node.
      * @param keyStroke Keystroke being pressed at mouse click.
+     * @param links All links within the graph.
      */
-    var handlePathHighlighting = function (d, keyStroke) {
+    var handlePathHighlighting = function (d, keyStroke, links) {
 
         /* Clear any highlighting. */
-        clearHighlighting();
+        clearHighlighting(links);
 
         if (keyStroke.ctrl) {
 
@@ -525,8 +540,9 @@ var provvisRender = function () {
     /**
      * Fit visualization onto free windows space.
      * @param transitionTime The time in milliseconds for the duration of the animation.
+     * @param nodes All nodes within the graph.
      */
-    var fitGraphToWindow = function (transitionTime) {
+    var fitGraphToWindow = function (transitionTime, nodes) {
         var min = [d3.min(nodes, function (d) {
                 return d.x - vis.margin.left;
             }), d3.min(nodes, function (d) {
@@ -565,9 +581,10 @@ var provvisRender = function () {
 
     /**
      * Wrapper function to invoke scale and transformation onto the visualization.
+     * @param nodes All nodes within the graph.
      */
-    var handleFitGraphToWindow = function () {
-        fitGraphToWindow(1000);
+    var handleFitGraphToWindow = function (nodes) {
+        fitGraphToWindow(1000, nodes);
     };
 
     /**
@@ -780,19 +797,30 @@ var provvisRender = function () {
 
     /**
      * Draw simple node/link highlighting shapes.
+     * @param links All links within the graph.
      */
-    var drawHighlightingShapes = function () {
+    var drawHighlightingShapes = function (links) {
         hLink = vis.canvas.append("g").classed({"hLinks": true}).selectAll(".hLink")
             .data(links)
             .enter().append("path")
             .attr("d", function (l) {
-                var pathSegment = " M" + parseInt(l.source.x, 10) + "," + parseInt(l.source.y, 10);
-                if (Math.abs(l.source.x - l.target.x) > cell.width) {
-                    pathSegment = pathSegment.concat(" L" + parseInt(l.source.x + (cell.width)) + "," + parseInt(l.target.y, 10) + " H" + parseInt(l.target.x, 10));
+                var pathSegment = "";
+                if ($("#prov-ctrl-link-style option:selected").attr("value") === "bezier") {
+                    pathSegment = "M" + l.source.x + "," + l.source.y;
+                    pathSegment = pathSegment.concat(" Q" + (l.source.x + cell.width / 3) + "," + (l.source.y) + " " +
+                        (l.source.x + cell.width / 2) + "," + (l.source.y + (l.target.y - l.source.y) / 2) + " " +
+                        "T" + (l.source.x + cell.width) + "," + l.target.y) +
+                        " H" + l.target.x;
+                    return pathSegment;
                 } else {
-                    pathSegment = pathSegment.concat(" L" + parseInt(l.target.x, 10) + "," + parseInt(l.target.y, 10));
+                    pathSegment = " M" + l.source.x + "," + l.source.y;
+                    if (Math.abs(l.source.x - l.target.x) > cell.width) {
+                        pathSegment = pathSegment.concat(" L" + (l.source.x + cell.width) + "," + l.target.y + " H" + l.target.x);
+                    } else {
+                        pathSegment = pathSegment.concat(" L" + l.target.x + "," + l.target.y);
+                    }
+                    return pathSegment;
                 }
-                return pathSegment;
             })
             .classed({
                 "hLink": true
@@ -823,7 +851,7 @@ var provvisRender = function () {
             });
 
             /* Set link visibility. */
-            links.forEach(function (l) {
+            graph.links.forEach(function (l) {
                 d3.selectAll("#linkId-" + l.autoId).style("display", "inline");
                 l.hidden = false;
             });
@@ -852,7 +880,7 @@ var provvisRender = function () {
             };
 
             /* Hide analyses. */
-            graph.aNodes.forEach( function(d) {
+            graph.aNodes.forEach(function (d) {
                 d3.select("#nodeId-" + d.autoId).style("display", "none");
                 d.hidden = true;
             });
@@ -895,7 +923,6 @@ var provvisRender = function () {
 
     /* TODO: Minimize layout through minimizing analyses - adapt to collapse/expand. */
     /* TODO: Handle analysis aggregation. */
-    /* TODO: Preserve highlighting on collapse/expand. */
     /**
      * Handle events.
      * @param graph Provenance graph object.
@@ -904,50 +931,53 @@ var provvisRender = function () {
 
         handleToolbar(graph);
 
-        var keyEvent = Object.create(null);
+        var keyEvent = Object.create(null),
+            nodeClickTimeout;
+
         d3.selectAll(".node, .saNode, .aNode").on("click", function (d) {
-            keyEvent = {"alt": d3.event.altKey, "shift": d3.event.shiftKey, "ctrl": d3.event.ctrlKey};
-
             if (d3.event.defaultPrevented) return;
-            clearTimeout(this.clickTimeout);
+            clearTimeout(nodeClickTimeout);
 
-            if (d3.event.ctrlKey || d3.event.shiftKey) {
-                this.clickTimeout = setTimeout(function () {
-                    handlePathHighlighting(d, keyEvent);
-                }, 100);
-            } else {
-                this.clickTimeout = setTimeout(function () {
+            keyEvent = {"alt": d3.event.altKey, "shift": d3.event.shiftKey, "ctrl": d3.event.ctrlKey};
+            nodeClickTimeout = setTimeout(function () {
+                if (keyEvent.ctrl || keyEvent.shift) {
+                    handlePathHighlighting(d, keyEvent, graph.links);
+                } else {
                     handleNodeSelection(d, keyEvent);
-                }, 100);
-            }
+                }
+            }, 200);
+
         });
 
         d3.selectAll(".node, .saNode, .aNode").on("dblclick", function (d) {
-            keyEvent = {"alt": d3.event.altKey, "shift": d3.event.shiftKey, "ctrl": d3.event.ctrlKey};
             if (d3.event.defaultPrevented) return;
-            clearTimeout(this.clickTimeout);
+            clearTimeout(nodeClickTimeout);
 
             /* Fire double click event. */
-            handleCollapseExpandNode(d, keyEvent);
+            keyEvent = {"alt": d3.event.altKey, "shift": d3.event.shiftKey, "ctrl": d3.event.ctrlKey};
+            if (keyEvent.ctrl || keyEvent.shift) {
+                handleCollapseExpandNode(d, keyEvent);
+            }
         });
 
+        var bRectClickTimeout;
         /* Handle click separation. */
-        d3.selectAll(".brect, .link, .hLink, .vLine, .hLine").on("click", function () {
+        d3.selectAll(".brect, .link, .hLink, .vLine, .hLine", ".cell").on("click", function () {
             if (d3.event.defaultPrevented) return;
-            clearTimeout(this.clickTimeout);
+            clearTimeout(bRectClickTimeout);
 
             /* Click event is executed after 100ms unless the double click event below clears the click event timeout.*/
-            this.clickTimeout = setTimeout(function () {
-                clearHighlighting();
-            }, 100);
+            bRectClickTimeout = setTimeout(function () {
+                clearHighlighting(graph.links);
+            }, 200);
         });
 
         d3.selectAll(".brect, .link, .hLink, .vLine, .hLine, .cell").on("dblclick", function () {
             if (d3.event.defaultPrevented) return;
-            clearTimeout(this.clickTimeout);
+            clearTimeout(bRectClickTimeout);
 
             /* Double click event is executed when this event is triggered before the click timeout has finished. */
-            handleFitGraphToWindow();
+            handleFitGraphToWindow(graph.nodes);
         });
 
         /* Handle tooltips. */
@@ -1031,8 +1061,9 @@ var provvisRender = function () {
 
     /**
      * Set coordinates for nodes.
+     * @param nodes All nodes within the graph.
      */
-    var assignCellCoords = function () {
+    var assignCellCoords = function (nodes) {
         nodes.forEach(function (d) {
             d.x = -d.col * cell.width;
             d.y = d.row * cell.height;
@@ -1064,9 +1095,6 @@ var provvisRender = function () {
         vis = provVis;
         cell = {width: vis.radius * 3, height: vis.radius * 3};
 
-        nodes = vis.graph.nodes;
-        links = vis.graph.links;
-
         analysisWorkflowMap = vis.graph.analysisWorkflowMap;
 
         width = vis.graph.width;
@@ -1077,22 +1105,22 @@ var provvisRender = function () {
         setTimeout(function () {
 
             /* Set coordinates for nodes. */
-            assignCellCoords();
+            assignCellCoords(vis.graph.nodes);
 
             /* Draw grid. */
             drawGrid(vis.graph.grid);
 
-            /* Draw simple node/link highlighting shapes. */
-            drawHighlightingShapes();
+            /* Draw simple background links for highlighting. */
+            drawHighlightingShapes(vis.graph.links);
 
             /* Draw links. */
-            drawLinks();
+            drawLinks(vis.graph.links);
 
             /* Create analysis group layers. */
             createAnalysisLayers(vis.graph.aNodes);
 
             /* Draw nodes. */
-            drawNodes();
+            drawNodes(vis.graph.nodes);
 
 
             /* Create initial layout for subanalysis only nodes. */
@@ -1108,7 +1136,7 @@ var provvisRender = function () {
 
 
             /* Set initial graph position. */
-            fitGraphToWindow(0);
+            fitGraphToWindow(0, vis.graph.nodes);
 
             /* Colorize graph. */
             dyeWorkflows();
@@ -1136,11 +1164,11 @@ var provvisRender = function () {
      */
     var runRenderUpdatePrivate = function (vis, solrResponse) {
 
-        nodes.forEach(function (n) {
+        vis.graph.nodes.forEach(function (n) {
             n.hidden = true;
             d3.select("#nodeId-" + n.autoId).style("display", "none");
         });
-        links.forEach(function (l) {
+        vis.graph.links.forEach(function (l) {
             l.hidden = true;
             d3.select("#linkId-" + l.autoId).style("display", "none");
         });
