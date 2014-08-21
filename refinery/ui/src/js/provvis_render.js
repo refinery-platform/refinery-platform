@@ -485,6 +485,7 @@ var provvisRender = function () {
             /* Set link visibility. */
             d.parent.links.values().forEach(function (l) {
                 d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).style("display", "none");
+                l.hidden = true;
             });
             d.parent.inputs.values().forEach(function (sain) {
                 sain.predLinks.values().forEach(function (l) {
@@ -827,12 +828,14 @@ var provvisRender = function () {
                 l.hidden = false;
             });
 
+            /* Set nodes visible first. */
             graph.nodes.forEach(function (d) {
-                /* Set node visibility. */
                 d.hidden = false;
                 d3.select("#nodeId-" + d.autoId).style("display", "inline");
+            });
 
-                /* Update connections. */
+            /* Update connections. */
+            graph.nodes.forEach(function (d) {
                 updateNode(d3.select("#nodeId-" + d.autoId), d, d.x, d.y);
                 updateLink(d3.select("#nodeId-" + d.autoId), d, d.x, d.y);
             });
@@ -848,6 +851,12 @@ var provvisRender = function () {
                 });
             };
 
+            /* Hide analyses. */
+            graph.aNodes.forEach( function(d) {
+                d3.select("#nodeId-" + d.autoId).style("display", "none");
+                d.hidden = true;
+            });
+
             graph.saNodes.forEach(function (d) {
                 /* Set node visibility. */
                 d.hidden = false;
@@ -857,6 +866,7 @@ var provvisRender = function () {
                 /* Set link visibility. */
                 d.links.values().forEach(function (l) {
                     d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).style("display", "none");
+                    l.hidden = true;
                 });
                 d.inputs.values().forEach(function (sain) {
                     sain.predLinks.values().forEach(function (l) {
@@ -864,8 +874,10 @@ var provvisRender = function () {
                         l.hidden = false;
                     });
                 });
+            });
 
-                /* Update connections. */
+            /* Update connections. */
+            graph.saNodes.forEach(function (d) {
                 updateNode(d3.select("#nodeId-" + d.autoId), d, d.x, d.y);
                 updateLink(d3.select("#nodeId-" + d.autoId), d, d.x, d.y);
             });
@@ -902,11 +914,11 @@ var provvisRender = function () {
             if (d3.event.ctrlKey || d3.event.shiftKey) {
                 this.clickTimeout = setTimeout(function () {
                     handlePathHighlighting(d, keyEvent);
-                }, 200);
+                }, 100);
             } else {
                 this.clickTimeout = setTimeout(function () {
                     handleNodeSelection(d, keyEvent);
-                }, 200);
+                }, 100);
             }
         });
 
@@ -924,10 +936,10 @@ var provvisRender = function () {
             if (d3.event.defaultPrevented) return;
             clearTimeout(this.clickTimeout);
 
-            /* Click event is executed after 200ms unless the double click event below clears the click event timeout.*/
+            /* Click event is executed after 100ms unless the double click event below clears the click event timeout.*/
             this.clickTimeout = setTimeout(function () {
                 clearHighlighting();
-            }, 200);
+            }, 100);
         });
 
         d3.selectAll(".brect, .link, .hLink, .vLine, .hLine, .cell").on("dblclick", function () {
