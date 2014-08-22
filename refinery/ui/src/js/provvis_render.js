@@ -813,18 +813,24 @@ var provvisRender = function () {
         node.on("mouseover", function (d) {
             showTooltip(createHTMLKeyValuePair("Node", d.uuid) + "<br>" +
                 createHTMLKeyValuePair("Name", d.name) + "<br>" +
-                createHTMLKeyValuePair("Type", d.fileType) + "<br>", event);
+                createHTMLKeyValuePair("Author", d.attributes.get("Author")) + "<br>" +
+                createHTMLKeyValuePair("File Type", d.attributes.get("FileType")) + "<br>" +
+                createHTMLKeyValuePair("Year", d.attributes.get("Year")) + "<br>" +
+                createHTMLKeyValuePair("Month", d.attributes.get("Month")) + "<br>" +
+                createHTMLKeyValuePair("Type", d.fileType), event);
         }).on("mousemove", function (d) {
-            showTooltip(createHTMLKeyValuePair("Uuid", d.uuid) + "<br>" +
+            showTooltip(createHTMLKeyValuePair("Node", d.uuid) + "<br>" +
                 createHTMLKeyValuePair("Name", d.name) + "<br>" +
-                createHTMLKeyValuePair("Type", d.fileType) + "<br>", event);
+                createHTMLKeyValuePair("Author", d.attributes.get("Author")) + "<br>" +
+                createHTMLKeyValuePair("File Type", d.attributes.get("FileType")) + "<br>" +
+                createHTMLKeyValuePair("Year", d.attributes.get("Year")) + "<br>" +
+                createHTMLKeyValuePair("Month", d.attributes.get("Month")) + "<br>" +
+                createHTMLKeyValuePair("Type", d.fileType), event);
         }).on("mouseout", function () {
             hideTooltip();
         });
 
         /* Subanalysis tooltips. */
-        console.log(saNode);
-        console.log(saNode.select(".saGlyph"));
         saNode.select(".saGlyph").on("mouseover", function (d) {
             showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
@@ -994,6 +1000,7 @@ var provvisRender = function () {
             });
         });
 
+        /* TODO: Preserve path highlighting. */
         $("#prov-ctrl-collapse-click").click(function () {
             var hideChildNodes = function (n) {
                 n.children.values().forEach(function (cn) {

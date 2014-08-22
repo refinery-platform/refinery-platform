@@ -109,6 +109,8 @@ var provvisDecl = function () {
         this.subanalysis = subanalysis;
         this.uuid = uuid;
 
+        this.attributes = d3.map();
+
         this.rowBK = {left: -1, right: -1};
         this.bcOrder = -1;
         this.isBlockRoot = false;

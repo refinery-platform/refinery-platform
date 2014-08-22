@@ -11,8 +11,9 @@ var provvis = function () {
      * Refinery injection for the provenance visualization.
      * @param studyUuid The serialized unique identifier referencing a study.
      * @param studyAnalyses Analyses objects from the refinery scope.
+     * @param solrResponse Facet filter information on node attributes.
      */
-    var runProvVisPrivate = function (studyUuid, studyAnalyses) {
+    var runProvVisPrivate = function (studyUuid, studyAnalyses, solrResponse) {
 
         /* Only allow one instance of ProvVis. */
         if (vis instanceof provvisDecl.ProvVis === false) {
@@ -87,7 +88,7 @@ var provvis = function () {
                     .classed("brect", true);
 
                 /* Extract graph data. */
-                vis.graph = provvisInit.runInit(data, analysesData);
+                vis.graph = provvisInit.runInit(data, analysesData, solrResponse);
 
                 /* Compute layout. */
                 provvisLayout.runLayout(vis.graph);
@@ -114,8 +115,8 @@ var provvis = function () {
      * Publish module function.
      */
     return{
-        runProvVis: function (studyUuid, studyAnalyses) {
-            runProvVisPrivate(studyUuid, studyAnalyses);
+        runProvVis: function (studyUuid, studyAnalyses, solrResponse) {
+            runProvVisPrivate(studyUuid, studyAnalyses, solrResponse);
         }, runProvVisUpdate: function (solrResponse) {
             runProvVisUpdatePrivate(solrResponse);
         }, getProvVis: function () {

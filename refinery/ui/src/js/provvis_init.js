@@ -411,17 +411,39 @@ var provvisInit = function () {
     };
 
     /**
+     * Temporarily facet node attribute extraction.
+     * @param vis The provenance visualization root object.
+     * @param solrResponse Facet filter information on node attributes.
+     */
+    var extractFacetNodeAttributesPrivate = function (solrResponse) {
+        solrResponse.getDocumentList().forEach(function (d) {
+
+            /* Set facet attributes to all nodes for the subanalysis of the selected node. */
+            var selNode = nodeMap.get(d.uuid);
+            selNode.parent.children.values().forEach(function (cn) {
+                cn.attributes.set("Author", d.Author_Characteristics_2_1_s);
+                cn.attributes.set("Month", d.Month_Characteristics_2_1_s);
+                cn.attributes.set("Title", d.Title_Characteristics_2_1_s);
+                cn.attributes.set("Year", d.Year_Characteristics_2_1_s);
+                cn.attributes.set("FileType", d.REFINERY_FILETYPE_2_1_s);
+                cn.attributes.set("Type", d.REFINERY_TYPE_2_1_s);
+            });
+        });
+    };
+
+    /**
      * Main init module function.
      * @param data Dataset holding the information for nodes and links.
      * @param analysesData Collection holding the information for analysis - node mapping.
+     * @param solrResponse Facet filter information on node attributes.
      * @returns {provvisDecl.ProvGraph} The main graph object of the provenance visualization.
      */
-    var runInitPrivate = function (data, analysesData) {
+    var runInitPrivate = function (data, analysesData, solrResponse) {
         /* Extract raw objects. */
         var obj = d3.entries(data)[1];
 
         /* Create node collection. */
-        extractNodes(obj);
+        extractNodes(obj, solrResponse);
 
         /* Create link collection. */
         extractLinks();
@@ -438,6 +460,9 @@ var provvisInit = function () {
         /* Create analysis node mapping. */
         createAnalysisNodeMapping();
 
+        /* Temporarily facet node attribute extraction. */
+        extractFacetNodeAttributesPrivate(solrResponse);
+
         /* Create graph. */
         return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, 0, 0, []);
     };
@@ -446,8 +471,8 @@ var provvisInit = function () {
      * Publish module function.
      */
     return{
-        runInit: function (data, analysesData) {
-            return runInitPrivate(data, analysesData);
+        runInit: function (data, analysesData, solrResponse) {
+            return runInitPrivate(data, analysesData, solrResponse);
         }
     };
 }();

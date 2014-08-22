@@ -113,7 +113,6 @@
                 // do nothing
             });
 
-
             clientCommands.addHandler(SOLR_QUERY_INITIALIZED_COMMAND, function (arguments) {
                 //console.log( SOLR_QUERY_INITIALIZED_COMMAND + ' executed' );
                 //console.log( arguments );
@@ -142,7 +141,7 @@
                 $('a[data-toggle="pill"]').on('shown', function (event) {
                     if (event.target.href.split("#")[1] === "provenance-view-tab") {
                         if (provvis.getProvVis() instanceof provvisDecl.ProvVis === false) {
-                            provvis.runProvVis(currentStudyUuid, analyses.objects);
+
                         } else {
                             facetSelectionUpdated(arguments);
                             provvisRender.runRenderUpdate(provvis.getProvVis(), arguments.response)
@@ -216,6 +215,11 @@
 
                 if (pivotMatrixView._matrix === undefined) {
                     pivotMatrixView.updateMatrix(arguments.response);
+                }
+
+                /* Set face attributes for nodes in Provenance Visualization.*/
+                if (arguments.query == provVisQuery && provvis.getProvVis() instanceof provvisDecl.ProvVis === false) {
+                    provvis.runProvVis(currentStudyUuid, dataSetMonitor.analyses.objects, arguments.response);
                 }
 
                 /* Update Provenance Visualization by filtered nodeset. */
@@ -343,6 +347,12 @@
                 tableView.render(lastSolrResponse);
 
                 //client.run( query, SOLR_FULL_QUERY );
+
+                /* Initialize Provenance Visualization query. */
+                provVisQuery = query.clone();
+                provVisQuery.setDocumentCount(provVisQuery.getTotalDocumentCount());
+                provVisQuery.setDocumentIndex(0);
+                client.run(provVisQuery, SOLR_FULL_QUERY);
             });
 
 
