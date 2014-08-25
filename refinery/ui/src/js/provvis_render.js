@@ -918,7 +918,7 @@ var provvisRender = function () {
      * @param grid An array containing cells.
      */
     var drawGrid = function (grid) {
-        vis.canvas.append("g").classed({"grid": true})
+        vis.canvas.append("g").classed({"grid": true}).style("display", "none")
             .selectAll(".vLine")
             .data(function () {
                 return grid.map(function (d, i) {
@@ -1107,6 +1107,15 @@ var provvisRender = function () {
             d3.selectAll(".hLink").style("stroke", function (d) {
                 return timeScale(parseISOTimeFormat(d.target.parent.parent.created));
             });
+        });
+
+        $("#prov-ctrl-show-grid").click(function () {
+            if ($("#prov-ctrl-show-grid").hasClass("active")) {
+                d3.select(".grid").style("display", "none");
+            } else {
+                d3.select(".grid").style("display", "inline");
+            }
+
         });
     };
 

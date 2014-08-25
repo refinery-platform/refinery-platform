@@ -66,6 +66,7 @@ var provvis = function () {
                 $('<div/>', {'class': '', 'id': "provenance-controls", 'html': ''}).appendTo('#' + "provenance-graph");
                 $("<button/>", { "id": "prov-ctrl-collapse-click", "type": "button", "class": 'btn btn-mini', "rel": "tooltip", "data-placement": "bottom", "html": "Collapse All", "data-html": "true", "title": "Collapse"}).appendTo("#" + "provenance-controls");
                 $("<button/>", { "style": "margin-left: 1px", "id": "prov-ctrl-expand-click", "type": "button", "class": 'btn btn-mini', "rel": "tooltip", "data-placement": "bottom", "html": "Expand All", "data-html": "true", "title": "Expand"}).appendTo("#" + "provenance-controls");
+                $("<button/>", { "style": "margin-left: 1px", "id": "prov-ctrl-show-grid", "type": "button", "data-toggle": "button", "class": 'btn btn-mini', "rel": "tooltip", "data-placement": "bottom", "html": "Show Grid", "data-html": "true", "title": "Grid"}).appendTo("#" + "provenance-controls");
                 $( "<span/>", { "style": "margin-left: 10px", "class": "prov-ctrl-label", html: "Link style" } ).appendTo( "#" + "provenance-controls" );
                 $( "<select/>", { "style": "margin-left: 1px", "class": "combobox", "id": "prov-ctrl-link-style", html: "<option value=\"bezier\">Bezier</option><option value=\"edge\">Edge</option>" } ).appendTo( "#" + "provenance-controls");
                 $( "<span/>", { "style": "margin-left: 10px", "class": "prov-ctrl-label", html: "Color scheme" } ).appendTo( "#" + "provenance-controls" );
