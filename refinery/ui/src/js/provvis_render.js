@@ -24,6 +24,8 @@ var provvisRender = function () {
         cols = d3.map(),
         rows = d3.map();
 
+    var timeScale = Object.create(null);
+
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
         .append("div")
@@ -208,7 +210,8 @@ var provvisRender = function () {
      */
     var dyeWorkflows = function () {
         d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").style("stroke", function (d) {
-            return vis.color(analysisWorkflowMap.get(d.analysis));
+            //return vis.color(analysisWorkflowMap.get(d.analysis));
+            return timeScale(parseISOTimeFormat(d.parent.parent.created));
         });
     };
 
@@ -217,7 +220,8 @@ var provvisRender = function () {
      */
     var dyeAnalyses = function () {
         d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").style("fill", function (d) {
-            return vis.color(d.analysis);
+            //return vis.color(d.analysis);
+            return timeScale(parseISOTimeFormat(d.parent.parent.created));
         });
     };
 
@@ -351,17 +355,46 @@ var provvisRender = function () {
                                 (-vis.radius) + "," + (-vis.radius / 2);
                         })
                         .style("fill", function () {
-                            return vis.color(san.parent.uuid);
-                        })
+                            //return vis.color(san.parent.uuid);
+                            return timeScale(parseISOTimeFormat(san.parent.created));
+                        })/*
                         .style("stroke", function () {
-                            return vis.color(analysisWorkflowMap.get(san.parent.uuid));
+                            //return vis.color(analysisWorkflowMap.get(san.parent.uuid));
+                            return timeScale(parseISOTimeFormat(san.parent.created));
                         })
-                        .style("stroke-width", 2);
+                        .style("stroke-width", 2)*/;
                 });
         });
 
         /* Set node dom element. */
         saNode = d3.selectAll(".saNode");
+    };
+
+    /**
+     * Parses a string into the ISO time format.
+     * @param value The time in the string format.
+     * @returns {*} The value in the ISO time format.
+     */
+    var parseISOTimeFormat = function (value) {
+        return d3.time.format.iso.parse(value);
+    };
+
+    /**
+     * Creates a linear time scale ranging from the first to the last analysis created.
+     * @param aNodes Analysis nodes.
+     * @param range Linear color scale for domain values.
+     */
+    var createAnalysisTimeScale = function (aNodes, range) {
+        var min = d3.min(aNodes.filter(function (d) {return d.end !== -1;}), function (d) {
+                return parseISOTimeFormat(d.created);
+            }),
+            max = d3.max(aNodes.filter(function (d) {return d.end !== -1;}), function (d) {
+                return parseISOTimeFormat(d.created);
+            });
+
+        return d3.time.scale()
+            .domain([min, max])
+            .range([range[0], range[1]]);
     };
 
     /**
@@ -394,12 +427,14 @@ var provvisRender = function () {
                                 (-2 * vis.radius) + "," + (-vis.radius);
                         })
                         .style("fill", function () {
-                            return vis.color(an.uuid);
+                            //return vis.color(an.uuid);
+                            return timeScale(parseISOTimeFormat(an.created));
                         })
-                        .style("stroke", function () {
-                            return vis.color(analysisWorkflowMap.get(an.uuid));
+                        /*.style("stroke", function () {
+                            //return vis.color(analysisWorkflowMap.get(an.uuid));
+                            return timeScale(parseISOTimeFormat(an.created));
                         })
-                        .style("stroke-width", 3);
+                        .style("stroke-width", 3)*/;
                 });
         });
 
@@ -852,20 +887,16 @@ var provvisRender = function () {
         aNode.on("mouseover", function (d) {
             showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
-                createHTMLKeyValuePair("Created", d.created) + "<br>" +
-                createHTMLKeyValuePair("Start", d.start) + "<br>" +
-                createHTMLKeyValuePair("End", d.end) + "<br>", event);
+                createHTMLKeyValuePair("Created", parseISOTimeFormat(d.created)) + "<br>", event);
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
-                createHTMLKeyValuePair("Created", d.created) + "<br>" +
-                createHTMLKeyValuePair("Start", d.start) + "<br>" +
-                createHTMLKeyValuePair("End", d.end) + "<br>", event);
+                createHTMLKeyValuePair("Created", parseISOTimeFormat(d.created)) + "<br>", event);
         }).on("mouseout", function () {
             hideTooltip();
         });
 
-
+/* TODO: FIX Mouseout/Mouseover.*/
         saNode.select(".saMenu").selectAll("path").on("mouseover", function () {
             d3.select(this).style("opacity", 0.7);
         });
@@ -959,7 +990,8 @@ var provvisRender = function () {
             .attr("id", function (l) {
                 return "hLinkId-" + l.autoId;
             }).style("stroke", function (d) {
-                return vis.color(analysisWorkflowMap.get(d.target.analysis));
+                /*return vis.color(analysisWorkflowMap.get(d.target.analysis));*/
+                return timeScale(parseISOTimeFormat(d.target.parent.parent.created));
             });
     };
 
@@ -1049,6 +1081,31 @@ var provvisRender = function () {
                 if (!n.hidden) {
                     updateLink(d3.select(this), n, n.x, n.y);
                 }
+            });
+        });
+
+        $("#prov-ctrl-color-scheme").change(function () {
+            var selectedColorScheme = $("#prov-ctrl-color-scheme option:selected").attr("value");
+            switch(selectedColorScheme) {
+                case "color":
+                    timeScale.range(["lightblue", "darkblue"]);
+                    break;
+                case "grayscale":
+                    timeScale.range(["lightgray", "black"]);
+                    break;
+            }
+
+            d3.selectAll(".node").style("fill", function (d) {
+                return timeScale(parseISOTimeFormat(d.parent.parent.created));
+            });
+            d3.selectAll(".aNode").style("fill", function (d) {
+                return timeScale(parseISOTimeFormat(d.created));
+            });
+            d3.selectAll(".saNode").style("fill", function (d) {
+                return timeScale(parseISOTimeFormat(d.parent.created));
+            });
+            d3.selectAll(".hLink").style("stroke", function (d) {
+                return timeScale(parseISOTimeFormat(d.target.parent.parent.created));
             });
         });
     };
@@ -1243,6 +1300,7 @@ var provvisRender = function () {
 
         /* Short delay. */
         setTimeout(function () {
+            timeScale = createAnalysisTimeScale(vis.graph.aNodes, ["lightgray", "black"]);
 
             /* Set coordinates for nodes. */
             assignCellCoords(vis.graph.nodes, vis.graph.width, vis.graph.depth);
@@ -1279,7 +1337,7 @@ var provvisRender = function () {
             fitGraphToWindow(0, vis.graph.nodes);
 
             /* Colorize graph. */
-            dyeWorkflows();
+            //dyeWorkflows();
             dyeAnalyses();
 
             /* Add dragging behavior to nodes. */

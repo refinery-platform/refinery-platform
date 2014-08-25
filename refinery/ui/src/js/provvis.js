@@ -68,6 +68,8 @@ var provvis = function () {
                 $("<button/>", { "style": "margin-left: 1px", "id": "prov-ctrl-expand-click", "type": "button", "class": 'btn btn-mini', "rel": "tooltip", "data-placement": "bottom", "html": "Expand All", "data-html": "true", "title": "Expand"}).appendTo("#" + "provenance-controls");
                 $( "<span/>", { "style": "margin-left: 10px", "class": "prov-ctrl-label", html: "Link style" } ).appendTo( "#" + "provenance-controls" );
                 $( "<select/>", { "style": "margin-left: 1px", "class": "combobox", "id": "prov-ctrl-link-style", html: "<option value=\"bezier\">Bezier</option><option value=\"edge\">Edge</option>" } ).appendTo( "#" + "provenance-controls");
+                $( "<span/>", { "style": "margin-left: 10px", "class": "prov-ctrl-label", html: "Color scheme" } ).appendTo( "#" + "provenance-controls" );
+                $( "<select/>", { "style": "margin-left: 1px", "class": "combobox", "id": "prov-ctrl-color-scheme", html: "<option value=\"grayscale\">Grayscale</option><option value=\"color\">Color</option>" } ).appendTo( "#" + "provenance-controls");
 
                 /* Main canvas drawing area. */
                 vis.canvas = d3.select("#provenance-graph")
