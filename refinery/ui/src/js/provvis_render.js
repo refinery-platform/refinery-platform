@@ -896,19 +896,29 @@ var provvisRender = function () {
             hideTooltip();
         });
 
-/* TODO: FIX Mouseout/Mouseover.*/
+        /* Subanalysis arc menu. */
+        var curMenu,
+            menuTimeout;
+
         saNode.select(".saMenu").selectAll("path").on("mouseover", function () {
             d3.select(this).style("opacity", 0.7);
+            clearTimeout(menuTimeout);
         });
         saNode.select(".saMenu").selectAll("path").on("mousemove", function () {
             d3.select(this).style("opacity", 0.7);
+            clearTimeout(menuTimeout);
         });
+
         saNode.select(".saMenu").selectAll("path").on("mouseout", function () {
             d3.select(this).style("opacity", 0.3);
         });
 
         saNode.select(".saMenu").on("mouseout", function () {
-            d3.select(this).select(".saMenu").style("display", "none");
+            clearTimeout(menuTimeout);
+            curMenu = d3.select(this);
+            menuTimeout = setTimeout(function() {
+                curMenu.style("display", "none");
+            }, 100);
         });
     };
 
@@ -1084,6 +1094,7 @@ var provvisRender = function () {
             });
         });
 
+        /* Switch time-dependant color scheme. */
         $("#prov-ctrl-color-scheme").change(function () {
             var selectedColorScheme = $("#prov-ctrl-color-scheme option:selected").attr("value");
             switch(selectedColorScheme) {
@@ -1109,6 +1120,7 @@ var provvisRender = function () {
             });
         });
 
+        /* Show and hide grid. */
         $("#prov-ctrl-show-grid").click(function () {
             if ($("#prov-ctrl-show-grid").hasClass("active")) {
                 d3.select(".grid").style("display", "none");
