@@ -327,23 +327,35 @@ var provvisRender = function () {
                             return san.hidden ? "none" : "inline";
                         });
 
-                    /* TODO: PROTOTYPE: Implementation for node menu. */
-                    var saMenu = [0, 1, 2, 3];
-                    var arcMenuItem = d3.svg.arc()
-                        .innerRadius(vis.radius)
-                        .outerRadius(vis.radius * 3)
-                        .startAngle(function (d, i) {
-                            return i * (2 / saMenu.length) * Math.PI;
-                        })
-                        .endAngle(function (d, i) {
-                            return ((i + 1) * (2 / saMenu.length) * Math.PI);
-                        });
+                    /* TODO: TO DISCUSS. */
+                    var saMenuData = [{label: "WF", value: 1},
+                        {label: "o: " + san.outputs.size(), value: 1},
+                        {label: "i: " + san.inputs.size(), value: 1},
+                        {label: "SA: " + san.subanalysis, value: 1}];
 
-                    g.append("g").classed({"saMenu": true}).style("display", "none").selectAll("path")
-                        .data(saMenu)
+                    var arc = d3.svg.arc()
+                        .innerRadius(vis.radius)
+                        .outerRadius(vis.radius * 4);
+
+                    var pie = d3.layout.pie()
+                        .value(function(d) { return d.value; });
+
+                    var arcs = g.append("g").attr("class", "saMenu").data([saMenuData])
+                        .selectAll("arc")
+                        .data(pie)
                         .enter()
-                        .append("path")
-                        .attr("d", arcMenuItem).style("opacity", 0.3);
+                        .append("g").attr("class", "arc");
+
+                    arcs.append("path")
+                        .attr("d", arc).style("opacity", 0.3);
+
+                    arcs.append("text")
+                        .attr("class", "saMenuText")
+                        .attr("transform", function(d) {
+                            return "translate(" + arc.centroid(d)[0] + "," + arc.centroid(d)[1] + ")";
+                        })
+                        .text(function(d) {return d.data.label; })
+                        .style("opacity", 0.5);
 
                     g.append("g").classed({"saGlyph": true})
                         .style("fill", function () {
@@ -357,13 +369,7 @@ var provvisRender = function () {
                                 "0" + "," + (vis.radius) + " " +
                                 (-vis.radius) + "," + (vis.radius / 2) + " " +
                                 (-vis.radius) + "," + (-vis.radius / 2);
-                        })
-                        /*
-                        .style("stroke", function () {
-                            //return vis.color(analysisWorkflowMap.get(san.parent.uuid));
-                            return timeScale(parseISOTimeFormat(san.parent.created));
-                        })
-                        .style("stroke-width", 2)*/;
+                        });
                 });
         });
 
@@ -904,17 +910,20 @@ var provvisRender = function () {
         var curMenu,
             menuTimeout;
 
-        saNode.select(".saMenu").selectAll("path").on("mouseover", function () {
-            d3.select(this).style("opacity", 0.7);
+        saNode.select(".saMenu").selectAll(".arc").on("mouseover", function () {
+            d3.select(this).select("path").style("opacity", 0.7);
+            d3.select(this).select(".text").style("opacity", 1.0);
             clearTimeout(menuTimeout);
         });
-        saNode.select(".saMenu").selectAll("path").on("mousemove", function () {
-            d3.select(this).style("opacity", 0.7);
+        saNode.select(".saMenu").selectAll(".arc").on("mousemove", function () {
+            d3.select(this).select("path").style("opacity", 0.7);
+            d3.select(this).select(".text").style("opacity", 1.0);
             clearTimeout(menuTimeout);
         });
 
-        saNode.select(".saMenu").selectAll("path").on("mouseout", function () {
-            d3.select(this).style("opacity", 0.3);
+        saNode.select(".saMenu").selectAll(".arc").on("mouseout", function () {
+            d3.select(this).select("path").style("opacity", 0.3);
+            d3.select(this).select(".text").style("opacity", 0.5);
         });
 
         saNode.select(".saMenu").on("mouseout", function () {
