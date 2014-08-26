@@ -345,7 +345,11 @@ var provvisRender = function () {
                         .append("path")
                         .attr("d", arcMenuItem).style("opacity", 0.3);
 
-                    g.append("g").classed({"saGlyph": true}).append("polygon")
+                    g.append("g").classed({"saGlyph": true})
+                        .style("fill", function () {
+                            //return vis.color(san.parent.uuid);
+                            return timeScale(parseISOTimeFormat(san.parent.created));
+                        }).append("polygon")
                         .attr("points", function () {
                             return "0," + (-vis.radius) + " " +
                                 (vis.radius) + "," + (-vis.radius / 2) + " " +
@@ -354,10 +358,7 @@ var provvisRender = function () {
                                 (-vis.radius) + "," + (vis.radius / 2) + " " +
                                 (-vis.radius) + "," + (-vis.radius / 2);
                         })
-                        .style("fill", function () {
-                            //return vis.color(san.parent.uuid);
-                            return timeScale(parseISOTimeFormat(san.parent.created));
-                        })/*
+                        /*
                         .style("stroke", function () {
                             //return vis.color(analysisWorkflowMap.get(san.parent.uuid));
                             return timeScale(parseISOTimeFormat(san.parent.created));
@@ -417,6 +418,10 @@ var provvisRender = function () {
                         .style("display", function () {
                             return an.hidden ? "none" : "inline";
                         })
+                        .style("fill", function () {
+                            //return vis.color(an.uuid);
+                            return timeScale(parseISOTimeFormat(an.created));
+                        })
                         .append("polygon")
                         .attr("points", function () {
                             return "0," + (-2 * vis.radius) + " " +
@@ -425,10 +430,6 @@ var provvisRender = function () {
                                 "0" + "," + (2 * vis.radius) + " " +
                                 (-2 * vis.radius) + "," + (vis.radius) + " " +
                                 (-2 * vis.radius) + "," + (-vis.radius);
-                        })
-                        .style("fill", function () {
-                            //return vis.color(an.uuid);
-                            return timeScale(parseISOTimeFormat(an.created));
                         })
                         /*.style("stroke", function () {
                             //return vis.color(analysisWorkflowMap.get(an.uuid));
@@ -516,6 +517,9 @@ var provvisRender = function () {
             d.hidden = true;
             d.children.values().forEach(function (cn) {
                 d3.select("#nodeId-" + cn.autoId).style("display", "inline");
+                if (cn instanceof provvisDecl.Subanalysis === true) {
+                    d3.select("#nodeId-" + cn.autoId).select(".saMenu").style("display", "none");
+                }
                 cn.hidden = false;
             });
 
@@ -1063,6 +1067,7 @@ var provvisRender = function () {
                 /* Set node visibility. */
                 d.hidden = false;
                 d3.select("#nodeId-" + d.autoId).style("display", "inline");
+                d3.select("#nodeId-" + d.autoId).select(".saMenu").style("display", "none");
                 hideChildNodes(d);
 
                 /* Set link visibility. */
@@ -1112,7 +1117,7 @@ var provvisRender = function () {
             d3.selectAll(".aNode").style("fill", function (d) {
                 return timeScale(parseISOTimeFormat(d.created));
             });
-            d3.selectAll(".saNode").style("fill", function (d) {
+            d3.selectAll(".saNode").select(".saGlyph").style("fill", function (d) {
                 return timeScale(parseISOTimeFormat(d.parent.created));
             });
             d3.selectAll(".hLink").style("stroke", function (d) {
