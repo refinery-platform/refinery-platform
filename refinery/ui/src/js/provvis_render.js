@@ -912,18 +912,18 @@ var provvisRender = function () {
 
         saNode.select(".saMenu").selectAll(".arc").on("mouseover", function () {
             d3.select(this).select("path").style("opacity", 0.7);
-            d3.select(this).select(".text").style("opacity", 1.0);
+            d3.select(this).select(".saMenuText").style("opacity", 1.0);
             clearTimeout(menuTimeout);
         });
         saNode.select(".saMenu").selectAll(".arc").on("mousemove", function () {
             d3.select(this).select("path").style("opacity", 0.7);
-            d3.select(this).select(".text").style("opacity", 1.0);
+            d3.select(this).select(".saMenuText").style("opacity", 1.0);
             clearTimeout(menuTimeout);
         });
 
         saNode.select(".saMenu").selectAll(".arc").on("mouseout", function () {
             d3.select(this).select("path").style("opacity", 0.3);
-            d3.select(this).select(".text").style("opacity", 0.5);
+            d3.select(this).select(".saMenuText").style("opacity", 0.5);
         });
 
         saNode.select(".saMenu").on("mouseout", function () {
