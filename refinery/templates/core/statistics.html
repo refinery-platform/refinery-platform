@@ -36,5 +36,26 @@
 			<h1>{{ files }}</h1><h3>files</h3>
 		</div>
 	</div>
+
+  <div id="chart"></div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript" src="/static/vendor/d3/d3.min.js"></script>
+<script type="text/javascript" src="/static/vendor/refinery-utility-visualization/rfnry.vis.util.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $.get("http://192.168.50.50:8000/more_statistics/", function (response) {
+            var data = JSON.parse(response).data;
+            var config = {
+                height: 400,
+                width: $(document).width(),
+                drawTarget: "chart",
+                orientation: "vertical"
+            };
+            rfnry.vis.util.draw("simple", config, data);    
+        });
+    });
+</script>
 {% endblock %}
