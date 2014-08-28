@@ -83,20 +83,21 @@ def more_statistics(request):
     json_data = json.dumps({"data": {"items": ["users", "groups", "projects", "data_sets", "workflows", "files"], "categories": ["value"], "matrix": [[users], [groups], [projects], [data_sets], [workflows], [files]]}})
     return HttpResponse(json_data)
 
+def get_shared_resource_summary(model):
+    total = len(model.objects.all())
+    public = len(filter(lambda x: x.is_public(), model.objects.all()))
+    private_shared = len(filter(lambda x: (not x.is_public() and len(x.get_groups()) > 1), model.objects.all()))
+    private = total - public - private_shared
+    return {"total": total, "public": public, "private": private, "private_shared": private_shared}
+
 def data_set_statistics(request):
-    total_data_sets = len(DataSet.objects.all())
-    public_data_sets = len(filter(lambda x: x.is_public(), DataSet.objects.all()))
-    private_data_sets = total_data_sets - public_data_sets
-    json_data = json.dumps({"total": total_data_sets, "public": public_data_sets, "private": private_data_sets})
-    return HttpResponse(json_data)
+    return HttpResponse(json.dumps(get_shared_resource_summary(DataSet)))
 
 def project_statistics(request):
-    total_projects = len(Project.objects.all())
-    public_projects = len(filter(lambda x: x.is_public(), Project.objects.all()))
-    private_projects = total_projects - public_projects
-    json_data = json.dumps({"total": total_projects, "public": public_projects, "private": private_projects})
-    return HttpResponse(json_data)
+    return HttpResponse(json.dumps(get_shared_resource_summary(Project)))
 
+def workflow_statistics(request):
+    return HttpResponse(json.dumps(get_shared_resource_summary(Workflow)))
 
 def custom_error_page(request, template, context_dict):
     temp_loader = loader.get_template(template)
