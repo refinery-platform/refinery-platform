@@ -47,10 +47,26 @@ var provvisRender = function () {
     };
 
     /**
-     * Hide tooltip again.
+     * Hide tooltip.
      */
     var hideTooltip = function () {
         tooltip.style("visibility", "hidden");
+    };
+
+    /**
+     * Show subanalysis arc menu.
+     * @param n Current dom node.
+     */
+    var showArcMenu = function (n)  {
+        n.select(".saMenu").style("display", "inline");
+    };
+
+    /**
+     * Hide subanalysis arc menu.
+     * @param n Current dom node.
+     */
+    var hideArcMenu = function (n)  {
+        n.select(".saMenu").style("display", "none");
     };
 
     /**
@@ -156,8 +172,11 @@ var provvisRender = function () {
      */
     var dragging = function (n) {
 
-        /* While dragging, hide tooltips. */
+        /* While dragging, hide tooltips and arcMenu. */
         hideTooltip();
+        if (n.nodeType === "subanalysis") {
+            hideArcMenu(d3.select(this));
+        }
 
         /* Drag selected node. */
         updateNode(d3.select(this), n, d3.event.x, d3.event.y);
@@ -176,6 +195,11 @@ var provvisRender = function () {
      * Drag end listener.
      */
     var dragEnd = function (n) {
+
+        /* On drag end, show arc menu. */
+        if (n.nodeType === "subanalysis") {
+            showArcMenu(d3.select(this));
+        }
 
         /* Update data. */
         n.col = Math.round(-1 * n.x / cell.width);
@@ -815,9 +839,10 @@ var provvisRender = function () {
                 if (n.row < d.row || n.row > d.row || n.col > d.col || n.col < d.col) {
                     n.x = cols.get(n.col).x;
                     n.y = rows.get(n.row).y;
-                    updateNode(d3.select(this), n, n.x, n.y);
-                    updateLink(d3.select(this), n, n.x, n.y);
+
                 }
+                updateNode(d3.select(this), n, n.x, n.y);
+                updateLink(d3.select(this), n, n.x, n.y);
             });
         } else if (!d.selected) {
             /* Expand row and/or column. */
@@ -832,9 +857,9 @@ var provvisRender = function () {
                 if (n.row < d.row || n.row > d.row || n.col > d.col || n.col < d.col) {
                     n.x = cols.get(n.col).x;
                     n.y = rows.get(n.row).y;
-                    updateNode(d3.select(this), n, n.x, n.y);
-                    updateLink(d3.select(this), n, n.x, n.y);
                 }
+                updateNode(d3.select(this), n, n.x, n.y);
+                updateLink(d3.select(this), n, n.x, n.y);
             });
         }
     };
