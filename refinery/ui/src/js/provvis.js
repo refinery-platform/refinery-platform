@@ -7,6 +7,103 @@
 
 var provvis = function () {
     var vis = Object.create(null);
+
+    /**
+     * Creates a simple toolbar containing actions for global visualization interaction.
+     * @param parentId Parent div id for the toolbar items.
+     */
+    var createToolbar = function (parentId) {
+        /* Toolbar. */
+        $('<div/>', {
+            "id": "provenance-controls",
+            "class": ""
+        }).appendTo(parentId);
+
+        $("<button/>", {
+            "id": "prov-ctrl-collapse-click",
+            "class": "btn btn-mini",
+            "type": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Collapse All",
+            "data-html": "true",
+            "title": "Collapse"
+        }).appendTo(parentId);
+
+        $("<button/>", {
+            "id": "prov-ctrl-expand-click",
+            "class": 'btn btn-mini',
+            "type": "button",
+            "style": "margin-left: 2px",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Expand All",
+            "data-html": "true",
+            "title": "Expand"
+        }).appendTo(parentId);
+
+        $("<button/>", {
+            "id": "prov-ctrl-show-grid",
+            "class": 'btn btn-mini',
+            "type": "button",
+            "style": "margin-left: 2px",
+            "data-toggle": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Show Grid",
+            "data-html": "true",
+            "title": "Grid"
+        }).appendTo(parentId);
+
+        $("<span/>", {
+            "class": "prov-ctrl-label",
+            "style": "margin-left: 10px",
+            "html": "Link style"
+        }).appendTo(parentId);
+
+        $("<select/>", {
+            "id": "prov-ctrl-link-style",
+            "class": "combobox",
+            "style": "margin-left: 2px",
+            "width": "auto",
+            "html":
+                "<option value=\"bezier\">Bezier</option>" +
+                "<option value=\"edge\">Edge</option>"
+        }).appendTo(parentId);
+
+        $("<span/>", {
+            "class": "prov-ctrl-label",
+            "style": "margin-left: 10px",
+            "html": "Color scheme"
+        }).appendTo(parentId);
+
+        $("<select/>", {
+            "id": "prov-ctrl-color-scheme",
+            "class": "combobox",
+            "style": "margin-left: 2px",
+            "width": "auto",
+            "html":
+                "<option value=\"grayscale\">Grayscale</option>" +
+                "<option value=\"color\">Color</option>"
+        }).appendTo(parentId);
+
+        $("<span/>", {
+            "class": "prov-ctrl-label",
+            "style": "margin-left: 10px",
+            "html": "Filter action"
+        }).appendTo(parentId);
+
+        $("<select/>", {
+            "id": "prov-ctrl-filter-action",
+            "class": "combobox",
+            "style": "margin-left: 2px",
+            "width": "auto",
+            "html":
+                "<option value=\"hide\">Hide unselected</option>" +
+                "<option value=\"blend\">Blend unselected</option>"
+        }).appendTo(parentId);
+    };
+
     /**
      * Refinery injection for the provenance visualization.
      * @param studyUuid The serialized unique identifier referencing a study.
@@ -63,14 +160,7 @@ var provvis = function () {
                 };
 
                 /* Toolbar. */
-                $('<div/>', {'class': '', 'id': "provenance-controls", 'html': ''}).appendTo('#' + "provenance-graph");
-                $("<button/>", { "id": "prov-ctrl-collapse-click", "type": "button", "class": 'btn btn-mini', "rel": "tooltip", "data-placement": "bottom", "html": "Collapse All", "data-html": "true", "title": "Collapse"}).appendTo("#" + "provenance-controls");
-                $("<button/>", { "style": "margin-left: 2px", "id": "prov-ctrl-expand-click", "type": "button", "class": 'btn btn-mini', "rel": "tooltip", "data-placement": "bottom", "html": "Expand All", "data-html": "true", "title": "Expand"}).appendTo("#" + "provenance-controls");
-                $("<button/>", { "style": "margin-left: 2px", "id": "prov-ctrl-show-grid", "type": "button", "data-toggle": "button", "class": 'btn btn-mini', "rel": "tooltip", "data-placement": "bottom", "html": "Show Grid", "data-html": "true", "title": "Grid"}).appendTo("#" + "provenance-controls");
-                $( "<span/>", { "style": "margin-left: 10px", "class": "prov-ctrl-label", html: "Link style" } ).appendTo( "#" + "provenance-controls" );
-                $( "<select/>", { "style": "margin-left: 2px", "width": "auto", "class": "combobox", "id": "prov-ctrl-link-style", html: "<option value=\"bezier\">Bezier</option><option value=\"edge\">Edge</option>" } ).appendTo( "#" + "provenance-controls");
-                $( "<span/>", { "style": "margin-left: 10px", "class": "prov-ctrl-label", html: "Color scheme" } ).appendTo( "#" + "provenance-controls" );
-                $( "<select/>", { "style": "margin-left: 2px", "width": "auto", "class": "combobox", "id": "prov-ctrl-color-scheme", html: "<option value=\"grayscale\">Grayscale</option><option value=\"color\">Color</option>" } ).appendTo( "#" + "provenance-controls");
+                createToolbar("#provenance-graph");
 
                 /* Main canvas drawing area. */
                 vis.canvas = d3.select("#provenance-graph")
