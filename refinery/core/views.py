@@ -72,17 +72,6 @@ def statistics(request):
     
     return render_to_response('core/statistics.html', { "users": users, "groups": groups, "projects": projects, "workflows": workflows, "data_sets": data_sets, "files": files, "base_url": base_url }, context_instance=RequestContext( request ) )
 
-def more_statistics(request):
-    users = User.objects.count()
-    groups = Group.objects.count()
-    projects = Project.objects.count()
-    data_sets = DataSet.objects.count()
-    workflows = Workflow.objects.filter( is_active=True ).count()
-    files = FileStoreItem.objects.count()
-    
-    json_data = json.dumps({"data": {"items": ["users", "groups", "projects", "data_sets", "workflows", "files"], "categories": ["value"], "matrix": [[users], [groups], [projects], [data_sets], [workflows], [files]]}})
-    return HttpResponse(json_data)
-
 def get_shared_resource_summary(model):
     total = len(model.objects.all())
     public = len(filter(lambda x: x.is_public(), model.objects.all()))

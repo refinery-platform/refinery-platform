@@ -20,6 +20,6 @@
     "angular-ui-router": "0.2.7",
     "angular-bootstrap": "0.8.0",
     "tipsy": "0.1.7",
-    "refinery-utility-visualization": "1.0.0"
+    "c3": "0.3.0"
   }
 }
