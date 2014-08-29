@@ -66,7 +66,9 @@ var provvis = function () {
             "class": "combobox",
             "style": "margin-left: 2px",
             "width": "auto",
-            "html": "<option value=\"bezier\">Bezier</option><option value=\"edge\">Edge</option>"
+            "html":
+                "<option value=\"bezier\">Bezier</option>" +
+                "<option value=\"edge\">Edge</option>"
         }).appendTo(parentId);
 
         $("<span/>", {
@@ -80,7 +82,25 @@ var provvis = function () {
             "class": "combobox",
             "style": "margin-left: 2px",
             "width": "auto",
-            "html": "<option value=\"grayscale\">Grayscale</option><option value=\"color\">Color</option>"
+            "html":
+                "<option value=\"grayscale\">Grayscale</option>" +
+                "<option value=\"color\">Color</option>"
+        }).appendTo(parentId);
+
+        $("<span/>", {
+            "class": "prov-ctrl-label",
+            "style": "margin-left: 10px",
+            "html": "Filter action"
+        }).appendTo(parentId);
+
+        $("<select/>", {
+            "id": "prov-ctrl-filter-action",
+            "class": "combobox",
+            "style": "margin-left: 2px",
+            "width": "auto",
+            "html":
+                "<option value=\"hide\">Hide unselected</option>" +
+                "<option value=\"blend\">Blend unselected</option>"
         }).appendTo(parentId);
     };
 

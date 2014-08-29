@@ -25,6 +25,9 @@ var provvisRender = function () {
         rows = d3.map();
 
     var timeScale = Object.create(null);
+    var filterAction = Object.create(null);
+
+    var lastSolrResponse = Object.create(null);
 
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
@@ -1184,6 +1187,22 @@ var provvisRender = function () {
             }
 
         });
+
+        /* Switch filter action. */
+        $("#prov-ctrl-filter-action").change(function () {
+            var selectedFilterAction = $("#prov-ctrl-filter-action option:selected").attr("value");
+            switch (selectedFilterAction) {
+                case "hide":
+                    /* Hide unselected analyses and its child nodes. */
+                    filterAction = "hide";
+                    break;
+                case "blend":
+                    /* Blend unselected analyses and its child nodes. */
+                    filterAction = "blend";
+                    break;
+            }
+            runRenderUpdatePrivate(vis, lastSolrResponse);
+        });
     };
 
     /* TODO: Minimize layout through minimizing analyses - adapt to collapse/expand. */
@@ -1208,7 +1227,8 @@ var provvisRender = function () {
                 if (keyEvent.ctrl || keyEvent.shift) {
                     handlePathHighlighting(d, keyEvent, graph.links);
                 } else {
-                    handleNodeSelection(d, keyEvent);
+                    /* TODO: Temporarily disabled. */
+                    //handleNodeSelection(d, keyEvent);
                 }
             }, 200);
         });
@@ -1377,6 +1397,7 @@ var provvisRender = function () {
         /* Short delay. */
         setTimeout(function () {
             timeScale = createAnalysisTimeScale(vis.graph.aNodes, ["lightgray", "black"]);
+            filterAction = "hide";
 
             /* Set coordinates for nodes. */
             assignCellCoords(vis.graph.nodes, vis.graph.width, vis.graph.depth);
@@ -1429,34 +1450,91 @@ var provvisRender = function () {
         }, 500);
     };
 
-    /* TODO: PROTOTYPE: Quick implementation. */
+    /* TODO: Code cleanup. */
     /**
      * On attribute filter change, the provenance visualization will be updated.
      * @param vis The provenance visualization root object.
      * @param solrResponse Query response object holding information about attribute filter changed.
      */
     var runRenderUpdatePrivate = function (vis, solrResponse) {
+        var selNodes = [];
 
-        vis.graph.nodes.forEach(function (n) {
-            n.hidden = true;
-            d3.select("#nodeId-" + n.autoId).style("display", "none");
-        });
-        vis.graph.links.forEach(function (l) {
-            l.hidden = true;
-            d3.select("#linkId-" + l.autoId).style("display", "none");
-        });
-
+        /* Show selected nodes. */
         solrResponse.getDocumentList().forEach(function (d) {
-            var selNode = vis.graph.nodeMap.get(d.uuid);
-            selNode.parent.children.values().forEach(function (cn) {
-                cn.hidden = false;
-                d3.select("#nodeId-" + cn.autoId).style("display", "inline");
-            });
-            selNode.parent.links.values().forEach(function (cl) {
-                cl.hidden = false;
-                d3.select("#linkId-" + cl.autoId).style("display", "inline");
-            });
+            selNodes.push(vis.graph.nodeMap.get(d.uuid));
         });
+
+        /* Set (un)filtered nodes. */
+        vis.graph.nodes.forEach(function (n) {
+           if (selNodes.map(function (d) {return d.parent;}).indexOf(n.parent) === -1) {
+               n.filtered = false;
+               n.parent.filtered = false;
+               n.parent.parent.filtered = false;
+               n.parent.children.forEach(function (cn) {
+                   cn.filtered = false;
+               });
+           } else {
+               n.filtered = true;
+               n.parent.filtered = true;
+               n.parent.parent.filtered = true;
+               n.parent.children.forEach(function (cn) {
+                   cn.filtered = true;
+               });
+           }
+        });
+
+        /* Hide or blend (un)selected nodes. */
+        vis.graph.nodes.forEach(function (n) {
+            var curNode = n;
+            while (curNode.hidden) {
+                curNode = curNode.parent;
+            }
+
+            if (!curNode.filtered) {
+                switch(filterAction) {
+                    case "hide":
+                        d3.select("#nodeId-" + curNode.autoId).style("display", "none");
+                        if (!(curNode instanceof provvisDecl.Node)) {
+                            curNode.links.values().forEach(function (l) {
+                                d3.selectAll("#linkId-" + l.autoId).style("display", "none");
+                            });
+                        } else {
+                            curNode.parent.links.values().forEach(function (l) {
+                                d3.selectAll("#linkId-" + l.autoId).style("display", "none");
+                            });
+                        }
+                        break;
+                    case "blend":
+                        d3.select("#nodeId-" + curNode.autoId).style({"display": "inline", "opacity": 0.3});
+                        if (!(curNode instanceof provvisDecl.Node)) {
+                            curNode.links.values().filter(function (l) {return !l.hidden;}).forEach(function (l) {
+                                d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 0.3});
+                            });
+                        } else {
+                            curNode.parent.links.values().filter(function (l) {return !l.hidden;}).forEach(function (l) {
+                                d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 0.3});
+                            });
+                        }
+                        break;
+                }
+            } else {
+                d3.select("#nodeId-" + curNode.autoId).style({"display": "inline", "opacity": 1.0});
+                if (!(curNode instanceof provvisDecl.Node)) {
+                    curNode.links.values().filter(function (l) {return !l.hidden;}).forEach(function (l) {
+                        d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 1.0});
+                    });
+                } else {
+                    curNode.parent.links.values().filter(function (l) {return !l.hidden;}).forEach(function (l) {
+                        d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 1.0});
+                    });
+                }
+            }
+        });
+
+        /* TODO: Hide or blend (un)selected links. */
+
+
+        lastSolrResponse = solrResponse;
     };
 
     /**

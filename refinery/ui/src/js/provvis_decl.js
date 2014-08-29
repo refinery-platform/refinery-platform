@@ -76,9 +76,12 @@ var provvisDecl = function () {
 
         this.doi = new DoiComponents();
         this.selected = false;
+        this.filtered = true;
 
         /* TODO: Group layout specific properties into sub-property. */
     };
+
+    /* TODO: Add enums for node appearance, eg.: hide, blend, lod0-2 */
 
     /**
      * Constructor function for the node data structure.
