@@ -15,7 +15,8 @@ var provvisInit = function () {
 
         nodeMap = d3.map(),
 
-        analysisWorkflowMap = d3.map();
+        analysisWorkflowMap = d3.map(),
+        workflows = d3.map();
 
     /**
      * Assign node types.
@@ -214,6 +215,40 @@ var provvisInit = function () {
     var createAnalysisNode = function (a, i) {
         return new provvisDecl.Analysis(i, Object.create(null), true, a.uuid,
             a.workflow__uuid, i, a.time_start, a.time_end, a.creation_date);
+    };
+
+    /**
+     * Extracts workflow uuid with its workflow data.
+     * @param analysesData analyses object extracted from global refinery variable.
+     */
+    var extractWorkflows = function (analysesData) {
+
+        analysesData.forEach(function (a) {
+
+            /* Prepare for json format. */
+            var prepareJSON = function (wfCpy) {
+                var text = wfCpy.replace(/u'/g, "\"");
+                text = text.replace(/\'/g, "\"");
+                text = text.replace(/\sNone/g, " \"None\"");
+                text = text.replace(/\\/g, "");
+                text = text.replace(/\"{\"/g, "{\"");
+                text = text.replace(/}\"/g, "}");
+                text = text.replace(/\"\"(\S+)\"\"/g, "\"$1\"");
+
+                /* Eliminate __xxxx__ parameters. */
+                text = text.replace(/\"__(\S*)__\":\s{1}\d*(,\s{1})?/g, "");
+                text = text.replace(/,\s{1}null/g, "");
+                text = text.replace(/,\s{1}}/g, "}");
+
+                return text;
+            };
+
+            /* Transform to JSON object. */
+            var text = prepareJSON(a.workflow_copy);
+            var wfData = JSON.parse(text);
+            var wfObj = d3.entries(wfData);
+            workflows.set(a.workflow__uuid, wfObj);
+        });
     };
 
     /**
@@ -454,6 +489,9 @@ var provvisInit = function () {
         /* Create analysis nodes. */
         extractAnalyses(analysesData);
 
+        /* Extract workflow information. */
+        extractWorkflows(analysesData);
+
         /* Divide dataset and analyses into subanalyses. */
         markSubanalyses();
 
@@ -464,7 +502,7 @@ var provvisInit = function () {
         extractFacetNodeAttributesPrivate(solrResponse);
 
         /* Create graph. */
-        return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, 0, 0, []);
+        return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, workflows, 0, 0, []);
     };
 
     /**
