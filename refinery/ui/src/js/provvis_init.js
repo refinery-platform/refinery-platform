@@ -249,6 +249,8 @@ var provvisInit = function () {
             var wfObj = d3.entries(wfData);
             workflows.set(a.workflow__uuid, wfObj);
         });
+
+        console.log(workflows);
     };
 
     /**

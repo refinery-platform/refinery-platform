@@ -1185,7 +1185,18 @@ var provvisRender = function () {
             } else {
                 d3.select(".grid").style("display", "inline");
             }
+        });
 
+        /* Show and hide grid. */
+        $("#prov-ctrl-show-table").click(function () {
+
+            console.log($("#prov-ctrl-show-table").hasClass("active"));
+
+            if ($("#prov-ctrl-show-table").hasClass("active")) {
+                d3.select("#provenance-table").style("display", "none");
+            } else {
+                d3.select("#provenance-table").style("display", "block");
+            }
         });
 
         /* Switch filter action. */

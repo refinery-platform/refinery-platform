@@ -10,15 +10,24 @@ var provvis = function () {
 
     /**
      * Creates a simple toolbar containing actions for global visualization interaction.
-     * @param parentId Parent div id for the toolbar items.
+     * @param parentId Parent div id for the toolbar.
+     * @param divId Toolbar div id.
      */
-    var createToolbar = function (parentId) {
+    var createToolbar = function (parentId, divId) {
         /* Toolbar. */
         $('<div/>', {
-            "id": "provenance-controls",
+            "id": divId,
             "class": ""
         }).appendTo(parentId);
+    };
 
+    /**
+     * Creates a simple toolbar items for global visualization interaction.
+     * @param parentId Parent div id for the toolbar items.
+     */
+    var createToolbarItems = function (parentId) {
+
+        /* Toolbar items. */
         $("<button/>", {
             "id": "prov-ctrl-collapse-click",
             "class": "btn btn-mini",
@@ -53,6 +62,19 @@ var provvis = function () {
             "html": "Show Grid",
             "data-html": "true",
             "title": "Grid"
+        }).appendTo(parentId);
+
+        $("<button/>", {
+            "id": "prov-ctrl-show-table",
+            "class": 'btn btn-mini',
+            "type": "button",
+            "style": "margin-left: 2px",
+            "data-toggle": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Show Table",
+            "data-html": "true",
+            "title": "Table"
         }).appendTo(parentId);
 
         $("<span/>", {
@@ -102,6 +124,51 @@ var provvis = function () {
                 "<option value=\"hide\">Hide unselected</option>" +
                 "<option value=\"blend\">Blend unselected</option>"
         }).appendTo(parentId);
+    };
+
+    /* TODO: Prototype implementation. */
+    /**
+     * Floating table properties div.
+     ~ @param parentId Parent div id for the floating table div.
+     * @param divId Table div id.
+     */
+    var createFloatingTableDiv = function (parentId, divId) {
+        /* Toolbar. */
+        $('<div/>', {
+            "id": divId,
+            "style": "position: fixed",
+            "top": "0px",
+            "left": "0px",
+            "width": "200px",
+            "height": "100px",
+            "z-index": 2
+        }).appendTo(parentId);
+
+        // add new table on click
+        var table = d3.select("#" + divId),
+            prop_tbl = table.append("table").attr("id", "workflowtbl"),
+            tbody = prop_tbl.append("tbody"),
+            tableEntries = [];
+
+            tableEntries.push(["pName1", "pVal1"]);
+            tableEntries.push(["pName2", "pVal2"]);
+
+        // nested tr-td selection for actual entries
+        var tr = tbody.selectAll("tr")
+            .data(tableEntries)
+            .enter()
+            .append("tr");
+
+        var td = tr.selectAll("td")
+            .data(function (d) {
+                return d;
+            })
+            .enter()
+            .append("td")
+            .text(function (d) {
+                return d;
+            });
+
     };
 
     /**
@@ -160,19 +227,40 @@ var provvis = function () {
                 };
 
                 /* Toolbar. */
-                createToolbar("#provenance-graph");
+                createToolbar("#provenance-graph", "provenance-controls");
+
+                /* Toolbar items. */
+                createToolbarItems("#provenance-controls");
+
+
+                $('<div/>', {
+                    "id": "provenance-vis",
+                    "style": "position: relative",
+                    "width": "100%",
+                    "height": "100%"
+                }).appendTo("#provenance-graph");
+
+                $('<div/>', {
+                    "id": "provenance-canvas",
+                    "z-index": 1/*,
+                    "style": "position: fixed",
+                    "top": "0px",
+                    "left": "0px",
+                    "width": "80%",
+                    "height": "80%"*/
+                }).appendTo("#provenance-vis");
 
                 /* Main canvas drawing area. */
-                vis.canvas = d3.select("#provenance-graph")
-                    .append("svg:svg")
+                vis.canvas = d3.select("#provenance-canvas")
+                    .append("svg")
                     .attr("transform", "translate(" + vis.margin.left + "," + vis.margin.top + ")")
                     .attr("viewBox", "0 0 " + (width) + " " + (height))
                     .attr("preserveAspectRatio", "xMinYMin meet")
                     .attr("pointer-events", "all")
                     .classed("canvas", true)
-                    .append("svg:g")
+                    .append("g")
                     .call(vis.zoom = d3.behavior.zoom().on("zoom", redraw)).on("dblclick.zoom", null)
-                    .append("svg:g");
+                    .append("g");
 
                 /* Helper rectangle to support pan and zoom. */
                 vis.rect = vis.canvas.append("svg:rect")
@@ -188,6 +276,9 @@ var provvis = function () {
 
                 /* Render graph. */
                 provvisRender.runRender(vis);
+
+                /* Floating table properties div. */
+                createFloatingTableDiv("#provenance-vis", "provenance-table");
             });
         }
     };
