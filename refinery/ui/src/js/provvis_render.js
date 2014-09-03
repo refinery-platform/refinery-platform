@@ -1187,7 +1187,7 @@ var provvisRender = function () {
             }
         });
 
-        /* Show and hide grid. */
+        /* Show and hide table. */
         $("#prov-ctrl-show-table").click(function () {
 
             console.log($("#prov-ctrl-show-table").hasClass("active"));

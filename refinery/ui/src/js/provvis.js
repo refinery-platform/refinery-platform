@@ -18,7 +18,7 @@ var provvis = function () {
         $('<div/>', {
             "id": divId,
             "class": ""
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
     };
 
     /**
@@ -37,7 +37,7 @@ var provvis = function () {
             "html": "Collapse All",
             "data-html": "true",
             "title": "Collapse"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<button/>", {
             "id": "prov-ctrl-expand-click",
@@ -49,7 +49,7 @@ var provvis = function () {
             "html": "Expand All",
             "data-html": "true",
             "title": "Expand"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<button/>", {
             "id": "prov-ctrl-show-grid",
@@ -62,7 +62,7 @@ var provvis = function () {
             "html": "Show Grid",
             "data-html": "true",
             "title": "Grid"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<button/>", {
             "id": "prov-ctrl-show-table",
@@ -75,13 +75,13 @@ var provvis = function () {
             "html": "Show Table",
             "data-html": "true",
             "title": "Table"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<span/>", {
             "class": "prov-ctrl-label",
             "style": "margin-left: 10px",
             "html": "Link style"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<select/>", {
             "id": "prov-ctrl-link-style",
@@ -91,13 +91,13 @@ var provvis = function () {
             "html":
                 "<option value=\"bezier\">Bezier</option>" +
                 "<option value=\"edge\">Edge</option>"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<span/>", {
             "class": "prov-ctrl-label",
             "style": "margin-left: 10px",
             "html": "Color scheme"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<select/>", {
             "id": "prov-ctrl-color-scheme",
@@ -107,13 +107,13 @@ var provvis = function () {
             "html":
                 "<option value=\"grayscale\">Grayscale</option>" +
                 "<option value=\"color\">Color</option>"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<span/>", {
             "class": "prov-ctrl-label",
             "style": "margin-left: 10px",
             "html": "Filter action"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<select/>", {
             "id": "prov-ctrl-filter-action",
@@ -123,7 +123,23 @@ var provvis = function () {
             "html":
                 "<option value=\"hide\">Hide unselected</option>" +
                 "<option value=\"blend\">Blend unselected</option>"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
+    };
+
+    /**
+     * Creates the hierarchical provenance visualization div layout.
+     * @param rootId Visualization root element.
+     * @param divId Visualization canvas.
+     * @param parentId Provenance graph tab element.
+     */
+    var createVisualizationContainer = function (rootId, divId, parentId) {
+        $('<div/>', {
+            "id": rootId
+        }).appendTo("#" + parentId);
+
+        $('<div/>', {
+            "id": divId
+        }).appendTo("#" + rootId);
     };
 
     /* TODO: Prototype implementation. */
@@ -132,21 +148,17 @@ var provvis = function () {
      ~ @param parentId Parent div id for the floating table div.
      * @param divId Table div id.
      */
-    var createFloatingTableDiv = function (parentId, divId) {
+    var createWorkflowTable = function (parentId, divId) {
         /* Toolbar. */
         $('<div/>', {
-            "id": divId,
-            "style": "position: fixed",
-            "top": "0px",
-            "left": "0px",
-            "width": "200px",
-            "height": "100px",
-            "z-index": 2
-        }).appendTo(parentId);
+            "id": divId
+        }).appendTo("#" + parentId);
 
         // add new table on click
         var table = d3.select("#" + divId),
-            prop_tbl = table.append("table").attr("id", "workflowtbl"),
+            prop_tbl = table.append("table")
+                .attr("id", "provenance-table-content")
+                .attr("class", "table table-bordered table-condensed table-responsive"),
             tbody = prop_tbl.append("tbody"),
             tableEntries = [];
 
@@ -227,28 +239,16 @@ var provvis = function () {
                 };
 
                 /* Toolbar. */
-                createToolbar("#provenance-graph", "provenance-controls");
+                createToolbar("provenance-graph", "provenance-controls");
 
                 /* Toolbar items. */
-                createToolbarItems("#provenance-controls");
+                createToolbarItems("provenance-controls");
 
+                /* Hierarchical div layout. */
+                createVisualizationContainer("provenance-vis", "provenance-canvas", "provenance-graph");
 
-                $('<div/>', {
-                    "id": "provenance-vis",
-                    "style": "position: relative",
-                    "width": "100%",
-                    "height": "100%"
-                }).appendTo("#provenance-graph");
-
-                $('<div/>', {
-                    "id": "provenance-canvas",
-                    "z-index": 1/*,
-                    "style": "position: fixed",
-                    "top": "0px",
-                    "left": "0px",
-                    "width": "80%",
-                    "height": "80%"*/
-                }).appendTo("#provenance-vis");
+                /* On-top docked table. */
+                createWorkflowTable("provenance-canvas", "provenance-table");
 
                 /* Main canvas drawing area. */
                 vis.canvas = d3.select("#provenance-canvas")
@@ -276,9 +276,6 @@ var provvis = function () {
 
                 /* Render graph. */
                 provvisRender.runRender(vis);
-
-                /* Floating table properties div. */
-                createFloatingTableDiv("#provenance-vis", "provenance-table");
             });
         }
     };
