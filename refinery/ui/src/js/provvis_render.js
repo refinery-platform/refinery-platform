@@ -60,7 +60,7 @@ var provvisRender = function () {
      * Show subanalysis arc menu.
      * @param n Current dom node.
      */
-    var showArcMenu = function (n)  {
+    var showArcMenu = function (n) {
         n.select(".saMenu").style("display", "inline");
     };
 
@@ -68,7 +68,7 @@ var provvisRender = function () {
      * Hide subanalysis arc menu.
      * @param n Current dom node.
      */
-    var hideArcMenu = function (n)  {
+    var hideArcMenu = function (n) {
         n.select(".saMenu").style("display", "none");
     };
 
@@ -868,6 +868,64 @@ var provvisRender = function () {
     };
 
     /**
+     * Updated table on subanalysis node selection.
+     * @param selSa Selected subanalysis node.
+     */
+    var updateWfTableContent = function (selSa) {
+        var selWf = vis.graph.workflows.get(selSa.parent.wfUuid);
+
+        /* Update workflow title. */
+        if (typeof selWf === "undefined") {
+            vis.wfTable.select("#wfTitle").html("<b>" + "Workflow: " + "<b>" + " - ");
+        } else {
+            vis.wfTable.select("#wfTitle").html("<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + selSa.parent.wfUuid + ">" + selWf.name + "</a>");
+        }
+
+        vis.wfTable.selectAll("table")
+            .data([0])
+            .enter()
+            .append("table")
+            .attr("id", "provenance-table-content")
+            .attr("class", "table table-striped table-condensed");
+        var table = vis.wfTable.select("table");
+
+        table.selectAll("thead")
+            .data([0])
+            .enter()
+            .append("thead");
+        var tHead = table.select("thead");
+
+        table.selectAll("tbody")
+            .data([0])
+            .enter()
+            .append("tbody");
+        var tBody = table.select("tbody");
+
+        /* Header row. */
+        var th = tHead.selectAll("th")
+            .data(d3.keys(selWf));
+
+        th.enter().append("th");
+        th.text(function(d) { return d; });
+        th.exit().remove();
+
+        /* Body rows. */
+        var rows = tBody.selectAll("tr")
+            .data([d3.values(selWf)]);
+        rows.enter().append("tr");
+        rows.exit().remove();
+
+        /* Table data. */
+        var cells = rows.selectAll("td")
+            .data(function(d) {
+                return d;
+            });
+        cells.enter().append("td");
+        cells.text(function (d) { return d;});
+        cells.exit().remove();
+    };
+
+    /**
      * Adds tooltips to nodes.
      */
     var handleTooltips = function () {
@@ -1185,7 +1243,15 @@ var provvisRender = function () {
             } else {
                 d3.select(".grid").style("display", "inline");
             }
+        });
 
+        /* Show and hide table. */
+        $("#prov-ctrl-show-table").click(function () {
+            if ($("#prov-ctrl-show-table").hasClass("active")) {
+                d3.select("#provenance-table").style("display", "none");
+            } else {
+                d3.select("#provenance-table").style("display", "block");
+            }
         });
 
         /* Switch filter action. */
@@ -1229,6 +1295,11 @@ var provvisRender = function () {
                 } else {
                     /* TODO: Temporarily disabled. */
                     //handleNodeSelection(d, keyEvent);
+
+                    switch (d.nodeType) {
+                        case "subanalysis":
+                            updateWfTableContent(d);
+                    }
                 }
             }, 200);
         });
@@ -1466,21 +1537,23 @@ var provvisRender = function () {
 
         /* Set (un)filtered nodes. */
         vis.graph.nodes.forEach(function (n) {
-           if (selNodes.map(function (d) {return d.parent;}).indexOf(n.parent) === -1) {
-               n.filtered = false;
-               n.parent.filtered = false;
-               n.parent.parent.filtered = false;
-               n.parent.children.forEach(function (cn) {
-                   cn.filtered = false;
-               });
-           } else {
-               n.filtered = true;
-               n.parent.filtered = true;
-               n.parent.parent.filtered = true;
-               n.parent.children.forEach(function (cn) {
-                   cn.filtered = true;
-               });
-           }
+            if (selNodes.map(function (d) {
+                return d.parent;
+            }).indexOf(n.parent) === -1) {
+                n.filtered = false;
+                n.parent.filtered = false;
+                n.parent.parent.filtered = false;
+                n.parent.children.forEach(function (cn) {
+                    cn.filtered = false;
+                });
+            } else {
+                n.filtered = true;
+                n.parent.filtered = true;
+                n.parent.parent.filtered = true;
+                n.parent.children.forEach(function (cn) {
+                    cn.filtered = true;
+                });
+            }
         });
 
         /* Hide or blend (un)selected nodes. */
@@ -1491,7 +1564,7 @@ var provvisRender = function () {
             }
 
             if (!curNode.filtered) {
-                switch(filterAction) {
+                switch (filterAction) {
                     case "hide":
                         d3.select("#nodeId-" + curNode.autoId).style("display", "none");
                         if (!(curNode instanceof provvisDecl.Node)) {
@@ -1507,11 +1580,15 @@ var provvisRender = function () {
                     case "blend":
                         d3.select("#nodeId-" + curNode.autoId).style({"display": "inline", "opacity": 0.3});
                         if (!(curNode instanceof provvisDecl.Node)) {
-                            curNode.links.values().filter(function (l) {return !l.hidden;}).forEach(function (l) {
+                            curNode.links.values().filter(function (l) {
+                                return !l.hidden;
+                            }).forEach(function (l) {
                                 d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 0.3});
                             });
                         } else {
-                            curNode.parent.links.values().filter(function (l) {return !l.hidden;}).forEach(function (l) {
+                            curNode.parent.links.values().filter(function (l) {
+                                return !l.hidden;
+                            }).forEach(function (l) {
                                 d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 0.3});
                             });
                         }
@@ -1520,11 +1597,15 @@ var provvisRender = function () {
             } else {
                 d3.select("#nodeId-" + curNode.autoId).style({"display": "inline", "opacity": 1.0});
                 if (!(curNode instanceof provvisDecl.Node)) {
-                    curNode.links.values().filter(function (l) {return !l.hidden;}).forEach(function (l) {
+                    curNode.links.values().filter(function (l) {
+                        return !l.hidden;
+                    }).forEach(function (l) {
                         d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 1.0});
                     });
                 } else {
-                    curNode.parent.links.values().filter(function (l) {return !l.hidden;}).forEach(function (l) {
+                    curNode.parent.links.values().filter(function (l) {
+                        return !l.hidden;
+                    }).forEach(function (l) {
                         d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 1.0});
                     });
                 }

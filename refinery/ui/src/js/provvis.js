@@ -10,15 +10,24 @@ var provvis = function () {
 
     /**
      * Creates a simple toolbar containing actions for global visualization interaction.
-     * @param parentId Parent div id for the toolbar items.
+     * @param parentId Parent div id for the toolbar.
+     * @param divId Toolbar div id.
      */
-    var createToolbar = function (parentId) {
+    var createToolbar = function (parentId, divId) {
         /* Toolbar. */
         $('<div/>', {
-            "id": "provenance-controls",
+            "id": divId,
             "class": ""
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
+    };
 
+    /**
+     * Creates a simple toolbar items for global visualization interaction.
+     * @param parentId Parent div id for the toolbar items.
+     */
+    var createToolbarItems = function (parentId) {
+
+        /* Toolbar items. */
         $("<button/>", {
             "id": "prov-ctrl-collapse-click",
             "class": "btn btn-mini",
@@ -28,7 +37,7 @@ var provvis = function () {
             "html": "Collapse All",
             "data-html": "true",
             "title": "Collapse"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<button/>", {
             "id": "prov-ctrl-expand-click",
@@ -40,7 +49,7 @@ var provvis = function () {
             "html": "Expand All",
             "data-html": "true",
             "title": "Expand"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<button/>", {
             "id": "prov-ctrl-show-grid",
@@ -53,13 +62,26 @@ var provvis = function () {
             "html": "Show Grid",
             "data-html": "true",
             "title": "Grid"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
+
+        $("<button/>", {
+            "id": "prov-ctrl-show-table",
+            "class": 'btn btn-mini',
+            "type": "button",
+            "style": "margin-left: 2px",
+            "data-toggle": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Show Table",
+            "data-html": "true",
+            "title": "Table"
+        }).appendTo("#" + parentId);
 
         $("<span/>", {
             "class": "prov-ctrl-label",
             "style": "margin-left: 10px",
             "html": "Link style"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<select/>", {
             "id": "prov-ctrl-link-style",
@@ -69,13 +91,13 @@ var provvis = function () {
             "html":
                 "<option value=\"bezier\">Bezier</option>" +
                 "<option value=\"edge\">Edge</option>"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<span/>", {
             "class": "prov-ctrl-label",
             "style": "margin-left: 10px",
             "html": "Color scheme"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<select/>", {
             "id": "prov-ctrl-color-scheme",
@@ -85,13 +107,13 @@ var provvis = function () {
             "html":
                 "<option value=\"grayscale\">Grayscale</option>" +
                 "<option value=\"color\">Color</option>"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<span/>", {
             "class": "prov-ctrl-label",
             "style": "margin-left: 10px",
             "html": "Filter action"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
 
         $("<select/>", {
             "id": "prov-ctrl-filter-action",
@@ -101,7 +123,44 @@ var provvis = function () {
             "html":
                 "<option value=\"hide\">Hide unselected</option>" +
                 "<option value=\"blend\">Blend unselected</option>"
-        }).appendTo(parentId);
+        }).appendTo("#" + parentId);
+    };
+
+    /**
+     * Creates the hierarchical provenance visualization div layout.
+     * @param rootId Visualization root element.
+     * @param divId Visualization canvas.
+     * @param parentId Provenance graph tab element.
+     */
+    var createVisualizationContainer = function (rootId, divId, parentId) {
+        $('<div/>', {
+            "id": rootId
+        }).appendTo("#" + parentId);
+
+        $('<div/>', {
+            "id": divId
+        }).appendTo("#" + rootId);
+    };
+
+    /* TODO: Prototype implementation. */
+    /**
+     * Floating table properties div.
+     * @param parentId Parent div id for the floating table div.
+     * @param divId Table div id.
+     * @returns {*} The table div container.
+     */
+    var createWorkflowTable = function (parentId, divId) {
+        /* New table enclosing div. */
+        $('<div/>', {
+            "id": divId
+        }).appendTo("#" + parentId);
+
+        /* New table. */
+        var tableContainer = d3.select("#" + divId);
+
+        tableContainer.append("g").attr("id", "wfTitle").html("<b>" + "Workflow: " + "<b>" + " - ");
+
+        return tableContainer;
     };
 
     /**
@@ -142,8 +201,20 @@ var provvis = function () {
                 /* Declare graph. */
                 var graph = Object.create(null);
 
+                /* Toolbar. */
+                createToolbar("provenance-graph", "provenance-controls");
+
+                /* Toolbar items. */
+                createToolbarItems("provenance-controls");
+
+                /* Hierarchical div layout. */
+                createVisualizationContainer("provenance-vis", "provenance-canvas", "provenance-graph");
+
+                /* On-top docked table. */
+                var wfTable = createWorkflowTable("provenance-canvas", "provenance-table");
+
                 /* Create vis and add graph. */
-                vis = new provvisDecl.ProvVis("#provenance-graph", zoom, data, url, canvas, rect, margin, width,
+                vis = new provvisDecl.ProvVis("provenance-graph", zoom, data, url, canvas, wfTable, rect, margin, width,
                     height, r, color, graph);
 
                 /* Geometric zoom. */
@@ -159,20 +230,17 @@ var provvis = function () {
                         " scale(" + (+1 / d3.event.scale) + ")");
                 };
 
-                /* Toolbar. */
-                createToolbar("#provenance-graph");
-
                 /* Main canvas drawing area. */
-                vis.canvas = d3.select("#provenance-graph")
-                    .append("svg:svg")
+                vis.canvas = d3.select("#provenance-canvas")
+                    .append("svg")
                     .attr("transform", "translate(" + vis.margin.left + "," + vis.margin.top + ")")
                     .attr("viewBox", "0 0 " + (width) + " " + (height))
                     .attr("preserveAspectRatio", "xMinYMin meet")
                     .attr("pointer-events", "all")
                     .classed("canvas", true)
-                    .append("svg:g")
+                    .append("g")
                     .call(vis.zoom = d3.behavior.zoom().on("zoom", redraw)).on("dblclick.zoom", null)
-                    .append("svg:g");
+                    .append("g");
 
                 /* Helper rectangle to support pan and zoom. */
                 vis.rect = vis.canvas.append("svg:rect")

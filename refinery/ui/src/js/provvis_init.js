@@ -246,7 +246,7 @@ var provvisInit = function () {
             /* Transform to JSON object. */
             var text = prepareJSON(a.workflow_copy);
             var wfData = JSON.parse(text);
-            var wfObj = d3.entries(wfData);
+            var wfObj = wfData;
             workflows.set(a.workflow__uuid, wfObj);
         });
     };

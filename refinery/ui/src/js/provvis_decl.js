@@ -211,6 +211,7 @@ var provvisDecl = function () {
      * @param data
      * @param url
      * @param canvas
+     * @param wfTable
      * @param rect
      * @param margin
      * @param width
@@ -220,13 +221,14 @@ var provvisDecl = function () {
      * @param graph
      * @constructor
      */
-    var ProvVis = function (parentDiv, zoom, data, url, canvas, rect, margin, width, height, radius, color, graph) {
+    var ProvVis = function (parentDiv, zoom, data, url, canvas, wfTable, rect, margin, width, height, radius, color, graph) {
         this._parentDiv = parentDiv;
         this.zoom = zoom;
         this._data = data;
         this._url = url;
 
         this.canvas = canvas;
+        this.wfTable = wfTable;
         this.rect = rect;
         this.margin = margin;
         this.width = width;
