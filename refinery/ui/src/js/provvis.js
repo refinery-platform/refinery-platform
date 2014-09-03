@@ -145,42 +145,22 @@ var provvis = function () {
     /* TODO: Prototype implementation. */
     /**
      * Floating table properties div.
-     ~ @param parentId Parent div id for the floating table div.
+     * @param parentId Parent div id for the floating table div.
      * @param divId Table div id.
+     * @returns {*} The table div container.
      */
     var createWorkflowTable = function (parentId, divId) {
-        /* Toolbar. */
+        /* New table enclosing div. */
         $('<div/>', {
             "id": divId
         }).appendTo("#" + parentId);
 
-        // add new table on click
-        var table = d3.select("#" + divId),
-            prop_tbl = table.append("table")
-                .attr("id", "provenance-table-content")
-                .attr("class", "table table-bordered table-condensed table-responsive"),
-            tbody = prop_tbl.append("tbody"),
-            tableEntries = [];
+        /* New table. */
+        var tableContainer = d3.select("#" + divId);
 
-            tableEntries.push(["pName1", "pVal1"]);
-            tableEntries.push(["pName2", "pVal2"]);
+        tableContainer.append("g").attr("id", "wfTitle").html("<b>" + "Workflow: " + "<b>" + " - ");
 
-        // nested tr-td selection for actual entries
-        var tr = tbody.selectAll("tr")
-            .data(tableEntries)
-            .enter()
-            .append("tr");
-
-        var td = tr.selectAll("td")
-            .data(function (d) {
-                return d;
-            })
-            .enter()
-            .append("td")
-            .text(function (d) {
-                return d;
-            });
-
+        return tableContainer;
     };
 
     /**
@@ -221,8 +201,20 @@ var provvis = function () {
                 /* Declare graph. */
                 var graph = Object.create(null);
 
+                /* Toolbar. */
+                createToolbar("provenance-graph", "provenance-controls");
+
+                /* Toolbar items. */
+                createToolbarItems("provenance-controls");
+
+                /* Hierarchical div layout. */
+                createVisualizationContainer("provenance-vis", "provenance-canvas", "provenance-graph");
+
+                /* On-top docked table. */
+                var wfTable = createWorkflowTable("provenance-canvas", "provenance-table");
+
                 /* Create vis and add graph. */
-                vis = new provvisDecl.ProvVis("#provenance-graph", zoom, data, url, canvas, rect, margin, width,
+                vis = new provvisDecl.ProvVis("provenance-graph", zoom, data, url, canvas, wfTable, rect, margin, width,
                     height, r, color, graph);
 
                 /* Geometric zoom. */
@@ -237,18 +229,6 @@ var provvis = function () {
                         (-(d3.event.translate[1] + vis.margin.top) / d3.event.scale) + ")" +
                         " scale(" + (+1 / d3.event.scale) + ")");
                 };
-
-                /* Toolbar. */
-                createToolbar("provenance-graph", "provenance-controls");
-
-                /* Toolbar items. */
-                createToolbarItems("provenance-controls");
-
-                /* Hierarchical div layout. */
-                createVisualizationContainer("provenance-vis", "provenance-canvas", "provenance-graph");
-
-                /* On-top docked table. */
-                createWorkflowTable("provenance-canvas", "provenance-table");
 
                 /* Main canvas drawing area. */
                 vis.canvas = d3.select("#provenance-canvas")
