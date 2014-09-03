@@ -644,7 +644,7 @@
         </div>
           <p>
           {% for perm in data_set.get_groups %}
-              <a href="{% url "group perm.group.uuid" %}">{{ perm.group.name }}</a>&nbsp;
+              <a href="{% url "group" perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
               {% if perm.read %}
                 <i class="icon-eye-open"></i>
               {% endif %}
