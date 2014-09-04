@@ -231,6 +231,57 @@ var provvisRender = function () {
         d3.selectAll(".node, .aNode, .saNode").call(drag);
     };
 
+    /* TODO: Prototype implementation. */
+    /**
+     * Draws the support view.
+     * @param vis The provenance visualization root object.
+     */
+    var drawSupportView = function (vis) {
+        var svg = d3.select("#provenance-support-view")
+            .append("svg")
+            .attr("height", 100)
+            .attr("width", 100)
+            .style("margin-top","0px");
+
+        var gradient = svg.append("defs")
+            .append("linearGradient")
+            .attr("id", "gradientGrayscale");
+
+        gradient.append("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", "#fff")
+            .attr("stop-opacity", 1);
+
+        gradient.append("stop")
+            .attr("offset", "100%")
+            .attr("stop-color", "#000")
+            .attr("stop-opacity", 1);
+
+        svg.append("rect")
+            .attr("id", "supportView")
+            .attr("x",0)
+            .attr("y",0)
+            .attr("width", 100)
+            .attr("height",100)
+            .style({"fill": "url(#gradientGrayscale)", "stroke": "lightgray", "stroke-width": "1px"});
+
+        /* TODO: Fix absolute x-values on click. */
+        svg.append("line")
+            .attr("x1", -150)
+            .attr("y1", 0)
+            .attr("x2", -150)
+            .attr("y2", 100)
+            .style({"stroke": "green", "stroke-width": "2px"});
+
+        d3.select("#supportView").on("click", function (d) {
+            /*console.log(d3.select(this));
+            console.log(d3.event.x + ", " + d3.event.y);*/
+            d3.select(this.parentNode).select("line")
+                .attr("x1", d3.event.x-200)
+                .attr("x2", d3.event.x-200);
+        });
+    };
+
     /**
      * Dye graph by analyses and its corresponding workflows.
      */
@@ -891,6 +942,7 @@ var provvisRender = function () {
                 break;
 
             case "dt":
+                /* TODO: Add tool_state paramters column. */
                 data = vis.graph.nodeData.get(selNode.uuid);
                 if (typeof data !== "undefined") {
                     title = "<b>" + selNode.fileType + ": " + "<b>";
@@ -971,6 +1023,8 @@ var provvisRender = function () {
             return d;
         });
         cells.exit().remove();
+
+        $("#provenance-support-view").css({"top": ($("#provenance-table").height()) + "px"});
     };
 
     /**
@@ -1297,8 +1351,25 @@ var provvisRender = function () {
         $("#prov-ctrl-show-table").click(function () {
             if ($("#prov-ctrl-show-table").hasClass("active")) {
                 d3.select("#provenance-table").style("display", "none");
+                $("#provenance-support-view").css({"top": "0px"});
             } else {
                 d3.select("#provenance-table").style("display", "block");
+                $("#provenance-support-view").css({"top": ($("#provenance-table").height()) + "px"});
+            }
+        });
+
+        /* Show and hide support view. */
+        $("#prov-ctrl-show-support-view").click(function () {
+            if ($("#prov-ctrl-show-support-view").hasClass("active")) {
+                d3.select("#provenance-support-view").style("display", "none");
+            } else {
+                d3.select("#provenance-support-view").style("display", "block");
+            }
+
+            if ($("#prov-ctrl-show-table").hasClass("active")) {
+                $("#provenance-support-view").css({"top": ($("#provenance-table").height()) + "px"});
+            } else {
+                $("#provenance-support-view").css({"top": "0px"});
             }
         });
 
@@ -1551,6 +1622,9 @@ var provvisRender = function () {
 
             /* Add dragging behavior to nodes. */
             applyDragBehavior();
+
+            /* Draw support view. */
+            drawSupportView(vis);
 
             /* Initially collapse all analyses. */
             collapseAll(vis.graph);

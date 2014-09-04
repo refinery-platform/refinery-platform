@@ -219,9 +219,10 @@ var provvisDecl = function () {
      * @param radius
      * @param color
      * @param graph
+     * @param supportView
      * @constructor
      */
-    var ProvVis = function (parentDiv, zoom, data, url, canvas, nodeTable, rect, margin, width, height, radius, color, graph) {
+    var ProvVis = function (parentDiv, zoom, data, url, canvas, nodeTable, rect, margin, width, height, radius, color, graph, supportView) {
         this._parentDiv = parentDiv;
         this.zoom = zoom;
         this._data = data;
@@ -236,6 +237,7 @@ var provvisDecl = function () {
         this.radius = radius;
         this.color = color;
         this.graph = graph;
+        this.supportView = supportView;
     };
 
     /**
@@ -275,6 +277,15 @@ var provvisDecl = function () {
         this.depth = depth;
         this.grid = grid;
     };
+
+/*    *//**
+     * Support view only showing analysis within a time-gradient background.
+     *
+     * @constructor
+     *//*
+    var SupportView = function () {
+
+    };*/
 
     /**
      * Publish constructor function declarations.

@@ -77,6 +77,19 @@ var provvis = function () {
             "title": "Node Info"
         }).appendTo("#" + parentId);
 
+        $("<button/>", {
+            "id": "prov-ctrl-show-support-view",
+            "class": 'btn btn-mini',
+            "type": "button",
+            "style": "margin-left: 2px",
+            "data-toggle": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Support View",
+            "data-html": "true",
+            "title": "Support View"
+        }).appendTo("#" + parentId);
+
         $("<span/>", {
             "class": "prov-ctrl-label",
             "style": "margin-left: 10px",
@@ -164,6 +177,26 @@ var provvis = function () {
     };
 
     /**
+     * Support view only showing analysis within a time-gradient background.
+     * @param parentId Parent div id for the floating table div.
+     * @param divId Table div id.
+     * @returns {*} The support view div container.
+     */
+    var createSupportView = function (parentId, divId) {
+        /* New support view enclosing div. */
+        $('<div/>', {
+            "id": divId
+        }).appendTo("#" + parentId);
+
+        /* New support view content. */
+        var supportViewContainer = d3.select("#" + divId);
+
+        supportViewContainer.append("g").attr("id", "viewTitle").html("<b>" + "SupportView" + "<b>");
+
+        return supportViewContainer;
+    };
+
+    /**
      * Refinery injection for the provenance visualization.
      * @param studyUuid The serialized unique identifier referencing a study.
      * @param studyAnalyses Analyses objects from the refinery scope.
@@ -213,9 +246,12 @@ var provvis = function () {
                 /* On-top docked table. */
                 var nodeTable = createNodeTable("provenance-canvas", "provenance-table");
 
+                /* Support view div. */
+                var supportView = createSupportView("provenance-canvas", "provenance-support-view");
+
                 /* Create vis and add graph. */
                 vis = new provvisDecl.ProvVis("provenance-graph", zoom, data, url, canvas, nodeTable, rect, margin, width,
-                    height, r, color, graph);
+                    height, r, color, graph, supportView);
 
                 /* Geometric zoom. */
                 var redraw = function () {
