@@ -211,7 +211,7 @@ var provvisDecl = function () {
      * @param data
      * @param url
      * @param canvas
-     * @param wfTable
+     * @param nodeTable
      * @param rect
      * @param margin
      * @param width
@@ -221,14 +221,14 @@ var provvisDecl = function () {
      * @param graph
      * @constructor
      */
-    var ProvVis = function (parentDiv, zoom, data, url, canvas, wfTable, rect, margin, width, height, radius, color, graph) {
+    var ProvVis = function (parentDiv, zoom, data, url, canvas, nodeTable, rect, margin, width, height, radius, color, graph) {
         this._parentDiv = parentDiv;
         this.zoom = zoom;
         this._data = data;
         this._url = url;
 
         this.canvas = canvas;
-        this.wfTable = wfTable;
+        this.nodeTable = nodeTable;
         this.rect = rect;
         this.margin = margin;
         this.width = width;
@@ -249,13 +249,15 @@ var provvisDecl = function () {
      * @param saNodes
      * @param analysisWorkflowMap
      * @param nodeMap
-     * @param workflows
+     * @param analysisData
+     * @param workflowData
+     * @param nodeData
      * @param width
      * @param depth
      * @param grid
      * @constructor
      */
-    var ProvGraph = function (nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, workflows, width, depth, grid) {
+    var ProvGraph = function (nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, width, depth, grid) {
         this.nodes = nodes;
         this.links = links;
         this.iNodes = iNodes;
@@ -265,7 +267,9 @@ var provvisDecl = function () {
 
         this.analysisWorkflowMap = analysisWorkflowMap;
         this.nodeMap = nodeMap;
-        this.workflows = workflows;
+        this.analysisData = analysisData;
+        this.workflowData = workflowData;
+        this.nodeData = nodeData;
 
         this.width = width;
         this.depth = depth;

@@ -34,7 +34,7 @@ var provvis = function () {
             "type": "button",
             "rel": "tooltip",
             "data-placement": "bottom",
-            "html": "Collapse All",
+            "html": "Collapse",
             "data-html": "true",
             "title": "Collapse"
         }).appendTo("#" + parentId);
@@ -46,7 +46,7 @@ var provvis = function () {
             "style": "margin-left: 2px",
             "rel": "tooltip",
             "data-placement": "bottom",
-            "html": "Expand All",
+            "html": "Expand",
             "data-html": "true",
             "title": "Expand"
         }).appendTo("#" + parentId);
@@ -59,7 +59,7 @@ var provvis = function () {
             "data-toggle": "button",
             "rel": "tooltip",
             "data-placement": "bottom",
-            "html": "Show Grid",
+            "html": "Grid",
             "data-html": "true",
             "title": "Grid"
         }).appendTo("#" + parentId);
@@ -72,15 +72,15 @@ var provvis = function () {
             "data-toggle": "button",
             "rel": "tooltip",
             "data-placement": "bottom",
-            "html": "Show Table",
+            "html": "Node Info",
             "data-html": "true",
-            "title": "Table"
+            "title": "Node Info"
         }).appendTo("#" + parentId);
 
         $("<span/>", {
             "class": "prov-ctrl-label",
             "style": "margin-left: 10px",
-            "html": "Link style"
+            "html": "Links"
         }).appendTo("#" + parentId);
 
         $("<select/>", {
@@ -96,7 +96,7 @@ var provvis = function () {
         $("<span/>", {
             "class": "prov-ctrl-label",
             "style": "margin-left: 10px",
-            "html": "Color scheme"
+            "html": "Time-encoding"
         }).appendTo("#" + parentId);
 
         $("<select/>", {
@@ -112,7 +112,7 @@ var provvis = function () {
         $("<span/>", {
             "class": "prov-ctrl-label",
             "style": "margin-left: 10px",
-            "html": "Filter action"
+            "html": "Filter"
         }).appendTo("#" + parentId);
 
         $("<select/>", {
@@ -149,7 +149,7 @@ var provvis = function () {
      * @param divId Table div id.
      * @returns {*} The table div container.
      */
-    var createWorkflowTable = function (parentId, divId) {
+    var createNodeTable = function (parentId, divId) {
         /* New table enclosing div. */
         $('<div/>', {
             "id": divId
@@ -158,7 +158,7 @@ var provvis = function () {
         /* New table. */
         var tableContainer = d3.select("#" + divId);
 
-        tableContainer.append("g").attr("id", "wfTitle").html("<b>" + "Workflow: " + "<b>" + " - ");
+        tableContainer.append("g").attr("id", "nodeTitle").html("<b>" + "Node: " + "<b>" + " - ");
 
         return tableContainer;
     };
@@ -211,10 +211,10 @@ var provvis = function () {
                 createVisualizationContainer("provenance-vis", "provenance-canvas", "provenance-graph");
 
                 /* On-top docked table. */
-                var wfTable = createWorkflowTable("provenance-canvas", "provenance-table");
+                var nodeTable = createNodeTable("provenance-canvas", "provenance-table");
 
                 /* Create vis and add graph. */
-                vis = new provvisDecl.ProvVis("provenance-graph", zoom, data, url, canvas, wfTable, rect, margin, width,
+                vis = new provvisDecl.ProvVis("provenance-graph", zoom, data, url, canvas, nodeTable, rect, margin, width,
                     height, r, color, graph);
 
                 /* Geometric zoom. */

@@ -868,26 +868,70 @@ var provvisRender = function () {
     };
 
     /**
-     * Updated table on subanalysis node selection.
-     * @param selSa Selected subanalysis node.
+     * Updated table on node selection.
+     * @param selNode Selected node.
      */
-    var updateWfTableContent = function (selSa) {
-        var selWf = vis.graph.workflows.get(selSa.parent.wfUuid);
+    var updateTableContent = function (selNode) {
+        var title = " - ",
+            data = Object.create(null);
 
-        /* Update workflow title. */
-        if (typeof selWf === "undefined") {
-            vis.wfTable.select("#wfTitle").html("<b>" + "Workflow: " + "<b>" + " - ");
-        } else {
-            vis.wfTable.select("#wfTitle").html("<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + selSa.parent.wfUuid + ">" + selWf.name + "</a>");
+        switch (selNode.nodeType) {
+            case "raw":
+            case "special":
+            case "processed":
+                data = vis.graph.nodeData.get(selNode.uuid);
+                if (typeof data !== "undefined") {
+                    title = "<b>" + selNode.fileType + ": " + "<b>";
+                    if (data.file_url !== null) {
+                        title += "<a href=" + data.file_url + ">" + data.name + "</a>";
+                    } else {
+                        title += " - ";
+                    }
+                }
+                break;
+
+            case "dt":
+                data = vis.graph.nodeData.get(selNode.uuid);
+                if (typeof data !== "undefined") {
+                    title = "<b>" + selNode.fileType + ": " + "<b>";
+                    if (data.file_url !== null) {
+                        title += "<a href=" + data.file_url + ">" + data.name + "</a>";
+                    } else {
+                        title += " - ";
+                    }
+                }
+                break;
+
+            case "subanalysis":
+                data = vis.graph.workflowData.get(selNode.parent.wfUuid);
+                if (typeof data !== "undefined") {
+                    title = "<b>" + "Subanalysis: " + "<b>" + "<a href=/workflows/" + selNode.parent.wfUuid + ">" + data.name + "</a>";
+                } else {
+                    title = "<b>" + "Dataset " + "<b>";
+                }
+                break;
+
+            case "analysis":
+                data = vis.graph.analysisData.get(selNode.uuid);
+                if (typeof data !== "undefined") {
+                    title = "<b>" + "Analysis: " + "<b>" + "<a href=/workflows/" + data.uuid + ">" + data.name + "</a>";
+                } else {
+                    title = "<b>" + "Dataset " + "<b>";
+                }
+                break;
         }
 
-        vis.wfTable.selectAll("table")
+        /* Update node title. */
+        vis.nodeTable.select("#nodeTitle").html(title);
+
+        /* Update table content. */
+        vis.nodeTable.selectAll("table")
             .data([0])
             .enter()
             .append("table")
             .attr("id", "provenance-table-content")
             .attr("class", "table table-striped table-condensed");
-        var table = vis.wfTable.select("table");
+        var table = vis.nodeTable.select("table");
 
         table.selectAll("thead")
             .data([0])
@@ -903,25 +947,29 @@ var provvisRender = function () {
 
         /* Header row. */
         var th = tHead.selectAll("th")
-            .data(d3.keys(selWf));
+            .data(d3.keys(data));
 
         th.enter().append("th");
-        th.text(function(d) { return d; });
+        th.text(function (d) {
+            return d;
+        });
         th.exit().remove();
 
         /* Body rows. */
         var rows = tBody.selectAll("tr")
-            .data([d3.values(selWf)]);
+            .data([d3.values(data)]);
         rows.enter().append("tr");
         rows.exit().remove();
 
         /* Table data. */
         var cells = rows.selectAll("td")
-            .data(function(d) {
+            .data(function (d) {
                 return d;
             });
         cells.enter().append("td");
-        cells.text(function (d) { return d;});
+        cells.text(function (d) {
+            return d;
+        });
         cells.exit().remove();
     };
 
@@ -1296,10 +1344,7 @@ var provvisRender = function () {
                     /* TODO: Temporarily disabled. */
                     //handleNodeSelection(d, keyEvent);
 
-                    switch (d.nodeType) {
-                        case "subanalysis":
-                            updateWfTableContent(d);
-                    }
+                    updateTableContent(d);
                 }
             }, 200);
         });

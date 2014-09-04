@@ -16,7 +16,9 @@ var provvisInit = function () {
         nodeMap = d3.map(),
 
         analysisWorkflowMap = d3.map(),
-        workflows = d3.map();
+        workflowData = d3.map(),
+        analysisData = d3.map(),
+        nodeData = d3.map();
 
     /**
      * Assign node types.
@@ -77,6 +79,8 @@ var provvisInit = function () {
 
             /* Build node hash. */
             nodeMap.set(n.uuid, newNode);
+
+            nodeData.set(n.uuid, n);
         });
     };
 
@@ -247,7 +251,7 @@ var provvisInit = function () {
             var text = prepareJSON(a.workflow_copy);
             var wfData = JSON.parse(text);
             var wfObj = wfData;
-            workflows.set(a.workflow__uuid, wfObj);
+            workflowData.set(a.workflow__uuid, wfObj);
         });
     };
 
@@ -266,6 +270,7 @@ var provvisInit = function () {
         analysesData.forEach(function (a, i) {
             aNodes.push(createAnalysisNode(a, i + 1));
             analysisWorkflowMap.set(a.uuid, a.workflow__uuid);
+            analysisData.set(a.uuid, a);
         });
     };
 
@@ -502,7 +507,7 @@ var provvisInit = function () {
         extractFacetNodeAttributesPrivate(solrResponse);
 
         /* Create graph. */
-        return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, workflows, 0, 0, []);
+        return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, 0, 0, []);
     };
 
     /**
