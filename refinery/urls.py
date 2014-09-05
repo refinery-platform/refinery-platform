@@ -69,6 +69,7 @@ urlpatterns = patterns('',
     url(r'^data_set_manager/', include('data_set_manager.urls')),
     url(r'^visualization_manager/', include('visualization_manager.urls')),
     url(r'^file_server/', include('file_server.urls')),
+    url(r'^file_store/', include('file_store.urls')),
 
     url(r'^tasks/', include('djcelery.urls')),
 

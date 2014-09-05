@@ -27,6 +27,7 @@ module.exports = function(grunt) {
         'angular-bootstrap/ui-bootstrap-tpls.min.js',
         'angular-bootstrap/ui-bootstrap.min.js',
         'tipsy/src/javascripts/jquery.tipsy.js',
+        'resumablejs/resumable.js',
       ],
       css: [
         'select2/select2.css',

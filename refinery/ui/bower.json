@@ -19,6 +19,7 @@
     "angular-ui-select2": "0.0.5",
     "angular-ui-router": "0.2.7",
     "angular-bootstrap": "0.8.0",
-    "tipsy": "0.1.7"
+    "tipsy": "0.1.7",
+    "resumablejs": "89cef58556"
   }
 }
