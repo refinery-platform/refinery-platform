@@ -38,7 +38,8 @@
         var queryCommands = new Backbone.Wreqr.Commands();
         var dataSetMonitorCommands = new Backbone.Wreqr.Commands();
 
-        var lastSolrResponse = null;
+        var lastSolrResponse = null,
+            lastProvVisSolrResponse = null;
 
         var showAnnotation = false;
 
@@ -140,11 +141,8 @@
 
                 $('a[data-toggle="pill"]').on('shown', function (event) {
                     if (event.target.href.split("#")[1] === "provenance-view-tab") {
-                        if (provvis.getProvVis() instanceof provvisDecl.ProvVis === false) {
-
-                        } else {
-                            facetSelectionUpdated(arguments);
-                            provvisRender.runRenderUpdate(provvis.getProvVis(), arguments.response)
+                        if (provvis.getProvVis() instanceof provvisDecl.ProvVis === true) {
+                            provvisRender.runRenderUpdate(provvis.getProvVis(), lastProvVisSolrResponse);
                         }
                     }
                 })
@@ -220,6 +218,10 @@
                 /* Set face attributes for nodes in Provenance Visualization.*/
                 if (arguments.query == provVisQuery && provvis.getProvVis() instanceof provvisDecl.ProvVis === false) {
                     provvis.runProvVis(currentStudyUuid, dataSetMonitor.analyses.objects, arguments.response);
+                }
+
+                if (arguments.query == provVisQuery) {
+                    lastProvVisSolrResponse = arguments.response;
                 }
 
                 /* Update Provenance Visualization by filtered nodeset. */
@@ -319,7 +321,7 @@
                 client.run(pivotQuery, SOLR_FULL_QUERY);
 
                 /* ProvVis hook for update. */
-                if (($('.nav-pills li.active a').attr('href').split("#")[1] === 'provenance-view-tab') && provvis.getProvVis() instanceof provvisDecl.ProvVis) {
+                if (provvis.getProvVis() instanceof provvisDecl.ProvVis) {
                     provVisQuery = query.clone();
                     provVisQuery.setDocumentCount(provVisQuery.getTotalDocumentCount());
                     provVisQuery.setDocumentIndex(0);

@@ -15,7 +15,10 @@ var provvisInit = function () {
 
         nodeMap = d3.map(),
 
-        analysisWorkflowMap = d3.map();
+        analysisWorkflowMap = d3.map(),
+        workflowData = d3.map(),
+        analysisData = d3.map(),
+        nodeData = d3.map();
 
     /**
      * Assign node types.
@@ -76,6 +79,8 @@ var provvisInit = function () {
 
             /* Build node hash. */
             nodeMap.set(n.uuid, newNode);
+
+            nodeData.set(n.uuid, n);
         });
     };
 
@@ -217,6 +222,40 @@ var provvisInit = function () {
     };
 
     /**
+     * Extracts workflow uuid with its workflow data.
+     * @param analysesData analyses object extracted from global refinery variable.
+     */
+    var extractWorkflows = function (analysesData) {
+
+        analysesData.forEach(function (a) {
+
+            /* Prepare for json format. */
+            var prepareJSON = function (wfCpy) {
+                var text = wfCpy.replace(/u'/g, "\"");
+                text = text.replace(/\'/g, "\"");
+                text = text.replace(/\sNone/g, " \"None\"");
+                text = text.replace(/\\/g, "");
+                text = text.replace(/\"{\"/g, "{\"");
+                text = text.replace(/}\"/g, "}");
+                text = text.replace(/\"\"(\S+)\"\"/g, "\"$1\"");
+
+                /* Eliminate __xxxx__ parameters. */
+                text = text.replace(/\"__(\S*)__\":\s{1}\d*(,\s{1})?/g, "");
+                text = text.replace(/,\s{1}null/g, "");
+                text = text.replace(/,\s{1}}/g, "}");
+
+                return text;
+            };
+
+            /* Transform to JSON object. */
+            var text = prepareJSON(a.workflow_copy);
+            var wfData = JSON.parse(text);
+            var wfObj = wfData;
+            workflowData.set(a.workflow__uuid, wfObj);
+        });
+    };
+
+    /**
      * Extracts analyses nodes as well as maps it to their corresponding workflows.
      * @param analysesData analyses object extracted from global refinery variable.
      */
@@ -231,6 +270,7 @@ var provvisInit = function () {
         analysesData.forEach(function (a, i) {
             aNodes.push(createAnalysisNode(a, i + 1));
             analysisWorkflowMap.set(a.uuid, a.workflow__uuid);
+            analysisData.set(a.uuid, a);
         });
     };
 
@@ -454,6 +494,9 @@ var provvisInit = function () {
         /* Create analysis nodes. */
         extractAnalyses(analysesData);
 
+        /* Extract workflow information. */
+        extractWorkflows(analysesData);
+
         /* Divide dataset and analyses into subanalyses. */
         markSubanalyses();
 
@@ -464,7 +507,7 @@ var provvisInit = function () {
         extractFacetNodeAttributesPrivate(solrResponse);
 
         /* Create graph. */
-        return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, 0, 0, []);
+        return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, 0, 0, []);
     };
 
     /**

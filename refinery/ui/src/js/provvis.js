@@ -7,6 +7,195 @@
 
 var provvis = function () {
     var vis = Object.create(null);
+
+    /**
+     * Creates a simple toolbar containing actions for global visualization interaction.
+     * @param parentId Parent div id for the toolbar.
+     * @param divId Toolbar div id.
+     */
+    var createToolbar = function (parentId, divId) {
+        /* Toolbar. */
+        $('<div/>', {
+            "id": divId,
+            "class": ""
+        }).appendTo("#" + parentId);
+    };
+
+    /**
+     * Creates a simple toolbar items for global visualization interaction.
+     * @param parentId Parent div id for the toolbar items.
+     */
+    var createToolbarItems = function (parentId) {
+
+        /* Toolbar items. */
+        $("<button/>", {
+            "id": "prov-ctrl-collapse-click",
+            "class": "btn btn-mini",
+            "type": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Collapse",
+            "data-html": "true",
+            "title": "Collapse"
+        }).appendTo("#" + parentId);
+
+        $("<button/>", {
+            "id": "prov-ctrl-expand-click",
+            "class": 'btn btn-mini',
+            "type": "button",
+            "style": "margin-left: 2px",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Expand",
+            "data-html": "true",
+            "title": "Expand"
+        }).appendTo("#" + parentId);
+
+        $("<button/>", {
+            "id": "prov-ctrl-show-grid",
+            "class": 'btn btn-mini',
+            "type": "button",
+            "style": "margin-left: 2px",
+            "data-toggle": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Grid",
+            "data-html": "true",
+            "title": "Grid"
+        }).appendTo("#" + parentId);
+
+        $("<button/>", {
+            "id": "prov-ctrl-show-table",
+            "class": 'btn btn-mini',
+            "type": "button",
+            "style": "margin-left: 2px",
+            "data-toggle": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Node Info",
+            "data-html": "true",
+            "title": "Node Info"
+        }).appendTo("#" + parentId);
+
+        $("<button/>", {
+            "id": "prov-ctrl-show-support-view",
+            "class": 'btn btn-mini',
+            "type": "button",
+            "style": "margin-left: 2px",
+            "data-toggle": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Support View",
+            "data-html": "true",
+            "title": "Support View"
+        }).appendTo("#" + parentId);
+
+        $("<span/>", {
+            "class": "prov-ctrl-label",
+            "style": "margin-left: 10px",
+            "html": "Links"
+        }).appendTo("#" + parentId);
+
+        $("<select/>", {
+            "id": "prov-ctrl-link-style",
+            "class": "combobox",
+            "style": "margin-left: 2px",
+            "width": "auto",
+            "html":
+                "<option value=\"bezier\">Bezier</option>" +
+                "<option value=\"edge\">Edge</option>"
+        }).appendTo("#" + parentId);
+
+        $("<span/>", {
+            "class": "prov-ctrl-label",
+            "style": "margin-left: 10px",
+            "html": "Time-encoding"
+        }).appendTo("#" + parentId);
+
+        $("<select/>", {
+            "id": "prov-ctrl-color-scheme",
+            "class": "combobox",
+            "style": "margin-left: 2px",
+            "width": "auto",
+            "html":
+                "<option value=\"grayscale\">Grayscale</option>" +
+                "<option value=\"color\">Color</option>"
+        }).appendTo("#" + parentId);
+
+        $("<span/>", {
+            "class": "prov-ctrl-label",
+            "style": "margin-left: 10px",
+            "html": "Filter"
+        }).appendTo("#" + parentId);
+
+        $("<select/>", {
+            "id": "prov-ctrl-filter-action",
+            "class": "combobox",
+            "style": "margin-left: 2px",
+            "width": "auto",
+            "html":
+                "<option value=\"hide\">Hide unselected</option>" +
+                "<option value=\"blend\">Blend unselected</option>"
+        }).appendTo("#" + parentId);
+    };
+
+    /**
+     * Creates the hierarchical provenance visualization div layout.
+     * @param rootId Visualization root element.
+     * @param divId Visualization canvas.
+     * @param parentId Provenance graph tab element.
+     */
+    var createVisualizationContainer = function (rootId, divId, parentId) {
+        $('<div/>', {
+            "id": rootId
+        }).appendTo("#" + parentId);
+
+        $('<div/>', {
+            "id": divId
+        }).appendTo("#" + rootId);
+    };
+
+    /* TODO: Prototype implementation. */
+    /**
+     * Floating table properties div.
+     * @param parentId Parent div id for the floating table div.
+     * @param divId Table div id.
+     * @returns {*} The table div container.
+     */
+    var createNodeTable = function (parentId, divId) {
+        /* New table enclosing div. */
+        $('<div/>', {
+            "id": divId
+        }).appendTo("#" + parentId);
+
+        /* New table. */
+        var tableContainer = d3.select("#" + divId);
+
+        tableContainer.append("g").attr("id", "nodeTitle").html("<b>" + "Node: " + "<b>" + " - ");
+
+        return tableContainer;
+    };
+
+    /**
+     * Support view only showing analysis within a time-gradient background.
+     * @param parentId Parent div id for the floating table div.
+     * @param divId Table div id.
+     * @returns {*} The support view div container.
+     */
+    var createSupportView = function (parentId, divId) {
+        /* New support view enclosing div. */
+        $('<div/>', {
+            "id": divId
+        }).appendTo("#" + parentId);
+
+        /* New support view content. */
+        var supportViewContainer = d3.select("#" + divId);
+
+        supportViewContainer.append("g").attr("id", "viewTitle").html("<b>" + "SupportView" + "<b>");
+
+        return supportViewContainer;
+    };
+
     /**
      * Refinery injection for the provenance visualization.
      * @param studyUuid The serialized unique identifier referencing a study.
@@ -45,9 +234,24 @@ var provvis = function () {
                 /* Declare graph. */
                 var graph = Object.create(null);
 
+                /* Toolbar. */
+                createToolbar("provenance-graph", "provenance-controls");
+
+                /* Toolbar items. */
+                createToolbarItems("provenance-controls");
+
+                /* Hierarchical div layout. */
+                createVisualizationContainer("provenance-vis", "provenance-canvas", "provenance-graph");
+
+                /* On-top docked table. */
+                var nodeTable = createNodeTable("provenance-canvas", "provenance-table");
+
+                /* Support view div. */
+                var supportView = createSupportView("provenance-canvas", "provenance-support-view");
+
                 /* Create vis and add graph. */
-                vis = new provvisDecl.ProvVis("#provenance-graph", zoom, data, url, canvas, rect, margin, width,
-                    height, r, color, graph);
+                vis = new provvisDecl.ProvVis("provenance-graph", zoom, data, url, canvas, nodeTable, rect, margin, width,
+                    height, r, color, graph, supportView);
 
                 /* Geometric zoom. */
                 var redraw = function () {
@@ -62,27 +266,17 @@ var provvis = function () {
                         " scale(" + (+1 / d3.event.scale) + ")");
                 };
 
-                /* Toolbar. */
-                $('<div/>', {'class': '', 'id': "provenance-controls", 'html': ''}).appendTo('#' + "provenance-graph");
-                $("<button/>", { "id": "prov-ctrl-collapse-click", "type": "button", "class": 'btn btn-mini', "rel": "tooltip", "data-placement": "bottom", "html": "Collapse All", "data-html": "true", "title": "Collapse"}).appendTo("#" + "provenance-controls");
-                $("<button/>", { "style": "margin-left: 1px", "id": "prov-ctrl-expand-click", "type": "button", "class": 'btn btn-mini', "rel": "tooltip", "data-placement": "bottom", "html": "Expand All", "data-html": "true", "title": "Expand"}).appendTo("#" + "provenance-controls");
-                $("<button/>", { "style": "margin-left: 1px", "id": "prov-ctrl-show-grid", "type": "button", "data-toggle": "button", "class": 'btn btn-mini', "rel": "tooltip", "data-placement": "bottom", "html": "Show Grid", "data-html": "true", "title": "Grid"}).appendTo("#" + "provenance-controls");
-                $( "<span/>", { "style": "margin-left: 10px", "class": "prov-ctrl-label", html: "Link style" } ).appendTo( "#" + "provenance-controls" );
-                $( "<select/>", { "style": "margin-left: 1px", "class": "combobox", "id": "prov-ctrl-link-style", html: "<option value=\"bezier\">Bezier</option><option value=\"edge\">Edge</option>" } ).appendTo( "#" + "provenance-controls");
-                $( "<span/>", { "style": "margin-left: 10px", "class": "prov-ctrl-label", html: "Color scheme" } ).appendTo( "#" + "provenance-controls" );
-                $( "<select/>", { "style": "margin-left: 1px", "class": "combobox", "id": "prov-ctrl-color-scheme", html: "<option value=\"grayscale\">Grayscale</option><option value=\"color\">Color</option>" } ).appendTo( "#" + "provenance-controls");
-
                 /* Main canvas drawing area. */
-                vis.canvas = d3.select("#provenance-graph")
-                    .append("svg:svg")
+                vis.canvas = d3.select("#provenance-canvas")
+                    .append("svg")
                     .attr("transform", "translate(" + vis.margin.left + "," + vis.margin.top + ")")
                     .attr("viewBox", "0 0 " + (width) + " " + (height))
                     .attr("preserveAspectRatio", "xMinYMin meet")
                     .attr("pointer-events", "all")
                     .classed("canvas", true)
-                    .append("svg:g")
+                    .append("g")
                     .call(vis.zoom = d3.behavior.zoom().on("zoom", redraw)).on("dblclick.zoom", null)
-                    .append("svg:g");
+                    .append("g");
 
                 /* Helper rectangle to support pan and zoom. */
                 vis.rect = vis.canvas.append("svg:rect")

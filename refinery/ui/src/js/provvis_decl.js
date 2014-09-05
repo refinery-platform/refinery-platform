@@ -76,9 +76,12 @@ var provvisDecl = function () {
 
         this.doi = new DoiComponents();
         this.selected = false;
+        this.filtered = true;
 
         /* TODO: Group layout specific properties into sub-property. */
     };
+
+    /* TODO: Add enums for node appearance, eg.: hide, blend, lod0-2 */
 
     /**
      * Constructor function for the node data structure.
@@ -208,6 +211,7 @@ var provvisDecl = function () {
      * @param data
      * @param url
      * @param canvas
+     * @param nodeTable
      * @param rect
      * @param margin
      * @param width
@@ -215,15 +219,17 @@ var provvisDecl = function () {
      * @param radius
      * @param color
      * @param graph
+     * @param supportView
      * @constructor
      */
-    var ProvVis = function (parentDiv, zoom, data, url, canvas, rect, margin, width, height, radius, color, graph) {
+    var ProvVis = function (parentDiv, zoom, data, url, canvas, nodeTable, rect, margin, width, height, radius, color, graph, supportView) {
         this._parentDiv = parentDiv;
         this.zoom = zoom;
         this._data = data;
         this._url = url;
 
         this.canvas = canvas;
+        this.nodeTable = nodeTable;
         this.rect = rect;
         this.margin = margin;
         this.width = width;
@@ -231,6 +237,7 @@ var provvisDecl = function () {
         this.radius = radius;
         this.color = color;
         this.graph = graph;
+        this.supportView = supportView;
     };
 
     /**
@@ -244,12 +251,15 @@ var provvisDecl = function () {
      * @param saNodes
      * @param analysisWorkflowMap
      * @param nodeMap
+     * @param analysisData
+     * @param workflowData
+     * @param nodeData
      * @param width
      * @param depth
      * @param grid
      * @constructor
      */
-    var ProvGraph = function (nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, width, depth, grid) {
+    var ProvGraph = function (nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, width, depth, grid) {
         this.nodes = nodes;
         this.links = links;
         this.iNodes = iNodes;
@@ -259,11 +269,23 @@ var provvisDecl = function () {
 
         this.analysisWorkflowMap = analysisWorkflowMap;
         this.nodeMap = nodeMap;
+        this.analysisData = analysisData;
+        this.workflowData = workflowData;
+        this.nodeData = nodeData;
 
         this.width = width;
         this.depth = depth;
         this.grid = grid;
     };
+
+/*    *//**
+     * Support view only showing analysis within a time-gradient background.
+     *
+     * @constructor
+     *//*
+    var SupportView = function () {
+
+    };*/
 
     /**
      * Publish constructor function declarations.

@@ -27,11 +27,14 @@ module.exports = function(grunt) {
         'angular-bootstrap/ui-bootstrap-tpls.min.js',
         'angular-bootstrap/ui-bootstrap.min.js',
         'tipsy/src/javascripts/jquery.tipsy.js',
+        'd3/d3.min.js',
+        'c3/c3.min.js',
         'resumablejs/resumable.js',
       ],
       css: [
         'select2/select2.css',
         'tipsy/src/stylesheets/tipsy.css',
+        'c3/c3.css',
       ],
       img: [
         'select2/select2.png',

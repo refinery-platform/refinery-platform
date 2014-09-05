@@ -6,7 +6,7 @@
 
 
 {% block head_html %}
-  <link ref="stylesheet" href="{% static "styles/css/provenance-visualization.css" %}" />
+  <link rel="stylesheet" href="{% static "styles/css/provenance-visualization.css" %}" />
   <link rel="stylesheet" href="{% static "vendor/tipsy/src/stylesheets/tipsy.css" %}" />
   <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
   
@@ -103,6 +103,43 @@
    * Provenance Visualization CSS Styles
    */
 
+  #provenance-vis {
+      position: relative;
+  }
+
+  #provenance-canvas {}
+
+  #provenance-table {
+      position: absolute;
+      left: 0px;
+      right: 0px;
+      top: 0px;
+      display: none;
+      background-color: #ffffff;
+      border-style: solid;
+      border-color: lightgray;
+      border-width: 1px;
+  }
+
+  #provenance-table-content {
+      background-color: #ffffff;
+  }
+
+  #provenance-support-view {
+      position: absolute;
+      left: 0px;
+      top: 0px;
+      width: 110px;
+      height: 130px;
+      display: none;
+      margin-top: 5px;
+      background-color: #ffffff;
+  }
+
+  #provenance-support-view-content {
+      background-color: dimgray;
+  }
+
   .canvas {
   }
 
@@ -156,6 +193,13 @@
       stroke: none;
       fill: gray;
       display: none;
+      cursor:default;
+  }
+
+  .saMenuText {
+    fill: black;
+    font-size: 10px;
+    text-anchor: middle;
   }
 
   .saGlyph {
@@ -619,7 +663,7 @@
         </div>
           <p>
           {% for perm in data_set.get_groups %}
-              <a href="{% url "group perm.group.uuid" %}">{{ perm.group.name }}</a>&nbsp;
+              <a href="{% url "group" perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
               {% if perm.read %}
                 <i class="icon-eye-open"></i>
               {% endif %}

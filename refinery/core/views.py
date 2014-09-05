@@ -1,6 +1,7 @@
 from datetime import datetime
 import os.path
 import re
+import json
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import get_current_site
@@ -70,6 +71,22 @@ def statistics(request):
     base_url = uri.split( request.get_full_path() )[0]
     
     return render_to_response('core/statistics.html', { "users": users, "groups": groups, "projects": projects, "workflows": workflows, "data_sets": data_sets, "files": files, "base_url": base_url }, context_instance=RequestContext( request ) )
+
+def get_shared_resource_summary(model):
+    total = len(model.objects.all())
+    public = len(filter(lambda x: x.is_public(), model.objects.all()))
+    private_shared = len(filter(lambda x: (not x.is_public() and len(x.get_groups()) > 1), model.objects.all()))
+    private = total - public - private_shared
+    return {"total": total, "public": public, "private": private, "private_shared": private_shared}
+
+def data_set_statistics(request):
+    return HttpResponse(json.dumps(get_shared_resource_summary(DataSet)))
+
+def project_statistics(request):
+    return HttpResponse(json.dumps(get_shared_resource_summary(Project)))
+
+def workflow_statistics(request):
+    return HttpResponse(json.dumps(get_shared_resource_summary(Workflow)))
 
 def custom_error_page(request, template, context_dict):
     temp_loader = loader.get_template(template)
