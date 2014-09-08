@@ -286,7 +286,7 @@ var provvisRender = function () {
      * Dye graph by analyses and its corresponding workflows.
      */
     var dyeWorkflows = function () {
-        d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").style("stroke", function (d) {
+        d3.selectAll(".rawNode, .specialNode, .dtNode, .intermediateNode, .storedNode").style("stroke", function (d) {
             return timeScale(parseISOTimeFormat(d.parent.parent.created));
         });
     };
@@ -295,7 +295,7 @@ var provvisRender = function () {
      * Dye graph by analyses.
      */
     var dyeAnalyses = function () {
-        d3.selectAll(".rawNode, .specialNode, .dtNode, .processedNode").style("fill", function (d) {
+        d3.selectAll(".rawNode, .specialNode, .dtNode, .intermediateNode, .storedNode").style("fill", function (d) {
             return timeScale(parseISOTimeFormat(d.parent.parent.created));
         });
     };
@@ -545,25 +545,25 @@ var provvisRender = function () {
                     return "translate(" + d.x + "," + d.y + ")";
                 })
                 .each(function (d) {
-                    if (d.nodeType === "raw" || d.nodeType === "processed") {
+                    if (d.nodeType === "raw" || d.nodeType === "intermediate" || d.nodeType === "stored") {
                         d3.select(this)
                             .append("circle")
-                            .attr("r", vis.radius);
+                            .attr("r", function (d) {return d.nodeType === "intermediate" ? 3*vis.radius/4 : vis.radius;});
                     } else {
                         if (d.nodeType === "special") {
                             d3.select(this)
                                 .append("rect")
-                                .attr("transform", "translate(" + ( -vis.radius) + "," + (-vis.radius) + ")")
-                                .attr("width", vis.radius * 2)
-                                .attr("height", vis.radius * 2);
+                                .attr("transform", "translate(" + ( -3*vis.radius/4) + "," + (-3*vis.radius/4) + ")")
+                                .attr("width", 6*vis.radius/4)
+                                .attr("height", 6*vis.radius/4);
                         } else if (d.nodeType === "dt") {
                             d3.select(this)
                                 .append("rect")
                                 .attr("transform", function () {
-                                    return "translate(" + (-vis.radius * 0.75) + "," + (-vis.radius * 0.75) + ")" + "rotate(45 " + (vis.radius * 0.75) + "," + (vis.radius * 0.75) + ")";
+                                    return "translate(" + (-vis.radius/2) + "," + (-vis.radius/2) + ")" + "rotate(45 " + (vis.radius/2) + "," + (vis.radius/2) + ")";
                                 })
-                                .attr("width", vis.radius * 1.5)
-                                .attr("height", vis.radius * 1.5);
+                                .attr("width", vis.radius * 1)
+                                .attr("height", vis.radius * 1);
                         }
                     }
                 }).attr("class", function (d) {
@@ -751,7 +751,7 @@ var provvisRender = function () {
         /* Update node size. */
         if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {
             if (d.selected) {
-                if (d.nodeType === "raw" || d.nodeType === "processed") {
+                if (d.nodeType === "raw" || d.nodeType === "intermediate" || d.nodeType === "stored") {
                     d3.select("#nodeId-" + d.autoId).select("circle").attr("r", vis.radius * 2);
                 } else if (d.nodeType === "special") {
                     d3.select("#nodeId-" + d.autoId)
@@ -771,7 +771,7 @@ var provvisRender = function () {
                 }
 
             } else {
-                if (d.nodeType === "raw" || d.nodeType === "processed") {
+                if (d.nodeType === "raw" || d.nodeType === "intermediate" || d.nodeType === "stored") {
                     d3.select("#nodeId-" + d.autoId).select("circle").attr("r", vis.radius);
                 } else if (d.nodeType === "special") {
                     d3.select("#nodeId-" + d.autoId)
@@ -929,7 +929,8 @@ var provvisRender = function () {
         switch (selNode.nodeType) {
             case "raw":
             case "special":
-            case "processed":
+            case "intermediate":
+            case "stored":
                 data = vis.graph.nodeData.get(selNode.uuid);
                 if (typeof data !== "undefined") {
                     title = "<b>" + selNode.fileType + ": " + "<b>";

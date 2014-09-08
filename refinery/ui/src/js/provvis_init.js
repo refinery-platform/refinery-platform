@@ -22,13 +22,13 @@ var provvisInit = function () {
 
     /**
      * Assign node types.
-     * @param fileType Dataset specified node type.
+     * @param n Current raw node.
      * @returns {string} The CSS class corresponding to the type of the node.
      */
-    var assignNodeType = function (fileType) {
+    var assignNodeType = function (n) {
         var nodeType = "";
 
-        switch (fileType) {
+        switch (n.type) {
             case "Source Name":
             case "Sample Name":
             case "Assay Name":
@@ -38,10 +38,13 @@ var provvisInit = function () {
                 nodeType = "dt";
                 break;
             default:
-                nodeType = "processed";
+                if (n.file_url === null) {
+                    nodeType = "intermediate";
+                } else {
+                    nodeType = "stored";
+                }
                 break;
         }
-
         return nodeType;
     };
 
@@ -60,7 +63,7 @@ var provvisInit = function () {
             }),
             analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : "dataset";
 
-        return new provvisDecl.Node(id, type, Object.create(null), false, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid);
+        return new provvisDecl.Node(id, type, Object.create(null), false, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid, n.file_url);
     };
 
     /**
@@ -71,7 +74,7 @@ var provvisInit = function () {
         d3.values(datasetJsonObj.value).forEach(function (n, i) {
 
             /* Assign class string for node types. */
-            var nodeType = assignNodeType(n.type);
+            var nodeType = assignNodeType(n);
 
             /* Extract node properties from api and create Node. */
             var newNode = createNode(n, nodeType, i);
@@ -452,7 +455,6 @@ var provvisInit = function () {
 
     /**
      * Temporarily facet node attribute extraction.
-     * @param vis The provenance visualization root object.
      * @param solrResponse Facet filter information on node attributes.
      */
     var extractFacetNodeAttributesPrivate = function (solrResponse) {
