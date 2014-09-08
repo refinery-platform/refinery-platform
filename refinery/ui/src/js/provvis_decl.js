@@ -98,9 +98,10 @@ var provvisDecl = function () {
      * @param analysis
      * @param subanalysis
      * @param uuid
+     * @param fileUrl
      * @constructor
      */
-    var Node = function (id, nodeType, parent, hidden, name, fileType, study, assay, parents, analysis, subanalysis, uuid) {
+    var Node = function (id, nodeType, parent, hidden, name, fileType, study, assay, parents, analysis, subanalysis, uuid, fileUrl) {
         BaseNode.call(this, id, nodeType, parent, hidden);
 
         this.name = name;
@@ -111,6 +112,7 @@ var provvisDecl = function () {
         this.analysis = analysis;
         this.subanalysis = subanalysis;
         this.uuid = uuid;
+        this.fileUrl = fileUrl;
 
         this.attributes = d3.map();
 
