@@ -237,12 +237,7 @@ var provvisRender = function () {
      * @param vis The provenance visualization root object.
      */
     var drawSupportView = function (vis) {
-        var svg = d3.select("#provenance-support-view")
-            .append("svg")
-            .attr("height", 100)
-            .attr("width", 100)
-            .style("margin-top","0px");
-
+        var svg = d3.select("#provenance-support-view").select("svg");
         var gradient = svg.append("defs")
             .append("linearGradient")
             .attr("id", "gradientGrayscale");
@@ -276,6 +271,15 @@ var provvisRender = function () {
             d3.select(this.parentNode).select("line")
                 .attr("x1", d3.mouse(this)[0])
                 .attr("x2", d3.mouse(this)[0]);
+
+            var gradientScale = d3.scale.linear()
+                .domain([0,100])
+                .range([Date.parse(timeScale.domain()[0]), Date.parse(timeScale.domain()[1])]);
+
+            d3.select("#curTime").html("<b>" + new Date(gradientScale(d3.mouse(this)[0])) + "<b>");
+
+            /* TODO: Set nodes and links below threshold to "filtered". */
+            /* TODO: Hide/Blend filtered nodes and links. */
         });
     };
 
@@ -1728,9 +1732,6 @@ var provvisRender = function () {
                 }
             }
         });
-
-        /* TODO: Hide or blend (un)selected links. */
-
 
         lastSolrResponse = solrResponse;
     };

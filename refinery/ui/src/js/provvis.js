@@ -191,7 +191,15 @@ var provvis = function () {
         /* New support view content. */
         var supportViewContainer = d3.select("#" + divId);
 
-        supportViewContainer.append("g").attr("id", "viewTitle").html("<b>" + "SupportView" + "<b>");
+        supportViewContainer.append("g").attr("id", "viewTitle").html("<b>" + "Visible Analyses" + "<b>");
+
+        supportViewContainer
+            .append("svg")
+            .attr("height", 100)
+            .attr("width", 100)
+            .style({"margin-top": "0px", "margin-bottom": "0px", "padding": "0px"});
+
+        supportViewContainer.append("g").attr("id", "curTime").html("<b>" + "Date Threshold" + "<b>");
 
         return supportViewContainer;
     };
