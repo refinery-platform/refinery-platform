@@ -265,8 +265,15 @@ var provvisInit = function () {
     var extractAnalyses = function (analysesData) {
 
         /* Create analysis for dataset. */
+
+        /* Apply start date of earliest analysis to dataset. */
+        var datasetTimeStart = d3.min(analysesData.filter(function (d) {
+            return d.time_start !== -1;
+        }), function (d) {
+            return d.time_start;
+        });
         aNodes.push(new provvisDecl.Analysis(0, Object.create(null), true, "dataset", "noworkflow",
-            0, -1, -1, -1));
+            0, datasetTimeStart, -1, -1));
         analysisWorkflowMap.set("dataset", "noworkflow");
 
         /* Create remaining analyses. */

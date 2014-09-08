@@ -199,7 +199,19 @@ var provvis = function () {
             .attr("width", 100)
             .style({"margin-top": "0px", "margin-bottom": "0px", "padding": "0px"});
 
-        supportViewContainer.append("g").attr("id", "curTime").html("<b>" + "Date Threshold" + "<b>");
+        supportViewContainer.append("g").attr("id", "curTime").html("<b>" + "Date Threshold" + "<b>" + "<br>");
+
+        /* Toolbar items. */
+        $("<button/>", {
+            "id": "prov-support-view-reset-time",
+            "class": "btn btn-mini",
+            "type": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Reset",
+            "data-html": "true",
+            "title": "Reset"
+        }).appendTo(supportViewContainer);
 
         return supportViewContainer;
     };
