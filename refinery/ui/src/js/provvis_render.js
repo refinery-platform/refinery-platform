@@ -265,7 +265,6 @@ var provvisRender = function () {
             .attr("height",100)
             .style({"fill": "url(#gradientGrayscale)", "stroke": "lightgray", "stroke-width": "1px"});
 
-        /* TODO: Fix absolute x-values on click. */
         svg.append("line")
             .attr("x1", -150)
             .attr("y1", 0)
@@ -273,12 +272,10 @@ var provvisRender = function () {
             .attr("y2", 100)
             .style({"stroke": "green", "stroke-width": "2px"});
 
-        d3.select("#supportView").on("click", function (d) {
-/*            console.log(d3.select(this));
-            console.log(d3.event.x + ", " + d3.event.y);*/
+        d3.select("#supportView").on("click", function () {
             d3.select(this.parentNode).select("line")
-                .attr("x1", d3.event.x-200)
-                .attr("x2", d3.event.x-200);
+                .attr("x1", d3.mouse(this)[0])
+                .attr("x2", d3.mouse(this)[0]);
         });
     };
 
@@ -287,7 +284,7 @@ var provvisRender = function () {
      */
     var dyeWorkflows = function () {
         d3.selectAll(".rawNode, .specialNode, .dtNode, .intermediateNode, .storedNode").style("stroke", function (d) {
-            return timeScale(parseISOTimeFormat(d.parent.parent.created));
+            return timeScale(parseISOTimeFormat(d.parent.parent.start));
         });
     };
 
@@ -296,7 +293,7 @@ var provvisRender = function () {
      */
     var dyeAnalyses = function () {
         d3.selectAll(".rawNode, .specialNode, .dtNode, .intermediateNode, .storedNode").style("fill", function (d) {
-            return timeScale(parseISOTimeFormat(d.parent.parent.created));
+            return timeScale(parseISOTimeFormat(d.parent.parent.start));
         });
     };
 
@@ -440,7 +437,7 @@ var provvisRender = function () {
 
                     g.append("g").classed({"saGlyph": true})
                         .style("fill", function () {
-                            return timeScale(parseISOTimeFormat(san.parent.created));
+                            return timeScale(parseISOTimeFormat(san.parent.start));
                         }).append("polygon")
                         .attr("points", function () {
                             return "0," + (-vis.radius) + " " +
@@ -473,14 +470,14 @@ var provvisRender = function () {
      */
     var createAnalysisTimeScale = function (aNodes, range) {
         var min = d3.min(aNodes.filter(function (d) {
-                return d.end !== -1;
+                return d.start !== -1;
             }), function (d) {
-                return parseISOTimeFormat(d.created);
+                return parseISOTimeFormat(d.start);
             }),
             max = d3.max(aNodes.filter(function (d) {
-                return d.end !== -1;
+                return d.start !== -1;
             }), function (d) {
-                return parseISOTimeFormat(d.created);
+                return parseISOTimeFormat(d.start);
             });
 
         return d3.time.scale()
@@ -509,7 +506,7 @@ var provvisRender = function () {
                             return an.hidden ? "none" : "inline";
                         })
                         .style("fill", function () {
-                            return timeScale(parseISOTimeFormat(an.created));
+                            return timeScale(parseISOTimeFormat(an.start));
                         })
                         .append("polygon")
                         .attr("points", function () {
@@ -1086,11 +1083,11 @@ var provvisRender = function () {
         aNode.on("mouseover", function (d) {
             showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
-                createHTMLKeyValuePair("Created", parseISOTimeFormat(d.created)) + "<br>", event);
+                createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
-                createHTMLKeyValuePair("Created", parseISOTimeFormat(d.created)) + "<br>", event);
+                createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);
         }).on("mouseout", function () {
             hideTooltip();
         });
