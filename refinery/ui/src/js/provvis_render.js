@@ -274,7 +274,7 @@ var provvisRender = function () {
             .style({"stroke": "green", "stroke-width": "2px"});
 
         d3.select("#supportView").on("click", function (d) {
-            /*console.log(d3.select(this));
+/*            console.log(d3.select(this));
             console.log(d3.event.x + ", " + d3.event.y);*/
             d3.select(this.parentNode).select("line")
                 .attr("x1", d3.event.x-200)
@@ -1202,7 +1202,7 @@ var provvisRender = function () {
                 return "hLinkId-" + l.autoId;
             }).style("stroke", function (d) {
                 /*return vis.color(analysisWorkflowMap.get(d.target.analysis));*/
-                return timeScale(parseISOTimeFormat(d.target.parent.parent.created));
+                return timeScale(parseISOTimeFormat(d.target.parent.parent.start));
             });
     };
 
@@ -1325,16 +1325,16 @@ var provvisRender = function () {
             }
 
             d3.selectAll(".node").style("fill", function (d) {
-                return timeScale(parseISOTimeFormat(d.parent.parent.created));
+                return timeScale(parseISOTimeFormat(d.parent.parent.start));
             });
             d3.selectAll(".aNode").style("fill", function (d) {
-                return timeScale(parseISOTimeFormat(d.created));
+                return timeScale(parseISOTimeFormat(d.start));
             });
             d3.selectAll(".saNode").select(".saGlyph").style("fill", function (d) {
-                return timeScale(parseISOTimeFormat(d.parent.created));
+                return timeScale(parseISOTimeFormat(d.parent.start));
             });
             d3.selectAll(".hLink").style("stroke", function (d) {
-                return timeScale(parseISOTimeFormat(d.target.parent.parent.created));
+                return timeScale(parseISOTimeFormat(d.target.parent.parent.start));
             });
         });
 
