@@ -84,5 +84,4 @@ redirect_stderr = true
 autostart = true
 autorestart = true
 startsecs = 3
-stopwaitsecs = 0
 priority = 999
