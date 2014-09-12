@@ -1,17 +1,12 @@
-
-from core.models import DataSet, ExtendedGroup
 from data_set_manager.single_file_column_parser import SingleFileColumnParser
-from data_set_manager.tasks import create_dataset, annotate_nodes
-from django.contrib.auth.models import User
+from data_set_manager.tasks import create_dataset
 from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
-import os
-import re
-import time
+
 
 class Command(BaseCommand):
-    help = "Takes a tab-delimited file as input, parses, and"
-    help = "%s inputs it into the database\n\nNOTE: All provided indices should be zero-based" % help
+    help = "Takes a tab-delimited file as input, parses, and inputs it into"
+    help += " the database\n\nNOTE: All provided indices should be zero-based"
 
     option_list = BaseCommand.option_list + (
                 make_option('--username',
@@ -87,19 +82,16 @@ class Command(BaseCommand):
                             ),
                 )
 
-    """
-    Name: handle
-    Description:
-        main program; calls the parsing and insertion functions
-    """   
     def handle(self, *args, **options):
-        
+        """Name: handle
+        Description: main program; calls the parsing and insertion functions
+
+        """
         required = ['username', 'title', 'file_name', 'source_column_index', 'data_file_column']
         for arg in required:
             if not options[arg]:
                 raise CommandError('%s was not provided.' % arg)
-        
-        
+
         parser = SingleFileColumnParser()
         parser.file_permanent = options['data_file_permanent']
         parser.file_column_index = int( options['data_file_column'] )
@@ -123,4 +115,8 @@ class Command(BaseCommand):
         investigation.title = options['title']
         investigation.save()
         
-        create_dataset( investigation.uuid, options['username'], dataset_title=options['title'], slug=options['slug'], public=options['is_public'] )
+        create_dataset(investigation_uuid=investigation.uuid,
+                       username=options['username'],
+                       dataset_title=options['title'],
+                       slug=options['slug'],
+                       public=options['is_public'])
