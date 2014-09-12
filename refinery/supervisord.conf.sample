@@ -4,7 +4,7 @@
 ; your environment.
 
 [supervisord]
-logfile = %(here)s/supervisord.log
+logfile = %(here)s/log/supervisord.log
 logfile_maxbytes = 1MB
 logfile_backups = 4
 pidfile = /tmp/supervisord.pid
@@ -26,7 +26,7 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 [program:solr]
 command = java -Dlog4j.configuration=file://%(here)s/solr/log4j.properties -Djava.awt.headless=true -Dsolr.solr.home=%(here)s/solr/ -jar start.jar
 directory = /opt/solr/example
-stdout_logfile = %(here)s/solr.log
+stdout_logfile = %(here)s/log/solr.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
 redirect_stderr = true
@@ -37,7 +37,7 @@ startsecs = 10
 [program:celeryd]
 command = python %(here)s/manage.py celeryd --events
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
-stdout_logfile = %(here)s/celeryd.log
+stdout_logfile = %(here)s/log/celeryd.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
 redirect_stderr = true
@@ -53,7 +53,7 @@ priority = 995
 [program:celerycam]
 command = python %(here)s/manage.py celerycam
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
-stdout_logfile = %(here)s/celerycam.log
+stdout_logfile = %(here)s/log/celerycam.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
 redirect_stderr = true
@@ -65,7 +65,7 @@ priority= 994
 [program:celerybeat]
 command = python %(here)s/manage.py celerybeat
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
-stdout_logfile = %(here)s/celerybeat.log
+stdout_logfile = %(here)s/log/celerybeat.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
 redirect_stderr = true
@@ -77,7 +77,7 @@ priority= 996
 [program:runserver]
 command = python %(here)s/manage.py runserver 0.0.0.0:8000 --noreload
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
-stdout_logfile = %(here)s/refinery.log
+stdout_logfile = %(here)s/log/refinery.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
 redirect_stderr = true
