@@ -31,6 +31,16 @@ module.exports = function(grunt) {
         'c3/c3.min.js',
         'resumablejs/resumable.js',
       ],
+      map: [
+        // uncompressed source is required along with map for debugging
+        // http://stackoverflow.com/a/18365316
+        'jquery/dist/jquery.min.map',
+        'jquery/dist/jquery.js',
+        'angular/angular.min.js.map',
+        'angular/angular.js',
+        'angular-resource/angular-resource.min.js.map',
+        'angular-resource/angular-resource.js',
+      ],
       css: [
         'select2/select2.css',
         'tipsy/src/stylesheets/tipsy.css',
@@ -135,6 +145,7 @@ module.exports = function(grunt) {
             cwd: 'bower_components/',
             src: [
               '<%= vendor_files.js %>',
+              '<%= vendor_files.map %>',
               '<%= vendor_files.css %>',
               '<%= vendor_files.img %>',
             ],
