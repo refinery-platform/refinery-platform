@@ -37,6 +37,14 @@ var provvisRender = function () {
         .style("z-index", "10")
         .style("visibility", "hidden");
 
+
+    /**
+     * On doi change, update node doi labels.
+     */
+    var updateNodeDoi = function () {
+        d3.selectAll(".node, .saNode, .aNode").select(".nodeDoiLabel").text(function (d) {return d.doi.doiWeightedSum;});
+    };
+
     /**
      * Make tooltip visible and align it to the events position.
      * @param label Inner html code appended to the tooltip.
@@ -1813,7 +1821,18 @@ var provvisRender = function () {
                         cn.filtered = true;
                     });
                 }
+
+                /* TODO: Potential bug. */
+                /* Filtered attribute changed. */
+                n.doi.filteredChanged();
+                n.parent.doi.filteredChanged();
+                n.parent.parent.doi.filteredChanged();
+                /*n.parent.children.forEach(function (cn) {
+                    console.log(cn);
+                    cn.doi.filteredChanged();
+                });*/
             });
+            updateNodeDoi();
         }
 
         /* Hide or blend (un)selected nodes. */

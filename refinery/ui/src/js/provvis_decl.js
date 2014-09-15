@@ -5,9 +5,12 @@ var provvisDecl = function () {
 
     /**
      * Constructor function representing the degree-of-interest (DOI) components for BaseNode.
+     * @param node The encapsulating node.
      * @constructor
      */
-    var DoiComponents = function () {
+    var DoiComponents = function (node) {
+
+        this.node = node;
 
         /* API: General interest. */
         /**************************/
@@ -28,8 +31,8 @@ var provvisDecl = function () {
         /* UI: Interest derived from user actions. */
         /*******************************************/
 
-        /* A node is within the filter results. */
-        this.filtered = 0;
+        this.doiFiltered = 0;
+        this.doiSelected = 0;
 
         /* A node's attribute is matched during a search task. */
         this.searched = 0;
@@ -37,8 +40,7 @@ var provvisDecl = function () {
         /* A node is part of a node-link path highlighted. */
         this.highlighted = 0;
 
-        /* A node can be selected for further actions or detailed information. */
-        this.selected = 0;
+
 
         /* A node is separated through alignment from its surrounding nodes. */
         this.aligned = 0;
@@ -65,6 +67,22 @@ var provvisDecl = function () {
     };
 
     /**
+     * Look up filtered attribute for encapsulating node.
+     * A node is within the filter results.
+     */
+    DoiComponents.prototype.filteredChanged = function () {
+        this.doiFiltered = this.node.filtered ? 1 : 0.5;
+        this.computeWeightedSum();
+    };
+
+    /**
+     * A node can be selected for further actions or detailed information.
+     */
+    DoiComponents.prototype.selectedChanged = function () {
+        this.doiSelected = this.node.selected ? 1 : 0;
+    };
+
+    /**
      * Calculates the dominant doi component.
      */
     DoiComponents.prototype.computeMinMax = function () {
@@ -77,7 +95,8 @@ var provvisDecl = function () {
      */
     DoiComponents.prototype.computeWeightedSum = function () {
         /* TODO: Specify component weights within method params and compute a mean among all components. */
-        this.doiWeightedSum = -1;
+
+        this.doiWeightedSum = this.doiFiltered * 0.5 + this.doiSelected * 0.5;
     };
 
     /**
@@ -108,7 +127,7 @@ var provvisDecl = function () {
         BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
         this.autoId = BaseNode.numInstances;
 
-        this.doi = new DoiComponents();
+        this.doi = new DoiComponents(this);
         this.selected = false;
         this.filtered = true;
 
