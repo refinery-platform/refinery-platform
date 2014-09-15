@@ -8,25 +8,59 @@ var provvisDecl = function () {
      * @constructor
      */
     var DoiComponents = function () {
-        this.time = "";
+
+        /* API: General interest. */
+        /**************************/
+
+        /* The latest execution time of a node is more important than earlier executions.*/
+        this.time = 0;
+
+        /* For layered nodes: Workflow parameters, files or topology changes over time.*/
         this.change = {wfParams: d3.map(), files: d3.map(), topology: d3.map()};
-        this.relationship = Object.create(null);
 
-        this.filtered = false;
-        this.searched = false;
-        this.highlighted = false;
-        this.selected = false;
-        this.dragged = false;
-        this.expanded = false;
-        this.collapsed = false;
-        this.alligned = false;
-        this.aggregated = false;
-        this.layered = false;
-        this.stratified = false;
+        /* Corresponds to the node type: Node, subanalysis, analysis.*/
+        this.relationship = 0;
 
-        this.distFactor = -1;
+        /* The overall graph width and height influences node appearances.*/
+        this.graphMetrics = {width: -1, height: -1};
 
+
+        /* UI: Interest derived from user actions. */
+        /*******************************************/
+
+        /* A node is within the filter results. */
+        this.filtered = 0;
+
+        /* A node's attribute is matched during a search task. */
+        this.searched = 0;
+
+        /* A node is part of a node-link path highlighted. */
+        this.highlighted = 0;
+
+        /* A node can be selected for further actions or detailed information. */
+        this.selected = 0;
+
+        /* A node is separated through alignment from its surrounding nodes. */
+        this.aligned = 0;
+
+        /* Multiple nodes are manually merged into a stratified node. */
+        this.stratified = 0;
+
+
+        /* Distance. */
+        /*************/
+
+        /* A node's neighborhood directly influences it's DOI value through link weight and fallout function. */
+        this.graphNeighborhood = 1;
+
+
+        /* Computation. */
+        /****************/
+
+        /* A node's dominant component is represented by the minimum or maximum value throughout all components. */
         this.doiMinMax = -1;
+
+        /* A node's average DOI value is calculated by the sum of all weighted single DOI component values. */
         this.doiWeightedSum = -1;
     };
 
