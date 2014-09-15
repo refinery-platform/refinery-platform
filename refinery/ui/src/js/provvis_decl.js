@@ -51,7 +51,7 @@ var provvisDecl = function () {
         /*************/
 
         /* A node's neighborhood directly influences it's DOI value through link weight and fallout function. */
-        this.graphNeighborhood = 1;
+        this.neighborhoodDoiFactor = 1;
 
 
         /* Computation. */

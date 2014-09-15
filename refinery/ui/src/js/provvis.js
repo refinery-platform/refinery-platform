@@ -65,6 +65,19 @@ var provvis = function () {
         }).appendTo("#" + parentId);
 
         $("<button/>", {
+            "id": "prov-ctrl-show-doi",
+            "class": 'btn btn-mini',
+            "type": "button",
+            "style": "margin-left: 2px",
+            "data-toggle": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Doi",
+            "data-html": "true",
+            "title": "Doi"
+        }).appendTo("#" + parentId);
+
+        $("<button/>", {
             "id": "prov-ctrl-show-table",
             "class": 'btn btn-mini',
             "type": "button",

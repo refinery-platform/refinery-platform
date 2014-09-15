@@ -544,10 +544,12 @@ var provvisRender = function () {
                         })
                         .style("opacity", 0.5);
 
-                    g.append("g").classed({"saGlyph": true})
+                    var glyph = g.append("g").classed({"saGlyph": true})
                         .style("fill", function () {
                             return timeScale(parseISOTimeFormat(san.parent.start));
-                        }).append("polygon")
+                        });
+
+                    glyph.append("polygon")
                         .attr("points", function () {
                             return "0," + (-vis.radius) + " " +
                                 (vis.radius) + "," + (-vis.radius / 2) + " " +
@@ -556,6 +558,14 @@ var provvisRender = function () {
                                 (-vis.radius) + "," + (vis.radius / 2) + " " +
                                 (-vis.radius) + "," + (-vis.radius / 2);
                         });
+
+                    glyph.append("text")
+                        .text(function (d) {
+                            return d.doi.doiWeightedSum;
+                        }).attr("class", "nodeDoiLabel")
+                        .attr("text-anchor", "middle")
+                        .attr("dominant-baseline", "central")
+                        .style("display", "none");
                 });
         });
 
@@ -606,7 +616,7 @@ var provvisRender = function () {
                     return an.autoId === +analysisId.replace(/(analysisId-)/g, "");
                 }))
                 .enter().append("g").each(function (an) {
-                    d3.select(this).classed({"aNode": true})
+                    var glyph = d3.select(this).classed({"aNode": true})
                         .attr("transform", "translate(" + an.x + "," + an.y + ")")
                         .attr("id", function () {
                             return "nodeId-" + an.autoId;
@@ -616,8 +626,8 @@ var provvisRender = function () {
                         })
                         .style("fill", function () {
                             return timeScale(parseISOTimeFormat(an.start));
-                        })
-                        .append("polygon")
+                        });
+                    glyph.append("polygon")
                         .attr("points", function () {
                             return "0," + (-2 * vis.radius) + " " +
                                 (2 * vis.radius) + "," + (-vis.radius) + " " +
@@ -626,6 +636,13 @@ var provvisRender = function () {
                                 (-2 * vis.radius) + "," + (vis.radius) + " " +
                                 (-2 * vis.radius) + "," + (-vis.radius);
                         });
+                    glyph.append("text")
+                        .text(function (d) {
+                            return d.doi.doiWeightedSum;
+                        }).attr("class", "nodeDoiLabel")
+                        .attr("text-anchor", "middle")
+                        .attr("dominant-baseline", "central")
+                        .style("display", "none");
                 });
         });
 
@@ -677,7 +694,13 @@ var provvisRender = function () {
                 })
                 .attr("id", function (d) {
                     return "nodeId-" + d.autoId;
-                });
+                }).append("text")
+                .text(function (d) {
+                    return d.doi.doiWeightedSum;
+                }).attr("class", "nodeDoiLabel")
+                .attr("text-anchor", "middle")
+                .attr("dominant-baseline", "central")
+                .style("display", "none");
         });
 
         /* Set node dom element. */
@@ -1451,6 +1474,15 @@ var provvisRender = function () {
                 d3.select(".grid").style("display", "none");
             } else {
                 d3.select(".grid").style("display", "inline");
+            }
+        });
+
+        /* Show and hide doi labels. */
+        $("#prov-ctrl-show-doi").click(function () {
+            if ($("#prov-ctrl-show-doi").hasClass("active")) {
+                d3.selectAll(".nodeDoiLabel").style("display", "none");
+            } else {
+                d3.selectAll(".nodeDoiLabel").style("display", "inline");
             }
         });
 
