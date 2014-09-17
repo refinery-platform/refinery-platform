@@ -28,6 +28,53 @@ var provvis = function () {
     var createToolbarItems = function (parentId) {
 
         /* Toolbar items. */
+
+        /* TODO: Menu implementation example. */
+
+        $("<span/>", {
+            "id": "prov-ctrl-visible-views",
+            "class": "dropdown"
+        }).appendTo("#" + parentId);
+
+        $("<a/>", {
+            "href": "#",
+            "class": "dropdown-toggle btn btn-mini btn-default",
+            "data-toggle": "dropdown",
+            "html": "<i class=icon-eye-open></i>" +
+                "&nbsp;" + "Views" + "&nbsp;" +
+                "<i class=icon-caret-down></i>" + "&nbsp;"
+        }).appendTo("#prov-ctrl-visible-views");
+
+        $("<ul/>", {
+            "id": "prov-ctrl-visible-views-list",
+            "style": {"max-height": "200px", "overflow": "hidden", "overflow-y": "auto"},
+            "class": "dropdown-menu",
+            "role": "menu",
+            "aria-labelledby": "dLabel"
+        }).appendTo("#prov-ctrl-visible-views");
+
+        $("<li/>", {
+            "id": "prov-ctrl-show-grid",
+            "html": "<a class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Grid" + "</label>" + "</a>"
+        }).appendTo("#prov-ctrl-visible-views-list");
+        $("<li/>", {
+            "id": "prov-ctrl-show-doi",
+            "html": "<a class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Doi" + "</label>" + "</a>"
+        }).appendTo("#prov-ctrl-visible-views-list");
+        $("<li/>", {
+            "id": "prov-ctrl-show-table",
+            "html": "<a class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Node Info" + "</label>" + "</a>"
+        }).appendTo("#prov-ctrl-visible-views-list");
+        $("<li/>", {
+            "id": "prov-ctrl-show-support-view",
+            "html": "<a class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Analyses-Time View" + "</label>" + "</a>"
+        }).appendTo("#prov-ctrl-visible-views-list");
+
+        /* Stop dropdown menu from closing on click. */
+        $("#prov-ctrl-visible-views-list").bind("click", function (e) {
+            e.stopPropagation();
+        });
+
         $("<button/>", {
             "id": "prov-ctrl-collapse-click",
             "class": "btn btn-mini",
@@ -51,58 +98,6 @@ var provvis = function () {
             "title": "Expand"
         }).appendTo("#" + parentId);
 
-        $("<button/>", {
-            "id": "prov-ctrl-show-grid",
-            "class": 'btn btn-mini',
-            "type": "button",
-            "style": "margin-left: 2px",
-            "data-toggle": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
-            "html": "Grid",
-            "data-html": "true",
-            "title": "Grid"
-        }).appendTo("#" + parentId);
-
-        $("<button/>", {
-            "id": "prov-ctrl-show-doi",
-            "class": 'btn btn-mini',
-            "type": "button",
-            "style": "margin-left: 2px",
-            "data-toggle": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
-            "html": "Doi",
-            "data-html": "true",
-            "title": "Doi"
-        }).appendTo("#" + parentId);
-
-        $("<button/>", {
-            "id": "prov-ctrl-show-table",
-            "class": 'btn btn-mini',
-            "type": "button",
-            "style": "margin-left: 2px",
-            "data-toggle": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
-            "html": "Node Info",
-            "data-html": "true",
-            "title": "Node Info"
-        }).appendTo("#" + parentId);
-
-        $("<button/>", {
-            "id": "prov-ctrl-show-support-view",
-            "class": 'btn btn-mini',
-            "type": "button",
-            "style": "margin-left: 2px",
-            "data-toggle": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
-            "html": "Support View",
-            "data-html": "true",
-            "title": "Support View"
-        }).appendTo("#" + parentId);
-
         $("<span/>", {
             "class": "prov-ctrl-label",
             "style": "margin-left: 10px",
@@ -114,8 +109,7 @@ var provvis = function () {
             "class": "combobox",
             "style": "margin-left: 2px",
             "width": "auto",
-            "html":
-                "<option value=\"bezier\">Bezier</option>" +
+            "html": "<option value=\"bezier\">Bezier</option>" +
                 "<option value=\"edge\">Edge</option>"
         }).appendTo("#" + parentId);
 
@@ -130,8 +124,7 @@ var provvis = function () {
             "class": "combobox",
             "style": "margin-left: 2px",
             "width": "auto",
-            "html":
-                "<option value=\"grayscale\">Grayscale</option>" +
+            "html": "<option value=\"grayscale\">Grayscale</option>" +
                 "<option value=\"color\">Color</option>"
         }).appendTo("#" + parentId);
 
@@ -146,8 +139,7 @@ var provvis = function () {
             "class": "combobox",
             "style": "margin-left: 2px",
             "width": "auto",
-            "html":
-                "<option value=\"hide\">Hide unselected</option>" +
+            "html": "<option value=\"hide\">Hide unselected</option>" +
                 "<option value=\"blend\">Blend unselected</option>"
         }).appendTo("#" + parentId);
     };

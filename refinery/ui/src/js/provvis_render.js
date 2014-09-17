@@ -1478,7 +1478,7 @@ var provvisRender = function () {
 
         /* Show and hide grid. */
         $("#prov-ctrl-show-grid").click(function () {
-            if ($("#prov-ctrl-show-grid").hasClass("active")) {
+            if (!$("#prov-ctrl-show-grid").find("input").is(":checked")) {
                 d3.select(".grid").style("display", "none");
             } else {
                 d3.select(".grid").style("display", "inline");
@@ -1487,7 +1487,7 @@ var provvisRender = function () {
 
         /* Show and hide doi labels. */
         $("#prov-ctrl-show-doi").click(function () {
-            if ($("#prov-ctrl-show-doi").hasClass("active")) {
+            if (!$("#prov-ctrl-show-doi").find("input").is(":checked")) {
                 d3.selectAll(".nodeDoiLabel").style("display", "none");
             } else {
                 d3.selectAll(".nodeDoiLabel").style("display", "inline");
@@ -1496,7 +1496,7 @@ var provvisRender = function () {
 
         /* Show and hide table. */
         $("#prov-ctrl-show-table").click(function () {
-            if ($("#prov-ctrl-show-table").hasClass("active")) {
+            if (!$("#prov-ctrl-show-table").find("input").is(":checked")) {
                 d3.select("#provenance-table").style("display", "none");
                 $("#provenance-support-view").css({"top": "0px"});
             } else {
@@ -1507,7 +1507,7 @@ var provvisRender = function () {
 
         /* Show and hide support view. */
         $("#prov-ctrl-show-support-view").click(function () {
-            if ($("#prov-ctrl-show-support-view").hasClass("active")) {
+            if (!$("#prov-ctrl-show-support-view").find("input").is(":checked")) {
                 d3.select("#provenance-support-view").style("display", "none");
             } else {
                 d3.select("#provenance-support-view").style("display", "block");
