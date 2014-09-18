@@ -131,7 +131,7 @@ var provvisRender = function () {
             d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).attr("d", function (l) {
                 var srcCoords = getNodeCoords(l.source),
                     pathSegment = "";
-                if ($("#prov-ctrl-link-style option:selected").attr("value") === "bezier") {
+                if ($("#prov-ctrl-links-bezier").find("input").is(":checked")) {
                     pathSegment = "M" + srcCoords.x + "," + srcCoords.y;
                     pathSegment = pathSegment.concat(" Q" + (srcCoords.x + cell.width / 3) + "," + (srcCoords.y) + " " +
                         (srcCoords.x + cell.width / 2) + "," + (srcCoords.y + (y - srcCoords.y) / 2) + " " +
@@ -156,7 +156,7 @@ var provvisRender = function () {
             d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).attr("d", function (l) {
                 var tarCoords = getNodeCoords(l.target),
                     pathSegment = "";
-                if ($("#prov-ctrl-link-style option:selected").attr("value") === "bezier") {
+                if ($("#prov-ctrl-links-bezier").find("input").is(":checked")) {
                     pathSegment = "M" + x + "," + y;
                     pathSegment = pathSegment.concat(" Q" + (x + cell.width / 3) + "," + (y) + " " +
                         (x + cell.width / 2) + "," + (y + (tarCoords.y - y) / 2) + " " +
@@ -1442,7 +1442,18 @@ var provvisRender = function () {
         });
 
         /* Switch link styles. */
-        $("#prov-ctrl-link-style").change(function () {
+        $("#prov-ctrl-links-bezier").click(function () {
+            $("#prov-ctrl-links-bezier").find("input").prop("checked", true);
+            $("#prov-ctrl-links-straight").find("input").prop("checked", false);
+            d3.selectAll(".node, .aNode, .saNode").each(function (n) {
+                if (!n.hidden) {
+                    updateLink(d3.select(this), n, n.x, n.y);
+                }
+            });
+        });
+        $("#prov-ctrl-links-straight").click(function () {
+            $("#prov-ctrl-links-straight").find("input").prop("checked", true);
+            $("#prov-ctrl-links-bezier").find("input").prop("checked", false);
             d3.selectAll(".node, .aNode, .saNode").each(function (n) {
                 if (!n.hidden) {
                     updateLink(d3.select(this), n, n.x, n.y);

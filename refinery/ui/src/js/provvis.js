@@ -29,8 +29,7 @@ var provvis = function () {
 
         /* Toolbar items. */
 
-        /* TODO: Menu implementation example. */
-
+        /* Views. */
         $("<span/>", {
             "id": "prov-ctrl-visible-views",
             "class": "dropdown"
@@ -75,6 +74,9 @@ var provvis = function () {
             e.stopPropagation();
         });
 
+        /* TODO: Create button groups for global and node-centric actions. */
+
+        /* Collapse. */
         $("<button/>", {
             "id": "prov-ctrl-collapse-click",
             "class": "btn btn-mini",
@@ -86,6 +88,7 @@ var provvis = function () {
             "title": "Collapse"
         }).appendTo("#" + parentId);
 
+        /* Expand. */
         $("<button/>", {
             "id": "prov-ctrl-expand-click",
             "class": 'btn btn-mini',
@@ -96,21 +99,6 @@ var provvis = function () {
             "html": "Expand",
             "data-html": "true",
             "title": "Expand"
-        }).appendTo("#" + parentId);
-
-        $("<span/>", {
-            "class": "prov-ctrl-label",
-            "style": "margin-left: 10px",
-            "html": "Links"
-        }).appendTo("#" + parentId);
-
-        $("<select/>", {
-            "id": "prov-ctrl-link-style",
-            "class": "combobox",
-            "style": "margin-left: 2px",
-            "width": "auto",
-            "html": "<option value=\"bezier\">Bezier</option>" +
-                "<option value=\"edge\">Edge</option>"
         }).appendTo("#" + parentId);
 
         $("<span/>", {
@@ -142,6 +130,37 @@ var provvis = function () {
             "html": "<option value=\"hide\">Hide unselected</option>" +
                 "<option value=\"blend\">Blend unselected</option>"
         }).appendTo("#" + parentId);
+
+        /* Links. */
+        $("<span/>", {
+            "id": "prov-ctrl-links",
+            "class": "dropdown"
+        }).appendTo("#" + parentId);
+
+        $("<a/>", {
+            "href": "#",
+            "class": "dropdown-toggle btn btn-mini btn-default",
+            "data-toggle": "dropdown",
+            "html": "&nbsp;" + "Link style" + "&nbsp;" +
+                "<i class=icon-caret-down></i>" + "&nbsp;"
+        }).appendTo("#prov-ctrl-links");
+
+        $("<ul/>", {
+            "id": "prov-ctrl-links-list",
+            "style": {"max-height": "200px", "overflow": "hidden", "overflow-y": "auto"},
+            "class": "dropdown-menu",
+            "role": "menu",
+            "aria-labelledby": "dLabel"
+        }).appendTo("#prov-ctrl-links");
+
+        $("<li/>", {
+            "id": "prov-ctrl-links-bezier",
+            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Bezier" + "</label>" + "</a>"
+        }).appendTo("#prov-ctrl-links-list");
+        $("<li/>", {
+            "id": "prov-ctrl-links-straight",
+            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Straight" + "</label>" + "</a>"
+        }).appendTo("#prov-ctrl-links-list");
     };
 
     /**
