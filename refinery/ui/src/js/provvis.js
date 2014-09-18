@@ -17,7 +17,8 @@ var provvis = function () {
         /* Toolbar. */
         $('<div/>', {
             "id": divId,
-            "class": ""
+            "class": "",
+            "style": "margin-bottom: 5px"
         }).appendTo("#" + parentId);
     };
 
@@ -29,52 +30,14 @@ var provvis = function () {
 
         /* Toolbar items. */
 
-        /* Views. */
-        $("<span/>", {
-            "id": "prov-ctrl-visible-views",
-            "class": "dropdown"
-        }).appendTo("#" + parentId);
-
-        $("<a/>", {
-            "href": "#",
-            "class": "dropdown-toggle btn btn-mini btn-default",
-            "data-toggle": "dropdown",
-            "html": "<i class=icon-eye-open></i>" +
-                "&nbsp;" + "Views" + "&nbsp;" +
-                "<i class=icon-caret-down></i>" + "&nbsp;"
-        }).appendTo("#prov-ctrl-visible-views");
-
-        $("<ul/>", {
-            "id": "prov-ctrl-visible-views-list",
-            "style": {"max-height": "200px", "overflow": "hidden", "overflow-y": "auto"},
-            "class": "dropdown-menu",
-            "role": "menu",
-            "aria-labelledby": "dLabel"
-        }).appendTo("#prov-ctrl-visible-views");
-
-        $("<li/>", {
-            "id": "prov-ctrl-show-grid",
-            "html": "<a class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Grid" + "</label>" + "</a>"
-        }).appendTo("#prov-ctrl-visible-views-list");
-        $("<li/>", {
-            "id": "prov-ctrl-show-doi",
-            "html": "<a class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Doi" + "</label>" + "</a>"
-        }).appendTo("#prov-ctrl-visible-views-list");
-        $("<li/>", {
-            "id": "prov-ctrl-show-table",
-            "html": "<a class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Node Info" + "</label>" + "</a>"
-        }).appendTo("#prov-ctrl-visible-views-list");
-        $("<li/>", {
-            "id": "prov-ctrl-show-support-view",
-            "html": "<a class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Analyses-Time View" + "</label>" + "</a>"
-        }).appendTo("#prov-ctrl-visible-views-list");
-
-        /* Stop dropdown menu from closing on click. */
-        $("#prov-ctrl-visible-views-list").bind("click", function (e) {
-            e.stopPropagation();
-        });
-
         /* TODO: Create button groups for global and node-centric actions. */
+
+        /* Node centric items. */
+        $("<span/>", {
+            "id": "prov-ctrl-node-btn-group",
+            "class": "btn-group",
+            "data-toggle": "buttons-radio"
+        }).appendTo("#" + parentId);
 
         /* Collapse. */
         $("<button/>", {
@@ -83,84 +46,161 @@ var provvis = function () {
             "type": "button",
             "rel": "tooltip",
             "data-placement": "bottom",
+            "data-documents": "Collapse",
             "html": "Collapse",
             "data-html": "true",
             "title": "Collapse"
-        }).appendTo("#" + parentId);
+        }).appendTo("#prov-ctrl-node-btn-group");
 
         /* Expand. */
         $("<button/>", {
             "id": "prov-ctrl-expand-click",
             "class": 'btn btn-mini',
             "type": "button",
-            "style": "margin-left: 2px",
             "rel": "tooltip",
             "data-placement": "bottom",
+            "data-documents": "Expand",
             "html": "Expand",
             "data-html": "true",
             "title": "Expand"
+        }).appendTo("#prov-ctrl-node-btn-group");
+
+
+        /* Global items. */
+        $("<div/>", {
+            "id": "prov-ctrl-global-btn-group",
+            "class": "btn-group",
+            "style": "margin-left: 15px"
         }).appendTo("#" + parentId);
 
-        $("<span/>", {
-            "class": "prov-ctrl-label",
-            "style": "margin-left: 10px",
-            "html": "Time-encoding"
-        }).appendTo("#" + parentId);
-
-        $("<select/>", {
-            "id": "prov-ctrl-color-scheme",
-            "class": "combobox",
-            "style": "margin-left: 2px",
-            "width": "auto",
-            "html": "<option value=\"grayscale\">Grayscale</option>" +
-                "<option value=\"color\">Color</option>"
-        }).appendTo("#" + parentId);
-
-        $("<span/>", {
-            "class": "prov-ctrl-label",
-            "style": "margin-left: 10px",
-            "html": "Filter"
-        }).appendTo("#" + parentId);
-
-        $("<select/>", {
-            "id": "prov-ctrl-filter-action",
-            "class": "combobox",
-            "style": "margin-left: 2px",
-            "width": "auto",
-            "html": "<option value=\"hide\">Hide unselected</option>" +
-                "<option value=\"blend\">Blend unselected</option>"
-        }).appendTo("#" + parentId);
-
-        /* Links. */
-        $("<span/>", {
-            "id": "prov-ctrl-links",
-            "class": "dropdown"
-        }).appendTo("#" + parentId);
+        /* Views. */
+        $("<div/>", {
+            "id": "prov-ctrl-visible-views",
+            "class": "btn btn-mini btn-group"
+        }).appendTo("#prov-ctrl-global-btn-group");
 
         $("<a/>", {
-            "href": "#",
-            "class": "dropdown-toggle btn btn-mini btn-default",
+            "class": "btn btn-mini dropdown-toggle",
             "data-toggle": "dropdown",
+            "href": "#",
+            "html": "<i class=icon-eye-open></i>" +
+                "&nbsp;" + "Views" + "&nbsp;" +
+                "<i class=icon-caret-down></i>" + "&nbsp;"
+        }).appendTo("#prov-ctrl-visible-views");
+
+        $("<ul/>", {
+            "id": "prov-ctrl-visible-views-list",
+            "class": "dropdown-menu"
+        }).appendTo("#prov-ctrl-visible-views");
+
+        $("<li/>", {
+            "id": "prov-ctrl-show-grid",
+            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Grid" + "</label>" + "</a>"
+        }).appendTo("#prov-ctrl-visible-views-list");
+        $("<li/>", {
+            "id": "prov-ctrl-show-doi",
+            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Doi" + "</label>" + "</a>"
+        }).appendTo("#prov-ctrl-visible-views-list");
+        $("<li/>", {
+            "id": "prov-ctrl-show-table",
+            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Node Info" + "</label>" + "</a>"
+        }).appendTo("#prov-ctrl-visible-views-list");
+        $("<li/>", {
+            "id": "prov-ctrl-show-support-view",
+            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Analyses-Time View" + "</label>" + "</a>"
+        }).appendTo("#prov-ctrl-visible-views-list");
+
+        /* Stop dropdown menu from closing on click. */
+        $("#prov-ctrl-visible-views-list").bind("click", function (e) {
+            e.stopPropagation();
+        });
+
+        /* Links. */
+        $("<div/>", {
+            "id": "prov-ctrl-links",
+            "class": "btn btn-mini btn-group"
+        }).appendTo("#prov-ctrl-global-btn-group");
+
+        $("<a/>", {
+            "class": "btn btn-mini dropdown-toggle",
+            "data-toggle": "dropdown",
+            "href": "#",
             "html": "&nbsp;" + "Link style" + "&nbsp;" +
                 "<i class=icon-caret-down></i>" + "&nbsp;"
         }).appendTo("#prov-ctrl-links");
 
         $("<ul/>", {
             "id": "prov-ctrl-links-list",
-            "style": {"max-height": "200px", "overflow": "hidden", "overflow-y": "auto"},
-            "class": "dropdown-menu",
-            "role": "menu",
-            "aria-labelledby": "dLabel"
+            "class": "dropdown-menu"
         }).appendTo("#prov-ctrl-links");
 
         $("<li/>", {
-            "id": "prov-ctrl-links-bezier",
-            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Bezier" + "</label>" + "</a>"
+            "id": "prov-ctrl-links-list-bezier",
+            "html": "<a href=\"#\"class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Bezier" + "</label>" + "</a>"
         }).appendTo("#prov-ctrl-links-list");
         $("<li/>", {
-            "id": "prov-ctrl-links-straight",
-            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Straight" + "</label>" + "</a>"
+            "id": "prov-ctrl-links-list-straight",
+            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Straight" + "</label>" + "</a>"
         }).appendTo("#prov-ctrl-links-list");
+
+
+        /* Time color-gradient. */
+        $("<div/>", {
+            "id": "prov-ctrl-time-enc",
+            "class": "btn btn-mini btn-group"
+        }).appendTo("#prov-ctrl-global-btn-group");
+
+        $("<a/>", {
+            "class": "btn btn-mini dropdown-toggle",
+            "data-toggle": "dropdown",
+            "href": "#",
+            "html": "&nbsp;" + "Time enc." + "&nbsp;" +
+                "<i class=icon-caret-down></i>" + "&nbsp;"
+        }).appendTo("#prov-ctrl-time-enc");
+
+        $("<ul/>", {
+            "id": "prov-ctrl-time-enc-list",
+            "class": "dropdown-menu"
+        }).appendTo("#prov-ctrl-time-enc");
+
+        $("<li/>", {
+            "id": "prov-ctrl-time-enc-list-gs",
+            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Grayscale" + "</label>" + "</a>"
+        }).appendTo("#prov-ctrl-time-enc-list");
+        $("<li/>", {
+            "id": "prov-ctrl-time-enc-list-blue",
+            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Blue" + "</label>" + "</a>"
+        }).appendTo("#prov-ctrl-time-enc-list");
+
+
+        /* Filter action. */
+        $("<div/>", {
+            "id": "prov-ctrl-filter",
+            "class": "btn btn-mini btn-group"
+        }).appendTo("#prov-ctrl-global-btn-group");
+
+        $("<a/>", {
+            "class": "btn btn-mini dropdown-toggle",
+            "data-toggle": "dropdown",
+            "href": "#",
+            "html": "&nbsp;" + "Filter" + "&nbsp;" +
+                "<i class=icon-caret-down></i>" + "&nbsp;"
+        }).appendTo("#prov-ctrl-filter");
+
+        $("<ul/>", {
+            "id": "prov-ctrl-filter-list",
+            "class": "dropdown-menu"
+        }).appendTo("#prov-ctrl-filter");
+
+        $("<li/>", {
+            "id": "prov-ctrl-filter-list-hide",
+            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Hide" + "</label>" + "</a>"
+        }).appendTo("#prov-ctrl-filter-list");
+        $("<li/>", {
+            "id": "prov-ctrl-filter-list-blend",
+            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Blend" + "</label>" + "</a>"
+        }).appendTo("#prov-ctrl-filter-list");
+
     };
 
     /**

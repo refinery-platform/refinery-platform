@@ -131,7 +131,7 @@ var provvisRender = function () {
             d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).attr("d", function (l) {
                 var srcCoords = getNodeCoords(l.source),
                     pathSegment = "";
-                if ($("#prov-ctrl-links-bezier").find("input").is(":checked")) {
+                if ($("#prov-ctrl-links-list-bezier").find("input").is(":checked")) {
                     pathSegment = "M" + srcCoords.x + "," + srcCoords.y;
                     pathSegment = pathSegment.concat(" Q" + (srcCoords.x + cell.width / 3) + "," + (srcCoords.y) + " " +
                         (srcCoords.x + cell.width / 2) + "," + (srcCoords.y + (y - srcCoords.y) / 2) + " " +
@@ -156,7 +156,7 @@ var provvisRender = function () {
             d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).attr("d", function (l) {
                 var tarCoords = getNodeCoords(l.target),
                     pathSegment = "";
-                if ($("#prov-ctrl-links-bezier").find("input").is(":checked")) {
+                if ($("#prov-ctrl-links-list-bezier").find("input").is(":checked")) {
                     pathSegment = "M" + x + "," + y;
                     pathSegment = pathSegment.concat(" Q" + (x + cell.width / 3) + "," + (y) + " " +
                         (x + cell.width / 2) + "," + (y + (tarCoords.y - y) / 2) + " " +
@@ -1442,18 +1442,20 @@ var provvisRender = function () {
         });
 
         /* Switch link styles. */
-        $("#prov-ctrl-links-bezier").click(function () {
-            $("#prov-ctrl-links-bezier").find("input").prop("checked", true);
-            $("#prov-ctrl-links-straight").find("input").prop("checked", false);
-            d3.selectAll(".node, .aNode, .saNode").each(function (n) {
-                if (!n.hidden) {
-                    updateLink(d3.select(this), n, n.x, n.y);
-                }
-            });
-        });
-        $("#prov-ctrl-links-straight").click(function () {
-            $("#prov-ctrl-links-straight").find("input").prop("checked", true);
-            $("#prov-ctrl-links-bezier").find("input").prop("checked", false);
+        $("[id^=prov-ctrl-links-list-]").click(function () {
+
+            $(this).find("input").prop("checked", true);
+
+            var selectedLinkStyle = $(this).find("label").text();
+            switch (selectedLinkStyle) {
+                case "Bezier":
+                    $("#prov-ctrl-links-list-straight").find("input").prop("checked", false);
+                    break;
+                case "Straight":
+                    $("#prov-ctrl-links-list-bezier").find("input").prop("checked", false);
+                    break;
+            }
+
             d3.selectAll(".node, .aNode, .saNode").each(function (n) {
                 if (!n.hidden) {
                     updateLink(d3.select(this), n, n.x, n.y);
@@ -1462,14 +1464,19 @@ var provvisRender = function () {
         });
 
         /* Switch time-dependant color scheme. */
-        $("#prov-ctrl-color-scheme").change(function () {
-            var selectedColorScheme = $("#prov-ctrl-color-scheme option:selected").attr("value");
+        $("[id^=prov-ctrl-time-enc-list-]").click(function () {
+
+            $(this).find("input").prop("checked", true);
+
+            var selectedColorScheme = $(this).find("label").text();
             switch (selectedColorScheme) {
-                case "color":
+                case "Blue":
                     timeScale.range(["lightblue", "darkblue"]);
+                    $("#prov-ctrl-time-enc-list-gs").find("input").prop("checked", false);
                     break;
-                case "grayscale":
+                case "Grayscale":
                     timeScale.range(["white", "black"]);
+                    $("#prov-ctrl-time-enc-list-blue").find("input").prop("checked", false);
                     break;
             }
 
@@ -1531,16 +1538,19 @@ var provvisRender = function () {
             }
         });
 
-        /* Switch filter action. */
-        $("#prov-ctrl-filter-action").change(function () {
-            var selectedFilterAction = $("#prov-ctrl-filter-action option:selected").attr("value");
+        /* Switch link styles. */
+        $("[id^=prov-ctrl-filter-list-]").click(function () {
+
+            $(this).find("input").prop("checked", true);
+
+            var selectedFilterAction = $(this).find("label").text();
             switch (selectedFilterAction) {
-                case "hide":
-                    /* Hide unselected analyses and its child nodes. */
+                case "Hide":
+                    $("#prov-ctrl-filter-list-blend").find("input").prop("checked", false);
                     filterAction = "hide";
                     break;
-                case "blend":
-                    /* Blend unselected analyses and its child nodes. */
+                case "Blend":
+                    $("#prov-ctrl-filter-list-hide").find("input").prop("checked", false);
                     filterAction = "blend";
                     break;
             }
