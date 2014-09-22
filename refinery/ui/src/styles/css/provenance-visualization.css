@@ -1,25 +1,148 @@
-/*
- * (c) Stefan Luger 2014
- * css adapated of mbostock force layout example
+/**
+ * Provenance Visualization CSS Styles
+ *
+ * @author sluger Stefan Luger https://github.com/sluger
  */
-.node {
-  stroke: #fff;
-  stroke-width: 1.5px;
-  fill: gray;
+
+#provenance-vis {
+    position: relative;
 }
 
-.inputNode {
-  stroke: #fff;
-  stroke-width: 1.5px;
-  fill: rgb(237, 116, 7);
+#provenance-canvas {}
+
+#provenance-table {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    display: none;
+    background-color: #ffffff;
+    border-style: solid;
+    border-color: lightgray;
+    border-width: 1px;
+}
+
+#provenance-table-content {
+    background-color: #ffffff;
+}
+
+#provenance-support-view {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 110px;
+    height: 130px;
+    display: none;
+    margin-top: 5px;
+    background-color: #ffffff;
+}
+
+#provenance-support-view-content {
+    background-color: dimgray;
+}
+
+/* btn-group tweaks as by: http://stackoverflow.com/a/13766206 */
+.btn-group.btn {   border: 0;   padding: 0; }
+.btn-group.btn > .btn { border-radius: 0 }
+.btn-group.btn > .dropdown-menu {  text-align: left; }
+.btn-group.btn:first-child > .btn {
+    -webkit-border-radius: 4px 0 0 4px;
+    -moz-border-radius: 4px 0 0 4px;
+    border-radius: 4px 0 0 4px;
+}
+
+.btn-group.btn:last-child > .btn {
+    -webkit-border-radius: 0 4px 4px 0;
+    -moz-border-radius: 0 4px 4px 0;
+    border-radius: 0 4px 4px 0;
+}
+
+#curTime {
+    color: #136382;
+}
+
+.canvas {
+}
+
+.node, .aNode, .saNode {
+    stroke-width: 1.5px;
+    stroke: #000000;
+}
+
+.rawNode {
+}
+
+.specialNode {
+    stroke-width: 1px;
+}
+
+.dtNode {
+    stroke-width: 1px;
+}
+
+.intermediateNode {
+    stroke-width: 1px;
+}
+
+.storedNode {
+}
+
+.selectedNode {
+    stroke-width: 3px;
+    stroke: #000000;
 }
 
 .link {
-  stroke: gray;
-  stroke-width: 1.5px;
-  stroke-opacity: .7;
+    stroke: gray;
+    stroke-width: 1.5px;
+    stroke-opacity: 1;
+    fill: none;
+}
+
+.hLink {
+    stroke-width: 10px;
+    opacity: 1.0;
+    fill: none;
+    display: none;
 }
 
 .brect {
-  fill: #fff;
+    fill: #ffffff;
+}
+
+.cell {
+    fill: none;
+}
+
+.vLine, .hLine {
+    stroke-width: 1px;
+    stroke: lightgray;
+    opacity: 1;
+}
+
+.saMenu {
+    stroke-width: 0px;
+    stroke: none;
+    fill: gray;
+    display: none;
+    cursor:default;
+}
+
+.saMenuText {
+    fill: black;
+    font-size: 10px;
+    text-anchor: middle;
+}
+
+.saGlyph {
+
+}
+
+.nodeDoiLabel {
+    fill: #ed7407;
+    stroke: #ed7407;
+    stroke-width: 0.5px;
+    font-size: 11px;
+    font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    cursor:default;
 }

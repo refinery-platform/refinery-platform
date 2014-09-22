@@ -5,29 +5,91 @@ var provvisDecl = function () {
 
     /**
      * Constructor function representing the degree-of-interest (DOI) components for BaseNode.
+     * @param node The encapsulating node.
      * @constructor
      */
-    var DoiComponents = function () {
-        this.time = "";
+    var DoiComponents = function (node) {
+
+        this.node = node;
+
+        /* API: General interest. */
+        /**************************/
+
+        /* The latest execution time of a node is more important than earlier executions.*/
+        this.time = 0;
+
+        /* For layered nodes: Workflow parameters, files or topology changes over time.*/
         this.change = {wfParams: d3.map(), files: d3.map(), topology: d3.map()};
-        this.relationship = Object.create(null);
 
-        this.filtered = false;
-        this.searched = false;
-        this.highlighted = false;
-        this.selected = false;
-        this.dragged = false;
-        this.expanded = false;
-        this.collapsed = false;
-        this.alligned = false;
-        this.aggregated = false;
-        this.layered = false;
-        this.stratified = false;
+        /* Corresponds to the node type: Node, subanalysis, analysis.*/
+        this.relationship = 0;
 
-        this.distFactor = -1;
+        /* The overall graph width and height influences node appearances.*/
+        this.graphMetrics = {width: -1, height: -1};
 
+
+        /* UI: Interest derived from user actions. */
+        /*******************************************/
+
+        /* A node is in the result set of filter actions. */
+        this.doiFiltered = 0;
+
+        /* A node is selected by user actions. */
+        this.doiSelected = 0;
+
+        /* A node is part of a node-link path highlighted. */
+        this.doiHighlighted = 0;
+
+        /* A node's attribute is matched during a search task. */
+        this.searched = 0;
+
+        /* A node is separated through alignment from its surrounding nodes. */
+        this.aligned = 0;
+
+        /* Multiple nodes are manually merged into a stratified node. */
+        this.stratified = 0;
+
+
+        /* Distance. */
+        /*************/
+
+        /* A node's neighborhood directly influences it's DOI value through link weight and fallout function. */
+        this.neighborhoodDoiFactor = 1;
+
+
+        /* Computation. */
+        /****************/
+
+        /* A node's dominant component is represented by the minimum or maximum value throughout all components. */
         this.doiMinMax = -1;
+
+        /* A node's average DOI value is calculated by the sum of all weighted single DOI component values. */
         this.doiWeightedSum = -1;
+    };
+
+    /**
+     * Look up filtered attribute for encapsulating node.
+     * A node is within the filter results.
+     */
+    DoiComponents.prototype.filteredChanged = function () {
+        this.doiFiltered = this.node.filtered ? 1 : 0.5;
+        this.computeWeightedSum();
+    };
+
+    /**
+     * A node can be selected for further actions or detailed information.
+     */
+    DoiComponents.prototype.selectedChanged = function () {
+        this.doiSelected = this.node.selected ? 1 : 0;
+        this.computeWeightedSum();
+    };
+
+    /**
+     * A path containing nodes may be highlighted.
+     */
+    DoiComponents.prototype.highlightedChanged = function () {
+        this.doiHighlighted = this.node.highlighted ? 1 : 0;
+        this.computeWeightedSum();
     };
 
     /**
@@ -43,7 +105,8 @@ var provvisDecl = function () {
      */
     DoiComponents.prototype.computeWeightedSum = function () {
         /* TODO: Specify component weights within method params and compute a mean among all components. */
-        this.doiWeightedSum = -1;
+
+        this.doiWeightedSum = (this.doiFiltered/3 + this.doiSelected/3 + this.doiHighlighted/3).toFixed(2);
     };
 
     /**
@@ -74,7 +137,7 @@ var provvisDecl = function () {
         BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
         this.autoId = BaseNode.numInstances;
 
-        this.doi = new DoiComponents();
+        this.doi = new DoiComponents(this);
         this.selected = false;
         this.filtered = true;
 

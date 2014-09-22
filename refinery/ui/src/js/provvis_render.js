@@ -37,6 +37,14 @@ var provvisRender = function () {
         .style("z-index", "10")
         .style("visibility", "hidden");
 
+
+    /**
+     * On doi change, update node doi labels.
+     */
+    var updateNodeDoi = function () {
+        d3.selectAll(".node, .saNode, .aNode").select(".nodeDoiLabel").text(function (d) {return d.doi.doiWeightedSum;});
+    };
+
     /**
      * Make tooltip visible and align it to the events position.
      * @param label Inner html code appended to the tooltip.
@@ -123,7 +131,7 @@ var provvisRender = function () {
             d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).attr("d", function (l) {
                 var srcCoords = getNodeCoords(l.source),
                     pathSegment = "";
-                if ($("#prov-ctrl-link-style option:selected").attr("value") === "bezier") {
+                if ($("#prov-ctrl-links-list-bezier").find("input").is(":checked")) {
                     pathSegment = "M" + srcCoords.x + "," + srcCoords.y;
                     pathSegment = pathSegment.concat(" Q" + (srcCoords.x + cell.width / 3) + "," + (srcCoords.y) + " " +
                         (srcCoords.x + cell.width / 2) + "," + (srcCoords.y + (y - srcCoords.y) / 2) + " " +
@@ -148,7 +156,7 @@ var provvisRender = function () {
             d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).attr("d", function (l) {
                 var tarCoords = getNodeCoords(l.target),
                     pathSegment = "";
-                if ($("#prov-ctrl-link-style option:selected").attr("value") === "bezier") {
+                if ($("#prov-ctrl-links-list-bezier").find("input").is(":checked")) {
                     pathSegment = "M" + x + "," + y;
                     pathSegment = pathSegment.concat(" Q" + (x + cell.width / 3) + "," + (y) + " " +
                         (x + cell.width / 2) + "," + (y + (tarCoords.y - y) / 2) + " " +
@@ -415,6 +423,13 @@ var provvisRender = function () {
         links.forEach(function (l) {
             l.highlighted = false;
         });
+
+        d3.selectAll(".node, .aNode, .saNode").each(function (n) {
+            n.highlighted = false;
+            n.doi.highlightedChanged();
+        });
+
+        updateNodeDoi();
     };
 
     /**
@@ -425,6 +440,10 @@ var provvisRender = function () {
         while (n.hidden) {
             n = n.parent;
         }
+
+        n.highlighted = true;
+        n.doi.highlightedChanged();
+
         /* Get svg link element, and for each predecessor call recursively. */
         n.predLinks.values().forEach(function (l) {
             l.highlighted = true;
@@ -441,6 +460,10 @@ var provvisRender = function () {
         while (n.hidden) {
             n = n.parent;
         }
+
+        n.highlighted = true;
+        n.doi.highlightedChanged();
+
         /* Get svg link element, and for each successor call recursively. */
         n.succLinks.values().forEach(function (l) {
             l.highlighted = true;
@@ -544,10 +567,12 @@ var provvisRender = function () {
                         })
                         .style("opacity", 0.5);
 
-                    g.append("g").classed({"saGlyph": true})
+                    var glyph = g.append("g").classed({"saGlyph": true})
                         .style("fill", function () {
                             return timeScale(parseISOTimeFormat(san.parent.start));
-                        }).append("polygon")
+                        });
+
+                    glyph.append("polygon")
                         .attr("points", function () {
                             return "0," + (-vis.radius) + " " +
                                 (vis.radius) + "," + (-vis.radius / 2) + " " +
@@ -556,6 +581,14 @@ var provvisRender = function () {
                                 (-vis.radius) + "," + (vis.radius / 2) + " " +
                                 (-vis.radius) + "," + (-vis.radius / 2);
                         });
+
+                    glyph.append("text")
+                        .text(function (d) {
+                            return d.doi.doiWeightedSum;
+                        }).attr("class", "nodeDoiLabel")
+                        .attr("text-anchor", "middle")
+                        .attr("dominant-baseline", "central")
+                        .style("display", "none");
                 });
         });
 
@@ -606,7 +639,7 @@ var provvisRender = function () {
                     return an.autoId === +analysisId.replace(/(analysisId-)/g, "");
                 }))
                 .enter().append("g").each(function (an) {
-                    d3.select(this).classed({"aNode": true})
+                    var glyph = d3.select(this).classed({"aNode": true})
                         .attr("transform", "translate(" + an.x + "," + an.y + ")")
                         .attr("id", function () {
                             return "nodeId-" + an.autoId;
@@ -616,8 +649,8 @@ var provvisRender = function () {
                         })
                         .style("fill", function () {
                             return timeScale(parseISOTimeFormat(an.start));
-                        })
-                        .append("polygon")
+                        });
+                    glyph.append("polygon")
                         .attr("points", function () {
                             return "0," + (-2 * vis.radius) + " " +
                                 (2 * vis.radius) + "," + (-vis.radius) + " " +
@@ -626,6 +659,13 @@ var provvisRender = function () {
                                 (-2 * vis.radius) + "," + (vis.radius) + " " +
                                 (-2 * vis.radius) + "," + (-vis.radius);
                         });
+                    glyph.append("text")
+                        .text(function (d) {
+                            return d.doi.doiWeightedSum;
+                        }).attr("class", "nodeDoiLabel")
+                        .attr("text-anchor", "middle")
+                        .attr("dominant-baseline", "central")
+                        .style("display", "none");
                 });
         });
 
@@ -677,7 +717,13 @@ var provvisRender = function () {
                 })
                 .attr("id", function (d) {
                     return "nodeId-" + d.autoId;
-                });
+                }).append("text")
+                .text(function (d) {
+                    return d.doi.doiWeightedSum;
+                }).attr("class", "nodeDoiLabel")
+                .attr("text-anchor", "middle")
+                .attr("dominant-baseline", "central")
+                .style("display", "none");
         });
 
         /* Set node dom element. */
@@ -788,6 +834,8 @@ var provvisRender = function () {
             /* Highlight path. */
             highlightPredPath(d);
         }
+
+        updateNodeDoi();
     };
 
     /**
@@ -854,51 +902,72 @@ var provvisRender = function () {
             d.selected = true;
         }
 
+        d.doi.selectedChanged();
+        updateNodeDoi();
+
         /* Update node size. */
         if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {
             if (d.selected) {
                 if (d.nodeType === "raw" || d.nodeType === "intermediate" || d.nodeType === "stored") {
-                    d3.select("#nodeId-" + d.autoId).select("circle").attr("r", vis.radius * 2);
+                    d3.select("#nodeId-" + d.autoId)
+                        .select("circle")
+                        .transition()
+                        .duration(500)
+                        .attr("r", function (d) {return d.nodeType === "intermediate" ? 6*vis.radius/4 : vis.radius*2;});
                 } else if (d.nodeType === "special") {
                     d3.select("#nodeId-" + d.autoId)
                         .select("rect")
+                        .transition()
+                        .duration(500)
                         .attr("transform", "translate(" + (-vis.radius * 2) + "," + (-vis.radius * 2) + ")")
                         .attr("width", vis.radius * 4)
                         .attr("height", vis.radius * 4);
                 } else if (d.nodeType === "dt") {
                     d3.select("#nodeId-" + d.autoId)
                         .select("rect")
+                        .transition()
+                        .duration(500)
                         .attr("transform", function () {
-                            return "translate(" + (-vis.radius * 1.5) + "," + (-vis.radius * 1.5) + ")" +
-                                "rotate(45 " + (vis.radius * 1.5) + "," + (vis.radius * 1.5) + ")";
+                            return "translate(" + (-vis.radius) + "," + (-vis.radius) + ")" +
+                                "rotate(45 " + (vis.radius) + "," + (vis.radius) + ")";
                         })
-                        .attr("width", vis.radius * 3)
-                        .attr("height", vis.radius * 3);
+                        .attr("width", vis.radius * 2)
+                        .attr("height", vis.radius * 2);
                 }
-
+                d3.select("#nodeId-" + d.autoId).attr("class", "node " + d.nodeType + "Node selectedNode");
             } else {
                 if (d.nodeType === "raw" || d.nodeType === "intermediate" || d.nodeType === "stored") {
-                    d3.select("#nodeId-" + d.autoId).select("circle").attr("r", vis.radius);
+                    d3.select("#nodeId-" + d.autoId).select("circle")
+                        .transition()
+                        .duration(500)
+                        .attr("r", function (d) {return d.nodeType === "intermediate" ? 3*vis.radius/4 : vis.radius;});
                 } else if (d.nodeType === "special") {
                     d3.select("#nodeId-" + d.autoId)
                         .select("rect")
-                        .attr("transform", "translate(" + (-vis.radius) + "," + (-vis.radius) + ")")
-                        .attr("width", vis.radius * 2)
-                        .attr("height", vis.radius * 2);
+                        .transition()
+                        .duration(500)
+                        .attr("transform", "translate(" + (-3*vis.radius/4) + "," + (-3*vis.radius/4) + ")")
+                        .attr("width", 6*vis.radius/4)
+                        .attr("height", 6*vis.radius/4);
                 } else if (d.nodeType === "dt") {
                     d3.select("#nodeId-" + d.autoId)
                         .select("rect")
+                        .transition()
+                        .duration(500)
                         .attr("transform", function () {
-                            return "translate(" + (-vis.radius * 0.75) + "," + (-vis.radius * 0.75) + ")" +
-                                "rotate(45 " + (vis.radius * 0.75) + "," + (vis.radius * 0.75) + ")";
+                            return "translate(" + (-vis.radius/2) + "," + (-vis.radius/2) + ")" +
+                                "rotate(45 " + (vis.radius/2) + "," + (vis.radius/2) + ")";
                         })
-                        .attr("width", vis.radius * 1.5)
-                        .attr("height", vis.radius * 1.5);
+                        .attr("width", vis.radius)
+                        .attr("height", vis.radius);
                 }
+                d3.select("#nodeId-" + d.autoId).attr("class", "node " + d.nodeType + "Node");
             }
         } else if (d.nodeType === "subanalysis") {
             if (d.selected) {
                 d3.select("#nodeId-" + d.autoId).select("polygon")
+                    .transition()
+                    .duration(500)
                     .attr("points", function () {
                         return "0," + (-vis.radius * 2) + " " +
                             (vis.radius * 2) + "," + (-vis.radius) + " " +
@@ -906,9 +975,11 @@ var provvisRender = function () {
                             "0" + "," + (vis.radius * 2) + " " +
                             (-vis.radius * 2) + "," + (vis.radius) + " " +
                             (-vis.radius * 2) + "," + (-vis.radius);
-                    });
+                    }).attr("class", "saNode selectedNode");
             } else {
                 d3.select("#nodeId-" + d.autoId).select("polygon")
+                    .transition()
+                    .duration(500)
                     .attr("points", function () {
                         return "0," + (-vis.radius) + " " +
                             (vis.radius) + "," + (-vis.radius / 2) + " " +
@@ -916,12 +987,13 @@ var provvisRender = function () {
                             "0" + "," + (vis.radius) + " " +
                             (-vis.radius) + "," + (vis.radius / 2) + " " +
                             (-vis.radius) + "," + (-vis.radius / 2);
-                    });
+                    }).attr("class", "saNode");
             }
-
         } else if (d.nodeType === "analysis") {
             if (d.selected) {
                 d3.select("#nodeId-" + d.autoId).select("polygon")
+                    .transition()
+                    .duration(500)
                     .attr("points", function () {
                         return "0," + (-4 * vis.radius) + " " +
                             (4 * vis.radius) + "," + (-vis.radius * 2) + " " +
@@ -929,9 +1001,11 @@ var provvisRender = function () {
                             "0" + "," + (4 * vis.radius) + " " +
                             (-4 * vis.radius) + "," + (vis.radius * 2) + " " +
                             (-4 * vis.radius) + "," + (-vis.radius * 2);
-                    });
+                    }).attr("class", "aNode selectedNode");
             } else {
                 d3.select("#nodeId-" + d.autoId).select("polygon")
+                    .transition()
+                    .duration(500)
                     .attr("points", function () {
                         return "0," + (-2 * vis.radius) + " " +
                             (2 * vis.radius) + "," + (-vis.radius) + " " +
@@ -939,89 +1013,10 @@ var provvisRender = function () {
                             "0" + "," + (2 * vis.radius) + " " +
                             (-2 * vis.radius) + "," + (vis.radius) + " " +
                             (-2 * vis.radius) + "," + (-vis.radius);
-                    });
+                    }).attr("class", "aNode");
             }
         }
 
-        /* TODO: Check for negative cols and rows. */
-        var shiftCols = function (col, shiftAmount, selected) {
-            for (var i = 0; i < depth; i++) {
-                if (i < col) {
-                    cols.get(i).x = cols.get(i).x + shiftAmount;
-                } else if (i > col) {
-                    cols.get(i).x = cols.get(i).x - shiftAmount;
-                }
-
-                if (i === col) {
-                    d3.select("#vLine-" + i)
-                        .attr("x1", cols.get(i).x + shiftAmount * 1.5)
-                        .attr("x2", cols.get(i).x + shiftAmount * 1.5);
-                } else {
-                    d3.select("#vLine-" + i)
-                        .attr("x1", cols.get(i).x + shiftAmount / 2)
-                        .attr("x2", cols.get(i).x + shiftAmount / 2);
-                }
-            }
-            cols.get(col).expanded = selected ? true : false;
-        };
-        var shiftRows = function (row, shiftAmount, selected) {
-            for (var i = 0; i < width; i++) {
-
-                if (i < row) {
-                    rows.get(i).y = rows.get(i).y - shiftAmount;
-                } else if (i > row) {
-                    rows.get(i).y = rows.get(i).y + shiftAmount;
-                }
-
-                if (i === row) {
-                    d3.select("#hLine-" + i)
-                        .attr("y1", rows.get(i).y + shiftAmount * 1.5)
-                        .attr("y2", rows.get(i).y + shiftAmount * 1.5);
-                } else {
-                    d3.select("#hLine-" + i)
-                        .attr("y1", rows.get(i).y + shiftAmount / 2)
-                        .attr("y2", rows.get(i).y + shiftAmount / 2);
-                }
-            }
-            rows.get(row).expanded = selected ? true : false;
-        };
-
-        if (d.selected) {
-            /* Expand row and/or column. */
-            if (!cols.get(d.col).expanded) {
-                shiftCols(d.col, cell.width, d.selected);
-            }
-            if (!rows.get(d.row).expanded) {
-                shiftRows(d.row, cell.height, d.selected);
-            }
-
-            d3.selectAll(".node, .saNode, aNode").each(function (n) {
-                if (n.row < d.row || n.row > d.row || n.col > d.col || n.col < d.col) {
-                    n.x = cols.get(n.col).x;
-                    n.y = rows.get(n.row).y;
-
-                }
-                updateNode(d3.select(this), n, n.x, n.y);
-                updateLink(d3.select(this), n, n.x, n.y);
-            });
-        } else if (!d.selected) {
-            /* Expand row and/or column. */
-            if (cols.get(d.col).expanded) {
-                shiftCols(d.col, -cell.width, d.selected);
-            }
-            if (rows.get(d.row).expanded) {
-                shiftRows(d.row, -cell.height, d.selected);
-            }
-
-            d3.selectAll(".node, .saNode, aNode").each(function (n) {
-                if (n.row < d.row || n.row > d.row || n.col > d.col || n.col < d.col) {
-                    n.x = cols.get(n.col).x;
-                    n.y = rows.get(n.row).y;
-                }
-                updateNode(d3.select(this), n, n.x, n.y);
-                updateLink(d3.select(this), n, n.x, n.y);
-            });
-        }
     };
 
     /**
@@ -1411,7 +1406,20 @@ var provvisRender = function () {
         });
 
         /* Switch link styles. */
-        $("#prov-ctrl-link-style").change(function () {
+        $("[id^=prov-ctrl-links-list-]").click(function () {
+
+            $(this).find("input").prop("checked", true);
+
+            var selectedLinkStyle = $(this).find("label").text();
+            switch (selectedLinkStyle) {
+                case "Bezier":
+                    $("#prov-ctrl-links-list-straight").find("input").prop("checked", false);
+                    break;
+                case "Straight":
+                    $("#prov-ctrl-links-list-bezier").find("input").prop("checked", false);
+                    break;
+            }
+
             d3.selectAll(".node, .aNode, .saNode").each(function (n) {
                 if (!n.hidden) {
                     updateLink(d3.select(this), n, n.x, n.y);
@@ -1420,14 +1428,19 @@ var provvisRender = function () {
         });
 
         /* Switch time-dependant color scheme. */
-        $("#prov-ctrl-color-scheme").change(function () {
-            var selectedColorScheme = $("#prov-ctrl-color-scheme option:selected").attr("value");
+        $("[id^=prov-ctrl-time-enc-list-]").click(function () {
+
+            $(this).find("input").prop("checked", true);
+
+            var selectedColorScheme = $(this).find("label").text();
             switch (selectedColorScheme) {
-                case "color":
+                case "Blue":
                     timeScale.range(["lightblue", "darkblue"]);
+                    $("#prov-ctrl-time-enc-list-gs").find("input").prop("checked", false);
                     break;
-                case "grayscale":
+                case "Grayscale":
                     timeScale.range(["white", "black"]);
+                    $("#prov-ctrl-time-enc-list-blue").find("input").prop("checked", false);
                     break;
             }
 
@@ -1447,16 +1460,25 @@ var provvisRender = function () {
 
         /* Show and hide grid. */
         $("#prov-ctrl-show-grid").click(function () {
-            if ($("#prov-ctrl-show-grid").hasClass("active")) {
+            if (!$("#prov-ctrl-show-grid").find("input").is(":checked")) {
                 d3.select(".grid").style("display", "none");
             } else {
                 d3.select(".grid").style("display", "inline");
             }
         });
 
+        /* Show and hide doi labels. */
+        $("#prov-ctrl-show-doi").click(function () {
+            if (!$("#prov-ctrl-show-doi").find("input").is(":checked")) {
+                d3.selectAll(".nodeDoiLabel").style("display", "none");
+            } else {
+                d3.selectAll(".nodeDoiLabel").style("display", "inline");
+            }
+        });
+
         /* Show and hide table. */
         $("#prov-ctrl-show-table").click(function () {
-            if ($("#prov-ctrl-show-table").hasClass("active")) {
+            if (!$("#prov-ctrl-show-table").find("input").is(":checked")) {
                 d3.select("#provenance-table").style("display", "none");
                 $("#provenance-support-view").css({"top": "0px"});
             } else {
@@ -1467,7 +1489,7 @@ var provvisRender = function () {
 
         /* Show and hide support view. */
         $("#prov-ctrl-show-support-view").click(function () {
-            if ($("#prov-ctrl-show-support-view").hasClass("active")) {
+            if (!$("#prov-ctrl-show-support-view").find("input").is(":checked")) {
                 d3.select("#provenance-support-view").style("display", "none");
             } else {
                 d3.select("#provenance-support-view").style("display", "block");
@@ -1480,16 +1502,19 @@ var provvisRender = function () {
             }
         });
 
-        /* Switch filter action. */
-        $("#prov-ctrl-filter-action").change(function () {
-            var selectedFilterAction = $("#prov-ctrl-filter-action option:selected").attr("value");
+        /* Switch link styles. */
+        $("[id^=prov-ctrl-filter-list-]").click(function () {
+
+            $(this).find("input").prop("checked", true);
+
+            var selectedFilterAction = $(this).find("label").text();
             switch (selectedFilterAction) {
-                case "hide":
-                    /* Hide unselected analyses and its child nodes. */
+                case "Hide":
+                    $("#prov-ctrl-filter-list-blend").find("input").prop("checked", false);
                     filterAction = "hide";
                     break;
-                case "blend":
-                    /* Blend unselected analyses and its child nodes. */
+                case "Blend":
+                    $("#prov-ctrl-filter-list-hide").find("input").prop("checked", false);
                     filterAction = "blend";
                     break;
             }
@@ -1520,7 +1545,7 @@ var provvisRender = function () {
                     handlePathHighlighting(d, keyEvent, graph.links);
                 } else {
                     /* TODO: Temporarily disabled. */
-                    //handleNodeSelection(d, keyEvent);
+                    handleNodeSelection(d, keyEvent);
 
                     updateTableContent(d);
                 }
@@ -1781,7 +1806,18 @@ var provvisRender = function () {
                         cn.filtered = true;
                     });
                 }
+
+                /* TODO: Potential bug. */
+                /* Filtered attribute changed. */
+                n.doi.filteredChanged();
+                n.parent.doi.filteredChanged();
+                n.parent.parent.doi.filteredChanged();
+                /*n.parent.children.forEach(function (cn) {
+                    console.log(cn);
+                    cn.doi.filteredChanged();
+                });*/
             });
+            updateNodeDoi();
         }
 
         /* Hide or blend (un)selected nodes. */

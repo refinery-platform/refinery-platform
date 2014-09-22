@@ -11,6 +11,7 @@ class venvdeps {
   package { 'libncurses5-dev': }
   package { 'libldap2-dev': }
   package { 'libsasl2-dev': }
+  package { 'libffi-dev': }  # for SSL modules
 }
 include venvdeps
 
