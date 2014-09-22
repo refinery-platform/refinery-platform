@@ -423,6 +423,12 @@ var provvisRender = function () {
         links.forEach(function (l) {
             l.highlighted = false;
         });
+
+        d3.selectAll(".node, .aNode, .saNode").each(function (n) {
+            n.highligted = false;
+            n.doi.highlightedChanged();
+        });
+        updateNodeDoi();
     };
 
     /**
@@ -433,6 +439,10 @@ var provvisRender = function () {
         while (n.hidden) {
             n = n.parent;
         }
+
+        n.highlighted = true;
+        n.doi.highlightedChanged();
+
         /* Get svg link element, and for each predecessor call recursively. */
         n.predLinks.values().forEach(function (l) {
             l.highlighted = true;
@@ -449,6 +459,10 @@ var provvisRender = function () {
         while (n.hidden) {
             n = n.parent;
         }
+
+        n.highlighted = true;
+        n.doi.highlightedChanged();
+
         /* Get svg link element, and for each successor call recursively. */
         n.succLinks.values().forEach(function (l) {
             l.highlighted = true;
@@ -819,6 +833,8 @@ var provvisRender = function () {
             /* Highlight path. */
             highlightPredPath(d);
         }
+
+        updateNodeDoi();
     };
 
     /**
@@ -884,6 +900,9 @@ var provvisRender = function () {
         } else {
             d.selected = true;
         }
+
+        d.doi.selectedChanged();
+        updateNodeDoi();
 
         /* Update node size. */
         if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {

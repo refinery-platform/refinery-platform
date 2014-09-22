@@ -31,16 +31,17 @@ var provvisDecl = function () {
         /* UI: Interest derived from user actions. */
         /*******************************************/
 
+        /* A node is in the result set of filter actions. */
         this.doiFiltered = 0;
+
+        /* A node is selected by user actions. */
         this.doiSelected = 0;
+
+        /* A node is part of a node-link path highlighted. */
+        this.doiHighlighted = 0;
 
         /* A node's attribute is matched during a search task. */
         this.searched = 0;
-
-        /* A node is part of a node-link path highlighted. */
-        this.highlighted = 0;
-
-
 
         /* A node is separated through alignment from its surrounding nodes. */
         this.aligned = 0;
@@ -80,6 +81,15 @@ var provvisDecl = function () {
      */
     DoiComponents.prototype.selectedChanged = function () {
         this.doiSelected = this.node.selected ? 1 : 0;
+        this.computeWeightedSum();
+    };
+
+    /**
+     * A path containing nodes may be highlighted.
+     */
+    DoiComponents.prototype.highlightedChanged = function () {
+        this.doiHighlighted = this.node.highlighted ? 1 : 0;
+        this.computeWeightedSum();
     };
 
     /**
@@ -96,7 +106,7 @@ var provvisDecl = function () {
     DoiComponents.prototype.computeWeightedSum = function () {
         /* TODO: Specify component weights within method params and compute a mean among all components. */
 
-        this.doiWeightedSum = this.doiFiltered * 0.5 + this.doiSelected * 0.5;
+        this.doiWeightedSum = this.doiFiltered/3 + this.doiSelected/3 + this.doiHighlighted/3;
     };
 
     /**
