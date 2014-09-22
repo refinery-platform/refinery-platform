@@ -889,47 +889,65 @@ var provvisRender = function () {
         if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {
             if (d.selected) {
                 if (d.nodeType === "raw" || d.nodeType === "intermediate" || d.nodeType === "stored") {
-                    d3.select("#nodeId-" + d.autoId).select("circle").attr("r", vis.radius * 2);
+                    d3.select("#nodeId-" + d.autoId)
+                        .select("circle")
+                        .transition()
+                        .duration(500)
+                        .attr("r", function (d) {return d.nodeType === "intermediate" ? 6*vis.radius/4 : vis.radius*2;});
                 } else if (d.nodeType === "special") {
                     d3.select("#nodeId-" + d.autoId)
                         .select("rect")
+                        .transition()
+                        .duration(500)
                         .attr("transform", "translate(" + (-vis.radius * 2) + "," + (-vis.radius * 2) + ")")
                         .attr("width", vis.radius * 4)
                         .attr("height", vis.radius * 4);
                 } else if (d.nodeType === "dt") {
                     d3.select("#nodeId-" + d.autoId)
                         .select("rect")
+                        .transition()
+                        .duration(500)
                         .attr("transform", function () {
-                            return "translate(" + (-vis.radius * 1.5) + "," + (-vis.radius * 1.5) + ")" +
-                                "rotate(45 " + (vis.radius * 1.5) + "," + (vis.radius * 1.5) + ")";
+                            return "translate(" + (-vis.radius) + "," + (-vis.radius) + ")" +
+                                "rotate(45 " + (vis.radius) + "," + (vis.radius) + ")";
                         })
-                        .attr("width", vis.radius * 3)
-                        .attr("height", vis.radius * 3);
+                        .attr("width", vis.radius * 2)
+                        .attr("height", vis.radius * 2);
                 }
-
+                d3.select("#nodeId-" + d.autoId).attr("class", "node " + d.nodeType + "Node selectedNode");
             } else {
                 if (d.nodeType === "raw" || d.nodeType === "intermediate" || d.nodeType === "stored") {
-                    d3.select("#nodeId-" + d.autoId).select("circle").attr("r", vis.radius);
+                    d3.select("#nodeId-" + d.autoId).select("circle")
+                        .transition()
+                        .duration(500)
+                        .attr("r", function (d) {return d.nodeType === "intermediate" ? 3*vis.radius/4 : vis.radius;});
                 } else if (d.nodeType === "special") {
                     d3.select("#nodeId-" + d.autoId)
                         .select("rect")
-                        .attr("transform", "translate(" + (-vis.radius) + "," + (-vis.radius) + ")")
-                        .attr("width", vis.radius * 2)
-                        .attr("height", vis.radius * 2);
+                        .transition()
+                        .duration(500)
+                        .attr("transform", "translate(" + (-3*vis.radius/4) + "," + (-3*vis.radius/4) + ")")
+                        .attr("width", 6*vis.radius/4)
+                        .attr("height", 6*vis.radius/4);
                 } else if (d.nodeType === "dt") {
                     d3.select("#nodeId-" + d.autoId)
                         .select("rect")
+                        .transition()
+                        .duration(500)
                         .attr("transform", function () {
-                            return "translate(" + (-vis.radius * 0.75) + "," + (-vis.radius * 0.75) + ")" +
-                                "rotate(45 " + (vis.radius * 0.75) + "," + (vis.radius * 0.75) + ")";
+                            return "translate(" + (-vis.radius/2) + "," + (-vis.radius/2) + ")" +
+                                "rotate(45 " + (vis.radius/2) + "," + (vis.radius/2) + ")";
                         })
-                        .attr("width", vis.radius * 1.5)
-                        .attr("height", vis.radius * 1.5);
+                        .attr("width", vis.radius)
+                        .attr("height", vis.radius);
                 }
+                d3.select("#nodeId-" + d.autoId).attr("class", "node " + d.nodeType + "Node");
             }
         } else if (d.nodeType === "subanalysis") {
             if (d.selected) {
                 d3.select("#nodeId-" + d.autoId).select("polygon")
+                    .transition()
+                    .duration(500)
                     .attr("points", function () {
                         return "0," + (-vis.radius * 2) + " " +
                             (vis.radius * 2) + "," + (-vis.radius) + " " +
@@ -937,9 +955,11 @@ var provvisRender = function () {
                             "0" + "," + (vis.radius * 2) + " " +
                             (-vis.radius * 2) + "," + (vis.radius) + " " +
                             (-vis.radius * 2) + "," + (-vis.radius);
-                    });
+                    }).attr("class", "saNode selectedNode");
             } else {
                 d3.select("#nodeId-" + d.autoId).select("polygon")
+                    .transition()
+                    .duration(500)
                     .attr("points", function () {
                         return "0," + (-vis.radius) + " " +
                             (vis.radius) + "," + (-vis.radius / 2) + " " +
@@ -947,12 +967,13 @@ var provvisRender = function () {
                             "0" + "," + (vis.radius) + " " +
                             (-vis.radius) + "," + (vis.radius / 2) + " " +
                             (-vis.radius) + "," + (-vis.radius / 2);
-                    });
+                    }).attr("class", "saNode");
             }
-
         } else if (d.nodeType === "analysis") {
             if (d.selected) {
                 d3.select("#nodeId-" + d.autoId).select("polygon")
+                    .transition()
+                    .duration(500)
                     .attr("points", function () {
                         return "0," + (-4 * vis.radius) + " " +
                             (4 * vis.radius) + "," + (-vis.radius * 2) + " " +
@@ -960,9 +981,11 @@ var provvisRender = function () {
                             "0" + "," + (4 * vis.radius) + " " +
                             (-4 * vis.radius) + "," + (vis.radius * 2) + " " +
                             (-4 * vis.radius) + "," + (-vis.radius * 2);
-                    });
+                    }).attr("class", "aNode selectedNode");
             } else {
                 d3.select("#nodeId-" + d.autoId).select("polygon")
+                    .transition()
+                    .duration(500)
                     .attr("points", function () {
                         return "0," + (-2 * vis.radius) + " " +
                             (2 * vis.radius) + "," + (-vis.radius) + " " +
@@ -970,89 +993,10 @@ var provvisRender = function () {
                             "0" + "," + (2 * vis.radius) + " " +
                             (-2 * vis.radius) + "," + (vis.radius) + " " +
                             (-2 * vis.radius) + "," + (-vis.radius);
-                    });
+                    }).attr("class", "aNode");
             }
         }
 
-        /* TODO: Check for negative cols and rows. */
-        var shiftCols = function (col, shiftAmount, selected) {
-            for (var i = 0; i < depth; i++) {
-                if (i < col) {
-                    cols.get(i).x = cols.get(i).x + shiftAmount;
-                } else if (i > col) {
-                    cols.get(i).x = cols.get(i).x - shiftAmount;
-                }
-
-                if (i === col) {
-                    d3.select("#vLine-" + i)
-                        .attr("x1", cols.get(i).x + shiftAmount * 1.5)
-                        .attr("x2", cols.get(i).x + shiftAmount * 1.5);
-                } else {
-                    d3.select("#vLine-" + i)
-                        .attr("x1", cols.get(i).x + shiftAmount / 2)
-                        .attr("x2", cols.get(i).x + shiftAmount / 2);
-                }
-            }
-            cols.get(col).expanded = selected ? true : false;
-        };
-        var shiftRows = function (row, shiftAmount, selected) {
-            for (var i = 0; i < width; i++) {
-
-                if (i < row) {
-                    rows.get(i).y = rows.get(i).y - shiftAmount;
-                } else if (i > row) {
-                    rows.get(i).y = rows.get(i).y + shiftAmount;
-                }
-
-                if (i === row) {
-                    d3.select("#hLine-" + i)
-                        .attr("y1", rows.get(i).y + shiftAmount * 1.5)
-                        .attr("y2", rows.get(i).y + shiftAmount * 1.5);
-                } else {
-                    d3.select("#hLine-" + i)
-                        .attr("y1", rows.get(i).y + shiftAmount / 2)
-                        .attr("y2", rows.get(i).y + shiftAmount / 2);
-                }
-            }
-            rows.get(row).expanded = selected ? true : false;
-        };
-
-        if (d.selected) {
-            /* Expand row and/or column. */
-            if (!cols.get(d.col).expanded) {
-                shiftCols(d.col, cell.width, d.selected);
-            }
-            if (!rows.get(d.row).expanded) {
-                shiftRows(d.row, cell.height, d.selected);
-            }
-
-            d3.selectAll(".node, .saNode, aNode").each(function (n) {
-                if (n.row < d.row || n.row > d.row || n.col > d.col || n.col < d.col) {
-                    n.x = cols.get(n.col).x;
-                    n.y = rows.get(n.row).y;
-
-                }
-                updateNode(d3.select(this), n, n.x, n.y);
-                updateLink(d3.select(this), n, n.x, n.y);
-            });
-        } else if (!d.selected) {
-            /* Expand row and/or column. */
-            if (cols.get(d.col).expanded) {
-                shiftCols(d.col, -cell.width, d.selected);
-            }
-            if (rows.get(d.row).expanded) {
-                shiftRows(d.row, -cell.height, d.selected);
-            }
-
-            d3.selectAll(".node, .saNode, aNode").each(function (n) {
-                if (n.row < d.row || n.row > d.row || n.col > d.col || n.col < d.col) {
-                    n.x = cols.get(n.col).x;
-                    n.y = rows.get(n.row).y;
-                }
-                updateNode(d3.select(this), n, n.x, n.y);
-                updateLink(d3.select(this), n, n.x, n.y);
-            });
-        }
     };
 
     /**
@@ -1581,7 +1525,7 @@ var provvisRender = function () {
                     handlePathHighlighting(d, keyEvent, graph.links);
                 } else {
                     /* TODO: Temporarily disabled. */
-                    //handleNodeSelection(d, keyEvent);
+                    handleNodeSelection(d, keyEvent);
 
                     updateTableContent(d);
                 }
