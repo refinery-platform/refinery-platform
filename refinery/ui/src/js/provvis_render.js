@@ -425,9 +425,10 @@ var provvisRender = function () {
         });
 
         d3.selectAll(".node, .aNode, .saNode").each(function (n) {
-            n.highligted = false;
+            n.highlighted = false;
             n.doi.highlightedChanged();
         });
+
         updateNodeDoi();
     };
 
