@@ -30,6 +30,8 @@ module.exports = function(grunt) {
         'd3/d3.min.js',
         'c3/c3.min.js',
         'resumablejs/resumable.js',
+        'ng-file-upload/angular-file-upload.min.js',
+        'ng-grid/build/ng-grid.min.js',
       ],
       map: [
         // uncompressed source is required along with map for debugging
@@ -45,6 +47,7 @@ module.exports = function(grunt) {
         'select2/select2.css',
         'tipsy/src/stylesheets/tipsy.css',
         'c3/c3.css',
+        'ng-grid/ng-grid.css',
       ],
       img: [
         'select2/select2.png',
@@ -86,7 +89,7 @@ module.exports = function(grunt) {
       options: {
         banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
       },
-      app_files: {
+      app_scripts: {
         files: [
           {
             expand: true,
@@ -97,7 +100,7 @@ module.exports = function(grunt) {
           },
         ]
       },
-      vendor_files: {
+      vendor_assets: {
         files: [
           {
             '<%= vendor_dir %>/angular-ui-select2/release/select2.min.js':
@@ -165,7 +168,7 @@ module.exports = function(grunt) {
     watch: {
       app_scripts: {
         files: ['<%= source_dir %>/<%= source_files.js %>'],
-        tasks: ['jshint', 'clean:app_scripts', 'copy:app_scripts'],
+        tasks: ['jshint', 'clean:app_scripts', 'uglify:app_scripts', 'copy:app_scripts'],
       },
       app_styles: {
         files: ['<%= source_dir %>/<%= source_files.css %>'],
@@ -177,9 +180,10 @@ module.exports = function(grunt) {
       },
       vendor_assets: {
         files: ['<%= vendor_dir %>/<%= vendor_files.js %>',
+                '<%= vendor_dir %>/<%= vendor_files.map %>',
                 '<%= vendor_dir %>/<%= vendor_files.css %>',
                 '<%= vendor_dir %>/<%= vendor_files.img %>'],
-        tasks: ['copy:vendor_assets'],        
+        tasks: ['clean:vendor_assets', 'uglify:vendor_assets', 'copy:vendor_assets'],
       },
       styles: {
         files: ['<%= styles_dir %>/less/*.less'],
@@ -198,8 +202,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-less');  
-  
+
   // Default task(s).
   grunt.registerTask('default', ['jshint', 'clean', 'uglify', 'less', 'copy']);
-
 };

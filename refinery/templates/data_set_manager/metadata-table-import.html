@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block head_html %}
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}vendor/ng-grid/ng-grid.css" />
+{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+    <h1>Create New Data Set&nbsp;<small id="import-message"></small></h1>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="refinery-panel refinery-panel-content scrollable">
+  <div class="row-fluid">
+
+    <div class="refinery-header">
+      <span class="refinery-header-left"><h2>Metadata Table Import</h2></span>
+    </div>
+<!--
+    <form id="metadataTableImportForm" enctype="multipart/form-data" action="#" method="post">
+      {% csrf_token %}
+
+      <p>{{ form.non_field_errors }}</p>
+      <p>{{ error }}</p>  
+
+      <div class="refinery-subheader">
+        <h4>From File</h4>
+      </div>
+      <p>
+        {{ form.metadata_file.errors}}
+        {{ form.metadata_file }}
+      </p>
+
+      <input style="float: left;" class="btn" id="import-button" type="submit" value="Import"/>
+      <div style="margin-left: 15px; padding: 15px; float: left; display: block; height: 22px; width: 22px;" id="spinner"></div>
+    </form>
+-->
+    <style>
+      .gridStyle {
+          border: 1px solid rgb(212,212,212);
+          width: 100%; 
+          height: 330px;
+      }
+    </style>
+    <div ng-controller="MetadataTableImportCtrl">
+      <form id="metadataTableImportForm" enctype="multipart/form-data" action="#" method="post">
+        {% csrf_token %}
+
+        {% verbatim %}
+
+        <input type="file" ng-file-select="onFileSelect($files)"/>
+        <div class="gridStyle" ng-grid="gridOptions"></div>
+        <p>Please provide the following values:</p>
+        <label>Title
+        <input type="text" ng-model="title"/>
+        (Required) name of this data set
+        </label>
+        <label>Source Column Index
+        <select ng-model="sourceColumnIndex"
+                name="source_column_index"
+                ng-required
+                multiple
+                size="{{ metadataHeader.length || 10 }}"
+                ng-options="heading for heading in metadataHeader">
+        </select>
+        (Required) columns to be used for source grouping. Values in the columns indicated by the list of columns provided for the Source Column Index will be concatenated to create an identifier for the "source" of the sample.
+        </label>
+        <label>Data File Column
+        <select ng-model="dataFileColumn"
+                name="data_file_column"
+                ng-required
+                ng-options="heading for heading in metadataHeader">
+        </select>
+        (Required) column that contains the path to or the URL of the file associated with this sample
+        </label>
+        <label>Auxiliary File Column
+        <select ng-model="auxFileColumn"
+                name="aux_file_column"
+                ng-options="heading for heading in metadataHeader">
+        </select>
+        Column that contains the path to an auxiliary file (e.g. for visualization) associated with the input file
+        </label>
+        <label>Base path
+        <select ng-model="basePath"
+                name="base_path"
+                ng-options="heading for heading in metadataHeader">
+        </select>
+        base path of your data file paths if using relative locations
+        </label>
+        <label>Annotation column
+        <select ng-model="annotationColumn"
+                name="annotation_column"
+                ng-options="heading for heading in metadataHeader">
+        </select>
+        column containing boolean flag to indicate whether the data file in this row should be treated as an annotation file
+        </label>
+        <label>Genome build column
+        <select ng-model="genomeBuildColumn"
+                name="genome_build_column"
+                ng-options="heading for heading in metadataHeader">
+        </select>
+        column containing genome build IDs
+        </label>
+        <label>Data file permanent
+          <input type="checkbox" ng-model="dataFilePermanent"/>
+          flag for whether data files should be permanently on the system or cached
+        </label>
+        <label>Is public
+          <input type="checkbox" ng-model="isPublic"/>
+          flag for whether this data set will be visible to the public
+        </label>
+<!--
+        sourceColumnIndex: {{ sourceColumnIndex }}
+        length: {{ metadataHeader.length || 10 }}
+-->
+        {% endverbatim %}
+        <input style="float: left;" class="btn" id="import-button" type="submit" value="Import"/>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+  <script type="text/javascript">
+    // Check for the various File API support.
+    if (window.File && window.FileReader && window.FileList && window.Blob) {
+      // Great success! All the File APIs are supported.
+    } else {
+      alert('The File APIs are not fully supported in this browser.');
+    }
+  </script>
+  <script type="text/javascript" src="{{ STATIC_URL }}vendor/ng-file-upload/angular-file-upload.min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}vendor/d3/d3.min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}vendor/ng-grid/build/ng-grid.min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/metadata_table_import.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/spin/spin.min.js"></script>
+
+  <script type="text/javascript">
+      var opts = {
+      lines: 13, // The number of lines to draw
+      length: 4, // The length of each line
+      width: 2, // The line thickness
+      radius: 6, // The radius of the inner circle
+      corners: 1, // Corner roundness (0..1)
+      rotate: 0, // The rotation offset
+      color: '#000', // #rgb or #rrggbb
+      speed: 1, // Rounds per second
+      trail: 60, // Afterglow percentage
+      shadow: false, // Whether to render a shadow
+      hwaccel: false, // Whether to use hardware acceleration
+      className: 'spinner', // The CSS class to assign to the spinner
+      zIndex: 2e9, // The z-index (defaults to 2000000000)
+      top: 'auto', // Top position relative to parent in px
+      left: 'auto' // Left position relative to parent in px
+      };
+
+      $("#import-button").on( "click", function() {
+        $("#import-errors").html( "")
+        var target = document.getElementById('spinner');    
+        //var spinner = new Spinner(opts).spin(target);
+
+      var spinner = new Spinner(opts).spin();
+      target.appendChild(spinner.el);       
+        $("#import-message").html( "Running ...")
+      });
+  </script>
+{% endblock %}

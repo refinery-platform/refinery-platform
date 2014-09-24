@@ -10,7 +10,7 @@ from urlparse import urlparse
 from django import forms
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
-from django.shortcuts import render_to_response
+from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
 from haystack.query import SearchQuerySet
@@ -124,7 +124,7 @@ class ProcessISATabView(View):
     '''Process ISA-Tab archive
 
     '''
-    template_name = 'data_set_manager/import.html'
+    template_name = 'data_set_manager/isa-tab-import.html'
     success_view_name = 'data_set'
     isa_tab_cookie_name = 'isa_tab_url'
 
@@ -250,3 +250,31 @@ def handle_uploaded_file(source_file, target_path):
     with open(target_path, 'wb+') as destination:
         for chunk in source_file.chunks():
             destination.write(chunk)
+
+
+class ImportMetadataTableForm(forms.Form):
+    """Metadata table file upload form
+
+    """
+    metadata_file = forms.FileField(label='Metadata file',
+                                    required=True,
+                                    error_messages={'required': 'Please select a file'})
+
+
+class ProcessMetadataTableView(View):
+    """Create a new dataset from uploaded metadata table.
+
+    """
+    template_name = 'data_set_manager/metadata-table-import.html'
+
+    def get(self, request, *args, **kwargs):
+        form = ImportMetadataTableForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = ImportMetadataTableForm(request.POST, request.FILES)
+        if form.is_valid():
+            f = form.cleaned_data['metadata_file']
+            # process the uploaded file
+        else:   # submitted form is not valid
+            return render(request, self.template_name, {'form': form})

@@ -7,7 +7,8 @@ Created on May 11, 2012
 from django.conf.urls.defaults import patterns, url
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from data_set_manager.views import ImportISATabView, ProcessISATabView
+from data_set_manager.views import ImportISATabView, ProcessISATabView,\
+    ProcessMetadataTableView
 
 
 urlpatterns = patterns('data_set_manager.views',
@@ -27,4 +28,7 @@ urlpatterns = patterns('data_set_manager.views',
     url(r'^import/isa-tab-form/$', login_required(ProcessISATabView.as_view()),
         name='process_isa_tab'),
     url(r'^contents/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', "contents", name="data_set_manager_contents" ),
+    url(r'^import/metadata-table-form/$',
+        login_required(ProcessMetadataTableView.as_view()),
+        name='process_metadata_table'),
 )
