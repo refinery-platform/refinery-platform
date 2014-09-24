@@ -146,6 +146,7 @@ def fix_last_col(file):
     file: name of file to fix
 
     """
+    #TODO: exception handling for file operations (IOError)
     logger.info("trying to fix the last column if necessary")
     reader = csv.reader(open(file, 'rU'), dialect='excel-tab')
     tempfilename = tempfile.NamedTemporaryFile().name
