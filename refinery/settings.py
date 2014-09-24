@@ -308,8 +308,11 @@ SERVER_EMAIL = 'root@localhost'
 # Disable migrations when running unittests and use syncdb instead
 SOUTH_TESTS_MIGRATE = False
 
-# allow 4 concurrent Celery tasks (default is the number of CPU cores)
+# allow 4 concurrent Celery tasks (minimum required to avoid problems with monitoring tasks)
 CELERYD_CONCURRENCY = 4
+
+# for system stability
+CELERYD_MAX_TASKS_PER_CHILD = 100
 
 # === Refinery Settings ===
 
