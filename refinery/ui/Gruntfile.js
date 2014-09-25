@@ -29,7 +29,6 @@ module.exports = function(grunt) {
         'tipsy/src/javascripts/jquery.tipsy.js',
         'd3/d3.min.js',
         'c3/c3.min.js',
-        'resumablejs/resumable.js',
         'ng-file-upload/angular-file-upload.min.js',
         'ng-grid/build/ng-grid.min.js',
       ],
