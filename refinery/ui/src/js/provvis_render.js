@@ -43,6 +43,81 @@ var provvisRender = function () {
      */
     var updateNodeDoi = function () {
         d3.selectAll(".node, .saNode, .aNode").select(".nodeDoiLabel").text(function (d) {return d.doi.doiWeightedSum;});
+
+        d3.selectAll(".node, .saNode, .aNode").each( function (d) {
+
+            /* Doi-dependant node glyph scaling factor. */
+            var scaleFactor = 1;
+
+            switch(true) {
+                case (-2 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.25):
+                    scaleFactor = 1;
+                    break;
+                case (0.25 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.5):
+                    scaleFactor = 1.5;
+                    break;
+                case (0.5 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.75):
+                    scaleFactor = 2;
+                    break;
+                case (0.75 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 2):
+                    scaleFactor = 3;
+                    break;
+            }
+
+            /* Update node size. */
+            if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {
+                if (d.nodeType === "raw" || d.nodeType === "intermediate" || d.nodeType === "stored") {
+                    d3.select("#nodeId-" + d.autoId).select("circle")
+                        .transition()
+                        .duration(500)
+                        .attr("r", function (d) {return d.nodeType === "intermediate" ? 3*scaleFactor*vis.radius/4 : scaleFactor*vis.radius;});
+                } else if (d.nodeType === "special") {
+                    d3.select("#nodeId-" + d.autoId)
+                        .select("rect")
+                        .transition()
+                        .duration(500)
+                        .attr("transform", "translate(" + (-3*scaleFactor*vis.radius/4) + "," + (-3*scaleFactor*vis.radius/4) + ")")
+                        .attr("width", 6*scaleFactor*vis.radius/4)
+                        .attr("height", 6*scaleFactor*vis.radius/4);
+                } else if (d.nodeType === "dt") {
+                    d3.select("#nodeId-" + d.autoId)
+                        .select("rect")
+                        .transition()
+                        .duration(500)
+                        .attr("transform", function () {
+                            return "translate(" + (-scaleFactor*vis.radius/2) + "," + (-scaleFactor*vis.radius/2) + ")" +
+                                "rotate(45 " + (scaleFactor*vis.radius/2) + "," + (scaleFactor*vis.radius/2) + ")";
+                        })
+                        .attr("width", scaleFactor*vis.radius)
+                        .attr("height", scaleFactor*vis.radius);
+                }
+            } else if (d.nodeType === "subanalysis") {
+
+                d3.select("#nodeId-" + d.autoId).select("polygon")
+                    .transition()
+                    .duration(500)
+                    .attr("points", function () {
+                        return "0," + (-vis.radius) + " " +
+                            (vis.radius) + "," + (-vis.radius / 2) + " " +
+                            (vis.radius) + "," + (vis.radius / 2) + " " +
+                            "0" + "," + (vis.radius) + " " +
+                            (-vis.radius) + "," + (vis.radius / 2) + " " +
+                            (-vis.radius) + "," + (-vis.radius / 2);
+                    });
+            } else if (d.nodeType === "analysis") {
+                d3.select("#nodeId-" + d.autoId).select("polygon")
+                    .transition()
+                    .duration(500)
+                    .attr("points", function () {
+                        return "0," + (-2 * vis.radius) + " " +
+                            (2 * vis.radius) + "," + (-vis.radius) + " " +
+                            (2 * vis.radius) + "," + (vis.radius) + " " +
+                            "0" + "," + (2 * vis.radius) + " " +
+                            (-2 * vis.radius) + "," + (vis.radius) + " " +
+                            (-2 * vis.radius) + "," + (-vis.radius);
+                    });
+            }
+        });
     };
 
     /**
@@ -908,112 +983,21 @@ var provvisRender = function () {
         /* Update node size. */
         if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {
             if (d.selected) {
-                if (d.nodeType === "raw" || d.nodeType === "intermediate" || d.nodeType === "stored") {
-                    d3.select("#nodeId-" + d.autoId)
-                        .select("circle")
-                        .transition()
-                        .duration(500)
-                        .attr("r", function (d) {return d.nodeType === "intermediate" ? 6*vis.radius/4 : vis.radius*2;});
-                } else if (d.nodeType === "special") {
-                    d3.select("#nodeId-" + d.autoId)
-                        .select("rect")
-                        .transition()
-                        .duration(500)
-                        .attr("transform", "translate(" + (-vis.radius * 2) + "," + (-vis.radius * 2) + ")")
-                        .attr("width", vis.radius * 4)
-                        .attr("height", vis.radius * 4);
-                } else if (d.nodeType === "dt") {
-                    d3.select("#nodeId-" + d.autoId)
-                        .select("rect")
-                        .transition()
-                        .duration(500)
-                        .attr("transform", function () {
-                            return "translate(" + (-vis.radius) + "," + (-vis.radius) + ")" +
-                                "rotate(45 " + (vis.radius) + "," + (vis.radius) + ")";
-                        })
-                        .attr("width", vis.radius * 2)
-                        .attr("height", vis.radius * 2);
-                }
                 d3.select("#nodeId-" + d.autoId).attr("class", "node " + d.nodeType + "Node selectedNode");
             } else {
-                if (d.nodeType === "raw" || d.nodeType === "intermediate" || d.nodeType === "stored") {
-                    d3.select("#nodeId-" + d.autoId).select("circle")
-                        .transition()
-                        .duration(500)
-                        .attr("r", function (d) {return d.nodeType === "intermediate" ? 3*vis.radius/4 : vis.radius;});
-                } else if (d.nodeType === "special") {
-                    d3.select("#nodeId-" + d.autoId)
-                        .select("rect")
-                        .transition()
-                        .duration(500)
-                        .attr("transform", "translate(" + (-3*vis.radius/4) + "," + (-3*vis.radius/4) + ")")
-                        .attr("width", 6*vis.radius/4)
-                        .attr("height", 6*vis.radius/4);
-                } else if (d.nodeType === "dt") {
-                    d3.select("#nodeId-" + d.autoId)
-                        .select("rect")
-                        .transition()
-                        .duration(500)
-                        .attr("transform", function () {
-                            return "translate(" + (-vis.radius/2) + "," + (-vis.radius/2) + ")" +
-                                "rotate(45 " + (vis.radius/2) + "," + (vis.radius/2) + ")";
-                        })
-                        .attr("width", vis.radius)
-                        .attr("height", vis.radius);
-                }
                 d3.select("#nodeId-" + d.autoId).attr("class", "node " + d.nodeType + "Node");
             }
         } else if (d.nodeType === "subanalysis") {
             if (d.selected) {
-                d3.select("#nodeId-" + d.autoId).select("polygon")
-                    .transition()
-                    .duration(500)
-                    .attr("points", function () {
-                        return "0," + (-vis.radius * 2) + " " +
-                            (vis.radius * 2) + "," + (-vis.radius) + " " +
-                            (vis.radius * 2) + "," + (vis.radius) + " " +
-                            "0" + "," + (vis.radius * 2) + " " +
-                            (-vis.radius * 2) + "," + (vis.radius) + " " +
-                            (-vis.radius * 2) + "," + (-vis.radius);
-                    }).attr("class", "saNode selectedNode");
+                d3.select("#nodeId-" + d.autoId).attr("class", "saNode selectedNode");
             } else {
-                d3.select("#nodeId-" + d.autoId).select("polygon")
-                    .transition()
-                    .duration(500)
-                    .attr("points", function () {
-                        return "0," + (-vis.radius) + " " +
-                            (vis.radius) + "," + (-vis.radius / 2) + " " +
-                            (vis.radius) + "," + (vis.radius / 2) + " " +
-                            "0" + "," + (vis.radius) + " " +
-                            (-vis.radius) + "," + (vis.radius / 2) + " " +
-                            (-vis.radius) + "," + (-vis.radius / 2);
-                    }).attr("class", "saNode");
+                d3.select("#nodeId-" + d.autoId).attr("class", "saNode");
             }
         } else if (d.nodeType === "analysis") {
             if (d.selected) {
-                d3.select("#nodeId-" + d.autoId).select("polygon")
-                    .transition()
-                    .duration(500)
-                    .attr("points", function () {
-                        return "0," + (-4 * vis.radius) + " " +
-                            (4 * vis.radius) + "," + (-vis.radius * 2) + " " +
-                            (4 * vis.radius) + "," + (vis.radius * 2) + " " +
-                            "0" + "," + (4 * vis.radius) + " " +
-                            (-4 * vis.radius) + "," + (vis.radius * 2) + " " +
-                            (-4 * vis.radius) + "," + (-vis.radius * 2);
-                    }).attr("class", "aNode selectedNode");
+                d3.select("#nodeId-" + d.autoId).attr("class", "aNode selectedNode");
             } else {
-                d3.select("#nodeId-" + d.autoId).select("polygon")
-                    .transition()
-                    .duration(500)
-                    .attr("points", function () {
-                        return "0," + (-2 * vis.radius) + " " +
-                            (2 * vis.radius) + "," + (-vis.radius) + " " +
-                            (2 * vis.radius) + "," + (vis.radius) + " " +
-                            "0" + "," + (2 * vis.radius) + " " +
-                            (-2 * vis.radius) + "," + (vis.radius) + " " +
-                            (-2 * vis.radius) + "," + (-vis.radius);
-                    }).attr("class", "aNode");
+                d3.select("#nodeId-" + d.autoId).attr("class", "aNode");
             }
         }
 
