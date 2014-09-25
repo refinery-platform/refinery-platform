@@ -42,14 +42,16 @@ var provvisRender = function () {
      * On doi change, update node doi labels.
      */
     var updateNodeDoi = function () {
-        d3.selectAll(".node, .saNode, .aNode").select(".nodeDoiLabel").text(function (d) {return d.doi.doiWeightedSum;});
+        d3.selectAll(".node, .saNode, .aNode").select(".nodeDoiLabel").text(function (d) {
+            return d.doi.doiWeightedSum;
+        });
 
-        d3.selectAll(".node, .saNode, .aNode").each( function (d) {
+        d3.selectAll(".node, .saNode, .aNode").each(function (d) {
 
             /* Doi-dependant node glyph scaling factor. */
             var scaleFactor = 1;
 
-            switch(true) {
+            switch (true) {
                 case (-2 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.25):
                     scaleFactor = 1;
                     break;
@@ -70,26 +72,28 @@ var provvisRender = function () {
                     d3.select("#nodeId-" + d.autoId).select("circle")
                         .transition()
                         .duration(500)
-                        .attr("r", function (d) {return d.nodeType === "intermediate" ? 3*scaleFactor*vis.radius/4 : scaleFactor*vis.radius;});
+                        .attr("r", function (d) {
+                            return d.nodeType === "intermediate" ? 3 * scaleFactor * vis.radius / 4 : scaleFactor * vis.radius;
+                        });
                 } else if (d.nodeType === "special") {
                     d3.select("#nodeId-" + d.autoId)
                         .select("rect")
                         .transition()
                         .duration(500)
-                        .attr("transform", "translate(" + (-3*scaleFactor*vis.radius/4) + "," + (-3*scaleFactor*vis.radius/4) + ")")
-                        .attr("width", 6*scaleFactor*vis.radius/4)
-                        .attr("height", 6*scaleFactor*vis.radius/4);
+                        .attr("transform", "translate(" + (-3 * scaleFactor * vis.radius / 4) + "," + (-3 * scaleFactor * vis.radius / 4) + ")")
+                        .attr("width", 6 * scaleFactor * vis.radius / 4)
+                        .attr("height", 6 * scaleFactor * vis.radius / 4);
                 } else if (d.nodeType === "dt") {
                     d3.select("#nodeId-" + d.autoId)
                         .select("rect")
                         .transition()
                         .duration(500)
                         .attr("transform", function () {
-                            return "translate(" + (-scaleFactor*vis.radius/2) + "," + (-scaleFactor*vis.radius/2) + ")" +
-                                "rotate(45 " + (scaleFactor*vis.radius/2) + "," + (scaleFactor*vis.radius/2) + ")";
+                            return "translate(" + (-scaleFactor * vis.radius / 2) + "," + (-scaleFactor * vis.radius / 2) + ")" +
+                                "rotate(45 " + (scaleFactor * vis.radius / 2) + "," + (scaleFactor * vis.radius / 2) + ")";
                         })
-                        .attr("width", scaleFactor*vis.radius)
-                        .attr("height", scaleFactor*vis.radius);
+                        .attr("width", scaleFactor * vis.radius)
+                        .attr("height", scaleFactor * vis.radius);
                 }
             } else if (d.nodeType === "subanalysis") {
 
@@ -321,7 +325,9 @@ var provvisRender = function () {
      * @param vis The provenance visualization root object.
      */
     var filterAnalysesByTime = function (timeThreshold, vis) {
-        var selAnalyses = vis.graph.aNodes.filter( function (an) {return parseISOTimeFormat(an.start) >= timeThreshold;});
+        var selAnalyses = vis.graph.aNodes.filter(function (an) {
+            return parseISOTimeFormat(an.start) >= timeThreshold;
+        });
 
         /* Set (un)filtered analyses. */
         vis.graph.aNodes.forEach(function (an) {
@@ -424,10 +430,10 @@ var provvisRender = function () {
 
         svg.append("rect")
             .attr("id", "supportView")
-            .attr("x",0)
-            .attr("y",0)
+            .attr("x", 0)
+            .attr("y", 0)
             .attr("width", 100)
-            .attr("height",100)
+            .attr("height", 100)
             .style({"fill": "url(#gradientGrayscale)", "stroke": "white", "stroke-width": "1px"});
 
         svg.append("line")
@@ -438,16 +444,16 @@ var provvisRender = function () {
             .style({"stroke": "#136382", "stroke-width": "2px"});
 
         var gradientScale = d3.scale.linear()
-            .domain([0,100])
+            .domain([0, 100])
             .range([Date.parse(timeScale.domain()[0]), Date.parse(timeScale.domain()[1])]);
 
-        vis.graph.aNodes.forEach( function (an) {
-           svg.append("line")
-               .attr("x1", gradientScale.invert(parseISOTimeFormat(an.start)))
-               .attr("y1", 70)
-               .attr("x2", gradientScale.invert(parseISOTimeFormat(an.start)))
-               .attr("y2", 100)
-               .style({"stroke": "#ed7407", "stroke-width": "1.5px"});
+        vis.graph.aNodes.forEach(function (an) {
+            svg.append("line")
+                .attr("x1", gradientScale.invert(parseISOTimeFormat(an.start)))
+                .attr("y1", 70)
+                .attr("x2", gradientScale.invert(parseISOTimeFormat(an.start)))
+                .attr("y2", 100)
+                .style({"stroke": "#ed7407", "stroke-width": "1.5px"});
         });
 
         d3.select("#supportView").on("click", function () {
@@ -463,7 +469,7 @@ var provvisRender = function () {
         });
 
         $("#prov-support-view-reset-time").click(function () {
-           filterAnalysesByTime(Date.parse(timeScale.domain()[0]), vis);
+            filterAnalysesByTime(Date.parse(timeScale.domain()[0]), vis);
             d3.select(this.parentNode).select("line")
                 .attr("x1", 0)
                 .attr("x2", 0);
@@ -769,19 +775,21 @@ var provvisRender = function () {
                     if (d.nodeType === "raw" || d.nodeType === "intermediate" || d.nodeType === "stored") {
                         d3.select(this)
                             .append("circle")
-                            .attr("r", function (d) {return d.nodeType === "intermediate" ? 3*vis.radius/4 : vis.radius;});
+                            .attr("r", function (d) {
+                                return d.nodeType === "intermediate" ? 3 * vis.radius / 4 : vis.radius;
+                            });
                     } else {
                         if (d.nodeType === "special") {
                             d3.select(this)
                                 .append("rect")
-                                .attr("transform", "translate(" + ( -3*vis.radius/4) + "," + (-3*vis.radius/4) + ")")
-                                .attr("width", 6*vis.radius/4)
-                                .attr("height", 6*vis.radius/4);
+                                .attr("transform", "translate(" + ( -3 * vis.radius / 4) + "," + (-3 * vis.radius / 4) + ")")
+                                .attr("width", 6 * vis.radius / 4)
+                                .attr("height", 6 * vis.radius / 4);
                         } else if (d.nodeType === "dt") {
                             d3.select(this)
                                 .append("rect")
                                 .attr("transform", function () {
-                                    return "translate(" + (-vis.radius/2) + "," + (-vis.radius/2) + ")" + "rotate(45 " + (vis.radius/2) + "," + (vis.radius/2) + ")";
+                                    return "translate(" + (-vis.radius / 2) + "," + (-vis.radius / 2) + ")" + "rotate(45 " + (vis.radius / 2) + "," + (vis.radius / 2) + ")";
                                 })
                                 .attr("width", vis.radius * 1)
                                 .attr("height", vis.radius * 1);
@@ -1689,7 +1697,7 @@ var provvisRender = function () {
     var runRenderPrivate = function (provVis) {
         /* Save vis object to module scope. */
         vis = provVis;
-        cell = {width: vis.radius * 3, height: vis.radius * 3};
+        cell = {width: vis.radius * 5, height: vis.radius * 5};
 
         analysisWorkflowMap = vis.graph.analysisWorkflowMap;
 
@@ -1797,9 +1805,9 @@ var provvisRender = function () {
                 n.parent.doi.filteredChanged();
                 n.parent.parent.doi.filteredChanged();
                 /*n.parent.children.forEach(function (cn) {
-                    console.log(cn);
-                    cn.doi.filteredChanged();
-                });*/
+                 console.log(cn);
+                 cn.doi.filteredChanged();
+                 });*/
             });
             updateNodeDoi();
         }
