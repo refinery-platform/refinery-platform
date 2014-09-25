@@ -101,24 +101,24 @@ var provvisRender = function () {
                     .transition()
                     .duration(500)
                     .attr("points", function () {
-                        return "0," + (-vis.radius) + " " +
-                            (vis.radius) + "," + (-vis.radius / 2) + " " +
-                            (vis.radius) + "," + (vis.radius / 2) + " " +
-                            "0" + "," + (vis.radius) + " " +
-                            (-vis.radius) + "," + (vis.radius / 2) + " " +
-                            (-vis.radius) + "," + (-vis.radius / 2);
+                        return "0," + (-scaleFactor * vis.radius) + " " +
+                            (scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius / 2) + " " +
+                            (scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius / 2) + " " +
+                            "0" + "," + (scaleFactor * vis.radius) + " " +
+                            (-scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius / 2) + " " +
+                            (-scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius / 2);
                     });
             } else if (d.nodeType === "analysis") {
                 d3.select("#nodeId-" + d.autoId).select("polygon")
                     .transition()
                     .duration(500)
                     .attr("points", function () {
-                        return "0," + (-2 * vis.radius) + " " +
-                            (2 * vis.radius) + "," + (-vis.radius) + " " +
-                            (2 * vis.radius) + "," + (vis.radius) + " " +
-                            "0" + "," + (2 * vis.radius) + " " +
-                            (-2 * vis.radius) + "," + (vis.radius) + " " +
-                            (-2 * vis.radius) + "," + (-vis.radius);
+                        return "0," + (-2 * scaleFactor * vis.radius) + " " +
+                            (2 * scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius) + " " +
+                            (2 * scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius) + " " +
+                            "0" + "," + (2 * scaleFactor * vis.radius) + " " +
+                            (-2 * scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius) + " " +
+                            (-2 * scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius);
                     });
             }
         });
