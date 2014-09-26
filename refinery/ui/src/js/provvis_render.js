@@ -124,31 +124,29 @@ var provvisRender = function () {
             }
         });
 
-        /* Collapse into subanalysis. */
+        /* Collapse into analysis. */
         d3.selectAll(".aNode").each(function (an) {
             var keyStroke;
 
             /* Expand. */
-            if (an.doi.doiWeightedSum >= (2 / 3)) {
+            if (an.doi.doiWeightedSum >= (1 / 2)) {
                 keyStroke = {ctrl: true, shift: false};
                 /* Collapse. */
-            } else if (an.doi.doiWeightedSum <= (1 / 3)) {
+            } else if (an.doi.doiWeightedSum < (1 / 2)) {
                 keyStroke = {ctrl: false, shift: true};
             }
             handleCollapseExpandNode(an, keyStroke);
         });
-
-
 
         /* Collapse into subanalysis. */
         d3.selectAll(".saNode").each(function (san) {
             var keyStroke;
 
             /* Expand. */
-            if (san.doi.doiWeightedSum >= (2 / 3)) {
+            if (san.doi.doiWeightedSum >= (1 / 2)) {
                 keyStroke = {ctrl: true, shift: false};
                 /* Collapse. */
-            } else if (san.doi.doiWeightedSum <= (1 / 3)) {
+            } else if (san.doi.doiWeightedSum < (1 / 2)) {
                 keyStroke = {ctrl: false, shift: true};
             }
             handleCollapseExpandNode(san, keyStroke);
@@ -555,6 +553,14 @@ var provvisRender = function () {
 
         n.highlighted = true;
         n.doi.highlightedChanged();
+        n.children.values().forEach(function (cn) {
+            cn.highlighted = true;
+            cn.doi.highlightedChanged();
+            cn.children.values().forEach(function (ccn) {
+                ccn.highlighted = true;
+                ccn.doi.highlightedChanged();
+            });
+        });
 
         /* Get svg link element, and for each predecessor call recursively. */
         n.predLinks.values().forEach(function (l) {
@@ -575,6 +581,14 @@ var provvisRender = function () {
 
         n.highlighted = true;
         n.doi.highlightedChanged();
+        n.children.values().forEach(function (cn) {
+            cn.highlighted = true;
+            cn.doi.highlightedChanged();
+            cn.children.values().forEach(function (ccn) {
+                ccn.highlighted = true;
+                ccn.doi.highlightedChanged();
+            });
+        });
 
         /* Get svg link element, and for each successor call recursively. */
         n.succLinks.values().forEach(function (l) {
@@ -1016,7 +1030,7 @@ var provvisRender = function () {
             d.doi.selectedChanged();
             if (d.children.values()) {
                 d.children.values().forEach(function (cn) {
-                   cn.selected = false;
+                    cn.selected = false;
                     cn.doi.selectedChanged();
                     if (cn.children.values()) {
                         cn.children.values().forEach(function (ccn) {
