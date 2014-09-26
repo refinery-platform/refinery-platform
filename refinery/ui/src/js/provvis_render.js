@@ -46,6 +46,7 @@ var provvisRender = function () {
             return d.doi.doiWeightedSum;
         });
 
+        /* Glyph scale. */
         d3.selectAll(".node, .saNode, .aNode").each(function (d) {
 
             /* Doi-dependant node glyph scaling factor. */
@@ -66,7 +67,7 @@ var provvisRender = function () {
                     break;
             }
 
-            /* Update node size. */
+            /* Update node glyph size. */
             if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {
                 if (d.nodeType === "raw" || d.nodeType === "intermediate" || d.nodeType === "stored") {
                     d3.select("#nodeId-" + d.autoId).select("circle")
@@ -121,6 +122,36 @@ var provvisRender = function () {
                             (-2 * scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius);
                     });
             }
+        });
+
+        /* Collapse into subanalysis. */
+        d3.selectAll(".aNode").each(function (an) {
+            var keyStroke;
+
+            /* Expand. */
+            if (an.doi.doiWeightedSum >= (2 / 3)) {
+                keyStroke = {ctrl: true, shift: false};
+                /* Collapse. */
+            } else if (an.doi.doiWeightedSum <= (1 / 3)) {
+                keyStroke = {ctrl: false, shift: true};
+            }
+            handleCollapseExpandNode(an, keyStroke);
+        });
+
+
+
+        /* Collapse into subanalysis. */
+        d3.selectAll(".saNode").each(function (san) {
+            var keyStroke;
+
+            /* Expand. */
+            if (san.doi.doiWeightedSum >= (2 / 3)) {
+                keyStroke = {ctrl: true, shift: false};
+                /* Collapse. */
+            } else if (san.doi.doiWeightedSum <= (1 / 3)) {
+                keyStroke = {ctrl: false, shift: true};
+            }
+            handleCollapseExpandNode(san, keyStroke);
         });
     };
 
@@ -815,6 +846,7 @@ var provvisRender = function () {
 
     /**
      * Sets the visibility of links and (a)nodes when collapsing or expanding analyses.
+     * @param d Node.
      * @param keyStroke Keystroke being pressed at mouse click.
      */
     var handleCollapseExpandNode = function (d, keyStroke) {
@@ -981,14 +1013,41 @@ var provvisRender = function () {
         /* Update selection. */
         if (d.selected) {
             d.selected = false;
+            d.doi.selectedChanged();
+            if (d.children.values()) {
+                d.children.values().forEach(function (cn) {
+                   cn.selected = false;
+                    cn.doi.selectedChanged();
+                    if (cn.children.values()) {
+                        cn.children.values().forEach(function (ccn) {
+                            ccn.selected = false;
+                            ccn.doi.selectedChanged();
+                        });
+                    }
+                });
+            }
         } else {
             d.selected = true;
+            d.doi.selectedChanged();
+            if (d.children.values()) {
+                d.children.values().forEach(function (cn) {
+                    cn.selected = true;
+                    cn.doi.selectedChanged();
+                    if (cn.children.values()) {
+                        cn.children.values().forEach(function (ccn) {
+                            ccn.selected = true;
+                            ccn.doi.selectedChanged();
+                        });
+                    }
+                });
+            }
         }
 
-        d.doi.selectedChanged();
+        console.log(d.children.values());
+
         updateNodeDoi();
 
-        /* Update node size. */
+        /* Update node glyph stroke. */
         if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {
             if (d.selected) {
                 d3.select("#nodeId-" + d.autoId).attr("class", "node " + d.nodeType + "Node selectedNode");
