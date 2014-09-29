@@ -930,7 +930,7 @@ var provvisRender = function () {
             hideChildNodes(d.parent);
 
             /* Set saBBox visibility. */
-            if (d.nodeType === "subanalysis" ) {
+            if (d.nodeType === "subanalysis") {
                 d3.select("#saBBoxId-" + d.autoId).style("display", "none");
             } else {
                 d3.select("#saBBoxId-" + d.parent.autoId).style("display", "none");
@@ -1231,6 +1231,7 @@ var provvisRender = function () {
                 createHTMLKeyValuePair("Year", d.attributes.get("Year")) + "<br>" +
                 createHTMLKeyValuePair("Month", d.attributes.get("Month")) + "<br>" +
                 createHTMLKeyValuePair("Type", d.fileType), event);
+                d3.select(this).classed("mouseoverNode", true);
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("Node", d.uuid) + "<br>" +
                 createHTMLKeyValuePair("Name", d.name) + "<br>" +
@@ -1241,6 +1242,7 @@ var provvisRender = function () {
                 createHTMLKeyValuePair("Type", d.fileType), event);
         }).on("mouseout", function () {
             hideTooltip();
+            d3.select(this).classed("mouseoverNode", false);
         });
 
         /* Subanalysis tooltips. */
@@ -1248,7 +1250,7 @@ var provvisRender = function () {
             showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
                 "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);
-
+            d3.select(this).classed("mouseoverNode", true);
             d3.select(this.parentNode).select(".saMenu").style("display", "inline");
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
@@ -1258,6 +1260,7 @@ var provvisRender = function () {
             d3.select(this.parentNode).select(".saMenu").style("display", "inline");
         }).on("mouseout", function () {
             hideTooltip();
+            d3.select(this).classed("mouseoverNode", false);
             /*d3.select(this.parentNode).select(".saMenu").style("display", "none");*/
         });
 
@@ -1266,12 +1269,14 @@ var provvisRender = function () {
             showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
                 createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);
+            d3.select(this).classed("mouseoverNode", true);
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
                 createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);
         }).on("mouseout", function () {
             hideTooltip();
+            d3.select(this).classed("mouseoverNode", false);
         });
 
         /* Subanalysis arc menu. */
@@ -1354,16 +1359,24 @@ var provvisRender = function () {
     var drawBoundingBoxes = function () {
 
         /* Create subanalysis bounding box objects. */
-        vis.graph.saNodes.forEach( function (san) {
-            var minX = d3.min(san.children.values(), function (d) {return d.x -cell.width/2+2;}),
-                maxX = d3.max(san.children.values(), function (d) {return d.x+cell.width/2-2;}),
-                minY = d3.min(san.children.values(), function (d) {return d.y-cell.height/2+2;}),
-                maxY = d3.max(san.children.values(), function (d) {return d.y+cell.height/2-2;});
+        vis.graph.saNodes.forEach(function (san) {
+            var minX = d3.min(san.children.values(), function (d) {
+                    return d.x - cell.width / 2 + 2;
+                }),
+                maxX = d3.max(san.children.values(), function (d) {
+                    return d.x + cell.width / 2 - 2;
+                }),
+                minY = d3.min(san.children.values(), function (d) {
+                    return d.y - cell.height / 2 + 2;
+                }),
+                maxY = d3.max(san.children.values(), function (d) {
+                    return d.y + cell.height / 2 - 2;
+                });
 
             saBBoxes.set(san.id, {minX: minX, maxX: maxX, minY: minY, maxY: maxY});
         });
 
-        vis.canvas.append("g").classed({"saBBoxes": true}).style("display", "inline")
+        saBBox = vis.canvas.append("g").classed({"saBBoxes": true}).style("display", "inline")
             .selectAll(".saBBox")
             .data(saBBoxes.keys())
             .enter().append("rect")
@@ -1371,11 +1384,17 @@ var provvisRender = function () {
                 return "translate(" + (saBBoxes.get(d).minX) + "," + (saBBoxes.get(d).minY) + ")";
             })
             .attr("class", "saBBox")
-            .attr("id", function (d) {return "saBBoxId-" + vis.graph.saNodes[d].autoId;})
-            .attr("width", function (d) {return saBBoxes.get(d).maxX - saBBoxes.get(d).minX;})
-            .attr("height", function (d) {return saBBoxes.get(d).maxY - saBBoxes.get(d).minY;})
-            .attr("rx", cell.width/3)
-            .attr("ry", cell.height/3);
+            .attr("id", function (d) {
+                return "saBBoxId-" + vis.graph.saNodes[d].autoId;
+            })
+            .attr("width", function (d) {
+                return saBBoxes.get(d).maxX - saBBoxes.get(d).minX;
+            })
+            .attr("height", function (d) {
+                return saBBoxes.get(d).maxY - saBBoxes.get(d).minY;
+            })
+            .attr("rx", cell.width / 3)
+            .attr("ry", cell.height / 3);
     };
 
     /**
@@ -1695,23 +1714,31 @@ var provvisRender = function () {
         handleTooltips();
 
         /* Collapse on bounding box click.*/
-        d3.selectAll(".saBBox").on("click", function (d) {
+        saBBox.on("click", function (d) {
             var keyStroke;
             keyStroke = {ctrl: false, shift: true};
             handleCollapseExpandNode(vis.graph.saNodes[d].children.values()[0], keyStroke);
 
-            /* Unselect. */
+            /* Deselect. */
             vis.graph.saNodes[d].selected = false;
             vis.graph.saNodes[d].doi.selectedChanged();
             vis.graph.saNodes[d].parent.selected = false;
             vis.graph.saNodes[d].parent.doi.selectedChanged();
-            vis.graph.saNodes[d].children.values().forEach( function (cn) {
-               cn.selected = false;
+            vis.graph.saNodes[d].children.values().forEach(function (cn) {
+                cn.selected = false;
                 cn.doi.selectedChanged();
             });
 
             /* Update node doi. */
             updateNodeDoi();
+        });
+
+        /* On mouseover show strokes. */
+        saBBox.on("mouseover", function () {
+            d3.select(this).classed("mouseoverBBox", true);
+        });
+        saBBox.on("mouseout", function () {
+            d3.select(this).classed("mouseoverBBox", false);
         });
     };
 
@@ -1852,14 +1879,14 @@ var provvisRender = function () {
             /* Draw grid. */
             drawGrid(vis.graph.grid);
 
-            /* TODO: Draw bounding boxes. */
-            drawBoundingBoxes();
-
             /* Draw simple background links for highlighting. */
             drawHighlightingShapes(vis.graph.links);
 
             /* Draw links. */
             drawLinks(vis.graph.links);
+
+            /* Draw bounding boxes. */
+            drawBoundingBoxes();
 
             /* Create analysis group layers. */
             createAnalysisLayers(vis.graph.aNodes);
