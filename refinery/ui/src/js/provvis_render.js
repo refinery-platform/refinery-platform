@@ -1693,6 +1693,26 @@ var provvisRender = function () {
 
         /* Handle tooltips. */
         handleTooltips();
+
+        /* Collapse on bounding box click.*/
+        d3.selectAll(".saBBox").on("click", function (d) {
+            var keyStroke;
+            keyStroke = {ctrl: false, shift: true};
+            handleCollapseExpandNode(vis.graph.saNodes[d].children.values()[0], keyStroke);
+
+            /* Unselect. */
+            vis.graph.saNodes[d].selected = false;
+            vis.graph.saNodes[d].doi.selectedChanged();
+            vis.graph.saNodes[d].parent.selected = false;
+            vis.graph.saNodes[d].parent.doi.selectedChanged();
+            vis.graph.saNodes[d].children.values().forEach( function (cn) {
+               cn.selected = false;
+                cn.doi.selectedChanged();
+            });
+
+            /* Update node doi. */
+            updateNodeDoi();
+        });
     };
 
     /* TODO: Dynamic layout compensation. */
