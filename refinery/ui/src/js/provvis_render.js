@@ -1360,7 +1360,7 @@ var provvisRender = function () {
                 minY = d3.min(san.children.values(), function (d) {return d.y-cell.height/2+2;}),
                 maxY = d3.max(san.children.values(), function (d) {return d.y+cell.height/2-2;});
 
-            saBBoxes.set(san.autoId, {minX: minX, maxX: maxX, minY: minY, maxY: maxY});
+            saBBoxes.set(san.id, {minX: minX, maxX: maxX, minY: minY, maxY: maxY});
         });
 
         vis.canvas.append("g").classed({"saBBoxes": true}).style("display", "inline")
@@ -1371,15 +1371,11 @@ var provvisRender = function () {
                 return "translate(" + (saBBoxes.get(d).minX) + "," + (saBBoxes.get(d).minY) + ")";
             })
             .attr("class", "saBBox")
-            .attr("id", function (d) {return "saBBoxId-" + d;})
+            .attr("id", function (d) {return "saBBoxId-" + vis.graph.saNodes[d].autoId;})
             .attr("width", function (d) {return saBBoxes.get(d).maxX - saBBoxes.get(d).minX;})
             .attr("height", function (d) {return saBBoxes.get(d).maxY - saBBoxes.get(d).minY;})
-            .attr("rx", cell.width/2)
-            .attr("ry", cell.height/2)
-            .attr("fill", "#ffffff")
-            .attr("fill-opacity", 0)
-            .attr("stroke", "green")
-            .style("display", "none");
+            .attr("rx", cell.width/3)
+            .attr("ry", cell.height/3);
     };
 
     /**

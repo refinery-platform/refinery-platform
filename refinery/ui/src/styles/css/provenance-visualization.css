@@ -146,3 +146,10 @@
     font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
     cursor:default;
 }
+
+.saBBox {
+    fill: #aaaaaa;
+    stroke: none;
+    stroke-width: 0px;
+    display: none;
+}
