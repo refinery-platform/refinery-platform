@@ -18,33 +18,51 @@ You may also have to import the right VM image:
     $ vagrant box add precise32 http://files.vagrantup.com/precise32.box
 
 Configure and Load Virtual Machine
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
     $ git clone git@github.com:parklab/refinery-platform.git
     $ cd refinery-platform
     $ vagrant up
-The above step should take about 15 minutes depending on the speed of your machine and
-Internet connection.  If you get an error, simply retry by:
+The above step should take about 15 minutes depending on the speed of your
+machine and Internet connection.  If you get an error, simply retry by:
 
 .. code-block:: bash
 
     $ vagrant provision
 
-Launch Refinery
-~~~~~~~~~~~~~~~
+Open http://192.168.50.50:8000/ in your web browser.
 
-Connect to the initialized VM and start Refinery services:
+Configure Deployment Environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Create a Python virtual environment (optional but recommended, assumes
+virtualenvwrapper is installed):
+
+.. code-block:: bash
+
+    $ mkvirtualenv -a $(pwd) refinery-deployment
+
+Install Fabric:
+
+.. code-block:: bash
+    $ pip install -r deployment/requirements.txt
+
+To pull the latest code and update Refinery installation:
+
+.. code-block:: bash
+
+    $ fab vm update
+
+Refinery Operations on the VM
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Connect to the initialized VM:
 
 .. code-block:: bash
 
     $ vagrant ssh
-    $ cd /vagrant/refinery && workon refinery-platform
-    $ supervisord
-
-Open http://192.168.50.50:8000/ in your web browser.
-
+    $ workon refinery-platform
+    $ ./manage.py
 
 Please see `installation notes
 <https://refinery-platform.readthedocs.org/en/latest/administrator/setup.html>`_

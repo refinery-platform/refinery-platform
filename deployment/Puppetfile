@@ -1,6 +1,9 @@
 forge "http://forge.puppetlabs.com"
 
+mod "puppetlabs/stdlib", "4.3.2"
 mod "puppetlabs/apt", "1.4.2"
 mod "puppetlabs/postgresql", "3.2.0"
 mod "puppetlabs/rabbitmq", "3.1.0"
 mod "stankevich/python", "1.6.2"
+mod "puppetlabs/nodejs", "0.6.1"
+mod "thias/sysctl", "1.0.0"

@@ -45,7 +45,6 @@ docs/_static/*
 .DS_Store
 .pydevproject
 .settings/*
-*.conflict
 refinery/*.pid
 refinery/solr/*/data
 refinery/fabric/
@@ -57,12 +56,14 @@ deployment/.tmp/
 deployment/modules/
 deployment/Puppetfile.lock
 refinery/celerybeat-schedule*
-*.sublime-*
 refinery/ui/app/
 refinery/ui/bower_components/
 refinery/ui/node_modules/
 media/
 static/
+isa-tab/
+*.conflict
+*.sublime-*
 
 # to be moved into refinery/ui/app/
 refinery/static/styles/css/font-awesome*.css

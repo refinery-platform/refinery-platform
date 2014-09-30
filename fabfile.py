@@ -1,9 +1,5 @@
 '''
-Created on Oct 24, 2012
-
 Deployment script for the Refinery software environment
-
-OS: CentOS 5.7
 
 Requirements:
 * ~/.fabricrc (see fabricrc.txt for details):
@@ -31,7 +27,7 @@ from fabric.contrib.files import exists, upload_template
 from fabric.decorators import task, with_settings
 from fabric.operations import require, open_shell
 from fabric.utils import puts
-
+from fabtools.vagrant import vagrant
 
 env.local_project_dir = os.path.dirname(os.path.abspath(__file__))
 env.local_template_dir = os.path.join(env.local_project_dir, "fabric")
@@ -39,11 +35,12 @@ env.local_template_dir = os.path.join(env.local_project_dir, "fabric")
 # Django integration
 sys.path.append(env.local_project_dir)
 # use import as to avoid conflict with fabric.api.settings
-from django.conf import settings as django_settings
+# from django.conf import settings as django_settings
 
 
 # Fabric settings
 env.forward_agent = True    # for Github operations
+env.project_user = "vagrant"    # since it's used as arg for decorators
 
 
 def check_env_vars():
@@ -92,6 +89,17 @@ def directory_structure_config():
     env.refinery_virtualenv_dir = os.path.join(env.virtualenv_dir,
                                                env.refinery_virtualenv_name)
     env.refinery_project_dir = os.path.join(env.refinery_app_dir, "refinery")
+
+
+@task
+def vm():
+    """Configure environment for deployment on Vagrant VM
+
+    """
+    execute(vagrant)
+    env.refinery_app_dir = "/vagrant"
+    env.refinery_project_dir = os.path.join(env.refinery_app_dir, "refinery")
+    env.refinery_virtualenv_name = "refinery-platform"
 
 
 @task
@@ -148,16 +156,6 @@ def prod():
     env.local_conf_dir = os.path.join(env.local_template_dir, "prod")
     env.bash_profile_template = "bash_profile"
     env.bashrc_template = "bashrc"
-
-
-@task
-def loc():
-    '''Set config to local (requires SSH server running on localhost)
-
-    '''
-    env.dev_settings_file = "settings_local.py"
-    django.settings_module(os.path.splitext(env.dev_settings_file)[0])
-    env.os = env.local_os
 
 
 @task
@@ -548,45 +546,29 @@ def setup_refinery():
 #    execute(refinery_changepassword("admin"))
 
 
-@task
+@task(alias="update")
 @with_settings(user=env.project_user)
 def update_refinery():
-    '''Pull code updates from the Github Refinery repository
+    '''Perform full update of Refinery installation
 
     '''
-    #TODO: refactor to move each operation to a separate task
+    #TODO: move each operation to a separate task
     puts("Updating Refinery")
-    with cd(os.path.join(env.refinery_project_dir)):
-        run("git pull")
-    with cd(os.path.join(env.refinery_project_dir, "ui")):
-        run("bower install")
-        run("grunt")
-    with prefix("workon {refinery_virtualenv_name}".format(**env)):
-        run("pip install -r ../requirements.txt")
-        run("find . -name '*.pyc' -delete")
-        run("./manage.py syncdb --migrate")
-        run("./manage.py collectstatic --noinput")
-        run("supervisorctl restart celeryd celerycam celerybeat")
-    with cd(os.path.join(env.refinery_project_dir)):
-        run("touch wsgi.py")
-
-
-@task
-def upload_apache_config():
-    '''Upload Apache settings. Requires symlink in /etc/httpd/conf.d
-
-    '''
-    with settings(user=env.project_user):
-        upload_template("apache.conf", "{conf_dir}/apache.conf".format(**env),
-                        context=env, use_jinja=True,
-                        template_dir=env.local_conf_dir, backup=False)
-    # create a symlink if necessary
-    if env.os == "CentOS":
-        target = "/etc/httpd/conf.d/refinery.conf"
-        if not exists(target):
-            sudo("ln -s {conf_dir}/apache.conf {t}".format(t=target, **env))
-    else:
-        pass
+    with cd(env.refinery_project_dir):
+        output = run("git pull")
+    if not 'Already up-to-date' in output:
+        with cd(os.path.join(env.refinery_project_dir, "ui")):
+            run("npm install")
+            run("bower install --config.interactive=false")
+            run("grunt")
+        with prefix("workon {refinery_virtualenv_name}".format(**env)):
+            run("pip install -r {refinery_app_dir}/requirements.txt".format(**env))
+            run("find . -name '*.pyc' -delete")
+            run("{refinery_project_dir}/manage.py syncdb --migrate".format(**env))
+            run("{refinery_project_dir}/manage.py collectstatic --noinput".format(**env))
+            run("supervisorctl restart all")
+        with cd(os.path.join(env.refinery_project_dir)):
+            run("touch {refinery_project_dir}/wsgi.py".format(**env))
 
 
 @task
