@@ -64,6 +64,7 @@ static/
 isa-tab/
 *.conflict
 *.sublime-*
+.idea/
 
 # to be moved into refinery/ui/app/
 refinery/static/styles/css/font-awesome*.css
