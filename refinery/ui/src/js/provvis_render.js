@@ -45,6 +45,7 @@ var provvisRender = function () {
      * On doi change, update node doi labels.
      */
     var updateNodeDoi = function () {
+        /* Update node doi label. */
         d3.selectAll(".node, .saNode, .aNode").select(".nodeDoiLabel").text(function (d) {
             return d.doi.doiWeightedSum;
         });
@@ -100,7 +101,6 @@ var provvisRender = function () {
                         .attr("height", scaleFactor * vis.radius);
                 }
             } else if (d.nodeType === "subanalysis") {
-
                 d3.select("#nodeId-" + d.autoId).select("polygon")
                     .transition()
                     .duration(500)
@@ -127,29 +127,29 @@ var provvisRender = function () {
             }
         });
 
-        /* Collapse into analysis. */
+        /* On analysis doi. */
         d3.selectAll(".aNode").each(function (an) {
             var keyStroke;
 
             /* Expand. */
-            if (an.doi.doiWeightedSum >= (1 / 2)) {
+            if (an.doi.doiWeightedSum >= (1 / 3)) {
                 keyStroke = {ctrl: true, shift: false};
                 /* Collapse. */
-            } else if (an.doi.doiWeightedSum < (1 / 2)) {
+            } else if (an.doi.doiWeightedSum < (1 / 3)) {
                 keyStroke = {ctrl: false, shift: true};
             }
             handleCollapseExpandNode(an, keyStroke);
         });
 
-        /* Collapse into subanalysis. */
+        /* On subanalysis doi. */
         d3.selectAll(".saNode").each(function (san) {
             var keyStroke;
 
             /* Expand. */
-            if (san.doi.doiWeightedSum >= (1 / 2)) {
+            if (san.doi.doiWeightedSum >= (2 / 3)) {
                 keyStroke = {ctrl: true, shift: false};
                 /* Collapse. */
-            } else if (san.doi.doiWeightedSum < (1 / 2)) {
+            } else if (san.doi.doiWeightedSum < (1 / 3)) {
                 keyStroke = {ctrl: false, shift: true};
             }
             handleCollapseExpandNode(san, keyStroke);
@@ -803,7 +803,6 @@ var provvisRender = function () {
         aNode = d3.selectAll(".aNode");
     };
 
-    /* TODO: Draw nodes according to analysis creation time. */
     /**
      * Draw nodes.
      * @param nodes All nodes within the graph.
@@ -1940,7 +1939,7 @@ var provvisRender = function () {
     var runRenderUpdatePrivate = function (vis, solrResponse) {
         var selNodes = [];
 
-        if (typeof solrResponse !== "undefined") {
+        if (solrResponse instanceof SolrResponse) {
             /* Show selected nodes. */
             solrResponse.getDocumentList().forEach(function (d) {
                 selNodes.push(vis.graph.nodeMap.get(d.uuid));
@@ -1951,30 +1950,26 @@ var provvisRender = function () {
                 if (selNodes.map(function (d) {
                     return d.parent;
                 }).indexOf(n.parent) === -1) {
-                    n.filtered = false;
-                    n.parent.filtered = false;
-                    n.parent.parent.filtered = false;
-                    n.parent.children.forEach(function (cn) {
+                    n.parent.children.values().forEach(function (cn) {
                         cn.filtered = false;
                     });
+                    n.parent.filtered = false;
+                    n.parent.parent.filtered = false;
                 } else {
-                    n.filtered = true;
-                    n.parent.filtered = true;
-                    n.parent.parent.filtered = true;
-                    n.parent.children.forEach(function (cn) {
+                    n.parent.children.values().forEach(function (cn) {
                         cn.filtered = true;
                     });
+                    n.parent.filtered = true;
+                    n.parent.parent.filtered = true;
                 }
 
-                /* TODO: Potential bug. */
                 /* Filtered attribute changed. */
-                n.doi.filteredChanged();
+                n.parent.children.values().forEach(function (cn) {
+                    cn.doi.filteredChanged();
+                });
                 n.parent.doi.filteredChanged();
                 n.parent.parent.doi.filteredChanged();
-                /*n.parent.children.forEach(function (cn) {
-                 console.log(cn);
-                 cn.doi.filteredChanged();
-                 });*/
+
             });
             updateNodeDoi();
         }
