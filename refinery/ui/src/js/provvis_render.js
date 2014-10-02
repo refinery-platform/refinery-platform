@@ -347,7 +347,8 @@ var provvisRender = function () {
             .on("dragend", dragEnd);
 
         /* Invoke dragging behavior on nodes. */
-        d3.selectAll(".node, .aNode, .saNode").call(drag);
+        /* d3.selectAll(".node, .aNode, .saNode").call(drag); */
+        d3.selectAll(".aNode, .saNode").call(drag);
     };
 
     /* TODO: Code Cleanup. */
