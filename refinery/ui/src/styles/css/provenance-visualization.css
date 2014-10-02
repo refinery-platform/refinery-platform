@@ -67,6 +67,7 @@
 .node, .aNode, .saNode {
     stroke-width: 1.5px;
     stroke: #000000;
+    display: none;
 }
 
 .rawNode {
@@ -95,6 +96,16 @@
 .mouseoverNode {
     stroke-width: 3px;
     stroke: #ed7407;
+}
+
+.filteredNode, .filteredLink {
+    display: inline;
+    opacity: 1.0;
+}
+
+.blendedNode, .blendedLink {
+    display: inline;
+    opacity: 0.3;
 }
 
 .link {

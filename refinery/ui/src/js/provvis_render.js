@@ -127,6 +127,72 @@ var provvisRender = function () {
             }
         });
 
+        /* Hide or blend (un)selected nodes. */
+        vis.graph.saNodes.forEach(function (san) {
+
+            if (!san.filtered) {
+                switch (filterAction) {
+                    case "hide":
+                        d3.select("#nodeId-" + san.autoId).classed("blendedNode", false);
+                        san.children.values().forEach( function (n) {
+                            d3.select("#nodeId-" + n.autoId).classed("blendedNode", false);
+                        });
+                        san.links.values().forEach( function (l) {
+                            d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", false);
+                        });
+                        break;
+                    case "blend":
+                        d3.select("#nodeId-" + san.autoId).classed("blendedNode", true);
+                        san.children.values().forEach( function (n) {
+                            d3.select("#nodeId-" + n.autoId).classed("blendedNode", true);
+                        });
+                        san.links.values().forEach( function (l) {
+                            d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", true);
+                        });
+                        break;
+                }
+                san.children.values().forEach( function (n) {
+                    d3.select("#nodeId-" + n.autoId).classed("filteredNode", false);
+                });
+                san.links.values().forEach( function (l) {
+                    d3.selectAll("#linkId-" + l.autoId).classed("filteredLink", false);
+                });
+            } else {
+                d3.select("#nodeId-" + san.autoId).classed({"filteredNode": true, "blendedNode": false});
+                san.children.values().forEach( function (n) {
+                    d3.select("#nodeId-" + n.autoId).classed({"filteredNode": true, "blendedNode": false});
+                });
+                san.links.values().forEach( function (l) {
+                    d3.selectAll("#linkId-" + l.autoId).classed({"filteredLink": true, "blendedLink": false});
+                });
+            }
+        });
+
+        vis.graph.aNodes.forEach(function (an) {
+            if (!an.filtered) {
+                switch (filterAction) {
+                    case "hide":
+                        d3.select("#nodeId-" + an.autoId).classed("blendedNode", false);
+                        an.links.values().forEach(function (l) {
+                            d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", false);
+                        });
+                        break;
+                    case "blend":
+                        d3.select("#nodeId-" + an.autoId).classed("blendedNode", true);
+                        an.links.values().forEach(function (l) {
+                            d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", true);
+                        });
+                        break;
+                }
+                d3.select("#nodeId-" + an.autoId).classed("filteredNode", false);
+            } else {
+                d3.select("#nodeId-" + an.autoId).classed({"filteredNode": true, "blendedNode": false});
+                an.links.values().forEach(function (l) {
+                    d3.selectAll("#linkId-" + l.autoId).classed({"filteredLink": true, "blendedLink": false});
+                });
+            }
+        });
+
         /* On analysis doi. */
         d3.selectAll(".aNode").each(function (an) {
             var keyStroke;
@@ -390,6 +456,7 @@ var provvisRender = function () {
                 curNode = curNode.parent;
             }
 
+            /* TODO: Change styles to css classes. */
             if (!curNode.filtered) {
                 switch (filterAction) {
                     case "hide":
@@ -867,7 +934,7 @@ var provvisRender = function () {
      * @param keyStroke Keystroke being pressed at mouse click.
      */
     var handleCollapseExpandNode = function (d, keyStroke) {
-
+/* TODO: Change styles to css classes. */
         var hideChildNodes = function (n) {
             n.children.values().forEach(function (cn) {
                 cn.hidden = true;
@@ -1077,22 +1144,16 @@ var provvisRender = function () {
         /* Update node glyph stroke. */
         if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {
             if (d.selected) {
-                d3.select("#nodeId-" + d.autoId).attr("class", "node " + d.nodeType + "Node selectedNode");
+                d3.select("#nodeId-" + d.autoId).classed(d.nodeType + "Node", true);
             } else {
-                d3.select("#nodeId-" + d.autoId).attr("class", "node " + d.nodeType + "Node");
+                d3.select("#nodeId-" + d.autoId).classed(d.nodeType + "Node", true);
             }
-        } else if (d.nodeType === "subanalysis") {
-            if (d.selected) {
-                d3.select("#nodeId-" + d.autoId).attr("class", "saNode selectedNode");
-            } else {
-                d3.select("#nodeId-" + d.autoId).attr("class", "saNode");
-            }
-        } else if (d.nodeType === "analysis") {
-            if (d.selected) {
-                d3.select("#nodeId-" + d.autoId).attr("class", "aNode selectedNode");
-            } else {
-                d3.select("#nodeId-" + d.autoId).attr("class", "aNode");
-            }
+        }
+
+        if (d.selected) {
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", true);
+        } else {
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", false);
         }
 
     };
@@ -1940,12 +2001,13 @@ var provvisRender = function () {
         var selNodes = [];
 
         if (solrResponse instanceof SolrResponse) {
-            /* Show selected nodes. */
+
+            /* Copy filtered nodes. */
             solrResponse.getDocumentList().forEach(function (d) {
                 selNodes.push(vis.graph.nodeMap.get(d.uuid));
             });
 
-            /* Set (un)filtered nodes. */
+            /* Set (un)filtered subanalyses. */
             vis.graph.nodes.forEach(function (n) {
                 if (selNodes.map(function (d) {
                     return d.parent;
@@ -1954,13 +2016,11 @@ var provvisRender = function () {
                         cn.filtered = false;
                     });
                     n.parent.filtered = false;
-                    n.parent.parent.filtered = false;
                 } else {
                     n.parent.children.values().forEach(function (cn) {
                         cn.filtered = true;
                     });
                     n.parent.filtered = true;
-                    n.parent.parent.filtered = true;
                 }
 
                 /* Filtered attribute changed. */
@@ -1968,68 +2028,22 @@ var provvisRender = function () {
                     cn.doi.filteredChanged();
                 });
                 n.parent.doi.filteredChanged();
-                n.parent.parent.doi.filteredChanged();
 
             });
+
+            /* Update analysis node filter. */
+            vis.graph.aNodes.forEach( function (an) {
+                an.filtered = false;
+                an.children.values().forEach( function (san) {
+                    if (san.filtered) {
+                        an.filtered = true;
+                    }
+                });
+                an.doi.filteredChanged();
+            });
+
             updateNodeDoi();
         }
-
-        /* Hide or blend (un)selected nodes. */
-        vis.graph.nodes.forEach(function (n) {
-            var curNode = n;
-            while (curNode.hidden) {
-                curNode = curNode.parent;
-            }
-
-            if (!curNode.filtered) {
-                switch (filterAction) {
-                    case "hide":
-                        d3.select("#nodeId-" + curNode.autoId).style("display", "none");
-                        if (!(curNode instanceof provvisDecl.Node)) {
-                            curNode.links.values().forEach(function (l) {
-                                d3.selectAll("#linkId-" + l.autoId).style("display", "none");
-                            });
-                        } else {
-                            curNode.parent.links.values().forEach(function (l) {
-                                d3.selectAll("#linkId-" + l.autoId).style("display", "none");
-                            });
-                        }
-                        break;
-                    case "blend":
-                        d3.select("#nodeId-" + curNode.autoId).style({"display": "inline", "opacity": 0.3});
-                        if (!(curNode instanceof provvisDecl.Node)) {
-                            curNode.links.values().filter(function (l) {
-                                return !l.hidden;
-                            }).forEach(function (l) {
-                                d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 0.3});
-                            });
-                        } else {
-                            curNode.parent.links.values().filter(function (l) {
-                                return !l.hidden;
-                            }).forEach(function (l) {
-                                d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 0.3});
-                            });
-                        }
-                        break;
-                }
-            } else {
-                d3.select("#nodeId-" + curNode.autoId).style({"display": "inline", "opacity": 1.0});
-                if (!(curNode instanceof provvisDecl.Node)) {
-                    curNode.links.values().filter(function (l) {
-                        return !l.hidden;
-                    }).forEach(function (l) {
-                        d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 1.0});
-                    });
-                } else {
-                    curNode.parent.links.values().filter(function (l) {
-                        return !l.hidden;
-                    }).forEach(function (l) {
-                        d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 1.0});
-                    });
-                }
-            }
-        });
-
         lastSolrResponse = solrResponse;
     };
 
