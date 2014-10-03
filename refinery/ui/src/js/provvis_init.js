@@ -460,6 +460,7 @@ var provvisInit = function () {
         });
     };
 
+    /* TODO: Only extract attributes relevant to the filter attributes. */
     /**
      * Temporarily facet node attribute extraction.
      * @param solrResponse Facet filter information on node attributes.
@@ -472,7 +473,6 @@ var provvisInit = function () {
                 var selNode = nodeMap.get(d.uuid);
 
                 var rawFacetAttributes = d3.entries(d);
-                console.log(rawFacetAttributes);
 
                 rawFacetAttributes.forEach( function (fa) {
                     var attrNameEndIndex = fa.key.indexOf("_Characteristics_"),
@@ -482,25 +482,19 @@ var provvisInit = function () {
                         attrName = fa.key.replace(/REFINERY_/g, "");
                         attrName = attrName.replace(/_2_1_s/g, "");
                         attrName = attrName.toLowerCase();
+
+                        /* Temporary FileType field fix. */
+                        if (attrName === "filetype") {
+                            attrName = "FileType";
+                        }
                     } else {
                         attrName = fa.key.substr(0,attrNameEndIndex);
                     }
 
                     selNode.parent.children.values().forEach( function (cn) {
                         cn.attributes.set(attrName, fa.value);
-                        console.log(cn.attributes);
                     });
                 });
-
-                /*
-                selNode.parent.children.values().forEach(function (cn) {
-                    cn.attributes.set("Author", d.Author_Characteristics_2_1_s);
-                    cn.attributes.set("Month", d.Month_Characteristics_2_1_s);
-                    cn.attributes.set("Title", d.Title_Characteristics_2_1_s);
-                    cn.attributes.set("Year", d.Year_Characteristics_2_1_s);
-                    cn.attributes.set("FileType", d.REFINERY_FILETYPE_2_1_s);
-                    cn.attributes.set("Type", d.REFINERY_TYPE_2_1_s);
-                });*/
             });
         }
     };
