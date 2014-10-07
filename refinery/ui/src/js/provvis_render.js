@@ -1724,6 +1724,26 @@ var provvisRender = function () {
             }
             runRenderUpdatePrivate(vis, lastSolrResponse);
         });
+
+        /* Choose visible node attribute. */
+        $("[id^=prov-ctrl-visible-attribute-list-]").click(function () {
+
+            /* Set and get chosen attribute as active. */
+            $(this).find("input").prop("checked", true);
+            var selectedAttrName = $(this).find("label").text();
+
+            /* On click, set current to active and unselect others. */
+            $("#prov-ctrl-visible-attribute-list > li").each( function (idx, li) {
+                var item = $(li);
+                if (item[0].id !== ("prov-ctrl-visible-attribute-list-" + selectedAttrName)) {
+                    item.find("input").prop("checked", false);
+                }
+            });
+
+            /* TODO: Change attribute label on every node. */
+
+
+        });
     };
 
     /* TODO: Minimize layout through minimizing analyses - adapt to collapse/expand. */

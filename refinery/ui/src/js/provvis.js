@@ -64,6 +64,35 @@ var provvis = function () {
         }).appendTo("#prov-ctrl-node-btn-group");
 
 
+        /* Attribute labeling. */
+        $("<div/>", {
+            "id": "prov-ctrl-node-labeling-btn-group",
+            "class": "btn-group",
+            "style": "margin-left: 15px"
+        }).appendTo("#" + parentId);
+
+        $("<div/>", {
+            "id": "prov-ctrl-visible-attribute",
+            "class": "btn btn-mini btn-group"
+        }).appendTo("#prov-ctrl-node-labeling-btn-group");
+
+        $("<a/>", {
+            "class": "btn btn-mini dropdown-toggle",
+            "data-toggle": "dropdown",
+            "href": "#",
+            "html": "<i class=icon-eye-open></i>" +
+                "&nbsp;" + "Attributes" + "&nbsp;" +
+                "<i class=icon-caret-down></i>" + "&nbsp;"
+        }).appendTo("#prov-ctrl-visible-attribute");
+
+        $("<ul/>", {
+            "id": "prov-ctrl-visible-attribute-list",
+            "class": "dropdown-menu"
+        }).appendTo("#prov-ctrl-visible-attribute");
+
+        /* TODO: Add attributes as list items in provvis_init.js. */
+
+
         /* Global items. */
         $("<div/>", {
             "id": "prov-ctrl-global-btn-group",

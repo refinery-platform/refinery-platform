@@ -18,7 +18,9 @@ var provvisInit = function () {
         analysisWorkflowMap = d3.map(),
         workflowData = d3.map(),
         analysisData = d3.map(),
-        nodeData = d3.map();
+        nodeData = d3.map(),
+
+        nodeAttributeList = [];
 
     /**
      * Assign node types.
@@ -500,6 +502,48 @@ var provvisInit = function () {
     };
 
     /**
+     * Add face node attributes to dropdown button menu in toolbar.
+     * @param solrResponse Facet filter information on node attributes.
+     */
+    var createFacetNodeAttributeList = function (solrResponse) {
+
+        /* Extract attributes. */
+        if (solrResponse instanceof SolrResponse &&  solrResponse.getDocumentList().length > 0) {
+
+            var sampleNode = solrResponse.getDocumentList()[0];
+            var rawAttrSet = d3.entries(sampleNode);
+
+            rawAttrSet.forEach( function (fa) {
+                var attrNameEndIndex = fa.key.indexOf("_Characteristics_"),
+                    attrName = "";
+
+                if (attrNameEndIndex === -1) {
+                    attrName = fa.key.replace(/REFINERY_/g, "");
+                    attrName = attrName.replace(/_2_1_s/g, "");
+                    attrName = attrName.toLowerCase();
+
+                    /* Temporary FileType field fix. */
+                    if (attrName === "filetype") {
+                        attrName = "FileType";
+                    }
+                } else {
+                    attrName = fa.key.substr(0, attrNameEndIndex);
+                }
+
+                nodeAttributeList.push(attrName);
+            });
+        }
+
+        /* Add to button dropdown list. */
+        nodeAttributeList.forEach( function (na) {
+            $("<li/>", {
+                "id": "prov-ctrl-visible-attribute-list-" + na,
+                "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">" + na + "</label>" + "</a>"
+            }).appendTo("#prov-ctrl-visible-attribute-list");
+        });
+    };
+
+    /**
      * Main init module function.
      * @param data Dataset holding the information for nodes and links.
      * @param analysesData Collection holding the information for analysis - node mapping.
@@ -533,6 +577,8 @@ var provvisInit = function () {
 
         /* Temporarily facet node attribute extraction. */
         extractFacetNodeAttributesPrivate(solrResponse);
+
+        createFacetNodeAttributeList(solrResponse);
 
         /* Create graph. */
         return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, 0, 0, []);
