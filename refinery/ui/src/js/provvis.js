@@ -80,17 +80,15 @@ var provvis = function () {
             "class": "btn btn-mini dropdown-toggle",
             "data-toggle": "dropdown",
             "href": "#",
-            "html": "<i class=icon-eye-open></i>" +
+            "html": "<i class=icon-wrench></i>" +
                 "&nbsp;" + "Attributes" + "&nbsp;" +
                 "<i class=icon-caret-down></i>" + "&nbsp;"
         }).appendTo("#prov-ctrl-visible-attribute");
 
         $("<ul/>", {
             "id": "prov-ctrl-visible-attribute-list",
-            "class": "dropdown-menu"
+            "class": "dropdown-menu scrollable-menu"
         }).appendTo("#prov-ctrl-visible-attribute");
-
-        /* TODO: Add attributes as list items in provvis_init.js. */
 
 
         /* Global items. */
@@ -141,6 +139,7 @@ var provvis = function () {
         $("#prov-ctrl-visible-views-list").bind("click", function (e) {
             e.stopPropagation();
         });
+
 
         /* Links. */
         $("<div/>", {
@@ -228,8 +227,8 @@ var provvis = function () {
             "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Blend" + "</label>" + "</a>"
         }).appendTo("#prov-ctrl-filter-list");
 
-        /* Help. */
 
+        /* Help. */
         $("<div>", {
             "class": "modal fade bs-example-modal-sm",
             "tabindex": "-1",

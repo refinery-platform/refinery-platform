@@ -476,11 +476,11 @@ var provvisInit = function () {
 
                 var rawFacetAttributes = d3.entries(d);
 
-                rawFacetAttributes.forEach( function (fa) {
+                rawFacetAttributes.forEach(function (fa) {
                     var attrNameEndIndex = fa.key.indexOf("_Characteristics_"),
                         attrName = "";
 
-                    if(attrNameEndIndex === -1) {
+                    if (attrNameEndIndex === -1) {
                         attrName = fa.key.replace(/REFINERY_/g, "");
                         attrName = attrName.replace(/_2_1_s/g, "");
                         attrName = attrName.toLowerCase();
@@ -490,7 +490,7 @@ var provvisInit = function () {
                             attrName = "FileType";
                         }
                     } else {
-                        attrName = fa.key.substr(0,attrNameEndIndex);
+                        attrName = fa.key.substr(0, attrNameEndIndex);
                     }
 
                     selNode.attributes.set(attrName, fa.value);
@@ -506,12 +506,12 @@ var provvisInit = function () {
     var createFacetNodeAttributeList = function (solrResponse) {
 
         /* Extract attributes. */
-        if (solrResponse instanceof SolrResponse &&  solrResponse.getDocumentList().length > 0) {
+        if (solrResponse instanceof SolrResponse && solrResponse.getDocumentList().length > 0) {
 
             var sampleNode = solrResponse.getDocumentList()[0];
             var rawAttrSet = d3.entries(sampleNode);
 
-            rawAttrSet.forEach( function (fa) {
+            rawAttrSet.forEach(function (fa) {
                 var attrNameEndIndex = fa.key.indexOf("_Characteristics_"),
                     attrName = "";
 
@@ -533,12 +533,15 @@ var provvisInit = function () {
         }
 
         /* Add to button dropdown list. */
-        nodeAttributeList.forEach( function (na) {
+        nodeAttributeList.forEach(function (na) {
             $("<li/>", {
                 "id": "prov-ctrl-visible-attribute-list-" + na,
                 "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">" + na + "</label>" + "</a>"
             }).appendTo("#prov-ctrl-visible-attribute-list");
         });
+
+        /* Initially set name attribute checked. */
+        $("#prov-ctrl-visible-attribute-list-name").find("input").prop("checked", true);
     };
 
     /**

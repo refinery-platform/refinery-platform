@@ -925,7 +925,9 @@ var provvisRender = function () {
                 .attr("dominant-baseline", "central")
                 .style("display", "none");
 
-            nodeGlyph.filter(function (d) {return d.nodeType === "stored";})
+            nodeGlyph.filter(function (d) {
+                return d.nodeType === "stored";
+            })
                 .append("text")
                 .text(function (d) {
                     return d.attributes.get("name");
@@ -1744,17 +1746,17 @@ var provvisRender = function () {
             var selAttrName = $(this).find("label").text();
 
             /* On click, set current to active and unselect others. */
-            $("#prov-ctrl-visible-attribute-list > li").each( function (idx, li) {
+            $("#prov-ctrl-visible-attribute-list > li").each(function (idx, li) {
                 var item = $(li);
                 if (item[0].id !== ("prov-ctrl-visible-attribute-list-" + selAttrName)) {
                     item.find("input").prop("checked", false);
                 }
             });
 
-            /* TODO: Currently, the doi text field is set for demonstration purposes only. */
-
             /* Change attribute label on every node. */
-            graph.nodes.filter( function (d) {return d.nodeType === "stored";}).forEach( function (n) {
+            graph.nodes.filter(function (d) {
+                return d.nodeType === "stored";
+            }).forEach(function (n) {
                 d3.select("#nodeId-" + n.autoId).select(".nodeAttrLabel").text(n.attributes.get(selAttrName));
             });
 
