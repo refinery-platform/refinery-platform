@@ -173,7 +173,9 @@
 }
 
 .saBBox text {
+    fill-opacity: 0.0;
     stroke-width: 0px;
+    display: none;
 }
 
 .mouseoverBBox {
@@ -185,4 +187,5 @@
 .mouseoverBBox text {
     fill: #ed7407;
     fill-opacity: 1.0;
+    display: inline;
 }
