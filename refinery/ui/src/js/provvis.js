@@ -214,7 +214,7 @@ var provvis = function () {
         }).appendTo(".bs-example-modal-sm");
 
         $("<div>", {
-            "class": "modal-content",
+            "class": "modal-content"
         }).appendTo(".modal-dialog");
 
         $("<div>", {
@@ -230,7 +230,7 @@ var provvis = function () {
 
         $("<h4>", {
             "class": "modal-title",
-            "id":"myModalLabel",
+            "id": "myModalLabel",
             "html": "Visualization Interaction Command List"
         }).appendTo(".modal-header");
 
