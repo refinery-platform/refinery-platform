@@ -1730,18 +1730,22 @@ var provvisRender = function () {
 
             /* Set and get chosen attribute as active. */
             $(this).find("input").prop("checked", true);
-            var selectedAttrName = $(this).find("label").text();
+            var selAttrName = $(this).find("label").text();
 
             /* On click, set current to active and unselect others. */
             $("#prov-ctrl-visible-attribute-list > li").each( function (idx, li) {
                 var item = $(li);
-                if (item[0].id !== ("prov-ctrl-visible-attribute-list-" + selectedAttrName)) {
+                if (item[0].id !== ("prov-ctrl-visible-attribute-list-" + selAttrName)) {
                     item.find("input").prop("checked", false);
                 }
             });
 
-            /* TODO: Change attribute label on every node. */
+            /* TODO: Currently, the doi text field is set for demonstration purposes only. */
 
+            /* Change attribute label on every node. */
+            node.each( function (n) {
+                d3.select(this).select("text").text(n.attributes.get(selAttrName));
+            });
 
         });
     };
