@@ -877,7 +877,7 @@ var provvisRender = function () {
     var drawNodes = function (nodes) {
         analysis.each(function () {
             var analysisId = d3.select(this).attr("id");
-            d3.select(this).selectAll(".node")
+            var nodeGlyph = d3.select(this).selectAll(".node")
                 .data(nodes.filter(function (n) {
                     return n.parent.parent.autoId === +analysisId.replace(/(analysisId-)/g, "");
                 }))
@@ -915,13 +915,24 @@ var provvisRender = function () {
                 })
                 .attr("id", function (d) {
                     return "nodeId-" + d.autoId;
-                }).append("text")
+                });
+
+            nodeGlyph.append("text")
                 .text(function (d) {
                     return d.doi.doiWeightedSum;
                 }).attr("class", "nodeDoiLabel")
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "central")
                 .style("display", "none");
+
+            nodeGlyph.filter(function (d) {return d.nodeType === "stored";})
+                .append("text")
+                .text(function (d) {
+                    return d.attributes.get("name");
+                }).attr("class", "nodeAttrLabel")
+                .attr("text-anchor", "left")
+                .attr("dominant-baseline", "top")
+                .style("display", "inline");
         });
 
         /* Set node dom element. */
@@ -1743,8 +1754,8 @@ var provvisRender = function () {
             /* TODO: Currently, the doi text field is set for demonstration purposes only. */
 
             /* Change attribute label on every node. */
-            node.each( function (n) {
-                d3.select(this).select("text").text(n.attributes.get(selAttrName));
+            graph.nodes.filter( function (d) {return d.nodeType === "stored";}).forEach( function (n) {
+                d3.select("#nodeId-" + n.autoId).select(".nodeAttrLabel").text(n.attributes.get(selAttrName));
             });
 
         });

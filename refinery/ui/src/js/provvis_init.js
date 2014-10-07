@@ -493,9 +493,7 @@ var provvisInit = function () {
                         attrName = fa.key.substr(0,attrNameEndIndex);
                     }
 
-                    selNode.parent.children.values().forEach( function (cn) {
-                        cn.attributes.set(attrName, fa.value);
-                    });
+                    selNode.attributes.set(attrName, fa.value);
                 });
             });
         }

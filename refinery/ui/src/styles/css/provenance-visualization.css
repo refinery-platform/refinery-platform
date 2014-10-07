@@ -163,6 +163,15 @@
     cursor:default;
 }
 
+.nodeAttrLabel {
+    fill: #ed7407;
+    stroke: #ed7407;
+    stroke-width: 0.5px;
+    font-size: 11px;
+    font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    cursor:default;
+}
+
 .saBBox {
     fill: #000000;
     fill-opacity: 0.3;
