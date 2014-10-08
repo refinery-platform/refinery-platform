@@ -158,12 +158,15 @@ var provvisRender = function () {
                     d3.selectAll("#linkId-" + l.autoId).classed("filteredLink", false);
                 });
             } else {
-                d3.select("#nodeId-" + san.autoId).classed({"filteredNode": true, "blendedNode": false});
+                d3.select("#nodeId-" + san.autoId).classed("filteredNode", true);
+                d3.select("#nodeId-" + san.autoId).classed("blendedNode", false);
                 san.children.values().forEach(function (n) {
-                    d3.select("#nodeId-" + n.autoId).classed({"filteredNode": true, "blendedNode": false});
+                    d3.select("#nodeId-" + san.autoId).classed("filteredNode", true);
+                    d3.select("#nodeId-" + san.autoId).classed("blendedNode", false);
                 });
                 san.links.values().forEach(function (l) {
-                    d3.selectAll("#linkId-" + l.autoId).classed({"filteredLink": true, "blendedLink": false});
+                    d3.selectAll("#linkId-" + l.autoId).classed("filteredLink", true);
+                    d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", false);
                 });
             }
         });
@@ -186,9 +189,11 @@ var provvisRender = function () {
                 }
                 d3.select("#nodeId-" + an.autoId).classed("filteredNode", false);
             } else {
-                d3.select("#nodeId-" + an.autoId).classed({"filteredNode": true, "blendedNode": false});
+                d3.select("#nodeId-" + an.autoId).classed("filteredNode", true);
+                d3.select("#nodeId-" + an.autoId).classed("blendedNode", false);
                 an.links.values().forEach(function (l) {
-                    d3.selectAll("#linkId-" + l.autoId).classed({"filteredLink": true, "blendedLink": false});
+                    d3.selectAll("#linkId-" + l.autoId).classed("filteredLink", true);
+                    d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", false);
                 });
             }
         });
@@ -220,6 +225,9 @@ var provvisRender = function () {
             }
             handleCollapseExpandNode(san, keyStroke);
         });
+
+        /* TODO: Rewrite display:[none|inline] property. */
+        /* TODO: Rewrite collapse expand based on css classes. */
     };
 
     /**
@@ -674,7 +682,7 @@ var provvisRender = function () {
      * @param links All links within the graph.
      */
     var drawLinks = function (links) {
-        link = vis.canvas.append("g").classed({"links": true}).selectAll(".link")
+        link = vis.canvas.append("g").classed("links", true).selectAll(".link")
             .data(links)
             .enter().append("path")
             .attr("d", function (l) {
@@ -719,13 +727,10 @@ var provvisRender = function () {
                     return san.parent.autoId === +analysisId.replace(/(analysisId-)/g, "");
                 }))
                 .enter().append("g").each(function (san) {
-                    var g = d3.select(this).classed({"saNode": true})
+                    var g = d3.select(this).classed("saNode", true)
                         .attr("transform", "translate(" + san.x + "," + san.y + ")")
                         .attr("id", function () {
                             return "nodeId-" + san.autoId;
-                        })
-                        .style("display", function () {
-                            return san.hidden ? "none" : "inline";
                         });
 
                     /* TODO: TO DISCUSS. */
@@ -764,7 +769,7 @@ var provvisRender = function () {
                         })
                         .style("opacity", 0.5);
 
-                    var glyph = g.append("g").classed({"saGlyph": true})
+                    var glyph = g.append("g").classed("saGlyph", true)
                         .style("fill", function () {
                             return timeScale(parseISOTimeFormat(san.parent.start));
                         });
@@ -841,9 +846,7 @@ var provvisRender = function () {
                         .attr("id", function () {
                             return "nodeId-" + an.autoId;
                         })
-                        .style("display", function () {
-                            return an.hidden ? "none" : "inline";
-                        })
+                        .classed({"aNode": true, "filteredNode": true, "blendedNode": false, "selectedNode": false})
                         .style("fill", function () {
                             return timeScale(parseISOTimeFormat(an.start));
                         });
@@ -881,9 +884,7 @@ var provvisRender = function () {
                 .data(nodes.filter(function (n) {
                     return n.parent.parent.autoId === +analysisId.replace(/(analysisId-)/g, "");
                 }))
-                .enter().append("g").style("display", function (d) {
-                    return d.hidden ? "none" : "inline";
-                }).attr("transform", function (d) {
+                .enter().append("g").attr("transform", function (d) {
                     return "translate(" + d.x + "," + d.y + ")";
                 })
                 .each(function (d) {
