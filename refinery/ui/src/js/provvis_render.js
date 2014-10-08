@@ -1842,6 +1842,7 @@ var provvisRender = function () {
                 cn.selected = false;
                 cn.doi.selectedChanged();
             });
+            d3.select("#nodeId-" + vis.graph.saNodes[d].parent.autoId).classed("selectedNode", false);
 
             /* Update node doi. */
             updateNodeDoi();
