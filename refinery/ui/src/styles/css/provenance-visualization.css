@@ -87,32 +87,14 @@
     display: none;
 }
 
-.rawNode {
-}
-
-.specialNode {
-    stroke-width: 1px;
-}
-
-.dtNode {
-    stroke-width: 1px;
-}
-
-.intermediateNode {
-    stroke-width: 1px;
-}
-
-.storedNode {
-}
-
 .selectedNode {
-    stroke-width: 3px;
+    stroke-width: 1.5px;
     stroke: #ed7407;
 }
 
 .mouseoverNode {
     stroke-width: 3px;
-    stroke: #ed7407;
+    stroke: #136382;;
 }
 
 .filteredNode, .filteredLink {
@@ -206,12 +188,12 @@
 
 .mouseoverBBox {
     stroke-width: 2px;
-    stroke: #ed7407;
+    stroke: #136382;;
     display: inline;
 }
 
 .mouseoverBBox text {
-    fill: #ed7407;
+    fill: #136382;
     fill-opacity: 1.0;
     display: inline;
 }

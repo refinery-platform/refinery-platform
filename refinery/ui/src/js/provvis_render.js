@@ -198,6 +198,9 @@ var provvisRender = function () {
             }
         });
 
+
+        /* TODO: BUG: Executed everytime, although aNode is already expanded. */
+
         /* On analysis doi. */
         d3.selectAll(".aNode").each(function (an) {
             var keyStroke;
@@ -953,6 +956,7 @@ var provvisRender = function () {
             n.children.values().forEach(function (cn) {
                 cn.hidden = true;
                 d3.select("#nodeId-" + cn.autoId).style("display", "none");
+                d3.select("#nodeId-" + cn.autoId).classed("selectedNode", false);
                 if (!cn.children.empty())
                     hideChildNodes(cn);
             });
@@ -966,6 +970,7 @@ var provvisRender = function () {
             d.hidden = true;
             d.children.values().forEach(function (cn) {
                 d3.select("#nodeId-" + cn.autoId).style("display", "inline");
+                d3.select("#nodeId-" + cn.autoId).classed("selectedNode", true);
                 if (cn instanceof provvisDecl.Subanalysis === true) {
                     d3.select("#nodeId-" + cn.autoId).select(".saMenu").style("display", "none");
                 }
@@ -1123,14 +1128,17 @@ var provvisRender = function () {
         /* Update selection. */
         if (d.selected) {
             d.selected = false;
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", false);
             d.doi.selectedChanged();
             if (d.children.values()) {
                 d.children.values().forEach(function (cn) {
                     cn.selected = false;
+                    d3.select("#nodeId-" + cn.autoId).classed("selectedNode", false);
                     cn.doi.selectedChanged();
                     if (cn.children.values()) {
                         cn.children.values().forEach(function (ccn) {
                             ccn.selected = false;
+                            d3.select("#nodeId-" + ccn.autoId).classed("selectedNode", false);
                             ccn.doi.selectedChanged();
                         });
                     }
@@ -1138,14 +1146,17 @@ var provvisRender = function () {
             }
         } else {
             d.selected = true;
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", true);
             d.doi.selectedChanged();
             if (d.children.values()) {
                 d.children.values().forEach(function (cn) {
                     cn.selected = true;
+                    d3.select("#nodeId-" + cn.autoId).classed("selectedNode", true);
                     cn.doi.selectedChanged();
                     if (cn.children.values()) {
                         cn.children.values().forEach(function (ccn) {
                             ccn.selected = true;
+                            d3.select("#nodeId-" + ccn.autoId).classed("selectedNode", true);
                             ccn.doi.selectedChanged();
                         });
                     }
@@ -1154,22 +1165,6 @@ var provvisRender = function () {
         }
 
         updateNodeDoi();
-
-        /* Update node glyph stroke. */
-        if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {
-            if (d.selected) {
-                d3.select("#nodeId-" + d.autoId).classed(d.nodeType + "Node", true);
-            } else {
-                d3.select("#nodeId-" + d.autoId).classed(d.nodeType + "Node", true);
-            }
-        }
-
-        if (d.selected) {
-            d3.select("#nodeId-" + d.autoId).classed("selectedNode", true);
-        } else {
-            d3.select("#nodeId-" + d.autoId).classed("selectedNode", false);
-        }
-
     };
 
     /**
@@ -1841,6 +1836,7 @@ var provvisRender = function () {
             vis.graph.saNodes[d].children.values().forEach(function (cn) {
                 cn.selected = false;
                 cn.doi.selectedChanged();
+                d3.select("#nodeId-" + cn.autoId).classed("selectedNode", false);
             });
             d3.select("#nodeId-" + vis.graph.saNodes[d].parent.autoId).classed("selectedNode", false);
 
