@@ -40,7 +40,6 @@ sys.path.append(env.local_project_dir)
 
 # Fabric settings
 env.forward_agent = True    # for Github operations
-env.project_user = "vagrant"    # since it's used as arg for decorators
 
 
 def check_env_vars():
@@ -97,6 +96,7 @@ def vm():
 
     """
     execute(vagrant)
+    env.project_user = "vagrant"    # since it's used as arg for decorators
     env.refinery_app_dir = "/vagrant"
     env.refinery_project_dir = os.path.join(env.refinery_app_dir, "refinery")
     env.refinery_virtualenv_name = "refinery-platform"
