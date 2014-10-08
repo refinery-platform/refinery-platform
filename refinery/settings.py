@@ -149,12 +149,6 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
 )
 
-# NG: added to provide fixtures for non-Refinery models
-FIXTURE_DIRS = (
-    os.path.join(BASE_DIR, "fixtures/auth"),
-    os.path.join(BASE_DIR, "fixtures/guardian"),
-)
-
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
