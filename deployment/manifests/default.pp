@@ -98,6 +98,12 @@ exec { "syncdb":
              ],
 }
 ->
+exec { "create_superuser":
+  command => "${virtualenv}/bin/python ${project_root}/manage.py loaddata superuser.json",
+  user => $appuser,
+  group => $appgroup,
+}
+->
 exec { "init_refinery":
   command => "${virtualenv}/bin/python ${project_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
   user => $appuser,
