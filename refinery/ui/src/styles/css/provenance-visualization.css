@@ -8,7 +8,8 @@
     position: relative;
 }
 
-#provenance-canvas {}
+#provenance-canvas {
+}
 
 #provenance-table {
     position: absolute;
@@ -42,9 +43,19 @@
 }
 
 /* btn-group tweaks as by: http://stackoverflow.com/a/13766206 */
-.btn-group.btn {   border: 0;   padding: 0; }
-.btn-group.btn > .btn { border-radius: 0 }
-.btn-group.btn > .dropdown-menu {  text-align: left; }
+.btn-group.btn {
+    border: 0;
+    padding: 0;
+}
+
+.btn-group.btn > .btn {
+    border-radius: 0
+}
+
+.btn-group.btn > .dropdown-menu {
+    text-align: left;
+}
+
 .btn-group.btn:first-child > .btn {
     -webkit-border-radius: 4px 0 0 4px;
     -moz-border-radius: 4px 0 0 4px;
@@ -55,6 +66,12 @@
     -webkit-border-radius: 0 4px 4px 0;
     -moz-border-radius: 0 4px 4px 0;
     border-radius: 0 4px 4px 0;
+}
+
+.scrollable-menu {
+    max-height: 300px;
+    overflow: hidden;
+    overflow-y: auto;
 }
 
 #curTime {
@@ -141,7 +158,7 @@
     stroke: none;
     fill: gray;
     display: none;
-    cursor:default;
+    cursor: default;
 }
 
 .saMenuText {
@@ -160,7 +177,16 @@
     stroke-width: 0.5px;
     font-size: 11px;
     font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    cursor:default;
+    cursor: default;
+}
+
+.nodeAttrLabel {
+    fill: #ed7407;
+    stroke: #ed7407;
+    stroke-width: 0.5px;
+    font-size: 11px;
+    font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    cursor: default;
 }
 
 .saBBox {
@@ -169,10 +195,23 @@
     stroke: none;
     stroke-width: 0px;
     display: none;
+    cursor: default;
+}
+
+.saBBox text {
+    fill-opacity: 0.0;
+    stroke-width: 0px;
+    display: none;
 }
 
 .mouseoverBBox {
-    stroke-width: 3px;
+    stroke-width: 2px;
     stroke: #ed7407;
+    display: inline;
+}
+
+.mouseoverBBox text {
+    fill: #ed7407;
+    fill-opacity: 1.0;
     display: inline;
 }

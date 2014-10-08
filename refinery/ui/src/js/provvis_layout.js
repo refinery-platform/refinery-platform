@@ -39,7 +39,8 @@ var provvisLayout = function () {
      */
     var groupNodesByLayer = function (topNodes) {
         var layer = firstLayer,
-            lgNodes = []; /* Layer-grouped and topology sorted nodes. */
+            lgNodes = [];
+        /* Layer-grouped and topology sorted nodes. */
 
         lgNodes.push([]);
         var k = 0;

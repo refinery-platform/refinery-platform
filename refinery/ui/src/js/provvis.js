@@ -30,8 +30,6 @@ var provvis = function () {
 
         /* Toolbar items. */
 
-        /* TODO: Create button groups for global and node-centric actions. */
-
         /* Node centric items. */
         $("<span/>", {
             "id": "prov-ctrl-node-btn-group",
@@ -64,6 +62,33 @@ var provvis = function () {
             "data-html": "true",
             "title": "Expand"
         }).appendTo("#prov-ctrl-node-btn-group");
+
+
+        /* Attribute labeling. */
+        $("<div/>", {
+            "id": "prov-ctrl-node-labeling-btn-group",
+            "class": "btn-group",
+            "style": "margin-left: 15px"
+        }).appendTo("#" + parentId);
+
+        $("<div/>", {
+            "id": "prov-ctrl-visible-attribute",
+            "class": "btn btn-mini btn-group"
+        }).appendTo("#prov-ctrl-node-labeling-btn-group");
+
+        $("<a/>", {
+            "class": "btn btn-mini dropdown-toggle",
+            "data-toggle": "dropdown",
+            "href": "#",
+            "html": "<i class=icon-wrench></i>" +
+                "&nbsp;" + "Attributes" + "&nbsp;" +
+                "<i class=icon-caret-down></i>" + "&nbsp;"
+        }).appendTo("#prov-ctrl-visible-attribute");
+
+        $("<ul/>", {
+            "id": "prov-ctrl-visible-attribute-list",
+            "class": "dropdown-menu scrollable-menu"
+        }).appendTo("#prov-ctrl-visible-attribute");
 
 
         /* Global items. */
@@ -114,6 +139,7 @@ var provvis = function () {
         $("#prov-ctrl-visible-views-list").bind("click", function (e) {
             e.stopPropagation();
         });
+
 
         /* Links. */
         $("<div/>", {
@@ -201,6 +227,72 @@ var provvis = function () {
             "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Blend" + "</label>" + "</a>"
         }).appendTo("#prov-ctrl-filter-list");
 
+
+        /* Help. */
+        $("<div>", {
+            "class": "modal fade bs-example-modal-sm",
+            "tabindex": "-1",
+            "role": "dialog",
+            "aria-labelledby": "mySmallModalLabel",
+            "aria-hidden": "true"
+        }).appendTo("body");
+
+        $("<div>", {
+            "class": "modal-dialog modal-sm"
+        }).appendTo(".bs-example-modal-sm");
+
+        $("<div>", {
+            "class": "modal-content"
+        }).appendTo(".modal-dialog");
+
+        $("<div>", {
+            "class": "modal-header"
+        }).appendTo(".modal-content");
+
+        $("<button>", {
+            "type": "button",
+            "class": "close",
+            "data-dismiss": "modal",
+            "html": "<span aria-hidden=\"true\">" + "&times;" + "</span><span class=\"sr-only\"></span>"
+        }).appendTo(".modal-header");
+
+        $("<h4>", {
+            "class": "modal-title",
+            "id": "myModalLabel",
+            "html": "Visualization Interaction Command List"
+        }).appendTo(".modal-header");
+
+        $("<div>", {
+            "class": "modal-body",
+            "html": "<ul><li><b>Node controls:</b></li>" +
+                "<ul><li>(Un)Select: Left click</li>" +
+                "<li>Highlight predecessors: SHIFT + Left click</li>" +
+                "<li>Highlight successors: CTRL + Left click</li>" +
+                "<li>Collapse Node: SHIFT + Left double click</li>" +
+                "<li>Expand Node: CTRL + Left double click</li></ul>" +
+                "<li><b>Global controls:</b></li>" +
+                "<ul><li>Clear highlighting: Left click on background</li>" +
+                "<li>Fit graph to screen: Left double click on background</li></ul></ul>"
+        }).appendTo(".modal-content");
+
+        $("<div>", {
+            "class": "modal-footer"
+        }).appendTo(".modal-content");
+
+        $("<button/>", {
+            "id": "prov-ctrl-help",
+            "class": "btn btn-mini",
+            "type": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "data-toggle": "modal",
+            "data-target": ".bs-example-modal-sm",
+            "html": "<i class=icon-question-sign></i>" +
+                "&nbsp;" + "Command List",
+            "data-html": "true",
+            "title": "Command List",
+            "style": "margin-left: 15px"
+        }).appendTo("#" + parentId);
     };
 
     /**

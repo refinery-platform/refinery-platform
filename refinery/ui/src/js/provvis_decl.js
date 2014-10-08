@@ -106,7 +106,7 @@ var provvisDecl = function () {
     DoiComponents.prototype.computeWeightedSum = function () {
         /* TODO: Specify component weights within method params and compute a mean among all components. */
 
-        this.doiWeightedSum = (this.doiFiltered/3 + this.doiSelected/3 + this.doiHighlighted/3).toFixed(2);
+        this.doiWeightedSum = (this.doiFiltered / 3 + this.doiSelected / 3 + this.doiHighlighted / 3).toFixed(2);
     };
 
     /**
@@ -343,14 +343,16 @@ var provvisDecl = function () {
         this.grid = grid;
     };
 
-/*    *//**
+    /*    */
+    /**
      * Support view only showing analysis within a time-gradient background.
      *
      * @constructor
-     *//*
-    var SupportView = function () {
+     */
+    /*
+     var SupportView = function () {
 
-    };*/
+     };*/
 
     /**
      * Publish constructor function declarations.

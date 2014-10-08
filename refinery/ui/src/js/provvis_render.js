@@ -134,35 +134,35 @@ var provvisRender = function () {
                 switch (filterAction) {
                     case "hide":
                         d3.select("#nodeId-" + san.autoId).classed("blendedNode", false);
-                        san.children.values().forEach( function (n) {
+                        san.children.values().forEach(function (n) {
                             d3.select("#nodeId-" + n.autoId).classed("blendedNode", false);
                         });
-                        san.links.values().forEach( function (l) {
+                        san.links.values().forEach(function (l) {
                             d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", false);
                         });
                         break;
                     case "blend":
                         d3.select("#nodeId-" + san.autoId).classed("blendedNode", true);
-                        san.children.values().forEach( function (n) {
+                        san.children.values().forEach(function (n) {
                             d3.select("#nodeId-" + n.autoId).classed("blendedNode", true);
                         });
-                        san.links.values().forEach( function (l) {
+                        san.links.values().forEach(function (l) {
                             d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", true);
                         });
                         break;
                 }
-                san.children.values().forEach( function (n) {
+                san.children.values().forEach(function (n) {
                     d3.select("#nodeId-" + n.autoId).classed("filteredNode", false);
                 });
-                san.links.values().forEach( function (l) {
+                san.links.values().forEach(function (l) {
                     d3.selectAll("#linkId-" + l.autoId).classed("filteredLink", false);
                 });
             } else {
                 d3.select("#nodeId-" + san.autoId).classed({"filteredNode": true, "blendedNode": false});
-                san.children.values().forEach( function (n) {
+                san.children.values().forEach(function (n) {
                     d3.select("#nodeId-" + n.autoId).classed({"filteredNode": true, "blendedNode": false});
                 });
-                san.links.values().forEach( function (l) {
+                san.links.values().forEach(function (l) {
                     d3.selectAll("#linkId-" + l.autoId).classed({"filteredLink": true, "blendedLink": false});
                 });
             }
@@ -877,7 +877,7 @@ var provvisRender = function () {
     var drawNodes = function (nodes) {
         analysis.each(function () {
             var analysisId = d3.select(this).attr("id");
-            d3.select(this).selectAll(".node")
+            var nodeGlyph = d3.select(this).selectAll(".node")
                 .data(nodes.filter(function (n) {
                     return n.parent.parent.autoId === +analysisId.replace(/(analysisId-)/g, "");
                 }))
@@ -915,13 +915,26 @@ var provvisRender = function () {
                 })
                 .attr("id", function (d) {
                     return "nodeId-" + d.autoId;
-                }).append("text")
+                });
+
+            nodeGlyph.append("text")
                 .text(function (d) {
                     return d.doi.doiWeightedSum;
                 }).attr("class", "nodeDoiLabel")
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "central")
                 .style("display", "none");
+
+            nodeGlyph.filter(function (d) {
+                return d.nodeType === "stored";
+            })
+                .append("text")
+                .text(function (d) {
+                    return d.attributes.get("name");
+                }).attr("class", "nodeAttrLabel")
+                .attr("text-anchor", "left")
+                .attr("dominant-baseline", "top")
+                .style("display", "inline");
         });
 
         /* Set node dom element. */
@@ -934,7 +947,7 @@ var provvisRender = function () {
      * @param keyStroke Keystroke being pressed at mouse click.
      */
     var handleCollapseExpandNode = function (d, keyStroke) {
-/* TODO: Change styles to css classes. */
+        /* TODO: Change styles to css classes. */
         var hideChildNodes = function (n) {
             n.children.values().forEach(function (cn) {
                 cn.hidden = true;
@@ -1292,7 +1305,7 @@ var provvisRender = function () {
                 createHTMLKeyValuePair("Year", d.attributes.get("Year")) + "<br>" +
                 createHTMLKeyValuePair("Month", d.attributes.get("Month")) + "<br>" +
                 createHTMLKeyValuePair("Type", d.fileType), event);
-                d3.select(this).classed("mouseoverNode", true);
+            d3.select(this).classed("mouseoverNode", true);
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("Node", d.uuid) + "<br>" +
                 createHTMLKeyValuePair("Name", d.name) + "<br>" +
@@ -1440,14 +1453,17 @@ var provvisRender = function () {
         saBBox = vis.canvas.append("g").classed({"saBBoxes": true}).style("display", "inline")
             .selectAll(".saBBox")
             .data(saBBoxes.keys())
-            .enter().append("rect")
-            .attr("transform", function (d) {
-                return "translate(" + (saBBoxes.get(d).minX) + "," + (saBBoxes.get(d).minY) + ")";
-            })
+            .enter()
+            .append("g")
             .attr("class", "saBBox")
             .attr("id", function (d) {
                 return "saBBoxId-" + vis.graph.saNodes[d].autoId;
-            })
+            }).attr("transform", function (d) {
+                return "translate(" + (saBBoxes.get(d).minX) + "," + (saBBoxes.get(d).minY) + ")";
+            });
+
+        /* Actual bounding box. */
+        saBBox.append("rect")
             .attr("width", function (d) {
                 return saBBoxes.get(d).maxX - saBBoxes.get(d).minX;
             })
@@ -1456,6 +1472,19 @@ var provvisRender = function () {
             })
             .attr("rx", cell.width / 3)
             .attr("ry", cell.height / 3);
+
+        /* Workflow name as label. */
+        saBBox.append("text")
+            .attr("transform", function () {
+                return "translate(" + (10) + "," + (-2) + ")";
+            })
+            .text(function (d) {
+                var wfName = "noworkflow";
+                if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid) !== "undefined") {
+                    wfName = vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid).name;
+                }
+                return wfName;
+            });
     };
 
     /**
@@ -1708,6 +1737,30 @@ var provvisRender = function () {
             }
             runRenderUpdatePrivate(vis, lastSolrResponse);
         });
+
+        /* Choose visible node attribute. */
+        $("[id^=prov-ctrl-visible-attribute-list-]").click(function () {
+
+            /* Set and get chosen attribute as active. */
+            $(this).find("input").prop("checked", true);
+            var selAttrName = $(this).find("label").text();
+
+            /* On click, set current to active and unselect others. */
+            $("#prov-ctrl-visible-attribute-list > li").each(function (idx, li) {
+                var item = $(li);
+                if (item[0].id !== ("prov-ctrl-visible-attribute-list-" + selAttrName)) {
+                    item.find("input").prop("checked", false);
+                }
+            });
+
+            /* Change attribute label on every node. */
+            graph.nodes.filter(function (d) {
+                return d.nodeType === "stored";
+            }).forEach(function (n) {
+                d3.select("#nodeId-" + n.autoId).select(".nodeAttrLabel").text(n.attributes.get(selAttrName));
+            });
+
+        });
     };
 
     /* TODO: Minimize layout through minimizing analyses - adapt to collapse/expand. */
@@ -1732,7 +1785,6 @@ var provvisRender = function () {
                 if (keyEvent.ctrl || keyEvent.shift) {
                     handlePathHighlighting(d, keyEvent, graph.links);
                 } else {
-                    /* TODO: Temporarily disabled. */
                     handleNodeSelection(d, keyEvent);
 
                     updateTableContent(d);
@@ -2032,9 +2084,9 @@ var provvisRender = function () {
             });
 
             /* Update analysis node filter. */
-            vis.graph.aNodes.forEach( function (an) {
+            vis.graph.aNodes.forEach(function (an) {
                 an.filtered = false;
-                an.children.values().forEach( function (san) {
+                an.children.values().forEach(function (san) {
                     if (san.filtered) {
                         an.filtered = true;
                     }
