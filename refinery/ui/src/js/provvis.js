@@ -233,7 +233,6 @@ var provvis = function () {
             "class": "modal fade bs-example-modal-sm",
             "tabindex": "-1",
             "role": "dialog",
-            "aria-labelledby": "mySmallModalLabel",
             "aria-hidden": "true"
         }).appendTo("body");
 
@@ -246,31 +245,15 @@ var provvis = function () {
         }).appendTo(".modal-dialog");
 
         $("<div>", {
-            "class": "modal-header"
-        }).appendTo(".modal-content");
-
-        $("<button>", {
-            "type": "button",
-            "class": "close",
-            "data-dismiss": "modal",
-            "html": "<span aria-hidden=\"true\">" + "&times;" + "</span><span class=\"sr-only\"></span>"
-        }).appendTo(".modal-header");
-
-        $("<h4>", {
-            "class": "modal-title",
-            "id": "myModalLabel",
-            "html": "Visualization Interaction Command List"
-        }).appendTo(".modal-header");
-
-        $("<div>", {
             "class": "modal-body",
-            "html": "<ul><li><b>Node controls:</b></li>" +
+            "html": "<h3>Command Shortcut List</h3>" +
+                "<ul><li><div class=\"refinery-subheader\"><h4>Node controls:</h4></div></li>" +
                 "<ul><li>(Un)Select: Left click</li>" +
                 "<li>Highlight predecessors: SHIFT + Left click</li>" +
                 "<li>Highlight successors: CTRL + Left click</li>" +
                 "<li>Collapse Node: SHIFT + Left double click</li>" +
-                "<li>Expand Node: CTRL + Left double click</li></ul>" +
-                "<li><b>Global controls:</b></li>" +
+                "<li>Expand Node: CTRL + Left double click</li></ul><br>" +
+                "<li><div class=\"refinery-subheader\"><h4>Node controls:</h4></div></li>" +
                 "<ul><li>Clear highlighting: Left click on background</li>" +
                 "<li>Fit graph to screen: Left double click on background</li></ul></ul>"
         }).appendTo(".modal-content");
@@ -278,6 +261,12 @@ var provvis = function () {
         $("<div>", {
             "class": "modal-footer"
         }).appendTo(".modal-content");
+
+        $("<button>", {
+            "class": "btn btn-primary",
+            "data-dismiss": "modal",
+            "html": "OK"
+        }).appendTo(".modal-footer");
 
         $("<button/>", {
             "id": "prov-ctrl-help",
