@@ -33,8 +33,7 @@ var provvis = function () {
         /* Node centric items. */
         $("<span/>", {
             "id": "prov-ctrl-node-btn-group",
-            "class": "btn-group",
-            "data-toggle": "buttons-radio"
+            "class": "btn-group"
         }).appendTo("#" + parentId);
 
 
