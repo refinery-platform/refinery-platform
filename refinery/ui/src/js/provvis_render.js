@@ -784,7 +784,7 @@ var provvisRender = function () {
                     return an.autoId === +analysisId.replace(/(analysisId-)/g, "");
                 }))
                 .enter().append("g").each(function (an) {
-                    var glyph = d3.select(this).classed({"aNode": true})
+                    var nodeGlyph = d3.select(this).classed({"aNode": true})
                         .attr("transform", "translate(" + an.x + "," + an.y + ")")
                         .attr("id", function () {
                             return "nodeId-" + an.autoId;
@@ -793,7 +793,7 @@ var provvisRender = function () {
                         .style("fill", function () {
                             return timeScale(parseISOTimeFormat(an.start));
                         });
-                    glyph.append("polygon")
+                    nodeGlyph.append("polygon")
                         .attr("points", function () {
                             return "0," + (vis.radius) + " " +
                                 (vis.radius) + "," + (-0.5 * vis.radius) + " " +
@@ -802,13 +802,24 @@ var provvisRender = function () {
                                 (-vis.radius) + "," + (0.5 * vis.radius) + " " +
                                 (-vis.radius) + "," + (-0.5 * vis.radius);
                         });
-                    glyph.append("text")
+                    nodeGlyph.append("text")
                         .text(function (d) {
                             return d.doi.doiWeightedSum;
                         }).attr("class", "nodeDoiLabel")
                         .attr("text-anchor", "middle")
                         .attr("dominant-baseline", "central")
                         .style("display", "none");
+
+                    nodeGlyph.append("text")
+                        .attr("transform", function () {
+                            return "translate(" + (-cell.width / 2) + "," + (cell.height / 2) + ")";
+                        })
+                        .text(function (d) {
+                            return parseISOTimeFormat(d.start);
+                        }).attr("class", "nodeAttrLabel")
+                        .attr("text-anchor", "right")
+                        .attr("dominant-baseline", "bottom")
+                        .style("display", "inline");
                 });
         });
 

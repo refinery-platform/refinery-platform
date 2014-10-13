@@ -109,7 +109,7 @@
 
 .mouseoverNode {
     stroke-width: 3px;
-    stroke: #136382;;
+    stroke: #136382;
 }
 
 .filteredNode, .filteredLink {
@@ -175,6 +175,13 @@
     font-size: 11px;
     font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
     cursor: default;
+}
+
+.mouseoverNode text {
+    fill: #136382;
+    stroke: #136382;
+    stroke-width: 0.5px;
+    display: inline;
 }
 
 .saBBox {
