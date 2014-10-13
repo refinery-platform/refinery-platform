@@ -161,8 +161,8 @@ var provvisRender = function () {
                 d3.select("#nodeId-" + san.autoId).classed("filteredNode", true);
                 d3.select("#nodeId-" + san.autoId).classed("blendedNode", false);
                 san.children.values().forEach(function (n) {
-                    d3.select("#nodeId-" + san.autoId).classed("filteredNode", true);
-                    d3.select("#nodeId-" + san.autoId).classed("blendedNode", false);
+                    d3.select("#nodeId-" + n.autoId).classed("filteredNode", true);
+                    d3.select("#nodeId-" + n.autoId).classed("blendedNode", false);
                 });
                 san.links.values().forEach(function (l) {
                     d3.selectAll("#linkId-" + l.autoId).classed("filteredLink", true);
@@ -955,8 +955,8 @@ var provvisRender = function () {
         var hideChildNodes = function (n) {
             n.children.values().forEach(function (cn) {
                 cn.hidden = true;
-                d3.select("#nodeId-" + cn.autoId).style("display", "none");
                 d3.select("#nodeId-" + cn.autoId).classed("selectedNode", false);
+                d3.select("#nodeId-" + cn.autoId).classed("hiddenNode", true);
                 if (!cn.children.empty())
                     hideChildNodes(cn);
             });
@@ -966,11 +966,11 @@ var provvisRender = function () {
         if (keyStroke.ctrl && (d.nodeType === "analysis" || d.nodeType === "subanalysis")) {
 
             /* Set node visibility. */
-            d3.select("#nodeId-" + d.autoId).style("display", "none");
+            d3.select("#nodeId-" + d.autoId).classed("hiddenNode", true);
             d.hidden = true;
             d.children.values().forEach(function (cn) {
-                d3.select("#nodeId-" + cn.autoId).style("display", "inline");
                 d3.select("#nodeId-" + cn.autoId).classed("selectedNode", true);
+                d3.select("#nodeId-" + cn.autoId).classed("hiddenNode", false);
                 if (cn instanceof provvisDecl.Subanalysis === true) {
                     d3.select("#nodeId-" + cn.autoId).select(".saMenu").style("display", "none");
                 }
@@ -1012,7 +1012,7 @@ var provvisRender = function () {
 
             /* Set node visibility. */
             d.parent.hidden = false;
-            d3.select("#nodeId-" + d.parent.autoId).style("display", "inline");
+            d3.select("#nodeId-" + d.parent.autoId).classed("hiddenNode", false);
             hideChildNodes(d.parent);
 
             /* Set saBBox visibility. */

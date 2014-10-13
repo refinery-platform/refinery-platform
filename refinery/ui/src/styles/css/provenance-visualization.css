@@ -107,6 +107,10 @@
     opacity: 0.3;
 }
 
+.hiddenNode {
+    display: none;
+}
+
 .link {
     stroke: gray;
     stroke-width: 1.5px;
