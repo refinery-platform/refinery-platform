@@ -457,62 +457,7 @@ var provvisRender = function () {
             }
         });
 
-        /* Hide or blend (un)selected nodes. */
-        vis.graph.nodes.forEach(function (n) {
-            var curNode = n;
-            while (curNode.hidden) {
-                curNode = curNode.parent;
-            }
-
-            /* TODO: Change styles to css classes. */
-            if (!curNode.filtered) {
-                switch (filterAction) {
-                    case "hide":
-                        d3.select("#nodeId-" + curNode.autoId).style("display", "none");
-                        if (!(curNode instanceof provvisDecl.Node)) {
-                            curNode.links.values().forEach(function (l) {
-                                d3.selectAll("#linkId-" + l.autoId).style("display", "none");
-                            });
-                        } else {
-                            curNode.parent.links.values().forEach(function (l) {
-                                d3.selectAll("#linkId-" + l.autoId).style("display", "none");
-                            });
-                        }
-                        break;
-                    case "blend":
-                        d3.select("#nodeId-" + curNode.autoId).style({"display": "inline", "opacity": 0.3});
-                        if (!(curNode instanceof provvisDecl.Node)) {
-                            curNode.links.values().filter(function (l) {
-                                return !l.hidden;
-                            }).forEach(function (l) {
-                                d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 0.3});
-                            });
-                        } else {
-                            curNode.parent.links.values().filter(function (l) {
-                                return !l.hidden;
-                            }).forEach(function (l) {
-                                d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 0.3});
-                            });
-                        }
-                        break;
-                }
-            } else {
-                d3.select("#nodeId-" + curNode.autoId).style({"display": "inline", "opacity": 1.0});
-                if (!(curNode instanceof provvisDecl.Node)) {
-                    curNode.links.values().filter(function (l) {
-                        return !l.hidden;
-                    }).forEach(function (l) {
-                        d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 1.0});
-                    });
-                } else {
-                    curNode.parent.links.values().filter(function (l) {
-                        return !l.hidden;
-                    }).forEach(function (l) {
-                        d3.select("#linkId-" + l.autoId).style({"display": "inline", "opacity": 1.0});
-                    });
-                }
-            }
-        });
+        updateNodeDoi();
     };
 
     /* TODO: Prototype implementation. Code cleanup. */
