@@ -169,8 +169,8 @@
 }
 
 .nodeAttrLabel {
-    fill: #ed7407;
-    stroke: #ed7407;
+    fill: #000000;
+    stroke: #000000;
     stroke-width: 0.5px;
     font-size: 11px;
     font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;

@@ -58,16 +58,16 @@ var provvisRender = function () {
 
             switch (true) {
                 case (-2 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.25):
-                    scaleFactor = 1;
+                    scaleFactor = 0.75;
                     break;
                 case (0.25 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.5):
-                    scaleFactor = 1.5;
+                    scaleFactor = 1.0;
                     break;
                 case (0.5 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.75):
-                    scaleFactor = 2;
+                    scaleFactor = 1.25;
                     break;
                 case (0.75 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 2):
-                    scaleFactor = 3;
+                    scaleFactor = 1.5;
                     break;
             }
 
@@ -117,12 +117,12 @@ var provvisRender = function () {
                     .transition()
                     .duration(500)
                     .attr("points", function () {
-                        return "0," + (-2 * scaleFactor * vis.radius) + " " +
-                            (2 * scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius) + " " +
-                            (2 * scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius) + " " +
-                            "0" + "," + (2 * scaleFactor * vis.radius) + " " +
-                            (-2 * scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius) + " " +
-                            (-2 * scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius);
+                        return (-1.5 * scaleFactor * vis.radius) + "," + "0" + " " +
+                            (-scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius) + " " +
+                            (scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius) + " " +
+                            (1.5 * scaleFactor * vis.radius) + "," + "0" + " " +
+                            (scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius) + " " +
+                            (-scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius);
                     });
             }
         });
@@ -795,12 +795,12 @@ var provvisRender = function () {
                         });
                     glyph.append("polygon")
                         .attr("points", function () {
-                            return "0," + (-2 * vis.radius) + " " +
-                                (2 * vis.radius) + "," + (-vis.radius) + " " +
-                                (2 * vis.radius) + "," + (vis.radius) + " " +
-                                "0" + "," + (2 * vis.radius) + " " +
-                                (-2 * vis.radius) + "," + (vis.radius) + " " +
-                                (-2 * vis.radius) + "," + (-vis.radius);
+                            return "0," + (vis.radius) + " " +
+                                (vis.radius) + "," + (-0.5 * vis.radius) + " " +
+                                (vis.radius) + "," + (0.5 * vis.radius) + " " +
+                                "0" + "," + (0.5 * vis.radius) + " " +
+                                (-vis.radius) + "," + (0.5 * vis.radius) + " " +
+                                (-vis.radius) + "," + (-0.5 * vis.radius);
                         });
                     glyph.append("text")
                         .text(function (d) {
@@ -871,13 +871,15 @@ var provvisRender = function () {
 
             nodeGlyph.filter(function (d) {
                 return d.nodeType === "stored";
-            })
-                .append("text")
+            }).append("text")
+                .attr("transform", function () {
+                    return "translate(" + (-cell.width / 2) + "," + (cell.height / 2) + ")";
+                })
                 .text(function (d) {
                     return d.attributes.get("name");
                 }).attr("class", "nodeAttrLabel")
-                .attr("text-anchor", "left")
-                .attr("dominant-baseline", "top")
+                .attr("text-anchor", "right")
+                .attr("dominant-baseline", "bottom")
                 .style("display", "inline");
         });
 
@@ -1060,9 +1062,8 @@ var provvisRender = function () {
     /**
      * Left click on a node to reveal additional details.
      * @param d Node
-     * @param d3Event Mouse event.
      */
-    var handleNodeSelection = function (d, d3Event) {
+    var handleNodeSelection = function (d) {
 
         /* Update selection. */
         if (d.selected) {
