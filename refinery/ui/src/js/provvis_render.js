@@ -1862,10 +1862,15 @@ var provvisRender = function () {
             vis.graph.saNodes[d].doi.selectedChanged();
             vis.graph.saNodes[d].parent.selected = false;
             vis.graph.saNodes[d].parent.doi.selectedChanged();
-            vis.graph.saNodes[d].children.values().forEach(function (cn) {
+            vis.graph.saNodes[d].parent.children.values().forEach(function (cn) {
                 cn.selected = false;
                 cn.doi.selectedChanged();
                 d3.select("#nodeId-" + cn.autoId).classed("selectedNode", false);
+                cn.children.values().forEach(function (acn) {
+                    acn.selected = false;
+                    acn.doi.selectedChanged();
+                    d3.select("#nodeId-" + acn.autoId).classed("selectedNode", false);
+                });
             });
             d3.select("#nodeId-" + vis.graph.saNodes[d].parent.autoId).classed("selectedNode", false);
 
