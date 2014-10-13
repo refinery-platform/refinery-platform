@@ -90,7 +90,7 @@
 .link {
     stroke: gray;
     stroke-width: 1.5px;
-    stroke-opacity: 1;
+    stroke-opacity: 1.0;
     fill: none;
     display: none;
 }
@@ -120,6 +120,7 @@
 .blendedNode, .blendedLink {
     display: inline;
     opacity: 0.3;
+    stroke-opacity: 0.3;
 }
 
 .hiddenNode, .hiddenLink {
