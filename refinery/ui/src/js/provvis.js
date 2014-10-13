@@ -37,30 +37,44 @@ var provvis = function () {
             "data-toggle": "buttons-radio"
         }).appendTo("#" + parentId);
 
-        /* Collapse. */
+
+        /* Analyses. */
         $("<button/>", {
-            "id": "prov-ctrl-collapse-click",
+            "id": "prov-ctrl-analyses-click",
             "class": "btn btn-mini",
             "type": "button",
             "rel": "tooltip",
             "data-placement": "bottom",
-            "data-documents": "Collapse",
-            "html": "Collapse",
+            "data-documents": "Analyses",
+            "html": "Analyses",
             "data-html": "true",
-            "title": "Collapse"
+            "title": "Analyses"
         }).appendTo("#prov-ctrl-node-btn-group");
 
-        /* Expand. */
+        /* Subanalyses. */
         $("<button/>", {
-            "id": "prov-ctrl-expand-click",
+            "id": "prov-ctrl-subanalyses-click",
+            "class": "btn btn-mini",
+            "type": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "data-documents": "Subanalyses",
+            "html": "Subanalyses",
+            "data-html": "true",
+            "title": "Subanalyses"
+        }).appendTo("#prov-ctrl-node-btn-group");
+
+        /* Files and Tools. */
+        $("<button/>", {
+            "id": "prov-ctrl-files-click",
             "class": 'btn btn-mini',
             "type": "button",
             "rel": "tooltip",
             "data-placement": "bottom",
-            "data-documents": "Expand",
-            "html": "Expand",
+            "data-documents": "Files/Tools",
+            "html": "Files/Tools",
             "data-html": "true",
-            "title": "Expand"
+            "title": "Files/Tools"
         }).appendTo("#prov-ctrl-node-btn-group");
 
 

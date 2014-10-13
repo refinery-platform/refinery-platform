@@ -87,6 +87,21 @@
     display: none;
 }
 
+.link {
+    stroke: gray;
+    stroke-width: 1.5px;
+    stroke-opacity: 1;
+    fill: none;
+    display: none;
+}
+
+.hLink {
+    stroke-width: 10px;
+    opacity: 1.0;
+    fill: none;
+    display: none;
+}
+
 .selectedNode {
     stroke-width: 1.5px;
     stroke: #ed7407;
@@ -107,21 +122,7 @@
     opacity: 0.3;
 }
 
-.hiddenNode {
-    display: none;
-}
-
-.link {
-    stroke: gray;
-    stroke-width: 1.5px;
-    stroke-opacity: 1;
-    fill: none;
-}
-
-.hLink {
-    stroke-width: 10px;
-    opacity: 1.0;
-    fill: none;
+.hiddenNode, .hiddenLink {
     display: none;
 }
 
