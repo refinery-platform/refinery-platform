@@ -27,7 +27,7 @@ var provvisRender = function () {
     var saBBoxes = d3.map(),
         saBBox = Object.create(null);
 
-    var timeScale = Object.create(null);
+    var timeColorScale = Object.create(null);
     var filterAction = Object.create(null);
 
     var lastSolrResponse = Object.create(null);
@@ -211,6 +211,8 @@ var provvisRender = function () {
                 /* Collapse. */
             } else if (an.doi.doiWeightedSum < (1 / 3)) {
                 keyStroke = {ctrl: false, shift: true};
+            } else {
+                keyStroke = {ctrl: false, shift: false};
             }
             handleCollapseExpandNode(an, keyStroke);
         });
@@ -225,6 +227,8 @@ var provvisRender = function () {
                 /* Collapse. */
             } else if (san.doi.doiWeightedSum < (1 / 3)) {
                 keyStroke = {ctrl: false, shift: true};
+            } else {
+                keyStroke = {ctrl: false, shift: false};
             }
             handleCollapseExpandNode(san, keyStroke);
         });
@@ -498,7 +502,7 @@ var provvisRender = function () {
 
         var gradientScale = d3.scale.linear()
             .domain([0, 100])
-            .range([Date.parse(timeScale.domain()[0]), Date.parse(timeScale.domain()[1])]);
+            .range([Date.parse(timeColorScale.domain()[0]), Date.parse(timeColorScale.domain()[1])]);
 
         vis.graph.aNodes.forEach(function (an) {
             svg.append("line")
@@ -522,7 +526,7 @@ var provvisRender = function () {
         });
 
         $("#prov-support-view-reset-time").click(function () {
-            filterAnalysesByTime(Date.parse(timeScale.domain()[0]), vis);
+            filterAnalysesByTime(Date.parse(timeColorScale.domain()[0]), vis);
             d3.select(this.parentNode).select("line")
                 .attr("x1", 0)
                 .attr("x2", 0);
@@ -535,7 +539,7 @@ var provvisRender = function () {
      */
     var dyeWorkflows = function () {
         d3.selectAll(".rawNode, .specialNode, .dtNode, .intermediateNode, .storedNode").style("stroke", function (d) {
-            return timeScale(parseISOTimeFormat(d.parent.parent.start));
+            return timeColorScale(parseISOTimeFormat(d.parent.parent.start));
         });
     };
 
@@ -544,7 +548,7 @@ var provvisRender = function () {
      */
     var dyeAnalyses = function () {
         d3.selectAll(".rawNode, .specialNode, .dtNode, .intermediateNode, .storedNode").style("fill", function (d) {
-            return timeScale(parseISOTimeFormat(d.parent.parent.start));
+            return timeColorScale(parseISOTimeFormat(d.parent.parent.start));
         });
     };
 
@@ -712,12 +716,12 @@ var provvisRender = function () {
                         })
                         .style("opacity", 0.5);
 
-                    var glyph = g.append("g").classed("saGlyph", true)
+                    var nodeGlyph = g.append("g").classed("saGlyph", true)
                         .style("fill", function () {
-                            return timeScale(parseISOTimeFormat(san.parent.start));
+                            return timeColorScale(parseISOTimeFormat(san.parent.start));
                         });
 
-                    glyph.append("polygon")
+                    nodeGlyph.append("polygon")
                         .attr("points", function () {
                             return "0," + (-vis.radius) + " " +
                                 (vis.radius) + "," + (-vis.radius / 2) + " " +
@@ -727,13 +731,29 @@ var provvisRender = function () {
                                 (-vis.radius) + "," + (-vis.radius / 2);
                         });
 
-                    glyph.append("text")
+                    nodeGlyph.append("text")
                         .text(function (d) {
                             return d.doi.doiWeightedSum;
                         }).attr("class", "nodeDoiLabel")
                         .attr("text-anchor", "middle")
                         .attr("dominant-baseline", "central")
                         .style("display", "none");
+
+                    nodeGlyph.append("text")
+                        .attr("transform", function () {
+                            return "translate(" + (-cell.width / 2) + "," + (cell.height / 2) + ")";
+                        })
+                        .text(function (d) {
+                            var wfName = "noworkflow";
+                            if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid) !== "undefined") {
+                                wfName = vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid).name;
+                            }
+                            return wfName;
+                        }).attr("class", "nodeAttrLabel")
+                        .attr("text-anchor", "right")
+                        .attr("dominant-baseline", "bottom")
+                        .style("display", "inline");
+
                 });
         });
 
@@ -755,7 +775,7 @@ var provvisRender = function () {
      * @param aNodes Analysis nodes.
      * @param range Linear color scale for domain values.
      */
-    var createAnalysisTimeScale = function (aNodes, range) {
+    var createAnalysistimeColorScale = function (aNodes, range) {
         var min = d3.min(aNodes.filter(function (d) {
                 return d.start !== -1;
             }), function (d) {
@@ -791,7 +811,7 @@ var provvisRender = function () {
                         })
                         .classed({"aNode": true, "filteredNode": true, "blendedNode": false, "selectedNode": false})
                         .style("fill", function () {
-                            return timeScale(parseISOTimeFormat(an.start));
+                            return timeColorScale(parseISOTimeFormat(an.start));
                         });
                     nodeGlyph.append("polygon")
                         .attr("points", function () {
@@ -1468,7 +1488,7 @@ var provvisRender = function () {
                 return "hLinkId-" + l.autoId;
             }).style("stroke", function (d) {
                 /*return vis.color(analysisWorkflowMap.get(d.target.analysis));*/
-                return timeScale(parseISOTimeFormat(d.target.parent.parent.start));
+                return timeColorScale(parseISOTimeFormat(d.target.parent.parent.start));
             });
     };
 
@@ -1634,26 +1654,26 @@ var provvisRender = function () {
             var selectedColorScheme = $(this).find("label").text();
             switch (selectedColorScheme) {
                 case "Blue":
-                    timeScale.range(["lightblue", "darkblue"]);
+                    timeColorScale.range(["lightblue", "darkblue"]);
                     $("#prov-ctrl-time-enc-list-gs").find("input").prop("checked", false);
                     break;
                 case "Grayscale":
-                    timeScale.range(["white", "black"]);
+                    timeColorScale.range(["white", "black"]);
                     $("#prov-ctrl-time-enc-list-blue").find("input").prop("checked", false);
                     break;
             }
 
             d3.selectAll(".node").style("fill", function (d) {
-                return timeScale(parseISOTimeFormat(d.parent.parent.start));
+                return timeColorScale(parseISOTimeFormat(d.parent.parent.start));
             });
             d3.selectAll(".aNode").style("fill", function (d) {
-                return timeScale(parseISOTimeFormat(d.start));
+                return timeColorScale(parseISOTimeFormat(d.start));
             });
             d3.selectAll(".saNode").select(".saGlyph").style("fill", function (d) {
-                return timeScale(parseISOTimeFormat(d.parent.start));
+                return timeColorScale(parseISOTimeFormat(d.parent.start));
             });
             d3.selectAll(".hLink").style("stroke", function (d) {
-                return timeScale(parseISOTimeFormat(d.target.parent.parent.start));
+                return timeColorScale(parseISOTimeFormat(d.target.parent.parent.start));
             });
         });
 
@@ -1956,6 +1976,38 @@ var provvisRender = function () {
     };
 
     /**
+     * Compute doi weight based on analysis start time.
+     * @param aNodes Analysis nodes.
+     */
+    var initDoiTimeComponent = function (aNodes) {
+
+        var min = d3.min(aNodes.filter(function (d) {
+                return d.start !== -1;
+            }), function (d) {
+                return parseISOTimeFormat(d.start);
+            }),
+            max = d3.max(aNodes.filter(function (d) {
+                return d.start !== -1;
+            }), function (d) {
+                return parseISOTimeFormat(d.start);
+            });
+
+        var doiTimeScale = d3.time.scale()
+            .domain([min, max])
+            .range([0.0, 1.0]);
+
+        aNodes.forEach(function (an) {
+            an.doi.initTimeComponent(doiTimeScale(parseISOTimeFormat(an.start)));
+            an.children.values().forEach(function (san) {
+                san.doi.initTimeComponent(doiTimeScale(parseISOTimeFormat(an.start)));
+                san.children.values().forEach(function (n) {
+                    n.doi.initTimeComponent(doiTimeScale(parseISOTimeFormat(an.start)));
+                });
+            });
+        });
+    };
+
+    /**
      * Main render module function.
      * @param provVis The provenance visualization root object.
      */
@@ -1972,7 +2024,8 @@ var provvisRender = function () {
 
         /* Short delay. */
         setTimeout(function () {
-            timeScale = createAnalysisTimeScale(vis.graph.aNodes, ["white", "black"]);
+            timeColorScale = createAnalysistimeColorScale(vis.graph.aNodes, ["white", "black"]);
+            initDoiTimeComponent(vis.graph.aNodes);
             filterAction = "hide";
 
             /* Set coordinates for nodes. */
@@ -1998,11 +2051,13 @@ var provvisRender = function () {
 
             /* Create initial layout for subanalysis only nodes. */
             initSubanalysisLayout(vis.graph.saNodes);
+
             /* Draw subanalysis nodes. */
             drawSubanalysisNodes(vis.graph.saNodes);
 
             /* Create initial layout for analysis only nodes. */
             initAnalysisLayout(vis.graph.aNodes);
+
             /* Draw analysis nodes. */
             drawAnalysisNodes(vis.graph.aNodes);
 

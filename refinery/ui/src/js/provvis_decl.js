@@ -16,7 +16,7 @@ var provvisDecl = function () {
         /**************************/
 
         /* The latest execution time of a node is more important than earlier executions.*/
-        this.time = 0;
+        this.doiTime = 0;
 
         /* For layered nodes: Workflow parameters, files or topology changes over time.*/
         this.change = {wfParams: d3.map(), files: d3.map(), topology: d3.map()};
@@ -93,6 +93,15 @@ var provvisDecl = function () {
     };
 
     /**
+     * Based on the time frame, calculate component weight.
+     * @param factor The analysis start time scaled between 0 and 1.
+     */
+    DoiComponents.prototype.initTimeComponent = function (factor) {
+        this.doiTime = factor;
+        this.computeWeightedSum();
+    };
+
+    /**
      * Calculates the dominant doi component.
      */
     DoiComponents.prototype.computeMinMax = function () {
@@ -106,7 +115,7 @@ var provvisDecl = function () {
     DoiComponents.prototype.computeWeightedSum = function () {
         /* TODO: Specify component weights within method params and compute a mean among all components. */
 
-        this.doiWeightedSum = (this.doiFiltered / 3 + this.doiSelected / 3 + this.doiHighlighted / 3).toFixed(2);
+        this.doiWeightedSum = (this.doiFiltered / 4 + this.doiSelected / 4 + this.doiHighlighted / 4 + this.doiTime / 4).toFixed(2);
     };
 
     /**
