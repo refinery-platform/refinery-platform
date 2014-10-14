@@ -274,9 +274,9 @@ var provvisInit = function () {
         }), function (d) {
             return d.time_start;
         });
-        aNodes.push(new provvisDecl.Analysis(0, Object.create(null), true, "dataset", "noworkflow",
+        aNodes.push(new provvisDecl.Analysis(0, Object.create(null), true, "dataset", "dataset",
             0, datasetTimeStart, -1, -1));
-        analysisWorkflowMap.set("dataset", "noworkflow");
+        analysisWorkflowMap.set("dataset", "dataset");
 
         /* Create remaining analyses. */
         analysesData.forEach(function (a, i) {

@@ -429,7 +429,6 @@ var provvisRender = function () {
         d3.selectAll(".aNode, .saNode").call(drag);
     };
 
-    /* TODO: Code Cleanup. Rewrite css classes. */
     /**
      * Filter analyses by time gradient support view.
      * @param timeThreshold The point of time where analyses executed before are hidden.
@@ -464,7 +463,6 @@ var provvisRender = function () {
         updateNodeDoi();
     };
 
-    /* TODO: Prototype implementation. Code cleanup. */
     /**
      * Draws the support view.
      * @param vis The provenance visualization root object.
@@ -680,8 +678,8 @@ var provvisRender = function () {
                             return "nodeId-" + san.autoId;
                         });
 
-                    /* TODO: TO DISCUSS. */
-                    var saMenuData = [
+                    /* TODO: Menu currently disabled. */
+                    /*var saMenuData = [
                         {label: "WF", value: 1},
                         {label: "o: " + san.outputs.size(), value: 1},
                         {label: "i: " + san.inputs.size(), value: 1},
@@ -714,7 +712,7 @@ var provvisRender = function () {
                         .text(function (d) {
                             return d.data.label;
                         })
-                        .style("opacity", 0.5);
+                        .style("opacity", 0.5);*/
 
                     var nodeGlyph = g.append("g").classed("saGlyph", true)
                         .style("fill", function () {
@@ -744,11 +742,11 @@ var provvisRender = function () {
                             return "translate(" + (-cell.width / 2) + "," + (cell.height / 2) + ")";
                         })
                         .text(function (d) {
-                            var wfName = "noworkflow";
+                            var wfName = "dataset";
                             if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid) !== "undefined") {
                                 wfName = vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid).name;
                             }
-                            return wfName;
+                            return wfName.substr(0,20) + "..";
                         }).attr("class", "nodeAttrLabel")
                         .attr("text-anchor", "right")
                         .attr("dominant-baseline", "bottom")
@@ -835,7 +833,7 @@ var provvisRender = function () {
                             return "translate(" + (-cell.width / 2) + "," + (cell.height / 2) + ")";
                         })
                         .text(function (d) {
-                            return parseISOTimeFormat(d.start);
+                            return parseISOTimeFormat(d.start).toString().substr(0,21) + "..";
                         }).attr("class", "nodeAttrLabel")
                         .attr("text-anchor", "right")
                         .attr("dominant-baseline", "bottom")
@@ -943,9 +941,9 @@ var provvisRender = function () {
             d.children.values().forEach(function (cn) {
                 d3.select("#nodeId-" + cn.autoId).classed("selectedNode", true);
                 d3.select("#nodeId-" + cn.autoId).classed("hiddenNode", false);
-                if (cn instanceof provvisDecl.Subanalysis === true) {
+                /*if (cn instanceof provvisDecl.Subanalysis === true) {
                     d3.select("#nodeId-" + cn.autoId).select(".saMenu").style("display", "none");
-                }
+                }*/
                 cn.hidden = false;
             });
 
@@ -1265,63 +1263,84 @@ var provvisRender = function () {
 
         /* Node tooltips. */
         node.on("mouseover", function (d) {
-            showTooltip(createHTMLKeyValuePair("Node", d.uuid) + "<br>" +
+            /*showTooltip(*//*createHTMLKeyValuePair("Node", d.uuid) + "<br>" +*//*
                 createHTMLKeyValuePair("Name", d.name) + "<br>" +
                 createHTMLKeyValuePair("Author", d.attributes.get("Author")) + "<br>" +
                 createHTMLKeyValuePair("File Type", d.attributes.get("FileType")) + "<br>" +
                 createHTMLKeyValuePair("Year", d.attributes.get("Year")) + "<br>" +
                 createHTMLKeyValuePair("Month", d.attributes.get("Month")) + "<br>" +
-                createHTMLKeyValuePair("Type", d.fileType), event);
+                createHTMLKeyValuePair("Type", d.fileType), event);*/
             d3.select(this).classed("mouseoverNode", true);
         }).on("mousemove", function (d) {
-            showTooltip(createHTMLKeyValuePair("Node", d.uuid) + "<br>" +
+            /*showTooltip(*//*createHTMLKeyValuePair("Node", d.uuid) + "<br>" +*//*
                 createHTMLKeyValuePair("Name", d.name) + "<br>" +
                 createHTMLKeyValuePair("Author", d.attributes.get("Author")) + "<br>" +
                 createHTMLKeyValuePair("File Type", d.attributes.get("FileType")) + "<br>" +
                 createHTMLKeyValuePair("Year", d.attributes.get("Year")) + "<br>" +
                 createHTMLKeyValuePair("Month", d.attributes.get("Month")) + "<br>" +
-                createHTMLKeyValuePair("Type", d.fileType), event);
+                createHTMLKeyValuePair("Type", d.fileType), event);*/
         }).on("mouseout", function () {
-            hideTooltip();
+            /*hideTooltip();*/
             d3.select(this).classed("mouseoverNode", false);
         });
 
         /* Subanalysis tooltips. */
         saNode.select(".saGlyph").on("mouseover", function (d) {
-            showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
+           /* showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
-                "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);
+                "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
             d3.select(this).classed("mouseoverNode", true);
-            d3.select(this.parentNode).select(".saMenu").style("display", "inline");
-        }).on("mousemove", function (d) {
-            showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
-                createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
-                "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);
+            d3.select(this).select(".nodeAttrLabel").text( function (d) {
+                var wfName = "dataset";
+                if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid) !== "undefined") {
+                    wfName = vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid).name;
+                }
+                return wfName;
+            });
 
-            d3.select(this.parentNode).select(".saMenu").style("display", "inline");
+            /*d3.select(this.parentNode).select(".saMenu").style("display", "inline");*/
+        }).on("mousemove", function (d) {
+           /* showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
+                createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
+                "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
+
+            /*d3.select(this.parentNode).select(".saMenu").style("display", "inline");*/
         }).on("mouseout", function () {
-            hideTooltip();
+            /*hideTooltip();*/
             d3.select(this).classed("mouseoverNode", false);
             /*d3.select(this.parentNode).select(".saMenu").style("display", "none");*/
+            d3.select(this).select(".nodeAttrLabel").text( function (d) {
+                var wfName = "dataset";
+                if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid) !== "undefined") {
+                    wfName = vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid).name;
+                }
+                return wfName.substr(0,20) + "..";
+            });
         });
 
         /* Analysis tolltips. */
         aNode.on("mouseover", function (d) {
-            showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
+            /*showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
-                createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);
+                createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);*/
             d3.select(this).classed("mouseoverNode", true);
+            d3.select(this).select(".nodeAttrLabel").text( function (d) {
+                return parseISOTimeFormat(d.start).toString();
+            });
         }).on("mousemove", function (d) {
-            showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
+           /* showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
                 createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
-                createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);
+                createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);*/
         }).on("mouseout", function () {
-            hideTooltip();
+            /*hideTooltip();*/
             d3.select(this).classed("mouseoverNode", false);
+            d3.select(this).select(".nodeAttrLabel").text( function (d) {
+                return parseISOTimeFormat(d.start).toString().substr(0,21) + "..";
+            });
         });
 
         /* Subanalysis arc menu. */
-        var curMenu,
+        /*var curMenu,
             menuTimeout;
 
         saNode.select(".saMenu").selectAll(".arc").on("mouseover", function () {
@@ -1346,7 +1365,7 @@ var provvisRender = function () {
             menuTimeout = setTimeout(function () {
                 curMenu.style("display", "none");
             }, 100);
-        });
+        });*/
     };
 
     /**
@@ -1402,16 +1421,16 @@ var provvisRender = function () {
         /* Create subanalysis bounding box objects. */
         vis.graph.saNodes.forEach(function (san) {
             var minX = d3.min(san.children.values(), function (d) {
-                    return d.x - cell.width / 2 + 2;
+                    return d.x - cell.width / 2 + 5;
                 }),
                 maxX = d3.max(san.children.values(), function (d) {
-                    return d.x + cell.width / 2 - 2;
+                    return d.x + cell.width / 2 - 5;
                 }),
                 minY = d3.min(san.children.values(), function (d) {
-                    return d.y - cell.height / 2 + 2;
+                    return d.y - cell.height / 2 + 5;
                 }),
                 maxY = d3.max(san.children.values(), function (d) {
-                    return d.y + cell.height / 2 - 2;
+                    return d.y + cell.height / 2 - 5;
                 });
 
             saBBoxes.set(san.id, {minX: minX, maxX: maxX, minY: minY, maxY: maxY});
@@ -1446,7 +1465,7 @@ var provvisRender = function () {
                 return "translate(" + (10) + "," + (-2) + ")";
             })
             .text(function (d) {
-                var wfName = "noworkflow";
+                var wfName = "dataset";
                 if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid) !== "undefined") {
                     wfName = vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid).name;
                 }
@@ -1552,7 +1571,7 @@ var provvisRender = function () {
             /* Set node visibility. */
             d.hidden = false;
             d3.select("#nodeId-" + d.autoId).classed("hiddenNode", false);
-            d3.select("#nodeId-" + d.autoId).select(".saMenu").style("display", "none");
+            /*d3.select("#nodeId-" + d.autoId).select(".saMenu").style("display", "none");*/
             hideChildNodes(d);
 
             /* Set link visibility. */
@@ -2087,7 +2106,6 @@ var provvisRender = function () {
         }, 500);
     };
 
-    /* TODO: Code cleanup. */
     /**
      * On attribute filter change, the provenance visualization will be updated.
      * @param vis The provenance visualization root object.
