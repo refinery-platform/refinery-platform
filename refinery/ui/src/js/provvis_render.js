@@ -1366,6 +1366,27 @@ var provvisRender = function () {
                 curMenu.style("display", "none");
             }, 100);
         });*/
+
+        /* On mouseover subanalysis bounding box. */
+        saBBox.on("mouseover", function () {
+            d3.select(this).classed("mouseoverBBox", true);
+            d3.select(this).select(".nodeAttrLabel").text( function (d) {
+                var wfName = "dataset";
+                if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid) !== "undefined") {
+                    wfName = vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid).name;
+                }
+                return wfName;
+            });
+        }).on("mouseout", function (d) {
+            d3.select(this).classed("mouseoverBBox", false);
+            d3.select(this).select(".nodeAttrLabel").text( function (d) {
+                var wfName = "dataset";
+                if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid) !== "undefined") {
+                    wfName = vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid).name;
+                }
+                return wfName.substr(0,20) + "..";
+            });
+        });
     };
 
     /**
@@ -1436,7 +1457,7 @@ var provvisRender = function () {
             saBBoxes.set(san.id, {minX: minX, maxX: maxX, minY: minY, maxY: maxY});
         });
 
-        saBBox = vis.canvas.append("g").classed({"saBBoxes": true}).style("display", "inline")
+        saBBox = vis.canvas.append("g").classed({"saBBoxes": true})
             .selectAll(".saBBox")
             .data(saBBoxes.keys())
             .enter()
@@ -1463,13 +1484,13 @@ var provvisRender = function () {
         saBBox.append("text")
             .attr("transform", function () {
                 return "translate(" + (10) + "," + (-2) + ")";
-            })
+            }).attr("class", "nodeAttrLabel")
             .text(function (d) {
                 var wfName = "dataset";
                 if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid) !== "undefined") {
                     wfName = vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid).name;
                 }
-                return wfName;
+                return wfName.substr(0,20) + "..";
             });
     };
 
@@ -1537,6 +1558,11 @@ var provvisRender = function () {
         graph.nodes.forEach(function (d) {
             d.hidden = false;
             d3.select("#nodeId-" + d.autoId).classed("hiddenNode", false);
+        });
+
+        /* Set saBBox visibility. */
+        saBBox.each( function (d) {
+           d3.select(this).style("display", "inline");
         });
 
         /* Update connections. */
@@ -1872,14 +1898,6 @@ var provvisRender = function () {
 
             /* Update node doi. */
             updateNodeDoi();
-        });
-
-        /* On mouseover show strokes. */
-        saBBox.on("mouseover", function () {
-            d3.select(this).classed("mouseoverBBox", true);
-        });
-        saBBox.on("mouseout", function () {
-            d3.select(this).classed("mouseoverBBox", false);
         });
     };
 
