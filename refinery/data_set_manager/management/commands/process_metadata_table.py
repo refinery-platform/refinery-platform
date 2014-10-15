@@ -1,7 +1,6 @@
-from data_set_manager.single_file_column_parser import SingleFileColumnParser
-from data_set_manager.tasks import create_dataset
-from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
+from django.core.management.base import BaseCommand, CommandError
+from data_set_manager.single_file_column_parser import process_metadata_table
 
 
 class Command(BaseCommand):
@@ -91,32 +90,13 @@ class Command(BaseCommand):
         for arg in required:
             if not options[arg]:
                 raise CommandError('%s was not provided.' % arg)
-
-        parser = SingleFileColumnParser()
-        parser.file_permanent = options['data_file_permanent']
-        parser.file_column_index = int( options['data_file_column'] )
-        parser.source_column_index = [int(x.strip()) for x in options['source_column_index'].split(",")]
-        parser.column_index_separator = "/"
-        parser.file_base_path = options['base_path']
-        
-        if options['auxiliary_file_column'] is not None:
-            parser.auxiliary_file_column_index = int( options['auxiliary_file_column'] )
-        
-        if options['species_column'] is not None:
-            parser.species_column_index = int( options['species_column'] )
-        
-        if options['genome_build_column'] is not None:
-            parser.genome_build_column_index = int( options['genome_build_column'] )                
-        
-        if options['annotation_column'] is not None:
-            parser.annotation_column_index = int( options['annotation_column'] )                
-        
-        investigation = parser.run(options['file_name'])
-        investigation.title = options['title']
-        investigation.save()
-        
-        create_dataset(investigation_uuid=investigation.uuid,
-                       username=options['username'],
-                       dataset_title=options['title'],
-                       slug=options['slug'],
-                       public=options['is_public'])
+        source_columns = [int(x.strip()) for x in options['source_column_index'].split(",")]
+        with open(options['file_name']) as metadata_file:
+            dataset_uuid = process_metadata_table(
+                options['username'], options['title'], metadata_file,
+                source_columns, options['data_file_column'],
+                options['data_file_permanent'], options['base_path'],
+                options['auxiliary_file_column'], options['species_column'],
+                options['genome_build_column'], options['annotation_column'],
+                options['slug'], options['is_public'])
+        print("Created dataset with UUID '{}'".format(dataset_uuid))

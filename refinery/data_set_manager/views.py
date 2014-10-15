@@ -5,16 +5,17 @@ Created on May 11, 2012
 '''
 
 import os
-import simplejson
 from urlparse import urlparse
 from django import forms
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponseRedirect, HttpResponse, \
+    HttpResponseBadRequest
 from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
 from haystack.query import SearchQuerySet
 from core.models import *
+from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
 from data_set_manager.utils import *
 from file_store.tasks import download_file, DownloadError
@@ -27,9 +28,10 @@ def index(request):
         mimetype='application/json')
 
 
-def nodes(request, type, study_uuid, assay_uuid=None ):
+def nodes(request, type, study_uuid, assay_uuid=None):
     start = datetime.now()
-    matrix = get_matrix(study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type )
+    matrix = get_matrix(study_uuid=study_uuid, assay_uuid=assay_uuid,
+                        node_type=type)
     end = datetime.now()
     print( "Time to retrieve node matrix: " + str(end - start))
     return HttpResponse(simplejson.dumps(matrix, indent=2),
@@ -38,56 +40,68 @@ def nodes(request, type, study_uuid, assay_uuid=None ):
 
 def node_attributes(request, type, study_uuid, assay_uuid=None):
     attributes = get_node_attributes(study_uuid=study_uuid,
-                                          assay_uuid=assay_uuid,
-                                          node_type=type)
+                                     assay_uuid=assay_uuid,
+                                     node_type=type)
     return HttpResponse(simplejson.dumps(attributes, indent=2),
                         mimetype='application/json')
 
 
-def node_types(request, study_uuid, assay_uuid=None ):
-    return HttpResponse( simplejson.dumps( get_node_types( study_uuid=study_uuid, assay_uuid=assay_uuid ), indent=2 ), mimetype='application/json' )
+def node_types(request, study_uuid, assay_uuid=None):
+    return HttpResponse(simplejson.dumps(
+        get_node_types(study_uuid=study_uuid, assay_uuid=assay_uuid), indent=2),
+                        mimetype='application/json')
 
-def node_types_files(request, study_uuid, assay_uuid=None ):
-    return HttpResponse( simplejson.dumps( get_node_types( study_uuid=study_uuid, assay_uuid=assay_uuid, files_only=True, filter_set=Node.FILES ), indent=2 ), mimetype='application/json' )
 
-def node_annotate(request, type, study_uuid, assay_uuid=None ):
-    return HttpResponse( simplejson.dumps( update_annotated_nodes(study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type ), indent=2 ), mimetype='application/json' )
-    #return HttpResponse( update_annotated_nodes(study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type ), mimetype='application/json' )
-    
-def contents(request, study_uuid, assay_uuid ):
+def node_types_files(request, study_uuid, assay_uuid=None):
+    return HttpResponse(simplejson.dumps(
+        get_node_types(study_uuid=study_uuid, assay_uuid=assay_uuid,
+                       files_only=True, filter_set=Node.FILES), indent=2),
+                        mimetype='application/json')
+
+
+def node_annotate(request, type, study_uuid, assay_uuid=None):
+    return HttpResponse(simplejson.dumps(
+        update_annotated_nodes(study_uuid=study_uuid, assay_uuid=assay_uuid,
+                               node_type=type), indent=2),
+                        mimetype='application/json')
+    # return HttpResponse( update_annotated_nodes(study_uuid=study_uuid, assay_uuid=assay_uuid, node_type=type ), mimetype='application/json' )
+
+
+def contents(request, study_uuid, assay_uuid):
     # getting current workflows
     workflows = Workflow.objects.all();
-    
+
     return render_to_response('data_set_manager/contents.html', {
-                               "study_uuid": study_uuid,
-                               "assay_uuid": assay_uuid,
-                               "workflows": workflows,
-                               },
-                              context_instance=RequestContext(request) )
-    
+        "study_uuid": study_uuid,
+        "assay_uuid": assay_uuid,
+        "workflows": workflows,
+    },
+                              context_instance=RequestContext(request))
+
 
 # ajax function for returning typeahead queries
 def search_typeahead(request):
-    
-    if (request.is_ajax()):        
+    if (request.is_ajax()):
         search_value = request.POST.getlist('search')
-        
+
         results = SearchQuerySet().autocomplete(content_auto=search_value[0])
-        #results = SearchQuerySet().auto_query(search_value[0])
-        
+        # results = SearchQuerySet().auto_query(search_value[0])
+
         ret_list = []
         for res in results:
             ret_list.append(res.name)
-        return HttpResponse( simplejson.dumps( ret_list, indent=2 ), mimetype='application/json' )
+        return HttpResponse(simplejson.dumps(ret_list, indent=2),
+                            mimetype='application/json')
 
 
-#===============================================================================
+# ===============================================================================
 # ISA-Tab import
 #===============================================================================
 class ImportISATabView(View):
     '''Capture ISA archive URL from POST requests submitted from external sites
 
     '''
+
     def post(self, request, *args, **kwargs):
         try:
             isa_tab_url = request.POST['isa_tab_url']
@@ -107,7 +121,7 @@ class ImportISATabFileForm(forms.Form):
     '''
     isa_tab_file = forms.FileField(label='ISA-Tab file', required=False)
     isa_tab_url = forms.URLField(label='ISA-Tab URL', required=False,
-                                 widget=forms.TextInput(attrs={'size':'37'}))
+                                 widget=forms.TextInput(attrs={'size': '37'}))
 
     def clean(self):
         cleaned_data = super(ImportISATabFileForm, self).clean()
@@ -200,7 +214,8 @@ class ProcessISATabView(View):
                 except DownloadError as e:
                     logger.error("Problem downloading ISA-Tab file. %s", e)
                     error = "Problem downloading ISA-Tab file from: " + url
-                    context = RequestContext(request, {'form': form, 'error': error})
+                    context = RequestContext(request,
+                                             {'form': form, 'error': error})
                     return render_to_response(self.template_name,
                                               context_instance=context)
             else:
@@ -231,7 +246,7 @@ class ProcessISATabView(View):
                                          {'form': form, 'error': error})
                 return render_to_response(self.template_name,
                                           context_instance=context)
-        else:   # submitted form is not valid
+        else:  # submitted form is not valid
             context = RequestContext(request, {'form': form})
             return render_to_response(self.template_name,
                                       context_instance=context)
@@ -252,29 +267,28 @@ def handle_uploaded_file(source_file, target_path):
             destination.write(chunk)
 
 
-class ImportMetadataTableForm(forms.Form):
-    """Metadata table file upload form
-
-    """
-    metadata_file = forms.FileField(label='Metadata file',
-                                    required=True,
-                                    error_messages={'required': 'Please select a file'})
-
-
 class ProcessMetadataTableView(View):
     """Create a new dataset from uploaded metadata table.
 
     """
     template_name = 'data_set_manager/metadata-table-import.html'
+    success_view_name = 'data_set'
 
     def get(self, request, *args, **kwargs):
-        form = ImportMetadataTableForm()
-        return render(request, self.template_name, {'form': form})
+        return render(request, self.template_name)
 
     def post(self, request, *args, **kwargs):
-        form = ImportMetadataTableForm(request.POST, request.FILES)
-        if form.is_valid():
-            f = form.cleaned_data['metadata_file']
-            # process the uploaded file
-        else:   # submitted form is not valid
-            return render(request, self.template_name, {'form': form})
+        try:
+            metadata_file = request.FILES['file']
+            title = request.POST['title']
+            source_column_index = [int(x) for x in request.POST.getlist('source_column_index')]
+            data_file_column = request.POST['data_file_column']
+        except KeyError:
+            return render(request, self.template_name,
+                          {'error_message': 'Required value(s) are missing'})
+        # process the uploaded file
+        dataset_uuid = process_metadata_table(
+            request.user.username, title, metadata_file, source_column_index,
+            data_file_column)
+        return HttpResponseRedirect(reverse(self.success_view_name,
+                                            args=(dataset_uuid,)))

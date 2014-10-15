@@ -17,25 +17,7 @@
     <div class="refinery-header">
       <span class="refinery-header-left"><h2>Metadata Table Import</h2></span>
     </div>
-<!--
-    <form id="metadataTableImportForm" enctype="multipart/form-data" action="#" method="post">
-      {% csrf_token %}
 
-      <p>{{ form.non_field_errors }}</p>
-      <p>{{ error }}</p>  
-
-      <div class="refinery-subheader">
-        <h4>From File</h4>
-      </div>
-      <p>
-        {{ form.metadata_file.errors}}
-        {{ form.metadata_file }}
-      </p>
-
-      <input style="float: left;" class="btn" id="import-button" type="submit" value="Import"/>
-      <div style="margin-left: 15px; padding: 15px; float: left; display: block; height: 22px; width: 22px;" id="spinner"></div>
-    </form>
--->
     <style>
       .gridStyle {
           border: 1px solid rgb(212,212,212);
@@ -43,78 +25,108 @@
           height: 330px;
       }
     </style>
+
     <div ng-controller="MetadataTableImportCtrl">
-      <form id="metadataTableImportForm" enctype="multipart/form-data" action="#" method="post">
+      <form id="importMetadataTableForm" enctype="multipart/form-data" action="/data_set_manager/import/metadata-table-form/" method="post">
         {% csrf_token %}
 
-        {% verbatim %}
+        <input type="file" ng-file-select="onFileSelect($files)" name="file"/>
+{#        {{ form.metadata_file }}#}
 
-        <input type="file" ng-file-select="onFileSelect($files)"/>
         <div class="gridStyle" ng-grid="gridOptions"></div>
-        <p>Please provide the following values:</p>
-        <label>Title
-        <input type="text" ng-model="title"/>
-        (Required) name of this data set
-        </label>
-        <label>Source Column Index
-        <select ng-model="sourceColumnIndex"
-                name="source_column_index"
-                ng-required
-                multiple
-                size="{{ metadataHeader.length || 10 }}"
+        <p>Please provide the following values (fields marked in <strong>bold</strong> are required):</p>
+{#        {{ form.non_field_errors }}#}
+{#        {% for field in form %}#}
+{#          <div>#}
+{#            {{ field.errors }}#}
+{#          </div>#}
+{#        {% endfor %}#}
+        {% if error_message %}
+          <p><strong>{{ error_message }}</strong></p>
+        {% endif %}
+        <table>
+          <colgroup>
+            <col style="width: 12%"/>
+          </colgroup>
+          <tr>
+            <td><strong>Title</strong></td>
+            <td><input type="text" ng-model="title" name="title"/></td>
+{#            <td>{{ form.title }}</td>#}
+            <td>name of this data set</td>
+          </tr>
+          <tr>
+            <td><strong>Source Column Index</strong></td>
+            <td>
+              {% verbatim %}
+              <select ng-model="sourceColumnIndex" name="source_column_index"
+                      ng-required multiple
+                      size="{{ metadataHeader.length || 10 }}"
+                      ng-options="heading for heading in metadataHeader">
+              </select>
+              {% endverbatim %}
+            </td>
+{#            <td>{{ form.source_column_index }}</td>#}
+            <td>columns to be used for source grouping. Values in the columns indicated by the list of columns provided for the Source Column Index will be concatenated to create an identifier for the "source" of the sample.</td>
+          </tr>
+          <tr>
+            <td><strong>Data File Column</strong></td>
+            <td>
+                <select ng-model="dataFileColumn" name="data_file_column"
+                ng-required ng-options="heading for heading in metadataHeader">
+                </select>
+            </td>
+{#            <td>{{ form.data_file_column }}</td>#}
+            <td>column that contains the path to or the URL of the file associated with this sample</td>
+          </tr>
+          <tr>
+            <td>Auxiliary File Column</td>
+            <td>
+                <select ng-model="auxFileColumn" name="aux_file_column"
                 ng-options="heading for heading in metadataHeader">
-        </select>
-        (Required) columns to be used for source grouping. Values in the columns indicated by the list of columns provided for the Source Column Index will be concatenated to create an identifier for the "source" of the sample.
-        </label>
-        <label>Data File Column
-        <select ng-model="dataFileColumn"
-                name="data_file_column"
-                ng-required
+                </select>
+            </td>
+            <td>Column that contains the path to an auxiliary file (e.g. for visualization) associated with the input file</td>
+          </tr>
+          <tr>
+            <td>Base path</td>
+            <td><input type="text" ng-model="basePath"></td>
+            <td>base path of your data file paths if using relative locations</td>
+          </tr>
+          <tr>
+            <td>Annotation column</td>
+            <td>
+              <select ng-model="annotationColumn" name="annotation_column"
                 ng-options="heading for heading in metadataHeader">
-        </select>
-        (Required) column that contains the path to or the URL of the file associated with this sample
-        </label>
-        <label>Auxiliary File Column
-        <select ng-model="auxFileColumn"
-                name="aux_file_column"
-                ng-options="heading for heading in metadataHeader">
-        </select>
-        Column that contains the path to an auxiliary file (e.g. for visualization) associated with the input file
-        </label>
-        <label>Base path
-        <select ng-model="basePath"
-                name="base_path"
-                ng-options="heading for heading in metadataHeader">
-        </select>
-        base path of your data file paths if using relative locations
-        </label>
-        <label>Annotation column
-        <select ng-model="annotationColumn"
-                name="annotation_column"
-                ng-options="heading for heading in metadataHeader">
-        </select>
-        column containing boolean flag to indicate whether the data file in this row should be treated as an annotation file
-        </label>
-        <label>Genome build column
-        <select ng-model="genomeBuildColumn"
-                name="genome_build_column"
-                ng-options="heading for heading in metadataHeader">
-        </select>
-        column containing genome build IDs
-        </label>
-        <label>Data file permanent
-          <input type="checkbox" ng-model="dataFilePermanent"/>
-          flag for whether data files should be permanently on the system or cached
-        </label>
-        <label>Is public
-          <input type="checkbox" ng-model="isPublic"/>
-          flag for whether this data set will be visible to the public
-        </label>
+              </select>
+            </td>
+            <td>column containing boolean flag to indicate whether the data file in this row should be treated as an annotation file</td>
+          </tr>
+          <tr>
+            <td>Genome build column</td>
+            <td>
+              <select ng-model="genomeBuildColumn" name="genome_build_column"
+                      ng-options="heading for heading in metadataHeader">
+              </select>
+            </td>
+            <td>column containing genome build IDs</td>
+          </tr>
+          <tr>
+            <td>Data file permanent</td>
+            <td><input type="checkbox" ng-model="dataFilePermanent"/></td>
+            <td>flag for whether data files should be permanently on the system or cached</td>
+          </tr>
+          <tr>
+            <td>Is public</td>
+            <td><input type="checkbox" ng-model="isPublic"/></td>
+            <td>flag for whether this data set will be visible to the public</td>
+          </tr>
+        </table>
 <!--
+        {% verbatim %}
         sourceColumnIndex: {{ sourceColumnIndex }}
         length: {{ metadataHeader.length || 10 }}
--->
         {% endverbatim %}
+-->
         <input style="float: left;" class="btn" id="import-button" type="submit" value="Import"/>
 
       </form>
