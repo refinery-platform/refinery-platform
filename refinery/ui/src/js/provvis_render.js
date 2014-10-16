@@ -1078,6 +1078,9 @@ var provvisRender = function () {
 
         /* Background rectangle fix. */
         vis.rect.attr("transform", "translate(" + (-newPos[0] / newScale) + "," + (-newPos[1] / newScale) + ")" + " scale(" + (+1 / newScale) + ")");
+
+        /* Quick fix to exclude scale from text labels. */
+        d3.selectAll("text").attr("transform","scale(" + (+1 / newScale) + ")");
     };
 
     /**

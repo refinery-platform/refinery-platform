@@ -313,7 +313,6 @@ var provvis = function () {
         }).appendTo("#" + rootId);
     };
 
-    /* TODO: Prototype implementation. */
     /**
      * Floating table properties div.
      * @param parentId Parent div id for the floating table div.
@@ -442,6 +441,10 @@ var provvis = function () {
                         (-(d3.event.translate[0] + vis.margin.left) / d3.event.scale) + "," +
                         (-(d3.event.translate[1] + vis.margin.top) / d3.event.scale) + ")" +
                         " scale(" + (+1 / d3.event.scale) + ")");
+
+                    /* TODO: Clean up. */
+                    /* Quick fix to exclude scale from text labels. */
+                    d3.selectAll("text").attr("transform","scale(" + (+1 / d3.event.scale) + ")");
                 };
 
                 /* Main canvas drawing area. */
