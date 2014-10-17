@@ -680,39 +680,39 @@ var provvisRender = function () {
 
                     /* TODO: Menu currently disabled. */
                     /*var saMenuData = [
-                        {label: "WF", value: 1},
-                        {label: "o: " + san.outputs.size(), value: 1},
-                        {label: "i: " + san.inputs.size(), value: 1},
-                        {label: "SA: " + san.subanalysis, value: 1}
-                    ];
+                     {label: "WF", value: 1},
+                     {label: "o: " + san.outputs.size(), value: 1},
+                     {label: "i: " + san.inputs.size(), value: 1},
+                     {label: "SA: " + san.subanalysis, value: 1}
+                     ];
 
-                    var arc = d3.svg.arc()
-                        .innerRadius(vis.radius)
-                        .outerRadius(vis.radius * 4);
+                     var arc = d3.svg.arc()
+                     .innerRadius(vis.radius)
+                     .outerRadius(vis.radius * 4);
 
-                    var pie = d3.layout.pie()
-                        .value(function (d) {
-                            return d.value;
-                        });
+                     var pie = d3.layout.pie()
+                     .value(function (d) {
+                     return d.value;
+                     });
 
-                    var arcs = g.append("g").attr("class", "saMenu").data([saMenuData])
-                        .selectAll("arc")
-                        .data(pie)
-                        .enter()
-                        .append("g").attr("class", "arc");
+                     var arcs = g.append("g").attr("class", "saMenu").data([saMenuData])
+                     .selectAll("arc")
+                     .data(pie)
+                     .enter()
+                     .append("g").attr("class", "arc");
 
-                    arcs.append("path")
-                        .attr("d", arc).style("opacity", 0.3);
+                     arcs.append("path")
+                     .attr("d", arc).style("opacity", 0.3);
 
-                    arcs.append("text")
-                        .attr("class", "saMenuText")
-                        .attr("transform", function (d) {
-                            return "translate(" + arc.centroid(d)[0] + "," + arc.centroid(d)[1] + ")";
-                        })
-                        .text(function (d) {
-                            return d.data.label;
-                        })
-                        .style("opacity", 0.5);*/
+                     arcs.append("text")
+                     .attr("class", "saMenuText")
+                     .attr("transform", function (d) {
+                     return "translate(" + arc.centroid(d)[0] + "," + arc.centroid(d)[1] + ")";
+                     })
+                     .text(function (d) {
+                     return d.data.label;
+                     })
+                     .style("opacity", 0.5);*/
 
                     var nodeGlyph = g.append("g").classed("saGlyph", true)
                         .style("fill", function () {
@@ -746,7 +746,7 @@ var provvisRender = function () {
                             if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid) !== "undefined") {
                                 wfName = vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid).name;
                             }
-                            return wfName.substr(0,20) + "..";
+                            return wfName.substr(0, 20) + "..";
                         }).attr("class", "nodeAttrLabel")
                         .attr("text-anchor", "right")
                         .attr("dominant-baseline", "bottom")
@@ -774,14 +774,10 @@ var provvisRender = function () {
      * @param range Linear color scale for domain values.
      */
     var createAnalysistimeColorScale = function (aNodes, range) {
-        var min = d3.min(aNodes.filter(function (d) {
-                return d.start !== -1;
-            }), function (d) {
+        var min = d3.min(aNodes, function (d) {
                 return parseISOTimeFormat(d.start);
             }),
-            max = d3.max(aNodes.filter(function (d) {
-                return d.start !== -1;
-            }), function (d) {
+            max = d3.max(aNodes, function (d) {
                 return parseISOTimeFormat(d.start);
             });
 
@@ -833,7 +829,7 @@ var provvisRender = function () {
                             return "translate(" + (-cell.width / 2) + "," + (cell.height / 2) + ")";
                         })
                         .text(function (d) {
-                            return parseISOTimeFormat(d.start).toString().substr(0,21) + "..";
+                            return parseISOTimeFormat(d.start).toString().substr(0, 21) + "..";
                         }).attr("class", "nodeAttrLabel")
                         .attr("text-anchor", "right")
                         .attr("dominant-baseline", "bottom")
@@ -942,8 +938,8 @@ var provvisRender = function () {
                 d3.select("#nodeId-" + cn.autoId).classed("selectedNode", true);
                 d3.select("#nodeId-" + cn.autoId).classed("hiddenNode", false);
                 /*if (cn instanceof provvisDecl.Subanalysis === true) {
-                    d3.select("#nodeId-" + cn.autoId).select(".saMenu").style("display", "none");
-                }*/
+                 d3.select("#nodeId-" + cn.autoId).select(".saMenu").style("display", "none");
+                 }*/
                 cn.hidden = false;
             });
 
@@ -1080,7 +1076,7 @@ var provvisRender = function () {
         vis.rect.attr("transform", "translate(" + (-newPos[0] / newScale) + "," + (-newPos[1] / newScale) + ")" + " scale(" + (+1 / newScale) + ")");
 
         /* Quick fix to exclude scale from text labels. */
-        d3.selectAll("text").attr("transform","scale(" + (+1 / newScale) + ")");
+        d3.selectAll("text").attr("transform", "scale(" + (+1 / newScale) + ")");
     };
 
     /**
@@ -1266,22 +1262,26 @@ var provvisRender = function () {
 
         /* Node tooltips. */
         node.on("mouseover", function (d) {
-            /*showTooltip(*//*createHTMLKeyValuePair("Node", d.uuid) + "<br>" +*//*
-                createHTMLKeyValuePair("Name", d.name) + "<br>" +
-                createHTMLKeyValuePair("Author", d.attributes.get("Author")) + "<br>" +
-                createHTMLKeyValuePair("File Type", d.attributes.get("FileType")) + "<br>" +
-                createHTMLKeyValuePair("Year", d.attributes.get("Year")) + "<br>" +
-                createHTMLKeyValuePair("Month", d.attributes.get("Month")) + "<br>" +
-                createHTMLKeyValuePair("Type", d.fileType), event);*/
+            /*showTooltip(*/
+            /*createHTMLKeyValuePair("Node", d.uuid) + "<br>" +*/
+            /*
+             createHTMLKeyValuePair("Name", d.name) + "<br>" +
+             createHTMLKeyValuePair("Author", d.attributes.get("Author")) + "<br>" +
+             createHTMLKeyValuePair("File Type", d.attributes.get("FileType")) + "<br>" +
+             createHTMLKeyValuePair("Year", d.attributes.get("Year")) + "<br>" +
+             createHTMLKeyValuePair("Month", d.attributes.get("Month")) + "<br>" +
+             createHTMLKeyValuePair("Type", d.fileType), event);*/
             d3.select(this).classed("mouseoverNode", true);
         }).on("mousemove", function (d) {
-            /*showTooltip(*//*createHTMLKeyValuePair("Node", d.uuid) + "<br>" +*//*
-                createHTMLKeyValuePair("Name", d.name) + "<br>" +
-                createHTMLKeyValuePair("Author", d.attributes.get("Author")) + "<br>" +
-                createHTMLKeyValuePair("File Type", d.attributes.get("FileType")) + "<br>" +
-                createHTMLKeyValuePair("Year", d.attributes.get("Year")) + "<br>" +
-                createHTMLKeyValuePair("Month", d.attributes.get("Month")) + "<br>" +
-                createHTMLKeyValuePair("Type", d.fileType), event);*/
+            /*showTooltip(*/
+            /*createHTMLKeyValuePair("Node", d.uuid) + "<br>" +*/
+            /*
+             createHTMLKeyValuePair("Name", d.name) + "<br>" +
+             createHTMLKeyValuePair("Author", d.attributes.get("Author")) + "<br>" +
+             createHTMLKeyValuePair("File Type", d.attributes.get("FileType")) + "<br>" +
+             createHTMLKeyValuePair("Year", d.attributes.get("Year")) + "<br>" +
+             createHTMLKeyValuePair("Month", d.attributes.get("Month")) + "<br>" +
+             createHTMLKeyValuePair("Type", d.fileType), event);*/
         }).on("mouseout", function () {
             /*hideTooltip();*/
             d3.select(this).classed("mouseoverNode", false);
@@ -1289,11 +1289,11 @@ var provvisRender = function () {
 
         /* Subanalysis tooltips. */
         saNode.select(".saGlyph").on("mouseover", function (d) {
-           /* showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
-                createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
-                "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
+            /* showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
+             createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
+             "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
             d3.select(this).classed("mouseoverNode", true);
-            d3.select(this).select(".nodeAttrLabel").text( function (d) {
+            d3.select(this).select(".nodeAttrLabel").text(function (d) {
                 var wfName = "dataset";
                 if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid) !== "undefined") {
                     wfName = vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid).name;
@@ -1303,77 +1303,77 @@ var provvisRender = function () {
 
             /*d3.select(this.parentNode).select(".saMenu").style("display", "inline");*/
         }).on("mousemove", function (d) {
-           /* showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
-                createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
-                "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
+            /* showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
+             createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
+             "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
 
             /*d3.select(this.parentNode).select(".saMenu").style("display", "inline");*/
         }).on("mouseout", function () {
             /*hideTooltip();*/
             d3.select(this).classed("mouseoverNode", false);
             /*d3.select(this.parentNode).select(".saMenu").style("display", "none");*/
-            d3.select(this).select(".nodeAttrLabel").text( function (d) {
+            d3.select(this).select(".nodeAttrLabel").text(function (d) {
                 var wfName = "dataset";
                 if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid) !== "undefined") {
                     wfName = vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid).name;
                 }
-                return wfName.substr(0,20) + "..";
+                return wfName.substr(0, 20) + "..";
             });
         });
 
         /* Analysis tolltips. */
         aNode.on("mouseover", function (d) {
             /*showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
-                createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
-                createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);*/
+             createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
+             createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);*/
             d3.select(this).classed("mouseoverNode", true);
-            d3.select(this).select(".nodeAttrLabel").text( function (d) {
+            d3.select(this).select(".nodeAttrLabel").text(function (d) {
                 return parseISOTimeFormat(d.start).toString();
             });
         }).on("mousemove", function (d) {
-           /* showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
-                createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
-                createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);*/
+            /* showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
+             createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
+             createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);*/
         }).on("mouseout", function () {
             /*hideTooltip();*/
             d3.select(this).classed("mouseoverNode", false);
-            d3.select(this).select(".nodeAttrLabel").text( function (d) {
-                return parseISOTimeFormat(d.start).toString().substr(0,21) + "..";
+            d3.select(this).select(".nodeAttrLabel").text(function (d) {
+                return parseISOTimeFormat(d.start).toString().substr(0, 21) + "..";
             });
         });
 
         /* Subanalysis arc menu. */
         /*var curMenu,
-            menuTimeout;
+         menuTimeout;
 
-        saNode.select(".saMenu").selectAll(".arc").on("mouseover", function () {
-            d3.select(this).select("path").style("opacity", 0.7);
-            d3.select(this).select(".saMenuText").style("opacity", 1.0);
-            clearTimeout(menuTimeout);
-        });
-        saNode.select(".saMenu").selectAll(".arc").on("mousemove", function () {
-            d3.select(this).select("path").style("opacity", 0.7);
-            d3.select(this).select(".saMenuText").style("opacity", 1.0);
-            clearTimeout(menuTimeout);
-        });
+         saNode.select(".saMenu").selectAll(".arc").on("mouseover", function () {
+         d3.select(this).select("path").style("opacity", 0.7);
+         d3.select(this).select(".saMenuText").style("opacity", 1.0);
+         clearTimeout(menuTimeout);
+         });
+         saNode.select(".saMenu").selectAll(".arc").on("mousemove", function () {
+         d3.select(this).select("path").style("opacity", 0.7);
+         d3.select(this).select(".saMenuText").style("opacity", 1.0);
+         clearTimeout(menuTimeout);
+         });
 
-        saNode.select(".saMenu").selectAll(".arc").on("mouseout", function () {
-            d3.select(this).select("path").style("opacity", 0.3);
-            d3.select(this).select(".saMenuText").style("opacity", 0.5);
-        });
+         saNode.select(".saMenu").selectAll(".arc").on("mouseout", function () {
+         d3.select(this).select("path").style("opacity", 0.3);
+         d3.select(this).select(".saMenuText").style("opacity", 0.5);
+         });
 
-        saNode.select(".saMenu").on("mouseout", function () {
-            clearTimeout(menuTimeout);
-            curMenu = d3.select(this);
-            menuTimeout = setTimeout(function () {
-                curMenu.style("display", "none");
-            }, 100);
-        });*/
+         saNode.select(".saMenu").on("mouseout", function () {
+         clearTimeout(menuTimeout);
+         curMenu = d3.select(this);
+         menuTimeout = setTimeout(function () {
+         curMenu.style("display", "none");
+         }, 100);
+         });*/
 
         /* On mouseover subanalysis bounding box. */
         saBBox.on("mouseover", function () {
             d3.select(this).classed("mouseoverBBox", true);
-            d3.select(this).select(".nodeAttrLabel").text( function (d) {
+            d3.select(this).select(".nodeAttrLabel").text(function (d) {
                 var wfName = "dataset";
                 if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid) !== "undefined") {
                     wfName = vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid).name;
@@ -1382,12 +1382,12 @@ var provvisRender = function () {
             });
         }).on("mouseout", function (d) {
             d3.select(this).classed("mouseoverBBox", false);
-            d3.select(this).select(".nodeAttrLabel").text( function (d) {
+            d3.select(this).select(".nodeAttrLabel").text(function (d) {
                 var wfName = "dataset";
                 if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid) !== "undefined") {
                     wfName = vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid).name;
                 }
-                return wfName.substr(0,20) + "..";
+                return wfName.substr(0, 20) + "..";
             });
         });
     };
@@ -1493,7 +1493,7 @@ var provvisRender = function () {
                 if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid) !== "undefined") {
                     wfName = vis.graph.workflowData.get(vis.graph.saNodes[d].parent.wfUuid).name;
                 }
-                return wfName.substr(0,20) + "..";
+                return wfName.substr(0, 20) + "..";
             });
     };
 
@@ -1564,8 +1564,8 @@ var provvisRender = function () {
         });
 
         /* Set saBBox visibility. */
-        saBBox.each( function (d) {
-           d3.select(this).style("display", "inline");
+        saBBox.each(function (d) {
+            d3.select(this).style("display", "inline");
         });
 
         /* Update connections. */
@@ -2020,17 +2020,17 @@ var provvisRender = function () {
      * @param aNodes Analysis nodes.
      */
     var initDoiTimeComponent = function (aNodes) {
+        var min = parseISOTimeFormat(new Date(0)),
+            max = parseISOTimeFormat(new Date(0));
 
-        var min = d3.min(aNodes.filter(function (d) {
-                return d.start !== -1;
-            }), function (d) {
-                return parseISOTimeFormat(d.start);
-            }),
-            max = d3.max(aNodes.filter(function (d) {
-                return d.start !== -1;
-            }), function (d) {
+        if (aNodes.length > 1) {
+            min = d3.min(aNodes, function (d) {
                 return parseISOTimeFormat(d.start);
             });
+            max = d3.max(aNodes, function (d) {
+                return parseISOTimeFormat(d.start);
+            });
+        }
 
         var doiTimeScale = d3.time.scale()
             .domain([min, max])

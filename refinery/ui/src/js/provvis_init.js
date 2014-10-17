@@ -266,16 +266,17 @@ var provvisInit = function () {
      */
     var extractAnalyses = function (analysesData) {
 
-        /* Create analysis for dataset. */
+        /* Datasets have no date information. */
+        var initDate = new Date(0);
+        if (analysesData.length > 0) {
+            initDate = d3.min(analysesData, function (d) {
+                return new Date(d.time_start);
+            });
+        }
 
-        /* Apply start date of earliest analysis to dataset. */
-        var datasetTimeStart = d3.min(analysesData.filter(function (d) {
-            return d.time_start !== -1;
-        }), function (d) {
-            return d.time_start;
-        });
+        /* Create analysis for dataset. */
         aNodes.push(new provvisDecl.Analysis(0, Object.create(null), true, "dataset", "dataset",
-            0, datasetTimeStart, -1, -1));
+            0, initDate, initDate, initDate));
         analysisWorkflowMap.set("dataset", "dataset");
 
         /* Create remaining analyses. */
