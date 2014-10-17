@@ -151,6 +151,7 @@ var provvisRender = function () {
                         });
                         break;
                 }
+                d3.select("#nodeId-" + san.autoId).classed("filteredNode", false);
                 san.children.values().forEach(function (n) {
                     d3.select("#nodeId-" + n.autoId).classed("filteredNode", false);
                 });
