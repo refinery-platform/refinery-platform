@@ -30,19 +30,19 @@ class Command(BaseCommand):
                             ),
                 make_option('--data_file_column',
                             action='store',
-                            type='string',
+                            type='int',
                             help='(Required) index of the column of the input file that contains the path to or the URL of the file associated with this sample'
                             ),
                 make_option('--auxiliary_file_column',
                             action='store',
-                            type='string',
+                            type='int',
                             default=None,
                             help='column index of the input file that contains the path to an auxiliary file (e.g. for visualization) associated with the input file'
                             ),
                 make_option('--base_path',
                             action='store',
                             type='string',
-                            default="",
+                            default=None,
                             help='base path of your data file paths if using relative locations'
                             ),
                 make_option('--slug',
@@ -53,19 +53,19 @@ class Command(BaseCommand):
                             ),
                 make_option('--species_column',
                             action='store',
-                            type='string',
+                            type='int',
                             default=None,
                             help='column containing species names or ids'
                             ),
                 make_option('--annotation_column',
                             action='store',
-                            type='string',
+                            type='int',
                             default=None,
                             help='column containing boolean flag to indicate whether the data file in this row should be treated as an annotation file'
                             ),
                 make_option('--genome_build_column',
                             action='store',
-                            type='string',
+                            type='int',
                             default=None,
                             help='column containing genome build ids'
                             ),
@@ -91,6 +91,14 @@ class Command(BaseCommand):
             if not options[arg]:
                 raise CommandError('%s was not provided.' % arg)
         source_columns = [int(x.strip()) for x in options['source_column_index'].split(",")]
+        for column_index in source_columns:
+            if column_index < 0:
+                raise CommandError("source_column_index values can not be negative")
+        integer_values = ['data_file_column', 'auxiliary_file_column',
+                          'genome_build_column', 'annotation_column']
+        for arg in integer_values:
+            if options[arg] and options[arg] < 0:
+                raise CommandError("{} can not be negative".format(arg))
         with open(options['file_name']) as metadata_file:
             dataset_uuid = process_metadata_table(
                 options['username'], options['title'], metadata_file,

@@ -278,17 +278,47 @@ class ProcessMetadataTableView(View):
         return render(request, self.template_name)
 
     def post(self, request, *args, **kwargs):
+        # get required params
         try:
             metadata_file = request.FILES['file']
             title = request.POST['title']
-            source_column_index = [int(x) for x in request.POST.getlist('source_column_index')]
-            data_file_column = request.POST['data_file_column']
-        except KeyError:
+            source_column_index = [abs(int(x)) for x in request.POST.getlist('source_column_index')]
+            data_file_column = abs(int(request.POST['data_file_column']))
+        except (KeyError, ValueError):
             return render(request, self.template_name,
                           {'error_message': 'Required value(s) are missing'})
+        # get optional params
+        try:
+            aux_file_column = abs(int(request.POST['aux_file_column']))
+        except ValueError:
+            aux_file_column = None
+        try:
+            species_column = abs(int(request.POST['species_column']))
+        except ValueError:
+            species_column = None
+        try:
+            annotation_column = abs(int(request.POST['annotation_column']))
+        except ValueError:
+            annotation_column = None
+        try:
+            genome_build_column = abs(int(request.POST['genome_build_column']))
+        except ValueError:
+            genome_build_column = None
+        base_path = request.POST.get('base_path', None)
+        slug = request.POST.get('slug', None)
+        try:
+            data_file_permanent = bool(request.POST['data_file_permanent'])
+        except KeyError:
+            data_file_permanent = False
+        try:
+            is_public = bool(request.POST['is_public'])
+        except KeyError:
+            is_public = False
         # process the uploaded file
         dataset_uuid = process_metadata_table(
             request.user.username, title, metadata_file, source_column_index,
-            data_file_column)
+            data_file_column, data_file_permanent, base_path, aux_file_column,
+            species_column, genome_build_column, annotation_column, slug,
+            is_public)
         return HttpResponseRedirect(reverse(self.success_view_name,
                                             args=(dataset_uuid,)))

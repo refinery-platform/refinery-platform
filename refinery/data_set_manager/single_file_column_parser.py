@@ -291,32 +291,46 @@ def process_metadata_table(username, title, metadata_file, source_columns,
                            annotation_column=None, slug=None, is_public=False):
     """Create a dataset given a metadata file object and its description
 
+    :param username: username
+    :type username: str
+    :param title: dataset name
+    :type title: str
     :param metadata_file: metadata file in tab-delimited format
-    :type metadata_file: file object
-    :param source_columns: a list of source columns
-    :type source_columns: list of integers
+    :type metadata_file: file
+    :param source_columns: a list of source column indices
+    :type source_columns: list of ints
+    :param data_file_column: data file column index
+    :type data_file_column: int
+    :param data_file_permanent: should data files be imported
+    :type data_file_permanent: bool
+    :param base_path: path to append to data file
+    :type base_path: str
+    :param auxiliary_file_column: auxiliary file column index
+    :type auxiliary_file_column: int
+    :param species_column: species column index
+    :type species_column: int
+    :param genome_build_column: genome build column index
+    :type genome_build_column: int
+    :param annotation_column: annotation column index
+    :type annotation_column: int
+    :param slug: dataset name shortcut
+    :type slug: str
+    :param is_public: is dataset available to public
+    :type is_public: bool
 
     :returns: UUID of the new dataset
 
     """
     parser = SingleFileColumnParser()
     parser.file_permanent = data_file_permanent
-    parser.file_column_index = int(data_file_column)
+    parser.file_column_index = data_file_column
     parser.source_column_index = source_columns
     parser.column_index_separator = "/"
     parser.file_base_path = base_path
-
-    if auxiliary_file_column is not None:
-        parser.auxiliary_file_column_index = int(auxiliary_file_column)
-
-    if species_column is not None:
-        parser.species_column_index = int(species_column)
-
-    if genome_build_column is not None:
-        parser.genome_build_column_index = int(genome_build_column)
-
-    if annotation_column is not None:
-        parser.annotation_column_index = int(annotation_column)
+    parser.auxiliary_file_column_index = auxiliary_file_column
+    parser.species_column_index = species_column
+    parser.genome_build_column_index = genome_build_column
+    parser.annotation_column_index = annotation_column
 
     investigation = parser.run(metadata_file)
     investigation.title = title
