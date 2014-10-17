@@ -1127,37 +1127,37 @@ var provvisRender = function () {
             d3.select("#nodeId-" + d.autoId).classed("selectedNode", false);
             d.doi.selectedChanged();
             /*if (d.children.values()) {
-                d.children.values().forEach(function (cn) {
-                    cn.selected = false;
-                    d3.select("#nodeId-" + cn.autoId).classed("selectedNode", false);
-                    cn.doi.selectedChanged();
-                    if (cn.children.values()) {
-                        cn.children.values().forEach(function (ccn) {
-                            ccn.selected = false;
-                            d3.select("#nodeId-" + ccn.autoId).classed("selectedNode", false);
-                            ccn.doi.selectedChanged();
-                        });
-                    }
-                });
-            }*/
+             d.children.values().forEach(function (cn) {
+             cn.selected = false;
+             d3.select("#nodeId-" + cn.autoId).classed("selectedNode", false);
+             cn.doi.selectedChanged();
+             if (cn.children.values()) {
+             cn.children.values().forEach(function (ccn) {
+             ccn.selected = false;
+             d3.select("#nodeId-" + ccn.autoId).classed("selectedNode", false);
+             ccn.doi.selectedChanged();
+             });
+             }
+             });
+             }*/
         } else {
             d.selected = true;
             d3.select("#nodeId-" + d.autoId).classed("selectedNode", true);
             d.doi.selectedChanged();
             /*if (d.children.values()) {
-                d.children.values().forEach(function (cn) {
-                    cn.selected = true;
-                    d3.select("#nodeId-" + cn.autoId).classed("selectedNode", true);
-                    cn.doi.selectedChanged();
-                    if (cn.children.values()) {
-                        cn.children.values().forEach(function (ccn) {
-                            ccn.selected = true;
-                            d3.select("#nodeId-" + ccn.autoId).classed("selectedNode", true);
-                            ccn.doi.selectedChanged();
-                        });
-                    }
-                });
-            }*/
+             d.children.values().forEach(function (cn) {
+             cn.selected = true;
+             d3.select("#nodeId-" + cn.autoId).classed("selectedNode", true);
+             cn.doi.selectedChanged();
+             if (cn.children.values()) {
+             cn.children.values().forEach(function (ccn) {
+             ccn.selected = true;
+             d3.select("#nodeId-" + ccn.autoId).classed("selectedNode", true);
+             ccn.doi.selectedChanged();
+             });
+             }
+             });
+             }*/
         }
 
         updateNodeDoi();
@@ -1510,6 +1510,7 @@ var provvisRender = function () {
             })
             .attr("rx", cell.width / 3)
             .attr("ry", cell.height / 3);
+        /*.style("fill", function (d) {return timeColorScale(parseISOTimeFormat(vis.graph.saNodes[d].parent.start));});*/
 
         /* Workflow name as label. */
         saBBox.append("text")
@@ -1771,6 +1772,9 @@ var provvisRender = function () {
             d3.selectAll(".hLink").style("stroke", function (d) {
                 return timeColorScale(parseISOTimeFormat(d.target.parent.parent.start));
             });
+            /*d3.selectAll(".saBBox").select("rect").style("fill", function (d) {
+             return timeColorScale(parseISOTimeFormat(vis.graph.saNodes[d].parent.start));
+             });*/
         });
 
         /* Show and hide grid. */
