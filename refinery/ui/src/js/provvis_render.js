@@ -561,6 +561,7 @@ var provvisRender = function () {
             l.highlighted = false;
         });
 
+        /* TODO: Rewrite for objects. */
         d3.selectAll(".node, .aNode, .saNode").each(function (n) {
             n.highlighted = false;
             n.doi.highlightedChanged();
@@ -942,6 +943,11 @@ var provvisRender = function () {
                  d3.select("#nodeId-" + cn.autoId).select(".saMenu").style("display", "none");
                  }*/
                 cn.hidden = false;
+
+                cn.children.values().forEach(function (n) {
+                    d3.select("#nodeId-" + n.autoId).classed("hiddenNode", true);
+                    n.hidden = true;
+                });
             });
 
             /* Set link visibility. */
@@ -952,7 +958,18 @@ var provvisRender = function () {
                         d3.selectAll("#hLinkId-" + l.autoId).classed("hiddenLink", false);
                     }
                 });
+            } else {
+                d.children.values().forEach(function (san) {
+                    san.links.values().forEach(function (l) {
+                        d3.selectAll("#linkId-" + l.autoId).classed("hiddenLink", true);
+                        if (l.highlighted) {
+                            d3.selectAll("#hLinkId-" + l.autoId).classed("hiddenLink", true);
+                        }
+                    });
+                    d3.select("#saBBoxId-" + san.autoId).style("display", "none");
+                });
             }
+
             d.inputs.values().forEach(function (sain) {
                 sain.predLinks.values().forEach(function (l) {
                     d3.selectAll("#linkId-" + l.autoId).classed("hiddenLink", false);
