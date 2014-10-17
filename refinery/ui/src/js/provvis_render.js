@@ -571,20 +571,18 @@ var provvisRender = function () {
      * @param n BaseNode extending constructor function.
      */
     var highlightPredPath = function (n) {
-        while (n.hidden) {
-            n = n.parent;
-        }
 
+        /* Current node is highlighted. */
         n.highlighted = true;
         n.doi.highlightedChanged();
-        n.children.values().forEach(function (cn) {
-            cn.highlighted = true;
-            cn.doi.highlightedChanged();
-            cn.children.values().forEach(function (ccn) {
-                ccn.highlighted = true;
-                ccn.doi.highlightedChanged();
-            });
-        });
+
+        /* Parent nodes are highlighted too. */
+        var pn = n.parent;
+        while (pn instanceof provvisDecl.BaseNode === true) {
+            pn.highlighted = true;
+            pn.doi.highlightedChanged();
+            pn = pn.parent;
+        }
 
         /* Get svg link element, and for each predecessor call recursively. */
         n.predLinks.values().forEach(function (l) {
@@ -599,20 +597,18 @@ var provvisRender = function () {
      * @param n BaseNode extending constructor function.
      */
     var highlightSuccPath = function (n) {
-        while (n.hidden) {
-            n = n.parent;
-        }
 
+        /* Current node is highlighted. */
         n.highlighted = true;
         n.doi.highlightedChanged();
-        n.children.values().forEach(function (cn) {
-            cn.highlighted = true;
-            cn.doi.highlightedChanged();
-            cn.children.values().forEach(function (ccn) {
-                ccn.highlighted = true;
-                ccn.doi.highlightedChanged();
-            });
-        });
+
+        /* Parent nodes are highlighted too. */
+        var pn = n.parent;
+        while (pn instanceof provvisDecl.BaseNode === true) {
+            pn.highlighted = true;
+            pn.doi.highlightedChanged();
+            pn = pn.parent;
+        }
 
         /* Get svg link element, and for each successor call recursively. */
         n.succLinks.values().forEach(function (l) {
