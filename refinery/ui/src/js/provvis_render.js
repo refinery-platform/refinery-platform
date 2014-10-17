@@ -206,32 +206,30 @@ var provvisRender = function () {
         d3.selectAll(".aNode").each(function (an) {
             var keyStroke;
 
-            /* Expand. */
             if (an.doi.doiWeightedSum >= (1 / 3)) {
+                /* Expand. */
                 keyStroke = {ctrl: true, shift: false};
-                /* Collapse. */
+                handleCollapseExpandNode(an, keyStroke);
             } else if (an.doi.doiWeightedSum < (1 / 3)) {
+                /* Collapse. */
                 keyStroke = {ctrl: false, shift: true};
-            } else {
-                keyStroke = {ctrl: false, shift: false};
+                handleCollapseExpandNode(an, keyStroke);
             }
-            handleCollapseExpandNode(an, keyStroke);
         });
 
         /* On subanalysis doi. */
         d3.selectAll(".saNode").each(function (san) {
             var keyStroke;
 
-            /* Expand. */
             if (san.doi.doiWeightedSum >= (2 / 3)) {
+                /* Expand. */
                 keyStroke = {ctrl: true, shift: false};
-                /* Collapse. */
+                handleCollapseExpandNode(san, keyStroke);
             } else if (san.doi.doiWeightedSum < (1 / 3)) {
+                /* Collapse. */
                 keyStroke = {ctrl: false, shift: true};
-            } else {
-                keyStroke = {ctrl: false, shift: false};
+                handleCollapseExpandNode(san, keyStroke);
             }
-            handleCollapseExpandNode(san, keyStroke);
         });
     };
 
@@ -1634,6 +1632,9 @@ var provvisRender = function () {
             });
         });
 
+        /* Hide subanalysis bounding boxes. */
+        d3.selectAll(".saBBox").style("display", "none");
+
         /* Update connections. */
         graph.saNodes.forEach(function (d) {
             updateNode(d3.select("#nodeId-" + d.autoId), d, d.x, d.y);
@@ -1662,6 +1663,23 @@ var provvisRender = function () {
             d.hidden = false;
             hideChildNodes(d);
         });
+
+        /* Set link visibility. */
+        graph.saNodes.forEach(function (d) {
+            d.links.values().forEach(function (l) {
+                d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("hiddenLink", true);
+                l.hidden = true;
+            });
+            d.inputs.values().forEach(function (sain) {
+                sain.predLinks.values().forEach(function (l) {
+                    d3.selectAll("#linkId-" + l.autoId).classed("hiddenLink", false);
+                    l.hidden = false;
+                });
+            });
+        });
+
+        /* Hide subanalysis bounding boxes. */
+        d3.selectAll(".saBBox").style("display", "none");
 
         /* Update connections. */
         graph.aNodes.forEach(function (d) {
