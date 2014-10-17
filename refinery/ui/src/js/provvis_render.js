@@ -138,7 +138,7 @@ var provvisRender = function () {
                             d3.select("#nodeId-" + n.autoId).classed("blendedNode", false);
                         });
                         san.links.values().forEach(function (l) {
-                            d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", false);
+                            d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("blendedLink", false);
                         });
                         break;
                     case "blend":
@@ -147,7 +147,7 @@ var provvisRender = function () {
                             d3.select("#nodeId-" + n.autoId).classed("blendedNode", true);
                         });
                         san.links.values().forEach(function (l) {
-                            d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", true);
+                            d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("blendedLink", true);
                         });
                         break;
                 }
@@ -156,7 +156,7 @@ var provvisRender = function () {
                     d3.select("#nodeId-" + n.autoId).classed("filteredNode", false);
                 });
                 san.links.values().forEach(function (l) {
-                    d3.selectAll("#linkId-" + l.autoId).classed("filteredLink", false);
+                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("filteredLink", false);
                 });
             } else {
                 d3.select("#nodeId-" + san.autoId).classed("filteredNode", true);
@@ -166,8 +166,8 @@ var provvisRender = function () {
                     d3.select("#nodeId-" + n.autoId).classed("blendedNode", false);
                 });
                 san.links.values().forEach(function (l) {
-                    d3.selectAll("#linkId-" + l.autoId).classed("filteredLink", true);
-                    d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", false);
+                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("filteredLink", true);
+                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("blendedLink", false);
                 });
             }
         });
@@ -178,13 +178,13 @@ var provvisRender = function () {
                     case "hide":
                         d3.select("#nodeId-" + an.autoId).classed("blendedNode", false);
                         an.links.values().forEach(function (l) {
-                            d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", false);
+                            d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("blendedLink", false);
                         });
                         break;
                     case "blend":
                         d3.select("#nodeId-" + an.autoId).classed("blendedNode", true);
                         an.links.values().forEach(function (l) {
-                            d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", true);
+                            d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("blendedLink", true);
                         });
                         break;
                 }
@@ -193,8 +193,8 @@ var provvisRender = function () {
                 d3.select("#nodeId-" + an.autoId).classed("filteredNode", true);
                 d3.select("#nodeId-" + an.autoId).classed("blendedNode", false);
                 an.links.values().forEach(function (l) {
-                    d3.selectAll("#linkId-" + l.autoId).classed("filteredLink", true);
-                    d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", false);
+                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("filteredLink", true);
+                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("blendedLink", false);
                 });
             }
         });
@@ -554,7 +554,7 @@ var provvisRender = function () {
      * @param links All links within the graph.
      */
     var clearHighlighting = function (links) {
-        d3.selectAll(".hLink").style("display", "none");
+        d3.selectAll(".hLink").classed("hiddenLink", true);
         links.forEach(function (l) {
             l.highlighted = false;
         });
@@ -1553,7 +1553,7 @@ var provvisRender = function () {
                 }
             })
             .classed({
-                "hLink": true
+                "hLink": true, "hiddenLink": true
             })
             .attr("id", function (l) {
                 return "hLinkId-" + l.autoId;
