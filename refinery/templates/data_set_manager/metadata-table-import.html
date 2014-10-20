@@ -35,13 +35,14 @@
         <p>Please select a file containing a metadata table in tab-delimited format:</p>
         <input type="file" ng-file-select="onFileSelect($files)" name="file"/>
 
+        {% if error_message %}
+          <p><strong>{{ error_message }}</strong></p>
+        {% endif %}
+
         <div ng-show="selectedFile">
           <div class="gridStyle" ng-grid="gridOptions"></div>
 
           <p>Please provide the following values (fields marked in <strong>bold</strong> are required):</p>
-          {% if error_message %}
-            <p><strong>{{ error_message }}</strong></p>
-          {% endif %}
 
           <table>
             <colgroup>

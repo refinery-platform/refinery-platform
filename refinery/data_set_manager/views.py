@@ -282,11 +282,18 @@ class ProcessMetadataTableView(View):
         try:
             metadata_file = request.FILES['file']
             title = request.POST['title']
-            source_column_index = [abs(int(x)) for x in request.POST.getlist('source_column_index')]
             data_file_column = abs(int(request.POST['data_file_column']))
         except (KeyError, ValueError):
-            return render(request, self.template_name,
-                          {'error_message': 'Required value(s) are missing'})
+            error = {
+                'error_message':
+                    'Import failed because required parameter value(s) are missing'
+            }
+            return render(request, self.template_name, error)
+        source_column_index = [abs(int(x)) for x in request.POST.getlist('source_column_index')]
+        if source_column_index == []:
+            error = {'error_message':
+                         'Import failed because source column(s) were not selected'}
+            return render(request, self.template_name, error)
         # get optional params
         try:
             aux_file_column = abs(int(request.POST['aux_file_column']))

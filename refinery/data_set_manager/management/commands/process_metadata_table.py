@@ -90,7 +90,10 @@ class Command(BaseCommand):
         for arg in required:
             if not options[arg]:
                 raise CommandError('%s was not provided.' % arg)
-        source_columns = [int(x.strip()) for x in options['source_column_index'].split(",")]
+        try:
+            source_columns = [int(x.strip()) for x in options['source_column_index'].split(",")]
+        except ValueError:
+            raise CommandError("source_column_index value(s) are invalid")
         for column_index in source_columns:
             if column_index < 0:
                 raise CommandError("source_column_index values can not be negative")
