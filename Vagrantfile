@@ -10,7 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # please see the online documentation at vagrantup.com.
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "precise32"
+  config.vm.box = "ubuntu/trusty64"
   config.vm.hostname = "refinery"
   config.vm.network :private_network, ip: "192.168.50.50"
 
@@ -43,8 +43,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Install Librarian-puppet and modules before puppet provisioning (requires git)
   $librarian_puppet_install_script =
 <<SCRIPT
-  /usr/bin/apt-get -qq update && /usr/bin/apt-get -y install git
-  gem install librarian-puppet -v 1.0.4 && cd /vagrant/deployment && librarian-puppet config tmp /tmp/puppet --global && librarian-puppet install
+  /usr/bin/apt-get -qq update && /usr/bin/apt-get -y install git ruby1.9.1-dev apache2
+  ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future gem install librarian-puppet -v 1.0.4 && cd /vagrant/deployment && librarian-puppet config tmp /tmp/puppet --global && librarian-puppet install
 SCRIPT
   config.vm.provision :shell, :inline => $librarian_puppet_install_script
 
