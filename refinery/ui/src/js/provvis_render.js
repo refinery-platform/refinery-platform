@@ -1976,10 +1976,10 @@ var provvisRender = function () {
      */
     var assignCellCoords = function (nodes, aNodes, saNodes, width, depth) {
         for (var i = 0; i < depth; i++) {
-            cols.set(i, {"x": -i * cell.width, "expanded": false});
+            cols.set(i, {"x": -i * cell.width});
         }
         for (i = 0; i < width; i++) {
-            rows.set(i, {"y": i * cell.height, "expanded": false});
+            rows.set(i, {"y": i * cell.height});
         }
 
         nodes.forEach(function (n) {
