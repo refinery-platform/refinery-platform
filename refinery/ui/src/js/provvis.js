@@ -469,7 +469,11 @@ var provvis = function () {
                 vis.graph = provvisInit.runInit(data, analysesData, solrResponse);
 
                 /* Compute layout. */
-                provvisLayout.runLayout(vis.graph);
+                /* TODO: OLD LAYOUT. */
+                provvisLayoutOld.runLayout(vis.graph);
+
+                /* TODO: NEW LAYOUT (IN DEVELOPMENT). */
+                //provvisLayout.runLayout(vis.graph);
 
                 /* Render graph. */
                 provvisRender.runRender(vis);

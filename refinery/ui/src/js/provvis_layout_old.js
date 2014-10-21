@@ -1,7 +1,7 @@
 /**
  * Module for layout.
  */
-var provvisLayout = function () {
+var provvisLayoutOld = function () {
 
     /* Restore dummy path link. */
     var dummyPaths = [];
@@ -1347,7 +1347,6 @@ var provvisLayout = function () {
         });
     };
 
-
     /**
      * Main layout module function.
      * @param graph The main graph object of the provenance visualization.
@@ -1360,7 +1359,7 @@ var provvisLayout = function () {
         depth = graph.depth;
         grid = graph.grid;
 
-        console.log("Provvis: New layout is active.");
+        console.log("Provvis: Old layout is active.");
 
         /* Group output nodes by subanalysis and analysis. */
         graph.oNodes = sortOutputNodes(graph.oNodes, graph.saNodes);

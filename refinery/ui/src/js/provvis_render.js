@@ -1954,88 +1954,15 @@ var provvisRender = function () {
         });
     };
 
-    /* TODO: Dynamic layout compensation. */
-    /**
-     * Create initial layout for analysis only nodes.
-     * @param aNodes Analysis nodes.
-     */
-    var initAnalysisLayout = function (aNodes) {
-        var firstLayer = 0;
-
-        aNodes.forEach(function (an) {
-            var rootCol;
-
-            if (an.succs.size() > 0) {
-                rootCol = an.succs.values()[0].inputs.values()[0].col;
-
-                an.succs.values().forEach(function (san) {
-                    san.inputs.values().forEach(function (sanIn) {
-                        if (sanIn.col + 1 > rootCol) {
-                            rootCol = sanIn.col + 1;
-                        }
-                    });
-                });
-            } else {
-                if (an.outputs.size() > 0) {
-                    rootCol = an.outputs.values()[0].col;
-                } else {
-                    an.col = firstLayer;
-                }
-            }
-
-            an.col = rootCol;
-            an.x = -an.col * cell.width;
-            an.row = an.outputs.values().map(function (aon) {
-                return aon.row;
-            })[parseInt(an.outputs.size() / 2, 10)];
-            an.y = an.row * cell.height;
-        });
-    };
-
-    /* TODO: Dynamic layout compensation. */
-    /**
-     * Create initial layout for subanalysis only nodes.
-     * @param saNodes Subanalysis nodes.
-     */
-    var initSubanalysisLayout = function (saNodes) {
-        var firstLayer = 0;
-        saNodes.forEach(function (san) {
-            var rootCol;
-
-            if (san.succs.length > 0) {
-                rootCol = san.succs.values()[0].inputs.values()[0].col;
-
-                san.succs.forEach(function (sasn) {
-                    sasn.inputs.values().forEach(function (sasnIn) {
-                        if (sasnIn.col + 1 > rootCol) {
-                            rootCol = sasnIn.col + 1;
-                        }
-                    });
-                });
-            } else {
-                if (san.outputs.size() > 0) {
-                    rootCol = san.outputs.values()[0].col;
-                } else {
-                    san.col = firstLayer;
-                }
-            }
-
-            san.col = rootCol;
-            san.x = -san.col * cell.width;
-            san.row = san.outputs.values().map(function (aon) {
-                return aon.row;
-            })[parseInt(san.outputs.size() / 2, 10)];
-            san.y = san.row * cell.height;
-        });
-    };
-
     /**
      * Set coordinates for columns and rows as well as nodes.
      * @param nodes All nodes within the graph.
+     * @param aNodes Analysis nodes.
+     * @param saNodes Subanalysis nodes.
      * @param width Graph width in rows.
      * @param depth Graph depth in cols.
      */
-    var assignCellCoords = function (nodes, width, depth) {
+    var assignCellCoords = function (nodes, aNodes, saNodes, width, depth) {
         for (var i = 0; i < depth; i++) {
             cols.set(i, {"x": -i * cell.width, "expanded": false});
         }
@@ -2046,6 +1973,16 @@ var provvisRender = function () {
         nodes.forEach(function (n) {
             n.x = cols.get(n.col).x;
             n.y = rows.get(n.row).y;
+        });
+
+        aNodes.forEach(function (an) {
+            an.x = cols.get(an.col).x;
+            an.y = rows.get(an.row).y;
+        });
+
+        saNodes.forEach(function (san) {
+            san.x = cols.get(san.col).x;
+            san.y = rows.get(san.row).y;
         });
     };
 
@@ -2119,7 +2056,7 @@ var provvisRender = function () {
             filterAction = "hide";
 
             /* Set coordinates for nodes. */
-            assignCellCoords(vis.graph.nodes, vis.graph.width, vis.graph.depth);
+            assignCellCoords(vis.graph.nodes, vis.graph.aNodes, vis.graph.saNodes, vis.graph.width, vis.graph.depth);
 
             /* Draw grid. */
             drawGrid(vis.graph.grid);
@@ -2140,13 +2077,13 @@ var provvisRender = function () {
             drawNodes(vis.graph.nodes);
 
             /* Create initial layout for subanalysis only nodes. */
-            initSubanalysisLayout(vis.graph.saNodes);
+            /*initSubanalysisLayout(vis.graph.saNodes);*/
 
             /* Draw subanalysis nodes. */
             drawSubanalysisNodes(vis.graph.saNodes);
 
             /* Create initial layout for analysis only nodes. */
-            initAnalysisLayout(vis.graph.aNodes);
+            /*initAnalysisLayout(vis.graph.aNodes);*/
 
             /* Draw analysis nodes. */
             drawAnalysisNodes(vis.graph.aNodes);
