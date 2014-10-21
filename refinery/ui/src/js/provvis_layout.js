@@ -3,9 +3,6 @@
  */
 var provvisLayout = function () {
 
-    /* Restore dummy path link. */
-    var dummyPaths = [];
-
     /* The layout is processed from the left (beginning at column/layer 0) to the right. */
     var firstLayer = 0,
         width = 0,
@@ -77,7 +74,6 @@ var provvisLayout = function () {
      * @param lgNodes Layer grouped array of nodes.
      */
     var initRowPlacementRight = function (lgNodes) {
-
         lgNodes.forEach(function (lg) {
             lg.forEach(function (n, i) {
                 n.rowBK.right = depth - lg.length + i;
@@ -592,133 +588,6 @@ var provvisLayout = function () {
     };
 
     /**
-     * Add dummy vertices.
-     */
-    var addDummyNodes = function () {
-        links.forEach(function (l) {
-            /* When the link is longer than one column, add dummy nodes. */
-            var gapLength = Math.abs(l.source.col - l.target.col);
-
-            if (gapLength > 1) {
-                dummyPaths.push({
-                    id: l.id,
-                    source: ({
-                        id: l.source.id,
-                        predNodes: l.source.preds.values().map(function (p) {
-                            return p.id;
-                        }).filter(function (p) {
-                            return nodes[p].nodeType !== "dummy";
-                        }),
-                        predNodeLinks: l.source.predLinks.values().map(function (p) {
-                            return p.id;
-                        }).filter(function (p) {
-                            return nodes[p].nodeType !== "dummy";
-                        }),
-                        succNodes: l.source.succs.values().map(function (p) {
-                            return p.id;
-                        }).filter(function (s) {
-                            return nodes[s].nodeType !== "dummy";
-                        }),
-                        succNodeLinks: l.source.succLinks.values().map(function (p) {
-                            return p.id;
-                        }).filter(function (s) {
-                            return nodes[s].nodeType !== "dummy";
-                        })
-                    }),
-                    target: ({
-                        id: l.target.id,
-                        predNodes: l.target.preds.values().map(function (p) {
-                            return p.id;
-                        }).filter(function (p) {
-                            return nodes[p].nodeType !== "dummy";
-                        }),
-                        predNodeLinks: l.target.predLinks.values().map(function (p) {
-                            return p.id;
-                        }).filter(function (p) {
-                            return nodes[p].nodeType !== "dummy";
-                        }),
-                        succNodes: l.target.succs.values().map(function (p) {
-                            return p.id;
-                        }).filter(function (s) {
-                            return nodes[s].nodeType !== "dummy";
-                        }),
-                        succNodeLinks: l.target.succLinks.values().map(function (p) {
-                            return p.id;
-                        }).filter(function (s) {
-                            return nodes[s].nodeType !== "dummy";
-                        })
-                    }),
-                    parents: l.target.parents.filter(function (p) {
-                        return p;
-                    })
-                });
-
-                /* Dummy nodes are affiliated with the source node of the link in context. */
-                var newNodeId = nodes.length,
-                    newLinkId = links.length,
-                    predNodeId = l.source.id,
-                    curCol = l.source.col,
-                    curAnalysis = l.source.analysis,
-                    curStudy = l.source.study,
-                    curAssay = l.source.assay,
-                    curParent = l.target.parent,
-                    curSubanalysis = l.target.subanalysis;
-
-                /* Insert Nodes. */
-                var i = 0;
-                while (i < gapLength - 1) {
-                    nodes.push(new provvisDecl.Node(newNodeId + i, "dummy", curParent, false,
-                            "dummyNode-" + (newNodeId + i), "dummy", curStudy, curAssay,
-                        (i === 0) ? [l.source.uuid] : ["dummyNode-" + predNodeId], curAnalysis, curSubanalysis,
-                            "dummyNode-" + (newNodeId + i)));
-                    nodes[newNodeId + i].col = curCol + 1;
-                    predNodeId = newNodeId + i;
-                    curCol++;
-                    i++;
-                }
-                /* Update parents for original target node. */
-                l.target.parents = l.target.parents.concat([nodes[predNodeId].uuid]);
-                l.target.parents.splice(l.target.parents.indexOf(l.source.uuid), 1);
-
-                /* Insert links (one link more than nodes). */
-                predNodeId = l.source.id;
-                curCol = l.source.col;
-
-                /* Insert Links. */
-                var j = 0;
-                while (j < gapLength) {
-                    links.push(new provvisDecl.Link(newLinkId + j, nodes[predNodeId],
-                        (j === gapLength - 1) ? l.target : nodes[newNodeId + j], false));
-                    predNodeId = newNodeId + j;
-                    curCol++;
-                    j++;
-                }
-
-                /* Remove successors for original source node. */
-                l.source.succs.remove(l.target.autoId);
-                l.source.succLinks.remove(l.autoId);
-
-                /* Remove predecessors for original target node. */
-                l.target.preds.remove(l.source.autoId);
-                l.target.predLinks.remove(l.autoId);
-
-                /* Set maps for dummy path. */
-                j = 0;
-                var curLink = links[newLinkId];
-                while (j < gapLength) {
-                    curLink.source.succs.set(curLink.target.autoId, curLink.target);
-                    curLink.source.succLinks.set(curLink.autoId, curLink);
-                    curLink.target.preds.set(curLink.source.autoId, curLink.source);
-                    curLink.target.predLinks.set(curLink.autoId, curLink);
-
-                    curLink = links[newLinkId + j + 1];
-                    j++;
-                }
-            }
-        });
-    };
-
-    /**
      * Assign layers.
      * @param topNodes Topology sorted array of nodes.
      */
@@ -786,7 +655,6 @@ var provvisLayout = function () {
         return outputNodesSkeleton;
     };
 
-    /* TODO: Revise topsort. */
     /**
      * Linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
      * @param oNodes Output nodes.
@@ -847,505 +715,68 @@ var provvisLayout = function () {
         }
     };
 
-    /* TODO: PROTOTYPE: Code cleanup. */
     /**
-     * Sort output nodes by subanalysis and analysis.
-     * Secondly, the distance for every pair of analyses (which are part of the graphs outputnodes) are computed
-     * and prioritized to be aligned together in the most-right and fixed layer of the graph.
-     * @param oNodes Output nodes.
-     * @param saNodes Subanalysis nodes.
-     * @returns {Array} The sorted array of output nodes.
+     * Generic implementation for the linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
+     * @param startNodes Array containing the starting nodes.
+     * @returns {Array} Topology sorted array of nodes.
      */
-    var sortOutputNodes = function (oNodes, saNodes) {
+    var topSortNodes = function (startNodes) {
+        var sortedNodes = [];
 
-        /* Sort output nodes. */
-        oNodes.sort(function (a, b) {
-            return b.parent.id - a.parent.id;
-        });
-
-        /* Set analyses as output analyses. */
-        oNodes.forEach(function (n) {
-            /* Set subanalysis as output. */
-            n.parent.isOutputAnalysis = true;
-        });
-
-
-        var dist = [],
-            clusters = [],
-            priorities = [],
-            sortedoNodes = [];
-
-        /* Initialize n x n distance, cluster and priority matrix. */
-        saNodes.forEach(function (san, i) {
-            dist.push([]);
-            clusters.push([]);
-            priorities.push([]);
-            saNodes.forEach(function (sanj, j) {
-                dist[i][j] = -1;
-                clusters[i][j] = 0;
-            });
-        });
-
-        var curDist = 0,
-            curSa = Object.create(null),
-            origSa = Object.create(null);
-
-
-        var foundNeighbor = function (sa) {
-            if (sa.isOutputAnalysis) {
-                var i = saNodes.indexOf(origSa),
-                    j = saNodes.indexOf(sa);
-
-                if (curDist < dist[i][j] || dist[i][j] === -1) {
-                    dist[i][j] = curDist;
-                }
-            }
-        };
-
-        /* Traverse in successor direction. */
-        var traverseFront = function (sa) {
-            foundNeighbor(sa);
-            curDist++;
-            sa.succs.values().forEach(traverseFront);
-            curDist--;
-        };
-
-        /* Traverse in predecessor direction. */
-        var traverseBack = function (sa) {
-            foundNeighbor(sa);
-
-            // traverse front
-            var succs = sa.succs.values().filter(function (ssa) {
-                return ssa.id !== curSa.id;
-            });
-            curSa = sa;
-            curDist++;
-            succs.forEach(function (ssa) {
-                traverseFront(ssa);
-            });
-            sa.preds.values().forEach(function (psa) {
-                traverseBack(psa);
-            });
-            curDist--;
-        };
-
-        /* Each output subanalysis then has its path length to another output subanalysis. */
-        var getNeighbors = function (ar, i) {
-            var curMin = d3.max(ar),
-                indices = [];
-            ar.forEach(function (v, j) {
-                if (v !== -1 && i !== j) {
-                    if (v < curMin) {
-                        curMin = v;
-                        indices = [];
-                        indices.push(j);
-                    } else if (v === curMin) {
-                        indices.push(j);
-                    }
-                }
-            });
-            return indices;
-        };
-
-        /* For each neighbors of an output subanalysis, cluster them with the connecting output subanalyses. */
-        var computeClusters = function () {
-            saNodes.filter(function (d) {
-                return d.isOutputAnalysis;
-            }).forEach(function (sa) {
-                var neighbors = getNeighbors(dist[saNodes.indexOf(sa)], saNodes.indexOf(sa));
-                neighbors.forEach(function (j) {
-                    var i = saNodes.indexOf(sa);
-                    clusters[i][j]++;
-                    //clusters[j][i]++;
-                });
-            });
-        };
-
-        /* Every output subanalysis has its nearest neighbors. */
-        var setPriorities = function () {
-            var setSa = function (sa, i, j) {
-                clusters[i].forEach(function (d, k) {
-                    if (d === j && sa !== saNodes[k]) {
-                        priorities[i].push(saNodes[k].id);
+        /* For each successor node. */
+        var handleSuccessorSAN = function (predNode) {
+            predNode.succs.values().forEach( function (succNode) {
+                /* Mark edge as removed. */
+                succNode.predLinks.values().forEach( function (predLink) {
+                    if (predLink.source.parent.id === predNode.id) {
+                        predLink.l.ts.removed = true;
                     }
                 });
-            };
-            saNodes.forEach(function (sa, i) {
-                for (var j = d3.max(clusters[i]); j > 0; j--) {
-                    setSa(sa, i, j);
+
+                /* When successor node has no other incoming edges,
+                 insert successor node into result set. */
+                if (!succNode.predLinks.values().some(function (predLink) {
+                    return !predLink.l.ts.removed;
+                })) {
+                    startNodes.push(succNode);
                 }
             });
         };
 
-        /* Iterate over output subanalysis and insert it directly after its nearest neighbor.*/
-        var insertSorted = function (ar, sa) {
-            var tail = [];
-            var bla = "";
-            ar.forEach(function (d) {
-                bla = bla + " " + d.id;
-            });
-            var found = false,
-                cutIndex = 0;
-            for (var i = 0; i < priorities.length && !found; i++) {
-                var p = priorities[saNodes.indexOf(sa)][i];
-                for (var j = 0; j < ar.length && !found; j++) {
-                    var d = ar[j];
-                    if (d.parent.id === p) {
-                        found = true;
-                        cutIndex = j;
-                    }
-                }
-            }
+        /* While the input set is not empty. */
+        while(startNodes.length > 0) {
 
-            if (!found) {
-                ar.push.apply(ar, sa.outputs.values());
-            } else {
-                tail = ar.splice(cutIndex, ar.length - cutIndex);
-                ar.push.apply(ar, sa.outputs.values());
-                ar.push.apply(ar, tail);
-            }
-        };
+            /* Remove first item. */
+            var curNode = startNodes.shift();
 
-        /* Traverse back and forth to find distance with path hops between subanalyses. */
-        var findConnections = function () {
-            saNodes.forEach(function (sani) {
-                curDist++;
-                curSa = sani;
-                origSa = sani;
-                sani.preds.values().forEach(function (psa) {
-                    traverseBack(psa);
-                });
-                sani.succs.values().forEach(function (ssa) {
-                    traverseFront(ssa);
-                });
-                curDist--;
-            });
-        };
+            /* And push it into result set. */
+            sortedNodes.push(curNode);
 
-        var reorderOutputNodes = function () {
-            /* Set dataset subanalyses without any successor analyses. */
-            saNodes.filter(function (sa) {
-                return sa.isOutputAnalysis;
-            }).filter(function (sa) {
-                return getNeighbors(dist[saNodes.indexOf(sa)], saNodes.indexOf(sa)).length === 0;
-            }).forEach(function (sa) {
-                sortedoNodes.push.apply(sortedoNodes, sa.outputs.values());
-            });
-
-            /* Set remaining clusters. */
-            saNodes.filter(function (sa) {
-                return sa.isOutputAnalysis;
-            }).filter(function (sa) {
-                return getNeighbors(dist[saNodes.indexOf(sa)], saNodes.indexOf(sa)).length !== 0;
-            }).forEach(function (sa) {
-
-                insertSorted(sortedoNodes, sa);
-            });
-        };
-
-        findConnections();
-        computeClusters();
-        setPriorities();
-        reorderOutputNodes();
-
-        return sortedoNodes;
-    };
-
-    /**
-     * Restore links where dummy nodes were inserted in order to process the layout.
-     */
-    var removeDummyNodes = function () {
-        /* Clean up links. */
-        for (var i = 0; i < links.length; i++) {
-            var l = links[i];
-            /* Clean source. */
-            if (l.source.nodeType != "dummy" && l.target.nodeType == "dummy") {
-                l.source.succs.remove(l.target.autoId);
-                l.source.succLinks.remove(l.autoId);
-                links.splice(i, 1);
-                i--;
-            }
-            /* Clean target. */
-            else if (l.source.nodeType == "dummy" && l.target.nodeType != "dummy") {
-                l.target.parents.splice(l.target.parents.indexOf(l.source.uuid), 1);
-                l.target.preds.remove(l.source.autoId);
-                l.target.predLinks.remove(l.autoId);
-                links.splice(i, 1);
-                i--;
-            }
-            /* Remove pure dummy links. */
-            else if (l.source.nodeType == "dummy" && l.target.nodeType == "dummy") {
-                l.target.preds.remove(l.source.autoId);
-                l.target.predLinks.remove(l.autoId);
-                l.source.succs.remove(l.target.autoId);
-                l.source.succLinks.remove(l.autoId);
-                links.splice(i, 1);
-                i--;
-            }
+            /* Get successor nodes for curSAN. */
+            handleSuccessorSAN(curNode);
         }
 
-        /* Clean up nodes. */
-        for (var j = 0; j < nodes.length; j++) {
-            var n = nodes[j];
-
-            if (n.nodeType === "dummy") {
-                n.preds = d3.map();
-                n.succs = d3.map();
-                n.predLinks = d3.map();
-                n.succLinks = d3.map();
-
-                nodes.splice(j, 1);
-                j--;
-            }
-        }
-
-        /* Restore links. */
-        dummyPaths.forEach(function (dP) {
-            var sourceId = links[dP.id].source.id,
-                targetId = links[dP.id].target.id;
-
-            dP.target.predNodes.forEach(function (pn) {
-                nodes[targetId].preds.set(nodes[pn].autoId, nodes[pn]);
-            });
-            dP.target.predNodeLinks.forEach(function (pnl) {
-                nodes[targetId].predLinks.set(links[pnl].autoId, links[pnl]);
-            });
-            dP.source.succNodes.forEach(function (sn) {
-                nodes[sourceId].succs.set(nodes[sn].autoId, nodes[sn]);
-            });
-            dP.source.succNodeLinks.forEach(function (snl) {
-                nodes[sourceId].succLinks.set(links[snl].autoId, links[snl]);
-            });
-
-            nodes[targetId].parents = nodes[targetId].parents.concat(dP.parents.filter(function (p) {
-                return nodes[targetId].parents.indexOf(p) === -1;
-            }));
-        });
-        dummyPaths = [];
+        return sortedNodes;
     };
 
-    /**
-     * Compress analysis horizontally.
-     * @param aNodes Analysis nodes.
-     */
-    var horizontalAnalysisAlignment = function (aNodes) {
-        aNodes.forEach(function (an) {
+    /* TODO: In development. */
+    var layerNodes = function (tsNodes) {
+        tsNodes.forEach( function (n) {
 
-            var maxOutput = d3.max(an.outputs.values(), function (d) {
-                return d.col;
-            });
-
-            an.outputs.values().filter(function (d) {
-                return d.col < maxOutput;
-            }).forEach(function (ano) {
-                var curNode = ano,
-                    j = 0;
-
-                /* Check for gaps. */
-                if (curNode.col < maxOutput) {
-
-                    /* Get first node for this block. */
-                    var curBlockNode = curNode;
-                    while (curBlockNode.preds.size() === 1 &&
-                        curBlockNode.preds.values()[0].analysis === an.uuid &&
-                        curBlockNode.preds.values()[0].col - curBlockNode.col === 1) {
-                        curBlockNode = curBlockNode.preds.values()[0];
-                    }
-
-                    /* When pred for leading block node is of the same analysis. */
-                    while (curNode.col < maxOutput &&
-                        curBlockNode.preds.size() === 1 &&
-                        curBlockNode.preds.values()[0].analysis === an.uuid &&
-                        curNode.preds.size() === 1) {
-                        var predNode = curNode.preds.values()[0];
-                        if (predNode.col - curNode.col > 1) {
-
-                            var shiftCurNode = curNode,
-                                colShift = maxOutput + j;
-
-                            /* Shift the gap to align with the maximum output column of this analysis. */
-                            while (shiftCurNode !== ano) {
-                                shiftCurNode.col = colShift;
-                                shiftCurNode = shiftCurNode.succs.values()[0];
-                                colShift--;
-                            }
-                            ano.col = colShift;
-                        }
-                        j++;
-                        curNode = predNode;
-                    }
-                }
-            });
         });
     };
 
-    /**
-     * Analyses without successor analyses are shifted left.
-     * @param aNodes Analysis nodes.
-     */
-    var leftShiftAnalysis = function (aNodes) {
-        aNodes.forEach(function (an) {
+    /* TODO: In development. */
+    var groupNodes = function (tsNodes) {
 
-            var leftMostInputCol = d3.max(an.inputs.values(), function (ain) {
-                return ain.col;
-            });
-            var rightMostPredCol = depth;
-
-
-            an.inputs.values().forEach(function (ain) {
-                var curMin = d3.min(ain.preds.values(),
-                    function (ainpn) {
-                        return ainpn.col;
-                    });
-
-                if (curMin < rightMostPredCol) {
-                    rightMostPredCol = curMin;
-                }
-            });
-
-            /* Shift when gap. */
-            if (rightMostPredCol - leftMostInputCol > 1 && an.succs.empty()) {
-                an.children.forEach(function (n) {
-                    n.col += rightMostPredCol - leftMostInputCol - 1;
-                });
-            }
-        });
+        return [];
     };
 
-    /**
-     * Try to center analysis via grid lookup.
-     */
-    var centerAnalysisOnRightSplit = function () {
-        /* Iterate from right to left, column-wise. */
+    /* TODO: In development. */
+    var layoutNodes = function (gNodes) {
 
-        var isAnotherAnalysis = function (sn) {
-            return sn.analysis !== grid[i][j].analysis;
-        };
-
-        var getMedianRow = function (d) {
-            var medianRow = d.succs.values().sort(function (a, b) {
-                return a.row - b.row;
-            }).map(function (n) {
-                return n.row;
-            });
-            return medianRow[Math.floor(medianRow.length / 2)];
-        };
-
-        for (var i = 0; i < depth; i++) {
-            for (var j = 0; j < width; j++) {
-                if (grid[i][j] !== "undefined" && grid[i][j].succs.size() > 1 && grid[i][j].succs.values().some(isAnotherAnalysis)) {
-
-                    /* Within this analysis and for each predecessor, traverse back and shift rows. */
-                    var newRow = getMedianRow(grid[i][j]),
-                        curNode = grid[i][j];
-
-                    while (curNode.preds.size() === 1) {
-                        grid[i][j] = "undefined";
-                        grid[i][newRow] = curNode;
-                        curNode.row = newRow;
-                        curNode = curNode.preds.values()[0];
-                    }
-                    if (curNode.preds.empty()) {
-                        grid[i][j] = "undefined";
-                        grid[i][newRow] = curNode;
-                        curNode.row = newRow;
-                    }
-                }
-            }
-        }
     };
 
-    /**
-     * Optimize layout.
-     * @param saNodes Subanalysis nodes.
-     * @param aNodes Analysis nodes.
-     */
-    var postprocessLayout = function (saNodes, aNodes) {
-
-        horizontalAnalysisAlignment(saNodes);
-
-        leftShiftAnalysis(aNodes);
-
-        createNodeGrid();
-
-        centerAnalysisOnRightSplit();
-
-        /* TODO: When centering at a split, check block-class with occupied rows/cols (Compaction). */
-        /* TODO: Form classes for blocks and rearrange analysis. */
-    };
-
-    /**
-     * Create initial layout for analysis only nodes.
-     * @param aNodes Analysis nodes.
-     */
-    var initAnalysisLayout = function (aNodes) {
-        var firstLayer = 0;
-
-        aNodes.forEach(function (an) {
-            var rootCol;
-
-            if (an.succs.size() > 0) {
-                rootCol = an.succs.values()[0].inputs.values()[0].col;
-
-                an.succs.values().forEach(function (san) {
-                    san.inputs.values().forEach(function (sanIn) {
-                        if (sanIn.col + 1 > rootCol) {
-                            rootCol = sanIn.col + 1;
-                        }
-                    });
-                });
-            } else {
-                if (an.outputs.size() > 0) {
-                    rootCol = an.outputs.values()[0].col;
-                } else {
-                    an.col = firstLayer;
-                }
-            }
-
-            an.col = rootCol;
-            /*an.x = -an.col * cell.width;*/
-            an.row = an.outputs.values().map(function (aon) {
-                return aon.row;
-            })[parseInt(an.outputs.size() / 2, 10)];
-            /*an.y = an.row * cell.height;*/
-        });
-    };
-
-    /**
-     * Create initial layout for subanalysis only nodes.
-     * @param saNodes Subanalysis nodes.
-     */
-    var initSubanalysisLayout = function (saNodes) {
-        var firstLayer = 0;
-        saNodes.forEach(function (san) {
-            var rootCol;
-
-            if (san.succs.length > 0) {
-                rootCol = san.succs.values()[0].inputs.values()[0].col;
-
-                san.succs.forEach(function (sasn) {
-                    sasn.inputs.values().forEach(function (sasnIn) {
-                        if (sasnIn.col + 1 > rootCol) {
-                            rootCol = sasnIn.col + 1;
-                        }
-                    });
-                });
-            } else {
-                if (san.outputs.size() > 0) {
-                    rootCol = san.outputs.values()[0].col;
-                } else {
-                    san.col = firstLayer;
-                }
-            }
-
-            san.col = rootCol;
-            /*san.x = -san.col * cell.width;*/
-            san.row = san.outputs.values().map(function (aon) {
-                return aon.row;
-            })[parseInt(san.outputs.size() / 2, 10)];
-            /*san.y = san.row * cell.height;*/
-        });
-    };
 
 
     /**
@@ -1362,20 +793,65 @@ var provvisLayout = function () {
 
         console.log("Provvis: New layout is active.");
 
-        /* Group output nodes by subanalysis and analysis. */
-        graph.oNodes = sortOutputNodes(graph.oNodes, graph.saNodes);
+
+
+
+        /* SUBANALYSIS LAYOUT. */
+        /* TODO: Generic re-implementation for subanalysis nodes. */
+
+        /* Add input subanalyses to starting nodes. */
+        var startSANodes = [];
+        graph.dataset.children.values().forEach(function (san) {
+            startSANodes.push(san);
+        });
+        var tsSANodes = topSortNodes(startSANodes);
+
+        if (tsSANodes !== null) {
+            layerNodes(tsSANodes);
+
+            var gSANodes = groupNodes(tsSANodes);
+
+            layoutNodes(gSANodes);
+
+            // createNodeGrid();
+        } else {
+            console.log("Error: Graph is not acyclic!");
+        }
+
+
+
+
+
+        /* ANALYSIS LAYOUT. */
+        /* TODO: Generic re-implementation for analysis nodes. */
+
+        var startANodes = [];
+        startANodes.push(graph.dataset);
+        var tsANodes = topSortNodes(startANodes);
+console.log(tsANodes.map(function (d) {return d.id;}));
+        if (tsANodes !== null) {
+            layerNodes(tsANodes);
+
+            var gANodes = groupNodes(tsANodes);
+
+            layoutNodes(gANodes);
+
+            // createNodeGrid();
+        } else {
+            console.log("Error: Graph is not acyclic!");
+        }
+
+
+
+
+
+        /* FILES/TOOLS LAYOUT. */
+        /* TODO: Generic re-implementation for files/tools of one subanalysis (workflow). */
 
         /* Topological order. */
         var topNodes = sortTopological(graph.oNodes);
         if (topNodes !== null) {
             /* Assign layers. */
-            assignLayers(topNodes);
-
-            /* Add dummy nodes and links. */
-            addDummyNodes();
-
-            /* Recalculate layers including dummy nodes. */
-            topNodes = sortTopological(graph.oNodes);
             assignLayers(topNodes);
 
             /* Group nodes by layer. */
@@ -1384,18 +860,8 @@ var provvisLayout = function () {
             /* Place vertices. */
             computeLayout(lgNodes);
 
-            /* Restore original dataset. */
-            removeDummyNodes();
-
-            /* TODO: Revise postprocessing. */
-            /* Optimize layout. */
-            postprocessLayout(graph.saNodes, graph.aNodes);
-
-            /* Create initial layout for subanalysis only nodes. */
-            initSubanalysisLayout(graph.saNodes);
-
-            /* Create initial layout for analysis only nodes. */
-            initAnalysisLayout(graph.aNodes);
+            /* Create grid. */
+            createNodeGrid();
 
             graph.nodes = nodes;
             graph.links = links;
