@@ -317,6 +317,7 @@ var provvisDecl = function () {
     /**
      * Constructor function for the provenance graph.
      *
+     * @param dataset
      * @param nodes
      * @param links
      * @param iNodes
@@ -333,7 +334,8 @@ var provvisDecl = function () {
      * @param grid
      * @constructor
      */
-    var ProvGraph = function (nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, width, depth, grid) {
+    var ProvGraph = function (dataset, nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, width, depth, grid) {
+        this.dataset = dataset;
         this.nodes = nodes;
         this.links = links;
         this.iNodes = iNodes;
