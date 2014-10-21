@@ -1318,8 +1318,8 @@ var provvisRender = function () {
              "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
 
             /* TODO: DEBUG INFO: */
-            showTooltip(createHTMLKeyValuePair("AutoId", d.autoId) + "<br>" +
-                createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>", event);
+            /*showTooltip(createHTMLKeyValuePair("AutoId", d.autoId) + "<br>" +
+                createHTMLKeyValuePair("Subanalysis", d.id) + "<br>", event);*/
 
             d3.select(this).classed("mouseoverNode", true);
             d3.select(this).select(".nodeAttrLabel").text(function (d) {
@@ -1337,14 +1337,14 @@ var provvisRender = function () {
              "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
 
             /* TODO: DEBUG INFO: */
-            showTooltip(createHTMLKeyValuePair("AutoId", d.autoId) + "<br>" +
-                createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>", event);
+            /*showTooltip(createHTMLKeyValuePair("AutoId", d.autoId) + "<br>" +
+                createHTMLKeyValuePair("Subanalysis", d.id) + "<br>", event);*/
 
             /*d3.select(this.parentNode).select(".saMenu").style("display", "inline");*/
         }).on("mouseout", function () {
 
             /* TODO: DEBUG INFO: */
-            hideTooltip();
+            /*hideTooltip();*/
 
             d3.select(this).classed("mouseoverNode", false);
             /*d3.select(this.parentNode).select(".saMenu").style("display", "none");*/

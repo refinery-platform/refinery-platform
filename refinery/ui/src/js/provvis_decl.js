@@ -269,9 +269,18 @@ var provvisDecl = function () {
         this.target = target;
         this.hidden = hidden;
         this.highlighted = false;
-        this.l = {neighbor: false,
+
+        /* Layout computation specific flags. */
+        this.l = {
+
+            /* Top sort marking [Kahn 1962]. */
+            ts: {removed: false},
+
+            /* Vertical coord assignment markings [Brandes and Köpf 2002]. */
+            neighbor: false,
             type0: false,
-            type1: false};
+            type1: false
+        };
 
         Link.numInstances = (Link.numInstances || 0) + 1;
         this.autoId = Link.numInstances;
