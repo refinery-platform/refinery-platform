@@ -138,10 +138,10 @@ var provvisDecl = function () {
         this.predLinks = d3.map();
         this.succLinks = d3.map();
         this.children = d3.map();
-        this.col = -1;
-        this.row = -1;
-        this.x = -1;
-        this.y = -1;
+        this.col = 0;
+        this.row = 0;
+        this.x = 0;
+        this.y = 0;
 
         BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
         this.autoId = BaseNode.numInstances;
