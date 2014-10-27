@@ -32,6 +32,8 @@ var provvisRender = function () {
 
     var lastSolrResponse = Object.create(null);
 
+    var selectedNodeSet = d3.map();
+
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
         .append("div")
@@ -204,31 +206,23 @@ var provvisRender = function () {
 
         /* On analysis doi. */
         d3.selectAll(".aNode").each(function (an) {
-            var keyStroke;
-
             if (an.doi.doiWeightedSum >= (1 / 3)) {
                 /* Expand. */
-                keyStroke = {ctrl: true, shift: false};
-                handleCollapseExpandNode(an, keyStroke);
+                handleCollapseExpandNode(an, "e");
             } else if (an.doi.doiWeightedSum < (1 / 3)) {
                 /* Collapse. */
-                keyStroke = {ctrl: false, shift: true};
-                handleCollapseExpandNode(an, keyStroke);
+                handleCollapseExpandNode(an, "c");
             }
         });
 
         /* On subanalysis doi. */
         d3.selectAll(".saNode").each(function (san) {
-            var keyStroke;
-
             if (san.doi.doiWeightedSum >= (2 / 3)) {
                 /* Expand. */
-                keyStroke = {ctrl: true, shift: false};
-                handleCollapseExpandNode(san, keyStroke);
+                handleCollapseExpandNode(san, "e");
             } else if (san.doi.doiWeightedSum < (1 / 3)) {
                 /* Collapse. */
-                keyStroke = {ctrl: false, shift: true};
-                handleCollapseExpandNode(san, keyStroke);
+                handleCollapseExpandNode(san, "c");
             }
         });
     };
@@ -923,7 +917,7 @@ var provvisRender = function () {
         };
 
         /* Expand. */
-        if (keyStroke.ctrl && (d.nodeType === "analysis" || d.nodeType === "subanalysis")) {
+        if (keyStroke === "e" && (d.nodeType === "analysis" || d.nodeType === "subanalysis")) {
 
             /* Set node visibility. */
             d3.select("#nodeId-" + d.autoId).classed("hiddenNode", true);
@@ -983,7 +977,7 @@ var provvisRender = function () {
                 updateLink(d3.select("#nodeId-" + cn.autoId), cn, cn.x, cn.y);
             });
 
-        } else if (keyStroke.shift && d.nodeType !== "analysis") {
+        } else if (keyStroke === "c" && d.nodeType !== "analysis") {
             /* Collapse. */
 
             /* Set node visibility. */
@@ -1031,11 +1025,11 @@ var provvisRender = function () {
         /* Clear any highlighting. */
         clearHighlighting(links);
 
-        if (keyStroke.ctrl) {
+        if (keyStroke === "s") {
 
             /* Highlight path. */
             highlightSuccPath(d);
-        } else if (keyStroke.shift) {
+        } else if (keyStroke === "p") {
 
             /* Highlight path. */
             highlightPredPath(d);
@@ -1109,6 +1103,8 @@ var provvisRender = function () {
 
         vis.nodeTable.select("#nodeTitle").html("<b>" + "Node: " + "<b>" + " - ");
         vis.nodeTable.select("#provenance-table-content").html("");
+
+        selectedNodeSet = d3.map();
     };
 
     /**
@@ -1122,38 +1118,12 @@ var provvisRender = function () {
             d.selected = false;
             d3.select("#nodeId-" + d.autoId).classed("selectedNode", false);
             d.doi.selectedChanged();
-            /*if (d.children.values()) {
-             d.children.values().forEach(function (cn) {
-             cn.selected = false;
-             d3.select("#nodeId-" + cn.autoId).classed("selectedNode", false);
-             cn.doi.selectedChanged();
-             if (cn.children.values()) {
-             cn.children.values().forEach(function (ccn) {
-             ccn.selected = false;
-             d3.select("#nodeId-" + ccn.autoId).classed("selectedNode", false);
-             ccn.doi.selectedChanged();
-             });
-             }
-             });
-             }*/
+            selectedNodeSet.remove(d.autoId);
         } else {
             d.selected = true;
             d3.select("#nodeId-" + d.autoId).classed("selectedNode", true);
             d.doi.selectedChanged();
-            /*if (d.children.values()) {
-             d.children.values().forEach(function (cn) {
-             cn.selected = true;
-             d3.select("#nodeId-" + cn.autoId).classed("selectedNode", true);
-             cn.doi.selectedChanged();
-             if (cn.children.values()) {
-             cn.children.values().forEach(function (ccn) {
-             ccn.selected = true;
-             d3.select("#nodeId-" + ccn.autoId).classed("selectedNode", true);
-             ccn.doi.selectedChanged();
-             });
-             }
-             });
-             }*/
+            selectedNodeSet.set(d.autoId, d);
         }
 
         updateNodeDoi();
@@ -1883,33 +1853,11 @@ var provvisRender = function () {
 
         handleToolbar(graph);
 
-        var keyEvent = Object.create(null),
-            nodeClickTimeout;
-
         d3.selectAll(".node, .saGlyph, .aNode").on("click", function (d) {
             if (d3.event.defaultPrevented) return;
-            clearTimeout(nodeClickTimeout);
 
-            keyEvent = {"alt": d3.event.altKey, "shift": d3.event.shiftKey, "ctrl": d3.event.ctrlKey};
-            nodeClickTimeout = setTimeout(function () {
-                if (keyEvent.ctrl || keyEvent.shift) {
-                    handlePathHighlighting(d, keyEvent, graph.links);
-                } else {
-                    handleNodeSelection(d, keyEvent);
-                    updateTableContent(d);
-                }
-            }, 200);
-        });
-
-        d3.selectAll(".node, .saGlyph, .aNode").on("dblclick", function (d) {
-            if (d3.event.defaultPrevented) return;
-            clearTimeout(nodeClickTimeout);
-
-            /* Fire double click event. */
-            keyEvent = {"alt": d3.event.altKey, "shift": d3.event.shiftKey, "ctrl": d3.event.ctrlKey};
-            if (keyEvent.ctrl || keyEvent.shift) {
-                handleCollapseExpandNode(d, keyEvent);
-            }
+            handleNodeSelection(d);
+            updateTableContent(d);
         });
 
         var bRectClickTimeout;
@@ -1940,9 +1888,7 @@ var provvisRender = function () {
 
         /* Collapse on bounding box click.*/
         saBBox.on("click", function (d) {
-            var keyStroke;
-            keyStroke = {ctrl: false, shift: true};
-            handleCollapseExpandNode(vis.graph.saNodes[d].children.values()[0], keyStroke);
+            handleCollapseExpandNode(vis.graph.saNodes[d].children.values()[0], "c");
 
             /* Deselect. */
             vis.graph.saNodes[d].selected = false;
@@ -1964,6 +1910,32 @@ var provvisRender = function () {
             /* Update node doi. */
             updateNodeDoi();
         });
+
+        var keydown = function () {
+            d3.event.preventDefault();
+
+            if (selectedNodeSet.empty()) return;
+
+            selectedNodeSet.values().forEach(function (d) {
+                switch (d3.event.keyCode) {
+
+                    case 67: /* c => collapse*/
+                        handleCollapseExpandNode(d, "c");
+                        break;
+                    case 69: /* e => expand*/
+                        handleCollapseExpandNode(d, "e");
+                        break;
+                    case 80: /* l => highlight predecessors */
+                        handlePathHighlighting(d, "p", graph.links);
+                        break;
+                    case 83: /* r => highlight successors */
+                        handlePathHighlighting(d, "s", graph.links);
+                        break;
+                }
+            });
+        };
+
+        d3.select("body").on("keydown", keydown);
     };
 
     /**

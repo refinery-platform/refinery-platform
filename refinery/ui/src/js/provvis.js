@@ -262,10 +262,10 @@ var provvis = function () {
             "html": "<h3>Command Shortcut List</h3>" +
                 "<ul><li><div class=\"refinery-subheader\"><h4>Node and path specific:</h4></div></li>" +
                 "<ul><li>(Un)Select: Left click</li>" +
-                "<li>Highlight predecessors: SHIFT + Left click</li>" +
-                "<li>Highlight successors: CTRL + Left click</li>" +
-                "<li>Collapse Node: SHIFT + Left double click</li>" +
-                "<li>Expand Node: CTRL + Left double click</li></ul><br>" +
+                "<li>Highlight predecessors: 'p'</li>" +
+                "<li>Highlight successors: 's'</li>" +
+                "<li>Collapse Node: 'c'</li>" +
+                "<li>Expand Node: 'e'</li></ul><br>" +
                 "<li><div class=\"refinery-subheader\"><h4>Global:</h4></div></li>" +
                 "<ul><li>Clear highlighting: Left click on background</li>" +
                 "<li>Fit graph to screen: Left double click on background</li></ul></ul>"
