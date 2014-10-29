@@ -208,7 +208,7 @@ class ui {
   }
   ->
   exec { "bower_modules":
-    command => "/usr/bin/bower install",
+    command => "/usr/bin/bower install --config.interactive=false",
     cwd => $ui_app_root,
     logoutput => on_failure,
     user => $appuser,
