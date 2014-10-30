@@ -310,9 +310,16 @@ class ExternalToolStatusResource(ModelResource):
 
 
 class StatisticsResource(Resource):
-    dataset_count = fields.IntegerField(attribute="dataset_count")
-    workflow_count = fields.IntegerField(attribute="workflow_count")
-    project_count = fields.IntegerField(attribute="project_count")
+    dataset = fields.DictField(attribute="dataset")
+    workflow = fields.DictField(attribute="workflow")
+    project = fields.DictField(attribute="project")
+
+    def stat_summary(self, model):
+        total = len(model.objects.all())
+        public = len(filter(lambda x: x.is_public(), model.objects.all()))
+        private_shared = len(filter(lambda x: (not x.is_public() and len(x.get_groups()) > 1), model.objects.all()))
+        private = total - public - private_shared
+        return {"total": total, "public": public, "private": private, "private_shared": private_shared}
 
     class Meta:
         resource_name = "statistics"
@@ -327,6 +334,6 @@ class StatisticsResource(Resource):
         return self.get_object_list(bundle)
 
     def get_object_list(self, request):
-        results = [StatisticsObject(DataSet.objects.count(), Workflow.objects.count(), Project.objects.count())]
+        results = [StatisticsObject(self.stat_summary(DataSet), self.stat_summary(Workflow), self.stat_summary(Project))]
         return results
 

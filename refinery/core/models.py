@@ -1047,8 +1047,8 @@ class ExternalToolStatus(models.Model):
         unique_together = ('name', 'unique_instance_identifier')
 
 class StatisticsObject(object):
-    def __init__(self, dataset_count=0, workflow_count=0, project_count=0):
-        self.dataset_count = dataset_count
-        self.workflow_count = workflow_count
-        self.project_count = project_count
+    def __init__(self, dataset=None, workflow=None, project=None):
+        self.dataset = dataset
+        self.workflow = workflow
+        self.project = project
 
