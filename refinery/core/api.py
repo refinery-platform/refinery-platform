@@ -331,9 +331,22 @@ class StatisticsResource(Resource):
         return kwargs 
 
     def obj_get_list(self, bundle, **kwargs):
-        return self.get_object_list(bundle)
+        return self.get_object_list(bundle.request)
 
     def get_object_list(self, request):
-        results = [StatisticsObject(self.stat_summary(DataSet), self.stat_summary(Workflow), self.stat_summary(Project))]
+        dataset_summary = {}
+        workflow_summary = {}
+        project_summary = {}
+        
+        if "dataset" in request.GET:
+            dataset_summary = self.stat_summary(DataSet)
+
+        if "workflow" in request.GET:
+            workflow_summary = self.stat_summary(Workflow)
+
+        if "project" in request.GET:
+            project_summary = self.stat_summary(Project)
+
+        results = [StatisticsObject(dataset_summary, workflow_summary, project_summary)]
         return results
 

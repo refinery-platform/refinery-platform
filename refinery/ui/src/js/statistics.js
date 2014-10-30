@@ -37,14 +37,16 @@ angular.module("refineryStatistics", [])
         };
     }
 
-    $http.get("http://192.168.50.50:8000/api/v1/statistics/?format=json").success(function (response) {
+    $http.get("http://192.168.50.50:8000/api/v1/statistics/?format=json&dataset&workflow&project").success(function (response) {
         var dataset = response.objects[0].dataset;
         var workflow = response.objects[0].workflow;
         var project = response.objects[0].project;
 
-        plot(dataset, "dataSetChart");
-        plot(workflow, "workflowChart");
-        plot(project, "projectChart");
+        if (dataset) { plot(dataset, "dataSetChart"); }
+
+        if (workflow) { plot(workflow, "workflowChart"); }
+        
+        if (project) { plot(project, "projectChart"); }
     });
 
     window.onresize = function (event) {
