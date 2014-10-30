@@ -42,11 +42,11 @@ angular.module("refineryStatistics", [])
         var workflow = response.objects[0].workflow;
         var project = response.objects[0].project;
 
-        if (dataset) { plot(dataset, "dataSetChart"); }
+        if (!jQuery.isEmptyObject(dataset)) { plot(dataset, "dataSetChart"); }
 
-        if (workflow) { plot(workflow, "workflowChart"); }
+        if (!jQuery.isEmptyObject(workflow)) { plot(workflow, "workflowChart"); }
         
-        if (project) { plot(project, "projectChart"); }
+        if (!jQuery.isEmptyObject(project)) { plot(project, "projectChart"); }
     });
 
     window.onresize = function (event) {
