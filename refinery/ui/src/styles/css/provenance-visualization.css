@@ -8,7 +8,8 @@
     position: relative;
 }
 
-#provenance-canvas {}
+#provenance-canvas {
+}
 
 #provenance-table {
     position: absolute;
@@ -42,9 +43,19 @@
 }
 
 /* btn-group tweaks as by: http://stackoverflow.com/a/13766206 */
-.btn-group.btn {   border: 0;   padding: 0; }
-.btn-group.btn > .btn { border-radius: 0 }
-.btn-group.btn > .dropdown-menu {  text-align: left; }
+.btn-group.btn {
+    border: 0;
+    padding: 0;
+}
+
+.btn-group.btn > .btn {
+    border-radius: 0
+}
+
+.btn-group.btn > .dropdown-menu {
+    text-align: left;
+}
+
 .btn-group.btn:first-child > .btn {
     -webkit-border-radius: 4px 0 0 4px;
     -moz-border-radius: 4px 0 0 4px;
@@ -55,6 +66,12 @@
     -webkit-border-radius: 0 4px 4px 0;
     -moz-border-radius: 0 4px 4px 0;
     border-radius: 0 4px 4px 0;
+}
+
+.scrollable-menu {
+    max-height: 300px;
+    overflow: hidden;
+    overflow-y: auto;
 }
 
 #curTime {
@@ -70,32 +87,29 @@
     display: none;
 }
 
-.rawNode {
+.link {
+    stroke: gray;
+    stroke-width: 1.5px;
+    stroke-opacity: 1.0;
+    fill: none;
+    display: none;
 }
 
-.specialNode {
-    stroke-width: 1px;
-}
-
-.dtNode {
-    stroke-width: 1px;
-}
-
-.intermediateNode {
-    stroke-width: 1px;
-}
-
-.storedNode {
+.hLink {
+    stroke-width: 10px;
+    opacity: 1.0;
+    fill: none;
+    display: none;
 }
 
 .selectedNode {
-    stroke-width: 3px;
+    stroke-width: 1.5px;
     stroke: #ed7407;
 }
 
 .mouseoverNode {
     stroke-width: 3px;
-    stroke: #ed7407;
+    stroke: #136382;
 }
 
 .filteredNode, .filteredLink {
@@ -106,19 +120,10 @@
 .blendedNode, .blendedLink {
     display: inline;
     opacity: 0.3;
+    stroke-opacity: 0.3;
 }
 
-.link {
-    stroke: gray;
-    stroke-width: 1.5px;
-    stroke-opacity: 1;
-    fill: none;
-}
-
-.hLink {
-    stroke-width: 10px;
-    opacity: 1.0;
-    fill: none;
+.hiddenNode, .hiddenLink {
     display: none;
 }
 
@@ -141,7 +146,7 @@
     stroke: none;
     fill: gray;
     display: none;
-    cursor:default;
+    cursor: default;
 }
 
 .saMenuText {
@@ -158,21 +163,44 @@
     fill: #ed7407;
     stroke: #ed7407;
     stroke-width: 0.5px;
-    font-size: 11px;
+    font-size: 15px;
     font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    cursor:default;
+    cursor: default;
+}
+
+.nodeAttrLabel {
+    fill: #000000;
+    fill-opacity: 1.0;
+    stroke: #000000;
+    stroke-width: 0.0px;
+    font-size: 13px;
+    font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    cursor: default;
+}
+
+.mouseoverNode text {
+    fill: #136382;
+    stroke: #136382;
+    stroke-width: 0.5px;
+    display: inline;
 }
 
 .saBBox {
     fill: #000000;
     fill-opacity: 0.3;
-    stroke: none;
-    stroke-width: 0px;
     display: none;
+    cursor: default;
 }
 
-.mouseoverBBox {
-    stroke-width: 3px;
-    stroke: #ed7407;
+.mouseoverBBox rect{
+    stroke-width: 2px;
+    stroke: #136382;
     display: inline;
+}
+
+.mouseoverBBox .nodeAttrLabel {
+    fill: #136382;
+    stroke: #136382;
+    fill-opacity: 1.0;
+    stroke-width: 0.5px;
 }

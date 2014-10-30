@@ -1,7 +1,6 @@
-from data_set_manager.single_file_column_parser import SingleFileColumnParser
-from data_set_manager.tasks import create_dataset
-from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
+from django.core.management.base import BaseCommand, CommandError
+from data_set_manager.single_file_column_parser import process_metadata_table
 
 
 class Command(BaseCommand):
@@ -31,19 +30,19 @@ class Command(BaseCommand):
                             ),
                 make_option('--data_file_column',
                             action='store',
-                            type='string',
+                            type='int',
                             help='(Required) index of the column of the input file that contains the path to or the URL of the file associated with this sample'
                             ),
                 make_option('--auxiliary_file_column',
                             action='store',
-                            type='string',
+                            type='int',
                             default=None,
                             help='column index of the input file that contains the path to an auxiliary file (e.g. for visualization) associated with the input file'
                             ),
                 make_option('--base_path',
                             action='store',
                             type='string',
-                            default="",
+                            default=None,
                             help='base path of your data file paths if using relative locations'
                             ),
                 make_option('--slug',
@@ -54,19 +53,19 @@ class Command(BaseCommand):
                             ),
                 make_option('--species_column',
                             action='store',
-                            type='string',
+                            type='int',
                             default=None,
                             help='column containing species names or ids'
                             ),
                 make_option('--annotation_column',
                             action='store',
-                            type='string',
+                            type='int',
                             default=None,
                             help='column containing boolean flag to indicate whether the data file in this row should be treated as an annotation file'
                             ),
                 make_option('--genome_build_column',
                             action='store',
-                            type='string',
+                            type='int',
                             default=None,
                             help='column containing genome build ids'
                             ),
@@ -91,32 +90,21 @@ class Command(BaseCommand):
         for arg in required:
             if not options[arg]:
                 raise CommandError('%s was not provided.' % arg)
-
-        parser = SingleFileColumnParser()
-        parser.file_permanent = options['data_file_permanent']
-        parser.file_column_index = int( options['data_file_column'] )
-        parser.source_column_index = [int(x.strip()) for x in options['source_column_index'].split(",")]
-        parser.column_index_separator = "/"
-        parser.file_base_path = options['base_path']
-        
-        if options['auxiliary_file_column'] is not None:
-            parser.auxiliary_file_column_index = int( options['auxiliary_file_column'] )
-        
-        if options['species_column'] is not None:
-            parser.species_column_index = int( options['species_column'] )
-        
-        if options['genome_build_column'] is not None:
-            parser.genome_build_column_index = int( options['genome_build_column'] )                
-        
-        if options['annotation_column'] is not None:
-            parser.annotation_column_index = int( options['annotation_column'] )                
-        
-        investigation = parser.run(options['file_name'])
-        investigation.title = options['title']
-        investigation.save()
-        
-        create_dataset(investigation_uuid=investigation.uuid,
-                       username=options['username'],
-                       dataset_title=options['title'],
-                       slug=options['slug'],
-                       public=options['is_public'])
+        source_columns = [int(x.strip()) for x in options['source_column_index'].split(",")]
+        for column_index in source_columns:
+            if column_index < 0:
+                raise CommandError("source_column_index values can not be negative")
+        integer_values = ['data_file_column', 'auxiliary_file_column',
+                          'genome_build_column', 'annotation_column']
+        for arg in integer_values:
+            if options[arg] and options[arg] < 0:
+                raise CommandError("{} can not be negative".format(arg))
+        with open(options['file_name']) as metadata_file:
+            dataset_uuid = process_metadata_table(
+                options['username'], options['title'], metadata_file,
+                source_columns, options['data_file_column'],
+                options['data_file_permanent'], options['base_path'],
+                options['auxiliary_file_column'], options['species_column'],
+                options['genome_build_column'], options['annotation_column'],
+                options['slug'], options['is_public'])
+        print("Created dataset with UUID '{}'".format(dataset_uuid))

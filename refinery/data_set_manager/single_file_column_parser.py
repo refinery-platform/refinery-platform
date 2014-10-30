@@ -3,15 +3,16 @@ Created on Jun 20, 2012
 
 @author: nils
 '''
-from annotation_server.models import species_to_taxon_id, Taxon
-from data_set_manager.genomes import map_species_name_to_id
-from data_set_manager.models import Investigation, Study, Node, Attribute, Assay
-from file_store.tasks import create, import_file
 import csv
 import file_server
 import logging
 import operator
 import os
+from annotation_server.models import species_to_taxon_id, Taxon
+from data_set_manager.models import Investigation, Study, Node, Attribute, Assay
+from data_set_manager.tasks import create_dataset
+from file_store.tasks import create, import_file
+
 
 # get module logger
 logger = logging.getLogger(__name__)
@@ -127,22 +128,31 @@ class SingleFileColumnParser:
         else:
             return self.column_index_separator.join( operator.itemgetter(*internal_column_index)(row) )            
 
-    def _parse_file(self, file_name ):
+    def _parse_file(self):
         try:
-            self._current_file =  open( file_name, "rU" )
-            self._current_reader = csv.reader( self._current_file, dialect="excel-tab", delimiter=self.delimiter )
+            # need to use splitlines() to avoid potential newline errors
+            # http://madebyknight.com/handling-csv-uploads-in-django/
+            self._current_reader = csv.reader(
+                self._current_file.read().splitlines(),
+                dialect="excel-tab",
+                delimiter=self.delimiter)
         except:
-            logger.exception( "Unable to read file " + str( self._current_file ) + "." )
-        
+            logger.exception("Unable to read file %s", str(self._current_file))
+
         # create investigation, study and assay objects
         investigation = self._create_investigation()
-        study = self._create_study( investigation=investigation, file_name=file_name )                
-        assay = self._create_assay( study=study, file_name=file_name )
-        
+        study = self._create_study(investigation=investigation,
+                                   file_name=self._current_file.name)
+        assay = self._create_assay(study=study,
+                                   file_name=self._current_file.name)
+
         #import in file as "pre-isa" file
-        logger.info('trying to add pre-isa archive file %s' % file_name)
-        investigation.pre_isarchive_file = create(file_name, permanent=True)
-        import_file(investigation.pre_isarchive_file, refresh=True, permanent=True)
+        logger.info("trying to add pre-isa archive file %s",
+                    self._current_file.name)
+        investigation.pre_isarchive_file = create(self._current_file.name,
+                                                  permanent=True)
+        import_file(investigation.pre_isarchive_file, refresh=True,
+                    permanent=True)
         investigation.save()
             
         # read column headers
@@ -265,15 +275,67 @@ class SingleFileColumnParser:
                         value=row[column_index].strip() )             
              
         return investigation
-                    
-        
 
-    def run(self, file_name, archive=None):
-        
+    def run(self, file_object, archive=None):
         if self.file_column_index is None:
-            logger.exception( "The index of the column containing the data file paths cannot be None." )
-            
-        return self._parse_file( file_name )        
+            logger.exception(
+                "The index of the column containing the data file paths cannot be None")
+        self._current_file = file_object
+        return self._parse_file()
 
-    
 
+def process_metadata_table(username, title, metadata_file, source_columns,
+                           data_file_column, data_file_permanent=False,
+                           base_path="", auxiliary_file_column=None,
+                           species_column=None, genome_build_column=None,
+                           annotation_column=None, slug=None, is_public=False):
+    """Create a dataset given a metadata file object and its description
+
+    :param username: username
+    :type username: str
+    :param title: dataset name
+    :type title: str
+    :param metadata_file: metadata file in tab-delimited format
+    :type metadata_file: file
+    :param source_columns: a list of source column indices
+    :type source_columns: list of ints
+    :param data_file_column: data file column index
+    :type data_file_column: int
+    :param data_file_permanent: should data files be imported
+    :type data_file_permanent: bool
+    :param base_path: path to append to data file
+    :type base_path: str
+    :param auxiliary_file_column: auxiliary file column index
+    :type auxiliary_file_column: int
+    :param species_column: species column index
+    :type species_column: int
+    :param genome_build_column: genome build column index
+    :type genome_build_column: int
+    :param annotation_column: annotation column index
+    :type annotation_column: int
+    :param slug: dataset name shortcut
+    :type slug: str
+    :param is_public: is dataset available to public
+    :type is_public: bool
+
+    :returns: UUID of the new dataset
+
+    """
+    parser = SingleFileColumnParser()
+    parser.file_permanent = data_file_permanent
+    parser.file_column_index = data_file_column
+    parser.source_column_index = source_columns
+    parser.column_index_separator = "/"
+    parser.file_base_path = base_path
+    parser.auxiliary_file_column_index = auxiliary_file_column
+    parser.species_column_index = species_column
+    parser.genome_build_column_index = genome_build_column
+    parser.annotation_column_index = annotation_column
+
+    investigation = parser.run(metadata_file)
+    investigation.title = title
+    investigation.save()
+
+    return create_dataset(investigation_uuid=investigation.uuid,
+                          username=username, dataset_title=title, slug=slug,
+                          public=is_public)

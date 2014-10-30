@@ -143,6 +143,11 @@
                     if (event.target.href.split("#")[1] === "provenance-view-tab") {
                         if (provvis.getProvVis() instanceof provvisDecl.ProvVis === true) {
                             provvisRender.runRenderUpdate(provvis.getProvVis(), lastProvVisSolrResponse);
+                        } else {
+                            provVisQuery = query.clone();
+                            provVisQuery.setDocumentCount(provVisQuery.getTotalDocumentCount());
+                            provVisQuery.setDocumentIndex(0);
+                            client.run(provVisQuery, SOLR_FULL_QUERY);
                         }
                     }
                 })
@@ -348,13 +353,7 @@
                 analysisView.render(lastSolrResponse);
                 tableView.render(lastSolrResponse);
 
-                //client.run( query, SOLR_FULL_QUERY );
-
-                /* Initialize Provenance Visualization query. */
-                provVisQuery = query.clone();
-                provVisQuery.setDocumentCount(provVisQuery.getTotalDocumentCount());
-                provVisQuery.setDocumentIndex(0);
-                client.run(provVisQuery, SOLR_FULL_QUERY);
+                client.run(query, SOLR_FULL_QUERY);
             });
 
 

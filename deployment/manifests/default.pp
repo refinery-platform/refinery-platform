@@ -98,6 +98,12 @@ exec { "syncdb":
              ],
 }
 ->
+exec { "create_superuser":
+  command => "${virtualenv}/bin/python ${project_root}/manage.py loaddata superuser.json",
+  user => $appuser,
+  group => $appgroup,
+}
+->
 exec { "init_refinery":
   command => "${virtualenv}/bin/python ${project_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
   user => $appuser,
@@ -202,7 +208,7 @@ class ui {
   }
   ->
   exec { "bower_modules":
-    command => "/usr/bin/bower install",
+    command => "/usr/bin/bower install --config.interactive=false",
     cwd => $ui_app_root,
     logoutput => on_failure,
     user => $appuser,

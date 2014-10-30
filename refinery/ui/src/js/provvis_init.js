@@ -6,7 +6,8 @@
 var provvisInit = function () {
 
     /* Initialize node-link arrays. */
-    var nodes = [],
+    var dataset = Object.create(null),
+        nodes = [],
         links = [],
         iNodes = [],
         oNodes = [],
@@ -18,7 +19,9 @@ var provvisInit = function () {
         analysisWorkflowMap = d3.map(),
         workflowData = d3.map(),
         analysisData = d3.map(),
-        nodeData = d3.map();
+        nodeData = d3.map(),
+
+        nodeAttributeList = [];
 
     /**
      * Assign node types.
@@ -264,17 +267,19 @@ var provvisInit = function () {
      */
     var extractAnalyses = function (analysesData) {
 
-        /* Create analysis for dataset. */
+        /* Datasets have no date information. */
+        var initDate = new Date(0);
+        if (analysesData.length > 0) {
+            initDate = d3.min(analysesData, function (d) {
+                return new Date(d.time_start);
+            });
+        }
 
-        /* Apply start date of earliest analysis to dataset. */
-        var datasetTimeStart = d3.min(analysesData.filter(function (d) {
-            return d.time_start !== -1;
-        }), function (d) {
-            return d.time_start;
-        });
-        aNodes.push(new provvisDecl.Analysis(0, Object.create(null), true, "dataset", "noworkflow",
-            0, datasetTimeStart, -1, -1));
-        analysisWorkflowMap.set("dataset", "noworkflow");
+        /* Create analysis for dataset. */
+        dataset = new provvisDecl.Analysis(0, Object.create(null), true, "dataset", "dataset",
+            0, initDate, initDate, initDate);
+        aNodes.push(dataset);
+        analysisWorkflowMap.set("dataset", "dataset");
 
         /* Create remaining analyses. */
         analysesData.forEach(function (a, i) {
@@ -460,24 +465,86 @@ var provvisInit = function () {
         });
     };
 
+    /* TODO: Only extract attributes relevant to the filter attributes. */
     /**
      * Temporarily facet node attribute extraction.
      * @param solrResponse Facet filter information on node attributes.
      */
     var extractFacetNodeAttributesPrivate = function (solrResponse) {
-        solrResponse.getDocumentList().forEach(function (d) {
+        if (solrResponse instanceof SolrResponse) {
+            solrResponse.getDocumentList().forEach(function (d) {
 
-            /* Set facet attributes to all nodes for the subanalysis of the selected node. */
-            var selNode = nodeMap.get(d.uuid);
-            selNode.parent.children.values().forEach(function (cn) {
-                cn.attributes.set("Author", d.Author_Characteristics_2_1_s);
-                cn.attributes.set("Month", d.Month_Characteristics_2_1_s);
-                cn.attributes.set("Title", d.Title_Characteristics_2_1_s);
-                cn.attributes.set("Year", d.Year_Characteristics_2_1_s);
-                cn.attributes.set("FileType", d.REFINERY_FILETYPE_2_1_s);
-                cn.attributes.set("Type", d.REFINERY_TYPE_2_1_s);
+                /* Set facet attributes to all nodes for the subanalysis of the selected node. */
+                var selNode = nodeMap.get(d.uuid);
+
+                var rawFacetAttributes = d3.entries(d);
+
+                rawFacetAttributes.forEach(function (fa) {
+                    var attrNameEndIndex = fa.key.indexOf("_Characteristics_"),
+                        attrName = "";
+
+                    if (attrNameEndIndex === -1) {
+                        attrName = fa.key.replace(/REFINERY_/g, "");
+                        attrName = attrName.replace(/_2_1_s/g, "");
+                        attrName = attrName.toLowerCase();
+
+                        /* Temporary FileType field fix. */
+                        if (attrName === "filetype") {
+                            attrName = "FileType";
+                        }
+                    } else {
+                        attrName = fa.key.substr(0, attrNameEndIndex);
+                    }
+
+                    selNode.attributes.set(attrName, fa.value);
+                });
             });
+        }
+    };
+
+    /**
+     * Add face node attributes to dropdown button menu in toolbar.
+     * @param solrResponse Facet filter information on node attributes.
+     */
+    var createFacetNodeAttributeList = function (solrResponse) {
+
+        /* Extract attributes. */
+        if (solrResponse instanceof SolrResponse && solrResponse.getDocumentList().length > 0) {
+
+            var sampleNode = solrResponse.getDocumentList()[0];
+            var rawAttrSet = d3.entries(sampleNode);
+
+            rawAttrSet.forEach(function (fa) {
+                var attrNameEndIndex = fa.key.indexOf("_Characteristics_"),
+                    attrName = "";
+
+                if (attrNameEndIndex === -1) {
+                    attrName = fa.key.replace(/REFINERY_/g, "");
+                    attrName = attrName.replace(/_2_1_s/g, "");
+                    attrName = attrName.toLowerCase();
+
+                    /* Temporary FileType field fix. */
+                    if (attrName === "filetype") {
+                        attrName = "FileType";
+                    }
+                } else {
+                    attrName = fa.key.substr(0, attrNameEndIndex);
+                }
+
+                nodeAttributeList.push(attrName);
+            });
+        }
+
+        /* Add to button dropdown list. */
+        nodeAttributeList.forEach(function (na) {
+            $("<li/>", {
+                "id": "prov-ctrl-visible-attribute-list-" + na,
+                "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">" + na + "</label>" + "</a>"
+            }).appendTo("#prov-ctrl-visible-attribute-list");
         });
+
+        /* Initially set name attribute checked. */
+        $("#prov-ctrl-visible-attribute-list-name").find("input").prop("checked", true);
     };
 
     /**
@@ -515,8 +582,10 @@ var provvisInit = function () {
         /* Temporarily facet node attribute extraction. */
         extractFacetNodeAttributesPrivate(solrResponse);
 
+        createFacetNodeAttributeList(solrResponse);
+
         /* Create graph. */
-        return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, 0, 0, []);
+        return new provvisDecl.ProvGraph(dataset, nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, 0, 0, []);
     };
 
     /**

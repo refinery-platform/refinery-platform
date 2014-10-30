@@ -30,40 +30,78 @@ var provvis = function () {
 
         /* Toolbar items. */
 
-        /* TODO: Create button groups for global and node-centric actions. */
-
         /* Node centric items. */
         $("<span/>", {
             "id": "prov-ctrl-node-btn-group",
-            "class": "btn-group",
-            "data-toggle": "buttons-radio"
+            "class": "btn-group"
         }).appendTo("#" + parentId);
 
-        /* Collapse. */
+
+        /* Analyses. */
         $("<button/>", {
-            "id": "prov-ctrl-collapse-click",
+            "id": "prov-ctrl-analyses-click",
             "class": "btn btn-mini",
             "type": "button",
             "rel": "tooltip",
             "data-placement": "bottom",
-            "data-documents": "Collapse",
-            "html": "Collapse",
+            "data-documents": "Analyses",
+            "html": "Analyses",
             "data-html": "true",
-            "title": "Collapse"
+            "title": "Analyses"
         }).appendTo("#prov-ctrl-node-btn-group");
 
-        /* Expand. */
+        /* Subanalyses. */
         $("<button/>", {
-            "id": "prov-ctrl-expand-click",
+            "id": "prov-ctrl-subanalyses-click",
+            "class": "btn btn-mini",
+            "type": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "data-documents": "Subanalyses",
+            "html": "Subanalyses",
+            "data-html": "true",
+            "title": "Subanalyses"
+        }).appendTo("#prov-ctrl-node-btn-group");
+
+        /* Files and Tools. */
+        $("<button/>", {
+            "id": "prov-ctrl-files-click",
             "class": 'btn btn-mini',
             "type": "button",
             "rel": "tooltip",
             "data-placement": "bottom",
-            "data-documents": "Expand",
-            "html": "Expand",
+            "data-documents": "Files/Tools",
+            "html": "Files/Tools",
             "data-html": "true",
-            "title": "Expand"
+            "title": "Files/Tools"
         }).appendTo("#prov-ctrl-node-btn-group");
+
+
+        /* Attribute labeling. */
+        $("<div/>", {
+            "id": "prov-ctrl-node-labeling-btn-group",
+            "class": "btn-group",
+            "style": "margin-left: 15px"
+        }).appendTo("#" + parentId);
+
+        $("<div/>", {
+            "id": "prov-ctrl-visible-attribute",
+            "class": "btn btn-mini btn-group"
+        }).appendTo("#prov-ctrl-node-labeling-btn-group");
+
+        $("<a/>", {
+            "class": "btn btn-mini dropdown-toggle",
+            "data-toggle": "dropdown",
+            "href": "#",
+            "html": "<i class=icon-wrench></i>" +
+                "&nbsp;" + "Attributes" + "&nbsp;" +
+                "<i class=icon-caret-down></i>" + "&nbsp;"
+        }).appendTo("#prov-ctrl-visible-attribute");
+
+        $("<ul/>", {
+            "id": "prov-ctrl-visible-attribute-list",
+            "class": "dropdown-menu scrollable-menu"
+        }).appendTo("#prov-ctrl-visible-attribute");
 
 
         /* Global items. */
@@ -114,6 +152,7 @@ var provvis = function () {
         $("#prov-ctrl-visible-views-list").bind("click", function (e) {
             e.stopPropagation();
         });
+
 
         /* Links. */
         $("<div/>", {
@@ -201,6 +240,61 @@ var provvis = function () {
             "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Blend" + "</label>" + "</a>"
         }).appendTo("#prov-ctrl-filter-list");
 
+
+        /* Help. */
+        $("<div>", {
+            "class": "modal fade bs-example-modal-sm",
+            "tabindex": "-1",
+            "role": "dialog",
+            "aria-hidden": "true"
+        }).appendTo("body");
+
+        $("<div>", {
+            "class": "modal-dialog modal-sm"
+        }).appendTo(".bs-example-modal-sm");
+
+        $("<div>", {
+            "class": "modal-content"
+        }).appendTo(".modal-dialog");
+
+        $("<div>", {
+            "class": "modal-body",
+            "html": "<h3>Command Shortcut List</h3>" +
+                "<ul><li><div class=\"refinery-subheader\"><h4>Node and path specific:</h4></div></li>" +
+                "<ul><li>(Un)Select: Left click</li>" +
+                "<li>Highlight predecessors: 'p'</li>" +
+                "<li>Highlight successors: 's'</li>" +
+                "<li>Collapse Node: 'c'</li>" +
+                "<li>Expand Node: 'e'</li></ul><br>" +
+                "<li><div class=\"refinery-subheader\"><h4>Global:</h4></div></li>" +
+                "<ul><li>Clear highlighting: Left click on background</li>" +
+                "<li>Fit graph to screen: Left double click on background</li></ul></ul>"
+        }).appendTo(".modal-content");
+
+        $("<div>", {
+            "class": "modal-footer"
+        }).appendTo(".modal-content");
+
+        $("<button>", {
+            "class": "btn btn-primary",
+            "data-dismiss": "modal",
+            "html": "OK"
+        }).appendTo(".modal-footer");
+
+        $("<button/>", {
+            "id": "prov-ctrl-help",
+            "class": "btn btn-mini",
+            "type": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "data-toggle": "modal",
+            "data-target": ".bs-example-modal-sm",
+            "html": "<i class=icon-question-sign></i>" +
+                "&nbsp;" + "Command List",
+            "data-html": "true",
+            "title": "Command List",
+            "style": "margin-left: 15px"
+        }).appendTo("#" + parentId);
     };
 
     /**
@@ -219,7 +313,6 @@ var provvis = function () {
         }).appendTo("#" + rootId);
     };
 
-    /* TODO: Prototype implementation. */
     /**
      * Floating table properties div.
      * @param parentId Parent div id for the floating table div.
@@ -348,6 +441,10 @@ var provvis = function () {
                         (-(d3.event.translate[0] + vis.margin.left) / d3.event.scale) + "," +
                         (-(d3.event.translate[1] + vis.margin.top) / d3.event.scale) + ")" +
                         " scale(" + (+1 / d3.event.scale) + ")");
+
+                    /* TODO: Clean up. */
+                    /* Quick fix to exclude scale from text labels. */
+                    d3.selectAll("text").attr("transform","scale(" + (+1 / d3.event.scale) + ")");
                 };
 
                 /* Main canvas drawing area. */
@@ -372,7 +469,11 @@ var provvis = function () {
                 vis.graph = provvisInit.runInit(data, analysesData, solrResponse);
 
                 /* Compute layout. */
-                provvisLayout.runLayout(vis.graph);
+                /* TODO: OLD LAYOUT. */
+                provvisLayoutOld.runLayout(vis.graph);
+
+                /* TODO: NEW LAYOUT (IN DEVELOPMENT). */
+                //provvisLayout.runLayout(vis.graph);
 
                 /* Render graph. */
                 provvisRender.runRender(vis);
