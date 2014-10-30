@@ -347,6 +347,16 @@ class StatisticsResource(Resource):
         if "project" in request.GET:
             project_summary = self.stat_summary(Project)
 
+        request_string = request.GET.get("type")
+        
+        if request_string is not None:
+            if "dataset" in request_string:
+                dataset_summary = self.stat_summary(DataSet)
+            if "workflow" in request_string:
+                workflow_summary = self.stat_summary(Workflow)
+            if "project" in request_string:
+                project_summary = self.stat_summary(Project)
+
         results = [StatisticsObject(dataset_summary, workflow_summary, project_summary)]
         return results
 
