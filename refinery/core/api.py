@@ -6,7 +6,7 @@ Created on May 4, 2012
 
 from GuardianTastypieAuthz import GuardianAuthorization
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, \
-    WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus
+    WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus, StatisticsObject
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
 from core.tasks import check_tool_status
@@ -26,6 +26,7 @@ from tastypie.serializers import Serializer
 import logging
 import re
 import json
+import uuid
 
 
 logger = logging.getLogger(__name__)
@@ -308,23 +309,6 @@ class ExternalToolStatusResource(ModelResource):
         return bundle
 
 
-class dict2obj(object):
-        def __init__(self, d=None):
-            self.__dict__['d'] = d
-
-        def __getattr__(self, key):
-            value = self.__dict__['d'][key]
-            if type(value) == type({}):
-                return dict2obj(value)
-            
-            return value
-
-class StatisticsObject(object):
-    def __init__(self, dataset_count=0, workflow_count=0, project_count=0):
-        self.dataset_count = dataset_count
-        self.workflow_count = workflow_count
-        self.project_count = project_count
-
 class StatisticsResource(Resource):
     dataset_count = fields.IntegerField(attribute="dataset_count")
     workflow_count = fields.IntegerField(attribute="workflow_count")
@@ -336,47 +320,13 @@ class StatisticsResource(Resource):
 
     def detail_uri_kwargs(self, bundle_or_obj):
         kwargs = {}
-        kwargs['pk'] = 23 #bundle_or_obj.obj.uuid
+        kwargs['pk'] = uuid.uuid1()
         return kwargs 
 
     def obj_get_list(self, bundle, **kwargs):
         return self.get_object_list(bundle)
 
     def get_object_list(self, request):
-        """
-        results = []
-        results.append(dict2obj(
-            {
-                'title': 'Test 1',
-                'content': 'content 1',
-            }
-        ))
-        results.append(dict2obj(
-            {
-                'title': 'Test Blog Title 2',
-                'content': 'Blog Content 2',
-                'author_name': 'User 2'
-            }
-        ))
-        return results;
-        """
-        results = [StatisticsObject(1, 4, 5), StatisticsObject(6, 2, 1), StatisticsObject(7, 3, 1)]
+        results = [StatisticsObject(DataSet.objects.count(), Workflow.objects.count(), Project.objects.count())]
         return results
 
-    def obj_get(self, bundle, **kwargs):
-        pass
-
-    def obj_create(self, bundle, **kwargs):
-        pass
-
-    def obj_update(self, bundle, **kwargs):
-        pass
-
-    def obj_delete_list(self, bundle, **kwargs):
-        pass
-
-    def obj_delete(self, bundle, **kwargs):
-        pass
-
-    def rollback(self, bundles):
-        pass
