@@ -34,6 +34,8 @@ var provvisRender = function () {
 
     var selectedNodeSet = d3.map();
 
+    var draggingActive = false;
+
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
         .append("div")
@@ -382,6 +384,8 @@ var provvisRender = function () {
         n.row = Math.round(d3.event.y / cell.height);
         n.x = -1 * n.col * cell.width;
         n.y = n.row * cell.height;
+
+        draggingActive = true;
     };
 
     /**
@@ -405,6 +409,10 @@ var provvisRender = function () {
 
         /* Align adjacent links. */
         updateLink(d3.select(this), n, n.x, n.y);
+
+        setTimeout(function () {
+            draggingActive = false;
+        }, 200);
     };
 
     /**
@@ -1289,7 +1297,7 @@ var provvisRender = function () {
 
             /* TODO: DEBUG INFO: */
             /*showTooltip(createHTMLKeyValuePair("AutoId", d.autoId) + "<br>" +
-                createHTMLKeyValuePair("Subanalysis", d.id) + "<br>", event);*/
+             createHTMLKeyValuePair("Subanalysis", d.id) + "<br>", event);*/
 
             d3.select(this).classed("mouseoverNode", true);
             d3.select(this).select(".nodeAttrLabel").text(function (d) {
@@ -1308,7 +1316,7 @@ var provvisRender = function () {
 
             /* TODO: DEBUG INFO: */
             /*showTooltip(createHTMLKeyValuePair("AutoId", d.autoId) + "<br>" +
-                createHTMLKeyValuePair("Subanalysis", d.id) + "<br>", event);*/
+             createHTMLKeyValuePair("Subanalysis", d.id) + "<br>", event);*/
 
             /*d3.select(this.parentNode).select(".saMenu").style("display", "inline");*/
         }).on("mouseout", function () {
@@ -1856,8 +1864,10 @@ var provvisRender = function () {
         d3.selectAll(".node, .saGlyph, .aNode").on("click", function (d) {
             if (d3.event.defaultPrevented) return;
 
-            handleNodeSelection(d);
-            updateTableContent(d);
+            if (!draggingActive) {
+                handleNodeSelection(d);
+                updateTableContent(d);
+            }
         });
 
         var bRectClickTimeout;
