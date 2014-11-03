@@ -1045,3 +1045,10 @@ class ExternalToolStatus(models.Model):
 
     class Meta:
         unique_together = ('name', 'unique_instance_identifier')
+
+class StatisticsObject(object):
+    def __init__(self, dataset=None, workflow=None, project=None):
+        self.dataset = dataset
+        self.workflow = workflow
+        self.project = project
+
