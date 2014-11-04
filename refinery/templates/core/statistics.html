@@ -18,7 +18,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="refinery-panel refinery-panel-content scrollable">
+<div class="refinery-panel refinery-panel-content scrollable" ng-controller="refineryStatisticsController">
 	<div class="row-fluid">
 		<div class="span4 well">
 			<h1>{{ users }}</h1><h3>users</h3>
@@ -37,103 +37,18 @@
 		</div>
 		<div class="span4 well">
 			<h1>{{ workflows }}</h1><h3>workflows</h3>
-      <div id="workflowsChart"></div>
+      <div id="workflowChart"></div>
 		</div>
 		<div class="span4 well">
 			<h1>{{ projects }}</h1><h3>projects</h3>
-      <div id="projectsChart"></div>
+      <div id="projectChart"></div>
 		</div>
 	</div>
-
-  <div id="test"></div>
 </div>
+
 {% endblock %}
 
 {% block script %}
 <script type="text/javascript" src="/static/vendor/d3/d3.min.js"></script>
 <script type="text/javascript" src="/static/vendor/c3/c3.min.js"></script>
-<script type="text/javascript">
-
-    var chartMap = {};
-
-    function plot(data, target) {
-        var heightWidthRatio = 1.6;
-        var widthScaleRatio = 0.8;
-        var chartWidth = $(target).parent().innerWidth() * widthScaleRatio;
-        var chartHeight = chartWidth / heightWidthRatio;
-        var chart = c3.generate({
-            bindto: target,
-            data: {
-                x: "x",
-                columns: [
-                    ["x", "public", "private", "private shared"],
-                    [" ", data.public, data.private, data.privateShared]
-                ],
-                type: "bar"
-            },
-            bar: { 
-                width: { 
-                    ratio: 0.5 
-                } 
-            },
-            size: {
-                width: chartWidth,
-                height: chartHeight
-            },
-            axis: {
-                x: {
-                    type: "category"
-                },
-                y: {
-                    tick: {
-                        format: d3.format("d")
-                    }
-                }
-            },
-            legend: {
-                show: false
-            }
-        });
-        chartMap[target] = { 
-            chart: chart,
-            data: data
-        };
-    }
-
-    function processJSON(json) {
-        var data = JSON.parse(json);
-        return {
-            total: data["total"],
-            public: data["public"],
-            private: data["private"],
-            privateShared: data["private_shared"]
-        };
-    }
-
-    $(document).ready(function () {
-        // data sets
-        $.get("http://192.168.50.50:8000/data_set_statistics/", function (response) {
-            var data = processJSON(response);
-            plot(data, "#dataSetChart");
-        });
-
-        // workflows
-        $.get("http://192.168.50.50:8000/workflow_statistics/", function (response) {
-            var data = processJSON(response);
-            plot(data, "#workflowsChart");
-        });
-
-        // projects
-        $.get("http://192.168.50.50:8000/project_statistics/", function (response) {
-            var data = processJSON(response);
-            plot(data, "#projectsChart");
-        });
-    });
-
-    $(window).resize(function () {
-        for (var k in chartMap) {
-            plot(chartMap[k].data, k);
-        }
-    });
-</script>
 {% endblock %}

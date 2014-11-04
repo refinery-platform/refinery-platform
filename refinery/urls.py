@@ -12,7 +12,7 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     NodeResource, NodeSetListResource, NodePairResource,\
     NodeRelationshipResource, WorkflowResource,\
     WorkflowInputRelationshipsResource, DataSetResource,\
-    ExternalToolStatusResource
+    ExternalToolStatusResource, StatisticsResource
 from core.models import DataSet
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource
@@ -42,6 +42,7 @@ v1_api.register(NodeRelationshipResource())
 v1_api.register(WorkflowResource())
 v1_api.register(WorkflowInputRelationshipsResource())
 v1_api.register(ExternalToolStatusResource())
+v1_api.register(StatisticsResource())
 #v1_api.register(TaxonResource())
 #v1_api.register(GenomeBuildResource())
 #v1_api.register(CytoBandResource())

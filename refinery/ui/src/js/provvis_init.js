@@ -6,7 +6,8 @@
 var provvisInit = function () {
 
     /* Initialize node-link arrays. */
-    var nodes = [],
+    var dataset = Object.create(null),
+        nodes = [],
         links = [],
         iNodes = [],
         oNodes = [],
@@ -275,8 +276,9 @@ var provvisInit = function () {
         }
 
         /* Create analysis for dataset. */
-        aNodes.push(new provvisDecl.Analysis(0, Object.create(null), true, "dataset", "dataset",
-            0, initDate, initDate, initDate));
+        dataset = new provvisDecl.Analysis(0, Object.create(null), true, "dataset", "dataset",
+            0, initDate, initDate, initDate);
+        aNodes.push(dataset);
         analysisWorkflowMap.set("dataset", "dataset");
 
         /* Create remaining analyses. */
@@ -583,7 +585,7 @@ var provvisInit = function () {
         createFacetNodeAttributeList(solrResponse);
 
         /* Create graph. */
-        return new provvisDecl.ProvGraph(nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, 0, 0, []);
+        return new provvisDecl.ProvGraph(dataset, nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, 0, 0, []);
     };
 
     /**

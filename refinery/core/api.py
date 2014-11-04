@@ -6,7 +6,7 @@ Created on May 4, 2012
 
 from GuardianTastypieAuthz import GuardianAuthorization
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, \
-    WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus
+    WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus, StatisticsObject
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
 from core.tasks import check_tool_status
@@ -21,11 +21,12 @@ from tastypie.authorization import DjangoAuthorization, Authorization
 from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS, ALL
 from tastypie.exceptions import Unauthorized
-from tastypie.resources import ModelResource
+from tastypie.resources import ModelResource, Resource
 from tastypie.serializers import Serializer
 import logging
 import re
 import json
+import uuid
 
 
 logger = logging.getLogger(__name__)
@@ -306,3 +307,56 @@ class ExternalToolStatusResource(ModelResource):
         bundle.data['status'] = check_tool_status(bundle.data['name'])[1] # call to method
 
         return bundle
+
+
+class StatisticsResource(Resource):
+    dataset = fields.DictField(attribute="dataset")
+    workflow = fields.DictField(attribute="workflow")
+    project = fields.DictField(attribute="project")
+
+    def stat_summary(self, model):
+        total = len(model.objects.all())
+        public = len(filter(lambda x: x.is_public(), model.objects.all()))
+        private_shared = len(filter(lambda x: (not x.is_public() and len(x.get_groups()) > 1), model.objects.all()))
+        private = total - public - private_shared
+        return {"total": total, "public": public, "private": private, "private_shared": private_shared}
+
+    class Meta:
+        resource_name = "statistics"
+        object_class = StatisticsObject 
+
+    def detail_uri_kwargs(self, bundle_or_obj):
+        kwargs = {}
+        kwargs['pk'] = uuid.uuid1()
+        return kwargs 
+
+    def obj_get_list(self, bundle, **kwargs):
+        return self.get_object_list(bundle.request)
+
+    def get_object_list(self, request):
+        dataset_summary = {}
+        workflow_summary = {}
+        project_summary = {}
+        
+        if "dataset" in request.GET:
+            dataset_summary = self.stat_summary(DataSet)
+
+        if "workflow" in request.GET:
+            workflow_summary = self.stat_summary(Workflow)
+
+        if "project" in request.GET:
+            project_summary = self.stat_summary(Project)
+
+        request_string = request.GET.get("type")
+        
+        if request_string is not None:
+            if "dataset" in request_string:
+                dataset_summary = self.stat_summary(DataSet)
+            if "workflow" in request_string:
+                workflow_summary = self.stat_summary(Workflow)
+            if "project" in request_string:
+                project_summary = self.stat_summary(Project)
+
+        results = [StatisticsObject(dataset_summary, workflow_summary, project_summary)]
+        return results
+

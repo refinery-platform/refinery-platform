@@ -32,6 +32,10 @@ var provvisRender = function () {
 
     var lastSolrResponse = Object.create(null);
 
+    var selectedNodeSet = d3.map();
+
+    var draggingActive = false;
+
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
         .append("div")
@@ -204,31 +208,23 @@ var provvisRender = function () {
 
         /* On analysis doi. */
         d3.selectAll(".aNode").each(function (an) {
-            var keyStroke;
-
             if (an.doi.doiWeightedSum >= (1 / 3)) {
                 /* Expand. */
-                keyStroke = {ctrl: true, shift: false};
-                handleCollapseExpandNode(an, keyStroke);
+                handleCollapseExpandNode(an, "e");
             } else if (an.doi.doiWeightedSum < (1 / 3)) {
                 /* Collapse. */
-                keyStroke = {ctrl: false, shift: true};
-                handleCollapseExpandNode(an, keyStroke);
+                handleCollapseExpandNode(an, "c");
             }
         });
 
         /* On subanalysis doi. */
         d3.selectAll(".saNode").each(function (san) {
-            var keyStroke;
-
             if (san.doi.doiWeightedSum >= (2 / 3)) {
                 /* Expand. */
-                keyStroke = {ctrl: true, shift: false};
-                handleCollapseExpandNode(san, keyStroke);
+                handleCollapseExpandNode(san, "e");
             } else if (san.doi.doiWeightedSum < (1 / 3)) {
                 /* Collapse. */
-                keyStroke = {ctrl: false, shift: true};
-                handleCollapseExpandNode(san, keyStroke);
+                handleCollapseExpandNode(san, "c");
             }
         });
     };
@@ -388,6 +384,8 @@ var provvisRender = function () {
         n.row = Math.round(d3.event.y / cell.height);
         n.x = -1 * n.col * cell.width;
         n.y = n.row * cell.height;
+
+        draggingActive = true;
     };
 
     /**
@@ -411,6 +409,10 @@ var provvisRender = function () {
 
         /* Align adjacent links. */
         updateLink(d3.select(this), n, n.x, n.y);
+
+        setTimeout(function () {
+            draggingActive = false;
+        }, 200);
     };
 
     /**
@@ -923,7 +925,7 @@ var provvisRender = function () {
         };
 
         /* Expand. */
-        if (keyStroke.ctrl && (d.nodeType === "analysis" || d.nodeType === "subanalysis")) {
+        if (keyStroke === "e" && (d.nodeType === "analysis" || d.nodeType === "subanalysis")) {
 
             /* Set node visibility. */
             d3.select("#nodeId-" + d.autoId).classed("hiddenNode", true);
@@ -983,7 +985,7 @@ var provvisRender = function () {
                 updateLink(d3.select("#nodeId-" + cn.autoId), cn, cn.x, cn.y);
             });
 
-        } else if (keyStroke.shift && d.nodeType !== "analysis") {
+        } else if (keyStroke === "c" && d.nodeType !== "analysis") {
             /* Collapse. */
 
             /* Set node visibility. */
@@ -1031,11 +1033,11 @@ var provvisRender = function () {
         /* Clear any highlighting. */
         clearHighlighting(links);
 
-        if (keyStroke.ctrl) {
+        if (keyStroke === "s") {
 
             /* Highlight path. */
             highlightSuccPath(d);
-        } else if (keyStroke.shift) {
+        } else if (keyStroke === "p") {
 
             /* Highlight path. */
             highlightPredPath(d);
@@ -1109,6 +1111,8 @@ var provvisRender = function () {
 
         vis.nodeTable.select("#nodeTitle").html("<b>" + "Node: " + "<b>" + " - ");
         vis.nodeTable.select("#provenance-table-content").html("");
+
+        selectedNodeSet = d3.map();
     };
 
     /**
@@ -1122,38 +1126,12 @@ var provvisRender = function () {
             d.selected = false;
             d3.select("#nodeId-" + d.autoId).classed("selectedNode", false);
             d.doi.selectedChanged();
-            /*if (d.children.values()) {
-             d.children.values().forEach(function (cn) {
-             cn.selected = false;
-             d3.select("#nodeId-" + cn.autoId).classed("selectedNode", false);
-             cn.doi.selectedChanged();
-             if (cn.children.values()) {
-             cn.children.values().forEach(function (ccn) {
-             ccn.selected = false;
-             d3.select("#nodeId-" + ccn.autoId).classed("selectedNode", false);
-             ccn.doi.selectedChanged();
-             });
-             }
-             });
-             }*/
+            selectedNodeSet.remove(d.autoId);
         } else {
             d.selected = true;
             d3.select("#nodeId-" + d.autoId).classed("selectedNode", true);
             d.doi.selectedChanged();
-            /*if (d.children.values()) {
-             d.children.values().forEach(function (cn) {
-             cn.selected = true;
-             d3.select("#nodeId-" + cn.autoId).classed("selectedNode", true);
-             cn.doi.selectedChanged();
-             if (cn.children.values()) {
-             cn.children.values().forEach(function (ccn) {
-             ccn.selected = true;
-             d3.select("#nodeId-" + ccn.autoId).classed("selectedNode", true);
-             ccn.doi.selectedChanged();
-             });
-             }
-             });
-             }*/
+            selectedNodeSet.set(d.autoId, d);
         }
 
         updateNodeDoi();
@@ -1316,6 +1294,11 @@ var provvisRender = function () {
             /* showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
              createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
              "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
+
+            /* TODO: DEBUG INFO: */
+            /*showTooltip(createHTMLKeyValuePair("AutoId", d.autoId) + "<br>" +
+             createHTMLKeyValuePair("Subanalysis", d.id) + "<br>", event);*/
+
             d3.select(this).classed("mouseoverNode", true);
             d3.select(this).select(".nodeAttrLabel").text(function (d) {
                 var wfName = "dataset";
@@ -1331,9 +1314,16 @@ var provvisRender = function () {
              createHTMLKeyValuePair("Workflow", d.wfUuid) + "<br>" +
              "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
 
+            /* TODO: DEBUG INFO: */
+            /*showTooltip(createHTMLKeyValuePair("AutoId", d.autoId) + "<br>" +
+             createHTMLKeyValuePair("Subanalysis", d.id) + "<br>", event);*/
+
             /*d3.select(this.parentNode).select(".saMenu").style("display", "inline");*/
         }).on("mouseout", function () {
+
+            /* TODO: DEBUG INFO: */
             /*hideTooltip();*/
+
             d3.select(this).classed("mouseoverNode", false);
             /*d3.select(this.parentNode).select(".saMenu").style("display", "none");*/
             d3.select(this).select(".nodeAttrLabel").text(function (d) {
@@ -1871,32 +1861,12 @@ var provvisRender = function () {
 
         handleToolbar(graph);
 
-        var keyEvent = Object.create(null),
-            nodeClickTimeout;
-
         d3.selectAll(".node, .saGlyph, .aNode").on("click", function (d) {
             if (d3.event.defaultPrevented) return;
-            clearTimeout(nodeClickTimeout);
 
-            keyEvent = {"alt": d3.event.altKey, "shift": d3.event.shiftKey, "ctrl": d3.event.ctrlKey};
-            nodeClickTimeout = setTimeout(function () {
-                if (keyEvent.ctrl || keyEvent.shift) {
-                    handlePathHighlighting(d, keyEvent, graph.links);
-                } else {
-                    handleNodeSelection(d, keyEvent);
-                    updateTableContent(d);
-                }
-            }, 200);
-        });
-
-        d3.selectAll(".node, .saGlyph, .aNode").on("dblclick", function (d) {
-            if (d3.event.defaultPrevented) return;
-            clearTimeout(nodeClickTimeout);
-
-            /* Fire double click event. */
-            keyEvent = {"alt": d3.event.altKey, "shift": d3.event.shiftKey, "ctrl": d3.event.ctrlKey};
-            if (keyEvent.ctrl || keyEvent.shift) {
-                handleCollapseExpandNode(d, keyEvent);
+            if (!draggingActive) {
+                handleNodeSelection(d);
+                updateTableContent(d);
             }
         });
 
@@ -1928,9 +1898,7 @@ var provvisRender = function () {
 
         /* Collapse on bounding box click.*/
         saBBox.on("click", function (d) {
-            var keyStroke;
-            keyStroke = {ctrl: false, shift: true};
-            handleCollapseExpandNode(vis.graph.saNodes[d].children.values()[0], keyStroke);
+            handleCollapseExpandNode(vis.graph.saNodes[d].children.values()[0], "c");
 
             /* Deselect. */
             vis.graph.saNodes[d].selected = false;
@@ -1952,100 +1920,63 @@ var provvisRender = function () {
             /* Update node doi. */
             updateNodeDoi();
         });
-    };
 
-    /* TODO: Dynamic layout compensation. */
-    /**
-     * Create initial layout for analysis only nodes.
-     * @param aNodes Analysis nodes.
-     */
-    var initAnalysisLayout = function (aNodes) {
-        var firstLayer = 0;
+        var keydown = function () {
+            d3.event.preventDefault();
 
-        aNodes.forEach(function (an) {
-            var rootCol;
+            if (selectedNodeSet.empty()) return;
 
-            if (an.succs.size() > 0) {
-                rootCol = an.succs.values()[0].inputs.values()[0].col;
+            selectedNodeSet.values().forEach(function (d) {
+                switch (d3.event.keyCode) {
 
-                an.succs.values().forEach(function (san) {
-                    san.inputs.values().forEach(function (sanIn) {
-                        if (sanIn.col + 1 > rootCol) {
-                            rootCol = sanIn.col + 1;
-                        }
-                    });
-                });
-            } else {
-                if (an.outputs.size() > 0) {
-                    rootCol = an.outputs.values()[0].col;
-                } else {
-                    an.col = firstLayer;
+                    case 67: /* c => collapse*/
+                        handleCollapseExpandNode(d, "c");
+                        break;
+                    case 69: /* e => expand*/
+                        handleCollapseExpandNode(d, "e");
+                        break;
+                    case 80: /* l => highlight predecessors */
+                        handlePathHighlighting(d, "p", graph.links);
+                        break;
+                    case 83: /* r => highlight successors */
+                        handlePathHighlighting(d, "s", graph.links);
+                        break;
                 }
-            }
+            });
+        };
 
-            an.col = rootCol;
-            an.x = -an.col * cell.width;
-            an.row = an.outputs.values().map(function (aon) {
-                return aon.row;
-            })[parseInt(an.outputs.size() / 2, 10)];
-            an.y = an.row * cell.height;
-        });
-    };
-
-    /* TODO: Dynamic layout compensation. */
-    /**
-     * Create initial layout for subanalysis only nodes.
-     * @param saNodes Subanalysis nodes.
-     */
-    var initSubanalysisLayout = function (saNodes) {
-        var firstLayer = 0;
-        saNodes.forEach(function (san) {
-            var rootCol;
-
-            if (san.succs.length > 0) {
-                rootCol = san.succs.values()[0].inputs.values()[0].col;
-
-                san.succs.forEach(function (sasn) {
-                    sasn.inputs.values().forEach(function (sasnIn) {
-                        if (sasnIn.col + 1 > rootCol) {
-                            rootCol = sasnIn.col + 1;
-                        }
-                    });
-                });
-            } else {
-                if (san.outputs.size() > 0) {
-                    rootCol = san.outputs.values()[0].col;
-                } else {
-                    san.col = firstLayer;
-                }
-            }
-
-            san.col = rootCol;
-            san.x = -san.col * cell.width;
-            san.row = san.outputs.values().map(function (aon) {
-                return aon.row;
-            })[parseInt(san.outputs.size() / 2, 10)];
-            san.y = san.row * cell.height;
-        });
+        d3.select("body").on("keydown", keydown);
     };
 
     /**
      * Set coordinates for columns and rows as well as nodes.
      * @param nodes All nodes within the graph.
+     * @param aNodes Analysis nodes.
+     * @param saNodes Subanalysis nodes.
      * @param width Graph width in rows.
      * @param depth Graph depth in cols.
      */
-    var assignCellCoords = function (nodes, width, depth) {
+    var assignCellCoords = function (nodes, aNodes, saNodes, width, depth) {
         for (var i = 0; i < depth; i++) {
-            cols.set(i, {"x": -i * cell.width, "expanded": false});
+            cols.set(i, {"x": -i * cell.width});
         }
         for (i = 0; i < width; i++) {
-            rows.set(i, {"y": i * cell.height, "expanded": false});
+            rows.set(i, {"y": i * cell.height});
         }
 
         nodes.forEach(function (n) {
             n.x = cols.get(n.col).x;
             n.y = rows.get(n.row).y;
+        });
+
+        aNodes.forEach(function (an) {
+            an.x = cols.get(an.col).x;
+            an.y = rows.get(an.row).y;
+        });
+
+        saNodes.forEach(function (san) {
+            san.x = cols.get(san.col).x;
+            san.y = rows.get(san.row).y;
         });
     };
 
@@ -2119,7 +2050,7 @@ var provvisRender = function () {
             filterAction = "hide";
 
             /* Set coordinates for nodes. */
-            assignCellCoords(vis.graph.nodes, vis.graph.width, vis.graph.depth);
+            assignCellCoords(vis.graph.nodes, vis.graph.aNodes, vis.graph.saNodes, vis.graph.width, vis.graph.depth);
 
             /* Draw grid. */
             drawGrid(vis.graph.grid);
@@ -2140,13 +2071,13 @@ var provvisRender = function () {
             drawNodes(vis.graph.nodes);
 
             /* Create initial layout for subanalysis only nodes. */
-            initSubanalysisLayout(vis.graph.saNodes);
+            /*initSubanalysisLayout(vis.graph.saNodes);*/
 
             /* Draw subanalysis nodes. */
             drawSubanalysisNodes(vis.graph.saNodes);
 
             /* Create initial layout for analysis only nodes. */
-            initAnalysisLayout(vis.graph.aNodes);
+            /*initAnalysisLayout(vis.graph.aNodes);*/
 
             /* Draw analysis nodes. */
             drawAnalysisNodes(vis.graph.aNodes);

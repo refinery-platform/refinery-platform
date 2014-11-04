@@ -138,10 +138,10 @@ var provvisDecl = function () {
         this.predLinks = d3.map();
         this.succLinks = d3.map();
         this.children = d3.map();
-        this.col = -1;
-        this.row = -1;
-        this.x = -1;
-        this.y = -1;
+        this.col = 0;
+        this.row = 0;
+        this.x = 0;
+        this.y = 0;
 
         BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
         this.autoId = BaseNode.numInstances;
@@ -269,9 +269,18 @@ var provvisDecl = function () {
         this.target = target;
         this.hidden = hidden;
         this.highlighted = false;
-        this.l = {neighbor: false,
+
+        /* Layout computation specific flags. */
+        this.l = {
+
+            /* Top sort marking [Kahn 1962]. */
+            ts: {removed: false},
+
+            /* Vertical coord assignment markings [Brandes and Köpf 2002]. */
+            neighbor: false,
             type0: false,
-            type1: false};
+            type1: false
+        };
 
         Link.numInstances = (Link.numInstances || 0) + 1;
         this.autoId = Link.numInstances;
@@ -317,6 +326,7 @@ var provvisDecl = function () {
     /**
      * Constructor function for the provenance graph.
      *
+     * @param dataset
      * @param nodes
      * @param links
      * @param iNodes
@@ -333,7 +343,8 @@ var provvisDecl = function () {
      * @param grid
      * @constructor
      */
-    var ProvGraph = function (nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, width, depth, grid) {
+    var ProvGraph = function (dataset, nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, width, depth, grid) {
+        this.dataset = dataset;
         this.nodes = nodes;
         this.links = links;
         this.iNodes = iNodes;
