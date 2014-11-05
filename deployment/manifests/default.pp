@@ -60,6 +60,7 @@ exec { "pip_requirements_install":
   # specifying metaparameter requirements for python::virtualenv doesn't re-run
   # pip after virtual environment has been created
   command => "${virtualenv}/bin/pip install -r ${requirements}",
+  timeout => 0,
   user => $appuser,
   group => $appgroup,
 }
