@@ -60,33 +60,7 @@ def contact(request):
     return render_to_response('core/contact.html', {}, context_instance=RequestContext( request ) )
 
 def statistics(request):
-    users = User.objects.count()
-    groups = Group.objects.count()
-    projects = Project.objects.count()
-    data_sets = DataSet.objects.count()
-    workflows = Workflow.objects.filter( is_active=True ).count()
-    files = FileStoreItem.objects.count()
-
-    uri = request.build_absolute_uri()
-    base_url = uri.split( request.get_full_path() )[0]
-    
-    return render_to_response('core/statistics.html', { "users": users, "groups": groups, "projects": projects, "workflows": workflows, "data_sets": data_sets, "files": files, "base_url": base_url }, context_instance=RequestContext( request ) )
-
-def get_shared_resource_summary(model):
-    total = len(model.objects.all())
-    public = len(filter(lambda x: x.is_public(), model.objects.all()))
-    private_shared = len(filter(lambda x: (not x.is_public() and len(x.get_groups()) > 1), model.objects.all()))
-    private = total - public - private_shared
-    return {"total": total, "public": public, "private": private, "private_shared": private_shared}
-
-def data_set_statistics(request):
-    return HttpResponse(json.dumps(get_shared_resource_summary(DataSet)))
-
-def project_statistics(request):
-    return HttpResponse(json.dumps(get_shared_resource_summary(Project)))
-
-def workflow_statistics(request):
-    return HttpResponse(json.dumps(get_shared_resource_summary(Workflow)))
+    return render_to_response('core/statistics.html', {}, context_instance=RequestContext(request))
 
 def custom_error_page(request, template, context_dict):
     temp_loader = loader.get_template(template)

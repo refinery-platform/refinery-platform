@@ -1,8 +1,8 @@
 angular.module("refineryStatistics", [])
 
 .controller("refineryStatisticsController", function ($scope, $http) {
+    
     var chartMap = {};
-
     function plot(data, target) {
         var heightWidthRatio = 1.6;
         var widthScaleRatio = 0.8;
@@ -37,7 +37,14 @@ angular.module("refineryStatistics", [])
         };
     }
 
-    $http.get("http://192.168.50.50:8000/api/v1/statistics/?format=json&dataset&workflow&project").success(function (response) {
+    $http.get("/api/v1/statistics/?format=json&dataset&workflow&project").success(function (response) {
+        $scope.users = response.objects[0].user;
+        $scope.groups = response.objects[0].group;
+        $scope.files = response.objects[0].files;
+        $scope.data_sets = response.objects[0].dataset.total;
+        $scope.workflows = response.objects[0].workflow.total;
+        $scope.projects = response.objects[0].project.total;
+
         var dataset = response.objects[0].dataset;
         var workflow = response.objects[0].workflow;
         var project = response.objects[0].project;
@@ -54,4 +61,13 @@ angular.module("refineryStatistics", [])
             plot(chartMap[k].data, k);
         }
     };
+})
+
+.directive("statisticsData", function () {
+    return {
+        templateUrl: "/static/partials/statistics_tpls.html",
+        restrict: "A"
+    };
 });
+
+

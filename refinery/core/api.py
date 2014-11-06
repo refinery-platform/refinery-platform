@@ -11,6 +11,7 @@ from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
 from core.tasks import check_tool_status
 from django.conf.urls.defaults import url
+from django.contrib.auth.models import User, Group
 from django.core.serializers import json
 from django.db.models.aggregates import Count
 from django.utils import simplejson
@@ -310,6 +311,9 @@ class ExternalToolStatusResource(ModelResource):
 
 
 class StatisticsResource(Resource):
+    user = fields.IntegerField(attribute="user")
+    group = fields.IntegerField(attribute="group")
+    files = fields.IntegerField(attribute="files")
     dataset = fields.DictField(attribute="dataset")
     workflow = fields.DictField(attribute="workflow")
     project = fields.DictField(attribute="project")
@@ -334,6 +338,9 @@ class StatisticsResource(Resource):
         return self.get_object_list(bundle.request)
 
     def get_object_list(self, request):
+        user_count = User.objects.count()
+        group_count = Group.objects.count()
+        files_count = FileStoreItem.objects.count()
         dataset_summary = {}
         workflow_summary = {}
         project_summary = {}
@@ -357,6 +364,6 @@ class StatisticsResource(Resource):
             if "project" in request_string:
                 project_summary = self.stat_summary(Project)
 
-        results = [StatisticsObject(dataset_summary, workflow_summary, project_summary)]
+        results = [StatisticsObject(user_count, group_count, files_count, dataset_summary, workflow_summary, project_summary)]
         return results
 
