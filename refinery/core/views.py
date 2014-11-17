@@ -800,6 +800,7 @@ def analysis(request, analysis_uuid ):
 def solr_select(request, core):
     # core format is <name_of_core>    
     # query.GET is a querydict containing all parts of the query
+    #TODO: handle runtime errors when making GET request
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
     data = request.GET.urlencode()
     req = urllib2.Request(url, data ) #, {'Content-Type': 'application/json'})
