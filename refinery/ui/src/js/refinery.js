@@ -6,7 +6,8 @@ angular.module('refineryApp', [
   'refineryExternalToolStatus',
   'refineryNodeRelationship',
   'refineryIgv',
-  'refineryStatistics'
+  'refineryStatistics',
+  'refineryMetadataTableImport'
 ])
 
 .config(['$provide', function($provide) {

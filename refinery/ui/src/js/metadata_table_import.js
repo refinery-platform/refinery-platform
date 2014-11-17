@@ -1,4 +1,4 @@
-angular.module('refineryWorkflows', ['angularFileUpload', 'ngGrid'])
+angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
 
 .controller('MetadataTableImportCtrl', ['$scope', '$log', function($scope, $log) {
   'use strict';
