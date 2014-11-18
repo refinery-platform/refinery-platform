@@ -5,6 +5,12 @@ $requirements = "/vagrant/requirements.txt"
 $project_root = "/vagrant/refinery"
 $ui_app_root = "${project_root}/ui"
 
+# to make logs easier to read
+file { "/etc/timezone":
+  content => "US/Eastern",
+}
+
+# for better performance
 sysctl { 'vm.swappiness': value => '10' }
 
 file { "/home/${appuser}/.ssh/config":
@@ -67,7 +73,7 @@ exec { "pip_requirements_install":
 
 package { 'virtualenvwrapper': }
 ->
-file_line {"virtualenvwrapper_config":
+file_line { "virtualenvwrapper_config":
   path => "/home/${appuser}/.profile",
   line => "source /etc/bash_completion.d/virtualenvwrapper",
   require => Python::Virtualenv[$virtualenv],
