@@ -619,6 +619,17 @@ def _delete_datafile(sender, **kwargs):
     item.delete_datafile()
 
 
+def check_files(file_list):
+    """Check if files exist. URLs are ignored, relative paths are converted to
+    absolute using
+
+    :param file_list: list of file paths (URLs, absolute or relative paths).
+    :type file_list: list.
+    :returns: a list of file paths that don't exist.
+
+    """
+
+
 def _symlink_file_on_disk(source, target):
     '''Symlink source path to target path creating intermediate directories if they don't exist.
     

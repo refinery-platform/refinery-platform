@@ -333,6 +333,8 @@ FILE_STORE_DIR = 'file_store'
 # format: {'pattern': 'replacement'} - may contain more than one key-value pair
 REFINERY_FILE_SOURCE_MAP = {}
 
+REFINERY_DATA_IMPORT_DIR = '/vagrant/import'
+
 # location of the Solr server (must be accessible from the web browser)
 REFINERY_SOLR_BASE_URL = "http://localhost:8983/solr/"
 

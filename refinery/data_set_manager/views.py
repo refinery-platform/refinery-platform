@@ -5,6 +5,7 @@ Created on May 11, 2012
 '''
 
 import os
+import simplejson as json
 from urlparse import urlparse
 from django import forms
 from django.core.urlresolvers import reverse
@@ -286,13 +287,13 @@ class ProcessMetadataTableView(View):
         except (KeyError, ValueError):
             error = {
                 'error_message':
-                    'Import failed because required parameter value(s) are missing'
+                'Import failed because required parameter value(s) are missing'
             }
             return render(request, self.template_name, error)
         source_column_index = [abs(int(x)) for x in request.POST.getlist('source_column_index')]
-        if source_column_index == []:
+        if not source_column_index:
             error = {'error_message':
-                         'Import failed because source column(s) were not selected'}
+                     'Import failed because source column(s) were not selected'}
             return render(request, self.template_name, error)
         # get optional params
         try:
@@ -329,3 +330,33 @@ class ProcessMetadataTableView(View):
             is_public)
         return HttpResponseRedirect(reverse(self.success_view_name,
                                             args=(dataset_uuid,)))
+
+
+class CheckDataFilesView(View):
+    """Check if given files exist, return list of files that don't exist
+
+    """
+    def post(self, request, *args, **kwargs):
+        if not request.is_ajax() or not request.body:
+            return HttpResponseBadRequest()
+
+        # get data from json request
+        input_file_list = json.loads(request.body)
+        bad_file_list = []
+
+        # check if files are available
+        for file_path in input_file_list:
+            # skip checking if a path is a URL
+            if file_path != urlparse(file_path).path:
+                logger.debug("Skipping URL '%s'", file_path)
+                continue
+            # if file path are relative, prepend data import dir + username
+            if not os.path.isabs(file_path):
+                file_path = os.path.join(
+                    settings.REFINERY_DATA_IMPORT_DIR, request.user.username, file_path
+                )
+            if not os.path.exists(file_path):
+                bad_file_list.append(file_path)
+
+        # return json response
+        return HttpResponse(json.dumps(bad_file_list))
