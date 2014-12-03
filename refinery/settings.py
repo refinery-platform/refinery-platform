@@ -333,6 +333,8 @@ FILE_STORE_DIR = 'file_store'
 # format: {'pattern': 'replacement'} - may contain more than one key-value pair
 REFINERY_FILE_SOURCE_MAP = {}
 
+# data file import directory; it should be located on the same partition as
+# FILE_STORE_DIR and MEDIA_ROOT to make import operations fast
 REFINERY_DATA_IMPORT_DIR = '/vagrant/import'
 
 # location of the Solr server (must be accessible from the web browser)

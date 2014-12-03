@@ -348,15 +348,17 @@ class CheckDataFilesView(View):
         for file_path in input_file_list:
             # skip checking if a path is a URL
             if file_path != urlparse(file_path).path:
-                logger.debug("Skipping URL '%s'", file_path)
+                logger.debug("Skipping check on import URL '%s'", file_path)
                 continue
-            # if file path are relative, prepend data import dir + username
+            # process relative file path
             if not os.path.isabs(file_path):
                 file_path = os.path.join(
                     settings.REFINERY_DATA_IMPORT_DIR, request.user.username, file_path
                 )
             if not os.path.exists(file_path):
                 bad_file_list.append(file_path)
+            logger.debug("Data file path checked: '%s'", file_path)
 
         # return json response
-        return HttpResponse(json.dumps(bad_file_list))
+        return HttpResponse(json.dumps(bad_file_list),
+                            content_type="application/json")

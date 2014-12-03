@@ -62,7 +62,7 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
 
   $scope.checkFiles = function() {
     // check if the files listed in the dataFileColumn exist on the server
-    var dataFileList = [];
+    var dataFileList = [];  // list of file references to be checked
     $scope.metadata.forEach(function(row) {
       // assumes $scope.dataFileColumn was selected
       if ($scope.basePath) {
@@ -77,18 +77,22 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
       headers: {'X-Requested-With': 'XMLHttpRequest'},
       data: dataFileList
     };
-    $http(req).success(function(response) {
-      if (response.length > 0) {
-        var errorMsg = "The following files were not found on the server:\n\n";
-        response.forEach(function(filePath) {
-          errorMsg += filePath + "\n\n";
-        });
+    $http(req).
+      success(function(response) {
+        if (response.length > 0) {
+          var errorMsg = "The following files were not found on the server:\n\n";
+          response.forEach(function(filePath) {
+            errorMsg += filePath + "\n\n";
+          });
+          alert(errorMsg);
+        } else {
+          alert("All files were found");
+        }
+      }).
+      error(function(response, status) {
+        var errorMsg = "Request failed: error " + status;
+        $log.error(errorMsg);
         alert(errorMsg);
-      } else {
-        alert("All files were found");
-      }
-    }).error(function(response, status) {
-      $log.error("Request failed: error " + status);
-    });
+      });
   };
 }]);

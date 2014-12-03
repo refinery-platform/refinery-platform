@@ -173,39 +173,37 @@ class SingleFileColumnParser:
                 internal_auxiliary_file_column_index = len( headers ) + self.auxiliary_file_column_index
         else:
             internal_auxiliary_file_column_index = None
-        
-        # TODO: test if there are fewer columns than required        
+
+        # TODO: test if there are fewer columns than required
         logger.debug( "Parsing with file column %s and auxiliary file column %s." % ( internal_file_column_index, internal_auxiliary_file_column_index ) )
         
         # iterate over non-header rows in file
         for row in self._current_reader:
-            
-                
             # TODO: resolve relative indices
-            internal_source_column_index = self.source_column_index            
-            internal_sample_column_index = self.sample_column_index            
-            internal_assay_column_index = self.assay_column_index            
-                
+            internal_source_column_index = self.source_column_index
+            internal_sample_column_index = self.sample_column_index
+            internal_assay_column_index = self.assay_column_index
 
             # add data file to file store
-            file_uuid = None            
+            file_uuid = None
 
             if self.file_base_path is None:
                 file_path = row[internal_file_column_index].strip()
             else:
-                file_path = os.path.join( self.file_base_path, row[internal_file_column_index].strip() )
+                file_path = os.path.join(
+                    self.file_base_path, row[internal_file_column_index].strip()
+                )
 
-            file_uuid = create( source=file_path, permanent=self.file_permanent )
-                                    
+            file_uuid = create(source=file_path, permanent=self.file_permanent)
+
             if file_uuid is not None:
                 logger.debug( "Added data file " + file_path + " to file store." )
             else:
-                logger.exception( "Unable to add data file " + file_path + " to file store." )            
-
+                logger.exception( "Unable to add data file " + file_path + " to file store." )
 
             # add auxiliary file to file store
             auxiliary_file_uuid = None
-            
+
             if internal_auxiliary_file_column_index is not None:
                 if self.file_base_path is None:
                     auxiliary_file_path = row[internal_auxiliary_file_column_index].strip()
