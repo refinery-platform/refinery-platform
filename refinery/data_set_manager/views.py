@@ -20,7 +20,7 @@ from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
 from data_set_manager.utils import *
 from file_store.tasks import download_file, DownloadError
-from file_store.models import get_temp_dir
+from file_store.models import get_temp_dir, translate_file_source
 
 
 def index(request):
@@ -346,15 +346,8 @@ class CheckDataFilesView(View):
 
         # check if files are available
         for file_path in input_file_list:
-            # skip checking if a path is a URL
-            if file_path != urlparse(file_path).path:
-                logger.debug("Skipping check on import URL '%s'", file_path)
-                continue
-            # process relative file path
-            if not os.path.isabs(file_path):
-                file_path = os.path.join(
-                    settings.REFINERY_DATA_IMPORT_DIR, request.user.username, file_path
-                )
+            file_path = translate_file_source(
+                file_path, username=request.user.username)
             if not os.path.exists(file_path):
                 bad_file_list.append(file_path)
             logger.debug("Data file path checked: '%s'", file_path)

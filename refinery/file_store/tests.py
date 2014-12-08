@@ -9,7 +9,8 @@ from urlparse import urljoin
 from django.conf import settings
 from django.test import SimpleTestCase
 from file_store.models import file_path, get_temp_dir, get_file_object,\
-    FileStoreItem, FILE_STORE_TEMP_DIR, BIGBED, UNKNOWN, WIG
+    FileStoreItem, FILE_STORE_TEMP_DIR, BIGBED, UNKNOWN, WIG,\
+    translate_file_source
 
 
 class FileStoreModuleTest(SimpleTestCase):
@@ -174,9 +175,9 @@ class FileStoreItemTest(SimpleTestCase):
 
 
 class FileStoreItemManagerTest(SimpleTestCase):
-    '''FileStoreItemManager methods test.
+    """FileStoreItemManager methods test.
 
-    '''
+    """
     def setUp(self):
         self.filename = 'test_file.tdf'
         self.sharename = 'labname'
@@ -186,19 +187,57 @@ class FileStoreItemManagerTest(SimpleTestCase):
         self.url_source = urljoin(self.url_prefix, self.filename)
 
     def test_file_source_map_translation(self):
-        '''Test translation from URL to file system path when creating a new instance.
+        """Test translation from URL to file system path when creating a new instance.
 
-        '''
+        """
         settings.REFINERY_FILE_SOURCE_MAP = {self.url_prefix: self.path_prefix}
         item = FileStoreItem.objects.create_item(self.url_source)
         self.assertEqual(item.source, self.path_source)
 
     def test_empty_file_source_map_translation(self):
-        '''Test that empty map doesn't affect creating new FileStoreItem instances.
+        """Test that empty map doesn't affect creating new FileStoreItem instances.
 
-        '''
+        """
         settings.REFINERY_FILE_SOURCE_MAP = {}
         item = FileStoreItem.objects.create_item(self.url_source)
         self.assertEqual(item.source, self.url_source)
         item = FileStoreItem.objects.create_item(self.path_source)
         self.assertEqual(item.source, self.path_source)
+
+
+class FileSourceTranslationTest(SimpleTestCase):
+    def setUp(self):
+        self.username = 'guest'
+        self.base_path = '/test/'
+        self.filename = 'test_file.fastq'
+        self.abs_path_source = os.path.join('/absolute/path', self.filename)
+        self.rel_path_source = os.path.join('relative/path', self.filename)
+        self.url_prefix = 'http://example.org/web/path/'
+        self.url_source = urljoin(self.url_prefix, self.filename)
+
+    def test_translate_with_map(self):
+        settings.REFINERY_FILE_SOURCE_MAP = {self.url_prefix: '/new/path/'}
+        source = translate_file_source(self.url_source)
+        self.assertEqual(source, os.path.join('/new/path/', self.filename))
+
+    def test_translate_from_url(self):
+        source = translate_file_source(self.url_source)
+        self.assertEqual(source, self.url_source)
+
+    def test_translate_from_absolute_path(self):
+        source = translate_file_source(self.abs_path_source)
+        self.assertEqual(source, self.abs_path_source)
+
+    def test_translate_from_relative_path_with_base_bath(self):
+        source = translate_file_source(self.rel_path_source, base_path=self.base_path)
+        self.assertEqual(source, os.path.join(self.base_path, self.rel_path_source))
+
+    def test_translate_from_relative_path_without_base_path(self):
+        source = translate_file_source(self.rel_path_source, username=self.username)
+        self.assertEqual(source, os.path.join(settings.REFINERY_DATA_IMPORT_DIR,
+                                              self.username,
+                                              self.rel_path_source))
+
+    def test_translate_from_relative_path_without_username_or_base_path(self):
+        with self.assertRaises(ValueError):
+            translate_file_source(self.rel_path_source)

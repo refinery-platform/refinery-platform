@@ -8,9 +8,11 @@ import file_server
 import logging
 import operator
 import os
+import tempfile
 from annotation_server.models import species_to_taxon_id, Taxon
 from data_set_manager.models import Investigation, Study, Node, Attribute, Assay
 from data_set_manager.tasks import create_dataset
+from file_store.models import translate_file_source
 from file_store.tasks import create, import_file
 
 
@@ -156,7 +158,6 @@ class SingleFileColumnParser:
         investigation.save()
             
         # read column headers
-        headers = []
         headers = self._current_reader.next()
         
         # compute absolute file_column_index (in case a negative value was provided)
@@ -185,8 +186,6 @@ class SingleFileColumnParser:
             internal_assay_column_index = self.assay_column_index
 
             # add data file to file store
-            file_uuid = None
-
             if self.file_base_path is None:
                 file_path = row[internal_file_column_index].strip()
             else:
@@ -330,7 +329,23 @@ def process_metadata_table(username, title, metadata_file, source_columns,
     parser.genome_build_column_index = genome_build_column
     parser.annotation_column_index = annotation_column
 
-    investigation = parser.run(metadata_file)
+    # process metadata file
+    reader = csv.reader(metadata_file.read().splitlines(), dialect="excel-tab",
+                        delimiter=parser.delimiter)
+    with tempfile.TemporaryFile() as processed_metadata_file:
+        writer = csv.writer(processed_metadata_file, dialect="excel-tab",
+                            delimiter=parser.delimiter)
+        # get the header row
+        writer.writerow(reader.next())
+        # translate data file references
+        for row in reader:
+            translated_source = translate_file_source(
+                row[data_file_column], username=username, base_path=base_path)
+            row[data_file_column] = translated_source
+            writer.writerow(row)
+        processed_metadata_file.flush()
+        processed_metadata_file.seek(0)
+        investigation = parser.run(processed_metadata_file)
     investigation.title = title
     investigation.save()
 

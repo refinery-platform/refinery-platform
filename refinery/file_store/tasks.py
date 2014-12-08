@@ -14,10 +14,9 @@ logger = logging.getLogger('file_store')
 
 @task()
 def create(source, sharename='', filetype='', permanent=False, file_size=1):
-    '''
-    Create a FileStoreItem instance and return its UUID
+    """Create a FileStoreItem instance and return its UUID
     Important: source must be either an absolute file system path or a URL
-    
+
     :param source: URL or absolute file system path to a file.
     :type source: str.
     :param sharename: Group share name.
@@ -30,10 +29,11 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
     :type file_size: int.
     :returns: FileStoreItem UUID if success, None if failure.
 
-    '''
+    """
     logger.info("Creating FileStoreItem using source '%s'", source)
 
-    item = FileStoreItem.objects.create_item(source=source, sharename=sharename, filetype=filetype)
+    item = FileStoreItem.objects.create_item(
+        source=source, sharename=sharename, filetype=filetype)
     if not item:
         logger.error("Failed to create FileStoreItem")
         return None
@@ -43,7 +43,8 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
     if permanent:
         # copy to file store now and don't add to cache
         #TODO: provide progress update, call import_file as subtask?
-        if not import_file(item.uuid, permanent=True, refresh=True, file_size=file_size):
+        if not import_file(
+                item.uuid, permanent=True, refresh=True, file_size=file_size):
             logger.error("Could not import file from '%s'", item.source)
 
     return item.uuid

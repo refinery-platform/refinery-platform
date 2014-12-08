@@ -209,37 +209,68 @@ def file_path(instance, filename):
     return os.path.join(instance.sharename, dir1, dir2, filename)
 
 
-class _FileStoreItemManager(models.Manager):
-    '''Custom model manager to handle creation and retrieval of FileStoreItems.
+def is_url(string):
+    """Check if a given string is a URL
 
-    '''
+    """
+    return urlparse(string).scheme != ""
+
+
+def translate_file_source(source, username='', base_path=''):
+    """Convert file source to absolute path
+    source: URL, absolute or relative file system path
+    base_path: absolute path to prepend to source if source is a relative path
+
+    """
+    # convert URL to a file system path by applying source map
+    for pattern, replacement in settings.REFINERY_FILE_SOURCE_MAP.iteritems():
+        translated_source = re.sub(pattern, replacement, source)
+        if source != translated_source:
+            source = translated_source
+            break
+
+    if is_url(source) or os.path.isabs(source):
+        return source
+
+    # process relative path
+    if base_path:
+        source = os.path.join(base_path, source)
+    elif username:
+        source = os.path.join(
+            settings.REFINERY_DATA_IMPORT_DIR, username, source)
+    else:
+        error_msg = "Failed to translate relative source path: "
+        error_msg += "must provide either username or base_path"
+        raise ValueError(error_msg)
+    return source
+
+
+class _FileStoreItemManager(models.Manager):
+    """Custom model manager to handle creation and retrieval of FileStoreItems.
+
+    """
     def create_item(self, source, sharename='', filetype=''):
-        '''A "constructor" for FileStoreItem.
-        
+        """A "constructor" for FileStoreItem.
+
         :param source: URL or absolute file system path to a file.
         :type source: str.
         :returns: FileStoreItem -- if success, None if failure.
 
-        '''
+        """
         # it doesn't make sense to create a FileStoreItem without a file source
         if not source:
             logger.error("Source is required but was not provided")
             return None
-        # translate source if necessary
-        for pattern, replacement in settings.REFINERY_FILE_SOURCE_MAP.iteritems():
-            translated_source = re.sub(pattern, replacement, source)
-            if source != translated_source:
-                source = translated_source
-                break
 
         item = self.create(source=source, sharename=sharename)
 
         # assign a file type
         item.set_filetype(filetype)
 
-        # try symlinking
         if os.path.isabs(item.source):
             item.symlink_datafile()
+        else:  # handle relative file paths
+            os.path.join(settings.REFINERY_DATA_IMPORT_DIR, item.source)
 
         return item
 
@@ -472,17 +503,18 @@ class FileStoreItem(models.Model):
             return None
 
     def symlink_datafile(self):
-        '''Create a symlink to the file pointed by source.
+        """Create a symlink to the file pointed by source.
         Does not check that the source is an absolute file system path.
 
         :returns: bool -- True if success, False if failure.
 
-        '''
+        """
         logger.debug("Symlinking datafile to %s", self.source)
 
         if os.path.isfile(self.source):
             # construct symlink target path based on source file name
-            rel_dst_path = self.datafile.storage.get_available_name(file_path(self, os.path.basename(self.source)))
+            rel_dst_path = self.datafile.storage.get_available_name(
+                file_path(self, os.path.basename(self.source)))
             abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
 
             # create symlink
@@ -500,23 +532,27 @@ class FileStoreItem(models.Model):
             return False
 
     def get_full_url(self):
-        '''Return the full URL (including hostname) for the datafile.
+        """Return the full URL (including hostname) for the datafile.
 
         :returns: str -- local URL or source if it's a remote file
 
-        '''
+        """
         if self.is_local():
             try:
                 current_site = Site.objects.get_current()
             except Site.DoesNotExist:
                 logger.error("Cannot provide a full URL: no sites configured or SITE_ID is not set correctly")
-            #FIXME: provide a protocol-neutral URL
+                return None
+            #FIXME: provide a protocol-neutral URL or do not return protocol
             return 'http://{}{}'.format(current_site.domain, self.datafile.url)
         else:
+            # data file doesn't exist on disk
             if os.path.isabs(self.source):
-                # in case source is a file system path but file doesn't exist on disk
+                # source is a file system path
+                logger.error("File not found at '%s'", self.datafile.name)
                 return None
             else:
+                # source is a URL
                 return self.source
 
 
@@ -617,17 +653,6 @@ def _delete_datafile(sender, **kwargs):
     item = kwargs.get('instance')
     logger.debug("Deleting FileStoreItem with UUID '%s'", item.uuid)
     item.delete_datafile()
-
-
-def check_files(file_list):
-    """Check if files exist. URLs are ignored, relative paths are converted to
-    absolute using
-
-    :param file_list: list of file paths (URLs, absolute or relative paths).
-    :type file_list: list.
-    :returns: a list of file paths that don't exist.
-
-    """
 
 
 def _symlink_file_on_disk(source, target):
