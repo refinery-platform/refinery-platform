@@ -267,10 +267,10 @@ class _FileStoreItemManager(models.Manager):
         # assign a file type
         item.set_filetype(filetype)
 
-        if os.path.isabs(item.source):
+        # symlink if source is a file system path outside of the import dir
+        if (os.path.isabs(item.source) and
+                settings.REFINERY_DATA_IMPORT_DIR not in item.source):
             item.symlink_datafile()
-        else:  # handle relative file paths
-            os.path.join(settings.REFINERY_DATA_IMPORT_DIR, item.source)
 
         return item
 
