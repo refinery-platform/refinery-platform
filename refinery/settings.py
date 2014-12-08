@@ -329,7 +329,8 @@ ISA_TAB_DIR = '/vagrant/isa-tab'
 # relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
 FILE_STORE_DIR = 'file_store'
 
-# optional dictionary for translating file URLs into file system paths (and vice versa)
+# optional dictionary for translating file URLs into file system paths (and vice
+# versa) by substituting 'pattern' for 'replacement'
 # format: {'pattern': 'replacement'} - may contain more than one key-value pair
 REFINERY_FILE_SOURCE_MAP = {}
 
