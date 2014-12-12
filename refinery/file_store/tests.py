@@ -10,7 +10,7 @@ from django.conf import settings
 from django.test import SimpleTestCase
 from file_store.models import file_path, get_temp_dir, get_file_object,\
     FileStoreItem, FILE_STORE_TEMP_DIR, BIGBED, UNKNOWN, WIG,\
-    translate_file_source
+    generate_file_source_translator
 
 
 class FileStoreModuleTest(SimpleTestCase):
@@ -217,27 +217,36 @@ class FileSourceTranslationTest(SimpleTestCase):
 
     def test_translate_with_map(self):
         settings.REFINERY_FILE_SOURCE_MAP = {self.url_prefix: '/new/path/'}
+        translate_file_source = generate_file_source_translator()
         source = translate_file_source(self.url_source)
         self.assertEqual(source, os.path.join('/new/path/', self.filename))
 
     def test_translate_from_url(self):
+        translate_file_source = generate_file_source_translator()
         source = translate_file_source(self.url_source)
         self.assertEqual(source, self.url_source)
 
     def test_translate_from_absolute_path(self):
+        translate_file_source = generate_file_source_translator()
         source = translate_file_source(self.abs_path_source)
         self.assertEqual(source, self.abs_path_source)
 
     def test_translate_from_relative_path_with_base_bath(self):
-        source = translate_file_source(self.rel_path_source, base_path=self.base_path)
-        self.assertEqual(source, os.path.join(self.base_path, self.rel_path_source))
+        translate_file_source = \
+            generate_file_source_translator(base_path=self.base_path)
+        source = translate_file_source(self.rel_path_source)
+        self.assertEqual(source,
+                         os.path.join(self.base_path, self.rel_path_source))
 
     def test_translate_from_relative_path_without_base_path(self):
-        source = translate_file_source(self.rel_path_source, username=self.username)
+        translate_file_source = \
+            generate_file_source_translator(username=self.username)
+        source = translate_file_source(self.rel_path_source)
         self.assertEqual(source, os.path.join(settings.REFINERY_DATA_IMPORT_DIR,
                                               self.username,
                                               self.rel_path_source))
 
     def test_translate_from_relative_path_without_username_or_base_path(self):
+        translate_file_source = generate_file_source_translator()
         with self.assertRaises(ValueError):
             translate_file_source(self.rel_path_source)
