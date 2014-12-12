@@ -62,20 +62,16 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
 
   $scope.checkFiles = function() {
     // check if the files listed in the dataFileColumn exist on the server
-    var dataFileList = [];  // list of file references to be checked
+    var fileData = {"base_path": $scope.basePath, "list": []};
     $scope.metadata.forEach(function(row) {
       // assumes $scope.dataFileColumn was selected
-      if ($scope.basePath) {
-        dataFileList.push($scope.basePath + row[$scope.dataFileColumn]);
-      } else {
-        dataFileList.push(row[$scope.dataFileColumn]);
-      }
+        fileData.list.push(row[$scope.dataFileColumn]);
     });
     var req = {
       method: 'POST',
       url: '/data_set_manager/import/check_files/',
       headers: {'X-Requested-With': 'XMLHttpRequest'},
-      data: dataFileList
+      data: fileData
     };
     $http(req).
       success(function(response) {

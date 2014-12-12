@@ -326,17 +326,24 @@ class CheckDataFilesView(View):
             return HttpResponseBadRequest()
 
         # get data from json request
-        input_file_list = json.loads(request.body)
+        file_data = json.loads(request.body)
+        try:
+            base_path = file_data["base_path"]
+        except KeyError:
+            base_path = ""
         bad_file_list = []
 
         translate_file_source = generate_file_source_translator(
-            username=request.user.username)
+            username=request.user.username, base_path=base_path)
         # check if files are available
-        for file_path in input_file_list:
-            file_path = translate_file_source(file_path)
-            if not os.path.exists(file_path):
-                bad_file_list.append(file_path)
-            logger.debug("File path checked: '%s'", file_path)
+        try:
+            for file_path in file_data["list"]:
+                file_path = translate_file_source(file_path)
+                if not os.path.exists(file_path):
+                    bad_file_list.append(file_path)
+                logger.debug("File path checked: '%s'", file_path)
+        except KeyError:
+            return HttpResponseBadRequest()
 
         # return json response
         return HttpResponse(json.dumps(bad_file_list),
