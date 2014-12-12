@@ -216,33 +216,41 @@ def is_url(string):
     return urlparse(string).scheme != ""
 
 
-def translate_file_source(source, username='', base_path=''):
-    """Convert file source to absolute path
-    source: URL, absolute or relative file system path
-    base_path: absolute path to prepend to source if source is a relative path
+def generate_file_source_translator(username='', base_path=''):
+    """Generate file source reference translator function based on username or
+    base_path
+    base_path: absolute path to prepend to source if source is relative
 
     """
-    # convert URL to a file system path by applying source map
-    for pattern, replacement in settings.REFINERY_FILE_SOURCE_MAP.iteritems():
-        translated_source = re.sub(pattern, replacement, source)
-        if source != translated_source:
-            source = translated_source
-            break
+    def translate(source):
+        """Convert file source to absolute path
+        source: URL, absolute or relative file system path
 
-    if is_url(source) or os.path.isabs(source):
+        """
+        source = source.strip()
+        # convert URLs to file system paths by applying source map
+        for pattern, replacement in settings.REFINERY_FILE_SOURCE_MAP.iteritems():
+            translated_source = re.sub(pattern, replacement, source)
+            if source != translated_source:
+                source = translated_source
+                break
+
+        # ignore URLs and absolute file paths
+        if is_url(source) or os.path.isabs(source):
+            return source
+
+        # process relative path
+        if base_path:
+            source = os.path.join(base_path, source)
+        elif username:
+            source = os.path.join(
+                settings.REFINERY_DATA_IMPORT_DIR, username, source)
+        else:
+            error_msg = "Failed to translate relative source path: "
+            error_msg += "must provide either username or base_path"
+            raise ValueError(error_msg)
         return source
-
-    # process relative path
-    if base_path:
-        source = os.path.join(base_path, source)
-    elif username:
-        source = os.path.join(
-            settings.REFINERY_DATA_IMPORT_DIR, username, source)
-    else:
-        error_msg = "Failed to translate relative source path: "
-        error_msg += "must provide either username or base_path"
-        raise ValueError(error_msg)
-    return source
+    return translate
 
 
 class _FileStoreItemManager(models.Manager):
@@ -264,7 +272,6 @@ class _FileStoreItemManager(models.Manager):
 
         item = self.create(source=source, sharename=sharename)
 
-        # assign a file type
         item.set_filetype(filetype)
 
         # symlink if source is a file system path outside of the import dir

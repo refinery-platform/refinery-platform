@@ -35,7 +35,7 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
     item = FileStoreItem.objects.create_item(
         source=source, sharename=sharename, filetype=filetype)
     if not item:
-        logger.error("Failed to create FileStoreItem")
+        logger.error("Failed to create FileStoreItem using source '%s'", source)
         return None
 
     logger.info("FileStoreItem created with UUID %s", item.uuid)

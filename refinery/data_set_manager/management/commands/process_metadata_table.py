@@ -86,28 +86,31 @@ class Command(BaseCommand):
         Description: main program; calls the parsing and insertion functions
 
         """
-        required = ['username', 'title', 'file_name', 'source_column_index', 'data_file_column']
+        required = ['username', 'title', 'file_name', 'source_column_index',
+                    'data_file_column']
         for arg in required:
             if not options[arg]:
-                raise CommandError('%s was not provided.' % arg)
+                raise CommandError('{} was not provided'.format(arg))
+        source_columns = \
+            [x.strip() for x in options['source_column_index'].split(",")]
         try:
-            source_columns = [int(x.strip()) for x in options['source_column_index'].split(",")]
-        except ValueError:
-            raise CommandError("source_column_index value(s) are invalid")
-        for column_index in source_columns:
-            if column_index < 0:
-                raise CommandError("source_column_index values can not be negative")
-        integer_values = ['data_file_column', 'auxiliary_file_column',
-                          'genome_build_column', 'annotation_column']
-        for arg in integer_values:
-            if options[arg] and options[arg] < 0:
-                raise CommandError("{} can not be negative".format(arg))
-        with open(options['file_name']) as metadata_file:
-            dataset_uuid = process_metadata_table(
-                options['username'], options['title'], metadata_file,
-                source_columns, options['data_file_column'],
-                options['data_file_permanent'], options['base_path'],
-                options['auxiliary_file_column'], options['species_column'],
-                options['genome_build_column'], options['annotation_column'],
-                options['slug'], options['is_public'])
+            with open(options['file_name']) as metadata_file:
+                dataset_uuid = process_metadata_table(
+                    username=options['username'], title=options['title'],
+                    metadata_file=metadata_file, source_columns=source_columns,
+                    data_file_column=options['data_file_column'],
+                    auxiliary_file_column=options['auxiliary_file_column'],
+                    base_path=options['base_path'],
+                    data_file_permanent=options['data_file_permanent'],
+                    species_column=options['species_column'],
+                    genome_build_column=options['genome_build_column'],
+                    annotation_column=options['annotation_column'],
+                    slug=options['slug'], is_public=options['is_public'])
+        except IOError as exc:
+            raise CommandError(
+                "Could not open file '{}': {}".format(
+                    options['file_name'], exc))
+        except ValueError as exc:
+            raise CommandError(exc)
+
         print("Created dataset with UUID '{}'".format(dataset_uuid))
