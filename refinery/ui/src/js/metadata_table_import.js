@@ -6,8 +6,25 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
   $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
 }])
 
+.factory('fileSources', ['$http', function($http, $log) {
+  "use strict";
+
+  return {
+    check: function(fileData, successCallback, errorCallback) {
+      var req = {
+        method: 'POST',
+        url: '/data_set_manager/import/check_files/',
+        headers: {'X-Requested-With': 'XMLHttpRequest'},
+        data: fileData
+      };
+      $http(req).success(successCallback).error(errorCallback);
+    }
+  };
+}])
+
 .controller('MetadataTableImportCtrl',
-  ['$scope', '$log', '$http', function($scope, $log, $http) {
+  ['$scope', '$log', '$http', 'fileSources',
+    function($scope, $log, $http, fileSources) {
 
   'use strict';
 
@@ -20,6 +37,7 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
   $scope.badFileList = [];
 
   function makeColumnDefs(row) {
+    // calculate column widths according to each column header length
     var totalChars = row.reduce(function(previousValue, currentValue) {
       return previousValue + String(currentValue).length;
     }, 0);
@@ -39,6 +57,7 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
     if (! $files[0]) {
       // clear existing content from screen if user didn't select a file
       $scope.$apply(function(){
+        //TODO: clear $files?
         $scope.metadataSample = [];
         $scope.metadataHeader = [];
         $scope.columnDefs = [];
@@ -52,6 +71,7 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
     reader.onload = function(e) {
       $scope.$apply(function() {
         $scope.metadata = d3.tsv.parse(e.target.result);
+        // get 5 lines to display on screen
         $scope.metadataSample = $scope.metadata.slice(0, 5);
         $scope.metadataHeader = Object.keys($scope.metadataSample[0]);
         $scope.columnDefs = makeColumnDefs($scope.metadataHeader);
@@ -63,18 +83,14 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
   $scope.checkFiles = function() {
     // check if the files listed in the dataFileColumn exist on the server
     var fileData = {"base_path": $scope.basePath, "list": []};
-    $scope.metadata.forEach(function(row) {
-      // assumes $scope.dataFileColumn was selected
+    // get the list of file references
+    if ($scope.dataFileColumn) {
+      $scope.metadata.forEach(function (row) {
         fileData.list.push(row[$scope.dataFileColumn]);
-    });
-    var req = {
-      method: 'POST',
-      url: '/data_set_manager/import/check_files/',
-      headers: {'X-Requested-With': 'XMLHttpRequest'},
-      data: fileData
-    };
-    $http(req).
-      success(function(response) {
+      });
+    }
+    fileSources.check(fileData,
+      function(response) {
         if (response.length > 0) {
           var errorMsg = "The following files were not found on the server:\n\n";
           response.forEach(function(filePath) {
@@ -84,11 +100,11 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
         } else {
           alert("All files were found");
         }
-      }).
-      error(function(response, status) {
-        var errorMsg = "Request failed: error " + status;
-        $log.error(errorMsg);
-        alert(errorMsg);
-      });
+    },
+    function(response, status) {
+      var errorMsg = "Request failed: error " + status;
+      $log.error(errorMsg);
+      alert(errorMsg);
+    });
   };
 }]);

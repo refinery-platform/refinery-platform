@@ -285,10 +285,8 @@ class ProcessMetadataTableView(View):
             title = request.POST['title']
             data_file_column = request.POST['data_file_column']
         except (KeyError, ValueError):
-            error = {
-                'error_message':
-                'Import failed because required parameters are missing'
-            }
+            error = {'error_message':
+                     'Import failed because required parameters are missing'}
             return render(request, self.template_name, error)
         source_column_index = request.POST.getlist('source_column_index')
         if not source_column_index:
@@ -325,16 +323,16 @@ class CheckDataFilesView(View):
         if not request.is_ajax() or not request.body:
             return HttpResponseBadRequest()
 
-        # get data from json request
         file_data = json.loads(request.body)
         try:
             base_path = file_data["base_path"]
         except KeyError:
             base_path = ""
-        bad_file_list = []
 
+        bad_file_list = []
         translate_file_source = generate_file_source_translator(
             username=request.user.username, base_path=base_path)
+
         # check if files are available
         try:
             for file_path in file_data["list"]:
@@ -342,9 +340,9 @@ class CheckDataFilesView(View):
                 if not os.path.exists(file_path):
                     bad_file_list.append(file_path)
                 logger.debug("File path checked: '%s'", file_path)
-        except KeyError:
+        except KeyError:  # if there's no list provided
             return HttpResponseBadRequest()
 
-        # return json response
-        return HttpResponse(json.dumps(bad_file_list),
+        # prefix output to protect from JSON vulnerability (stripped by Angular)
+        return HttpResponse(")]}',\n" + json.dumps(bad_file_list),
                             content_type="application/json")
