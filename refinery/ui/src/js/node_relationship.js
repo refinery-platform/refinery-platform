@@ -200,8 +200,11 @@ angular.module('refineryNodeRelationship', [
   };
 
 
-  $scope.openDeleteMappingDialog = function( nodeRelationship ) {
-    $scope.newDeleteMappingDialogConfig = { title: 'Delete File Mapping?', text: 'Are you sure you want to delete the file mapping "' + nodeRelationship.name + '"?' };
+  $scope.openDeleteMappingDialog = function(nodeRelationship) {
+    $scope.newDeleteMappingDialogConfig = {
+      title: 'Delete File Mapping?',
+      text: 'Are you sure you want to delete the file mapping "' + nodeRelationship.name + '"?'
+    };
 
     var modalInstance = $modal.open({
       templateUrl: '/static/partials/confirmation_dialog.tpls.html',
@@ -214,7 +217,12 @@ angular.module('refineryNodeRelationship', [
     });
 
     modalInstance.result.then(function () {
-      nodeRelationshipService.deleteNodeRelationship( nodeRelationship, successDelete, function( response ){ $log.error( "Error!" ); $log.error( response ); } );
+      nodeRelationshipService.deleteNodeRelationship(
+        nodeRelationship, successDelete, function(response){
+          $log.error("Error!");
+          $log.error(response);
+        }
+      );
     }, function () {
       $log.info('Modal dismissed at: ' + new Date());
     });

@@ -6,7 +6,7 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
   $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
 }])
 
-.factory('fileSources', ['$http', function($http, $log) {
+.factory('fileSources', ['$http', function($http) {
   "use strict";
 
   return {
@@ -23,10 +23,10 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
 }])
 
 .controller('MetadataTableImportCtrl',
-  ['$scope', '$log', '$http', 'fileSources',
-    function($scope, $log, $http, fileSources) {
+  ['$scope', '$log', '$http', '$modal', 'fileSources',
+    function($scope, $log, $http, $modal, fileSources) {
 
-  'use strict';
+  "use strict";
 
   $scope.gridOptions = {
     data: 'metadataSample',
@@ -91,20 +91,42 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
     }
     fileSources.check(fileData,
       function(response) {
+        var checkFilesDialogConfig;
         if (response.length > 0) {
-          var errorMsg = "The following files were not found on the server:\n\n";
-          response.forEach(function(filePath) {
-            errorMsg += filePath + "\n\n";
-          });
-          alert(errorMsg);
+          checkFilesDialogConfig = {
+            title: "The following files were not found on the server:",
+            items: response
+          };
         } else {
-          alert("All files were found");
+          checkFilesDialogConfig = {
+            title: "All files were found on the server",
+            items: []
+          };
         }
-    },
-    function(response, status) {
-      var errorMsg = "Request failed: error " + status;
-      $log.error(errorMsg);
-      alert(errorMsg);
-    });
+        var modalInstance = $modal.open({
+          templateUrl: '/static/partials/list_confirmation_dialog.tpls.html',
+          controller: ConfirmationDialogInstanceCtrl,
+          size: 'lg',
+          resolve: {
+            config: function() {
+              return checkFilesDialogConfig;
+            }
+          }
+        });
+      },
+      function(response, status) {
+        var errorMsg = "Request failed: error " + status;
+        $log.error(errorMsg);
+        alert(errorMsg);
+      }
+    );
   };
 }]);
+
+var ConfirmationDialogInstanceCtrl = function($scope, $modalInstance, config) {
+  $scope.config = config;
+
+  $scope.ok = function () {
+    $modalInstance.close();
+  };
+};
