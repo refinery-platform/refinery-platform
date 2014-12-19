@@ -42,10 +42,9 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
 
     if permanent:
         # copy to file store now and don't add to cache
-        #TODO: provide progress update, call import_file as subtask?
-        if not import_file(
-                item.uuid, permanent=True, refresh=True, file_size=file_size):
-            logger.error("Could not import file from '%s'", item.source)
+        #TODO: provide progress update
+        import_file.delay(
+            item.uuid, permanent=True, refresh=True, file_size=file_size)
 
     return item.uuid
 
@@ -67,7 +66,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
 
     item = FileStoreItem.objects.get_item(uuid=uuid)
     if not item:
-        logger.error("Failed to import FileStoreItem with UUID '%s'", uuid)
+        logger.error("FileStoreItem with UUID '%s' not found", uuid)
         return None
 
     # if file is ready to be used then return it,

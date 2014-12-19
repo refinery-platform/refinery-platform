@@ -100,7 +100,7 @@ angular.module('refineryMetadataTableImport', ['angularFileUpload', 'ngGrid'])
         } else {
           checkFilesDialogConfig = {
             title: "All files were found on the server",
-            items: []
+            items: response
           };
         }
         var modalInstance = $modal.open({

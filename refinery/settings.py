@@ -163,6 +163,7 @@ INSTALLED_APPS = (
     # NG: added for that human touch ...
     'django.contrib.humanize',
     'django.contrib.markup',
+    'django_extensions',
     # NG: added for search and faceting (Solr support)
     'haystack', 
     # NG: added for celery (task queue)
@@ -302,11 +303,9 @@ SERVER_EMAIL = 'root@localhost'
 # Disable migrations when running unittests and use syncdb instead
 SOUTH_TESTS_MIGRATE = False
 
-# allow 4 concurrent Celery tasks (minimum required to avoid problems with monitoring tasks)
-CELERYD_CONCURRENCY = 4
-
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = 100
+CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 
 # === Refinery Settings ===
 

@@ -338,17 +338,15 @@ class FileStoreItem(models.Model):
         return self.uuid + ' - ' + self.datafile.name
 
     def get_absolute_path(self):
-        '''Compute the absolute path to the data file.
+        """Compute the absolute path to the data file.
         
         :returns: str -- the absolute path to the data file or None if the file
         does not exist on disk.
         
-        '''
+        """
         if self.datafile and self.datafile.storage.exists(self.datafile.path):
             return self.datafile.path
         else:
-            logger.warn("Datafile doesn't exist in FileStoreItem '{}'"
-                        .format(self.uuid))
             return None
 
     def get_file_size(self, report_symlinks=False):
