@@ -4,7 +4,6 @@
  * @author sluger Stefan Luger https://github.com/sluger
  * @exports runProvVis The published function to run the visualization.
  */
-
 var provvis = function () {
     var vis = Object.create(null);
 
@@ -232,30 +231,33 @@ var provvis = function () {
         }).appendTo("#prov-ctrl-filter");
 
         $("<li/>", {
-            "id": "prov-ctrl-filter-list-hide",
-            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Hide" + "</label>" + "</a>"
+            "id": "prov-ctrl-filter-list-blend",
+            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Blend" + "</label>" + "</a>"
         }).appendTo("#prov-ctrl-filter-list");
         $("<li/>", {
-            "id": "prov-ctrl-filter-list-blend",
-            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Blend" + "</label>" + "</a>"
+            "id": "prov-ctrl-filter-list-hide",
+            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Hide" + "</label>" + "</a>"
         }).appendTo("#prov-ctrl-filter-list");
 
 
         /* Help. */
         $("<div>", {
-            "class": "modal fade bs-example-modal-sm",
+            "id": "help-modal",
+            "class": "modal hide fade bs-example-modal-sm-help",
             "tabindex": "-1",
             "role": "dialog",
             "aria-hidden": "true"
         }).appendTo("body");
 
         $("<div>", {
+            "id": "help-dialog",
             "class": "modal-dialog modal-sm"
-        }).appendTo(".bs-example-modal-sm");
+        }).appendTo("#help-modal");
 
         $("<div>", {
+            "id": "help-content",
             "class": "modal-content"
-        }).appendTo(".modal-dialog");
+        }).appendTo("#help-dialog");
 
         $("<div>", {
             "class": "modal-body",
@@ -269,17 +271,18 @@ var provvis = function () {
                 "<li><div class=\"refinery-subheader\"><h4>Global:</h4></div></li>" +
                 "<ul><li>Clear highlighting: Left click on background</li>" +
                 "<li>Fit graph to screen: Left double click on background</li></ul></ul>"
-        }).appendTo(".modal-content");
+        }).appendTo("#help-content");
 
         $("<div>", {
+            "id": "help-footer",
             "class": "modal-footer"
-        }).appendTo(".modal-content");
+        }).appendTo("#help-content");
 
         $("<button>", {
             "class": "btn btn-primary",
             "data-dismiss": "modal",
             "html": "OK"
-        }).appendTo(".modal-footer");
+        }).appendTo("#help-footer");
 
         $("<button/>", {
             "id": "prov-ctrl-help",
@@ -288,11 +291,73 @@ var provvis = function () {
             "rel": "tooltip",
             "data-placement": "bottom",
             "data-toggle": "modal",
-            "data-target": ".bs-example-modal-sm",
+            "data-target": "#help-modal",
             "html": "<i class=icon-question-sign></i>" +
                 "&nbsp;" + "Command List",
             "data-html": "true",
             "title": "Command List",
+            "style": "margin-left: 15px"
+        }).appendTo("#" + parentId);
+
+
+        /* Glyph Legend. */
+        $("<div>", {
+            "id": "legend-modal",
+            "class": "modal hide fade bs-example-modal-sm-legend",
+            "tabindex": "-1",
+            "role": "dialog",
+            "aria-hidden": "true"
+        }).appendTo("body");
+
+        $("<div>", {
+            "id": "legend-dialog",
+            "class": "modal-dialog modal-sm"
+        }).appendTo("#legend-modal");
+
+        $("<div>", {
+            "id": "legend-content",
+            "class": "modal-content"
+        }).appendTo("#legend-dialog");
+
+        $("<div>", {
+            "id": "legend-body",
+            "class": "modal-body",
+            "html": "<h3>Glyph Legend</h3>" +
+                "<div class=\"refinery-subheader\"><h4>Node Types:</h4></div>" +
+                "<div class=\"provvis-legend-cell\" id=\"prov-ctrl-legend-types\"></div>" +
+                "<div class=\"refinery-subheader\"><h4>Time Encoding:</h4></div>" +
+                "<div class=\"provvis-legend-cell\" id=\"prov-ctrl-legend-time\"></div>" +
+                "<div class=\"refinery-subheader\"><h4>Layering:</h4></div>" +
+                "<div class=\"provvis-legend-cell\" id=\"prov-ctrl-legend-layering\"></div>" +
+                "<div class=\"refinery-subheader\"><h4>Aggregation:</h4></div>" +
+                "<div class=\"provvis-legend-cell\" id=\"prov-ctrl-legend-aggregation\"></div>" +
+                "<div class=\"refinery-subheader\"><h4>Stratification:</h4></div>" +
+                "<div class=\"provvis-legend-cell\" id=\"prov-ctrl-legend-stratification\"></div>"
+        }).appendTo("#legend-content");
+
+        $("<div>", {
+            "id": "legend-footer",
+            "class": "modal-footer"
+        }).appendTo("#legend-content");
+
+        $("<button>", {
+            "class": "btn btn-primary",
+            "data-dismiss": "modal",
+            "html": "OK"
+        }).appendTo("#legend-footer");
+
+        $("<button/>", {
+            "id": "prov-ctrl-legend",
+            "class": "btn btn-mini",
+            "type": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "data-toggle": "modal",
+            "data-target": "#legend-modal",
+            "html": "<i class=icon-question-sign></i>" +
+                "&nbsp;" + "Glyph Legend",
+            "data-html": "true",
+            "title": "Glyph Legend",
             "style": "margin-left: 15px"
         }).appendTo("#" + parentId);
     };
@@ -373,6 +438,219 @@ var provvis = function () {
         return supportViewContainer;
     };
 
+
+    /**
+     * Analysis path generator.
+     * @returns {string} A polygon.
+     */
+    var drawAnalysisPolygon = function () {
+        return (-15) + "," + "0" + " " +
+            (-10) + "," + (-10) + " " +
+            10 + "," + (-10) + " " +
+            15 + "," + 0 + " " +
+            10 + "," + 10 + " " +
+            (-10) + "," + 10;
+    };
+
+    /**
+     * Subanalysis path generator.
+     * @returns {string} A polygon.
+     */
+    var drawSubanalysisPolygon = function () {
+        return "0," + (-10) + " " +
+            10 + "," + (-5) + " " +
+            10 + "," + 5 + " " +
+            "0" + "," + 10 + " " +
+            (-10) + "," + 5 + " " +
+            (-10) + "," + (-5);
+    };
+
+    /**
+     * Render glyph legend elements.
+     */
+    var renderGlyphLegend = function () {
+
+        /* Node types. */
+        var lTypesCanvas = d3.select("#prov-ctrl-legend-types").append("svg")
+            .classed("provvis-legend-cell-canvas", true);
+
+        /* Draw analysis node. */
+        var typesAn = lTypesCanvas.append("g").attr("transform", "translate(15,15)");
+        typesAn.append("polygon")
+            .attr("points", function () {
+                return drawAnalysisPolygon();
+            }).style({"fill": "none", "stroke": "black", "stroke-width": "1px"});
+        typesAn.append("text").attr("transform", "translate(19,5)").text(function () {
+            return "Analysis";
+        });
+
+        /* Draw subanalysis node. */
+        var typesSan = lTypesCanvas.append("g").attr("transform", "translate(105,15)");
+        typesSan.append("polygon")
+            .attr("points", function () {
+                return drawSubanalysisPolygon();
+            }).style({"fill": "none", "stroke": "black", "stroke-width": "1px"});
+        typesSan.append("text").attr("transform", "translate(17,5)").text(function () {
+            return "Sub-Analysis";
+        });
+
+        /* Draw file node. */
+        var typesFn = lTypesCanvas.append("g").attr("transform", "translate(230,15)");
+        typesFn.append("circle")
+            .attr("r", 10).style({"fill": "none", "stroke": "black", "stroke-width": "1px"});
+        typesFn.append("text").attr("transform", "translate(15,5)").text(function () {
+            return "File";
+        });
+
+        /* Draw tool node. */
+        var typesTn = lTypesCanvas.append("g").attr("transform", "translate(285,15)");
+        typesTn.append("rect")
+            .attr("transform", function () {
+                return "translate(" + (-5) + "," + (-5) + ")" +
+                    "rotate(45 " + 5 + "," + 5 + ")";
+            })
+            .attr("width", 10)
+            .attr("height", 10)
+            .style({"fill": "none", "stroke": "black", "stroke-width": "1px"});
+        typesTn.append("text").attr("transform", "translate(15,5)").text(function () {
+            return "Tool";
+        });
+
+        /* Draw sample node. */
+        var typesSn = lTypesCanvas.append("g").attr("transform", "translate(350,15)");
+        typesSn.append("rect")
+            .attr("transform", "translate(" + ( -3 * 10 / 4) + "," + (-3 * 10 / 4) + ")")
+            .attr("width", 6 * 10 / 4)
+            .attr("height", 6 * 10 / 4)
+            .style({"fill": "none", "stroke": "black", "stroke-width": "1px"});
+        typesSn.append("text").attr("transform", "translate(15,5)").text(function () {
+            return "Source/Sample/Assay";
+        });
+
+
+        /* Time encoding. */
+        var lTimeCanvas = d3.select("#prov-ctrl-legend-time").append("svg").classed("provvis-legend-cell-canvas", true);
+
+        var timeGradient = lTimeCanvas.append("g")
+            .append("defs")
+            .append("linearGradient")
+            .attr("id", "legendGrayscale");
+
+        timeGradient.append("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", "#fff")
+            .attr("stop-opacity", 1);
+
+        timeGradient.append("stop")
+            .attr("offset", "100%")
+            .attr("stop-color", "#000")
+            .attr("stop-opacity", 1);
+
+        lTimeCanvas.append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", 530)
+            .attr("height", 30)
+            .style({"fill": "url(#legendGrayscale)", "stroke": "white", "stroke-width": "1px"});
+
+        lTimeCanvas.append("text").attr("transform", "translate(0,25)").text(function () {
+            return "Earliest analysis execution";
+        });
+        lTimeCanvas.append("text").attr("transform", "translate(350,25)").text(function () {
+            return "Latest analysis execution";
+        })
+            .style({"fill": "white"});
+
+
+        /* Layering. */
+        var lLayer = d3.select("#prov-ctrl-legend-layering").append("svg").classed("provvis-legend-cell-canvas", true);
+        var layerExampleNodes = [0, 1, 2, 3, 4];
+
+        var gradientScale = d3.scale.linear()
+            .domain([0, 4])
+            .range(["lightgray", "black"]);
+
+        var layerLinks = lLayer.append("g").attr("transform", "translate(15,15)");
+        layerLinks.selectAll(".lLinks")
+            .data(layerExampleNodes)
+            .enter().append("g").attr("transform", function (n, i) {
+                return "translate(" + 0 + "," + (i * 5) + ")";
+            }).append("line")
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", 300)
+            .attr("y2", 0)
+            .style({"stroke": function (d, i) {
+                return gradientScale(i);
+            }, "fill": "none", "stroke-width": "5px"});
+
+        var layerNodeset1 = lLayer.append("g").attr("transform", "translate(15,15)");
+        layerNodeset1.selectAll(".lan")
+            .data(layerExampleNodes)
+            .enter().append("g").attr("transform", function (n, i) {
+                return "translate(" + 0 + "," + (i * 5) + ")";
+            }).append("polygon")
+            .attr("points", function () {
+                return drawAnalysisPolygon();
+            }).style({"fill": function (d, i) {
+                return gradientScale(i);
+            }, "stroke": "none", "stroke-width": "1px"});
+        layerNodeset1.append("text").attr("transform", "translate(20,16)").text(function () {
+            return "{5}";
+        });
+
+        var layerNodeset2 = lLayer.append("g").attr("transform", "translate(300,15)");
+        layerNodeset2.selectAll(".lan")
+            .data(layerExampleNodes)
+            .enter().append("g").attr("transform", function (n, i) {
+                return "translate(" + 0 + "," + (i * 5) + ")";
+            }).append("polygon")
+            .attr("points", function () {
+                return drawAnalysisPolygon();
+            }).style({"fill": function (d, i) {
+                return gradientScale(i);
+            }, "stroke": "none", "stroke-width": "1px"});
+        layerNodeset2.append("text").attr("transform", "translate(20,16)").text(function () {
+            return "{5}";
+        });
+
+
+        /* Aggregation. */
+        var lAggregation = d3.select("#prov-ctrl-legend-aggregation").append("svg").classed("provvis-legend-cell-canvas", true);
+        var aggrNodeset = lAggregation.append("g").attr("transform", "translate(15,15)");
+        aggrNodeset.selectAll(".lan")
+            .data(layerExampleNodes)
+            .enter().append("g").attr("transform", function (n, i) {
+                return "translate(" + (i * 5) + "," + 0 + ")";
+            }).append("polygon")
+            .attr("points", function () {
+                return drawAnalysisPolygon();
+            }).style({"fill": function () {
+                return gradientScale(2);
+            }, "stroke": "none", "stroke-width": "1px"});
+        aggrNodeset.append("text").attr("transform", "translate(40,4)").text(function () {
+            return "{5}";
+        });
+
+
+        /* Stratification. */
+        var lStratification = d3.select("#prov-ctrl-legend-stratification").append("svg").classed("provvis-legend-cell-canvas", true);
+        var stratNodeset = lStratification.append("g").attr("transform", "translate(15,15)");
+        stratNodeset.selectAll(".lan")
+            .data(layerExampleNodes)
+            .enter().append("g").attr("transform", function (n, i) {
+                return "translate(" + 0 + "," + (i * 5) + ")";
+            }).append("polygon")
+            .attr("points", function () {
+                return drawSubanalysisPolygon();
+            }).style({"fill": function () {
+                return gradientScale(3);
+            }, "stroke": "none", "stroke-width": "1px"});
+        stratNodeset.append("text").attr("transform", "translate(17,12)").text(function () {
+            return "{5}";
+        });
+    };
+
     /**
      * Refinery injection for the provenance visualization.
      * @param studyUuid The serialized unique identifier referencing a study.
@@ -417,6 +695,9 @@ var provvis = function () {
                 /* Toolbar items. */
                 createToolbarItems("provenance-controls");
 
+                /* Render glyph legend. */
+                renderGlyphLegend();
+
                 /* Hierarchical div layout. */
                 createVisualizationContainer("provenance-vis", "provenance-canvas", "provenance-graph");
 
@@ -426,9 +707,12 @@ var provvis = function () {
                 /* Support view div. */
                 var supportView = createSupportView("provenance-canvas", "provenance-support-view");
 
+                /* Init grid cell dimensions. */
+                var cell = {width: r * 5, height: r * 5};
+
                 /* Create vis and add graph. */
                 vis = new provvisDecl.ProvVis("provenance-graph", zoom, data, url, canvas, nodeTable, rect, margin, width,
-                    height, r, color, graph, supportView);
+                    height, r, color, graph, supportView, cell);
 
                 /* Geometric zoom. */
                 var redraw = function () {
@@ -442,9 +726,19 @@ var provvis = function () {
                         (-(d3.event.translate[1] + vis.margin.top) / d3.event.scale) + ")" +
                         " scale(" + (+1 / d3.event.scale) + ")");
 
-                    /* TODO: Clean up. */
-                    /* Quick fix to exclude scale from text labels. */
-                    d3.selectAll("text").attr("transform","scale(" + (+1 / d3.event.scale) + ")");
+                    /* Fix to exclude zoom scale from text labels. */
+                    vis.canvas.selectAll(".aBBoxLabel").attr("transform", "translate(" + 4 +
+                        "," + (vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                    vis.canvas.selectAll(".saBBoxLabel").attr("transform", "translate(" + 10 +
+                        "," + (vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                    vis.canvas.selectAll(".nodeDoiLabel").attr("transform", "translate(" + (-cell.width / 2 + 2) +
+                        "," + vis.radius * 1.5 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                    vis.canvas.selectAll(".nodeAttrLabel").attr("transform", "translate(" + (-cell.width / 2 + 5) +
+                        "," + vis.radius * 1.5 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                    vis.canvas.selectAll(".subanalysisLabel").attr("transform", "translate(" + (-cell.width / 2 + 5) +
+                        "," + vis.radius * 1.5 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                    vis.canvas.selectAll(".analysisLabel").attr("transform", "translate(" + (-cell.width / 2 + 4) +
+                        "," + vis.radius * 1.5 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
                 };
 
                 /* Main canvas drawing area. */
@@ -469,11 +763,7 @@ var provvis = function () {
                 vis.graph = provvisInit.runInit(data, analysesData, solrResponse);
 
                 /* Compute layout. */
-                /* TODO: OLD LAYOUT. */
-                provvisLayoutOld.runLayout(vis.graph);
-
-                /* TODO: NEW LAYOUT (IN DEVELOPMENT). */
-                //provvisLayout.runLayout(vis.graph);
+                provvisLayout.runLayout(vis.graph);
 
                 /* Render graph. */
                 provvisRender.runRender(vis);
@@ -489,6 +779,10 @@ var provvis = function () {
         provvisRender.runRenderUpdate(vis, solrResponse);
     };
 
+    /**
+     * Visualization instance getter.
+     * @returns {null} The provvis instance.
+     */
     var getProvVisPrivate = function () {
         return vis;
     };
