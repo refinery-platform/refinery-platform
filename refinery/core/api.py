@@ -6,7 +6,8 @@ Created on May 4, 2012
 
 from GuardianTastypieAuthz import GuardianAuthorization
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, \
-    WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus, StatisticsObject
+    WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus, StatisticsObject, \
+    SharedPermissionObject
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
 from core.tasks import check_tool_status
@@ -366,4 +367,47 @@ class StatisticsResource(Resource):
 
         results = [StatisticsObject(user_count, group_count, files_count, dataset_summary, workflow_summary, project_summary)]
         return results
+
+class SharedPermissionResource(Resource):
+    username = fields.CharField(attribute="username")
+    shared_res_name = fields.CharField(attribute="shared_res_name")
+    keys = fields.ListField(attribute="keys")
+    permission_map = fields.DictField(attribute="permission_map")
+
+    dummy_permission_map_test = {
+        "G1": {
+            "read": True,
+            "change": False
+        },
+        "G2": {
+            "read": True,
+            "change": True
+        },
+        "G3": {
+            "read": True,
+            "change": True
+        }
+    }
+
+    
+    def getSharingStatus(username, shared_res_type, shared_res_name):
+        pass
+
+    class Meta:
+        resource_name = "shared_permission"
+        object_class = SharedPermissionObject
+
+    def detail_uri_kwargs(self, bundle_or_obj):
+        kwargs = {}
+        kwargs['pk'] = uuid.uuid1()
+        return kwargs
+
+    def obj_get_list(self, bundle, **kwargs):
+        return self.get_object_list(bundle.request)
+
+    def get_object_list(self, request):
+        #if "username" in request.GET and "shared_resource" in request.GET:
+        return [SharedPermissionObject("username_test", "resname_test", ["G1", "G2", "G3"], self.dummy_permission_map_test)]   
+        #else:
+
 
