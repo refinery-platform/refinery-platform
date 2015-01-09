@@ -11,10 +11,9 @@ var provvisLayout = function () {
 
     /**
      * Maps the column/row index to nodes.
-     * @param nodeset The nodeset.
      * @param parent The parent node.
      */
-    var createNodeGrid = function (nodeset, parent) {
+    var initNodeGrid = function (parent) {
         var grid = [];
 
         for (var i = 0; i < parent.l.depth; i++) {
@@ -25,13 +24,6 @@ var provvisLayout = function () {
             }
         }
 
-        console.log(parent);
-
-        nodeset.forEach(function (n) {
-            console.log(n);
-            grid[n.col][n.row] = n;
-        });
-
         parent.l.grid = grid;
     };
 
@@ -40,9 +32,11 @@ var provvisLayout = function () {
      * @param lgNodes Layer grouped array of nodes.
      */
     var initRowPlacementLeft = function (lgNodes) {
+        console.log("#INITROW-LEFT");
         lgNodes.forEach(function (lg) {
             lg.forEach(function (n, i) {
                 n.l.rowBK.left = i;
+                console.log(n.autoId + " " + n.l.rowBK.left);
             });
         });
     };
@@ -67,13 +61,12 @@ var provvisLayout = function () {
      * @returns {Array} Layer grouped array of nodes sorted by barycenter heuristic.
      */
     var oneSidedCrossingMinimisation = function (lgNodes, parent) {
-
-        /* For each layer (fixed layer L0), check layer to the left (variable layer L1). */
+        /* For each layer (fixed layer L0), check layer to the right (variable layer L1). */
         lgNodes.forEach(function (lg, i) {
             var usedCoords = [],
                 delta = 0.01;
 
-            /* If there is a layer left to the current layer. */
+            /* If there is a layer right to the current layer. */
             if (typeof lgNodes[i + 1] !== "undefined" && lgNodes[i + 1] !== null) {
 
                 /* For each node within the variable layer. */
@@ -81,10 +74,14 @@ var provvisLayout = function () {
                     var degree = 1,
                         accRows = 0;
 
-                    if (!n.succs.empty()) {
-                        degree = n.succs.size();
-                        n.succs.values().forEach(function (sn) {
-                            accRows += (sn.l.rowBK.left + 1);
+                    if (!n.preds.empty()) {
+                        degree = n.preds.size();
+                        n.preds.values().forEach(function (pn) {
+                            var curA = pn;
+                            if (pn instanceof provvisDecl.Node && parent instanceof provvisDecl.ProvGraph) {
+                                curA = pn.parent.parent;
+                            }
+                            accRows += (curA.l.rowBK.left + 1);
                         });
                     }
 
@@ -127,6 +124,15 @@ var provvisLayout = function () {
             barycenterOrderedNodes[i].forEach(function (n, k) {
                 n.l.rowBK.left = k;
                 n.l.rowBK.right = parent.l.width - barycenterOrderedNodes[i].length + k;
+            });
+        });
+
+        console.log("#BARYORDER");
+        console.log(barycenterOrderedNodes);
+        barycenterOrderedNodes.forEach(function (l, i) {
+            console.log("layer " + i);
+            l.forEach(function (d) {
+                console.log(d.autoId + " " + d.l.rowBK.left);
             });
         });
 
@@ -339,7 +345,7 @@ var provvisLayout = function () {
 
         markConflictsLeft(bclgNodes, parent.aLinks);
 
-        console.log("conflicts:");
+        console.log("#CONFLICTS");
         bclgNodes.forEach(function (l, i) {
             l.forEach(function (d) {
                 console.log(d);
@@ -350,9 +356,7 @@ var provvisLayout = function () {
         });
         console.log("");
 
-        console.log(parent.aLinks);
-
-        formBlocks(bclgNodes, "left", parent.aLinks);
+        formBlocks(bclgNodes, "left", parent);
 
         /* Reset conflicts. */
         /*
@@ -372,9 +376,9 @@ var provvisLayout = function () {
      * For each node in the block, assign the most right row.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      * @param alignment Left or right aligned layout initialization.
-     * @param links Graph links.
+     * @param parent The Provenance graph.
      */
-    var formBlocks = function (bclgNodes, alignment, links) {
+    var formBlocks = function (bclgNodes, alignment, parent) {
 
         var isBlockRoot = function (l) {
             return l.l.isBlockRoot;
@@ -382,6 +386,14 @@ var provvisLayout = function () {
 
         var isNeighbor = function (l) {
             return l.l.neighbor ? true : false;
+        };
+
+        /* Add additional cell to grid column. */
+        var addGridRow = function (parent) {
+            parent.l.grid.forEach(function (gc) {
+                gc.push("undefined");
+            });
+            parent.l.width += 1;
         };
 
         /* UPPER */
@@ -397,53 +409,94 @@ var provvisLayout = function () {
                 if (preds.length === 0) {
                     bclgNodes[l][i].l.isBlockRoot = true;
 
-                    console.log("BLOCK ROOT " + bclgNodes[l][i].autoId);
-
+                    /* Find block path. */
                     /* Get right most row. */
                     var succs = bclgNodes[l][i].succLinks.values().filter(isNeighbor),
                         rootRow = alignment === "left" ? bclgNodes[l][i].l.rowBK.left : bclgNodes[l][i].l.rowBK.right,
                         curLink = "undefined",
-                        curA = bclgNodes[l][i];
+                        curA = bclgNodes[l][i],
+                        blockLength = 1,
+                        occupied = true;
 
                     while (succs.length === 1) {
                         curLink = succs[0];
                         curA = curLink.target instanceof provvisDecl.Node ? curLink.target.parent.parent : curLink.target;
 
-                        console.log(curA.autoId + " " + curA.l.rowBK.left);
                         if (alignment === "left" && curA.l.rowBK.left > rootRow) {
                             rootRow = curA.l.rowBK.left;
                         } else if (alignment === "right" && curA.l.rowBK.right < rootRow) {
                             rootRow = curA.l.rowBK.right;
                         }
                         succs = curA.succLinks.values().filter(isNeighbor);
+                        blockLength++;
                     }
 
-                    console.log("curRootRow " + rootRow);
+                    /* Check if block path is occupied. */
+                    while (occupied) {
+                        occupied = false;
+                        succs = bclgNodes[l][i].succLinks.values().filter(isNeighbor);
+                        curA = bclgNodes[l][i];
+                        curLink = "undefined";
+                        curA = bclgNodes[l][i];
 
-                    /* Traverse through block and set root row. */
+                        if (parent.l.grid[curA.col][rootRow] && parent.l.grid[curA.col][rootRow] !== "undefined") {
+                            occupied = true;
+                        }
+
+                        while (succs.length === 1 && !occupied) {
+                            curLink = succs[0];
+                            curA = curLink.target instanceof provvisDecl.Node ? curLink.target.parent.parent : curLink.target;
+
+                            if (parent.l.grid[curA.col][rootRow] && parent.l.grid[curA.col][rootRow] !== "undefined") {
+                                occupied = true;
+                            }
+
+                            succs = curA.succLinks.values().filter(isNeighbor);
+                        }
+
+                        if (occupied) {
+                            /* Increase root row. */
+                            rootRow++;
+                        }
+                    }
+
+
+                    /* Save block path. */
+
+                    /* Traverse through block and set root row. Set grid cells. */
                     succs = bclgNodes[l][i].succLinks.values().filter(isNeighbor);
                     if (alignment === "left") {
                         bclgNodes[l][i].l.rowBK.left = rootRow;
-                        bclgNodes[l][i].row = rootRow;
-                    } else if (alignment === "left") {
-                        bclgNodes[l][i].l.rowBK.left = rootRow;
-                        bclgNodes[l][i].row = rootRow;
+                    } else if (alignment === "right") {
+                        bclgNodes[l][i].l.rowBK.right = rootRow;
                     }
+                    bclgNodes[l][i].row = rootRow;
+
+                    /* Add additional cell to grid column. */
+                    while (parent.l.grid[bclgNodes[l][i].col].length <= rootRow)  {
+                        addGridRow(parent);
+                    }
+
+                    parent.l.grid[bclgNodes[l][i].col][rootRow] = bclgNodes[l][i];
+
                     while (succs.length === 1) {
                         curLink = succs[0];
                         curA = curLink.target instanceof provvisDecl.Node ? curLink.target.parent.parent : curLink.target;
 
                         if (alignment === "left") {
                             curA.l.rowBK.left = rootRow;
-                            curA.row = rootRow;
-                        } else if (alignment === "left") {
-                            curA.l.rowBK.left = rootRow;
-                            curA.row = rootRow;
+                        } else if (alignment === "right") {
+                            curA.l.rowBK.right = rootRow;
                         }
+                        curA.row = rootRow;
                         succs = curA.succLinks.values().filter(isNeighbor);
-                    }
 
-                    console.log("with rootRow " + rootRow);
+                        while (parent.l.grid[curA.col].length <= rootRow)  {
+                            addGridRow(parent);
+                            console.log("#ADDROW");
+                        }
+                        parent.l.grid[curA.col][curA.row] = curA;
+                    }
                 }
             }
         }
@@ -495,17 +548,11 @@ var provvisLayout = function () {
      * @param parent The parent node.
      */
     var setGridLayoutDimensions = function (lgNodes, parent) {
-
-        console.log(lgNodes);
-
         parent.l.width = d3.max(lgNodes, function (lg) {
             return lg.length;
         });
 
-        /* TODO: CHECK depth. */
-        parent.l.depth = lgNodes.length +2;
-
-        console.log(parent.l);
+        parent.l.depth = lgNodes.length;
     };
 
     /**
@@ -520,12 +567,21 @@ var provvisLayout = function () {
 
         /* For each successor node. */
         var handleSuccessorNodes = function (curNode) {
-            console.log("curNode " + curNode.autoId);
-            console.log(curNode);
+
+            /* When the analysis layout is computed, links occur between dummy nodes (Analysis) and Nodes or Analysis.
+             * In order to distinct both cases, the connection between dummy nodes and nodes is preserved by saving
+             * the id of a node rather than its parent analysis id. */
+            if (curNode instanceof provvisDecl.Node && parent instanceof provvisDecl.ProvGraph) {
+                curNode = curNode.parent.parent;
+            }
+
+            /* Get successors. */
             curNode.succs.values().filter(function (s) {
                 return s.parent === null || s.parent === parent || curNode.uuid === "dummy";
             }).forEach(function (succNode) {
-                console.log("succNode: " + succNode.autoId);
+                if (succNode instanceof provvisDecl.Node && parent instanceof provvisDecl.ProvGraph) {
+                    succNode = succNode.parent.parent;
+                }
 
                 /* Mark edge as removed. */
                 succNode.predLinks.values().forEach(function (predLink) {
@@ -544,24 +600,16 @@ var provvisLayout = function () {
 
                     if (predLinkNode && predLinkNode.autoId === curNode.autoId) {
                         predLink.l.ts.removed = true;
-                        console.log(predLink.autoId + "REMOVED");
                     }
-                    console.log("predLinkNode: " + predLinkNode.autoId);
-                    console.log("succNode: ");
-                    console.log(succNode);
                 });
 
                 /* When successor node has no other incoming edges,
                  insert successor node into result set. */
-                console.log("CHECK FOR ADD: ");
-                console.log(succNode.predLinks);
                 if (!succNode.predLinks.values().some(function (predLink) {
                     return !predLink.l.ts.removed;
                 }) && !succNode.l.ts.removed) {
                     startNodes.push(succNode);
                     succNode.l.ts.removed = true;
-
-                    console.log("ADD " + succNode.autoId);
                 }
             });
         };
@@ -583,6 +631,7 @@ var provvisLayout = function () {
         }
 
         /* Handle cyclic graphs. */
+        /* TODO: Review condition. */
         if (startNodes.length > nodesLength) {
             return null;
         } else {
@@ -593,21 +642,21 @@ var provvisLayout = function () {
     /**
      * Assign layers.
      * @param tsNodes Topology sorted nodes.
-     * @param parents The parent node.
+     * @param parent The parent node.
      */
     var layerNodes = function (tsNodes, parent) {
         var layer = 0,
-            succs = [],
             preds = [];
 
         tsNodes.forEach(function (n) {
 
-            /* Get outgoing neighbor. */
-            succs = n.succs.values().filter(function (d) {
-                return d.parent === parent;
-            });
-            preds = n.preds.values().filter(function (d) {
-                return d.parent === parent;
+            /* Get incoming predecessors. */
+            n.preds.values().filter(function (p) {
+                if (p.parent === parent) {
+                    preds.push(p);
+                } else if (p instanceof provvisDecl.Node && parent instanceof provvisDecl.ProvGraph) {
+                    preds.push(p.parent.parent);
+                }
             });
 
             if (preds.length === 0) {
@@ -662,6 +711,9 @@ var provvisLayout = function () {
         /* Set graph width and depth. */
         setGridLayoutDimensions(gNodes, parent);
 
+        /* Init grid. */
+        initNodeGrid(parent);
+
         /* Init row placement. */
         initRowPlacementLeft(gNodes);
 
@@ -672,7 +724,6 @@ var provvisLayout = function () {
         var bcgNodes = oneSidedCrossingMinimisation(gNodes, parent);
 
         /* TODO: In development. */
-
         /* Update row placements. */
         verticalCoordAssignment(bcgNodes, parent);
     };
@@ -799,7 +850,6 @@ var provvisLayout = function () {
 
             var gapLength = Math.abs(l.source.parent.parent.col - l.target.parent.parent.col);
 
-
             if (gapLength > 1) {
                 /* Dummy nodes are affiliated with the source node of the link in context. */
                 var newNodeId = graph.aNodes.length,
@@ -824,7 +874,7 @@ var provvisLayout = function () {
                 /* Insert Links. */
                 var j = 0;
                 while (j < gapLength) {
-                    graph.aLinks.push(new provvisDecl.Link(newLinkId + j, graph.aNodes[predNodeId],
+                    graph.aLinks.push(new provvisDecl.Link(newLinkId + j, (j === 0) ? l.source : graph.aNodes[predNodeId],
                         (j === gapLength - 1) ? l.target : graph.aNodes[newNodeId + j], false));
                     predNodeId = newNodeId + j;
                     curCol++;
@@ -851,32 +901,32 @@ var provvisLayout = function () {
                 j = 0;
                 var curLink = graph.aLinks[newLinkId];
                 while (j < gapLength) {
+
                     curLink.source.succs.set(curLink.target.autoId, curLink.target);
                     curLink.source.succLinks.set(curLink.autoId, curLink);
                     curLink.target.preds.set(curLink.source.autoId, curLink.source);
                     curLink.target.predLinks.set(curLink.autoId, curLink);
 
-                    /* TODO: Fix source and target nodes for dragging. */
                     /* Connect target node with last dummy node. */
                     if (j + 1 === gapLength) {
-                        console.log(curLink);
                         l.target.predLinks.set(curLink.autoId, curLink);
                         l.target.preds.set(curLink.source.autoId, curLink.source);
                         l.target.parent.predLinks.set(curLink.autoId, curLink);
                         l.target.parent.preds.set(curLink.source.autoId, curLink.source);
                         l.target.parent.parent.predLinks.set(curLink.autoId, curLink);
                         l.target.parent.parent.preds.set(curLink.source.autoId, curLink.source);
-
+                    } else if (j === 0) {
                         l.source.succLinks.set(curLink.autoId, curLink);
-                        l.source.succs.set(l.target.autoId, l.target);
-
-
+                        l.source.succs.set(curLink.target.autoId, curLink.target);
+                        l.source.parent.succLinks.set(curLink.autoId, curLink);
+                        l.source.parent.succs.set(curLink.target.autoId, curLink.target);
+                        l.source.parent.parent.succLinks.set(curLink.autoId, curLink);
+                        l.source.parent.parent.succs.set(curLink.target.autoId, curLink.target);
                     }
+
                     curLink = graph.aLinks[newLinkId + j + 1];
                     j++;
                 }
-
-                console.log(l.target);
             }
         });
     };
@@ -986,7 +1036,7 @@ var provvisLayout = function () {
         startANodes.push(graph.dataset);
         var tsANodes = topSortNodes(startANodes, graph.aNodes.length, graph);
         console.log("ts: " + tsANodes.map(function (d) {
-            return d.id;
+            return d.autoId;
         }));
         if (tsANodes !== null) {
             layerNodes(tsANodes, graph);
@@ -1005,6 +1055,9 @@ var provvisLayout = function () {
                 al.l.ts.removed = false;
             });
             tsANodes = topSortNodes(startANodes, graph.aNodes.length, graph);
+            console.log("ts: " + tsANodes.map(function (d) {
+                return d.autoId;
+            }));
 
             layerNodes(tsANodes, graph);
 
@@ -1028,10 +1081,9 @@ var provvisLayout = function () {
             /* Remove dummy nodes. */
             //removeDummyNodes(graph);
 
+            console.log("#aNodes");
             console.log(graph.aNodes);
 
-            /* Create grid. */
-            createNodeGrid(graph.aNodes, graph);
         } else {
             console.log("Error: Graph is not acyclic!");
         }
@@ -1060,7 +1112,7 @@ var provvisLayout = function () {
             });
 
             /* Create grid. */
-            createNodeGrid(an.children.values(), an);
+            //createNodeGrid(an.children.values(), an);
         });
 
 
