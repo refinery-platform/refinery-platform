@@ -267,7 +267,7 @@ var provvis = function () {
                 "<li>Highlight predecessors: 'p'</li>" +
                 "<li>Highlight successors: 's'</li>" +
                 "<li>Collapse Node: 'c'</li>" +
-                "<li>Expand Node: 'e'</li></ul><br>" +
+                "<li>Expand Node: 'e' or double click</li></ul><br>" +
                 "<li><div class=\"refinery-subheader\"><h4>Global:</h4></div></li>" +
                 "<ul><li>Clear highlighting: Left click on background</li>" +
                 "<li>Fit graph to screen: Left double click on background</li></ul></ul>"

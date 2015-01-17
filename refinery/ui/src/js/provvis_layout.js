@@ -19,7 +19,6 @@ var provvisLayout = function () {
         for (var i = 0; i < parent.l.depth; i++) {
             grid.push([]);
             for (var j = 0; j < parent.l.width; j++) {
-                grid[i].push([]);
                 grid[i][j] = "undefined";
             }
         }
@@ -32,11 +31,9 @@ var provvisLayout = function () {
      * @param lgNodes Layer grouped array of nodes.
      */
     var initRowPlacementLeft = function (lgNodes) {
-        console.log("#INITROW-LEFT");
         lgNodes.forEach(function (lg) {
             lg.forEach(function (n, i) {
                 n.l.rowBK.left = i;
-                console.log(n.autoId + " " + n.l.rowBK.left);
             });
         });
     };
@@ -380,10 +377,6 @@ var provvisLayout = function () {
      */
     var formBlocks = function (bclgNodes, alignment, parent) {
 
-        var isBlockRoot = function (l) {
-            return l.l.isBlockRoot;
-        };
-
         var isNeighbor = function (l) {
             return l.l.neighbor ? true : false;
         };
@@ -473,10 +466,11 @@ var provvisLayout = function () {
                     bclgNodes[l][i].row = rootRow;
 
                     /* Add additional cell to grid column. */
-                    while (parent.l.grid[bclgNodes[l][i].col].length <= rootRow)  {
+                    while (parent.l.grid[bclgNodes[l][i].col].length <= rootRow) {
                         addGridRow(parent);
                     }
 
+                    /* Set grid cell. */
                     parent.l.grid[bclgNodes[l][i].col][rootRow] = bclgNodes[l][i];
 
                     while (succs.length === 1) {
@@ -491,10 +485,11 @@ var provvisLayout = function () {
                         curA.row = rootRow;
                         succs = curA.succLinks.values().filter(isNeighbor);
 
-                        while (parent.l.grid[curA.col].length <= rootRow)  {
+                        while (parent.l.grid[curA.col].length <= rootRow) {
                             addGridRow(parent);
                             console.log("#ADDROW");
                         }
+                        /* Set grid cell. */
                         parent.l.grid[curA.col][curA.row] = curA;
                     }
                 }
@@ -539,6 +534,7 @@ var provvisLayout = function () {
     var verticalCoordAssignment = function (bclgNodes, parent) {
         verticalAlignment(bclgNodes, parent);
 
+        /* TODO: In development. */
         //balanceLayout(bclgNodes, parent);
     };
 
@@ -1018,6 +1014,47 @@ var provvisLayout = function () {
 
 
     /**
+     * Reorder subanalysis layout to minimize edge crossings.
+     * @param aNodes Analysis nodes.
+     * @param saNodes Subanalysis nodes.
+     */
+    var reorderSubanalysisNodes = function (aNodes, saNodes) {
+
+        console.log("#REORDER_SUBANALYES");
+        console.log(aNodes[0].parent.l.grid);
+
+        /* Initializations. */
+        aNodes.filter(function (an) {
+            return an.nodeType !== "dummy";
+        }).forEach(function (an) {
+
+            /* Initialize analysis dimensions. */
+            an.l.depth = 1;
+            an.l.width = an.children.size();
+
+            /* Create grid for subanalyses. */
+            initNodeGrid(an);
+
+            /* Initialize subanalysis col and row attributes. */
+            an.children.values().forEach(function (san, i) {
+
+                /* Only one column does exist in this view. */
+                san.col = 0;
+                //san.row = an.children.size() - i - 1;
+                san.row = i;
+
+                /* Set grid cell. */
+                an.l.grid[san.col][san.row] = san;
+
+                /* TODO: Barycenter ordering. */
+
+
+            });
+        });
+    };
+
+
+    /**
      * Main layout module function.
      * @param graph The main graph object of the provenance visualization.
      */
@@ -1074,7 +1111,7 @@ var provvisLayout = function () {
             console.log("gANodes");
             console.log(gANodes);
 
-            /* TODO: in progress*/
+            /* TODO: in progress. */
             layoutNodes(gANodes, graph);
 
 
@@ -1102,46 +1139,31 @@ var provvisLayout = function () {
         console.log("SUBANALYIS");
         console.log("==========");
 
-        graph.aNodes.forEach(function (an) {
-            an.l.depth = 1;
-            an.l.width = an.children.size();
-            an.children.values().forEach(function (san, i) {
-                san.col = 0;
-                san.row = i;
-                /* TODO: i is fine for subanalysis view - upon expansion, dynamically adapt row. */
-            });
-
-            /* Create grid. */
-            //createNodeGrid(an.children.values(), an);
-        });
+        reorderSubanalysisNodes(graph.aNodes, graph.saNodes);
 
 
         /* FILES/TOOLS LAYOUT. */
-        /* TODO: Generic re-implementation for files/tools of one subanalysis (workflow). */
-        console.log("");
-        console.log("NODES");
-        console.log("===========");
+        /*        console.log("");
+         console.log("NODES");
+         console.log("===========");*/
 
         graph.saNodes.forEach(function (san) {
             var tsNodes = topSortNodes(san.inputs.values(), san.children.size(), san);
-            console.log("ts: " + tsNodes.map(function (d) {
-                return d.id;
-            }));
+            /*            console.log("ts: " + tsNodes.map(function (d) {
+             return d.id;
+             }));*/
             if (tsNodes !== null) {
                 /* Assign layers. */
                 layerNodes(tsNodes, san);
 
                 /* Group nodes by layer. */
                 var gNodes = groupNodes(tsNodes);
-                gNodes.forEach(function (gn, i) {
-                    console.log(i + ": " + gn.map(function (d) {
-                        return d.id;
-                    }));
-                });
-                console.log("");
+                /*                gNodes.forEach(function (gn, i) {
+                 console.log(i + ": " + gn.map(function (d) {
+                 return d.id;
+                 }));
+                 });*/
 
-                /* Place vertices. */
-                //layoutNodes(gNodes, san);
 
                 /* TODO: Workflow vis layout test. */
 
@@ -1194,16 +1216,31 @@ var provvisLayout = function () {
                                 sn.row = n.row;
                             });
                         }
-
                     });
-
                 });
-
-                /* Create grid. */
-                //createNodeGrid(tsNodes, san);
             } else {
                 console.log("Error: Graph is not acyclic!");
             }
+        });
+
+        /* Create workflow grid. */
+        graph.saNodes.forEach(function (san) {
+
+            /* Initialize workflow dimensions. */
+            san.l.depth = d3.max(san.children.values(), function (n) {
+                return n.col;
+            }) + 1;
+            san.l.width = d3.max(san.children.values(), function (n) {
+                return n.row;
+            }) + 1;
+
+            /* Init grid. */
+            initNodeGrid(san);
+
+            /* Set grid cells. */
+            san.children.values().forEach(function (n) {
+                san.l.grid[n.col][n.row] = n;
+            });
         });
     };
 
@@ -1215,5 +1252,4 @@ var provvisLayout = function () {
             runLayoutPrivate(graph);
         }
     };
-
 }();

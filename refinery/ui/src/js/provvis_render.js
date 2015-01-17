@@ -71,20 +71,21 @@ var provvisRender = function () {
             /* Doi-dependant node glyph scaling factor. */
             var scaleFactor = 1;
 
-            switch (true) {
-                case (-2 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.25):
-                    scaleFactor = 0.75;
-                    break;
-                case (0.25 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.5):
-                    scaleFactor = 1.0;
-                    break;
-                case (0.5 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.75):
-                    scaleFactor = 1.25;
-                    break;
-                case (0.75 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 2):
-                    scaleFactor = 1.5;
-                    break;
-            }
+            /*switch (true) {
+             case (-2 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.25):
+             scaleFactor = 0.75;
+             break;
+             case (0.25 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.5):
+             scaleFactor = 1.0;
+             break;
+             case (0.5 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.75):
+             scaleFactor = 1.25;
+             break;
+             case (0.75 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 2):
+             scaleFactor = 1.5;
+             break;
+             }*/
+            scaleFactor = 0.75;
 
             /* Update node glyph size. */
             if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {
@@ -625,7 +626,7 @@ var provvisRender = function () {
                 }
             })
             .classed({
-                "hLink": true, "aHLink": true, "hiddenLink": true
+                "hLink": true, "hiddenLink": true
             })
             .attr("id", function (l) {
                 return "hLinkId-" + l.autoId;
@@ -766,7 +767,7 @@ var provvisRender = function () {
                     .attr("ry", cell.height / 3);
 
                 /* Time as label. */
-                analysisBBox.append("g").attr("clip-path", "url(#aBBClipId-" + an.autoId + ")")
+                analysisBBox.append("g").classed({"labels": true}).attr("clip-path", "url(#aBBClipId-" + an.autoId + ")")
                     .append("text")
                     .attr("transform", function () {
                         return "translate(" + 4 + "," + (vis.radius) + ")";
@@ -844,7 +845,7 @@ var provvisRender = function () {
                 }
             })
             .classed({
-                "hLink": true, "saHLink": true, "hiddenLink": true
+                "hLink": true, "hiddenLink": true
             })
             .attr("id", function (l) {
                 return "hLinkId-" + l.autoId;
@@ -937,7 +938,7 @@ var provvisRender = function () {
                     .attr("ry", cell.height / 3);
 
                 /* Workflow name as label. */
-                subanalysisBBox.append("g").attr("clip-path", "url(#saBBClipId-" + san.autoId + ")")
+                subanalysisBBox.append("g").classed({"labels": true}).attr("clip-path", "url(#saBBClipId-" + san.autoId + ")")
                     .append("text")
                     .attr("transform", function () {
                         return "translate(" + 10 + "," + (vis.radius) + ")";
@@ -1155,6 +1156,7 @@ var provvisRender = function () {
     };
 
     /* TODO: On expand, preserve highlighting of inner nodes. */
+    /* TODO: In development. */
     /**
      * Sets the visibility of links and (a)nodes when collapsing or expanding analyses.
      * @param d Node.
@@ -1173,6 +1175,125 @@ var provvisRender = function () {
 
         /* Expand. */
         if (keyStroke === "e" && (d.nodeType === "analysis" || d.nodeType === "subanalysis")) {
+
+
+            /* Dynamically adjust layout. */
+            /*
+             var pos = {col: 0, row: 0},
+             curAN = d,
+             origDepth = vis.graph.l.depth,
+             origWidth = vis.graph.l.width;
+             console.log("#EXPAND");
+             if (d.nodeType === "analysis") {
+             pos.col = d.col;
+             pos.row = d.row;
+             } else if (d.nodeType === "subanalysis") {
+             pos.col = d.col + d.parent.col;
+             pos.row = d.row + d.parent.row;
+             curAN = d.parent;
+             }
+
+             console.log(d);
+             console.log("#POS col: " + pos.col + " row: " + pos.row);
+             console.log("#CHILD: depth: " + d.l.depth + " width: " + d.l.width);
+
+             */
+            /* Check grid for neighbors to shift right an below depending on the size of the expanded grid. */
+            /*
+
+
+             for (var i = 0; i < origDepth; i++) {
+             for (var j = 0; j < origWidth; j++) {
+
+
+
+             */
+            /* Every grid cell, which is not 'undefined' and with col and row greater than pos.col and pos.row, shift by d.l.depth and d.l.width. */
+            /*
+             if (vis.graph.l.grid[i][j] && vis.graph.l.grid[i][j] !== "undefined" && vis.graph.l.grid[i][j] !== curAN && (i >= pos.col && j >= pos.row)) {
+
+
+             */
+            /* Dynamically enlarge grid. */
+            /*
+             console.log("#CELL " + i + ", " + j);
+             console.log("col: " + i + " -> " + (i + d.l.depth - 1));
+             console.log("row: " + j + " -> " + (j + d.l.width - 1));
+
+
+             */
+            /* Enlarge grid depth. */
+            /*
+             var s = vis.graph.l.depth,
+             t = 0;
+             if (s < (i + d.l.depth)) {
+             while (s < (i + d.l.depth)) {
+             vis.graph.l.grid.push([]);
+             for (t = 0; t < vis.graph.l.width; t++) {
+             vis.graph.l.grid[s][t] = "undefined";
+             }
+             s++;
+             }
+             vis.graph.l.depth = i + d.l.depth;
+             }
+
+             */
+            /* Enlarge grid width. */
+            /*
+             s = 0;
+             t = vis.graph.l.width;
+             if (t < (j + d.l.width)) {
+             for (; s < vis.graph.l.depth; s++) {
+             for (t = vis.graph.l.width; t < j + d.l.width; t++) {
+             vis.graph.l.grid[s][t] = "undefined";
+             }
+             }
+             vis.graph.l.width = j + d.l.width;
+             }
+
+
+             */
+            /* Move affected cells. */
+            /*
+             */
+            /* Set new col and row for node. */
+            /*
+             var shiftAN = vis.graph.l.grid[i][j];
+             shiftAN.col = i + d.l.depth - 1;
+             shiftAN.row = j + d.l.width - 1;
+
+             shiftAN.x = shiftAN.col * cell.width;
+             shiftAN.y = shiftAN.row * cell.height;
+
+             */
+            /* Align selected node. */
+            /*
+             updateNode(d3.select("#gNodeId-" + shiftAN.autoId), shiftAN, shiftAN.x, shiftAN.y);
+
+             */
+            /* Align adjacent links. */
+            /*
+             updateLink(shiftAN, shiftAN.x, shiftAN.y);
+
+
+             console.log(vis.graph.l.grid[i][j]);
+             console.log(vis.graph.l.grid[i + d.l.depth - 1][j + d.l.width - 1]);
+             console.log(shiftAN);
+
+             vis.graph.l.grid[i][j] = "undefined";
+             vis.graph.l.grid[i + d.l.depth - 1][j + d.l.width - 1] = shiftAN;
+             console.log("HERE");
+             console.log(vis.graph.l.grid[i][j]);
+             console.log(vis.graph.l.grid[i + d.l.depth - 1][j + d.l.width - 1]);
+
+             //updateNodeDoi();
+
+             console.log(vis.graph.l);
+             console.log(vis.graph.l.depth);
+             console.log(vis.graph.l.width);
+             }
+             }
+             }*/
 
             /* Set node visibility. */
             d3.select("#nodeId-" + d.autoId).classed("hiddenNode", true);
@@ -1716,6 +1837,7 @@ var provvisRender = function () {
 
         /* Node tooltips. */
         node.on("mouseover", function (d) {
+            var self = d3.select(this);
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
                 createHTMLKeyValuePair("id", d.id) + "<br>" +
                 createHTMLKeyValuePair("col", d.col) + "<br>" +
@@ -1723,7 +1845,8 @@ var provvisRender = function () {
                 createHTMLKeyValuePair("row", d.row) + "<br>" +
                 createHTMLKeyValuePair("y", d.y), event);
 
-            d3.select(this).classed("mouseoverNode", true);
+            self.classed("mouseoverNode", true);
+            self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
                 createHTMLKeyValuePair("id", d.id) + "<br>" +
@@ -1732,9 +1855,11 @@ var provvisRender = function () {
                 createHTMLKeyValuePair("row", d.row) + "<br>" +
                 createHTMLKeyValuePair("y", d.y), event);
 
-        }).on("mouseout", function () {
+        }).on("mouseout", function (d) {
+            var self = d3.select(this);
             hideTooltip();
-            d3.select(this).classed("mouseoverNode", false);
+            self.classed("mouseoverNode", false);
+            self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
         /* Subanalysis tooltips. */
@@ -1748,6 +1873,7 @@ var provvisRender = function () {
                 createHTMLKeyValuePair("y", d.y), event);
 
             self.classed("mouseoverNode", true);
+            self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
                 createHTMLKeyValuePair("id", d.id) + "<br>" +
@@ -1755,11 +1881,12 @@ var provvisRender = function () {
                 createHTMLKeyValuePair("x", d.x) + "<br>" +
                 createHTMLKeyValuePair("row", d.row) + "<br>" +
                 createHTMLKeyValuePair("y", d.y), event);
-        }).on("mouseout", function () {
+        }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
 
             self.classed("mouseoverNode", false);
+            self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
         /* Analysis tolltips. */
@@ -1773,6 +1900,7 @@ var provvisRender = function () {
                 createHTMLKeyValuePair("y", d.y), event);
 
             self.classed("mouseoverNode", true);
+            self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
                 createHTMLKeyValuePair("id", d.id) + "<br>" +
@@ -1780,30 +1908,34 @@ var provvisRender = function () {
                 createHTMLKeyValuePair("x", d.x) + "<br>" +
                 createHTMLKeyValuePair("row", d.row) + "<br>" +
                 createHTMLKeyValuePair("y", d.y), event);
-
-        }).on("mouseout", function () {
+        }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
 
             self.classed("mouseoverNode", false);
+            self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
         /* On mouseover subanalysis bounding box. */
         saBBox.on("mouseover", function () {
             var self = d3.select(this);
             self.classed("mouseoverBBox", true);
-        }).on("mouseout", function () {
+            self.select(".labels").attr("clip-path", "");
+        }).on("mouseout", function (d) {
             var self = d3.select(this);
             self.classed("mouseoverBBox", false);
+            self.select(".labels").attr("clip-path", "url(#saBBClipId-" + d.autoId + ")");
         });
 
         /* On mouseover analysis bounding box. */
         aBBox.on("mouseover", function () {
             var self = d3.select(this);
             self.classed("mouseoverBBox", true);
-        }).on("mouseout", function () {
+            self.select(".labels").attr("clip-path", "");
+        }).on("mouseout", function (d) {
             var self = d3.select(this);
             self.classed("mouseoverBBox", false);
+            self.select(".labels").attr("clip-path", "url(#aBBClipId-" + d.autoId + ")");
         });
 
         /* Link tooltips. */
@@ -2228,17 +2360,32 @@ var provvisRender = function () {
 
         handleToolbar(graph);
 
+        /* Handle click separation on nodes. */
+        var domNodesetClickTimeout;
         domNodeset.on("click", function (d) {
             if (d3.event.defaultPrevented) return;
+            clearTimeout(domNodesetClickTimeout);
 
-            if (!draggingActive) {
-                handleNodeSelection(d);
-                updateTableContent(d);
-            }
+
+            /* Click event is executed after 100ms unless the double click event below clears the click event timeout.*/
+            domNodesetClickTimeout = setTimeout(function () {
+                if (!draggingActive) {
+                    handleNodeSelection(d);
+                    updateTableContent(d);
+                }
+            }, 200);
         });
 
+        domNodeset.on("dblclick", function (d) {
+            if (d3.event.defaultPrevented) return;
+            clearTimeout(domNodesetClickTimeout);
+
+            /* Double click event is executed when this event is triggered before the click timeout has finished. */
+            handleCollapseExpandNode(d, "e");
+        });
+
+        /* Handle click separation on other dom elements. */
         var bRectClickTimeout;
-        /* Handle click separation. */
         d3.selectAll(".brect, .link, .hLink, .vLine, .hLine", ".cell").on("click", function () {
             if (d3.event.defaultPrevented) return;
             clearTimeout(bRectClickTimeout);

@@ -146,7 +146,7 @@ var provvisDecl = function () {
         /* Layout specific. */
         this.l = {
 
-            /* Top sort marking [Kahn 1962]. */
+            /* Top sort markings [Kahn 1962]. */
             ts: {removed: false},
 
             /* Graph attributes. */
@@ -256,7 +256,6 @@ var provvisDecl = function () {
         this.inputs = d3.map();
         this.outputs = d3.map();
         this.links = d3.map();
-        this.isOutputAnalysis = false;
     };
 
     Subanalysis.prototype = Object.create(BaseNode.prototype);
@@ -281,7 +280,7 @@ var provvisDecl = function () {
         /* Layout computation specific flags. */
         this.l = {
 
-            /* Top sort marking [Kahn 1962]. */
+            /* Top sort markings [Kahn 1962]. */
             ts: {removed: false},
 
             /* Vertical coord assignment markings [Brandes and Köpf 2002]. */
