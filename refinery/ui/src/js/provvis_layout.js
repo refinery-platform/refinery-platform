@@ -701,6 +701,7 @@ var provvisLayout = function () {
      * Layout node columns.
      * @param gNodes Layer grouped array of nodes.
      * @param parent The parent node.
+     * @returns {Array} Layered analysis nodes.
      */
     var layoutNodes = function (gNodes, parent) {
 
@@ -722,6 +723,8 @@ var provvisLayout = function () {
         /* TODO: In development. */
         /* Update row placements. */
         verticalCoordAssignment(bcgNodes, parent);
+
+        return bcgNodes;
     };
 
 
@@ -1015,40 +1018,83 @@ var provvisLayout = function () {
 
     /**
      * Reorder subanalysis layout to minimize edge crossings.
-     * @param aNodes Analysis nodes.
-     * @param saNodes Subanalysis nodes.
+     * @param bclgNodes Barcyenter sorted, layered and grouped analysis nodes.
      */
-    var reorderSubanalysisNodes = function (aNodes, saNodes) {
+    var reorderSubanalysisNodes = function (bclgNodes) {
 
         console.log("#REORDER_SUBANALYES");
-        console.log(aNodes[0].parent.l.grid);
 
         /* Initializations. */
-        aNodes.filter(function (an) {
-            return an.nodeType !== "dummy";
-        }).forEach(function (an) {
+        bclgNodes.forEach(function (l, i) {
+            l.forEach(function (an) {
 
-            /* Initialize analysis dimensions. */
-            an.l.depth = 1;
-            an.l.width = an.children.size();
+                /* Initialize analysis dimensions. */
+                an.l.depth = 1;
+                an.l.width = an.children.size();
 
-            /* Create grid for subanalyses. */
-            initNodeGrid(an);
+                /* Create grid for subanalyses. */
+                initNodeGrid(an);
 
-            /* Initialize subanalysis col and row attributes. */
-            an.children.values().forEach(function (san, i) {
+                /* List which contains the subanalysis to reorder aftewards. */
+                var colList = [];
 
-                /* Only one column does exist in this view. */
-                san.col = 0;
-                //san.row = an.children.size() - i - 1;
-                san.row = i;
+                /* Initialize subanalysis col and row attributes. */
+                an.children.values().forEach(function (san, j) {
 
-                /* Set grid cell. */
-                an.l.grid[san.col][san.row] = san;
+                    /* Only one column does exist in this view. */
+                    san.col = 0;
+                    san.row = j;
 
-                /* TODO: Barycenter ordering. */
+                    /* The preceding analysis marks the fixed layer. */
+                    if (!an.preds.empty()) {
 
+                        /* Barycenter ordering. */
+                        var degree = 1,
+                            accRows = 0,
+                            usedCoords = [],
+                            delta = 0;
 
+                        degree = san.preds.size();
+
+                        /* Accumulate san row as well as an row for each pred. */
+                        san.preds.values().forEach(function (psan) {
+                            accRows += psan.row + ((psan.parent.row) ? psan.parent.row : 0);
+                        });
+
+                        /* If any subanalysis within the analysis has the same barycenter value, increase it by a small value. */
+                        if (usedCoords.indexOf(accRows / degree) === -1) {
+                            san.l.bcOrder = accRows / degree;
+                            usedCoords.push(accRows / degree);
+                        } else {
+                            san.l.bcOrder = accRows / degree + delta;
+                            usedCoords.push(accRows / degree + delta);
+                            delta += 0.01;
+                        }
+
+                        /* Push into array to reorder afterwards. */
+                        colList.push(san);
+                    }
+
+                });
+
+                /* Sort subanalysis nodes. */
+                colList.sort(function (a,b) {
+                   return a.l.bcOrder - b.l.bcOrder;
+                });
+
+                /* Reorder subanalysis nodes. */
+                colList.forEach( function (d,j) {
+                    d.row = j;
+                });
+
+                /* Set grid. */
+                an.children.values().forEach(function (san) {
+                    /* Set grid cell. */
+                    an.l.grid[san.col][san.row] = san;
+                });
+
+                /* Reset reorder list. */
+                colList = [];
             });
         });
     };
@@ -1112,7 +1158,7 @@ var provvisLayout = function () {
             console.log(gANodes);
 
             /* TODO: in progress. */
-            layoutNodes(gANodes, graph);
+            var bclgNodes = layoutNodes(gANodes, graph);
 
 
             /* Remove dummy nodes. */
@@ -1121,25 +1167,28 @@ var provvisLayout = function () {
             console.log("#aNodes");
             console.log(graph.aNodes);
 
+
+            /* Reset layout properties for links. */
+            graph.aNodes.forEach(function (an) {
+                an.l.ts.removed = false;
+            });
+
+            graph.links.forEach(function (l) {
+                l.l.ts.removed = false;
+            });
+
+            /* SUBANALYSIS LAYOUT. */
+            console.log("");
+            console.log("SUBANALYIS");
+            console.log("==========");
+
+            console.log(bclgNodes);
+
+            reorderSubanalysisNodes(bclgNodes);
+
         } else {
             console.log("Error: Graph is not acyclic!");
         }
-
-        /* Reset layout properties for links. */
-        graph.aNodes.forEach(function (an) {
-            an.l.ts.removed = false;
-        });
-
-        graph.links.forEach(function (l) {
-            l.l.ts.removed = false;
-        });
-
-        /* SUBANALYSIS LAYOUT. */
-        console.log("");
-        console.log("SUBANALYIS");
-        console.log("==========");
-
-        reorderSubanalysisNodes(graph.aNodes, graph.saNodes);
 
 
         /* FILES/TOOLS LAYOUT. */
