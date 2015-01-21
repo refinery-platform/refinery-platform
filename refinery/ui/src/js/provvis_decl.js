@@ -286,7 +286,10 @@ var provvisDecl = function () {
             /* Vertical coord assignment markings [Brandes and Köpf 2002]. */
             neighbor: false,
             type0: false,
-            type1: false
+            type1: false,
+
+            /* Replaced by dummy links. */
+            gap: false
         };
 
         Link.numInstances = (Link.numInstances || 0) + 1;

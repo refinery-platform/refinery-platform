@@ -612,7 +612,9 @@ var provvisRender = function () {
 
         /* Draw highlighting links. */
         vis.canvas.append("g").classed({"aHLinks": true}).selectAll(".hLink")
-            .data(graph.aLinks)
+            .data(graph.aLinks.filter(function (l) {
+                return !l.l.gap;
+            }))
             .enter().append("path")
             .attr("d", function (l) {
                 var srcX = (l.source instanceof provvisDecl.Analysis) ? l.source.x : l.source.parent.parent.x,
@@ -634,7 +636,9 @@ var provvisRender = function () {
 
         /* Draw normal links. */
         vis.canvas.append("g").classed({"aLinks": true}).selectAll(".link")
-            .data(graph.aLinks)
+            .data(graph.aLinks.filter(function (l) {
+                return !l.l.gap;
+            }))
             .enter().append("path")
             .attr("d", function (l) {
                 var srcX = (l.source instanceof provvisDecl.Analysis) ? l.source.x : l.source.parent.parent.x,
@@ -2658,14 +2662,41 @@ var provvisRender = function () {
             });
 
             /* Update analysis node filter. */
-            vis.graph.aNodes.filter(excludeDummyAnalyses).forEach(function (an) {
-                an.filtered = false;
-                an.children.values().forEach(function (san) {
-                    if (san.filtered) {
-                        an.filtered = true;
-                    }
-                });
+            vis.graph.aNodes.forEach(function (an) {
+                if (an.uuid === "dummy") {
+                    an.filtered = false;
+                }
+                else if (an.children.values().some(function (san) {
+                    return san.filtered;
+                })) {
+                    an.filtered = true;
+                } else {
+                    an.filtered = false;
+                }
                 an.doi.filteredChanged();
+            });
+
+            /* Update dummy paths based on start and end node. */
+            vis.graph.aNodes.filter(function (dan) {
+                return dan.uuid === "dummy";
+            }).forEach(function (an) {
+                var curAN = an;
+
+                /* Start node of dummy path. */
+                if (curAN.preds.values()[0].uuid !== "dummy" && curAN.preds.values()[0].filtered) {
+                    while (curAN.succs.values()[0].uuid === "dummy") {
+                        curAN = curAN.succs.values()[0];
+                    }
+
+                    /* End node of dummy path. If both start and end node are filtered, set path as filtered. */
+                    if (curAN.succs.values()[0].uuid !== "dummy" && curAN.succs.values()[0].filtered) {
+                        while (!curAN.preds.values()[0].filtered) {
+                            curAN.filtered = true;
+                            curAN = curAN.preds.values()[0];
+                        }
+                        curAN.filtered = true;
+                    }
+                }
             });
 
             updateNodeDoi();

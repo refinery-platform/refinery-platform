@@ -124,14 +124,14 @@ var provvisLayout = function () {
             });
         });
 
-        console.log("#BARYORDER");
+        /*console.log("#BARYORDER");
         console.log(barycenterOrderedNodes);
         barycenterOrderedNodes.forEach(function (l, i) {
             console.log("layer " + i);
             l.forEach(function (d) {
                 console.log(d.autoId + " " + d.l.rowBK.left);
             });
-        });
+        });*/
 
         return barycenterOrderedNodes;
     };
@@ -338,9 +338,9 @@ var provvisLayout = function () {
      * @param parent The parent node.
      */
     var verticalAlignment = function (bclgNodes, parent) {
-        markCandidates(bclgNodes, parent.aLinks);
+        markCandidates(bclgNodes, parent.aLinks.filter(function (l) {return !l.l.gap;}));
 
-        markConflictsLeft(bclgNodes, parent.aLinks);
+        markConflictsLeft(bclgNodes, parent.aLinks.filter(function (l) {return !l.l.gap;}));
 
         console.log("#CONFLICTS");
         bclgNodes.forEach(function (l, i) {
@@ -788,7 +788,8 @@ var provvisLayout = function () {
 
         /* First, backup original connections. */
         graph.aLinks.forEach(function (l) {
-            /* When the link is longer than one column, add dummy nodes. */
+
+            /* When the link is longer than one column, add dummy nodes and links. */
             var gapLength = Math.abs(l.source.parent.parent.col - l.target.parent.parent.col);
 
             if (gapLength > 1) {
@@ -926,6 +927,9 @@ var provvisLayout = function () {
                     curLink = graph.aLinks[newLinkId + j + 1];
                     j++;
                 }
+
+                /* Exclude original analysis link from aLink container. */
+                l.l.gap = true;
             }
         });
     };
