@@ -1177,6 +1177,8 @@ var provvisRender = function () {
             });
         };
 
+        var anBBoxCoords = Object.create(null);
+
         /* Expand. */
         if (keyStroke === "e" && (d.nodeType === "analysis" || d.nodeType === "subanalysis")) {
 
@@ -1349,7 +1351,7 @@ var provvisRender = function () {
                 d3.select("#BBoxId-" + d.autoId).classed("hiddenBBox", false);
 
                 /* Compute bounding box for analysis child nodes. */
-                var anBBoxCoords = getAnalysisBBoxCoords(d.parent);
+                anBBoxCoords = getAnalysisBBoxCoords(d.parent);
 
                 /* Adjust analysis bounding box. */
                 d3.selectAll("#BBoxId-" + d.parent.autoId + ", #aBBClipId-" + d.parent.autoId).selectAll("rect")
@@ -1365,15 +1367,15 @@ var provvisRender = function () {
             } else {
 
                 /* Compute bounding box for analysis child nodes. */
-                var anBBoxCords = getBBoxCords(d, 1);
+                anBBoxCoords = getBBoxCords(d, 1);
 
                 /* Enlarge analysis bounding box. */
                 d3.select("#BBoxId-" + d.autoId).select("rect")
                     .attr("width", function () {
-                        return anBBoxCords.x.max - anBBoxCords.x.min;
+                        return anBBoxCoords.x.max - anBBoxCoords.x.min;
                     })
                     .attr("height", function () {
-                        return anBBoxCords.y.max - anBBoxCords.y.min;
+                        return anBBoxCoords.y.max - anBBoxCoords.y.min;
                     });
 
                 /* Update links. */
@@ -1426,6 +1428,20 @@ var provvisRender = function () {
                 updateLink(d.parent, d.parent.x, d.parent.y);
 
             } else {
+                /* If the selected subanalysis is the last remaining to collapse, adjust bounding box. */
+                if (!d.parent.parent.children.values().some(function (san) {return san.hidden;})) {
+                    /* Compute bounding box for analysis child nodes. */
+                    anBBoxCoords = getBBoxCords(d.parent.parent, 1);
+
+                    /* Adjust analysis bounding box. */
+                    d3.select("#BBoxId-" + d.parent.parent.autoId).select("rect")
+                        .attr("width", function () {
+                            return anBBoxCoords.x.max - anBBoxCoords.x.min;
+                        })
+                        .attr("height", function () {
+                            return anBBoxCoords.y.max - anBBoxCoords.y.min;
+                        });
+                }
                 /* Update links. */
                 updateLink(d.parent.parent, d.parent.parent.x, d.parent.parent.y);
             }
