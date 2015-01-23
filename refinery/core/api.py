@@ -368,11 +368,17 @@ class StatisticsResource(Resource):
         results = [StatisticsObject(user_count, group_count, files_count, dataset_summary, workflow_summary, project_summary)]
         return results
 
+
 class SharedPermissionResource(Resource):
     username = fields.CharField(attribute="username")
-    shared_res_name = fields.CharField(attribute="shared_res_name")
-    keys = fields.ListField(attribute="keys")
+    keys = fields.DictField(attribute="keys")
     permission_map = fields.DictField(attribute="permission_map")
+
+    dummy_keys = {
+        "DataSet": ["DS1", "DS2"],
+        "Project": ["P1", "P2", "P3"],
+        "Workflow": ["W1", "W2"]
+    }
 
     dummy_permission_map_test = {
         "G1": {
@@ -389,10 +395,60 @@ class SharedPermissionResource(Resource):
         }
     }
 
-    
-    def getSharingStatus(username, shared_res_type, shared_res_name):
-        pass
+    def get_keys(self, username_key):
+        def get_res_type_keys(res_type):
+            user_list = filter(lambda u: u.username == username_key, User.objects.all())
+            user = None if len(user_list) == 0 else user_list[0]
+            user_groups = user.groups.all()
+            filtered_res = filter(lambda res: res.get_owner() == user, res_type.objects.all())
+            return map(lambda res: res.name, filtered_res)
+        
+        final_key_map = {
+            "DataSet": get_res_type_keys(DataSet),
+            "Project": get_res_type_keys(Project),
+            "Workflow": get_res_type_keys(Workflow)
+        }
 
+        return final_key_map
+
+    def get_permission_map(self, username_key):
+        user_list = filter(lambda u: u.username == username_key, User.objects.all())
+        user = None if len(user_list) == 0 else user_list[0]
+        user_groups = user.groups.all()
+
+        def get_res_map(res_type):
+            # all the resources that are owned by the user
+            filtered_res = filter(lambda res: res.get_owner() == user, res_type.objects.all())
+            
+            # the groups that the user is part of
+            groups = []            
+
+            # the final resulting dictionary for one type of resource
+            total_dict = {}
+            for i in filtered_res:
+                # the specific dictionary for one resource
+                res_dict = {}
+                
+                # groups.extend(map(lambda res: res["group"], i.get_groups().group_ptr))
+
+                # see if extended group or group is preferred just have to remove the group_ptr
+                res_group_shared_with = map(lambda res: (res["group"].group_ptr.name, {"read": res["read"], "change": res["change"]}), i.get_groups())
+                for j in res_group_shared_with:
+                    res_dict[j[0]] = j[1]
+
+                total_dict[i.name] = res_dict
+
+            return total_dict
+
+        final_permission_map = {
+            "DataSet": get_res_map(DataSet),
+            "Project": get_res_map(Project),
+            "Workflow": get_res_map(Workflow)
+        }
+
+        return final_permission_map
+  
+    
     class Meta:
         resource_name = "shared_permission"
         object_class = SharedPermissionObject
@@ -407,7 +463,28 @@ class SharedPermissionResource(Resource):
 
     def get_object_list(self, request):
         #if "username" in request.GET and "shared_resource" in request.GET:
-        return [SharedPermissionObject("username_test", "resname_test", ["G1", "G2", "G3"], self.dummy_permission_map_test)]   
+        #return [SharedPermissionObject("username7", self.dummy_keys, self.get_permission_map("username5"))] 
+        return [SharedPermissionObject("username7", self.get_keys("username7"), self.get_permission_map("username7"))]
         #else:
 
 
+"""
+    def get_keys(shared_res_type
+
+    def get_permission_map(username_key, shared_res_type, shared_res_key):
+        
+        # get correct user from User.objects.all(); if doesn't exist, return blank
+        user_list = filter(lambda user: user.username == username_key, User.objects.all())
+        user = None if len(user_list) == 0 else user_list[0]
+        user_groups = user.groups.all()
+        
+        # get correct sharable res depending on sharable res type; if doesn't exist, return blank
+        # TODO: confirm if this is the correct way of checking classes. it seems to work. for now
+        
+        def filter_from_res(shared_res, key):
+            filtered_list = filter(lambda x: x.name == key, shared_res.objects.all())
+            return (None if len(filtered_list) == 0 else filtered_list[0])
+
+        shared_res = filter_from_res(shared_res_type, shared_res_key)
+"""
+    
