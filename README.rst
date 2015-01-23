@@ -65,6 +65,10 @@ Connect to the initialized VM:
     $ workon refinery-platform
     $ ./manage.py
 
+Log in to Refinery (http://192.168.50.50:8000/) with the default guest user account (username: guest, password: guest).
+
+Log in to Django admin UI (http://192.168.50.50:8000/admin/) with the default superuser account (username: admin, password: refinery).
+
 Please see `installation notes
 <https://refinery-platform.readthedocs.org/en/latest/administrator/setup.html>`_
 for more details, including information on how to configure Galaxy for this setup.

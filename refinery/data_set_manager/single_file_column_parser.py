@@ -7,95 +7,124 @@ import csv
 import file_server
 import logging
 import operator
-import os
+import tempfile
 from annotation_server.models import species_to_taxon_id, Taxon
 from data_set_manager.models import Investigation, Study, Node, Attribute, Assay
 from data_set_manager.tasks import create_dataset
+from file_store.models import generate_file_source_translator
 from file_store.tasks import create, import_file
 
 
-# get module logger
 logger = logging.getLogger(__name__)
 
 
-'''
-from data_set_manager.single_file_column_parser import SingleFileColumnParser
-p = SingleFileColumnParser()
-p.file_permanent = False
-p.run( "/Users/nils/Data/Refinery/modENCODe/modENCODE_refinery_example.txt" )
-'''
-
-
 class SingleFileColumnParser:
-    '''
-    Creates a source -> sample -> assay -> raw data file sequences. Attaches all attributes to the sample node. 
+    """Creates a source -> sample -> assay -> raw data file sequences. Attaches all attributes to the sample node.
     
     Assumptions:
     1. Each line corresponds to a data file that will be treated as a "raw data file".
     2. Each data file occurs only once in the file.
     3. All information relating to a given data file can be found in the same line of the input file.
     4. First row contains the column headers and there is one non-empty string for each column.
-    
+
     Defaults:
     delimiter = tab
     file_column_index = last column
     file_permanent = files will be added to the file store permanently
-    '''
-    
-    # single character to be used to separate columns 
-    delimiter = "\t"
-    
-    # absolute path used prefix data file names and paths encountered in the input file 
-    file_base_path = None
-    
-    # flag indicating whether files should be stored permanently in the file store or only temporarily 
-    file_permanent = True
 
-    # column of the input file that contains the path to the input file
-    # May not be None. Negative values are allowed and are counted from the last column of the file (-1 = last column)
-    file_column_index = -1
-    
-    # column of the input file that contains the path to an auxiliary file (e.g. for visualization) associated with the input file
-    # May be None. Negative values are allowed and are counted from the last column of the file (-1 = last column)
-    auxiliary_file_column_index = None
-    
-    # column containing species names or ids, if set to None the parser will not set this information
-    species_column_index = None
+    """
+    def __init__(self, metadata_file, file_source_translator,
+                 source_column_index, data_file_column_index=-1,
+                 auxiliary_file_column_index=None, file_base_path="",
+                 data_file_permanent=False, species_column_index=None,
+                 genome_build_column_index=None, annotation_column_index=None,
+                 sample_column_index=None, assay_column_index=None,
+                 column_index_separator=" "):
+        """Prepare metadata file for parsing
 
-    # column containing genome build ids, if set to None the parser will not set this information
-    genome_build_column_index = None
-    
-    # column containing boolean flag to indicate whether the data file in this row should be treated as an annotation file
-    # only those rows where this flag is "True"/"true"/"TRUE"/etc. will be treated a annotation files
-    # all others (most notably those where the field is empty) will be treated as regular files  
-    annotation_column_index = None     
-    
-    # list of column indices to be used for source, sample and assay grouping (may be None)
-    # values in these columns will be combined using the value in column_index_separator  
-    source_column_index = None
-    sample_column_index = None
-    assay_column_index = None
-    column_index_separator = " "
-    
-    # non-public variables
-    _logger = None
-    _current_file = None
-    _current_reader = None    
+        """
+        # single character to be used to separate columns
+        self.delimiter = "\t"
 
-    def __init__(self):
-        logger = logging.getLogger(__name__)
-        # create console handler with a higher log level
-        logger.addHandler( logging.StreamHandler() )
-        
+        # metadata file object
+        self.metadata_file = metadata_file
+        self.metadata_file.seek(0)
+        try:
+            # need to use splitlines() to avoid potential newline errors
+            # http://madebyknight.com/handling-csv-uploads-in-django/
+            self.metadata_reader = csv.reader(
+                self.metadata_file.read().splitlines(),
+                dialect="excel-tab",
+                delimiter=self.delimiter)
+        except csv.Error:
+            logger.exception("Unable to read file %s", str(self.metadata_file))
+            raise
+        # compute number of columns
+        self.headers = self.metadata_reader.next()
+        self.num_columns = len(self.headers)
+
+        # data file reference converter
+        self.file_source_translator = file_source_translator
+
+        # column of the input file that contains the path to the input file
+        # May not be None. Negative values are allowed and are counted from the
+        # last column of the file (-1 = last column)
+        if data_file_column_index < 0:
+            self.file_column_index = self.num_columns + data_file_column_index
+        else:
+            self.file_column_index = data_file_column_index
+
+        # column of the input file that contains the path to an auxiliary file
+        # (e.g. for visualization) associated with the input file
+        # May be None. Negative values are allowed and are counted from the last
+        # column of the file (-1 = last column)
+        if auxiliary_file_column_index and auxiliary_file_column_index < 0:
+            self.auxiliary_file_column_index =\
+                self.num_columns + auxiliary_file_column_index
+        else:
+            self.auxiliary_file_column_index = auxiliary_file_column_index
+
+        # absolute path used prefix data file names and paths encountered in
+        # the input file
+        self.file_base_path = file_base_path
+
+        # flag indicating whether files should be stored permanently in the
+        # file store or only temporarily
+        self.file_permanent = data_file_permanent
+
+        # column containing species names or ids, if set to None the parser will
+        # not set this information
+        self.species_column_index = species_column_index
+
+        # column containing genome build ids, if set to None the parser will not
+        # set this information
+        self.genome_build_column_index = genome_build_column_index
+
+        # column containing boolean flag to indicate whether the data file in
+        # this row should be treated as an annotation file
+        # only those rows where this flag is "True"/"true"/"TRUE"/etc. will be
+        # treated a annotation files
+        # all others (most notably those where the field is empty) will be
+        # treated as regular files
+        self.annotation_column_index = annotation_column_index
+
+        # list of column indices to be used for source, sample and assay
+        # grouping (may be None), values in these columns will be combined using
+        # column_index_separator
+        self.source_column_index = source_column_index
+        self.sample_column_index = sample_column_index
+        self.assay_column_index = assay_column_index
+        self.column_index_separator = column_index_separator
+
     def _create_investigation(self):
         return Investigation.objects.create()
-        
+
     def _create_study(self, investigation, file_name ):
         return Study.objects.create( investigation=investigation, file_name=file_name )   
 
     def _create_assay(self, study, file_name ):
         return Assay.objects.create( study=study, file_name=file_name )
-    
+
     def _get_species( self, row ):
         if self.species_column_index is not None:            
             try:                
@@ -108,7 +137,6 @@ class SingleFileColumnParser:
                 return taxon_id_options[0][1];  
             except Taxon.DoesNotExist:
                 return None;
-                            
         return None        
 
     def _get_genome_build( self, row ):
@@ -119,176 +147,121 @@ class SingleFileColumnParser:
     def _is_annotation( self, row ):
         if self.annotation_column_index is not None:
             return bool( "true" == row[self.annotation_column_index].lower().strip() )        
-        return False        
+        return False
 
-    
     def _create_name(self, row, internal_column_index, internal_file_column_index ):        
         if internal_column_index is None:
             return row[internal_file_column_index].strip()
         else:
-            return self.column_index_separator.join( operator.itemgetter(*internal_column_index)(row) )            
+            return self.column_index_separator.join( operator.itemgetter(*internal_column_index)(row) )
 
-    def _parse_file(self):
-        try:
-            # need to use splitlines() to avoid potential newline errors
-            # http://madebyknight.com/handling-csv-uploads-in-django/
-            self._current_reader = csv.reader(
-                self._current_file.read().splitlines(),
-                dialect="excel-tab",
-                delimiter=self.delimiter)
-        except:
-            logger.exception("Unable to read file %s", str(self._current_file))
-
+    def run(self):
         # create investigation, study and assay objects
         investigation = self._create_investigation()
+        #FIXME: self.metadata_file.name may not be informative, especially in
+        # case of temp files that don't exist on disk
         study = self._create_study(investigation=investigation,
-                                   file_name=self._current_file.name)
+                                   file_name=self.metadata_file.name)
         assay = self._create_assay(study=study,
-                                   file_name=self._current_file.name)
+                                   file_name=self.metadata_file.name)
 
         #import in file as "pre-isa" file
         logger.info("trying to add pre-isa archive file %s",
-                    self._current_file.name)
-        investigation.pre_isarchive_file = create(self._current_file.name,
+                    self.metadata_file.name)
+        #FIXME: this will not create a FileStoreItem if self.metadata_file does
+        # not exist on disk (e.g., a file object like TemporaryFile)
+        investigation.pre_isarchive_file = create(self.metadata_file.name,
                                                   permanent=True)
-        import_file(investigation.pre_isarchive_file, refresh=True,
-                    permanent=True)
+        import_file(
+            investigation.pre_isarchive_file, refresh=True, permanent=True)
         investigation.save()
-            
-        # read column headers
-        headers = []
-        headers = self._current_reader.next()
-        
-        # compute absolute file_column_index (in case a negative value was provided)
-        if self.file_column_index >= 0:
-            internal_file_column_index = self.file_column_index
-        else:                
-            internal_file_column_index = len( headers ) + self.file_column_index
 
-        # compute absolute auxiliary_file_column_index (in case a negative value was provided)
-        if self.auxiliary_file_column_index is not None:
-            if self.auxiliary_file_column_index >= 0:
-                internal_auxiliary_file_column_index = self.auxiliary_file_column_index
-            else:                
-                internal_auxiliary_file_column_index = len( headers ) + self.auxiliary_file_column_index
-        else:
-            internal_auxiliary_file_column_index = None
-        
-        # TODO: test if there are fewer columns than required        
-        logger.debug( "Parsing with file column %s and auxiliary file column %s." % ( internal_file_column_index, internal_auxiliary_file_column_index ) )
-        
+        #TODO: test if there are fewer columns than required
+        logger.debug("Parsing with file column %s and auxiliary file column %s",
+                     self.file_column_index, self.auxiliary_file_column_index)
+
         # iterate over non-header rows in file
-        for row in self._current_reader:
-            
-                
-            # TODO: resolve relative indices
-            internal_source_column_index = self.source_column_index            
-            internal_sample_column_index = self.sample_column_index            
-            internal_assay_column_index = self.assay_column_index            
-                
+        for row in self.metadata_reader:
+            #TODO: resolve relative indices
+            internal_source_column_index = self.source_column_index
+            internal_sample_column_index = self.sample_column_index
+            internal_assay_column_index = self.assay_column_index
 
             # add data file to file store
-            file_uuid = None            
-
-            if self.file_base_path is None:
-                file_path = row[internal_file_column_index].strip()
-            else:
-                file_path = os.path.join( self.file_base_path, row[internal_file_column_index].strip() )
-
-            file_uuid = create( source=file_path, permanent=self.file_permanent )
-                                    
-            if file_uuid is not None:
-                logger.debug( "Added data file " + file_path + " to file store." )
-            else:
-                logger.exception( "Unable to add data file " + file_path + " to file store." )            
-
+            data_file_path = self.file_source_translator(
+                row[self.file_column_index])
+            data_file_uuid = create(
+                source=data_file_path, permanent=self.file_permanent)
 
             # add auxiliary file to file store
-            auxiliary_file_uuid = None
-            
-            if internal_auxiliary_file_column_index is not None:
-                if self.file_base_path is None:
-                    auxiliary_file_path = row[internal_auxiliary_file_column_index].strip()
-                else:
-                    auxiliary_file_path = os.path.join( self.file_base_path, row[internal_auxiliary_file_column_index].strip() )
-                    
-                auxiliary_file_uuid = create( source=auxiliary_file_path, permanent=self.file_permanent )
-    
-                if auxiliary_file_uuid is not None:
-                    logger.debug( "Added auxiliary file " + auxiliary_file_path + "  to file store." )
-                else:
-                    logger.exception( "Unable to add auxiliary file " + file_path + " to file store." )
-                    
-                
+            if self.auxiliary_file_column_index:
+                auxiliary_file_path = self.file_source_translator(
+                    row[self.auxiliary_file_column_index])
+                auxiliary_file_uuid = create(
+                    source=auxiliary_file_path, permanent=self.file_permanent)
+            else:
+                auxiliary_file_uuid = None
+
             # add files to file server
-            file_server.models.add( file_uuid, auxiliary_file_uuid );
+            #TODO: add error handling in case of None values for UUIDs
+            file_server.models.add(data_file_uuid, auxiliary_file_uuid);
 
             # create nodes if file was successfully created
             
             # source node
-            source_name = self._create_name(row, internal_source_column_index, internal_file_column_index)                                
+            source_name = self._create_name(
+                row, internal_source_column_index, self.file_column_index)
             source_node, is_source_new = Node.objects.get_or_create(
-                study=study,
-                name=source_name,
-                type=Node.SOURCE )
+                study=study, name=source_name, type=Node.SOURCE)
 
             # sample node
-            sample_name = self._create_name(row, internal_sample_column_index, internal_file_column_index)                                
+            sample_name = self._create_name(
+                row, internal_sample_column_index, self.file_column_index)
             sample_node, is_sample_new = Node.objects.get_or_create(
-                study=study,
-                name=sample_name,
-                type=Node.SAMPLE )            
-            source_node.add_child( sample_node )
+                study=study, name=sample_name, type=Node.SAMPLE)
+            source_node.add_child(sample_node)
 
             # assay node
-            assay_name = self._create_name(row, internal_assay_column_index, internal_file_column_index)                                
+            assay_name = self._create_name(
+                row, internal_assay_column_index, self.file_column_index)
             assay_node, is_assay_new = Node.objects.get_or_create(
-                study=study,
-                assay=assay,
-                name=assay_name,
-                type=Node.ASSAY )            
-            sample_node.add_child( assay_node )
-            
+                study=study, assay=assay, name=assay_name, type=Node.ASSAY )
+            sample_node.add_child(assay_node)
+
             file_node = Node.objects.create(
-                study=study,
-                assay=assay,
-                name=row[internal_file_column_index].strip(),
-                file_uuid=file_uuid,
-                type=Node.RAW_DATA_FILE,
-                species=self._get_species( row ),
-                genome_build=self._get_genome_build( row ),
-                is_annotation=self._is_annotation( row ) )
-            assay_node.add_child( file_node )
-            
-            # iterate over columns to create attributes to attach to the sample node
-            for column_index in range( 0, len( row ) ):
+                study=study, assay=assay,
+                name=row[self.file_column_index].strip(),
+                file_uuid=data_file_uuid, type=Node.RAW_DATA_FILE,
+                species=self._get_species(row),
+                genome_build=self._get_genome_build(row),
+                is_annotation=self._is_annotation(row))
+            assay_node.add_child(file_node)
+
+            # iterate over columns to create attributes to attach to sample node
+            for column_index in range(0, len(row)):
                 # skip data file column
-                if ( internal_file_column_index == column_index ) or ( internal_auxiliary_file_column_index == column_index ) or ( self.annotation_column_index == column_index ):
+                if (self.file_column_index == column_index or
+                    self.auxiliary_file_column_index == column_index or
+                    self.annotation_column_index == column_index):
                     continue
-                
-                # create attribute as characteristic and attach to sample node if the sample node was newly created
+
+                # create attribute as characteristic and attach to sample node
+                # if the sample node was newly created
                 if is_sample_new:
                     attribute = Attribute.objects.create(
-                        node=sample_node,
-                        type=Attribute.CHARACTERISTICS,
-                        subtype=headers[column_index].strip().lower(),
+                        node=sample_node, type=Attribute.CHARACTERISTICS,
+                        subtype=self.headers[column_index].strip().lower(),
                         value=row[column_index].strip() )             
-             
-        return investigation
 
-    def run(self, file_object, archive=None):
-        if self.file_column_index is None:
-            logger.exception(
-                "The index of the column containing the data file paths cannot be None")
-        self._current_file = file_object
-        return self._parse_file()
+        return investigation
 
 
 def process_metadata_table(username, title, metadata_file, source_columns,
-                           data_file_column, data_file_permanent=False,
-                           base_path="", auxiliary_file_column=None,
+                           data_file_column, auxiliary_file_column=None,
+                           base_path="", data_file_permanent=False,
                            species_column=None, genome_build_column=None,
-                           annotation_column=None, slug=None, is_public=False):
+                           annotation_column=None, sample_column=None,
+                           assay_column=None, slug=None, is_public=False):
     """Create a dataset given a metadata file object and its description
 
     :param username: username
@@ -321,21 +294,68 @@ def process_metadata_table(username, title, metadata_file, source_columns,
     :returns: UUID of the new dataset
 
     """
-    parser = SingleFileColumnParser()
-    parser.file_permanent = data_file_permanent
-    parser.file_column_index = data_file_column
-    parser.source_column_index = source_columns
-    parser.column_index_separator = "/"
-    parser.file_base_path = base_path
-    parser.auxiliary_file_column_index = auxiliary_file_column
-    parser.species_column_index = species_column
-    parser.genome_build_column_index = genome_build_column
-    parser.annotation_column_index = annotation_column
-
-    investigation = parser.run(metadata_file)
+    try:
+        source_columns = [abs(int(x)) for x in source_columns]
+    except ValueError as exc:
+        logger.error(exc)
+        raise ValueError("source column indices must be integers")
+    try:
+        data_file_column = int(data_file_column)
+    except ValueError as exc:
+        logger.error(exc)
+        raise ValueError("data file column index must be an integer")
+    try:
+        auxiliary_file_column = int(auxiliary_file_column)
+    except (TypeError, ValueError):
+        auxiliary_file_column = None
+    try:
+        base_path = str(base_path)
+    except ValueError:
+        base_path = ""
+    try:
+        species_column = int(species_column)
+    except (TypeError, ValueError):
+        species_column = None
+    try:
+        genome_build_column = int(genome_build_column)
+    except (TypeError, ValueError):
+        genome_build_column = None
+    try:
+        annotation_column = int(annotation_column)
+    except (TypeError, ValueError):
+        annotation_column = None
+    try:
+        sample_column = int(sample_column)
+    except (TypeError, ValueError):
+        sample_column = None
+    try:
+        assay_column = int(assay_column)
+    except (TypeError, ValueError):
+        assay_column = None
+    try:
+        slug = str(slug)
+    except ValueError:
+        slug = None
+    data_file_permanent = bool(data_file_permanent)
+    is_public = bool(is_public)
+    file_source_translator = generate_file_source_translator(
+        username=username, base_path=base_path)
+    parser = SingleFileColumnParser(
+        metadata_file=metadata_file,
+        file_source_translator=file_source_translator,
+        source_column_index=source_columns,
+        data_file_column_index=data_file_column,
+        auxiliary_file_column_index=auxiliary_file_column,
+        file_base_path=base_path, data_file_permanent=data_file_permanent,
+        species_column_index=species_column,
+        genome_build_column_index=genome_build_column,
+        annotation_column_index=annotation_column,
+        sample_column_index=sample_column, assay_column_index=assay_column,
+        column_index_separator="/")
+    investigation = parser.run()
     investigation.title = title
     investigation.save()
 
-    return create_dataset(investigation_uuid=investigation.uuid,
-                          username=username, dataset_title=title, slug=slug,
-                          public=is_public)
+    return create_dataset(
+        investigation_uuid=investigation.uuid, username=username,
+        dataset_title=title, slug=slug, public=is_public)

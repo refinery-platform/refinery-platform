@@ -3,7 +3,9 @@
 {% load static %}
 
 {% block head_html %}
-<link rel="stylesheet" type="text/css" href="{% static "vendor/ng-grid/ng-grid.css" %}" />
+<link rel="stylesheet" type="text/css"
+      href="{% static "vendor/ng-grid/ng-grid.css" %}"
+      xmlns="http://www.w3.org/1999/html"/>
 {% endblock %}
 
 {% block subheader %}
@@ -24,7 +26,7 @@
       .gridStyle {
           border: 1px solid rgb(212,212,212);
           width: 100%; 
-          height: 330px;
+          height: 200px;
       }
     </style>
 
@@ -185,6 +187,9 @@
             </tr>
           </table>
 
+          <input style="float: left;" class="btn" type="button"
+                 ng-click="checkFiles()" value="Check Files"
+                 ng-disabled="!(dataFileColumn)"/>
           <input style="float: left;" class="btn" id="import-button"
                  type="submit" value="Import"
                  ng-disabled="importMetadataTableForm.$invalid"/>
@@ -193,7 +198,6 @@
           </div>
         </div>
       </form>
-
     </div>
   </div>
 </div>

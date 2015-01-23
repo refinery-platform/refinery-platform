@@ -4,6 +4,33 @@
  * @author sluger Stefan Luger https://github.com/sluger
  */
 
+.provvis-legend-cell {
+    width: auto;
+    height: 45px;
+    padding: 0px;
+    margin: 0px;
+    display: inline-block;
+}
+
+.provvis-legend-cell-canvas {
+    width: 500px;
+    height: 45px;
+    padding: 0px;
+    margin: 0px;
+}
+
+.provvis-legend-cell text {
+    text-align: left;
+}
+
+#legend-modal {
+    max-height: 500px;
+}
+
+#legend-body {
+    max-height: 460px;
+}
+
 #provenance-vis {
     position: relative;
 }
@@ -81,25 +108,34 @@
 .canvas {
 }
 
-.node, .aNode, .saNode {
-    stroke-width: 1.5px;
-    stroke: #000000;
+.analysis {
     display: none;
 }
 
-.link {
+.node, .aNode, .saNode {
+    stroke-width: 1.5px;
+    stroke: #000000;
+}
+
+.link, .saLink {
     stroke: gray;
     stroke-width: 1.5px;
     stroke-opacity: 1.0;
     fill: none;
-    display: none;
 }
 
-.hLink {
+.aLink {
+    stroke: gray;
+    stroke-width: 1.5px;
+    stroke-opacity: 1.0;
+    fill: none;
+}
+
+.hLink, .aHLink, .saHLink {
     stroke-width: 10px;
     opacity: 1.0;
     fill: none;
-    display: none;
+    stroke: #ed7407;
 }
 
 .selectedNode {
@@ -119,8 +155,7 @@
 
 .blendedNode, .blendedLink {
     display: inline;
-    opacity: 0.3;
-    stroke-opacity: 0.3;
+    opacity: 0.15;
 }
 
 .hiddenNode, .hiddenLink {
@@ -141,24 +176,6 @@
     opacity: 1;
 }
 
-.saMenu {
-    stroke-width: 0px;
-    stroke: none;
-    fill: gray;
-    display: none;
-    cursor: default;
-}
-
-.saMenuText {
-    fill: black;
-    font-size: 10px;
-    text-anchor: middle;
-}
-
-.saGlyph {
-
-}
-
 .nodeDoiLabel {
     fill: #ed7407;
     stroke: #ed7407;
@@ -168,7 +185,7 @@
     cursor: default;
 }
 
-.nodeAttrLabel {
+.nodeAttrLabel, .subanalysisLabel, .analysisLabel, .aBBoxLabel, .saBBoxLabel {
     fill: #000000;
     fill-opacity: 1.0;
     stroke: #000000;
@@ -185,22 +202,31 @@
     display: inline;
 }
 
-.saBBox {
+.saBBox, .aBBox, .BBox {
     fill: #000000;
-    fill-opacity: 0.3;
-    display: none;
+    fill-opacity: 0.2;
+    display: inline;
     cursor: default;
 }
 
-.mouseoverBBox rect{
+.hiddenBBox {
+    display: none;
+}
+
+.mouseoverBBox rect {
     stroke-width: 2px;
     stroke: #136382;
     display: inline;
 }
 
-.mouseoverBBox .nodeAttrLabel {
+.mouseoverBBox .nodeAttrLabel, .mouseoverBBox .subanalysisLabel, .mouseoverBBox .analysisLabel,
+.mouseoverBBox .aBBoxLabel, .mouseoverBBox .saBBoxLabel {
     fill: #136382;
     stroke: #136382;
     fill-opacity: 1.0;
     stroke-width: 0.5px;
+}
+
+.hiddenLabel {
+    display: none;
 }

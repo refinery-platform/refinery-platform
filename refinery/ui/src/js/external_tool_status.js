@@ -1,49 +1,5 @@
 angular.module('refineryExternalToolStatus', [])
 
-
-.controller('ExternalToolStatusController', function(externalToolStatusService, $scope, $timeout, $log) {
-
-  (function tick() {
-      $scope.isSolrUp = externalToolStatusService.isSolrUp();
-      $scope.isCeleryUp = externalToolStatusService.isCeleryUp();
-      $scope.isGalaxyUp = externalToolStatusService.isGalaxyUp();
-      
-      if (externalToolStatusService.getSystemStatus() === "OK") {
-        $scope.systemStatusOk = true;
-        $scope.systemStatusWarning = false;
-        $scope.systemStatusError = false;
-        $scope.systemStatusUnknown = false;
-      }
-      else if (externalToolStatusService.getSystemStatus() === "WARNING") {
-        $scope.systemStatusOk = false;
-        $scope.systemStatusWarning = true;
-        $scope.systemStatusError = false;
-        $scope.systemStatusUnknown = false;
-      }
-      else if (externalToolStatusService.getSystemStatus() === "ERROR") {
-        $scope.systemStatusOk = false;
-        $scope.systemStatusWarning = false;
-        $scope.systemStatusError = true;
-        $scope.systemStatusUnknown = false;
-      }
-      else if (externalToolStatusService.getSystemStatus() === "UNKNOWN") {
-        $scope.systemStatusOk = false;
-        $scope.systemStatusWarning = false;
-        $scope.systemStatusError = false;
-        $scope.systemStatusUnknown = true;
-      }
-
-      $timeout(tick, 1000);
-  })();
-})
-
-.directive('externaltoolstatus', function(externalToolStatusService, $log) {
-  return {
-    templateUrl: '/static/partials/external_tool_status.tpls.html',
-    restrict: 'A',
-  };
-})
-
 .factory("externalToolStatusFactory", function($resource) {
   'use strict';
 
@@ -54,7 +10,7 @@ angular.module('refineryExternalToolStatus', [])
   );
 })
 
-.service("externalToolStatusService", function(externalToolStatusFactory, $log, $timeout) {
+.controller('ExternalToolStatusController', function(externalToolStatusFactory, $scope, $timeout, $log) {
 
   var tools;
 
@@ -66,90 +22,119 @@ angular.module('refineryExternalToolStatus', [])
         tools = undefined;
         $log.error( "Error accessing external tool status API." );
       });
-      $timeout(tick, 1000);
-  })();
 
-  function processResponse(objects) {
-    for ( var i = 0; i < objects.length; ++i ) {
-      tools[objects[i].name] = {};
-    }
+      function processResponse(objects) {
+        for ( var i = 0; i < objects.length; ++i ) {
+          tools[objects[i].name] = {};
+        }
 
-    for ( i = 0; i < objects.length; ++i ) {
-      tools[objects[i].name][objects[i].unique_instance_identifier] = objects[i].status;
-    }
-  }
-
-  var isSolrUp = function() {
-      if ( !tools ) {
-        return undefined;
-      }
-      if ( !tools.SOLR ) {
-        return false;
-      } 
-      return tools.SOLR[""] === "SUCCESS";
-  };
-    
-  var isCeleryUp = function() {
-      if ( !tools ) {
-        return undefined;
-      }
-    if ( !tools.CELERY ) {
-      return false;
-    }
-    return tools.CELERY[""] === "SUCCESS";
-  };
-
-  var isGalaxyUp = function() {
-      if ( !tools ) {
-        return undefined;
-      }
-    if ( !tools.GALAXY ) {
-      return false;
-    }
-
-    for (var key in tools.GALAXY) {
-      if (tools.GALAXY.hasOwnProperty(key)) {
-        if (tools.GALAXY[key] !== "SUCCESS") {
-          return false;
+        for ( i = 0; i < objects.length; ++i ) {
+          tools[objects[i].name][objects[i].unique_instance_identifier] = objects[i].status;
         }
       }
-    }
 
-    return true;
+      var isSolrUp = function() {
+          if ( !tools ) {
+            return undefined;
+          }
+          if ( !tools.SOLR ) {
+            return false;
+          } 
+          return tools.SOLR[null] === "SUCCESS";
+      };
+        
+      var isCeleryUp = function() {
+          if ( !tools ) {
+            return undefined;
+          }
+        if ( !tools.CELERY ) {
+          return false;
+        }
+        return tools.CELERY[null] === "SUCCESS";
+      };
+
+      var isGalaxyUp = function() {
+          if ( !tools ) {
+            return undefined;
+          }
+        if ( !tools.GALAXY ) {
+          return false;
+        }
+
+        for (var key in tools.GALAXY) {
+          if (tools.GALAXY.hasOwnProperty(key)) {
+            if (tools.GALAXY[key] !== "SUCCESS") {
+              return false;
+            }
+          }
+        }
+
+        return true;
+      };
+
+      var isGalaxyInstanceUp = function(uniqueInstanceId) {
+        if ( !tools ) {
+          return undefined;
+        }
+        if ( !tools.GALAXY ) {
+          return false;
+        }
+        return tools.GALAXY[uniqueInstanceId] === "SUCCESS";
+      };
+
+      var getSystemStatus = function() {
+        if (!tools) {
+          return "UNKNOWN";
+        }
+
+        if (!isCeleryUp()) {
+          return "ERROR";
+        }
+
+        if (!isSolrUp() || !isGalaxyUp()) {
+          return "WARNING";
+        }
+
+        return "OK";
+      };
+
+      $scope.isSolrUp = isSolrUp();
+      $scope.isCeleryUp = isCeleryUp();
+      $scope.isGalaxyUp = isGalaxyUp();
+      
+      if (getSystemStatus() === "OK") {
+        $scope.systemStatusOk = true;
+        $scope.systemStatusWarning = false;
+        $scope.systemStatusError = false;
+        $scope.systemStatusUnknown = false;
+      }
+      else if (getSystemStatus() === "WARNING") {
+        $scope.systemStatusOk = false;
+        $scope.systemStatusWarning = true;
+        $scope.systemStatusError = false;
+        $scope.systemStatusUnknown = false;
+      }
+      else if (getSystemStatus() === "ERROR") {
+        $scope.systemStatusOk = false;
+        $scope.systemStatusWarning = false;
+        $scope.systemStatusError = true;
+        $scope.systemStatusUnknown = false;
+      }
+      else if (getSystemStatus() === "UNKNOWN") {
+        $scope.systemStatusOk = false;
+        $scope.systemStatusWarning = false;
+        $scope.systemStatusError = false;
+        $scope.systemStatusUnknown = true;
+      }
+
+      $timeout(tick, 1000);
+  })();
+})
+
+.directive('externaltoolstatus', function($log) {
+  return {
+    templateUrl: '/static/partials/external_tool_status.tpls.html',
+    restrict: 'A',
   };
-
-  var isGalaxyInstanceUp = function(uniqueInstanceId) {
-    if ( !tools ) {
-      return undefined;
-    }
-    if ( !tools.GALAXY ) {
-      return false;
-    }
-    return tools.GALAXY[uniqueInstanceId] === "SUCCESS";
-  };
-
-  var getSystemStatus = function() {
-    if (!tools) {
-      return "UNKNOWN";
-    }
-
-    if (!isCeleryUp()) {
-      return "ERROR";
-    }
-
-    if (!isSolrUp() || !isGalaxyUp()) {
-      return "WARNING";
-    }
-
-    return "OK";
-  };
-
-  return ({
-    getSystemStatus: getSystemStatus,
-    isSolrUp: isSolrUp,
-    isCeleryUp: isCeleryUp,
-    isGalaxyUp: isGalaxyUp,
-    isGalaxyInstanceUp: isGalaxyInstanceUp
-  });
 });
 

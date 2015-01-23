@@ -34,8 +34,13 @@ autostart = true
 autorestart = true
 startsecs = 10
 
-[program:celeryd]
-command = python %(here)s/manage.py celeryd --events
+[group:celeryd]
+programs = worker1,worker2
+priority = 995
+
+[program:worker1]
+; minimum of four processes required to avoid problems with monitoring tasks
+command = python %(here)s/manage.py celeryd -c 4 -Q celery --events
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
 stdout_logfile = %(here)s/log/celeryd.log
 stdout_logfile_maxbytes = 1MB
@@ -45,6 +50,25 @@ autostart = true
 autorestart = true
 startsecs = 5
 stopasgroup = true
+killasgroup = true
+; Need to wait for currently executing tasks to finish at shutdown.
+; Increase this if you have very long running tasks.
+;stopwaitsecs = 60
+priority = 995
+
+[program:worker2]
+; limits concurrent file imports to two
+command = python %(here)s/manage.py celeryd -c 2 -Q file_import --events
+environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
+stdout_logfile = %(here)s/log/celeryd-w2.log
+stdout_logfile_maxbytes = 1MB
+stdout_logfile_backups = 4
+redirect_stderr = true
+autostart = true
+autorestart = true
+startsecs = 5
+stopasgroup = true
+killasgroup = true
 ; Need to wait for currently executing tasks to finish at shutdown.
 ; Increase this if you have very long running tasks.
 ;stopwaitsecs = 60

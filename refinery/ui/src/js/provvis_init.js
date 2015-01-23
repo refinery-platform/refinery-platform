@@ -1,5 +1,3 @@
-/* TODO: Add a "Reset layout" to the toolbar. */
-
 /**
  * Module for init.
  */
@@ -9,6 +7,7 @@ var provvisInit = function () {
     var dataset = Object.create(null),
         nodes = [],
         links = [],
+        aLinks = [],
         iNodes = [],
         oNodes = [],
         aNodes = [],
@@ -107,7 +106,7 @@ var provvisInit = function () {
     var extractLinks = function () {
         var lId = 0;
 
-        nodes.forEach(function (n, i) {
+        nodes.forEach(function (n) {
             if (typeof n.uuid !== "undefined") {
                 if (typeof n.parents !== "undefined") {
 
@@ -394,9 +393,14 @@ var provvisInit = function () {
         /* Set links for subanalysis. */
         saNodes.forEach(function (san) {
             links.filter(function (l) {
-                return l !== null && san.parent.uuid === l.target.analysis && l.target.subanalysis === san.subanalysis;
+                return l !== null && san.parent.uuid === l.source.analysis && l.source.subanalysis === san.subanalysis;
             }).forEach(function (ll) {
-                san.links.set(ll.autoId, ll);
+                if (san.parent.uuid === ll.target.analysis) {
+                    san.links.set(ll.autoId, ll);
+                } else {
+                    /* Set links between two analyses. */
+                    aLinks.push(ll);
+                }
             });
         });
 
@@ -418,6 +422,10 @@ var provvisInit = function () {
                 /* Set subanalysis wfUuid. */
                 san.wfUuid = an.wfUuid;
             });
+
+            /* Set workflow name. */
+            var wfObj = workflowData.get(an.wfUuid);
+            an.wfName = (typeof wfObj === "undefined") ? "dataset" : wfObj.name;
         });
 
         aNodes.forEach(function (an) {
@@ -441,7 +449,7 @@ var provvisInit = function () {
             });
         });
 
-        /* Set links. */
+        /* Set analysis links. */
         aNodes.forEach(function (an) {
             an.children.values().forEach(function (san) {
                 san.links.values().forEach(function (sanl) {
@@ -465,7 +473,6 @@ var provvisInit = function () {
         });
     };
 
-    /* TODO: Only extract attributes relevant to the filter attributes. */
     /**
      * Temporarily facet node attribute extraction.
      * @param solrResponse Facet filter information on node attributes.
@@ -548,6 +555,16 @@ var provvisInit = function () {
     };
 
     /**
+     * Sets the parent objects for analysis nodes.
+     * @param graph The provenance graph.
+     */
+    var setAnalysisParent = function (graph) {
+        graph.aNodes.forEach(function (an) {
+            an.parent = graph;
+        });
+    };
+
+    /**
      * Main init module function.
      * @param data Dataset holding the information for nodes and links.
      * @param analysesData Collection holding the information for analysis - node mapping.
@@ -585,7 +602,12 @@ var provvisInit = function () {
         createFacetNodeAttributeList(solrResponse);
 
         /* Create graph. */
-        return new provvisDecl.ProvGraph(dataset, nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, 0, 0, []);
+        var graph = new provvisDecl.ProvGraph(dataset, nodes, links, aLinks, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData);
+
+        /* Set parent objects for analysis nodes. */
+        setAnalysisParent(graph);
+
+        return graph;
     };
 
     /**

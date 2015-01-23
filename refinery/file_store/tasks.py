@@ -14,10 +14,9 @@ logger = logging.getLogger('file_store')
 
 @task()
 def create(source, sharename='', filetype='', permanent=False, file_size=1):
-    '''
-    Create a FileStoreItem instance and return its UUID
+    """Create a FileStoreItem instance and return its UUID
     Important: source must be either an absolute file system path or a URL
-    
+
     :param source: URL or absolute file system path to a file.
     :type source: str.
     :param sharename: Group share name.
@@ -30,21 +29,22 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
     :type file_size: int.
     :returns: FileStoreItem UUID if success, None if failure.
 
-    '''
+    """
     logger.info("Creating FileStoreItem using source '%s'", source)
 
-    item = FileStoreItem.objects.create_item(source=source, sharename=sharename, filetype=filetype)
+    item = FileStoreItem.objects.create_item(
+        source=source, sharename=sharename, filetype=filetype)
     if not item:
-        logger.error("Failed to create FileStoreItem")
+        logger.error("Failed to create FileStoreItem using source '%s'", source)
         return None
 
     logger.info("FileStoreItem created with UUID %s", item.uuid)
 
     if permanent:
         # copy to file store now and don't add to cache
-        #TODO: provide progress update, call import_file as subtask?
-        if not import_file(item.uuid, permanent=True, refresh=True, file_size=file_size):
-            logger.error("Could not import file from '%s'", item.source)
+        #TODO: provide progress update
+        import_file.delay(
+            item.uuid, permanent=True, refresh=True, file_size=file_size)
 
     return item.uuid
 
@@ -66,7 +66,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
 
     item = FileStoreItem.objects.get_item(uuid=uuid)
     if not item:
-        logger.error("Failed to import FileStoreItem with UUID '%s'", uuid)
+        logger.error("FileStoreItem with UUID '%s' not found", uuid)
         return None
 
     # if file is ready to be used then return it,

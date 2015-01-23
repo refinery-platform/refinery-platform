@@ -143,17 +143,29 @@ var provvisDecl = function () {
         this.x = 0;
         this.y = 0;
 
+        /* Layout specific. */
+        this.l = {
+
+            /* Top sort markings [Kahn 1962]. */
+            ts: {removed: false},
+
+            /* Graph attributes. */
+            width: 0,
+            depth: 0,
+            grid: [],
+
+            rowBK: {left: -1, right: -1},
+            bcOrder: -1,
+            isBlockRoot: false
+        };
+
         BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
         this.autoId = BaseNode.numInstances;
 
         this.doi = new DoiComponents(this);
         this.selected = false;
         this.filtered = true;
-
-        /* TODO: Group layout specific properties into sub-property. */
     };
-
-    /* TODO: Add enums for node appearance, eg.: hide, blend, lod0-2 */
 
     /**
      * Constructor function for the node data structure.
@@ -187,10 +199,6 @@ var provvisDecl = function () {
         this.fileUrl = fileUrl;
 
         this.attributes = d3.map();
-
-        this.rowBK = {left: -1, right: -1};
-        this.bcOrder = -1;
-        this.isBlockRoot = false;
     };
 
     Node.prototype = Object.create(BaseNode.prototype);
@@ -223,6 +231,8 @@ var provvisDecl = function () {
         this.inputs = d3.map();
         this.outputs = d3.map();
         this.links = d3.map();
+
+        this.wfName = "";
     };
 
     Analysis.prototype = Object.create(BaseNode.prototype);
@@ -246,9 +256,6 @@ var provvisDecl = function () {
         this.inputs = d3.map();
         this.outputs = d3.map();
         this.links = d3.map();
-        this.isOutputAnalysis = false;
-
-        /* TODO: Workflow field. */
     };
 
     Subanalysis.prototype = Object.create(BaseNode.prototype);
@@ -273,13 +280,16 @@ var provvisDecl = function () {
         /* Layout computation specific flags. */
         this.l = {
 
-            /* Top sort marking [Kahn 1962]. */
+            /* Top sort markings [Kahn 1962]. */
             ts: {removed: false},
 
             /* Vertical coord assignment markings [Brandes and Köpf 2002]. */
             neighbor: false,
             type0: false,
-            type1: false
+            type1: false,
+
+            /* Replaced by dummy links. */
+            gap: false
         };
 
         Link.numInstances = (Link.numInstances || 0) + 1;
@@ -303,9 +313,10 @@ var provvisDecl = function () {
      * @param color
      * @param graph
      * @param supportView
+     * @param cell
      * @constructor
      */
-    var ProvVis = function (parentDiv, zoom, data, url, canvas, nodeTable, rect, margin, width, height, radius, color, graph, supportView) {
+    var ProvVis = function (parentDiv, zoom, data, url, canvas, nodeTable, rect, margin, width, height, radius, color, graph, supportView, cell) {
         this._parentDiv = parentDiv;
         this.zoom = zoom;
         this._data = data;
@@ -321,6 +332,7 @@ var provvisDecl = function () {
         this.color = color;
         this.graph = graph;
         this.supportView = supportView;
+        this.cell = cell;
     };
 
     /**
@@ -329,6 +341,7 @@ var provvisDecl = function () {
      * @param dataset
      * @param nodes
      * @param links
+     * @param aLinks
      * @param iNodes
      * @param oNodes
      * @param aNodes
@@ -338,15 +351,13 @@ var provvisDecl = function () {
      * @param analysisData
      * @param workflowData
      * @param nodeData
-     * @param width
-     * @param depth
-     * @param grid
      * @constructor
      */
-    var ProvGraph = function (dataset, nodes, links, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData, width, depth, grid) {
+    var ProvGraph = function (dataset, nodes, links, aLinks, iNodes, oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData, nodeData) {
         this.dataset = dataset;
         this.nodes = nodes;
         this.links = links;
+        this.aLinks = aLinks;
         this.iNodes = iNodes;
         this.oNodes = oNodes;
         this.aNodes = aNodes;
@@ -358,9 +369,12 @@ var provvisDecl = function () {
         this.workflowData = workflowData;
         this.nodeData = nodeData;
 
-        this.width = width;
-        this.depth = depth;
-        this.grid = grid;
+        /* Layout specific. */
+        this.l = {
+            width: 0,
+            depth: 0,
+            grid: []
+        };
     };
 
     /*    */

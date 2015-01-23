@@ -5,6 +5,7 @@ Created on May 11, 2012
 '''
 
 import os
+import simplejson as json
 from urlparse import urlparse
 from django import forms
 from django.core.urlresolvers import reverse
@@ -16,10 +17,10 @@ from django.views.generic import View
 from haystack.query import SearchQuerySet
 from core.models import *
 from data_set_manager.single_file_column_parser import process_metadata_table
-from data_set_manager.tasks import parse_isatab
+from data_set_manager.tasks import create_dataset, parse_isatab
 from data_set_manager.utils import *
 from file_store.tasks import download_file, DownloadError
-from file_store.models import get_temp_dir
+from file_store.models import get_temp_dir, generate_file_source_translator
 
 
 def index(request):
@@ -282,50 +283,66 @@ class ProcessMetadataTableView(View):
         try:
             metadata_file = request.FILES['file']
             title = request.POST['title']
-            data_file_column = abs(int(request.POST['data_file_column']))
+            data_file_column = request.POST['data_file_column']
         except (KeyError, ValueError):
-            error = {
-                'error_message':
-                    'Import failed because required parameter value(s) are missing'
-            }
-            return render(request, self.template_name, error)
-        source_column_index = [abs(int(x)) for x in request.POST.getlist('source_column_index')]
-        if source_column_index == []:
             error = {'error_message':
-                         'Import failed because source column(s) were not selected'}
+                     'Import failed because required parameters are missing'}
             return render(request, self.template_name, error)
-        # get optional params
+        source_column_index = request.POST.getlist('source_column_index')
+        if not source_column_index:
+            error = {'error_message':
+                     'Import failed because no source columns were selected'}
+            return render(request, self.template_name, error)
         try:
-            aux_file_column = abs(int(request.POST['aux_file_column']))
-        except ValueError:
-            aux_file_column = None
+            dataset_uuid = process_metadata_table(
+                username=request.user.username, title=title,
+                metadata_file=metadata_file, source_columns=source_column_index,
+                data_file_column=data_file_column,
+                auxiliary_file_column=request.POST.get('aux_file_column', None),
+                base_path=request.POST.get('base_path', ""),
+                data_file_permanent=request.POST.get('data_file_permanent',
+                                                     False),
+                species_column=request.POST.get('species_column', None),
+                genome_build_column=request.POST.get('genome_build_column',
+                                                     None),
+                annotation_column=request.POST.get('annotation_column', None),
+                slug=request.POST.get('slug', None),
+                is_public=request.POST.get('is_public', False))
+        except ValueError as exc:
+            error = {'error_message': exc}
+            return render(request, self.template_name, error)
+        return HttpResponseRedirect(
+            reverse(self.success_view_name, args=(dataset_uuid,)))
+
+
+class CheckDataFilesView(View):
+    """Check if given files exist, return list of files that don't exist
+
+    """
+    def post(self, request, *args, **kwargs):
+        if not request.is_ajax() or not request.body:
+            return HttpResponseBadRequest()
+
+        file_data = json.loads(request.body)
         try:
-            species_column = abs(int(request.POST['species_column']))
-        except ValueError:
-            species_column = None
-        try:
-            annotation_column = abs(int(request.POST['annotation_column']))
-        except ValueError:
-            annotation_column = None
-        try:
-            genome_build_column = abs(int(request.POST['genome_build_column']))
-        except ValueError:
-            genome_build_column = None
-        base_path = request.POST.get('base_path', None)
-        slug = request.POST.get('slug', None)
-        try:
-            data_file_permanent = bool(request.POST['data_file_permanent'])
+            base_path = file_data["base_path"]
         except KeyError:
-            data_file_permanent = False
+            base_path = ""
+
+        bad_file_list = []
+        translate_file_source = generate_file_source_translator(
+            username=request.user.username, base_path=base_path)
+
+        # check if files are available
         try:
-            is_public = bool(request.POST['is_public'])
-        except KeyError:
-            is_public = False
-        # process the uploaded file
-        dataset_uuid = process_metadata_table(
-            request.user.username, title, metadata_file, source_column_index,
-            data_file_column, data_file_permanent, base_path, aux_file_column,
-            species_column, genome_build_column, annotation_column, slug,
-            is_public)
-        return HttpResponseRedirect(reverse(self.success_view_name,
-                                            args=(dataset_uuid,)))
+            for file_path in file_data["list"]:
+                file_path = translate_file_source(file_path)
+                if not os.path.exists(file_path):
+                    bad_file_list.append(file_path)
+                logger.debug("File path checked: '%s'", file_path)
+        except KeyError:  # if there's no list provided
+            return HttpResponseBadRequest()
+
+        # prefix output to protect from JSON vulnerability (stripped by Angular)
+        return HttpResponse(")]}',\n" + json.dumps(bad_file_list),
+                            content_type="application/json")

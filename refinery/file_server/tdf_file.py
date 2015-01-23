@@ -204,6 +204,7 @@ class TDFFile(object):
     # prepare object for unpickling (byte stream needs to be restored)    
     def __setstate__(self, dictionary):
         # reopen file byte stream
+        #TODO: replace get_file_object() with open(), make sure file object is closed after use
         file_object = file_store.models.get_file_object(dictionary['filename'])
         bytestream = TDFByteStream(file_object)
         self.__dict__.update(dictionary)  # reload attributes

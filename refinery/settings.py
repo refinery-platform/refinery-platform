@@ -163,6 +163,7 @@ INSTALLED_APPS = (
     # NG: added for that human touch ...
     'django.contrib.humanize',
     'django.contrib.markup',
+    'django_extensions',
     # NG: added for search and faceting (Solr support)
     'haystack', 
     # NG: added for celery (task queue)
@@ -302,11 +303,9 @@ SERVER_EMAIL = 'root@localhost'
 # Disable migrations when running unittests and use syncdb instead
 SOUTH_TESTS_MIGRATE = False
 
-# allow 4 concurrent Celery tasks (minimum required to avoid problems with monitoring tasks)
-CELERYD_CONCURRENCY = 4
-
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = 100
+CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 
 # === Refinery Settings ===
 
@@ -329,9 +328,14 @@ ISA_TAB_DIR = '/vagrant/isa-tab'
 # relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
 FILE_STORE_DIR = 'file_store'
 
-# optional dictionary for translating file URLs into file system paths (and vice versa)
+# optional dictionary for translating file URLs into file system paths (and vice
+# versa) by substituting 'pattern' for 'replacement'
 # format: {'pattern': 'replacement'} - may contain more than one key-value pair
 REFINERY_FILE_SOURCE_MAP = {}
+
+# data file import directory; it should be located on the same partition as
+# FILE_STORE_DIR and MEDIA_ROOT to make import operations fast
+REFINERY_DATA_IMPORT_DIR = '/vagrant/import'
 
 # location of the Solr server (must be accessible from the web browser)
 REFINERY_SOLR_BASE_URL = "http://localhost:8983/solr/"
