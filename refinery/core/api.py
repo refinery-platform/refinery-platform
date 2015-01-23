@@ -464,27 +464,10 @@ class SharedPermissionResource(Resource):
     def get_object_list(self, request):
         #if "username" in request.GET and "shared_resource" in request.GET:
         #return [SharedPermissionObject("username7", self.dummy_keys, self.get_permission_map("username5"))] 
-        return [SharedPermissionObject("username7", self.get_keys("username7"), self.get_permission_map("username7"))]
+
+        username = request.GET["username"]
+
+        return [SharedPermissionObject(username, self.get_keys(username), self.get_permission_map(username))]
         #else:
 
 
-"""
-    def get_keys(shared_res_type
-
-    def get_permission_map(username_key, shared_res_type, shared_res_key):
-        
-        # get correct user from User.objects.all(); if doesn't exist, return blank
-        user_list = filter(lambda user: user.username == username_key, User.objects.all())
-        user = None if len(user_list) == 0 else user_list[0]
-        user_groups = user.groups.all()
-        
-        # get correct sharable res depending on sharable res type; if doesn't exist, return blank
-        # TODO: confirm if this is the correct way of checking classes. it seems to work. for now
-        
-        def filter_from_res(shared_res, key):
-            filtered_list = filter(lambda x: x.name == key, shared_res.objects.all())
-            return (None if len(filtered_list) == 0 else filtered_list[0])
-
-        shared_res = filter_from_res(shared_res_type, shared_res_key)
-"""
-    
