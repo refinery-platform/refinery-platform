@@ -124,15 +124,6 @@ var provvisLayout = function () {
             });
         });
 
-        /*console.log("#BARYORDER");
-        console.log(barycenterOrderedNodes);
-        barycenterOrderedNodes.forEach(function (l, i) {
-            console.log("layer " + i);
-            l.forEach(function (d) {
-                console.log(d.autoId + " " + d.l.rowBK.left);
-            });
-        });*/
-
         return barycenterOrderedNodes;
     };
 
@@ -241,13 +232,9 @@ var provvisLayout = function () {
             /* Update upNeighbors. */
             upNeighbors = bclgNodes[upl][i].predLinks.values().filter(filterNeighbors);
 
-
             /* Type 0 sharing conflicts. */
             var leftMostPredRow = -1,
                 leftMostLink = "undefined";
-
-            console.log("leftmostlink");
-            console.log(upNeighbors);
 
             /* Init left most link. */
             if (upNeighbors.length > 0) {
@@ -258,11 +245,9 @@ var provvisLayout = function () {
                 leftMostPredRow = srcA.l.rowBK.left;
                 leftMostLink = upNeighbors[0];
             }
-            console.log(leftMostPredRow);
 
             /* Get left most link. */
             upNeighbors.forEach(function (upp) {
-                console.log(upp);
                 var srcA = upp.source;
                 if (upp.source instanceof provvisDecl.Node) {
                     srcA = upp.source.parent.parent;
@@ -273,9 +258,6 @@ var provvisLayout = function () {
                     leftMostLink = upp;
                 }
             });
-
-            console.log("HERE");
-            console.log(leftMostLink.autoId);
 
             /* Mark all but left most links. */
             upNeighbors.forEach(function (upp) {
@@ -289,7 +271,6 @@ var provvisLayout = function () {
                         if (sl !== leftMostLink) {
                             sl.l.type0 = true;
                             sl.l.neighbor = false;
-                            console.log(sl.autoId + " NOT A NEIGHBOR");
                         }
                     });
                 }
@@ -298,13 +279,11 @@ var provvisLayout = function () {
             /* Update upNeighbors. */
             upNeighbors = bclgNodes[upl][i].predLinks.values().filter(filterNeighbors);
 
-
             /* For multiple predlinks, prioritize the left one. */
             if (upNeighbors.length > 1) {
                 upNeighbors.forEach(function (upp) {
                     if (upp !== leftMostLink) {
                         upp.l.neighbor = false;
-                        console.log(upp.autoId + " NOT A NEIGHBOR");
                     }
                 });
             }
@@ -332,26 +311,20 @@ var provvisLayout = function () {
         }
     };
 
+    /* TODO: Refine and clean up. */
     /**
      * Align each vertex with its chosen (left|right and upper/under) Neighbor.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      * @param parent The parent node.
      */
     var verticalAlignment = function (bclgNodes, parent) {
-        markCandidates(bclgNodes, parent.aLinks.filter(function (l) {return !l.l.gap;}));
+        markCandidates(bclgNodes, parent.aLinks.filter(function (l) {
+            return !l.l.gap;
+        }));
 
-        markConflictsLeft(bclgNodes, parent.aLinks.filter(function (l) {return !l.l.gap;}));
-
-        console.log("#CONFLICTS");
-        bclgNodes.forEach(function (l, i) {
-            l.forEach(function (d) {
-                console.log(d);
-                d.succLinks.values().forEach(function (sl) {
-                    console.log(sl);
-                });
-            });
-        });
-        console.log("");
+        markConflictsLeft(bclgNodes, parent.aLinks.filter(function (l) {
+            return !l.l.gap;
+        }));
 
         formBlocks(bclgNodes, "left", parent);
 
@@ -487,7 +460,6 @@ var provvisLayout = function () {
 
                         while (parent.l.grid[curA.col].length <= rootRow) {
                             addGridRow(parent);
-                            console.log("#ADDROW");
                         }
                         /* Set grid cell. */
                         parent.l.grid[curA.col][curA.row] = curA;
@@ -1026,8 +998,6 @@ var provvisLayout = function () {
      */
     var reorderSubanalysisNodes = function (bclgNodes) {
 
-        console.log("#REORDER_SUBANALYES");
-
         /* Initializations. */
         bclgNodes.forEach(function (l, i) {
             l.forEach(function (an) {
@@ -1082,12 +1052,12 @@ var provvisLayout = function () {
                 });
 
                 /* Sort subanalysis nodes. */
-                colList.sort(function (a,b) {
-                   return a.l.bcOrder - b.l.bcOrder;
+                colList.sort(function (a, b) {
+                    return a.l.bcOrder - b.l.bcOrder;
                 });
 
                 /* Reorder subanalysis nodes. */
-                colList.forEach( function (d,j) {
+                colList.forEach(function (d, j) {
                     d.row = j;
                 });
 
@@ -1109,22 +1079,14 @@ var provvisLayout = function () {
      * @param graph The main graph object of the provenance visualization.
      */
     var runLayoutPrivate = function (graph) {
-        console.log("Provvis: New layout is active.");
-
-        console.log(graph.aLinks);
 
         /* ANALYSIS LAYOUT. */
-        /* TODO: Generic re-implementation for analysis nodes. */
-        console.log("");
-        console.log("ANALYIS");
-        console.log("=======");
+        /* TODO: Refine and cleanup */
 
         var startANodes = [];
         startANodes.push(graph.dataset);
         var tsANodes = topSortNodes(startANodes, graph.aNodes.length, graph);
-        console.log("ts: " + tsANodes.map(function (d) {
-            return d.autoId;
-        }));
+
         if (tsANodes !== null) {
             layerNodes(tsANodes, graph);
 
@@ -1142,35 +1104,16 @@ var provvisLayout = function () {
                 al.l.ts.removed = false;
             });
             tsANodes = topSortNodes(startANodes, graph.aNodes.length, graph);
-            console.log("ts: " + tsANodes.map(function (d) {
-                return d.autoId;
-            }));
 
             layerNodes(tsANodes, graph);
 
             var gANodes = groupNodes(tsANodes);
-            console.log("layers:");
-            gANodes.forEach(function (l, i) {
-                console.log(i + ": " + l.map(function (d) {
-                    return d.autoId;
-                }));
-            });
-            console.log("");
 
-
-            console.log("gANodes");
-            console.log(gANodes);
-
-            /* TODO: in progress. */
+            /* TODO: Refine and clean up. */
             var bclgNodes = layoutNodes(gANodes, graph);
-
 
             /* Remove dummy nodes. */
             //removeDummyNodes(graph);
-
-            console.log("#aNodes");
-            console.log(graph.aNodes);
-
 
             /* Reset layout properties for links. */
             graph.aNodes.forEach(function (an) {
@@ -1182,12 +1125,6 @@ var provvisLayout = function () {
             });
 
             /* SUBANALYSIS LAYOUT. */
-            console.log("");
-            console.log("SUBANALYIS");
-            console.log("==========");
-
-            console.log(bclgNodes);
-
             reorderSubanalysisNodes(bclgNodes);
 
         } else {
@@ -1196,29 +1133,17 @@ var provvisLayout = function () {
 
 
         /* FILES/TOOLS LAYOUT. */
-        /*        console.log("");
-         console.log("NODES");
-         console.log("===========");*/
-
         graph.saNodes.forEach(function (san) {
             var tsNodes = topSortNodes(san.inputs.values(), san.children.size(), san);
-            /*            console.log("ts: " + tsNodes.map(function (d) {
-             return d.id;
-             }));*/
+
             if (tsNodes !== null) {
                 /* Assign layers. */
                 layerNodes(tsNodes, san);
 
                 /* Group nodes by layer. */
                 var gNodes = groupNodes(tsNodes);
-                /*                gNodes.forEach(function (gn, i) {
-                 console.log(i + ": " + gn.map(function (d) {
-                 return d.id;
-                 }));
-                 });*/
 
-
-                /* TODO: Workflow vis layout test. */
+                /* TODO: Refine and cleanup. */
 
                 /* Init rows and visited flag. */
                 gNodes.forEach(function (gn) {

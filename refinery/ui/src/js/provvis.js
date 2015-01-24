@@ -438,7 +438,6 @@ var provvis = function () {
         return supportViewContainer;
     };
 
-
     /**
      * Analysis path generator.
      * @returns {string} A polygon.
@@ -758,6 +757,9 @@ var provvis = function () {
                     .attr("width", width)
                     .attr("height", height)
                     .classed("brect", true);
+
+                /* Create layout grid dom group. */
+                vis.grid = vis.canvas.append("g").classed({"grid": true}).style("display", "none");
 
                 /* Extract graph data. */
                 vis.graph = provvisInit.runInit(data, analysesData, solrResponse);
