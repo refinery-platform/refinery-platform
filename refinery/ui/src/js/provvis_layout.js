@@ -1073,6 +1073,18 @@ var provvisLayout = function () {
         });
     };
 
+    /**
+     * Extract and set layered nodes for analysis nodes.
+     * @param bclgNodes Barcyenter sorted, layered and grouped analysis nodes.
+     */
+    var extractLayeredNodes = function (bclgNodes) {
+
+        /* TODO: For each column, for each analysis, check successors.
+         * If there are at least two analyses sharing the same input files, layer them.
+         */
+
+    };
+
 
     /**
      * Main layout module function.
@@ -1124,102 +1136,108 @@ var provvisLayout = function () {
                 l.l.ts.removed = false;
             });
 
+
+
+            /* TODO: Extract and create layered nodes. */
+            extractLayeredNodes(bclgNodes);
+
+
+
             /* SUBANALYSIS LAYOUT. */
             reorderSubanalysisNodes(bclgNodes);
+
+            /* FILES/TOOLS LAYOUT. */
+            graph.saNodes.forEach(function (san) {
+                var tsNodes = topSortNodes(san.inputs.values(), san.children.size(), san);
+
+                if (tsNodes !== null) {
+                    /* Assign layers. */
+                    layerNodes(tsNodes, san);
+
+                    /* Group nodes by layer. */
+                    var gNodes = groupNodes(tsNodes);
+
+                    /* TODO: Refine and cleanup. */
+
+                    /* Init rows and visited flag. */
+                    gNodes.forEach(function (gn) {
+                        gn.forEach(function (n, i) {
+                            n.row = i;
+                            n.visited = false;
+                        });
+                    });
+
+                    /* Process layout, for each column. */
+                    gNodes.forEach(function (gn) {
+
+                        /* For each node. */
+                        gn.forEach(function (n) {
+
+                            var succs = n.succs.values().filter(function (s) {
+                                return  s.parent === n.parent;
+                            });
+
+                            /* Branch. */
+                            if (succs.length > 1) {
+
+                                /* Successors was visited before? */
+                                var visited = getNumberofVisitedNodesByArray(succs),
+                                    rowShift = succs.length / 2;
+
+                                /* Shift nodes before and after the branch. */
+                                /* But only if there are more than one successor. */
+                                if ((succs.length - visited) > 1) {
+                                    shiftNodesByRows(tsNodes, rowShift, n.col, n.row);
+                                    shiftNodesByRows(tsNodes, rowShift, n.col, n.row + 1);
+                                }
+
+                                var succRow = n.row - rowShift + visited;
+                                succs.forEach(function (sn) {
+                                    if (succs.length % 2 === 0 && succRow === n.row) {
+                                        succRow++;
+                                    }
+
+                                    if (sn.visited === false) {
+                                        sn.row = succRow;
+                                        sn.visited = true;
+                                        succRow++;
+                                    }
+                                });
+                            } else {
+                                succs.forEach(function (sn) {
+                                    sn.row = n.row;
+                                });
+                            }
+                        });
+                    });
+                } else {
+                    console.log("Error: Graph is not acyclic!");
+                }
+            });
+
+            /* Create workflow grid. */
+            graph.saNodes.forEach(function (san) {
+
+                /* Initialize workflow dimensions. */
+                san.l.depth = d3.max(san.children.values(), function (n) {
+                    return n.col;
+                }) + 1;
+                san.l.width = d3.max(san.children.values(), function (n) {
+                    return n.row;
+                }) + 1;
+
+                /* Init grid. */
+                initNodeGrid(san);
+
+                /* Set grid cells. */
+                san.children.values().forEach(function (n) {
+                    san.l.grid[n.col][n.row] = n;
+                });
+            });
 
         } else {
             console.log("Error: Graph is not acyclic!");
         }
-
-
-        /* FILES/TOOLS LAYOUT. */
-        graph.saNodes.forEach(function (san) {
-            var tsNodes = topSortNodes(san.inputs.values(), san.children.size(), san);
-
-            if (tsNodes !== null) {
-                /* Assign layers. */
-                layerNodes(tsNodes, san);
-
-                /* Group nodes by layer. */
-                var gNodes = groupNodes(tsNodes);
-
-                /* TODO: Refine and cleanup. */
-
-                /* Init rows and visited flag. */
-                gNodes.forEach(function (gn) {
-                    gn.forEach(function (n, i) {
-                        n.row = i;
-                        n.visited = false;
-                    });
-                });
-
-                /* Process layout, for each column. */
-                gNodes.forEach(function (gn) {
-
-                    /* For each node. */
-                    gn.forEach(function (n) {
-
-                        var succs = n.succs.values().filter(function (s) {
-                            return  s.parent === n.parent;
-                        });
-
-                        /* Branch. */
-                        if (succs.length > 1) {
-
-                            /* Successors was visited before? */
-                            var visited = getNumberofVisitedNodesByArray(succs),
-                                rowShift = succs.length / 2;
-
-                            /* Shift nodes before and after the branch. */
-                            /* But only if there are more than one successor. */
-                            if ((succs.length - visited) > 1) {
-                                shiftNodesByRows(tsNodes, rowShift, n.col, n.row);
-                                shiftNodesByRows(tsNodes, rowShift, n.col, n.row + 1);
-                            }
-
-                            var succRow = n.row - rowShift + visited;
-                            succs.forEach(function (sn) {
-                                if (succs.length % 2 === 0 && succRow === n.row) {
-                                    succRow++;
-                                }
-
-                                if (sn.visited === false) {
-                                    sn.row = succRow;
-                                    sn.visited = true;
-                                    succRow++;
-                                }
-                            });
-                        } else {
-                            succs.forEach(function (sn) {
-                                sn.row = n.row;
-                            });
-                        }
-                    });
-                });
-            } else {
-                console.log("Error: Graph is not acyclic!");
-            }
-        });
-
-        /* Create workflow grid. */
-        graph.saNodes.forEach(function (san) {
-
-            /* Initialize workflow dimensions. */
-            san.l.depth = d3.max(san.children.values(), function (n) {
-                return n.col;
-            }) + 1;
-            san.l.width = d3.max(san.children.values(), function (n) {
-                return n.row;
-            }) + 1;
-
-            /* Init grid. */
-            initNodeGrid(san);
-
-            /* Set grid cells. */
-            san.children.values().forEach(function (n) {
-                san.l.grid[n.col][n.row] = n;
-            });
-        });
     };
 
     /**

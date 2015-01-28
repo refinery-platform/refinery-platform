@@ -599,6 +599,7 @@ var provvisInit = function () {
         /* Temporarily facet node attribute extraction. */
         extractFacetNodeAttributesPrivate(solrResponse);
 
+        /* Create node attribute list. */
         createFacetNodeAttributeList(solrResponse);
 
         /* Create graph. */

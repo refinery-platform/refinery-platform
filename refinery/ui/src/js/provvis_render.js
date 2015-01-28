@@ -1698,7 +1698,7 @@ var provvisRender = function () {
                 updateLink(d.parent, d.parent.x, d.parent.y);
 
             } else {
-                /* If the selected subanalysis is the last remaining to collapse, adjust bounding box. */
+                /* If the selected subanalysis is the last remaining to collapse, adjust bounding box and clippath. */
                 if (!d.parent.parent.children.values().some(function (san) {
                     return san.hidden;
                 })) {
@@ -1713,6 +1713,13 @@ var provvisRender = function () {
                         .attr("height", function () {
                             return anBBoxCoords.y.max - anBBoxCoords.y.min;
                         });
+
+                    /* Adjust clippath. */
+                    d3.select("#aBBClipId-"+d.parent.parent.autoId).select("rect")
+                        .attr("width", cell.width - 4)
+                        .attr("height", cell.height - 2)
+                        .attr("rx", cell.width / 3)
+                        .attr("ry", cell.height / 3);
                 }
                 /* Update links. */
                 updateLink(d.parent.parent, d.parent.parent.x, d.parent.parent.y);
