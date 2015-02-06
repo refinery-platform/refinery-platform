@@ -124,15 +124,6 @@ var provvisLayout = function () {
             });
         });
 
-        /*console.log("#BARYORDER");
-        console.log(barycenterOrderedNodes);
-        barycenterOrderedNodes.forEach(function (l, i) {
-            console.log("layer " + i);
-            l.forEach(function (d) {
-                console.log(d.autoId + " " + d.l.rowBK.left);
-            });
-        });*/
-
         return barycenterOrderedNodes;
     };
 
@@ -241,13 +232,9 @@ var provvisLayout = function () {
             /* Update upNeighbors. */
             upNeighbors = bclgNodes[upl][i].predLinks.values().filter(filterNeighbors);
 
-
             /* Type 0 sharing conflicts. */
             var leftMostPredRow = -1,
                 leftMostLink = "undefined";
-
-            console.log("leftmostlink");
-            console.log(upNeighbors);
 
             /* Init left most link. */
             if (upNeighbors.length > 0) {
@@ -258,11 +245,9 @@ var provvisLayout = function () {
                 leftMostPredRow = srcA.l.rowBK.left;
                 leftMostLink = upNeighbors[0];
             }
-            console.log(leftMostPredRow);
 
             /* Get left most link. */
             upNeighbors.forEach(function (upp) {
-                console.log(upp);
                 var srcA = upp.source;
                 if (upp.source instanceof provvisDecl.Node) {
                     srcA = upp.source.parent.parent;
@@ -273,9 +258,6 @@ var provvisLayout = function () {
                     leftMostLink = upp;
                 }
             });
-
-            console.log("HERE");
-            console.log(leftMostLink.autoId);
 
             /* Mark all but left most links. */
             upNeighbors.forEach(function (upp) {
@@ -289,7 +271,6 @@ var provvisLayout = function () {
                         if (sl !== leftMostLink) {
                             sl.l.type0 = true;
                             sl.l.neighbor = false;
-                            console.log(sl.autoId + " NOT A NEIGHBOR");
                         }
                     });
                 }
@@ -298,13 +279,11 @@ var provvisLayout = function () {
             /* Update upNeighbors. */
             upNeighbors = bclgNodes[upl][i].predLinks.values().filter(filterNeighbors);
 
-
             /* For multiple predlinks, prioritize the left one. */
             if (upNeighbors.length > 1) {
                 upNeighbors.forEach(function (upp) {
                     if (upp !== leftMostLink) {
                         upp.l.neighbor = false;
-                        console.log(upp.autoId + " NOT A NEIGHBOR");
                     }
                 });
             }
@@ -332,26 +311,20 @@ var provvisLayout = function () {
         }
     };
 
+    /* TODO: Refine and clean up. */
     /**
      * Align each vertex with its chosen (left|right and upper/under) Neighbor.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      * @param parent The parent node.
      */
     var verticalAlignment = function (bclgNodes, parent) {
-        markCandidates(bclgNodes, parent.aLinks.filter(function (l) {return !l.l.gap;}));
+        markCandidates(bclgNodes, parent.aLinks.filter(function (l) {
+            return !l.l.gap;
+        }));
 
-        markConflictsLeft(bclgNodes, parent.aLinks.filter(function (l) {return !l.l.gap;}));
-
-        console.log("#CONFLICTS");
-        bclgNodes.forEach(function (l, i) {
-            l.forEach(function (d) {
-                console.log(d);
-                d.succLinks.values().forEach(function (sl) {
-                    console.log(sl);
-                });
-            });
-        });
-        console.log("");
+        markConflictsLeft(bclgNodes, parent.aLinks.filter(function (l) {
+            return !l.l.gap;
+        }));
 
         formBlocks(bclgNodes, "left", parent);
 
@@ -487,7 +460,6 @@ var provvisLayout = function () {
 
                         while (parent.l.grid[curA.col].length <= rootRow) {
                             addGridRow(parent);
-                            console.log("#ADDROW");
                         }
                         /* Set grid cell. */
                         parent.l.grid[curA.col][curA.row] = curA;
@@ -1026,8 +998,6 @@ var provvisLayout = function () {
      */
     var reorderSubanalysisNodes = function (bclgNodes) {
 
-        console.log("#REORDER_SUBANALYES");
-
         /* Initializations. */
         bclgNodes.forEach(function (l, i) {
             l.forEach(function (an) {
@@ -1082,12 +1052,12 @@ var provvisLayout = function () {
                 });
 
                 /* Sort subanalysis nodes. */
-                colList.sort(function (a,b) {
-                   return a.l.bcOrder - b.l.bcOrder;
+                colList.sort(function (a, b) {
+                    return a.l.bcOrder - b.l.bcOrder;
                 });
 
                 /* Reorder subanalysis nodes. */
-                colList.forEach( function (d,j) {
+                colList.forEach(function (d, j) {
                     d.row = j;
                 });
 
@@ -1103,28 +1073,91 @@ var provvisLayout = function () {
         });
     };
 
+    /**
+     * Extract and set layered nodes for analysis nodes.
+     * @param bclgNodes Barcyenter sorted, layered and grouped analysis nodes.
+     */
+    var extractLayeredNodes = function (bclgNodes) {
+
+        /* TODO: Provenance layering algorithm:
+         *
+         * FOR each grid layer starting at 1:
+         *   FOR each analysis node:
+         *     Each new connection between predecessor analysis node outputs and the current analysis node inputs
+         *     creates a pattern i.
+         *
+         *     If another analysis node within the current layer conforms to the same workflow of an
+         *     existing pattern analysis node:
+         *       - happen to to have the same file-file connection, as a created pattern before,
+         *         a layeredNode is created.
+         *       - would start a pattern with an analysis node, which already belongs to an active pattern,
+         *         the pattern with the most instances wins and claims this analysis node.
+         *       - would conform to a pattern but do have additional input connections
+         *         (e.g. due to owning more subanalyses), this analysis node would not be part of the pattern
+         *         and may start a new pattern or a CHANGE.
+         *
+         *     After every analysis node within the current layer is processed:
+         *       - new patterns which do only have one congruent instance
+         *         (conforming to the pattern - meaning itself alone) ends the pattern.
+         *       - existing patterns which were expanded by a single analysis node will end the pattern
+         *         and therefore the layered provenance path.
+         *   ENDFOR
+         * ENDFOR
+         *
+         * CHANGES to tolerate:
+         *   - WORKFLOW PARAMETERS: matching file-file connections and workflow, but different workflow parameters.
+         *   - FILE-FILE: matching workflow and workflow parameters but different file-file connections.
+         *   - TOPOLOGY: matching file-file connections but different workflow and different workflow parameters.
+         */
+
+
+        /* Pattern data-structure. */
+
+        /* Pattern node object */
+        var pn =
+        {
+            inputs: [],
+            outputs: [],
+            workflowName: "",
+            workflowParams: Object.create(null),
+            numInstances: 0
+
+        };
+
+        /* Pattern. */
+        var p =
+        {
+            startCol: 0,
+            endCol: 0,
+            p: []
+        };
+
+        /* Pattern container. */
+        var patterns = [];
+
+        /* Provenance layering algorithm. */
+        for (var i = 0; i < bclgNodes.length; i++) {
+            //console.log("layer " + i);
+            for (var j = 0; j < bclgNodes[i].length; j++) {
+                //console.log(bclgNodes[i][j]);
+            }
+        }
+    };
+
 
     /**
      * Main layout module function.
      * @param graph The main graph object of the provenance visualization.
      */
     var runLayoutPrivate = function (graph) {
-        console.log("Provvis: New layout is active.");
-
-        console.log(graph.aLinks);
 
         /* ANALYSIS LAYOUT. */
-        /* TODO: Generic re-implementation for analysis nodes. */
-        console.log("");
-        console.log("ANALYIS");
-        console.log("=======");
+        /* TODO: Refine and cleanup */
 
         var startANodes = [];
         startANodes.push(graph.dataset);
         var tsANodes = topSortNodes(startANodes, graph.aNodes.length, graph);
-        console.log("ts: " + tsANodes.map(function (d) {
-            return d.autoId;
-        }));
+
         if (tsANodes !== null) {
             layerNodes(tsANodes, graph);
 
@@ -1142,35 +1175,16 @@ var provvisLayout = function () {
                 al.l.ts.removed = false;
             });
             tsANodes = topSortNodes(startANodes, graph.aNodes.length, graph);
-            console.log("ts: " + tsANodes.map(function (d) {
-                return d.autoId;
-            }));
 
             layerNodes(tsANodes, graph);
 
             var gANodes = groupNodes(tsANodes);
-            console.log("layers:");
-            gANodes.forEach(function (l, i) {
-                console.log(i + ": " + l.map(function (d) {
-                    return d.autoId;
-                }));
-            });
-            console.log("");
 
-
-            console.log("gANodes");
-            console.log(gANodes);
-
-            /* TODO: in progress. */
+            /* TODO: Refine and clean up. */
             var bclgNodes = layoutNodes(gANodes, graph);
-
 
             /* Remove dummy nodes. */
             //removeDummyNodes(graph);
-
-            console.log("#aNodes");
-            console.log(graph.aNodes);
-
 
             /* Reset layout properties for links. */
             graph.aNodes.forEach(function (an) {
@@ -1181,120 +1195,108 @@ var provvisLayout = function () {
                 l.l.ts.removed = false;
             });
 
+
+
+            /* TODO: Extract and create layered nodes. */
+            extractLayeredNodes(bclgNodes);
+
+
+
             /* SUBANALYSIS LAYOUT. */
-            console.log("");
-            console.log("SUBANALYIS");
-            console.log("==========");
-
-            console.log(bclgNodes);
-
             reorderSubanalysisNodes(bclgNodes);
+
+            /* FILES/TOOLS LAYOUT. */
+            graph.saNodes.forEach(function (san) {
+                var tsNodes = topSortNodes(san.inputs.values(), san.children.size(), san);
+
+                if (tsNodes !== null) {
+                    /* Assign layers. */
+                    layerNodes(tsNodes, san);
+
+                    /* Group nodes by layer. */
+                    var gNodes = groupNodes(tsNodes);
+
+                    /* TODO: Refine and cleanup. */
+
+                    /* Init rows and visited flag. */
+                    gNodes.forEach(function (gn) {
+                        gn.forEach(function (n, i) {
+                            n.row = i;
+                            n.visited = false;
+                        });
+                    });
+
+                    /* Process layout, for each column. */
+                    gNodes.forEach(function (gn) {
+
+                        /* For each node. */
+                        gn.forEach(function (n) {
+
+                            var succs = n.succs.values().filter(function (s) {
+                                return  s.parent === n.parent;
+                            });
+
+                            /* Branch. */
+                            if (succs.length > 1) {
+
+                                /* Successors was visited before? */
+                                var visited = getNumberofVisitedNodesByArray(succs),
+                                    rowShift = succs.length / 2;
+
+                                /* Shift nodes before and after the branch. */
+                                /* But only if there are more than one successor. */
+                                if ((succs.length - visited) > 1) {
+                                    shiftNodesByRows(tsNodes, rowShift, n.col, n.row);
+                                    shiftNodesByRows(tsNodes, rowShift, n.col, n.row + 1);
+                                }
+
+                                var succRow = n.row - rowShift + visited;
+                                succs.forEach(function (sn) {
+                                    if (succs.length % 2 === 0 && succRow === n.row) {
+                                        succRow++;
+                                    }
+
+                                    if (sn.visited === false) {
+                                        sn.row = succRow;
+                                        sn.visited = true;
+                                        succRow++;
+                                    }
+                                });
+                            } else {
+                                succs.forEach(function (sn) {
+                                    sn.row = n.row;
+                                });
+                            }
+                        });
+                    });
+                } else {
+                    console.log("Error: Graph is not acyclic!");
+                }
+            });
+
+            /* Create workflow grid. */
+            graph.saNodes.forEach(function (san) {
+
+                /* Initialize workflow dimensions. */
+                san.l.depth = d3.max(san.children.values(), function (n) {
+                    return n.col;
+                }) + 1;
+                san.l.width = d3.max(san.children.values(), function (n) {
+                    return n.row;
+                }) + 1;
+
+                /* Init grid. */
+                initNodeGrid(san);
+
+                /* Set grid cells. */
+                san.children.values().forEach(function (n) {
+                    san.l.grid[n.col][n.row] = n;
+                });
+            });
 
         } else {
             console.log("Error: Graph is not acyclic!");
         }
-
-
-        /* FILES/TOOLS LAYOUT. */
-        /*        console.log("");
-         console.log("NODES");
-         console.log("===========");*/
-
-        graph.saNodes.forEach(function (san) {
-            var tsNodes = topSortNodes(san.inputs.values(), san.children.size(), san);
-            /*            console.log("ts: " + tsNodes.map(function (d) {
-             return d.id;
-             }));*/
-            if (tsNodes !== null) {
-                /* Assign layers. */
-                layerNodes(tsNodes, san);
-
-                /* Group nodes by layer. */
-                var gNodes = groupNodes(tsNodes);
-                /*                gNodes.forEach(function (gn, i) {
-                 console.log(i + ": " + gn.map(function (d) {
-                 return d.id;
-                 }));
-                 });*/
-
-
-                /* TODO: Workflow vis layout test. */
-
-                /* Init rows and visited flag. */
-                gNodes.forEach(function (gn) {
-                    gn.forEach(function (n, i) {
-                        n.row = i;
-                        n.visited = false;
-                    });
-                });
-
-                /* Process layout, for each column. */
-                gNodes.forEach(function (gn) {
-
-                    /* For each node. */
-                    gn.forEach(function (n) {
-
-                        var succs = n.succs.values().filter(function (s) {
-                            return  s.parent === n.parent;
-                        });
-
-                        /* Branch. */
-                        if (succs.length > 1) {
-
-                            /* Successors was visited before? */
-                            var visited = getNumberofVisitedNodesByArray(succs),
-                                rowShift = succs.length / 2;
-
-                            /* Shift nodes before and after the branch. */
-                            /* But only if there are more than one successor. */
-                            if ((succs.length - visited) > 1) {
-                                shiftNodesByRows(tsNodes, rowShift, n.col, n.row);
-                                shiftNodesByRows(tsNodes, rowShift, n.col, n.row + 1);
-                            }
-
-                            var succRow = n.row - rowShift + visited;
-                            succs.forEach(function (sn) {
-                                if (succs.length % 2 === 0 && succRow === n.row) {
-                                    succRow++;
-                                }
-
-                                if (sn.visited === false) {
-                                    sn.row = succRow;
-                                    sn.visited = true;
-                                    succRow++;
-                                }
-                            });
-                        } else {
-                            succs.forEach(function (sn) {
-                                sn.row = n.row;
-                            });
-                        }
-                    });
-                });
-            } else {
-                console.log("Error: Graph is not acyclic!");
-            }
-        });
-
-        /* Create workflow grid. */
-        graph.saNodes.forEach(function (san) {
-
-            /* Initialize workflow dimensions. */
-            san.l.depth = d3.max(san.children.values(), function (n) {
-                return n.col;
-            }) + 1;
-            san.l.width = d3.max(san.children.values(), function (n) {
-                return n.row;
-            }) + 1;
-
-            /* Init grid. */
-            initNodeGrid(san);
-
-            /* Set grid cells. */
-            san.children.values().forEach(function (n) {
-                san.l.grid[n.col][n.row] = n;
-            });
-        });
     };
 
     /**
