@@ -22,7 +22,8 @@ from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import DjangoAuthorization, Authorization
 from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS, ALL
-from tastypie.exceptions import Unauthorized
+from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
+from tastypie.http import HttpNotFound
 from tastypie.resources import ModelResource, Resource
 from tastypie.serializers import Serializer
 import logging
@@ -348,10 +349,8 @@ class StatisticsResource(Resource):
         
         if "dataset" in request.GET:
             dataset_summary = self.stat_summary(DataSet)
-
         if "workflow" in request.GET:
             workflow_summary = self.stat_summary(Workflow)
-
         if "project" in request.GET:
             project_summary = self.stat_summary(Project)
 
@@ -374,81 +373,47 @@ class SharedPermissionResource(Resource):
     keys = fields.DictField(attribute="keys")
     permission_map = fields.DictField(attribute="permission_map")
 
-    dummy_keys = {
-        "DataSet": ["DS1", "DS2"],
-        "Project": ["P1", "P2", "P3"],
-        "Workflow": ["W1", "W2"]
-    }
+    # get user object from username string
+    def get_user(self, username):
+        user_list = filter(lambda u: u.username == username, User.objects.all())
+        return None if len(user_list) == 0 else user_list[0]
+       
+    # get all the resources that belongs to the user for a specific type of sharable resource
+    def get_res(self, username, res_type):
+        user = self.get_user(username)
+        return filter(lambda res: res.get_owner() == user, res_type.objects.all())
 
-    dummy_permission_map_test = {
-        "G1": {
-            "read": True,
-            "change": False
-        },
-        "G2": {
-            "read": True,
-            "change": True
-        },
-        "G3": {
-            "read": True,
-            "change": True
-        }
-    }
+    # the keys are the names of the sharable resources
+    def get_key_map(self, username):
+        def extract_names(res_list):
+            return map(lambda res: res.name, res_list)
+        return {
+            "DataSet": extract_names(self.get_res(username, DataSet)),
+            "Project": extract_names(self.get_res(username, Project)),
+            "Workflow": extract_names(self.get_res(username, Workflow)) }
 
-    def get_keys(self, username_key):
-        def get_res_type_keys(res_type):
-            user_list = filter(lambda u: u.username == username_key, User.objects.all())
-            user = None if len(user_list) == 0 else user_list[0]
-            user_groups = user.groups.all()
-            filtered_res = filter(lambda res: res.get_owner() == user, res_type.objects.all())
-            return map(lambda res: res.name, filtered_res)
-        
-        final_key_map = {
-            "DataSet": get_res_type_keys(DataSet),
-            "Project": get_res_type_keys(Project),
-            "Workflow": get_res_type_keys(Workflow)
-        }
-
-        return final_key_map
-
-    def get_permission_map(self, username_key):
-        user_list = filter(lambda u: u.username == username_key, User.objects.all())
-        user = None if len(user_list) == 0 else user_list[0]
-        user_groups = user.groups.all()
-
+    def get_permission_map(self, username):
         def get_res_map(res_type):
-            # all the resources that are owned by the user
-            filtered_res = filter(lambda res: res.get_owner() == user, res_type.objects.all())
+            # all the resources that are owned by the user for a specific type
+            owned_res = self.get_res(username, res_type)
+            acc_dict = {}
             
-            # the groups that the user is part of
-            groups = []            
-
-            # the final resulting dictionary for one type of resource
-            total_dict = {}
-            for i in filtered_res:
-                # the specific dictionary for one resource
+            for i in owned_res:
+                # the dictionary for one specific resource
                 res_dict = {}
-                
-                # groups.extend(map(lambda res: res["group"], i.get_groups().group_ptr))
-
                 # see if extended group or group is preferred just have to remove the group_ptr
                 res_group_shared_with = map(lambda res: (res["group"].group_ptr.name, {"read": res["read"], "change": res["change"]}), i.get_groups())
+            
                 for j in res_group_shared_with:
-                    res_dict[j[0]] = j[1]
-
-                total_dict[i.name] = res_dict
-
-            return total_dict
-
-        final_permission_map = {
+                   # j[0] contains group name, j[1] contains read/change permission
+                   res_dict[j[0]] = j[1]
+                acc_dict[i.name] = res_dict
+            return acc_dict
+        return {
             "DataSet": get_res_map(DataSet),
             "Project": get_res_map(Project),
-            "Workflow": get_res_map(Workflow)
-        }
+            "Workflow": get_res_map(Workflow) }
 
-        return final_permission_map
-  
-    
     class Meta:
         resource_name = "shared_permission"
         object_class = SharedPermissionObject
@@ -462,12 +427,13 @@ class SharedPermissionResource(Resource):
         return self.get_object_list(bundle.request)
 
     def get_object_list(self, request):
-        #if "username" in request.GET and "shared_resource" in request.GET:
-        #return [SharedPermissionObject("username7", self.dummy_keys, self.get_permission_map("username5"))] 
-
         username = request.GET["username"]
-
-        return [SharedPermissionObject(username, self.get_keys(username), self.get_permission_map(username))]
-        #else:
+        
+        if self.get_user(username) is None:
+            raise ImmediateHttpResponse(response=HttpNotFound("Username does not exist"))
+        else: 
+            key_map = self.get_key_map(username)
+            permission_map = self.get_permission_map(username)
+            return [SharedPermissionObject(username, key_map, permission_map)]
 
 
