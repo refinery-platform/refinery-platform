@@ -1,0 +1,120 @@
+angular.module("refinerySharing", [])
+
+.controller("refinerySharingController", function ($scope, $http) {
+    var user = document.getElementById("user").innerText;
+    var dataSetEntries = [];
+    var projectEntries = [];
+    var workflowEntries = [];
+    
+    // in case the HTML page has changes
+    var dataSetTable = "data-set-table";
+    var workflowTable = "workflow-table";
+    var projectTable = "project-table";
+    var testDiv = "size-test";
+
+    $http.get("/api/v1/shared_permission/?username=" + user + "&format=json").success(function (response) {
+        var keys = response.objects[0].keys;
+        var permissionMap = response.objects[0].permissionMap;
+
+        // data set
+        dataSetNames = keys.DataSet;
+        
+        dataSetEntries = [
+            {
+                resName: "DS1",
+                groups: [
+                    {
+                        name: "A",
+                        permission: "read"
+                    },
+                    {
+                        name: "B",
+                        permission: "change"
+                    }
+                ]
+            },
+            {
+                resName: "DS2",
+                groups: [
+                    {
+                        name: "C",
+                        permission: "read"
+                    },
+                    {
+                        name: "D",
+                        permission: "change"
+                    }
+                ]
+            }
+        ];
+
+        for (var i = 0; i < dataSetEntries.length; i++) {
+            addResourceEntry(dataSetTable, dataSetEntries[i].resName, dataSetEntries[i].groups);
+        }
+
+        // project
+        projectNames = keys.Project;
+
+        // workflow
+        workflowNames = keys.Workflow;
+
+    });
+
+    function addResourceEntry(divId, resName, groups) {
+        var divObj = document.getElementById(divId);
+        var divWidth = divObj.offsetWidth;
+        var htmlToBeAppended = "<br>" + resName;
+        // add edit button
+
+
+        for (var i = 0; i < groups.length; i++) {
+            var dotCount = 0;
+            var tmpHTMLHead = "<br>&nbsp&nbsp&nbsp&nbsp" + groups[i].name + "&nbsp";
+            var tmpHTMLMid = "";
+            var tmpHTMLTail = "&nbsp" + groups[i].permission;
+            while (getTextWidth(testDiv, tmpHTMLHead + tmpHTMLMid + tmpHTMLTail) < divWidth) {
+                dotCount++;
+                tmpHTMLMid = Array(dotCount + 1).join(".");
+            }
+            htmlToBeAppended += tmpHTMLHead + tmpHTMLMid + tmpHTMLTail;
+        }
+        divObj.innerHTML += htmlToBeAppended;
+    }
+
+    function getTextWidth(divId, text) {
+        var testDiv = document.getElementById(divId);
+        testDiv.innerHTML = text;
+        var length = testDiv.clientWidth;
+        testDiv.innerHTML = "";
+        return length;
+    }
+
+    window.onresize = function (event) {
+        var dataSetDiv = document.getElementById(dataSetTable);
+        var workflowDiv = document.getElementById(workflowTable);
+        var projectDiv = document.getElementById(projectTable);
+
+        dataSetDiv.innerHTML = "<div id='size-test' style='display: hidden; position: absolute; height: auto; width: auto'></div>";
+        workflowDiv.innerHTML = "";
+        projectDiv.innerHTML = "";
+
+        for (var i = 0; i < dataSetEntries.length; i++) {
+            addResourceEntry(dataSetTable, dataSetEntries[i].resName, dataSetEntries[i].groups);
+        }
+
+        for (var j = 0; i < workflowEntries.length; i++) {
+            addResourceEntry(workflowTable, workflowEntries[j].resName, workflowEntries[j].groups);
+        }
+
+        for (var k = 0; i < projectEntries.length; i++) {
+            addResourceEntry(projectTable, projectEntries[k].resName, projectEntries[k].groups);
+        }
+    };
+})
+
+.directive("sharingData", function() {
+    return {
+        templateUrl: "/static/partials/sharing_tpls.html",
+        restrict: "A"
+    };
+});

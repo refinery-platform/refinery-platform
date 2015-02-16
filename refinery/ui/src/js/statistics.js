@@ -1,7 +1,6 @@
 angular.module("refineryStatistics", [])
 
 .controller("refineryStatisticsController", function ($scope, $http) {
-    
     var chartMap = {};
     function plot(data, target) {
         var heightWidthRatio = 1.6;
