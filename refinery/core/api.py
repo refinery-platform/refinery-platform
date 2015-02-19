@@ -388,9 +388,9 @@ class SharedPermissionResource(Resource):
         def extract_names(res_list):
             return map(lambda res: res.name, res_list)
         return {
-            "DataSet": extract_names(self.get_res(username, DataSet)),
-            "Project": extract_names(self.get_res(username, Project)),
-            "Workflow": extract_names(self.get_res(username, Workflow)) }
+            "data_set": extract_names(self.get_res(username, DataSet)),
+            "project": extract_names(self.get_res(username, Project)),
+            "workflow": extract_names(self.get_res(username, Workflow)) }
 
     def get_permission_map(self, username):
         def get_res_map(res_type):
@@ -399,20 +399,21 @@ class SharedPermissionResource(Resource):
             acc_dict = {}
             
             for i in owned_res:
-                # the dictionary for one specific resource
-                res_dict = {}
+                # the list for one specific resource
+                res_list = []
                 # see if extended group or group is preferred just have to remove the group_ptr
                 res_group_shared_with = map(lambda res: (res["group"].group_ptr.name, {"read": res["read"], "change": res["change"]}), i.get_groups())
             
                 for j in res_group_shared_with:
-                   # j[0] contains group name, j[1] contains read/change permission
-                   res_dict[j[0]] = j[1]
-                acc_dict[i.name] = res_dict
+                    # j[0] contains group name, j[1] contains read/change permission
+                    # change has higher priority over read; change implies read permission
+                    res_list.append({ "name": j[0], "permission": j[1]})
+                acc_dict[i.name] = res_list
             return acc_dict
         return {
-            "DataSet": get_res_map(DataSet),
-            "Project": get_res_map(Project),
-            "Workflow": get_res_map(Workflow) }
+            "data_set": get_res_map(DataSet),
+            "project": get_res_map(Project),
+            "workflow": get_res_map(Workflow) }
 
     class Meta:
         resource_name = "shared_permission"
