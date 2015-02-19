@@ -765,7 +765,10 @@ var provvis = function () {
                 vis.graph = provvisInit.runInit(data, analysesData, solrResponse);
 
                 /* Compute layout. */
-                provvisLayout.runLayout(vis.graph);
+                var bclgNodes = provvisLayout.runLayout(vis.graph);
+
+                /* Discover and and inject motifs. */
+                provvisMotifs.runMotifs(vis.graph, bclgNodes);
 
                 /* Render graph. */
                 provvisRender.runRender(vis);

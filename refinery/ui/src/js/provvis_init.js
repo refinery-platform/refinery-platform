@@ -65,7 +65,7 @@ var provvisInit = function () {
             }),
             analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : "dataset";
 
-        return new provvisDecl.Node(id, type, Object.create(null), false, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid, n.file_url);
+        return new provvisDecl.Node(id, type, Object.create(null), true, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid, n.file_url);
     };
 
     /**
@@ -222,7 +222,7 @@ var provvisInit = function () {
      * @returns {provvisDecl.Analysis} New Analysis object.
      */
     var createAnalysisNode = function (a, i) {
-        return new provvisDecl.Analysis(i, Object.create(null), true, a.uuid,
+        return new provvisDecl.Analysis(i, Object.create(null), false, a.uuid,
             a.workflow__uuid, i, a.time_start, a.time_end, a.creation_date);
     };
 
@@ -275,7 +275,7 @@ var provvisInit = function () {
         }
 
         /* Create analysis for dataset. */
-        dataset = new provvisDecl.Analysis(0, Object.create(null), true, "dataset", "dataset",
+        dataset = new provvisDecl.Analysis(0, Object.create(null), false, "dataset", "dataset",
             0, initDate, initDate, initDate);
         aNodes.push(dataset);
         analysisWorkflowMap.set("dataset", "dataset");

@@ -234,8 +234,7 @@ var provvisDecl = function () {
 
         this.wfName = "";
 
-        this.layer = Object.create(null);
-        this.aggregation = Object.create(null);
+        this.macro = Object.create(null);
     };
 
     Analysis.prototype = Object.create(BaseNode.prototype);
@@ -265,42 +264,58 @@ var provvisDecl = function () {
     Subanalysis.prototype.constructor = Subanalysis;
 
     /**
-     * Constructor function for the layered node data structure.
+     * Constructor function for the aggregated macro node data structure.
      *
      * @param id
      * @param parent
      * @param hidden
      * @constructor
      */
-    var LayeredNode = function (id, parent, hidden) {
-        BaseNode.call(this, id, "layeredNode", parent, hidden);
+    var Macro = function (id, parent, hidden) {
+        BaseNode.call(this, id, "macro", parent, hidden);
 
         this.inputs = d3.map();
         this.outputs = d3.map();
         this.links = d3.map();
     };
 
-    LayeredNode.prototype = Object.create(BaseNode.prototype);
-    LayeredNode.prototype.constructor = LayeredNode;
+    Macro.prototype = Object.create(BaseNode.prototype);
+    Macro.prototype.constructor = Macro;
 
     /**
-     * Constructor function for the aggregated node data structure.
+     * Constructor function for the provenance layered node data structure.
      *
      * @param id
      * @param parent
      * @param hidden
      * @constructor
      */
-    var AggregatedNode = function (id, parent, hidden) {
-        BaseNode.call(this, id, "aggregatedNode", parent, hidden);
+    var Layer = function (id, parent, hidden) {
+        Macro.call(this, id, "layer", parent, hidden);
+
+    };
+
+    Layer.prototype = Object.create(Macro.prototype);
+    Layer.prototype.constructor = Layer;
+
+
+
+    /**
+     * Constructor function for the motif data structure.
+     *
+     * @constructor
+     */
+    var Motif = function () {
 
         this.inputs = d3.map();
         this.outputs = d3.map();
-        this.links = d3.map();
-    };
 
-    AggregatedNode.prototype = Object.create(BaseNode.prototype);
-    AggregatedNode.prototype.constructor = AggregatedNode;
+        this.nodes = d3.map();
+        this.links = d3.map();
+
+        Motif.numInstances = (Motif.numInstances || 0) + 1;
+        this.autoId = Motif.numInstances;
+    };
 
     /**
      * Constructor function for the link data structure.
@@ -418,17 +433,6 @@ var provvisDecl = function () {
         };
     };
 
-    /*    */
-    /**
-     * Support view only showing analysis within a time-gradient background.
-     *
-     * @constructor
-     */
-    /*
-     var SupportView = function () {
-
-     };*/
-
     /**
      * Publish constructor function declarations.
      */
@@ -438,6 +442,9 @@ var provvisDecl = function () {
         Node: Node,
         Analysis: Analysis,
         Subanalysis: Subanalysis,
+        Macro: Macro,
+        Layer: Layer,
+        Motif: Motif,
         Link: Link,
         ProvVis: ProvVis,
         ProvGraph: ProvGraph

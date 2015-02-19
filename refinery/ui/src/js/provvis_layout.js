@@ -209,7 +209,7 @@ var provvisLayout = function () {
                     /* Crossing. */
                 } else {
                     /* Type 0 and 1 conflict: If link is an non-inner segment, mark link to be removed. */
-                    if (tarA.nodeType !== "dummy" || srcA.nodeType !== "dummy") {
+                    if (tarA.uuid !== "dummy" || srcA.uuid !== "dummy") {
                         upp.l.type1 = true;
 
                         /* If link is an inner segment, remove all non-inner segments crossing it beforehand. */
@@ -1074,78 +1074,6 @@ var provvisLayout = function () {
     };
 
     /**
-     * Extract and set layered nodes for analysis nodes.
-     * @param bclgNodes Barcyenter sorted, layered and grouped analysis nodes.
-     */
-    var extractLayeredNodes = function (bclgNodes) {
-
-        /* TODO: Provenance layering algorithm:
-         *
-         * FOR each grid layer starting at 1:
-         *   FOR each analysis node:
-         *     Each new connection between predecessor analysis node outputs and the current analysis node inputs
-         *     creates a pattern i.
-         *
-         *     If another analysis node within the current layer conforms to the same workflow of an
-         *     existing pattern analysis node:
-         *       - happen to to have the same file-file connection, as a created pattern before,
-         *         a layeredNode is created.
-         *       - would start a pattern with an analysis node, which already belongs to an active pattern,
-         *         the pattern with the most instances wins and claims this analysis node.
-         *       - would conform to a pattern but do have additional input connections
-         *         (e.g. due to owning more subanalyses), this analysis node would not be part of the pattern
-         *         and may start a new pattern or a CHANGE.
-         *
-         *     After every analysis node within the current layer is processed:
-         *       - new patterns which do only have one congruent instance
-         *         (conforming to the pattern - meaning itself alone) ends the pattern.
-         *       - existing patterns which were expanded by a single analysis node will end the pattern
-         *         and therefore the layered provenance path.
-         *   ENDFOR
-         * ENDFOR
-         *
-         * CHANGES to tolerate:
-         *   - WORKFLOW PARAMETERS: matching file-file connections and workflow, but different workflow parameters.
-         *   - FILE-FILE: matching workflow and workflow parameters but different file-file connections.
-         *   - TOPOLOGY: matching file-file connections but different workflow and different workflow parameters.
-         */
-
-
-        /* Pattern data-structure. */
-
-        /* Pattern node object */
-        var pn =
-        {
-            inputs: [],
-            outputs: [],
-            workflowName: "",
-            workflowParams: Object.create(null),
-            numInstances: 0
-
-        };
-
-        /* Pattern. */
-        var p =
-        {
-            startCol: 0,
-            endCol: 0,
-            p: []
-        };
-
-        /* Pattern container. */
-        var patterns = [];
-
-        /* Provenance layering algorithm. */
-        for (var i = 0; i < bclgNodes.length; i++) {
-            //console.log("layer " + i);
-            for (var j = 0; j < bclgNodes[i].length; j++) {
-                //console.log(bclgNodes[i][j]);
-            }
-        }
-    };
-
-
-    /**
      * Main layout module function.
      * @param graph The main graph object of the provenance visualization.
      */
@@ -1154,6 +1082,7 @@ var provvisLayout = function () {
         /* ANALYSIS LAYOUT. */
         /* TODO: Refine and cleanup */
 
+        var bclgNodes = [];
         var startANodes = [];
         startANodes.push(graph.dataset);
         var tsANodes = topSortNodes(startANodes, graph.aNodes.length, graph);
@@ -1181,7 +1110,7 @@ var provvisLayout = function () {
             var gANodes = groupNodes(tsANodes);
 
             /* TODO: Refine and clean up. */
-            var bclgNodes = layoutNodes(gANodes, graph);
+            bclgNodes = layoutNodes(gANodes, graph);
 
             /* Remove dummy nodes. */
             //removeDummyNodes(graph);
@@ -1194,13 +1123,6 @@ var provvisLayout = function () {
             graph.links.forEach(function (l) {
                 l.l.ts.removed = false;
             });
-
-
-
-            /* TODO: Extract and create layered nodes. */
-            extractLayeredNodes(bclgNodes);
-
-
 
             /* SUBANALYSIS LAYOUT. */
             reorderSubanalysisNodes(bclgNodes);
@@ -1297,6 +1219,8 @@ var provvisLayout = function () {
         } else {
             console.log("Error: Graph is not acyclic!");
         }
+
+        return bclgNodes;
     };
 
     /**
@@ -1304,7 +1228,7 @@ var provvisLayout = function () {
      */
     return{
         runLayout: function (graph) {
-            runLayoutPrivate(graph);
+            return runLayoutPrivate(graph);
         }
     };
 }();
