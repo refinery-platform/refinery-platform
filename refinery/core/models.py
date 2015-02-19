@@ -1055,8 +1055,17 @@ class StatisticsObject(object):
         self.workflow = workflow
         self.project = project
 
-class SharedPermissionObject(object):
+class UserMultiPermissionObject(object):
     def __init__(self, username=None, keys=None, permission_map=None):
         self.username = username
         self.keys = keys
         self.permission_map = permission_map
+
+class UserSinglePermissionObject(object):
+    def __init__(self, username=None, user_id=None, res_type=None, res_name=None, res_uuid=None, shares=None):
+        self.username = username
+        self.user_id = user_id
+        self.res_type = res_type
+        self.res_name = res_name
+        self.res_uuid = res_uuid
+        self.shares = shares

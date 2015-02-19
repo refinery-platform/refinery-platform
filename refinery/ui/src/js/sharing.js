@@ -15,7 +15,7 @@ angular.module("refinerySharing", [])
     var projectTable = "project-table";
     var testDiv = "size-test";
 
-    $http.get("/api/v1/shared_permission/?username=" + user + "&format=json").success(function (response) {
+    $http.get("/api/v1/user_multi_permission/?username=" + user + "&format=json").success(function (response) {
         var keys = response.objects[0].keys;
         var permissionMap = response.objects[0].permission_map;
 

@@ -7,7 +7,7 @@ Created on May 4, 2012
 from GuardianTastypieAuthz import GuardianAuthorization
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, \
     WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus, StatisticsObject, \
-    SharedPermissionObject
+    UserMultiPermissionObject, UserSinglePermissionObject
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
 from core.tasks import check_tool_status
@@ -23,7 +23,7 @@ from tastypie.authorization import DjangoAuthorization, Authorization
 from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS, ALL
 from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
-from tastypie.http import HttpNotFound
+from tastypie.http import HttpNotFound, HttpForbidden
 from tastypie.resources import ModelResource, Resource
 from tastypie.serializers import Serializer
 import logging
@@ -313,22 +313,22 @@ class ExternalToolStatusResource(ModelResource):
 
 
 class StatisticsResource(Resource):
-    user = fields.IntegerField(attribute="user")
-    group = fields.IntegerField(attribute="group")
-    files = fields.IntegerField(attribute="files")
-    dataset = fields.DictField(attribute="dataset")
-    workflow = fields.DictField(attribute="workflow")
-    project = fields.DictField(attribute="project")
+    user = fields.IntegerField(attribute='user')
+    group = fields.IntegerField(attribute='group')
+    files = fields.IntegerField(attribute='files')
+    dataset = fields.DictField(attribute='dataset')
+    workflow = fields.DictField(attribute='workflow')
+    project = fields.DictField(attribute='project')
 
     def stat_summary(self, model):
         total = len(model.objects.all())
         public = len(filter(lambda x: x.is_public(), model.objects.all()))
         private_shared = len(filter(lambda x: (not x.is_public() and len(x.get_groups()) > 1), model.objects.all()))
         private = total - public - private_shared
-        return {"total": total, "public": public, "private": private, "private_shared": private_shared}
+        return {'total': total, 'public': public, 'private': private, 'private_shared': private_shared}
 
     class Meta:
-        resource_name = "statistics"
+        resource_name = 'statistics'
         object_class = StatisticsObject 
 
     def detail_uri_kwargs(self, bundle_or_obj):
@@ -347,31 +347,31 @@ class StatisticsResource(Resource):
         workflow_summary = {}
         project_summary = {}
         
-        if "dataset" in request.GET:
+        if 'dataset' in request.GET:
             dataset_summary = self.stat_summary(DataSet)
-        if "workflow" in request.GET:
+        if 'workflow' in request.GET:
             workflow_summary = self.stat_summary(Workflow)
-        if "project" in request.GET:
+        if 'project' in request.GET:
             project_summary = self.stat_summary(Project)
 
-        request_string = request.GET.get("type")
+        request_string = request.GET.get('type')
         
         if request_string is not None:
-            if "dataset" in request_string:
+            if 'dataset' in request_string:
                 dataset_summary = self.stat_summary(DataSet)
-            if "workflow" in request_string:
+            if 'workflow' in request_string:
                 workflow_summary = self.stat_summary(Workflow)
-            if "project" in request_string:
+            if 'project' in request_string:
                 project_summary = self.stat_summary(Project)
 
         results = [StatisticsObject(user_count, group_count, files_count, dataset_summary, workflow_summary, project_summary)]
         return results
 
 
-class SharedPermissionResource(Resource):
-    username = fields.CharField(attribute="username")
-    keys = fields.DictField(attribute="keys")
-    permission_map = fields.DictField(attribute="permission_map")
+class UserMultiPermissionResource(Resource):
+    username = fields.CharField(attribute='username')
+    keys = fields.DictField(attribute='keys')
+    permission_map = fields.DictField(attribute='permission_map')
 
     # get user object from username string
     def get_user(self, username):
@@ -388,9 +388,9 @@ class SharedPermissionResource(Resource):
         def extract_names(res_list):
             return map(lambda res: res.name, res_list)
         return {
-            "data_set": extract_names(self.get_res(username, DataSet)),
-            "project": extract_names(self.get_res(username, Project)),
-            "workflow": extract_names(self.get_res(username, Workflow)) }
+            'data_set': extract_names(self.get_res(username, DataSet)),
+            'project': extract_names(self.get_res(username, Project)),
+            'workflow': extract_names(self.get_res(username, Workflow)) }
 
     def get_permission_map(self, username):
         def get_res_map(res_type):
@@ -402,22 +402,22 @@ class SharedPermissionResource(Resource):
                 # the list for one specific resource
                 res_list = []
                 # see if extended group or group is preferred just have to remove the group_ptr
-                res_group_shared_with = map(lambda res: (res["group"].group_ptr.name, {"read": res["read"], "change": res["change"]}), i.get_groups())
+                res_group_shared_with = map(lambda res: (res['group'].group_ptr.name, {'read': res['read'], 'change': res['change']}), i.get_groups())
             
                 for j in res_group_shared_with:
                     # j[0] contains group name, j[1] contains read/change permission
                     # change has higher priority over read; change implies read permission
-                    res_list.append({ "name": j[0], "permission": j[1]})
+                    res_list.append({'name': j[0], 'permission': j[1]})
                 acc_dict[i.name] = res_list
             return acc_dict
         return {
-            "data_set": get_res_map(DataSet),
-            "project": get_res_map(Project),
-            "workflow": get_res_map(Workflow) }
+            'data_set': get_res_map(DataSet),
+            'project': get_res_map(Project),
+            'workflow': get_res_map(Workflow) }
 
     class Meta:
-        resource_name = "shared_permission"
-        object_class = SharedPermissionObject
+        resource_name = 'user_multi_permission'
+        object_class = UserMultiPermissionObject
 
     def detail_uri_kwargs(self, bundle_or_obj):
         kwargs = {}
@@ -428,13 +428,98 @@ class SharedPermissionResource(Resource):
         return self.get_object_list(bundle.request)
 
     def get_object_list(self, request):
-        username = request.GET["username"]
+        # GET requests
+        username = request.GET['username']
         
         if self.get_user(username) is None:
             raise ImmediateHttpResponse(response=HttpNotFound("Username does not exist"))
         else: 
             key_map = self.get_key_map(username)
             permission_map = self.get_permission_map(username)
-            return [SharedPermissionObject(username, key_map, permission_map)]
+            return [UserMultiPermissionObject(username, key_map, permission_map)]
+
+class UserSinglePermissionResource(Resource):
+    username = fields.CharField(attribute='username')
+    user_id = fields.CharField(attribute='user_id')
+    res_type = fields.CharField(attribute='res_type')
+    res_name = fields.CharField(attribute='res_name')
+    res_uuid = fields.CharField(attribute='res_uuid')
+    shares = fields.ListField(attribute='shares')
+
+    def get_user_by_name(self, username):
+        user_list = filter(lambda u: u.username == username, User.objects.all())
+        return None if len(user_list) == 0 else user_list[0]
+    
+    def get_user_by_id(self, user_id):
+        # HTTP requests come in as strings 
+        user_list = filter(lambda u: str(u.id) == user_id, User.objects.all())
+        return None if len(user_list) == 0 else user_list[0]
+
+    # get res object based on name and type
+    def get_res_by_name(self, res_type, res_name):
+        if res_type is None:
+            return None
+        res_list = filter(lambda r: r.name == res_name, res_type.objects.all())
+        return None if len(res_list) == 0 else res_list[0]
+
+    def get_res_by_uuid(self, res_type, res_uuid):
+        if res_type is None:
+            return None
+        res_list = filter(lambda r: r.uuid == res_uuid, res_type.objects.all())
+        return None if len(res_list) == 0 else res_list[0]
+
+    def get_res_type(self, res_type_str):
+        if res_type_str == 'DataSet':
+            return DataSet
+        elif res_type_str == 'Project':
+            return Project
+        elif res_type_str == 'Workflow':
+            return Workflow
+        else:
+            return None
+
+    def get_shares(self, res):
+        share_list = []
+        groups_shared_with = map(lambda r: (r['group'].group_ptr.name, r['group'].uuid, {'read': r['read'], 'change': r['change']}), res.get_groups())
+
+        for i in groups_shared_with:
+            # i[0] is group name, i[1] is uuid, i[2] is permissions
+            share_list.append({'name': i[0], 'uuid': i[1], 'permission': i[2]})
+        
+        return share_list
+
+    class Meta:
+        resource_name = 'user_single_permission'
+        object_class = UserSinglePermissionObject
+
+    def detail_uri_kwargs(self, bundle_or_obj):
+        kwargs = {}
+        kwargs['pk'] = uuid.uuid1()
+        return kwargs
+
+    def obj_get_list(self, bundle, **kwargs):
+        return self.get_object_list(bundle.request)
+
+    def get_object_list(self, request):
+        #GET requests
+        user_id = request.GET['user-id']
+        user = self.get_user_by_id(user_id)
+
+        res_type_str = request.GET['res-type']
+        res_type = self.get_res_type(res_type_str)
+        res_uuid = request.GET['res-uuid']
+        res = self.get_res_by_uuid(res_type, res_uuid)
+
+        # something went wrong
+        if (user is None):
+            raise ImmediateHttpResponse(response=HttpNotFound("User cannot be found"))
+        elif (res is None):
+            raise ImmediateHttpResponse(response=HttpNotFound("User found, but resource cannot be found"))
+        elif (res.get_owner().id != user.id):
+            raise ImmediateHttpResponse(response=HttpForbidden("User does not have ownership of the resource"))
+        else:
+            # passed all checks
+            shares = self.get_shares(res)
+            return [UserSinglePermissionObject(user.username, user_id, res_type_str, res.name, res_uuid, shares)]
 
 
