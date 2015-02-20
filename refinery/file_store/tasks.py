@@ -6,7 +6,8 @@ from urlparse import urlparse
 from tempfile import NamedTemporaryFile
 from celery.task import task
 from django.core.files import File
-from file_store.models import FileStoreItem, get_temp_dir, file_path, FILE_STORE_BASE_DIR
+from file_store.models import FileStoreItem, get_temp_dir, file_path,\
+    FILE_STORE_BASE_DIR
 
 
 logger = logging.getLogger('file_store')
@@ -30,6 +31,7 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
     :returns: FileStoreItem UUID if success, None if failure.
 
     """
+    #TODO: move to file_store/models.py since it's never used as a task
     logger.info("Creating FileStoreItem using source '%s'", source)
 
     item = FileStoreItem.objects.create_item(
@@ -40,11 +42,7 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
 
     logger.info("FileStoreItem created with UUID %s", item.uuid)
 
-    if permanent:
-        # copy to file store now and don't add to cache
-        #TODO: provide progress update
-        import_file.delay(
-            item.uuid, permanent=True, refresh=True, file_size=file_size)
+    #TODO: don't add to cache if permanent
 
     return item.uuid
 
@@ -68,6 +66,10 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
     if not item:
         logger.error("FileStoreItem with UUID '%s' not found", uuid)
         return None
+
+    # save task ID for looking up file import status
+    item.import_task_id = import_file.request.id
+    item.save()
 
     # if file is ready to be used then return it,
     # otherwise delete it if update is requested
@@ -177,9 +179,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         # save the model instance
         item.save()
 
-    if not permanent:
-        #TODO: if permanent is False then add to cache
-        pass
+    #TODO: if permanent is False then add to cache
 
     return item
 

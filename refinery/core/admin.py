@@ -14,7 +14,6 @@ from django_extensions.admin import ForeignKeyAutocompleteAdmin
 from guardian.admin import GuardedModelAdmin
 
 
-
 class AnalysisNodeConnectionAdmin(ForeignKeyAutocompleteAdmin):
     raw_id_fields = ("node",)    
 
@@ -44,6 +43,9 @@ class DownloadAdmin(GuardedModelAdmin,ForeignKeyAutocompleteAdmin):
 
 class ExternalToolStatusAdmin(admin.ModelAdmin):
     readonly_fields = ('last_time_check', )
+
+class DataSetAdmin(admin.ModelAdmin):
+    readonly_fields = ('uuid',)
 
 admin.site.register(UserProfile)
 admin.site.register(ExtendedGroup)

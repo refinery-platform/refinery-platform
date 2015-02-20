@@ -11,7 +11,7 @@ import tempfile
 from annotation_server.models import species_to_taxon_id, Taxon
 from data_set_manager.models import Investigation, Study, Node, Attribute, Assay
 from data_set_manager.tasks import create_dataset
-from file_store.models import generate_file_source_translator
+from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import create, import_file
 
 
@@ -170,10 +170,9 @@ class SingleFileColumnParser:
                     self.metadata_file.name)
         #FIXME: this will not create a FileStoreItem if self.metadata_file does
         # not exist on disk (e.g., a file object like TemporaryFile)
-        investigation.pre_isarchive_file = create(self.metadata_file.name,
-                                                  permanent=True)
-        import_file(
-            investigation.pre_isarchive_file, refresh=True, permanent=True)
+        investigation.pre_isarchive_file = create(
+            self.metadata_file.name, permanent=True)
+        import_file(investigation.pre_isarchive_file, refresh=True)
         investigation.save()
 
         #TODO: test if there are fewer columns than required
@@ -192,6 +191,7 @@ class SingleFileColumnParser:
                 row[self.file_column_index])
             data_file_uuid = create(
                 source=data_file_path, permanent=self.file_permanent)
+            import_file.delay(data_file_uuid)
 
             # add auxiliary file to file store
             if self.auxiliary_file_column_index:
@@ -199,6 +199,7 @@ class SingleFileColumnParser:
                     row[self.auxiliary_file_column_index])
                 auxiliary_file_uuid = create(
                     source=auxiliary_file_path, permanent=self.file_permanent)
+                import_file.delay(auxiliary_file_uuid)
             else:
                 auxiliary_file_uuid = None
 
