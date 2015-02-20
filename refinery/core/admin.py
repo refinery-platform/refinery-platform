@@ -27,7 +27,7 @@ class WorkflowEngineAdmin(GuardedModelAdmin):
     pass
 
 class DataSetAdmin(GuardedModelAdmin):
-    pass
+    readonly_fields = ('uuid',)
 
 class InvestigationLinkAdmin(GuardedModelAdmin):
     pass
@@ -43,9 +43,6 @@ class DownloadAdmin(GuardedModelAdmin,ForeignKeyAutocompleteAdmin):
 
 class ExternalToolStatusAdmin(admin.ModelAdmin):
     readonly_fields = ('last_time_check', )
-
-class DataSetAdmin(admin.ModelAdmin):
-    readonly_fields = ('uuid',)
 
 admin.site.register(UserProfile)
 admin.site.register(ExtendedGroup)
