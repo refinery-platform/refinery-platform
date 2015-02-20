@@ -1659,7 +1659,6 @@ var provvisRender = function () {
 
                 /* Shift vertically within the analysis grid. */
                 for (i = d.row; i < d.l.width - 1 + d.parent.l.width; i++) {
-
                     if (i < d.row + d.l.width - 1) {
                         d.parent.l.grid[0].splice(d.row + 1, 0, "undefined");
                     } else if (i > d.row + d.l.width - 1 && d.parent.l.grid[0][i] instanceof provvisDecl.Subanalysis) {
@@ -1680,6 +1679,11 @@ var provvisRender = function () {
 
                 /* Shift analyses horizontally. */
                 if (!isAnyChildNodeVisible) {
+
+                    /* TODO: Check free space. */
+
+
+
                     shiftedAnalysisNodeset = [];
                     for (i = vis.graph.l.depth - 1; i > d.parent.col; i--) {
                         for (j = 0; j < vis.graph.l.width; j++) {
@@ -1707,12 +1711,8 @@ var provvisRender = function () {
                     }
                 }
 
-                /* Clear workflow nodes from the graph grid within the analysis bounding box. */
-                d.parent.children.values().forEach(function (san) {
-                    san.children.values().forEach(function (n) {
-                        setGridCellVal(n.parent.parent.col + n.parent.col + n.col, n.parent.parent.row + n.parent.row + n.row, "undefined");
-                    });
-                });
+                /* Clear workflow nodes. */
+                clearGridCell(d.parent, {col: d.parent.col, row: d.parent.row});
 
                 /* Shift analyses downwards within the same column of the analysis in context. */
                 shiftedAnalysisNodeset = [];
@@ -2080,7 +2080,18 @@ var provvisRender = function () {
                                 /* Actual analyses to shift. Do not shift any analysis twice. */
                                 if (shiftedAnalysisNodeset.indexOf(curAN) === -1) {
                                     dragStartAnalysisPos = {col: curAN.col, row: curAN.row};
-                                    curAN.row = j;
+
+                                    /* Get row offset as the current node within the analysis must not represent the
+                                    most upper left reference grid cell. */
+                                    var curN = vis.graph.l.grid[i][j],
+                                        rowOffset = 0;
+
+                                    while (curN !== curAN) {
+                                        rowOffset += curN.row;
+                                        curN = curN.parent;
+                                    }
+
+                                    curAN.row = j-rowOffset;
                                     curAN.y = curAN.row * cell.width;
 
                                     /* Update grid cells. */
@@ -3100,7 +3111,6 @@ var provvisRender = function () {
         /* TODO: Currently disabled - rewrite for develop branch. */
         /* Handle tooltips. */
         handleTooltips();
-
         //handleDebugTooltips();
 
         /* Collapse on bounding box click.*/
