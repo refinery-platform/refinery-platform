@@ -159,8 +159,7 @@ def chord_execution(ret_val, analysis):
 
     # DEBUGGING NOT CLEANING UP
     result_chord, result_set = progress_chord(execution_taskset)(
-        chord_postprocessing.subtask((analysis, ))
-        )
+        chord_postprocessing.subtask((analysis, )))
 
     analysis_status.execution_taskset_id = result_set.task_id 
     analysis_status.save()

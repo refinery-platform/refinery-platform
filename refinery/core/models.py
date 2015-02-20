@@ -377,11 +377,11 @@ class DataSet(SharableResource):
         include_symlinks = True
         
         for study in investigation.study_set.all():
-            
-            files = Node.objects.filter( study=study.id, file_uuid__isnull=False ).values( "file_uuid" )
-
+            files = Node.objects.filter(
+                study=study.id, file_uuid__isnull=False).values("file_uuid")
             for file in files:                
-                size = get_file_size( file["file_uuid"], report_symlinks=include_symlinks )
+                size = get_file_size(
+                    file["file_uuid"], report_symlinks=include_symlinks)
                 file_size += size
 
         return file_size
