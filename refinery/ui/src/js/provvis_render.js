@@ -186,13 +186,15 @@ var provvisRender = function () {
 
                 /* Blend/Hide analysis links. */
                 an.predLinks.values().forEach(function (pl) {
-                    d3.selectAll("#linkId-" + pl.autoId + ", #hLinkId-" + pl.autoId).classed("filteredLink", false)
+                    d3.selectAll("#linkId-" + pl.autoId + ", #hLinkId-" + pl.autoId)
+                        .classed("filteredLink", false)
                         .classed("blendedLink", function () {
                             return filterAction === "blend" ? true : false;
                         });
                 });
                 an.succLinks.values().forEach(function (sl) {
-                    d3.selectAll("#linkId-" + sl.autoId + ", #hLinkId-" + sl.autoId).classed("filteredLink", false)
+                    d3.selectAll("#linkId-" + sl.autoId + ", #hLinkId-" + sl.autoId)
+                        .classed("filteredLink", false)
                         .classed("blendedLink", function () {
                             return filterAction === "blend" ? true : false;
                         });
@@ -207,13 +209,15 @@ var provvisRender = function () {
                 /* Display analysis links. */
                 an.predLinks.values().forEach(function (pl) {
                     if (pl.source.filtered) {
-                        d3.selectAll("#linkId-" + pl.autoId + ", #hLinkId-" + pl.autoId).classed("filteredLink", true)
+                        d3.selectAll("#linkId-" + pl.autoId + ", #hLinkId-" + pl.autoId)
+                            .classed("filteredLink", true)
                             .classed("blendedLink", false);
                     }
                 });
                 an.succLinks.values().forEach(function (sl) {
                     if (sl.target.filtered) {
-                        d3.selectAll("#linkId-" + sl.autoId + ", #hLinkId-" + sl.autoId).classed("filteredLink", true)
+                        d3.selectAll("#linkId-" + sl.autoId + ", #hLinkId-" + sl.autoId)
+                            .classed("filteredLink", true)
                             .classed("blendedLink", false);
                     }
                 });
