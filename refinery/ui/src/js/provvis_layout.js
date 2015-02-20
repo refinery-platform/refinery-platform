@@ -4,57 +4,26 @@
 var provvisLayout = function () {
 
     /* The layout is processed from the left (beginning at column/layer 0) to the right. */
-    var firstLayer = 0,
-        width = 0,
-        depth = 0,
-        grid = [];
+    var firstLayer = 0;
 
-    var nodes = [],
-        links = [];
+    /* Restore dummy path link. */
+    var dummyPaths = [];
 
     /**
      * Maps the column/row index to nodes.
+     * @param parent The parent node.
      */
-    var createNodeGrid = function () {
-        for (var i = 0; i < depth; i++) {
+    var initNodeGrid = function (parent) {
+        var grid = [];
+
+        for (var i = 0; i < parent.l.depth; i++) {
             grid.push([]);
-            for (var j = 0; j < width; j++) {
-                grid[i].push([]);
+            for (var j = 0; j < parent.l.width; j++) {
                 grid[i][j] = "undefined";
             }
         }
 
-        nodes.forEach(function (n) {
-            grid[n.col][n.row] = n;
-        });
-    };
-
-    /**
-     * Group nodes by layers into a 2d array.
-     * @param topNodes Topological sorted nodes.
-     * @returns {Array} Layer grouped array of nodes.
-     */
-    var groupNodesByLayer = function (topNodes) {
-        var layer = firstLayer,
-            lgNodes = [];
-        /* Layer-grouped and topology sorted nodes. */
-
-        lgNodes.push([]);
-        var k = 0;
-        topNodes.forEach(function (n) {
-            if (nodes[n.id].col === layer) {
-                lgNodes[k].push(nodes[n.id]);
-            } else if (nodes[n.id].col < layer) {
-                lgNodes[nodes[n.id].col].push(nodes[n.id]);
-            } else {
-                k++;
-                layer++;
-                lgNodes.push([]);
-                lgNodes[k].push(nodes[n.id]);
-            }
-        });
-
-        return lgNodes;
+        parent.l.grid = grid;
     };
 
     /**
@@ -64,7 +33,7 @@ var provvisLayout = function () {
     var initRowPlacementLeft = function (lgNodes) {
         lgNodes.forEach(function (lg) {
             lg.forEach(function (n, i) {
-                n.rowBK.left = i;
+                n.l.rowBK.left = i;
             });
         });
     };
@@ -72,11 +41,12 @@ var provvisLayout = function () {
     /**
      * Init row placement.
      * @param lgNodes Layer grouped array of nodes.
+     * @param graph The provenance graph.
      */
-    var initRowPlacementRight = function (lgNodes) {
+    var initRowPlacementRight = function (lgNodes, graph) {
         lgNodes.forEach(function (lg) {
             lg.forEach(function (n, i) {
-                n.rowBK.right = depth - lg.length + i;
+                n.l.rowBK.right = graph.l.depth - lg.length + i;
             });
         });
     };
@@ -84,16 +54,16 @@ var provvisLayout = function () {
     /**
      * 1-sided crossing minimization via barycentric heuristic.
      * @param lgNodes Layer grouped array of nodes.
+     * @param parent The parent node.
      * @returns {Array} Layer grouped array of nodes sorted by barycenter heuristic.
      */
-    var oneSidedCrossingMinimisation = function (lgNodes) {
-
-        /* For each layer (fixed layer L0), check layer to the left (variable layer L1). */
+    var oneSidedCrossingMinimisation = function (lgNodes, parent) {
+        /* For each layer (fixed layer L0), check layer to the right (variable layer L1). */
         lgNodes.forEach(function (lg, i) {
             var usedCoords = [],
                 delta = 0.01;
 
-            /* If there is a layer left to the current layer. */
+            /* If there is a layer right to the current layer. */
             if (typeof lgNodes[i + 1] !== "undefined" && lgNodes[i + 1] !== null) {
 
                 /* For each node within the variable layer. */
@@ -101,19 +71,23 @@ var provvisLayout = function () {
                     var degree = 1,
                         accRows = 0;
 
-                    if (!n.succs.empty()) {
-                        degree = n.succs.size();
-                        n.succs.values().forEach(function (sn) {
-                            accRows += (sn.rowBK.left + 1);
+                    if (!n.preds.empty()) {
+                        degree = n.preds.size();
+                        n.preds.values().forEach(function (pn) {
+                            var curA = pn;
+                            if (pn instanceof provvisDecl.Node && parent instanceof provvisDecl.ProvGraph) {
+                                curA = pn.parent.parent;
+                            }
+                            accRows += (curA.l.rowBK.left + 1);
                         });
                     }
 
                     /* If any node within the layer has the same barycenter value, increase it by a small value. */
                     if (usedCoords.indexOf(accRows / degree) === -1) {
-                        n.bcOrder = accRows / degree;
+                        n.l.bcOrder = accRows / degree;
                         usedCoords.push(accRows / degree);
                     } else {
-                        n.bcOrder = accRows / degree + delta;
+                        n.l.bcOrder = accRows / degree + delta;
                         usedCoords.push(accRows / degree + delta);
                         delta += 0.01;
                     }
@@ -127,9 +101,9 @@ var provvisLayout = function () {
             barycenterOrderedNodes[i] = [];
             lg.forEach(function (n, j) {
 
-                /* Init most right layer as fixed. */
+                /* Init most left layer as fixed. */
                 if (i === firstLayer) {
-                    n.bcOrder = j + 1;
+                    n.l.bcOrder = j + 1;
                     barycenterOrderedNodes[firstLayer][j] = n;
 
                     /* Set earlier computed bcOrder. */
@@ -140,13 +114,13 @@ var provvisLayout = function () {
 
             /* Reorder by barycentric value. */
             barycenterOrderedNodes[i].sort(function (a, b) {
-                return a.bcOrder - b.bcOrder;
+                return a.l.bcOrder - b.l.bcOrder;
             });
 
             /* Set row attribute after sorting. */
             barycenterOrderedNodes[i].forEach(function (n, k) {
-                n.rowBK.left = k;
-                n.rowBK.right = width - barycenterOrderedNodes[i].length + k;
+                n.l.rowBK.left = k;
+                n.l.rowBK.right = parent.l.width - barycenterOrderedNodes[i].length + k;
             });
         });
 
@@ -164,14 +138,14 @@ var provvisLayout = function () {
             while (i < bclgNodes[l].length) {
 
                 /* Mark links as Neighbors:
-                 the exact median if the length of successor nodes is odd,
+                 the exact median if the length of prdecessor nodes is odd,
                  else the middle two. */
-                var succs = bclgNodes[l][i].succLinks.values();
-                if (succs.length !== 0) {
-                    if (succs.length % 2 === 0) {
-                        links[succs[parseInt(succs.length / 2 - 1, 10)].id].l.neighbor = true;
+                var pl = bclgNodes[l][i].predLinks;
+                if (pl.size() !== 0) {
+                    if (pl.size() % 2 === 0) {
+                        pl.values()[parseInt(pl.size() / 2 - 1, 10)].l.neighbor = true;
                     }
-                    links[succs[parseInt(succs.length / 2, 10)].id].l.neighbor = true;
+                    pl.values()[parseInt(pl.size() / 2, 10)].l.neighbor = true;
                 }
                 i++;
             }
@@ -180,98 +154,72 @@ var provvisLayout = function () {
     };
 
     /**
-     * Mark type 1 - and type 0 conflicts.
+     * Start at 2nd layer.
+     * Within the layer - from left to right - get predLinks for each node.
+     * For each predlink check conflicts as followed:
+     * Type 2: No crossings are possible and therefore this step is omitted.
+     * Type 1: Is there a crossing between an inner and a non-inner segment? If so, mark non-inner segment as 'type1'.
+     * Type 0: Is there a crossing between a pair of non-inner segments? Does the predLink share a node? If so, mark non-inner segment as 'type'.
+     * Finally, if there are multiple predlinks with no conflicts left, set all but the left most neighbors to 'false'.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
+     * @param links Graph links.
      */
-    var markConflictsLeft = function (bclgNodes) {
+    var markConflictsLeft = function (bclgNodes, links) {
 
-        var excludeUpSharedNodeLinks = function (value) {
-            return links[value].l.type0 ? false : true;
+        /* Helper. */
+        var filterNeighbors = function (pl) {
+            return pl.l.neighbor && pl.l.type0 === false && pl.l.type1 === false ? true : false;
         };
-
-        var filterNeighbors = function (value) {
-            return links[value].l.neighbor ? true : false;
-        };
-
-        var btUpSuccs = [],
-            upSuccs = [];
 
         /* Backtracked upper successor links. */
         var backtrackUpCrossings = function () {
-            btUpSuccs.forEach(function (bts) {
+            btUpNeighbors.forEach(function (btp) {
                 /* Crossing. */
-                if (links[bts].target.rowBK.left > jMax) {
-                    links[bts].l.type1 = true;
-                    links[bts].l.neighbor = true;
+                if (btp.source.l.rowBK.left > jMax) {
+                    btp.l.type1 = true;
+                    btp.l.neighbor = true;
                 }
             });
         };
 
-        var mapSuccsToIds = function (d) {
-            return d.succLinks.values().map(function (n) {
-                return n.id;
-            });
-        };
+        var upNeighbors = [],
+            btUpNeighbors = [];
 
         var markUpCrossings = function () {
 
-            /* Resolve shared nodes first. (Type 0 Conflict) */
-            var leftMostPredRow = -1,
-                leftMostLink = -1;
+            /* Type 2 conflicts are omitted. */
 
-            /* Get left most link. */
-            upSuccs.forEach(function (ups) {
-                if (links[ups].target.predLinks.size() > 1) {
-                    leftMostPredRow = links[upSuccs[0]].source.rowBK.left;
-                    links[ups].target.predLinks.values().forEach(function (pl) {
-                        if (pl.target.nodeType !== "dummy" || pl.source.nodeType !== "dummy") {
-
-                            /* Check top most link. */
-                            if (pl.source.rowBK.left < leftMostPredRow) {
-                                leftMostPredRow = pl.source.rowBK.left;
-                                leftMostLink = pl.id;
-                            }
-                        }
-                    });
-                }
-            });
-
-            /* Mark all but left most links. */
-            upSuccs.forEach(function (ups) {
-                if (links[ups].target.predLinks.size() > 1 && leftMostLink !== -1) {
-                    links[ups].target.predLinks.values().forEach(function (pl) {
-                        if (pl.id !== leftMostLink) {
-                            pl.l.type0 = true;
-                            pl.l.neighbor = false;
-                        }
-                    });
-                }
-            });
-
-            /* Update upSuccs. */
-            upSuccs = upSuccs.filter(excludeUpSharedNodeLinks);
-
-            /* Resolve crossings. */
+            /* Type 1 and 0 crossing conflicts. */
             var curjMax = jMax;
-            upSuccs.forEach(function (ups) {
-                if (links[ups].target.rowBK.left >= jMax) {
-                    if (links[ups].target.rowBK.left > curjMax) {
-                        curjMax = links[ups].target.row;
+            upNeighbors.forEach(function (upp) {
+
+                var srcA = upp.source,
+                    tarA = upp.target;
+                if (upp.source instanceof provvisDecl.Node) {
+                    srcA = upp.source.parent.parent;
+                }
+                if (tarA instanceof provvisDecl.Node) {
+                    tarA = upp.target.parent.parent;
+                }
+
+                if (srcA.l.rowBK.left >= jMax) {
+                    if (srcA.l.rowBK.left > curjMax) {
+                        curjMax = srcA.row;
                     }
                     /* Crossing. */
                 } else {
-                    /* Type 0 and 1 conflict: If link is an non-inner segment, mark link to be "removed". */
-                    if (bclgNodes[upl][i].nodeType !== "dummy" || links[ups].target.nodeType !== "dummy") {
-                        links[ups].l.type1 = true;
+                    /* Type 0 and 1 conflict: If link is an non-inner segment, mark link to be removed. */
+                    if (tarA.uuid !== "dummy" || srcA.uuid !== "dummy") {
+                        upp.l.type1 = true;
 
-                        /* If link is an inner segment, remove all non-inner segments before which are crossing it. */
+                        /* If link is an inner segment, remove all non-inner segments crossing it beforehand. */
                     } else {
                         /* Iterate back in current layer. */
                         var m = i;
                         for (m; m > 0; m--) {
                             if (m < i) {
-                                /* Get successors for m */
-                                btUpSuccs = mapSuccsToIds(bclgNodes[upl][m]).filter(filterNeighbors);
+                                /* Get predLinks for m */
+                                btUpNeighbors = bclgNodes[upl][m].predLinks.values().filter(filterNeighbors);
                                 backtrackUpCrossings();
                             }
                         }
@@ -280,8 +228,67 @@ var provvisLayout = function () {
                 }
             });
             jMax = curjMax;
-        };
 
+            /* Update upNeighbors. */
+            upNeighbors = bclgNodes[upl][i].predLinks.values().filter(filterNeighbors);
+
+            /* Type 0 sharing conflicts. */
+            var leftMostPredRow = -1,
+                leftMostLink = "undefined";
+
+            /* Init left most link. */
+            if (upNeighbors.length > 0) {
+                var srcA = upNeighbors[0].source;
+                if (srcA instanceof provvisDecl.Node) {
+                    srcA = upNeighbors[0].source.parent.parent;
+                }
+                leftMostPredRow = srcA.l.rowBK.left;
+                leftMostLink = upNeighbors[0];
+            }
+
+            /* Get left most link. */
+            upNeighbors.forEach(function (upp) {
+                var srcA = upp.source;
+                if (upp.source instanceof provvisDecl.Node) {
+                    srcA = upp.source.parent.parent;
+                }
+
+                if (srcA.l.rowBK.left < leftMostPredRow) {
+                    leftMostPredRow = srcA.l.rowBK.left;
+                    leftMostLink = upp;
+                }
+            });
+
+            /* Mark all but left most links. */
+            upNeighbors.forEach(function (upp) {
+                var srcA = upp.source;
+                if (upp.source instanceof provvisDecl.Node) {
+                    srcA = upp.source.parent.parent;
+                }
+
+                if (srcA.succLinks.size() > 1 && leftMostLink !== "undefined") {
+                    srcA.succLinks.values().forEach(function (sl) {
+                        if (sl !== leftMostLink) {
+                            sl.l.type0 = true;
+                            sl.l.neighbor = false;
+                        }
+                    });
+                }
+            });
+
+            /* Update upNeighbors. */
+            upNeighbors = bclgNodes[upl][i].predLinks.values().filter(filterNeighbors);
+
+            /* For multiple predlinks, prioritize the left one. */
+            if (upNeighbors.length > 1) {
+                upNeighbors.forEach(function (upp) {
+                    if (upp !== leftMostLink) {
+                        upp.l.neighbor = false;
+                    }
+                });
+            }
+
+        };
 
         /* Handle crossing upper conflicts (Type 0 and 1)*/
         var upl = 1;
@@ -294,7 +301,8 @@ var provvisLayout = function () {
                     iCur = i;
 
                     /* Crossing successor links. */
-                    upSuccs = mapSuccsToIds(bclgNodes[upl][i]).filter(filterNeighbors);
+                    upNeighbors = bclgNodes[upl][i].predLinks.values().filter(filterNeighbors);
+
                     markUpCrossings();
                 }
                 i++;
@@ -303,179 +311,55 @@ var provvisLayout = function () {
         }
     };
 
-    /**
-     * Mark type 1 - and type 0 conflicts.
-     * @param bclgNodes Barycenter sorted layer grouped array of nodes.
-     */
-    var markConflictsRight = function (bclgNodes) {
-
-        var excludeUpSharedNodeLinks = function (value) {
-            return links[value].l.type0 ? false : true;
-        };
-
-        var filterNeighbors = function (value) {
-            return links[value].l.neighbor ? true : false;
-        };
-
-        var btUpSuccs = [],
-            upSuccs = [];
-
-        /* Backtracked upper successor links. */
-        var backtrackUpCrossings = function () {
-            btUpSuccs.forEach(function (bts) {
-                /* Crossing. */
-                if (links[bts].target.rowBK.right > jMax) {
-                    links[bts].l.type1 = true;
-                    links[bts].l.neighbor = true;
-                }
-            });
-        };
-
-        var mapSuccsToIds = function (d) {
-            return d.succLinks.values().map(function (n) {
-                return n.id;
-            });
-        };
-
-        var markUpCrossings = function () {
-
-            /* Resolve shared nodes first. (Type 0 Conflict) */
-            var rightMostPredRow = -1,
-                rightMostLink = -1;
-
-            /* Get right most link. */
-            upSuccs.forEach(function (ups) {
-                if (links[ups].target.predLinks.size() > 1) {
-                    rightMostPredRow = links[upSuccs[0]].source.rowBK.right;
-                    links[ups].target.predLinks.values().forEach(function (pl) {
-                        if (pl.target.nodeType !== "dummy" || pl.source.nodeType !== "dummy") {
-
-                            /* Check right most link. */
-                            if (pl.source.rowBK.right > rightMostPredRow) {
-                                rightMostPredRow = pl.source.rowBK.right;
-                                rightMostLink = pl.id;
-                            }
-                        }
-                    });
-                }
-            });
-
-            /* Mark all but right most links. */
-            upSuccs.forEach(function (ups) {
-                if (links[ups].target.predLinks.size() > 1 && rightMostLink !== -1) {
-                    links[ups].target.predLinks.values().forEach(function (pl) {
-                        if (pl.id !== rightMostLink) {
-                            pl.l.type0 = true;
-                            pl.l.neighbor = false;
-                        }
-                    });
-                }
-            });
-
-            /* Update upSuccs. */
-            upSuccs = upSuccs.filter(excludeUpSharedNodeLinks);
-
-            /* Resolve crossings. */
-            var curjMax = jMax;
-            upSuccs.forEach(function (ups) {
-                if (links[ups].target.rowBK.right <= jMax) {
-                    if (links[ups].target.rowBK.right < curjMax) {
-                        curjMax = links[ups].target.rowBK.right;
-                    }
-                    /* Crossing. */
-                } else {
-
-                    /* Type 0 and 1 conflict: If link is an non-inner segment, mark link to be "removed". */
-                    if (bclgNodes[upl][i].nodeType !== "dummy" || links[ups].target.nodeType !== "dummy") {
-                        links[ups].l.type1 = true;
-
-                        /* If link is an inner segment, remove all non-inner segments before which are crossing it. */
-                    } else {
-                        /* Iterate back in current layer. */
-                        var m = i;
-                        for (m; m < bclgNodes[upl][i].length; m++) {
-                            if (m > i) {
-                                /* Get successors for m */
-                                btUpSuccs = mapSuccsToIds(bclgNodes[upl][m]).filter(filterNeighbors);
-                                backtrackUpCrossings();
-                            }
-                        }
-
-                    }
-                }
-            });
-            jMax = curjMax;
-        };
-
-        /* Handle crossing upper conflicts (Type 0 and 1)*/
-        var upl = 1;
-        while (upl < bclgNodes.length) {
-            var i = bclgNodes[upl].length - 1,
-                jMax = bclgNodes[upl].length,
-                iCur = -1;
-            while (i > 0) {
-                if (typeof bclgNodes[upl][i] !== "undefined") {
-                    iCur = i;
-
-                    /* Crossing successor links. */
-                    upSuccs = mapSuccsToIds(bclgNodes[upl][i]).filter(filterNeighbors);
-                    markUpCrossings();
-                }
-                i--;
-            }
-            upl++;
-        }
-    };
-
+    /* TODO: Refine and clean up. */
     /**
      * Align each vertex with its chosen (left|right and upper/under) Neighbor.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
+     * @param parent The parent node.
      */
-    var verticalAlignment = function (bclgNodes) {
-        markCandidates(bclgNodes);
+    var verticalAlignment = function (bclgNodes, parent) {
+        markCandidates(bclgNodes, parent.aLinks.filter(function (l) {
+            return !l.l.gap;
+        }));
 
-        markConflictsLeft(bclgNodes);
-        formBlocks(bclgNodes, "left");
+        markConflictsLeft(bclgNodes, parent.aLinks.filter(function (l) {
+            return !l.l.gap;
+        }));
+
+        formBlocks(bclgNodes, "left", parent);
 
         /* Reset conflicts. */
-        links.forEach(function (l) {
-            l.l.type0 = false;
-            l.l.type1 = false;
-        });
-        markConflictsRight(bclgNodes);
-        formBlocks(bclgNodes, "right");
+        /*
+         links.forEach(function (l) {
+         l.l.type0 = false;
+         l.l.type1 = false;
+         });
+         markConflictsRight(bclgNodes, links);
+         formBlocks(bclgNodes, "right", links);*/
     };
 
     /**
-     * * After resolving conflicts, no crossings are left and connected paths are concatenated into blocks.
+     * After resolving conflicts, no crossings are left and connected paths are concatenated into blocks.
+     * Iterate through each layer from left to right, for each node:
+     * When node has no predecessor links with neighbor marked, node is root for block.
+     * The block's row is determined by the most right row of any node in the block.
+     * For each node in the block, assign the most right row.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
      * @param alignment Left or right aligned layout initialization.
+     * @param parent The Provenance graph.
      */
-    var formBlocks = function (bclgNodes, alignment) {
+    var formBlocks = function (bclgNodes, alignment, parent) {
 
-        /* Horizontal paths build blocks with its rightmost node being the root.
-         * The root element does not own a Neighbor link.
-         * Every child - determined by the Neighbor mark of links,
-         * will be placed in the exact same row as its root. */
-
-        var isBlockRoot = function (value) {
-            return links[value].l.neighbor;
+        var isNeighbor = function (l) {
+            return l.l.neighbor ? true : false;
         };
 
-        var filterNeighbor = function (value) {
-            return links[value].l.neighbor ? true : false;
-        };
-
-        var createSuccs = function (d) {
-            return d.succLinks.values().map(function (n) {
-                return n.id;
+        /* Add additional cell to grid column. */
+        var addGridRow = function (parent) {
+            parent.l.grid.forEach(function (gc) {
+                gc.push("undefined");
             });
-        };
-
-        var createPreds = function (d) {
-            return d.predLinks.values().map(function (n) {
-                return n.id;
-            });
+            parent.l.width += 1;
         };
 
         /* UPPER */
@@ -484,31 +368,101 @@ var provvisLayout = function () {
          * if node is root, iterate through block and place nodes into rows. */
         for (var l = 0; l < bclgNodes.length; l++) {
             for (var i = 0; i < bclgNodes[l].length; i++) {
-                var succs = createSuccs(bclgNodes[l][i]).filter(isBlockRoot);
 
-                if (succs.length === 0) {
-                    bclgNodes[l][i].isBlockRoot = true;
+                /* Get block root. */
+                var preds = bclgNodes[l][i].predLinks.values().filter(isNeighbor);
 
-                    /* Follow path through Neighbors in predecessors and set row to root row. */
-                    var rootRow = alignment === "left" ? bclgNodes[l][i].rowBK.left : bclgNodes[l][i].rowBK.right,
-                        curLink = -1,
-                        curNode = bclgNodes[l][i];
+                if (preds.length === 0) {
+                    bclgNodes[l][i].l.isBlockRoot = true;
 
-                    /* Traverse. */
-                    while (curLink !== -2) {
-                        curLink = createPreds(curNode).filter(filterNeighbor);
-                        if (curLink.length === 0) {
-                            curLink = -2;
-                        } else {
-                            /* Greedy choice for Neighbor when there exist two. */
-                            if (alignment === "left") {
-                                links[curLink[0]].source.rowBK.left = rootRow;
-                                curNode = links[curLink[0]].source;
-                            } else {
-                                links[curLink[curLink.length - 1]].source.rowBK.right = rootRow;
-                                curNode = links[curLink[curLink.length - 1]].source;
-                            }
+                    /* Find block path. */
+                    /* Get right most row. */
+                    var succs = bclgNodes[l][i].succLinks.values().filter(isNeighbor),
+                        rootRow = alignment === "left" ? bclgNodes[l][i].l.rowBK.left : bclgNodes[l][i].l.rowBK.right,
+                        curLink = "undefined",
+                        curA = bclgNodes[l][i],
+                        blockLength = 1,
+                        occupied = true;
+
+                    while (succs.length === 1) {
+                        curLink = succs[0];
+                        curA = curLink.target instanceof provvisDecl.Node ? curLink.target.parent.parent : curLink.target;
+
+                        if (alignment === "left" && curA.l.rowBK.left > rootRow) {
+                            rootRow = curA.l.rowBK.left;
+                        } else if (alignment === "right" && curA.l.rowBK.right < rootRow) {
+                            rootRow = curA.l.rowBK.right;
                         }
+                        succs = curA.succLinks.values().filter(isNeighbor);
+                        blockLength++;
+                    }
+
+                    /* Check if block path is occupied. */
+                    while (occupied) {
+                        occupied = false;
+                        succs = bclgNodes[l][i].succLinks.values().filter(isNeighbor);
+                        curA = bclgNodes[l][i];
+                        curLink = "undefined";
+                        curA = bclgNodes[l][i];
+
+                        if (parent.l.grid[curA.col][rootRow] && parent.l.grid[curA.col][rootRow] !== "undefined") {
+                            occupied = true;
+                        }
+
+                        while (succs.length === 1 && !occupied) {
+                            curLink = succs[0];
+                            curA = curLink.target instanceof provvisDecl.Node ? curLink.target.parent.parent : curLink.target;
+
+                            if (parent.l.grid[curA.col][rootRow] && parent.l.grid[curA.col][rootRow] !== "undefined") {
+                                occupied = true;
+                            }
+
+                            succs = curA.succLinks.values().filter(isNeighbor);
+                        }
+
+                        if (occupied) {
+                            /* Increase root row. */
+                            rootRow++;
+                        }
+                    }
+
+
+                    /* Save block path. */
+
+                    /* Traverse through block and set root row. Set grid cells. */
+                    succs = bclgNodes[l][i].succLinks.values().filter(isNeighbor);
+                    if (alignment === "left") {
+                        bclgNodes[l][i].l.rowBK.left = rootRow;
+                    } else if (alignment === "right") {
+                        bclgNodes[l][i].l.rowBK.right = rootRow;
+                    }
+                    bclgNodes[l][i].row = rootRow;
+
+                    /* Add additional cell to grid column. */
+                    while (parent.l.grid[bclgNodes[l][i].col].length <= rootRow) {
+                        addGridRow(parent);
+                    }
+
+                    /* Set grid cell. */
+                    parent.l.grid[bclgNodes[l][i].col][rootRow] = bclgNodes[l][i];
+
+                    while (succs.length === 1) {
+                        curLink = succs[0];
+                        curA = curLink.target instanceof provvisDecl.Node ? curLink.target.parent.parent : curLink.target;
+
+                        if (alignment === "left") {
+                            curA.l.rowBK.left = rootRow;
+                        } else if (alignment === "right") {
+                            curA.l.rowBK.right = rootRow;
+                        }
+                        curA.row = rootRow;
+                        succs = curA.succLinks.values().filter(isNeighbor);
+
+                        while (parent.l.grid[curA.col].length <= rootRow) {
+                            addGridRow(parent);
+                        }
+                        /* Set grid cell. */
+                        parent.l.grid[curA.col][curA.row] = curA;
                     }
                 }
             }
@@ -518,16 +472,17 @@ var provvisLayout = function () {
     /**
      * Balance y-coordinates for each layer by mean of in- and outgoing links.
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
+     * @param parent The parent node.
      */
-    var balanceLayout = function (bclgNodes) {
+    var balanceLayout = function (bclgNodes, parent) {
         bclgNodes.forEach(function (lg) {
             lg.forEach(function (n) {
                 var rootRow = -1;
 
-                if (n.isBlockRoot) {
+                if (n.l.isBlockRoot) {
                     var curNode = n,
-                        minRow = Math.min(curNode.rowBK.left, curNode.rowBK.right),
-                        delta = Math.abs(curNode.rowBK.left - curNode.rowBK.right) / 2;
+                        minRow = Math.min(curNode.l.rowBK.left, curNode.l.rowBK.right),
+                        delta = Math.abs(curNode.l.rowBK.left - curNode.l.rowBK.right) / 2;
 
                     rootRow = Math.round(minRow + delta);
 
@@ -546,189 +501,72 @@ var provvisLayout = function () {
     /**
      * Set row placement for nodes in each layer. [Brandes and Köpf 2002]
      * @param bclgNodes Barycenter sorted layer grouped array of nodes.
+     * @param parent The parent node.
      */
-    var verticalCoordAssignment = function (bclgNodes) {
+    var verticalCoordAssignment = function (bclgNodes, parent) {
+        verticalAlignment(bclgNodes, parent);
 
-        verticalAlignment(bclgNodes);
-
-        balanceLayout(bclgNodes);
+        /* TODO: In development. */
+        //balanceLayout(bclgNodes, parent);
     };
 
     /**
      * Set grid layout dimensions.
      * @param lgNodes Layer grouped array of nodes.
+     * @param parent The parent node.
      */
-    var setGridLayoutDimensions = function (lgNodes) {
-        width = d3.max(lgNodes, function (lg) {
+    var setGridLayoutDimensions = function (lgNodes, parent) {
+        parent.l.width = d3.max(lgNodes, function (lg) {
             return lg.length;
         });
 
-        depth = lgNodes.length;
-    };
-
-    /**
-     * Layout node columns.
-     * @param lgNodes Layer grouped array of nodes.
-     */
-    var computeLayout = function (lgNodes) {
-
-        setGridLayoutDimensions(lgNodes);
-
-        /* Init row placement. */
-        initRowPlacementLeft(lgNodes);
-
-        /* Init row placement. */
-        initRowPlacementRight(lgNodes);
-
-        /* Minimize edge crossings. */
-        var bclgNodes = oneSidedCrossingMinimisation(lgNodes);
-
-        /* Update row placements. */
-        verticalCoordAssignment(bclgNodes);
-    };
-
-    /**
-     * Assign layers.
-     * @param topNodes Topology sorted array of nodes.
-     */
-    var assignLayers = function (topNodes) {
-        var layer = 0,
-            succs = [];
-
-        topNodes.forEach(function (n) {
-
-            /* Get outgoing neighbor. */
-            succs = nodes[n.id].succs.values();
-
-            if (succs.length === 0) {
-                nodes[n.id].col = layer;
-            } else {
-                var minSuccLayer = layer;
-                succs.forEach(function (s) {
-                    if (s.col > minSuccLayer) {
-                        minSuccLayer = s.col;
-                    }
-                });
-                nodes[n.id].col = minSuccLayer + 1;
-            }
-        });
-    };
-
-
-    /**
-     * Reduces the collection of graph nodes to an object only containing id, preds and succs.
-     * @returns {Array} Returns a reduced collection of graph nodes.
-     */
-    var createReducedGraph = function () {
-        var graphSkeleton = [];
-
-        nodes.forEach(function (n) {
-            var nodePreds = [];
-            n.preds.values().forEach(function (pp) {
-                nodePreds.push(pp.id);
-            });
-            var nodeSuccs = [];
-            n.succs.values().forEach(function (ss) {
-                nodeSuccs.push(ss.id);
-            });
-            graphSkeleton.push({id: n.id, p: nodePreds, s: nodeSuccs});
-        });
-
-        return graphSkeleton;
-    };
-
-    /**
-     * Reduces the collection of output nodes to an object only containing id, preds and succs.
-     * @param oNodes Output nodes.
-     * @returns {Array} Returns a reduced collection of output nodes.
-     */
-    var createReducedOutputNodes = function (oNodes) {
-        var outputNodesSkeleton = [];
-
-        oNodes.forEach(function (n) {
-            var nodePreds = [];
-            n.preds.values().forEach(function (pp) {
-                nodePreds.push(pp.id);
-            });
-            outputNodesSkeleton.push({id: n.id, p: nodePreds, s: []});
-        });
-        return outputNodesSkeleton;
-    };
-
-    /**
-     * Linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
-     * @param oNodes Output nodes.
-     * @returns {*} If graph is acyclic, returns null; else returns topology sorted array of nodes.
-     */
-    var sortTopological = function (oNodes) {
-        var s = [], /* Copy of output nodes array. */
-            l = [], /* Result set for sorted elements. */
-            t = [], /* Copy nodes array, because we have to delete links from the graph. */
-            n = Object.create(null);
-
-        s = createReducedOutputNodes(oNodes);
-        t = createReducedGraph();
-
-        /* To avoid definition of function in while loop below (added by NG). */
-        /* For each successor. */
-        var handleInputNodes = function (pred) {
-            var index = -1,
-                succs = t[pred].s;
-
-            /* For each parent (predecessor), remove edge n->m. Delete parent with p.uuid == n.uuid. */
-            succs.forEach(function (ss, k) {
-                if (ss == n.id) {
-                    index = k;
-                }
-            });
-
-            /* If parent of successor equals n, delete edge. */
-            if (index > -1) {
-                succs.splice(index, 1);
-            }
-
-            /* If there are no edges left, insert m into s. */
-            if (succs.length === 0) {
-                s.push(t[pred]);
-            }
-            /* Else, current successor has other parents to be processed first. */
-        };
-
-        /* While the input set is not empty. */
-        while (s.length > 0) {
-
-            /* Remove first item n. */
-            n = s.shift();
-
-            /* And push it into result set. */
-            l.push(n);
-
-            /* Get predecessor node set for n. */
-            n.p.forEach(handleInputNodes);
-        }
-
-        /* Handle cyclic graphs. */
-        if (s.length > 0) {
-            return null;
-        } else {
-            return l;
-        }
+        parent.l.depth = lgNodes.length;
     };
 
     /**
      * Generic implementation for the linear time topology sort [Kahn 1962] (http://en.wikipedia.org/wiki/Topological_sorting).
      * @param startNodes Array containing the starting nodes.
+     * @param nodesLength Size of the nodes array.
+     * @param parent The parent node.
      * @returns {Array} Topology sorted array of nodes.
      */
-    var topSortNodes = function (startNodes) {
+    var topSortNodes = function (startNodes, nodesLength, parent) {
         var sortedNodes = [];
 
         /* For each successor node. */
-        var handleSuccessorSAN = function (predNode) {
-            predNode.succs.values().forEach( function (succNode) {
+        var handleSuccessorNodes = function (curNode) {
+
+            /* When the analysis layout is computed, links occur between dummy nodes (Analysis) and Nodes or Analysis.
+             * In order to distinct both cases, the connection between dummy nodes and nodes is preserved by saving
+             * the id of a node rather than its parent analysis id. */
+            if (curNode instanceof provvisDecl.Node && parent instanceof provvisDecl.ProvGraph) {
+                curNode = curNode.parent.parent;
+            }
+
+            /* Get successors. */
+            curNode.succs.values().filter(function (s) {
+                return s.parent === null || s.parent === parent || curNode.uuid === "dummy";
+            }).forEach(function (succNode) {
+                if (succNode instanceof provvisDecl.Node && parent instanceof provvisDecl.ProvGraph) {
+                    succNode = succNode.parent.parent;
+                }
+
                 /* Mark edge as removed. */
-                succNode.predLinks.values().forEach( function (predLink) {
-                    if (predLink.source.parent.id === predNode.id) {
+                succNode.predLinks.values().forEach(function (predLink) {
+
+                    /* When pred node is of type dummy, the source node directly is an analysis. */
+                    var predLinkNode = null;
+                    if (curNode instanceof provvisDecl.Analysis) {
+                        if (predLink.source instanceof provvisDecl.Analysis) {
+                            predLinkNode = predLink.source;
+                        } else {
+                            predLinkNode = predLink.source.parent.parent;
+                        }
+                    } else if (curNode instanceof provvisDecl.Node) {
+                        predLinkNode = predLink.source;
+                    }
+
+                    if (predLinkNode && predLinkNode.autoId === curNode.autoId) {
                         predLink.l.ts.removed = true;
                     }
                 });
@@ -737,141 +575,652 @@ var provvisLayout = function () {
                  insert successor node into result set. */
                 if (!succNode.predLinks.values().some(function (predLink) {
                     return !predLink.l.ts.removed;
-                })) {
+                }) && !succNode.l.ts.removed) {
                     startNodes.push(succNode);
+                    succNode.l.ts.removed = true;
                 }
             });
         };
 
         /* While the input set is not empty. */
-        while(startNodes.length > 0) {
+        var i = 0;
+        while (i < startNodes.length && i < nodesLength) {
 
             /* Remove first item. */
-            var curNode = startNodes.shift();
+            var curNode = startNodes[i];
 
             /* And push it into result set. */
             sortedNodes.push(curNode);
+            curNode.l.ts.removed = true;
 
-            /* Get successor nodes for curSAN. */
-            handleSuccessorSAN(curNode);
+            /* Get successor nodes for current node. */
+            handleSuccessorNodes(curNode);
+            i++;
         }
 
-        return sortedNodes;
+        /* Handle cyclic graphs. */
+        /* TODO: Review condition. */
+        if (startNodes.length > nodesLength) {
+            return null;
+        } else {
+            return sortedNodes;
+        }
     };
 
-    /* TODO: In development. */
-    var layerNodes = function (tsNodes) {
-        tsNodes.forEach( function (n) {
+    /**
+     * Assign layers.
+     * @param tsNodes Topology sorted nodes.
+     * @param parent The parent node.
+     */
+    var layerNodes = function (tsNodes, parent) {
+        var layer = 0,
+            preds = [];
 
+        tsNodes.forEach(function (n) {
+
+            /* Get incoming predecessors. */
+            n.preds.values().filter(function (p) {
+                if (p.parent === parent) {
+                    preds.push(p);
+                } else if (p instanceof provvisDecl.Node && parent instanceof provvisDecl.ProvGraph) {
+                    preds.push(p.parent.parent);
+                }
+            });
+
+            if (preds.length === 0) {
+                n.col = layer;
+            } else {
+                var minLayer = layer;
+                preds.forEach(function (p) {
+                    if (p.col > minLayer) {
+                        minLayer = p.col;
+                    }
+                });
+                n.col = minLayer + 1;
+            }
         });
     };
 
-    /* TODO: In development. */
+    /**
+     * Group nodes by layers into a 2d array.
+     * @param tsNodes Topology sorted nodes.
+     * @returns {Array} Layer grouped nodes.
+     */
     var groupNodes = function (tsNodes) {
+        var layer = 0,
+            lgNodes = [];
 
-        return [];
+        lgNodes.push([]);
+
+        var k = 0;
+        tsNodes.forEach(function (n) {
+            if (n.col === layer) {
+                lgNodes[k].push(n);
+            } else if (n.col < layer) {
+                lgNodes[n.col].push(n);
+            } else {
+                k++;
+                layer++;
+                lgNodes.push([]);
+                lgNodes[k].push(n);
+            }
+        });
+
+        return lgNodes;
     };
 
-    /* TODO: In development. */
-    var layoutNodes = function (gNodes) {
+    /**
+     * Layout node columns.
+     * @param gNodes Layer grouped array of nodes.
+     * @param parent The parent node.
+     * @returns {Array} Layered analysis nodes.
+     */
+    var layoutNodes = function (gNodes, parent) {
 
+        /* Set graph width and depth. */
+        setGridLayoutDimensions(gNodes, parent);
+
+        /* Init grid. */
+        initNodeGrid(parent);
+
+        /* Init row placement. */
+        initRowPlacementLeft(gNodes);
+
+        /* Init row placement. */
+        initRowPlacementRight(gNodes, parent);
+
+        /* Minimize edge crossings. */
+        var bcgNodes = oneSidedCrossingMinimisation(gNodes, parent);
+
+        /* TODO: In development. */
+        /* Update row placements. */
+        verticalCoordAssignment(bcgNodes, parent);
+
+        return bcgNodes;
     };
 
 
+    /**
+     * Get number of nodes visited already.
+     * @param arr Array of nodes.
+     * @returns {number} The number of nodes visited already.
+     */
+    function getNumberofVisitedNodesByArray(arr) {
+        var count = 0;
+
+        arr.forEach(function (nn) {
+            if (nn.visited) {
+                count++;
+            }
+        });
+
+        return count;
+    }
+
+    /**
+     * Get nodes of columns from begin to end column id.
+     * @param tsNodes The nodes within the subanalysis.
+     * @param begin Column according to grid layout.
+     * @param end (Including) Column according to grid layout.
+     * @returns {Array} Set of nodes.
+     */
+    function getNodesByColumnRange(tsNodes, begin, end) {
+        var nodesToTranslate = [];
+
+        tsNodes.forEach(function (n) {
+            if (n.col >= begin && n.col <= end) {
+                nodesToTranslate.push(n);
+            }
+        });
+
+        return nodesToTranslate;
+    }
+
+    /**
+     * Shift specific nodes by rows.
+     * @param tsNodes The nodes within the subanalysis.
+     * @param rowShift Number of rows to shift.
+     * @param col Nodes up to column.
+     * @param row Nodes from row.
+     */
+    function shiftNodesByRows(tsNodes, rowShift, col, row) {
+        getNodesByColumnRange(tsNodes, 0, col).forEach(function (nn) {
+            if (nn.row >= row) {
+                nn.row += rowShift;
+            }
+        });
+    }
+
+
+    /**
+     * Add dummy vertices.
+     * @param graph The provenance graph.
+     */
+    var addDummyNodes = function (graph) {
+
+        /* First, backup original connections. */
+        graph.aLinks.forEach(function (l) {
+
+            /* When the link is longer than one column, add dummy nodes and links. */
+            var gapLength = Math.abs(l.source.parent.parent.col - l.target.parent.parent.col);
+
+            if (gapLength > 1) {
+                dummyPaths.push({
+                    id: l.autoId,
+                    source: ({
+                        id: l.source.parent.parent.autoId,
+                        predNodes: l.source.parent.parent.preds.values().filter(function (p) {
+                            return p.uuid !== "dummy";
+                        }).map(function (p) {
+                            return p.autoId;
+                        }),
+                        predNodeLinks: l.source.parent.parent.predLinks.values().filter(function (p) {
+                            return p.uuid !== "dummy";
+                        }).map(function (p) {
+                            return p.autoId;
+                        }),
+                        succNodes: l.source.parent.parent.succs.values().filter(function (p) {
+                            return p.uuid !== "dummy";
+                        }).map(function (p) {
+                            return p.autoId;
+                        }),
+                        succNodeLinks: l.source.parent.parent.succLinks.values().filter(function (p) {
+                            return p.uuid !== "dummy";
+                        }).map(function (p) {
+                            return p.autoId;
+                        })
+                    }),
+                    target: ({
+                        id: l.target.parent.parent.autoId,
+                        predNodes: l.target.parent.parent.preds.values().filter(function (p) {
+                            return p.uuid !== "dummy";
+                        }).map(function (p) {
+                            return p.autoId;
+                        }),
+                        predNodeLinks: l.target.parent.parent.predLinks.values().filter(function (p) {
+                            return p.uuid !== "dummy";
+                        }).map(function (p) {
+                            return p.autoId;
+                        }),
+                        succNodes: l.target.parent.parent.succs.values().filter(function (p) {
+                            return p.uuid !== "dummy";
+                        }).map(function (p) {
+                            return p.autoId;
+                        }),
+                        succNodeLinks: l.target.parent.parent.succLinks.values().filter(function (p) {
+                            return p.uuid !== "dummy";
+                        }).map(function (p) {
+                            return p.autoId;
+                        })
+                    })
+                });
+            }
+        });
+
+        /* Second, create new dummy nodes. */
+        graph.aLinks.forEach(function (l) {
+
+            var gapLength = Math.abs(l.source.parent.parent.col - l.target.parent.parent.col);
+
+            if (gapLength > 1) {
+                /* Dummy nodes are affiliated with the source node of the link in context. */
+                var newNodeId = graph.aNodes.length,
+                    newLinkId = graph.aLinks.length,
+                    predNodeId = l.source.parent.parent.id,
+                    curCol = l.source.parent.parent.col;
+
+                /* Insert Nodes. */
+                var i = 0;
+                while (i < gapLength - 1) {
+                    graph.aNodes.push(new provvisDecl.Analysis(newNodeId + i, graph, false, "dummy", "dummy", "dummy", 0, 0, 0));
+                    graph.aNodes[newNodeId + i].col = curCol + 1;
+                    predNodeId = newNodeId + i;
+                    curCol++;
+                    i++;
+                }
+
+                /* Insert links (one link more than nodes). */
+                predNodeId = l.source.parent.parent.id;
+                curCol = l.source.parent.parent.col;
+
+                /* Insert Links. */
+                var j = 0;
+                while (j < gapLength) {
+                    graph.aLinks.push(new provvisDecl.Link(newLinkId + j, (j === 0) ? l.source : graph.aNodes[predNodeId],
+                        (j === gapLength - 1) ? l.target : graph.aNodes[newNodeId + j], false));
+                    predNodeId = newNodeId + j;
+                    curCol++;
+                    j++;
+                }
+
+                /* Remove successors for original source node. */
+                l.source.parent.parent.succs.remove(l.target.parent.parent.autoId);
+                l.source.parent.parent.succLinks.remove(l.autoId);
+                l.source.parent.succs.remove(l.target.parent.autoId);
+                l.source.parent.succLinks.remove(l.autoId);
+                l.source.succs.remove(l.target.autoId);
+                l.source.succLinks.remove(l.autoId);
+
+                /* Remove predecessors for original target node. */
+                l.target.parent.parent.preds.remove(l.source.parent.parent.autoId);
+                l.target.parent.parent.predLinks.remove(l.autoId);
+                l.target.parent.preds.remove(l.source.parent.autoId);
+                l.target.parent.predLinks.remove(l.autoId);
+                l.target.preds.remove(l.source.autoId);
+                l.target.predLinks.remove(l.autoId);
+
+                /* Set maps for dummy path. */
+                j = 0;
+                var curLink = graph.aLinks[newLinkId];
+                while (j < gapLength) {
+
+                    curLink.source.succs.set(curLink.target.autoId, curLink.target);
+                    curLink.source.succLinks.set(curLink.autoId, curLink);
+                    curLink.target.preds.set(curLink.source.autoId, curLink.source);
+                    curLink.target.predLinks.set(curLink.autoId, curLink);
+
+                    /* Connect target node with last dummy node. */
+                    if (j + 1 === gapLength) {
+                        l.target.predLinks.set(curLink.autoId, curLink);
+                        l.target.preds.set(curLink.source.autoId, curLink.source);
+                        l.target.parent.predLinks.set(curLink.autoId, curLink);
+                        l.target.parent.preds.set(curLink.source.autoId, curLink.source);
+                        l.target.parent.parent.predLinks.set(curLink.autoId, curLink);
+                        l.target.parent.parent.preds.set(curLink.source.autoId, curLink.source);
+                    } else if (j === 0) {
+                        l.source.succLinks.set(curLink.autoId, curLink);
+                        l.source.succs.set(curLink.target.autoId, curLink.target);
+                        l.source.parent.succLinks.set(curLink.autoId, curLink);
+                        l.source.parent.succs.set(curLink.target.autoId, curLink.target);
+                        l.source.parent.parent.succLinks.set(curLink.autoId, curLink);
+                        l.source.parent.parent.succs.set(curLink.target.autoId, curLink.target);
+                    }
+
+                    curLink = graph.aLinks[newLinkId + j + 1];
+                    j++;
+                }
+
+                /* Exclude original analysis link from aLink container. */
+                l.l.gap = true;
+            }
+        });
+    };
+
+
+    /**
+     * Restore links where dummy nodes were inserted in order to process the layout.
+     * @param The provenance graph.
+     */
+    var removeDummyNodes = function (graph) {
+
+        /* Look up helper. */
+        var getANodeByAutoId = function (autoId) {
+            return graph.aNodes.filter(function (d) {
+                return d.autoId === autoId;
+            })[0];
+        };
+
+        /* Look up helper. */
+        var getALinkByAutoId = function (autoId) {
+            return graph.aLinks.filter(function (d) {
+                return d.autoId === autoId;
+            })[0];
+        };
+
+        /* Clean up links. */
+        for (var i = 0; i < graph.aLinks.length; i++) {
+            var l = graph.aLinks[i];
+            /* Clean source. */
+            if (l.source.uuid != "dummy" && l.target.uuid == "dummy") {
+
+                l.source.succs.remove(l.target.autoId);
+                l.source.succLinks.remove(l.autoId);
+                graph.aLinks.splice(i, 1);
+                i--;
+            }
+            /* Clean target. */
+            else if (l.source.uuid == "dummy" && l.target.uuid != "dummy") {
+                l.target.preds.remove(l.source.autoId);
+                l.target.predLinks.remove(l.autoId);
+                graph.aLinks.splice(i, 1);
+                i--;
+            }
+            /* Remove pure dummy links. */
+            else if (l.source.uuid == "dummy" && l.target.uuid == "dummy") {
+                l.target.preds.remove(l.source.autoId);
+                l.target.predLinks.remove(l.autoId);
+                l.source.succs.remove(l.target.autoId);
+                l.source.succLinks.remove(l.autoId);
+                graph.aLinks.splice(i, 1);
+                i--;
+            }
+        }
+
+        /* Clean up nodes. */
+        for (var j = 0; j < graph.aNodes.length; j++) {
+            var n = graph.aNodes[j];
+
+            if (n.uuid === "dummy") {
+                n.preds = d3.map();
+                n.succs = d3.map();
+                n.predLinks = d3.map();
+                n.succLinks = d3.map();
+
+                graph.aNodes.splice(j, 1);
+                j--;
+            }
+        }
+        /* Restore links. */
+        dummyPaths.forEach(function (dP) {
+            var sourceId = dP.source.id,
+                targetId = dP.target.id;
+
+            dP.target.predNodes.forEach(function (pn) {
+                getANodeByAutoId(targetId).preds.set(pn, getANodeByAutoId(pn));
+            });
+            dP.target.predNodeLinks.forEach(function (pnl) {
+                getANodeByAutoId(targetId).predLinks.set(pnl, getALinkByAutoId(pnl));
+            });
+            dP.source.succNodes.forEach(function (sn) {
+                getANodeByAutoId(sourceId).succs.set(sn, getANodeByAutoId(sn));
+            });
+            dP.source.succNodeLinks.forEach(function (snl) {
+                getANodeByAutoId(sourceId).succLinks.set(snl, getALinkByAutoId(snl));
+            });
+        });
+        dummyPaths = [];
+    };
+
+
+    /**
+     * Reorder subanalysis layout to minimize edge crossings.
+     * @param bclgNodes Barcyenter sorted, layered and grouped analysis nodes.
+     */
+    var reorderSubanalysisNodes = function (bclgNodes) {
+
+        /* Initializations. */
+        bclgNodes.forEach(function (l, i) {
+            l.forEach(function (an) {
+
+                /* Initialize analysis dimensions. */
+                an.l.depth = 1;
+                an.l.width = an.children.size();
+
+                /* Create grid for subanalyses. */
+                initNodeGrid(an);
+
+                /* List which contains the subanalysis to reorder aftewards. */
+                var colList = [];
+
+                /* Initialize subanalysis col and row attributes. */
+                an.children.values().forEach(function (san, j) {
+
+                    /* Only one column does exist in this view. */
+                    san.col = 0;
+                    san.row = j;
+
+                    /* The preceding analysis marks the fixed layer. */
+                    if (!an.preds.empty()) {
+
+                        /* Barycenter ordering. */
+                        var degree = 1,
+                            accRows = 0,
+                            usedCoords = [],
+                            delta = 0;
+
+                        degree = san.preds.size();
+
+                        /* Accumulate san row as well as an row for each pred. */
+                        san.preds.values().forEach(function (psan) {
+                            accRows += psan.row + ((psan.parent.row) ? psan.parent.row : 0);
+                        });
+
+                        /* If any subanalysis within the analysis has the same barycenter value, increase it by a small value. */
+                        if (usedCoords.indexOf(accRows / degree) === -1) {
+                            san.l.bcOrder = accRows / degree;
+                            usedCoords.push(accRows / degree);
+                        } else {
+                            san.l.bcOrder = accRows / degree + delta;
+                            usedCoords.push(accRows / degree + delta);
+                            delta += 0.01;
+                        }
+
+                        /* Push into array to reorder afterwards. */
+                        colList.push(san);
+                    }
+
+                });
+
+                /* Sort subanalysis nodes. */
+                colList.sort(function (a, b) {
+                    return a.l.bcOrder - b.l.bcOrder;
+                });
+
+                /* Reorder subanalysis nodes. */
+                colList.forEach(function (d, j) {
+                    d.row = j;
+                });
+
+                /* Set grid. */
+                an.children.values().forEach(function (san) {
+                    /* Set grid cell. */
+                    an.l.grid[san.col][san.row] = san;
+                });
+
+                /* Reset reorder list. */
+                colList = [];
+            });
+        });
+    };
 
     /**
      * Main layout module function.
      * @param graph The main graph object of the provenance visualization.
      */
     var runLayoutPrivate = function (graph) {
-        nodes = graph.nodes;
-        links = graph.links;
-
-        width = graph.width;
-        depth = graph.depth;
-        grid = graph.grid;
-
-        console.log("Provvis: New layout is active.");
-
-
-
-
-        /* SUBANALYSIS LAYOUT. */
-        /* TODO: Generic re-implementation for subanalysis nodes. */
-
-        /* Add input subanalyses to starting nodes. */
-        var startSANodes = [];
-        graph.dataset.children.values().forEach(function (san) {
-            startSANodes.push(san);
-        });
-        var tsSANodes = topSortNodes(startSANodes);
-
-        if (tsSANodes !== null) {
-            layerNodes(tsSANodes);
-
-            var gSANodes = groupNodes(tsSANodes);
-
-            layoutNodes(gSANodes);
-
-            // createNodeGrid();
-        } else {
-            console.log("Error: Graph is not acyclic!");
-        }
-
-
-
-
 
         /* ANALYSIS LAYOUT. */
-        /* TODO: Generic re-implementation for analysis nodes. */
+        /* TODO: Refine and cleanup */
 
+        var bclgNodes = [];
         var startANodes = [];
         startANodes.push(graph.dataset);
-        var tsANodes = topSortNodes(startANodes);
-console.log(tsANodes.map(function (d) {return d.id;}));
+        var tsANodes = topSortNodes(startANodes, graph.aNodes.length, graph);
+
         if (tsANodes !== null) {
-            layerNodes(tsANodes);
+            layerNodes(tsANodes, graph);
+
+            /* Add dummy nodes. */
+            addDummyNodes(graph);
+
+            /* Reset start nodes and removed flag. */
+
+            startANodes = [];
+            startANodes.push(graph.dataset);
+            graph.aNodes.forEach(function (an) {
+                an.l.ts.removed = false;
+            });
+            graph.aLinks.forEach(function (al) {
+                al.l.ts.removed = false;
+            });
+            tsANodes = topSortNodes(startANodes, graph.aNodes.length, graph);
+
+            layerNodes(tsANodes, graph);
 
             var gANodes = groupNodes(tsANodes);
 
-            layoutNodes(gANodes);
+            /* TODO: Refine and clean up. */
+            bclgNodes = layoutNodes(gANodes, graph);
 
-            // createNodeGrid();
+            /* Remove dummy nodes. */
+            //removeDummyNodes(graph);
+
+            /* Reset layout properties for links. */
+            graph.aNodes.forEach(function (an) {
+                an.l.ts.removed = false;
+            });
+
+            graph.links.forEach(function (l) {
+                l.l.ts.removed = false;
+            });
+
+            /* SUBANALYSIS LAYOUT. */
+            reorderSubanalysisNodes(bclgNodes);
+
+            /* FILES/TOOLS LAYOUT. */
+            graph.saNodes.forEach(function (san) {
+                var tsNodes = topSortNodes(san.inputs.values(), san.children.size(), san);
+
+                if (tsNodes !== null) {
+                    /* Assign layers. */
+                    layerNodes(tsNodes, san);
+
+                    /* Group nodes by layer. */
+                    var gNodes = groupNodes(tsNodes);
+
+                    /* TODO: Refine and cleanup. */
+
+                    /* Init rows and visited flag. */
+                    gNodes.forEach(function (gn) {
+                        gn.forEach(function (n, i) {
+                            n.row = i;
+                            n.visited = false;
+                        });
+                    });
+
+                    /* Process layout, for each column. */
+                    gNodes.forEach(function (gn) {
+
+                        /* For each node. */
+                        gn.forEach(function (n) {
+
+                            var succs = n.succs.values().filter(function (s) {
+                                return  s.parent === n.parent;
+                            });
+
+                            /* Branch. */
+                            if (succs.length > 1) {
+
+                                /* Successors was visited before? */
+                                var visited = getNumberofVisitedNodesByArray(succs),
+                                    rowShift = succs.length / 2;
+
+                                /* Shift nodes before and after the branch. */
+                                /* But only if there are more than one successor. */
+                                if ((succs.length - visited) > 1) {
+                                    shiftNodesByRows(tsNodes, rowShift, n.col, n.row);
+                                    shiftNodesByRows(tsNodes, rowShift, n.col, n.row + 1);
+                                }
+
+                                var succRow = n.row - rowShift + visited;
+                                succs.forEach(function (sn) {
+                                    if (succs.length % 2 === 0 && succRow === n.row) {
+                                        succRow++;
+                                    }
+
+                                    if (sn.visited === false) {
+                                        sn.row = succRow;
+                                        sn.visited = true;
+                                        succRow++;
+                                    }
+                                });
+                            } else {
+                                succs.forEach(function (sn) {
+                                    sn.row = n.row;
+                                });
+                            }
+                        });
+                    });
+                } else {
+                    console.log("Error: Graph is not acyclic!");
+                }
+            });
+
+            /* Create workflow grid. */
+            graph.saNodes.forEach(function (san) {
+
+                /* Initialize workflow dimensions. */
+                san.l.depth = d3.max(san.children.values(), function (n) {
+                    return n.col;
+                }) + 1;
+                san.l.width = d3.max(san.children.values(), function (n) {
+                    return n.row;
+                }) + 1;
+
+                /* Init grid. */
+                initNodeGrid(san);
+
+                /* Set grid cells. */
+                san.children.values().forEach(function (n) {
+                    san.l.grid[n.col][n.row] = n;
+                });
+            });
+
         } else {
             console.log("Error: Graph is not acyclic!");
         }
 
-
-
-
-
-        /* FILES/TOOLS LAYOUT. */
-        /* TODO: Generic re-implementation for files/tools of one subanalysis (workflow). */
-
-        /* Topological order. */
-        var topNodes = sortTopological(graph.oNodes);
-        if (topNodes !== null) {
-            /* Assign layers. */
-            assignLayers(topNodes);
-
-            /* Group nodes by layer. */
-            var lgNodes = groupNodesByLayer(topNodes);
-
-            /* Place vertices. */
-            computeLayout(lgNodes);
-
-            /* Create grid. */
-            createNodeGrid();
-
-            graph.nodes = nodes;
-            graph.links = links;
-
-            graph.width = width;
-            graph.depth = depth;
-            graph.grid = grid;
-        } else {
-            console.log("Error: Graph is not acyclic!");
-        }
+        return bclgNodes;
     };
 
     /**
@@ -879,8 +1228,7 @@ console.log(tsANodes.map(function (d) {return d.id;}));
      */
     return{
         runLayout: function (graph) {
-            runLayoutPrivate(graph);
+            return runLayoutPrivate(graph);
         }
     };
-
 }();
