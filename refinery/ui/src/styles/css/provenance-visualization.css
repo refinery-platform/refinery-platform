@@ -209,6 +209,11 @@
     cursor: default;
 }
 
+.dragCollision {
+    fill: #FF0000;
+    fill-opacity: 0.8;
+}
+
 .hiddenBBox {
     display: none;
 }

@@ -276,6 +276,8 @@ var provvisRender = function () {
         d3.event.sourceEvent.stopPropagation();
 
         dragStartAnalysisPos = {col: n.col, row: n.row};
+
+        clearGridCell(n, dragStartAnalysisPos);
     };
 
     /**
@@ -412,6 +414,82 @@ var provvisRender = function () {
     };
 
     /**
+     * Collision detection while dragging.
+     * @param an Analysis node.
+     * @returns {boolean} Whether a collision occured.
+     */
+    var checkCollision = function (an) {
+        var minCol = !an.hidden ? an.col : d3.min(an.children.values(), function (san) {
+                return !san.hidden ? an.col + san.col : d3.min(san.children.values(), function (cn) {
+                    return an.col + san.col + cn.col;
+                });
+            }),
+            maxCol = !an.hidden ? an.col : d3.max(an.children.values(), function (san) {
+                return !san.hidden ? an.col + san.col : d3.max(san.children.values(), function (cn) {
+                    return an.col + san.col + cn.col;
+                });
+            }),
+            minRow = !an.hidden ? an.row : d3.min(an.children.values(), function (san) {
+                return !san.hidden ? an.row + san.row : d3.min(san.children.values(), function (cn) {
+                    return an.row + san.row + cn.row;
+                });
+            }), maxRow = !an.hidden ? an.row : d3.max(an.children.values(), function (san) {
+                return !san.hidden ? an.row + san.row : d3.max(san.children.values(), function (cn) {
+                    return an.row + san.row + cn.row;
+                });
+            });
+
+        /* Crop to grid boundaries. */
+        if (minCol < 0) {
+            minCol = 0;
+        }
+        if (maxCol >= vis.graph.l.depth) {
+            maxCol = vis.graph.l.depth - 1;
+        }
+        if (minRow < 0) {
+            minRow = 0;
+        }
+        if (maxRow >= vis.graph.l.width) {
+            maxRow = vis.graph.l.width - 1;
+        }
+
+        /* Helpers. */
+        var getMinSuccCol = d3.min(an.succs.values(), function (s) {
+            return !s.hidden ? s.col : d3.min(s.children.values(), function (ssan) {
+                return !ssan.hidden ? s.col + ssan.col : d3.min(ssan.children.values(), function (scn) {
+                    return s.col + ssan.col + scn.col;
+                });
+            });
+        });
+
+        var getMaxPredCol = d3.max(an.preds.values(), function (p) {
+            return !p.hidden ? p.col : d3.max(p.children.values(), function (psan) {
+                return !psan.hidden ? p.col + psan.col : d3.max(psan.children.values(), function (pcn) {
+                    return p.col + psan.col + pcn.col;
+                });
+            });
+        });
+
+        /* Analysis can't be dragged before a pred or after a successor node. */
+        if (maxCol >= getMinSuccCol || an.col <= getMaxPredCol) {
+            return true;
+        }
+
+        for (var i = minCol; i >= 0 && i <= maxCol && i < vis.graph.l.depth; i++) {
+            for (var j = minRow; j >= 0 && j <= maxRow && j < vis.graph.l.width; j++) {
+
+                /* Dragged to the drag start position. */
+                if (i === dragStartAnalysisPos.col && j === dragStartAnalysisPos.row) {
+                } /* Dragged to an occupied cell. */
+                else if (vis.graph.l.grid[i][j] !== "undefined") {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
+    /**
      * Drag listener.
      * @param n Node object.
      */
@@ -432,6 +510,12 @@ var provvisRender = function () {
         n.row = Math.round(d3.event.y / cell.height);
         n.x = n.col * cell.width;
         n.y = n.row * cell.height;
+
+        if (checkCollision(n)) {
+            self.select(".aBBox").classed("dragCollision", true);
+        } else {
+            self.select(".aBBox").classed("dragCollision", false);
+        }
 
         draggingActive = true;
     };
@@ -659,6 +743,13 @@ var provvisRender = function () {
             /* Update data. */
             n.col = Math.round(n.x / cell.width);
             n.row = Math.round(n.y / cell.height);
+
+            /* Collision check. */
+            if (checkCollision(n)) {
+                n.col = dragStartAnalysisPos.col;
+                n.row = dragStartAnalysisPos.row;
+            }
+            self.select(".aBBox").classed("dragCollision", false);
 
             /* Shift analysis node. */
             dragAnalysisNode(n, self);
