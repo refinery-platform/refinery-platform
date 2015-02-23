@@ -339,7 +339,7 @@ var provvisLayout = function () {
     };
 
     /**
-     * After resolving conflicts, no crossings are left and connected paths are concatenated into blocks.
+     * After resolving conflicts, minimal crossings are left and connected paths are concatenated into blocks.
      * Iterate through each layer from left to right, for each node:
      * When node has no predecessor links with neighbor marked, node is root for block.
      * The block's row is determined by the most right row of any node in the block.
@@ -1090,8 +1090,9 @@ var provvisLayout = function () {
         if (tsANodes !== null) {
             layerNodes(tsANodes, graph);
 
+            /* TODO: Temporarily disabled. */
             /* Add dummy nodes. */
-            addDummyNodes(graph);
+            //addDummyNodes(graph);
 
             /* Reset start nodes and removed flag. */
 
