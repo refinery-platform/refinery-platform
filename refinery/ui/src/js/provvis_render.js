@@ -2344,6 +2344,22 @@ var provvisRender = function () {
                     .attr("height", function () {
                         return cell.height - 2;
                     });
+
+                /* Update links. */
+                updateLink(curAN, curAN.x, curAN.y);
+
+                /* Set grid cell. */
+                setGridCell(curAN);
+
+                /* Vertical compaction. */
+                postprocessGridColumn(curAN.col);
+                for (i = curAN.col; i < vis.graph.l.depth; i++) {
+                    postprocessGridColumn(i);
+                }
+
+                /* Splice grid. */
+                spliceGridColumns(curAN);
+                spliceGridRows(curAN);
             } else {
                 curAN = d.parent.parent;
 
@@ -2382,22 +2398,28 @@ var provvisRender = function () {
                         .attr("rx", cell.width / 3)
                         .attr("ry", cell.height / 3);
                 }
+                /* Update links. */
+                updateLink(curAN, curAN.x, curAN.y);
+
+                /* Set grid cell. */
+                setGridCell(curAN);
+
+                /* Vertical compaction. */
+                postprocessGridColumn(curAN.col);
+                for (i = curAN.col; i < vis.graph.l.depth; i++) {
+                    postprocessGridColumn(i);
+                }
+
+                /* If the selected subanalysis is the last remaining to collapse. */
+                if (!curAN.children.values().some(function (san) {
+                    return san.hidden;
+                })) {
+
+                    /* Splice grid. */
+                    spliceGridColumns(curAN);
+                    spliceGridRows(curAN);
+                }
             }
-            /* Update links. */
-            updateLink(curAN, curAN.x, curAN.y);
-
-            /* Set grid cell. */
-            setGridCell(curAN);
-
-            /* Vertical compaction. */
-            postprocessGridColumn(curAN.col);
-            for (i = curAN.col; i < vis.graph.l.depth; i++) {
-                postprocessGridColumn(i);
-            }
-
-            /* Splice grid. */
-            spliceGridColumns(curAN);
-            spliceGridRows(curAN);
         }
         clearNodeSelection();
 
