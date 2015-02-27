@@ -13,7 +13,8 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     NodeRelationshipResource, WorkflowResource,\
     WorkflowInputRelationshipsResource, DataSetResource,\
     ExternalToolStatusResource, StatisticsResource, \
-    UserMultiPermissionResource, UserSinglePermissionResource
+    UserMultiPermissionResource, UserSinglePermissionResource, \
+    ProjectPermissionResource
 from core.models import DataSet
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource
@@ -46,6 +47,7 @@ v1_api.register(ExternalToolStatusResource())
 v1_api.register(StatisticsResource())
 v1_api.register(UserMultiPermissionResource())
 v1_api.register(UserSinglePermissionResource())
+v1_api.register(ProjectPermissionResource())
 #v1_api.register(TaxonResource())
 #v1_api.register(GenomeBuildResource())
 #v1_api.register(CytoBandResource())

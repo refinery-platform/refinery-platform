@@ -1069,3 +1069,16 @@ class UserSinglePermissionObject(object):
         self.res_name = res_name
         self.res_uuid = res_uuid
         self.shares = shares
+
+class ResourcePermissionObject(object):
+    def __init__(self, owner=None, owner_id=None, res_type=None, res_name=None, uuid=None, shares=None):
+        self.owner = owner
+        self.owner_id = owner_id
+        self.res_type = res_type
+        self.res_name = res_name
+        self.uuid = uuid
+        self.shares = shares
+
+class ProjectPermissionObject(ResourcePermissionObject):
+    def __init__(self, owner=None, owner_id=None, res_name=None, uuid=None, shares=None):
+        super(ProjectPermissionObject, self).__init__(owner, owner_id, Project, res_name, uuid, shares)

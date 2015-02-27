@@ -7,7 +7,7 @@ Created on May 4, 2012
 from GuardianTastypieAuthz import GuardianAuthorization
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, \
     WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus, StatisticsObject, \
-    UserMultiPermissionObject, UserSinglePermissionObject
+    UserMultiPermissionObject, UserSinglePermissionObject, ProjectPermissionObject
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
 from core.tasks import check_tool_status
@@ -439,12 +439,12 @@ class UserMultiPermissionResource(Resource):
             return [UserMultiPermissionObject(username, key_map, permission_map)]
 
 class UserSinglePermissionResource(Resource):
-    username = fields.CharField(attribute='username')
-    user_id = fields.CharField(attribute='user_id')
-    res_type = fields.CharField(attribute='res_type')
-    res_name = fields.CharField(attribute='res_name')
-    res_uuid = fields.CharField(attribute='res_uuid')
-    shares = fields.ListField(attribute='shares')
+    username = fields.CharField(attribute='username', null=True)
+    user_id = fields.CharField(attribute='user_id', null=True)
+    res_type = fields.CharField(attribute='res_type', null=True)
+    res_name = fields.CharField(attribute='res_name', null=True)
+    res_uuid = fields.CharField(attribute='res_uuid', null=True)
+    shares = fields.ListField(attribute='shares', null=True)
 
     def get_user_by_name(self, username):
         user_list = filter(lambda u: u.username == username, User.objects.all())
@@ -492,10 +492,25 @@ class UserSinglePermissionResource(Resource):
         resource_name = 'user_single_permission'
         object_class = UserSinglePermissionObject
 
-    def detail_uri_kwargs(self, bundle_or_obj):
+    def detail_uri_kwargs(self, bundle):
+        # I'm not sure if this is only used in GET requests so logging
+        logger.info("with request type " + bundle.request.method)
         kwargs = {}
-        kwargs['pk'] = uuid.uuid1()
+        kwargs['pk'] = bundle.request.REQUEST['res-uuid']
         return kwargs
+
+    def obj_get(self, bundle, **kwargs):
+        # bucket = self._bucket()
+        # message = bucket.get(kwargs['pk'])
+        """
+        logger.info("pk:")
+        logger.info(kwargs['pk'])
+        logger.info(bundle.request)
+        logger.info(bundle.request.body)
+        # logger.info(bundle.request.body)
+        """
+        pk = kwargs['pk']
+        return self.get_res_by_uuid(Project, pk)
 
     def obj_get_list(self, bundle, **kwargs):
         return self.get_object_list(bundle.request)
@@ -522,4 +537,61 @@ class UserSinglePermissionResource(Resource):
             shares = self.get_shares(res)
             return [UserSinglePermissionObject(user.username, user_id, res_type_str, res.name, res_uuid, shares)]
 
+class ProjectPermissionResource(Resource):
+    owner = fields.CharField(attribute='owner')
+    owner_id = fields.CharField(attribute='owner_id')
+    res_name = fields.CharField(attribute='res_name')
+    uuid = fields.CharField(attribute='uuid')
+    shares = fields.ListField(attribute='shares')
+
+    def get_user(self, user_id):
+        user_list = filter(lambda u: str(u.id) == user_id, User.objects.all())
+        return None if len(user_list) == 0 else user_list[0]
+
+    def get_res(self, res_uuid):
+        res_list = filter(lambda r: r.uuid == res_uuid, Project.objects.all())
+        return None if len(res_list) == 0 else res_list[0]
+
+    def get_shares(self, res):
+        share_list = []
+        groups_shared_with = map(lambda r: (r['group'].group_ptr.name, r['group'].uuid, {'read': r['read'], 'change': r['change']}), res.get_groups())
+
+        for i in groups_shared_with:
+            # i[0] is group name, i[1] is uuid, i[2] is permissions
+            share_list.append({'name': i[0], 'uuid': i[1], 'permission': i[2]})
+        
+        return share_list
+
+    class Meta:
+        resource_name = 'project_permission'
+        object_class = ProjectPermissionObject
+
+    def detail_uri_kwargs(self, bundle):
+        kwargs = {}
+        kwargs['pk'] = uuid.uuid1()
+        logger.info("BUNDLE OBJECT ============")
+        logger.info(bundle.obj)
+        logger.info("BUNDLE DATA ==============")
+        logger.info(bundle.data)
+        logger.info("BUNDLE REQUEST ===========")
+        logger.info(bundle.request)
+
+        return kwargs
+
+    def obj_get_list(self, bundle, **kwargs):
+        return self.get_object_list(bundle.request)
+
+    def get_object_list(self, request):
+        user = self.get_user(request.GET['owner-id'])
+        res = self.get_res(request.GET['uuid'])
+
+        if (user is None):
+            raise ImmediateHttpResponse(response=HttpNotFound("User cannot be found"))
+        elif (res is None):
+            raise ImmediateHttpResponse(response=HttpNotFound("User found, but resource cannot be found"))
+        elif (res.get_owner().id != user.id):
+            raise ImmediateHttpResponse(response=HttpForbidden("User does not have ownership of the resource"))
+        else:
+            shares = self.get_shares(res)
+            return [ProjectPermissionObject(user.username, user.id, res.name, res.uuid, shares)]
 
