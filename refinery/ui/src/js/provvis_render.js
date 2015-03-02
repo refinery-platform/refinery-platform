@@ -137,12 +137,12 @@ var provvisRender = function () {
                     self.select("circle")
                         .attr("r", function (d) {
                             return d.nodeType === "intermediate" ? 3 * scaleFactor *
-                                vis.radius / 4 : scaleFactor * vis.radius;
+                            vis.radius / 4 : scaleFactor * vis.radius;
                         });
                 } else if (d.nodeType === "special") {
                     self.select("rect")
                         .attr("transform", "translate(" + (-3 * scaleFactor * vis.radius / 4) + "," +
-                            (-3 * scaleFactor * vis.radius / 4) + ")")
+                        (-3 * scaleFactor * vis.radius / 4) + ")")
                         .attr("width", 6 * scaleFactor * vis.radius / 4)
                         .attr("height", 6 * scaleFactor * vis.radius / 4);
                 } else if (d.nodeType === "dt") {
@@ -339,9 +339,9 @@ var provvisRender = function () {
         var pathSegment = "M" + srcX + "," + srcY;
 
         pathSegment = pathSegment.concat(" Q" + (srcX + cell.width / 3) + "," + (srcY) + " " +
-            (srcX + cell.width / 2) + "," + (srcY + (tarY - srcY) / 2) + " " +
-            "T" + (srcX + cell.width) + "," + tarY) +
-            " H" + tarX;
+        (srcX + cell.width / 2) + "," + (srcY + (tarY - srcY) / 2) + " " +
+        "T" + (srcX + cell.width) + "," + tarY) +
+        " H" + tarX;
 
         return pathSegment;
     };
@@ -748,6 +748,52 @@ var provvisRender = function () {
          * the graph is shifted by the absolute amount of the negative cell count.
          */
         if (n.col < 0 || n.row < 0) {
+
+            /* Remember translations. */
+            var p = n.x < 0 ? n.x : 0,
+                q = n.y < 0 ? n.y : 0;
+
+            /* Get current and absolute canvas transition. */
+            var t = d3.transform(vis.canvas.attr("transform")),
+                u = t.translate[0],
+                v = t.translate[1],
+                w = t.scale[0];
+
+            /* Add relative translation to canvas. */
+            var newPos = [u + (p * w), v + (q * w)],
+                newScale = w;
+
+            /* Transformations. */
+            vis.canvas
+                .attr("transform", "translate(" + newPos + ")scale(" + newScale + ")");
+
+            vis.zoom.translate(newPos);
+            vis.zoom.scale(newScale);
+
+            /* Background rectangle fix. */
+            vis.rect.attr("transform", "translate(" + (-newPos[0] / newScale) + "," +
+            (-newPos[1] / newScale) + ")" + " scale(" + (1 / newScale) + ")");
+
+            /* Quick fix to exclude scale from text labels. */
+            vis.canvas.selectAll(".aBBoxLabel")
+                .attr("transform", "translate(" + 4 + "," + (vis.radius) + ") scale(" + (1 / newScale) + ")");
+
+            vis.canvas.selectAll(".saBBoxLabel")
+                .attr("transform", "translate(" + 10 + "," + (vis.radius) + ") scale(" + (1 / newScale) + ")");
+
+            vis.canvas.selectAll(".nodeDoiLabel")
+                .attr("transform", "translate(" + (-cell.width / 2 + 2) + "," + vis.radius * 1.5 + ") scale(" + (1 / newScale) + ")");
+
+            vis.canvas.selectAll(".nodeAttrLabel")
+                .attr("transform", "translate(" + (-cell.width / 2 + 5) + "," + vis.radius * 1.5 + ") scale(" + (1 / newScale) + ")");
+
+            vis.canvas.selectAll(".subanalysisLabel")
+                .attr("transform", "translate(" + (-cell.width / 2 + 5) + "," + vis.radius * 1.5 + ") scale(" + (1 / newScale) + ")");
+
+            vis.canvas.selectAll(".analysisLabel")
+                .attr("transform", "translate(" + (-cell.width / 2 + 4) + "," + vis.radius * 1.5 + ") scale(" + (1 / newScale) + ")");
+
+            /* Compute cols and rows to shift. */
             shiftCols = n.col < 0 ? Math.abs(n.col) : 0;
             shiftRows = n.row < 0 ? Math.abs(n.row) : 0;
 
@@ -1514,7 +1560,7 @@ var provvisRender = function () {
                         nGlyph
                             .append("rect")
                             .attr("transform", "translate(" + ( -3 * vis.radius / 4) + "," +
-                                (-3 * vis.radius / 4) + ")")
+                            (-3 * vis.radius / 4) + ")")
                             .attr("width", 6 * vis.radius / 4)
                             .attr("height", 6 * vis.radius / 4);
                     } else if (d.nodeType === "dt") {
@@ -1687,8 +1733,8 @@ var provvisRender = function () {
         /* Shrink grid by columns. */
         var colIsUsed = function (colIndex) {
             return vis.graph.l.grid[colIndex] && vis.graph.l.grid[colIndex].some(function (c) {
-                return c !== "undefined";
-            });
+                    return c !== "undefined";
+                });
         };
 
         /* Actual splicing. */
@@ -1699,8 +1745,6 @@ var provvisRender = function () {
                 vis.graph.l.depth--;
             }
         }
-
-        vis.graph.l.depth = vis.graph.l.grid.length;
 
         /* Update grid cells. */
         if (colLastSpliced < vis.graph.l.depth) {
@@ -1729,8 +1773,8 @@ var provvisRender = function () {
                     }
                 }
             }
-            updateGrid(vis.graph);
         }
+        updateGrid(vis.graph);
     };
 
     /**
@@ -1805,8 +1849,8 @@ var provvisRender = function () {
                     }
                 }
             }
-            updateGrid(vis.graph);
         }
+        updateGrid(vis.graph);
     };
 
     /**
@@ -2339,7 +2383,7 @@ var provvisRender = function () {
                 d3.selectAll("#BBoxId-" + curAN.autoId + ", #aBBClipId-" + curAN.autoId).selectAll("rect")
                     .attr("width", function () {
                         return (d3.select(this.parentElement).attr("id") === "BBoxId-" + curAN.autoId) ?
-                            cell.width - 2 : cell.width - 4;
+                        cell.width - 2 : cell.width - 4;
                     })
                     .attr("height", function () {
                         return cell.height - 2;
@@ -2352,9 +2396,11 @@ var provvisRender = function () {
                 setGridCell(curAN);
 
                 /* Vertical compaction. */
-                postprocessGridColumn(curAN.col);
-                for (i = curAN.col; i < vis.graph.l.depth; i++) {
-                    postprocessGridColumn(i);
+                if (curAN.uuid !== "dataset") {
+                    postprocessGridColumn(curAN.col);
+                    for (i = curAN.col; i < vis.graph.l.depth; i++) {
+                        postprocessGridColumn(i);
+                    }
                 }
 
                 /* Splice grid. */
@@ -2377,8 +2423,8 @@ var provvisRender = function () {
 
                 /* If the selected subanalysis is the last remaining to collapse, adjust bounding box and clippath. */
                 if (!curAN.children.values().some(function (san) {
-                    return san.hidden;
-                })) {
+                        return san.hidden;
+                    })) {
                     /* Compute bounding box for analysis child nodes. */
                     anBBoxCoords = getBBoxCords(curAN, 1);
 
@@ -2405,20 +2451,22 @@ var provvisRender = function () {
                 setGridCell(curAN);
 
                 /* Vertical compaction. */
-                postprocessGridColumn(curAN.col);
-                for (i = curAN.col; i < vis.graph.l.depth; i++) {
-                    postprocessGridColumn(i);
+                if (curAN.uuid !== "dataset") {
+                    postprocessGridColumn(curAN.col);
+                    for (i = curAN.col; i < vis.graph.l.depth; i++) {
+                        postprocessGridColumn(i);
+                    }
                 }
 
                 /* If the selected subanalysis is the last remaining to collapse. */
-                if (!curAN.children.values().some(function (san) {
-                    return san.hidden;
-                })) {
+                /*if (!curAN.children.values().some(function (san) {
+                 return san.hidden;
+                 })) {*/
 
-                    /* Splice grid. */
-                    spliceGridColumns(curAN);
-                    spliceGridRows(curAN);
-                }
+                /* Splice grid. */
+                spliceGridColumns(curAN);
+                spliceGridRows(curAN);
+                /*}*/
             }
         }
         clearNodeSelection();
@@ -2454,28 +2502,17 @@ var provvisRender = function () {
     /**
      * Fit visualization onto free windows space.
      * @param transitionTime The time in milliseconds for the duration of the animation.
-     * @param nodes All nodes within the graph.
      */
-    var fitGraphToWindow = function (transitionTime, nodes) {
-        var min = [d3.min(nodes, function (d) {
-                return d.x - vis.margin.left;
-            }), d3.min(nodes, function (d) {
-                return d.y - vis.margin.top;
-            })],
-            max = [d3.max(nodes, function (d) {
-                return d.x + vis.margin.right;
-            }), d3.max(nodes, function (d) {
-                return d.y + vis.margin.bottom;
-            })],
-            delta = [max[0] - min[0], max[1] - min[1]],
-            factor = [(vis.width / delta[0]), (height / delta[1])],
-        /* Maximize scale to factor 3. */
-            newScale = d3.min(factor.concat([3])),
-            newPos = [((vis.width - delta[0] * newScale) / 2),
-                ((height - delta[1] * newScale) / 2)];
+    var fitGraphToWindow = function (transitionTime) {
 
-        newPos[0] -= min[0] * newScale;
-        newPos[1] -= min[1] * newScale;
+        var min = [0, 0],
+            max = [vis.graph.l.depth * cell.width, vis.graph.l.width * cell.height],
+            delta = [max[0] - min[0], max[1] - min[1]],
+            factor = [(vis.width / delta[0]), (vis.height / delta[1])],
+        /* Maximize scale to factor 3. */
+            newScale = d3.min(factor.concat([3]))*0.9,
+            newPos = [vis.margin.left*2*newScale,
+                ((vis.height - delta[1] * newScale) / 2+vis.margin.top*2)];
 
         vis.canvas
             .transition()
@@ -2485,9 +2522,21 @@ var provvisRender = function () {
         vis.zoom.translate(newPos);
         vis.zoom.scale(newScale);
 
+        /* Hide and show labels at specific threshold. */
+        setTimeout(function () {
+            if (newScale < 1) {
+                vis.canvas.selectAll(".labels")
+                    .classed("hiddenLabel", true);
+            } else {
+                vis.canvas.selectAll(".labels")
+                    .classed("hiddenLabel", false);
+            }
+        }, transitionTime);
+
+
         /* Background rectangle fix. */
         vis.rect.attr("transform", "translate(" + (-newPos[0] / newScale) + "," +
-            (-newPos[1] / newScale) + ")" + " scale(" + (1 / newScale) + ")");
+        (-newPos[1] / newScale) + ")" + " scale(" + (1 / newScale) + ")");
 
         /* Quick fix to exclude scale from text labels. */
         vis.canvas.selectAll(".aBBoxLabel")
@@ -2607,7 +2656,7 @@ var provvisRender = function () {
                 data = vis.graph.workflowData.get(selNode.parent.wfUuid);
                 if (typeof data !== "undefined") {
                     title = "<b>" + "Subanalysis: " + "<b>" + "<a href=/workflows/" + selNode.parent.wfUuid + ">" +
-                        data.name + "</a>";
+                    data.name + "</a>";
                 } else {
                     title = "<b>" + "Dataset " + "<b>";
                 }
@@ -2618,7 +2667,7 @@ var provvisRender = function () {
                 data = vis.graph.analysisData.get(selNode.uuid);
                 if (typeof data !== "undefined") {
                     title = "<b>" + "Analysis: " + "<b>" + "<a href=/workflows/" + data.uuid + ">" +
-                        data.name + "</a>";
+                    data.name + "</a>";
                 } else {
                     title = "<b>" + "Dataset " + "<b>";
                 }
@@ -2713,86 +2762,73 @@ var provvisRender = function () {
 
         /* Node tooltips. */
         node.on("mouseover", function (d) {
-            showTooltip(
-                    createHTMLKeyValuePair("Name", d.name) + "<br>" +
-                    createHTMLKeyValuePair("Author", d.attributes.get("Author")) + "<br>" +
-                    createHTMLKeyValuePair("File Type", d.attributes.get("FileType")) + "<br>" +
-                    createHTMLKeyValuePair("Year", d.attributes.get("Year")) + "<br>" +
-                    createHTMLKeyValuePair("Month", d.attributes.get("Month")) + "<br>" +
-                    createHTMLKeyValuePair("Type", d.fileType), event);
-
-            d3.select(this).classed("mouseoverNode", true);
+            var self = d3.select(this);
+            var ttStr = createHTMLKeyValuePair("Name", d.name) + "<br>" +
+                createHTMLKeyValuePair("Type", d.fileType) + "<br>" +
+                createHTMLKeyValuePair("File Url", d.fileUrl) + "<br>" +
+                createHTMLKeyValuePair("UUID", d.uuid) + "<br>";
+            d.attributes.forEach(function (key, value) {
+                ttStr += createHTMLKeyValuePair(key, value) + "<br>";
+            });
+            showTooltip(ttStr, event);
+            self.classed("mouseoverNode", true);
+            self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
-            showTooltip(
-                    createHTMLKeyValuePair("Name", d.name) + "<br>" +
-                    createHTMLKeyValuePair("Author", d.attributes.get("Author")) + "<br>" +
-                    createHTMLKeyValuePair("File Type", d.attributes.get("FileType")) + "<br>" +
-                    createHTMLKeyValuePair("Year", d.attributes.get("Year")) + "<br>" +
-                    createHTMLKeyValuePair("Month", d.attributes.get("Month")) + "<br>" +
-                    createHTMLKeyValuePair("Type", d.fileType), event);
-
-        }).on("mouseout", function () {
+            var ttStr = createHTMLKeyValuePair("Name", d.name) + "<br>" +
+                createHTMLKeyValuePair("Type", d.fileType) + "<br>" +
+                createHTMLKeyValuePair("File Url", d.fileUrl) + "<br>" +
+                createHTMLKeyValuePair("UUID", d.uuid) + "<br>";
+            d.attributes.forEach(function (key, value) {
+                ttStr += createHTMLKeyValuePair(key, value) + "<br>";
+            });
+            showTooltip(ttStr, event);
+        }).on("mouseout", function (d) {
+            var self = d3.select(this);
             hideTooltip();
-            d3.select(this).classed("mouseoverNode", false);
+            self.classed("mouseoverNode", false);
+            self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
         /* Subanalysis tooltips. */
         saNode.on("mouseover", function (d) {
             var self = d3.select(this);
-            showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
-                createHTMLKeyValuePair("Workflow", getWfNameByNode(d)) + "<br>" +
-                "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);
-
+            /*showTooltip(
+             createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
+             createHTMLKeyValuePair("Workflow", getWfNameByNode(d)) + "<br>" +
+             "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
             self.classed("mouseoverNode", true);
-            self.select(".nodeAttrLabel").text(function (d) {
-                var wfName = "dataset";
-                if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid) !== "undefined") {
-                    wfName = vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid).name;
-                }
-                return wfName;
-            });
+            self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
-            showTooltip(createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
-                createHTMLKeyValuePair("Workflow", getWfNameByNode(d)) + "<br>" +
-                "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);
-        }).on("mouseout", function () {
+            /*showTooltip(
+             createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
+             createHTMLKeyValuePair("Workflow", getWfNameByNode(d)) + "<br>" +
+             "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
+        }).on("mouseout", function (d) {
             var self = d3.select(this);
-            hideTooltip();
-
+            /*hideTooltip();*/
             self.classed("mouseoverNode", false);
-            self.select(".nodeAttrLabel").text(function (d) {
-                var wfName = "dataset";
-                if (typeof vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid) !== "undefined") {
-                    wfName = vis.graph.workflowData.get(vis.graph.saNodes[d.id].parent.wfUuid).name;
-                }
-                return wfName.substr(0, 20) + "..";
-            });
+            self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
         /* Analysis tolltips. */
         aNode.on("mouseover", function (d) {
             var self = d3.select(this);
-            showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
-                createHTMLKeyValuePair("Workflow", getWfNameByNode(d)) + "<br>" +
-                createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);
-
+            /* showTooltip(
+             createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
+             createHTMLKeyValuePair("Workflow", getWfNameByNode(d)) + "<br>" +
+             createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);*/
             self.classed("mouseoverNode", true);
-            self.select(".nodeAttrLabel").text(function (d) {
-                return parseISOTimeFormat(d.start).toString();
-            });
+            self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
-            showTooltip(createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
-                createHTMLKeyValuePair("Workflow", getWfNameByNode(d)) + "<br>" +
-                createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);
-
-        }).on("mouseout", function () {
+            /*showTooltip(
+             createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
+             createHTMLKeyValuePair("Workflow", getWfNameByNode(d)) + "<br>" +
+             createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);*/
+        }).on("mouseout", function (d) {
             var self = d3.select(this);
-            hideTooltip();
-
+            /*hideTooltip();*/
             self.classed("mouseoverNode", false);
-            self.select(".nodeAttrLabel").text(function (d) {
-                return parseISOTimeFormat(d.start).toString().substr(0, 21) + "..";
-            });
+            self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
         /* On mouseover subanalysis bounding box. */
@@ -2836,23 +2872,23 @@ var provvisRender = function () {
         /* Node tooltips. */
         node.on("mouseover", function (d) {
             var self = d3.select(this);
-            showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
+            showTooltip(
+                createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
                 createHTMLKeyValuePair("id", d.id) + "<br>" +
                 createHTMLKeyValuePair("col", d.col) + "<br>" +
                 createHTMLKeyValuePair("x", d.x) + "<br>" +
                 createHTMLKeyValuePair("row", d.row) + "<br>" +
                 createHTMLKeyValuePair("y", d.y), event);
-
             self.classed("mouseoverNode", true);
             self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
-            showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
+            showTooltip(
+                createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
                 createHTMLKeyValuePair("id", d.id) + "<br>" +
                 createHTMLKeyValuePair("col", d.col) + "<br>" +
                 createHTMLKeyValuePair("x", d.x) + "<br>" +
                 createHTMLKeyValuePair("row", d.row) + "<br>" +
                 createHTMLKeyValuePair("y", d.y), event);
-
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
@@ -2864,25 +2900,23 @@ var provvisRender = function () {
         saNode.on("mouseover", function (d) {
             var self = d3.select(this);
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-                createHTMLKeyValuePair("id", d.id) + "<br>" +
-                createHTMLKeyValuePair("col", d.col) + "<br>" +
-                createHTMLKeyValuePair("x", d.x) + "<br>" +
-                createHTMLKeyValuePair("row", d.row) + "<br>" +
-                createHTMLKeyValuePair("y", d.y), event);
-
+            createHTMLKeyValuePair("id", d.id) + "<br>" +
+            createHTMLKeyValuePair("col", d.col) + "<br>" +
+            createHTMLKeyValuePair("x", d.x) + "<br>" +
+            createHTMLKeyValuePair("row", d.row) + "<br>" +
+            createHTMLKeyValuePair("y", d.y), event);
             self.classed("mouseoverNode", true);
             self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-                createHTMLKeyValuePair("id", d.id) + "<br>" +
-                createHTMLKeyValuePair("col", d.col) + "<br>" +
-                createHTMLKeyValuePair("x", d.x) + "<br>" +
-                createHTMLKeyValuePair("row", d.row) + "<br>" +
-                createHTMLKeyValuePair("y", d.y), event);
+            createHTMLKeyValuePair("id", d.id) + "<br>" +
+            createHTMLKeyValuePair("col", d.col) + "<br>" +
+            createHTMLKeyValuePair("x", d.x) + "<br>" +
+            createHTMLKeyValuePair("row", d.row) + "<br>" +
+            createHTMLKeyValuePair("y", d.y), event);
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
-
             self.classed("mouseoverNode", false);
             self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
@@ -2891,25 +2925,23 @@ var provvisRender = function () {
         aNode.on("mouseover", function (d) {
             var self = d3.select(this);
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-                createHTMLKeyValuePair("id", d.id) + "<br>" +
-                createHTMLKeyValuePair("col", d.col) + "<br>" +
-                createHTMLKeyValuePair("x", d.x) + "<br>" +
-                createHTMLKeyValuePair("row", d.row) + "<br>" +
-                createHTMLKeyValuePair("y", d.y), event);
-
+            createHTMLKeyValuePair("id", d.id) + "<br>" +
+            createHTMLKeyValuePair("col", d.col) + "<br>" +
+            createHTMLKeyValuePair("x", d.x) + "<br>" +
+            createHTMLKeyValuePair("row", d.row) + "<br>" +
+            createHTMLKeyValuePair("y", d.y), event);
             self.classed("mouseoverNode", true);
             self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-                createHTMLKeyValuePair("id", d.id) + "<br>" +
-                createHTMLKeyValuePair("col", d.col) + "<br>" +
-                createHTMLKeyValuePair("x", d.x) + "<br>" +
-                createHTMLKeyValuePair("row", d.row) + "<br>" +
-                createHTMLKeyValuePair("y", d.y), event);
+            createHTMLKeyValuePair("id", d.id) + "<br>" +
+            createHTMLKeyValuePair("col", d.col) + "<br>" +
+            createHTMLKeyValuePair("x", d.x) + "<br>" +
+            createHTMLKeyValuePair("row", d.row) + "<br>" +
+            createHTMLKeyValuePair("y", d.y), event);
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
-
             self.classed("mouseoverNode", false);
             self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
@@ -2939,28 +2971,28 @@ var provvisRender = function () {
         /* Link tooltips. */
         link.on("mouseover", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-                createHTMLKeyValuePair("id", d.id) + "<br>" +
-                createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
-                createHTMLKeyValuePair("tar", d.target.autoId), event);
+            createHTMLKeyValuePair("id", d.id) + "<br>" +
+            createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
+            createHTMLKeyValuePair("tar", d.target.autoId), event);
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-                createHTMLKeyValuePair("id", d.id) + "<br>" +
-                createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
-                createHTMLKeyValuePair("tar", d.target.autoId), event);
+            createHTMLKeyValuePair("id", d.id) + "<br>" +
+            createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
+            createHTMLKeyValuePair("tar", d.target.autoId), event);
         }).on("mouseout", function () {
             hideTooltip();
         });
 
         aLink.on("mouseover", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-                createHTMLKeyValuePair("id", d.id) + "<br>" +
-                createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
-                createHTMLKeyValuePair("tar", d.target.autoId), event);
+            createHTMLKeyValuePair("id", d.id) + "<br>" +
+            createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
+            createHTMLKeyValuePair("tar", d.target.autoId), event);
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-                createHTMLKeyValuePair("id", d.id) + "<br>" +
-                createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
-                createHTMLKeyValuePair("tar", d.target.autoId), event);
+            createHTMLKeyValuePair("id", d.id) + "<br>" +
+            createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
+            createHTMLKeyValuePair("tar", d.target.autoId), event);
         }).on("mouseout", function () {
             hideTooltip();
         });
@@ -3657,8 +3689,8 @@ var provvisRender = function () {
             /* Set (un)filtered subanalyses. */
             vis.graph.nodes.forEach(function (n) {
                 if (selNodes.map(function (d) {
-                    return d.parent;
-                }).indexOf(n.parent) === -1) {
+                        return d.parent;
+                    }).indexOf(n.parent) === -1) {
                     n.parent.children.values().forEach(function (cn) {
                         cn.filtered = false;
                     });
@@ -3684,8 +3716,8 @@ var provvisRender = function () {
                     an.filtered = false;
                 }
                 else if (an.children.values().some(function (san) {
-                    return san.filtered;
-                })) {
+                        return san.filtered;
+                    })) {
                     an.filtered = true;
                 } else {
                     an.filtered = false;
@@ -3724,7 +3756,7 @@ var provvisRender = function () {
     /**
      * Publish module function.
      */
-    return{
+    return {
         runRender: function (vis) {
             runRenderPrivate(vis);
         }, runRenderUpdate: function (vis, solrResponse) {

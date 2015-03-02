@@ -33,6 +33,7 @@
 
 #provenance-vis {
     position: relative;
+    overflow: hidden;
 }
 
 #provenance-canvas {

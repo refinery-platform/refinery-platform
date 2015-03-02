@@ -482,9 +482,8 @@ var provvisInit = function () {
             solrResponse.getDocumentList().forEach(function (d) {
 
                 /* Set facet attributes to all nodes for the subanalysis of the selected node. */
-                var selNode = nodeMap.get(d.uuid);
-
-                var rawFacetAttributes = d3.entries(d);
+                var selNode = nodeMap.get(d.uuid),
+                    rawFacetAttributes = d3.entries(d);
 
                 rawFacetAttributes.forEach(function (fa) {
                     var attrNameEndIndex = fa.key.indexOf("_Characteristics_"),
@@ -492,13 +491,8 @@ var provvisInit = function () {
 
                     if (attrNameEndIndex === -1) {
                         attrName = fa.key.replace(/REFINERY_/g, "");
-                        attrName = attrName.replace(/_2_1_s/g, "");
+                        attrName = attrName.replace(/_([0-9])+_([0-9])+_s/g, "");
                         attrName = attrName.toLowerCase();
-
-                        /* Temporary FileType field fix. */
-                        if (attrName === "filetype") {
-                            attrName = "FileType";
-                        }
                     } else {
                         attrName = fa.key.substr(0, attrNameEndIndex);
                     }
@@ -527,13 +521,8 @@ var provvisInit = function () {
 
                 if (attrNameEndIndex === -1) {
                     attrName = fa.key.replace(/REFINERY_/g, "");
-                    attrName = attrName.replace(/_2_1_s/g, "");
+                    attrName = attrName.replace(/_([0-9])+_([0-9])+_s/g, "");
                     attrName = attrName.toLowerCase();
-
-                    /* Temporary FileType field fix. */
-                    if (attrName === "filetype") {
-                        attrName = "FileType";
-                    }
                 } else {
                     attrName = fa.key.substr(0, attrNameEndIndex);
                 }

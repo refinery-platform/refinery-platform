@@ -677,10 +677,6 @@ var provvis = function () {
                 /* Initialize margin conventions */
                 var margin = {top: 20, right: 10, bottom: 20, left: 10};
 
-                /* Initialize canvas dimensions. */
-                var width = window.innerWidth - margin.left - margin.right,
-                    height = window.innerHeight - margin.top - margin.bottom;
-
                 /* Set drawing constants. */
                 var r = 7,
                     color = d3.scale.category20();
@@ -709,6 +705,10 @@ var provvis = function () {
                 /* Init grid cell dimensions. */
                 var cell = {width: r * 5, height: r * 5};
 
+                /* Initialize canvas dimensions. */
+                var width = $("div#provenance-vis").width() - margin.left - margin.right,
+                    height = 700/*window.innerHeight*/ - margin.top - margin.bottom;
+
                 /* Create vis and add graph. */
                 vis = new provvisDecl.ProvVis("provenance-graph", zoom, data, url, canvas, nodeTable, rect, margin, width,
                     height, r, color, graph, supportView, cell);
@@ -718,6 +718,13 @@ var provvis = function () {
                     /* Translation and scaling. */
                     vis.canvas.attr("transform", "translate(" + d3.event.translate + ")" +
                         " scale(" + d3.event.scale + ")");
+
+                    /* Hide and show labels at specific threshold. */
+                    if (d3.event.scale < 1) {
+                        vis.canvas.selectAll(".labels").classed("hiddenLabel", true);
+                    } else {
+                        vis.canvas.selectAll(".labels").classed("hiddenLabel", false);
+                    }
 
                     /* Fix for rectangle getting translated too - doesn't work after window resize. */
                     vis.rect.attr("transform", "translate(" +
