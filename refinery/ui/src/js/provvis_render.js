@@ -2510,9 +2510,9 @@ var provvisRender = function () {
             delta = [max[0] - min[0], max[1] - min[1]],
             factor = [(vis.width / delta[0]), (vis.height / delta[1])],
         /* Maximize scale to factor 3. */
-            newScale = d3.min(factor.concat([3]))*0.9,
-            newPos = [vis.margin.left*2*newScale,
-                ((vis.height - delta[1] * newScale) / 2+vis.margin.top*2)];
+            newScale = d3.min(factor.concat([3])) * 0.9,
+            newPos = [vis.margin.left * 2 * newScale,
+                ((vis.height - delta[1] * newScale) / 2 + vis.margin.top * 2)];
 
         vis.canvas
             .transition()
@@ -3253,27 +3253,23 @@ var provvisRender = function () {
 
         /* Switch link styles. */
         $("[id^=prov-ctrl-links-list-]").click(function () {
-
-            $(this).find("input").prop("checked", true);
-
-            var selectedLinkStyle = $(this).find("label").text();
-            switch (selectedLinkStyle) {
+            switch ($(this).text()) {
                 case "Bezier":
-                    $("#prov-ctrl-links-list-straight").find("input").prop("checked", false);
+                    $("#prov-ctrl-links-list-straight").find("input[type='radio']").prop("checked", false);
                     break;
                 case "Straight":
-                    $("#prov-ctrl-links-list-bezier").find("input").prop("checked", false);
+                    $("#prov-ctrl-links-list-bezier").find("input[type='radio']").prop("checked", false);
                     break;
             }
+            $(this).find("input[type='radio']").prop("checked", true);
 
             aNode.each(function (an) {
                 updateLink(an, an.x, an.y);
                 an.children.values().forEach(function (san) {
                     san.links.values().forEach(function (l) {
-
                         /* Redraw links within subanalysis. */
                         d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).attr("d", function (l) {
-                            if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
+                            if ($("#prov-ctrl-links-list-bezier").find("input[type='radio']").prop("checked")) {
                                 return drawBezierLink(l, l.source.x, l.source.y, l.target.x, l.target.y);
                             } else {
                                 return drawStraightLink(l, l.source.x, l.source.y, l.target.x, l.target.y);
@@ -3287,17 +3283,17 @@ var provvisRender = function () {
         /* Switch time-dependant color scheme. */
         $("[id^=prov-ctrl-time-enc-list-]").click(function () {
 
-            $(this).find("input").prop("checked", true);
+            $(this).find("input[type='radio']").prop("checked", true);
 
             var selectedColorScheme = $(this).find("label").text();
             switch (selectedColorScheme) {
                 case "Blue":
                     timeColorScale.range(["white", "darkblue"]);
-                    $("#prov-ctrl-time-enc-list-gs").find("input").prop("checked", false);
+                    $("#prov-ctrl-time-enc-list-gs").find("input[type='radio']").prop("checked", false);
                     break;
                 case "Grayscale":
                     timeColorScale.range(["white", "black"]);
-                    $("#prov-ctrl-time-enc-list-blue").find("input").prop("checked", false);
+                    $("#prov-ctrl-time-enc-list-blue").find("input[type='radio']").prop("checked", false);
                     break;
             }
 
@@ -3314,7 +3310,7 @@ var provvisRender = function () {
 
         /* Show and hide grid. */
         $("#prov-ctrl-show-grid").click(function () {
-            if (!$("#prov-ctrl-show-grid").find("input").is(":checked")) {
+            if (!$("#prov-ctrl-show-grid").find("input[type='checkbox']").is(":checked")) {
                 d3.select(".grid").style("display", "none");
             } else {
                 d3.select(".grid").style("display", "inline");
@@ -3323,7 +3319,7 @@ var provvisRender = function () {
 
         /* Show and hide doi labels. */
         $("#prov-ctrl-show-doi").click(function () {
-            if (!$("#prov-ctrl-show-doi").find("input").is(":checked")) {
+            if (!$("#prov-ctrl-show-doi").find("input[type='checkbox']").is(":checked")) {
                 d3.selectAll(".nodeDoiLabel").style("display", "none");
             } else {
                 d3.selectAll(".nodeDoiLabel").style("display", "inline");
@@ -3333,7 +3329,7 @@ var provvisRender = function () {
         /* TODO: BUG: On repositioning table and support view. */
         /* Show and hide table. */
         $("#prov-ctrl-show-table").click(function () {
-            if (!$("#prov-ctrl-show-table").find("input").is(":checked")) {
+            if (!$("#prov-ctrl-show-table").find("input[type='checkbox']").is(":checked")) {
                 d3.select("#provenance-table").style("display", "none");
                 $("#provenance-support-view").css({"top": "0px"});
             } else {
@@ -3344,7 +3340,7 @@ var provvisRender = function () {
 
         /* Show and hide support view. */
         $("#prov-ctrl-show-support-view").click(function () {
-            if (!$("#prov-ctrl-show-support-view").find("input").is(":checked")) {
+            if (!$("#prov-ctrl-show-support-view").find("input[type='checkbox']").is(":checked")) {
                 d3.select("#provenance-support-view").style("display", "none");
             } else {
                 d3.select("#provenance-support-view").style("display", "block");
@@ -3360,16 +3356,16 @@ var provvisRender = function () {
         /* Switch filter action. */
         $("[id^=prov-ctrl-filter-list-]").click(function () {
 
-            $(this).find("input").prop("checked", true);
+            $(this).find("input[type='radio']").prop("checked", true);
 
             var selectedFilterAction = $(this).find("label").text();
             switch (selectedFilterAction) {
                 case "Hide":
-                    $("#prov-ctrl-filter-list-blend").find("input").prop("checked", false);
+                    $("#prov-ctrl-filter-list-blend").find("input[type='radio']").prop("checked", false);
                     filterAction = "hide";
                     break;
                 case "Blend":
-                    $("#prov-ctrl-filter-list-hide").find("input").prop("checked", false);
+                    $("#prov-ctrl-filter-list-hide").find("input[type='radio']").prop("checked", false);
                     filterAction = "blend";
                     break;
             }
@@ -3380,14 +3376,14 @@ var provvisRender = function () {
         $("[id^=prov-ctrl-visible-attribute-list-]").click(function () {
 
             /* Set and get chosen attribute as active. */
-            $(this).find("input").prop("checked", true);
+            $(this).find("input[type='radio']").prop("checked", true);
             var selAttrName = $(this).find("label").text();
 
             /* On click, set current to active and unselect others. */
             $("#prov-ctrl-visible-attribute-list > li").each(function (idx, li) {
                 var item = $(li);
                 if (item[0].id !== ("prov-ctrl-visible-attribute-list-" + selAttrName)) {
-                    item.find("input").prop("checked", false);
+                    item.find("input[type='radio']").prop("checked", false);
                 }
             });
 
