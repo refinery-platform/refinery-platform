@@ -174,11 +174,11 @@ var provvis = function () {
 
         $("<li/>", {
             "id": "prov-ctrl-links-list-bezier",
-            "html": "<a href=\"#\"class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Bezier" + "</label>" + "</a>"
+            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Bezier" + "</label>" + "</a>"
         }).appendTo("#prov-ctrl-links-list");
         $("<li/>", {
             "id": "prov-ctrl-links-list-straight",
-            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Straight" + "</label>" + "</a>"
+            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Straight" + "</label>" + "</a>"
         }).appendTo("#prov-ctrl-links-list");
 
 
@@ -203,11 +203,11 @@ var provvis = function () {
 
         $("<li/>", {
             "id": "prov-ctrl-time-enc-list-gs",
-            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Grayscale" + "</label>" + "</a>"
+            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Grayscale" + "</label>" + "</a>"
         }).appendTo("#prov-ctrl-time-enc-list");
         $("<li/>", {
             "id": "prov-ctrl-time-enc-list-blue",
-            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Blue" + "</label>" + "</a>"
+            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Blue" + "</label>" + "</a>"
         }).appendTo("#prov-ctrl-time-enc-list");
 
 
@@ -232,11 +232,11 @@ var provvis = function () {
 
         $("<li/>", {
             "id": "prov-ctrl-filter-list-blend",
-            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Blend" + "</label>" + "</a>"
+            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Blend" + "</label>" + "</a>"
         }).appendTo("#prov-ctrl-filter-list");
         $("<li/>", {
             "id": "prov-ctrl-filter-list-hide",
-            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Hide" + "</label>" + "</a>"
+            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Hide" + "</label>" + "</a>"
         }).appendTo("#prov-ctrl-filter-list");
 
 
