@@ -43,7 +43,7 @@ virtualenvwrapper is installed, for example in Ubuntu: apt-get install virtualen
 
     $ mkvirtualenv -a $(pwd) refinery-deployment
 
-Install Fabric (assumes python-dev package is installed, for example in Ubuntu: apt-get install python-dev):
+Install Fabric (assumes header files for Python are installed, for example in Ubuntu: apt-get install python-dev):
 
 .. code-block:: bash
 
