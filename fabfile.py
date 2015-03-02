@@ -37,7 +37,6 @@ sys.path.append(env.local_project_dir)
 # use import as to avoid conflict with fabric.api.settings
 # from django.conf import settings as django_settings
 
-
 # Fabric settings
 env.forward_agent = True    # for Github operations
 
