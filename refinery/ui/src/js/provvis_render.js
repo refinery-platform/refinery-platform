@@ -2572,10 +2572,9 @@ var provvisRender = function () {
 
     /**
      * Wrapper function to invoke scale and transformation onto the visualization.
-     * @param nodes All nodes within the graph.
      */
-    var handleFitGraphToWindow = function (nodes) {
-        fitGraphToWindow(1000, nodes);
+    var handleFitGraphToWindow = function ()  {
+        fitGraphToWindow(1000);
     };
 
     /**
@@ -3449,7 +3448,7 @@ var provvisRender = function () {
             clearTimeout(bRectClickTimeout);
 
             /* Double click event is executed when this event is triggered before the click timeout has finished. */
-            handleFitGraphToWindow(graph.nodes);
+            handleFitGraphToWindow();
         });
 
         /* TODO: Currently disabled - rewrite for develop branch. */
@@ -3648,9 +3647,6 @@ var provvisRender = function () {
         /* Concat aNode, saNode and node. */
         domNodeset = concatDomClassElements(["aNode", "saNode", "node"]);
 
-        /* Set initial graph position. */
-        fitGraphToWindow(0, vis.graph.nodes);
-
         /* Add dragging behavior to nodes. */
         applyDragBehavior();
 
@@ -3662,6 +3658,9 @@ var provvisRender = function () {
 
         /* Event listeners. */
         handleEvents(vis.graph);
+
+        /* Set initial graph position. */
+        fitGraphToWindow(0);
 
         //console.log("#INITIAL GRID: ");
         //console.log(vis.graph.l.grid);
