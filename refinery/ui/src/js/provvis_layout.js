@@ -999,7 +999,7 @@ var provvisLayout = function () {
     var reorderSubanalysisNodes = function (bclgNodes) {
 
         /* Initializations. */
-        bclgNodes.forEach(function (l, i) {
+        bclgNodes.forEach(function (l) {
             l.forEach(function (an) {
 
                 /* Initialize analysis dimensions. */
@@ -1009,7 +1009,7 @@ var provvisLayout = function () {
                 /* Create grid for subanalyses. */
                 initNodeGrid(an);
 
-                /* List which contains the subanalysis to reorder aftewards. */
+                /* List which contains the subanalysis to reorder afterwards. */
                 var colList = [];
 
                 /* Initialize subanalysis col and row attributes. */
@@ -1070,6 +1070,86 @@ var provvisLayout = function () {
                 /* Reset reorder list. */
                 colList = [];
             });
+        });
+    };
+
+    /**
+     * Reorder workflow nodes to minimize edge crossings.
+     * @param gNodes Topology sorted, layered and grouped nodes.
+     * @param san Parent subanalysis.
+     */
+    var reorderNodes = function (gNodes, san) {
+
+        /* Initializations. */
+        gNodes.forEach(function (l,i) {
+
+            /* List which contains the nodes to reorder afterwards. */
+            var colList = [];
+            l.forEach(function (n,j) {
+                n.col = i;
+                n.row = j;
+
+                /* The preceding nodes marks the fixed layer. */
+                if (!n.preds.empty()) {
+
+                    /* Barycenter ordering. */
+                    var degree = 1,
+                        accRows = 0,
+                        usedCoords = [],
+                        delta = 0;
+
+                    degree = n.preds.size();
+
+                    /* Accumulate san row as well as an row for each pred. */
+                    n.preds.values().forEach(function (pn) {
+                        accRows += pn.row + ((pn.parent.row) ? pn.parent.row : 0);
+                    });
+
+                    /* If any node within the workflow has the same barycenter value, increase it by a small value. */
+                    if (usedCoords.indexOf(accRows / degree) === -1) {
+                        n.l.bcOrder = accRows / degree;
+                        usedCoords.push(accRows / degree);
+                    } else {
+                        n.l.bcOrder = accRows / degree + delta;
+                        usedCoords.push(accRows / degree + delta);
+                        delta += 0.01;
+                    }
+                }
+                /* Push into array to reorder afterwards. */
+                colList.push(n);
+            });
+
+            /* Sort subanalysis nodes. */
+            colList.sort(function (a, b) {
+                return a.l.bcOrder - b.l.bcOrder;
+            });
+
+            /* Reorder subanalysis nodes. */
+            colList.forEach(function (d, j) {
+                d.row = j;
+            });
+
+            gNodes[i] = colList;
+
+            /* Reset reorder list. */
+            colList = [];
+        });
+
+        /* Initialize workflow dimensions. */
+        san.l.depth = d3.max(san.children.values(), function (n) {
+            return n.col;
+        }) + 1;
+        san.l.width = d3.max(san.children.values(), function (n) {
+            return n.row;
+        }) + 1;
+
+        /* Init grid. */
+        initNodeGrid(san);
+
+        /* Set grid. */
+        san.children.values().forEach(function (n) {
+            /* Set grid cell. */
+            san.l.grid[n.col][n.row] = n;
         });
     };
 
@@ -1139,12 +1219,14 @@ var provvisLayout = function () {
                     /* Group nodes by layer. */
                     var gNodes = groupNodes(tsNodes);
 
+                    /* Reorder nodes. */
+                    reorderNodes(gNodes, san);
+
                     /* TODO: Refine and cleanup. */
 
                     /* Init rows and visited flag. */
                     gNodes.forEach(function (gn) {
-                        gn.forEach(function (n, i) {
-                            n.row = i;
+                        gn.forEach(function (n) {
                             n.visited = false;
                         });
                     });
@@ -1153,21 +1235,25 @@ var provvisLayout = function () {
                     gNodes.forEach(function (gn) {
 
                         /* For each node. */
-                        gn.forEach(function (n) {
+                        gn.sort(function (a, b) {
+                            return a.row - b.row;
+                        }).forEach(function (n) {
 
                             var succs = n.succs.values().filter(function (s) {
                                 return  s.parent === n.parent;
+                            }).sort(function (a, b) {
+                                return a.row - b.row;
                             });
 
-                            /* Branch. */
+                            /* Split. */
                             if (succs.length > 1) {
 
-                                /* Successors was visited before? */
+                                /* Successors were visited before? */
                                 var visited = getNumberofVisitedNodesByArray(succs),
                                     rowShift = succs.length / 2;
 
-                                /* Shift nodes before and after the branch. */
-                                /* But only if there are more than one successor. */
+                                /* Shift nodes before and after the branch.
+                                 * But only if there are more than one successor. */
                                 if ((succs.length - visited) > 1) {
                                     shiftNodesByRows(tsNodes, rowShift, n.col, n.row);
                                     shiftNodesByRows(tsNodes, rowShift, n.col, n.row + 1);
@@ -1192,31 +1278,28 @@ var provvisLayout = function () {
                             }
                         });
                     });
+
+
+                    /* Initialize workflow dimensions. */
+                    san.l.depth = d3.max(san.children.values(), function (n) {
+                        return n.col;
+                    }) + 1;
+                    san.l.width = d3.max(san.children.values(), function (n) {
+                        return n.row;
+                    }) + 1;
+
+                    /* Init grid. */
+                    initNodeGrid(san);
+
+                    /* Set grid cells. */
+                    san.children.values().forEach(function (n) {
+                        san.l.grid[n.col][n.row] = n;
+                    });
+
                 } else {
                     console.log("Error: Graph is not acyclic!");
                 }
             });
-
-            /* Create workflow grid. */
-            graph.saNodes.forEach(function (san) {
-
-                /* Initialize workflow dimensions. */
-                san.l.depth = d3.max(san.children.values(), function (n) {
-                    return n.col;
-                }) + 1;
-                san.l.width = d3.max(san.children.values(), function (n) {
-                    return n.row;
-                }) + 1;
-
-                /* Init grid. */
-                initNodeGrid(san);
-
-                /* Set grid cells. */
-                san.children.values().forEach(function (n) {
-                    san.l.grid[n.col][n.row] = n;
-                });
-            });
-
         } else {
             console.log("Error: Graph is not acyclic!");
         }
