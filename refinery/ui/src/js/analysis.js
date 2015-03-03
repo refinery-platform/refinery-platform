@@ -1,6 +1,8 @@
 angular.module('refineryAnalysis', [])
 
-.controller('AnalysisCtrl', function($scope, $rootScope, $http, $window, $log, $timeout, workflow, externalToolStatusService) {
+.controller('AnalysisCtrl', function(
+    $scope, $rootScope, $http, $window, $log, $timeout, workflow) {
+
   'use strict';
 
   $scope.analysisConfig = {
@@ -9,12 +11,6 @@ angular.module('refineryAnalysis', [])
     nodeSetUuid: null,
     nodeRelationshipUuid: null
   };
-
-  // get Galaxy instance status for a particular workflow
-  (function tick() {
-    $scope.galaxyStatus = externalToolStatusService.isGalaxyInstanceUp(workflow.getGalaxyInstanceId());
-    $timeout(tick, 1000);
-  })();
 
   $scope.$onRootScope('nodeSetChangedEvent', function(event, currentNodeSet) {
     $scope.analysisConfig.nodeSetUuid = currentNodeSet.uuid;

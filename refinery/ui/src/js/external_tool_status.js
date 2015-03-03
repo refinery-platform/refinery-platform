@@ -2,16 +2,11 @@ angular.module('refineryExternalToolStatus', [])
 
 .factory("externalToolStatusFactory", function($resource) {
   'use strict';
-
-  return $resource(
-    '/api/v1/externaltoolstatus/', {
-      format: 'json'
-    }
-  );
+  return $resource('/api/v1/externaltoolstatus/', {format: 'json'});
 })
 
-.controller('ExternalToolStatusController', function(externalToolStatusFactory, $scope, $timeout, $log) {
-
+.controller('ExternalToolStatusController', function(
+    externalToolStatusFactory, $scope, $timeout, $log) {
   var tools;
 
   (function tick() {
