@@ -171,15 +171,19 @@
             <div class="row-fluid">
 
               {% verbatim %}
-              <div class="{{ $root.ctrlTabSpanSize }}" ng-init="$root.ctrlTabSpanSize='span2'" ng-show="showCtrlTab" ng-cloak style="background-color: #eaeaea; padding: 10px;">
+              <div class="{{ $root.ctrlTabSpanSize }}"
+                   ng-init="$root.ctrlTabSpanSize='span2'"
+                   ng-show="showCtrlTab" ng-cloak
+                   style="background-color: #eaeaea; padding: 10px;">
                 <!-- <div ui-view="data-set-ui-mode-controls"></div> -->
                 <div ui-view></div>
               </div>
               {% endverbatim %}
 
               {% verbatim %}
-              <div class="{{ $root.mainTabSpanSize }}" ng-init="$root.mainTabSpanSize='span12'" ng-cloak>
-                {% endverbatim %}
+                <div class="{{ $root.mainTabSpanSize }}"
+                     ng-init="$root.mainTabSpanSize='span12'" ng-cloak>
+              {% endverbatim %}
 
                 <div class="row-fluid" ng-if="$root.mode==='analyze'">
                   <div ng-include="'/static/partials/data_set_ui_node_mapping.html'"></div>
@@ -189,28 +193,35 @@
 
                 <div class="row-fluid">
                   <div class="span2">
-                    <div class="row-fluid" style="margin-bottom: 5px;">
-                      <div class="span12">
-                        {% if not REFINERY_REPOSITORY_MODE %}
+                    {% if not REFINERY_REPOSITORY_MODE %}
+                      <div class="row-fluid" style="margin-bottom: 5px;">
+                        <div class="span12">
                           {% if user.is_authenticated %}
                             <span id="node-set-manager-panel">
-                                        <!-- <label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Selection</label> -->
-                                        <span id="node-set-manager-controls"></span>
-                                    </span>
+                              <!-- <label class="control-label"
+                              style="font-size: large; margin-left: 15px;
+                              margin-right: 5px; position: relative; top: 3px;">
+                              Selection
+                              </label> -->
+                              <span id="node-set-manager-controls"></span>
+                            </span>
                           {% endif %}
-                          </div>
-                          </div>
-
-                          <div class="row-fluid" style="margin-bottom: 5px;">
-                          <div class="span12">
+                        </div>
+                      </div>
+                      <div class="row-fluid" style="margin-bottom: 5px;">
+                        <div class="span12">
                           <div style="width: 100%;">
-                            <div id="node-set-save-button" class="btn btn-mini">Save</div>
-                            <div id="clear-facets" class="btn btn-mini">Reset</div>
+                            <div id="node-set-save-button" class="btn btn-mini">
+                              Save
+                            </div>
+                            <div id="clear-facets" class="btn btn-mini">
+                              Reset
+                            </div>
                             <!-- <div id="" class="btn btn-mini">Download</div> -->
                           </div>
-                        {% endif %}
                         </div>
-                        </div>
+                      </div>
+                    {% endif %}
 
                     <!--
                     <ul class="nav nav-pills" id="navigation-tabs">
@@ -251,9 +262,6 @@
                             <a id="submitReposBtn" data-workflow_id="{{work.uuid}}" role="button" style="margin-left: 5px" class="btn  btn-warning disabled" rel="tooltip" data-placement="bottom" data-html="true" title=""><i class="icon-download"></i>&nbsp;&nbsp;Download as Archive</a>
                             <a href="#" id="help-download-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
                           {% endfor %}
-
-
-
                         {% endif %}
 
                         <div style="float:right; display: block;">
@@ -303,8 +311,6 @@
                                     {% endif %}
                                     -->
                       </div>
-
-
                     </div>
 
                     <div class="row-fluid">
@@ -409,11 +415,16 @@
               <p>
                 {% if data_set.analysis_set.all|length > 0 %}
                   {% for analysis in data_set.analysis_set.all %}
-                    <a href="{% url 'analysis_status' analysis.uuid %}">{{ analysis.name }}</a>
+                    <a href="{% url 'analysis_status' analysis.uuid %}">
+                      {{ analysis.name }}
+                    </a>
                     {% if analysis.project.is_catch_all %}
                       (unassigned)
                     {% else %}
-                      (Project <a href="{% url 'project' analysis.project.uuid %}">{{ analysis.project.name }}</a>)
+                      (Project
+                      <a href="{% url 'project' analysis.project.uuid %}">
+                        {{ analysis.project.name }}
+                      </a>)
                     {% endif %}
                     <br/>
                   {% endfor %}
@@ -426,14 +437,15 @@
 
           <div class="tab-pane fade" id="downloads">
             <div class="refinery-header">
-                <span class="refinery-header-left">
-                    <h3>Downloads</h3>
-                </span>
+              <span class="refinery-header-left"><h3>Downloads</h3></span>
             </div>
             <p>
               {% if data_set.download_set.all|length > 0 %}
                 {% for download in data_set.download_set.all %}
-                  <a href="{{download.file_store_item.get_full_url}}">{{ download.name }}</a> ({{ download.file_store_item.get_file_size|filesizeformat }})
+                  <a href="{{download.file_store_item.get_full_url}}">
+                    {{ download.name }}
+                  </a>
+                  ({{ download.file_store_item.get_file_size|filesizeformat }})
                   <br/>
                 {% endfor %}
               {% else %}
@@ -445,20 +457,32 @@
           <div class="tab-pane fade" id="details">
 
             <div class="refinery-header">
-                    <span class="refinery-header-left">
-                        <h3>{{ data_set.name }}</h3>
-                    </span>
+              <span class="refinery-header-left">
+                <h3>{{ data_set.name }}</h3>
+              </span>
             </div>
 
             <div class="refinery-subheader">
               <h4>Summary</h4>
             </div>
-            <p>{% if data_set.summary %} {{ data_set.summary }} {% else %} <i>None provided.</i>{% endif %}</p>
+            <p>
+              {% if data_set.summary %}
+                {{ data_set.summary }}
+              {% else %}
+                <i>None provided.</i>
+              {% endif %}
+            </p>
 
             <div class="refinery-subheader">
               <h4>Description</h4>
             </div>
-            <p>{% if data_set.description %} {{ data_set.description|markdown:"safe" }} {% else %} <i>None provided.</i>{% endif %}</p>
+            <p>
+              {% if data_set.description %}
+                {{ data_set.description|markdown:"safe" }}
+              {% else %}
+                <i>None provided.</i>
+              {% endif %}
+            </p>
 
             <div class="refinery-subheader">
               <h4>Shortcut Name</h4>
@@ -645,7 +669,7 @@
       var REFINERY_USER_AUTHENTICATED = false;
     {% endif %}
 
-    var csrf_token = "{{csrf_token }}";
+    var csrf_token = "{{ csrf_token }}";
   </script>
 
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/solr/solr_utilities.js"></script>
@@ -672,9 +696,7 @@
   <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_render.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/provvis.js"></script>
 
-
   <script type="application/javascript">
-
     $(document).ready(function () {
       $( "#view-selector" ).select2({minimumResultsForSearch: -1});
       $( "#view-selector" ).on("change", function(event) {
