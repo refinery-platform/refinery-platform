@@ -138,8 +138,6 @@ var provvisDecl = function () {
         this.predLinks = d3.map();
         this.succLinks = d3.map();
         this.children = d3.map();
-        this.col = 0;
-        this.row = 0;
         this.x = 0;
         this.y = 0;
 
@@ -152,11 +150,8 @@ var provvisDecl = function () {
             /* Graph attributes. */
             width: 0,
             depth: 0,
-            grid: [],
 
-            rowBK: {left: -1, right: -1},
-            bcOrder: -1,
-            isBlockRoot: false
+            bcOrder: -1
         };
 
         BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
@@ -299,7 +294,6 @@ var provvisDecl = function () {
     Layer.prototype.constructor = Layer;
 
 
-
     /**
      * Constructor function for the motif data structure.
      *
@@ -337,15 +331,7 @@ var provvisDecl = function () {
         this.l = {
 
             /* Top sort markings [Kahn 1962]. */
-            ts: {removed: false},
-
-            /* Vertical coord assignment markings [Brandes and Köpf 2002]. */
-            neighbor: false,
-            type0: false,
-            type1: false,
-
-            /* Replaced by dummy links. */
-            gap: false
+            ts: {removed: false}
         };
 
         Link.numInstances = (Link.numInstances || 0) + 1;
@@ -428,8 +414,7 @@ var provvisDecl = function () {
         /* Layout specific. */
         this.l = {
             width: 0,
-            depth: 0,
-            grid: []
+            depth: 0
         };
     };
 

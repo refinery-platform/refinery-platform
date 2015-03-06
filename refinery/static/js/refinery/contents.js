@@ -141,8 +141,8 @@
 
                 $('a[data-toggle="pill"]').on('shown', function (event) {
                     if (event.target.href.split("#")[1] === "provenance-view-tab") {
-                        if (provvis.getProvVis() instanceof provvisDecl.ProvVis === true) {
-                            provvisRender.runRenderUpdate(provvis.getProvVis(), lastProvVisSolrResponse);
+                        if (provvis.get() instanceof provvisDecl.ProvVis === true) {
+                            provvisRender.update(provvis.get(), lastProvVisSolrResponse);
                         } else {
                             provVisQuery = query.clone();
                             provVisQuery.setDocumentCount(provVisQuery.getTotalDocumentCount());
@@ -221,8 +221,8 @@
                 }
 
                 /* Set face attributes for nodes in Provenance Visualization.*/
-                if (arguments.query == provVisQuery && provvis.getProvVis() instanceof provvisDecl.ProvVis === false) {
-                    provvis.runProvVis(currentStudyUuid, dataSetMonitor.analyses.objects, arguments.response);
+                if (arguments.query == provVisQuery && provvis.get() instanceof provvisDecl.ProvVis === false) {
+                    provvis.run(currentStudyUuid, dataSetMonitor.analyses.objects, arguments.response);
                 }
 
                 if (arguments.query == provVisQuery) {
@@ -230,8 +230,8 @@
                 }
 
                 /* Update Provenance Visualization by filtered nodeset. */
-                if (($('.nav-pills li.active a').attr('href').split("#")[1] === 'provenance-view-tab') && arguments.query == provVisQuery && provvis.getProvVis() instanceof provvisDecl.ProvVis) {
-                    provvisRender.runRenderUpdate(provvis.getProvVis(), arguments.response);
+                if (($('.nav-pills li.active a').attr('href').split("#")[1] === 'provenance-view-tab') && arguments.query == provVisQuery && provvis.get() instanceof provvisDecl.ProvVis) {
+                    provvisRender.update(provvis.get(), arguments.response);
                 }
             });
 
@@ -326,7 +326,7 @@
                 client.run(pivotQuery, SOLR_FULL_QUERY);
 
                 /* ProvVis hook for update. */
-                if (provvis.getProvVis() instanceof provvisDecl.ProvVis) {
+                if (provvis.get() instanceof provvisDecl.ProvVis) {
                     provVisQuery = query.clone();
                     provVisQuery.setDocumentCount(provVisQuery.getTotalDocumentCount());
                     provVisQuery.setDocumentIndex(0);
