@@ -31,6 +31,9 @@ module.exports = function(grunt) {
         'c3/c3.min.js',
         'ng-file-upload/angular-file-upload.min.js',
         'ng-grid/build/ng-grid.min.js',
+        'lodash/dist/lodash.min.js',
+        'graphlib/dist/graphlib.core.min.js',
+        'dagre/dist/dagre.core.min.js',
       ],
       map: [
         // uncompressed source is required along with map for debugging
