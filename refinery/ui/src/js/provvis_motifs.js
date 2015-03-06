@@ -10,13 +10,7 @@ var provvisMotifs = function () {
      * @param graph The main graph object of the provenance visualization.
      * @param bclgNodes Barcentric layered and grouped nodes.
      */
-    var runMotifsPrivate = function (graph, bclgNodes) {
-        /*console.log("#motif discovery:");
-        console.log(graph);
-
-        console.log(bclgNodes);
-*/
-
+    var runMotifsPrivate = function (graph) {
 
         /**
          * Breadth first search algorithm.
@@ -69,8 +63,8 @@ var provvisMotifs = function () {
      * Publish module function.
      */
     return{
-        runMotifs: function (graph, bclgNodes) {
-            runMotifsPrivate(graph, bclgNodes);
+        run: function (graph) {
+            runMotifsPrivate(graph);
         }
     };
 }();

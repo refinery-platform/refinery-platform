@@ -130,10 +130,7 @@ var provvis = function () {
             "class": "dropdown-menu"
         }).appendTo("#prov-ctrl-visible-views");
 
-        $("<li/>", {
-            "id": "prov-ctrl-show-grid",
-            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Grid" + "</label>" + "</a>"
-        }).appendTo("#prov-ctrl-visible-views-list");
+
         $("<li/>", {
             "id": "prov-ctrl-show-doi",
             "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Doi" + "</label>" + "</a>"
@@ -702,7 +699,7 @@ var provvis = function () {
                 /* Support view div. */
                 var supportView = createSupportView("provenance-canvas", "provenance-support-view");
 
-                /* Init grid cell dimensions. */
+                /* Init node cell dimensions. */
                 var cell = {width: r * 5, height: r * 5};
 
                 /* Initialize canvas dimensions. */
@@ -765,20 +762,17 @@ var provvis = function () {
                     .attr("height", height)
                     .classed("brect", true);
 
-                /* Create layout grid dom group. */
-                vis.grid = vis.canvas.append("g").classed({"grid": true}).style("display", "none");
-
                 /* Extract graph data. */
-                vis.graph = provvisInit.runInit(data, analysesData, solrResponse);
+                vis.graph = provvisInit.run(data, analysesData, solrResponse);
 
                 /* Compute layout. */
-                var bclgNodes = provvisLayout.runLayout(vis.graph);
+                provvisLayout.run(vis.graph, vis.cell);
 
                 /* Discover and and inject motifs. */
-                provvisMotifs.runMotifs(vis.graph, bclgNodes);
+                provvisMotifs.run(vis.graph);
 
                 /* Render graph. */
-                provvisRender.runRender(vis);
+                provvisRender.run(vis);
             });
         }
     };
@@ -803,11 +797,11 @@ var provvis = function () {
      * Publish module function.
      */
     return{
-        runProvVis: function (studyUuid, studyAnalyses, solrResponse) {
+        run: function (studyUuid, studyAnalyses, solrResponse) {
             runProvVisPrivate(studyUuid, studyAnalyses, solrResponse);
-        }, runProvVisUpdate: function (solrResponse) {
+        }, update: function (solrResponse) {
             runProvVisUpdatePrivate(solrResponse);
-        }, getProvVis: function () {
+        }, get: function () {
             return getProvVisPrivate();
         }
     };
