@@ -604,7 +604,7 @@ var provvisInit = function () {
      * Publish module function.
      */
     return{
-        run: function (data, analysesData, solrResponse) {
+        runInit: function (data, analysesData, solrResponse) {
             return runInitPrivate(data, analysesData, solrResponse);
         }
     };
