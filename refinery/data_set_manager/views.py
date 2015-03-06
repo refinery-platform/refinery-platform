@@ -347,37 +347,3 @@ class CheckDataFilesView(View):
         # prefix output to protect from JSON vulnerability (stripped by Angular)
         return HttpResponse(")]}',\n" + json.dumps(bad_file_list),
                             content_type="application/json")
-
-class CheckFileImportStatusView(View):
-    """Check import status of files in a dataset
-
-    """
-    def get(self, request, data_set_uuid):
-        if not request.is_ajax():
-            return HttpResponseBadRequest()
-
-        try:
-            data_set = DataSet.objects.get(uuid=data_set_uuid)
-        except (DataSet.DoesNotExist, MultipleObjectsReturned):
-            logger.error("Dataset with UUID '%s' does not exist", data_set_uuid)
-            return HttpResponseBadRequest()
-
-        investigation = data_set.get_investigation()
-        # get list of file UUIDs in dataset
-        file_uuids = []
-        for study in investigation.study_set.all():
-            file_nodes = Node.objects.filter(
-                study=study.id, file_uuid__isnull=False)
-            file_uuids.extend(file_nodes.values_list('file_uuid', flat=True))
-        # make list of file UUIDs and corresponding import task IDs
-        files = list(FileStoreItem.objects.filter(
-            uuid__in=file_uuids).values('uuid', 'import_task_id'))
-        # replace task IDs with corresponding task states
-        for file_item in files:
-            result = AsyncResult(file_item['import_task_id'])
-            file_item['import_state'] = result.state
-            del file_item['import_task_id']
-        return HttpResponse(
-            # ")]}',\n" + json.dumps(dict(zip(file_uuids, file_import_states))),
-            json.dumps(files),
-            content_type="application/json")

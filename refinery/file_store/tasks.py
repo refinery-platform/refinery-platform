@@ -47,7 +47,7 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
     return item.uuid
 
 
-@task()
+@task(track_started=True)
 def import_file(uuid, permanent=False, refresh=False, file_size=1):
     '''Download or copy file specified by UUID.
 

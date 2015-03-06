@@ -128,17 +128,21 @@ class NodeResource(ModelResource):
 
     def dehydrate(self, bundle):
         # return download URL of file if a file is associated with the node
-        if bundle.obj.file_uuid is not None and bundle.obj.file_uuid != "":
-            try:
-                bundle.data['file_url'] = FileStoreItem.objects.get(
-                    uuid=bundle.obj.file_uuid).get_full_url()
-            except:
-                logger.warning(
-                    "Unable to find file store item with UUID '%s'",
-                    bundle.obj.file_uuid)
-                bundle.data['file_url'] = None
-        else:
+        try:
+            file_item = FileStoreItem.objects.get(uuid=bundle.obj.file_uuid)
+        except AttributeError:
+            logger.warning("No UUID provided")
             bundle.data['file_url'] = None
+            bundle.data['file_import_status'] = None
+        except FileStoreItem.DoesNotExist:
+            logger.warning(
+                "Unable to find file store item with UUID '%s'",
+                bundle.obj.file_uuid)
+            bundle.data['file_url'] = None
+            bundle.data['file_import_status'] = None
+        else:
+            bundle.data['file_url'] = file_item.get_full_url()
+            bundle.data['file_import_status'] = file_item.get_import_status()
         return bundle
 
 

@@ -18,6 +18,7 @@ import os
 import re
 import logging
 from urlparse import urlparse, urljoin
+from celery.result import AsyncResult
 from django.conf import settings
 from django.dispatch import receiver
 from django.db import models
@@ -549,7 +550,8 @@ class FileStoreItem(models.Model):
             except Site.DoesNotExist:
                 logger.error("Cannot provide a full URL: no sites configured or SITE_ID is not set correctly")
                 return None
-            #FIXME: provide a protocol-neutral URL or do not return protocol
+            #FIXME: provide a URL without the domain portion
+            # visualization_manager.views may be expecting a full URL
             return 'http://{}{}'.format(current_site.domain, self.datafile.url)
         else:
             # data file doesn't exist on disk
@@ -560,6 +562,12 @@ class FileStoreItem(models.Model):
             else:
                 # source is a URL
                 return self.source
+
+    def get_import_status(self):
+        """Return file import task state
+
+        """
+        return AsyncResult(self.import_task_id).state
 
 
 def is_local(uuid):
