@@ -21,6 +21,7 @@ class StudyResource(ModelResource):
         filtering = { "uuid": ALL }
         fields = [ "uuid" ]
 
+
 class AssayResource(ModelResource):
     class Meta:
         queryset = Assay.objects.all()
@@ -29,6 +30,7 @@ class AssayResource(ModelResource):
         resource_name = "assay"
         filtering = { "uuid": ALL }
         fields = [ "uuid" ]
+
 
 class AttributeOrderResource(ModelResource):
     study = fields.ToOneField(StudyResource, "study")

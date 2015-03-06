@@ -288,21 +288,23 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
     except:
         pass
 
-    return render_to_response('core/data_set.html', 
-                              {
-                                "data_set": data_set,
-                                "analysis_uuid": analysis_uuid,
-                                "studies": studies,
-                                "study_uuid": study_uuid,
-                                "study_id": study_id,
-                                "assay_uuid": assay_uuid,
-                                "assay_id": assay_id,
-                                "has_change_dataset_permission": 'change_dataset' in get_perms(request.user, data_set),
-                                "workflows": workflows,
-                                "isatab_archive": isatab_archive,
-                                "pre_isatab_archive": pre_isatab_archive,                             
-                              },
-                              context_instance=RequestContext(request))
+    return render_to_response(
+        'core/data_set.html',
+        {
+            "data_set": data_set,
+            "analysis_uuid": analysis_uuid,
+            "studies": studies,
+            "study_uuid": study_uuid,
+            "study_id": study_id,
+            "assay_uuid": assay_uuid,
+            "assay_id": assay_id,
+            "has_change_dataset_permission": 'change_dataset' in get_perms(
+                request.user, data_set),
+            "workflows": workflows,
+            "isatab_archive": isatab_archive,
+            "pre_isatab_archive": pre_isatab_archive,
+        },
+        context_instance=RequestContext(request))
 
 
 def data_set_edit(request,uuid):    

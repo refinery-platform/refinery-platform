@@ -131,12 +131,13 @@ class SingleFileColumnParser:
                 species_name = row[self.species_column_index].strip()
                 taxon_id_options = species_to_taxon_id( species_name )
                 
-                if len( taxon_id_options ) > 1:
-                    logger.warn( "Using first out of multiple taxon ids found for %s: %s" % ( species_name, taxon_id_options ) )
+                if len(taxon_id_options) > 1:
+                    logger.warn("Using first out of multiple taxon ids found for %s: %s",
+                                species_name, taxon_id_options)
                 
-                return taxon_id_options[0][1];  
+                return taxon_id_options[0][1]
             except Taxon.DoesNotExist:
-                return None;
+                return None
         return None        
 
     def _get_genome_build( self, row ):
