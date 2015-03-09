@@ -332,7 +332,8 @@ class FileStoreItem(models.Model):
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
     filetype = models.CharField(max_length=15, choices=FILE_TYPES, blank=True)
-    import_task_id = UUIDField(unique=True, blank=True)
+    #: file import task ID
+    import_task_id = UUIDField(blank=True)
 
     objects = _FileStoreItemManager()
 
