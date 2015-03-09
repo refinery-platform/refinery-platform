@@ -55,7 +55,7 @@ module.exports = function(grunt) {
         'select2/select2.png',
         'select2/select2-spinner.gif',
         'tipsy/src/images/tipsy.gif'
-      ],
+      ]
     },
 
     less: {
@@ -72,7 +72,7 @@ module.exports = function(grunt) {
           "<%= styles_dir %>/css/font-awesome.css": "<%= styles_dir %>/less/font-awesome.less",
           "<%= styles_dir %>/css/font-awesome-ie7.css": "<%= styles_dir %>/less/font-awesome-ie7.less",
           "<%= styles_dir %>/css/variables.css": "<%= styles_dir %>/less/variables.less",
-          "<%= styles_dir %>/css/refinery-style.css": "<%= styles_dir %>/less/refinery-style.less",
+          "<%= styles_dir %>/css/refinery-style.css": "<%= styles_dir %>/less/refinery-style.less"
           // the following fail to compile:
           //"<%= styles_dir %>/css/refinery-style-bootstrap.css": "<%= styles_dir %>/less/refinery-style-bootstrap.less",
           //"<%= styles_dir %>/css/refinery-style-bootstrap-responsive.css": "<%= styles_dir %>/less/refinery-style-bootstrap-responsive.less",
@@ -194,7 +194,7 @@ module.exports = function(grunt) {
           nospawn: true
         }
       }      
-    },
+    }
   });
 
   // Load the plugin that provides the "uglify" task.
