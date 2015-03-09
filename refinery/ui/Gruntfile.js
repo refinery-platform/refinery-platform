@@ -13,7 +13,7 @@ module.exports = function(grunt) {
     source_files: {
       js: ['**/*.js'],
       css: ['**/*.css'],
-      html: ['**/*.html'],
+      html: ['**/*.html']
     },
     vendor_files: {
       js: [
@@ -33,7 +33,7 @@ module.exports = function(grunt) {
         'ng-grid/build/ng-grid.min.js',
         'lodash/dist/lodash.min.js',
         'graphlib/dist/graphlib.core.min.js',
-        'dagre/dist/dagre.core.min.js',
+        'dagre/dist/dagre.core.min.js'
       ],
       map: [
         // uncompressed source is required along with map for debugging
@@ -43,18 +43,18 @@ module.exports = function(grunt) {
         'angular/angular.min.js.map',
         'angular/angular.js',
         'angular-resource/angular-resource.min.js.map',
-        'angular-resource/angular-resource.js',
+        'angular-resource/angular-resource.js'
       ],
       css: [
         'select2/select2.css',
         'tipsy/src/stylesheets/tipsy.css',
         'c3/c3.css',
-        'ng-grid/ng-grid.css',
+        'ng-grid/ng-grid.css'
       ],
       img: [
         'select2/select2.png',
         'select2/select2-spinner.gif',
-        'tipsy/src/images/tipsy.gif',
+        'tipsy/src/images/tipsy.gif'
       ],
     },
 
@@ -84,7 +84,7 @@ module.exports = function(grunt) {
       files: [
         'Gruntfile.js',
         '<%= source_dir %>/<%= source_files.js %>'
-      ],
+      ]
     },
 
     uglify: {
@@ -98,8 +98,8 @@ module.exports = function(grunt) {
             cwd: '<%= source_dir %>/',
             src: '<%= source_files.js %>',
             dest: '<%= release_dir %>/',
-            ext: '.min.js',
-          },
+            ext: '.min.js'
+          }
         ]
       },
       vendor_assets: {
@@ -107,9 +107,9 @@ module.exports = function(grunt) {
           {
             '<%= vendor_dir %>/angular-ui-select2/release/select2.min.js':
             ['<%= vendor_dir %>/angular-ui-select2/src/select2.js']
-          },
+          }
         ]
-      },
+      }
     },
 
     copy: {
@@ -119,9 +119,9 @@ module.exports = function(grunt) {
             expand: true,
             cwd: '<%= source_dir %>/',
             src: ['<%= source_files.js %>'],
-            dest: '<%= release_dir %>/',
-          },
-        ],
+            dest: '<%= release_dir %>/'
+          }
+        ]
       },
       app_styles: {
         files: [
@@ -129,9 +129,9 @@ module.exports = function(grunt) {
             expand: true,
             cwd: '<%= source_dir %>/',
             src: ['<%= source_files.css %>'],
-            dest: '<%= release_dir %>/',
-          },
-        ],
+            dest: '<%= release_dir %>/'
+          }
+        ]
       },
       app_templates: {
         files: [
@@ -139,9 +139,9 @@ module.exports = function(grunt) {
             expand: true,
             cwd: '<%= source_dir %>/',
             src: ['<%= source_files.html %>'],
-            dest: '<%= release_dir %>/',
-          },
-        ],
+            dest: '<%= release_dir %>/'
+          }
+        ]
       },
       vendor_assets: {
         files: [
@@ -152,40 +152,40 @@ module.exports = function(grunt) {
               '<%= vendor_files.js %>',
               '<%= vendor_files.map %>',
               '<%= vendor_files.css %>',
-              '<%= vendor_files.img %>',
+              '<%= vendor_files.img %>'
             ],
-            dest: '<%= release_dir %>/vendor/',
-          },
-        ],
-      },
+            dest: '<%= release_dir %>/vendor/'
+          }
+        ]
+      }
     },
 
     clean: {
       app_scripts: ['<%= release_dir %>/js'],
       app_styles: ['<%= release_dir %>/styles'],
       app_templates: ['<%= release_dir %>/partials'],
-      vendor_assets: ['<%= release_dir %>/vendor'],
+      vendor_assets: ['<%= release_dir %>/vendor']
     },
 
     watch: {
       app_scripts: {
         files: ['<%= source_dir %>/<%= source_files.js %>'],
-        tasks: ['jshint', 'clean:app_scripts', 'uglify:app_scripts', 'copy:app_scripts'],
+        tasks: ['jshint', 'clean:app_scripts', 'uglify:app_scripts', 'copy:app_scripts']
       },
       app_styles: {
         files: ['<%= source_dir %>/<%= source_files.css %>'],
-        tasks: ['clean:app_styles', 'copy:app_styles'],
+        tasks: ['clean:app_styles', 'copy:app_styles']
       },
       app_templates: {
         files: ['<%= source_dir %>/<%= source_files.html %>'],
-        tasks: ['clean:app_templates', 'copy:app_templates'],
+        tasks: ['clean:app_templates', 'copy:app_templates']
       },
       vendor_assets: {
         files: ['<%= vendor_dir %>/<%= vendor_files.js %>',
                 '<%= vendor_dir %>/<%= vendor_files.map %>',
                 '<%= vendor_dir %>/<%= vendor_files.css %>',
                 '<%= vendor_dir %>/<%= vendor_files.img %>'],
-        tasks: ['clean:vendor_assets', 'uglify:vendor_assets', 'copy:vendor_assets'],
+        tasks: ['clean:vendor_assets', 'uglify:vendor_assets', 'copy:vendor_assets']
       },
       styles: {
         files: ['<%= styles_dir %>/less/*.less'],
