@@ -66,7 +66,9 @@ SolrDocumentTable = function(
             $('#' + id).html(link)
           }
           else {
-            $('#' + id).html("")
+            // file import is in progress
+            var status = '<i class="icon-bolt"></i>';
+            $('#' + id).html(status)
           }
         },
         error: function (result) {
