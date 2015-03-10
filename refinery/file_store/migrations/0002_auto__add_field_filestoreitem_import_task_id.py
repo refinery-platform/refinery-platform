@@ -10,7 +10,7 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding field 'FileStoreItem.import_task_id'
         db.add_column(u'file_store_filestoreitem', 'import_task_id',
-                      self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=36, blank=True),
+                      self.gf('django.db.models.fields.CharField')(default='', max_length=36, blank=True),
                       keep_default=False)
 
 
@@ -25,7 +25,7 @@ class Migration(SchemaMigration):
             'datafile': ('django.db.models.fields.files.FileField', [], {'max_length': '1024', 'blank': 'True'}),
             'filetype': ('django.db.models.fields.CharField', [], {'max_length': '15', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'import_task_id': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'}),
+            'import_task_id': ('django.db.models.fields.CharField', [], {'max_length': '36', 'blank': 'True'}),
             'sharename': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
             'source': ('django.db.models.fields.CharField', [], {'max_length': '1024'}),
             'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
