@@ -439,6 +439,8 @@ var provvisInit = function () {
                 });
             });
 
+            /* TODO: Bug when deleting a successful analysis through django admin gui. */
+
             /* Set successor analyses. */
             an.children.values().forEach(function (san) {
                 san.succs.values().forEach(function (ssan) {

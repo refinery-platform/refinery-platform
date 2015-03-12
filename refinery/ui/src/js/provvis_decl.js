@@ -326,6 +326,7 @@ var provvisDecl = function () {
         this.target = target;
         this.hidden = hidden;
         this.highlighted = false;
+        this.filtered = true;
 
         /* Layout computation specific flags. */
         this.l = {
