@@ -616,12 +616,10 @@ def download_history_files(analysis) :
 
     """
     logger.debug("analysis_manger.download_history_files called")
-
     # retrieving list of files to download for workflow
     #TODO: handle Django exceptions
     analysis = Analysis.objects.get(uuid=analysis.uuid)
     dl_files = analysis.workflow_dl_files
-
     # creating dictionary based on files to download predetermined by workflow
     # w/ keep operators
     dl_dict = {}
@@ -630,12 +628,10 @@ def download_history_files(analysis) :
         temp_dict['filename'] = dl.filename
         temp_dict['pair_id'] = dl.pair_id
         dl_dict[str(dl.step_id)] = temp_dict
-
     task_list = []
+    galaxy_instance = analysis.workflow.workflow_engine.instance
     try:
-        download_list =\
-            analysis.workflow.workflow_engine.instance.get_history_file_list(
-                analysis.history_id)
+        download_list = galaxy_instance.get_history_file_list(analysis.history_id)
     except galaxy.client.ConnectionError as exc:
         error_msg = "Post-processing failed: error downloading Galaxy history files "
         error_msg += "for analysis '{}': {}".format(analysis.name, exc.message)
@@ -643,43 +639,32 @@ def download_history_files(analysis) :
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.cleanup()
         return task_list
-
     # Iterating through files in current galaxy history
     for results in download_list:
         # download file if result state is "ok"
         if results['state'] == 'ok':
             file_type = results["type"]
             curr_file_id = results['name']
-
             if curr_file_id in dl_dict:
                 curr_dl_dict = dl_dict[curr_file_id]
                 result_name = curr_dl_dict['filename'] + '.' + file_type
                 # size of file defined by galaxy
                 file_size = results['file_size']
-
-                # Determing tag if galaxy results should be download through http or copying files directly
-                local_download = analysis.workflow.workflow_engine.instance.local_download
-
-                # to retrieve HTML files as zip archives via dataset URL
-                if local_download and file_type != 'html':
+                # Determing tag if galaxy results should be download through
+                # http or copying files directly to retrieve HTML files as zip
+                # archives via dataset URL
+                if galaxy_instance.local_download and file_type != 'html':
                     download_url = results['file_name']
                 else:
                     url = 'datasets/' + str(results['dataset_id']) + '/display?to_ext=txt'
-                    download_url = urlparse.urljoin(
-                        analysis.workflow.workflow_engine.instance.base_url, url)
-
+                    download_url = urlparse.urljoin(galaxy_instance.base_url, url)
                 # workaround to set the correct file type for zip archives of
                 # reports produced by FASTQC
                 if file_type == 'html':
                     file_type = 'zip'
-
                 # TODO: when changing permanent=True, fix update of % download of file 
                 filestore_uuid = create(
-                    source=download_url,
-                    filetype=file_type,
-                    permanent=False
-                )
-
+                    source=download_url, filetype=file_type, permanent=False)
                 # adding history files to django model 
                 temp_file = AnalysisResult(
                     analysis_uuid=analysis.uuid, file_store_uuid=filestore_uuid,
@@ -687,13 +672,12 @@ def download_history_files(analysis) :
                 temp_file.save()
                 analysis.results.add(temp_file) 
                 analysis.save()
-                
                 # downloading analysis results into file_store
                 # only download files if size is greater than 1
                 if file_size > 0:
                     #task_id = import_file.subtask((filestore_uuid, True, False, file_size,))
                     # local download, force copying into the file_store instead of symlinking
-                    if local_download:
+                    if galaxy_instance.local_download:
                         task_id = import_file.subtask(
                             (filestore_uuid, False, True, file_size,))
                     else:
