@@ -2035,6 +2035,9 @@ var provvisRender = function () {
         link.each(function (l) {
             d3.select(this).classed("hiddenLink", false);
             l.hidden = false;
+            if (l.highlighted) {
+                d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
+            }
         });
 
         aNode.each(function (an) {
