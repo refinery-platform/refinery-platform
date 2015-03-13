@@ -53,206 +53,19 @@ var provvisRender = function () {
         .style("z-index", "10")
         .style("visibility", "hidden");
 
-    /**
-     * Breadth first search algorithm.
-     * @param an Analysis node.
-     */
-    var bfsSuccessorAnalyses = function (an) {
-
-        /**
-         * Helper function to get successors of the current node;
-         * @param n Node.
-         */
-        var getSuccs = function (n) {
-
-            /* Add successor nodes to queue. */
-            n.succs.values().forEach(function (s) {
-                if (s instanceof provvisDecl.Node && nset.indexOf(s.parent.parent) === -1) {
-                    nset.push(s.parent.parent);
-                    nqueue.push(s.parent.parent);
-                }
-                else if (nset.indexOf(s) === -1) {
-                    nset.push(s);
-                    nqueue.push(s);
-                }
-            });
-        };
-
-        /* Init nodeset and queue. */
-        var nqueue = [],
-            nset = [];
-        nset.push(an);
-        nqueue.push(an);
-
-        /* Iterate over queue. */
-        while (nqueue.length > 0) {
-            getSuccs(nqueue.shift());
-        }
-
-        /* Only return successors. */
-        nset.shift();
-        return nset;
-    };
-
     /* TODO: Performance issue - quite slow. */
     /**
      * On doi change, update node doi labels.
      */
     var updateNodeDoi = function () {
 
+        //console.log("#updateNodeDoi");
+
         /* Update node doi label. */
         domNodeset.select(".nodeDoiLabel").text(function (d) {
             return d.doi.doiWeightedSum;
         });
 
-        /* Glyph scale. */
-        domNodeset.each(function (d) {
-            var self = d3.select(this);
-            /* Doi-dependant node glyph scaling factor. */
-            var scaleFactor = 1;
-
-            /*switch (true) {
-             case (-2 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.25):
-             scaleFactor = 0.75;
-             break;
-             case (0.25 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.5):
-             scaleFactor = 1.0;
-             break;
-             case (0.5 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 0.75):
-             scaleFactor = 1.25;
-             break;
-             case (0.75 < d.doi.doiWeightedSum && d.doi.doiWeightedSum <= 2):
-             scaleFactor = 1.5;
-             break;
-             }*/
-            scaleFactor = 0.75;
-
-            /* Update node glyph size. */
-            if (d.nodeType !== "subanalysis" && d.nodeType !== "analysis") {
-                if (d.nodeType === "raw" || d.nodeType === "intermediate" || d.nodeType === "stored") {
-                    self.select("circle")
-                        .attr("r", function (d) {
-                            return d.nodeType === "intermediate" ? 3 * scaleFactor *
-                            vis.radius / 4 : scaleFactor * vis.radius;
-                        });
-                } else if (d.nodeType === "special") {
-                    self.select("rect")
-                        .attr("transform", "translate(" + (-3 * scaleFactor * vis.radius / 4) + "," +
-                        (-3 * scaleFactor * vis.radius / 4) + ")")
-                        .attr("width", 6 * scaleFactor * vis.radius / 4)
-                        .attr("height", 6 * scaleFactor * vis.radius / 4);
-                } else if (d.nodeType === "dt") {
-                    self.select("rect")
-                        .attr("transform", function () {
-                            return "translate(" + (-scaleFactor * vis.radius / 2) + "," +
-                                (-scaleFactor * vis.radius / 2) + ")" +
-                                "rotate(45 " + (scaleFactor * vis.radius / 2) + "," +
-                                (scaleFactor * vis.radius / 2) + ")";
-                        })
-                        .attr("width", scaleFactor * vis.radius)
-                        .attr("height", scaleFactor * vis.radius);
-                }
-            } else if (d.nodeType === "subanalysis") {
-                self.select("polygon")
-                    .attr("points", function () {
-                        return "0," + (-scaleFactor * vis.radius) + " " +
-                            (scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius / 2) + " " +
-                            (scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius / 2) + " " +
-                            "0" + "," + (scaleFactor * vis.radius) + " " +
-                            (-scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius / 2) + " " +
-                            (-scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius / 2);
-                    });
-            } else if (d.nodeType === "analysis") {
-                self.select("polygon")
-                    .attr("points", function () {
-                        return (-1.5 * scaleFactor * vis.radius) + "," + "0" + " " +
-                            (-scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius) + " " +
-                            (scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius) + " " +
-                            (1.5 * scaleFactor * vis.radius) + "," + "0" + " " +
-                            (scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius) + " " +
-                            (-scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius);
-                    });
-            }
-        });
-
-        /* TODO: On facet filter reset button, reset filter as well. */
-        /* Hide or blend (un)selected nodes. */
-        analysis.each(function (an) {
-            var self = d3.select(this);
-            if (!an.filtered) {
-
-                /* Blend/Hide analysis links. */
-                an.predLinks.values().forEach(function (pl) {
-                    d3.selectAll("#linkId-" + pl.autoId + ", #hLinkId-" + pl.autoId)
-                        .classed("filteredLink", false)
-                        .classed("blendedLink", function () {
-                            return filterAction === "blend" ? true : false;
-                        });
-                });
-                an.succLinks.values().forEach(function (sl) {
-                    d3.selectAll("#linkId-" + sl.autoId + ", #hLinkId-" + sl.autoId)
-                        .classed("filteredLink", false)
-                        .classed("blendedLink", function () {
-                            return filterAction === "blend" ? true : false;
-                        });
-                });
-
-                /* Blend/Hide analysis. */
-                self.classed("filteredNode", false)
-                    .classed("blendedNode", function () {
-                        return filterAction === "blend" ? true : false;
-                    });
-
-                /* Update child nodes. */
-                an.children.values().forEach(function (san) {
-                    d3.select("#gNodeId-" + san.autoId)
-                        .classed("filteredNode", false)
-                        .classed("blendedNode", function () {
-                            return filterAction === "blend" ? true : false;
-                        });
-
-                    san.children.values().forEach(function (n) {
-                        d3.select("#gNodeId-" + n.autoId)
-                            .classed("filteredNode", false)
-                            .classed("blendedNode", function () {
-                                return filterAction === "blend" ? true : false;
-                            });
-                    });
-                });
-
-            } else {
-                /* Display analysis links. */
-                an.predLinks.values().forEach(function (pl) {
-                    if (pl.source.filtered) {
-                        d3.selectAll("#linkId-" + pl.autoId + ", #hLinkId-" + pl.autoId)
-                            .classed("filteredLink", true)
-                            .classed("blendedLink", false);
-                    }
-                });
-                an.succLinks.values().forEach(function (sl) {
-                    if (sl.target.filtered) {
-                        d3.selectAll("#linkId-" + sl.autoId + ", #hLinkId-" + sl.autoId)
-                            .classed("filteredLink", true)
-                            .classed("blendedLink", false);
-                    }
-                });
-
-                /* Update child nodes. */
-                an.children.values().forEach(function (san) {
-                    d3.select("#gNodeId-" + san.autoId)
-                        .classed("filteredNode", true)
-                        .classed("blendedNode", false);
-                    san.children.values().forEach(function (n) {
-                        d3.select("#gNodeId-" + n.autoId)
-                            .classed("filteredNode", true)
-                            .classed("blendedNode", false);
-                    });
-                });
-
-                /* Display analysis. */
-                self.classed("filteredNode", true).classed("blendedNode", false);
-            }
-        });
 
         /* On analysis doi. */
         aNode.each(function (an) {
@@ -410,30 +223,38 @@ var provvisRender = function () {
 
         /* Get input links and update coordinates for x2 and y2. */
         n.predLinks.values().forEach(function (l) {
-            d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).transition().duration(draggingActive ? 0 : nodeLinkTransitionTime).attr("d", function (l) {
-                var srcCoords = getFixedNodeCoords(l.source),
-                    tarCoords = getDraggedNodeCoords(l.target, x, y);
+            d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId)
+                .transition()
+                .duration(draggingActive ? 0 : nodeLinkTransitionTime)
+                .attr("d", function (l) {
 
-                if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
-                    return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
-                } else {
-                    return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
-                }
-            });
+                    var srcCoords = getFixedNodeCoords(l.source),
+                        tarCoords = getDraggedNodeCoords(l.target, x, y);
+
+                    if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
+                        return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
+                    } else {
+                        return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
+                    }
+                });
         });
 
         /* Get output links and update coordinates for x1 and y1. */
         n.succLinks.values().forEach(function (l) {
-            d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).transition().duration(draggingActive ? 0 : nodeLinkTransitionTime).attr("d", function (l) {
-                var tarCoords = getFixedNodeCoords(l.target),
-                    srcCoords = getDraggedNodeCoords(l.source, x, y);
+            d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId)
+                .transition()
+                .duration(draggingActive ? 0 : nodeLinkTransitionTime)
+                .attr("d", function (l) {
 
-                if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
-                    return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
-                } else {
-                    return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
-                }
-            });
+                    var tarCoords = getFixedNodeCoords(l.target),
+                        srcCoords = getDraggedNodeCoords(l.source, x, y);
+
+                    if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
+                        return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
+                    } else {
+                        return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
+                    }
+                });
         });
     };
 
@@ -549,19 +370,47 @@ var provvisRender = function () {
             }
         });
 
+        /* Update analysis link filter attributes. */
+        vis.graph.aLinks.forEach(function (al) {
+            al.filtered = false;
+        });
+        vis.graph.aLinks.filter(function (al) {
+            return al.source.parent.parent.filtered && al.target.parent.parent.filtered;
+        }).forEach(function (al) {
+            al.filtered = true;
+        });
+
         /* On filter action 'hide', splice and recompute graph. */
         if (filterAction === "hide") {
-            vis.graph.aNodes = vis.graph.aNodes.filter(function (an) {return an.filtered;});
-            vis.graph.saNodes = vis.graph.saNodes.filter(function (san) {return san.filtered;});
-            vis.graph.nodes = vis.graph.nodes.filter(function (n) {return n.filtered;});
+
+            /* Update filtered nodesets. */
+            vis.graph.aNodes = vis.graph.aNodes.filter(function (an) {
+                return an.filtered;
+            });
+            vis.graph.saNodes = vis.graph.saNodes.filter(function (san) {
+                return san.filtered;
+            });
+            vis.graph.nodes = vis.graph.nodes.filter(function (n) {
+                return n.filtered;
+            });
+
+            /* Update filtered linksets. */
             vis.graph.aLinks = vis.graph.aLinks.filter(function (al) {
-                return vis.graph.aNodes.indexOf(al.source.parent.parent) !== -1 && vis.graph.aNodes.indexOf(al.target.parent.parent) !== -1;
+                return al.filtered;
             });
         }
 
+        updateNodeDoi();
+
         dagreDynamicLayout(vis.graph);
         fitGraphToWindow(nodeLinkTransitionTime);
-        updateNodeDoi();
+
+        updateNodeFilter();
+        updateAnalysisLinks(vis.graph);
+
+        vis.graph.aNodes.forEach(function (an) {
+            updateLink(an, an.x, an.y);
+        });
     };
 
     /**
@@ -637,7 +486,8 @@ var provvisRender = function () {
      * Reset css for all links.
      */
     var clearHighlighting = function () {
-        hLink.classed("hiddenLink", true).classed("filteredLink", false);
+        hLink.classed("hiddenLink", true)
+            .classed("filteredLink", false);
         link.each(function (l) {
             l.highlighted = false;
         });
@@ -704,61 +554,113 @@ var provvisRender = function () {
     };
 
     /**
-     * Draw links analyses connecting links.
-     * @param graph The provenance graph.
+     * For a node, get first visible parent node coords.
+     * @param curN Node to start traversing to its parents.
+     * @returns {{x: number, y: number}} X and y coordinates of the first visible parent node.
      */
-    var drawAnalysisLinks = function (graph) {
+    var getVisibleNodeCoords = function (curN) {
+        var x = 0,
+            y = 0;
 
-        /* Draw highlighting links. */
-        vis.canvas.append("g").classed({"aHLinks": true}).selectAll(".hLink")
-            .data(graph.aLinks.filter(function (l) {
-                return !l.l.gap;
-            }))
-            .enter().append("path")
-            .attr("d", function (l) {
-                var srcX = (l.source instanceof provvisDecl.Analysis) ? l.source.x : l.source.parent.parent.x,
-                    srcY = (l.source instanceof provvisDecl.Analysis) ? l.source.y : l.source.parent.parent.y,
-                    tarX = (l.target instanceof provvisDecl.Analysis) ? l.target.x : l.target.parent.parent.x,
-                    tarY = (l.target instanceof provvisDecl.Analysis) ? l.target.y : l.target.parent.parent.y;
-                if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
-                    return drawBezierLink(l, srcX, srcY, tarX, tarY);
-                } else {
-                    return drawStraightLink(l, srcX, srcY, tarX, tarY);
-                }
-            })
-            .classed({
-                "hLink": true, "hiddenLink": true
-            })
-            .attr("id", function (l) {
+        while (curN.hidden && curN !== vis.graph) {
+            curN = curN.parent;
+        }
+        while (curN !== vis.graph) {
+            x += curN.x;
+            y += curN.y;
+            curN = curN.parent;
+        }
+        return {x: x, y: y};
+    };
+
+    var updateAnalysisLinks = function (graph) {
+        //console.log("#updateAnalysisLinks");
+
+        /* TODO: Check update for highlighting. */
+        /* Data join. */
+        var ahl = vis.canvas.select("g.aHLinks").selectAll(".hLink")
+            .data(graph.aLinks);
+
+        /* Enter. */
+        ahl.enter().append("path")
+            .classed({"hLink": true})
+            .classed("blendedLink", function () {
+                return filterAction === "blend" ? true : false;
+            }).classed("filteredLink", function (l) {
+                return l.filtered;
+            }).classed("hiddenLink", function (l) {
+                return !l.highlighted;
+            }).attr("id", function (l) {
                 return "hLinkId-" + l.autoId;
             });
 
-        /* Draw normal links. */
-        vis.canvas.append("g").classed({"aLinks": true}).selectAll(".link")
-            .data(graph.aLinks.filter(function (l) {
-                return !l.l.gap;
-            }))
-            .enter().append("path")
-            .attr("d", function (l) {
-                var srcX = (l.source instanceof provvisDecl.Analysis) ? l.source.x : l.source.parent.parent.x,
-                    srcY = (l.source instanceof provvisDecl.Analysis) ? l.source.y : l.source.parent.parent.y,
-                    tarX = (l.target instanceof provvisDecl.Analysis) ? l.target.x : l.target.parent.parent.x,
-                    tarY = (l.target instanceof provvisDecl.Analysis) ? l.target.y : l.target.parent.parent.y;
-                if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
-                    return drawBezierLink(l, srcX, srcY, tarX, tarY);
-                } else {
-                    return drawStraightLink(l, srcX, srcY, tarX, tarY);
-                }
-            })
-            .classed({
-                "link": true, "aLink": true
-            })
-            .attr("id", function (l) {
+        /* Enter and update. */
+        ahl.attr("d", function (l) {
+            var srcCoords = getVisibleNodeCoords(l.source),
+                tarCoords = getVisibleNodeCoords(l.target);
+            if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
+                return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
+            } else {
+                return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
+            }
+        }).classed("blendedLink", function (l) {
+            return !l.filtered && filterAction === "blend" ? true : false;
+        }).classed("filteredLink", function (l) {
+            return l.filtered;
+        }).classed("hiddenLink", function (l) {
+            return !l.highlighted;
+        }).attr("id", function (l) {
+            return "hLinkId-" + l.autoId;
+        });
+
+        /* Exit. */
+        ahl.exit().remove();
+
+        /* Set dom elements. */
+        hLink = d3.selectAll(".hLink");
+
+        /* Data join */
+        var al = vis.canvas.select("g.aLinks").selectAll(".link")
+            .data(graph.aLinks);
+
+        /* Enter. */
+        al.enter().append("path")
+            .classed({"link": true, "aLink": true})
+            .classed("blendedLink", function (l) {
+                return !l.filtered && filterAction === "blend" ? true : false;
+            }).classed("filteredLink", function (l) {
+                return l.filtered;
+            }).classed("hiddenLink", function (l) {
+                return l.hidden;
+            }).attr("id", function (l) {
                 return "linkId-" + l.autoId;
             });
 
+        /* Enter and update. */
+        al.attr("d", function (l) {
+            var srcCoords = getVisibleNodeCoords(l.source),
+                tarCoords = getVisibleNodeCoords(l.target);
+            if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
+                return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
+            } else {
+                return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
+            }
+        }).classed("blendedLink", function (l) {
+            return !l.filtered && filterAction === "blend" ? true : false;
+        }).classed("filteredLink", function (l) {
+            return l.filtered;
+        }).classed("hiddenLink", function (l) {
+            return l.hidden;
+        }).attr("id", function (l) {
+            return "linkId-" + l.autoId;
+        });
+
+        /* Exit. */
+        al.exit().remove();
+
         /* Set dom elements. */
         aLink = d3.selectAll(".aLink");
+        link = d3.selectAll(".link");
     };
 
     /**
@@ -887,14 +789,15 @@ var provvisRender = function () {
                 aLabels = analysisNode.append("g").classed({"labels": true})
                     .attr("clip-path", "url(#bbClipId-" + an.autoId + ")");
 
+            var scaleFactor = 0.75;
             aGlyph.append("polygon")
                 .attr("points", function () {
-                    return "0," + (vis.radius) + " " +
-                        (vis.radius) + "," + (-0.5 * vis.radius) + " " +
-                        (vis.radius) + "," + (0.5 * vis.radius) + " " +
-                        "0" + "," + (0.5 * vis.radius) + " " +
-                        (-vis.radius) + "," + (0.5 * vis.radius) + " " +
-                        (-vis.radius) + "," + (-0.5 * vis.radius);
+                    return (-1.5 * scaleFactor * vis.radius) + "," + "0" + " " +
+                        (-scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius) + " " +
+                        (scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius) + " " +
+                        (1.5 * scaleFactor * vis.radius) + "," + "0" + " " +
+                        (scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius) + " " +
+                        (-scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius);
                 });
 
             /* Add text labels. */
@@ -930,9 +833,10 @@ var provvisRender = function () {
     var drawSubanalysisLinks = function (san) {
 
         /* Draw highlighting links. */
-        d3.select("#gNodeId-" + san.autoId).append("g").classed({"saHLinks": true}).selectAll(".hLink")
-            .data(san.links.values())
-            .enter().append("path")
+        var sahl = d3.select("#gNodeId-" + san.autoId).append("g").classed({"saHLinks": true}).selectAll(".hLink")
+            .data(san.links.values());
+
+        sahl.enter().append("path")
             .attr("d", function (l) {
                 if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
                     return drawBezierLink(l, l.source.x, l.source.y, l.target.x, l.target.y);
@@ -947,10 +851,13 @@ var provvisRender = function () {
                 return "hLinkId-" + l.autoId;
             });
 
+        sahl.exit().remove();
+
         /* Draw normal links. */
-        d3.select("#gNodeId-" + san.autoId).append("g").classed({"saLinks": true}).selectAll(".link")
-            .data(san.links.values())
-            .enter().append("path")
+        var sal = d3.select("#gNodeId-" + san.autoId).append("g").classed({"saLinks": true}).selectAll(".link")
+            .data(san.links.values());
+
+        sal.enter().append("path")
             .attr("d", function (l) {
                 if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
                     return drawBezierLink(l, l.source.x, l.source.y, l.target.x, l.target.y);
@@ -964,6 +871,7 @@ var provvisRender = function () {
             .attr("id", function (l) {
                 return "linkId-" + l.autoId;
             });
+        sal.exit().remove();
     };
 
     /**
@@ -1059,14 +967,15 @@ var provvisRender = function () {
                     saLabels = subanalysisNode.append("g").classed({"labels": true})
                         .attr("clip-path", "url(#bbClipId-" + san.autoId + ")");
 
+                var scaleFactor = 0.75;
                 saGlyph.append("polygon")
                     .attr("points", function () {
-                        return "0," + (-vis.radius) + " " +
-                            (vis.radius) + "," + (-vis.radius / 2) + " " +
-                            (vis.radius) + "," + (vis.radius / 2) + " " +
-                            "0" + "," + (vis.radius) + " " +
-                            (-vis.radius) + "," + (vis.radius / 2) + " " +
-                            (-vis.radius) + "," + (-vis.radius / 2);
+                        return "0," + (-scaleFactor * vis.radius) + " " +
+                            (scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius / 2) + " " +
+                            (scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius / 2) + " " +
+                            "0" + "," + (scaleFactor * vis.radius) + " " +
+                            (-scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius / 2) + " " +
+                            (-scaleFactor * vis.radius) + "," + (-scaleFactor * vis.radius / 2);
                     });
 
                 /* Add text labels. */
@@ -1148,29 +1057,33 @@ var provvisRender = function () {
                     nLabels = self.append("g").classed({"labels": true})
                         .attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
 
+                var scaleFactor = 0.75;
                 if (d.nodeType === "raw" || d.nodeType === "intermediate" || d.nodeType === "stored") {
                     nGlyph
                         .append("circle")
                         .attr("r", function (d) {
-                            return d.nodeType === "intermediate" ? 3 * vis.radius / 4 : vis.radius;
+                            return d.nodeType === "intermediate" ? 3 * scaleFactor *
+                            vis.radius / 4 : scaleFactor * vis.radius;
                         });
                 } else {
                     if (d.nodeType === "special") {
                         nGlyph
                             .append("rect")
-                            .attr("transform", "translate(" + ( -3 * vis.radius / 4) + "," +
-                            (-3 * vis.radius / 4) + ")")
-                            .attr("width", 6 * vis.radius / 4)
-                            .attr("height", 6 * vis.radius / 4);
+                            .attr("transform", "translate(" + (-3 * scaleFactor * vis.radius / 4) + "," +
+                            (-3 * scaleFactor * vis.radius / 4) + ")")
+                            .attr("width", 6 * scaleFactor * vis.radius / 4)
+                            .attr("height", 6 * scaleFactor * vis.radius / 4);
                     } else if (d.nodeType === "dt") {
                         nGlyph
                             .append("rect")
                             .attr("transform", function () {
-                                return "translate(" + (-vis.radius / 2) + "," + (-vis.radius / 2) + ")" + "rotate(45 " +
-                                    (vis.radius / 2) + "," + (vis.radius / 2) + ")";
+                                return "translate(" + (-scaleFactor * vis.radius / 2) + "," +
+                                    (-scaleFactor * vis.radius / 2) + ")" +
+                                    "rotate(45 " + (scaleFactor * vis.radius / 2) + "," +
+                                    (scaleFactor * vis.radius / 2) + ")";
                             })
-                            .attr("width", vis.radius * 1)
-                            .attr("height", vis.radius * 1);
+                            .attr("width", scaleFactor * vis.radius)
+                            .attr("height", scaleFactor * vis.radius);
                     }
                 }
 
@@ -1291,7 +1204,7 @@ var provvisRender = function () {
             curHeight = 0;
 
         graph.aNodes.forEach(function (an) {
-            anBBoxCoords = getABBoxCoords(an,0);
+            anBBoxCoords = getABBoxCoords(an, 0);
             curWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
             curHeight = anBBoxCoords.y.max - anBBoxCoords.y.min;
 
@@ -2095,44 +2008,57 @@ var provvisRender = function () {
         });
     };
 
-
     /**
-     * Expand all analsyes into file and tool nodes.
+     * Expand all analsyes into workflow nodes.
      */
-    var showAllNodes = function () {
-        /* Set node visibility. */
+    var showAllWorkflows = function () {
+
+        /* Set subanalysis visibility. */
         saNode.each(function (san) {
             san.hidden = true;
             d3.select(this).classed("hiddenNode", true);
         });
 
+        /* Set analysis visibility. */
         aNode.each(function (an) {
             an.hidden = true;
             d3.select(this).classed("hiddenNode", true);
+        });
 
-            /* Compute bounding box for analysis child nodes. */
-            var anBBoxCoords = getABBoxCoords(an, 1);
-
-            /* Adjust analysis bounding box. */
-            d3.select("#BBoxId-" + an.autoId).select("rect")
-                .attr("width", function () {
-                    return anBBoxCoords.x.max - anBBoxCoords.x.min;
-                })
-                .attr("height", function () {
-                    return anBBoxCoords.y.max - anBBoxCoords.y.min;
-                });
+        /* Set node visibility. */
+        node.each(function (n) {
+            n.hidden = false;
+            d3.select(this).classed("hiddenNode", false);
         });
 
         /* Set link visibility. */
         link.each(function (l) {
             d3.select(this).classed("hiddenLink", false);
             l.hidden = false;
+            if (l.highlighted) {
+                d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
+            }
         });
 
-        /* Set nodes visible first. */
-        node.each(function (n) {
-            n.hidden = false;
-            d3.select(this).classed("hiddenNode", false);
+        aNode.each(function (an) {
+            /* Adjust subanalysis coords. */
+            var wfBBoxCoords = getWFBBoxCoords(an.children.values()[0], 1);
+            an.children.values().sort(function (a, b) {
+                return a.y - b.y;
+            }).forEach(function (san, i) {
+                san.y = i * (wfBBoxCoords.y.max - wfBBoxCoords.y.min);
+                updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
+            });
+
+            /* Adjust analysis bounding box. */
+            var anBBoxCoords = getABBoxCoords(an, 1);
+            d3.selectAll("#BBoxId-" + an.autoId + ", #aBBClipId-" + an.autoId).selectAll("rect")
+                .attr("width", function () {
+                    return anBBoxCoords.x.max - anBBoxCoords.x.min;
+                })
+                .attr("height", function () {
+                    return anBBoxCoords.y.max - anBBoxCoords.y.min;
+                });
         });
 
         /* Set saBBox visibility. */
@@ -2196,11 +2122,19 @@ var provvisRender = function () {
         saBBox.classed("hiddenBBox", true);
 
         aNode.each(function (an) {
-            /* Compute bounding box for analysis child nodes. */
-            var anBBoxCoords = getWFBBoxCoords(an, 1);
 
-            /* Enlarge analysis bounding box. */
-            d3.select("#BBoxId-" + an.autoId).select("rect")
+            /* Adjust subanalysis coords. */
+            var wfBBoxCoords = getWFBBoxCoords(an.children.values()[0], 1);
+            an.children.values().sort(function (a, b) {
+                return a.y - b.y;
+            }).forEach(function (san, i) {
+                san.y = i * (wfBBoxCoords.y.max - wfBBoxCoords.y.min);
+                updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
+            });
+
+            /* Adjust analysis bounding box. */
+            var anBBoxCoords = getABBoxCoords(an, 1);
+            d3.selectAll("#BBoxId-" + an.autoId + ", #aBBClipId-" + an.autoId).selectAll("rect")
                 .attr("width", function () {
                     return anBBoxCoords.x.max - anBBoxCoords.x.min;
                 })
@@ -2208,7 +2142,6 @@ var provvisRender = function () {
                     return anBBoxCoords.y.max - anBBoxCoords.y.min;
                 });
 
-            /* Update connections. */
             updateLink(an, an.x, an.y);
         });
     };
@@ -2252,16 +2185,24 @@ var provvisRender = function () {
         saBBox.classed("hiddenBBox", true);
 
         aNode.each(function (an) {
-            /* Resize analysis bounding box. */
-            d3.select("#BBoxId-" + an.autoId).select("rect")
+            /* Adjust subanalysis coords. */
+            an.children.values().sort(function (a, b) {
+                return a.y - b.y;
+            }).forEach(function (san, i) {
+                san.y = i * vis.cell.height;
+                updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
+            });
+
+            /* Adjust analysis bounding box. */
+            var anBBoxCoords = getABBoxCoords(an, 1);
+            d3.selectAll("#BBoxId-" + an.autoId + ", #aBBClipId-" + an.autoId).selectAll("rect")
                 .attr("width", function () {
-                    return cell.width - 2;
+                    return anBBoxCoords.x.max - anBBoxCoords.x.min;
                 })
                 .attr("height", function () {
-                    return cell.height - 2;
+                    return anBBoxCoords.y.max - anBBoxCoords.y.min;
                 });
 
-            /* Update connections. */
             updateLink(an, an.x, an.y);
         });
     };
@@ -2284,8 +2225,8 @@ var provvisRender = function () {
             fitGraphToWindow(nodeLinkTransitionTime);
         });
 
-        $("#prov-ctrl-files-click").click(function () {
-            showAllNodes();
+        $("#prov-ctrl-workflows-click").click(function () {
+            showAllWorkflows();
             dagreDynamicLayout(graph);
             fitGraphToWindow(nodeLinkTransitionTime);
         });
@@ -2501,6 +2442,8 @@ var provvisRender = function () {
             }
         });
 
+        /* TODO: on bounding box double click, expand all containing nodes. */
+
         /* Collapse on bounding box click.*/
         aBBox.on("click", function (d) {
             if (!draggingActive) {
@@ -2521,6 +2464,7 @@ var provvisRender = function () {
             }
         });
 
+        /* TODO: Rewrite with js library. */
         var keydown = function () {
             d3.event.preventDefault();
 
@@ -2640,8 +2584,10 @@ var provvisRender = function () {
         initDoiFilterComponent(vis.graph.aNodes);
         filterAction = "blend";
 
-        /* Draw analyses connecting links. */
-        drawAnalysisLinks(vis.graph);
+        /* Draw analysis connecting links. */
+        vis.canvas.append("g").classed({"aHLinks": true});
+        vis.canvas.append("g").classed({"aLinks": true});
+        updateAnalysisLinks(vis.graph);
 
         /* Draw analysis nodes. */
         drawAnalysisNodes(vis.graph.aNodes);
@@ -2662,6 +2608,8 @@ var provvisRender = function () {
         drawSupportView(vis);
 
         /* Initiate doi. */
+        updateNodeFilter();
+        updateLinkFilter();
         updateNodeDoi();
 
         /* Event listeners. */
@@ -2669,6 +2617,69 @@ var provvisRender = function () {
 
         /* Set initial graph position. */
         fitGraphToWindow(0);
+    };
+
+
+    /* TODO: On facet filter reset button, reset filter as well. */
+    /**
+     * Update filtered nodes.
+     */
+    var updateNodeFilter = function () {
+        /* Hide or blend (un)selected nodes. */
+        analysis.each(function (an) {
+            var self = d3.select(this);
+            if (!an.filtered) {
+
+                /* Blend/Hide analysis. */
+                self.classed("filteredNode", false)
+                    .classed("blendedNode", function () {
+                        return filterAction === "blend" ? true : false;
+                    });
+
+                /* Update child nodes. */
+                an.children.values().forEach(function (san) {
+                    d3.select("#gNodeId-" + san.autoId)
+                        .classed("filteredNode", false)
+                        .classed("blendedNode", function () {
+                            return filterAction === "blend" ? true : false;
+                        });
+
+                    san.children.values().forEach(function (n) {
+                        d3.select("#gNodeId-" + n.autoId)
+                            .classed("filteredNode", false)
+                            .classed("blendedNode", function () {
+                                return filterAction === "blend" ? true : false;
+                            });
+                    });
+                });
+
+            } else {
+
+                /* Update child nodes. */
+                an.children.values().forEach(function (san) {
+                    d3.select("#gNodeId-" + san.autoId)
+                        .classed("filteredNode", true)
+                        .classed("blendedNode", false);
+                    san.children.values().forEach(function (n) {
+                        d3.select("#gNodeId-" + n.autoId)
+                            .classed("filteredNode", true)
+                            .classed("blendedNode", false);
+                    });
+                });
+
+                /* Display analysis. */
+                self.classed("filteredNode", true).classed("blendedNode", false);
+            }
+        });
+    };
+
+    /**
+     * Update filtered links.
+     */
+    var updateLinkFilter = function () {
+        vis.graph.aLinks.forEach(function (al) {
+
+        });
     };
 
     /**
@@ -2691,7 +2702,7 @@ var provvisRender = function () {
                 selNodes.push(vis.graph.nodeMap.get(d.uuid));
             });
 
-            /* Set (un)filtered subanalyses. */
+            /* Update subanalysis and workflow filter attributes. */
             vis.graph.nodes.forEach(function (n) {
                 if (selNodes.map(function (d) {
                         return d.parent;
@@ -2700,11 +2711,17 @@ var provvisRender = function () {
                         cn.filtered = false;
                     });
                     n.parent.filtered = false;
+                    n.parent.links.values().forEach(function (l) {
+                        l.filtered = false;
+                    });
                 } else {
                     n.parent.children.values().forEach(function (cn) {
                         cn.filtered = true;
                     });
                     n.parent.filtered = true;
+                    n.parent.links.values().forEach(function (l) {
+                        l.filtered = true;
+                    });
                 }
 
                 /* Filtered attribute changed. */
@@ -2712,10 +2729,9 @@ var provvisRender = function () {
                     cn.doi.filteredChanged();
                 });
                 n.parent.doi.filteredChanged();
-
             });
 
-            /* Update analysis node filter. */
+            /* Update analysis filter attributes. */
             vis.graph.aNodes.forEach(function (an) {
                 if (an.children.values().some(function (san) {
                         return san.filtered;
@@ -2727,19 +2743,47 @@ var provvisRender = function () {
                 an.doi.filteredChanged();
             });
 
+            /* Update analysis link filter attributes. */
+            vis.graph.aLinks.forEach(function (al) {
+                al.filtered = false;
+            });
+            vis.graph.aLinks.filter(function (al) {
+                return al.source.parent.parent.filtered && al.target.parent.parent.filtered;
+            }).forEach(function (al) {
+                al.filtered = true;
+            });
+
             /* On filter action 'hide', splice and recompute graph. */
             if (filterAction === "hide") {
-                vis.graph.aNodes = vis.graph.aNodes.filter(function (an) {return an.filtered;});
-                vis.graph.saNodes = vis.graph.saNodes.filter(function (san) {return san.filtered;});
-                vis.graph.nodes = vis.graph.nodes.filter(function (n) {return n.filtered;});
+
+                /* Update filtered nodesets. */
+                vis.graph.aNodes = vis.graph.aNodes.filter(function (an) {
+                    return an.filtered;
+                });
+                vis.graph.saNodes = vis.graph.saNodes.filter(function (san) {
+                    return san.filtered;
+                });
+                vis.graph.nodes = vis.graph.nodes.filter(function (n) {
+                    return n.filtered;
+                });
+
+                /* Update filtered linksets. */
                 vis.graph.aLinks = vis.graph.aLinks.filter(function (al) {
-                    return vis.graph.aNodes.indexOf(al.source.parent.parent) !== -1 && vis.graph.aNodes.indexOf(al.target.parent.parent) !== -1;
+                    return al.filtered;
                 });
             }
 
+            updateNodeDoi();
+
             dagreDynamicLayout(vis.graph);
             fitGraphToWindow(nodeLinkTransitionTime);
-            updateNodeDoi();
+
+            updateNodeFilter();
+            updateAnalysisLinks(vis.graph);
+
+            vis.graph.aNodes.forEach(function (an) {
+                updateLink(an, an.x, an.y);
+            });
         }
         lastSolrResponse = solrResponse;
     };

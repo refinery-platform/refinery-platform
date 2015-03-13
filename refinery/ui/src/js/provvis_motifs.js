@@ -64,7 +64,7 @@ var provvisMotifs = function () {
      */
     return{
         run: function (graph) {
-            runMotifsPrivate(graph);
+            return runMotifsPrivate(graph);
         }
     };
 }();

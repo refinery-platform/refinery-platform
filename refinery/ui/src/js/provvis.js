@@ -62,17 +62,17 @@ var provvis = function () {
             "title": "Subanalyses"
         }).appendTo("#prov-ctrl-node-btn-group");
 
-        /* Files and Tools. */
+        /* Workflows. */
         $("<button/>", {
-            "id": "prov-ctrl-files-click",
+            "id": "prov-ctrl-workflows-click",
             "class": 'btn btn-mini',
             "type": "button",
             "rel": "tooltip",
             "data-placement": "bottom",
-            "data-documents": "Files/Tools",
-            "html": "Files/Tools",
+            "data-documents": "Workflows",
+            "html": "Workflows",
             "data-html": "true",
-            "title": "Files/Tools"
+            "title": "Workflows"
         }).appendTo("#prov-ctrl-node-btn-group");
 
 
