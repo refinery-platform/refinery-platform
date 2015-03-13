@@ -2041,7 +2041,7 @@ var provvisRender = function () {
             /* Adjust subanalysis coords. */
             var wfBBoxCoords = getWFBBoxCoords(an.children.values()[0], 1);
             an.children.values().sort(function (a, b) {
-                return a.l.bcOrder - b.l.bcOrder;
+                return a.y - b.y;
             }).forEach(function (san, i) {
                 san.y = i * (wfBBoxCoords.y.max - wfBBoxCoords.y.min);
                 updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
@@ -2123,7 +2123,7 @@ var provvisRender = function () {
             /* Adjust subanalysis coords. */
             var wfBBoxCoords = getWFBBoxCoords(an.children.values()[0], 1);
             an.children.values().sort(function (a, b) {
-                return a.l.bcOrder - b.l.bcOrder;
+                return a.y - b.y;
             }).forEach(function (san, i) {
                 san.y = i * (wfBBoxCoords.y.max - wfBBoxCoords.y.min);
                 updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
@@ -2182,11 +2182,9 @@ var provvisRender = function () {
         saBBox.classed("hiddenBBox", true);
 
         aNode.each(function (an) {
-
             /* Adjust subanalysis coords. */
-            var wfBBoxCoords = getWFBBoxCoords(an.children.values()[0], 1);
             an.children.values().sort(function (a, b) {
-                return a.l.bcOrder - b.l.bcOrder;
+                return a.y - b.y;
             }).forEach(function (san, i) {
                 san.y = i * vis.cell.height;
                 updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
