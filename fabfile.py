@@ -564,7 +564,7 @@ def update_refinery():
         run("find . -name '*.pyc' -delete")
         run("{refinery_project_dir}/manage.py syncdb --migrate".format(**env))
         run("{refinery_project_dir}/manage.py collectstatic --noinput".format(**env))
-        run("supervisorctl restart all")
+        run("supervisorctl reload")
     with cd(os.path.join(env.refinery_project_dir)):
         run("touch {refinery_project_dir}/wsgi.py".format(**env))
 
