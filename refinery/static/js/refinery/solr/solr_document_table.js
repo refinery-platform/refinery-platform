@@ -65,14 +65,18 @@ SolrDocumentTable = function(
               result.file_url + '"><i class="icon-download"></i></a>';
             $('#' + id).html(link)
           }
-          else {
+          else if (result.file_import_status != null) {
             // file import is in progress
             var status = '<i class="icon-bolt"></i>';
-            $('#' + id).html(status)
+            $('#' + id).html(status);
+          }
+          else {
+            // no info received about the file
+            $('#' + id).html("");
           }
         },
-        error: function (result) {
-          $('#' + id).html("")
+        error: function(result) {
+          $('#' + id).html("");
         }
       });
       return s;
