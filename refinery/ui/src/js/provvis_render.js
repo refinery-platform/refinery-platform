@@ -370,8 +370,20 @@ var provvisRender = function () {
             }
         });
 
+        /* Update analysis link filter attributes. */
+        vis.graph.aLinks.forEach(function (al) {
+            al.filtered = false;
+        });
+        vis.graph.aLinks.filter(function (al) {
+            return al.source.parent.parent.filtered && al.target.parent.parent.filtered;
+        }).forEach(function (al) {
+            al.filtered = true;
+        });
+
         /* On filter action 'hide', splice and recompute graph. */
         if (filterAction === "hide") {
+
+            /* Update filtered nodesets. */
             vis.graph.aNodes = vis.graph.aNodes.filter(function (an) {
                 return an.filtered;
             });
@@ -381,14 +393,24 @@ var provvisRender = function () {
             vis.graph.nodes = vis.graph.nodes.filter(function (n) {
                 return n.filtered;
             });
+
+            /* Update filtered linksets. */
             vis.graph.aLinks = vis.graph.aLinks.filter(function (al) {
-                return vis.graph.aNodes.indexOf(al.source.parent.parent) !== -1 && vis.graph.aNodes.indexOf(al.target.parent.parent) !== -1;
+                return al.filtered;
             });
         }
 
+        updateNodeDoi();
+
         dagreDynamicLayout(vis.graph);
         fitGraphToWindow(nodeLinkTransitionTime);
-        updateNodeDoi();
+
+        updateNodeFilter();
+        updateAnalysisLinks(vis.graph);
+
+        vis.graph.aNodes.forEach(function (an) {
+            updateLink(an, an.x, an.y);
+        });
     };
 
     /**
