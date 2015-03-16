@@ -481,14 +481,15 @@ class FileStoreItem(models.Model):
             return False
 
     def rename_datafile(self, name):
-        '''Change name of the data file.
-        New name may not be the same as the requested name in case of conflict with an existing file.
+        """Change name of the data file.
+        New name may not be the same as the requested name in case of conflict
+        with an existing file.
 
         :param name: new data file name.
         :type name: str.
         :returns: str -- new name if renaming succeeded, None otherwise.
 
-        '''
+        """
         logger.debug("Renaming datafile %s to %s", self.datafile.name, name)
 
         if self.is_local():
