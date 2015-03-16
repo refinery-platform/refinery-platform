@@ -5,14 +5,15 @@ Created on Apr 5, 2012
 '''
 
 import ast
-from bioblend import galaxy
-import celery
 import copy
 from datetime import datetime
 import json
 import logging
+import os
 import socket
 import urlparse
+from bioblend import galaxy
+import celery
 from celery.task import task
 from celery.task.chords import Chord
 from celery.task.sets import subtask, TaskSet
@@ -28,7 +29,7 @@ from core.models import Analysis, AnalysisResult, WorkflowFilesDL, \
 from data_set_manager.models import Node
 from data_set_manager.utils import add_annotated_nodes_selection, \
     index_annotated_nodes_selection
-from file_store.models import FileStoreItem, is_local
+from file_store.models import FileStoreItem, is_local, HTML, ZIP
 from file_store.tasks import import_file, create, rename
 from galaxy_connector.galaxy_workflow import countWorkflowSteps, \
     create_expanded_workflow_graph
@@ -153,7 +154,7 @@ def chord_execution(ret_val, analysis):
     #TODO: handle DoesNotExist and MultipleObjectsReturned
     analysis_status = AnalysisStatus.objects.get(analysis=analysis)
 
-    execution_taskset = [];
+    execution_taskset = []
     execution_taskset.append(run_analysis_execution.subtask((analysis, )))
     execution_taskset.append(monitor_analysis_execution.subtask((analysis, )))
 
@@ -181,11 +182,9 @@ def chord_postprocessing(ret_val, analysis):
 
     if len(postprocessing_taskset) < 1:
         postprocessing_taskset = TaskSet(
-            task=[emptyTask.subtask(("ret_val", ))]
-            )
+            task=[emptyTask.subtask(("ret_val", ))])
     result_chord, result_set = progress_chord(postprocessing_taskset)(
-        chord_cleanup.subtask(analysis=analysis, )
-        )
+        chord_cleanup.subtask(analysis=analysis, ))
 
     analysis_status.postprocessing_taskset_id = result_set.task_id
     analysis_status.save()
@@ -496,15 +495,18 @@ def rename_analysis_results(analysis):
 
     """ 
     logger.debug("analysis_manager.rename_analysis_results called")
-
     # rename file_store items to new name updated from galaxy file_ids
-    #TODO: handle Django exceptions 
-    analysis_results = AnalysisResult.objects.filter(analysis_uuid=analysis.uuid)
+    analysis_results = AnalysisResult.objects.filter(
+        analysis_uuid=analysis.uuid)
     for result in analysis_results:
         # new name to load
         new_file_name = result.file_name
-        # rename file by way of file_store
-        filestore_item = rename(result.file_store_uuid, new_file_name)
+        # workaround for FastQC reports downloaded from Galaxy as zip archives
+        (root, ext) = os.path.splitext(new_file_name)
+        item = FileStoreItem.objects.get_item(uuid=result.file_store_uuid)
+        if ext == '.html' and item.get_filetype() == ZIP:
+            new_file_name = root + '.zip'
+        rename(result.file_store_uuid, new_file_name)
 
 
 @task()
@@ -653,15 +655,15 @@ def download_history_files(analysis) :
                 # Determing tag if galaxy results should be download through
                 # http or copying files directly to retrieve HTML files as zip
                 # archives via dataset URL
-                if galaxy_instance.local_download and file_type != 'html':
+                if galaxy_instance.local_download and file_type != HTML:
                     download_url = results['file_name']
                 else:
                     url = 'datasets/' + str(results['dataset_id']) + '/display?to_ext=txt'
                     download_url = urlparse.urljoin(galaxy_instance.base_url, url)
                 # workaround to set the correct file type for zip archives of
-                # reports produced by FASTQC
-                if file_type == 'html':
-                    file_type = 'zip'
+                # FastQC HTML reports produced by Galaxy dynamically
+                if file_type == HTML:
+                    file_type = ZIP
                 # TODO: when changing permanent=True, fix update of % download of file 
                 filestore_uuid = create(
                     source=download_url, filetype=file_type, permanent=False)
