@@ -2423,7 +2423,6 @@ var provvisRender = function () {
             handleFitGraphToWindow();
         });
 
-        /* TODO: Currently disabled - rewrite for develop branch. */
         /* Handle tooltips. */
         handleTooltips();
         //handleDebugTooltips();
@@ -2617,6 +2616,24 @@ var provvisRender = function () {
 
         /* Set initial graph position. */
         fitGraphToWindow(0);
+
+
+        /* TODO: Experimental layer highlighting. */
+        var layerColorScale = d3.scale.category20();
+        vis.graph.layerNodes.values().forEach(function (ln) {
+            ln.children.values().forEach(function (an) {
+                console.log(d3.select("#gNodeId-" + an.autoId));
+                d3.select("#gNodeId-" + an.autoId).attr("stroke", layerColorScale(ln.id));
+                d3.select("#nodeId-" + an.autoId).style({"stroke": layerColorScale(ln.id)});
+                an.children.values().forEach(function (san) {
+                    d3.select("#nodeId-" + san.autoId).style({"stroke": layerColorScale(ln.id)});
+                    san.children.values().forEach(function (n) {
+                        d3.select("#nodeId-" + n.autoId).style({"stroke": layerColorScale(ln.id)});
+                    });
+                });
+            });
+        });
+
     };
 
 
