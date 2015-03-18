@@ -18,6 +18,7 @@ var provvisRender = function () {
         saLink = Object.create(null),
         analysis = Object.create(null),
         subanalysis = Object.create(null),
+        layer = Object.create(null),
 
         hLink = Object.create(null),
 
@@ -40,10 +41,10 @@ var provvisRender = function () {
 
     var nodeLinkTransitionTime = 150;
 
-    var aNodesBAK = [];
-    var saNodesBAK = [];
-    var nodesBAK = [];
-    var aLinksBAK = [];
+    var aNodesBAK = [],
+        saNodesBAK = [],
+        nodesBAK = [],
+        aLinksBAK = [];
 
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
@@ -702,23 +703,48 @@ var provvisRender = function () {
     };
 
     /**
+     * Draw layered nodes.
+     * @param lNodes
+     */
+    var drawLayerNodes = function (lNodes) {
+
+        console.log(lNodes);
+
+        layer = vis.canvas.append("g").classed("layers", true).selectAll(".layer")
+            .data(lNodes.values())
+            .enter().append("g")
+            .classed("layer", true)
+            .attr("id", function (d) {
+                return "gNodeId-" + d.autoId;
+            });
+
+
+        /* TODO: */
+
+    };
+
+    /**
      * Draw analysis nodes.
      * @param aNodes Analysis nodes.
      */
     var drawAnalysisNodes = function (aNodes) {
-        analysis = vis.canvas.append("g").classed("analyses", true).selectAll(".analysis")
-            .data(aNodes)
-            .enter().append("g")
-            .classed("analysis", true)
-            .attr("id", function (d) {
-                return "gNodeId-" + d.autoId;
-            })
-            .attr("transform", function (d) {
-                return "translate(" + d.x + "," + d.y + ")";
-            })
-            .style("fill", function (d) {
-                return timeColorScale(parseISOTimeFormat(d.start));
-            });
+        layer.each(function (ln) {
+            console.log(ln);
+            d3.select("#gNodeId-" + ln.autoId).selectAll(".analysis")
+                .data(ln.children.values())
+                .enter().append("g")
+                .classed("analysis", true)
+                .attr("id", function (d) {
+                    return "gNodeId-" + d.autoId;
+                })
+                .attr("transform", function (d) {
+                    return "translate(" + d.x + "," + d.y + ")";
+                })
+                .style("fill", function (d) {
+                    return timeColorScale(parseISOTimeFormat(d.start));
+                });
+        });
+        analysis = vis.canvas.select("g.layers").selectAll(".analysis");
 
         analysis.each(function (an) {
             var self = d3.select(this);
@@ -2588,6 +2614,8 @@ var provvisRender = function () {
         vis.canvas.append("g").classed({"aLinks": true});
         updateAnalysisLinks(vis.graph);
 
+        drawLayerNodes(vis.graph.layerNodes);
+
         /* Draw analysis nodes. */
         drawAnalysisNodes(vis.graph.aNodes);
 
@@ -2617,13 +2645,11 @@ var provvisRender = function () {
         /* Set initial graph position. */
         fitGraphToWindow(0);
 
-
         /* TODO: Experimental layer highlighting. */
         var layerColorScale = d3.scale.category20();
-        vis.graph.layerNodes.values().forEach(function (ln) {
+        layer.each(function (ln) {
             ln.children.values().forEach(function (an) {
-                console.log(d3.select("#gNodeId-" + an.autoId));
-                d3.select("#gNodeId-" + an.autoId).attr("stroke", layerColorScale(ln.id));
+                d3.select("#gNodeId-" + an.autoId).style({"stroke": layerColorScale(ln.id)});
                 d3.select("#nodeId-" + an.autoId).style({"stroke": layerColorScale(ln.id)});
                 an.children.values().forEach(function (san) {
                     d3.select("#nodeId-" + san.autoId).style({"stroke": layerColorScale(ln.id)});
@@ -2633,7 +2659,6 @@ var provvisRender = function () {
                 });
             });
         });
-
     };
 
 

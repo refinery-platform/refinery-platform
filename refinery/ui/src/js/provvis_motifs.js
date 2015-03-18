@@ -137,7 +137,7 @@ var provvisMotifs = function () {
             layers.push(d3.map());
 
 
-            /* Group the same motifs into the same layer. */
+            /* Group the same motifs into a layer. */
             l.forEach(function (an) {
 
                 var keyStr = an.preds.values().map(function (pan) {
@@ -162,7 +162,6 @@ var provvisMotifs = function () {
             });
         });
         return layerNodes;
-
     };
 
     /**
@@ -177,7 +176,7 @@ var provvisMotifs = function () {
     /**
      * Publish module function.
      */
-    return{
+    return {
         run: function (graph) {
             return runMotifsPrivate(graph);
         }
