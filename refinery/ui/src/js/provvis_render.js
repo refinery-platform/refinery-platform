@@ -707,9 +707,6 @@ var provvisRender = function () {
      * @param lNodes
      */
     var drawLayerNodes = function (lNodes) {
-
-        console.log(lNodes);
-
         layer = vis.canvas.append("g").classed("layers", true).selectAll(".layer")
             .data(lNodes.values())
             .enter().append("g")
@@ -729,7 +726,6 @@ var provvisRender = function () {
      */
     var drawAnalysisNodes = function (aNodes) {
         layer.each(function (ln) {
-            console.log(ln);
             d3.select("#gNodeId-" + ln.autoId).selectAll(".analysis")
                 .data(ln.children.values())
                 .enter().append("g")

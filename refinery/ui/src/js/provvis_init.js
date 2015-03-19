@@ -398,7 +398,7 @@ var provvisInit = function () {
                 if (san.parent.uuid === ll.target.analysis) {
                     san.links.set(ll.autoId, ll);
                 } else {
-                    /* Set links between two analyses. */
+                    /* Set links between analyses. */
                     aLinks.push(ll);
                 }
             });

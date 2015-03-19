@@ -50,18 +50,17 @@ var provvisMotifs = function () {
 
     /**
      * Find and mark sequential and parallel analysis steps.
-     * @param bclgNodes Barycenter ordered, layered and grouped analysis nodes.
      * @param graph The provenance graph.
      * @returns {*} Layered nodes.
      */
-    var findLayers = function (bclgNodes, graph) {
+    var createLayerNodes = function (graph) {
 
         var layers = [],
             layerNodes = d3.map(),
             layerId = 0;
 
         /* Iterate breath first search. */
-        bclgNodes.forEach(function (l, i) {
+        graph.bclgNodes.forEach(function (l, i) {
 
             /**
              * Helper function to compare two d3.map() objects.
@@ -164,13 +163,78 @@ var provvisMotifs = function () {
         return layerNodes;
     };
 
+    var createLayerAnalysisMapping = function (graph) {
+        //console.log(graph.layerNodes);
+
+
+        /* Layer children are set already. */
+        graph.layerNodes.values().forEach(function (ln) {
+            ln.children.values().forEach(function (an) {
+                an.inputs.values().forEach(function (n) {
+                    /* Set input nodes. */
+                    ln.inputs.set(n.autoId, n);
+                });
+                an.outputs.values().forEach(function (n) {
+                    /* Set output nodes. */
+                    ln.outputs.set(n.autoId, n);
+                });
+            });
+
+            /* Set workflow name. */
+            var wfName = "dataset";
+            if (typeof graph.workflowData.get(ln.motif.wfUuid) !== "undefined") {
+                wfName = graph.workflowData.get(ln.motif.wfUuid).name;
+            }
+            ln.wfName = wfName.toString();
+
+        });
+
+        graph.layerNodes.values().forEach(function (ln) {
+
+            /* Set predecessor layers. */
+            ln.children.values().forEach(function (an) {
+                an.preds.values().forEach(function (pan) {
+                    if (!ln.preds.has(pan.layer.autoId)) {
+                        ln.preds.set(pan.layer.autoId, pan.layer);
+                    }
+                });
+            });
+
+            /* Set successor layers. */
+            ln.children.values().forEach(function (an) {
+                an.succs.values().forEach(function (san) {
+                    if (!ln.succs.has(san.layer.autoId)) {
+                        ln.succs.set(san.layer.autoId, san.layer);
+                    }
+                });
+            });
+        });
+
+        /* Set layer links. */
+        graph.layerNodes.values().forEach(function (ln) {
+            ln.children.values().forEach(function (an) {
+                an.links.values().forEach(function (anl) {
+                    ln.links.set(anl.autoId, anl);
+                });
+            });
+        });
+
+        /* TODO: Set predLinks and succLinks. */
+
+        /* TODO: Set layerLinks. */
+
+    };
+
     /**
      * Main motif discovery and injection module function.
      * @param graph The main graph object of the provenance visualization.
      * @param bclgNodes Barycentric layered and grouped nodes.
      */
     var runMotifsPrivate = function (graph) {
-        return findLayers(graph.bclgNodes, graph);
+        graph.layerNodes = createLayerNodes(graph);
+        createLayerAnalysisMapping(graph);
+
+
     };
 
     /**

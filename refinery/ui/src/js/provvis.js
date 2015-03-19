@@ -769,7 +769,7 @@ var provvis = function () {
                 vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
 
                 /* Discover and and inject motifs. */
-                vis.graph.layerNodes = provvisMotifs.run(vis.graph);
+                provvisMotifs.run(vis.graph);
 
                 /* Render graph. */
                 provvisRender.run(vis);

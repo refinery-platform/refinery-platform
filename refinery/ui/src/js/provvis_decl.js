@@ -267,14 +267,10 @@ var provvisDecl = function () {
     var Motif = function () {
         this.preds = d3.map();
         this.succs = d3.map();
-
         this.numIns = 0;
         this.numOuts = 0;
-
         this.wfUuid = "";
-
         this.numSubanalyses = 0;
-
         this.file = "";
 
         Motif.numInstances = (Motif.numInstances || 0) + 1;
@@ -292,7 +288,13 @@ var provvisDecl = function () {
     var Layer = function (id, motif, parent, hidden) {
         BaseNode.call(this, id, "layer", parent, hidden);
 
+        this.inputs = d3.map();
+        this.outputs = d3.map();
+        this.links = d3.map();
+
         this.motif = motif;
+        this.wfName = "";
+
     };
 
     Layer.prototype = Object.create(BaseNode.prototype);
@@ -407,6 +409,7 @@ var provvisDecl = function () {
         };
 
         this.layerNodes = d3.map();
+        this.layerLinks = d3.map();
     };
 
     /**
