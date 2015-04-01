@@ -538,11 +538,11 @@ class UserSinglePermissionResource(Resource):
             return [UserSinglePermissionObject(user.username, user_id, res_type_str, res.name, res_uuid, shares)]
 
 class ProjectPermissionResource(Resource):
-    owner = fields.CharField(attribute='owner')
-    owner_id = fields.CharField(attribute='owner_id')
-    res_name = fields.CharField(attribute='res_name')
-    uuid = fields.CharField(attribute='uuid')
-    shares = fields.ListField(attribute='shares')
+    owner = fields.CharField(attribute='owner', null=True)
+    owner_id = fields.CharField(attribute='owner_id', null=True)
+    res_name = fields.CharField(attribute='res_name', null=True)
+    uuid = fields.CharField(attribute='uuid', null=True)
+    shares = fields.ListField(attribute='shares', null=True)
 
     def get_user(self, user_id):
         user_list = filter(lambda u: str(u.id) == user_id, User.objects.all())
@@ -554,29 +554,53 @@ class ProjectPermissionResource(Resource):
 
     def get_shares(self, res):
         share_list = []
-        groups_shared_with = map(lambda r: (r['group'].group_ptr.name, r['group'].uuid, {'read': r['read'], 'change': r['change']}), res.get_groups())
+        groups_shared_with = map(lambda r: (r['group'].group_ptr.name, r['group'].id, {'read': r['read'], 'change': r['change']}), res.get_groups())
 
         for i in groups_shared_with:
-            # i[0] is group name, i[1] is uuid, i[2] is permissions
-            share_list.append({'name': i[0], 'uuid': i[1], 'permission': i[2]})
-        
+            # i[0] is group name, i[1] is id, i[2] is permissions
+            share_list.append({'name': i[0], 'id': i[1], 'permission': i[2]})
         return share_list
+
+    def get_group(self, group_id):
+        group_list = filter(lambda g: g.id == group_id, Group.objects.all())
+        return None if len(group_list) == 0 else group_list[0]
 
     class Meta:
         resource_name = 'project_permission'
         object_class = ProjectPermissionObject
 
-    def detail_uri_kwargs(self, bundle):
+    def detail_uri_kwargs(self, bundle_or_obj):
         kwargs = {}
-        kwargs['pk'] = uuid.uuid1()
-        logger.info("BUNDLE OBJECT ============")
-        logger.info(bundle.obj)
-        logger.info("BUNDLE DATA ==============")
-        logger.info(bundle.data)
-        logger.info("BUNDLE REQUEST ===========")
-        logger.info(bundle.request)
-
+        if isinstance(bundle_or_obj, Bundle):
+            kwargs['pk'] = bundle_or_obj.obj.uuid
+        else:
+            kwargs['pk'] = bundle_or_obj.uuid
         return kwargs
+
+    def obj_get(self, bundle, **kwargs):
+        uuid = kwargs['pk']
+        return self.get_res(uuid)
+
+    def obj_update(self, bundle, **kwargs):
+        kwargs = self.detail_uri_kwargs(bundle)
+        uuid = kwargs['pk']
+        res = self.get_res(uuid)
+        owner = res.get_owner()
+        permissionObject = ProjectPermissionObject()
+
+        # remove all objects before adding them
+        for i in res.get_groups():
+            res.unshare(self.get_group(i['id']))
+
+        for group_data in bundle.data['shares']:
+            group = self.get_group(group_data['id'])
+            isReadOnly = not (group_data['permission']['change'] and group_data['permission']['read'])
+            logger.info("name:" + group.name)
+            logger.info(isReadOnly)
+            res.share(group, isReadOnly)
+        
+        res.save()
+        return permissionObject
 
     def obj_get_list(self, bundle, **kwargs):
         return self.get_object_list(bundle.request)
@@ -594,4 +618,5 @@ class ProjectPermissionResource(Resource):
         else:
             shares = self.get_shares(res)
             return [ProjectPermissionObject(user.username, user.id, res.name, res.uuid, shares)]
+
 
