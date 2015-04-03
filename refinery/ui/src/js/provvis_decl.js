@@ -228,6 +228,7 @@ var provvisDecl = function () {
         this.links = d3.map();
 
         this.wfName = "";
+        this.wfCode = "";
 
         this.layer = "";
         this.motif = "";
@@ -408,8 +409,8 @@ var provvisDecl = function () {
             depth: 0
         };
 
-        this.layerNodes = d3.map();
-        this.layerLinks = d3.map();
+        this.lNodes = d3.map();
+        this.lLinks = d3.map();
     };
 
     /**

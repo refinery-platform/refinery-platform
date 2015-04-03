@@ -17,11 +17,6 @@ var provvisMotifs = function () {
          */
         var getSuccs = function (n) {
 
-            /* When node has only one input and output and successor node has no other inputs, start motif. */
-            if (n.succs.size() === 1 && n.succs.values()[0].preds.size() === 1) {
-                //console.log("#motif: "  + n.autoId);
-            }
-
             /* Add successor nodes to queue. */
             n.succs.values().forEach(function (s) {
                 if (s instanceof provvisDecl.Node && nset.indexOf(s.parent.parent) === -1) {
@@ -46,8 +41,7 @@ var provvisMotifs = function () {
     };
 
 
-    /* TODO: In experimental development state. */
-
+    /* TODO: May refine algorithm. */
     /**
      * Find and mark sequential and parallel analysis steps.
      * @param graph The provenance graph.
@@ -56,7 +50,7 @@ var provvisMotifs = function () {
     var createLayerNodes = function (graph) {
 
         var layers = [],
-            layerNodes = d3.map(),
+            lNodes = d3.map(),
             layerId = 0;
 
         /* Iterate breath first search. */
@@ -145,37 +139,44 @@ var provvisMotifs = function () {
                     layer = Object.create(null);
 
                 if (!(layers[i].has(keyStr + "-" + an.motif.autoId))) {
-                    layer = new provvisDecl.Layer(layerId, an.motif, graph, true);
+                    layer = new provvisDecl.Layer(layerId, an.motif, graph, false);
                     layer.children.set(an.autoId, an);
                     an.layer = layer;
-                    layerNodes.set(layer.autoId, an.layer);
+                    lNodes.set(layer.autoId, an.layer);
                     layerId++;
 
                     layers[i].set(keyStr + "-" + an.motif.autoId, layer.autoId);
                 } else {
-                    layer = layerNodes.get(layers[i].get(keyStr + "-" + an.motif.autoId));
+                    layer = lNodes.get(layers[i].get(keyStr + "-" + an.motif.autoId));
                     layer.children.set(an.autoId, an);
                     an.layer = layer;
                 }
 
             });
         });
-        return layerNodes;
+        return lNodes;
     };
 
+    /**
+     * For each layer the corresponding analyses, preceding and succeeding links as well as
+     * specifically in- and output nodes are mapped to it.
+     * @param graph The provenance graph.
+     */
     var createLayerAnalysisMapping = function (graph) {
-        //console.log(graph.layerNodes);
-
 
         /* Layer children are set already. */
-        graph.layerNodes.values().forEach(function (ln) {
+        graph.lNodes.values().forEach(function (ln) {
             ln.children.values().forEach(function (an) {
+
+                /* Set analysis parent. */
+                an.parent = an.layer;
+
+                /* Set input nodes. */
                 an.inputs.values().forEach(function (n) {
-                    /* Set input nodes. */
                     ln.inputs.set(n.autoId, n);
                 });
+                /* Set output nodes. */
                 an.outputs.values().forEach(function (n) {
-                    /* Set output nodes. */
                     ln.outputs.set(n.autoId, n);
                 });
             });
@@ -186,10 +187,30 @@ var provvisMotifs = function () {
                 wfName = graph.workflowData.get(ln.motif.wfUuid).name;
             }
             ln.wfName = wfName.toString();
+            ln.wfCode = ln.children.values()[0].wfCode;
 
+            /* Set layer parent. */
+            ln.parent = graph;
+
+            /* Set layer visibility. */
+            if (ln.children.size() <= 1) {
+                ln.hidden = true;
+            }
+            /* Set child analysis visibility. */
+            if (ln.children.size() === 1) {
+                ln.children.values()[0].hidden = false;
+
+                /* Set link visibility. */
+                ln.children.values()[0].predLinks.values().forEach(function (pl) {
+                    pl.hidden = false;
+                });
+                ln.children.values()[0].succLinks.values().forEach(function (sl) {
+                    sl.hidden = false;
+                });
+            }
         });
 
-        graph.layerNodes.values().forEach(function (ln) {
+        graph.lNodes.values().forEach(function (ln) {
 
             /* Set predecessor layers. */
             ln.children.values().forEach(function (an) {
@@ -211,7 +232,7 @@ var provvisMotifs = function () {
         });
 
         /* Set layer links. */
-        graph.layerNodes.values().forEach(function (ln) {
+        graph.lNodes.values().forEach(function (ln) {
             ln.children.values().forEach(function (an) {
                 an.links.values().forEach(function (anl) {
                     ln.links.set(anl.autoId, anl);
@@ -219,21 +240,28 @@ var provvisMotifs = function () {
             });
         });
 
-        /* TODO: Set predLinks and succLinks. */
-
-        /* TODO: Set layerLinks. */
-
+        /* Set layer links. */
+        var linkId = 0;
+        graph.lNodes.values().forEach(function (pl) {
+            pl.succs.values().forEach(function (sl) {
+                var layerLink = new provvisDecl.Link(linkId, pl, sl, pl.hidden || sl.hidden);
+                graph.lLinks.set(layerLink.autoId, layerLink);
+                pl.succLinks.set(layerLink.autoId, layerLink);
+                sl.predLinks.set(layerLink.autoId, layerLink);
+                linkId++;
+            });
+        });
     };
+
 
     /**
      * Main motif discovery and injection module function.
      * @param graph The main graph object of the provenance visualization.
-     * @param bclgNodes Barycentric layered and grouped nodes.
+     * @param cell Node cell dimensions.
      */
-    var runMotifsPrivate = function (graph) {
-        graph.layerNodes = createLayerNodes(graph);
+    var runMotifsPrivate = function (graph, cell) {
+        graph.lNodes = createLayerNodes(graph);
         createLayerAnalysisMapping(graph);
-
 
     };
 
@@ -241,8 +269,8 @@ var provvisMotifs = function () {
      * Publish module function.
      */
     return {
-        run: function (graph) {
-            return runMotifsPrivate(graph);
+        run: function (graph, cell) {
+            return runMotifsPrivate(graph, cell);
         }
     };
 }();
