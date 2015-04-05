@@ -42,7 +42,7 @@ priority = 995
 ; minimum of four processes required to avoid problems with monitoring tasks
 command = python %(here)s/manage.py celeryd -c 4 -Q celery --events
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
-stdout_logfile = %(here)s/log/celeryd.log
+stdout_logfile = %(here)s/log/celeryd-w1.log
 stdout_logfile_maxbytes = 1MB
 stdout_logfile_backups = 4
 redirect_stderr = true
@@ -57,8 +57,8 @@ killasgroup = true
 priority = 995
 
 [program:worker2]
-; limits concurrent file imports to two
-command = python %(here)s/manage.py celeryd -c 2 -Q file_import --events
+; limits concurrency of file imports to one to avoid overloading system IO
+command = python %(here)s/manage.py celeryd -c 1 -Q file_import --events
 environment = PATH="/home/vagrant/.virtualenvs/refinery-platform/bin"
 stdout_logfile = %(here)s/log/celeryd-w2.log
 stdout_logfile_maxbytes = 1MB

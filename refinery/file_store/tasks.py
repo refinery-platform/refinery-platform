@@ -6,7 +6,8 @@ from urlparse import urlparse
 from tempfile import NamedTemporaryFile
 from celery.task import task
 from django.core.files import File
-from file_store.models import FileStoreItem, get_temp_dir, file_path, FILE_STORE_BASE_DIR
+from file_store.models import FileStoreItem, get_temp_dir, file_path,\
+    FILE_STORE_BASE_DIR
 
 
 logger = logging.getLogger('file_store')
@@ -30,6 +31,7 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
     :returns: FileStoreItem UUID if success, None if failure.
 
     """
+    #TODO: move to file_store/models.py since it's never used as a task
     logger.info("Creating FileStoreItem using source '%s'", source)
 
     item = FileStoreItem.objects.create_item(
@@ -40,18 +42,14 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
 
     logger.info("FileStoreItem created with UUID %s", item.uuid)
 
-    if permanent:
-        # copy to file store now and don't add to cache
-        #TODO: provide progress update
-        import_file.delay(
-            item.uuid, permanent=True, refresh=True, file_size=file_size)
+    #TODO: don't add to cache if permanent
 
     return item.uuid
 
 
-@task()
+@task(track_started=True)
 def import_file(uuid, permanent=False, refresh=False, file_size=1):
-    '''Download or copy file specified by UUID.
+    """Download or copy file specified by UUID.
 
     :param permanent: Flag for adding the FileStoreItem to cache.
     :type permanent: bool.
@@ -61,13 +59,17 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
     :type file_size: int.
     :returns: FileStoreItem -- model instance or None if importing failed.
 
-    '''
+    """
     logger.debug("Importing FileStoreItem with UUID '%s'", uuid)
 
     item = FileStoreItem.objects.get_item(uuid=uuid)
     if not item:
         logger.error("FileStoreItem with UUID '%s' not found", uuid)
         return None
+
+    # save task ID for looking up file import status
+    item.import_task_id = import_file.request.id
+    item.save()
 
     # if file is ready to be used then return it,
     # otherwise delete it if update is requested
@@ -106,19 +108,20 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
             logger.error("Could not open URL '%s'", item.source)
             return None
         except urllib2.URLError as e:
-            logger.error("Could not open URL '%s'. Reason: '%s'", item.source, e.reason)
+            logger.error("Could not open URL '%s'. Reason: '%s'",
+                         item.source, e.reason)
             return None
         except ValueError as e:
-            logger.error("Could not open URL '%s'. Reason: '%s'", item.source, e.message)
+            logger.error("Could not open URL '%s'. Reason: '%s'",
+                         item.source, e.message)
             return None
 
         tmpfile = NamedTemporaryFile(dir=get_temp_dir(), delete=False)
 
-        # get remote file size, provide a default value in case Content-Length is missing
+        # provide a default value in case Content-Length is missing
         remotefilesize = int(response.info().getheader("Content-Length", file_size))
 
         logger.debug("Starting download from '%s'", item.source)
-
         # download and save the file
         localfilesize = 0
         blocksize = 8 * 2 ** 10    # 8 Kbytes
@@ -132,16 +135,14 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
                 percent_done = 0
             import_file.update_state(
                 state="PROGRESS",
-                meta={"percent_done": "%3.2f%%" % (percent_done),
+                meta={"percent_done": "%3.2f%%" % percent_done,
                       'current': localfilesize, 'total': remotefilesize}
                 )
-
         # cleanup
         #TODO: delete temp file if download failed 
         tmpfile.flush()
         tmpfile.close()
         response.close()
-
         logger.debug("Finished downloading from '%s'", item.source)
 
         # get the file name from URL (remove query string)
@@ -150,7 +151,6 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         # construct destination path based on source file name
         rel_dst_path = item.datafile.storage.get_available_name(file_path(item, src_file_name))
         abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
-
         # move the temp file into the file store
         try:
             if not os.path.exists(os.path.dirname(abs_dst_path)):
@@ -160,7 +160,6 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
             logger.error("Error moving temp file into the file store. OSError: %s, file name: %s, error: %s",
                          e.errno, e.filename, e.strerror)
             return False
-
         # temp file is only accessible by the owner by default which prevents
         # access by the web server if it is running as it's own user
         try:
@@ -177,9 +176,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         # save the model instance
         item.save()
 
-    if not permanent:
-        #TODO: if permanent is False then add to cache
-        pass
+    #TODO: if permanent is False then add to cache
 
     return item
 
@@ -240,25 +237,24 @@ def update(uuid, source):
 
 @task()
 def rename(uuid, name):
-    '''Change name of the file on disk and return the updated FileStoreItem instance.
+    """Change name of the file on disk and return the updated FileStoreItem instance.
 
     :param uuid: UUID of a FileStoreItem.
     :type uuid: str.
     :param name: New name of the FileStoreItem specified by the UUID.
     :type name: str.
-    :returns: FileStroreItem - updated FileStoreItem instance or None if there was an error.
+    :returns: FileStoreItem - updated FileStoreItem instance or None if there was an error.
 
-    '''
-    logger.debug("Renaming FileStoreItem with UUID '%s'", uuid)
-
-    item = FileStoreItem.objects.get_item(uuid=uuid)
-
-    if item:
-        if item.rename_datafile(name):
-            return item
-
-    logger.error("Failed to rename FileStoreItem with UUID '%s'", uuid)
-    return None
+    """
+    try:
+        item = FileStoreItem.objects.get_item(uuid=uuid)
+    except FileStoreItem.DoesNotExist:
+        logger.error("Failed to rename FileStoreItem with UUID '%s'", uuid)
+        return None
+    if item.rename_datafile(name):
+        return item
+    else:
+        return None
 
 
 @task()

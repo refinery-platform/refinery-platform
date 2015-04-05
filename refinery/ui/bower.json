@@ -22,6 +22,9 @@
     "tipsy": "0.1.7",
     "c3": "0.3.0",
     "ng-grid": "2.0.13",
-    "ng-file-upload": "1.6.6"
+    "ng-file-upload": "1.6.6",
+    "lodash": "2.4.1",
+    "graphlib": "1.0.1",
+    "dagre": "0.7.1"
   }
 }

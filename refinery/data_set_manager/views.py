@@ -7,6 +7,7 @@ Created on May 11, 2012
 import os
 import simplejson as json
 from urlparse import urlparse
+from celery.result import AsyncResult
 from django import forms
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse, \
@@ -235,7 +236,7 @@ class ProcessISATabView(View):
             logger.debug("Temp file name: '%s'", temp_file_path)
             dataset_uuid = parse_isatab.delay(request.user.username,
                                               False, temp_file_path).get()
-            #TODO: exception handling
+            #TODO: exception handling (OSError)
             os.unlink(temp_file_path)
             if dataset_uuid:
                 #TODO: redirect to the list of analysis samples for the given UUID

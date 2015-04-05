@@ -14,7 +14,6 @@ from django_extensions.admin import ForeignKeyAutocompleteAdmin
 from guardian.admin import GuardedModelAdmin
 
 
-
 class AnalysisNodeConnectionAdmin(ForeignKeyAutocompleteAdmin):
     raw_id_fields = ("node",)    
 
@@ -28,7 +27,7 @@ class WorkflowEngineAdmin(GuardedModelAdmin):
     pass
 
 class DataSetAdmin(GuardedModelAdmin):
-    pass
+    readonly_fields = ('uuid',)
 
 class InvestigationLinkAdmin(GuardedModelAdmin):
     pass

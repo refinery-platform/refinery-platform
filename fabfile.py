@@ -37,7 +37,6 @@ sys.path.append(env.local_project_dir)
 # use import as to avoid conflict with fabric.api.settings
 # from django.conf import settings as django_settings
 
-
 # Fabric settings
 env.forward_agent = True    # for Github operations
 
@@ -555,20 +554,19 @@ def update_refinery():
     #TODO: move each operation to a separate task
     puts("Updating Refinery")
     with cd(env.refinery_project_dir):
-        output = run("git pull")
-    if not 'Already up-to-date' in output:
-        with cd(os.path.join(env.refinery_project_dir, "ui")):
-            run("npm install")
-            run("bower install --config.interactive=false")
-            run("grunt")
-        with prefix("workon {refinery_virtualenv_name}".format(**env)):
-            run("pip install -r {refinery_app_dir}/requirements.txt".format(**env))
-            run("find . -name '*.pyc' -delete")
-            run("{refinery_project_dir}/manage.py syncdb --migrate".format(**env))
-            run("{refinery_project_dir}/manage.py collectstatic --noinput".format(**env))
-            run("supervisorctl restart all")
-        with cd(os.path.join(env.refinery_project_dir)):
-            run("touch {refinery_project_dir}/wsgi.py".format(**env))
+        run("git pull")
+    with cd(os.path.join(env.refinery_project_dir, "ui")):
+        run("npm install")
+        run("bower install --config.interactive=false")
+        run("grunt")
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
+        run("pip install -r {refinery_app_dir}/requirements.txt".format(**env))
+        run("find . -name '*.pyc' -delete")
+        run("{refinery_project_dir}/manage.py syncdb --migrate".format(**env))
+        run("{refinery_project_dir}/manage.py collectstatic --noinput".format(**env))
+        run("supervisorctl reload")
+    with cd(os.path.join(env.refinery_project_dir)):
+        run("touch {refinery_project_dir}/wsgi.py".format(**env))
 
 
 @task

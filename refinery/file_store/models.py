@@ -18,6 +18,7 @@ import os
 import re
 import logging
 from urlparse import urlparse, urljoin
+from celery.result import AsyncResult
 from django.conf import settings
 from django.dispatch import receiver
 from django.db import models
@@ -331,6 +332,8 @@ class FileStoreItem(models.Model):
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
     filetype = models.CharField(max_length=15, choices=FILE_TYPES, blank=True)
+    #: file import task ID
+    import_task_id = UUIDField(blank=True)
 
     objects = _FileStoreItemManager()
 
@@ -478,14 +481,15 @@ class FileStoreItem(models.Model):
             return False
 
     def rename_datafile(self, name):
-        '''Change name of the data file.
-        New name may not be the same as the requested name in case of conflict with an existing file.
+        """Change name of the data file.
+        New name may not be the same as the requested name in case of conflict
+        with an existing file.
 
         :param name: new data file name.
         :type name: str.
         :returns: str -- new name if renaming succeeded, None otherwise.
 
-        '''
+        """
         logger.debug("Renaming datafile %s to %s", self.datafile.name, name)
 
         if self.is_local():
@@ -548,7 +552,8 @@ class FileStoreItem(models.Model):
             except Site.DoesNotExist:
                 logger.error("Cannot provide a full URL: no sites configured or SITE_ID is not set correctly")
                 return None
-            #FIXME: provide a protocol-neutral URL or do not return protocol
+            #FIXME: provide a URL without the domain portion
+            # visualization_manager.views may be expecting a full URL
             return 'http://{}{}'.format(current_site.domain, self.datafile.url)
         else:
             # data file doesn't exist on disk
@@ -559,6 +564,12 @@ class FileStoreItem(models.Model):
             else:
                 # source is a URL
                 return self.source
+
+    def get_import_status(self):
+        """Return file import task state
+
+        """
+        return AsyncResult(self.import_task_id).state
 
 
 def is_local(uuid):

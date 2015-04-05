@@ -1,0 +1,4 @@
+# Fabric’s local settings file (copy to ~/.fabricrc)
+
+# username of the Refinery application user for Vagrant VM
+project_user=vagrant

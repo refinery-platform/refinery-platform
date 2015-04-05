@@ -33,6 +33,7 @@
 
 #provenance-vis {
     position: relative;
+    overflow: hidden;
 }
 
 #provenance-canvas {
@@ -47,7 +48,7 @@
     background-color: #ffffff;
     border-style: solid;
     border-color: lightgray;
-    border-width: 1px;
+    border-width: 1.0px;
 }
 
 #provenance-table-content {
@@ -96,7 +97,7 @@
 }
 
 .scrollable-menu {
-    max-height: 300px;
+    max-height: 300.0px;
     overflow: hidden;
     overflow-y: auto;
 }
@@ -108,31 +109,34 @@
 .canvas {
 }
 
-.analysis {
+.analysis, .layer {
+    /*display: none;*/
+}
+
+.node, .aNode, .saNode, .lNode {
+    stroke: #136382;
+    stroke-width: 0.5px;
+    stroke-opacity: 1.0;
     display: none;
 }
 
-.node, .aNode, .saNode {
-    stroke-width: 1.5px;
-    stroke: #000000;
-}
-
 .link, .saLink {
-    stroke: gray;
-    stroke-width: 1.5px;
+    stroke: #136382;
+    stroke-width: 1.0px;
     stroke-opacity: 1.0;
     fill: none;
 }
 
-.aLink {
-    stroke: gray;
-    stroke-width: 1.5px;
+.aLink, .lLink {
+    stroke: #136382;
+    stroke-width: 1.0px;
     stroke-opacity: 1.0;
     fill: none;
+    display: none;
 }
 
 .hLink, .aHLink, .saHLink {
-    stroke-width: 10px;
+    stroke-width: 10.0px;
     opacity: 1.0;
     fill: none;
     stroke: #ed7407;
@@ -141,11 +145,13 @@
 .selectedNode {
     stroke-width: 1.5px;
     stroke: #ed7407;
+    stroke-opacity: 1.0;
 }
 
 .mouseoverNode {
-    stroke-width: 3px;
-    stroke: #136382;
+    stroke-width: 1.0px;
+    stroke-opacity: 1.0;
+    /*stroke: #136382;*/
 }
 
 .filteredNode, .filteredLink {
@@ -166,16 +172,6 @@
     fill: #ffffff;
 }
 
-.cell {
-    fill: none;
-}
-
-.vLine, .hLine {
-    stroke-width: 1px;
-    stroke: lightgray;
-    opacity: 1;
-}
-
 .nodeDoiLabel {
     fill: #ed7407;
     stroke: #ed7407;
@@ -183,9 +179,11 @@
     font-size: 15px;
     font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
     cursor: default;
+    text-anchor: middle;
+    alignment-baseline: middle;
 }
 
-.nodeAttrLabel, .subanalysisLabel, .analysisLabel, .aBBoxLabel, .saBBoxLabel {
+.subanalysisLabel, .analysisLabel {
     fill: #000000;
     fill-opacity: 1.0;
     stroke: #000000;
@@ -193,20 +191,100 @@
     font-size: 13px;
     font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
     cursor: default;
+    text-anchor: middle;
+    alignment-baseline: middle;
+}
+
+.nodeAttrLabel {
+    fill: #000000;
+    fill-opacity: 1.0;
+    stroke: #000000;
+    stroke-width: 0.0px;
+    font-size: 13px;
+    font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    cursor: default;
+    text-anchor: start;
+    alignment-baseline: middle;
+}
+
+.aBBoxLabel, .saBBoxLabel {
+    fill: #000000;
+    fill-opacity: 1.0;
+    stroke: #000000;
+    stroke-width: 0.0px;
+    font-size: 13px;
+    font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    cursor: default;
+    text-anchor: left;
+    alignment-baseline: middle;
+}
+
+.layerLabel {
+    fill: #136382;
+    fill-opacity: 1.0;
+    stroke: #136382;
+    stroke-width: 0.0px;
+    font-size: 7px;
+    font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    cursor: default;
+    text-anchor: middle;
+    alignment-baseline: middle;
+}
+
+.aGlyph, .lGlyph {
+    fill-opacity: 1.0;
+    fill: #136382;
+    stroke-width: 1.0;
+}
+
+.aLine {
+    fill: #ffffff;
+    fill-opacity: 1.0;
+    stroke: #ffffff;
+    stroke-width: 0.3px;
+}
+
+.lLine {
+    fill: #136382;
+    fill-opacity: 1.0;
+    stroke: #136382;
+    stroke-width: 0.3px;
+}
+
+.saLabel, .aLabel, .lLabel, .wfLabel {
+    fill: #ffffff;
+    fill-opacity: 1.0;
+    stroke: #ffffff;
+    stroke-width: 0.0px;
+    font-size: 5px;
+    font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    cursor: default;
+    text-anchor: middle;
+    alignment-baseline: middle;
+}
+
+.lsaAnchor, .rsaAnchor, .laAnchor, .raAnchor, .llAnchor, .rlAnchor, .lnAnchor, .rnAnchor {
+    stroke-opacity: 1.0;
+    fill-opacity: 1.0;
+    fill: #136382;
+    /*fill-opacity: 0.0;*/
+    stroke-width: 0.5;
+}
+
+.glAnchor, .grAnchor {
+
 }
 
 .mouseoverNode text {
-    fill: #136382;
-    stroke: #136382;
-    stroke-width: 0.5px;
-    display: inline;
 }
 
 .saBBox, .aBBox, .BBox {
-    fill: #000000;
-    fill-opacity: 0.2;
-    display: inline;
+    fill-opacity: 0.0;
+    stroke: #136382;
+    stroke-width: 0.5px;
+    stroke-opacity: 0.5;
     cursor: default;
+    stroke-dasharray: 3, 3;
 }
 
 .hiddenBBox {
@@ -214,17 +292,17 @@
 }
 
 .mouseoverBBox rect {
-    stroke-width: 2px;
-    stroke: #136382;
-    display: inline;
+    stroke-opacity: 0.0;
+    fill-opacity: 0.3;
+    fill: #136382;
 }
 
-.mouseoverBBox .nodeAttrLabel, .mouseoverBBox .subanalysisLabel, .mouseoverBBox .analysisLabel,
+.mouseoverBBox .nodeAttrLabel, .mouseoverBBox .subanalysisLabel, .mouseoverBBox .analysisLabel, .mouseoverBBox .layerLabel,
 .mouseoverBBox .aBBoxLabel, .mouseoverBBox .saBBoxLabel {
-    fill: #136382;
-    stroke: #136382;
     fill-opacity: 1.0;
     stroke-width: 0.5px;
+    text-anchor: left;
+    alignment-baseline: middle;
 }
 
 .hiddenLabel {

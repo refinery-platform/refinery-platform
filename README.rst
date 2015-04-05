@@ -37,17 +37,23 @@ Open http://192.168.50.50:8000/ in your web browser.
 Configure Deployment Environment on the Host
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Create a Python virtual environment (optional but recommended, assumes
-virtualenvwrapper is installed):
+virtualenvwrapper is installed, for example in Ubuntu: apt-get install virtualenvwrapper):
 
 .. code-block:: bash
 
     $ mkvirtualenv -a $(pwd) refinery-deployment
 
-Install Fabric:
+Install Fabric (assumes header files for Python are installed, for example in Ubuntu: apt-get install python-dev):
 
 .. code-block:: bash
 
     $ pip install -r deployment/requirements.txt
+
+Use fabricrc.sample to update or initialize ~/fabricrc, for example:
+
+.. code-block:: bash
+
+    $ cp fabricrc.sample ~/.fabricrc
 
 To pull the latest code and update Refinery installation:
 

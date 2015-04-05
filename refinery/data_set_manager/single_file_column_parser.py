@@ -11,7 +11,7 @@ import tempfile
 from annotation_server.models import species_to_taxon_id, Taxon
 from data_set_manager.models import Investigation, Study, Node, Attribute, Assay
 from data_set_manager.tasks import create_dataset
-from file_store.models import generate_file_source_translator
+from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import create, import_file
 
 
@@ -131,12 +131,13 @@ class SingleFileColumnParser:
                 species_name = row[self.species_column_index].strip()
                 taxon_id_options = species_to_taxon_id( species_name )
                 
-                if len( taxon_id_options ) > 1:
-                    logger.warn( "Using first out of multiple taxon ids found for %s: %s" % ( species_name, taxon_id_options ) )
+                if len(taxon_id_options) > 1:
+                    logger.warn("Using first out of multiple taxon ids found for %s: %s",
+                                species_name, taxon_id_options)
                 
-                return taxon_id_options[0][1];  
+                return taxon_id_options[0][1]
             except Taxon.DoesNotExist:
-                return None;
+                return None
         return None        
 
     def _get_genome_build( self, row ):
@@ -170,16 +171,17 @@ class SingleFileColumnParser:
                     self.metadata_file.name)
         #FIXME: this will not create a FileStoreItem if self.metadata_file does
         # not exist on disk (e.g., a file object like TemporaryFile)
-        investigation.pre_isarchive_file = create(self.metadata_file.name,
-                                                  permanent=True)
-        import_file(
-            investigation.pre_isarchive_file, refresh=True, permanent=True)
+        investigation.pre_isarchive_file = create(
+            self.metadata_file.name, permanent=True)
+        import_file(investigation.pre_isarchive_file, refresh=True)
         investigation.save()
 
         #TODO: test if there are fewer columns than required
         logger.debug("Parsing with file column %s and auxiliary file column %s",
                      self.file_column_index, self.auxiliary_file_column_index)
 
+        # UUIDs of data files to postpone importing until parsing is finished
+        data_files = []
         # iterate over non-header rows in file
         for row in self.metadata_reader:
             #TODO: resolve relative indices
@@ -192,6 +194,7 @@ class SingleFileColumnParser:
                 row[self.file_column_index])
             data_file_uuid = create(
                 source=data_file_path, permanent=self.file_permanent)
+            data_files.append(data_file_uuid)
 
             # add auxiliary file to file store
             if self.auxiliary_file_column_index:
@@ -199,28 +202,26 @@ class SingleFileColumnParser:
                     row[self.auxiliary_file_column_index])
                 auxiliary_file_uuid = create(
                     source=auxiliary_file_path, permanent=self.file_permanent)
+                data_files.append(auxiliary_file_uuid)
             else:
                 auxiliary_file_uuid = None
 
             # add files to file server
             #TODO: add error handling in case of None values for UUIDs
-            file_server.models.add(data_file_uuid, auxiliary_file_uuid);
+            file_server.models.add(data_file_uuid, auxiliary_file_uuid)
 
             # create nodes if file was successfully created
-            
             # source node
             source_name = self._create_name(
                 row, internal_source_column_index, self.file_column_index)
             source_node, is_source_new = Node.objects.get_or_create(
                 study=study, name=source_name, type=Node.SOURCE)
-
             # sample node
             sample_name = self._create_name(
                 row, internal_sample_column_index, self.file_column_index)
             sample_node, is_sample_new = Node.objects.get_or_create(
                 study=study, name=sample_name, type=Node.SAMPLE)
             source_node.add_child(sample_node)
-
             # assay node
             assay_name = self._create_name(
                 row, internal_assay_column_index, self.file_column_index)
@@ -244,14 +245,17 @@ class SingleFileColumnParser:
                     self.auxiliary_file_column_index == column_index or
                     self.annotation_column_index == column_index):
                     continue
-
                 # create attribute as characteristic and attach to sample node
                 # if the sample node was newly created
                 if is_sample_new:
                     attribute = Attribute.objects.create(
                         node=sample_node, type=Attribute.CHARACTERISTICS,
                         subtype=self.headers[column_index].strip().lower(),
-                        value=row[column_index].strip() )             
+                        value=row[column_index].strip())
+
+        # kick off data file importing tasks
+        for uuid in data_files:
+            import_file.delay(uuid)
 
         return investigation
 

@@ -65,7 +65,7 @@ var provvisInit = function () {
             }),
             analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : "dataset";
 
-        return new provvisDecl.Node(id, type, Object.create(null), false, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid, n.file_url);
+        return new provvisDecl.Node(id, type, Object.create(null), true, n.name, n.type, study, assay, parents, analysis, n.subanalysis, n.uuid, n.file_url);
     };
 
     /**
@@ -97,7 +97,7 @@ var provvisInit = function () {
      * @returns {provvisDecl.Link} New Link object.
      */
     var createLink = function (lId, source, target) {
-        return new provvisDecl.Link(lId, source, target, false);
+        return new provvisDecl.Link(lId, source, target, true);
     };
 
     /**
@@ -398,7 +398,7 @@ var provvisInit = function () {
                 if (san.parent.uuid === ll.target.analysis) {
                     san.links.set(ll.autoId, ll);
                 } else {
-                    /* Set links between two analyses. */
+                    /* Set links between analyses. */
                     aLinks.push(ll);
                 }
             });
@@ -426,6 +426,15 @@ var provvisInit = function () {
             /* Set workflow name. */
             var wfObj = workflowData.get(an.wfUuid);
             an.wfName = (typeof wfObj === "undefined") ? "dataset" : wfObj.name;
+
+            /*  TODO: Temporary workflow abbreviation. */
+            if (an.wfName.indexOf("5 steps") > -1) {
+                an.wfCode = "5STPS";
+            } else if (an.wfName.indexOf("analog") > -1) {
+                an.wfCode = "SPP";
+            } else {
+                an.wfCode = "N/A";
+            }
         });
 
         aNodes.forEach(function (an) {
@@ -438,6 +447,8 @@ var provvisInit = function () {
                     }
                 });
             });
+
+            /* TODO: Bug when deleting a successful analysis through django admin gui. */
 
             /* Set successor analyses. */
             an.children.values().forEach(function (san) {
@@ -482,9 +493,8 @@ var provvisInit = function () {
             solrResponse.getDocumentList().forEach(function (d) {
 
                 /* Set facet attributes to all nodes for the subanalysis of the selected node. */
-                var selNode = nodeMap.get(d.uuid);
-
-                var rawFacetAttributes = d3.entries(d);
+                var selNode = nodeMap.get(d.uuid),
+                    rawFacetAttributes = d3.entries(d);
 
                 rawFacetAttributes.forEach(function (fa) {
                     var attrNameEndIndex = fa.key.indexOf("_Characteristics_"),
@@ -492,13 +502,8 @@ var provvisInit = function () {
 
                     if (attrNameEndIndex === -1) {
                         attrName = fa.key.replace(/REFINERY_/g, "");
-                        attrName = attrName.replace(/_2_1_s/g, "");
+                        attrName = attrName.replace(/_([0-9])+_([0-9])+_s/g, "");
                         attrName = attrName.toLowerCase();
-
-                        /* Temporary FileType field fix. */
-                        if (attrName === "filetype") {
-                            attrName = "FileType";
-                        }
                     } else {
                         attrName = fa.key.substr(0, attrNameEndIndex);
                     }
@@ -527,13 +532,8 @@ var provvisInit = function () {
 
                 if (attrNameEndIndex === -1) {
                     attrName = fa.key.replace(/REFINERY_/g, "");
-                    attrName = attrName.replace(/_2_1_s/g, "");
+                    attrName = attrName.replace(/_([0-9])+_([0-9])+_s/g, "");
                     attrName = attrName.toLowerCase();
-
-                    /* Temporary FileType field fix. */
-                    if (attrName === "filetype") {
-                        attrName = "FileType";
-                    }
                 } else {
                     attrName = fa.key.substr(0, attrNameEndIndex);
                 }
@@ -615,7 +615,7 @@ var provvisInit = function () {
      * Publish module function.
      */
     return{
-        runInit: function (data, analysesData, solrResponse) {
+        run: function (data, analysesData, solrResponse) {
             return runInitPrivate(data, analysesData, solrResponse);
         }
     };

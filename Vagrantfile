@@ -12,7 +12,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box = "precise32"
   config.vm.hostname = "refinery"
-  config.vm.network :private_network, ip: "192.168.50.50"
+  config.vm.network "private_network", ip: "192.168.50.50"
 
   config.vm.provider "virtualbox" do |v|
     v.memory = 1024

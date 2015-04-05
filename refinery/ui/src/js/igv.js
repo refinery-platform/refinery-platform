@@ -1,6 +1,8 @@
 angular.module('refineryIgv', [])
 
-.controller('IgvController', function($scope, $rootScope, $http, $window, $log, $timeout, $resource, workflow, externalToolStatusService ) {
+.controller('IgvController', function(
+    $scope, $rootScope, $http, $window, $log, $timeout, $resource) {
+
   'use strict';
 
   $scope.igvConfig = {

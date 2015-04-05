@@ -53,22 +53,23 @@ class AnalysisResource(ModelResource):
     name = fields.CharField(attribute='name', use_in='all')
     workflow__uuid = fields.CharField(attribute='workflow__uuid', use_in='all')
     creation_date = fields.CharField(attribute='creation_date', use_in='all')
-    workflow_steps_num = fields.IntegerField(attribute='workflow_steps_num',
-                                             blank=True, null=True, use_in='detail')
-    workflow_copy = fields.CharField(attribute='workflow_copy',
-                                     blank=True, null=True, use_in='detail')
-    history_id = fields.CharField(attribute='history_id', blank=True, null=True,
-                                  use_in='detail')
-    workflow_galaxy_id = fields.CharField(attribute='workflow_galaxy_id',
-                                          blank=True, null=True, use_in='detail')
-    library_id = fields.CharField(attribute='library_id', blank=True, null=True,
-                                  use_in='detail')
-    time_start = fields.DateTimeField(attribute='time_start', blank=True, null=True,
-                                      use_in='detail')
-    time_end = fields.DateTimeField(attribute='time_end', blank=True, null=True,
-                                    use_in='detail')
-    status = fields.CharField(attribute='status', default=Analysis.INITIALIZED_STATUS,
-                              blank=True, null=True, use_in='detail')
+    workflow_steps_num = fields.IntegerField(
+        attribute='workflow_steps_num', blank=True, null=True, use_in='detail')
+    workflow_copy = fields.CharField(
+        attribute='workflow_copy', blank=True, null=True, use_in='detail')
+    history_id = fields.CharField(
+        attribute='history_id', blank=True, null=True, use_in='detail')
+    workflow_galaxy_id = fields.CharField(
+        attribute='workflow_galaxy_id', blank=True, null=True, use_in='detail')
+    library_id = fields.CharField(
+        attribute='library_id', blank=True, null=True, use_in='detail')
+    time_start = fields.DateTimeField(
+        attribute='time_start', blank=True, null=True, use_in='detail')
+    time_end = fields.DateTimeField(
+        attribute='time_end', blank=True, null=True, use_in='detail')
+    status = fields.CharField(
+        attribute='status', default=Analysis.INITIALIZED_STATUS, blank=True,
+        null=True, use_in='detail')
 
     class Meta:
         queryset = Analysis.objects.all()
@@ -77,10 +78,15 @@ class AnalysisResource(ModelResource):
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
         allowed_methods = ["get"]
-        fields = ['data_set', 'creation_date', 'history_id', 'library_id', 'name',
-                'resource_uri', 'status', 'time_end', 'time_start', 'uuid',
-                'workflow_copy', 'workflow_galaxy_id', 'workflow_steps_num']
-        filtering = {'data_set': ALL_WITH_RELATIONS, 'workflow_steps_num': ALL_WITH_RELATIONS }
+        fields = [
+            'data_set', 'creation_date', 'history_id', 'library_id', 'name',
+            'resource_uri', 'status', 'time_end', 'time_start', 'uuid',
+            'workflow_copy', 'workflow_galaxy_id', 'workflow_steps_num'
+        ]
+        filtering = {
+            'data_set': ALL_WITH_RELATIONS,
+            'workflow_steps_num': ALL_WITH_RELATIONS
+        }
         ordering = ['name', 'creation_date']
 
 
@@ -91,9 +97,10 @@ class ProjectResource(ModelResource):
 
 
 class NodeResource(ModelResource):
-    parents = fields.ToManyField( 'core.api.NodeResource', 'parents' )
-    study = fields.ToOneField( 'data_set_manager.api.StudyResource', 'study' )
-    assay = fields.ToOneField( 'data_set_manager.api.AssayResource', 'assay', null=True )
+    parents = fields.ToManyField('core.api.NodeResource', 'parents')
+    study = fields.ToOneField('data_set_manager.api.StudyResource', 'study')
+    assay = fields.ToOneField(
+        'data_set_manager.api.AssayResource', 'assay', null=True)
 
     class Meta:
         queryset = Node.objects.all()
@@ -101,10 +108,15 @@ class NodeResource(ModelResource):
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
         authorization = Authorization() #GuardianAuthorization()
-        allowed_methods = ["get" ]
-        fields = ['name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay', 'children', 'type', 'analysis_uuid', 'subanalysis' ]
-        filtering = { 'uuid': ALL, 'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS }
-        #filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
+        allowed_methods = ["get"]
+        fields = [
+            'name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay',
+            'children', 'type', 'analysis_uuid', 'subanalysis'
+        ]
+        filtering = {
+            'uuid': ALL, 'study': ALL_WITH_RELATIONS,
+            'assay': ALL_WITH_RELATIONS
+        }
 
     def prepend_urls(self):
         return [
@@ -116,45 +128,62 @@ class NodeResource(ModelResource):
 
     def dehydrate(self, bundle):
         # return download URL of file if a file is associated with the node
-        
-        if bundle.obj.file_uuid is not None and bundle.obj.file_uuid != "":
-            try:
-                bundle.data['file_url'] = FileStoreItem.objects.get( uuid=bundle.obj.file_uuid ).get_full_url()
-            except:
-                logger.warning( 'Unable to find file store item with UUID "' + bundle.obj.file_uuid + '".' )
-                bundle.data['file_url'] = None
-        else:
+        try:
+            file_item = FileStoreItem.objects.get(uuid=bundle.obj.file_uuid)
+        except AttributeError:
+            logger.warning("No UUID provided")
             bundle.data['file_url'] = None
-           
+            bundle.data['file_import_status'] = None
+        except FileStoreItem.DoesNotExist:
+            logger.warning(
+                "Unable to find file store item with UUID '%s'",
+                bundle.obj.file_uuid)
+            bundle.data['file_url'] = None
+            bundle.data['file_import_status'] = None
+        else:
+            bundle.data['file_url'] = file_item.get_full_url()
+            bundle.data['file_import_status'] = file_item.get_import_status()
         return bundle
-    
+
 
 class NodeSetResource(ModelResource):
     # https://github.com/toastdriven/django-tastypie/pull/538
     # https://github.com/toastdriven/django-tastypie/issues/526
-    # Once the above has been integrated into a tastypie release branch remove NodeSetListResource and
-    # use "use_in" instead 
+    # Once the above has been integrated into a tastypie release branch remove
+    # NodeSetListResource and use "use_in" instead
     #nodes = fields.ToManyField(NodeResource, 'nodes', use_in="detail" )
-    
+
     solr_query = fields.CharField(attribute='solr_query', null=True)
-    solr_query_components = fields.CharField(attribute='solr_query_components', null=True)
+    solr_query_components = fields.CharField(
+        attribute='solr_query_components', null=True)
     node_count = fields.IntegerField(attribute='node_count', null=True)
     is_implicit = fields.BooleanField(attribute='is_implicit')
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
 
     class Meta:
-        # create node count attribute on the fly - node_count field has to be defined on resource
+        # create node count attribute on the fly - node_count field has to be
+        # defined on resource
         queryset = NodeSet.objects.all().order_by( '-is_current', 'name') 
         resource_name = 'nodeset'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
-        fields = [ 'is_current', 'name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
-        ordering = [ 'is_current', 'name', 'summary', 'assay', 'study', 'uuid', 'is_implicit', 'node_count', 'solr_query','solr_query_components']
+        fields = [
+            'is_current', 'name', 'summary', 'assay', 'study', 'uuid',
+            'is_implicit', 'node_count', 'solr_query','solr_query_components'
+        ]
+        ordering = [
+            'is_current', 'name', 'summary', 'assay', 'study', 'uuid',
+            'is_implicit', 'node_count', 'solr_query','solr_query_components'
+        ]
         allowed_methods = ["get", "post", "put" ]
-        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS, "uuid": ALL }
-        always_return_data = True # otherwise JQuery treats a 201 as an error for data type "JSON"
+        filtering = {
+            "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS,
+            "uuid": ALL
+        }
+        # jQuery treats a 201 as an error for data type "JSON"
+        always_return_data = True
 
     def prepend_urls(self):
         return [
@@ -165,19 +194,23 @@ class NodeSetResource(ModelResource):
         ]
 
     def obj_create(self, bundle, **kwargs):
-        '''Create a new NodeSet instance and assign current user as owner if
-        current user has read permission on the data set referenced by the new NodeSet
+        """Create a new NodeSet instance and assign current user as owner if
+        current user has read permission on the data set referenced by the new
+        NodeSet
 
-        '''
+        """
         # get the Study specified by the UUID in the new NodeSet
         study_uri = bundle.data['study']
-        match = re.search('[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}', study_uri)
+        match = re.search(
+            '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}',
+            study_uri)
         study_uuid = match.group()
         try:
             study = Study.objects.get(uuid=study_uuid)
         except Study.DoesNotExist:
             logger.error("Study '{}' does not exist".format(study_uuid))
-            self.unauthorized_result(Unauthorized("You are not allowed to create a new NodeSet."))
+            self.unauthorized_result(
+                Unauthorized("You are not allowed to create a new NodeSet."))
         # look up the dataset via InvestigationLink relationship
         # an investigation is only associated with a single data set even though
         # InvestigationLink is a many to many relationship
@@ -185,10 +218,12 @@ class NodeSetResource(ModelResource):
             dataset = study.investigation.investigationlink_set.all()[0].data_set
         except IndexError:
             logger.error("Data set not found for study '{}'".format(study.uuid))
-            self.unauthorized_result(Unauthorized("You are not allowed to create a new NodeSet."))
+            self.unauthorized_result(
+                Unauthorized("You are not allowed to create a new NodeSet."))
         permission = "read_%s" % dataset._meta.module_name
         if not bundle.request.user.has_perm(permission, dataset):
-            self.unauthorized_result(Unauthorized("You are not allowed to create a new NodeSet."))
+            self.unauthorized_result(
+                Unauthorized("You are not allowed to create a new NodeSet."))
         # if user has the read permission on the data set
         # continue with creating the new NodeSet instance
         bundle = super(NodeSetResource, self).obj_create(bundle, **kwargs)
@@ -203,21 +238,25 @@ class NodeSetListResource(ModelResource):
     is_implicit = fields.BooleanField(attribute='is_implicit')
 
     class Meta:
-        # create node count attribute on the fly - node_count field has to be defined on resource
+        # create node count attribute on the fly - node_count field has to be
+        # defined on resource
         queryset = NodeSet.objects.all().order_by( '-is_current', 'name') 
-        detail_resource_name = 'nodeset' # NG: introduced to get correct resource ids
+        # NG: introduced to get correct resource IDs
+        detail_resource_name = 'nodeset'
         resource_name = 'nodesetlist'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
-        fields = [ 'is_current', 'name', 'summary', 'assay', 'study', 'uuid' ]
-        allowed_methods = ["get" ]
-        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS }
-        ordering = [ 'is_current', 'name', 'node_count' ];
-    
+        fields = ['is_current', 'name', 'summary', 'assay', 'study', 'uuid']
+        allowed_methods = ["get"]
+        filtering = {"study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS}
+        ordering = ['is_current', 'name', 'node_count'];
+
     def dehydrate(self, bundle):
-        # replace resource URI to point to the nodeset resource instead of the nodesetlist resource        
-        bundle.data['resource_uri'] = bundle.data['resource_uri'].replace( self._meta.resource_name, self._meta.detail_resource_name ) 
+        # replace resource URI to point to the nodeset resource instead of the
+        # nodesetlist resource
+        bundle.data['resource_uri'] = bundle.data['resource_uri'].replace(
+            self._meta.resource_name, self._meta.detail_resource_name)
         return bundle
 
 
@@ -227,42 +266,46 @@ class NodePairResource(ModelResource):
     group = fields.CharField(attribute='group', null=True)
     
     class Meta:
-        detail_allowed_methods = [ 'get', 'post', 'delete', 'put', 'patch' ]
+        detail_allowed_methods = ['get', 'post', 'delete', 'put', 'patch']
         queryset = NodePair.objects.all()
         detail_resource_name = 'nodepair' 
         resource_name = 'nodepair'
         detail_uri_name = 'uuid'  
         authentication = SessionAuthentication()
         authorization = Authorization()        
-        # for use with AngularJS $resources: returns newly created object upon POST (in addition to the location response header)
+        # for use with AngularJS $resources: returns newly created object upon
+        # POST (in addition to the location response header)
         always_return_data = True
 
- 
+
 class NodeRelationshipResource(ModelResource):
     name = fields.CharField(attribute='name', null=True)
     type = fields.CharField(attribute='type', null=True)
-    node_pairs = fields.ToManyField(NodePairResource, 'node_pairs')  #, full=True), if you need each attribute for each nodepair
+    #, full=True), if you need each attribute for each nodepair
+    node_pairs = fields.ToManyField(NodePairResource, 'node_pairs')
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
-    
+
     class Meta:
-        detail_allowed_methods = [ 'get', 'post', 'delete', 'put', 'patch' ]
-        queryset = NodeRelationship.objects.all().order_by( '-is_current', 'name') 
+        detail_allowed_methods = ['get', 'post', 'delete', 'put', 'patch']
+        queryset = NodeRelationship.objects.all().order_by('-is_current', 'name')
         detail_resource_name = 'noderelationship' 
         resource_name = 'noderelationship'
         detail_uri_name = 'uuid'  
         authentication = SessionAuthentication()
         authorization = Authorization()
-        # for use with AngularJS $resources: returns newly created object upon POST (in addition to the location response header)
+        # for use with AngularJS $resources: returns newly created object upon
+        # POST (in addition to the location response header)
         always_return_data = True
-        
         #fields = ['type', 'study', 'assay', 'node_pairs']
-        ordering = [ 'is_current', 'name', 'type', 'node_pairs']
-        filtering = { 'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS }
+        ordering = ['is_current', 'name', 'type', 'node_pairs']
+        filtering = {'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS}
 
 
 class WorkflowResource(ModelResource):
-    input_relationships = fields.ToManyField("core.api.WorkflowInputRelationshipsResource", 'input_relationships', full=True)
+    input_relationships = fields.ToManyField(
+        "core.api.WorkflowInputRelationshipsResource", 'input_relationships',
+        full=True)
 
     class Meta:
         queryset = Workflow.objects.filter(is_active=True).order_by('name')
@@ -279,23 +322,24 @@ class WorkflowResource(ModelResource):
             try:
                 bundle.data['graph'] = json.loads(bundle.obj.graph)
             except ValueError:
-                logger.error("Failed to decode workflow graph into dictionary for workflow " + str(bundle.obj) + ".")
+                logger.error(
+                    "Failed to decode workflow graph into dictionary for " +
+                    "workflow '%s'", str(bundle.obj))
                 # don't include in response if error occurs
         bundle.data['author'] = bundle.obj.get_owner()
-        bundle.data['galaxy_instance_identifier'] = bundle.obj.workflow_engine.instance.api_key
+        bundle.data['galaxy_instance_identifier'] = \
+            bundle.obj.workflow_engine.instance.api_key
         return bundle
 
-        
+
 class WorkflowInputRelationshipsResource(ModelResource):
-    #workflow = fields.ToOneField(WorkflowResource, 'workflow')
-    
     class Meta:
         queryset = WorkflowInputRelationships.objects.all()
         detail_resource_name = 'workflowrelationships' 
         resource_name = 'workflowrelationships'
         #detail_uri_name = 'uuid'   
         fields = ['category', 'set1', 'set2', 'workflow']
-        
+
 
 class ExternalToolStatusResource(ModelResource):
     class Meta:
@@ -303,12 +347,12 @@ class ExternalToolStatusResource(ModelResource):
         resource_name = 'externaltoolstatus'
         authentication = Authentication()
         authorization = Authorization()
-        allowed_methods = ["get" ]
+        allowed_methods = ["get"]
         fields = ['name', 'is_active', 'unique_instance_identifier']
-        
-    def dehydrate(self, bundle):        
-        bundle.data['status'] = check_tool_status(bundle.data['name'])[1] # call to method
 
+    def dehydrate(self, bundle):
+        # call to method
+        bundle.data['status'] = check_tool_status(bundle.data['name'])[1]
         return bundle
 
 
@@ -323,7 +367,9 @@ class StatisticsResource(Resource):
     def stat_summary(self, model):
         total = len(model.objects.all())
         public = len(filter(lambda x: x.is_public(), model.objects.all()))
-        private_shared = len(filter(lambda x: (not x.is_public() and len(x.get_groups()) > 1), model.objects.all()))
+        private_shared = len(filter(
+            lambda x: (not x.is_public() and len(x.get_groups()) > 1),
+            model.objects.all()))
         private = total - public - private_shared
         return {'total': total, 'public': public, 'private': private, 'private_shared': private_shared}
 
@@ -364,7 +410,10 @@ class StatisticsResource(Resource):
             if 'project' in request_string:
                 project_summary = self.stat_summary(Project)
 
-        results = [StatisticsObject(user_count, group_count, files_count, dataset_summary, workflow_summary, project_summary)]
+        results = [
+            StatisticsObject(user_count, group_count, files_count,
+                             dataset_summary, workflow_summary, project_summary)
+        ]
         return results
 
 
@@ -378,10 +427,12 @@ class UserMultiPermissionResource(Resource):
         user_list = filter(lambda u: u.username == username, User.objects.all())
         return None if len(user_list) == 0 else user_list[0]
        
-    # get all the resources that belongs to the user for a specific type of sharable resource
+    # get all the resources that belongs to the user for a specific type of
+    # sharable resource
     def get_res(self, username, res_type):
         user = self.get_user(username)
-        return filter(lambda res: res.get_owner() == user, res_type.objects.all())
+        return filter(lambda res: res.get_owner() == user,
+                      res_type.objects.all())
 
     # the keys are the names of the sharable resources
     def get_key_map(self, username):
@@ -432,7 +483,8 @@ class UserMultiPermissionResource(Resource):
         username = request.GET['username']
         
         if self.get_user(username) is None:
-            raise ImmediateHttpResponse(response=HttpNotFound("Username does not exist"))
+            raise ImmediateHttpResponse(
+                response=HttpNotFound("Username does not exist"))
         else: 
             key_map = self.get_key_map(username)
             permission_map = self.get_permission_map(username)
@@ -618,5 +670,4 @@ class ProjectPermissionResource(Resource):
         else:
             shares = self.get_shares(res)
             return [ProjectPermissionObject(user.username, user.id, res.name, res.uuid, shares)]
-
 

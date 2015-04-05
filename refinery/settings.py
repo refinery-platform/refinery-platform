@@ -312,6 +312,8 @@ CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 # for registration module
 ACCOUNT_ACTIVATION_DAYS = 7
 REGISTRATION_OPEN = True
+# Message to display on registration page when REGISTRATION_OPEN is set to False
+REFINERY_REGISTRATION_CLOSED_MESSAGE = ''
 
 # set the name of the group that is used to share data with all users (= "the public")
 REFINERY_PUBLIC_GROUP_NAME = "Public" 
@@ -390,12 +392,6 @@ UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 # Tag for repository mode
 REFINERY_REPOSITORY_MODE = False
 
-# Message to display on registration page when REGISTRATION_OPEN is set to False
-REFINERY_REGISTRATION_CLOSED_MESSAGE = ''
-
-#Tag for number of days user has to activate their account before it expires
-ACCOUNT_ACTIVATION_DAYS = 7
-
 # Message to be displayed near the top of every page (HTML allowed)
 REFINERY_BANNER = ''
 
@@ -413,13 +409,13 @@ REFINERY_EXTERNAL_AUTH_MESSAGE = ''
 
 #external tool status settings 
 INTERVAL_BETWEEN_CHECKS = {
-                            "CELERY": 4.0,
-                            "SOLR": 5.0,
-                            "GALAXY": 5.0,
+                            "CELERY": 10.0,
+                            "SOLR": 10.0,
+                            "GALAXY": 10.0,
                             }
     
 TIMEOUT = {
-           "CELERY": 1.5,
+           "CELERY": 2.0,
            "SOLR": 2.5,
            "GALAXY": 2.0,
            }
