@@ -150,10 +150,10 @@ class OwnableResource ( BaseResource ):
         return self.name
     
     def set_owner( self, user ):
-        assign( "add_%s" % self._meta.verbose_name, user, self )
-        assign( "read_%s" % self._meta.verbose_name, user, self )
-        assign( "delete_%s" % self._meta.verbose_name, user, self )
-        assign( "change_%s" % self._meta.verbose_name, user, self )
+        assign_perm( "add_%s" % self._meta.verbose_name, user, self )
+        assign_perm( "read_%s" % self._meta.verbose_name, user, self )
+        assign_perm( "delete_%s" % self._meta.verbose_name, user, self )
+        assign_perm( "change_%s" % self._meta.verbose_name, user, self )
 
     def get_owner(self):
         # ownership is determined by "add" permission
@@ -193,7 +193,7 @@ class SharableResource (OwnableResource):
     
     def set_owner( self, user ):
         super( SharableResource, self ).set_owner( user )
-        assign( "share_%s" % self._meta.verbose_name, user, self )
+        assign_perm( "share_%s" % self._meta.verbose_name, user, self )
         
     def share( self, group, readonly=True ):
         meta_name = self._meta.verbose_name
@@ -280,10 +280,10 @@ class ManageableResource:
         return self.name + " (" + self.uuid + ")"
 
     def set_manager_group( self, group ):
-        assign( "add_%s" % self._meta.verbose_name, group, self )
-        assign( "read_%s" % self._meta.verbose_name, group, self )
-        assign( "delete_%s" % self._meta.verbose_name, group, self )
-        assign( "change_%s" % self._meta.verbose_name, group, self )
+        assign_perm( "add_%s" % self._meta.verbose_name, group, self )
+        assign_perm( "read_%s" % self._meta.verbose_name, group, self )
+        assign_perm( "delete_%s" % self._meta.verbose_name, group, self )
+        assign_perm( "change_%s" % self._meta.verbose_name, group, self )
 
     def get_manager_group( self ):
         # ownership is determined by "add" permission
@@ -1065,21 +1065,6 @@ class StatisticsObject(object):
         self.workflow = workflow
         self.project = project
 
-class UserMultiPermissionObject(object):
-    def __init__(self, username=None, keys=None, permission_map=None):
-        self.username = username
-        self.keys = keys
-        self.permission_map = permission_map
-
-class UserSinglePermissionObject(object):
-    def __init__(self, username=None, user_id=None, res_type=None, res_name=None, res_uuid=None, shares=None):
-        self.username = username
-        self.user_id = user_id
-        self.res_type = res_type
-        self.res_name = res_name
-        self.res_uuid = res_uuid
-        self.shares = shares
-
 class ResourcePermissionObject(object):
     def __init__(self, owner=None, owner_id=None, res_type=None, res_name=None, uuid=None, shares=None):
         self.owner = owner
@@ -1092,3 +1077,11 @@ class ResourcePermissionObject(object):
 class ProjectPermissionObject(ResourcePermissionObject):
     def __init__(self, owner=None, owner_id=None, res_name=None, uuid=None, shares=None):
         super(ProjectPermissionObject, self).__init__(owner, owner_id, Project, res_name, uuid, shares)
+        
+class DataSetPermissionObject(ResourcePermissionObject):
+    def __init__(self, owner=None, owner_id=None, res_name=None, uuid=None, shares=None):
+        super(DataSetPermissionObject, self).__init__(owner, owner_id, DataSet, res_name, uuid, shares)
+        
+class WorkflowPermissionObject(ResourcePermissionObject):
+    def __init__(self, owner=None, owner_id=None, res_name=None, uuid=None, shares=None):
+        super(WorkflowPermissionObject, self).__init__(owner, owner_id, Workflow, res_name, uuid, shares)
