@@ -25,7 +25,8 @@ var provvisRender = function () {
         lLink = Object.create(null),
 
         saBBox = Object.create(null),
-        aBBox = Object.create(null);
+        aBBox = Object.create(null),
+        lBBox = Object.create(null);
 
     var analysisWorkflowMap = d3.map(),
 
@@ -34,6 +35,7 @@ var provvisRender = function () {
 
     var timeColorScale = Object.create(null);
     var filterAction = Object.create(null);
+    var timeLineGradientScale = Object.create(null);
 
     var lastSolrResponse = Object.create(null);
 
@@ -41,7 +43,7 @@ var provvisRender = function () {
 
     var draggingActive = false;
 
-    var nodeLinkTransitionTime = 150;
+    var nodeLinkTransitionTime = 500;
 
     var aNodesBAK = [],
         saNodesBAK = [],
@@ -50,7 +52,6 @@ var provvisRender = function () {
         lLinksBAK = d3.map(),
         lNodesBAK = d3.map();
 
-    var maxVisibleLayers = 5.0;
     var scaleFactor = 0.75;
 
     /* Simple tooltips by NG. */
@@ -77,8 +78,12 @@ var provvisRender = function () {
         /* On layer doi. */
         lNode.each(function (ln) {
             if (ln.doi.doiWeightedSum >= (1 / 6) && !ln.hidden) {
+
+                /* TODO: on manual expand, check whether any child nodes are already expanded as aggregated nodes. */
+
                 /* Expand. */
                 handleCollapseExpandNode(ln, "e");
+                //console.log("expand ln " + ln.autoId);
             }
         });
 
@@ -87,9 +92,28 @@ var provvisRender = function () {
             if (an.doi.doiWeightedSum >= (2 / 6) && !an.hidden) {
                 /* Expand. */
                 handleCollapseExpandNode(an, "e");
+                //console.log("expand an " + an.autoId);
             } else if (an.doi.doiWeightedSum <= (2 / 6) && !an.hidden && an.parent.children.size() > 1) {
                 /* Collapse. */
+
                 handleCollapseExpandNode(an, "c");
+                //console.log("colapse an " + an.autoId);
+
+                /* TODO: 01: Only collapse those analysis nodes into the layered node which are below the threshold. */
+                an.parent.children.values().forEach(function (d) {
+                    if (d.doi.doiWeightedSum > (2 / 6)) {
+                        d.exaggerated = true;
+
+                        d.hidden = false;
+                        d3.select("#nodeId-" + d.autoId).classed("hiddenNode", false);
+                        //d3.select("#BBoxId-"+ d.autoId).classed("hiddenBBox", false);
+                        updateLink(d);
+                    } else {
+                        d.exaggerated = false;
+                        d.hidden = true;
+                        d3.select("#nodeId-" + an.autoId).classed("hiddenNode", true);
+                    }
+                });
             }
         });
 
@@ -103,7 +127,7 @@ var provvisRender = function () {
                 handleCollapseExpandNode(san, "c");
             } else if (!san.parent.hidden) {
                 /* Stay in subanalysis view. */
-                handleCollapseExpandNode(san.children.values()[0], "c");
+                //handleCollapseExpandNode(san.children.values()[0], "c");
             }
         });
     };
@@ -312,6 +336,8 @@ var provvisRender = function () {
         /* While dragging, hide tooltips. */
         hideTooltip();
 
+        var deltaY = d3.event.y - n.y;
+
         /* Set coords. */
         n.x = d3.event.x;
         n.y = d3.event.y;
@@ -322,11 +348,14 @@ var provvisRender = function () {
         /* Drag adjacent links. */
         updateLink(n);
 
-        /*if (n instanceof provvisDecl.Layer) {
-         n.children.values().forEach(function (an) {
-         updateLink(an);
-         });
-         }*/
+        if (n instanceof provvisDecl.Layer) {
+            n.children.values().forEach(function (an) {
+                an.x = n.x;
+                an.y += deltaY;
+                updateNode(d3.select("#gNodeId-" + an.autoId), an, an.x, an.y);
+                updateLink(an);
+            });
+        }
 
         draggingActive = true;
     };
@@ -344,11 +373,13 @@ var provvisRender = function () {
 
         /* Align adjacent links. */
         updateLink(n);
-        /*if (n instanceof provvisDecl.Layer) {
-         n.children.values().forEach(function (an) {
-         updateLink(an);
-         });
-         }*/
+
+        if (n instanceof provvisDecl.Layer) {
+            n.children.values().forEach(function (an) {
+                updateNode(d3.select("#gNodeId-" + an.autoId), an, an.x, an.y);
+                updateLink(an);
+            });
+        }
     };
 
     /**
@@ -386,21 +417,93 @@ var provvisRender = function () {
         domDragSet.call(drag);
     };
 
+    /**
+     * Drag start listener support for time lines.
+     */
+    var dragLineStart = function () {
+        d3.event.sourceEvent.stopPropagation();
+    };
+
+    /**
+     * Drag listener.
+     * @param l Time line.
+     */
+    var draggingLine = function (l) {
+        if (d3.event.x < 0) {
+            l.x = 0;
+        } else if (d3.event.x > 100) {
+            l.x = 100;
+        } else {
+            l.x = d3.event.x;
+        }
+
+        d3.select(this).attr("transform", function (d) {
+            return "translate(" + d.x + ",0)";
+        });
+        d3.select(this).attr("transform", function (d) {
+            return "translate(" + d.x + ",0)";
+        });
+    };
+
+    /**
+     * Drag end listener.
+     */
+    var dragLineEnd = function (l) {
+        var lowerTimeThreshold = Object.create(null),
+            upperTimeThreshold = Object.create(null);
+
+        if (l.className === "startTimeLine") {
+            lowerTimeThreshold = new Date(timeLineGradientScale(l.x));
+            upperTimeThreshold = new Date(timeLineGradientScale(
+                d3.transform(d3.select(".endTimeLine").attr("transform")).translate[0]));
+        } else {
+            lowerTimeThreshold = new Date(timeLineGradientScale(
+                d3.transform(d3.select(".startTimeLine").attr("transform")).translate[0]));
+            upperTimeThreshold = new Date(timeLineGradientScale(l.x));
+        }
+
+        d3.select("#curTime").html("<b>" + lowerTimeThreshold + "<b>" + "<br>" +
+            "<b>" + upperTimeThreshold + "<b>" + "<br>");
+
+        filterAnalysesByTime(lowerTimeThreshold, upperTimeThreshold, vis);
+    };
+
+    /**
+     * Sets the drag events for time lines.
+     * @param nodeType The dom lineset to allow dragging.
+     */
+    var applyTimeLineDragBehavior = function (domDragSet) {
+        /* Drag and drop line enabled. */
+        var drag = d3.behavior.drag()
+            .origin(function (d) {
+                return d;
+            })
+            .on("dragstart", dragLineStart)
+            .on("drag", draggingLine)
+            .on("dragend", dragLineEnd);
+
+        /* Invoke dragging behavior on nodes. */
+        domDragSet.call(drag);
+    };
+
     /* TODO: Update to incorporate facet filtering and adjust link visibility on loose graphs. */
     /**
      * Filter analyses by time gradient support view.
-     * @param timeThreshold The point of time where analyses executed before are hidden.
+     * @param lowerTimeThreshold The point of time where analyses executed before are hidden.
+     * @param upperTimeThreshold The point of time where analyses executed after are hidden.
      * @param vis The provenance visualization root object.
      */
-    var filterAnalysesByTime = function (timeThreshold, vis) {
+    var filterAnalysesByTime = function (lowerTimeThreshold, upperTimeThreshold, vis) {
         vis.graph.lNodes = lNodesBAK;
         vis.graph.aNodes = aNodesBAK;
         vis.graph.saNodes = saNodesBAK;
         vis.graph.nodes = nodesBAK;
         vis.graph.aLinks = aLinksBAK;
+        vis.graph.lLinks = lLinksBAK;
 
         var selAnalyses = vis.graph.aNodes.filter(function (an) {
-            return parseISOTimeFormat(an.start) >= timeThreshold;
+            upperTimeThreshold.setSeconds(upperTimeThreshold.getSeconds() + 1);
+            return parseISOTimeFormat(an.start) >= lowerTimeThreshold && parseISOTimeFormat(an.start) <= upperTimeThreshold;
         });
 
         /* Set (un)filtered analyses. */
@@ -424,6 +527,30 @@ var provvisRender = function () {
             }
         });
 
+        /* Update analysis filter attributes. */
+        vis.graph.aNodes.forEach(function (an) {
+            if (an.children.values().some(function (san) {
+                return san.filtered;
+            })) {
+                an.filtered = true;
+            } else {
+                an.filtered = false;
+            }
+            an.doi.filteredChanged();
+        });
+
+        /* Update layer filter attributes. */
+        vis.graph.lNodes.values().forEach(function (ln) {
+            if (ln.children.values().some(function (an) {
+                return an.filtered;
+            })) {
+                ln.filtered = true;
+            } else {
+                ln.filtered = false;
+            }
+            ln.doi.filteredChanged();
+        });
+
         /* Update analysis link filter attributes. */
         vis.graph.aLinks.forEach(function (al) {
             al.filtered = false;
@@ -433,14 +560,26 @@ var provvisRender = function () {
         }).forEach(function (al) {
             al.filtered = true;
         });
+        vis.graph.lLinks.values().forEach(function (ll) {
+            ll.filtered = false;
+        });
+        vis.graph.lLinks.values().filter(function (ll) {
+            return ll.source.filtered && ll.target.filtered;
+        }).forEach(function (ll) {
+            ll.filtered = true;
+        });
 
         /* On filter action 'hide', splice and recompute graph. */
         if (filterAction === "hide") {
 
             /* Update filtered nodesets. */
-            vis.graph.lNodes = vis.graph.aNodes.filter(function (ln) {
-                return ln.filtered;
+            var cpyLNodes = d3.map();
+            vis.graph.lNodes.entries().forEach(function (ln) {
+                if (ln.value.filtered) {
+                    cpyLNodes.set(ln.key, ln.value);
+                }
             });
+            vis.graph.lNodes = cpyLNodes;
             vis.graph.aNodes = vis.graph.aNodes.filter(function (an) {
                 return an.filtered;
             });
@@ -455,19 +594,32 @@ var provvisRender = function () {
             vis.graph.aLinks = vis.graph.aLinks.filter(function (al) {
                 return al.filtered;
             });
-        }
 
-        updateNodeDoi();
+            /* Update layer links. */
+            var cpyLLinks = d3.map();
+            vis.graph.lLinks.entries().forEach(function (ll) {
+                if (ll.value.filtered) {
+                    cpyLLinks.set(ll.key, ll.value);
+                }
+            });
+            vis.graph.lLinks = cpyLLinks;
+        }
 
         dagreDynamicLayerLayout(vis.graph);
         fitGraphToWindow(nodeLinkTransitionTime);
 
         updateNodeFilter();
         updateAnalysisLinks(vis.graph);
+        updateLayerLinks(vis.graph.lLinks);
 
         vis.graph.aNodes.forEach(function (an) {
             updateLink(an);
         });
+        vis.graph.lNodes.values().forEach(function (ln) {
+            updateLink(ln);
+        });
+
+        updateNodeDoi();
     };
 
     /**
@@ -475,7 +627,9 @@ var provvisRender = function () {
      * @param vis The provenance visualization root object.
      */
     var drawSupportView = function (vis) {
-        var svg = d3.select("#provenance-support-view").select("svg");
+        var svg = d3.select("#provenance-support-view").select("svg").append("g").attr("transform", function () {
+            return "translate(5,0)";
+        });
         var gradient = svg.append("defs")
             .append("linearGradient")
             .attr("id", "gradientGrayscale");
@@ -495,48 +649,68 @@ var provvisRender = function () {
             .attr("x", 0)
             .attr("y", 0)
             .attr("width", 100)
-            .attr("height", 100)
+            .attr("height", 85)
             .style({"fill": "url(#gradientGrayscale)", "stroke": "white", "stroke-width": "1px"});
 
-        svg.append("line")
+        var startTime = {
+            className: "startTimeLine",
+            x: 0
+        };
+        var endTime = {
+            className: "endTimeLine",
+            x: 100
+        };
+
+        var timeLineThreshold = svg.selectAll(".line")
+            .data([startTime, endTime])
+            .enter().append("g").attr("transform", function (d) {
+                return "translate(" + d.x + ",0)";
+            }).attr("class", function (d) {
+                return d.className;
+            });
+
+        timeLineThreshold.append("line")
             .attr("x1", 0)
             .attr("y1", 0)
             .attr("x2", 0)
-            .attr("y2", 100)
-            .style({"stroke": "#136382", "stroke-width": "2px"});
+            .attr("y2", 100);
 
-        var gradientScale = d3.scale.linear()
+        timeLineThreshold.append("polygon").classed("timeMarker", true)
+            .attr("points", "0,85 5,97 -5,97");
+
+        timeLineGradientScale = d3.scale.linear()
             .domain([0, 100])
             .range([Date.parse(timeColorScale.domain()[0]), Date.parse(timeColorScale.domain()[1])]);
 
         aNode.each(function (an) {
             svg.append("line")
-                .attr("x1", gradientScale.invert(parseISOTimeFormat(an.start)))
-                .attr("y1", 70)
-                .attr("x2", gradientScale.invert(parseISOTimeFormat(an.start)))
-                .attr("y2", 100)
+                .attr("x1", timeLineGradientScale.invert(parseISOTimeFormat(an.start)))
+                .attr("y1", 60)
+                .attr("x2", timeLineGradientScale.invert(parseISOTimeFormat(an.start)))
+                .attr("y2", 85)
                 .style({"stroke": "#ed7407", "stroke-width": "1.5px"});
         });
 
-        d3.select("#supportView").on("click", function () {
-            d3.select(this.parentNode).select("line")
-                .attr("x1", d3.mouse(this)[0])
-                .attr("x2", d3.mouse(this)[0]);
-
-            var selTimeThreshold = new Date(gradientScale(d3.mouse(this)[0]));
-
-            d3.select("#curTime").html("<b>" + selTimeThreshold + "<b>" + "<br>");
-
-            filterAnalysesByTime(selTimeThreshold, vis);
+        d3.selectAll(".startTimeLine, .endTimeLine").on("mouseover", function () {
+            d3.select(this).classed("mouseoverTimeLine", true);
         });
 
         $("#prov-support-view-reset-time").click(function () {
-            filterAnalysesByTime(Date.parse(timeColorScale.domain()[0]), vis);
-            d3.select(this.parentNode).select("line")
-                .attr("x1", 0)
-                .attr("x2", 0);
+            filterAnalysesByTime(new Date(timeLineGradientScale(0)), new Date(timeLineGradientScale(100)), vis);
+            d3.select(this.parentNode).select(".startTimeLine")
+                .attr("transform", function (d) {
+                    d.x = 0;
+                    return "translate(0,0)";
+                });
+            d3.select(this.parentNode).select(".endTimeLine")
+                .attr("transform", function (d) {
+                    d.x = 100;
+                    return "translate(100,0)";
+                });
             d3.select("#curTime").html("<b>" + "All" + "<b>" + "<br>");
         });
+
+        applyTimeLineDragBehavior(d3.selectAll(".startTimeLine, .endTimeLine"));
     };
 
     /**
@@ -802,6 +976,27 @@ var provvisRender = function () {
             })
             .attr("stop-opacity", 1);
 
+        /* Draw bounding box. */
+        lBBox = lEnter.append("g")
+            .attr("id", function (ln) {
+                return "BBoxId-" + ln.autoId;
+            }).classed({"lBBox": true, "BBox": true, "hiddenBBox": true})
+            .attr("transform", function () {
+                return "translate(" + (-cell.width / 2 + 1) + "," + (-cell.height / 2 + 1) + ")";
+            });
+
+        lBBox.append("rect")
+            .attr("width", function () {
+                return cell.width - 2;
+            })
+            .attr("height", function () {
+                return cell.height - 2;
+            })
+            .attr("rx", cell.width / 5)
+            .attr("ry", cell.height / 5);
+
+
+
         var layerNode = lEnter.append("g")
             .attr("id", function (l) {
                 return "nodeId-" + l.autoId;
@@ -846,6 +1041,18 @@ var provvisRender = function () {
             .attr("height", 4 * scaleFactor * vis.radius)
             .classed({"lGlyph": true});
 
+        lGlyph.append("rect")
+            .attr("x", -2 * scaleFactor * vis.radius)
+            .attr("y", -2 * scaleFactor * vis.radius)
+            .attr("rx", 1)
+            .attr("ry", 1)
+            .attr("width", 4 * scaleFactor * vis.radius)
+            .attr("height", 4 * scaleFactor * vis.radius).style({
+                "fill": function (d) {
+                    return "url(#layerGradientId-" + d.autoId + ")";
+                }
+            });
+
         lGlyph.append("g").classed({"glAnchor": true}).append("path")
             .attr("d", function () {
                 return "m" + (-1.5 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
@@ -880,68 +1087,31 @@ var provvisRender = function () {
                 return d.outputs.size();
             }).attr("class", "lLabel");
 
-        lGlyph.append("rect")
-            .attr("x", -1.5 * scaleFactor * vis.radius)
-            .attr("y", -2 * scaleFactor * vis.radius)
-            .attr("rx", 1)
-            .attr("ry", 1)
-            .attr("width", 3 * scaleFactor * vis.radius)
-            .attr("height", 4 * scaleFactor * vis.radius).style({
-                "fill": function (d) {
-                    return "url(#layerGradientId-" + d.autoId + ")";
-                }
-            });
-
+        /* TODO: Layer glyph. */
+        /*lGlyph.append("line")
+         .attr("x1", -1.5 * scaleFactor * vis.radius)
+         .attr("y1", -0.5 * scaleFactor * vis.radius)
+         .attr("x2", 2 * scaleFactor * vis.radius)
+         .attr("y2", -0.5 * scaleFactor * vis.radius)
+         .classed({"lLine": true});
         lGlyph.append("line")
-            .attr("x1", -1.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.2 * scaleFactor * vis.radius)
-            .attr("x2", -0.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.2 * scaleFactor * vis.radius)
-            .classed({"lLine": true});
+         .attr("x1", -2 * scaleFactor * vis.radius)
+         .attr("y1", -0.175 * scaleFactor * vis.radius)
+         .attr("x2", 2 * scaleFactor * vis.radius)
+         .attr("y2", -0.175 * scaleFactor * vis.radius)
+         .classed({"lLine": true});
         lGlyph.append("line")
-            .attr("x1", -1.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.4 * scaleFactor * vis.radius)
-            .attr("x2", -0.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.4 * scaleFactor * vis.radius)
-            .classed({"lLine": true});
+         .attr("x1", -2 * scaleFactor * vis.radius)
+         .attr("y1", 0.175 * scaleFactor * vis.radius)
+         .attr("x2", 2 * scaleFactor * vis.radius)
+         .attr("y2", 0.175 * scaleFactor * vis.radius)
+         .classed({"lLine": true});
         lGlyph.append("line")
-            .attr("x1", -1.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.6 * scaleFactor * vis.radius)
-            .attr("x2", -0.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.6 * scaleFactor * vis.radius)
-            .classed({"lLine": true});
-        lGlyph.append("line")
-            .attr("x1", -1.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.8 * scaleFactor * vis.radius)
-            .attr("x2", -0.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.8 * scaleFactor * vis.radius)
-            .classed({"lLine": true});
-
-        lGlyph.append("line")
-            .attr("x1", 0.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.2 * scaleFactor * vis.radius)
-            .attr("x2", 1.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.2 * scaleFactor * vis.radius)
-            .classed({"lLine": true});
-        lGlyph.append("line")
-            .attr("x1", 0.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.4 * scaleFactor * vis.radius)
-            .attr("x2", 1.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.4 * scaleFactor * vis.radius)
-            .classed({"lLine": true});
-        lGlyph.append("line")
-            .attr("x1", 0.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.6 * scaleFactor * vis.radius)
-            .attr("x2", 1.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.6 * scaleFactor * vis.radius)
-            .classed({"lLine": true});
-        lGlyph.append("line")
-            .attr("x1", 0.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.8 * scaleFactor * vis.radius)
-            .attr("x2", 1.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.8 * scaleFactor * vis.radius)
-            .classed({"lLine": true});
-
+         .attr("x1", -2 * scaleFactor * vis.radius)
+         .attr("y1", 0.5 * scaleFactor * vis.radius)
+         .attr("x2", 2 * scaleFactor * vis.radius)
+         .attr("y2", 0.5 * scaleFactor * vis.radius)
+         .classed({"lLine": true});*/
 
         /* Add text labels. */
         lLabels.append("text")
@@ -958,7 +1128,7 @@ var provvisRender = function () {
 
         lLabels.append("text")
             .attr("transform", function () {
-                return "translate(" + (0) + "," + (-0.4 * scaleFactor * vis.radius) + ")";
+                return "translate(" + (0) + "," + (-0.9 * scaleFactor * vis.radius) + ")";
             })
             .text(function (d) {
                 return d.children.size();
@@ -1170,11 +1340,19 @@ var provvisRender = function () {
 
         aGlyph.select("rect")
             .attr("x", -2 * scaleFactor * vis.radius)
-            .attr("y", -2 * scaleFactor * vis.radius)
+            .attr("y", -1.5 * scaleFactor * vis.radius)
             .attr("rx", 1)
             .attr("ry", 1)
             .attr("width", 4 * scaleFactor * vis.radius)
-            .attr("height", 4 * scaleFactor * vis.radius);
+            .attr("height", 3 * scaleFactor * vis.radius);
+
+        aGlyph.select("rect")
+            .attr("x", -2 * scaleFactor * vis.radius)
+            .attr("y", -0.5 * scaleFactor * vis.radius)
+            .attr("rx", 1)
+            .attr("ry", 1)
+            .attr("width", 4 * scaleFactor * vis.radius)
+            .attr("height", 2 * scaleFactor * vis.radius);
 
         aGlyph.select("g.glAnchor").select("path")
             .attr("d", function () {
@@ -1211,14 +1389,6 @@ var provvisRender = function () {
             }).attr("class", "aLabel")
             .style("display", "inline");
 
-        aGlyph.select("rect")
-            .attr("x", -1.5 * scaleFactor * vis.radius)
-            .attr("y", -1 * scaleFactor * vis.radius)
-            .attr("rx", 1)
-            .attr("ry", 1)
-            .attr("width", 3 * scaleFactor * vis.radius)
-            .attr("height", 2 * scaleFactor * vis.radius);
-
         /* Add text labels. */
         aLabels.select("text")
             .text(function (d) {
@@ -1228,7 +1398,7 @@ var provvisRender = function () {
 
         aLabels.select("text")
             .attr("transform", function () {
-                return "translate(" + (-1.5 * scaleFactor * vis.radius) + "," + (scaleFactor * vis.radius) + ")";
+                return "translate(" + (-1.5 * scaleFactor * vis.radius) + "," + (0.5 * scaleFactor * vis.radius) + ")";
             })
             .text(function (d) {
                 return d.wfCode;
@@ -1348,12 +1518,20 @@ var provvisRender = function () {
 
         aGlyph.append("rect")
             .attr("x", -2 * scaleFactor * vis.radius)
-            .attr("y", -2 * scaleFactor * vis.radius)
+            .attr("y", -1.5 * scaleFactor * vis.radius)
             .attr("rx", 1)
             .attr("ry", 1)
             .attr("width", 4 * scaleFactor * vis.radius)
-            .attr("height", 4 * scaleFactor * vis.radius)
+            .attr("height", 3 * scaleFactor * vis.radius)
             .classed({"aGlyph": true});
+
+        aGlyph.append("rect")
+            .attr("x", -2 * scaleFactor * vis.radius)
+            .attr("y", -0.5 * scaleFactor * vis.radius)
+            .attr("rx", 1)
+            .attr("ry", 1)
+            .attr("width", 4 * scaleFactor * vis.radius)
+            .attr("height", 2 * scaleFactor * vis.radius);
 
         aGlyph.append("g").classed({"glAnchor": true}).append("path")
             .attr("d", function () {
@@ -1392,43 +1570,44 @@ var provvisRender = function () {
             }).attr("class", "aLabel")
             .style("display", "inline");
 
-        aGlyph.append("rect")
-            .attr("x", -1.5 * scaleFactor * vis.radius)
-            .attr("y", 0 * scaleFactor * vis.radius)
-            .attr("rx", 1)
-            .attr("ry", 1)
-            .attr("width", 3 * scaleFactor * vis.radius)
-            .attr("height", 2 * scaleFactor * vis.radius);
+        /* aGlyph.append("rect")
+         .attr("x", 0.4 * scaleFactor * vis.radius)
+         .attr("y", -1.4 * scaleFactor * vis.radius)
+         .attr("rx", 0.5)
+         .attr("ry", 0.5)
+         .attr("width", 0.8 * scaleFactor * vis.radius)
+         .attr("height", 0.8 * scaleFactor * vis.radius)
+         .classed({"aLine": true});*/
 
         aGlyph.append("line")
             .attr("x1", 0.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.2 * scaleFactor * vis.radius)
+            .attr("y1", -0.7 * scaleFactor * vis.radius)
             .attr("x2", 1.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.2 * scaleFactor * vis.radius)
+            .attr("y2", -0.7 * scaleFactor * vis.radius)
             .classed({"aLine": true});
         aGlyph.append("line")
             .attr("x1", 0.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.4 * scaleFactor * vis.radius)
+            .attr("y1", -0.9 * scaleFactor * vis.radius)
             .attr("x2", 1.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.4 * scaleFactor * vis.radius)
+            .attr("y2", -0.9 * scaleFactor * vis.radius)
             .classed({"aLine": true});
         aGlyph.append("line")
             .attr("x1", 0.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.6 * scaleFactor * vis.radius)
+            .attr("y1", -1.1 * scaleFactor * vis.radius)
             .attr("x2", 1.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.6 * scaleFactor * vis.radius)
+            .attr("y2", -1.1 * scaleFactor * vis.radius)
             .classed({"aLine": true});
         aGlyph.append("line")
             .attr("x1", 0.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.8 * scaleFactor * vis.radius)
+            .attr("y1", -1.3 * scaleFactor * vis.radius)
             .attr("x2", 1.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.8 * scaleFactor * vis.radius)
+            .attr("y2", -1.3 * scaleFactor * vis.radius)
             .classed({"aLine": true});
         aGlyph.append("line")
             .attr("x1", -1.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.5 * scaleFactor * vis.radius)
+            .attr("y1", -1 * scaleFactor * vis.radius)
             .attr("x2", -0.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.5 * scaleFactor * vis.radius)
+            .attr("y2", -1 * scaleFactor * vis.radius)
             .classed({"aLine": true});
 
         /* Add text labels. */
@@ -1440,7 +1619,7 @@ var provvisRender = function () {
 
         aLabels.append("text")
             .attr("transform", function () {
-                return "translate(" + (0) + "," + (-0.4 * scaleFactor * vis.radius) + ")";
+                return "translate(" + (0) + "," + (-0.9 * scaleFactor * vis.radius) + ")";
             })
             .text(function (d) {
                 return d.children.size();
@@ -1449,7 +1628,7 @@ var provvisRender = function () {
 
         aLabels.append("text")
             .attr("transform", function () {
-                return "translate(" + 0 + "," + (scaleFactor * vis.radius) + ")";
+                return "translate(" + 0 + "," + (0.5 * scaleFactor * vis.radius) + ")";
             })
             .text(function (d) {
                 return d.wfCode;
@@ -1936,7 +2115,7 @@ var provvisRender = function () {
         graph.lNodes.values().forEach(function (ln) {
             curWidth = vis.cell.width;
             //curHeight = vis.cell.height;
-            curHeight = vis.cell.height + d3.min([Math.log(ln.children.size()) * 10, Math.log(maxVisibleLayers) * 10]) + 2;
+            curHeight = vis.cell.height;
 
             g.setNode(ln.autoId, {label: ln.autoId, width: curWidth, height: curHeight});
         });
@@ -1957,7 +2136,7 @@ var provvisRender = function () {
         var dlLNodes = d3.entries(g._nodes);
         graph.lNodes.values().forEach(function (ln) {
             curWidth = vis.cell.width;
-            curHeight = vis.cell.height + d3.min([Math.log(ln.children.size()) * 10, Math.log(maxVisibleLayers) * 10]) + 2;
+            curHeight = vis.cell.height;
 
             ln.x = dlLNodes.filter(function (d) {
                 return d.key === ln.autoId.toString();
@@ -1992,14 +2171,64 @@ var provvisRender = function () {
         });
         var anBBoxCoords = {},
             curWidth = 0,
-            curHeight = 0;
+            curHeight = 0,
+            exNum = 0,
+            accY = 0;
 
         /* Add layer or analysis nodes with a dynamic bounding box size (based on visible child nodes). */
         graph.lNodes.values().forEach(function (ln) {
+            d3.select("#BBoxId-" + ln.autoId).classed("hiddenBBox", true);
             if (!ln.hidden) {
                 curWidth = vis.cell.width;
-                curHeight = vis.cell.height + d3.min([Math.log(ln.children.size()) * 10, Math.log(maxVisibleLayers) * 10]);
-                g.setNode(ln.autoId, {label: ln.autoId, width: curWidth, height: curHeight});
+                curHeight = vis.cell.height;
+
+                /* TODO: 01: Check exaggerated layer children. */
+                /* Add visible dimensions to layer node without bounding boxes. */
+                /* Based on current y-coord order, the stack of nodes will be drawn vertically. */
+                /* Child nodes inherit x-coord of layer node and y-coord will be computed based on the statement above.*/
+                /* Layer node number labels may be updated. */
+                /* Maybe add a bounding box for layered node and exaggerated nodes.*/
+
+                exNum = 0;
+                accY = ln.y + vis.cell.height;
+                ln.children.values().sort(function (a, b) {
+                    return a.y - b.y;
+                }).forEach(function (an) {
+                    if (an.exaggerated) {
+                        exNum++;
+                        an.x = an.parent.x;
+                        an.y = accY;
+                        accY += (getABBoxCoords(an, 0).y.max - getABBoxCoords(an, 0).y.min);
+
+                        updateNodeAndLink(an, d3.select("#gNodeId-" + an.autoId));
+                        d3.select("#BBoxId-" + ln.autoId).classed("hiddenBBox", false);
+                    } else {
+                        an.x = an.parent.x;
+                        an.y = an.parent.y;
+                    }
+                });
+
+                /* Set layer label and bounding box. */
+                d3.select("#nodeId-" + ln.autoId).select("g.labels").select(".lLabel")
+                    .text(function () {
+                        return ln.children.size() - exNum + "/" + ln.children.size();
+                    });
+
+                /* Get potential expanded bounding box size. */
+                var accHeight = curHeight,
+                    accWidth = curWidth;
+                ln.children.values().forEach(function (an) {
+                    if (an.exaggerated) {
+                        anBBoxCoords = getABBoxCoords(an, 0);
+                        if (anBBoxCoords.x.max - anBBoxCoords.x.min > accWidth) {
+                            accWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
+                        }
+                        accHeight += anBBoxCoords.y.max - anBBoxCoords.y.min;
+                    }
+                });
+
+                d3.select("#BBoxId-" + ln.autoId).select("rect").attr("height", vis.cell.height - 2 + exNum * vis.cell.height);
+                g.setNode(ln.autoId, {label: ln.autoId, width: accWidth, height: accHeight});
             } else {
                 ln.children.values().forEach(function (an) {
                     anBBoxCoords = getABBoxCoords(an, 0);
@@ -2057,22 +2286,60 @@ var provvisRender = function () {
             if (graph.lNodes.has(n.label)) {
                 var ln = graph.lNodes.get(n.label);
                 curWidth = vis.cell.width;
-                curHeight = vis.cell.height + d3.min([Math.log(ln.children.size()) * 10, Math.log(maxVisibleLayers) * 10]);
+                curHeight = vis.cell.height;
+
+                var accHeight = curHeight,
+                    accWidth = curWidth;
+                ln.children.values().forEach(function (an) {
+                    if (an.exaggerated) {
+                        anBBoxCoords = getABBoxCoords(an, 0);
+                        if (anBBoxCoords.x.max - anBBoxCoords.x.min > accWidth) {
+                            accWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
+                        }
+                        accHeight += anBBoxCoords.y.max - anBBoxCoords.y.min;
+                    }
+                });
+
 
                 ln.x = n.x - curWidth / 2;
-                ln.y = n.y - curHeight / 2;
+                /*ln.y = n.y - curHeight / 2;*/
+                /*ln.x = n.x - accWidth / 2;*/
+                ln.y = n.y - accHeight / 2;
                 updateNodeAndLink(ln, d3.select("#gNodeId-" + ln.autoId));
+
+                exNum = 0;
+                accY = ln.y + vis.cell.height;
+                ln.children.values().sort(function (a, b) {
+                    return a.y - b.y;
+                }).forEach(function (an) {
+                    anBBoxCoords = getABBoxCoords(an, 0);
+                    curWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
+                    an.x = ln.x - curWidth / 2 + vis.cell.width / 2;
+
+                    if (an.exaggerated) {
+                        an.y = accY;
+                        accY += (getABBoxCoords(an, 0).y.max - getABBoxCoords(an, 0).y.min);
+                    } else {
+                        an.y = an.parent.y;
+                    }
+
+                    updateNodeAndLink(an, d3.select("#gNodeId-" + an.autoId));
+                });
+
             } else {
                 var an = graph.aNodes.filter(function (an) {
                     return an.autoId === n.label;
                 })[0];
-                anBBoxCoords = getABBoxCoords(an, 0);
-                curWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
-                curHeight = anBBoxCoords.y.max - anBBoxCoords.y.min;
 
-                an.x = n.x - curWidth / 2;
-                an.y = n.y - curHeight / 2;
-                updateNodeAndLink(an, d3.select("#gNodeId-" + an.autoId));
+                if (typeof an !== "undefined") {
+                    anBBoxCoords = getABBoxCoords(an, 0);
+                    curWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
+                    curHeight = anBBoxCoords.y.max - anBBoxCoords.y.min;
+
+                    an.x = n.x - curWidth / 2;
+                    an.y = n.y - curHeight / 2;
+                    updateNodeAndLink(an, d3.select("#gNodeId-" + an.autoId));
+                }
             }
         });
     };
@@ -2084,14 +2351,21 @@ var provvisRender = function () {
      * @param keyStroke Keystroke being pressed at mouse click.
      */
     var handleCollapseExpandNode = function (d, keyStroke) {
+
+        /**
+         * Helper function.
+         * @param n Base node.
+         */
         var hideChildNodes = function (n) {
-            n.children.values().forEach(function (cn) {
-                cn.hidden = true;
-                d3.select("#nodeId-" + cn.autoId).classed("selectedNode", false);
-                d3.select("#nodeId-" + cn.autoId).classed("hiddenNode", true);
-                if (!cn.children.empty())
-                    hideChildNodes(cn);
-            });
+            if (!n.children.empty()) {
+                n.children.values().forEach(function (cn) {
+                    cn.hidden = true;
+                    d3.select("#nodeId-" + cn.autoId).classed("selectedNode", false);
+                    d3.select("#nodeId-" + cn.autoId).classed("hiddenNode", true);
+                    if (!cn.children.empty())
+                        hideChildNodes(cn);
+                });
+            }
         };
 
         var anBBoxCoords = Object.create(null),
@@ -2107,12 +2381,7 @@ var provvisRender = function () {
             d.children.values().forEach(function (cn) {
                 d3.select("#nodeId-" + cn.autoId).classed("hiddenNode", false);
                 cn.hidden = false;
-
-                if (!cn.children.empty()) {
-                    cn.children.values().forEach(function (n) {
-                        hideChildNodes(n);
-                    });
-                }
+                hideChildNodes(cn);
             });
 
             /* Set link visibility. */
@@ -2218,7 +2487,9 @@ var provvisRender = function () {
                 updateLink(d);
                 updateNode(d3.select("#gNodeId-" + d.autoId), d, d.x, d.y);
             } else {
-                d.children.values().forEach(function (an) {
+                d.children.values().filter(function (an) {
+                    return an.filtered;
+                }).forEach(function (an) {
                     d3.select("#BBoxId-" + an.autoId).classed({"hiddenBBox": false});
                 });
 
@@ -2237,10 +2508,20 @@ var provvisRender = function () {
 
             } else if (d.nodeType === "analysis") {
                 //console.log("#COLLAPSE analysis " + d.autoId);
-                /* TODO: */
+
                 d.parent.children.values().forEach(function (an) {
                     d3.select("#BBoxId-" + an.autoId).classed({"hiddenBBox": true});
+                    an.exaggerated = false;
                 });
+
+                /* Set layer label and bounding box. */
+                d3.select("#nodeId-" + d.parent.autoId).select("g.labels").select(".lLabel")
+                    .text(function () {
+                        return d.children.size() + "/" + d.children.size();
+                    });
+
+                d3.select("#BBoxId-" + d.parent.autoId).classed({"hiddenBBox": true});
+
             } else {
                 //console.log("#COLLAPSE node " + d.autoId);
 
@@ -2777,14 +3058,33 @@ var provvisRender = function () {
         });
 
         /* On mouseover analysis bounding box. */
-        aBBox.on("mouseover", function () {
+        aBBox.on("mouseover", function (an) {
+            var self = d3.select(this);
+            self.select(".labels").attr("clip-path", "");
+
+            if (!an.hidden) {
+                an.parent.children.values().forEach(function (sibling) {
+                    d3.select("#BBoxId-" + sibling.autoId).classed("mouseoverBBox", true);
+                });
+            } else {
+                self.classed("mouseoverBBox", true);
+            }
+        }).on("mouseout", function (an) {
+            var self = d3.select(this);
+            self.select(".labels").attr("clip-path", "url(#aBBClipId-" + an.autoId + ")");
+
+            an.parent.children.values().forEach(function (sibling) {
+                d3.select("#BBoxId-" + sibling.autoId).classed("mouseoverBBox", false);
+            });
+        });
+
+        /* On mouseover layer bounding box. */
+        lBBox.on("mouseover", function () {
             var self = d3.select(this);
             self.classed("mouseoverBBox", true);
-            self.select(".labels").attr("clip-path", "");
-        }).on("mouseout", function (d) {
+        }).on("mouseout", function () {
             var self = d3.select(this);
             self.classed("mouseoverBBox", false);
-            self.select(".labels").attr("clip-path", "url(#aBBClipId-" + d.autoId + ")");
         });
     };
 
@@ -2893,14 +3193,34 @@ var provvisRender = function () {
         });
 
         /* On mouseover analysis bounding box. */
-        aBBox.on("mouseover", function () {
+        aBBox.on("mouseover", function (an) {
+            var self = d3.select(this);
+            self.select(".labels").attr("clip-path", "");
+
+            if (!an.hidden) {
+                an.parent.children.values().forEach(function (sibling) {
+                    d3.select("#BBoxId-" + sibling.autoId).classed("mouseoverBBox", true);
+                });
+            } else {
+                self.classed("mouseoverBBox", true);
+            }
+
+        }).on("mouseout", function (an) {
+            var self = d3.select(this);
+            self.select(".labels").attr("clip-path", "url(#aBBClipId-" + an.autoId + ")");
+
+            an.parent.children.values().forEach(function (sibling) {
+                d3.select("#BBoxId-" + sibling.autoId).classed("mouseoverBBox", false);
+            });
+        });
+
+        /* On mouseover layer bounding box. */
+        lBBox.on("mouseover", function () {
             var self = d3.select(this);
             self.classed("mouseoverBBox", true);
-            self.select(".labels").attr("clip-path", "");
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             self.classed("mouseoverBBox", false);
-            self.select(".labels").attr("clip-path", "url(#aBBClipId-" + d.autoId + ")");
         });
 
         /* Link tooltips. */
@@ -2959,7 +3279,7 @@ var provvisRender = function () {
 
         /* Set link visibility. */
         link.each(function (l) {
-            d3.select(this).classed("hiddenLink", false);
+            d3.select(this).classed("hiddenLinllk", false);
             l.hidden = false;
             if (l.highlighted) {
                 d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
@@ -2971,9 +3291,23 @@ var provvisRender = function () {
         });
 
         /* Adjust bounding boxes. */
-        aBBox.classed("hiddenBBox", false);
-        saBBox.classed("hiddenBBox", false);
-        aBBox.select("text").classed("hiddenLabel", false);
+        /*aBBox.classed("hiddenBBox", false);
+         saBBox.classed("hiddenBBox", false);
+         aBBox.select("text").classed("hiddenLabel", false);*/
+        saBBox.each(function (san) {
+            if (san.filtered && san.children.values().some(function (cn) {
+                return !cn.hidden;
+            })) {
+                d3.select(this).classed("hiddenBBox", false);
+            }
+        });
+
+        aBBox.each(function (an) {
+            if (an.filtered && an.parent.hidden) {
+                d3.select(this).classed("hiddenBBox", false);
+                d3.select(this).select("text").classed("hiddenLabel", false);
+            }
+        });
         aNode.each(function (an) {
 
             /* Adjust subanalysis coords. */
@@ -3045,8 +3379,26 @@ var provvisRender = function () {
 
         /* Adjust bounding boxes. */
         saBBox.classed("hiddenBBox", true);
-        aBBox.classed("hiddenBBox", false);
-        aBBox.select("text").classed("hiddenLabel", false);
+        /*aBBox.classed("hiddenBBox", false);
+         aBBox.select("text").classed("hiddenLabel", false);*/
+
+        saBBox.each(function (san) {
+            if (san.filtered && san.children.values().some(function (cn) {
+                return !cn.hidden;
+            })) {
+                d3.select(this).classed("hiddenBBox", false);
+            }
+        });
+
+        aBBox.each(function (an) {
+            if (an.filtered && (!an.hidden || an.children.values().some(function (cn) {
+                return !cn.hidden;
+            }))) {
+                d3.select(this).classed("hiddenBBox", false);
+                d3.select(this).select("text").classed("hiddenLabel", false);
+            }
+        });
+
         aNode.each(function (an) {
 
             /* Adjust subanalysis coords. */
@@ -3121,8 +3473,16 @@ var provvisRender = function () {
         lLink.classed({"hiddenLink": true});
 
         /* Adjust bounding boxes. */
+
         saBBox.classed("hiddenBBox", true);
-        aBBox.classed("hiddenBBox", false);
+        /*aBBox.classed("hiddenBBox", false);
+         aBBox.select("text").classed("hiddenLabel", false);*/
+
+        aBBox.each(function (an) {
+            if (an.filtered && !an.hidden) {
+                d3.select(this).classed("hiddenBBox", false);
+            }
+        });
         aNode.each(function (an) {
 
             /* Adjust subanalysis coords. */
@@ -3149,6 +3509,11 @@ var provvisRender = function () {
      * Collapse all layers into single layer nodes.
      */
     var showAllLayers = function () {
+
+        /**
+         * Helper function.
+         * @param n Base node.
+         */
         var hideChildNodes = function (n) {
             n.children.values().forEach(function (cn) {
                 cn.hidden = true;
@@ -3164,6 +3529,10 @@ var provvisRender = function () {
             ln.hidden = false;
             d3.select(this).classed("hiddenNode", false);
             hideChildNodes(ln);
+
+            if (!ln.children.empty()) {
+                handleCollapseExpandNode(ln.children.values()[0], 'c');
+            }
         });
 
         /* Set link visibility. */
@@ -3424,8 +3793,6 @@ var provvisRender = function () {
             }
         });
 
-        /* TODO: on bounding box double click, expand all containing nodes. */
-
         /* Collapse on bounding box click.*/
         var aBBoxClickTimeout;
         aBBox.on("click", function (d) {
@@ -3467,6 +3834,28 @@ var provvisRender = function () {
                 });
                 handleCollapseExpandNode(d.children.values()[0], "c");
                 handleCollapseExpandNode(d, "c");
+                /* Deselect. */
+                clearNodeSelection();
+
+                /* TODO: Temporarily disabled. */
+                /* Update node doi. */
+                //updateNodeDoi();
+            }
+        });
+
+        /* Collapse to layer node. */
+        lBBox.on("click", function (d) {
+            if (d3.event.defaultPrevented) return;
+
+            if (!draggingActive) {
+                d.children.values().forEach(function (an) {
+                    an.children.values().forEach(function (san) {
+                        handleCollapseExpandNode(san.children.values()[0], "c");
+                    });
+                    handleCollapseExpandNode(an.children.values()[0], "c");
+                });
+                handleCollapseExpandNode(d.children.values()[0], "c");
+
                 /* Deselect. */
                 clearNodeSelection();
 
@@ -3659,7 +4048,7 @@ var provvisRender = function () {
         fitGraphToWindow(0);
 
         /* TODO: Debug info. */
-        console.log(vis.graph);
+        //console.log(vis.graph);
     };
 
 
@@ -3695,9 +4084,7 @@ var provvisRender = function () {
                     .classed("blendedNode", function () {
                         return filterAction === "blend" ? true : false;
                     });
-                if (an.hidden) {
-                    d3.select("#BBoxId-" + an.autoId).classed("hiddenBBox", true);
-                }
+                d3.select("#BBoxId-" + an.autoId).classed("hiddenBBox", true);
 
                 /* Update child nodes. */
                 an.children.values().forEach(function (san) {
@@ -3885,13 +4272,12 @@ var provvisRender = function () {
                 vis.graph.lLinks = cpyLLinks;
             }
 
-            //updateNodeDoi();
-
             dagreDynamicLayerLayout(vis.graph);
             fitGraphToWindow(nodeLinkTransitionTime);
 
             updateNodeFilter();
             updateAnalysisLinks(vis.graph);
+            updateLayerLinks(vis.graph.lLinks);
 
             vis.graph.aNodes.forEach(function (an) {
                 updateLink(an);
@@ -3899,6 +4285,8 @@ var provvisRender = function () {
             vis.graph.lNodes.values().forEach(function (ln) {
                 updateLink(ln);
             });
+
+            updateNodeDoi();
         }
         lastSolrResponse = solrResponse;
     };
