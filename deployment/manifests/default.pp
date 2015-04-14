@@ -25,7 +25,7 @@ class { 'concat::setup':
   before => Class['postgresql::server'],
 }
 class { 'postgresql::globals':
-  version => '9.1',
+  version => '9.3',
   encoding => 'UTF8',
   locale => 'en_US.utf8',
 }
@@ -64,7 +64,7 @@ python::virtualenv { $virtualenv:
   group => $appgroup,
   require => [ Class['venvdeps'], Class['postgresql::lib::devel'] ],
 }
-~>
+->
 exec { "pip_requirements_install":
   # specifying metaparameter requirements for python::virtualenv doesn't re-run
   # pip after virtual environment has been created
@@ -72,6 +72,7 @@ exec { "pip_requirements_install":
   timeout => 0,
   user => $appuser,
   group => $appgroup,
+  timeout     => 4800,
 }
 
 package { 'virtualenvwrapper': }
@@ -250,6 +251,14 @@ exec { "supervisord":
 
 package { 'libapache2-mod-wsgi': }
 ->
+file { "/etc/apache2/sites-available":
+    ensure => "directory",
+}
+->
+file { "/etc/apache2/sites-enabled":
+    ensure => "directory",
+}
+->
 file { "/etc/apache2/sites-available/refinery":
   ensure => file,
   content => template("/vagrant/deployment/apache.conf"),
@@ -262,5 +271,5 @@ file { "/etc/apache2/sites-enabled/001-refinery":
 ~>
 service { 'apache2':
   ensure => running,
-  hasrestart => true,
+  hasrestart => true
 }
