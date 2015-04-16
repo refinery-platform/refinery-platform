@@ -10,7 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # please see the online documentation at vagrantup.com.
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "ubuntu/precise32"
+  config.vm.box = "ubuntu/trusty64"
   config.vm.hostname = "refinery"
   config.vm.network "private_network", ip: "192.168.50.50"
 
@@ -41,18 +41,18 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 #   puts("WARNING: $REFINERY_VM_TRANSFER_DIR is not set: importing datasets from the command line will not work.")
   end
 
-  # Install Librarian-puppet and modules before puppet provisioning (requires git)
+  # Install Librarian-puppet and modules before puppet provisioning (requires git and ruby-dev)
   $librarian_puppet_install_script =
 <<SCRIPT
-  /usr/bin/apt-get -qq update && /usr/bin/apt-get -y install git
-  gem install librarian-puppet -v 1.0.4 && cd /vagrant/deployment && librarian-puppet config tmp /tmp/puppet --global && librarian-puppet install
+  export DEBIAN_FRONTEND=noninteractive && /usr/bin/apt-get -qq update && /usr/bin/apt-get -qqy install git ruby-dev
+  gem install librarian-puppet -v 2.1.0 && cd /vagrant/deployment && librarian-puppet install
 SCRIPT
   config.vm.provision :shell, :inline => $librarian_puppet_install_script
 
   config.vm.provision :puppet do |puppet|
     puppet.manifests_path = "deployment/manifests"
     puppet.manifest_file  = "default.pp"
-#    puppet.module_path = "deployment/modules"  # requires modules dir to exist when this file is parsed
-    puppet.options = "--modulepath /vagrant/deployment/modules"
+    puppet.module_path = "deployment/modules"  # requires modules dir to exist when this file is parsed
+    puppet.options = "--hiera_config /vagrant/deployment/hiera.yaml"  # to avoid missing file warning
   end
 end

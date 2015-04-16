@@ -20,12 +20,8 @@ file { "/home/${appuser}/.ssh/config":
   group => $appgroup,
 }
 
-# temp workaround from https://github.com/puppetlabs/puppetlabs-postgresql/issues/348
-class { 'concat::setup':
-  before => Class['postgresql::server'],
-}
 class { 'postgresql::globals':
-  version => '9.1',
+  version => '9.3',
   encoding => 'UTF8',
   locale => 'en_US.utf8',
 }
@@ -46,6 +42,7 @@ class { 'python':
   pip => true,
   dev => true,
   virtualenv => true,
+  gunicorn => false,
 }
 
 class venvdeps {
@@ -58,6 +55,13 @@ class venvdeps {
 }
 include venvdeps
 
+file { "/home/${appuser}/.virtualenvs":
+  # workaround for parent directory /home/vagrant/.virtualenvs does not exist error
+  ensure => directory,
+  owner => $appuser,
+  group => $appgroup,
+}
+->
 python::virtualenv { $virtualenv:
   ensure => present,
   owner => $appuser,
@@ -65,12 +69,9 @@ python::virtualenv { $virtualenv:
   require => [ Class['venvdeps'], Class['postgresql::lib::devel'] ],
 }
 ~>
-exec { "pip_requirements_install":
-  # specifying metaparameter requirements for python::virtualenv doesn't re-run
-  # pip after virtual environment has been created
-  command => "${virtualenv}/bin/pip install -r ${requirements}",
-  timeout => 0,
-  user => $appuser,
+python::requirements { $requirements:
+  virtualenv => $virtualenv,
+  owner => $appuser,
   group => $appgroup,
 }
 
@@ -106,7 +107,7 @@ exec { "syncdb":
   group => $appgroup,
   require => [
                File["/vagrant/media"],
-               Python::Virtualenv[$virtualenv],
+               Python::Requirements[$requirements],
                Postgresql::Server::Db["refinery"]
              ],
 }
@@ -227,7 +228,7 @@ class ui {
     command => "${virtualenv}/bin/python ${project_root}/manage.py collectstatic --noinput",
     user => $appuser,
     group => $appgroup,
-    require => Python::Virtualenv[$virtualenv],
+    require => Python::Requirements[$requirements],
   }
 }
 include ui
@@ -249,15 +250,19 @@ exec { "supervisord":
 }
 
 package { 'libapache2-mod-wsgi': }
+package { 'apache2': }
+exec { 'apache2-wsgi':
+  command => '/usr/sbin/a2enmod wsgi',
+  subscribe => [ Package['apache2'], Package['libapache2-mod-wsgi'] ],
+}
 ->
-file { "/etc/apache2/sites-available/refinery":
+file { "/etc/apache2/sites-available/001-refinery.conf":
   ensure => file,
   content => template("/vagrant/deployment/apache.conf"),
 }
-->
-file { "/etc/apache2/sites-enabled/001-refinery":
-  ensure => link,
-  target => "../sites-available/refinery",
+~>
+exec { 'refinery-apache2':
+  command => '/usr/sbin/a2ensite 001-refinery',
 }
 ~>
 service { 'apache2':
