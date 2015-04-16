@@ -44,7 +44,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Install Librarian-puppet and modules before puppet provisioning (requires git and ruby-dev)
   $librarian_puppet_install_script =
 <<SCRIPT
-  export DEBIAN_FRONTEND=noninteractive && /usr/bin/apt-get -qq update && /usr/bin/apt-get -qqy install git ruby-dev
+  export DEBIAN_FRONTEND=noninteractive && /usr/bin/apt-get -qq update && /usr/bin/apt-get -q -y install git ruby-dev
   gem install librarian-puppet -v 2.1.0 && cd /vagrant/deployment && librarian-puppet install
 SCRIPT
   config.vm.provision :shell, :inline => $librarian_puppet_install_script
