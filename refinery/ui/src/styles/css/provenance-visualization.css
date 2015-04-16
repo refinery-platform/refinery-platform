@@ -278,7 +278,7 @@
 .mouseoverNode text {
 }
 
-.saBBox, .aBBox, .BBox {
+.saBBox, .aBBox, .BBox, .lBBox {
     fill-opacity: 0.0;
     stroke: #136382;
     stroke-width: 0.5px;
@@ -307,4 +307,19 @@
 
 .hiddenLabel {
     display: none;
+}
+
+.timeMarker {
+    fill: #136382;
+    stroke: #136382;
+    stroke-width: 1px;
+}
+
+.startTimeLine, .endTimeLine {
+    stroke: #136382;
+    stroke-width: 1px;
+}
+
+.mouseoverTimeLine {
+    cursor: col-resize;
 }

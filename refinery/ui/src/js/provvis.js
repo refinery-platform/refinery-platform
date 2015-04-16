@@ -428,7 +428,7 @@ var provvis = function () {
         supportViewContainer
             .append("svg")
             .attr("height", 100)
-            .attr("width", 100)
+            .attr("width", 110)
             .style({"margin-top": "0px", "margin-bottom": "0px", "padding": "0px"});
 
         supportViewContainer.append("g").attr("id", "curTime").html("<b>" + "Date Threshold" + "<b>" + "<br>");

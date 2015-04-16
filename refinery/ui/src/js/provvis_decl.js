@@ -160,6 +160,7 @@ var provvisDecl = function () {
         this.doi = new DoiComponents(this);
         this.selected = false;
         this.filtered = true;
+        this.exaggerated = false;
     };
 
     /**
