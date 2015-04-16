@@ -7,7 +7,7 @@ Created on May 4, 2012
 from GuardianTastypieAuthz import GuardianAuthorization
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, \
     WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus, StatisticsObject, \
-    ProjectPermissionObject, DataSetPermissionObject, WorkflowPermissionObject
+    ProjectSharingObject, DataSetSharingObject, WorkflowSharingObject, OwnershipPermissionObject
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
 from core.tasks import check_tool_status
@@ -392,16 +392,13 @@ class StatisticsResource(Resource):
         dataset_summary = {}
         workflow_summary = {}
         project_summary = {}
-        
         if 'dataset' in request.GET:
             dataset_summary = self.stat_summary(DataSet)
         if 'workflow' in request.GET:
             workflow_summary = self.stat_summary(Workflow)
         if 'project' in request.GET:
             project_summary = self.stat_summary(Project)
-
         request_string = request.GET.get('type')
-        
         if request_string is not None:
             if 'dataset' in request_string:
                 dataset_summary = self.stat_summary(DataSet)
@@ -409,7 +406,6 @@ class StatisticsResource(Resource):
                 workflow_summary = self.stat_summary(Workflow)
             if 'project' in request_string:
                 project_summary = self.stat_summary(Project)
-
         results = [
             StatisticsObject(user_count, group_count, files_count,
                              dataset_summary, workflow_summary, project_summary)
@@ -417,37 +413,37 @@ class StatisticsResource(Resource):
         return results
 
 
-class ProjectPermissionResource(Resource):
-    owner = fields.CharField(attribute='owner', null=True)
-    owner_id = fields.CharField(attribute='owner_id', null=True)
-    res_name = fields.CharField(attribute='res_name', null=True)
-    uuid = fields.CharField(attribute='uuid', null=True)
-    shares = fields.ListField(attribute='shares', null=True)
+class SharablePermission(object):
+    def __init__(self, res_type, perm_obj):
+        self.res_type = res_type
+        self.perm_obj = perm_obj
 
     def get_user(self, user_id):
         user_list = filter(lambda u: str(u.id) == user_id, User.objects.all())
         return None if len(user_list) == 0 else user_list[0]
 
     def get_res(self, res_uuid):
-        res_list = filter(lambda r: r.uuid == res_uuid, Project.objects.all())
+        res_list = filter(lambda r: r.uuid == res_uuid, self.res_type.objects.all())
         return None if len(res_list) == 0 else res_list[0]
-
-    def get_shares(self, res):
-        share_list = []
-        groups_shared_with = map(lambda r: (r['group'].group_ptr.name, r['group'].id, {'read': r['read'], 'change': r['change']}), res.get_groups())
-
-        for i in groups_shared_with:
-            # i[0] is group name, i[1] is id, i[2] is permissions
-            share_list.append({'name': i[0], 'id': i[1], 'permission': i[2]})
-        return share_list
 
     def get_group(self, group_id):
         group_list = filter(lambda g: g.id == group_id, Group.objects.all())
         return None if len(group_list) == 0 else group_list[0]
 
-    class Meta:
-        resource_name = 'project_permission'
-        object_class = ProjectPermissionObject
+    def get_shares(self, user, res):
+        group_dict = {}
+        all_groups = filter(lambda g: user in g.user_set.all(), Group.objects.all())
+        for i in all_groups:
+            group_dict[i.id] = (i.name, {'read': False, 'change': False})
+        groups_shared_with = map(lambda g: (g['group'].id, g['group'].group_ptr.name, {'read': g['read'], 'change': g['change']}), res.get_groups())
+        for i in groups_shared_with:
+            # 0 = id, 1 = name, 2 = permissions
+            group_dict[i[0]] = (i[1], i[2])
+        share_list = []
+        for k, v in group_dict.iteritems():
+            # k = id, v[0] = name, v[1] = permissions
+            share_list.append({'id': k, 'name': v[0], 'permissions': v[1]})
+        return share_list
 
     def detail_uri_kwargs(self, bundle_or_obj):
         kwargs = {}
@@ -466,19 +462,14 @@ class ProjectPermissionResource(Resource):
         uuid = kwargs['pk']
         res = self.get_res(uuid)
         owner = res.get_owner()
-        permissionObject = ProjectPermissionObject()
-
+        permissionObject = self.perm_obj()
         # remove all objects before adding them
         for i in res.get_groups():
             res.unshare(self.get_group(i['id']))
-
         for group_data in bundle.data['shares']:
             group = self.get_group(group_data['id'])
             isReadOnly = not (group_data['permission']['change'] and group_data['permission']['read'])
-            logger.info("name:" + group.name)
-            logger.info(isReadOnly)
             res.share(group, isReadOnly)
-        
         res.save()
         return permissionObject
 
@@ -488,7 +479,6 @@ class ProjectPermissionResource(Resource):
     def get_object_list(self, request):
         user = self.get_user(request.GET['owner-id'])
         res = self.get_res(request.GET['uuid'])
-
         if (user is None):
             raise ImmediateHttpResponse(response=HttpNotFound("User cannot be found"))
         elif (res is None):
@@ -496,172 +486,59 @@ class ProjectPermissionResource(Resource):
         elif (res.get_owner().id != user.id):
             raise ImmediateHttpResponse(response=HttpForbidden("User does not have ownership of the resource"))
         else:
-            shares = self.get_shares(res)
-            return [ProjectPermissionObject(user.username, user.id, res.name, res.uuid, shares)]
+            shares = self.get_shares(user, res)
+            return [self.perm_obj(user.username, user.id, res.name, res.uuid, shares)]
 
 
-class DataSetPermissionResource(Resource):
+class ProjectSharingResource(SharablePermission, Resource):
     owner = fields.CharField(attribute='owner', null=True)
     owner_id = fields.CharField(attribute='owner_id', null=True)
     res_name = fields.CharField(attribute='res_name', null=True)
-    uuid = fields.CharField(attribute='uuid', null=True)
+    res_uuid = fields.CharField(attribute='res_uuid', null=True)
     shares = fields.ListField(attribute='shares', null=True)
-
-    def get_user(self, user_id):
-        user_list = filter(lambda u: str(u.id) == user_id, User.objects.all())
-        return None if len(user_list) == 0 else user_list[0]
-
-    def get_res(self, res_uuid):
-        res_list = filter(lambda r: r.uuid == res_uuid, DataSet.objects.all())
-        return None if len(res_list) == 0 else res_list[0]
-
-    def get_shares(self, res):
-        share_list = []
-        groups_shared_with = map(lambda r: (r['group'].group_ptr.name, r['group'].id, {'read': r['read'], 'change': r['change']}), res.get_groups())
-
-        for i in groups_shared_with:
-            # i[0] is group name, i[1] is id, i[2] is permissions
-            share_list.append({'name': i[0], 'id': i[1], 'permission': i[2]})
-        return share_list
-
-    def get_group(self, group_id):
-        group_list = filter(lambda g: g.id == group_id, Group.objects.all())
-        return None if len(group_list) == 0 else group_list[0]
+    
+    def __init__(self):
+        SharablePermission.__init__(self, Project, ProjectSharingObject)
+        Resource.__init__(self)
 
     class Meta:
-        resource_name = 'dataset_permission'
-        object_class = DataSetPermissionObject
-
-    def detail_uri_kwargs(self, bundle_or_obj):
-        kwargs = {}
-        if isinstance(bundle_or_obj, Bundle):
-            kwargs['pk'] = bundle_or_obj.obj.uuid
-        else:
-            kwargs['pk'] = bundle_or_obj.uuid
-        return kwargs
-
-    def obj_get(self, bundle, **kwargs):
-        uuid = kwargs['pk']
-        return self.get_res(uuid)
-
-    def obj_update(self, bundle, **kwargs):
-        kwargs = self.detail_uri_kwargs(bundle)
-        uuid = kwargs['pk']
-        res = self.get_res(uuid)
-        owner = res.get_owner()
-        permissionObject = DataSetPermissionObject()
-
-        # remove all objects before adding them
-        for i in res.get_groups():
-            res.unshare(self.get_group(i['id']))
-
-        for group_data in bundle.data['shares']:
-            group = self.get_group(group_data['id'])
-            isReadOnly = not (group_data['permission']['change'] and group_data['permission']['read'])
-            logger.info("name:" + group.name)
-            logger.info(isReadOnly)
-            res.share(group, isReadOnly)
-        
-        res.save()
-        return permissionObject
-
-    def obj_get_list(self, bundle, **kwargs):
-        return self.get_object_list(bundle.request)
-
-    def get_object_list(self, request):
-        user = self.get_user(request.GET['owner-id'])
-        res = self.get_res(request.GET['uuid'])
-
-        if (user is None):
-            raise ImmediateHttpResponse(response=HttpNotFound("User cannot be found"))
-        elif (res is None):
-            raise ImmediateHttpResponse(response=HttpNotFound("User found, but resource cannot be found"))
-        elif (res.get_owner().id != user.id):
-            raise ImmediateHttpResponse(response=HttpForbidden("User does not have ownership of the resource"))
-        else:
-            shares = self.get_shares(res)
-            return [DataSetPermissionObject(user.username, user.id, res.name, res.uuid, shares)]
+        resource_name = 'project_sharing'
+        object_class = ProjectSharingObject
+        # authentication = SessionAuthentication()
+        # authorization = Authorization()
 
 
-class WorkflowPermissionResource(Resource):
+class DataSetSharingResource(SharablePermission, Resource):
     owner = fields.CharField(attribute='owner', null=True)
     owner_id = fields.CharField(attribute='owner_id', null=True)
     res_name = fields.CharField(attribute='res_name', null=True)
-    uuid = fields.CharField(attribute='uuid', null=True)
+    res_uuid = fields.CharField(attribute='res_uuid', null=True)
     shares = fields.ListField(attribute='shares', null=True)
-
-    def get_user(self, user_id):
-        user_list = filter(lambda u: str(u.id) == user_id, User.objects.all())
-        return None if len(user_list) == 0 else user_list[0]
-
-    def get_res(self, res_uuid):
-        res_list = filter(lambda r: r.uuid == res_uuid, Workflow.objects.all())
-        return None if len(res_list) == 0 else res_list[0]
-
-    def get_shares(self, res):
-        share_list = []
-        groups_shared_with = map(lambda r: (r['group'].group_ptr.name, r['group'].id, {'read': r['read'], 'change': r['change']}), res.get_groups())
-
-        for i in groups_shared_with:
-            # i[0] is group name, i[1] is id, i[2] is permissions
-            share_list.append({'name': i[0], 'id': i[1], 'permission': i[2]})
-        return share_list
-
-    def get_group(self, group_id):
-        group_list = filter(lambda g: g.id == group_id, Group.objects.all())
-        return None if len(group_list) == 0 else group_list[0]
+    
+    def __init__(self):
+        SharablePermission.__init__(self, DataSet, DataSetSharingObject)
+        Resource.__init__(self)
 
     class Meta:
-        resource_name = 'workflow_permission'
-        object_class = WorkflowPermissionObject
+        resource_name = 'dataset_sharing'
+        object_class = DataSetSharingObject
+        # authentication = SessionAuthentication()
+        # authorization = Authorization()
 
-    def detail_uri_kwargs(self, bundle_or_obj):
-        kwargs = {}
-        if isinstance(bundle_or_obj, Bundle):
-            kwargs['pk'] = bundle_or_obj.obj.uuid
-        else:
-            kwargs['pk'] = bundle_or_obj.uuid
-        return kwargs
 
-    def obj_get(self, bundle, **kwargs):
-        uuid = kwargs['pk']
-        return self.get_res(uuid)
+class WorkflowSharingResource(SharablePermission, Resource):
+    owner = fields.CharField(attribute='owner', null=True)
+    owner_id = fields.CharField(attribute='owner_id', null=True)
+    res_name = fields.CharField(attribute='res_name', null=True)
+    res_uuid = fields.CharField(attribute='res_uuid', null=True)
+    shares = fields.ListField(attribute='shares', null=True)
+    
+    def __init__(self):
+        SharablePermission.__init__(self, Workflow, WorkflowSharingObject)
+        Resource.__init__(self)
 
-    def obj_update(self, bundle, **kwargs):
-        kwargs = self.detail_uri_kwargs(bundle)
-        uuid = kwargs['pk']
-        res = self.get_res(uuid)
-        owner = res.get_owner()
-        permissionObject = WorkflowPermissionObject()
-
-        # remove all objects before adding them
-        for i in res.get_groups():
-            res.unshare(self.get_group(i['id']))
-
-        for group_data in bundle.data['shares']:
-            group = self.get_group(group_data['id'])
-            isReadOnly = not (group_data['permission']['change'] and group_data['permission']['read'])
-            logger.info("name:" + group.name)
-            logger.info(isReadOnly)
-            res.share(group, isReadOnly)
-        
-        res.save()
-        return permissionObject
-
-    def obj_get_list(self, bundle, **kwargs):
-        return self.get_object_list(bundle.request)
-
-    def get_object_list(self, request):
-        user = self.get_user(request.GET['owner-id'])
-        res = self.get_res(request.GET['uuid'])
-
-        if (user is None):
-            raise ImmediateHttpResponse(response=HttpNotFound("User cannot be found"))
-        elif (res is None):
-            raise ImmediateHttpResponse(response=HttpNotFound("User found, but resource cannot be found"))
-        elif (res.get_owner().id != user.id):
-            raise ImmediateHttpResponse(response=HttpForbidden("User does not have ownership of the resource"))
-        else:
-            shares = self.get_shares(res)
-            return [WorkflowPermissionObject(user.username, user.id, res.name, res.uuid, shares)]
-
+    class Meta:
+        resource_name = 'workflow_sharing'
+        object_class = WorkflowSharingObject
+        # authentication = SessionAuthentication()
+        # authorization = Authorization()

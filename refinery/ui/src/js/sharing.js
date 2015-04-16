@@ -2,7 +2,7 @@ angular.module("refinerySharing", [])
 
 .controller("refinerySharingController", function ($scope, $http) {
     // there should be a better way to get the user object
-    var user = document.getElementById("user").innerText;
+    var user = document.getElementById('user').innerText;
 
     // psuedo-global variables needed for redrawing on window resize
     var dataSetEntries = [];
@@ -10,11 +10,15 @@ angular.module("refinerySharing", [])
     var workflowEntries = [];
     
     // in case the HTML page has changes
-    var dataSetTable = "data-set-table";
-    var workflowTable = "workflow-table";
-    var projectTable = "project-table";
-    var testDiv = "size-test";
+    var dataSetTable = 'data-set-table';
+    var workflowTable = 'workflow-table';
+    var projectTable = 'project-table';
+    var testDiv = 'size-test';
 
+    // Projects
+    // $http.get('/api/v1/
+
+    /*
     $http.get("/api/v1/user_multi_permission/?username=" + user + "&format=json").success(function (response) {
         var keys = response.objects[0].keys;
         var permissionMap = response.objects[0].permission_map;
@@ -40,6 +44,7 @@ angular.module("refinerySharing", [])
             addResourceEntry(workflowTable, workflowEntries[k].resName, workflowEntries[k].groups);
         }
     });
+    */
 
     function getPermissionMap(resKeys, resMap) {
         function extractGroups(groups) {

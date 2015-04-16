@@ -1056,6 +1056,7 @@ class ExternalToolStatus(models.Model):
     class Meta:
         unique_together = ('name', 'unique_instance_identifier')
 
+
 class StatisticsObject(object):
     def __init__(self, user=0, group=0, files=0, dataset=None, workflow=None, project=None):
         self.user = user
@@ -1065,7 +1066,8 @@ class StatisticsObject(object):
         self.workflow = workflow
         self.project = project
 
-class ResourcePermissionObject(object):
+
+class ResourceSharingObject(object):
     def __init__(self, owner=None, owner_id=None, res_type=None, res_name=None, uuid=None, shares=None):
         self.owner = owner
         self.owner_id = owner_id
@@ -1074,14 +1076,25 @@ class ResourcePermissionObject(object):
         self.uuid = uuid
         self.shares = shares
 
-class ProjectPermissionObject(ResourcePermissionObject):
+
+class ProjectSharingObject(ResourceSharingObject):
     def __init__(self, owner=None, owner_id=None, res_name=None, uuid=None, shares=None):
-        super(ProjectPermissionObject, self).__init__(owner, owner_id, Project, res_name, uuid, shares)
-        
-class DataSetPermissionObject(ResourcePermissionObject):
+        super(ProjectSharingObject, self).__init__(owner, owner_id, Project, res_name, uuid, shares)
+
+
+class DataSetSharingObject(ResourceSharingObject):
     def __init__(self, owner=None, owner_id=None, res_name=None, uuid=None, shares=None):
-        super(DataSetPermissionObject, self).__init__(owner, owner_id, DataSet, res_name, uuid, shares)
-        
-class WorkflowPermissionObject(ResourcePermissionObject):
+        super(DataSetSharingObject, self).__init__(owner, owner_id, DataSet, res_name, uuid, shares)
+
+
+class WorkflowSharingObject(ResourceSharingObject):
     def __init__(self, owner=None, owner_id=None, res_name=None, uuid=None, shares=None):
-        super(WorkflowPermissionObject, self).__init__(owner, owner_id, Workflow, res_name, uuid, shares)
+        super(WorkflowSharingObject, self).__init__(owner, owner_id, Workflow, res_name, uuid, shares)
+
+
+class OwnershipPermissionObject(object):
+    def __init__(self, owner=None, owner_id=None, res_list=None):
+        self.owner = owner
+        self.owner_id = owner_id
+        self.res_list = res_list
+

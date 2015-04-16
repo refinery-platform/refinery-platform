@@ -158,6 +158,9 @@
 				Analyses		
 				{% endif %}
 			</th>    
+      <th width="0%">
+        Share
+      </th>
 		</tr>
 	</thead>
 	<tbody>
@@ -210,10 +213,13 @@
 					{% endif %}
 				{% endif %}
 	        	&nbsp;<a href="{% url "project" project.uuid %}">{{ project.name }}</a>
-	        </td>
+	      </td>
 	    	<td>
 	        {{project.analyses.all|length}}
-	        </td>
+	      </td>
+        <td>
+            <a href="google.com">Edit</a>
+        </td>
 	    </tr>
 			{% for analysis in project.analyses.all %}
 			    <tr>
