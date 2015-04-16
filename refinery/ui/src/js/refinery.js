@@ -7,7 +7,8 @@ angular.module('refineryApp', [
   'refineryNodeRelationship',
   'refineryIgv',
   'refineryStatistics',
-  'refineryMetadataTableImport'
+  'refineryMetadataTableImport',
+  'refinerySharing'
 ])
 
 .config(['$provide', function($provide) {

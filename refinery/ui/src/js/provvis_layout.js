@@ -307,8 +307,11 @@ var provvisLayout = function () {
 
         /* Init workflow node coords. */
         d3.entries(g._nodes).forEach(function (n) {
-            san.children.get(n.key).x = parseInt(n.value.x - cell.width / 2, 10);
-            san.children.get(n.key).y = parseInt(n.value.y - cell.height / 2, 10);
+            /* TODO: Revise potential refinery database bug. */
+            if (san.children.has(n.key)) {
+                san.children.get(n.key).x = parseInt(n.value.x - cell.width / 2, 10);
+                san.children.get(n.key).y = parseInt(n.value.y - cell.height / 2, 10);
+            }
         });
     };
 
@@ -393,8 +396,10 @@ var provvisLayout = function () {
             tsANodes = topSortNodes(startANodes, graph.aNodes.length, graph);
             layerNodes(tsANodes, graph);
 
+            bclgNodes = groupNodes(tsANodes);
+
             /* Analysis layout. */
-            reorderSubanalysisNodes(groupNodes(tsANodes), cell);
+            reorderSubanalysisNodes(bclgNodes, cell);
         } else {
             console.log("Error: Graph is not acyclic!");
         }

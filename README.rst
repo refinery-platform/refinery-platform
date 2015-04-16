@@ -53,7 +53,7 @@ Use fabricrc.sample to update or initialize ~/fabricrc, for example:
 
 .. code-block:: bash
 
-    $ cp fabricrc.sample ~/fabricrc
+    $ cp fabricrc.sample ~/.fabricrc
 
 To pull the latest code and update Refinery installation:
 

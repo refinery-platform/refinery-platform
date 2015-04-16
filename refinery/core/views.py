@@ -62,6 +62,9 @@ def contact(request):
 def statistics(request):
     return render_to_response('core/statistics.html', {}, context_instance=RequestContext(request))
 
+def sharing_permission(request):
+    return render_to_response('core/sharing.html', {'user': request.user}, context_instance=RequestContext(request))
+
 def custom_error_page(request, template, context_dict):
     temp_loader = loader.get_template(template)
     context = RequestContext(request, context_dict)

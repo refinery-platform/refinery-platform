@@ -24,7 +24,7 @@ from django.dispatch import receiver
 from django_extensions.db.fields import UUIDField
 from django_auth_ldap.backend import LDAPBackend
 from guardian.shortcuts import assign, get_users_with_perms, \
-    get_groups_with_perms
+    get_groups_with_perms, assign_perm, remove_perm
 from registration.signals import user_registered, user_activated
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
@@ -150,10 +150,10 @@ class OwnableResource ( BaseResource ):
         return self.name
     
     def set_owner( self, user ):
-        assign( "add_%s" % self._meta.verbose_name, user, self )
-        assign( "read_%s" % self._meta.verbose_name, user, self )
-        assign( "delete_%s" % self._meta.verbose_name, user, self )
-        assign( "change_%s" % self._meta.verbose_name, user, self )
+        assign_perm( "add_%s" % self._meta.verbose_name, user, self )
+        assign_perm( "read_%s" % self._meta.verbose_name, user, self )
+        assign_perm( "delete_%s" % self._meta.verbose_name, user, self )
+        assign_perm( "change_%s" % self._meta.verbose_name, user, self )
 
     def get_owner(self):
         # ownership is determined by "add" permission
@@ -193,14 +193,24 @@ class SharableResource (OwnableResource):
     
     def set_owner( self, user ):
         super( SharableResource, self ).set_owner( user )
-        assign( "share_%s" % self._meta.verbose_name, user, self )
+        assign_perm( "share_%s" % self._meta.verbose_name, user, self )
         
     def share( self, group, readonly=True ):
-        assign( "read_%s" % self._meta.verbose_name, group, self )
-        
+        meta_name = self._meta.verbose_name
+        assign_perm('read_%s' % self._meta.verbose_name, group, self)
+        remove_perm('change_%s' % self._meta.verbose_name, group, self)
+        remove_perm('share_%s' % self._meta.verbose_name, group, self)
+        remove_perm('delete_%s' % self._meta.verbose_name, group, self)
         if not readonly:
-            assign( "change_%s" % self._meta.verbose_name, group, self )        
+            assign_perm('change_%s' % meta_name, group, self)    
     
+    def unshare(self, group):
+        remove_perm('read_%s' % self._meta.verbose_name, group, self)
+        remove_perm('change_%s' % self._meta.verbose_name, group, self)
+        remove_perm('add_%s' % self._meta.verbose_name, group, self)
+        remove_perm('delete_%s' % self._meta.verbose_name, group, self)
+        remove_perm('share_%s' % self._meta.verbose_name, group, self)
+
     # TODO: clean this up    
     def get_groups(self, changeonly=False, readonly=False ):                
         permissions = get_groups_with_perms( self, attach_perms=True )
@@ -270,10 +280,10 @@ class ManageableResource:
         return self.name + " (" + self.uuid + ")"
 
     def set_manager_group( self, group ):
-        assign( "add_%s" % self._meta.verbose_name, group, self )
-        assign( "read_%s" % self._meta.verbose_name, group, self )
-        assign( "delete_%s" % self._meta.verbose_name, group, self )
-        assign( "change_%s" % self._meta.verbose_name, group, self )
+        assign_perm( "add_%s" % self._meta.verbose_name, group, self )
+        assign_perm( "read_%s" % self._meta.verbose_name, group, self )
+        assign_perm( "delete_%s" % self._meta.verbose_name, group, self )
+        assign_perm( "change_%s" % self._meta.verbose_name, group, self )
 
     def get_manager_group( self ):
         # ownership is determined by "add" permission
@@ -1046,6 +1056,7 @@ class ExternalToolStatus(models.Model):
     class Meta:
         unique_together = ('name', 'unique_instance_identifier')
 
+
 class StatisticsObject(object):
     def __init__(self, user=0, group=0, files=0, dataset=None, workflow=None, project=None):
         self.user = user
@@ -1055,8 +1066,35 @@ class StatisticsObject(object):
         self.workflow = workflow
         self.project = project
 
-class SharedPermissionObject(object):
-    def __init__(self, username=None, keys=None, permission_map=None):
-        self.username = username
-        self.keys = keys
-        self.permission_map = permission_map
+
+class ResourceSharingObject(object):
+    def __init__(self, owner=None, owner_id=None, res_type=None, res_name=None, uuid=None, shares=None):
+        self.owner = owner
+        self.owner_id = owner_id
+        self.res_type = res_type
+        self.res_name = res_name
+        self.uuid = uuid
+        self.shares = shares
+
+
+class ProjectSharingObject(ResourceSharingObject):
+    def __init__(self, owner=None, owner_id=None, res_name=None, uuid=None, shares=None):
+        super(ProjectSharingObject, self).__init__(owner, owner_id, Project, res_name, uuid, shares)
+
+
+class DataSetSharingObject(ResourceSharingObject):
+    def __init__(self, owner=None, owner_id=None, res_name=None, uuid=None, shares=None):
+        super(DataSetSharingObject, self).__init__(owner, owner_id, DataSet, res_name, uuid, shares)
+
+
+class WorkflowSharingObject(ResourceSharingObject):
+    def __init__(self, owner=None, owner_id=None, res_name=None, uuid=None, shares=None):
+        super(WorkflowSharingObject, self).__init__(owner, owner_id, Workflow, res_name, uuid, shares)
+
+
+class OwnershipPermissionObject(object):
+    def __init__(self, owner=None, owner_id=None, res_list=None):
+        self.owner = owner
+        self.owner_id = owner_id
+        self.res_list = res_list
+

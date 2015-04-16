@@ -36,6 +36,19 @@ var provvis = function () {
         }).appendTo("#" + parentId);
 
 
+        /* Layers. */
+        $("<button/>", {
+            "id": "prov-ctrl-layers-click",
+            "class": "btn btn-mini",
+            "type": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "data-documents": "Layers",
+            "html": "Layers",
+            "data-html": "true",
+            "title": "Layers"
+        }).appendTo("#prov-ctrl-node-btn-group");
+
         /* Analyses. */
         $("<button/>", {
             "id": "prov-ctrl-analyses-click",
@@ -415,7 +428,7 @@ var provvis = function () {
         supportViewContainer
             .append("svg")
             .attr("height", 100)
-            .attr("width", 100)
+            .attr("width", 110)
             .style({"margin-top": "0px", "margin-bottom": "0px", "padding": "0px"});
 
         supportViewContainer.append("g").attr("id", "curTime").html("<b>" + "Date Threshold" + "<b>" + "<br>");
@@ -706,6 +719,8 @@ var provvis = function () {
                 var width = $("div#provenance-vis").width() - margin.left - margin.right,
                     height = 700/*window.innerHeight*/ - margin.top - margin.bottom;
 
+                var scaleFactor = 0.75;
+
                 /* Create vis and add graph. */
                 vis = new provvisDecl.ProvVis("provenance-graph", zoom, data, url, canvas, nodeTable, rect, margin, width,
                     height, r, color, graph, supportView, cell);
@@ -719,8 +734,12 @@ var provvis = function () {
                     /* Hide and show labels at specific threshold. */
                     if (d3.event.scale < 1) {
                         vis.canvas.selectAll(".labels").classed("hiddenLabel", true);
+                        d3.selectAll(".glAnchor").classed("hiddenNode", true);
+                        d3.selectAll(".grAnchor").classed("hiddenNode", true);
                     } else {
                         vis.canvas.selectAll(".labels").classed("hiddenLabel", false);
+                        d3.selectAll(".glAnchor").classed("hiddenNode", false);
+                        d3.selectAll(".grAnchor").classed("hiddenNode", false);
                     }
 
                     /* Fix for rectangle getting translated too - doesn't work after window resize. */
@@ -730,18 +749,18 @@ var provvis = function () {
                         " scale(" + (+1 / d3.event.scale) + ")");
 
                     /* Fix to exclude zoom scale from text labels. */
-                    vis.canvas.selectAll(".aBBoxLabel").attr("transform", "translate(" + 4 +
-                        "," + (vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
-                    vis.canvas.selectAll(".saBBoxLabel").attr("transform", "translate(" + 10 +
-                        "," + (vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
-                    vis.canvas.selectAll(".nodeDoiLabel").attr("transform", "translate(" + (-cell.width / 2 + 2) +
-                        "," + vis.radius * 1.5 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
-                    vis.canvas.selectAll(".nodeAttrLabel").attr("transform", "translate(" + (-cell.width / 2 + 5) +
-                        "," + vis.radius * 1.5 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
-                    vis.canvas.selectAll(".subanalysisLabel").attr("transform", "translate(" + (-cell.width / 2 + 5) +
-                        "," + vis.radius * 1.5 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
-                    vis.canvas.selectAll(".analysisLabel").attr("transform", "translate(" + (-cell.width / 2 + 4) +
-                        "," + vis.radius * 1.5 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                    vis.canvas.selectAll(".aBBoxLabel").attr("transform", "translate(" + 0 +
+                    "," + (-1.5 * scaleFactor * vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                    vis.canvas.selectAll(".saBBoxLabel").attr("transform", "translate(" + 0 +
+                    "," + 0 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                    vis.canvas.selectAll(".nodeDoiLabel").attr("transform", "translate(" + 0 +
+                    "," + (2 * scaleFactor * vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                    vis.canvas.selectAll(".nodeAttrLabel").attr("transform", "translate(" +
+                    (-cell.width / 2 + 5) + "," + (-vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                    vis.canvas.selectAll(".subanalysisLabel").attr("transform", "translate(" + 0 +
+                    "," + 0 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                    vis.canvas.selectAll(".analysisLabel").attr("transform", "translate(" + 0 + "," +
+                    (scaleFactor * vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
                 };
 
                 /* Main canvas drawing area. */
@@ -766,10 +785,10 @@ var provvis = function () {
                 vis.graph = provvisInit.run(data, analysesData, solrResponse);
 
                 /* Compute layout. */
-                provvisLayout.run(vis.graph, vis.cell);
+                vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
 
                 /* Discover and and inject motifs. */
-                provvisMotifs.run(vis.graph);
+                provvisMotifs.run(vis.graph, vis.cell);
 
                 /* Render graph. */
                 provvisRender.run(vis);

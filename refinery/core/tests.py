@@ -7,7 +7,7 @@ These will pass when you run "manage.py test".
 
 from django.contrib.auth.models import User, Group
 from django.utils import unittest, simplejson
-from guardian.shortcuts import assign
+from guardian.shortcuts import assign_perm
 from tastypie.test import ResourceTestCase
 from core.api import AnalysisResource
 from core.management.commands.init_refinery import create_public_group
@@ -258,7 +258,7 @@ class NodeSetResourceTest(ResourceTestCase):
         '''
         nodeset = NodeSet.objects.create(name='ns', study=self.study, assay=self.assay,
                                          solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset._meta.module_name, self.user, nodeset)
+        assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
         response = self.api_client.get(nodeset_uri, format='json',
                                        authentication=self.get_credentials())
@@ -273,10 +273,10 @@ class NodeSetResourceTest(ResourceTestCase):
         '''
         nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
                                          solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
+        assign_perm("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
         nodeset2 = NodeSet.objects.create(name='ns2', study=self.study, assay=self.assay,
                                          solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset2._meta.module_name, self.user2, nodeset2)
+        assign_perm("read_%s" % nodeset2._meta.module_name, self.user2, nodeset2)
         nodeset_uri = make_api_uri('nodeset')
         response = self.api_client.get(nodeset_uri, format='json',
                                        authentication=self.get_credentials())
@@ -291,10 +291,10 @@ class NodeSetResourceTest(ResourceTestCase):
         '''
         nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
                                          solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
+        assign_perm("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
         nodeset2 = NodeSet.objects.create(name='ns2', study=self.study2, assay=self.assay2,
                                          solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset2._meta.module_name, self.user2, nodeset2)
+        assign_perm("read_%s" % nodeset2._meta.module_name, self.user2, nodeset2)
         nodeset_uri = make_api_uri('nodeset')
         response = self.api_client.get(nodeset_uri, format='json',
                                        authentication=self.get_credentials(),
@@ -311,10 +311,10 @@ class NodeSetResourceTest(ResourceTestCase):
         '''
         nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
                                          solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
+        assign_perm("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
         nodeset2 = NodeSet.objects.create(name='ns2', study=self.study2, assay=self.assay2,
                                          solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset2._meta.module_name, self.user, nodeset2)
+        assign_perm("read_%s" % nodeset2._meta.module_name, self.user, nodeset2)
         nodeset_uri = make_api_uri('nodeset')
         response = self.api_client.get(nodeset_uri, format='json',
                                        authentication=self.get_credentials(),
@@ -341,7 +341,7 @@ class NodeSetResourceTest(ResourceTestCase):
         '''
         nodeset = NodeSet.objects.create(name='ns', study=self.study, assay=self.assay,
                                          solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset._meta.module_name, self.user, nodeset)
+        assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
         response = self.api_client.get(nodeset_uri, format='json')
         self.assertHttpUnauthorized(response)
@@ -352,10 +352,10 @@ class NodeSetResourceTest(ResourceTestCase):
         '''
         nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
                                          solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
+        assign_perm("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
         nodeset2 = NodeSet.objects.create(name='ns2', study=self.study, assay=self.assay,
                                          solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset2._meta.module_name, self.user2, nodeset2)
+        assign_perm("read_%s" % nodeset2._meta.module_name, self.user2, nodeset2)
         nodeset_uri = make_api_uri('nodeset')
         response = self.api_client.get(nodeset_uri, format='json')
         self.assertHttpUnauthorized(response)
@@ -377,7 +377,7 @@ class NodeSetResourceTest(ResourceTestCase):
         '''
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay,
                                          solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset._meta.module_name, self.user2, nodeset)
+        assign_perm("read_%s" % nodeset._meta.module_name, self.user2, nodeset)
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
         response = self.api_client.get(nodeset_uri, format='json',
                                        authentication=self.get_credentials())
@@ -389,7 +389,7 @@ class NodeSetResourceTest(ResourceTestCase):
         '''
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay,
                                          solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset._meta.module_name, self.user, nodeset)
+        assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
         nodeset_uri = make_api_uri('nodeset', 'Invalid UUID')
         response = self.api_client.get(nodeset_uri, format='json',
                                        authentication=self.get_credentials())
@@ -401,7 +401,7 @@ class NodeSetResourceTest(ResourceTestCase):
         '''
         dataset = DataSet.objects.create()
         InvestigationLink.objects.create(data_set=dataset, investigation=self.investigation)
-        assign("read_%s" % dataset._meta.module_name, self.user, dataset)
+        assign_perm("read_%s" % dataset._meta.module_name, self.user, dataset)
         nodeset_data = {
             'name': 'nodeset1',
             'study': make_api_uri('study', self.study.uuid),
@@ -463,7 +463,7 @@ class NodeSetResourceTest(ResourceTestCase):
         self.assertEqual(NodeSet.objects.count(), 1)
         self.assertEqual(nodeset.name, 'nodeset')
         self.assertFalse(nodeset.is_implicit)
-        assign("change_%s" % nodeset._meta.module_name, self.user, nodeset)
+        assign_perm("change_%s" % nodeset._meta.module_name, self.user, nodeset)
 
         new_nodeset_data = {'name': 'new_nodeset', 'is_implicit': True}
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
@@ -482,7 +482,7 @@ class NodeSetResourceTest(ResourceTestCase):
         '''
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay)
         self.assertEqual(NodeSet.objects.count(), 1)
-        assign("delete_%s" % nodeset._meta.module_name, self.user, nodeset)
+        assign_perm("delete_%s" % nodeset._meta.module_name, self.user, nodeset)
 
         nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
         response = self.api_client.delete(nodeset_uri, format='json',
@@ -546,11 +546,11 @@ class NodeSetListResourceTest(ResourceTestCase):
         nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
                                           node_count=1, is_implicit=True,
                                           solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
+        assign_perm("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
         nodeset2 = NodeSet.objects.create(name='ns2', study=self.study2, assay=self.assay2,
                                           node_count=1, is_implicit=True,
                                           solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset2._meta.module_name, self.user2, nodeset2)
+        assign_perm("read_%s" % nodeset2._meta.module_name, self.user2, nodeset2)
         response = self.api_client.get(self.nodeset_uri, format='json',
                                        authentication=self.get_credentials())
         self.assertValidJSONResponse(response)
@@ -565,11 +565,11 @@ class NodeSetListResourceTest(ResourceTestCase):
         nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
                                           node_count=1, is_implicit=True,
                                           solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
+        assign_perm("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
         nodeset2 = NodeSet.objects.create(name='ns2', study=self.study2, assay=self.assay2,
                                           node_count=1, is_implicit=True,
                                           solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset2._meta.module_name, self.user, nodeset2)
+        assign_perm("read_%s" % nodeset2._meta.module_name, self.user, nodeset2)
 
         response = self.api_client.get(self.nodeset_uri, format='json',
                                        authentication=self.get_credentials(),
@@ -586,11 +586,11 @@ class NodeSetListResourceTest(ResourceTestCase):
         nodeset1 = NodeSet.objects.create(name='ns1', study=self.study, assay=self.assay,
                                           node_count=1, is_implicit=True,
                                           solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
+        assign_perm("read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
         nodeset2 = NodeSet.objects.create(name='ns2', study=self.study2, assay=self.assay2,
                                           node_count=1, is_implicit=True,
                                           solr_query=simplejson.dumps(self.query))
-        assign("read_%s" % nodeset2._meta.module_name, self.user2, nodeset2)
+        assign_perm("read_%s" % nodeset2._meta.module_name, self.user2, nodeset2)
 
         response = self.api_client.get(self.nodeset_uri, format='json',
                                        authentication=self.get_credentials(),
@@ -624,7 +624,7 @@ class NodeSetListResourceTest(ResourceTestCase):
         '''
         nodeset = NodeSet.objects.create(name='nodeset', study=self.study, assay=self.assay)
         self.assertEqual(NodeSet.objects.count(), 1)
-        assign("delete_%s" % nodeset._meta.module_name, self.user, nodeset)
+        assign_perm("delete_%s" % nodeset._meta.module_name, self.user, nodeset)
 
         response = self.api_client.delete(self.nodeset_uri, format='json',
                                           authentication=self.get_credentials())
@@ -665,7 +665,7 @@ class AnalysisResourceTest(ResourceTestCase):
         analysis = Analysis.objects.create(project=self.project,
                                            data_set=self.dataset,
                                            workflow=self.workflow)
-        assign("read_%s" % Analysis._meta.module_name, self.user, analysis)
+        assign_perm("read_%s" % Analysis._meta.module_name, self.user, analysis)
         analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
         response = self.api_client.get(analysis_uri, format='json',
                                        authentication=self.get_credentials())
@@ -681,11 +681,11 @@ class AnalysisResourceTest(ResourceTestCase):
         analysis1 = Analysis.objects.create(name='a1',project=self.project,
                                             data_set=self.dataset,
                                             workflow=self.workflow)
-        assign("read_%s" % Analysis._meta.module_name, self.user, analysis1)
+        assign_perm("read_%s" % Analysis._meta.module_name, self.user, analysis1)
         analysis2 = Analysis.objects.create(name='a2',project=self.project,
                                             data_set=self.dataset,
                                             workflow=self.workflow)
-        assign("read_%s" % Analysis._meta.module_name, self.user2, analysis2)
+        assign_perm("read_%s" % Analysis._meta.module_name, self.user2, analysis2)
         analysis_uri = make_api_uri(Analysis._meta.module_name)
         response = self.api_client.get(analysis_uri, format='json',
                                        authentication=self.get_credentials())
@@ -702,7 +702,7 @@ class AnalysisResourceTest(ResourceTestCase):
         analysis = Analysis.objects.create(project=self.project,
                                            data_set=self.dataset,
                                            workflow=self.workflow)
-        assign("read_%s" % Analysis._meta.module_name, self.user, analysis)
+        assign_perm("read_%s" % Analysis._meta.module_name, self.user, analysis)
         analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
         response = self.api_client.get(analysis_uri, format='json')
         self.assertHttpUnauthorized(response)
@@ -714,7 +714,7 @@ class AnalysisResourceTest(ResourceTestCase):
         analysis = Analysis.objects.create(project=self.project,
                                            data_set=self.dataset,
                                            workflow=self.workflow)
-        assign("read_%s" % Analysis._meta.module_name, self.user2, analysis)
+        assign_perm("read_%s" % Analysis._meta.module_name, self.user2, analysis)
         analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
         response = self.api_client.get(analysis_uri, format='json',
                                        authentication=self.get_credentials())
@@ -727,7 +727,7 @@ class AnalysisResourceTest(ResourceTestCase):
         analysis = Analysis.objects.create(project=self.project,
                                            data_set=self.dataset,
                                            workflow=self.workflow)
-        assign("read_%s" % Analysis._meta.module_name, self.user, analysis)
+        assign_perm("read_%s" % Analysis._meta.module_name, self.user, analysis)
         analysis_uri = make_api_uri(Analysis._meta.module_name, 'Invalid UUID')
         response = self.api_client.get(analysis_uri, format='json',
                                        authentication=self.get_credentials())
@@ -740,11 +740,11 @@ class AnalysisResourceTest(ResourceTestCase):
         analysis1 = Analysis.objects.create(name='a1',project=self.project,
                                             data_set=self.dataset,
                                             workflow=self.workflow)
-        assign("read_%s" % Analysis._meta.module_name, self.user, analysis1)
+        assign_perm("read_%s" % Analysis._meta.module_name, self.user, analysis1)
         analysis2 = Analysis.objects.create(name='a2',project=self.project,
                                             data_set=self.dataset2,
                                             workflow=self.workflow)
-        assign("read_%s" % Analysis._meta.module_name, self.user, analysis2)
+        assign_perm("read_%s" % Analysis._meta.module_name, self.user, analysis2)
         analysis_uri = make_api_uri(Analysis._meta.module_name)
         response = self.api_client.get(analysis_uri, format='json',
                                        data={'data_set__uuid': self.dataset.uuid},
@@ -762,11 +762,11 @@ class AnalysisResourceTest(ResourceTestCase):
         analysis1 = Analysis.objects.create(name='a1',project=self.project,
                                             data_set=self.dataset,
                                             workflow=self.workflow)
-        assign("read_%s" % Analysis._meta.module_name, self.user, analysis1)
+        assign_perm("read_%s" % Analysis._meta.module_name, self.user, analysis1)
         analysis2 = Analysis.objects.create(name='a2',project=self.project,
                                             data_set=self.dataset2,
                                             workflow=self.workflow)
-        assign("read_%s" % Analysis._meta.module_name, self.user, analysis2)
+        assign_perm("read_%s" % Analysis._meta.module_name, self.user, analysis2)
         analysis_uri = make_api_uri(Analysis._meta.module_name)
         response = self.api_client.get(analysis_uri, format='json',
                                        authentication=self.get_credentials(),
@@ -795,7 +795,7 @@ class AnalysisResourceTest(ResourceTestCase):
                                            data_set=self.dataset,
                                            workflow=self.workflow)
         self.assertEqual(Analysis.objects.count(), 1)
-        assign("delete_%s" % Analysis._meta.module_name, self.user, analysis)
+        assign_perm("delete_%s" % Analysis._meta.module_name, self.user, analysis)
 
         analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
         response = self.api_client.delete(analysis_uri, format='json',
@@ -811,7 +811,7 @@ class AnalysisResourceTest(ResourceTestCase):
                                            data_set=self.dataset,
                                            workflow=self.workflow)
         self.assertEqual(Analysis.objects.count(), 1)
-        assign("delete_%s" % Analysis._meta.module_name, self.user, analysis)
+        assign_perm("delete_%s" % Analysis._meta.module_name, self.user, analysis)
 
         analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
         response = self.api_client.delete(analysis_uri, format='json')

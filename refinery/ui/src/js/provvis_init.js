@@ -97,7 +97,7 @@ var provvisInit = function () {
      * @returns {provvisDecl.Link} New Link object.
      */
     var createLink = function (lId, source, target) {
-        return new provvisDecl.Link(lId, source, target, false);
+        return new provvisDecl.Link(lId, source, target, true);
     };
 
     /**
@@ -222,7 +222,7 @@ var provvisInit = function () {
      * @returns {provvisDecl.Analysis} New Analysis object.
      */
     var createAnalysisNode = function (a, i) {
-        return new provvisDecl.Analysis(i, Object.create(null), false, a.uuid,
+        return new provvisDecl.Analysis(i, Object.create(null), true, a.uuid,
             a.workflow__uuid, i, a.time_start, a.time_end, a.creation_date);
     };
 
@@ -275,7 +275,7 @@ var provvisInit = function () {
         }
 
         /* Create analysis for dataset. */
-        dataset = new provvisDecl.Analysis(0, Object.create(null), false, "dataset", "dataset",
+        dataset = new provvisDecl.Analysis(0, Object.create(null), true, "dataset", "dataset",
             0, initDate, initDate, initDate);
         aNodes.push(dataset);
         analysisWorkflowMap.set("dataset", "dataset");
@@ -398,7 +398,7 @@ var provvisInit = function () {
                 if (san.parent.uuid === ll.target.analysis) {
                     san.links.set(ll.autoId, ll);
                 } else {
-                    /* Set links between two analyses. */
+                    /* Set links between analyses. */
                     aLinks.push(ll);
                 }
             });
@@ -426,6 +426,15 @@ var provvisInit = function () {
             /* Set workflow name. */
             var wfObj = workflowData.get(an.wfUuid);
             an.wfName = (typeof wfObj === "undefined") ? "dataset" : wfObj.name;
+
+            /*  TODO: Temporary workflow abbreviation. */
+            if (an.wfName.indexOf("5 steps") > -1) {
+                an.wfCode = "5STPS";
+            } else if (an.wfName.indexOf("analog") > -1) {
+                an.wfCode = "SPP";
+            } else {
+                an.wfCode = "N/A";
+            }
         });
 
         aNodes.forEach(function (an) {

@@ -160,6 +160,7 @@ var provvisDecl = function () {
         this.doi = new DoiComponents(this);
         this.selected = false;
         this.filtered = true;
+        this.exaggerated = false;
     };
 
     /**
@@ -228,8 +229,10 @@ var provvisDecl = function () {
         this.links = d3.map();
 
         this.wfName = "";
+        this.wfCode = "";
 
-        this.macro = Object.create(null);
+        this.layer = "";
+        this.motif = "";
     };
 
     Analysis.prototype = Object.create(BaseNode.prototype);
@@ -259,23 +262,22 @@ var provvisDecl = function () {
     Subanalysis.prototype.constructor = Subanalysis;
 
     /**
-     * Constructor function for the aggregated macro node data structure.
+     * Constructor function for the motif data structure.
      *
-     * @param id
-     * @param parent
-     * @param hidden
      * @constructor
      */
-    var Macro = function (id, parent, hidden) {
-        BaseNode.call(this, id, "macro", parent, hidden);
+    var Motif = function () {
+        this.preds = d3.map();
+        this.succs = d3.map();
+        this.numIns = 0;
+        this.numOuts = 0;
+        this.wfUuid = "";
+        this.numSubanalyses = 0;
+        this.file = "";
 
-        this.inputs = d3.map();
-        this.outputs = d3.map();
-        this.links = d3.map();
+        Motif.numInstances = (Motif.numInstances || 0) + 1;
+        this.autoId = Motif.numInstances;
     };
-
-    Macro.prototype = Object.create(BaseNode.prototype);
-    Macro.prototype.constructor = Macro;
 
     /**
      * Constructor function for the provenance layered node data structure.
@@ -285,31 +287,20 @@ var provvisDecl = function () {
      * @param hidden
      * @constructor
      */
-    var Layer = function (id, parent, hidden) {
-        Macro.call(this, id, "layer", parent, hidden);
-
-    };
-
-    Layer.prototype = Object.create(Macro.prototype);
-    Layer.prototype.constructor = Layer;
-
-
-    /**
-     * Constructor function for the motif data structure.
-     *
-     * @constructor
-     */
-    var Motif = function () {
+    var Layer = function (id, motif, parent, hidden) {
+        BaseNode.call(this, id, "layer", parent, hidden);
 
         this.inputs = d3.map();
         this.outputs = d3.map();
-
-        this.nodes = d3.map();
         this.links = d3.map();
 
-        Motif.numInstances = (Motif.numInstances || 0) + 1;
-        this.autoId = Motif.numInstances;
+        this.motif = motif;
+        this.wfName = "";
+
     };
+
+    Layer.prototype = Object.create(BaseNode.prototype);
+    Layer.prototype.constructor = Layer;
 
     /**
      * Constructor function for the link data structure.
@@ -405,6 +396,7 @@ var provvisDecl = function () {
         this.oNodes = oNodes;
         this.aNodes = aNodes;
         this.saNodes = saNodes;
+        this.bclgNodes = [];
 
         this.analysisWorkflowMap = analysisWorkflowMap;
         this.nodeMap = nodeMap;
@@ -417,6 +409,9 @@ var provvisDecl = function () {
             width: 0,
             depth: 0
         };
+
+        this.lNodes = d3.map();
+        this.lLinks = d3.map();
     };
 
     /**
@@ -428,7 +423,6 @@ var provvisDecl = function () {
         Node: Node,
         Analysis: Analysis,
         Subanalysis: Subanalysis,
-        Macro: Macro,
         Layer: Layer,
         Motif: Motif,
         Link: Link,
