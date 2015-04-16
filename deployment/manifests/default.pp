@@ -38,6 +38,7 @@ postgresql::server::role { $appuser:
 postgresql::server::db { 'refinery':
   user => $appuser,
   password => '',
+  owner => $appuser,
 }
 
 class { 'python':
