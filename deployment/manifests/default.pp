@@ -6,8 +6,8 @@ $project_root = "/vagrant/refinery"
 $ui_app_root = "${project_root}/ui"
 
 # to make logs easier to read
-file { "/etc/timezone":
-  content => "US/Eastern",
+class { 'timezone':
+  timezone => 'America/New_York',
 }
 
 # for better performance
