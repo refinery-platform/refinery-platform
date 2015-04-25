@@ -39,11 +39,24 @@
 #provenance-canvas {
 }
 
+#provenance-sidebar {
+    position: absolute;
+    top: 0;
+    right: -320px;
+    width: 315px;
+    height: 100%;
+    background-color: #ffffff;
+    /*border-style: solid;
+    border-color: lightgray;
+    border-width: 1.0px;*/
+    /*display: none;*/
+}
+
 #provenance-table {
     position: absolute;
-    left: 0px;
-    right: 0px;
-    top: 0px;
+    left: 0;
+    right: 0;
+    top: 0;
     display: none;
     background-color: #ffffff;
     border-style: solid;
@@ -55,19 +68,34 @@
     background-color: #ffffff;
 }
 
-#provenance-support-view {
-    position: absolute;
-    left: 0px;
-    top: 0px;
-    width: 110px;
-    height: 130px;
-    display: none;
+#provenance-timeline-view {
+    position: relative;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 200px;
     margin-top: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
     background-color: #ffffff;
+    /*border-style: solid;
+    border-color: lightgray;
+    border-width: 1.0px;*/
 }
 
-#provenance-support-view-content {
-    background-color: dimgray;
+#provenance-doi-view {
+    position: relative;
+    left: 0;
+    top: 0;
+    /*width: 100%;
+    height: 200px;*/
+    margin-top: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
+    background-color: #ffffff;
+    border-style: solid;
+    border-color: lightgray;
+    border-width: 1.0px;
 }
 
 /* btn-group tweaks as by: http://stackoverflow.com/a/13766206 */
@@ -102,10 +130,6 @@
     overflow-y: auto;
 }
 
-#curTime {
-    color: #136382;
-}
-
 .canvas {
 }
 
@@ -136,22 +160,30 @@
 }
 
 .hLink, .aHLink, .saHLink {
-    stroke-width: 10.0px;
+    stroke-width: 6.0px;
     opacity: 1.0;
     fill: none;
     stroke: #ed7407;
 }
 
-.selectedNode {
+.selectedNode rect, .selectedNode circle {
     stroke-width: 1.5px;
     stroke: #ed7407;
     stroke-opacity: 1.0;
 }
 
-.mouseoverNode {
+.mouseoverNode .glyph rect, .mouseoverNode .glyph circle {
+    stroke: #ed7407;
     stroke-width: 1.0px;
     stroke-opacity: 1.0;
-    /*stroke: #136382;*/
+}
+
+.glAnchor:hover path, .grAnchor:hover path {
+    stroke: #ed7407;
+    stroke-width: 1.0px;
+    stroke-opacity: 1.0;
+    fill: #ed7407;
+    fill-opacity: 1.0;
 }
 
 .filteredNode, .filteredLink {
@@ -231,12 +263,6 @@
     alignment-baseline: middle;
 }
 
-.aGlyph, .lGlyph {
-    fill-opacity: 1.0;
-    fill: #136382;
-    stroke-width: 1.0;
-}
-
 .aLine {
     fill: #ffffff;
     fill-opacity: 1.0;
@@ -276,10 +302,26 @@
 }
 
 .mouseoverNode text {
+    /*fill: #ed7407;*/
 }
 
-.saBBox, .aBBox, .BBox, .lBBox {
+.saBBox {
     fill-opacity: 0.0;
+    stroke: #ffffff;
+    stroke-width: 1.0px;
+    stroke-opacity: 0.5;
+    cursor: default;
+    stroke-dasharray: 3, 3;
+}
+
+.aBBox {
+    fill: lightgray;
+    fill-opacity: 0.6;
+}
+
+.lBBox {
+    fill: lightgray;
+    fill-opacity: 0.6;
     stroke: #136382;
     stroke-width: 0.5px;
     stroke-opacity: 0.5;
@@ -293,14 +335,20 @@
 
 .mouseoverBBox rect {
     stroke-opacity: 0.0;
-    fill-opacity: 0.3;
+    fill-opacity: 0.5;
     fill: #136382;
+}
+
+.mouseoverTlBBox rect {
+    stroke-opacity: 0.0;
+    fill-opacity: 0.5;
+    fill: #ed7407;
 }
 
 .mouseoverBBox .nodeAttrLabel, .mouseoverBBox .subanalysisLabel, .mouseoverBBox .analysisLabel, .mouseoverBBox .layerLabel,
 .mouseoverBBox .aBBoxLabel, .mouseoverBBox .saBBoxLabel {
     fill-opacity: 1.0;
-    stroke-width: 0.5px;
+    /*stroke-width: 0.5px;*/
     text-anchor: left;
     alignment-baseline: middle;
 }
@@ -315,11 +363,39 @@
     stroke-width: 1px;
 }
 
-.startTimeLine, .endTimeLine {
+.startTimeline, .endTimeline {
+    fill: #136382;
     stroke: #136382;
     stroke-width: 1px;
 }
 
-.mouseoverTimeLine {
+.mouseoverTimeline {
     cursor: col-resize;
+}
+
+#tlTitle, #doiTitle {
+    font-style: italic;
+    font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: darkgray;
+    font-size: 14px;
+    font-weight: normal;
+    line-height: 20px;
+}
+
+#tlThreshold {
+    color: #136382;
+    font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.tlAnalysis {
+    fill: #ed7407;
+    stroke: #ed7407;
+    stroke-width: 3px;
+}
+
+.blendedTLAnalysis {
+    fill-opacity: 0.15;
+    stroke-opacity: 0.15;
 }

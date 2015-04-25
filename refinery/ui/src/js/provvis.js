@@ -152,10 +152,6 @@ var provvis = function () {
             "id": "prov-ctrl-show-table",
             "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Node Info" + "</label>" + "</a>"
         }).appendTo("#prov-ctrl-visible-views-list");
-        $("<li/>", {
-            "id": "prov-ctrl-show-support-view",
-            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Analyses-Time View" + "</label>" + "</a>"
-        }).appendTo("#prov-ctrl-visible-views-list");
 
         /* Stop dropdown menu from closing on click. */
         $("#prov-ctrl-visible-views-list").bind("click", function (e) {
@@ -370,6 +366,27 @@ var provvis = function () {
             "title": "Glyph Legend",
             "style": "margin-left: 15px"
         }).appendTo("#" + parentId);
+
+
+        /* Sidebar toggle. */
+        $("<span/>", {
+            "id": "prov-ctrl-sidebar-btn-group",
+            "class": "btn-group"
+        }).appendTo("#" + parentId);
+
+        $("<button/>", {
+            "id": "prov-ctrl-sidebar-click",
+            "class": "btn btn-mini",
+            "type": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "data-documents": "Sidebar",
+            "html": "<i class=icon-chevron-left></i>" +
+                "&nbsp;" + "Sidebar",
+            "data-html": "true",
+            "title": "Sidebar",
+            "style": "margin-left: 15px"
+        }).appendTo("#prov-ctrl-sidebar-btn-group");
     };
 
     /**
@@ -409,33 +426,50 @@ var provvis = function () {
     };
 
     /**
-     * Support view only showing analysis within a time-gradient background.
+     * Timeline view only showing analysis within a time-gradient background.
      * @param parentId Parent div id for the floating table div.
-     * @param divId Table div id.
-     * @returns {*} The support view div container.
+     * @param divId Div id.
+     * @returns {*} The timeline view div container.
      */
-    var createSupportView = function (parentId, divId) {
-        /* New support view enclosing div. */
+    var createTimelineView = function (parentId, divId) {
+        /* New timeline view enclosing div. */
         $('<div/>', {
             "id": divId
         }).appendTo("#" + parentId);
 
-        /* New support view content. */
-        var supportViewContainer = d3.select("#" + divId);
+        /* New timeline view content. */
+        var timelineContainer = d3.select("#" + divId);
 
-        supportViewContainer.append("g").attr("id", "viewTitle").html("<b>" + "Visible Analyses" + "<b>");
+        /*timelineContainer.append("g")
+         .attr("id", "tlTitle")
+         .html("Analysis Timeline");
+         */
+        $("<p/>", {
+            "id": "tlTitle",
+            "html": "Analysis Timeline"
+        }).appendTo(timelineContainer);
 
-        supportViewContainer
-            .append("svg")
+        $("<p/>", {
+            "id": "tlCanvas"
+        }).appendTo(timelineContainer);
+
+        d3.select("#tlCanvas").append("svg")
             .attr("height", 100)
-            .attr("width", 110)
-            .style({"margin-top": "0px", "margin-bottom": "0px", "padding": "0px"});
-
-        supportViewContainer.append("g").attr("id", "curTime").html("<b>" + "Date Threshold" + "<b>" + "<br>");
+            .attr("width", 310)
+            .style({"margin-top": "0px", "margin-bottom": "0px", "padding": "0px"})
+            .attr("pointer-events", "all");
 
         /* Toolbar items. */
+        $("<p/>", {
+            "id": "tlThreshold"
+        }).appendTo(timelineContainer);
+
+        $("<p/>", {
+            "id": "tlReset"
+        }).appendTo(timelineContainer);
+
         $("<button/>", {
-            "id": "prov-support-view-reset-time",
+            "id": "prov-timeline-view-reset-time",
             "class": "btn btn-mini",
             "type": "button",
             "rel": "tooltip",
@@ -443,9 +477,64 @@ var provvis = function () {
             "html": "Reset",
             "data-html": "true",
             "title": "Reset"
-        }).appendTo(supportViewContainer);
+        }).appendTo("#" + "tlReset");
 
-        return supportViewContainer;
+        return timelineContainer;
+    };
+
+    /**
+     * DOI view.
+     * @param parentId Parent div id for the floating table div.
+     * @param divId Div id.
+     * @returns {*} The DOI view div container.
+     */
+    var createDOIView = function (parentId, divId) {
+        /* New DOI view enclosing div. */
+        $('<div/>', {
+            "id": divId,
+            "style": "margin-top: 30px"
+        }).appendTo("#" + parentId);
+
+        /* New doi view content. */
+        var doiContainer = d3.select("#" + divId);
+
+        $("<p/>", {
+            "id": "doiTitle",
+            "html": "DOI components"
+        }).appendTo(doiContainer);
+
+        $("<p/>", {
+            "id": "doiCanvas"
+        }).appendTo(doiContainer);
+
+        d3.select("#doiCanvas").append("svg")
+            .attr("height", 300)
+            .attr("width", 310)
+            .style({"margin-top": "0px", "margin-left": "20px", "padding": "0px"})
+            .attr("pointer-events", "all");
+
+        /* Toolbar items. */
+        $("<p/>", {
+            "id": "doiComponents",
+            "html": "#DOI-comp<br>#DOI-comp<br>#DOI-comp<br>#DOI-comp<br>#DOI-comp<br>#DOI-comp<br>"
+        }).appendTo(doiContainer);
+
+        $("<p/>", {
+            "id": "doiReset"
+        }).appendTo(doiContainer);
+
+        $("<button/>", {
+            "id": "prov-doi-view-reset",
+            "class": "btn btn-mini",
+            "type": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Reset",
+            "data-html": "true",
+            "title": "Reset"
+        }).appendTo("#" + "doiReset");
+
+        return doiContainer;
     };
 
     /**
@@ -661,6 +750,24 @@ var provvis = function () {
     };
 
     /**
+     * Sidebar.
+     * @param parentId Parent div id for the floating sidebar div.
+     * @param divId Container div id.
+     * @returns {*} The sidebar div container.
+     */
+    var createSidebar = function (parentId, divId) {
+        /* New sidebar view enclosing div. */
+        $('<div/>', {
+            "id": divId
+        }).appendTo("#" + parentId);
+
+        /* New sidebar view content. */
+        var sideBarContainer = d3.select("#" + divId);
+
+        return sideBarContainer;
+    };
+
+    /**
      * Refinery injection for the provenance visualization.
      * @param studyUuid The serialized unique identifier referencing a study.
      * @param studyAnalyses Analyses objects from the refinery scope.
@@ -706,11 +813,18 @@ var provvis = function () {
                 /* Hierarchical div layout. */
                 createVisualizationContainer("provenance-vis", "provenance-canvas", "provenance-graph");
 
+                /* Left floated and docked sidebar. */
+                createSidebar("provenance-canvas", "provenance-sidebar");
+
                 /* On-top docked table. */
                 var nodeTable = createNodeTable("provenance-canvas", "provenance-table");
 
-                /* Support view div. */
-                var supportView = createSupportView("provenance-canvas", "provenance-support-view");
+                /* Timeline view div. */
+                var timelineView = createTimelineView("provenance-sidebar", "provenance-timeline-view");
+
+                /* DOI view div. */
+                /*TODO: Temporarily disabled. */
+                //var doiView = createDOIView("provenance-sidebar", "provenance-doi-view");
 
                 /* Init node cell dimensions. */
                 var cell = {width: r * 5, height: r * 5};
@@ -723,7 +837,7 @@ var provvis = function () {
 
                 /* Create vis and add graph. */
                 vis = new provvisDecl.ProvVis("provenance-graph", zoom, data, url, canvas, nodeTable, rect, margin, width,
-                    height, r, color, graph, supportView, cell);
+                    height, r, color, graph, timelineView, cell);
 
                 /* Geometric zoom. */
                 var redraw = function () {
@@ -749,18 +863,18 @@ var provvis = function () {
                         " scale(" + (+1 / d3.event.scale) + ")");
 
                     /* Fix to exclude zoom scale from text labels. */
-                    vis.canvas.selectAll(".aBBoxLabel").attr("transform", "translate(" + 0 +
-                    "," + (-1.5 * scaleFactor * vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                    vis.canvas.selectAll(".aBBoxLabel").attr("transform", "translate(" + 2 +
+                        "," + (0.5 * scaleFactor * vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
                     vis.canvas.selectAll(".saBBoxLabel").attr("transform", "translate(" + 0 +
-                    "," + 0 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                        "," + 0 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
                     vis.canvas.selectAll(".nodeDoiLabel").attr("transform", "translate(" + 0 +
-                    "," + (2 * scaleFactor * vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                        "," + (2 * scaleFactor * vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
                     vis.canvas.selectAll(".nodeAttrLabel").attr("transform", "translate(" +
-                    (-cell.width / 2 + 5) + "," + (-vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                        (-cell.width / 2 + 5) + "," + (-vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
                     vis.canvas.selectAll(".subanalysisLabel").attr("transform", "translate(" + 0 +
-                    "," + 0 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                        "," + 0 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
                     vis.canvas.selectAll(".analysisLabel").attr("transform", "translate(" + 0 + "," +
-                    (scaleFactor * vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                        (scaleFactor * vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
                 };
 
                 /* Main canvas drawing area. */
