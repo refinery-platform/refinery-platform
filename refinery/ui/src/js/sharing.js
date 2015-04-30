@@ -3,71 +3,6 @@ angular.module("refinerySharing", [])
 .controller("refinerySharingController", function ($scope, $http, $modal) {
     var userId = document.getElementById('user-id').innerText;
 
-    /*
-    // psuedo-global because modal data passing
-    var dataSetEntries = [];
-    var projectEntries = [];
-    var workflowEntries = [];
-
-    function getResourceIds() {
-        var datasetIds = $('.dataset-uuid-entry').map(function (i, obj) {
-            return obj.innerText;
-        });
-        var projectIds = $('.project-uuid-entry').map(function (i, obj) {
-            return obj.innerText;
-        });
-        var workflowIds = $('.workflow-uuid-entry').map(function (i, obj) {
-            return obj.innerText;
-        });
-        return {
-            dataset: datasetIds,
-            project: projectIds,
-            workflow: workflowIds
-        };
-    }
-
-    function updateEntries() {
-        dataSetEntries = [];
-        projectEntries = [];
-        workflowEntries = [];
-        
-        var resourceIdMap = getResourceIds();
-        var dataSetIds = resourceIdMap.dataset;
-        var projectIds = resourceIdMap.project;
-        var workflowIds = resourceIdMap.workflow;
-
-        // datasets
-        for (var di = 0; di < dataSetIds.length; di++) {
-            dataSetEntries.push([]);
-            callToAPI('dataset_sharing', userId, dataSetIds[di], dataSetEntries, di);
-        }
-
-        // projects
-        for (var pi = 0; pi < projectIds.length; pi++) {
-            projectEntries.push([]);
-            callToAPI('project_sharing', userId, projectIds[pi], projectEntries, pi);
-        }
-
-        // workflows
-        for (var wi = 0; wi < workflowIds.length; wi++) {
-            workflowEntries.push([]);
-            callToAPI('workflow_sharing', userId, workflowIds[wi], workflowEntries, wi);
-        }
-    }
-
-    function callToAPI(apiName, userId, uuid, entrySet, index) {
-        $http.get('api/v1/' + apiName + '/?owner-id=' + userId + '&uuid=' + uuid + '&format=json').success(function (response) {
-            entrySet[index] = response.objects[0].shares;
-        });
-    }
-
-    updateEntries();
-
-    console.log("entries test");
-    console.log(dataSetEntries);
-    console.log(projectEntries);
-    console.log(workflowEntries);
-*/
     function loadResource(api, uuid) {
         $http.get('api/v1/' + api + '/?owner-id=' + userId + '&uuid=' + uuid + '&format=json').success(function (response) {
             var shareList = response.objects[0].shares;
@@ -76,15 +11,15 @@ angular.module("refinerySharing", [])
             for (var i = 0; i < shareList.length; i++) {
                 var row = pTable.insertRow(-1);
                 var group = row.insertCell(0);
-                group.innerHTML = shareList[i].name;
-
+                group.innerHTML = shareList[i].name + '<div style="display: none;">' + shareList[i].id+ '</div>';
+                
                 var read = row.insertCell(1);
                 var readPerm = (shareList[i].permissions.read)? 'checked' : '';
-                read.innerHTML = '<input type="checkbox" ' + readPerm + '/>';
+                read.innerHTML = '<input type="checkbox" id=' + '"' + group.innerText +'-read" ' + readPerm + '/>';
                 
                 var change = row.insertCell(2);
                 var changePerm = (shareList[i].permissions.change)? 'checked' : '';
-                change.innerHTML = '<input type="checkbox" ' + changePerm + '/>';
+                change.innerHTML = '<input type="checkbox" id=' + '"' + group.innerText + '-change" ' + changePerm + '/>';
             }
         });
     }
@@ -103,17 +38,43 @@ angular.module("refinerySharing", [])
             controller: permissionEditorController,
             resolve: {
                 config: function () {
-                    return $scope.newPermissionModalConfig;
+                    return {
+                        api: api,
+                        uuid: uuid
+                    };
                 }
             }
         });
     };
 
-    var permissionEditorController = function($scope, $modalInstance, config) {
+    var permissionEditorController = function($scope, $http, $modalInstance, config) {
         $scope.config = config;
         
         $scope.save = function () {
-            
+            var pTable = document.getElementById('permission-table');
+            var cells = pTable.getElementsByTagName('td');
+            var data = '{"shares": [';
+            // Data is clustered into sets of 3 -- i is name, i+1 read, i+2 change
+            for (var i = 0; i < cells.length; i += 3) {
+                // Add the group
+                var name = cells[i].innerText;
+                var id = cells[i].children[0].innerText;
+                data += '{"name": "' + name + '", "id": ' + id + ', "permission": ';
+
+                // add permissions
+                var read = document.getElementById(name + '-read').checked;
+                var change = document.getElementById(name + '-change').checked;
+                data += '{"read": ' + read + ', "change": ' + change;
+
+                data += '}}';
+                if (i + 3 < cells.length) {
+                    data += ', ';
+                }
+            }
+            data += ']}';
+            console.log(data);
+            $http({method: 'PATCH', url: 'api/v1/' + config.api + '/' + config.uuid + '/', data: data});
+            $modalInstance.dismiss('saved');
         };
 
         $scope.cancel = function () {
@@ -121,11 +82,4 @@ angular.module("refinerySharing", [])
         };
     };
 });
-/*
-.directive("sharingData", function() {
-    return {
-        templateUrl: "/static/partials/sharing_tpls.html",
-        restrict: "A"
-    };
-});
-*/
+
