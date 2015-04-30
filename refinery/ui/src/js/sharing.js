@@ -1,145 +1,131 @@
 angular.module("refinerySharing", [])
 
-.controller("refinerySharingController", function ($scope, $http) {
-    // there should be a better way to get the user object
-    var user = document.getElementById('user').innerText;
+.controller("refinerySharingController", function ($scope, $http, $modal) {
+    var userId = document.getElementById('user-id').innerText;
 
-    // psuedo-global variables needed for redrawing on window resize
+    /*
+    // psuedo-global because modal data passing
     var dataSetEntries = [];
     var projectEntries = [];
     var workflowEntries = [];
-    
-    // in case the HTML page has changes
-    var dataSetTable = 'data-set-table';
-    var workflowTable = 'workflow-table';
-    var projectTable = 'project-table';
-    var testDiv = 'size-test';
 
-    // Projects
-    // $http.get('/api/v1/
-
-    /*
-    $http.get("/api/v1/user_multi_permission/?username=" + user + "&format=json").success(function (response) {
-        var keys = response.objects[0].keys;
-        var permissionMap = response.objects[0].permission_map;
-
-        // data set
-        dataSetEntries = getPermissionMap(keys.data_set, permissionMap.data_set);
-        
-        for (var i = 0; i < dataSetEntries.length; i++) {
-            addResourceEntry(dataSetTable, dataSetEntries[i].resName, dataSetEntries[i].groups);
-        }
-
-        // project
-        projectEntries = getPermissionMap(keys.project, permissionMap.project);
-        
-        for (var j = 0; j < projectEntries.length; j++) {
-            addResourceEntry(projectTable, projectEntries[j].resName, projectEntries[j].groups);
-        }
-
-        // workflow
-        workflowEntries = getPermissionMap(keys.workflow, permissionMap.workflow);
-        
-        for (var k = 0; k < workflowEntries.length; k++) {
-            addResourceEntry(workflowTable, workflowEntries[k].resName, workflowEntries[k].groups);
-        }
-    });
-    */
-
-    function getPermissionMap(resKeys, resMap) {
-        function extractGroups(groups) {
-            return groups.map(function (g) {
-                // change > read > none
-                return {
-                    "name": g.name,
-                    "permission": g.permission.change? "change" : (g.permission.read? "read": "none")
-                };
-            });
-        }
-
-        var resEntries = [];
-
-        for (var i = 0; i < resKeys.length; i++) {
-            resEntries.push({
-                resName: resKeys[i],
-                groups: extractGroups(resMap[resKeys[i]])
-            });
-        }
-
-        return resEntries;
+    function getResourceIds() {
+        var datasetIds = $('.dataset-uuid-entry').map(function (i, obj) {
+            return obj.innerText;
+        });
+        var projectIds = $('.project-uuid-entry').map(function (i, obj) {
+            return obj.innerText;
+        });
+        var workflowIds = $('.workflow-uuid-entry').map(function (i, obj) {
+            return obj.innerText;
+        });
+        return {
+            dataset: datasetIds,
+            project: projectIds,
+            workflow: workflowIds
+        };
     }
 
-    function drawPermissionMap() {
-        for (var i = 0; i < dataSetEntries.length; i++) {
-            addResourceEntry(dataSetTable, dataSetEntries[i].resName, dataSetEntries[i].groups);
+    function updateEntries() {
+        dataSetEntries = [];
+        projectEntries = [];
+        workflowEntries = [];
+        
+        var resourceIdMap = getResourceIds();
+        var dataSetIds = resourceIdMap.dataset;
+        var projectIds = resourceIdMap.project;
+        var workflowIds = resourceIdMap.workflow;
+
+        // datasets
+        for (var di = 0; di < dataSetIds.length; di++) {
+            dataSetEntries.push([]);
+            callToAPI('dataset_sharing', userId, dataSetIds[di], dataSetEntries, di);
         }
 
-        for (var j = 0; j < projectEntries.length; j++) {
-            addResourceEntry(projectTable, projectEntries[j].resName, projectEntries[j].groups);
+        // projects
+        for (var pi = 0; pi < projectIds.length; pi++) {
+            projectEntries.push([]);
+            callToAPI('project_sharing', userId, projectIds[pi], projectEntries, pi);
         }
 
-        for (var k = 0; k < workflowEntries.length; k++) {
-            addResourceEntry(workflowTable, workflowEntries[k].resName, workflowEntries[k].groups);
+        // workflows
+        for (var wi = 0; wi < workflowIds.length; wi++) {
+            workflowEntries.push([]);
+            callToAPI('workflow_sharing', userId, workflowIds[wi], workflowEntries, wi);
         }
     }
 
-    function addResourceEntry(divId, resName, groups) {
-        var divObj = document.getElementById(divId);
-        var divWidth = divObj.offsetWidth;
-        var htmlToBeAppended = "<br>" + resName;
-        // add edit button
+    function callToAPI(apiName, userId, uuid, entrySet, index) {
+        $http.get('api/v1/' + apiName + '/?owner-id=' + userId + '&uuid=' + uuid + '&format=json').success(function (response) {
+            entrySet[index] = response.objects[0].shares;
+        });
+    }
 
-        for (var i = 0; i < groups.length; i++) {
-            var dotCount = 0;
-            var tmpHTMLHead = "<br>&nbsp&nbsp&nbsp&nbsp" + groups[i].name + "&nbsp";
-            var tmpHTMLMid = "";
-            var tmpHTMLTail = "&nbsp" + groups[i].permission;
-            
-            while (getTextWidth(testDiv, tmpHTMLHead + tmpHTMLMid + tmpHTMLTail) < divWidth) {
-                dotCount++;
-                tmpHTMLMid = Array(dotCount + 1).join(".");
+    updateEntries();
+
+    console.log("entries test");
+    console.log(dataSetEntries);
+    console.log(projectEntries);
+    console.log(workflowEntries);
+*/
+    function loadResource(api, uuid) {
+        $http.get('api/v1/' + api + '/?owner-id=' + userId + '&uuid=' + uuid + '&format=json').success(function (response) {
+            var shareList = response.objects[0].shares;
+            var pTable = document.getElementById('permission-table');
+            // var pTable = $('.modal-body #permission-table');
+            for (var i = 0; i < shareList.length; i++) {
+                var row = pTable.insertRow(-1);
+                var group = row.insertCell(0);
+                group.innerHTML = shareList[i].name;
+
+                var read = row.insertCell(1);
+                var readPerm = (shareList[i].permissions.read)? 'checked' : '';
+                read.innerHTML = '<input type="checkbox" ' + readPerm + '/>';
+                
+                var change = row.insertCell(2);
+                var changePerm = (shareList[i].permissions.change)? 'checked' : '';
+                change.innerHTML = '<input type="checkbox" ' + changePerm + '/>';
             }
-
-            htmlToBeAppended += tmpHTMLHead + tmpHTMLMid + tmpHTMLTail;
-        }
-        
-        divObj.innerHTML += htmlToBeAppended;
+        });
     }
 
-    function getTextWidth(divId, text) {
-        var testDiv = document.getElementById(divId);
-        testDiv.innerHTML = text;
-        var length = testDiv.clientWidth;
-        testDiv.innerHTML = "";
-        return length;
+    function patchResource(api, uuid, newShares) {
+
     }
 
-    window.onresize = function (event) {
-        var dataSetDiv = document.getElementById(dataSetTable);
-        var workflowDiv = document.getElementById(workflowTable);
-        var projectDiv = document.getElementById(projectTable);
-
-        dataSetDiv.innerHTML = "<div id='size-test' style='display: hidden; position: absolute; height: auto; width: auto'></div>";
-        workflowDiv.innerHTML = "";
-        projectDiv.innerHTML = "";
-
-        for (var i = 0; i < dataSetEntries.length; i++) {
-            addResourceEntry(dataSetTable, dataSetEntries[i].resName, dataSetEntries[i].groups);
-        }
-
-        for (var j = 0; i < workflowEntries.length; i++) {
-            addResourceEntry(workflowTable, workflowEntries[j].resName, workflowEntries[j].groups);
-        }
-        
-        for (var k = 0; i < projectEntries.length; i++) {
-            addResourceEntry(projectTable, projectEntries[k].resName, projectEntries[k].groups);
-        }
+    $scope.openPermissionEditor = function (api, uuid) {
+        loadResource(api, uuid);
+        $scope.newPermissionModalConfig = {
+            title: 'Permission Editor'
+        };
+        var modalInstance = $modal.open({
+            templateUrl: 'static/partials/sharing.tpls.html',
+            controller: permissionEditorController,
+            resolve: {
+                config: function () {
+                    return $scope.newPermissionModalConfig;
+                }
+            }
+        });
     };
-})
 
+    var permissionEditorController = function($scope, $modalInstance, config) {
+        $scope.config = config;
+        
+        $scope.save = function () {
+            
+        };
+
+        $scope.cancel = function () {
+            $modalInstance.dismiss('cancel');
+        };
+    };
+});
+/*
 .directive("sharingData", function() {
     return {
         templateUrl: "/static/partials/sharing_tpls.html",
         restrict: "A"
     };
 });
+*/

@@ -64,7 +64,7 @@ angular.module("refineryStatistics", [])
 
 .directive("statisticsData", function () {
     return {
-        templateUrl: "/static/partials/statistics_tpls.html",
+        templateUrl: "/static/partials/statistics.tpls.html",
         restrict: "A"
     };
 });
