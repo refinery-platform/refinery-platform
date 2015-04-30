@@ -54,7 +54,6 @@ codekit-config.json
 .vagrant/
 deployment/.librarian/
 deployment/.tmp/
-deployment/modules/
 deployment/Puppetfile.lock
 refinery/celerybeat-schedule*
 refinery/ui/app/

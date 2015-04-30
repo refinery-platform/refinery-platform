@@ -1,0 +1,4 @@
+# Ignore everything in this directory (managed by librarian-puppet)
+*
+# Except this file
+!.gitignore

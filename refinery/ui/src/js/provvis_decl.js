@@ -346,11 +346,11 @@ var provvisDecl = function () {
      * @param radius
      * @param color
      * @param graph
-     * @param supportView
+     * @param timelineView
      * @param cell
      * @constructor
      */
-    var ProvVis = function (parentDiv, zoom, data, url, canvas, nodeTable, rect, margin, width, height, radius, color, graph, supportView, cell) {
+    var ProvVis = function (parentDiv, zoom, data, url, canvas, nodeTable, rect, margin, width, height, radius, color, graph, timelineView, cell) {
         this._parentDiv = parentDiv;
         this.zoom = zoom;
         this._data = data;
@@ -365,7 +365,7 @@ var provvisDecl = function () {
         this.radius = radius;
         this.color = color;
         this.graph = graph;
-        this.supportView = supportView;
+        this.timelineView = timelineView;
         this.cell = cell;
     };
 

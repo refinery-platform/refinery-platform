@@ -223,7 +223,7 @@ var provvisInit = function () {
      */
     var createAnalysisNode = function (a, i) {
         return new provvisDecl.Analysis(i, Object.create(null), true, a.uuid,
-            a.workflow__uuid, i, a.time_start, a.time_end, a.creation_date);
+            a.workflow__uuid, i, a.time_start.substr(0, a.time_start.length - 3), a.time_end.substr(0, a.time_end.length - 3), a.creation_date.substr(0, a.creation_date.length - 3));
     };
 
     /**
@@ -267,11 +267,14 @@ var provvisInit = function () {
     var extractAnalyses = function (analysesData) {
 
         /* Datasets have no date information. */
-        var initDate = new Date(0);
+        var initDate = d3.time.format.iso(new Date(0));
         if (analysesData.length > 0) {
             initDate = d3.min(analysesData, function (d) {
                 return new Date(d.time_start);
             });
+            initDate.setSeconds(initDate.getSeconds() - 1);
+            initDate = d3.time.format.iso(initDate);
+            initDate = initDate.substr(0, initDate.length - 1);
         }
 
         /* Create analysis for dataset. */
