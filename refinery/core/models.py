@@ -195,14 +195,18 @@ class SharableResource (OwnableResource):
         super( SharableResource, self ).set_owner( user )
         assign_perm( "share_%s" % self._meta.verbose_name, user, self )
         
-    def share( self, group, readonly=True ):
-        meta_name = self._meta.verbose_name
+    """
+    Sharing something always grants read and add permission
+    Change permission toggled by the value of the readonly flag
+    """
+    def share( self, group, readonly=True):
         assign_perm('read_%s' % self._meta.verbose_name, group, self)
+        assign_perm('add_%s' % self._meta.verbose_name, group, self)
         remove_perm('change_%s' % self._meta.verbose_name, group, self)
         remove_perm('share_%s' % self._meta.verbose_name, group, self)
         remove_perm('delete_%s' % self._meta.verbose_name, group, self)
         if not readonly:
-            assign_perm('change_%s' % meta_name, group, self)    
+            assign_perm('change_%s' % self._meta.verbose_name, group, self)    
     
     def unshare(self, group):
         remove_perm('read_%s' % self._meta.verbose_name, group, self)

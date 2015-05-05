@@ -54,6 +54,8 @@ var provvisRender = function () {
 
     var scaleFactor = 0.75;
 
+    var layoutCols = d3.map();
+
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
         .append("div")
@@ -99,7 +101,7 @@ var provvisRender = function () {
                 handleCollapseExpandNode(an, "c");
                 //console.log("colapse an " + an.autoId);
 
-                /* TODO: 01: Only collapse those analysis nodes into the layered node which are below the threshold. */
+                /* Only collapse those analysis nodes into the layered node which are below the threshold. */
                 an.parent.children.values().forEach(function (d) {
                     if (d.doi.doiWeightedSum > (2 / 6)) {
                         d.exaggerated = true;
@@ -140,7 +142,7 @@ var provvisRender = function () {
     var showTooltip = function (label, event) {
         tooltip.html(label);
         tooltip.style("visibility", "visible");
-        tooltip.style("top", (event.pageY - 10) + "px");
+        tooltip.style("top", (event.pageY + 10) + "px");
         tooltip.style("left", (event.pageX + 10) + "px");
     };
 
@@ -199,21 +201,106 @@ var provvisRender = function () {
      * @param tarY Target y coordinate.
      * @returns {*} Path for link.
      */
-    var drawBezierLink = function (l, srcX, srcY, tarX, tarY) {
-        var pathSegment = "M" + srcX + "," + srcY;
+    var drawBezierLink1 = function (l, srcX, srcY, tarX, tarY) {
+        var pathSegment = "M" + (srcX) + "," + srcY;
 
-        if (tarX - srcX > 5 * scaleFactor * vis.radius) {
-            pathSegment = pathSegment.concat(" Q" + (srcX + cell.width / 3) + "," + (srcY) + " " +
-            (srcX + cell.width / 2) + "," + (srcY + (tarY - srcY) / 2) + " " +
-            "T" + (srcX + cell.width) + "," + tarY) +
-            " H" + tarX;
+        if (tarX - srcX > vis.cell.width * 1.5) {
+
+            /* Extend links in expanded columns. */
+            var curN = l.source,
+                hLineSrc = srcX;
+
+            if (l.source instanceof provvisDecl.Layer || l.target instanceof provvisDecl.Layer || l.source.parent !== l.target.parent) {
+                while (!(curN instanceof provvisDecl.Analysis) && !(curN instanceof provvisDecl.Layer)) {
+                    curN = curN.parent;
+                }
+
+                if (curN instanceof provvisDecl.Analysis && !curN.parent.hidden && l.source.hidden) {
+                    curN = curN.parent;
+                }
+                hLineSrc = getABBoxCoords(curN, 0).x.max - vis.cell.width / 2;
+
+                layoutCols.values().forEach(function (c) {
+                    if (c.nodes.indexOf(curN.autoId) !== -1) {
+                        if (getABBoxCoords(curN, 0).x.max - getABBoxCoords(curN, 0).x.min < c.width) {
+                            hLineSrc = srcX + c.width / 2;
+                        }
+                    }
+                });
+
+                pathSegment = pathSegment.concat(" H" + (hLineSrc));
+            }
+
+            pathSegment = pathSegment.concat(" C" + (hLineSrc + cell.width / 3) + "," + (srcY) + " " +
+                (hLineSrc + cell.width / 2 - cell.width / 3) + "," + (tarY) + " " +
+                (hLineSrc + cell.width / 2) + "," + (tarY) + " " +
+                " H" + (tarX));
         } else {
             pathSegment = pathSegment.concat(" C" + (srcX + cell.width) + "," + (srcY) + " " +
-            (tarX - cell.width) + "," + (tarY) + " " +
-            (tarX) + "," + (tarY) + " ");
+                (tarX - cell.width) + "," + (tarY) + " " +
+                (tarX) + "," + (tarY) + " ");
         }
 
         return pathSegment;
+    };
+
+    /**
+     * Path generator for bezier link.
+     * @param l Link.
+     * @param srcX Source x coordinate.
+     * @param srcY Source y coordinate.
+     * @param tarX Target x coordinate.
+     * @param tarY Target y coordinate.
+     * @returns {*} Path for link.
+     */
+    var drawBezierLink2 = function (l, srcX, srcY, tarX, tarY) {
+        var pathSegment = "M" + srcX + "," + srcY;
+
+        if (tarX - srcX > 5 * scaleFactor * vis.radius) {
+            pathSegment = pathSegment.concat(" H" + (tarX - cell.width) + " Q" + ((tarX - cell.width) + cell.width / 3) + "," + (srcY) + " " +
+                ((tarX - cell.width) + cell.width / 2) + "," + (srcY + (tarY - srcY) / 2) + " " +
+                "T" + (tarX) + "," + tarY);
+        } else {
+            pathSegment = pathSegment.concat(" C" + (srcX + cell.width) + "," + (srcY) + " " +
+                (tarX - cell.width) + "," + (tarY) + " " +
+                (tarX) + "," + (tarY) + " ");
+        }
+
+        return pathSegment;
+    };
+
+    /**
+     * Path generator for bezier link.
+     * @param l Link.
+     * @param srcX Source x coordinate.
+     * @param srcY Source y coordinate.
+     * @param tarX Target x coordinate.
+     * @param tarY Target y coordinate.
+     * @returns {*} Path for link.
+     */
+    var drawBezierLink3 = function (l, srcX, srcY, tarX, tarY) {
+        var pathSegment = "M" + srcX + "," + srcY;
+
+        pathSegment = pathSegment.concat(" C" + (srcX + cell.width) + "," + (srcY) + " " +
+            (tarX - cell.width) + "," + (tarY) + " " +
+            (tarX) + "," + (tarY) + " ");
+
+        return pathSegment;
+    };
+
+    /**
+     * Path generator for bezier link.
+     * @param l Link.
+     * @param srcX Source x coordinate.
+     * @param srcY Source y coordinate.
+     * @param tarX Target x coordinate.
+     * @param tarY Target y coordinate.
+     * @returns {*} Path for link.
+     */
+    var drawBezierLink = function (l, srcX, srcY, tarX, tarY) {
+        return drawBezierLink1(l, srcX, srcY, tarX, tarY);
+        //return drawBezierLink2(l, srcX, srcY, tarX, tarY);
+        //return drawBezierLink3(l, srcX, srcY, tarX, tarY);
     };
 
     /**
@@ -267,21 +354,6 @@ var provvisRender = function () {
                 break;
         }
 
-        /**
-         * Helper function.
-         * @param curN Node object.
-         * @returns {number} X coord offset.
-         */
-        var getNodeOffset = function (curN) {
-            var xOffset = 2 * scaleFactor * vis.radius;
-
-            if (!curN.hidden && (curN instanceof provvisDecl.Node)) {
-                xOffset = 0;
-            }
-
-            return xOffset;
-        };
-
         /* Get input links and update coordinates for x2 and y2. */
         predLinks.values().forEach(function (l) {
             d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId)
@@ -293,9 +365,9 @@ var provvisRender = function () {
                         tarCoords = getVisibleNodeCoords(l.target);
 
                     if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
-                        return drawBezierLink(l, srcCoords.x + getNodeOffset(l.source), srcCoords.y, tarCoords.x - getNodeOffset(l.target), tarCoords.y);
+                        return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
                     } else {
-                        return drawStraightLink(l, srcCoords.x + getNodeOffset(l.source), srcCoords.y, tarCoords.x - getNodeOffset(l.target), tarCoords.y);
+                        return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
                     }
                 });
         });
@@ -311,9 +383,9 @@ var provvisRender = function () {
                         srcCoords = getVisibleNodeCoords(l.source);
 
                     if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
-                        return drawBezierLink(l, srcCoords.x + getNodeOffset(l.source), srcCoords.y, tarCoords.x - getNodeOffset(l.target), tarCoords.y);
+                        return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
                     } else {
-                        return drawStraightLink(l, srcCoords.x + getNodeOffset(l.source), srcCoords.y, tarCoords.x - getNodeOffset(l.target), tarCoords.y);
+                        return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
                     }
                 });
         });
@@ -350,7 +422,7 @@ var provvisRender = function () {
 
         if (n instanceof provvisDecl.Layer) {
             n.children.values().forEach(function (an) {
-                an.x = n.x;
+                an.x = n.x - (getABBoxCoords(an, 0).x.max - getABBoxCoords(an, 0).x.min) / 2 + vis.cell.width / 2;
                 an.y += deltaY;
                 updateNode(d3.select("#gNodeId-" + an.autoId), an, an.x, an.y);
                 updateLink(an);
@@ -417,78 +489,9 @@ var provvisRender = function () {
         domDragSet.call(drag);
     };
 
-    /**
-     * Drag start listener support for time lines.
-     */
-    var dragLineStart = function () {
-        d3.event.sourceEvent.stopPropagation();
-    };
-
-    /**
-     * Drag listener.
-     * @param l Time line.
-     */
-    var draggingLine = function (l) {
-        if (d3.event.x < 0) {
-            l.x = 0;
-        } else if (d3.event.x > 100) {
-            l.x = 100;
-        } else {
-            l.x = d3.event.x;
-        }
-
-        d3.select(this).attr("transform", function (d) {
-            return "translate(" + d.x + ",0)";
-        });
-        d3.select(this).attr("transform", function (d) {
-            return "translate(" + d.x + ",0)";
-        });
-    };
-
-    /**
-     * Drag end listener.
-     */
-    var dragLineEnd = function (l) {
-        var lowerTimeThreshold = Object.create(null),
-            upperTimeThreshold = Object.create(null);
-
-        if (l.className === "startTimeLine") {
-            lowerTimeThreshold = new Date(timeLineGradientScale(l.x));
-            upperTimeThreshold = new Date(timeLineGradientScale(
-                d3.transform(d3.select(".endTimeLine").attr("transform")).translate[0]));
-        } else {
-            lowerTimeThreshold = new Date(timeLineGradientScale(
-                d3.transform(d3.select(".startTimeLine").attr("transform")).translate[0]));
-            upperTimeThreshold = new Date(timeLineGradientScale(l.x));
-        }
-
-        d3.select("#curTime").html("<b>" + lowerTimeThreshold + "<b>" + "<br>" +
-            "<b>" + upperTimeThreshold + "<b>" + "<br>");
-
-        filterAnalysesByTime(lowerTimeThreshold, upperTimeThreshold, vis);
-    };
-
-    /**
-     * Sets the drag events for time lines.
-     * @param nodeType The dom lineset to allow dragging.
-     */
-    var applyTimeLineDragBehavior = function (domDragSet) {
-        /* Drag and drop line enabled. */
-        var drag = d3.behavior.drag()
-            .origin(function (d) {
-                return d;
-            })
-            .on("dragstart", dragLineStart)
-            .on("drag", draggingLine)
-            .on("dragend", dragLineEnd);
-
-        /* Invoke dragging behavior on nodes. */
-        domDragSet.call(drag);
-    };
-
     /* TODO: Update to incorporate facet filtering and adjust link visibility on loose graphs. */
     /**
-     * Filter analyses by time gradient support view.
+     * Filter analyses by time gradient timeline view.
      * @param lowerTimeThreshold The point of time where analyses executed before are hidden.
      * @param upperTimeThreshold The point of time where analyses executed after are hidden.
      * @param vis The provenance visualization root object.
@@ -623,13 +626,164 @@ var provvisRender = function () {
     };
 
     /**
-     * Draws the support view.
+     * Draws the timeline view.
      * @param vis The provenance visualization root object.
      */
-    var drawSupportView = function (vis) {
-        var svg = d3.select("#provenance-support-view").select("svg").append("g").attr("transform", function () {
+    var drawTimelineView = function (vis) {
+        var svg = d3.select("#provenance-timeline-view").select("svg").append("g").append("g").attr("transform", function () {
             return "translate(5,0)";
         });
+
+        var x = d3.scale.linear()
+            .domain([0, 300])
+            .range([0, 300]);
+
+        /**
+         * Drag start listener support for time lines.
+         */
+        var dragLineStart = function (l) {
+            d3.event.sourceEvent.stopPropagation();
+        };
+
+        /**
+         * Get lower and upper date threshold date in timeline view.
+         * @param l Time line.
+         * @returns {*[]} An array of size 2 containing both the lower and upper threshold date.
+         */
+        var getTimeLineThresholds = function (l) {
+            var lowerTimeThreshold = Object.create(null),
+                upperTimeThreshold = Object.create(null);
+
+            if (l.className === "startTimeline") {
+                lowerTimeThreshold = new Date(timeLineGradientScale(l.x));
+                upperTimeThreshold = new Date(timeLineGradientScale(
+                    x.invert(d3.transform(d3.select(".endTimeline").attr("transform")).translate[0])));
+            } else {
+                lowerTimeThreshold = new Date(timeLineGradientScale(
+                    x.invert(d3.transform(d3.select(".startTimeline").attr("transform")).translate[0])));
+                upperTimeThreshold = new Date(timeLineGradientScale(l.x));
+            }
+
+            return [lowerTimeThreshold, upperTimeThreshold];
+        };
+
+        /**
+         * Update lower and upper date threshold label in timeline view.
+         * @param l Time line.
+         */
+        var updateTimelineLabels = function (l) {
+
+            var tlThreshold = getTimeLineThresholds(l);
+            tlThreshold[1].setSeconds(tlThreshold[1].getSeconds() + 1);
+
+            var labelStart = d3.time.format.iso(tlThreshold[0]),
+                labelEnd = d3.time.format.iso(tlThreshold[1]);
+            labelStart = createCustomTimeFormat(labelStart.substr(0, labelStart.length - 1));
+            labelEnd = createCustomTimeFormat(labelEnd.substr(0, labelEnd.length - 1));
+
+            d3.select("#tlThreshold").html("Start: " + labelStart + "<br>" +
+                "End: " + labelEnd);
+
+            d3.selectAll(".tlAnalysis").each(function (an) {
+                if (parseISOTimeFormat(an.start) < tlThreshold[0] || parseISOTimeFormat(an.start) > tlThreshold[1]) {
+                    d3.select(this).classed("blendedTLAnalysis", true);
+                } else {
+                    d3.select(this).classed("blendedTLAnalysis", false);
+                }
+            });
+        };
+
+        /**
+         * Drag listener.
+         * @param l Time line.
+         */
+        var draggingLine = function (l) {
+
+            /* Check borders. */
+            if (d3.event.x < 0) {
+                l.x = 0;
+            } else if (d3.event.x > 300) {
+                l.x = 300;
+            } else {
+                l.x = d3.event.x;
+            }
+
+            /* Update lines. */
+            d3.select(this).attr("transform", function (d) {
+                return "translate(" + x(l.x) + ",0)";
+            });
+
+            /* Update labels. */
+            updateTimelineLabels(l);
+
+            /* On hover filter update. */
+            /*var tlTickCoords = vis.graph.aNodes.map(function (an) {return timeLineGradientScale.invert(parseISOTimeFormat(an.start));});
+             if (l.className === "startTimeline") {
+             if (tlTickCoords.some(function (x) {return l.x - x > 0 && l.x - x < 1; })) {
+             filterAnalysesByTime(getTimeLineThresholds(l)[0], getTimeLineThresholds(l)[1], vis);
+             }
+             } else {
+             if (tlTickCoords.some(function (x) {return l.x - x < 0 && l.x - x > -1; })) {
+             filterAnalysesByTime(getTimeLineThresholds(l)[0], getTimeLineThresholds(l)[1], vis);
+             }
+             }*/
+        };
+
+        /**
+         * Drag end listener.
+         * @param l Time line.
+         */
+        var dragLineEnd = function (l) {
+
+            /* Update labels. */
+            updateTimelineLabels(l);
+
+            /* Filter action. */
+            filterAnalysesByTime(getTimeLineThresholds(l)[0], getTimeLineThresholds(l)[1], vis);
+        };
+
+        /**
+         * Sets the drag events for time lines.
+         * @param nodeType The dom lineset to allow dragging.
+         */
+        var applyTimeLineDragBehavior = function (domDragSet) {
+            /* Drag and drop line enabled. */
+            var dragLine = d3.behavior.drag()
+                .origin(function (d) {
+                    return d;
+                })
+                .on("dragstart", dragLineStart)
+                .on("drag", draggingLine)
+                .on("dragend", dragLineEnd);
+
+            /* Invoke dragging behavior on nodes. */
+            domDragSet.call(dragLine);
+        };
+
+        /* Geometric zoom. */
+        var redrawTimeline = function () {
+
+            /* Translations. */
+            svg.selectAll(".tlAnalysis").attr("x1", function (an) {
+                return x(timeLineGradientScale.invert(parseISOTimeFormat(an.start)));
+            })
+                .attr("x2", function (an) {
+                    return x(timeLineGradientScale.invert(parseISOTimeFormat(an.start)));
+                });
+
+            svg.selectAll(".startTimeline, .endTimeline").attr("transform", function (d) {
+                return "translate(" + x(d.x) + "," + 0 + ")";
+            });
+
+            svg.select("#timelineView").attr("x", x(0))
+                .attr("width", x(300) - x(0));
+        };
+
+        /* Timeline zoom behavior. */
+        var timelineZoom = d3.behavior.zoom().x(x).scaleExtent([1, 10]).on("zoom", redrawTimeline);
+
+        timelineZoom(svg);
+
         var gradient = svg.append("defs")
             .append("linearGradient")
             .attr("id", "gradientGrayscale");
@@ -645,20 +799,20 @@ var provvisRender = function () {
             .attr("stop-opacity", 1);
 
         svg.append("rect")
-            .attr("id", "supportView")
+            .attr("id", "timelineView")
             .attr("x", 0)
-            .attr("y", 0)
-            .attr("width", 100)
-            .attr("height", 85)
+            .attr("y", 10)
+            .attr("width", 300)
+            .attr("height", 80)
             .style({"fill": "url(#gradientGrayscale)", "stroke": "white", "stroke-width": "1px"});
 
         var startTime = {
-            className: "startTimeLine",
+            className: "startTimeline",
             x: 0
         };
         var endTime = {
-            className: "endTimeLine",
-            x: 100
+            className: "endTimeline",
+            x: 300
         };
 
         var timeLineThreshold = svg.selectAll(".line")
@@ -676,41 +830,120 @@ var provvisRender = function () {
             .attr("y2", 100);
 
         timeLineThreshold.append("polygon").classed("timeMarker", true)
-            .attr("points", "0,85 5,97 -5,97");
+            .attr("points", "0,90 5,100 -5,100");
+        timeLineThreshold.append("polygon").classed("timeMarker", true)
+            .attr("points", "0,10 5,0 -5,0");
 
         timeLineGradientScale = d3.scale.linear()
-            .domain([0, 100])
+            .domain([0, 300])
             .range([Date.parse(timeColorScale.domain()[0]), Date.parse(timeColorScale.domain()[1])]);
 
-        aNode.each(function (an) {
-            svg.append("line")
-                .attr("x1", timeLineGradientScale.invert(parseISOTimeFormat(an.start)))
-                .attr("y1", 60)
-                .attr("x2", timeLineGradientScale.invert(parseISOTimeFormat(an.start)))
-                .attr("y2", 85)
-                .style({"stroke": "#ed7407", "stroke-width": "1.5px"});
+        svg.selectAll(".line")
+            .data(function () {
+                return vis.graph.aNodes;
+            })
+            .enter().append("line").classed("tlAnalysis", true)
+            .attr("x1", function (an) {
+                return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
+            })
+            .attr("y1", function (an) {
+                return an.children.size() >= 5 ? 10 : parseInt(90 - 80 / 5 * an.children.size(), 10);
+            })
+            .attr("x2", function (an) {
+                return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
+            })
+            .attr("y2", 90);
+
+        d3.selectAll(".startTimeline, .endTimeline").on("mouseover", function () {
+            d3.select(this).classed("mouseoverTimeline", true);
         });
 
-        d3.selectAll(".startTimeLine, .endTimeLine").on("mouseover", function () {
-            d3.select(this).classed("mouseoverTimeLine", true);
-        });
-
-        $("#prov-support-view-reset-time").click(function () {
-            filterAnalysesByTime(new Date(timeLineGradientScale(0)), new Date(timeLineGradientScale(100)), vis);
-            d3.select(this.parentNode).select(".startTimeLine")
+        $("#prov-timeline-view-reset-time").click(function () {
+            filterAnalysesByTime(new Date(timeLineGradientScale(0)), new Date(timeLineGradientScale(300)), vis);
+            d3.select(this.parentNode).select(".startTimeline")
                 .attr("transform", function (d) {
                     d.x = 0;
                     return "translate(0,0)";
                 });
-            d3.select(this.parentNode).select(".endTimeLine")
+            d3.select(this.parentNode).select(".endTimeline")
                 .attr("transform", function (d) {
-                    d.x = 100;
-                    return "translate(100,0)";
+                    d.x = 300;
+                    return "translate(300,0)";
                 });
-            d3.select("#curTime").html("<b>" + "All" + "<b>" + "<br>");
+            d3.select("#tlThreshold").html("<br>" + "All" + "" + "<br>");
+
+            svg.select("#timelineView").attr("transform", function () {
+                return "translate(5,0)";
+            }).attr("x", 5)
+                .attr("y", 10)
+                .attr("width", 300)
+                .attr("height", 80)
+                .style({"fill": "url(#gradientGrayscale)", "stroke": "white", "stroke-width": "1px"});
+
+            d3.selectAll(".tlAnalysis")
+                .attr("x1", function (an) {
+                    return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
+                })
+                .attr("y1", function (an) {
+                    return an.children.size() >= 5 ? 10 : parseInt(90 - 80 / 5 * an.children.size(), 10);
+                })
+                .attr("x2", function (an) {
+                    return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
+                })
+                .attr("y2", 90);
+
+            svg.select("svg.g.g").attr("transform", "translate(5,0)scale(1)");
+
+            /* TODO: Fix zoom reset. */
+            svg.zoom.translate([5, 0]);
+            svg.zoom.scale(1);
         });
 
-        applyTimeLineDragBehavior(d3.selectAll(".startTimeLine, .endTimeLine"));
+        applyTimeLineDragBehavior(d3.selectAll(".startTimeline, .endTimeline"));
+
+        updateTimelineLabels(startTime);
+    };
+
+
+    /* TODO: Placeholder code. */
+    /**
+     * Draws the DOI view.
+     * @param vis The provenance visualization root object.
+     */
+    var drawDoiView = function (vis) {
+        var svg = d3.select("#provenance-doi-view").select("svg").append("g").append("g").attr("transform", function () {
+            return "translate(0,0)";
+        });
+
+        var dummyCompRectData = [0, 0.05, 0.15, 0.35, 0.55, 0.83];
+
+        var color = d3.scale.category10();
+
+        /* Draw component rects. */
+        var dComp = svg.append("g").selectAll(".g").data(dummyCompRectData).enter().append("g")
+            .attr("id", function (d, i) {
+                return "doiRectId-" + i;
+            }).classed({"doiRect": true})
+            .attr("transform", function (d, i) {
+                return "translate(" + 0 + "," + (d * 300) + ")";
+            });
+
+        dComp.append("rect")
+            .attr("width", 100)
+            .attr("height", function (d) {
+                return 300 - 300 * d;
+            }).style({"fill": function (d) {
+                return color(d);
+            }});
+
+        dComp.append("text")
+            .attr("x", 110)
+            .attr("y", 10)
+            .text(function (d) {
+                return d;
+            }).style({"fill": function (d) {
+                return color(d);
+            }});
     };
 
     /**
@@ -892,7 +1125,8 @@ var provvisRender = function () {
      * @returns {*} The value in the ISO time format.
      */
     var parseISOTimeFormat = function (value) {
-        return d3.time.format.iso.parse(value);
+        var strictIsoFormat = d3.time.format("%Y-%m-%dT%H:%M:%S.%L");
+        return strictIsoFormat.parse(value);
     };
 
     /**
@@ -901,9 +1135,9 @@ var provvisRender = function () {
      * @returns {*} The time in custom format.
      */
     var createCustomTimeFormat = function (value) {
-        var isoDate = parseISOTimeFormat(value);
-        var customDateFormat = d3.time.format("%b %d, %Y %I:%M:%S %p");
-        return customDateFormat(isoDate);
+        var isoDate = parseISOTimeFormat(value),
+            customFormat = d3.time.format("%Y-%m-%d %H:%M:%S %p");
+        return customFormat(isoDate);
     };
 
     /**
@@ -980,21 +1214,20 @@ var provvisRender = function () {
         lBBox = lEnter.append("g")
             .attr("id", function (ln) {
                 return "BBoxId-" + ln.autoId;
-            }).classed({"lBBox": true, "BBox": true, "hiddenBBox": true})
+            }).classed({"lBBox": true, "BBox": true, "hiddenBBox": false})
             .attr("transform", function () {
-                return "translate(" + (-cell.width / 2 + 1) + "," + (-cell.height / 2 + 1) + ")";
+                return "translate(" + (-cell.width / 2) + "," + (-cell.height / 2) + ")";
             });
 
         lBBox.append("rect")
             .attr("width", function () {
-                return cell.width - 2;
+                return cell.width - 1;
             })
             .attr("height", function () {
-                return cell.height - 2;
+                return cell.height - 1;
             })
             .attr("rx", cell.width / 5)
             .attr("ry", cell.height / 5);
-
 
 
         var layerNode = lEnter.append("g")
@@ -1032,14 +1265,39 @@ var provvisRender = function () {
             .attr("width", 4 * scaleFactor * vis.radius)
             .attr("height", 4 * scaleFactor * vis.radius);
 
-        lGlyph.append("rect")
-            .attr("x", -2 * scaleFactor * vis.radius)
-            .attr("y", -2 * scaleFactor * vis.radius)
-            .attr("rx", 1)
-            .attr("ry", 1)
-            .attr("width", 4 * scaleFactor * vis.radius)
-            .attr("height", 4 * scaleFactor * vis.radius)
-            .classed({"lGlyph": true});
+        lGlyph.append("g").classed({"glAnchor": true}).append("path")
+            .attr("d", function () {
+                return "m" + (-2 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
+                    "h" + (-0.5 * scaleFactor * vis.radius) + " " +
+                    "a" + (-0.5 * scaleFactor * vis.radius) + " " + (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
+                    "0 " + (1 * scaleFactor * vis.radius) + " " +
+                    "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
+            }).classed({"llAnchor": true});
+
+        lGlyph.append("g").classed({"grAnchor": true}).append("path")
+            .attr("d", function () {
+                return "m" + (2 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
+                    "h" + (0.5 * scaleFactor * vis.radius) + " " +
+                    "a" + (0.5 * scaleFactor * vis.radius) + " " + (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
+                    "0 " + (1 * scaleFactor * vis.radius) + " " +
+                    "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
+            }).classed({"rlAnchor": true});
+
+        lGlyph.select("g.glAnchor").append("text")
+            .attr("transform", function () {
+                return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," + 0.5 + ")";
+            })
+            .text(function (d) {
+                return d.inputs.size();
+            }).attr("class", "lLabel");
+
+        lGlyph.select("g.grAnchor").append("text")
+            .attr("transform", function () {
+                return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," + 0.5 + ")";
+            })
+            .text(function (d) {
+                return d.outputs.size();
+            }).attr("class", "lLabel");
 
         lGlyph.append("rect")
             .attr("x", -2 * scaleFactor * vis.radius)
@@ -1051,41 +1309,7 @@ var provvisRender = function () {
                 "fill": function (d) {
                     return "url(#layerGradientId-" + d.autoId + ")";
                 }
-            });
-
-        lGlyph.append("g").classed({"glAnchor": true}).append("path")
-            .attr("d", function () {
-                return "m" + (-1.5 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
-                    "h" + (-0.5 * scaleFactor * vis.radius) + " " +
-                    "a" + (-0.5 * scaleFactor * vis.radius) + " " + (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
-                    "0 " + (1 * scaleFactor * vis.radius) + " " +
-                    "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
-            }).classed({"llAnchor": true});
-
-        lGlyph.select("g.glAnchor").append("text")
-            .attr("transform", function () {
-                return "translate(" + ( -2 * scaleFactor * vis.radius) + "," + 0.5 + ")";
-            })
-            .text(function (d) {
-                return d.inputs.size();
-            }).attr("class", "lLabel");
-
-        lGlyph.append("g").classed({"grAnchor": true}).append("path")
-            .attr("d", function () {
-                return "m" + (1.5 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
-                    "h" + (0.5 * scaleFactor * vis.radius) + " " +
-                    "a" + (0.5 * scaleFactor * vis.radius) + " " + (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
-                    "0 " + (1 * scaleFactor * vis.radius) + " " +
-                    "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
-            }).classed({"rlAnchor": true});
-
-        lGlyph.select("g.grAnchor").append("text")
-            .attr("transform", function () {
-                return "translate(" + ( 2 * scaleFactor * vis.radius) + "," + 0.5 + ")";
-            })
-            .text(function (d) {
-                return d.outputs.size();
-            }).attr("class", "lLabel");
+            }).classed({"lGlyph": true});
 
         /* TODO: Layer glyph. */
         /*lGlyph.append("line")
@@ -1094,19 +1318,19 @@ var provvisRender = function () {
          .attr("x2", 2 * scaleFactor * vis.radius)
          .attr("y2", -0.5 * scaleFactor * vis.radius)
          .classed({"lLine": true});
-        lGlyph.append("line")
+         lGlyph.append("line")
          .attr("x1", -2 * scaleFactor * vis.radius)
          .attr("y1", -0.175 * scaleFactor * vis.radius)
          .attr("x2", 2 * scaleFactor * vis.radius)
          .attr("y2", -0.175 * scaleFactor * vis.radius)
          .classed({"lLine": true});
-        lGlyph.append("line")
+         lGlyph.append("line")
          .attr("x1", -2 * scaleFactor * vis.radius)
          .attr("y1", 0.175 * scaleFactor * vis.radius)
          .attr("x2", 2 * scaleFactor * vis.radius)
          .attr("y2", 0.175 * scaleFactor * vis.radius)
          .classed({"lLine": true});
-        lGlyph.append("line")
+         lGlyph.append("line")
          .attr("x1", -2 * scaleFactor * vis.radius)
          .attr("y1", 0.5 * scaleFactor * vis.radius)
          .attr("x2", 2 * scaleFactor * vis.radius)
@@ -1261,11 +1485,11 @@ var provvisRender = function () {
             })
             .select("rect")
             .attr("transform", function () {
-                return "translate(" + (-cell.width / 2 + 1) + "," + (-cell.height / 2 + 1) + ")";
+                return "translate(" + (-cell.width / 2) + "," + (-cell.height / 2 + 1) + ")";
             })
-            .attr("y", -3 * scaleFactor * vis.radius)
+            .attr("y", -/*3 * */scaleFactor * vis.radius)
             .attr("width", cell.width - 4)
-            .attr("height", cell.height - 2 + 3 * scaleFactor * vis.radius)
+            .attr("height", cell.height - 2/* + 3 * scaleFactor * vis.radius*/)
             .attr("rx", cell.width / 5)
             .attr("ry", cell.height / 5);
 
@@ -1279,12 +1503,12 @@ var provvisRender = function () {
             });
 
         analysisBBox.select("rect")
-            .attr("y", -3 * scaleFactor * vis.radius)
+            .attr("y", -/*3 * */scaleFactor * vis.radius)
             .attr("width", function () {
                 return cell.width - 2;
             })
             .attr("height", function () {
-                return cell.height - 2 + 3 * scaleFactor * vis.radius;
+                return cell.height - 2/* + 3 * scaleFactor * vis.radius*/;
             })
             .attr("rx", cell.width / 5)
             .attr("ry", cell.height / 5);
@@ -1296,9 +1520,9 @@ var provvisRender = function () {
                 return "aBBClipId-" + an.autoId;
             })
             .select("rect")
-            .attr("y", -3 * scaleFactor * vis.radius)
+            .attr("y", -/*3 * */scaleFactor * vis.radius)
             .attr("width", cell.width - 4)
-            .attr("height", cell.height - 2 + 3 * scaleFactor * vis.radius)
+            .attr("height", cell.height - 2/* + 3 * scaleFactor * vis.radius*/)
             .attr("rx", cell.width / 5)
             .attr("ry", cell.height / 5);
 
@@ -1309,11 +1533,11 @@ var provvisRender = function () {
             })
             .select("text")
             .attr("transform", function () {
-                return "translate(" + 0 + "," + -1.5 * scaleFactor * vis.radius + ")";
+                return "translate(" + 2 + "," + 0.5 * scaleFactor * vis.radius + ")";
             })
             .attr("class", "aBBoxLabel")
             .text(function (d) {
-                return createCustomTimeFormat(d.start).toString();
+                return createCustomTimeFormat(d.start);
             });
 
         /* Draw analysis node. */
@@ -1338,25 +1562,9 @@ var provvisRender = function () {
 
         scaleFactor = 0.75;
 
-        aGlyph.select("rect")
-            .attr("x", -2 * scaleFactor * vis.radius)
-            .attr("y", -1.5 * scaleFactor * vis.radius)
-            .attr("rx", 1)
-            .attr("ry", 1)
-            .attr("width", 4 * scaleFactor * vis.radius)
-            .attr("height", 3 * scaleFactor * vis.radius);
-
-        aGlyph.select("rect")
-            .attr("x", -2 * scaleFactor * vis.radius)
-            .attr("y", -0.5 * scaleFactor * vis.radius)
-            .attr("rx", 1)
-            .attr("ry", 1)
-            .attr("width", 4 * scaleFactor * vis.radius)
-            .attr("height", 2 * scaleFactor * vis.radius);
-
         aGlyph.select("g.glAnchor").select("path")
             .attr("d", function () {
-                return "m" + (-1.5 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
+                return "m" + (-2 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
                     "h" + (-0.5 * scaleFactor * vis.radius) + " " +
                     "a" + (-0.5 * scaleFactor * vis.radius) + " " + (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
                     "0 " + (1 * scaleFactor * vis.radius) + " " +
@@ -1365,7 +1573,7 @@ var provvisRender = function () {
 
         aGlyph.select("g.grAnchor").select("text")
             .attr("transform", function () {
-                return "translate(" + ( -2 * scaleFactor * vis.radius) + "," + 0.5 + ")";
+                return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," + 0.5 + ")";
             })
             .text(function (d) {
                 return d.predLinks.size();
@@ -1375,19 +1583,27 @@ var provvisRender = function () {
 
         aGlyph.select("path")
             .attr("d", function () {
-                return "m" + (1.5 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
+                return "m" + (2 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
                     "h" + (0.5 * scaleFactor * vis.radius) + " " +
                     "a" + (0.5 * scaleFactor * vis.radius) + " " + (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
                     "0 " + (1 * scaleFactor * vis.radius) + " " +
                     "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
             }).select("text")
             .attr("transform", function () {
-                return "translate(" + ( 2 * scaleFactor * vis.radius) + "," + 0.5 + ")";
+                return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," + 0.5 + ")";
             })
             .text(function (d) {
                 return d.succLinks.size();
             }).attr("class", "aLabel")
             .style("display", "inline");
+
+        aGlyph.select("rect")
+            .attr("x", -2 * scaleFactor * vis.radius)
+            .attr("y", -1.5 * scaleFactor * vis.radius)
+            .attr("rx", 1)
+            .attr("ry", 1)
+            .attr("width", 4 * scaleFactor * vis.radius)
+            .attr("height", 3 * scaleFactor * vis.radius);
 
         /* Add text labels. */
         aLabels.select("text")
@@ -1430,9 +1646,9 @@ var provvisRender = function () {
             })
             .append("rect")
             .attr("transform", function () {
-                return "translate(" + (-cell.width / 2 + 1) + "," + (-cell.height / 2 + 1) + ")";
+                return "translate(" + (-cell.width / 2) + "," + (-cell.height / 2 + 1) + ")";
             })
-            .attr("y", -3 * scaleFactor * vis.radius)
+            .attr("y", -/*3 * */scaleFactor * vis.radius)
             .attr("width", cell.width - 4)
             .attr("height", cell.height - 2 + 2 * scaleFactor * vis.radius)
             .attr("rx", cell.width / 5)
@@ -1448,12 +1664,12 @@ var provvisRender = function () {
             });
 
         analysisBBox.append("rect")
-            .attr("y", -3 * scaleFactor * vis.radius)
+            .attr("y", -/*3 * */scaleFactor * vis.radius)
             .attr("width", function () {
                 return cell.width - 2;
             })
             .attr("height", function () {
-                return cell.height - 2 + 3 * scaleFactor * vis.radius;
+                return cell.height - 2/* + 3 * scaleFactor * vis.radius*/;
             })
             .attr("rx", cell.width / 5)
             .attr("ry", cell.height / 5);
@@ -1465,9 +1681,9 @@ var provvisRender = function () {
                 return "aBBClipId-" + an.autoId;
             })
             .append("rect")
-            .attr("y", -3 * scaleFactor * vis.radius)
+            .attr("y", -/*3 * */scaleFactor * vis.radius)
             .attr("width", cell.width - 4)
-            .attr("height", cell.height - 2 + 3 * scaleFactor * vis.radius)
+            .attr("height", cell.height - 2/* + 3 * scaleFactor * vis.radius*/)
             .attr("rx", cell.width / 5)
             .attr("ry", cell.height / 5);
 
@@ -1478,23 +1694,23 @@ var provvisRender = function () {
             })
             .append("text")
             .attr("transform", function () {
-                return "translate(" + 0 + "," + -1.5 * scaleFactor * vis.radius + ")";
+                return "translate(" + 2 + "," + 0.5 * scaleFactor * vis.radius + ")";
             })
             .attr("class", "aBBoxLabel")
             .text(function (d) {
-                return createCustomTimeFormat(d.start).toString();
+                return createCustomTimeFormat(d.start);
             });
 
-        analysisBBox.select("g.labels")
-            .attr("clip-path", function (an) {
-                return "url(#aBBClipId-" + an.autoId + ")";
-            }).append("text")
-            .attr("transform", function () {
-                return "translate(" + 0 + "," + 0 + ")";
-            })
-            .text(function (d) {
-                return d.wfName.toString();
-            }).attr("class", "saBBoxLabel");
+        /*analysisBBox.select("g.labels")
+         .attr("clip-path", function (an) {
+         return "url(#aBBClipId-" + an.autoId + ")";
+         }).append("text")
+         .attr("transform", function () {
+         return "translate(" + 0 + "," + 0 + ")";
+         })
+         .text(function (d) {
+         return d.wfName.toString();
+         }).attr("class", "saBBoxLabel");*/
 
         /* Draw analysis node. */
         var analysisNode = anEnter.append("g")
@@ -1516,26 +1732,9 @@ var provvisRender = function () {
                     return "url(#bbClipId-" + an.autoId + ")";
                 });
 
-        aGlyph.append("rect")
-            .attr("x", -2 * scaleFactor * vis.radius)
-            .attr("y", -1.5 * scaleFactor * vis.radius)
-            .attr("rx", 1)
-            .attr("ry", 1)
-            .attr("width", 4 * scaleFactor * vis.radius)
-            .attr("height", 3 * scaleFactor * vis.radius)
-            .classed({"aGlyph": true});
-
-        aGlyph.append("rect")
-            .attr("x", -2 * scaleFactor * vis.radius)
-            .attr("y", -0.5 * scaleFactor * vis.radius)
-            .attr("rx", 1)
-            .attr("ry", 1)
-            .attr("width", 4 * scaleFactor * vis.radius)
-            .attr("height", 2 * scaleFactor * vis.radius);
-
         aGlyph.append("g").classed({"glAnchor": true}).append("path")
             .attr("d", function () {
-                return "m" + (-1.5 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
+                return "m" + (-2 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
                     "h" + (-0.5 * scaleFactor * vis.radius) + " " +
                     "a" + (-0.5 * scaleFactor * vis.radius) + " " + (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
                     "0 " + (1 * scaleFactor * vis.radius) + " " +
@@ -1544,7 +1743,7 @@ var provvisRender = function () {
 
         aGlyph.select("g.glAnchor").append("text")
             .attr("transform", function () {
-                return "translate(" + ( -2 * scaleFactor * vis.radius) + "," + 0.5 + ")";
+                return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," + 0.5 + ")";
             })
             .text(function (d) {
                 return d.predLinks.size();
@@ -1554,7 +1753,7 @@ var provvisRender = function () {
 
         aGlyph.append("g").classed({"grAnchor": true}).append("path")
             .attr("d", function () {
-                return "m" + (1.5 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
+                return "m" + (2 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
                     "h" + (0.5 * scaleFactor * vis.radius) + " " +
                     "a" + (0.5 * scaleFactor * vis.radius) + " " + (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
                     "0 " + (1 * scaleFactor * vis.radius) + " " +
@@ -1563,52 +1762,21 @@ var provvisRender = function () {
 
         aGlyph.select("g.grAnchor").append("text")
             .attr("transform", function () {
-                return "translate(" + ( 2 * scaleFactor * vis.radius) + "," + 0.5 + ")";
+                return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," + 0.5 + ")";
             })
             .text(function (d) {
                 return d.succLinks.size();
             }).attr("class", "aLabel")
             .style("display", "inline");
 
-        /* aGlyph.append("rect")
-         .attr("x", 0.4 * scaleFactor * vis.radius)
-         .attr("y", -1.4 * scaleFactor * vis.radius)
-         .attr("rx", 0.5)
-         .attr("ry", 0.5)
-         .attr("width", 0.8 * scaleFactor * vis.radius)
-         .attr("height", 0.8 * scaleFactor * vis.radius)
-         .classed({"aLine": true});*/
-
-        aGlyph.append("line")
-            .attr("x1", 0.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.7 * scaleFactor * vis.radius)
-            .attr("x2", 1.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.7 * scaleFactor * vis.radius)
-            .classed({"aLine": true});
-        aGlyph.append("line")
-            .attr("x1", 0.5 * scaleFactor * vis.radius)
-            .attr("y1", -0.9 * scaleFactor * vis.radius)
-            .attr("x2", 1.5 * scaleFactor * vis.radius)
-            .attr("y2", -0.9 * scaleFactor * vis.radius)
-            .classed({"aLine": true});
-        aGlyph.append("line")
-            .attr("x1", 0.5 * scaleFactor * vis.radius)
-            .attr("y1", -1.1 * scaleFactor * vis.radius)
-            .attr("x2", 1.5 * scaleFactor * vis.radius)
-            .attr("y2", -1.1 * scaleFactor * vis.radius)
-            .classed({"aLine": true});
-        aGlyph.append("line")
-            .attr("x1", 0.5 * scaleFactor * vis.radius)
-            .attr("y1", -1.3 * scaleFactor * vis.radius)
-            .attr("x2", 1.5 * scaleFactor * vis.radius)
-            .attr("y2", -1.3 * scaleFactor * vis.radius)
-            .classed({"aLine": true});
-        aGlyph.append("line")
-            .attr("x1", -1.5 * scaleFactor * vis.radius)
-            .attr("y1", -1 * scaleFactor * vis.radius)
-            .attr("x2", -0.5 * scaleFactor * vis.radius)
-            .attr("y2", -1 * scaleFactor * vis.radius)
-            .classed({"aLine": true});
+        aGlyph.append("rect")
+            .attr("x", -2 * scaleFactor * vis.radius)
+            .attr("y", -1.5 * scaleFactor * vis.radius)
+            .attr("rx", 1)
+            .attr("ry", 1)
+            .attr("width", 4 * scaleFactor * vis.radius)
+            .attr("height", 3 * scaleFactor * vis.radius)
+            .classed({"aGlyph": true});
 
         /* Add text labels. */
         aLabels.append("text")
@@ -1619,11 +1787,16 @@ var provvisRender = function () {
 
         aLabels.append("text")
             .attr("transform", function () {
-                return "translate(" + (0) + "," + (-0.9 * scaleFactor * vis.radius) + ")";
+                return "translate(" + (0) + "," + (-0.5 * scaleFactor * vis.radius) + ")";
             })
             .text(function (d) {
                 return d.children.size();
             }).attr("class", "aLabel")
+            .style({
+                "fill": function (an) {
+                    return timeColorScale(parseISOTimeFormat(an.start)) < "#888888" ? "#ffffff" : "#000000";
+                }
+            })
             .style("display", "inline");
 
         aLabels.append("text")
@@ -1794,23 +1967,23 @@ var provvisRender = function () {
                         return saBBoxCoords.x.max - saBBoxCoords.x.min;
                     })
                     .attr("height", function () {
-                        return saBBoxCoords.y.max - saBBoxCoords.y.min;
+                        return saBBoxCoords.y.max - saBBoxCoords.y.min - 5;
                     })
                     .attr("rx", cell.width / 5)
                     .attr("ry", cell.height / 5);
 
                 /* Workflow name as label. */
                 /*subanalysisBBox.append("g").classed({"labels": true}).attr("clip-path", "url(#saBBClipId-" + san.autoId + ")")
-                    .append("text")
-                    .attr("transform", function () {
+                 .append("text")
+                 .attr("transform", function () {
                  return "translate(" + 0 + "," + 0 + ")";
-                    }).attr("class", "saBBoxLabel")
-                    .text(function () {
-                        var wfName = "dataset";
-                        if (typeof vis.graph.workflowData.get(san.parent.wfUuid) !== "undefined") {
-                            wfName = vis.graph.workflowData.get(san.parent.wfUuid).name;
-                        }
-                        return wfName.toString();
+                 }).attr("class", "saBBoxLabel")
+                 .text(function () {
+                 var wfName = "dataset";
+                 if (typeof vis.graph.workflowData.get(san.parent.wfUuid) !== "undefined") {
+                 wfName = vis.graph.workflowData.get(san.parent.wfUuid).name;
+                 }
+                 return wfName.toString();
                  });*/
 
                 /* Draw subanalysis node. */
@@ -1832,7 +2005,7 @@ var provvisRender = function () {
 
                 saGlyph.append("g").classed({"glAnchor": true}).append("path")
                     .attr("d", function () {
-                        return "m" + (-1.5 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
+                        return "m" + (-2 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
                             "h" + (-0.5 * scaleFactor * vis.radius) + " " +
                             "a" + (-0.5 * scaleFactor * vis.radius) + " " + (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
                             "0 " + (1 * scaleFactor * vis.radius) + " " +
@@ -1841,7 +2014,7 @@ var provvisRender = function () {
 
                 saGlyph.select("g.glAnchor").append("text")
                     .attr("transform", function () {
-                        return "translate(" + ( -2 * scaleFactor * vis.radius) + "," + 0.5 + ")";
+                        return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," + 0.5 + ")";
                     })
                     .text(function (d) {
                         return d.predLinks.size();
@@ -1850,7 +2023,7 @@ var provvisRender = function () {
 
                 saGlyph.append("g").classed({"grAnchor": true}).append("path")
                     .attr("d", function () {
-                        return "m" + (1.5 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
+                        return "m" + (2 * scaleFactor * vis.radius) + " " + (-0.5 * scaleFactor * vis.radius) + " " +
                             "h" + (0.5 * scaleFactor * vis.radius) + " " +
                             "a" + (0.5 * scaleFactor * vis.radius) + " " + (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
                             "0 " + (1 * scaleFactor * vis.radius) + " " +
@@ -1859,7 +2032,7 @@ var provvisRender = function () {
 
                 saGlyph.select("g.grAnchor").append("text")
                     .attr("transform", function () {
-                        return "translate(" + ( 2 * scaleFactor * vis.radius) + "," + 0.5 + ")";
+                        return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," + 0.5 + ")";
                     })
                     .text(function (d) {
                         return d.succLinks.size();
@@ -1867,12 +2040,19 @@ var provvisRender = function () {
                     .style("display", "inline");
 
                 saGlyph.append("rect")
-                    .attr("x", -1.5 * scaleFactor * vis.radius)
+                    .attr("x", -2 * scaleFactor * vis.radius)
                     .attr("y", -1 * scaleFactor * vis.radius)
                     .attr("rx", 1)
                     .attr("ry", 1)
-                    .attr("width", 3 * scaleFactor * vis.radius)
+                    .attr("width", 4 * scaleFactor * vis.radius)
                     .attr("height", 2 * scaleFactor * vis.radius);
+
+                /*.attr("x", -1.5 * scaleFactor * vis.radius)
+                 .attr("y", -1 * scaleFactor * vis.radius)
+                 .attr("rx", 1)
+                 .attr("ry", 1)
+                 .attr("width", 3 * scaleFactor * vis.radius)
+                 .attr("height", 2 * scaleFactor * vis.radius);*/
 
                 /* Add text labels. */
                 saLabels.append("text")
@@ -1979,14 +2159,14 @@ var provvisRender = function () {
                         .append("circle")
                         .attr("r", function (d) {
                             return d.nodeType === "intermediate" ? 3 * scaleFactor *
-                            vis.radius / 4 : 5 * scaleFactor * vis.radius / 6;
+                                vis.radius / 4 : 5 * scaleFactor * vis.radius / 6;
                         });
                 } else {
                     if (d.nodeType === "special") {
                         nGlyph
                             .append("rect")
                             .attr("transform", "translate(" + (-3 * scaleFactor * vis.radius / 4) + "," +
-                            (-3 * scaleFactor * vis.radius / 4) + ")")
+                                (-3 * scaleFactor * vis.radius / 4) + ")")
                             .attr("width", 1.5 * scaleFactor * vis.radius)
                             .attr("height", 1.5 * scaleFactor * vis.radius);
                     } else if (d.nodeType === "dt") {
@@ -2071,22 +2251,22 @@ var provvisRender = function () {
 
         var minX = !an.hidden ? an.x : d3.min(an.children.values(), function (san) {
                 return !san.hidden ? an.x + san.x : d3.min(san.children.values(), function (cn) {
-                    return an.x + san.x + cn.x;
+                    return !cn.hidden ? an.x + san.x + cn.x : an.x;
                 });
             }),
             maxX = !an.hidden ? an.x : d3.max(an.children.values(), function (san) {
                 return !san.hidden ? an.x + san.x : d3.max(san.children.values(), function (cn) {
-                    return an.x + san.x + cn.x;
+                    return !cn.hidden ? an.x + san.x + cn.x : an.x;
                 });
             }),
             minY = !an.hidden ? an.y : d3.min(an.children.values(), function (san) {
                 return !san.hidden ? an.y + san.y : d3.min(san.children.values(), function (cn) {
-                    return an.y + san.y + cn.y;
+                    return !cn.hidden ? an.y + san.y + cn.y : an.y;
                 });
             }),
             maxY = !an.hidden ? an.y : d3.max(an.children.values(), function (san) {
                 return !san.hidden ? an.y + san.y : d3.max(san.children.values(), function (cn) {
-                    return an.y + san.y + cn.y;
+                    return !cn.hidden ? an.y + san.y + cn.y : an.y;
                 });
             });
 
@@ -2150,6 +2330,7 @@ var provvisRender = function () {
         });
     };
 
+    /* TODO: Code cleanup. */
     /**
      * Dagre layout for analysis.
      * @param graph The provenance Graph.
@@ -2160,7 +2341,7 @@ var provvisRender = function () {
         var g = new dagre.graphlib.Graph();
         g.setGraph({
             rankdir: "LR",
-            nodesep: 3 * scaleFactor * vis.radius,
+            nodesep: 1 * scaleFactor * vis.radius,
             edgesep: 0,
             ranksep: 4 * scaleFactor * vis.radius,
             marginx: 0,
@@ -2179,10 +2360,11 @@ var provvisRender = function () {
         graph.lNodes.values().forEach(function (ln) {
             d3.select("#BBoxId-" + ln.autoId).classed("hiddenBBox", true);
             if (!ln.hidden) {
+                d3.select("#BBoxId-" + ln.autoId).classed("hiddenBBox", false);
                 curWidth = vis.cell.width;
                 curHeight = vis.cell.height;
 
-                /* TODO: 01: Check exaggerated layer children. */
+                /* Check exaggerated layer children. */
                 /* Add visible dimensions to layer node without bounding boxes. */
                 /* Based on current y-coord order, the stack of nodes will be drawn vertically. */
                 /* Child nodes inherit x-coord of layer node and y-coord will be computed based on the statement above.*/
@@ -2202,6 +2384,7 @@ var provvisRender = function () {
 
                         updateNodeAndLink(an, d3.select("#gNodeId-" + an.autoId));
                         d3.select("#BBoxId-" + ln.autoId).classed("hiddenBBox", false);
+                        d3.select("#BBoxId-" + an.autoId).classed("hiddenBBox", false);
                     } else {
                         an.x = an.parent.x;
                         an.y = an.parent.y;
@@ -2215,26 +2398,33 @@ var provvisRender = function () {
                     });
 
                 /* Get potential expanded bounding box size. */
-                var accHeight = curHeight,
-                    accWidth = curWidth;
+                var accHeight = curHeight - 2,
+                    accWidth = curWidth - 2;
                 ln.children.values().forEach(function (an) {
                     if (an.exaggerated) {
                         anBBoxCoords = getABBoxCoords(an, 0);
-                        if (anBBoxCoords.x.max - anBBoxCoords.x.min > accWidth) {
-                            accWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
+                        if (anBBoxCoords.x.max - anBBoxCoords.x.min - 4 > accWidth) {
+                            accWidth = anBBoxCoords.x.max - anBBoxCoords.x.min - 4;
                         }
                         accHeight += anBBoxCoords.y.max - anBBoxCoords.y.min;
                     }
                 });
 
-                d3.select("#BBoxId-" + ln.autoId).select("rect").attr("height", vis.cell.height - 2 + exNum * vis.cell.height);
+                d3.select("#BBoxId-" + ln.autoId).attr("transform",
+                        "translate(" + (-accWidth / 2) + "," + (-vis.cell.height / 2) + ")")
+                    .select("rect")
+                    .attr("width", accWidth)
+                    .attr("height", accHeight);
                 g.setNode(ln.autoId, {label: ln.autoId, width: accWidth, height: accHeight});
+                //g.setNode(ln.autoId, {label: ln.autoId, width: accWidth, height: ln.children.size()*(vis.cell.height+3 * scaleFactor * vis.radius)});
             } else {
                 ln.children.values().forEach(function (an) {
                     anBBoxCoords = getABBoxCoords(an, 0);
                     curWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
                     curHeight = anBBoxCoords.y.max - anBBoxCoords.y.min;
                     g.setNode(an.autoId, {label: an.autoId, width: curWidth, height: curHeight});
+
+                    //console.log(ln.autoId + " " + an.autoId + " " + curHeight);
                 });
             }
         });
@@ -2282,14 +2472,16 @@ var provvisRender = function () {
         dagre.layout(g);
 
         /* Set layer and analysis coords. */
+        layoutCols = d3.map();
+        var accWidth = 0,
+            accHeight = 0;
+
         d3.map(g._nodes).values().forEach(function (n) {
             if (graph.lNodes.has(n.label)) {
                 var ln = graph.lNodes.get(n.label);
-                curWidth = vis.cell.width;
-                curHeight = vis.cell.height;
+                accHeight = vis.cell.height;
+                accWidth = vis.cell.width;
 
-                var accHeight = curHeight,
-                    accWidth = curWidth;
                 ln.children.values().forEach(function (an) {
                     if (an.exaggerated) {
                         anBBoxCoords = getABBoxCoords(an, 0);
@@ -2300,12 +2492,8 @@ var provvisRender = function () {
                     }
                 });
 
-
-                ln.x = n.x - curWidth / 2;
-                /*ln.y = n.y - curHeight / 2;*/
-                /*ln.x = n.x - accWidth / 2;*/
+                ln.x = n.x - vis.cell.width / 2;
                 ln.y = n.y - accHeight / 2;
-                updateNodeAndLink(ln, d3.select("#gNodeId-" + ln.autoId));
 
                 exNum = 0;
                 accY = ln.y + vis.cell.height;
@@ -2322,10 +2510,7 @@ var provvisRender = function () {
                     } else {
                         an.y = an.parent.y;
                     }
-
-                    updateNodeAndLink(an, d3.select("#gNodeId-" + an.autoId));
                 });
-
             } else {
                 var an = graph.aNodes.filter(function (an) {
                     return an.autoId === n.label;
@@ -2333,18 +2518,40 @@ var provvisRender = function () {
 
                 if (typeof an !== "undefined") {
                     anBBoxCoords = getABBoxCoords(an, 0);
-                    curWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
-                    curHeight = anBBoxCoords.y.max - anBBoxCoords.y.min;
+                    accWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
+                    accHeight = anBBoxCoords.y.max - anBBoxCoords.y.min;
 
-                    an.x = n.x - curWidth / 2;
-                    an.y = n.y - curHeight / 2;
-                    updateNodeAndLink(an, d3.select("#gNodeId-" + an.autoId));
+                    an.x = n.x - accWidth / 2;
+                    an.y = n.y - accHeight / 2;
                 }
             }
+
+            /* Compute layouted columns. */
+            if (layoutCols.has(n.x)) {
+                layoutCols.get(n.x).nodes.push(n.label);
+            } else {
+                layoutCols.set(n.x, {nodes: [], width: 0});
+                layoutCols.get(n.x).nodes.push(n.label);
+            }
+            if (accWidth > layoutCols.get(n.x).width) {
+                layoutCols.get(n.x).width = accWidth;
+            }
+        });
+
+        /* Update graph dom elements. */
+        vis.graph.lNodes.values().forEach(function (ln) {
+            updateNodeAndLink(ln, d3.select("#gNodeId-" + ln.autoId));
+        });
+
+        /* Reorder node columns by y-coords. */
+        layoutCols.values().forEach(function (c) {
+            c.nodes = c.nodes.sort(function (a, b) {
+                return a.y - b.y;
+            });
         });
     };
 
-    /* TODO: Layer integration, code cleanup. */
+    /* TODO: Code cleanup. */
     /**
      * Sets the visibility of links and (a)nodes when collapsing or expanding analyses.
      * @param d Node.
@@ -2449,6 +2656,8 @@ var provvisRender = function () {
                 d3.select("#BBoxId-" + d.autoId).classed("hiddenBBox", false);
 
                 /* Update. */
+                wfBBoxCoords = getWFBBoxCoords(d, 1);
+                d.x = 0;
                 updateLink(d.parent);
                 updateNode(d3.select("#gNodeId-" + d.autoId), d, d.x, d.y);
 
@@ -2456,7 +2665,6 @@ var provvisRender = function () {
                 siblings = d.parent.children.values().filter(function (san) {
                     return san !== d && san.y > d.y;
                 });
-                wfBBoxCoords = getWFBBoxCoords(d, 1);
                 siblings.forEach(function (san) {
                     san.y += wfBBoxCoords.y.max - wfBBoxCoords.y.min - cell.height;
                     updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
@@ -2469,8 +2677,18 @@ var provvisRender = function () {
                         return anBBoxCoords.x.max - anBBoxCoords.x.min;
                     })
                     .attr("height", function () {
-                        return anBBoxCoords.y.max - anBBoxCoords.y.min + 3 * scaleFactor * vis.radius;
+                        return anBBoxCoords.y.max - anBBoxCoords.y.min/* + 3 * scaleFactor * vis.radius*/;
                     });
+
+                /* TODO: Center non-expanded subanalyses horizontally. */
+                d.parent.children.values().filter(function (san) {
+                    return !san.hidden;
+                }).forEach(function (san) {
+                    san.x = (anBBoxCoords.x.max - anBBoxCoords.x.min) / 2 - vis.cell.width / 2;
+                    updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
+                });
+                //d.x = -(wfBBoxCoords.x.max - wfBBoxCoords.x.min)/2;
+                updateNode(d3.select("#gNodeId-" + d.autoId), d, d.x, d.y);
             } else if (d.nodeType === "analysis") {
 
                 /* Adjust analysis bounding box. */
@@ -2480,7 +2698,7 @@ var provvisRender = function () {
                         return anBBoxCoords.x.max - anBBoxCoords.x.min;
                     })
                     .attr("height", function () {
-                        return anBBoxCoords.y.max - anBBoxCoords.y.min + 3 * scaleFactor * vis.radius;
+                        return anBBoxCoords.y.max - anBBoxCoords.y.min/* + 3 * scaleFactor * vis.radius*/;
                     });
 
                 /* Update. */
@@ -2491,6 +2709,26 @@ var provvisRender = function () {
                     return an.filtered;
                 }).forEach(function (an) {
                     d3.select("#BBoxId-" + an.autoId).classed({"hiddenBBox": false});
+
+                    /* Hide workflow links. */
+                    an.links.values().forEach(function (l) {
+                        d3.selectAll("#linkId-" + l.autoId + ",#hLinkId-" + l.autoId).classed("hiddenLink", true);
+                    });
+
+                    /* Hide workflow bounding box. */
+                    an.children.values().forEach(function (san) {
+                        d3.select("#BBoxId-" + san.autoId).classed("hiddenBBox", true);
+                    });
+
+                    /* Adjust bounding box. */
+                    anBBoxCoords = getABBoxCoords(an, 1);
+                    d3.selectAll("#BBoxId-" + an.autoId + ", #aBBClipId-" + an.autoId).select("rect")
+                        .attr("width", function () {
+                            return cell.width - 2;
+                        })
+                        .attr("height", function () {
+                            return cell.height - 2/* + 3 * scaleFactor * vis.radius*/;
+                        });
                 });
 
                 /* Update. */
@@ -2520,7 +2758,13 @@ var provvisRender = function () {
                         return d.children.size() + "/" + d.children.size();
                     });
 
-                d3.select("#BBoxId-" + d.parent.autoId).classed({"hiddenBBox": true});
+                /* Hide bounding boxes. */
+                d3.select("#BBoxId-" + d.parent.autoId).classed({"hiddenBBox": false});
+                d.parent.children.values().forEach(function (an) {
+                    an.children.values().forEach(function (san) {
+                        d3.select("#BBoxId-" + san.autoId).classed("hiddenBBox", true);
+                    });
+                });
 
             } else {
                 //console.log("#COLLAPSE node " + d.autoId);
@@ -2536,6 +2780,27 @@ var provvisRender = function () {
                     san.y -= wfBBoxCoords.y.max - wfBBoxCoords.y.min - cell.height;
                     updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
                 });
+
+                if (d.parent.parent.children.values().filter(function (san) {
+                    return san !== d.parent;
+                }).some(function (san) {
+                    return san.hidden;
+                })) {
+                    anBBoxCoords = getABBoxCoords(d.parent.parent, 1);
+                    d.parent.x = (anBBoxCoords.x.max - anBBoxCoords.x.min) / 2 - vis.cell.width / 2;
+                    updateNode(d3.select("#gNodeId-" + d.parent.autoId), d.parent, d.parent.x, d.parent.y);
+                }
+
+                if (d.parent.parent.children.values().filter(function (san) {
+                    return san !== d.parent;
+                }).every(function (san) {
+                    return !san.hidden;
+                })) {
+                    d.parent.parent.children.values().forEach(function (san) {
+                        san.x = 0;
+                        updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
+                    });
+                }
             }
 
             /* Set node visibility. */
@@ -2582,10 +2847,10 @@ var provvisRender = function () {
                 d3.selectAll("#BBoxId-" + d.parent.autoId + ", #aBBClipId-" + d.parent.autoId).selectAll("rect")
                     .attr("width", function () {
                         return (d3.select(this.parentElement).attr("id") === "BBoxId-" + d.parent.autoId) ?
-                        cell.width - 2 : cell.width - 4;
+                            cell.width - 2 : cell.width - 4;
                     })
                     .attr("height", function () {
-                        return cell.height - 2 + 3 * scaleFactor * vis.radius;
+                        return cell.height - 2/* + 3 * scaleFactor * vis.radius*/;
                     });
 
                 /* Update links. */
@@ -2611,9 +2876,8 @@ var provvisRender = function () {
                 /* Set saBBox visibility. */
                 d3.select("#BBoxId-" + d.autoId).classed("hiddenBBox", false);
 
-                /* Update links. */
+                /* Update. */
                 updateLink(d.parent.parent);
-
                 updateNode(d3.select("#gNodeId-" + d.parent.parent.autoId), d.parent.parent, d.parent.parent.x, d.parent.parent.y);
 
                 /* Compute bounding box for analysis child nodes. */
@@ -2625,13 +2889,13 @@ var provvisRender = function () {
                         return anBBoxCoords.x.max - anBBoxCoords.x.min;
                     })
                     .attr("height", function () {
-                        return anBBoxCoords.y.max - anBBoxCoords.y.min + 3 * scaleFactor * vis.radius;
+                        return anBBoxCoords.y.max - anBBoxCoords.y.min/* + 3 * scaleFactor * vis.radius*/;
                     });
 
                 /* If the selected subanalysis is the last remaining to collapse, adjust bounding box and clippath. */
                 if (!d.parent.parent.children.values().some(function (san) {
-                        return san.hidden;
-                    })) {
+                    return san.hidden;
+                })) {
                     /* Compute bounding box for analysis child nodes. */
                     anBBoxCoords = getABBoxCoords(d.parent.parent, 1);
 
@@ -2641,7 +2905,7 @@ var provvisRender = function () {
                             return anBBoxCoords.x.max - anBBoxCoords.x.min;
                         })
                         .attr("height", function () {
-                            return anBBoxCoords.y.max - anBBoxCoords.y.min + 3 * scaleFactor * vis.radius;
+                            return anBBoxCoords.y.max - anBBoxCoords.y.min/* + 3 * scaleFactor * vis.radius*/;
                         });
 
                     /* Adjust clippath. */
@@ -2747,13 +3011,13 @@ var provvisRender = function () {
 
         /* Background rectangle fix. */
         vis.rect.attr("transform", "translate(" + (-newPos[0] / newScale) + "," +
-        (-newPos[1] / newScale) + ")" + " scale(" + (1 / newScale) + ")");
+            (-newPos[1] / newScale) + ")" + " scale(" + (1 / newScale) + ")");
 
         /* Quick fix to exclude scale from text labels. */
         vis.canvas.selectAll(".aBBoxLabel")
             .transition()
             .duration(transitionTime)
-            .attr("transform", "translate(" + 0 + "," + (-1.5 * scaleFactor * vis.radius) + ") scale(" + (1 / newScale) + ")");
+            .attr("transform", "translate(" + 2 + "," + (0.5 * scaleFactor * vis.radius) + ") scale(" + (1 / newScale) + ")");
 
         vis.canvas.selectAll(".saBBoxLabel")
             .transition()
@@ -2859,7 +3123,7 @@ var provvisRender = function () {
                 data = vis.graph.workflowData.get(selNode.parent.wfUuid);
                 if (typeof data !== "undefined") {
                     title = "<b>" + "Subanalysis: " + "<b>" + "<a href=/workflows/" + selNode.parent.wfUuid + ">" +
-                    data.name + "</a>";
+                        data.name + "</a>";
                 } else {
                     title = "<b>" + "Dataset " + "<b>";
                 }
@@ -2870,7 +3134,7 @@ var provvisRender = function () {
                 data = vis.graph.analysisData.get(selNode.uuid);
                 if (typeof data !== "undefined") {
                     title = "<b>" + "Analysis: " + "<b>" + "<a href=/workflows/" + data.uuid + ">" +
-                    data.name + "</a>";
+                        data.name + "</a>";
                 } else {
                     title = "<b>" + "Dataset " + "<b>";
                 }
@@ -2927,8 +3191,6 @@ var provvisRender = function () {
             return d;
         });
         cells.exit().remove();
-
-        $("#provenance-support-view").css({"top": ($("#provenance-table").height()) + "px"});
     };
 
     /**
@@ -3062,13 +3324,13 @@ var provvisRender = function () {
             var self = d3.select(this);
             self.select(".labels").attr("clip-path", "");
 
-            if (!an.hidden) {
-                an.parent.children.values().forEach(function (sibling) {
-                    d3.select("#BBoxId-" + sibling.autoId).classed("mouseoverBBox", true);
-                });
-            } else {
-                self.classed("mouseoverBBox", true);
-            }
+            /*if (!an.hidden) {*/
+            an.parent.children.values().forEach(function (sibling) {
+                d3.select("#BBoxId-" + sibling.autoId).classed("mouseoverBBox", true);
+            });
+            /*            } else {
+             self.classed("mouseoverBBox", true);
+             }*/
         }).on("mouseout", function (an) {
             var self = d3.select(this);
             self.select(".labels").attr("clip-path", "url(#aBBClipId-" + an.autoId + ")");
@@ -3085,6 +3347,21 @@ var provvisRender = function () {
         }).on("mouseout", function () {
             var self = d3.select(this);
             self.classed("mouseoverBBox", false);
+        });
+
+        /* On mouseover timeline analysis lines. */
+        d3.selectAll(".tlAnalysis").on("mouseover", function (an) {
+            showTooltip(
+                    createHTMLKeyValuePair("Created", parseISOTimeFormat(an.start)) + "<br>" +
+                    createHTMLKeyValuePair("Workflow", getWfNameByNode(an)) + "<br>", event);
+            d3.select("#BBoxId-" + an.autoId).classed("mouseoverTlBBox", true);
+        }).on("mousemove", function (an) {
+            showTooltip(
+                    createHTMLKeyValuePair("Created", parseISOTimeFormat(an.start)) + "<br>" +
+                    createHTMLKeyValuePair("Workflow", getWfNameByNode(an)) + "<br>", event);
+        }).on("mouseout", function (an) {
+            hideTooltip();
+            d3.select("#BBoxId-" + an.autoId).classed("mouseoverTlBBox", false);
         });
     };
 
@@ -3107,16 +3384,16 @@ var provvisRender = function () {
         node.on("mouseover", function (d) {
             var self = d3.select(this);
             showTooltip(
-                createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-                createHTMLKeyValuePair("x", d.x) + "<br>" +
-                createHTMLKeyValuePair("y", d.y), event);
+                    createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
+                    createHTMLKeyValuePair("x", d.x) + "<br>" +
+                    createHTMLKeyValuePair("y", d.y), event);
             self.classed("mouseoverNode", true);
             self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             showTooltip(
-                createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-                createHTMLKeyValuePair("x", d.x) + "<br>" +
-                createHTMLKeyValuePair("y", d.y), event);
+                    createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
+                    createHTMLKeyValuePair("x", d.x) + "<br>" +
+                    createHTMLKeyValuePair("y", d.y), event);
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
@@ -3128,14 +3405,14 @@ var provvisRender = function () {
         saNode.on("mouseover", function (d) {
             var self = d3.select(this);
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-            createHTMLKeyValuePair("x", d.x) + "<br>" +
-            createHTMLKeyValuePair("y", d.y), event);
+                createHTMLKeyValuePair("x", d.x) + "<br>" +
+                createHTMLKeyValuePair("y", d.y), event);
             self.classed("mouseoverNode", true);
             self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-            createHTMLKeyValuePair("x", d.x) + "<br>" +
-            createHTMLKeyValuePair("y", d.y), event);
+                createHTMLKeyValuePair("x", d.x) + "<br>" +
+                createHTMLKeyValuePair("y", d.y), event);
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
@@ -3147,14 +3424,14 @@ var provvisRender = function () {
         aNode.on("mouseover", function (d) {
             var self = d3.select(this);
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-            createHTMLKeyValuePair("x", d.x) + "<br>" +
-            createHTMLKeyValuePair("y", d.y), event);
+                createHTMLKeyValuePair("x", d.x) + "<br>" +
+                createHTMLKeyValuePair("y", d.y), event);
             self.classed("mouseoverNode", true);
             self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-            createHTMLKeyValuePair("x", d.x) + "<br>" +
-            createHTMLKeyValuePair("y", d.y), event);
+                createHTMLKeyValuePair("x", d.x) + "<br>" +
+                createHTMLKeyValuePair("y", d.y), event);
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
@@ -3166,14 +3443,14 @@ var provvisRender = function () {
         lNode.on("mouseover", function (d) {
             var self = d3.select(this);
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-            createHTMLKeyValuePair("x", d.x) + "<br>" +
-            createHTMLKeyValuePair("y", d.y), event);
+                createHTMLKeyValuePair("x", d.x) + "<br>" +
+                createHTMLKeyValuePair("y", d.y), event);
             self.classed("mouseoverNode", true);
             //self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-            createHTMLKeyValuePair("x", d.x) + "<br>" +
-            createHTMLKeyValuePair("y", d.y), event);
+                createHTMLKeyValuePair("x", d.x) + "<br>" +
+                createHTMLKeyValuePair("y", d.y), event);
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
@@ -3197,13 +3474,13 @@ var provvisRender = function () {
             var self = d3.select(this);
             self.select(".labels").attr("clip-path", "");
 
-            if (!an.hidden) {
-                an.parent.children.values().forEach(function (sibling) {
-                    d3.select("#BBoxId-" + sibling.autoId).classed("mouseoverBBox", true);
-                });
-            } else {
-                self.classed("mouseoverBBox", true);
-            }
+            /*if (!an.hidden) {*/
+            an.parent.children.values().forEach(function (sibling) {
+                d3.select("#BBoxId-" + sibling.autoId).classed("mouseoverBBox", true);
+            });
+            /*            } else {
+             self.classed("mouseoverBBox", true);
+             }*/
 
         }).on("mouseout", function (an) {
             var self = d3.select(this);
@@ -3226,24 +3503,24 @@ var provvisRender = function () {
         /* Link tooltips. */
         link.on("mouseover", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-            createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
-            createHTMLKeyValuePair("tar", d.target.autoId), event);
+                createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
+                createHTMLKeyValuePair("tar", d.target.autoId), event);
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-            createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
-            createHTMLKeyValuePair("tar", d.target.autoId), event);
+                createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
+                createHTMLKeyValuePair("tar", d.target.autoId), event);
         }).on("mouseout", function () {
             hideTooltip();
         });
 
         aLink.on("mouseover", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-            createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
-            createHTMLKeyValuePair("tar", d.target.autoId), event);
+                createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
+                createHTMLKeyValuePair("tar", d.target.autoId), event);
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-            createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
-            createHTMLKeyValuePair("tar", d.target.autoId), event);
+                createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
+                createHTMLKeyValuePair("tar", d.target.autoId), event);
         }).on("mouseout", function () {
             hideTooltip();
         });
@@ -3279,7 +3556,7 @@ var provvisRender = function () {
 
         /* Set link visibility. */
         link.each(function (l) {
-            d3.select(this).classed("hiddenLinllk", false);
+            d3.select(this).classed("hiddenLink", false);
             l.hidden = false;
             if (l.highlighted) {
                 d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
@@ -3326,7 +3603,7 @@ var provvisRender = function () {
                     return anBBoxCoords.x.max - anBBoxCoords.x.min;
                 })
                 .attr("height", function () {
-                    return anBBoxCoords.y.max - anBBoxCoords.y.min + 3 * scaleFactor * vis.radius;
+                    return anBBoxCoords.y.max - anBBoxCoords.y.min/* + 3 * scaleFactor * vis.radius*/;
                 });
         });
     };
@@ -3414,10 +3691,11 @@ var provvisRender = function () {
             var anBBoxCoords = getABBoxCoords(an, 1);
             d3.selectAll("#BBoxId-" + an.autoId + ", #aBBClipId-" + an.autoId).selectAll("rect")
                 .attr("width", function () {
-                    return anBBoxCoords.x.max - anBBoxCoords.x.min;
+                    return (d3.select(this.parentElement).attr("id") === "BBoxId-" + an.autoId) ?
+                        cell.width - 2 : cell.width - 4;
                 })
                 .attr("height", function () {
-                    return anBBoxCoords.y.max - anBBoxCoords.y.min + 3 * scaleFactor * vis.radius;
+                    return anBBoxCoords.y.max - anBBoxCoords.y.min/* + 3 * scaleFactor * vis.radius*/;
                 });
         });
     };
@@ -3497,10 +3775,11 @@ var provvisRender = function () {
             var anBBoxCoords = getABBoxCoords(an, 1);
             d3.selectAll("#BBoxId-" + an.autoId + ", #aBBClipId-" + an.autoId).selectAll("rect")
                 .attr("width", function () {
-                    return anBBoxCoords.x.max - anBBoxCoords.x.min;
+                    return (d3.select(this.parentElement).attr("id") === "BBoxId-" + an.autoId) ?
+                        cell.width - 2 : cell.width - 4;
                 })
                 .attr("height", function () {
-                    return anBBoxCoords.y.max - anBBoxCoords.y.min + 3 * scaleFactor * vis.radius;
+                    return anBBoxCoords.y.max - anBBoxCoords.y.min/* + 3 * scaleFactor * vis.radius*/;
                 });
         });
     };
@@ -3533,6 +3812,14 @@ var provvisRender = function () {
             if (!ln.children.empty()) {
                 handleCollapseExpandNode(ln.children.values()[0], 'c');
             }
+        });
+
+
+        d3.selectAll(".lBBox").classed("hiddenBBox", true);
+        lNode.filter(function (ln) {
+            return ln.filtered && !ln.hidden;
+        }).each(function (ln) {
+            d3.select(this).classed("hiddenBBox", false);
         });
 
         /* Set link visibility. */
@@ -3649,30 +3936,13 @@ var provvisRender = function () {
             }
         });
 
-        /* TODO: BUG: On repositioning table and support view. */
+        /* TODO: BUG: On repositioning table and timeline view. */
         /* Show and hide table. */
         $("#prov-ctrl-show-table").click(function () {
             if (!$("#prov-ctrl-show-table").find("input[type='checkbox']").is(":checked")) {
                 d3.select("#provenance-table").style("display", "none");
-                $("#provenance-support-view").css({"top": "0px"});
             } else {
                 d3.select("#provenance-table").style("display", "block");
-                $("#provenance-support-view").css({"top": ($("#provenance-table").height()) + "px"});
-            }
-        });
-
-        /* Show and hide support view. */
-        $("#prov-ctrl-show-support-view").click(function () {
-            if (!$("#prov-ctrl-show-support-view").find("input[type='checkbox']").is(":checked")) {
-                d3.select("#provenance-support-view").style("display", "none");
-            } else {
-                d3.select("#provenance-support-view").style("display", "block");
-            }
-
-            if ($("#prov-ctrl-show-table").hasClass("active")) {
-                $("#provenance-support-view").css({"top": ($("#provenance-table").height()) + "px"});
-            } else {
-                $("#provenance-support-view").css({"top": "0px"});
             }
         });
 
@@ -3718,7 +3988,25 @@ var provvisRender = function () {
             });
 
         });
+
+        /* Sidebar. */
+        $("#prov-ctrl-sidebar-click").click(function () {
+            if ($("#provenance-sidebar").css("right") === "0px") {
+                $("#provenance-sidebar").animate({right: '-315'}, nodeLinkTransitionTime);
+                setTimeout(function () {
+                    $("#prov-ctrl-sidebar-click").html("<i class=icon-chevron-left></i>" + "&nbsp;" + "Sidebar");
+                }, nodeLinkTransitionTime);
+            } else {
+                $("#provenance-sidebar").animate({right: '0'}, nodeLinkTransitionTime);
+                setTimeout(function () {
+                    $("#prov-ctrl-sidebar-click").html("<i class=icon-chevron-right></i>" + "&nbsp;" + "Sidebar");
+                }, nodeLinkTransitionTime);
+            }
+        });
     };
+
+
+    /* TODO: Recompute layout only after all nodes were collapsed/expanded. */
 
     /**
      * Handle events.
@@ -3803,8 +4091,8 @@ var provvisRender = function () {
                 if (!draggingActive) {
                     if (d.hidden) {
                         if (d.children.values().some(function (san) {
-                                return san.hidden;
-                            })) {
+                            return san.hidden;
+                        })) {
                             d.children.values().forEach(function (san) {
                                 handleCollapseExpandNode(san.children.values()[0], "c");
                             });
@@ -3865,7 +4153,7 @@ var provvisRender = function () {
             }
         });
 
-
+        /* Handle path highlighting. */
         d3.selectAll(".glAnchor").on("click", function (d) {
             handlePathHighlighting(d, "p");
         });
@@ -3907,8 +4195,8 @@ var provvisRender = function () {
      * @param aNodes Analysis nodes.
      */
     var initDoiTimeComponent = function (aNodes) {
-        var min = parseISOTimeFormat(new Date(0)),
-            max = parseISOTimeFormat(new Date(0));
+        var min = d3.time.format.iso(new Date(0)),
+            max = d3.time.format.iso(new Date(0));
 
         if (aNodes.length > 1) {
             min = d3.min(aNodes, function (d) {
@@ -4030,9 +4318,6 @@ var provvisRender = function () {
         applyDragBehavior(layer);
         applyDragBehavior(analysis);
 
-        /* Draw support view. */
-        drawSupportView(vis);
-
         /* Initiate doi. */
         vis.graph.aNodes.forEach(function (an) {
             handleCollapseExpandNode(an, "c");
@@ -4040,6 +4325,13 @@ var provvisRender = function () {
         updateNodeFilter();
         updateLinkFilter();
         updateNodeDoi();
+
+        /* Draw timeline view. */
+        drawTimelineView(vis);
+
+        /* Draw doi view. */
+        /* TODO: Temporarily disabled. */
+        //drawDoiView(vis);
 
         /* Event listeners. */
         handleEvents(vis.graph);
@@ -4069,8 +4361,12 @@ var provvisRender = function () {
                     .classed("blendedNode", function () {
                         return filterAction === "blend" ? true : false;
                     });
+                d3.select("#BBoxId-" + ln.autoId).classed("hiddenBBox", true);
             } else {
                 self.classed("filteredNode", true).classed("blendedNode", false);
+                if (!ln.hidden) {
+                    d3.select("#BBoxId-" + ln.autoId).classed("hiddenBBox", false);
+                }
             }
         });
 
@@ -4167,8 +4463,8 @@ var provvisRender = function () {
             /* Update subanalysis and workflow filter attributes. */
             vis.graph.nodes.forEach(function (n) {
                 if (selNodes.map(function (d) {
-                        return d.parent;
-                    }).indexOf(n.parent) === -1) {
+                    return d.parent;
+                }).indexOf(n.parent) === -1) {
                     n.parent.children.values().forEach(function (cn) {
                         cn.filtered = false;
                     });
@@ -4196,8 +4492,8 @@ var provvisRender = function () {
             /* Update analysis filter attributes. */
             vis.graph.aNodes.forEach(function (an) {
                 if (an.children.values().some(function (san) {
-                        return san.filtered;
-                    })) {
+                    return san.filtered;
+                })) {
                     an.filtered = true;
                 } else {
                     an.filtered = false;
@@ -4208,8 +4504,8 @@ var provvisRender = function () {
             /* Update layer filter attributes. */
             vis.graph.lNodes.values().forEach(function (ln) {
                 if (ln.children.values().some(function (an) {
-                        return an.filtered;
-                    })) {
+                    return an.filtered;
+                })) {
                     ln.filtered = true;
                 } else {
                     ln.filtered = false;

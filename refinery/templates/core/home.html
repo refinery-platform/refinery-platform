@@ -16,6 +16,7 @@
 					{{ user.username }}				
 				{% endif %}
 			</small>
+      <div id="user-id" style="display:none;">{{ user.id }}</div>
 		{% endif %} 
 	</h1>  	  	
   </div>
@@ -34,7 +35,7 @@
    -->
 {% endif %}
 
-<div class="row-fluid">
+<div class="row-fluid" ng-controller="refinerySharingController">
 	{% if REFINERY_REPOSITORY_MODE %}
 		<div class="span8">
 	{% else %}
@@ -53,7 +54,7 @@
 			</div>
 		
 		{% if data_sets %}	
-			<table class="table table-condensed">
+			<table id="dataset-table" class="table table-condensed">
 				<thead>
 					<tr>
 						<th colspan="2">
@@ -82,6 +83,7 @@
 						</td>
 				    	<td width="100%">
 							<a href="{% url "data_set" data_set.uuid %}">{{ data_set.name }}</a>
+              <div class="dataset-uuid-entry" style="display:none;">{{ data_set.uuid }}</div>
 							{% if data_set.download_set.all|length > 0 %}
 								<table class="table-condensed" width="100%">
 									{% for download in data_set.download_set.all %}
@@ -145,7 +147,7 @@
 
 {% if projects or unassigned_analyses %}
 
-<table class="table table-condensed">
+<table id="project-table" class="table table-condensed">
 	<thead>
 		<tr>
 			<th width="100%">
@@ -213,12 +215,13 @@
 					{% endif %}
 				{% endif %}
 	        	&nbsp;<a href="{% url "project" project.uuid %}">{{ project.name }}</a>
+            <div class="project-uuid-entry" style="display:none;">{{ project.uuid }}</div>
 	      </td>
 	    	<td>
 	        {{project.analyses.all|length}}
 	      </td>
         <td>
-            <a href="google.com">Edit</a>
+            <a ng-click="openPermissionEditor('project_sharing', '{{ project.uuid }}')">Edit</a>
         </td>
 	    </tr>
 			{% for analysis in project.analyses.all %}
@@ -276,7 +279,7 @@
 </div>
 	
 {% if workflows %}
-	<table class="table table-condensed">
+	<table id="workflow-table" class="table table-condensed">
 		<thead>
 			<tr>
 				<th>
@@ -289,6 +292,7 @@
         <tr>
         	<td>
         		<a href="{% url "workflow" workflow.uuid %}">{{ workflow.name }}</a>
+            <div class="workflow-uuid-entry" style="display:none;">{{ workflow.uuid }}</div>
         	</td>
         </tr>
     	{% endfor %}

@@ -482,16 +482,20 @@ class SharablePermission(object):
         uuid = kwargs['pk']
         res = self.get_res(uuid)
         owner = res.get_owner()
-        permissionObject = self.perm_obj()
+        permission_object = self.perm_obj()
         # remove all objects before adding them
         for i in res.get_groups():
             res.unshare(self.get_group(i['id']))
         for group_data in bundle.data['shares']:
             group = self.get_group(group_data['id'])
-            isReadOnly = not (group_data['permission']['change'] and group_data['permission']['read'])
-            res.share(group, isReadOnly)
+            # sharing only allowed if read or change is true and if user is part of the group
+            should_share = ((group_data['permission']['read']) or (group_data['permission']['change'])) and (owner in group.user_set.all())
+            is_read_only = not (group_data['permission']['change'])
+            # isReadOnly = not (group_data['permission']['change'] and group_data['permission']['read'])
+            if should_share:
+                res.share(group, is_read_only)
         res.save()
-        return permissionObject
+        return permission_object
 
     def obj_get_list(self, bundle, **kwargs):
         return self.get_object_list(bundle.request)
