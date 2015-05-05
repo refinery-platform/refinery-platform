@@ -360,10 +360,10 @@
             // ---------------------------
             // node set manager
             // ---------------------------
-            if ($("#" + "node-set-manager-controls").length > 0) {
+            nodeSetManager = new NodeSetManager(externalStudyUuid, externalAssayUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, csrf_token);
+            nodeSetManager.initialize();
 
-                nodeSetManager = new NodeSetManager(externalStudyUuid, externalAssayUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, csrf_token);
-                nodeSetManager.initialize();
+            if ($("#" + "node-set-manager-controls").length > 0) {
 
                 nodeSetManager.setLoadSelectionCallback(function (nodeSet) {
                     query.deserialize(nodeSet.solr_query_components);

@@ -355,16 +355,18 @@ class DataSet(SharableResource):
     def get_investigation(self, version=None):
         if version is None:
             try:
-                max_version = InvestigationLink.objects.filter( data_set=self ).aggregate( Max("version" ) )["version__max"]
+                max_version = InvestigationLink.objects.filter(
+                    data_set=self).aggregate(Max("version"))["version__max"]
             except:
                 return None
         else:
             max_version = version
         try:
-            il = InvestigationLink.objects.filter( data_set=self, version=max_version ).get()
-            return il.investigation
+            il = InvestigationLink.objects.filter(
+                data_set=self, version=max_version).get()
         except:
             return None
+        return il.investigation
 
     def get_file_count(self):
         '''Returns the number of files in the data set.

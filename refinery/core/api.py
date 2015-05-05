@@ -4,32 +4,30 @@ Created on May 4, 2012
 @author: nils
 '''
 
-from GuardianTastypieAuthz import GuardianAuthorization
-from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow, \
-    WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus, StatisticsObject, \
-    ProjectSharingObject, DataSetSharingObject, WorkflowSharingObject, OwnershipPermissionObject
-from data_set_manager.api import StudyResource, AssayResource
-from data_set_manager.models import Node, Study
-from core.tasks import check_tool_status
+import json
+import logging
+import re
+import uuid
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group
-from django.core.serializers import json
-from django.db.models.aggregates import Count
-from django.utils import simplejson
-from file_store.models import FileStoreItem
+from guardian.shortcuts import get_objects_for_user
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
-from tastypie.authorization import DjangoAuthorization, Authorization
+from tastypie.authorization import Authorization
 from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS, ALL
 from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
 from tastypie.http import HttpNotFound, HttpForbidden
 from tastypie.resources import ModelResource, Resource
-from tastypie.serializers import Serializer
-import logging
-import re
-import json
-import uuid
+from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow,\
+    WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus,\
+    StatisticsObject, ProjectSharingObject, DataSetSharingObject,\
+    WorkflowSharingObject
+from core.tasks import check_tool_status
+from data_set_manager.api import StudyResource, AssayResource
+from data_set_manager.models import Node, Study
+from file_store.models import FileStoreItem
+from GuardianTastypieAuthz import GuardianAuthorization
 
 
 logger = logging.getLogger(__name__)
@@ -75,7 +73,8 @@ class AnalysisResource(ModelResource):
         queryset = Analysis.objects.all()
         resource_name = Analysis._meta.module_name
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
-        authentication = SessionAuthentication()
+        # required for public data set access by anonymous users
+        authentication = Authentication()
         authorization = GuardianAuthorization()
         allowed_methods = ["get"]
         fields = [
@@ -106,8 +105,9 @@ class NodeResource(ModelResource):
         queryset = Node.objects.all()
         resource_name = 'node'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
-        authentication = SessionAuthentication()
-        authorization = Authorization() #GuardianAuthorization()
+        # required for public data set access by anonymous users
+        authentication = Authentication()
+        authorization = Authorization()
         allowed_methods = ["get"]
         fields = [
             'name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay',
@@ -144,6 +144,26 @@ class NodeResource(ModelResource):
             bundle.data['file_url'] = file_item.get_full_url()
             bundle.data['file_import_status'] = file_item.get_import_status()
         return bundle
+
+    def get_object_list(self, request):
+        """Get all nodes that are available to the current user (via data set)
+        Temp workaround due to Node being not Ownable
+
+        """
+        perm = 'read_%s' % DataSet._meta.module_name
+        allowed_datasets = get_objects_for_user(request.user, perm, DataSet)
+        # get a list of node UUIDs that belong to all data sets available to the
+        # current user
+        all_allowed_studies = []
+        for dataset in allowed_datasets:
+            dataset_studies = dataset.get_investigation().study_set.all()
+            all_allowed_studies.extend([study for study in dataset_studies])
+        allowed_nodes = []
+        for study in all_allowed_studies:
+            allowed_nodes.extend(study.node_set.all().values('uuid'))
+        # filter nodes using that list
+        return super(NodeResource, self).get_object_list(request).filter(
+            uuid__in=[node['uuid'] for node in allowed_nodes])
 
 
 class NodeSetResource(ModelResource):
@@ -250,7 +270,7 @@ class NodeSetListResource(ModelResource):
         fields = ['is_current', 'name', 'summary', 'assay', 'study', 'uuid']
         allowed_methods = ["get"]
         filtering = {"study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS}
-        ordering = ['is_current', 'name', 'node_count'];
+        ordering = ['is_current', 'name', 'node_count']
 
     def dehydrate(self, bundle):
         # replace resource URI to point to the nodeset resource instead of the

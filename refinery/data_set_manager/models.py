@@ -172,7 +172,6 @@ class Study(NodeCollection):
     def assay_nodes(self):
         self.node_set( type=Node.ASSAY )
 
-
     def __unicode__(self):
         return unicode(self.identifier) + ": " + unicode(self.title)
     
@@ -276,27 +275,26 @@ class ProtocolComponent(models.Model):
     type_source = models.TextField(blank=True, null=True)
 
 
-
-class NodeManager(models.Manager):            
+class NodeManager(models.Manager):
     def genome_builds_for_files(self, file_uuids, default_fallback=True):
-        '''
-        Returns a dictionary that groups file nodes based on their genome build information.
-        '''
-        file_list = Node.objects.filter( file_uuid__in=file_uuids ).values( "species", "genome_build", "file_uuid" )
-        
+        """Returns a dictionary that groups file nodes based on their genome
+        build information
+
+        """
+        file_list = Node.objects.filter(file_uuid__in=file_uuids).values(
+            "species", "genome_build", "file_uuid")
         result = {}
-        
         for item in file_list:
-            if item["genome_build"] is None and item["species"] is not None and default_fallback == True:
-                item["genome_build"] = map_species_id_to_default_genome_build( item["species"] )
-            
+            if (item["genome_build"] is None and
+                item["species"] is not None and
+                default_fallback == True):
+                item["genome_build"] = map_species_id_to_default_genome_build(
+                    item["species"])
             if item["genome_build"] not in result:
                 result[item["genome_build"]] = []
-                
-            result[item["genome_build"]].append( item["file_uuid"] )
-        
+            result[item["genome_build"]].append(item["file_uuid"])
         return result
-            
+
 
 class Node(models.Model):
     # allowed node types
@@ -309,7 +307,6 @@ class Node(models.Model):
     NORMALIZATION = "Normalization Name"
     DATA_TRANSFORMATION = "Data Transformation Name"
 
-    
     ASSAY = "Assay Name"
     HYBRIDIZATION_ASSAY = "Hybridization Assay Name"
     GEL_ELECTROPHORESIS_ASSAY = "Gel Electrophoresis Assay Name"
@@ -361,23 +358,25 @@ class Node(models.Model):
         FREE_INDUCTION_DECAY_DATA_FILE,
         ACQUISITION_PARAMETER_DATA_FILE
     }
-    
-    TYPES = ASSAYS | FILES | { SOURCE, SAMPLE, EXTRACT, LABELED_EXTRACT, SCAN, NORMALIZATION, DATA_TRANSFORMATION }     
-    
+
+    TYPES = ASSAYS | FILES | {
+        SOURCE, SAMPLE, EXTRACT, LABELED_EXTRACT, SCAN, NORMALIZATION,
+        DATA_TRANSFORMATION}
+
     # replace default manager
     objects = NodeManager()
     
     uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study, db_index=True)
     assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
-    children = models.ManyToManyField("self", symmetrical=False, related_name="parents_set")
-    parents = models.ManyToManyField("self", symmetrical=False, related_name="children_set")
+    children = models.ManyToManyField(
+        "self", symmetrical=False, related_name="parents_set")
+    parents = models.ManyToManyField(
+        "self", symmetrical=False, related_name="children_set")
     type = models.TextField(db_index=True)
     name = models.TextField(db_index=True)
-        
     # only used for nodes representing files
     file_uuid = UUIDField(default=None,blank=True, null=True,auto=False)
-    
     # Refinery internal "attributes" (exported as comment attributes)     
     genome_build = models.TextField(db_index=True,null=True)
     species =  models.IntegerField(db_index=True,null=True)
@@ -386,21 +385,23 @@ class Node(models.Model):
     subanalysis = models.IntegerField(null=True,blank=False)
     workflow_output = models.CharField(null=True, blank=False, max_length=100)    
     
+    def __unicode__(self):
+        return unicode(self.type) + ": " + unicode(self.name) + " (" +\
+               unicode(self.parents.count()) + " parents, " +\
+               unicode(self.children.count()) + " children " + "| " +\
+               "species: " + unicode( self.species ) +\
+               ", genome build: " + unicode( self.genome_build ) + ")"
+
     def add_child(self, node):
         if node is None:
             return None
-        
         self.children.add( node )
         self.save()
         node.parents.add( self )
         node.save()
         return self
-            
-    
-    def __unicode__(self):
-        return unicode(self.type) + ": " + unicode(self.name) + " (" + unicode( self.parents.count() ) + " parents, " + unicode( self.children.count() ) + " children " + "| " + "species: " + unicode( self.species ) + ", genome build: " + unicode( self.genome_build ) + ")" 
-    
-    
+
+
 class Attribute(models.Model):
     # allowed attribute types
     MATERIAL_TYPE = "Material Type"
