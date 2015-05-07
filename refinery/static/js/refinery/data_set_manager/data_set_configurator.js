@@ -279,7 +279,7 @@ DataSetConfigurator.prototype.updateState = function( state, callback ) {
 DataSetConfigurator.prototype.createGetUrl = function() {
 	var self = this;
 		
-	var url = self.apiBaseUrl + self.apiEndpoint +
+	var url = self.apiBaseUrl + self.apiEndpoint + "/" +
 		"?" + "format=json" +
 		"&" + "limit=0" +
 		"&" + "study__uuid=" + self.studyUuid +

@@ -207,7 +207,7 @@ NodeSetManager.prototype.updateState = function (state, callback) {
 NodeSetManager.prototype.createGetListUrl = function () {
   var self = this;
 
-  var url = self.apiBaseUrl + self.apiEndpointList +
+  var url = self.apiBaseUrl + self.apiEndpointList + "/" +
     "?" + "format=json" +
     "&" + "limit=0" +
     "&" + "order_by=-is_current" +
