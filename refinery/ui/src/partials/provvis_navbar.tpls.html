@@ -17,6 +17,12 @@
         <ul id="prov-ctrl-visible-attribute-list" class="dropdown-menu scrollable-menu">
             <!-- TODO: with angular -->
         </ul>
+        <script>
+            /* Stop dropdown menu from closing on click. */
+            $("#prov-ctrl-visible-attribute-list").bind("click", function (e) {
+                e.stopPropagation();
+            });
+        </script>
     </div>
 </div>
 
@@ -32,16 +38,12 @@
             <!-- TODO: with angular -->
             <li id="prov-ctrl-show-doi">
                 <a href="#" class="field-name">
-                    <label class="checkbox">
-                        <input type="checkbox">Doi
-                    </label>
+                    <label class="checkbox"><input type="checkbox"/>Doi</label>
                 </a>
             </li>
             <li id="prov-ctrl-show-table">
                 <a href="#" class="field-name">
-                    <label class="checkbox">
-                        <input type="checkbox">Node info
-                    </label>
+                    <label class="checkbox"><input type="checkbox"/>Node info</label>
                 </a>
             </li>
             <script>
@@ -62,21 +64,17 @@
             <!-- TODO: with angular -->
             <li id="prov-ctrl-links-list-bezier">
                 <a href="#" class="field-name">
-                    <label class="radio">
-                        <input type="radio" checked>Bezier
-                    </label>
+                    <label class="radio"><input type="radio" checked>Bezier</label>
                 </a>
             </li>
             <li id="prov-ctrl-links-list-straight">
-                <a href="#">
-                    <label class="radio">
-                        <input type="radio">Straight
-                    </label>
+                <a href="#" class="field-name">
+                    <label class="radio"><input type="radio">Straight</label>
                 </a>
             </li>
             <script>
                 /* Stop dropdown menu from closing on click. */
-                $("#prov-ctrl-visible-views-list").bind("click", function (e) {
+                $("#prov-ctrl-links-list").bind("click", function (e) {
                     e.stopPropagation();
                 });
             </script>
@@ -92,21 +90,17 @@
             <!-- TODO: with angular -->
             <li id="prov-ctrl-time-enc-list-gs">
                 <a href="#" class="field-name">
-                    <label class="radio">
-                        <input type="radio" checked>Grayscale
-                    </label>
+                    <label class="radio"><input type="radio" checked>Grayscale</label>
                 </a>
             </li>
             <li id="prov-ctrl-time-enc-list-blue">
                 <a href="#" class="field-name">
-                    <label class="radio">
-                        <input type="radio">Blue
-                    </label>
+                    <label class="radio"><input type="radio">Blue</label>
                 </a>
             </li>
             <script>
                 /* Stop dropdown menu from closing on click. */
-                $("#prov-ctrl-visible-views-list").bind("click", function (e) {
+                $("#prov-ctrl-time-enc-list").bind("click", function (e) {
                     e.stopPropagation();
                 });
             </script>
@@ -118,25 +112,21 @@
         <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown-toggle" href="#">
             &nbsp;Filter&nbsp;<i class="icon-caret-down"/>&nbsp;
         </a>
-        <ul id="prov-ctrl-filter-list-blend" class="dropdown-menu">
+        <ul id="prov-ctrl-filter-list" class="dropdown-menu">
             <!-- TODO: with angular -->
-            <li id="prov-ctrl-time-enc-list-gs">
+            <li id="prov-ctrl-filter-list-blend">
                 <a href="#" class="field-name">
-                    <label class="radio">
-                        <input type="radio" checked>Blend
-                    </label>
+                    <label class="radio"><input type="radio" checked>Blend</label>
                 </a>
             </li>
             <li id="prov-ctrl-filter-list-hide">
                 <a href="#" class="field-name">
-                    <label class="radio">
-                        <input type="radio">Hide
-                    </label>
+                    <label class="radio"><input type="radio">Hide</label>
                 </a>
             </li>
             <script>
                 /* Stop dropdown menu from closing on click. */
-                $("#prov-ctrl-visible-views-list").bind("click", function (e) {
+                $("#prov-ctrl-filter-list").bind("click", function (e) {
                     e.stopPropagation();
                 });
             </script>

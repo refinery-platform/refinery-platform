@@ -4167,7 +4167,10 @@ var provvisRender = function () {
 
         /* Switch link styles. */
         $("[id^=prov-ctrl-links-list-]").click(function () {
-            switch ($(this).text()) {
+            $(this).find("input[type='radio']").prop("checked", true);
+
+            var selectedLinkStyle = $(this).find("label").text();
+            switch (selectedLinkStyle) {
                 case "Bezier":
                     $("#prov-ctrl-links-list-straight").find("input[type='radio']").prop("checked", false);
                     break;
@@ -4175,7 +4178,6 @@ var provvisRender = function () {
                     $("#prov-ctrl-links-list-bezier").find("input[type='radio']").prop("checked", false);
                     break;
             }
-            $(this).find("input[type='radio']").prop("checked", true);
 
             aNode.each(function (an) {
                 updateLink(an);
@@ -4196,7 +4198,6 @@ var provvisRender = function () {
 
         /* Switch time-dependant color scheme. */
         $("[id^=prov-ctrl-time-enc-list-]").click(function () {
-
             $(this).find("input[type='radio']").prop("checked", true);
 
             var selectedColorScheme = $(this).find("label").text();
@@ -4231,7 +4232,6 @@ var provvisRender = function () {
             }
         });
 
-        /* TODO: BUG: On repositioning table and timeline view. */
         /* Show and hide table. */
         $("#prov-ctrl-show-table").click(function () {
             if (!$("#prov-ctrl-show-table").find("input[type='checkbox']").is(":checked")) {
@@ -4243,7 +4243,6 @@ var provvisRender = function () {
 
         /* Switch filter action. */
         $("[id^=prov-ctrl-filter-list-]").click(function () {
-
             $(this).find("input[type='radio']").prop("checked", true);
 
             var selectedFilterAction = $(this).find("label").text();
