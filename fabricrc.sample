@@ -2,9 +2,9 @@
 
 project_user=vagrant
 refinery_project_dir=/vagrant
-refinery_virtual_env_name=refinery-platform
+refinery_virtualenv_name=refinery-platform
 
-# deployment hosts (not used if only doing local deployment with Vagrant)
+# deployment hosts (not used if only deploying locally with Vagrant)
 dev_host=refinery-dev.example.org
 stage_host=refinery-stage.example.org
 prod_host=refinery-prod.example.org
