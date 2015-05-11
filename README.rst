@@ -41,7 +41,7 @@ Install Fabric (assumes header files for Python are installed, for example in Ub
 
     $ pip install -r deployment/requirements.txt
 
-Use fabricrc.sample to update or initialize ~/fabricrc, for example:
+Use fabricrc.sample to update or initialize Fabric configuration, for example:
 
 .. code-block:: bash
 
