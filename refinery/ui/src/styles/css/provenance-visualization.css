@@ -461,14 +461,3 @@
     top: 0;
     left: 4px;
 }
-
-.provvis-navbar .provvis-nav > .active > a, .provvis-navbar .provvis-nav > .active > a:hover, .provvis-navbar .provvis-nav > .active > a:focus {
-    background-color: #ffffff;
-    text-shadow: 0 0px 0 #ffffff;
-    color: #000000;
-}
-
-.provvis-navbar-inner {
-    padding-left: 0px;
-    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#ffffff));
-}
