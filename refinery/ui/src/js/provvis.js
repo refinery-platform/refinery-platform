@@ -1,3 +1,31 @@
+angular.module("refineryProvvis", [])
+
+    .controller("provvisNavbarController", function ($scope, $http) {
+    $scope.name = "Navbar";
+
+    /* TODO: */
+    })
+
+    .controller("provvisCanvasController", function ($scope, $http) {
+    $scope.name = "Canvas";
+
+    /* TODO: */
+    })
+
+    .directive("provvisNavBar", function () {
+    return {
+        templateUrl: "/static/partials/provvis_navbar.tpls.html",
+        restrict: "A"
+    };
+    })
+
+    .directive("provvisCanvas", function () {
+    return {
+        templateUrl: "/static/partials/provvis_canvas.tpls.html",
+        restrict: "A"
+    };
+});
+
 /**
  * The refinery provenance graph visualization.
  *
@@ -6,388 +34,6 @@
  */
 var provvis = function () {
     var vis = Object.create(null);
-
-    /**
-     * Creates a simple toolbar containing actions for global visualization interaction.
-     * @param parentId Parent div id for the toolbar.
-     * @param divId Toolbar div id.
-     */
-    var createToolbar = function (parentId, divId) {
-        /* Toolbar. */
-        $('<div/>', {
-            "id": divId,
-            "class": "",
-            "style": "margin-bottom: 5px"
-        }).appendTo("#" + parentId);
-    };
-
-    /**
-     * Creates a simple toolbar items for global visualization interaction.
-     * @param parentId Parent div id for the toolbar items.
-     */
-    var createToolbarItems = function (parentId) {
-
-        /* Toolbar items. */
-
-        /* Node centric items. */
-        $("<span/>", {
-            "id": "prov-ctrl-node-btn-group",
-            "class": "btn-group"
-        }).appendTo("#" + parentId);
-
-
-        /* Layers. */
-        $("<button/>", {
-            "id": "prov-ctrl-layers-click",
-            "class": "btn btn-mini",
-            "type": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
-            "data-documents": "Layers",
-            "html": "Layers",
-            "data-html": "true",
-            "title": "Layers"
-        }).appendTo("#prov-ctrl-node-btn-group");
-
-        /* Analyses. */
-        $("<button/>", {
-            "id": "prov-ctrl-analyses-click",
-            "class": "btn btn-mini",
-            "type": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
-            "data-documents": "Analyses",
-            "html": "Analyses",
-            "data-html": "true",
-            "title": "Analyses"
-        }).appendTo("#prov-ctrl-node-btn-group");
-
-        /* Subanalyses. */
-        $("<button/>", {
-            "id": "prov-ctrl-subanalyses-click",
-            "class": "btn btn-mini",
-            "type": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
-            "data-documents": "Subanalyses",
-            "html": "Subanalyses",
-            "data-html": "true",
-            "title": "Subanalyses"
-        }).appendTo("#prov-ctrl-node-btn-group");
-
-        /* Workflows. */
-        $("<button/>", {
-            "id": "prov-ctrl-workflows-click",
-            "class": 'btn btn-mini',
-            "type": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
-            "data-documents": "Workflows",
-            "html": "Workflows",
-            "data-html": "true",
-            "title": "Workflows"
-        }).appendTo("#prov-ctrl-node-btn-group");
-
-
-        /* Attribute labeling. */
-        $("<div/>", {
-            "id": "prov-ctrl-node-labeling-btn-group",
-            "class": "btn-group",
-            "style": "margin-left: 15px"
-        }).appendTo("#" + parentId);
-
-        $("<div/>", {
-            "id": "prov-ctrl-visible-attribute",
-            "class": "btn btn-mini btn-group"
-        }).appendTo("#prov-ctrl-node-labeling-btn-group");
-
-        $("<a/>", {
-            "class": "btn btn-mini dropdown-toggle",
-            "data-toggle": "dropdown",
-            "href": "#",
-            "html": "<i class=icon-wrench></i>" +
-                "&nbsp;" + "Attributes" + "&nbsp;" +
-                "<i class=icon-caret-down></i>" + "&nbsp;"
-        }).appendTo("#prov-ctrl-visible-attribute");
-
-        $("<ul/>", {
-            "id": "prov-ctrl-visible-attribute-list",
-            "class": "dropdown-menu scrollable-menu"
-        }).appendTo("#prov-ctrl-visible-attribute");
-
-
-        /* Global items. */
-        $("<div/>", {
-            "id": "prov-ctrl-global-btn-group",
-            "class": "btn-group",
-            "style": "margin-left: 15px"
-        }).appendTo("#" + parentId);
-
-        /* Views. */
-        $("<div/>", {
-            "id": "prov-ctrl-visible-views",
-            "class": "btn btn-mini btn-group"
-        }).appendTo("#prov-ctrl-global-btn-group");
-
-        $("<a/>", {
-            "class": "btn btn-mini dropdown-toggle",
-            "data-toggle": "dropdown",
-            "href": "#",
-            "html": "<i class=icon-eye-open></i>" +
-                "&nbsp;" + "Views" + "&nbsp;" +
-                "<i class=icon-caret-down></i>" + "&nbsp;"
-        }).appendTo("#prov-ctrl-visible-views");
-
-        $("<ul/>", {
-            "id": "prov-ctrl-visible-views-list",
-            "class": "dropdown-menu"
-        }).appendTo("#prov-ctrl-visible-views");
-
-
-        $("<li/>", {
-            "id": "prov-ctrl-show-doi",
-            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Doi" + "</label>" + "</a>"
-        }).appendTo("#prov-ctrl-visible-views-list");
-        $("<li/>", {
-            "id": "prov-ctrl-show-table",
-            "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"checkbox\">" + "<input type=\"checkbox\">Node Info" + "</label>" + "</a>"
-        }).appendTo("#prov-ctrl-visible-views-list");
-
-        /* Stop dropdown menu from closing on click. */
-        $("#prov-ctrl-visible-views-list").bind("click", function (e) {
-            e.stopPropagation();
-        });
-
-
-        /* Links. */
-        $("<div/>", {
-            "id": "prov-ctrl-links",
-            "class": "btn btn-mini btn-group"
-        }).appendTo("#prov-ctrl-global-btn-group");
-
-        $("<a/>", {
-            "class": "btn btn-mini dropdown-toggle",
-            "data-toggle": "dropdown",
-            "href": "#",
-            "html": "&nbsp;" + "Link style" + "&nbsp;" +
-                "<i class=icon-caret-down></i>" + "&nbsp;"
-        }).appendTo("#prov-ctrl-links");
-
-        $("<ul/>", {
-            "id": "prov-ctrl-links-list",
-            "class": "dropdown-menu"
-        }).appendTo("#prov-ctrl-links");
-
-        $("<li/>", {
-            "id": "prov-ctrl-links-list-bezier",
-            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Bezier" + "</label>" + "</a>"
-        }).appendTo("#prov-ctrl-links-list");
-        $("<li/>", {
-            "id": "prov-ctrl-links-list-straight",
-            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Straight" + "</label>" + "</a>"
-        }).appendTo("#prov-ctrl-links-list");
-
-
-        /* Time color-gradient. */
-        $("<div/>", {
-            "id": "prov-ctrl-time-enc",
-            "class": "btn btn-mini btn-group"
-        }).appendTo("#prov-ctrl-global-btn-group");
-
-        $("<a/>", {
-            "class": "btn btn-mini dropdown-toggle",
-            "data-toggle": "dropdown",
-            "href": "#",
-            "html": "&nbsp;" + "Time enc." + "&nbsp;" +
-                "<i class=icon-caret-down></i>" + "&nbsp;"
-        }).appendTo("#prov-ctrl-time-enc");
-
-        $("<ul/>", {
-            "id": "prov-ctrl-time-enc-list",
-            "class": "dropdown-menu"
-        }).appendTo("#prov-ctrl-time-enc");
-
-        $("<li/>", {
-            "id": "prov-ctrl-time-enc-list-gs",
-            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Grayscale" + "</label>" + "</a>"
-        }).appendTo("#prov-ctrl-time-enc-list");
-        $("<li/>", {
-            "id": "prov-ctrl-time-enc-list-blue",
-            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Blue" + "</label>" + "</a>"
-        }).appendTo("#prov-ctrl-time-enc-list");
-
-
-        /* Filter action. */
-        $("<div/>", {
-            "id": "prov-ctrl-filter",
-            "class": "btn btn-mini btn-group"
-        }).appendTo("#prov-ctrl-global-btn-group");
-
-        $("<a/>", {
-            "class": "btn btn-mini dropdown-toggle",
-            "data-toggle": "dropdown",
-            "href": "#",
-            "html": "&nbsp;" + "Filter" + "&nbsp;" +
-                "<i class=icon-caret-down></i>" + "&nbsp;"
-        }).appendTo("#prov-ctrl-filter");
-
-        $("<ul/>", {
-            "id": "prov-ctrl-filter-list",
-            "class": "dropdown-menu"
-        }).appendTo("#prov-ctrl-filter");
-
-        $("<li/>", {
-            "id": "prov-ctrl-filter-list-blend",
-            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\" checked>Blend" + "</label>" + "</a>"
-        }).appendTo("#prov-ctrl-filter-list");
-        $("<li/>", {
-            "id": "prov-ctrl-filter-list-hide",
-            "html": "<a class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">Hide" + "</label>" + "</a>"
-        }).appendTo("#prov-ctrl-filter-list");
-
-
-        /* Help. */
-        $("<div>", {
-            "id": "help-modal",
-            "class": "modal hide fade bs-example-modal-sm-help",
-            "tabindex": "-1",
-            "role": "dialog",
-            "aria-hidden": "true"
-        }).appendTo("body");
-
-        $("<div>", {
-            "id": "help-dialog",
-            "class": "modal-dialog modal-sm"
-        }).appendTo("#help-modal");
-
-        $("<div>", {
-            "id": "help-content",
-            "class": "modal-content"
-        }).appendTo("#help-dialog");
-
-        $("<div>", {
-            "class": "modal-body",
-            "html": "<h3>Command Shortcut List</h3>" +
-                "<ul><li><div class=\"refinery-subheader\"><h4>Node and path specific:</h4></div></li>" +
-                "<ul><li>(Un)Select: Left click</li>" +
-                "<li>Highlight predecessors: 'p'</li>" +
-                "<li>Highlight successors: 's'</li>" +
-                "<li>Collapse Node: 'c'</li>" +
-                "<li>Expand Node: 'e' or double click</li></ul><br>" +
-                "<li><div class=\"refinery-subheader\"><h4>Global:</h4></div></li>" +
-                "<ul><li>Clear highlighting: Left click on background</li>" +
-                "<li>Fit graph to screen: Left double click on background</li></ul></ul>"
-        }).appendTo("#help-content");
-
-        $("<div>", {
-            "id": "help-footer",
-            "class": "modal-footer"
-        }).appendTo("#help-content");
-
-        $("<button>", {
-            "class": "btn btn-primary",
-            "data-dismiss": "modal",
-            "html": "OK"
-        }).appendTo("#help-footer");
-
-        $("<button/>", {
-            "id": "prov-ctrl-help",
-            "class": "btn btn-mini",
-            "type": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
-            "data-toggle": "modal",
-            "data-target": "#help-modal",
-            "html": "<i class=icon-question-sign></i>" +
-                "&nbsp;" + "Command List",
-            "data-html": "true",
-            "title": "Command List",
-            "style": "margin-left: 15px"
-        }).appendTo("#" + parentId);
-
-
-        /* Glyph Legend. */
-        $("<div>", {
-            "id": "legend-modal",
-            "class": "modal hide fade bs-example-modal-sm-legend",
-            "tabindex": "-1",
-            "role": "dialog",
-            "aria-hidden": "true"
-        }).appendTo("body");
-
-        $("<div>", {
-            "id": "legend-dialog",
-            "class": "modal-dialog modal-sm"
-        }).appendTo("#legend-modal");
-
-        $("<div>", {
-            "id": "legend-content",
-            "class": "modal-content"
-        }).appendTo("#legend-dialog");
-
-        $("<div>", {
-            "id": "legend-body",
-            "class": "modal-body",
-            "html": "<h3>Glyph Legend</h3>" +
-                "<div class=\"refinery-subheader\"><h4>Node Types:</h4></div>" +
-                "<div class=\"provvis-legend-cell\" id=\"prov-ctrl-legend-types\"></div>" +
-                "<div class=\"refinery-subheader\"><h4>Time Encoding:</h4></div>" +
-                "<div class=\"provvis-legend-cell\" id=\"prov-ctrl-legend-time\"></div>" +
-                "<div class=\"refinery-subheader\"><h4>Layering:</h4></div>" +
-                "<div class=\"provvis-legend-cell\" id=\"prov-ctrl-legend-layering\"></div>" +
-                "<div class=\"refinery-subheader\"><h4>Aggregation:</h4></div>" +
-                "<div class=\"provvis-legend-cell\" id=\"prov-ctrl-legend-aggregation\"></div>" +
-                "<div class=\"refinery-subheader\"><h4>Stratification:</h4></div>" +
-                "<div class=\"provvis-legend-cell\" id=\"prov-ctrl-legend-stratification\"></div>"
-        }).appendTo("#legend-content");
-
-        $("<div>", {
-            "id": "legend-footer",
-            "class": "modal-footer"
-        }).appendTo("#legend-content");
-
-        $("<button>", {
-            "class": "btn btn-primary",
-            "data-dismiss": "modal",
-            "html": "OK"
-        }).appendTo("#legend-footer");
-
-        $("<button/>", {
-            "id": "prov-ctrl-legend",
-            "class": "btn btn-mini",
-            "type": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
-            "data-toggle": "modal",
-            "data-target": "#legend-modal",
-            "html": "<i class=icon-question-sign></i>" +
-                "&nbsp;" + "Glyph Legend",
-            "data-html": "true",
-            "title": "Glyph Legend",
-            "style": "margin-left: 15px"
-        }).appendTo("#" + parentId);
-
-
-        /* Sidebar toggle. */
-        $("<span/>", {
-            "id": "prov-ctrl-sidebar-btn-group",
-            "class": "btn-group"
-        }).appendTo("#" + parentId);
-
-        $("<button/>", {
-            "id": "prov-ctrl-sidebar-click",
-            "class": "btn btn-mini",
-            "type": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
-            "data-documents": "Sidebar",
-            "html": "<i class=icon-chevron-left></i>" +
-                "&nbsp;" + "Sidebar",
-            "data-html": "true",
-            "title": "Sidebar",
-            "style": "margin-left: 15px"
-        }).appendTo("#prov-ctrl-sidebar-btn-group");
-    };
 
     /**
      * Creates the hierarchical provenance visualization div layout.
@@ -440,10 +86,6 @@ var provvis = function () {
         /* New timeline view content. */
         var timelineContainer = d3.select("#" + divId);
 
-        /*timelineContainer.append("g")
-         .attr("id", "tlTitle")
-         .html("Analysis Timeline");
-         */
         $("<p/>", {
             "id": "tlTitle",
             "html": "Analysis Timeline"
@@ -464,21 +106,6 @@ var provvis = function () {
             "id": "tlThreshold"
         }).appendTo(timelineContainer);
 
-        $("<p/>", {
-            "id": "tlReset"
-        }).appendTo(timelineContainer);
-
-        $("<button/>", {
-            "id": "prov-timeline-view-reset-time",
-            "class": "btn btn-mini",
-            "type": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
-            "html": "Reset",
-            "data-html": "true",
-            "title": "Reset"
-        }).appendTo("#" + "tlReset");
-
         return timelineContainer;
     };
 
@@ -492,10 +119,10 @@ var provvis = function () {
         /* New DOI view enclosing div. */
         $('<div/>', {
             "id": divId,
-            "style": "margin-top: 30px"
+            "style": "margin-top: 30px; width: 100%;"
         }).appendTo("#" + parentId);
 
-        /* New doi view content. */
+        /* New DOI view content. */
         var doiContainer = d3.select("#" + divId);
 
         $("<p/>", {
@@ -503,21 +130,45 @@ var provvis = function () {
             "html": "DOI components"
         }).appendTo(doiContainer);
 
-        $("<p/>", {
-            "id": "doiCanvas"
+        $("<div/>", {
+            "id": "doiVis",
+            "style": "width: 100%; height: 300px;"
         }).appendTo(doiContainer);
+
+        $("<div/>", {
+            "id": "doiCanvas",
+            "style": "width: 100px; float: left;"
+        }).appendTo("#doiVis");
 
         d3.select("#doiCanvas").append("svg")
             .attr("height", 300)
-            .attr("width", 310)
-            .style({"margin-top": "0px", "margin-left": "20px", "padding": "0px"})
-            .attr("pointer-events", "all");
+            .attr("width", 100)
+            .style({"margin-top": "0px", "margin-left": "0px", "padding": "0px"})
+            .attr("pointer-events", "all").append("g").append("g").attr("transform", function () {
+                return "translate(0,0)";
+            }).append("g");
+
+        $("<div/>", {
+            "id": "doiSpinners",
+            "style": "margin-left: 100px"
+        }).appendTo("#doiVis");
 
         /* Toolbar items. */
         $("<p/>", {
-            "id": "doiComponents",
-            "html": "#DOI-comp<br>#DOI-comp<br>#DOI-comp<br>#DOI-comp<br>#DOI-comp<br>#DOI-comp<br>"
+            "id": "doiApply",
+            "style": "margin-top: 20px;"
         }).appendTo(doiContainer);
+
+        $("<button/>", {
+            "id": "prov-doi-view-apply",
+            "class": "btn btn-mini",
+            "type": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Apply",
+            "data-html": "true",
+            "title": "Apply"
+        }).appendTo("#" + "doiApply");
 
         $("<p/>", {
             "id": "doiReset"
@@ -801,17 +452,11 @@ var provvis = function () {
                 /* Declare graph. */
                 var graph = Object.create(null);
 
-                /* Toolbar. */
-                createToolbar("provenance-graph", "provenance-controls");
-
-                /* Toolbar items. */
-                createToolbarItems("provenance-controls");
-
                 /* Render glyph legend. */
                 renderGlyphLegend();
 
                 /* Hierarchical div layout. */
-                createVisualizationContainer("provenance-vis", "provenance-canvas", "provenance-graph");
+                createVisualizationContainer("provenance-vis", "provenance-canvas", "provvis-canvas");
 
                 /* Left floated and docked sidebar. */
                 createSidebar("provenance-canvas", "provenance-sidebar");
@@ -823,8 +468,7 @@ var provvis = function () {
                 var timelineView = createTimelineView("provenance-sidebar", "provenance-timeline-view");
 
                 /* DOI view div. */
-                /*TODO: Temporarily disabled. */
-                //var doiView = createDOIView("provenance-sidebar", "provenance-doi-view");
+                var doiView = createDOIView("provenance-sidebar", "provenance-doi-view");
 
                 /* Init node cell dimensions. */
                 var cell = {width: r * 5, height: r * 5};

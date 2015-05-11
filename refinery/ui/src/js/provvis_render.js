@@ -908,42 +908,340 @@ var provvisRender = function () {
     /* TODO: Placeholder code. */
     /**
      * Draws the DOI view.
-     * @param vis The provenance visualization root object.
      */
-    var drawDoiView = function (vis) {
-        var svg = d3.select("#provenance-doi-view").select("svg").append("g").append("g").attr("transform", function () {
+    var drawDoiView = function () {
+        var innerSvg = d3.select("#provenance-doi-view").select("svg").select("g").select("g").attr("transform", function () {
             return "translate(0,0)";
-        });
+        }).select("g");
 
-        var dummyCompRectData = [0, 0.05, 0.15, 0.35, 0.55, 0.83];
-
+        var doiFactors = d3.values(provvisDecl.DoiFactors.factors);
         var color = d3.scale.category10();
 
-        /* Draw component rects. */
-        var dComp = svg.append("g").selectAll(".g").data(dummyCompRectData).enter().append("g")
-            .attr("id", function (d, i) {
-                return "doiRectId-" + i;
-            }).classed({"doiRect": true})
-            .attr("transform", function (d, i) {
-                return "translate(" + 0 + "," + (d * 300) + ")";
+        var updateDoiView = function (data) {
+            var rectOffset = 0,
+                labelOffset = 30,
+                labelsStart = (300 - data.length * labelOffset) / 2;
+
+            /* Data join. */
+            var dComp = innerSvg.selectAll("g").data(data);
+
+            /* Update. */
+            var gDCompUpdate = dComp.attr("id", function (d, i) {
+
+                return "doiCompId-" + i;
+            }).classed({"doiComp": true});
+            gDCompUpdate.select("rect")
+                .classed("doiCompRect", true)
+                .attr("x", 0)
+                .attr("y", function (d) {
+                    rectOffset += d.value * 300;
+                    return rectOffset - d.value * 300;
+                }).attr("width", 40)
+                .attr("height", function (d) {
+                    return d.value * 300;
+                }).style({"fill": function (d, i) {
+                    return color(i);
+                }});
+            rectOffset = 0;
+            gDCompUpdate.select("path").classed("doiCompHandle", true).attr("d", function (d, i) {
+                rectOffset += d.value * 300;
+                var numMaskedComps = d3.values(provvisDecl.DoiFactors.factors).filter(function (dc, i) {
+                    return provvisDecl.DoiFactors.isMasked(dc.label);
+                }).length;
+                if (numMaskedComps > 0) {
+                    return "M40," + (rectOffset - d.value * 300) + " " +
+                        "L" + (40 + labelOffset) + "," + (labelsStart + i * labelOffset) + " " +
+                        "h" + labelOffset + " " +
+                        "v" + labelOffset + " " +
+                        "h" + (-labelOffset) + " " +
+                        "L" + (40) + "," + (rectOffset) + " " +
+                        "V" + (rectOffset - d.value * 300);
+                } else {
+                    return "M40,150 " +
+                        "L" + (40 + labelOffset) + "," + (labelsStart + i * labelOffset) + " " +
+                        "h" + labelOffset + " " +
+                        "v" + labelOffset + " " +
+                        "h" + (-labelOffset) + " " +
+                        "L" + (40) + ",150";
+                }
+            }).style({"fill": function (d, i) {
+                return color(i);
+            }});
+
+            /* Enter. */
+            var gDCompEnter = dComp.enter().append("g")
+                .attr("id", function (d, i) {
+                    return "doiCompId-" + i;
+                }).classed({"doiComp": true});
+            gDCompEnter.append("rect")
+                .classed("doiCompRect", true)
+                .attr("x", 0)
+                .attr("y", function (d) {
+                    rectOffset += d.value * 300;
+                    return rectOffset - d.value * 300;
+                }).attr("width", 40)
+                .attr("height", function (d) {
+                    return d.value * 300;
+                }).style({"fill": function (d, i) {
+                    return color(i);
+                }});
+            rectOffset = 0;
+            gDCompEnter.append("path").classed("doiCompHandle", true).attr("d", function (d, i) {
+                rectOffset += d.value * 300;
+                return "M40," + (rectOffset - d.value * 300) + " " +
+                    "L" + (40 + labelOffset) + "," + (labelsStart + i * labelOffset) + " " +
+                    "h" + labelOffset + " " +
+                    "v" + labelOffset + " " +
+                    "h" + (-labelOffset) + " " +
+                    "L" + (40) + "," + (rectOffset) + " " +
+                    "V" + (rectOffset - d.value * 300);
+            }).style({"fill": function (d, i) {
+                return color(i);
+            }});
+
+            dComp.exit().remove();
+
+            $("#doiSpinners").css("padding-top", labelsStart);
+        };
+
+        updateDoiView(doiFactors);
+
+        doiFactors.forEach(function (dc, i) {
+            $('<div/>', {
+                "id": "dc-form-" + i,
+                "class": "form dc-form",
+                "style": "height: 30px; margin-bottom: 0px;"
+            }).appendTo("#" + "doiSpinners");
+
+            $('<input/>', {
+                "id": "dc-input-" + i,
+                "type": "text",
+                "class": "form-control dc-input",
+                "value": dc.value,
+                "style": "width: 25px; margin-bottom: 0px; margin-right: 2px; text-align: right;"
+            }).appendTo("#" + "dc-form-" + i);
+
+            $('<div/>', {
+                "id": "btn-group-wrapper-" + i,
+                "class": "btn-group"
+            }).appendTo("#" + "dc-form-" + i);
+
+            $('<div/>', {
+                "id": "dc-btn-group-" + i,
+                "class": "input-group-btn-vertical",
+                "style": "margin-right: 2px;"
+            }).appendTo("#" + "btn-group-wrapper-" + i);
+
+            $('<button/>', {
+                "id": "dc-carret-up-" + i,
+                "class": "btn btn-default",
+                "html": "<i class=icon-caret-up></i>"
+            }).appendTo("#" + "dc-btn-group-" + i);
+
+            $('<button/>', {
+                "id": "dc-carret-down-" + i,
+                "class": "btn btn-default",
+                "html": "<i class=icon-caret-down></i>"
+            }).appendTo("#" + "dc-btn-group-" + i);
+
+            $('<span/>', {
+                "id": "dc-label-" + i,
+                "class": "label dc-label",
+                "html": dc.label,
+                "style": "margin-right: 2px; background-color: " + color(i) + ";"
+            }).appendTo("#" + "dc-form-" + i);
+
+            $('<input/>', {
+                "id": "dc-checkbox-" + i,
+                "class": "dc-checkbox",
+                "type": "checkbox",
+                "checked": "true",
+                "style": "margin-top: 0px; margin-right: 2px; vertical-align: middle;"
+            }).appendTo("#" + "dc-form-" + i);
+        });
+
+        /* TODO: Prototype implementation. */
+        /* Ex- and include doi component. */
+        $(".dc-checkbox").click(function () {
+            var dcId = $(this)[0].id[$(this)[0].id.length - 1],
+                val = 0.0;
+            if ($(this)[0].checked) {
+                $(this.parentNode).find(".dc-label").css("opacity", 1.0);
+                d3.select("#doiCompId-" + dcId).style("fill-opacity", 1.0);
+                val = 0.0;
+                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, true);
+            } else {
+                $(this.parentNode).find(".dc-label").css("opacity", 0.3);
+                d3.select("#doiCompId-" + dcId).style("fill-opacity", 0.3);
+                val = 0.0;
+                $("#dc-input-" + dcId).val(val);
+                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, false);
+            }
+
+            var numMaskedComps = d3.values(provvisDecl.DoiFactors.factors).filter(function (dc, i) {
+                return provvisDecl.DoiFactors.isMasked(dc.label);
+            }).length;
+
+            if (numMaskedComps > 0) {
+                var accVal = d3.values(provvisDecl.DoiFactors.factors)
+                    .filter(function (dc, i) {
+                        return provvisDecl.DoiFactors.isMasked(dc.label);
+                    })
+                    .map(function (dc) {
+                        return dc.value;
+                    })
+                    .reduce(function (accVal, cur) {
+                        return accVal + cur;
+                    });
+
+                var tar = 1.0;
+
+                d3.values(provvisDecl.DoiFactors.factors)
+                    .forEach(function (dc, i) {
+                        if (provvisDecl.DoiFactors.isMasked(dc.label)) {
+                            var isMasked = $("#dc-checkbox-" + i)[0].checked;
+                            if (accVal === 0) {
+                                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[i], 1, isMasked);
+                                $("#dc-input-" + i).val(1);
+                            } else {
+                                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[i], (dc.value / accVal) * tar, isMasked);
+                                $("#dc-input-" + i).val((dc.value / accVal) * tar);
+                            }
+                        }
+                    });
+            }
+            updateDoiView(d3.values(provvisDecl.DoiFactors.factors));
+        });
+
+        /* TODO: Clean up code duplication. */
+
+        /* Increase component's influence. */
+        $(".dc-form .btn:first-of-type").on('click', function () {
+            var dcId = $(this)[0].id[$(this)[0].id.length - 1];
+            var val = parseFloat($("#dc-input-" + dcId).val()) + 0.01;
+            if ($("#dc-checkbox-" + dcId)[0].checked && val <= 1) {
+                $("#dc-input-" + dcId).val(val);
+                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, true);
+
+                var accVal = d3.values(provvisDecl.DoiFactors.factors)
+                    .filter(function (dc, i) {
+                        return i != dcId && provvisDecl.DoiFactors.isMasked(dc.label);
+                    })
+                    .map(function (dc) {
+                        return dc.value;
+                    })
+                    .reduce(function (accVal, cur) {
+                        return accVal + cur;
+                    });
+
+                var tar = parseFloat(1 - val);
+
+                d3.values(provvisDecl.DoiFactors.factors)
+                    .forEach(function (dc, i) {
+                        if (i != dcId && provvisDecl.DoiFactors.isMasked(dc.label)) {
+                            var isMasked = $("#dc-checkbox-" + i)[0].checked;
+                            provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[i], (dc.value / accVal) * tar, isMasked);
+                            $("#dc-input-" + i).val((dc.value / accVal) * tar);
+                        }
+                    });
+                updateDoiView(d3.values(provvisDecl.DoiFactors.factors));
+            }
+        });
+
+        /* Decrease component's influence. */
+        $(".dc-form .btn:last-of-type").on('click', function () {
+            var dcId = $(this)[0].id[$(this)[0].id.length - 1];
+            var val = parseFloat($("#dc-input-" + dcId).val()) - 0.01;
+            if ($("#dc-checkbox-" + dcId)[0].checked && val >= 0) {
+                $("#dc-input-" + dcId).val(val);
+                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, true);
+
+                var accVal = d3.values(provvisDecl.DoiFactors.factors)
+                    .filter(function (dc, i) {
+                        return i != dcId && provvisDecl.DoiFactors.isMasked(dc.label);
+                    })
+                    .map(function (dc) {
+                        return dc.value;
+                    })
+                    .reduce(function (accVal, cur) {
+                        return accVal + cur;
+                    });
+
+                var tar = parseFloat(1 - val);
+
+                d3.values(provvisDecl.DoiFactors.factors)
+                    .forEach(function (dc, i) {
+                        if (i != dcId && provvisDecl.DoiFactors.isMasked(dc.label)) {
+                            var isMasked = $("#dc-checkbox-" + i)[0].checked;
+                            provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[i], (dc.value / accVal) * tar, isMasked);
+                            $("#dc-input-" + i).val((dc.value / accVal) * tar);
+                        }
+                    });
+                updateDoiView(d3.values(provvisDecl.DoiFactors.factors));
+            }
+        });
+
+        $(".dc-input").keypress(function (e) {
+            if (e.which == 13) {
+                var dcId = $(this)[0].id[$(this)[0].id.length - 1];
+                var val = parseFloat($("#dc-input-" + dcId).val());
+
+                if (val > 1) {
+                    val = 1;
+                } else if (val < 0) {
+                    val = 0;
+                }
+
+                $(this).val(val);
+                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, true);
+
+                var accVal = d3.values(provvisDecl.DoiFactors.factors)
+                    .filter(function (dc, i) {
+                        return i != dcId && provvisDecl.DoiFactors.isMasked(dc.label);
+                    })
+                    .map(function (dc) {
+                        return dc.value;
+                    })
+                    .reduce(function (accVal, cur) {
+                        return accVal + cur;
+                    });
+
+                var tar = parseFloat(1 - val);
+
+                d3.values(provvisDecl.DoiFactors.factors)
+                    .forEach(function (dc, i) {
+                        if (i != dcId && provvisDecl.DoiFactors.isMasked(dc.label)) {
+                            var isMasked = $("#dc-checkbox-" + i)[0].checked;
+                            provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[i], (dc.value / accVal) * tar, isMasked);
+                            $("#dc-input-" + i).val((dc.value / accVal) * tar);
+                        }
+                    });
+                updateDoiView(d3.values(provvisDecl.DoiFactors.factors));
+            }
+        });
+
+        $("#prov-doi-view-apply").on('click', function () {
+            //updateDoiView(d3.values(provvisDecl.DoiFactors.factors));
+            updateNodeDoi();
+        });
+
+        $("#prov-doi-view-reset").on('click', function () {
+            var val = parseFloat(1 / d3.values(provvisDecl.DoiFactors.factors).filter(function (dc, i) {
+                return provvisDecl.DoiFactors.isMasked(dc.label);
+            }).length);
+
+            d3.values(provvisDecl.DoiFactors.factors)
+                .forEach(function (dc, i) {
+                    if (!provvisDecl.DoiFactors.isMasked(dc.label)) {
+                        $("#dc-input-" + i).val(0.0);
+                        provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[i], 0.0, false);
+                    } else {
+                        $("#dc-input-" + i).val(val);
+                        provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[i], val, true);
+                    }
             });
-
-        dComp.append("rect")
-            .attr("width", 100)
-            .attr("height", function (d) {
-                return 300 - 300 * d;
-            }).style({"fill": function (d) {
-                return color(d);
-            }});
-
-        dComp.append("text")
-            .attr("x", 110)
-            .attr("y", 10)
-            .text(function (d) {
-                return d;
-            }).style({"fill": function (d) {
-                return color(d);
-            }});
+            updateDoiView(d3.values(provvisDecl.DoiFactors.factors));
+        });
     };
 
     /**
@@ -2403,8 +2701,8 @@ var provvisRender = function () {
                 ln.children.values().forEach(function (an) {
                     if (an.exaggerated) {
                         anBBoxCoords = getABBoxCoords(an, 0);
-                        if (anBBoxCoords.x.max - anBBoxCoords.x.min - 4 > accWidth) {
-                            accWidth = anBBoxCoords.x.max - anBBoxCoords.x.min - 4;
+                        if (anBBoxCoords.x.max - anBBoxCoords.x.min - 2 > accWidth) {
+                            accWidth = anBBoxCoords.x.max - anBBoxCoords.x.min - 2;
                         }
                         accHeight += anBBoxCoords.y.max - anBBoxCoords.y.min;
                     }
@@ -2416,15 +2714,12 @@ var provvisRender = function () {
                     .attr("width", accWidth)
                     .attr("height", accHeight);
                 g.setNode(ln.autoId, {label: ln.autoId, width: accWidth, height: accHeight});
-                //g.setNode(ln.autoId, {label: ln.autoId, width: accWidth, height: ln.children.size()*(vis.cell.height+3 * scaleFactor * vis.radius)});
             } else {
                 ln.children.values().forEach(function (an) {
                     anBBoxCoords = getABBoxCoords(an, 0);
                     curWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
                     curHeight = anBBoxCoords.y.max - anBBoxCoords.y.min;
                     g.setNode(an.autoId, {label: an.autoId, width: curWidth, height: curHeight});
-
-                    //console.log(ln.autoId + " " + an.autoId + " " + curHeight);
                 });
             }
         });
@@ -2680,7 +2975,7 @@ var provvisRender = function () {
                         return anBBoxCoords.y.max - anBBoxCoords.y.min/* + 3 * scaleFactor * vis.radius*/;
                     });
 
-                /* TODO: Center non-expanded subanalyses horizontally. */
+                /* Center non-expanded subanalyses horizontally. */
                 d.parent.children.values().filter(function (san) {
                     return !san.hidden;
                 }).forEach(function (san) {
@@ -2919,7 +3214,7 @@ var provvisRender = function () {
                 updateLink(d.parent.parent);
             }
         }
-        clearNodeSelection();
+        //clearNodeSelection();
 
         /* Recompute layout. */
         dagreDynamicLayerLayout(vis.graph);
@@ -4162,32 +4457,40 @@ var provvisRender = function () {
             handlePathHighlighting(d, "s");
         });
 
-        /* TODO: Rewrite with js library. */
-        var keydown = function () {
-            d3.event.preventDefault();
+        /* TODO: Temporarily disabled. */
+        /*var keydown = function () {
+         d3.event.preventDefault();
 
             if (selectedNodeSet.empty()) return;
 
             selectedNodeSet.values().forEach(function (d) {
                 switch (d3.event.keyCode) {
 
-                    case 67: /* c => collapse*/
-                        handleCollapseExpandNode(d, "c");
+         case 67: */
+        /* c => collapse*/
+        /*
+         handleCollapseExpandNode(d, "c");
                         break;
-                    case 69: /* e => expand*/
-                        handleCollapseExpandNode(d, "e");
+         case 69: */
+        /* e => expand*/
+        /*
+         handleCollapseExpandNode(d, "e");
                         break;
-                    case 80: /* l => highlight predecessors */
-                        handlePathHighlighting(d, "p");
+         case 80: */
+        /* l => highlight predecessors */
+        /*
+         handlePathHighlighting(d, "p");
                         break;
-                    case 83: /* r => highlight successors */
-                        handlePathHighlighting(d, "s");
+         case 83: */
+        /* r => highlight successors */
+        /*
+         handlePathHighlighting(d, "s");
                         break;
                 }
             });
         };
 
-        d3.select("body").on("keydown", keydown);
+         d3.select("body").on("keydown", keydown);*/
     };
 
     /**
@@ -4330,17 +4633,13 @@ var provvisRender = function () {
         drawTimelineView(vis);
 
         /* Draw doi view. */
-        /* TODO: Temporarily disabled. */
-        //drawDoiView(vis);
+        drawDoiView();
 
         /* Event listeners. */
         handleEvents(vis.graph);
 
         /* Set initial graph position. */
         fitGraphToWindow(0);
-
-        /* TODO: Debug info. */
-        //console.log(vis.graph);
     };
 
 
