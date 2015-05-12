@@ -4744,14 +4744,19 @@ var provvisRender = function () {
     var updateLinkFilter = function () {
         saLink.classed("filteredLink", false);
 
-        vis.graph.saNodes.forEach(function (san) {
+        saNode.each(function (san) {
             if (!san.filtered) {
                 san.links.values().forEach( function (l) {
                     d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("filteredLink", false);
+                    if (filterAction === "blend") {
+                        d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", true);
+                    } else {
+                        d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", false);
+                    }
                 });
             } else {
                 san.links.values().forEach( function (l) {
-                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("filteredLink", true);
+                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed({"filteredLink": true, "blendedLink": false});
                 });
             }
         });
