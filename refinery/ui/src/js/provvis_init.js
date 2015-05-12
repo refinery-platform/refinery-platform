@@ -274,8 +274,10 @@ var provvisInit = function () {
             });
             initDate.setSeconds(initDate.getSeconds() - 1);
             initDate = d3.time.format.iso(initDate);
-            initDate = initDate.substr(0, initDate.length - 1);
         }
+
+        /* Fix to remove Z at the end of the date string. */
+        initDate = initDate.substr(0, initDate.length - 1);
 
         /* Create analysis for dataset. */
         dataset = new provvisDecl.Analysis(0, Object.create(null), true, "dataset", "dataset",
