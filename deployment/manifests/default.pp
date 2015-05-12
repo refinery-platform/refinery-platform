@@ -35,6 +35,7 @@ class { 'postgresql::lib::devel':
 postgresql::server::role { $appuser:
   createdb => true,
 }
+->
 postgresql::server::db { 'refinery':
   user => $appuser,
   password => '',
