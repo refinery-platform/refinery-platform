@@ -91,7 +91,7 @@ var provvisRender = function () {
 
         /* On analysis doi. */
         aNode.each(function (an) {
-            if (an.doi.doiWeightedSum >= (2 / 6) && !an.hidden  && an.filtered) {
+            if (an.doi.doiWeightedSum >= (2 / 6) && !an.hidden && an.filtered) {
                 /* Expand. */
                 handleCollapseExpandNode(an, "e");
                 //console.log("expand an " + an.autoId);
@@ -226,7 +226,7 @@ var provvisRender = function () {
                 layoutCols.values().forEach(function (c) {
                     if (c.nodes.indexOf(curN.autoId) !== -1) {
                         var curWidth = getABBoxCoords(curN, 0).x.max - getABBoxCoords(curN, 0).x.min,
-                            offset = (c.width - curWidth)/2 + vis.cell.width/2;
+                            offset = (c.width - curWidth) / 2 + vis.cell.width / 2;
                         if (curWidth < c.width) {
                             hLineSrc = srcX + offset;
                         }
@@ -1246,7 +1246,7 @@ var provvisRender = function () {
                         $("#dc-input-" + i).val(val);
                         provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[i], val, true);
                     }
-            });
+                });
             updateDoiView(d3.values(provvisDecl.DoiFactors.factors));
         });
 
@@ -2691,7 +2691,9 @@ var provvisRender = function () {
 
                 exNum = 0;
                 accY = ln.y + vis.cell.height;
-                ln.children.values().filter(function (an) {return an.filtered || filterAction === "blend";}).sort(function (a, b) {
+                ln.children.values().filter(function (an) {
+                    return an.filtered || filterAction === "blend";
+                }).sort(function (a, b) {
                     return a.y - b.y;
                 }).forEach(function (an) {
                     if (an.exaggerated) {
@@ -2710,7 +2712,9 @@ var provvisRender = function () {
                 });
 
                 /* Set layer label and bounding box. */
-                var numChildren = ln.children.values().filter(function (an) {return an.filtered || filterAction === "blend";}).length;
+                var numChildren = ln.children.values().filter(function (an) {
+                    return an.filtered || filterAction === "blend";
+                }).length;
                 d3.select("#nodeId-" + ln.autoId).select("g.labels").select(".lLabel")
                     .text(function () {
                         return numChildren - exNum + "/" + ln.children.size();
@@ -2719,7 +2723,9 @@ var provvisRender = function () {
                 /* Get potential expanded bounding box size. */
                 var accHeight = curHeight - 2,
                     accWidth = curWidth - 2;
-                ln.children.values().filter(function (an) {return an.filtered || filterAction === "blend";}).forEach(function (an) {
+                ln.children.values().filter(function (an) {
+                    return an.filtered || filterAction === "blend";
+                }).forEach(function (an) {
                     if (an.exaggerated) {
                         anBBoxCoords = getABBoxCoords(an, 0);
                         if (anBBoxCoords.x.max - anBBoxCoords.x.min - 2 > accWidth) {
@@ -2736,7 +2742,9 @@ var provvisRender = function () {
                     .attr("height", accHeight);
                 g.setNode(ln.autoId, {label: ln.autoId, width: accWidth, height: accHeight});
             } else {
-                ln.children.values().filter(function (an) {return an.filtered || filterAction === "blend";}).forEach(function (an) {
+                ln.children.values().filter(function (an) {
+                    return an.filtered || filterAction === "blend";
+                }).forEach(function (an) {
                     anBBoxCoords = getABBoxCoords(an, 0);
                     curWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
                     curHeight = anBBoxCoords.y.max - anBBoxCoords.y.min;
@@ -2800,7 +2808,9 @@ var provvisRender = function () {
                     accHeight = vis.cell.height;
                     accWidth = vis.cell.width;
 
-                    ln.children.values().filter(function(an){return an.filtered || filterAction === "blend";}).forEach(function (an) {
+                    ln.children.values().filter(function (an) {
+                        return an.filtered || filterAction === "blend";
+                    }).forEach(function (an) {
                         if (an.exaggerated) {
                             anBBoxCoords = getABBoxCoords(an, 0);
                             if (anBBoxCoords.x.max - anBBoxCoords.x.min > accWidth) {
@@ -2815,7 +2825,9 @@ var provvisRender = function () {
 
                     exNum = 0;
                     accY = ln.y + vis.cell.height;
-                    ln.children.values().filter(function(an){return an.filtered || filterAction === "blend";}).sort(function (a, b) {
+                    ln.children.values().filter(function (an) {
+                        return an.filtered || filterAction === "blend";
+                    }).sort(function (a, b) {
                         return a.y - b.y;
                     }).forEach(function (an) {
                         anBBoxCoords = getABBoxCoords(an, 0);
@@ -3065,7 +3077,6 @@ var provvisRender = function () {
 
             } else if (d.nodeType === "analysis") {
                 //console.log("#COLLAPSE analysis " + d.autoId);
-
                 d.parent.children.values().forEach(function (an) {
                     d3.select("#BBoxId-" + an.autoId).classed({"hiddenBBox": true});
                     an.exaggerated = false;
@@ -4493,34 +4504,34 @@ var provvisRender = function () {
         /*var keydown = function () {
          d3.event.preventDefault();
 
-            if (selectedNodeSet.empty()) return;
+         if (selectedNodeSet.empty()) return;
 
-            selectedNodeSet.values().forEach(function (d) {
-                switch (d3.event.keyCode) {
+         selectedNodeSet.values().forEach(function (d) {
+         switch (d3.event.keyCode) {
 
          case 67: */
         /* c => collapse*/
         /*
          handleCollapseExpandNode(d, "c");
-                        break;
+         break;
          case 69: */
         /* e => expand*/
         /*
          handleCollapseExpandNode(d, "e");
-                        break;
+         break;
          case 80: */
         /* l => highlight predecessors */
         /*
          handlePathHighlighting(d, "p");
-                        break;
+         break;
          case 83: */
         /* r => highlight successors */
         /*
          handlePathHighlighting(d, "s");
-                        break;
-                }
-            });
-        };
+         break;
+         }
+         });
+         };
 
          d3.select("body").on("keydown", keydown);*/
     };
@@ -4766,7 +4777,7 @@ var provvisRender = function () {
 
         saNode.each(function (san) {
             if (!san.filtered) {
-                san.links.values().forEach( function (l) {
+                san.links.values().forEach(function (l) {
                     d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("filteredLink", false);
                     if (filterAction === "blend") {
                         d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", true);
@@ -4775,7 +4786,7 @@ var provvisRender = function () {
                     }
                 });
             } else {
-                san.links.values().forEach( function (l) {
+                san.links.values().forEach(function (l) {
                     d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed({"filteredLink": true, "blendedLink": false});
                 });
             }
