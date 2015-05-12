@@ -1249,6 +1249,17 @@ var provvisRender = function () {
             });
             updateDoiView(d3.values(provvisDecl.DoiFactors.factors));
         });
+
+        /* Show and hide doi labels. */
+        $("#prov-doi-view-show").click(function () {
+            if ($(this).hasClass("active")) {
+                $(this).removeClass("active");
+                d3.selectAll(".nodeDoiLabel").style("display", "none");
+            } else {
+                $(this).addClass("active");
+                d3.selectAll(".nodeDoiLabel").style("display", "inline");
+            }
+        });
     };
 
     /**
@@ -3407,7 +3418,7 @@ var provvisRender = function () {
                 if (typeof data !== "undefined") {
                     title = "<b>" + selNode.fileType + ": " + "<b>";
                     if (data.file_url !== null) {
-                        title += "<a href=" + data.file_url + ">" + data.name + "</a>";
+                        title += "<a href=" + data.file_url + " target=\"_blank\">" + data.name + "</a>";
                     } else {
                         title += " - ";
                     }
@@ -3416,11 +3427,14 @@ var provvisRender = function () {
 
             case "dt":
                 /* TODO: Add tool_state parameters column. */
+                /* From parent workflow steps attribute, extract step by id.
+                 * var steps = vis.graph.workflowData.get(selNode.parent.wfUuid).steps; */
+
                 data = vis.graph.nodeData.get(selNode.uuid);
                 if (typeof data !== "undefined") {
                     title = "<b>" + selNode.fileType + ": " + "<b>";
                     if (data.file_url !== null) {
-                        title += "<a href=" + data.file_url + ">" + data.name + "</a>";
+                        title += "<a href=" + data.file_url + " target=\"_blank\">" + data.name + "</a>";
                     } else {
                         title += " - ";
                     }
@@ -3430,21 +3444,30 @@ var provvisRender = function () {
             case "subanalysis":
                 data = vis.graph.workflowData.get(selNode.parent.wfUuid);
                 if (typeof data !== "undefined") {
-                    title = "<b>" + "Subanalysis: " + "<b>" + "<a href=/workflows/" + selNode.parent.wfUuid + ">" +
-                        data.name + "</a>";
+                    title = "<b>" + "Subanalysis: " + "<b>" + "<a href=/workflows/" + selNode.wfUuid + " target=\"_blank\">" +
+                        selNode.parent.wfName + "</a>";
+                } else {
+                    title += " - ";
+                }
+                break;
+
+            case "analysis":
+                data = vis.graph.analysisData.get(selNode.uuid);
+                if (typeof data !== "undefined") {
+                    title = "<b>" + "Analysis: " + "<b>" + "<a href=/workflows/" + selNode.wfUuid + " target=\"_blank\">" +
+                        selNode.wfName + "</a>";
                 } else {
                     title = "<b>" + "Dataset " + "<b>";
                 }
                 break;
 
-            case "analysis":
-
-                data = vis.graph.analysisData.get(selNode.uuid);
+            case "layer":
+                data = {aggregation_count: selNode.children.size(), workflow: selNode.wfName, subanalysis_count: selNode.motif.numSubanalyses, wfUuid: selNode.motif.wfUuid};
                 if (typeof data !== "undefined") {
-                    title = "<b>" + "Analysis: " + "<b>" + "<a href=/workflows/" + data.uuid + ">" +
-                        data.name + "</a>";
+                    title = "<b>" + "Layer: " + "<b>" + "<a href=/workflows/" + data.wfUuid + " target=\"_blank\">" +
+                        data.workflow + "</a>";
                 } else {
-                    title = "<b>" + "Dataset " + "<b>";
+                    title += " - ";
                 }
                 break;
         }
@@ -4236,24 +4259,6 @@ var provvisRender = function () {
             });
         });
 
-        /* Show and hide doi labels. */
-        $("#prov-ctrl-show-doi").click(function () {
-            if (!$("#prov-ctrl-show-doi").find("input[type='checkbox']").is(":checked")) {
-                d3.selectAll(".nodeDoiLabel").style("display", "none");
-            } else {
-                d3.selectAll(".nodeDoiLabel").style("display", "inline");
-            }
-        });
-
-        /* Show and hide table. */
-        $("#prov-ctrl-show-table").click(function () {
-            if (!$("#prov-ctrl-show-table").find("input[type='checkbox']").is(":checked")) {
-                d3.select("#provenance-table").style("display", "none");
-            } else {
-                d3.select("#provenance-table").style("display", "block");
-            }
-        });
-
         /* Switch filter action. */
         $("[id^=prov-ctrl-filter-list-]").click(function () {
             $(this).find("input[type='radio']").prop("checked", true);
@@ -4294,6 +4299,21 @@ var provvisRender = function () {
                 d3.select("#nodeId-" + n.autoId).select(".nodeAttrLabel").text(n.attributes.get(selAttrName));
             });
 
+        });
+
+        /* Node info. */
+        $("#prov-ctrl-nodeinfo-click").click(function () {
+            if ($("#provenance-table").css("top") === "0px") {
+                $("#provenance-table").animate({top: '-155'}, nodeLinkTransitionTime);
+                setTimeout(function () {
+                    $("#prov-ctrl-nodeinfo-click").html("<i class=icon-chevron-down></i>" + "&nbsp;" + "Node info");
+                }, nodeLinkTransitionTime);
+            } else {
+                $("#provenance-table").animate({top: '0'}, nodeLinkTransitionTime);
+                setTimeout(function () {
+                    $("#prov-ctrl-nodeinfo-click").html("<i class=icon-chevron-up></i>" + "&nbsp;" + "Node info");
+                }, nodeLinkTransitionTime);
+            }
         });
 
         /* Sidebar. */

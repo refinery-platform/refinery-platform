@@ -109,6 +109,7 @@ var provvis = function () {
         return timelineContainer;
     };
 
+    /* TODO: Rewrite in angular template. */
     /**
      * DOI view.
      * @param parentId Parent div id for the floating table div.
@@ -154,9 +155,10 @@ var provvis = function () {
         }).appendTo("#doiVis");
 
         /* Toolbar items. */
-        $("<p/>", {
-            "id": "doiApply",
-            "style": "margin-top: 20px;"
+        $("<div/>", {
+            "id": "doiButtonGroup",
+            "class": "btn-group",
+            "style": "width: 100%"
         }).appendTo(doiContainer);
 
         $("<button/>", {
@@ -168,11 +170,7 @@ var provvis = function () {
             "html": "Apply",
             "data-html": "true",
             "title": "Apply"
-        }).appendTo("#" + "doiApply");
-
-        $("<p/>", {
-            "id": "doiReset"
-        }).appendTo(doiContainer);
+        }).appendTo("#" + "doiButtonGroup");
 
         $("<button/>", {
             "id": "prov-doi-view-reset",
@@ -183,7 +181,18 @@ var provvis = function () {
             "html": "Reset",
             "data-html": "true",
             "title": "Reset"
-        }).appendTo("#" + "doiReset");
+        }).appendTo("#" + "doiButtonGroup");
+
+        $("<button/>", {
+            "id": "prov-doi-view-show",
+            "class": "btn btn-mini",
+            "type": "button",
+            "rel": "tooltip",
+            "data-placement": "bottom",
+            "html": "Show",
+            "data-html": "true",
+            "title": "Show"
+        }).appendTo("#" + "doiButtonGroup");
 
         return doiContainer;
     };

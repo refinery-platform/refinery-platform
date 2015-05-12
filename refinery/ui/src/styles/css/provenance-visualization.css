@@ -56,6 +56,10 @@
     margin-left: 15px;
 }
 
+#prov-ctrl-nodeinfo-click {
+    margin-left: 15px;
+}
+
 #prov-ctrl-sidebar-click {
     margin-left: 15px;
 }
@@ -77,8 +81,10 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 0;
-    display: none;
+    top: -155px;
+    width: 100%;
+    max-height: 150px;
+    overflow-y: scroll;
     background-color: #ffffff;
     border-style: solid;
     border-color: lightgray;
