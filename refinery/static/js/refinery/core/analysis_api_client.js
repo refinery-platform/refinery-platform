@@ -59,7 +59,7 @@ AnalysisApiClient.prototype.refresh = function () {
 
 AnalysisApiClient.prototype.createGetListUrl = function () {
   var self = this;
-  var url = self.apiBaseUrl + self.apiEndpointList +
+  var url = self.apiBaseUrl + self.apiEndpointList + "/" +
     "?" + "format=json" +
     "&" + "limit=0" +
     "&" + "order_by=creation_date" +

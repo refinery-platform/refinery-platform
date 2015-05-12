@@ -3,6 +3,29 @@
  */
 var provvisDecl = function () {
 
+    var DoiFactors = (function () {
+
+        var factors = {
+            filtered: {label: "filtered", value: 0.25, masked: true},
+            selected: {label: "selected", value: 0.25, masked: true},
+            highlighted: {label: "highlighted", value: 0.25, masked: true},
+            time: {label: "time", value: 0.25, masked: true}
+        };
+
+        return {
+            set: function (prop, value, masked) {
+                factors[prop] = {label: prop.toString(), value: value, masked: masked};
+            },
+            get: function (prop) {
+                return factors[prop].value;
+            },
+            isMasked: function (prop) {
+                return factors[prop].masked;
+            },
+            factors: factors
+        };
+    })();
+
     /**
      * Constructor function representing the degree-of-interest (DOI) components for BaseNode.
      * @param node The encapsulating node.
@@ -115,7 +138,12 @@ var provvisDecl = function () {
     DoiComponents.prototype.computeWeightedSum = function () {
         /* TODO: Specify component weights within method params and compute a mean among all components. */
 
-        this.doiWeightedSum = (this.doiFiltered / 4 + this.doiSelected / 4 + this.doiHighlighted / 4 + this.doiTime / 4).toFixed(2);
+        this.doiWeightedSum = (
+            this.doiFiltered * provvisDecl.DoiFactors.factors.filtered.value +
+            this.doiSelected * provvisDecl.DoiFactors.factors.selected.value +
+            this.doiHighlighted * provvisDecl.DoiFactors.factors.highlighted.value +
+            this.doiTime * provvisDecl.DoiFactors.factors.time.value
+            ).toFixed(2);
     };
 
     /**
@@ -418,6 +446,7 @@ var provvisDecl = function () {
      * Publish constructor function declarations.
      */
     return {
+        DoiFactors: DoiFactors,
         DoiComponents: DoiComponents,
         BaseNode: BaseNode,
         Node: Node,

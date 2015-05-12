@@ -1,0 +1,220 @@
+<div ng-controller="provvisNavbarController">
+<div id="provenance-controls">
+<!-- Show all controls -->
+        <span id="prov-ctrl-node-btn-group" class="btn-group">
+            <button id="prov-ctrl-layers-click" class="btn btn-mini">Layers</button>
+            <button id="prov-ctrl-analyses-click" class="btn btn-mini">Analyses</button>
+            <button id="prov-ctrl-subanalyses-click" class="btn btn-mini">Subanalyses</button>
+            <button id="prov-ctrl-workflows-click" class="btn btn-mini">Workflows</button>
+        </span>
+
+<!-- Refinery stored output labels -->
+<div id="prov-ctrl-node-labeling-btn-group" class="btn-group">
+    <div id="prov-ctrl-visible-attribute" class="btn btn-mini btn-group">
+        <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown-toggle" href="#">
+            <i class="icon-wrench"/>&nbsp;Attributes&nbsp;<i class="icon-caret-down"/>&nbsp;
+        </a>
+        <ul id="prov-ctrl-visible-attribute-list" class="dropdown-menu scrollable-menu">
+            <!-- TODO: with angular -->
+        </ul>
+        <script>
+            /* Stop dropdown menu from closing on click. */
+            $("#prov-ctrl-visible-attribute-list").bind("click", function (e) {
+                e.stopPropagation();
+            });
+        </script>
+    </div>
+</div>
+
+<!-- Global items. -->
+<div id="prov-ctrl-global-btn-group" class="btn-group">
+
+    <!-- Views -->
+    <div id="prov-ctrl-visible-views" class="btn btn-mini btn-group">
+        <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown-toggle" href="#">
+            <i class="icon-eye-open"/>&nbsp;Views&nbsp;<i class="icon-caret-down"/>&nbsp;
+        </a>
+        <ul id="prov-ctrl-visible-views-list" class="dropdown-menu">
+            <!-- TODO: with angular -->
+            <li id="prov-ctrl-show-doi">
+                <a href="#" class="field-name">
+                    <label class="checkbox"><input type="checkbox"/>Doi</label>
+                </a>
+            </li>
+            <li id="prov-ctrl-show-table">
+                <a href="#" class="field-name">
+                    <label class="checkbox"><input type="checkbox"/>Node info</label>
+                </a>
+            </li>
+            <script>
+                /* Stop dropdown menu from closing on click. */
+                $("#prov-ctrl-visible-views-list").bind("click", function (e) {
+                    e.stopPropagation();
+                });
+            </script>
+        </ul>
+    </div>
+
+    <!-- Links -->
+    <div id="prov-ctrl-links" class="btn btn-mini btn-group">
+        <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown-toggle" href="#">
+            &nbsp;Link style&nbsp;<i class="icon-caret-down"/>&nbsp;
+        </a>
+        <ul id="prov-ctrl-links-list" class="dropdown-menu">
+            <!-- TODO: with angular -->
+            <li id="prov-ctrl-links-list-bezier">
+                <a href="#" class="field-name">
+                    <label class="radio"><input type="radio" checked>Bezier</label>
+                </a>
+            </li>
+            <li id="prov-ctrl-links-list-straight">
+                <a href="#" class="field-name">
+                    <label class="radio"><input type="radio">Straight</label>
+                </a>
+            </li>
+            <script>
+                /* Stop dropdown menu from closing on click. */
+                $("#prov-ctrl-links-list").bind("click", function (e) {
+                    e.stopPropagation();
+                });
+            </script>
+        </ul>
+    </div>
+
+    <!-- Time color-gradient -->
+    <div id="prov-ctrl-time-enc" class="btn btn-mini btn-group">
+        <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown-toggle" href="#">
+            &nbsp;Time enc.&nbsp;<i class="icon-caret-down"/>&nbsp;
+        </a>
+        <ul id="prov-ctrl-time-enc-list" class="dropdown-menu">
+            <!-- TODO: with angular -->
+            <li id="prov-ctrl-time-enc-list-gs">
+                <a href="#" class="field-name">
+                    <label class="radio"><input type="radio" checked>Grayscale</label>
+                </a>
+            </li>
+            <li id="prov-ctrl-time-enc-list-blue">
+                <a href="#" class="field-name">
+                    <label class="radio"><input type="radio">Blue</label>
+                </a>
+            </li>
+            <script>
+                /* Stop dropdown menu from closing on click. */
+                $("#prov-ctrl-time-enc-list").bind("click", function (e) {
+                    e.stopPropagation();
+                });
+            </script>
+        </ul>
+    </div>
+
+    <!-- Filter action -->
+    <div id="prov-ctrl-filter" class="btn btn-mini btn-group">
+        <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown-toggle" href="#">
+            &nbsp;Filter&nbsp;<i class="icon-caret-down"/>&nbsp;
+        </a>
+        <ul id="prov-ctrl-filter-list" class="dropdown-menu">
+            <!-- TODO: with angular -->
+            <li id="prov-ctrl-filter-list-blend">
+                <a href="#" class="field-name">
+                    <label class="radio"><input type="radio" checked>Blend</label>
+                </a>
+            </li>
+            <li id="prov-ctrl-filter-list-hide">
+                <a href="#" class="field-name">
+                    <label class="radio"><input type="radio">Hide</label>
+                </a>
+            </li>
+            <script>
+                /* Stop dropdown menu from closing on click. */
+                $("#prov-ctrl-filter-list").bind("click", function (e) {
+                    e.stopPropagation();
+                });
+            </script>
+        </ul>
+    </div>
+</div>
+
+<!-- Help. -->
+<div id="help-modal" class="modal hide fade bs-example-modal-sm-help" tabindex="-1" role="dialog" aria-hidden="true">
+    <div id="help-dialog" class="modal-dialog modal-sm">
+        <div id="help-content" class="modal-dialog">
+            <div class="modal-body">
+                <h3>Command Shortcut List</h3>
+                <ul>
+                    <li>
+                        <div class="refinery-subheader">
+                            <h4>Node and path specific:</h4>
+                        </div>
+                    </li>
+                    <ul>
+                        <li>(Un)Select: Left click</li>
+                        <li>Highlight predecessors: 'p'</li>
+                        <li>Highlight successors: 's'</li>
+                        <li>Collapse Node: 'c'</li>
+                        <li>Expand Node: 'e' or double click</li>
+                    </ul>
+                    <br>
+                    <li>
+                        <div class="refinery-subheader">
+                            <h4>Global:</h4>
+                        </div>
+                    </li>
+                    <ul>
+                        <li>Clear highlighting: Left click on background</li>
+                        <li>Fit graph to screen: Left double click on background</li>
+                    </ul>
+                </ul>
+            </div>
+            <div id="help-footer" class="modal-footer">
+                <button class="btn btn-primary" data-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+<button id="prov-ctrl-help" class="btn btn-mini" type="button" rel="tooltip" data-placement="bottom" data-toggle="modal"
+        data-target="#help-modal" data-html="true" title="Command List">
+    <i class=icon-question-sign></i>
+    &nbsp;Command List
+</button>
+
+<!-- Glyph legend. -->
+<div id="legend-modal" class="modal hide fade bs-example-modal-sm-legend" tabindex="-1" role="dialog"
+     aria-hidden="true">
+    <div id="legend-dialog" class="modal-dialog modal-sm">
+        <div id="legend-content" class="modal-dialog">
+            <div class="modal-body">
+                <h3>Glyph legend</h3>
+
+                <div class="refinery-subheader"><h4>Node Types:</h4></div>
+                <div class="provvis-legend-cell" id="prov-ctrl-legend-types"></div>
+                <div class="refinery-subheader"><h4>Time Encoding:</h4></div>
+                <div class="provvis-legend-cell" id="prov-ctrl-legend-time"></div>
+                <div class="refinery-subheader"><h4>Layering:</h4></div>
+                <div class="provvis-legend-cell" id="prov-ctrl-legend-layering"></div>
+                <div class="refinery-subheader"><h4>Aggregation:</h4></div>
+                <div class="provvis-legend-cell" id="prov-ctrl-legend-aggregation"></div>
+                <div class="refinery-subheader"><h4>Stratification:</h4></div>
+                <div class="provvis-legend-cell" id="prov-ctrl-legend-stratification"></div>
+            </div>
+            <div id="legend-footer" class="modal-footer">
+                <button class="btn btn-primary" data-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+<button id="prov-ctrl-legend" class="btn btn-mini" type="button" rel="tooltip" data-placement="bottom"
+        data-toggle="modal" data-target="#legend-modal" data-html="true" title="Command List">
+    <i class=icon-question-sign></i>
+    &nbsp;Glyph legend
+</button>
+
+<!-- Sidebar toggle -->
+        <span id="prov-ctrl-sidebar-btn-group" class="btn-group">
+            <button id="prov-ctrl-sidebar-click" class="btn btn-mini" type="button" rel="tooltip"
+                    data-placement="bottom" data-documents="Sidebar" data-html="true" title="Sidebar">
+                <i class=icon-chevron-left></i>
+                &nbsp;Sidebar
+            </button>
+        </span>
+</div>
+</div>

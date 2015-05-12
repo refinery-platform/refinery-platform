@@ -23,7 +23,7 @@
     }
 
     line {
-    //stroke: #eee;
+    /* stroke : #eee;*/
     }
 
     text.active {
@@ -334,8 +334,14 @@
                             </div>
                           </div>
                           <div class="tab-pane fade in" id="provenance-view-tab">
-                            <div id="provenance-graph">
-                              <!-- the provenance graph -->
+                              <div id="provenance-graph">
+                                  <div id="provvis-nav-bar" ng-controller="provvisNavbarController">
+                                      <div provvis-nav-bar></div>
+                                  </div>
+                                  <div id="provvis-canvas" ng-controller="provvisCanvasController">
+                                      <div provvis-canvas></div>
+                                  </div>
+                                  <!-- the provenance graph -->
                             </div>
                           </div>
                         </div>
