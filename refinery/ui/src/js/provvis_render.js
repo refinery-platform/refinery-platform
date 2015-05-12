@@ -79,7 +79,7 @@ var provvisRender = function () {
 
         /* On layer doi. */
         lNode.each(function (ln) {
-            if (ln.doi.doiWeightedSum >= (1 / 6) && !ln.hidden) {
+            if (ln.doi.doiWeightedSum >= (1 / 6) && !ln.hidden && ln.filtered) {
 
                 /* TODO: on manual expand, check whether any child nodes are already expanded as aggregated nodes. */
 
@@ -91,11 +91,11 @@ var provvisRender = function () {
 
         /* On analysis doi. */
         aNode.each(function (an) {
-            if (an.doi.doiWeightedSum >= (2 / 6) && !an.hidden) {
+            if (an.doi.doiWeightedSum >= (2 / 6) && !an.hidden  && an.filtered) {
                 /* Expand. */
                 handleCollapseExpandNode(an, "e");
                 //console.log("expand an " + an.autoId);
-            } else if (an.doi.doiWeightedSum <= (2 / 6) && !an.hidden && an.parent.children.size() > 1) {
+            } else if (an.doi.doiWeightedSum <= (2 / 6) && !an.hidden && an.parent.children.size() > 1 && an.filtered) {
                 /* Collapse. */
 
                 handleCollapseExpandNode(an, "c");
@@ -121,13 +121,13 @@ var provvisRender = function () {
 
         /* On subanalysis doi. */
         saNode.each(function (san) {
-            if (san.doi.doiWeightedSum >= (4 / 6) && !san.hidden) {
+            if (san.doi.doiWeightedSum >= (4 / 6) && !san.hidden && san.filtered) {
                 /* Expand. */
                 handleCollapseExpandNode(san, "e");
-            } else if (san.doi.doiWeightedSum < (2 / 6) && !san.parent.hidden) {
+            } else if (san.doi.doiWeightedSum < (2 / 6) && !san.parent.hidden && san.filtered) {
                 /* Collapse. */
                 handleCollapseExpandNode(san, "c");
-            } else if (!san.parent.hidden) {
+            } else if (!san.parent.hidden && san.filtered) {
                 /* Stay in subanalysis view. */
                 //handleCollapseExpandNode(san.children.values()[0], "c");
             }
@@ -220,10 +220,15 @@ var provvisRender = function () {
                 }
                 hLineSrc = getABBoxCoords(curN, 0).x.max - vis.cell.width / 2;
 
+                /* LayoutCols provides the maximum width of any potential expanded node
+                 * within the column of the graph. An the width difference is calculated as offset and added as
+                 * horizontal line to the link. */
                 layoutCols.values().forEach(function (c) {
                     if (c.nodes.indexOf(curN.autoId) !== -1) {
-                        if (getABBoxCoords(curN, 0).x.max - getABBoxCoords(curN, 0).x.min < c.width) {
-                            hLineSrc = srcX + c.width / 2;
+                        var curWidth = getABBoxCoords(curN, 0).x.max - getABBoxCoords(curN, 0).x.min,
+                            offset = (c.width - curWidth)/2 + vis.cell.width/2;
+                        if (curWidth < c.width) {
+                            hLineSrc = srcX + offset;
                         }
                     }
                 });
@@ -288,6 +293,7 @@ var provvisRender = function () {
         return pathSegment;
     };
 
+    /* TODO: May use functions as parameters. */
     /**
      * Path generator for bezier link.
      * @param l Link.
@@ -612,6 +618,7 @@ var provvisRender = function () {
         fitGraphToWindow(nodeLinkTransitionTime);
 
         updateNodeFilter();
+        updateLinkFilter();
         updateAnalysisLinks(vis.graph);
         updateLayerLinks(vis.graph.lLinks);
 
@@ -1241,6 +1248,17 @@ var provvisRender = function () {
                     }
             });
             updateDoiView(d3.values(provvisDecl.DoiFactors.factors));
+        });
+
+        /* Show and hide doi labels. */
+        $("#prov-doi-view-show").click(function () {
+            if ($(this).hasClass("active")) {
+                $(this).removeClass("active");
+                d3.selectAll(".nodeDoiLabel").style("display", "none");
+            } else {
+                $(this).addClass("active");
+                d3.selectAll(".nodeDoiLabel").style("display", "inline");
+            }
         });
     };
 
@@ -2630,7 +2648,7 @@ var provvisRender = function () {
 
     /* TODO: Code cleanup. */
     /**
-     * Dagre layout for analysis.
+     * Dynamic Dagre layout.
      * @param graph The provenance Graph.
      */
     var dagreDynamicLayerLayout = function (graph) {
@@ -2658,7 +2676,9 @@ var provvisRender = function () {
         graph.lNodes.values().forEach(function (ln) {
             d3.select("#BBoxId-" + ln.autoId).classed("hiddenBBox", true);
             if (!ln.hidden) {
-                d3.select("#BBoxId-" + ln.autoId).classed("hiddenBBox", false);
+                if (ln.filtered) {
+                    d3.select("#BBoxId-" + ln.autoId).classed("hiddenBBox", false);
+                }
                 curWidth = vis.cell.width;
                 curHeight = vis.cell.height;
 
@@ -2671,7 +2691,7 @@ var provvisRender = function () {
 
                 exNum = 0;
                 accY = ln.y + vis.cell.height;
-                ln.children.values().sort(function (a, b) {
+                ln.children.values().filter(function (an) {return an.filtered || filterAction === "blend";}).sort(function (a, b) {
                     return a.y - b.y;
                 }).forEach(function (an) {
                     if (an.exaggerated) {
@@ -2690,15 +2710,16 @@ var provvisRender = function () {
                 });
 
                 /* Set layer label and bounding box. */
+                var numChildren = ln.children.values().filter(function (an) {return an.filtered || filterAction === "blend";}).length;
                 d3.select("#nodeId-" + ln.autoId).select("g.labels").select(".lLabel")
                     .text(function () {
-                        return ln.children.size() - exNum + "/" + ln.children.size();
+                        return numChildren - exNum + "/" + ln.children.size();
                     });
 
                 /* Get potential expanded bounding box size. */
                 var accHeight = curHeight - 2,
                     accWidth = curWidth - 2;
-                ln.children.values().forEach(function (an) {
+                ln.children.values().filter(function (an) {return an.filtered || filterAction === "blend";}).forEach(function (an) {
                     if (an.exaggerated) {
                         anBBoxCoords = getABBoxCoords(an, 0);
                         if (anBBoxCoords.x.max - anBBoxCoords.x.min - 2 > accWidth) {
@@ -2715,7 +2736,7 @@ var provvisRender = function () {
                     .attr("height", accHeight);
                 g.setNode(ln.autoId, {label: ln.autoId, width: accWidth, height: accHeight});
             } else {
-                ln.children.values().forEach(function (an) {
+                ln.children.values().filter(function (an) {return an.filtered || filterAction === "blend";}).forEach(function (an) {
                     anBBoxCoords = getABBoxCoords(an, 0);
                     curWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
                     curHeight = anBBoxCoords.y.max - anBBoxCoords.y.min;
@@ -2771,65 +2792,68 @@ var provvisRender = function () {
         var accWidth = 0,
             accHeight = 0;
 
+        /* Assign x and y coords for layers or analyses. Check filter action as well as exaggerated nodes. */
         d3.map(g._nodes).values().forEach(function (n) {
-            if (graph.lNodes.has(n.label)) {
-                var ln = graph.lNodes.get(n.label);
-                accHeight = vis.cell.height;
-                accWidth = vis.cell.width;
+            if (typeof n !== "undefined") {
+                if (graph.lNodes.has(n.label) && (graph.lNodes.get(n.label).filtered || filterAction === "blend")) {
+                    var ln = graph.lNodes.get(n.label);
+                    accHeight = vis.cell.height;
+                    accWidth = vis.cell.width;
 
-                ln.children.values().forEach(function (an) {
-                    if (an.exaggerated) {
-                        anBBoxCoords = getABBoxCoords(an, 0);
-                        if (anBBoxCoords.x.max - anBBoxCoords.x.min > accWidth) {
-                            accWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
+                    ln.children.values().filter(function(an){return an.filtered || filterAction === "blend";}).forEach(function (an) {
+                        if (an.exaggerated) {
+                            anBBoxCoords = getABBoxCoords(an, 0);
+                            if (anBBoxCoords.x.max - anBBoxCoords.x.min > accWidth) {
+                                accWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
+                            }
+                            accHeight += anBBoxCoords.y.max - anBBoxCoords.y.min;
                         }
-                        accHeight += anBBoxCoords.y.max - anBBoxCoords.y.min;
+                    });
+
+                    ln.x = n.x - vis.cell.width / 2;
+                    ln.y = n.y - accHeight / 2;
+
+                    exNum = 0;
+                    accY = ln.y + vis.cell.height;
+                    ln.children.values().filter(function(an){return an.filtered || filterAction === "blend";}).sort(function (a, b) {
+                        return a.y - b.y;
+                    }).forEach(function (an) {
+                        anBBoxCoords = getABBoxCoords(an, 0);
+                        curWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
+                        an.x = ln.x - curWidth / 2 + vis.cell.width / 2;
+
+                        if (an.exaggerated) {
+                            an.y = accY;
+                            accY += (getABBoxCoords(an, 0).y.max - getABBoxCoords(an, 0).y.min);
+                        } else {
+                            an.y = an.parent.y;
+                        }
+                    });
+                } else {
+                    var an = graph.aNodes.filter(function (an) {
+                        return an.autoId === n.label && (an.filtered || filterAction === "blend");
+                    })[0];
+
+                    if (an && typeof an !== "undefined") {
+                        anBBoxCoords = getABBoxCoords(an, 0);
+                        accWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
+                        accHeight = anBBoxCoords.y.max - anBBoxCoords.y.min;
+
+                        an.x = n.x - accWidth / 2;
+                        an.y = n.y - accHeight / 2;
                     }
-                });
-
-                ln.x = n.x - vis.cell.width / 2;
-                ln.y = n.y - accHeight / 2;
-
-                exNum = 0;
-                accY = ln.y + vis.cell.height;
-                ln.children.values().sort(function (a, b) {
-                    return a.y - b.y;
-                }).forEach(function (an) {
-                    anBBoxCoords = getABBoxCoords(an, 0);
-                    curWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
-                    an.x = ln.x - curWidth / 2 + vis.cell.width / 2;
-
-                    if (an.exaggerated) {
-                        an.y = accY;
-                        accY += (getABBoxCoords(an, 0).y.max - getABBoxCoords(an, 0).y.min);
-                    } else {
-                        an.y = an.parent.y;
-                    }
-                });
-            } else {
-                var an = graph.aNodes.filter(function (an) {
-                    return an.autoId === n.label;
-                })[0];
-
-                if (typeof an !== "undefined") {
-                    anBBoxCoords = getABBoxCoords(an, 0);
-                    accWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
-                    accHeight = anBBoxCoords.y.max - anBBoxCoords.y.min;
-
-                    an.x = n.x - accWidth / 2;
-                    an.y = n.y - accHeight / 2;
                 }
-            }
 
-            /* Compute layouted columns. */
-            if (layoutCols.has(n.x)) {
-                layoutCols.get(n.x).nodes.push(n.label);
-            } else {
-                layoutCols.set(n.x, {nodes: [], width: 0});
-                layoutCols.get(n.x).nodes.push(n.label);
-            }
-            if (accWidth > layoutCols.get(n.x).width) {
-                layoutCols.get(n.x).width = accWidth;
+                /* Compute layouted columns. */
+                if (layoutCols.has(n.x)) {
+                    layoutCols.get(n.x).nodes.push(n.label);
+                } else {
+                    layoutCols.set(n.x, {nodes: [], width: 0});
+                    layoutCols.get(n.x).nodes.push(n.label);
+                }
+                if (accWidth > layoutCols.get(n.x).width) {
+                    layoutCols.get(n.x).width = accWidth;
+                }
             }
         });
 
@@ -3394,7 +3418,7 @@ var provvisRender = function () {
                 if (typeof data !== "undefined") {
                     title = "<b>" + selNode.fileType + ": " + "<b>";
                     if (data.file_url !== null) {
-                        title += "<a href=" + data.file_url + ">" + data.name + "</a>";
+                        title += "<a href=" + data.file_url + " target=\"_blank\">" + data.name + "</a>";
                     } else {
                         title += " - ";
                     }
@@ -3403,11 +3427,14 @@ var provvisRender = function () {
 
             case "dt":
                 /* TODO: Add tool_state parameters column. */
+                /* From parent workflow steps attribute, extract step by id.
+                 * var steps = vis.graph.workflowData.get(selNode.parent.wfUuid).steps; */
+
                 data = vis.graph.nodeData.get(selNode.uuid);
                 if (typeof data !== "undefined") {
                     title = "<b>" + selNode.fileType + ": " + "<b>";
                     if (data.file_url !== null) {
-                        title += "<a href=" + data.file_url + ">" + data.name + "</a>";
+                        title += "<a href=" + data.file_url + " target=\"_blank\">" + data.name + "</a>";
                     } else {
                         title += " - ";
                     }
@@ -3417,21 +3444,30 @@ var provvisRender = function () {
             case "subanalysis":
                 data = vis.graph.workflowData.get(selNode.parent.wfUuid);
                 if (typeof data !== "undefined") {
-                    title = "<b>" + "Subanalysis: " + "<b>" + "<a href=/workflows/" + selNode.parent.wfUuid + ">" +
-                        data.name + "</a>";
+                    title = "<b>" + "Subanalysis: " + "<b>" + "<a href=/workflows/" + selNode.wfUuid + " target=\"_blank\">" +
+                        selNode.parent.wfName + "</a>";
+                } else {
+                    title += " - ";
+                }
+                break;
+
+            case "analysis":
+                data = vis.graph.analysisData.get(selNode.uuid);
+                if (typeof data !== "undefined") {
+                    title = "<b>" + "Analysis: " + "<b>" + "<a href=/workflows/" + selNode.wfUuid + " target=\"_blank\">" +
+                        selNode.wfName + "</a>";
                 } else {
                     title = "<b>" + "Dataset " + "<b>";
                 }
                 break;
 
-            case "analysis":
-
-                data = vis.graph.analysisData.get(selNode.uuid);
+            case "layer":
+                data = {aggregation_count: selNode.children.size(), workflow: selNode.wfName, subanalysis_count: selNode.motif.numSubanalyses, wfUuid: selNode.motif.wfUuid};
                 if (typeof data !== "undefined") {
-                    title = "<b>" + "Analysis: " + "<b>" + "<a href=/workflows/" + data.uuid + ">" +
-                        data.name + "</a>";
+                    title = "<b>" + "Layer: " + "<b>" + "<a href=/workflows/" + data.wfUuid + " target=\"_blank\">" +
+                        data.workflow + "</a>";
                 } else {
-                    title = "<b>" + "Dataset " + "<b>";
+                    title += " - ";
                 }
                 break;
         }
@@ -4114,7 +4150,7 @@ var provvisRender = function () {
         lNode.filter(function (ln) {
             return ln.filtered && !ln.hidden;
         }).each(function (ln) {
-            d3.select(this).classed("hiddenBBox", false);
+            d3.select("BBoxId-" + ln.autoId).classed("hiddenBBox", false);
         });
 
         /* Set link visibility. */
@@ -4223,24 +4259,6 @@ var provvisRender = function () {
             });
         });
 
-        /* Show and hide doi labels. */
-        $("#prov-ctrl-show-doi").click(function () {
-            if (!$("#prov-ctrl-show-doi").find("input[type='checkbox']").is(":checked")) {
-                d3.selectAll(".nodeDoiLabel").style("display", "none");
-            } else {
-                d3.selectAll(".nodeDoiLabel").style("display", "inline");
-            }
-        });
-
-        /* Show and hide table. */
-        $("#prov-ctrl-show-table").click(function () {
-            if (!$("#prov-ctrl-show-table").find("input[type='checkbox']").is(":checked")) {
-                d3.select("#provenance-table").style("display", "none");
-            } else {
-                d3.select("#provenance-table").style("display", "block");
-            }
-        });
-
         /* Switch filter action. */
         $("[id^=prov-ctrl-filter-list-]").click(function () {
             $(this).find("input[type='radio']").prop("checked", true);
@@ -4281,6 +4299,21 @@ var provvisRender = function () {
                 d3.select("#nodeId-" + n.autoId).select(".nodeAttrLabel").text(n.attributes.get(selAttrName));
             });
 
+        });
+
+        /* Node info. */
+        $("#prov-ctrl-nodeinfo-click").click(function () {
+            if ($("#provenance-table").css("top") === "0px") {
+                $("#provenance-table").animate({top: '-155'}, nodeLinkTransitionTime);
+                setTimeout(function () {
+                    $("#prov-ctrl-nodeinfo-click").html("<i class=icon-chevron-down></i>" + "&nbsp;" + "Node info");
+                }, nodeLinkTransitionTime);
+            } else {
+                $("#provenance-table").animate({top: '0'}, nodeLinkTransitionTime);
+                setTimeout(function () {
+                    $("#prov-ctrl-nodeinfo-click").html("<i class=icon-chevron-up></i>" + "&nbsp;" + "Node info");
+                }, nodeLinkTransitionTime);
+            }
         });
 
         /* Sidebar. */
@@ -4716,9 +4749,7 @@ var provvisRender = function () {
                     });
                 });
 
-                if (!an.hidden) {
-                    d3.select("#BBoxId-" + an.autoId).classed("hiddenBBox", false);
-                }
+                d3.select("#BBoxId-" + an.autoId).classed("hiddenBBox", false);
 
                 /* Display analysis. */
                 self.classed("filteredNode", true).classed("blendedNode", false);
@@ -4731,8 +4762,23 @@ var provvisRender = function () {
      * Update filtered links.
      */
     var updateLinkFilter = function () {
-        vis.graph.aLinks.forEach(function (al) {
+        saLink.classed("filteredLink", false);
 
+        saNode.each(function (san) {
+            if (!san.filtered) {
+                san.links.values().forEach( function (l) {
+                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("filteredLink", false);
+                    if (filterAction === "blend") {
+                        d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", true);
+                    } else {
+                        d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", false);
+                    }
+                });
+            } else {
+                san.links.values().forEach( function (l) {
+                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed({"filteredLink": true, "blendedLink": false});
+                });
+            }
         });
     };
 
@@ -4870,6 +4916,7 @@ var provvisRender = function () {
             fitGraphToWindow(nodeLinkTransitionTime);
 
             updateNodeFilter();
+            updateLinkFilter();
             updateAnalysisLinks(vis.graph);
             updateLayerLinks(vis.graph.lLinks);
 
