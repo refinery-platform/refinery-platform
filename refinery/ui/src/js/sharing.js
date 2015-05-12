@@ -7,12 +7,13 @@ angular.module("refinerySharing", [])
         $http.get('api/v1/' + api + '/?owner-id=' + userId + '&uuid=' + uuid + '&format=json').success(function (response) {
             var shareList = response.objects[0].shares;
             var pTable = document.getElementById('permission-table');
-            // var pTable = $('.modal-body #permission-table');
             for (var i = 0; i < shareList.length; i++) {
                 var row = pTable.insertRow(-1);
                 var group = row.insertCell(0);
                 group.innerHTML = shareList[i].name + '<div style="display: none;">' + shareList[i].id+ '</div>';
                 
+                // var 
+
                 var read = row.insertCell(1);
                 var readPerm = (shareList[i].permissions.read)? 'checked' : '';
                 read.innerHTML = '<input type="checkbox" id=' + '"' + group.innerText +'-read" ' + readPerm + '/>';

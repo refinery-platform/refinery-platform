@@ -17,7 +17,7 @@ from tastypie.authorization import Authorization
 from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS, ALL
 from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
-from tastypie.http import HttpNotFound, HttpForbidden
+from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest
 from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow,\
     WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus,\
@@ -439,18 +439,18 @@ class SharablePermission(object):
         self.perm_obj = perm_obj
 
     def get_user(self, user_id):
-        user_list = filter(lambda u: str(u.id) == user_id, User.objects.all())
+        user_list = User.objects.filter(id=int(user_id))
         return None if len(user_list) == 0 else user_list[0]
 
     def get_res(self, res_uuid):
-        res_list = filter(lambda r: r.uuid == res_uuid, self.res_type.objects.all())
+        res_list = self.res_type.objects.filter(uuid=res_uuid)
         return None if len(res_list) == 0 else res_list[0]
 
     def get_group(self, group_id):
-        group_list = filter(lambda g: g.id == group_id, Group.objects.all())
+        group_list = Group.objects.filter(id=int(group_id))
         return None if len(group_list) == 0 else group_list[0]
 
-    def get_shares(self, user, res):
+    def get_share_list(self, user, res):
         group_dict = {}
         all_groups = filter(lambda g: user in g.user_set.all(), Group.objects.all())
         for i in all_groups:
@@ -482,11 +482,14 @@ class SharablePermission(object):
         uuid = kwargs['pk']
         res = self.get_res(uuid)
         owner = res.get_owner()
+        share_list = bundle.data['shares']
+        if ((res is None) or (owner is None) or (share_list is None)):
+            raise ImmediateHttpResponse(response=HttpBadRequest("Bad request data or invalid input format"))
         permission_object = self.perm_obj()
         # remove all objects before adding them
         for i in res.get_groups():
             res.unshare(self.get_group(i['id']))
-        for group_data in bundle.data['shares']:
+        for group_data in share_list:
             group = self.get_group(group_data['id'])
             # sharing only allowed if read or change is true and if user is part of the group
             should_share = ((group_data['permission']['read']) or (group_data['permission']['change'])) and (owner in group.user_set.all())
@@ -510,7 +513,7 @@ class SharablePermission(object):
         elif (res.get_owner().id != user.id):
             raise ImmediateHttpResponse(response=HttpForbidden("User does not have ownership of the resource"))
         else:
-            shares = self.get_shares(user, res)
+            shares = self.get_share_list(user, res)
             return [self.perm_obj(user.username, user.id, res.name, res.uuid, shares)]
 
 
