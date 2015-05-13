@@ -645,6 +645,8 @@ var provvisRender = function () {
             .domain([0, 300])
             .range([0, 300]);
 
+        var tlHeight = 50;
+
         /**
          * Drag start listener support for time lines.
          */
@@ -771,18 +773,21 @@ var provvisRender = function () {
         var redrawTimeline = function () {
 
             /* Translations. */
-            svg.selectAll(".tlAnalysis").attr("x1", function (an) {
-                return x(timeLineGradientScale.invert(parseISOTimeFormat(an.start)));
-            })
+            svg.selectAll(".tlAnalysis")
+                .attr("x1", function (an) {
+                    return x(timeLineGradientScale.invert(parseISOTimeFormat(an.start)));
+                })
                 .attr("x2", function (an) {
                     return x(timeLineGradientScale.invert(parseISOTimeFormat(an.start)));
                 });
 
-            svg.selectAll(".startTimeline, .endTimeline").attr("transform", function (d) {
-                return "translate(" + x(d.x) + "," + 0 + ")";
-            });
+            svg.selectAll(".startTimeline, .endTimeline")
+                .attr("transform", function (d) {
+                    return "translate(" + x(d.x) + "," + 0 + ")";
+                });
 
-            svg.select("#timelineView").attr("x", x(0))
+            svg.select("#timelineView")
+                .attr("x", x(0))
                 .attr("width", x(300) - x(0));
         };
 
@@ -810,7 +815,7 @@ var provvisRender = function () {
             .attr("x", 0)
             .attr("y", 10)
             .attr("width", 300)
-            .attr("height", 80)
+            .attr("height", tlHeight-10)
             .style({"fill": "url(#gradientGrayscale)", "stroke": "white", "stroke-width": "1px"});
 
         var startTime = {
@@ -834,10 +839,10 @@ var provvisRender = function () {
             .attr("x1", 0)
             .attr("y1", 0)
             .attr("x2", 0)
-            .attr("y2", 100);
+            .attr("y2", tlHeight);
 
         timeLineThreshold.append("polygon").classed("timeMarker", true)
-            .attr("points", "0,90 5,100 -5,100");
+            .attr("points", "0,50 5,60 -5,60");
         timeLineThreshold.append("polygon").classed("timeMarker", true)
             .attr("points", "0,10 5,0 -5,0");
 
@@ -854,12 +859,12 @@ var provvisRender = function () {
                 return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
             })
             .attr("y1", function (an) {
-                return an.children.size() >= 5 ? 10 : parseInt(90 - 80 / 5 * an.children.size(), 10);
+                return an.children.size() >= 5 ? 10 : parseInt(tlHeight - (tlHeight-10) / 5 * an.children.size(), 10);
             })
             .attr("x2", function (an) {
                 return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
             })
-            .attr("y2", 90);
+            .attr("y2", tlHeight);
 
         d3.selectAll(".startTimeline, .endTimeline").on("mouseover", function () {
             d3.select(this).classed("mouseoverTimeline", true);
@@ -884,7 +889,7 @@ var provvisRender = function () {
             }).attr("x", 5)
                 .attr("y", 10)
                 .attr("width", 300)
-                .attr("height", 80)
+                .attr("height", tlHeight)
                 .style({"fill": "url(#gradientGrayscale)", "stroke": "white", "stroke-width": "1px"});
 
             d3.selectAll(".tlAnalysis")
@@ -892,12 +897,12 @@ var provvisRender = function () {
                     return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
                 })
                 .attr("y1", function (an) {
-                    return an.children.size() >= 5 ? 10 : parseInt(90 - 80 / 5 * an.children.size(), 10);
+                    return an.children.size() >= 5 ? 10 : parseInt(tlHeight - (tlHeight-10) / 5 * an.children.size(), 10);
                 })
                 .attr("x2", function (an) {
                     return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
                 })
-                .attr("y2", 90);
+                .attr("y2", tlHeight);
 
             svg.select("svg.g.g").attr("transform", "translate(5,0)scale(1)");
 
@@ -1017,8 +1022,16 @@ var provvisRender = function () {
             $('<div/>', {
                 "id": "dc-form-" + i,
                 "class": "form dc-form",
-                "style": "height: 30px; margin-bottom: 0px;"
+                "style": "height: 30px; margin-bottom: 0px; position: absolute, top: " + parseInt(i*30,10) + "; left: -10;"
             }).appendTo("#" + "doiSpinners");
+
+            $('<input/>', {
+                "id": "dc-checkbox-" + i,
+                "class": "dc-checkbox",
+                "type": "checkbox",
+                "checked": "true",
+                "style": "margin-top: 0px; margin-right: 2px; vertical-align: middle;"
+            }).appendTo("#" + "dc-form-" + i);
 
             $('<input/>', {
                 "id": "dc-input-" + i,
@@ -1056,14 +1069,6 @@ var provvisRender = function () {
                 "class": "label dc-label",
                 "html": dc.label,
                 "style": "margin-right: 2px; background-color: " + color(i) + ";"
-            }).appendTo("#" + "dc-form-" + i);
-
-            $('<input/>', {
-                "id": "dc-checkbox-" + i,
-                "class": "dc-checkbox",
-                "type": "checkbox",
-                "checked": "true",
-                "style": "margin-top: 0px; margin-right: 2px; vertical-align: middle;"
             }).appendTo("#" + "dc-form-" + i);
         });
 

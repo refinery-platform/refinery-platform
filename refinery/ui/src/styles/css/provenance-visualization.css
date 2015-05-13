@@ -31,7 +31,7 @@
     max-height: 460px;
 }
 
-#provenance-vis {
+#provenance-canvas {
     position: relative;
     overflow: hidden;
 }
@@ -100,7 +100,7 @@
     left: 0;
     top: 0;
     width: 100%;
-    height: 200px;
+    height: 130px;
     margin-top: 5px;
     margin-left: 5px;
     margin-right: 5px;
@@ -114,8 +114,8 @@
     position: relative;
     left: 0;
     top: 0;
-    /*width: 100%;
-    height: 200px;*/
+    width: 100%;
+    height: 370px;
     margin-top: 5px;
     margin-left: 5px;
     margin-right: 5px;
@@ -407,6 +407,14 @@
     font-size: 14px;
     font-weight: normal;
     line-height: 20px;
+}
+
+#tlTitle{
+    margin-bottom: 5px;
+}
+
+#tlCanvas {
+    margin-bottom: 0px;
 }
 
 #tlThreshold {

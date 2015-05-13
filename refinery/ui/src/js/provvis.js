@@ -36,22 +36,6 @@ var provvis = function () {
     var vis = Object.create(null);
 
     /**
-     * Creates the hierarchical provenance visualization div layout.
-     * @param rootId Visualization root element.
-     * @param divId Visualization canvas.
-     * @param parentId Provenance graph tab element.
-     */
-    var createVisualizationContainer = function (rootId, divId, parentId) {
-        $('<div/>', {
-            "id": rootId
-        }).appendTo("#" + parentId);
-
-        $('<div/>', {
-            "id": divId
-        }).appendTo("#" + rootId);
-    };
-
-    /**
      * Floating table properties div.
      * @param parentId Parent div id for the floating table div.
      * @param divId Table div id.
@@ -96,7 +80,7 @@ var provvis = function () {
         }).appendTo(timelineContainer);
 
         d3.select("#tlCanvas").append("svg")
-            .attr("height", 100)
+            .attr("height", 60)
             .attr("width", 310)
             .style({"margin-top": "0px", "margin-bottom": "0px", "padding": "0px"})
             .attr("pointer-events", "all");
@@ -464,9 +448,6 @@ var provvis = function () {
                 /* Render glyph legend. */
                 renderGlyphLegend();
 
-                /* Hierarchical div layout. */
-                createVisualizationContainer("provenance-vis", "provenance-canvas", "provvis-canvas");
-
                 /* Left floated and docked sidebar. */
                 createSidebar("provenance-canvas", "provenance-sidebar");
 
@@ -483,7 +464,7 @@ var provvis = function () {
                 var cell = {width: r * 5, height: r * 5};
 
                 /* Initialize canvas dimensions. */
-                var width = $("div#provenance-vis").width() - margin.left - margin.right,
+                var width = $("div#provenance-canvas").width() - margin.left - margin.right,
                     height = 700/*window.innerHeight*/ - margin.top - margin.bottom;
 
                 var scaleFactor = 0.75;
