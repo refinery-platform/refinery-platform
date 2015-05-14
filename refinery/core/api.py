@@ -494,7 +494,6 @@ class SharablePermission(object):
             # sharing only allowed if read or change is true and if user is part of the group
             should_share = ((group_data['permission']['read']) or (group_data['permission']['change'])) and (owner in group.user_set.all())
             is_read_only = not (group_data['permission']['change'])
-            # isReadOnly = not (group_data['permission']['change'] and group_data['permission']['read'])
             if should_share:
                 res.share(group, is_read_only)
         res.save()
