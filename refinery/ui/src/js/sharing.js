@@ -29,18 +29,6 @@ angular.module("refinerySharing", [])
                 var changeAllowedHTML = '<td><input type="radio" name="' + i + '"' + changeAllowed + '></td>';
 
                 permissions.innerHTML = '<tr>' + noPermHTML + readOnlyHTML + changeAllowedHTML + '</tr>';
-
-                // permissions.innerHTML = '<form><input type="radio" ' + noPerm + '>No Permission <input type="radio" ' + readOnly + '>Read Only </form>';
-
-                /* 
-                var read = row.insertCell(1);
-                var readPerm = (shareList[i].permissions.read)? 'checked' : '';
-                read.innerHTML = '<input type="checkbox" id=' + '"' + group.innerText +'-read" ' + readPerm + '/>';
-                
-                var change = row.insertCell(2);
-                var changePerm = (shareList[i].permissions.change)? 'checked' : '';
-                change.innerHTML = '<input type="checkbox" id=' + '"' + group.innerText + '-change" ' + changePerm + '/>';
-                */
             }
         });
     }

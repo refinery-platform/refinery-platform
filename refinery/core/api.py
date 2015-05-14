@@ -387,9 +387,7 @@ class StatisticsResource(Resource):
     def stat_summary(self, model):
         total = len(model.objects.all())
         public = len(filter(lambda x: x.is_public(), model.objects.all()))
-        private_shared = len(filter(
-            lambda x: (not x.is_public() and len(x.get_groups()) > 1),
-            model.objects.all()))
+        private_shared = len(filter(lambda x: (not x.is_public() and len(x.get_groups()) > 1), model.objects.all()))
         private = total - public - private_shared
         return {'total': total, 'public': public, 'private': private, 'private_shared': private_shared}
 
@@ -427,8 +425,7 @@ class StatisticsResource(Resource):
             if 'project' in request_string:
                 project_summary = self.stat_summary(Project)
         results = [
-            StatisticsObject(user_count, group_count, files_count,
-                             dataset_summary, workflow_summary, project_summary)
+            StatisticsObject(user_count, group_count, files_count, dataset_summary, workflow_summary, project_summary)
         ]
         return results
 
