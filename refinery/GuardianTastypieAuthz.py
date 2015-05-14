@@ -40,7 +40,7 @@ class GuardianAuthorization(Authorization):
         if klass is False:
             return []
 
-        permission = '%s.view_%s' % (klass._meta.app_label, klass._meta.module_name)
+        permission = 'read_%s' % (klass._meta.module_name)
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
                 read_list.append(obj)
@@ -57,7 +57,7 @@ class GuardianAuthorization(Authorization):
         if klass is False:
             raise Unauthorized("You are not allowed to access that resource.")
 
-        permission = '%s.view_%s' % (klass._meta.app_label, klass._meta.module_name)
+        permission = 'read_%s' % (klass._meta.module_name)
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
                 read_list.append(obj)
@@ -73,7 +73,7 @@ class GuardianAuthorization(Authorization):
         if klass is False:
             return []
 
-        permission = '%s.add_%s' % (klass._meta.app_label, klass._meta.module_name)
+        permission = 'add_%s' % (klass._meta.module_name)
 
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
@@ -90,7 +90,7 @@ class GuardianAuthorization(Authorization):
         if klass is False:
             raise Unauthorized("You are not allowed to access that resource.")
 
-        permission = '%s.add_%s' % (klass._meta.app_label, klass._meta.module_name)
+        permission = 'add_%s' % (klass._meta.module_name)
 
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
@@ -107,7 +107,7 @@ class GuardianAuthorization(Authorization):
         if klass is False:
             return []
 
-        permission = '%s.change_%s' % (klass._meta.app_label, klass._meta.module_name)
+        permission = 'change_%s' % (klass._meta.module_name)
 
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
@@ -124,7 +124,7 @@ class GuardianAuthorization(Authorization):
         if klass is False:
             raise Unauthorized("You are not allowed to access that resource.")
 
-        permission = '%s.change_%s' % (klass._meta.app_label, klass._meta.module_name)
+        permission = 'change_%s' % (klass._meta.module_name)
 
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
@@ -141,7 +141,7 @@ class GuardianAuthorization(Authorization):
         if klass is False:
             return []
 
-        permission = '%s.delete_%s' % (klass._meta.app_label, klass._meta.module_name)
+        permission = 'delete_%s' % (klass._meta.module_name)
 
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
@@ -159,7 +159,7 @@ class GuardianAuthorization(Authorization):
         if klass is False:
             raise Unauthorized("You are not allowed to access that resource.")
 
-        permission = '%s.delete_%s' % (klass._meta.app_label, klass._meta.module_name)
+        permission = 'delete_%s' % (klass._meta.module_name)
 
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
@@ -168,4 +168,3 @@ class GuardianAuthorization(Authorization):
         if delete_list:
             return delete_list
         raise Unauthorized("You are not allowed to access that resource.")
-        
