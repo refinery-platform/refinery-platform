@@ -65,6 +65,9 @@
 							Description
 						</th>
 						{% endif %}	    
+            <th>
+              Share
+            </th>
 					</tr>
 				</thead>
 				<tbody>
@@ -102,6 +105,9 @@
 								</table>
 							{% endif %}
 			        	</td>
+                <td width="0%">
+                    <a ng-click="openPermissionEditor('dataset_sharing', '{{ data_set.uuid }}')">Edit</a>
+                </td>
 						{% if REFINERY_REPOSITORY_MODE %}
 				    	<td width="100%">
 							{{ data_set.summary }}

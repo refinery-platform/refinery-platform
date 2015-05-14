@@ -527,7 +527,7 @@ class ProjectSharingResource(SharablePermission, Resource):
     class Meta:
         resource_name = 'project_sharing'
         object_class = ProjectSharingObject
-        # authentication = SessionAuthentication()
+        authentication = SessionAuthentication()
         # authorization = Authorization()
 
 
@@ -545,7 +545,7 @@ class DataSetSharingResource(SharablePermission, Resource):
     class Meta:
         resource_name = 'dataset_sharing'
         object_class = DataSetSharingObject
-        # authentication = SessionAuthentication()
+        authentication = SessionAuthentication()
         # authorization = Authorization()
 
 
@@ -563,5 +563,5 @@ class WorkflowSharingResource(SharablePermission, Resource):
     class Meta:
         resource_name = 'workflow_sharing'
         object_class = WorkflowSharingObject
-        # authentication = SessionAuthentication()
+        authentication = SessionAuthentication()
         # authorization = Authorization()
