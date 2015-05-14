@@ -11,7 +11,7 @@ logger_debug = logging.getLogger(__name__)
 
 
 class GuardianAuthorization(Authorization):
-  """
+    """
     Uses permission checking from ``django.contrib.auth`` to map
     ``POST / PUT / DELETE / PATCH`` to their equivalent Django auth
     permissions.
