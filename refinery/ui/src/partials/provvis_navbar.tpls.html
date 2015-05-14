@@ -29,32 +29,6 @@
 <!-- Global items. -->
 <div id="prov-ctrl-global-btn-group" class="btn-group">
 
-    <!-- Views -->
-    <div id="prov-ctrl-visible-views" class="btn btn-mini btn-group">
-        <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown-toggle" href="#">
-            <i class="icon-eye-open"/>&nbsp;Views&nbsp;<i class="icon-caret-down"/>&nbsp;
-        </a>
-        <ul id="prov-ctrl-visible-views-list" class="dropdown-menu">
-            <!-- TODO: with angular -->
-            <li id="prov-ctrl-show-doi">
-                <a href="#" class="field-name">
-                    <label class="checkbox"><input type="checkbox"/>Doi</label>
-                </a>
-            </li>
-            <li id="prov-ctrl-show-table">
-                <a href="#" class="field-name">
-                    <label class="checkbox"><input type="checkbox"/>Node info</label>
-                </a>
-            </li>
-            <script>
-                /* Stop dropdown menu from closing on click. */
-                $("#prov-ctrl-visible-views-list").bind("click", function (e) {
-                    e.stopPropagation();
-                });
-            </script>
-        </ul>
-    </div>
-
     <!-- Links -->
     <div id="prov-ctrl-links" class="btn btn-mini btn-group">
         <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown-toggle" href="#">
@@ -148,10 +122,10 @@
                     </li>
                     <ul>
                         <li>(Un)Select: Left click</li>
-                        <li>Highlight predecessors: 'p'</li>
-                        <li>Highlight successors: 's'</li>
-                        <li>Collapse Node: 'c'</li>
-                        <li>Expand Node: 'e' or double click</li>
+                        <li>Highlight predecessors: Left click on left anchor</li>
+                        <li>Highlight successors: Left click on right anchor</li>
+                        <li>Collapse Node: Left click on enclosing bounding box</li>
+                        <li>Expand Node: Double click on node</li>
                     </ul>
                     <br>
                     <li>
@@ -208,13 +182,22 @@
     &nbsp;Glyph legend
 </button>
 
+<!-- Nodeinfo toggle -->
+        <div id="prov-ctrl-nodeinfo-btn-group" class="btn-group">
+            <button id="prov-ctrl-nodeinfo-click" class="btn btn-mini" type="button" rel="tooltip"
+                    data-placement="bottom" data-documents="Nodeinfo" data-html="true" title="Node info">
+                <i class=icon-chevron-down></i>
+                &nbsp;Node info
+            </button>
+        </div>
+
 <!-- Sidebar toggle -->
-        <span id="prov-ctrl-sidebar-btn-group" class="btn-group">
+        <div id="prov-ctrl-sidebar-btn-group" class="btn-group">
             <button id="prov-ctrl-sidebar-click" class="btn btn-mini" type="button" rel="tooltip"
                     data-placement="bottom" data-documents="Sidebar" data-html="true" title="Sidebar">
                 <i class=icon-chevron-left></i>
                 &nbsp;Sidebar
             </button>
-        </span>
+        </div>
 </div>
 </div>
