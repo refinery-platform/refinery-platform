@@ -122,7 +122,7 @@ var provvis = function () {
 
         $("<div/>", {
             "id": "doiCanvas",
-            "style": "width: 100px; float: left;"
+            "style": "width: 70px; float: left;"
         }).appendTo("#doiVis");
 
         d3.select("#doiCanvas").append("svg")
@@ -132,11 +132,6 @@ var provvis = function () {
             .attr("pointer-events", "all").append("g").append("g").attr("transform", function () {
                 return "translate(0,0)";
             }).append("g");
-
-        $("<div/>", {
-            "id": "doiSpinners",
-            "style": "margin-left: 100px"
-        }).appendTo("#doiVis");
 
         /* Toolbar items. */
         $("<div/>", {

@@ -951,9 +951,7 @@ var provvisRender = function () {
                 }).attr("width", 40)
                 .attr("height", function (d) {
                     return d.value * 300;
-                }).style({"fill": function (d, i) {
-                    return color(i);
-                }});
+                });
             rectOffset = 0;
             gDCompUpdate.select("path").classed("doiCompHandle", true).attr("d", function (d, i) {
                 rectOffset += d.value * 300;
@@ -976,9 +974,7 @@ var provvisRender = function () {
                         "h" + (-labelOffset) + " " +
                         "L" + (40) + ",150";
                 }
-            }).style({"fill": function (d, i) {
-                return color(i);
-            }});
+            });
 
             /* Enter. */
             var gDCompEnter = dComp.enter().append("g")
@@ -996,20 +992,20 @@ var provvisRender = function () {
                     return d.value * 300;
                 }).style({"fill": function (d, i) {
                     return color(i);
-                }});
+                }, "fill-opacity": 0.7});
             rectOffset = 0;
             gDCompEnter.append("path").classed("doiCompHandle", true).attr("d", function (d, i) {
                 rectOffset += d.value * 300;
                 return "M40," + (rectOffset - d.value * 300) + " " +
                     "L" + (40 + labelOffset) + "," + (labelsStart + i * labelOffset) + " " +
-                    "h" + labelOffset + " " +
+                    "h" + parseInt(labelOffset*5) + " " +
                     "v" + labelOffset + " " +
-                    "h" + (-labelOffset) + " " +
+                    "h" + (-parseInt(labelOffset*5)) + " " +
                     "L" + (40) + "," + (rectOffset) + " " +
                     "V" + (rectOffset - d.value * 300);
             }).style({"fill": function (d, i) {
                 return color(i);
-            }});
+            }, "fill-opacity": 0.7});
 
             dComp.exit().remove();
 
@@ -1022,8 +1018,8 @@ var provvisRender = function () {
             $('<div/>', {
                 "id": "dc-form-" + i,
                 "class": "form dc-form",
-                "style": "height: 30px; margin-bottom: 0px; position: absolute, top: " + parseInt(i*30,10) + "; left: -10;"
-            }).appendTo("#" + "doiSpinners");
+                "style": "height: 30px; position: absolute; left: 75px; top: " + parseInt((10-doiFactors.length)/2*30 +(i+1)*30,10) + "px;"
+            }).appendTo("#" + "doiVis");
 
             $('<input/>', {
                 "id": "dc-checkbox-" + i,
@@ -1068,7 +1064,7 @@ var provvisRender = function () {
                 "id": "dc-label-" + i,
                 "class": "label dc-label",
                 "html": dc.label,
-                "style": "margin-right: 2px; background-color: " + color(i) + ";"
+                "style": "margin-left: 2px; opacity: 0.7; background-color: " + color(i) + ";"
             }).appendTo("#" + "dc-form-" + i);
         });
 
@@ -1078,13 +1074,15 @@ var provvisRender = function () {
             var dcId = $(this)[0].id[$(this)[0].id.length - 1],
                 val = 0.0;
             if ($(this)[0].checked) {
-                $(this.parentNode).find(".dc-label").css("opacity", 1.0);
-                d3.select("#doiCompId-" + dcId).style("fill-opacity", 1.0);
+                $(this.parentNode).find(".dc-label").css("opacity", 0.7);
+                d3.select("#doiCompId-" + dcId).select(".doiCompRect").style("fill-opacity", 0.7);
+                d3.select("#doiCompId-" + dcId).select(".doiCompHandle").style("fill-opacity", 0.7);
                 val = 0.0;
                 provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, true);
             } else {
                 $(this.parentNode).find(".dc-label").css("opacity", 0.3);
-                d3.select("#doiCompId-" + dcId).style("fill-opacity", 0.3);
+                d3.select("#doiCompId-" + dcId).select(".doiCompRect").style("fill-opacity", 0.3);
+                d3.select("#doiCompId-" + dcId).select(".doiCompHandle").style("fill-opacity", 0.3);
                 val = 0.0;
                 $("#dc-input-" + dcId).val(val);
                 provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, false);
