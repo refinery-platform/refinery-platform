@@ -175,6 +175,11 @@
 		// activate bootstrap tooltips
 	    $('a[rel=tooltip]').tooltip();
 	
+    var user_id = '{{ user.id }}';
+    if (user_id === 'None') {
+        user_id = undefined;
+    }
+
 		function sizing() {
 		    var windowwidth=$(window).width();
 		    if(windowwidth<=767) {

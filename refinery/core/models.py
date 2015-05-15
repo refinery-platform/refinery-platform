@@ -798,7 +798,7 @@ class NodeSet(SharableResource, TemporaryResource):
         )
 
     def __unicode__(self):
-        return self.name + ( "*" if self.is_current else "" ) + " - " + self.get_owner_username() + " - " + str(self.study.title)
+        return self.name + ( "*" if self.is_current else "" ) + " - " + self.get_owner_username() # + " - " + str(self.study.title)
 
 
 def get_current_node_set( study_uuid, assay_uuid ):

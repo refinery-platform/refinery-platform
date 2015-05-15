@@ -387,9 +387,7 @@ class StatisticsResource(Resource):
     def stat_summary(self, model):
         total = len(model.objects.all())
         public = len(filter(lambda x: x.is_public(), model.objects.all()))
-        private_shared = len(filter(
-            lambda x: (not x.is_public() and len(x.get_groups()) > 1),
-            model.objects.all()))
+        private_shared = len(filter(lambda x: (not x.is_public() and len(x.get_groups()) > 1), model.objects.all()))
         private = total - public - private_shared
         return {'total': total, 'public': public, 'private': private, 'private_shared': private_shared}
 
@@ -427,8 +425,7 @@ class StatisticsResource(Resource):
             if 'project' in request_string:
                 project_summary = self.stat_summary(Project)
         results = [
-            StatisticsObject(user_count, group_count, files_count,
-                             dataset_summary, workflow_summary, project_summary)
+            StatisticsObject(user_count, group_count, files_count, dataset_summary, workflow_summary, project_summary)
         ]
         return results
 
@@ -494,7 +491,6 @@ class SharablePermission(object):
             # sharing only allowed if read or change is true and if user is part of the group
             should_share = ((group_data['permission']['read']) or (group_data['permission']['change'])) and (owner in group.user_set.all())
             is_read_only = not (group_data['permission']['change'])
-            # isReadOnly = not (group_data['permission']['change'] and group_data['permission']['read'])
             if should_share:
                 res.share(group, is_read_only)
         res.save()
@@ -531,7 +527,7 @@ class ProjectSharingResource(SharablePermission, Resource):
     class Meta:
         resource_name = 'project_sharing'
         object_class = ProjectSharingObject
-        # authentication = SessionAuthentication()
+        authentication = SessionAuthentication()
         # authorization = Authorization()
 
 
@@ -549,7 +545,7 @@ class DataSetSharingResource(SharablePermission, Resource):
     class Meta:
         resource_name = 'dataset_sharing'
         object_class = DataSetSharingObject
-        # authentication = SessionAuthentication()
+        authentication = SessionAuthentication()
         # authorization = Authorization()
 
 
@@ -567,5 +563,5 @@ class WorkflowSharingResource(SharablePermission, Resource):
     class Meta:
         resource_name = 'workflow_sharing'
         object_class = WorkflowSharingObject
-        # authentication = SessionAuthentication()
+        authentication = SessionAuthentication()
         # authorization = Authorization()
