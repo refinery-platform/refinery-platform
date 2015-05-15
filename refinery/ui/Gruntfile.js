@@ -33,7 +33,8 @@ module.exports = function(grunt) {
         'ng-grid/build/ng-grid.min.js',
         'lodash/dist/lodash.min.js',
         'graphlib/dist/graphlib.core.min.js',
-        'dagre/dist/dagre.core.min.js'
+        'dagre/dist/dagre.core.min.js',
+        'spectrum/spectrum.js'
       ],
       map: [
         // uncompressed source is required along with map for debugging
@@ -49,7 +50,8 @@ module.exports = function(grunt) {
         'select2/select2.css',
         'tipsy/src/stylesheets/tipsy.css',
         'c3/c3.css',
-        'ng-grid/ng-grid.css'
+        'ng-grid/ng-grid.css',
+        'spectrum/spectrum.css'
       ],
       img: [
         'select2/select2.png',

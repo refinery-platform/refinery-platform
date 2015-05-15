@@ -1,3 +1,109 @@
 <div ng-controller="provvisCanvasController">
-    <!--h1 ng-bind="name"></h1-->
+    <div id="provenance-canvas">
+        <div id="provenance-colorcoding-view">
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td id="prov-ctrl-cc-none">
+                                            <label class="radio"><input type="radio">None</label>
+                                        </td>
+                                        <td id="prov-ctrl-cc-time">
+                                            <label class="radio"><input type="radio" checked>Time</label>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <table class="table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <td id="prov-ctrl-cc-strokes">
+                                            <label class="provvis-cc-label">Edges:
+                                                <input type='text' id="provvis-cc-strokes"/>
+                                                <em id='provvis-cc-strokes-hex'>#136382</em>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td id="prov-ctrl-cc-highlight">
+                                            <label class="provvis-cc-label">Highlighting:
+                                                <input type='text' id="provvis-cc-highlight"/>
+                                                <em id='provvis-cc-highlight-hex'>#ed7407</em>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                        <td id="prov-ctrl-cc-workflow">
+                            <label class="radio"><input type="radio">Workflow</label>
+                            <table class="table-striped table-bordered table-condensed">
+                                <tbody id="prov-ctrl-cc-workflow-content">
+
+                                </tbody>
+                            </table>
+                        </td>
+                        <td id="prov-ctrl-cc-nodetype">
+                            <label class="radio"><input type="radio">Node type</label>
+                            <table class="table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <label class="provvis-cc-label">Layer:
+                                                <input type='text' id="provvis-cc-layer"/>
+                                                <em id='provvis-cc-layer-hex'>#1f77b4</em>
+                                            </label>
+                                        </td>
+                                        <td>
+                                            <label class="provvis-cc-label">Analysis:
+                                                <input type='text' id="provvis-cc-analysis"/>
+                                                <em id='provvis-cc-analysis-hex'>#2ca02c</em>
+                                            </label>
+                                        </td>
+                                        <td>
+                                            <label class="provvis-cc-label">Subanalysis:
+                                                <input type='text' id="provvis-cc-subanalysis"/>
+                                                <em id='provvis-cc-subanalysis-hex'>#d62728</em>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label class="provvis-cc-label">Data Transformation:
+                                                <input type='text' id="provvis-cc-dt"/>
+                                                <em id='provvis-cc-dt-hex'>#7f7f7f</em>
+                                            </label>
+                                        </td>
+                                        <td>
+                                            <label class="provvis-cc-label">Intermediate:
+                                                <input type='text' id="provvis-cc-intermediate"/>
+                                                <em id='provvis-cc-intermediate-hex'>#bcbd22</em>
+                                            </label>
+                                        </td>
+                                        <td>
+                                            <label class="provvis-cc-label">Stored:
+                                                <input type='text' id="provvis-cc-stored"/>
+                                                <em id='provvis-cc-stored-hex'>#8c564b</em>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <label class="provvis-cc-label">Special:
+                                                <input type='text' id="provvis-cc-special"/>
+                                                <em id='provvis-cc-special-hex'>#17becf</em>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>

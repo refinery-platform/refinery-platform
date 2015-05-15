@@ -6,6 +6,7 @@
 
 
 {% block head_html %}
+  <link rel="stylesheet" href="{% static "vendor/spectrum/spectrum.css" %}" />
   <link rel="stylesheet" href="{% static "styles/css/provenance-visualization.css" %}" />
   <link rel="stylesheet" href="{% static "vendor/tipsy/src/stylesheets/tipsy.css" %}" />
   <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
@@ -708,6 +709,7 @@
   <script type="text/javascript" src="{% static "vendor/lodash/dist/lodash.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/graphlib/dist/graphlib.core.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/dagre/dist/dagre.core.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/spectrum/spectrum.js" %}"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_decl.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_init.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/provvis_layout.js"></script>
