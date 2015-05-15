@@ -40,27 +40,8 @@
     margin-bottom: 5px;
 }
 
-#prov-ctrl-node-labeling-btn-group {
-    margin-left: 15px;
-}
-
-#prov-ctrl-global-btn-group {
-    margin-left: 15px;
-}
-
-#prov-ctrl-help {
-    margin-left: 15px;
-}
-
-#prov-ctrl-legend {
-    margin-left: 15px;
-}
-
-#prov-ctrl-nodeinfo-click {
-    margin-left: 15px;
-}
-
-#prov-ctrl-sidebar-click {
+#prov-ctrl-node-labeling-btn-group, #prov-ctrl-global-btn-group, #prov-ctrl-help, #prov-ctrl-legend,
+#prov-ctrl-colorcoding-click, #prov-ctrl-nodeinfo-click, #prov-ctrl-sidebar-click {
     margin-left: 15px;
 }
 
@@ -71,10 +52,6 @@
     width: 315px;
     height: 100%;
     background-color: #ffffff;
-    /*border-style: solid;
-    border-color: lightgray;
-    border-width: 1.0px;*/
-    /*display: none;*/
 }
 
 #provenance-table {
@@ -84,6 +61,20 @@
     top: -155px;
     width: 100%;
     max-height: 150px;
+    overflow-y: scroll;
+    background-color: #ffffff;
+    border-style: solid;
+    border-color: lightgray;
+    border-width: 1.0px;
+}
+
+#provenance-colorcoding-view {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -165px;
+    width: 100%;
+    max-height: 160px;
     overflow-y: scroll;
     background-color: #ffffff;
     border-style: solid;
@@ -105,9 +96,6 @@
     margin-left: 5px;
     margin-right: 5px;
     background-color: #ffffff;
-    /*border-style: solid;
-    border-color: lightgray;
-    border-width: 1.0px;*/
 }
 
 #provenance-doi-view {
@@ -120,9 +108,6 @@
     margin-left: 5px;
     margin-right: 5px;
     background-color: #ffffff;
-    /*border-style: solid;
-    border-color: lightgray;
-    border-width: 1.0px;*/
 }
 
 /* btn-group tweaks as by: http://stackoverflow.com/a/13766206 */
@@ -161,7 +146,6 @@
 }
 
 .analysis, .layer {
-    /*display: none;*/
 }
 
 .node, .aNode, .saNode, .lNode {
@@ -196,17 +180,18 @@
 
 .selectedNode rect, .selectedNode circle {
     stroke-width: 1.5px;
-    stroke: #ed7407;
+    /*stroke: #ed7407;*/
     stroke-opacity: 1.0;
 }
 
-.mouseoverNode .glyph rect, .mouseoverNode .glyph circle {
+.filteredNode:hover {
     stroke: #ed7407;
     stroke-width: 1.0px;
     stroke-opacity: 1.0;
 }
 
-.glAnchor:hover path, .grAnchor:hover path {
+
+.glAnchor:hover, .grAnchor:hover {
     stroke: #ed7407;
     stroke-width: 1.0px;
     stroke-opacity: 1.0;
@@ -305,7 +290,7 @@
     stroke-width: 0.3px;
 }
 
-.saLabel, .aLabel, .lLabel, .wfLabel {
+.saLabel, .aLabel, .lLabel, .wfLabel, .anLabel {
     fill: #ffffff;
     fill-opacity: 1.0;
     stroke: #ffffff;
@@ -317,21 +302,16 @@
     alignment-baseline: middle;
 }
 
-.lsaAnchor, .rsaAnchor, .laAnchor, .raAnchor, .llAnchor, .rlAnchor, .lnAnchor, .rnAnchor {
+.lsaAnchor, .rsaAnchor, .laAnchor, .raAnchor, .llAnchor, .rlAnchor, .lnAnchor, .rnAnchor {}
+
+.glAnchor, .grAnchor {
     stroke-opacity: 1.0;
     fill-opacity: 1.0;
     fill: #136382;
-    /*fill-opacity: 0.0;*/
     stroke-width: 0.5;
 }
 
-.glAnchor, .grAnchor {
-
-}
-
-.mouseoverNode text {
-    /*fill: #ed7407;*/
-}
+.mouseoverNode text {}
 
 .saBBox {
     fill-opacity: 0.0;
@@ -376,7 +356,6 @@
 .mouseoverBBox .nodeAttrLabel, .mouseoverBBox .subanalysisLabel, .mouseoverBBox .analysisLabel, .mouseoverBBox .layerLabel,
 .mouseoverBBox .aBBoxLabel, .mouseoverBBox .saBBoxLabel {
     fill-opacity: 1.0;
-    /*stroke-width: 0.5px;*/
     text-anchor: left;
     alignment-baseline: middle;
 }
@@ -409,7 +388,7 @@
     line-height: 20px;
 }
 
-#tlTitle{
+#tlTitle {
     margin-bottom: 5px;
 }
 
@@ -474,4 +453,51 @@
     position: absolute;
     top: 0;
     left: 4px;
+}
+
+/* Spectrum color picker overrides. */
+.sp-replacer {
+    border: none;
+    background: none;
+}
+
+.sp-preview {
+    border: none;
+    border-style: solid;
+    border-color: lightgray;
+    border-width: 1.0px;
+    width: 15px;
+    height: 15px;
+    margin: 0px;
+}
+
+.sp-dd, .sp-button-container {
+    display: none;
+}
+
+.sp-container {
+    font-size: 13px;
+    font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    border: none;
+    background-color: #ffffff;
+    border-style: solid;
+    border-color: lightgray;
+    border-width: 1.0px;
+}
+
+.sp-color, .sp-hue, .sp-alpha-inner {
+    border-style: solid;
+    border-color: lightgray;
+    border-width: 1.0px;
+}
+
+.sp-slider, .sp-alpha-handle {
+    border-style: solid;
+    border-color: black;
+    border-width: 1.0px;
+    background: transparent;
+}
+
+.provvis-cc-label {
+    padding-left: 15px;
 }

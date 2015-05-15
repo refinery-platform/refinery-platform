@@ -56,32 +56,6 @@
         </ul>
     </div>
 
-    <!-- Time color-gradient -->
-    <div id="prov-ctrl-time-enc" class="btn btn-mini btn-group">
-        <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown-toggle" href="#">
-            &nbsp;Time enc.&nbsp;<i class="icon-caret-down"/>&nbsp;
-        </a>
-        <ul id="prov-ctrl-time-enc-list" class="dropdown-menu">
-            <!-- TODO: with angular -->
-            <li id="prov-ctrl-time-enc-list-gs">
-                <a href="#" class="field-name">
-                    <label class="radio"><input type="radio" checked>Grayscale</label>
-                </a>
-            </li>
-            <li id="prov-ctrl-time-enc-list-blue">
-                <a href="#" class="field-name">
-                    <label class="radio"><input type="radio">Blue</label>
-                </a>
-            </li>
-            <script>
-                /* Stop dropdown menu from closing on click. */
-                $("#prov-ctrl-time-enc-list").bind("click", function (e) {
-                    e.stopPropagation();
-                });
-            </script>
-        </ul>
-    </div>
-
     <!-- Filter action -->
     <div id="prov-ctrl-filter" class="btn btn-mini btn-group">
         <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown-toggle" href="#">
@@ -184,6 +158,15 @@
     <i class=icon-question-sign></i>
     &nbsp;Glyph legend
 </button>
+
+<!-- Colorcoding toggle -->
+<div id="prov-ctrl-colorcoding-btn-group" class="btn-group">
+    <button id="prov-ctrl-colorcoding-click" class="btn btn-mini" type="button" rel="tooltip"
+            data-placement="bottom" data-documents="Colorcoding" data-html="true">
+        <i class=icon-chevron-down></i>
+        &nbsp;Color coding
+    </button>
+</div>
 
 <!-- Nodeinfo toggle -->
 <div id="prov-ctrl-nodeinfo-btn-group" class="btn-group">

@@ -449,6 +449,8 @@ var provvis = function () {
                 /* On-top docked table. */
                 var nodeTable = createNodeTable("provenance-canvas", "provenance-table");
 
+                var colorcodingView = "#provenance-colorcoding-view";
+
                 /* Timeline view div. */
                 var timelineView = createTimelineView("provenance-sidebar", "provenance-timeline-view");
 
@@ -466,7 +468,7 @@ var provvis = function () {
 
                 /* Create vis and add graph. */
                 vis = new provvisDecl.ProvVis("provenance-graph", zoom, data, url, canvas, nodeTable, rect, margin, width,
-                    height, r, color, graph, timelineView, cell);
+                    height, r, color, graph, timelineView, cell, colorcodingView);
 
                 /* Geometric zoom. */
                 var redraw = function () {

@@ -815,7 +815,7 @@ var provvisRender = function () {
             .attr("x", 0)
             .attr("y", 10)
             .attr("width", 300)
-            .attr("height", tlHeight-10)
+            .attr("height", tlHeight - 10)
             .style({"fill": "url(#gradientGrayscale)", "stroke": "white", "stroke-width": "1px"});
 
         var startTime = {
@@ -859,7 +859,7 @@ var provvisRender = function () {
                 return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
             })
             .attr("y1", function (an) {
-                return an.children.size() >= 5 ? 10 : parseInt(tlHeight - (tlHeight-10) / 5 * an.children.size(), 10);
+                return an.children.size() >= 5 ? 10 : parseInt(tlHeight - (tlHeight - 10) / 5 * an.children.size(), 10);
             })
             .attr("x2", function (an) {
                 return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
@@ -897,7 +897,7 @@ var provvisRender = function () {
                     return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
                 })
                 .attr("y1", function (an) {
-                    return an.children.size() >= 5 ? 10 : parseInt(tlHeight - (tlHeight-10) / 5 * an.children.size(), 10);
+                    return an.children.size() >= 5 ? 10 : parseInt(tlHeight - (tlHeight - 10) / 5 * an.children.size(), 10);
                 })
                 .attr("x2", function (an) {
                     return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
@@ -998,9 +998,9 @@ var provvisRender = function () {
                 rectOffset += d.value * 300;
                 return "M40," + (rectOffset - d.value * 300) + " " +
                     "L" + (40 + labelOffset) + "," + (labelsStart + i * labelOffset) + " " +
-                    "h" + parseInt(labelOffset*5) + " " +
+                    "h" + parseInt(labelOffset * 5) + " " +
                     "v" + labelOffset + " " +
-                    "h" + (-parseInt(labelOffset*5)) + " " +
+                    "h" + (-parseInt(labelOffset * 5)) + " " +
                     "L" + (40) + "," + (rectOffset) + " " +
                     "V" + (rectOffset - d.value * 300);
             }).style({"fill": function (d, i) {
@@ -1018,7 +1018,7 @@ var provvisRender = function () {
             $('<div/>', {
                 "id": "dc-form-" + i,
                 "class": "form dc-form",
-                "style": "height: 30px; position: absolute; left: 75px; top: " + parseInt((10-doiFactors.length)/2*30 +(i+1)*30,10) + "px;"
+                "style": "height: 30px; position: absolute; left: 75px; top: " + parseInt((10 - doiFactors.length) / 2 * 30 + (i + 1) * 30, 10) + "px;"
             }).appendTo("#" + "doiVis");
 
             $('<input/>', {
@@ -2110,7 +2110,7 @@ var provvisRender = function () {
             })
             .text(function (d) {
                 return d.children.size();
-            }).attr("class", "aLabel")
+            }).attr("class", "anLabel")
             .style({
                 "fill": function (an) {
                     return timeColorScale(parseISOTimeFormat(an.start)) < "#888888" ? "#ffffff" : "#000000";
@@ -3415,8 +3415,261 @@ var provvisRender = function () {
         //updateNodeDoi();
     };
 
+
+    /* TODO: Clean up. */
     /**
-     * Updated table on node selection.
+     * Colorcoding view.
+     */
+    var drawColorcodingView = function () {
+
+        var wfColorScale = d3.scale.category10();
+
+        var wfColorData = d3.map();
+
+        wfColorData.set("dataset", 0);
+        d3.values(vis.graph.workflowData).forEach(function (wf, i) {
+            wfColorData.set(wf.name, (i + 1));
+        });
+
+        wfColorData.entries().forEach(function (wf, i) {
+
+            var wfName = wf.key,
+                trimPos = wfName.indexOf("(imported");
+
+            wfName = wfName.substr(0, trimPos) || 'Dataset';
+
+            $('<tr/>', {
+                "id": "provvis-cc-wf-tr-" + i
+            }).appendTo("#" + "prov-ctrl-cc-workflow-content");
+
+            $('<td/>', {
+                "id": "provvis-cc-wf-td-" + i
+            }).appendTo("#" + "provvis-cc-wf-tr-" + i);
+
+            $('<label/>', {
+                "id": "provvis-cc-wf-label-" + i,
+                "html": wfName + ":"
+            }).appendTo("#" + "provvis-cc-wf-td-" + i);
+
+            $('<input/>', {
+                "id": "provvis-cc-wf-color-" + i,
+                "type": "text"
+            }).appendTo("#" + "provvis-cc-wf-label-" + i);
+
+            $('<em/>', {
+                "id": "provvis-cc-wf-hex-" + i,
+                "html": wfColorScale(wf.value)
+            }).appendTo("#" + "provvis-cc-wf-label-" + i);
+
+            $("#provvis-cc-wf-color-" + i).spectrum({
+                color: wfColorScale(wf.value),
+                showAlpha: true,
+                change: function (color) {
+                    $("#provvis-cc-wf-hex-" + i).text(color.toHexString());
+                }
+            });
+
+        });
+
+        var colorStrokes = "#136382",
+            colorHighlight = "#ed7407";
+
+        var updateStrokesColor = function (color) {
+            $("#provvis-cc-strokes-hex").text(color);
+            link.style({"stroke": color});
+            domNodeset.style({"stroke": color});
+            $(".glAnchor, .grAnchor").css({"stroke": color, "fill": color});
+        };
+
+        var updateHighlightColor = function (color) {
+            $("#provvis-cc-highlight-hex").text(color);
+            hLink.style({"stroke": color});
+
+            $(".filteredNode").hover(function () {
+                $(this).css({"stroke": color});
+            }, function () {
+                $(this).css({"stroke": colorStrokes});
+            });
+
+            $(".glAnchor, .grAnchor").hover(function () {
+                $(this).css({"stroke": color, "fill": color});
+            }, function () {
+                console.log($("#provvis-cc-strokes").text());
+                $(this).css({"stroke": colorStrokes, "fill": colorStrokes});
+            });
+        };
+
+        $("#provvis-cc-strokes").spectrum({
+            color: "#136382",
+            showAlpha: true,
+            change: function (color) {
+                colorStrokes = color.toHexString();
+                updateStrokesColor(colorStrokes);
+                updateHighlightColor(colorHighlight);
+            }
+        });
+
+        $("#provvis-cc-highlight").spectrum({
+            color: "#ed7407",
+            showAlpha: true,
+            change: function (color) {
+                colorHighlight = color.toHexString();
+                updateHighlightColor(colorHighlight);
+            }
+        });
+
+        $("#provvis-cc-layer").spectrum({
+            color: "#1f77b4",
+            showAlpha: true,
+            change: function (color) {
+                $("#provvis-cc-layer-hex").text(color.toHexString());
+            }
+        });
+
+        $("#provvis-cc-analysis").spectrum({
+            color: "#2ca02c",
+            showAlpha: true,
+            change: function (color) {
+                $("#provvis-cc-analysis-hex").text(color.toHexString());
+            }
+        });
+
+        $("#provvis-cc-subanalysis").spectrum({
+            color: "#d62728",
+            showAlpha: true,
+            change: function (color) {
+                $("#provvis-cc-subanalysis-hex").text(color.toHexString());
+            }
+        });
+
+        $("#provvis-cc-special").spectrum({
+            color: "#17becf",
+            showAlpha: true,
+            change: function (color) {
+                $("#provvis-cc-special-hex").text(color.toHexString());
+            }
+        });
+
+        $("#provvis-cc-dt").spectrum({
+            color: "#7f7f7f",
+            showAlpha: true,
+            change: function (color) {
+                $("#provvis-cc-dt-hex").text(color.toHexString());
+            }
+        });
+
+        $("#provvis-cc-intermediate").spectrum({
+            color: "#bcbd22",
+            showAlpha: true,
+            change: function (color) {
+                $("#provvis-cc-intermediate-hex").text(color.toHexString());
+            }
+        });
+
+        $("#provvis-cc-stored").spectrum({
+            color: "#8c564b",
+            showAlpha: true,
+            change: function (color) {
+                $("#provvis-cc-stored-hex").text(color.toHexString());
+            }
+        });
+
+        var checkedColor = 0;
+
+        $('#prov-ctrl-cc-none').find("input[type='radio']").click(function () {
+            checkedColor = "none";
+
+            $("#prov-ctrl-cc-time").find("input[type='radio']").prop("checked", false);
+            $("#prov-ctrl-cc-workflow").find("input[type='radio']").prop("checked", false);
+            $("#prov-ctrl-cc-nodetype").find("input[type='radio']").prop("checked", false);
+            switchColorScheme(checkedColor);
+        });
+
+        $('#prov-ctrl-cc-time').find("input[type='radio']").click(function () {
+            checkedColor = "time";
+
+            $("#prov-ctrl-cc-none").find("input[type='radio']").prop("checked", false);
+            $("#prov-ctrl-cc-workflow").find("input[type='radio']").prop("checked", false);
+            $("#prov-ctrl-cc-nodetype").find("input[type='radio']").prop("checked", false);
+            switchColorScheme(checkedColor);
+        });
+
+        $('#prov-ctrl-cc-workflow').find("input[type='radio']").click(function () {
+            checkedColor = "workflow";
+
+            $("#prov-ctrl-cc-none").find("input[type='radio']").prop("checked", false);
+            $("#prov-ctrl-cc-time").find("input[type='radio']").prop("checked", false);
+            $("#prov-ctrl-cc-nodetype").find("input[type='radio']").prop("checked", false);
+            switchColorScheme(checkedColor);
+        });
+
+        $('#prov-ctrl-cc-nodetype').find("input[type='radio']").click(function () {
+            checkedColor = "nodetype";
+
+            $("#prov-ctrl-cc-none").find("input[type='radio']").prop("checked", false);
+            $("#prov-ctrl-cc-time").find("input[type='radio']").prop("checked", false);
+            $("#prov-ctrl-cc-workflow").find("input[type='radio']").prop("checked", false);
+            switchColorScheme(checkedColor);
+        });
+
+        var switchColorScheme = function (checkedColor) {
+            switch (checkedColor) {
+                case "none":
+                    domNodeset.style({"fill": "#ffffff"});
+                    domNodeset.selectAll(".anLabel, .wfLabel").style({"fill": "#000000"});
+                    break;
+                case "time":
+                    aNode.style("fill", function (d) {
+                        return timeColorScale(parseISOTimeFormat(d.start));
+                    });
+                    aNode.selectAll(".anLabel, .wfLabel").style({
+                        "fill": function (an) {
+                            return timeColorScale(parseISOTimeFormat(an.start)) < "#888888" ? "#ffffff" : "#000000";
+                        }});
+
+                    saNode.style("fill", function (d) {
+                        return timeColorScale(parseISOTimeFormat(d.parent.start));
+                    });
+                    saNode.select(".wfLabel").style({
+                        "fill": function (san) {
+                            return timeColorScale(parseISOTimeFormat(san.parent.start)) < "#888888" ? "#ffffff" : "#000000";
+                        }});
+
+                    node.style("fill", function (d) {
+                        return timeColorScale(parseISOTimeFormat(d.parent.parent.start));
+                    });
+
+                    updateLayerNodes(vis.graph.lNodes);
+
+                    break;
+                case "workflow":
+                    var wfc = function (i) {
+                        return $('#provvis-cc-wf-hex-' + i).text();
+                    };
+
+                    domNodeset.each(function (d) {
+                        var cur = d;
+                        while (!(cur instanceof provvisDecl.Layer)) {
+                            cur = cur.parent;
+                        }
+                        d3.select("#nodeId-" + d.autoId).style({"fill": wfc(wfColorData.get(cur.wfName))});
+                    });
+                    break;
+                case "nodetype":
+                    var nt = function (t) {
+                        return $('#provvis-cc-' + t + '-hex').text();
+                    };
+
+                    domNodeset.each(function (d) {
+                        d3.select("#nodeId-" + d.autoId).style({"fill": nt(d.nodeType)});
+                    });
+                    break;
+            }
+        };
+    };
+
+    /**
+     * Update table on node selection.
      * @param selNode Selected node.
      */
     var updateTableContent = function (selNode) {
@@ -3581,7 +3834,7 @@ var provvisRender = function () {
                 ttStr += createHTMLKeyValuePair(key, value) + "<br>";
             });
             showTooltip(ttStr, event);
-            self.classed("mouseoverNode", true);
+            /*self.classed("mouseoverNode", true);*/
             self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             var ttStr = createHTMLKeyValuePair("Name", d.name) + "<br>" +
@@ -3595,7 +3848,7 @@ var provvisRender = function () {
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
-            self.classed("mouseoverNode", false);
+            /*self.classed("mouseoverNode", false);*/
             self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
@@ -3606,7 +3859,7 @@ var provvisRender = function () {
              createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
              createHTMLKeyValuePair("Workflow", getWfNameByNode(d)) + "<br>" +
              "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
-            self.classed("mouseoverNode", true);
+            /*self.classed("mouseoverNode", true);*/
             self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             /*showTooltip(
@@ -3616,7 +3869,7 @@ var provvisRender = function () {
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             /*hideTooltip();*/
-            self.classed("mouseoverNode", false);
+            /*self.classed("mouseoverNode", false);*/
             self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
@@ -3627,7 +3880,7 @@ var provvisRender = function () {
              createHTMLKeyValuePair("Analysis", d.uuid) + "<br>" +
              createHTMLKeyValuePair("Workflow", getWfNameByNode(d)) + "<br>" +
              createHTMLKeyValuePair("Created", parseISOTimeFormat(d.start)) + "<br>", event);*/
-            self.classed("mouseoverNode", true);
+            /*self.classed("mouseoverNode", true);*/
             self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             /*showTooltip(
@@ -3637,19 +3890,19 @@ var provvisRender = function () {
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             /*hideTooltip();*/
-            self.classed("mouseoverNode", false);
+            /*self.classed("mouseoverNode", false);*/
             self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
         /* Layer . */
         lNode.on("mouseover", function (d) {
             var self = d3.select(this);
-            self.classed("mouseoverNode", true);
+            /*self.classed("mouseoverNode", true);*/
             self.select(".labels").select(".wfLabel").attr("clip-path", "");
         }).on("mousemove", function (d) {
         }).on("mouseout", function (d) {
             var self = d3.select(this);
-            self.classed("mouseoverNode", false);
+            /*self.classed("mouseoverNode", false);*/
             self.select(".labels").select(".wfLabel").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
@@ -3732,7 +3985,7 @@ var provvisRender = function () {
                     createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
                     createHTMLKeyValuePair("x", d.x) + "<br>" +
                     createHTMLKeyValuePair("y", d.y), event);
-            self.classed("mouseoverNode", true);
+            /*self.classed("mouseoverNode", true);*/
             self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             showTooltip(
@@ -3742,7 +3995,7 @@ var provvisRender = function () {
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
-            self.classed("mouseoverNode", false);
+            /*self.classed("mouseoverNode", false);*/
             self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
@@ -3752,7 +4005,7 @@ var provvisRender = function () {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
                 createHTMLKeyValuePair("x", d.x) + "<br>" +
                 createHTMLKeyValuePair("y", d.y), event);
-            self.classed("mouseoverNode", true);
+            /*self.classed("mouseoverNode", true);*/
             self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
@@ -3761,7 +4014,7 @@ var provvisRender = function () {
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
-            self.classed("mouseoverNode", false);
+            /*self.classed("mouseoverNode", false);*/
             self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
@@ -3771,7 +4024,7 @@ var provvisRender = function () {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
                 createHTMLKeyValuePair("x", d.x) + "<br>" +
                 createHTMLKeyValuePair("y", d.y), event);
-            self.classed("mouseoverNode", true);
+            /*self.classed("mouseoverNode", true);*/
             self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
@@ -3780,7 +4033,7 @@ var provvisRender = function () {
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
-            self.classed("mouseoverNode", false);
+            /*self.classed("mouseoverNode", false);*/
             self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
@@ -3790,7 +4043,7 @@ var provvisRender = function () {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
                 createHTMLKeyValuePair("x", d.x) + "<br>" +
                 createHTMLKeyValuePair("y", d.y), event);
-            self.classed("mouseoverNode", true);
+            /*self.classed("mouseoverNode", true);*/
             //self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
@@ -3799,7 +4052,7 @@ var provvisRender = function () {
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
-            self.classed("mouseoverNode", false);
+            /*self.classed("mouseoverNode", false);*/
             //self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
@@ -4246,33 +4499,6 @@ var provvisRender = function () {
             });
         });
 
-        /* Switch time-dependant color scheme. */
-        $("[id^=prov-ctrl-time-enc-list-]").click(function () {
-            $(this).find("input[type='radio']").prop("checked", true);
-
-            var selectedColorScheme = $(this).find("label").text();
-            switch (selectedColorScheme) {
-                case "Blue":
-                    timeColorScale.range(["white", "darkblue"]);
-                    $("#prov-ctrl-time-enc-list-gs").find("input[type='radio']").prop("checked", false);
-                    break;
-                case "Grayscale":
-                    timeColorScale.range(["white", "black"]);
-                    $("#prov-ctrl-time-enc-list-blue").find("input[type='radio']").prop("checked", false);
-                    break;
-            }
-
-            aNode.style("fill", function (d) {
-                return timeColorScale(parseISOTimeFormat(d.start));
-            });
-            saNode.style("fill", function (d) {
-                return timeColorScale(parseISOTimeFormat(d.parent.start));
-            });
-            node.style("fill", function (d) {
-                return timeColorScale(parseISOTimeFormat(d.parent.parent.start));
-            });
-        });
-
         /* Switch filter action. */
         $("[id^=prov-ctrl-filter-list-]").click(function () {
             $(this).find("input[type='radio']").prop("checked", true);
@@ -4313,6 +4539,21 @@ var provvisRender = function () {
                 d3.select("#nodeId-" + n.autoId).select(".nodeAttrLabel").text(n.attributes.get(selAttrName));
             });
 
+        });
+
+        /* Color coding. */
+        $("#prov-ctrl-colorcoding-click").click(function () {
+            if ($("#provenance-colorcoding-view").css("top") === "0px") {
+                $("#provenance-colorcoding-view").animate({top: '-165'}, nodeLinkTransitionTime);
+                setTimeout(function () {
+                    $("#prov-ctrl-colorcoding-click").html("<i class=icon-chevron-down></i>" + "&nbsp;" + "Color coding");
+                }, nodeLinkTransitionTime);
+            } else {
+                $("#provenance-colorcoding-view").animate({top: '0'}, nodeLinkTransitionTime);
+                setTimeout(function () {
+                    $("#prov-ctrl-colorcoding-click").html("<i class=icon-chevron-up></i>" + "&nbsp;" + "Color coding");
+                }, nodeLinkTransitionTime);
+            }
         });
 
         /* Node info. */
@@ -4680,6 +4921,9 @@ var provvisRender = function () {
 
         /* Draw doi view. */
         drawDoiView();
+
+        /* Draw colorcoding view. */
+        drawColorcodingView();
 
         /* Event listeners. */
         handleEvents(vis.graph);
