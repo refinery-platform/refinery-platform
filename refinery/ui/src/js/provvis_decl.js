@@ -376,9 +376,10 @@ var provvisDecl = function () {
      * @param graph
      * @param timelineView
      * @param cell
+     * @param colorcodingView
      * @constructor
      */
-    var ProvVis = function (parentDiv, zoom, data, url, canvas, nodeTable, rect, margin, width, height, radius, color, graph, timelineView, cell) {
+    var ProvVis = function (parentDiv, zoom, data, url, canvas, nodeTable, rect, margin, width, height, radius, color, graph, timelineView, cell, colorcodingView) {
         this._parentDiv = parentDiv;
         this.zoom = zoom;
         this._data = data;
@@ -395,6 +396,7 @@ var provvisDecl = function () {
         this.graph = graph;
         this.timelineView = timelineView;
         this.cell = cell;
+        this.colorcodingView = colorcodingView;
     };
 
     /**
