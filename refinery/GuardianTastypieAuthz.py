@@ -1,7 +1,7 @@
 '''
 Source: https://github.com/davidbernick/GuardianTastypie
-
 '''
+
 from tastypie.authorization import Authorization
 from tastypie.exceptions import TastypieError, Unauthorized
 from guardian.shortcuts import assign,remove_perm
@@ -33,31 +33,44 @@ class GuardianAuthorization(Authorization):
         return model_klass
 
     def read_list(self, object_list, bundle):
-        klass = self.base_checks(bundle.request, object_list.model)
-        read_list=[]
+        # This does not work as originally implemented with a simple list as the return object
+        # because some downstream methods are trying to call QuerySet specific methods (e.g. order_by()) on the return
+        # object, therefore we are now removing objects from the QuerySet for which the user does not have 
+        # permissions.
 
+        klass = self.base_checks(bundle.request, object_list.model)
+        has_results = False
+        has_objects = object_list.count()
 
         if klass is False:
             return []
 
-        permission = 'read_%s' % (klass._meta.module_name)
+        permission = 'read_%s' % (klass._meta.verbose_name)
+
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
-                read_list.append(obj)
+                has_results = True
+            else:
+                # remove object for which the user does not have permissions
+                object_list.exclude(id=obj.id)
         # GET-style methods are always allowed.
-        if read_list:
-            return read_list
-        raise Unauthorized("You are not allowed to access that resource.")
+        if has_results:
+            return object_list
+        
+        # should we always just return an empty list and never report a 401?
+        if has_objects > 0 and not has_results:
+            raise Unauthorized("You are not allowed to access that resource.")
+        return object_list
 
     def read_detail(self, object_list, bundle):
         klass = self.base_checks(bundle.request, bundle.obj.__class__)
         read_list=[]
 
-
         if klass is False:
             raise Unauthorized("You are not allowed to access that resource.")
 
-        permission = 'read_%s' % (klass._meta.module_name)
+        permission = 'read_%s' % (klass._meta.verbose_name)
+
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
                 read_list.append(obj)
@@ -70,10 +83,12 @@ class GuardianAuthorization(Authorization):
         klass = self.base_checks(bundle.request, object_list.model)
         create_list=[]
 
+        logger.debug( object_list );
+
         if klass is False:
             return []
 
-        permission = 'add_%s' % (klass._meta.module_name)
+        permission = 'add_%s' % (klass._meta.verbose_name)
 
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
@@ -83,14 +98,20 @@ class GuardianAuthorization(Authorization):
             return create_list
         raise Unauthorized("You are not allowed to access that resource.")
     
+
     def create_detail(self, object_list, bundle):
+
+        # a temporary fix - for now any authenticated user can create any object
+        return True
+
+        '''
         klass = self.base_checks(bundle.request, bundle.obj.__class__)
         create_list=[]
 
         if klass is False:
             raise Unauthorized("You are not allowed to access that resource.")
 
-        permission = 'add_%s' % (klass._meta.module_name)
+        permission = 'add_%s' % (klass._meta.verbose_name)
 
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
@@ -99,6 +120,7 @@ class GuardianAuthorization(Authorization):
         if create_list:
             return True
         raise Unauthorized("You are not allowed to access that resource.")
+        '''
 
     def update_list(self, object_list, bundle):
         klass = self.base_checks(bundle.request, object_list.model)
@@ -107,7 +129,7 @@ class GuardianAuthorization(Authorization):
         if klass is False:
             return []
 
-        permission = 'change_%s' % (klass._meta.module_name)
+        permission = 'change_%s' % (klass._meta.verbose_name)
 
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
@@ -124,7 +146,7 @@ class GuardianAuthorization(Authorization):
         if klass is False:
             raise Unauthorized("You are not allowed to access that resource.")
 
-        permission = 'change_%s' % (klass._meta.module_name)
+        permission = 'change_%s' % (klass._meta.verbose_name)
 
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
@@ -141,7 +163,7 @@ class GuardianAuthorization(Authorization):
         if klass is False:
             return []
 
-        permission = 'delete_%s' % (klass._meta.module_name)
+        permission = 'delete_%s' % (klass._meta.verbose_name)
 
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
@@ -159,7 +181,7 @@ class GuardianAuthorization(Authorization):
         if klass is False:
             raise Unauthorized("You are not allowed to access that resource.")
 
-        permission = 'delete_%s' % (klass._meta.module_name)
+        permission = 'delete_%s' % (klass._meta.verbose_name)
 
         for obj in object_list:        
             if bundle.request.user.has_perms(permission,obj):
