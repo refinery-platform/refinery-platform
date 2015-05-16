@@ -188,7 +188,6 @@ var provvisDecl = function () {
         this.doi = new DoiComponents(this);
         this.selected = false;
         this.filtered = true;
-        this.exaggerated = false;
     };
 
     /**
@@ -261,6 +260,8 @@ var provvisDecl = function () {
 
         this.layer = "";
         this.motif = "";
+
+        this.exaggerated = false;
     };
 
     Analysis.prototype = Object.create(BaseNode.prototype);
