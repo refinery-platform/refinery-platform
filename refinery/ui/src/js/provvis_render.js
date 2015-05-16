@@ -4156,15 +4156,31 @@ var provvisRender = function () {
 
         aNode.each(function (an) {
 
-            /* Adjust subanalysis coords. */
-            var wfBBoxCoords = getWFBBoxCoords(an.children.values()[0], 1);
-            an.children.values().sort(function (a, b) {
-                return a.y - b.y;
-            }).forEach(function (san, i) {
-                san.y = i * (wfBBoxCoords.y.max - wfBBoxCoords.y.min);
-                san.x = 0; /* TODO: May cause problems. Revise! */
-                updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
-            });
+            /* Adjust dataset subanalysis coords. */
+            if (an.uuid === "dataset") {
+                var yOffset = 0;
+                an.children.values().sort(function (a, b) {
+                    return a.y - b.y;
+                }).forEach(function (san, i) {
+                    var wfBBoxCoords = getWFBBoxCoords(san, 1);
+                    san.y = yOffset;
+                    yOffset += (wfBBoxCoords.y.max - wfBBoxCoords.y.min);
+                    san.x = 0;
+                    /* TODO: May cause problems. Revise! */
+                    updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
+                });
+            } else {
+                /* Adjust subanalysis coords. */
+                var wfBBoxCoords = getWFBBoxCoords(an.children.values()[0], 1);
+                an.children.values().sort(function (a, b) {
+                    return a.y - b.y;
+                }).forEach(function (san, i) {
+                    san.y = i * (wfBBoxCoords.y.max - wfBBoxCoords.y.min);
+                    san.x = 0;
+                    /* TODO: May cause problems. Revise! */
+                    updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
+                });
+            }
 
             /* Adjust analysis bounding box. */
             var anBBoxCoords = getABBoxCoords(an, 1);
@@ -4188,7 +4204,7 @@ var provvisRender = function () {
         });
         link.classed("hiddenLink", false);
 
-        link.each( function (l) {
+        link.each(function (l) {
             if (l.filtered) {
                 l.hidden = false;
                 if (l.highlighted)
