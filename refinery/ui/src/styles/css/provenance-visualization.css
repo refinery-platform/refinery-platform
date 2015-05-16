@@ -176,6 +176,7 @@
     opacity: 1.0;
     fill: none;
     stroke: #ed7407;
+    display: none;
 }
 
 .selectedNode rect, .selectedNode circle {

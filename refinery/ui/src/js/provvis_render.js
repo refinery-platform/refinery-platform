@@ -1269,8 +1269,7 @@ var provvisRender = function () {
      * Reset css for all links.
      */
     var clearHighlighting = function () {
-        hLink.classed("hiddenLink", true)
-            .classed("filteredLink", false);
+        hLink.classed("hiddenLink", true);
         link.each(function (l) {
             l.highlighted = false;
         });
@@ -1281,6 +1280,7 @@ var provvisRender = function () {
         });
     };
 
+    /* TODO: Layer link highlighting. */
     /**
      * Get predecessing nodes for highlighting the path by the current node selection.
      * @param n BaseNode extending constructor function.
@@ -1303,7 +1303,7 @@ var provvisRender = function () {
         n.predLinks.values().forEach(function (l) {
             l.highlighted = true;
             if (!l.hidden)
-                d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false).classed("filteredLink", true);
+                d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
             highlightPredPath(l.source);
         });
     };
@@ -1331,7 +1331,7 @@ var provvisRender = function () {
                 an.succLinks.values().forEach(function (l) {
                     l.highlighted = true;
                     if (!l.hidden)
-                        d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false).classed("filteredLink", true);
+                        d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
 
                     highlightSuccPath(l.target);
                 });
@@ -1341,7 +1341,7 @@ var provvisRender = function () {
             n.succLinks.values().forEach(function (l) {
                 l.highlighted = true;
                 if (!l.hidden)
-                    d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false).classed("filteredLink", true);
+                    d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
 
                 highlightSuccPath(l.target);
             });
@@ -1717,6 +1717,7 @@ var provvisRender = function () {
         /* Set dom elements. */
         layer = vis.canvas.select("g.layers").selectAll(".layer");
         lNode = d3.selectAll(".lNode");
+        lBBox = d3.selectAll(".lBBox");
     };
 
     /**
@@ -2893,22 +2894,6 @@ var provvisRender = function () {
      */
     var handleCollapseExpandNode = function (d, keyStroke) {
 
-        /**
-         * Helper function.
-         * @param n Base node.
-         */
-        var hideChildNodes = function (n) {
-            if (!n.children.empty()) {
-                n.children.values().forEach(function (cn) {
-                    cn.hidden = true;
-                    d3.select("#nodeId-" + cn.autoId).classed("selectedNode", false);
-                    d3.select("#nodeId-" + cn.autoId).classed("hiddenNode", true);
-                    if (!cn.children.empty())
-                        hideChildNodes(cn);
-                });
-            }
-        };
-
         var anBBoxCoords = Object.create(null),
             wfBBoxCoords = Object.create(null),
             siblings = [];
@@ -3417,6 +3402,10 @@ var provvisRender = function () {
 
 
     /* TODO: Clean up. */
+    /* TODO: Domnodeset does not include currently filtered nodes or links. */
+    /* TODO: Change radio buttons to real buttons. */
+    /* TODO: Refine div layout. */
+    /* TODO: Add bounding box color. */
     /**
      * Colorcoding view.
      */
@@ -3494,7 +3483,6 @@ var provvisRender = function () {
             $(".glAnchor, .grAnchor").hover(function () {
                 $(this).css({"stroke": color, "fill": color});
             }, function () {
-                console.log($("#provvis-cc-strokes").text());
                 $(this).css({"stroke": colorStrokes, "fill": colorStrokes});
             });
         };
@@ -4128,61 +4116,44 @@ var provvisRender = function () {
      * Expand all analsyes into workflow nodes.
      */
     var showAllWorkflows = function () {
-        /* Set layer visibility. */
-        lNode.each(function (ln) {
-            ln.hidden = true;
-            d3.select(this).classed("hiddenNode", true);
-        });
-
-        /* Set analysis visibility. */
-        aNode.each(function (an) {
-            an.hidden = true;
-            d3.select(this).classed("hiddenNode", true);
-        });
-
-        /* Set subanalysis visibility. */
-        saNode.each(function (san) {
-            san.hidden = true;
-            d3.select(this).classed("hiddenNode", true);
-        });
 
         /* Set node visibility. */
+        lNode.each(function (ln) {
+            ln.hidden = true;
+        });
+        lNode.classed("hiddenNode", true);
+        aNode.each(function (an) {
+            an.hidden = true;
+        });
+        aNode.classed("hiddenNode", true);
+        saNode.each(function (san) {
+            san.hidden = true;
+        });
+        saNode.classed("hiddenNode", true);
         node.each(function (n) {
             n.hidden = false;
-            d3.select(this).classed("hiddenNode", false);
         });
+        node.classed("hiddenNode", false);
 
-        /* Set link visibility. */
-        link.each(function (l) {
-            d3.select(this).classed("hiddenLink", false);
-            l.hidden = false;
-            if (l.highlighted) {
-                d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
-            }
-        });
-        lLink.each(function (l) {
-            l.hidden = true;
-            d3.select(this).classed("hiddenLink", true);
-        });
-
-        /* Adjust bounding boxes. */
-        /*aBBox.classed("hiddenBBox", false);
-         saBBox.classed("hiddenBBox", false);
-         aBBox.select("text").classed("hiddenLabel", false);*/
+        /* Bounding box visibility. */
         saBBox.each(function (san) {
             if (san.filtered && san.children.values().some(function (cn) {
                 return !cn.hidden;
             })) {
                 d3.select(this).classed("hiddenBBox", false);
+            } else {
+                d3.select(this).classed("hiddenBBox", true);
             }
         });
 
+        /* Layer exaggeration label control. */
         aBBox.each(function (an) {
             if (an.filtered && an.parent.hidden) {
                 d3.select(this).classed("hiddenBBox", false);
                 d3.select(this).select("text").classed("hiddenLabel", false);
             }
         });
+
         aNode.each(function (an) {
 
             /* Adjust subanalysis coords. */
@@ -4191,6 +4162,7 @@ var provvisRender = function () {
                 return a.y - b.y;
             }).forEach(function (san, i) {
                 san.y = i * (wfBBoxCoords.y.max - wfBBoxCoords.y.min);
+                san.x = 0; /* TODO: May cause problems. Revise! */
                 updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
             });
 
@@ -4201,136 +4173,96 @@ var provvisRender = function () {
                     return anBBoxCoords.x.max - anBBoxCoords.x.min;
                 })
                 .attr("height", function () {
-                    return anBBoxCoords.y.max - anBBoxCoords.y.min/* + 3 * scaleFactor * vis.radius*/;
+                    return anBBoxCoords.y.max - anBBoxCoords.y.min;
                 });
+            d3.select("#BBoxId-" + an.autoId).classed("hiddenBBox", false);
+
+            if (!an.filtered) {
+                d3.select("#BBoxId-" + an.autoId).classed("hiddenBBox", true);
+            }
         });
+
+        /* Set link visibility. */
+        link.each(function (l) {
+            l.hidden = false;
+        });
+        link.classed("hiddenLink", false);
+
+        link.each( function (l) {
+            if (l.filtered) {
+                l.hidden = false;
+                if (l.highlighted)
+                    d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
+            } else {
+                if (filterAction === "hide") {
+                    l.hidden = true;
+                    d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", true);
+                } else {
+                    l.hidden = false;
+                    if (l.highlighted)
+                        d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
+                }
+            }
+        });
+
+        lLink.each(function (l) {
+            l.hidden = true;
+        });
+        lLink.classed("hiddenLink", true);
     };
 
     /**
      * Collapse all analyses into single subanalysis nodes.
      */
     var showAllSubanalyses = function () {
-        /* Set layer visibility. */
+
+        /* Set node visibility. */
         lNode.each(function (ln) {
             ln.hidden = true;
-            d3.select(this).classed("hiddenNode", true);
         });
-
-        /* Hide analyses. */
+        lNode.classed("hiddenNode", true);
         aNode.each(function (an) {
-            d3.select(this).classed("hiddenNode", true);
             an.hidden = true;
         });
-
-        /* Set node visibility. */
+        aNode.classed("hiddenNode", true);
         saNode.each(function (san) {
-            d3.select(this).classed("hiddenNode", false);
             san.hidden = false;
         });
-
-        /* Set node visibility. */
+        saNode.classed("hiddenNode", false);
         node.each(function (n) {
             n.hidden = true;
-            d3.select(this).classed("hiddenNode", true);
         });
+        node.classed("hiddenNode", true);
 
-        /* Set link visibility. */
-        saNode.each(function (san) {
-            san.links.values().forEach(function (l) {
-                d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("hiddenLink", true);
-                l.hidden = true;
-            });
-            san.inputs.values().forEach(function (sain) {
-                sain.predLinks.values().forEach(function (l) {
-                    d3.select("#linkId-" + l.autoId).classed("hiddenLink", false);
-                    l.hidden = false;
-                });
-            });
-        });
-        lLink.each(function (l) {
-            l.hidden = true;
-            d3.select(this).classed("hiddenLink", true);
-        });
-
-        /* Adjust bounding boxes. */
+        /* Bounding box visibility. */
         saBBox.classed("hiddenBBox", true);
-        /*aBBox.classed("hiddenBBox", false);
-         aBBox.select("text").classed("hiddenLabel", false);*/
-
-        saBBox.each(function (san) {
-            if (san.filtered && san.children.values().some(function (cn) {
-                return !cn.hidden;
-            })) {
-                d3.select(this).classed("hiddenBBox", false);
-            }
-        });
-
-        aBBox.each(function (an) {
-            if (an.filtered && (!an.hidden || an.children.values().some(function (cn) {
-                return !cn.hidden;
-            }))) {
-                d3.select(this).classed("hiddenBBox", false);
-                d3.select(this).select("text").classed("hiddenLabel", false);
-            }
-        });
 
         aNode.each(function (an) {
 
             /* Adjust subanalysis coords. */
-            var wfBBoxCoords = getWFBBoxCoords(an.children.values()[0], 1);
             an.children.values().sort(function (a, b) {
                 return a.y - b.y;
             }).forEach(function (san, i) {
-                san.y = i * (wfBBoxCoords.y.max - wfBBoxCoords.y.min);
+                san.y = i * vis.cell.height;
+                san.x = 0;
                 updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
             });
 
             /* Adjust analysis bounding box. */
             var anBBoxCoords = getABBoxCoords(an, 1);
             d3.selectAll("#BBoxId-" + an.autoId + ", #aBBClipId-" + an.autoId).selectAll("rect")
-                .attr("width", function () {
-                    return (d3.select(this.parentElement).attr("id") === "BBoxId-" + an.autoId) ?
-                        cell.width - 2 : cell.width - 4;
-                })
+                .attr("width", vis.cell.width - 2)
                 .attr("height", function () {
-                    return anBBoxCoords.y.max - anBBoxCoords.y.min/* + 3 * scaleFactor * vis.radius*/;
+                    return anBBoxCoords.y.max - anBBoxCoords.y.min;
                 });
-        });
-    };
+            d3.select("#BBoxId-" + an.autoId).classed("hiddenBBox", false);
 
-    /**
-     * Collapse all analyses into single analysis nodes.
-     */
-    var showAllAnalyses = function () {
-
-        /**
-         * Helper function.
-         * @param n Current node.
-         */
-        var hideChildNodes = function (n) {
-            n.children.values().forEach(function (cn) {
-                cn.hidden = true;
-                d3.select("#nodeId-" + cn.autoId).classed("selectedNode", false);
-                d3.select("#nodeId-" + cn.autoId).classed("hiddenNode", true);
-                if (!cn.children.empty())
-                    hideChildNodes(cn);
-            });
-        };
-
-        /* Set layer visibility. */
-        lNode.each(function (ln) {
-            ln.hidden = true;
-            d3.select(this).classed("hiddenNode", true);
+            if (!an.filtered) {
+                d3.select("#BBoxId-" + an.autoId).classed("hiddenBBox", true);
+            }
         });
 
-        /* Set node visibility. */
-        aNode.each(function (an) {
-            d3.select(this).classed("hiddenNode", false);
-            an.hidden = false;
-            hideChildNodes(an);
-        });
-
-        /* Set link visibility. */
+        /* Link visibility. */
         aNode.each(function (an) {
             an.links.values().forEach(function (l) {
                 d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("hiddenLink", true);
@@ -4343,99 +4275,119 @@ var provvisRender = function () {
                 });
             });
         });
+
         lLink.each(function (l) {
             l.hidden = true;
         });
-        lLink.classed({"hiddenLink": true});
+        lLink.classed("hiddenLink", true);
+    };
 
-        /* Adjust bounding boxes. */
+    /**
+     * Collapse all analyses into single analysis nodes.
+     */
+    var showAllAnalyses = function () {
 
-        saBBox.classed("hiddenBBox", true);
-        /*aBBox.classed("hiddenBBox", false);
-         aBBox.select("text").classed("hiddenLabel", false);*/
-
-        aBBox.each(function (an) {
-            if (an.filtered && !an.hidden) {
-                d3.select(this).classed("hiddenBBox", false);
-            }
+        /* Node visibility. */
+        lNode.each(function (ln) {
+            ln.hidden = true;
         });
+        lNode.classed("hiddenNode", true);
+
         aNode.each(function (an) {
+            an.hidden = false;
+            hideChildNodes(an);
+
+            /* Filtered visibility. */
+            if (an.filtered) {
+                d3.select("#BBoxId-" + an.autoId).classed("hiddenBBox", false);
+            }
+
+            /* Bounding box size. */
+            d3.selectAll("#BBoxId-" + an.autoId + ", #aBBClipId-" + an.autoId).select("rect")
+                .attr("width", vis.cell.width - 2)
+                .attr("height", vis.cell.height);
 
             /* Adjust subanalysis coords. */
             an.children.values().sort(function (a, b) {
                 return a.y - b.y;
             }).forEach(function (san, i) {
                 san.y = i * vis.cell.height;
+                san.x = 0;
                 updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
             });
-
-            /* Adjust analysis bounding box. */
-            var anBBoxCoords = getABBoxCoords(an, 1);
-            d3.selectAll("#BBoxId-" + an.autoId + ", #aBBClipId-" + an.autoId).selectAll("rect")
-                .attr("width", function () {
-                    return (d3.select(this.parentElement).attr("id") === "BBoxId-" + an.autoId) ?
-                        cell.width - 2 : cell.width - 4;
-                })
-                .attr("height", function () {
-                    return anBBoxCoords.y.max - anBBoxCoords.y.min/* + 3 * scaleFactor * vis.radius*/;
-                });
         });
-    };
+        aNode.classed("hiddenNode", false);
 
-    /**
-     * Collapse all layers into single layer nodes.
-     */
-    var showAllLayers = function () {
+        /* Bounding box visibility. */
+        saBBox.classed("hiddenBBox", true);
 
-        /**
-         * Helper function.
-         * @param n Base node.
-         */
-        var hideChildNodes = function (n) {
-            n.children.values().forEach(function (cn) {
-                cn.hidden = true;
-                d3.select("#nodeId-" + cn.autoId).classed("selectedNode", false);
-                d3.select("#nodeId-" + cn.autoId).classed("hiddenNode", true);
-                if (!cn.children.empty())
-                    hideChildNodes(cn);
-            });
-        };
-
-        /* Set layer visibility. */
-        lNode.each(function (ln) {
-            ln.hidden = false;
-            d3.select(this).classed("hiddenNode", false);
-            hideChildNodes(ln);
-
-            if (!ln.children.empty()) {
-                handleCollapseExpandNode(ln.children.values()[0], 'c');
-            }
-        });
-
-
-        d3.selectAll(".lBBox").classed("hiddenBBox", true);
-        lNode.filter(function (ln) {
-            return ln.filtered && !ln.hidden;
-        }).each(function (ln) {
-            d3.select("BBoxId-" + ln.autoId).classed("hiddenBBox", false);
-        });
-
-        /* Set link visibility. */
+        /* Link visibility. */
         aNode.each(function (an) {
             an.links.values().forEach(function (l) {
                 d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("hiddenLink", true);
                 l.hidden = true;
+            });
+            an.inputs.values().forEach(function (ain) {
+                ain.predLinks.values().forEach(function (l) {
+                    d3.select("#linkId-" + l.autoId).classed("hiddenLink", false);
+                    l.hidden = false;
+                });
+            });
+        });
+
+        lLink.each(function (l) {
+            l.hidden = true;
+        });
+        lLink.classed("hiddenLink", true);
+    };
+
+    /**
+     * Collapse all nodes into single layer nodes.
+     */
+    var showAllLayers = function () {
+
+        /* Node visibility. */
+        lNode.each(function (ln) {
+            ln.hidden = false;
+            hideChildNodes(ln);
+
+            /* Layer exaggeration reset. */
+            ln.children.values().forEach(function (an) {
+                an.exaggerated = false;
+            });
+
+            /* Filtered visibility. */
+            if (ln.filtered) {
+                d3.select("BBoxId-" + ln.autoId).classed("hiddenBBox", false);
+            }
+        });
+        lNode.classed("hiddenNode", false);
+
+        /* Bounding box visibility. */
+        saBBox.classed("hiddenBBox", true);
+        aBBox.classed("hiddenBBox", true);
+
+        /* Link visibility. */
+        aNode.each(function (an) {
+            an.links.values().forEach(function (l) {
+                d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("hiddenLink", true);
+                l.hidden = true;
+            });
+
+            /* Adjust subanalysis coords. */
+            an.children.values().sort(function (a, b) {
+                return a.y - b.y;
+            }).forEach(function (san, i) {
+                san.y = i * vis.cell.height;
+                san.x = 0;
+                updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
             });
         });
 
         lLink.each(function (l) {
             l.hidden = false;
         });
-        lLink.classed({"hiddenLink": false});
-
-        /* Hide bounding boxes. */
-        saBBox.classed("hiddenBBox", true);
-        aBBox.classed("hiddenBBox", true);
+        lLink.classed("hiddenLink", false);
     };
 
     /**
@@ -4743,41 +4695,6 @@ var provvisRender = function () {
         d3.selectAll(".grAnchor").on("click", function (d) {
             handlePathHighlighting(d, "s");
         });
-
-        /* TODO: Temporarily disabled. */
-        /*var keydown = function () {
-         d3.event.preventDefault();
-
-         if (selectedNodeSet.empty()) return;
-
-         selectedNodeSet.values().forEach(function (d) {
-         switch (d3.event.keyCode) {
-
-         case 67: */
-        /* c => collapse*/
-        /*
-         handleCollapseExpandNode(d, "c");
-         break;
-         case 69: */
-        /* e => expand*/
-        /*
-         handleCollapseExpandNode(d, "e");
-         break;
-         case 80: */
-        /* l => highlight predecessors */
-        /*
-         handlePathHighlighting(d, "p");
-         break;
-         case 83: */
-        /* r => highlight successors */
-        /*
-         handlePathHighlighting(d, "s");
-         break;
-         }
-         });
-         };
-
-         d3.select("body").on("keydown", keydown);*/
     };
 
     /**
@@ -5015,7 +4932,6 @@ var provvisRender = function () {
         });
     };
 
-    /* TODO: */
     /**
      * Update filtered links.
      */
@@ -5025,16 +4941,20 @@ var provvisRender = function () {
         saNode.each(function (san) {
             if (!san.filtered) {
                 san.links.values().forEach(function (l) {
-                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("filteredLink", false);
+                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId)
+                        .classed("filteredLink", false);
                     if (filterAction === "blend") {
-                        d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", true);
+                        d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId)
+                            .classed("blendedLink", true);
                     } else {
-                        d3.selectAll("#linkId-" + l.autoId).classed("blendedLink", false);
+                        d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId)
+                            .classed("blendedLink", false);
                     }
                 });
             } else {
                 san.links.values().forEach(function (l) {
-                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed({"filteredLink": true, "blendedLink": false});
+                    d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId)
+                        .classed({"filteredLink": true, "blendedLink": false});
                 });
             }
         });
