@@ -172,6 +172,12 @@ var provvisInit = function () {
                     traverseBackSubanalysis(pn, subanalysis);
                 }
             });
+
+            n.succs.values().forEach( function (sn) {
+                if (sn.subanalysis === null) {
+                    traverseDataset(sn, subanalysis);
+                }
+            });
         };
 
         /**
