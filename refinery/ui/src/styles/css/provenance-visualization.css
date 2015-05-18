@@ -40,9 +40,13 @@
     margin-bottom: 5px;
 }
 
-#prov-ctrl-node-labeling-btn-group, #prov-ctrl-global-btn-group, #prov-ctrl-help, #prov-ctrl-legend,
-#prov-ctrl-colorcoding-click, #prov-ctrl-nodeinfo-click, #prov-ctrl-sidebar-click {
+#prov-ctrl-node-labeling-btn-group, #prov-ctrl-global-btn-group, #prov-ctrl-nodeinfo-click, #prov-ctrl-sidebar-click, #prov-ctrl-help {
     margin-left: 15px;
+}
+
+#prov-ctrl-visible-attribute, #prov-ctrl-filter, #prov-ctrl-colorcoding {
+    padding-left: 0;
+    padding-right: 0;
 }
 
 #provenance-sidebar {
@@ -291,7 +295,7 @@
     stroke-width: 0.3px;
 }
 
-.saLabel, .aLabel, .lLabel, .wfLabel, .anLabel {
+.saLabel, .aLabel, .lLabel, .wfLabel, .anLabel, .sanLabel, .anwfLabel, .sanwfLabel {
     fill: #ffffff;
     fill-opacity: 1.0;
     stroke: #ffffff;
@@ -501,4 +505,21 @@
 
 .provvis-cc-label {
     padding-left: 15px;
+}
+
+.rotate-icon-90:before {
+    -webkit-transform: rotate(270deg);
+    -moz-transform: rotate(270deg);
+}
+
+.l-node-type-icon, .an-node-type-icon, .san-node-type-icon {
+    fill: #ffffff;
+    fill-opacity: 1.0;
+    stroke: #ffffff;
+    stroke-width: 0.0px;
+    cursor: default;
+    text-anchor: middle;
+    dominant-baseline: central;
+    font-family: FontAwesome;
+    font-size: 7px;
 }

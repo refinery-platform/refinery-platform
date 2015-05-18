@@ -56,6 +56,8 @@ var provvisRender = function () {
 
     var layoutCols = d3.map();
 
+    var linkStyle = "bezier1";
+
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
         .append("div")
@@ -370,7 +372,7 @@ var provvisRender = function () {
                     var srcCoords = getVisibleNodeCoords(l.source),
                         tarCoords = getVisibleNodeCoords(l.target);
 
-                    if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
+                    if (linkStyle === "bezier1") {
                         return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
                     } else {
                         return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
@@ -388,7 +390,7 @@ var provvisRender = function () {
                     var tarCoords = getVisibleNodeCoords(l.target),
                         srcCoords = getVisibleNodeCoords(l.source);
 
-                    if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
+                    if (linkStyle === "bezier1") {
                         return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
                     } else {
                         return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
@@ -1373,7 +1375,7 @@ var provvisRender = function () {
         ahl.attr("d", function (l) {
             var srcCoords = getVisibleNodeCoords(l.source),
                 tarCoords = getVisibleNodeCoords(l.target);
-            if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
+            if (linkStyle === "bezier1") {
                 return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
             } else {
                 return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
@@ -1415,7 +1417,7 @@ var provvisRender = function () {
         al.attr("d", function (l) {
             var srcCoords = getVisibleNodeCoords(l.source),
                 tarCoords = getVisibleNodeCoords(l.target);
-            if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
+            if (linkStyle === "bezier1") {
                 return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
             } else {
                 return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
@@ -1669,9 +1671,24 @@ var provvisRender = function () {
                 return "url(#bbClipId-" + l.autoId + ")";
             });
 
+        lLabels.append('text')
+            .attr("transform", function () {
+                return "translate(" + (-1.1*scaleFactor * vis.radius) + "," + (-1.1 * scaleFactor * vis.radius) + ")";
+            }).text(function() { return "\uf0c9"; })
+            .classed("l-node-type-icon", true)
+            .style({
+                "fill": function (l) {
+                    var latestDate = d3.min(l.children.values(), function (d) {
+                        return d.start;
+                    });
+                    return timeColorScale(parseISOTimeFormat(latestDate)) < "#888888" ? "#ffffff" : "#000000";
+                }
+            })
+            .style("display", "inline");
+
         lLabels.append("text")
             .attr("transform", function () {
-                return "translate(" + (0) + "," + (-0.9 * scaleFactor * vis.radius) + ")";
+                return "translate(" + (0.7*scaleFactor * vis.radius) + "," + (-1 * scaleFactor * vis.radius) + ")";
             })
             .text(function (d) {
                 return d.children.size();
@@ -1683,8 +1700,7 @@ var provvisRender = function () {
                     });
                     return timeColorScale(parseISOTimeFormat(latestDate)) < "#888888" ? "#ffffff" : "#000000";
                 }
-            })
-        ;
+            });
 
         lLabels.select(".wfLabel").append("text")
             .attr("transform", function () {
@@ -1750,7 +1766,7 @@ var provvisRender = function () {
             var srcCoords = getVisibleNodeCoords(l.source),
                 tarCoords = getVisibleNodeCoords(l.target);
 
-            if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
+            if (linkStyle === "bezier1") {
                 return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
             } else {
                 return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
@@ -1938,7 +1954,7 @@ var provvisRender = function () {
             })
             .text(function (d) {
                 return d.wfCode;
-            }).attr("class", "wfLabel")
+            }).attr("class", "anwfLabel")
             .style({
                 "fill": function (an) {
                     return timeColorScale(parseISOTimeFormat(an.start)) < "#888888" ? "#ffffff" : "#000000";
@@ -2105,9 +2121,22 @@ var provvisRender = function () {
             }).attr("class", "nodeDoiLabel")
             .style("display", "none");
 
+        aLabels.append('text')
+            .attr("transform", function () {
+                return "translate(" + (-1.1*scaleFactor * vis.radius) + "," + (-0.6 * scaleFactor * vis.radius) + ")";
+            }).text(function() {
+                return "\uf085";
+            }).classed("an-node-type-icon", true)
+            .style({
+                "fill": function (an) {
+                    return timeColorScale(parseISOTimeFormat(an.start)) < "#888888" ? "#ffffff" : "#000000";
+                }
+            })
+            .style("display", "inline");
+
         aLabels.append("text")
             .attr("transform", function () {
-                return "translate(" + (0) + "," + (-0.5 * scaleFactor * vis.radius) + ")";
+                return "translate(" + (1.0 * scaleFactor * vis.radius) + "," + (-0.6 * scaleFactor * vis.radius) + ")";
             })
             .text(function (d) {
                 return d.children.size();
@@ -2121,11 +2150,11 @@ var provvisRender = function () {
 
         aLabels.append("text")
             .attr("transform", function () {
-                return "translate(" + 0 + "," + (0.5 * scaleFactor * vis.radius) + ")";
+                return "translate(" + 0 + "," + (1 * scaleFactor * vis.radius) + ")";
             })
             .text(function (d) {
                 return d.wfCode;
-            }).attr("class", "wfLabel")
+            }).attr("class", "anwfLabel")
             .style({
                 "fill": function (an) {
                     return timeColorScale(parseISOTimeFormat(an.start)) < "#888888" ? "#ffffff" : "#000000";
@@ -2156,7 +2185,7 @@ var provvisRender = function () {
         /* Enter and update. */
         sahl.attr("d",
             function (l) {
-                if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
+                if (linkStyle === "bezier1") {
                     return drawBezierLink(l, l.source.x, l.source.y, l.target.x, l.target.y);
                 } else {
                     return drawStraightLink(l, l.source.x, l.source.y, l.target.x, l.target.y);
@@ -2170,7 +2199,7 @@ var provvisRender = function () {
         /* Enter. */
         sahl.enter().append("path")
             .attr("d", function (l) {
-                if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
+                if (linkStyle === "bezier1") {
                     return drawBezierLink(l, l.source.x, l.source.y, l.target.x, l.target.y);
                 } else {
                     return drawStraightLink(l, l.source.x, l.source.y, l.target.x, l.target.y);
@@ -2193,7 +2222,7 @@ var provvisRender = function () {
 
         /* Enter and update. */
         sal.attr("d", function (l) {
-            if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
+            if (linkStyle === "bezier1") {
                 return drawBezierLink(l, l.source.x, l.source.y, l.target.x, l.target.y);
             } else {
                 return drawStraightLink(l, l.source.x, l.source.y, l.target.x, l.target.y);
@@ -2206,7 +2235,7 @@ var provvisRender = function () {
         /* Enter. */
         sal.enter().append("path")
             .attr("d", function (l) {
-                if ($("#prov-ctrl-links-list-bezier").find("input").prop("checked")) {
+                if (linkStyle === "bezier1") {
                     return drawBezierLink(l, l.source.x, l.source.y, l.target.x, l.target.y);
                 } else {
                     return drawStraightLink(l, l.source.x, l.source.y, l.target.x, l.target.y);
@@ -2359,13 +2388,21 @@ var provvisRender = function () {
                     }).attr("class", "saLabel")
                     .style("display", "inline");
 
-                saGlyph.append("rect")
+                /*saGlyph.append("rect")
                     .attr("x", -2 * scaleFactor * vis.radius)
                     .attr("y", -1 * scaleFactor * vis.radius)
                     .attr("rx", 1)
                     .attr("ry", 1)
                     .attr("width", 4 * scaleFactor * vis.radius)
-                    .attr("height", 2 * scaleFactor * vis.radius);
+                    .attr("height", 2 * scaleFactor * vis.radius);*/
+
+                saGlyph.append("rect")
+                    .attr("x", -2 * scaleFactor * vis.radius)
+                    .attr("y", -1.5 * scaleFactor * vis.radius)
+                    .attr("rx", 1)
+                    .attr("ry", 1)
+                    .attr("width", 4 * scaleFactor * vis.radius)
+                    .attr("height", 3 * scaleFactor * vis.radius);
 
                 /*.attr("x", -1.5 * scaleFactor * vis.radius)
                  .attr("y", -1 * scaleFactor * vis.radius)
@@ -2381,13 +2418,40 @@ var provvisRender = function () {
                     }).attr("class", "nodeDoiLabel")
                     .style("display", "none");
 
+
+                saLabels.append('text')
+                    .attr("transform", function () {
+                        return "translate(" + (-1.1*scaleFactor * vis.radius) + "," + (-0.6 * scaleFactor * vis.radius) + ")";
+                    }).text(function() {
+                        return "\uf013";
+                    }).classed("san-node-type-icon", true)
+                    .style({
+                        "fill": function (san) {
+                            return timeColorScale(parseISOTimeFormat(san.parent.start)) < "#888888" ? "#ffffff" : "#000000";
+                        }
+                    })
+                    .style("display", "inline");
+
                 saLabels.append("text")
                     .attr("transform", function () {
-                        return "translate(" + 0 + "," + 0 + ")";
+                        return "translate(" + (1.0 * scaleFactor * vis.radius) + "," + (-0.6 * scaleFactor * vis.radius) + ")";
                     })
                     .text(function (d) {
+                        return d.children.size();
+                    }).attr("class", "sanLabel")
+                    .style({
+                        "fill": function (san) {
+                            return timeColorScale(parseISOTimeFormat(san.parent.start)) < "#888888" ? "#ffffff" : "#000000";
+                        }
+                    })
+                    .style("display", "inline");
+
+                saLabels.append("text")
+                    .attr("transform", function () {
+                        return "translate(" + 0 + "," + (1 * scaleFactor * vis.radius) + ")";
+                    }).text(function (d) {
                         return d.parent.wfCode;
-                    }).attr("class", "wfLabel")
+                    }).attr("class", "sanwfLabel")
                     .style({
                         "fill": function (san) {
                             return timeColorScale(parseISOTimeFormat(san.parent.start)) < "#888888" ? "#ffffff" : "#000000";
@@ -3604,13 +3668,13 @@ var provvisRender = function () {
             switch (checkedColor) {
                 case "none":
                     domNodeset.style({"fill": "#ffffff"});
-                    domNodeset.selectAll(".anLabel, .wfLabel").style({"fill": "#000000"});
+                    domNodeset.selectAll(".anLabel, .sanLabel, .anwfLabel, .sanwfLabel, .an-node-type-icon, .san-node-type-icon").style({"fill": "#000000"});
                     break;
                 case "time":
                     aNode.style("fill", function (d) {
                         return timeColorScale(parseISOTimeFormat(d.start));
                     });
-                    aNode.selectAll(".anLabel, .wfLabel").style({
+                    aNode.selectAll(".anLabel, .anwfLabel, .an-node-type-icon").style({
                         "fill": function (an) {
                             return timeColorScale(parseISOTimeFormat(an.start)) < "#888888" ? "#ffffff" : "#000000";
                         }});
@@ -3618,7 +3682,7 @@ var provvisRender = function () {
                     saNode.style("fill", function (d) {
                         return timeColorScale(parseISOTimeFormat(d.parent.start));
                     });
-                    saNode.select(".wfLabel").style({
+                    saNode.selectAll(".sanLabel, .sanwfLabel, .san-node-type-icon").style({
                         "fill": function (san) {
                             return timeColorScale(parseISOTimeFormat(san.parent.start)) < "#888888" ? "#ffffff" : "#000000";
                         }});
@@ -4514,12 +4578,12 @@ var provvisRender = function () {
             if ($("#provenance-colorcoding-view").css("top") === "0px") {
                 $("#provenance-colorcoding-view").animate({top: '-165'}, nodeLinkTransitionTime);
                 setTimeout(function () {
-                    $("#prov-ctrl-colorcoding-click").html("<i class=icon-chevron-down></i>" + "&nbsp;" + "Color coding");
+                    $("#prov-ctrl-colorcoding-click").html("<i class=icon-wrench></i>" + "&nbsp;Color coding&nbsp;" + "<i class=icon-caret-down></i>");
                 }, nodeLinkTransitionTime);
             } else {
                 $("#provenance-colorcoding-view").animate({top: '0'}, nodeLinkTransitionTime);
                 setTimeout(function () {
-                    $("#prov-ctrl-colorcoding-click").html("<i class=icon-chevron-up></i>" + "&nbsp;" + "Color coding");
+                    $("#prov-ctrl-colorcoding-click").html("<i class=icon-wrench></i>" + "&nbsp;Color coding&nbsp;" + "<i class=icon-caret-up></i>");
                 }, nodeLinkTransitionTime);
             }
         });
@@ -4529,12 +4593,12 @@ var provvisRender = function () {
             if ($("#provenance-table").css("top") === "0px") {
                 $("#provenance-table").animate({top: '-155'}, nodeLinkTransitionTime);
                 setTimeout(function () {
-                    $("#prov-ctrl-nodeinfo-click").html("<i class=icon-chevron-down></i>" + "&nbsp;" + "Node info");
+                    $("#prov-ctrl-nodeinfo-click").html("<i class=icon-info-sign></i>" + "&nbsp;Node info&nbsp;" + "<i class=icon-caret-down></i>");
                 }, nodeLinkTransitionTime);
             } else {
                 $("#provenance-table").animate({top: '0'}, nodeLinkTransitionTime);
                 setTimeout(function () {
-                    $("#prov-ctrl-nodeinfo-click").html("<i class=icon-chevron-up></i>" + "&nbsp;" + "Node info");
+                    $("#prov-ctrl-nodeinfo-click").html("<i class=icon-info-sign></i>" + "&nbsp;Node info&nbsp;" + "<i class=icon-caret-up></i>");
                 }, nodeLinkTransitionTime);
             }
         });
@@ -4544,12 +4608,12 @@ var provvisRender = function () {
             if ($("#provenance-sidebar").css("right") === "0px") {
                 $("#provenance-sidebar").animate({right: '-315'}, nodeLinkTransitionTime);
                 setTimeout(function () {
-                    $("#prov-ctrl-sidebar-click").html("<i class=icon-chevron-left></i>" + "&nbsp;" + "Sidebar");
+                    $("#prov-ctrl-sidebar-click").html("<i class=icon-filter></i>" + "&nbsp;Sidebar&nbsp;" + "<i class=icon-caret-left></i>");
                 }, nodeLinkTransitionTime);
             } else {
                 $("#provenance-sidebar").animate({right: '0'}, nodeLinkTransitionTime);
                 setTimeout(function () {
-                    $("#prov-ctrl-sidebar-click").html("<i class=icon-chevron-right></i>" + "&nbsp;" + "Sidebar");
+                    $("#prov-ctrl-sidebar-click").html("<i class=icon-filter></i>" + "&nbsp;Sidebar&nbsp;" + "<i class=icon-caret-right></i>");
                 }, nodeLinkTransitionTime);
             }
         });
