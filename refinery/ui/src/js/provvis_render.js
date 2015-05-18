@@ -4578,12 +4578,12 @@ var provvisRender = function () {
             if ($("#provenance-colorcoding-view").css("top") === "0px") {
                 $("#provenance-colorcoding-view").animate({top: '-165'}, nodeLinkTransitionTime);
                 setTimeout(function () {
-                    $("#prov-ctrl-colorcoding-click").html("<i class=icon-wrench></i>" + "&nbsp;Color coding&nbsp;" + "<i class=icon-caret-down></i>");
+                    $("#prov-ctrl-colorcoding-click").html("Color coding&nbsp;" + "<i class=icon-caret-down></i>");
                 }, nodeLinkTransitionTime);
             } else {
                 $("#provenance-colorcoding-view").animate({top: '0'}, nodeLinkTransitionTime);
                 setTimeout(function () {
-                    $("#prov-ctrl-colorcoding-click").html("<i class=icon-wrench></i>" + "&nbsp;Color coding&nbsp;" + "<i class=icon-caret-up></i>");
+                    $("#prov-ctrl-colorcoding-click").html("Color coding&nbsp;" + "<i class=icon-caret-up></i>");
                 }, nodeLinkTransitionTime);
             }
         });
