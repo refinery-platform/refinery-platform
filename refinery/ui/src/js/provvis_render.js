@@ -1324,13 +1324,25 @@ var provvisRender = function () {
             pn = pn.parent;
         }
 
-        /* Get svg link element, and for each predecessor call recursively. */
-        n.predLinks.values().forEach(function (l) {
-            l.highlighted = true;
-            if (!l.hidden)
-                d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
-            highlightPredPath(l.source);
-        });
+        if (n instanceof provvisDecl.Layer) {
+            n.children.values().forEach(function (an) {
+                an.predLinks.values().forEach(function (l) {
+                    l.highlighted = true;
+                    if (!l.hidden)
+                        d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
+
+                    highlightPredPath(l.source);
+                });
+            });
+        } else {
+            /* Get svg link element, and for each predecessor call recursively. */
+            n.predLinks.values().forEach(function (l) {
+                l.highlighted = true;
+                if (!l.hidden)
+                    d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
+                highlightPredPath(l.source);
+            });
+        }
     };
 
     /**
