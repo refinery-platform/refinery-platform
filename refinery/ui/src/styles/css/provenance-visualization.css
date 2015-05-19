@@ -401,11 +401,21 @@
     margin-bottom: 0px;
 }
 
-#tlThreshold {
+.tlThreshold {
     color: #136382;
     font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 14px;
     line-height: 20px;
+    text-align: left;
+}
+
+#tlThresholdStart {
+    text-align: left;
+}
+
+#tlThresholdEnd {
+    text-align: right;
+    margin-right: 10px;
 }
 
 .tlAnalysis {

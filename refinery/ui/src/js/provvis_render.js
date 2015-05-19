@@ -716,8 +716,8 @@ var provvisRender = function () {
             labelStart = createCustomTimeFormat(labelStart.substr(0, labelStart.length - 1));
             labelEnd = createCustomTimeFormat(labelEnd.substr(0, labelEnd.length - 1));
 
-            d3.select("#tlThreshold").html("Start: " + labelStart + "<br>" +
-                "End: " + labelEnd);
+            d3.select("#tlThresholdStart").html(labelStart);
+            d3.select("#tlThresholdEnd").html(labelEnd);
 
             d3.selectAll(".tlAnalysis").each(function (an) {
                 if (parseISOTimeFormat(an.start) < tlThreshold[0] || parseISOTimeFormat(an.start) > tlThreshold[1]) {

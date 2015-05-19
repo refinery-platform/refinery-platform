@@ -76,6 +76,11 @@ var provvis = function () {
         }).appendTo(timelineContainer);
 
         $("<p/>", {
+            "id": "tlThresholdStart",
+            "class": "tlThreshold"
+        }).appendTo(timelineContainer);
+
+        $("<p/>", {
             "id": "tlCanvas"
         }).appendTo(timelineContainer);
 
@@ -85,9 +90,9 @@ var provvis = function () {
             .style({"margin-top": "0px", "margin-bottom": "0px", "padding": "0px"})
             .attr("pointer-events", "all");
 
-        /* Toolbar items. */
         $("<p/>", {
-            "id": "tlThreshold"
+            "id": "tlThresholdEnd",
+            "class": "tlThreshold"
         }).appendTo(timelineContainer);
 
         return timelineContainer;
