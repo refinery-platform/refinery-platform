@@ -150,7 +150,7 @@ var provvisRender = function () {
         });
 
         /* On node doi. */
-        vis.graph.nodes.forEach( function (n) {
+        vis.graph.nodes.forEach(function (n) {
             /* TODO: */
         });
 
@@ -752,16 +752,22 @@ var provvisRender = function () {
             updateTimelineLabels(l);
 
             /* On hover filter update. */
-            /*var tlTickCoords = vis.graph.aNodes.map(function (an) {return timeLineGradientScale.invert(parseISOTimeFormat(an.start));});
-             if (l.className === "startTimeline") {
-             if (tlTickCoords.some(function (x) {return l.x - x > 0 && l.x - x < 1; })) {
-             filterAnalysesByTime(getTimeLineThresholds(l)[0], getTimeLineThresholds(l)[1], vis);
-             }
-             } else {
-             if (tlTickCoords.some(function (x) {return l.x - x < 0 && l.x - x > -1; })) {
-             filterAnalysesByTime(getTimeLineThresholds(l)[0], getTimeLineThresholds(l)[1], vis);
-             }
-             }*/
+            var tlTickCoords = aNodesBAK.map(function (an) {
+                return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
+            });
+            if (l.className === "startTimeline") {
+                if (tlTickCoords.some(function (t) {
+                    return x(l.x) - x(t) >= 0 && x(l.x) - x(t) <= 1;
+                })) {
+                    filterAnalysesByTime(getTimeLineThresholds(l)[0], getTimeLineThresholds(l)[1], vis);
+                }
+            } else {
+                if (tlTickCoords.some(function (t) {
+                    return x(l.x) - x(t) < 0 && x(l.x) - x(t) > -1;
+                })) {
+                    filterAnalysesByTime(getTimeLineThresholds(l)[0], getTimeLineThresholds(l)[1], vis);
+                }
+            }
         };
 
         /**
@@ -1257,6 +1263,20 @@ var provvisRender = function () {
         });
 
         $("#prov-doi-view-apply").on('click', function () {
+
+            /* Recompute doi. */
+            vis.graph.lNodes.values().forEach(function (l) {
+                l.doi.computeWeightedSum();
+                l.children.values().forEach(function (an) {
+                    an.doi.computeWeightedSum();
+                    an.children.values().forEach(function (san) {
+                        san.doi.computeWeightedSum();
+                        san.children.values().forEach(function (n) {
+                            n.doi.computeWeightedSum();
+                        });
+                    });
+                });
+            });
             updateNodeDoi();
         });
 
@@ -1708,8 +1728,10 @@ var provvisRender = function () {
 
         lLabels.append('text')
             .attr("transform", function () {
-                return "translate(" + (-1.1*scaleFactor * vis.radius) + "," + (-1.1 * scaleFactor * vis.radius) + ")";
-            }).text(function() { return "\uf0c9"; })
+                return "translate(" + (-1.1 * scaleFactor * vis.radius) + "," + (-1.1 * scaleFactor * vis.radius) + ")";
+            }).text(function () {
+                return "\uf0c9";
+            })
             .classed("l-node-type-icon", true)
             .style({
                 "fill": function (l) {
@@ -1723,7 +1745,7 @@ var provvisRender = function () {
 
         lLabels.append("text")
             .attr("transform", function () {
-                return "translate(" + (0.7*scaleFactor * vis.radius) + "," + (-1 * scaleFactor * vis.radius) + ")";
+                return "translate(" + (0.7 * scaleFactor * vis.radius) + "," + (-1 * scaleFactor * vis.radius) + ")";
             })
             .text(function (d) {
                 return d.children.size();
@@ -2158,8 +2180,8 @@ var provvisRender = function () {
 
         aLabels.append('text')
             .attr("transform", function () {
-                return "translate(" + (-1.1*scaleFactor * vis.radius) + "," + (-0.6 * scaleFactor * vis.radius) + ")";
-            }).text(function() {
+                return "translate(" + (-1.1 * scaleFactor * vis.radius) + "," + (-0.6 * scaleFactor * vis.radius) + ")";
+            }).text(function () {
                 return "\uf085";
             }).classed("an-node-type-icon", true)
             .style({
@@ -2424,12 +2446,12 @@ var provvisRender = function () {
                     .style("display", "inline");
 
                 /*saGlyph.append("rect")
-                    .attr("x", -2 * scaleFactor * vis.radius)
-                    .attr("y", -1 * scaleFactor * vis.radius)
-                    .attr("rx", 1)
-                    .attr("ry", 1)
-                    .attr("width", 4 * scaleFactor * vis.radius)
-                    .attr("height", 2 * scaleFactor * vis.radius);*/
+                 .attr("x", -2 * scaleFactor * vis.radius)
+                 .attr("y", -1 * scaleFactor * vis.radius)
+                 .attr("rx", 1)
+                 .attr("ry", 1)
+                 .attr("width", 4 * scaleFactor * vis.radius)
+                 .attr("height", 2 * scaleFactor * vis.radius);*/
 
                 saGlyph.append("rect")
                     .attr("x", -2 * scaleFactor * vis.radius)
@@ -2456,8 +2478,8 @@ var provvisRender = function () {
 
                 saLabels.append('text')
                     .attr("transform", function () {
-                        return "translate(" + (-1.1*scaleFactor * vis.radius) + "," + (-0.6 * scaleFactor * vis.radius) + ")";
-                    }).text(function() {
+                        return "translate(" + (-1.1 * scaleFactor * vis.radius) + "," + (-0.6 * scaleFactor * vis.radius) + ")";
+                    }).text(function () {
                         return "\uf013";
                     }).classed("san-node-type-icon", true)
                     .style({
@@ -3166,7 +3188,9 @@ var provvisRender = function () {
             /* Collapse subanalyses. */
             if (d.nodeType === "subanalysis") {
                 //console.log("#COLLAPSE subanalysis " + d.autoId);
-
+                d.parent.children.values().forEach(function (san) {
+                    d3.select("#BBoxId-" + san.autoId).classed({"hiddenBBox": true});
+                });
 
             } else if (d.nodeType === "analysis") {
                 //console.log("#COLLAPSE analysis " + d.autoId);
@@ -3297,7 +3321,7 @@ var provvisRender = function () {
                 updateNode(d3.select("#gNodeId-" + d.parent.autoId), d.parent, d.parent.x, d.parent.y);
             } else {
                 /* Set saBBox visibility. */
-                d3.select("#BBoxId-" + d.autoId).classed("hiddenBBox", false);
+                d3.select("#BBoxId-" + d.parent.autoId).classed("hiddenBBox", true);
 
                 /* Update. */
                 updateLink(d.parent.parent);
@@ -4851,6 +4875,12 @@ var provvisRender = function () {
                 });
             });
         });
+
+        vis.graph.lNodes.values().forEach(function (l) {
+            l.doi.initTimeComponent(d3.mean(l.children.values(), function (an) {
+                return doiTimeScale(parseISOTimeFormat(an.start));
+            }));
+        });
     };
 
     /**
@@ -5042,10 +5072,18 @@ var provvisRender = function () {
                         d3.select("#nodeId-" + n.autoId)
                             .classed("filteredNode", true)
                             .classed("blendedNode", false);
-                        if (!san.hidden) {
-                            d3.select("#BBoxId-" + an.autoId).classed("hiddenBBox", false);
-                        }
                     });
+
+                    if (an.children.values().some(function (san) {
+                        return !san.hidden;
+                    }) ||
+                        an.children.values().some(function (san) {
+                            return san.children.values().some(function (n) {
+                                return !n.hidden;
+                            });
+                        })) {
+                        d3.select("#BBoxId-" + an.autoId).classed("hiddenBBox", false);
+                    }
                 });
 
                 if (!an.hidden) {
