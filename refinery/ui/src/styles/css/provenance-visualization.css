@@ -295,7 +295,7 @@
     stroke-width: 0.3px;
 }
 
-.saLabel, .aLabel, .lLabel, .wfLabel, .anLabel, .sanLabel, .anwfLabel, .sanwfLabel {
+.saLabel, .aLabel, .lLabel, .wfLabel, .lnLabel, .anLabel, .sanLabel, .anwfLabel, .sanwfLabel {
     fill: #ffffff;
     fill-opacity: 1.0;
     stroke: #ffffff;
