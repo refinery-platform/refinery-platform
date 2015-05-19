@@ -971,7 +971,6 @@ var provvisRender = function () {
 
             /* Update. */
             var gDCompUpdate = dComp.attr("id", function (d, i) {
-
                 return "doiCompId-" + i;
             }).classed({"doiComp": true});
             gDCompUpdate.select("rect")
@@ -1102,25 +1101,12 @@ var provvisRender = function () {
 
         /* TODO: Prototype implementation. */
         /* Ex- and include doi component. */
-        $(".dc-checkbox").click(function () {
-            var dcId = $(this)[0].id[$(this)[0].id.length - 1],
-                val = 0.0;
-            if ($(this)[0].checked) {
-                $(this.parentNode).find(".dc-label").css("opacity", 0.7);
-                d3.select("#doiCompId-" + dcId).select(".doiCompRect").style("fill-opacity", 0.7);
-                d3.select("#doiCompId-" + dcId).select(".doiCompHandle").style("fill-opacity", 0.7);
-                val = 0.0;
-                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, true);
-            } else {
-                $(this.parentNode).find(".dc-label").css("opacity", 0.3);
-                d3.select("#doiCompId-" + dcId).select(".doiCompRect").style("fill-opacity", 0.3);
-                d3.select("#doiCompId-" + dcId).select(".doiCompHandle").style("fill-opacity", 0.3);
-                val = 0.0;
-                $("#dc-input-" + dcId).val(val);
-                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, false);
-            }
 
-            var numMaskedComps = d3.values(provvisDecl.DoiFactors.factors).filter(function (dc, i) {
+        /**
+         * Toggle doi components.
+         */
+        var toggleDoiComps = function () {
+            var numMaskedComps = d3.values(provvisDecl.DoiFactors.factors).filter(function (dc) {
                 return provvisDecl.DoiFactors.isMasked(dc.label);
             }).length;
 
@@ -1143,8 +1129,8 @@ var provvisRender = function () {
                         if (provvisDecl.DoiFactors.isMasked(dc.label)) {
                             var isMasked = $("#dc-checkbox-" + i)[0].checked;
                             if (accVal === 0) {
-                                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[i], 1, isMasked);
-                                $("#dc-input-" + i).val(1);
+                                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[i], 1/numMaskedComps, isMasked);
+                                $("#dc-input-" + i).val(1/numMaskedComps);
                             } else {
                                 provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[i], (dc.value / accVal) * tar, isMasked);
                                 $("#dc-input-" + i).val((dc.value / accVal) * tar);
@@ -1153,6 +1139,49 @@ var provvisRender = function () {
                     });
             }
             updateDoiView(d3.values(provvisDecl.DoiFactors.factors));
+        };
+
+        /* Toggle component on svg click. */
+        d3.selectAll(".doiComp").on("click", function () {
+            var dcId = d3.select(this).attr("id").substr(d3.select(this).attr("id").length-1, 1);
+            var val = 0.0;
+            if($("#dc-checkbox-" + dcId)[0].checked) {
+                $("#dc-checkbox-" + dcId).prop("checked", false);
+                $("#dc-label-"+dcId).css("opacity", 0.3);
+                d3.select("#doiCompId-" + dcId).select(".doiCompRect").style("fill-opacity", 0.3);
+                d3.select("#doiCompId-" + dcId).select(".doiCompHandle").style("fill-opacity", 0.3);
+                $("#dc-input-" + dcId).val(val);
+                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, false);
+            } else {
+                $($("#dc-checkbox-" + dcId)).prop("checked", true);
+                $("#dc-label-"+dcId).css("opacity", 0.7);
+                d3.select("#doiCompId-" + dcId).select(".doiCompRect").style("fill-opacity", 0.7);
+                d3.select("#doiCompId-" + dcId).select(".doiCompHandle").style("fill-opacity", 0.7);
+                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, true);
+            }
+            toggleDoiComps();
+        });
+
+        /* Toggle component on checkbox click. */
+        $(".dc-checkbox").click(function () {
+            var dcId = $(this)[0].id[$(this)[0].id.length - 1],
+                val = 0.0;
+            if ($(this)[0].checked) {
+                $(this.parentNode).find(".dc-label").css("opacity", 0.7);
+                d3.select("#doiCompId-" + dcId).select(".doiCompRect").style("fill-opacity", 0.7);
+                d3.select("#doiCompId-" + dcId).select(".doiCompHandle").style("fill-opacity", 0.7);
+                val = 0.0;
+                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, true);
+            } else {
+                $(this.parentNode).find(".dc-label").css("opacity", 0.3);
+                d3.select("#doiCompId-" + dcId).select(".doiCompRect").style("fill-opacity", 0.3);
+                d3.select("#doiCompId-" + dcId).select(".doiCompHandle").style("fill-opacity", 0.3);
+                val = 0.0;
+                $("#dc-input-" + dcId).val(val);
+                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, false);
+            }
+
+            toggleDoiComps();
         });
 
         /* TODO: Clean up code duplication. */
