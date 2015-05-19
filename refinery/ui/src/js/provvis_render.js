@@ -67,6 +67,7 @@ var provvisRender = function () {
         .style("visibility", "hidden");
 
     /* TODO: Performance issue - quite slow. */
+    /* TODO: Refine to statemachine to reach transitive states too (e.g. from analysis to node and vice versa). */
     /**
      * On doi change, update node doi labels.
      */
@@ -80,27 +81,27 @@ var provvisRender = function () {
         });
 
         /* On layer doi. */
-        lNode.each(function (ln) {
+        vis.graph.lNodes.values().forEach(function (ln) {
             if (ln.doi.doiWeightedSum >= (1 / 6) && !ln.hidden && ln.filtered) {
 
                 /* TODO: on manual expand, check whether any child nodes are already expanded as aggregated nodes. */
 
                 /* Expand. */
-                handleCollapseExpandNode(ln, "e");
+                handleCollapseExpandNode(ln, "e", "auto");
                 //console.log("expand ln " + ln.autoId);
             }
         });
 
         /* On analysis doi. */
-        aNode.each(function (an) {
+        vis.graph.aNodes.forEach(function (an) {
             if (an.doi.doiWeightedSum >= (2 / 6) && !an.hidden && an.filtered) {
                 /* Expand. */
-                handleCollapseExpandNode(an, "e");
+                handleCollapseExpandNode(an, "e", "auto");
                 //console.log("expand an " + an.autoId);
             } else if (an.doi.doiWeightedSum <= (2 / 6) && !an.hidden && an.parent.children.size() > 1 && an.filtered) {
                 /* Collapse. */
 
-                handleCollapseExpandNode(an, "c");
+                handleCollapseExpandNode(an, "c", "auto");
                 //console.log("colapse an " + an.autoId);
 
                 /* Only collapse those analysis nodes into the layered node which are below the threshold. */
@@ -121,19 +122,41 @@ var provvisRender = function () {
             }
         });
 
+        var allParentsHidden = function (n) {
+            var cur = n;
+
+            while (!(cur instanceof provvisDecl.Layer)) {
+                if (!cur.parent.hidden) {
+                    return false;
+                }
+                cur = cur.parent;
+            }
+
+            return true;
+        };
+
         /* On subanalysis doi. */
-        saNode.each(function (san) {
+        vis.graph.saNodes.forEach(function (san) {
             if (san.doi.doiWeightedSum >= (4 / 6) && !san.hidden && san.filtered) {
                 /* Expand. */
-                handleCollapseExpandNode(san, "e");
-            } else if (san.doi.doiWeightedSum < (2 / 6) && !san.parent.hidden && san.filtered) {
+                handleCollapseExpandNode(san, "e", "auto");
+            } else if (san.doi.doiWeightedSum < (2 / 6) && allParentsHidden(san) && san.filtered) {
                 /* Collapse. */
-                handleCollapseExpandNode(san, "c");
+                handleCollapseExpandNode(san, "c", "auto");
             } else if (!san.parent.hidden && san.filtered) {
                 /* Stay in subanalysis view. */
-                //handleCollapseExpandNode(san.children.values()[0], "c");
+                //handleCollapseExpandNode(san.children.values()[0], "c", "auto");
             }
         });
+
+        /* On node doi. */
+        vis.graph.nodes.forEach( function (n) {
+            /* TODO: */
+        });
+
+        /* Recompute layout. */
+        dagreDynamicLayerLayout(vis.graph);
+        fitGraphToWindow(nodeLinkTransitionTime);
     };
 
     /**
@@ -631,7 +654,8 @@ var provvisRender = function () {
             updateLink(ln);
         });
 
-        updateNodeDoi();
+        /* TODO: Currently disabled. */
+        //updateNodeDoi();
     };
 
     /**
@@ -1233,7 +1257,6 @@ var provvisRender = function () {
         });
 
         $("#prov-doi-view-apply").on('click', function () {
-            //updateDoiView(d3.values(provvisDecl.DoiFactors.factors));
             updateNodeDoi();
         });
 
@@ -2951,12 +2974,18 @@ var provvisRender = function () {
     };
 
     /* TODO: Code cleanup. */
+    /* TODO: Add transitions to bounding boxes. */
     /**
      * Sets the visibility of links and (a)nodes when collapsing or expanding analyses.
      * @param d Node.
      * @param keyStroke Keystroke being pressed at mouse click.
+     * @param trigger Function triggered by user interaction or automatic doi-function.
      */
-    var handleCollapseExpandNode = function (d, keyStroke) {
+    var handleCollapseExpandNode = function (d, keyStroke, trigger) {
+
+        if (typeof trigger === "undefined") {
+            trigger = "user";
+        }
 
         var anBBoxCoords = Object.create(null),
             wfBBoxCoords = Object.create(null),
@@ -3303,10 +3332,12 @@ var provvisRender = function () {
         }
         //clearNodeSelection();
 
-        /* Recompute layout. */
-        dagreDynamicLayerLayout(vis.graph);
+        if (trigger === "user") {
+            /* Recompute layout. */
+            dagreDynamicLayerLayout(vis.graph);
 
-        fitGraphToWindow(nodeLinkTransitionTime);
+            //fitGraphToWindow(nodeLinkTransitionTime);
+        }
     };
 
     /**
@@ -3330,7 +3361,7 @@ var provvisRender = function () {
         }
 
         /* TODO: Temporarily disabled. */
-        updateNodeDoi();
+        //updateNodeDoi();
     };
 
 
@@ -4665,7 +4696,8 @@ var provvisRender = function () {
                 clearHighlighting(graph.links);
                 clearNodeSelection();
 
-                updateNodeDoi();
+                /* Currently disabled. */
+                //updateNodeDoi();
             }, 200);
         });
 
@@ -4907,7 +4939,7 @@ var provvisRender = function () {
 
         /* Initiate doi. */
         vis.graph.aNodes.forEach(function (an) {
-            handleCollapseExpandNode(an, "c");
+            handleCollapseExpandNode(an, "c", "auto");
         });
         updateNodeFilter();
         updateLinkFilter();
@@ -5004,7 +5036,9 @@ var provvisRender = function () {
                     });
                 });
 
-                d3.select("#BBoxId-" + an.autoId).classed("hiddenBBox", false);
+                if (!an.hidden) {
+                    d3.select("#BBoxId-" + an.autoId).classed("hiddenBBox", false);
+                }
 
                 /* Display analysis. */
                 self.classed("filteredNode", true).classed("blendedNode", false);
@@ -5185,7 +5219,8 @@ var provvisRender = function () {
                 updateLink(ln);
             });
 
-            updateNodeDoi();
+            /* TODO: Currently disabled. */
+            //updateNodeDoi();
         }
         lastSolrResponse = solrResponse;
     };
