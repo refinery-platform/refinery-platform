@@ -66,12 +66,30 @@ var provvisRender = function () {
         .style("z-index", "10")
         .style("visibility", "hidden");
 
-    /* TODO: Performance issue - quite slow. */
+    /* TODO: Code cleanup. */
     /* TODO: Refine to statemachine to reach transitive states too (e.g. from analysis to node and vice versa). */
     /**
      * On doi change, update node doi labels.
      */
     var updateNodeDoi = function () {
+
+        /**
+         * Helper function to check whether every parent node is hidden.
+         * @param n BaseNode
+         * @returns {boolean} Returns true if any parent node is visible.
+         */
+        var allParentsHidden = function (n) {
+            var cur = n;
+
+            while (!(cur instanceof provvisDecl.Layer)) {
+                if (!(cur instanceof provvisDecl.Layer) && !cur.parent.hidden) {
+                    return false;
+                }
+                cur = cur.parent;
+            }
+
+            return true;
+        };
 
         //console.log("#updateNodeDoi");
 
@@ -82,10 +100,7 @@ var provvisRender = function () {
 
         /* On layer doi. */
         vis.graph.lNodes.values().forEach(function (ln) {
-            if (ln.doi.doiWeightedSum >= (1 / 6) && !ln.hidden && ln.filtered) {
-
-                /* TODO: on manual expand, check whether any child nodes are already expanded as aggregated nodes. */
-
+            if (ln.doi.doiWeightedSum >= (1 / 4) && !ln.hidden && ln.filtered) {
                 /* Expand. */
                 handleCollapseExpandNode(ln, "e", "auto");
                 //console.log("expand ln " + ln.autoId);
@@ -94,11 +109,14 @@ var provvisRender = function () {
 
         /* On analysis doi. */
         vis.graph.aNodes.forEach(function (an) {
-            if (an.doi.doiWeightedSum >= (2 / 6) && !an.hidden && an.filtered) {
+            /*var maxDoi = d3.max(an.parent.children.values(), function (cn) {
+             return cn.doi.doiWeightedSum;
+             });*/
+            if (an.doi.doiWeightedSum >= (2 / 4) && !an.hidden && an.filtered) {
                 /* Expand. */
                 handleCollapseExpandNode(an, "e", "auto");
                 //console.log("expand an " + an.autoId);
-            } else if (an.doi.doiWeightedSum <= (2 / 6) && !an.hidden && an.parent.children.size() > 1 && an.filtered) {
+            } else if (an.doi.doiWeightedSum < (1 / 4) && !an.hidden && an.parent.children.size() > 1 && an.filtered) {
                 /* Collapse. */
 
                 handleCollapseExpandNode(an, "c", "auto");
@@ -106,13 +124,18 @@ var provvisRender = function () {
 
                 /* Only collapse those analysis nodes into the layered node which are below the threshold. */
                 an.parent.children.values().forEach(function (d) {
-                    if (d.doi.doiWeightedSum > (2 / 6)) {
+                    if (d.doi.doiWeightedSum >= (1 / 4)) {
                         d.exaggerated = true;
 
                         d.hidden = false;
                         d3.select("#nodeId-" + d.autoId).classed("hiddenNode", false);
-                        //d3.select("#BBoxId-"+ d.autoId).classed("hiddenBBox", false);
                         updateLink(d);
+
+                        if (d.doi.doiWeightedSum >= (2 / 4) && !d.hidden && d.filtered) {
+                            /* Expand. */
+                            handleCollapseExpandNode(d, "e", "auto");
+                            //console.log("expand an " + an.autoId);
+                        }
                     } else {
                         d.exaggerated = false;
                         d.hidden = true;
@@ -122,36 +145,30 @@ var provvisRender = function () {
             }
         });
 
-        var allParentsHidden = function (n) {
-            var cur = n;
-
-            while (!(cur instanceof provvisDecl.Layer)) {
-                if (!cur.parent.hidden) {
-                    return false;
-                }
-                cur = cur.parent;
-            }
-
-            return true;
-        };
-
-        /* On subanalysis doi. */
+        /* On node doi. */
         vis.graph.saNodes.forEach(function (san) {
-            if (san.doi.doiWeightedSum >= (4 / 6) && !san.hidden && san.filtered) {
-                /* Expand. */
-                handleCollapseExpandNode(san, "e", "auto");
-            } else if (san.doi.doiWeightedSum < (2 / 6) && allParentsHidden(san) && san.filtered) {
+            var maxDoi = d3.max(san.children.values(), function (n) {
+                return n.doi.doiWeightedSum;
+            });
+            if (maxDoi < (3 / 4) && (allParentsHidden(san.children.values()[0]) || san.parent.exaggerated)) {
                 /* Collapse. */
-                handleCollapseExpandNode(san, "c", "auto");
-            } else if (!san.parent.hidden && san.filtered) {
-                /* Stay in subanalysis view. */
-                //handleCollapseExpandNode(san.children.values()[0], "c", "auto");
+                handleCollapseExpandNode(san.children.values()[0], "c", "auto");
             }
         });
 
-        /* On node doi. */
-        vis.graph.nodes.forEach(function (n) {
-            /* TODO: */
+        /* On subanalysis doi. */
+        vis.graph.saNodes.forEach(function (san) {
+            var maxDoi = d3.max(san.parent.children.values(), function (cn) {
+                return cn.doi.doiWeightedSum;
+            });
+
+            if (san.doi.doiWeightedSum >= (3 / 4) && !san.hidden && san.filtered) {
+                /* Expand. */
+                handleCollapseExpandNode(san, "e", "auto");
+            } else if (maxDoi < (2 / 4) && (allParentsHidden(san) && san.filtered || san.parent.exaggerated)) {
+                /* Collapse. */
+                handleCollapseExpandNode(san, "c", "auto");
+            }
         });
 
         /* Recompute layout. */
@@ -1129,8 +1146,8 @@ var provvisRender = function () {
                         if (provvisDecl.DoiFactors.isMasked(dc.label)) {
                             var isMasked = $("#dc-checkbox-" + i)[0].checked;
                             if (accVal === 0) {
-                                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[i], 1/numMaskedComps, isMasked);
-                                $("#dc-input-" + i).val(1/numMaskedComps);
+                                provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[i], 1 / numMaskedComps, isMasked);
+                                $("#dc-input-" + i).val(1 / numMaskedComps);
                             } else {
                                 provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[i], (dc.value / accVal) * tar, isMasked);
                                 $("#dc-input-" + i).val((dc.value / accVal) * tar);
@@ -1143,18 +1160,18 @@ var provvisRender = function () {
 
         /* Toggle component on svg click. */
         d3.selectAll(".doiComp").on("click", function () {
-            var dcId = d3.select(this).attr("id").substr(d3.select(this).attr("id").length-1, 1);
+            var dcId = d3.select(this).attr("id").substr(d3.select(this).attr("id").length - 1, 1);
             var val = 0.0;
-            if($("#dc-checkbox-" + dcId)[0].checked) {
+            if ($("#dc-checkbox-" + dcId)[0].checked) {
                 $("#dc-checkbox-" + dcId).prop("checked", false);
-                $("#dc-label-"+dcId).css("opacity", 0.3);
+                $("#dc-label-" + dcId).css("opacity", 0.3);
                 d3.select("#doiCompId-" + dcId).select(".doiCompRect").style("fill-opacity", 0.3);
                 d3.select("#doiCompId-" + dcId).select(".doiCompHandle").style("fill-opacity", 0.3);
                 $("#dc-input-" + dcId).val(val);
                 provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, false);
             } else {
                 $($("#dc-checkbox-" + dcId)).prop("checked", true);
-                $("#dc-label-"+dcId).css("opacity", 0.7);
+                $("#dc-label-" + dcId).css("opacity", 0.7);
                 d3.select("#doiCompId-" + dcId).select(".doiCompRect").style("fill-opacity", 0.7);
                 d3.select("#doiCompId-" + dcId).select(".doiCompHandle").style("fill-opacity", 0.7);
                 provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, true);
@@ -1778,7 +1795,7 @@ var provvisRender = function () {
             })
             .text(function (d) {
                 return d.children.size();
-            }).attr("class", "lLabel")
+            }).attr("class", "lnLabel")
             .style({
                 "fill": function (l) {
                     var latestDate = d3.min(l.children.values(), function (d) {
@@ -2869,7 +2886,7 @@ var provvisRender = function () {
                 var numChildren = ln.children.values().filter(function (an) {
                     return an.filtered || filterAction === "blend";
                 }).length;
-                d3.select("#nodeId-" + ln.autoId).select("g.labels").select(".lLabel")
+                d3.select("#nodeId-" + ln.autoId).select("g.labels").select(".lnLabel")
                     .text(function () {
                         return numChildren - exNum + "/" + ln.children.size();
                     });
@@ -3763,11 +3780,25 @@ var provvisRender = function () {
         var switchColorScheme = function (checkedColor) {
             switch (checkedColor) {
                 case "none":
-                    domNodeset.style({"fill": "#ffffff"});
+                    domNodeset.select(".glyph").selectAll("rect, circle").style({"fill": "#ffffff"});
                     domNodeset.selectAll(".anLabel, .sanLabel, .anwfLabel, .sanwfLabel, .an-node-type-icon, .san-node-type-icon").style({"fill": "#000000"});
+                    lNode.selectAll(".lnLabel, .wfLabel, .l-node-type-icon").style({"fill": "#000000"});
                     break;
                 case "time":
-                    aNode.style("fill", function (d) {
+                    lNode.each(function (l) {
+                        d3.select("#nodeId-" + l.autoId).select(".glyph").selectAll("rect").style("fill", function (d) {
+                            return "url(#layerGradientId-" + l.autoId + ")";
+                        });
+                    });
+                    lNode.selectAll(".lnLabel, .wfLabel, .l-node-type-icon").style({
+                        "fill": function (l) {
+                            var latestDate = d3.min(l.children.values(), function (d) {
+                                return d.start;
+                            });
+                            return timeColorScale(parseISOTimeFormat(latestDate)) < "#888888" ? "#ffffff" : "#000000";
+                        }});
+
+                    aNode.select(".glyph").selectAll("rect, circle").style("fill", function (d) {
                         return timeColorScale(parseISOTimeFormat(d.start));
                     });
                     aNode.selectAll(".anLabel, .anwfLabel, .an-node-type-icon").style({
@@ -3775,7 +3806,8 @@ var provvisRender = function () {
                             return timeColorScale(parseISOTimeFormat(an.start)) < "#888888" ? "#ffffff" : "#000000";
                         }});
 
-                    saNode.style("fill", function (d) {
+
+                    saNode.select(".glyph").selectAll("rect, circle").style("fill", function (d) {
                         return timeColorScale(parseISOTimeFormat(d.parent.start));
                     });
                     saNode.selectAll(".sanLabel, .sanwfLabel, .san-node-type-icon").style({
@@ -3783,12 +3815,9 @@ var provvisRender = function () {
                             return timeColorScale(parseISOTimeFormat(san.parent.start)) < "#888888" ? "#ffffff" : "#000000";
                         }});
 
-                    node.style("fill", function (d) {
+                    node.select(".glyph").selectAll("rect, circle").style("fill", function (d) {
                         return timeColorScale(parseISOTimeFormat(d.parent.parent.start));
                     });
-
-                    updateLayerNodes(vis.graph.lNodes);
-
                     break;
                 case "workflow":
                     var wfc = function (i) {
@@ -3800,7 +3829,7 @@ var provvisRender = function () {
                         while (!(cur instanceof provvisDecl.Layer)) {
                             cur = cur.parent;
                         }
-                        d3.select("#nodeId-" + d.autoId).style({"fill": wfc(wfColorData.get(cur.wfName))});
+                        d3.select("#nodeId-" + d.autoId).select(".glyph").selectAll("rect, circle").style({"fill": wfc(wfColorData.get(cur.wfName))});
                     });
                     break;
                 case "nodetype":
@@ -3809,7 +3838,7 @@ var provvisRender = function () {
                     };
 
                     domNodeset.each(function (d) {
-                        d3.select("#nodeId-" + d.autoId).style({"fill": nt(d.nodeType)});
+                        d3.select("#nodeId-" + d.autoId).select(".glyph").selectAll("rect, circle").style({"fill": nt(d.nodeType)});
                     });
                     break;
             }
