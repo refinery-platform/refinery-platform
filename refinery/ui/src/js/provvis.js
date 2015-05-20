@@ -388,12 +388,35 @@ var provvis = function () {
     };
 
     /**
+     * Adds a spinning loader icon to the parent div while the provenance visualization is loading.
+     */
+    var addProvvisLoaderIcon = function () {
+        $("<div>", {
+            "id": "provvis-loader"
+        }).appendTo("#" + "main-area");
+
+        $("<i>", {
+            "class": "icon-spinner spin-icon-infinite",
+            "id": "provvis-loader-icon"
+        }).appendTo("#" + "provvis-loader");
+    };
+
+    /**+
+     * Removes the loader icon again.
+     */
+    var removeProvvisLoaderIcon = function () {
+        $("#provvis-loader").remove();
+    };
+
+    /**
      * Refinery injection for the provenance visualization.
      * @param studyUuid The serialized unique identifier referencing a study.
      * @param studyAnalyses Analyses objects from the refinery scope.
      * @param solrResponse Facet filter information on node attributes.
      */
     var runProvVisPrivate = function (studyUuid, studyAnalyses, solrResponse) {
+
+        addProvvisLoaderIcon();
 
         /* Only allow one instance of ProvVis. */
         if (vis instanceof provvisDecl.ProvVis === false) {
@@ -518,6 +541,8 @@ var provvis = function () {
 
                 /* Render graph. */
                 provvisRender.run(vis);
+
+                removeProvvisLoaderIcon();
             });
         }
     };
