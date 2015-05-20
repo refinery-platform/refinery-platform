@@ -733,8 +733,8 @@ var provvisRender = function () {
             labelStart = createCustomTimeFormat(labelStart.substr(0, labelStart.length - 1));
             labelEnd = createCustomTimeFormat(labelEnd.substr(0, labelEnd.length - 1));
 
-            d3.select("#tlThresholdStart").html(labelStart);
-            d3.select("#tlThresholdEnd").html(labelEnd);
+            d3.select("#tlThresholdStart").html("Start: " + labelStart);
+            d3.select("#tlThresholdEnd").html("End: " + labelEnd);
 
             d3.selectAll(".tlAnalysis").each(function (an) {
                 if (parseISOTimeFormat(an.start) < tlThreshold[0] || parseISOTimeFormat(an.start) > tlThreshold[1]) {
@@ -976,7 +976,9 @@ var provvisRender = function () {
         }).select("g");
 
         var doiFactors = d3.values(provvisDecl.DoiFactors.factors);
-        var color = d3.scale.category10();
+        var doiColorScale = d3.scale.category10().range(["#333333", "#136382"]);
+
+        console.log(d3.scale.category10);
 
         var updateDoiView = function (data) {
             var rectOffset = 0,
@@ -1039,7 +1041,7 @@ var provvisRender = function () {
                 .attr("height", function (d) {
                     return d.value * 300;
                 }).style({"fill": function (d, i) {
-                    return color(i);
+                    return doiColorScale(10 - i);
                 }, "fill-opacity": 0.7});
             rectOffset = 0;
             gDCompEnter.append("path").classed("doiCompHandle", true).attr("d", function (d, i) {
@@ -1052,7 +1054,7 @@ var provvisRender = function () {
                     "L" + (40) + "," + (rectOffset) + " " +
                     "V" + (rectOffset - d.value * 300);
             }).style({"fill": function (d, i) {
-                return color(i);
+                return doiColorScale(10 - i);
             }, "fill-opacity": 0.7});
 
             dComp.exit().remove();
@@ -1112,9 +1114,16 @@ var provvisRender = function () {
                 "id": "dc-label-" + i,
                 "class": "label dc-label",
                 "html": dc.label,
-                "style": "margin-left: 2px; opacity: 0.7; background-color: " + color(i) + ";"
+                "style": "margin-left: 2px; opacity: 0.7; background-color: " + doiColorScale(10 - i) + ";"
             }).appendTo("#" + "dc-form-" + i);
         });
+
+        $("<a/>", {
+            "id": "prov-doi-view-reset",
+            "href": "#",
+            "html": "Redistribute",
+            "style": "width: 25px; position: absolute; left: 90px; top: " + parseInt((10 - doiFactors.length) / 2 * 30 + (doiFactors.length + 1) * 30 + 10, 10) + "px;"
+        }).appendTo("#" + "doiVis");
 
         /* TODO: Prototype implementation. */
         /* Ex- and include doi component. */
@@ -1346,12 +1355,10 @@ var provvisRender = function () {
 
         /* Show and hide doi labels. */
         $("#prov-doi-view-show").click(function () {
-            if ($(this).hasClass("active")) {
-                $(this).removeClass("active");
-                d3.selectAll(".nodeDoiLabel").style("display", "none");
-            } else {
-                $(this).addClass("active");
+            if ($(this).find("input[type='checkbox']").prop("checked")) {
                 d3.selectAll(".nodeDoiLabel").style("display", "inline");
+            } else {
+                d3.selectAll(".nodeDoiLabel").style("display", "none");
             }
         });
     };

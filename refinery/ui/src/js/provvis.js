@@ -1,30 +1,30 @@
 angular.module("refineryProvvis", [])
 
     .controller("provvisNavbarController", function ($scope, $http) {
-    $scope.name = "Navbar";
+        $scope.name = "Navbar";
 
-    /* TODO: */
+        /* TODO: */
     })
 
     .controller("provvisCanvasController", function ($scope, $http) {
-    $scope.name = "Canvas";
+        $scope.name = "Canvas";
 
-    /* TODO: */
+        /* TODO: */
     })
 
     .directive("provvisNavBar", function () {
-    return {
-        templateUrl: "/static/partials/provvis_navbar.tpls.html",
-        restrict: "A"
-    };
+        return {
+            templateUrl: "/static/partials/provvis_navbar.tpls.html",
+            restrict: "A"
+        };
     })
 
     .directive("provvisCanvas", function () {
-    return {
-        templateUrl: "/static/partials/provvis_canvas.tpls.html",
-        restrict: "A"
-    };
-});
+        return {
+            templateUrl: "/static/partials/provvis_canvas.tpls.html",
+            restrict: "A"
+        };
+    });
 
 /**
  * The refinery provenance graph visualization.
@@ -138,45 +138,21 @@ var provvis = function () {
                 return "translate(0,0)";
             }).append("g");
 
-        /* Toolbar items. */
-        $("<div/>", {
-            "id": "doiButtonGroup",
-            "class": "btn-group",
-            "style": "width: 100%"
-        }).appendTo(doiContainer);
 
         $("<button/>", {
             "id": "prov-doi-view-apply",
-            "class": "btn btn-mini",
+            "class": "btn btn-warning",
             "type": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
             "html": "Apply",
-            "data-html": "true",
-            "title": "Apply"
-        }).appendTo("#" + "doiButtonGroup");
+            "style": "position: absolute; left: 0px; top: 340px;"
+        }).appendTo(doiContainer);
 
-        $("<button/>", {
-            "id": "prov-doi-view-reset",
-            "class": "btn btn-mini",
-            "type": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
-            "html": "Reset",
-            "data-html": "true",
-            "title": "Reset"
-        }).appendTo("#" + "doiButtonGroup");
-
-        $("<button/>", {
+        $("<label/>", {
             "id": "prov-doi-view-show",
-            "class": "btn btn-mini",
-            "type": "button",
-            "rel": "tooltip",
-            "data-placement": "bottom",
-            "html": "Show",
-            "data-html": "true",
-            "title": "Show"
-        }).appendTo("#" + "doiButtonGroup");
+            "class": "prov-doi-view-show-checkbox",
+            "style": "display: flex; position: absolute; left: 75px; top: 340px; margin-top: 5px;",
+            "html": "<input id=\"prov-doi-view-show-input\" type=\"checkbox\" style=\"margin-right: 3px;\">Show DOI values"
+        }).appendTo(doiContainer);
 
         return doiContainer;
     };
