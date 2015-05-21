@@ -978,8 +978,6 @@ var provvisRender = function () {
         var doiFactors = d3.values(provvisDecl.DoiFactors.factors);
         var doiColorScale = d3.scale.category10().range(["#333333", "#136382"]);
 
-        console.log(d3.scale.category10);
-
         var updateDoiView = function (data) {
             var rectOffset = 0,
                 labelOffset = 30,
@@ -3557,8 +3555,9 @@ var provvisRender = function () {
             d.doi.selectedChanged();
         });
 
-        vis.nodeTable.select("#nodeTitle").html("<b>" + "Node: " + "<b>" + " - ");
-        vis.nodeTable.select("#provenance-table-content").html("");
+        $('#nodeInfoTitle').html("Select a node: - ");
+        $('#nodeInfoTitleLink').html("");
+        $("#" + "provenance-table-content").html("");
 
         selectedNodeSet = d3.map();
     };
@@ -3586,9 +3585,7 @@ var provvisRender = function () {
 
 
     /* TODO: Clean up. */
-    /* TODO: Domnodeset does not include currently filtered nodes or links. */
     /* TODO: Change radio buttons to real buttons. */
-    /* TODO: Refine div layout. */
     /* TODO: Add bounding box color. */
     /**
      * Colorcoding view.
@@ -3621,22 +3618,19 @@ var provvisRender = function () {
 
             $('<label/>', {
                 "id": "provvis-cc-wf-label-" + i,
-                "html": wfName + ":"
+                "class": "provvis-cc-label",
+                "html": "<input id=\"provvis-cc-wf-color-" + i + "\" type=\"text\">" + wfName
             }).appendTo("#" + "provvis-cc-wf-td-" + i);
-
-            $('<input/>', {
-                "id": "provvis-cc-wf-color-" + i,
-                "type": "text"
-            }).appendTo("#" + "provvis-cc-wf-label-" + i);
 
             $('<em/>', {
                 "id": "provvis-cc-wf-hex-" + i,
+                "class": "provvis-cc-hide-hex",
                 "html": wfColorScale(wf.value)
             }).appendTo("#" + "provvis-cc-wf-label-" + i);
 
             $("#provvis-cc-wf-color-" + i).spectrum({
                 color: wfColorScale(wf.value),
-                showAlpha: true,
+                showAlpha: false,
                 change: function (color) {
                     $("#provvis-cc-wf-hex-" + i).text(color.toHexString());
                 }
@@ -3748,39 +3742,23 @@ var provvisRender = function () {
 
         var checkedColor = 0;
 
-        $('#prov-ctrl-cc-none').find("input[type='radio']").click(function () {
+        $("[id^=prov-ctrl-cc-none-]").on("click", function () {
             checkedColor = "none";
-
-            $("#prov-ctrl-cc-time").find("input[type='radio']").prop("checked", false);
-            $("#prov-ctrl-cc-workflow").find("input[type='radio']").prop("checked", false);
-            $("#prov-ctrl-cc-nodetype").find("input[type='radio']").prop("checked", false);
             switchColorScheme(checkedColor);
         });
 
-        $('#prov-ctrl-cc-time').find("input[type='radio']").click(function () {
+        $("[id^=prov-ctrl-cc-time-]").on("click", function () {
             checkedColor = "time";
-
-            $("#prov-ctrl-cc-none").find("input[type='radio']").prop("checked", false);
-            $("#prov-ctrl-cc-workflow").find("input[type='radio']").prop("checked", false);
-            $("#prov-ctrl-cc-nodetype").find("input[type='radio']").prop("checked", false);
             switchColorScheme(checkedColor);
         });
 
-        $('#prov-ctrl-cc-workflow').find("input[type='radio']").click(function () {
+        $("[id^=prov-ctrl-cc-workflow-]").on("click", function () {
             checkedColor = "workflow";
-
-            $("#prov-ctrl-cc-none").find("input[type='radio']").prop("checked", false);
-            $("#prov-ctrl-cc-time").find("input[type='radio']").prop("checked", false);
-            $("#prov-ctrl-cc-nodetype").find("input[type='radio']").prop("checked", false);
             switchColorScheme(checkedColor);
         });
 
-        $('#prov-ctrl-cc-nodetype').find("input[type='radio']").click(function () {
+        $("[id^=prov-ctrl-cc-nodetype-]").on("click", function () {
             checkedColor = "nodetype";
-
-            $("#prov-ctrl-cc-none").find("input[type='radio']").prop("checked", false);
-            $("#prov-ctrl-cc-time").find("input[type='radio']").prop("checked", false);
-            $("#prov-ctrl-cc-workflow").find("input[type='radio']").prop("checked", false);
             switchColorScheme(checkedColor);
         });
 
@@ -3858,6 +3836,7 @@ var provvisRender = function () {
      */
     var updateTableContent = function (selNode) {
         var title = " - ",
+            titleLink = " - ",
             data = Object.create(null);
 
         switch (selNode.nodeType) {
@@ -3867,11 +3846,11 @@ var provvisRender = function () {
             case "stored":
                 data = vis.graph.nodeData.get(selNode.uuid);
                 if (typeof data !== "undefined") {
-                    title = "<b>" + selNode.fileType + ": " + "<b>";
+                    title = "<i class=\"icon-sitemap rotate-icon-90\"></i>&nbsp;" + selNode.fileType;
                     if (data.file_url !== null) {
-                        title += "<a href=" + data.file_url + " target=\"_blank\">" + data.name + "</a>";
+                        titleLink = "<a href=" + data.file_url + " target=\"_blank\">" + data.name + "</a>";
                     } else {
-                        title += " - ";
+                        titleLink = " - ";
                     }
                 }
                 break;
@@ -3883,11 +3862,9 @@ var provvisRender = function () {
 
                 data = vis.graph.nodeData.get(selNode.uuid);
                 if (typeof data !== "undefined") {
-                    title = "<b>" + selNode.fileType + ": " + "<b>";
+                    title = "<i class=\"icon-sitemap rotate-icon-90\"></i>&nbsp;" + selNode.fileType;
                     if (data.file_url !== null) {
-                        title += "<a href=" + data.file_url + " target=\"_blank\">" + data.name + "</a>";
-                    } else {
-                        title += " - ";
+                        titleLink = "<a href=" + data.file_url + " target=\"_blank\">" + data.name + "</a>";
                     }
                 }
                 break;
@@ -3895,84 +3872,49 @@ var provvisRender = function () {
             case "subanalysis":
                 data = vis.graph.workflowData.get(selNode.parent.wfUuid);
                 if (typeof data !== "undefined") {
-                    title = "<b>" + "Subanalysis: " + "<b>" + "<a href=/workflows/" + selNode.wfUuid + " target=\"_blank\">" +
+                    title = "<i class=\"icon-cog\"></i>&nbsp; Subanalysis";
+                    titleLink = "<a href=/workflows/" + selNode.wfUuid + " target=\"_blank\">" +
                         selNode.parent.wfName + "</a>";
                 } else {
-                    title += " - ";
+                    title = "<i class=\"icon-cog\"></i>&nbsp; Dataset";
                 }
                 break;
 
             case "analysis":
                 data = vis.graph.analysisData.get(selNode.uuid);
                 if (typeof data !== "undefined") {
-                    title = "<b>" + "Analysis: " + "<b>" + "<a href=/workflows/" + selNode.wfUuid + " target=\"_blank\">" +
+                    title = "<i class=\"icon-cogs\"></i>&nbsp; Analysis";
+                    titleLink = "<a href=/workflows/" + selNode.wfUuid + " target=\"_blank\">" +
                         selNode.wfName + "</a>";
                 } else {
-                    title = "<b>" + "Dataset " + "<b>";
+                    title = "<i class=\"icon-cogs\"></i>&nbsp; Dataset";
                 }
                 break;
 
             case "layer":
                 data = {aggregation_count: selNode.children.size(), workflow: selNode.wfName, subanalysis_count: selNode.motif.numSubanalyses, wfUuid: selNode.motif.wfUuid};
                 if (typeof data !== "undefined") {
-                    title = "<b>" + "Layer: " + "<b>" + "<a href=/workflows/" + data.wfUuid + " target=\"_blank\">" +
-                        data.workflow + "</a>";
-                } else {
-                    title += " - ";
+                    title = "<i class=\"icon-reorder\"></i>&nbsp; Layer";
+                    titleLink = "<a href=/workflows/" + data.wfUuid + " target=\"_blank\">" + data.workflow + "</a>";
                 }
                 break;
         }
 
-        /* Update node title. */
-        vis.nodeTable.select("#nodeTitle").html(title);
+        $('#nodeInfoTitle').html(title);
+        $('#nodeInfoTitleLink').html(titleLink);
 
-        /* Update table content. */
-        vis.nodeTable.selectAll("table")
-            .data([0])
-            .enter()
-            .append("table")
-            .attr("id", "provenance-table-content")
-            .attr("class", "table table-striped table-condensed");
-        var table = vis.nodeTable.select("table");
 
-        table.selectAll("thead")
-            .data([0])
-            .enter()
-            .append("thead");
-        var tHead = table.select("thead");
-
-        table.selectAll("tbody")
-            .data([0])
-            .enter()
-            .append("tbody");
-        var tBody = table.select("tbody");
-
-        /* Header row. */
-        var th = tHead.selectAll("th")
-            .data(d3.keys(data));
-
-        th.enter().append("th");
-        th.text(function (d) {
-            return d;
+        $("#" + "provenance-table-content").html("");
+        d3.entries(data).forEach( function (d) {
+            $("<div/>", {
+                "class": "refinery-subheader",
+                "html": "<h4>" + d.key + "</h4>"
+            }).appendTo("#" + "provenance-table-content");
+            $("<p/>", {
+                "class": "provvisNodeInfoValue",
+                "html": "<i>" + d.value + "</i>"
+            }).appendTo("#" + "provenance-table-content");
         });
-        th.exit().remove();
-
-        /* Body rows. */
-        var rows = tBody.selectAll("tr")
-            .data([d3.values(data)]);
-        rows.enter().append("tr");
-        rows.exit().remove();
-
-        /* Table data. */
-        var cells = rows.selectAll("td")
-            .data(function (d) {
-                return d;
-            });
-        cells.enter().append("td");
-        cells.text(function (d) {
-            return d;
-        });
-        cells.exit().remove();
     };
 
     /**
@@ -4705,20 +4647,6 @@ var provvisRender = function () {
 
         });
 
-        /* Color coding. */
-        $("#prov-ctrl-colorcoding-click").click(function () {
-            if ($("#provenance-colorcoding-view").css("top") === "0px") {
-                $("#provenance-colorcoding-view").animate({top: '-165'}, nodeLinkTransitionTime);
-                setTimeout(function () {
-                    $("#prov-ctrl-colorcoding-click").html("Color coding&nbsp;" + "<i class=icon-caret-down></i>");
-                }, nodeLinkTransitionTime);
-            } else {
-                $("#provenance-colorcoding-view").animate({top: '0'}, nodeLinkTransitionTime);
-                setTimeout(function () {
-                    $("#prov-ctrl-colorcoding-click").html("Color coding&nbsp;" + "<i class=icon-caret-up></i>");
-                }, nodeLinkTransitionTime);
-            }
-        });
 
         /* Node info. */
         $("#prov-ctrl-nodeinfo-click").click(function () {
@@ -4738,7 +4666,7 @@ var provvisRender = function () {
         /* Sidebar. */
         $("#prov-ctrl-sidebar-click").click(function () {
             if ($("#provenance-sidebar").css("right") === "0px") {
-                $("#provenance-sidebar").animate({right: '-315'}, nodeLinkTransitionTime);
+                $("#provenance-sidebar").animate({right: '-355'}, nodeLinkTransitionTime);
                 setTimeout(function () {
                     $("#prov-ctrl-sidebar-click").html("<i class=icon-filter></i>" + "&nbsp;Sidebar&nbsp;" + "<i class=icon-caret-left></i>");
                 }, nodeLinkTransitionTime);

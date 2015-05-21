@@ -35,26 +35,7 @@ angular.module("refineryProvvis", [])
 var provvis = function () {
     var vis = Object.create(null);
 
-    /**
-     * Floating table properties div.
-     * @param parentId Parent div id for the floating table div.
-     * @param divId Table div id.
-     * @returns {*} The table div container.
-     */
-    var createNodeTable = function (parentId, divId) {
-        /* New table enclosing div. */
-        $('<div/>', {
-            "id": divId
-        }).appendTo("#" + parentId);
-
-        /* New table. */
-        var tableContainer = d3.select("#" + divId);
-
-        tableContainer.append("g").attr("id", "nodeTitle").html("<b>" + "Node: " + "<b>" + " - ");
-
-        return tableContainer;
-    };
-
+    /* TODO: Rewrite in angular template. */
     /**
      * Timeline view only showing analysis within a time-gradient background.
      * @param parentId Parent div id for the floating table div.
@@ -138,7 +119,6 @@ var provvis = function () {
                 return "translate(0,0)";
             }).append("g");
 
-
         $("<button/>", {
             "id": "prov-doi-view-apply",
             "class": "btn btn-warning",
@@ -155,236 +135,6 @@ var provvis = function () {
         }).appendTo(doiContainer);
 
         return doiContainer;
-    };
-
-    /**
-     * Analysis path generator.
-     * @returns {string} A polygon.
-     */
-    var drawAnalysisPolygon = function () {
-        return (-15) + "," + "0" + " " +
-            (-10) + "," + (-10) + " " +
-            10 + "," + (-10) + " " +
-            15 + "," + 0 + " " +
-            10 + "," + 10 + " " +
-            (-10) + "," + 10;
-    };
-
-    /**
-     * Subanalysis path generator.
-     * @returns {string} A polygon.
-     */
-    var drawSubanalysisPolygon = function () {
-        return "0," + (-10) + " " +
-            10 + "," + (-5) + " " +
-            10 + "," + 5 + " " +
-            "0" + "," + 10 + " " +
-            (-10) + "," + 5 + " " +
-            (-10) + "," + (-5);
-    };
-
-    /**
-     * Render glyph legend elements.
-     */
-    var renderGlyphLegend = function () {
-
-        /* Node types. */
-        var lTypesCanvas = d3.select("#prov-ctrl-legend-types").append("svg")
-            .classed("provvis-legend-cell-canvas", true);
-
-        /* Draw analysis node. */
-        var typesAn = lTypesCanvas.append("g").attr("transform", "translate(15,15)");
-        typesAn.append("polygon")
-            .attr("points", function () {
-                return drawAnalysisPolygon();
-            }).style({"fill": "none", "stroke": "black", "stroke-width": "1px"});
-        typesAn.append("text").attr("transform", "translate(19,5)").text(function () {
-            return "Analysis";
-        });
-
-        /* Draw subanalysis node. */
-        var typesSan = lTypesCanvas.append("g").attr("transform", "translate(105,15)");
-        typesSan.append("polygon")
-            .attr("points", function () {
-                return drawSubanalysisPolygon();
-            }).style({"fill": "none", "stroke": "black", "stroke-width": "1px"});
-        typesSan.append("text").attr("transform", "translate(17,5)").text(function () {
-            return "Sub-Analysis";
-        });
-
-        /* Draw file node. */
-        var typesFn = lTypesCanvas.append("g").attr("transform", "translate(230,15)");
-        typesFn.append("circle")
-            .attr("r", 10).style({"fill": "none", "stroke": "black", "stroke-width": "1px"});
-        typesFn.append("text").attr("transform", "translate(15,5)").text(function () {
-            return "File";
-        });
-
-        /* Draw tool node. */
-        var typesTn = lTypesCanvas.append("g").attr("transform", "translate(285,15)");
-        typesTn.append("rect")
-            .attr("transform", function () {
-                return "translate(" + (-5) + "," + (-5) + ")" +
-                    "rotate(45 " + 5 + "," + 5 + ")";
-            })
-            .attr("width", 10)
-            .attr("height", 10)
-            .style({"fill": "none", "stroke": "black", "stroke-width": "1px"});
-        typesTn.append("text").attr("transform", "translate(15,5)").text(function () {
-            return "Tool";
-        });
-
-        /* Draw sample node. */
-        var typesSn = lTypesCanvas.append("g").attr("transform", "translate(350,15)");
-        typesSn.append("rect")
-            .attr("transform", "translate(" + ( -3 * 10 / 4) + "," + (-3 * 10 / 4) + ")")
-            .attr("width", 6 * 10 / 4)
-            .attr("height", 6 * 10 / 4)
-            .style({"fill": "none", "stroke": "black", "stroke-width": "1px"});
-        typesSn.append("text").attr("transform", "translate(15,5)").text(function () {
-            return "Source/Sample/Assay";
-        });
-
-
-        /* Time encoding. */
-        var lTimeCanvas = d3.select("#prov-ctrl-legend-time").append("svg").classed("provvis-legend-cell-canvas", true);
-
-        var timeGradient = lTimeCanvas.append("g")
-            .append("defs")
-            .append("linearGradient")
-            .attr("id", "legendGrayscale");
-
-        timeGradient.append("stop")
-            .attr("offset", "0%")
-            .attr("stop-color", "#fff")
-            .attr("stop-opacity", 1);
-
-        timeGradient.append("stop")
-            .attr("offset", "100%")
-            .attr("stop-color", "#000")
-            .attr("stop-opacity", 1);
-
-        lTimeCanvas.append("rect")
-            .attr("x", 0)
-            .attr("y", 0)
-            .attr("width", 530)
-            .attr("height", 30)
-            .style({"fill": "url(#legendGrayscale)", "stroke": "white", "stroke-width": "1px"});
-
-        lTimeCanvas.append("text").attr("transform", "translate(0,25)").text(function () {
-            return "Earliest analysis execution";
-        });
-        lTimeCanvas.append("text").attr("transform", "translate(350,25)").text(function () {
-            return "Latest analysis execution";
-        })
-            .style({"fill": "white"});
-
-
-        /* Layering. */
-        var lLayer = d3.select("#prov-ctrl-legend-layering").append("svg").classed("provvis-legend-cell-canvas", true);
-        var layerExampleNodes = [0, 1, 2, 3, 4];
-
-        var gradientScale = d3.scale.linear()
-            .domain([0, 4])
-            .range(["lightgray", "black"]);
-
-        var layerLinks = lLayer.append("g").attr("transform", "translate(15,15)");
-        layerLinks.selectAll(".lLinks")
-            .data(layerExampleNodes)
-            .enter().append("g").attr("transform", function (n, i) {
-                return "translate(" + 0 + "," + (i * 5) + ")";
-            }).append("line")
-            .attr("x1", 0)
-            .attr("y1", 0)
-            .attr("x2", 300)
-            .attr("y2", 0)
-            .style({"stroke": function (d, i) {
-                return gradientScale(i);
-            }, "fill": "none", "stroke-width": "5px"});
-
-        var layerNodeset1 = lLayer.append("g").attr("transform", "translate(15,15)");
-        layerNodeset1.selectAll(".lan")
-            .data(layerExampleNodes)
-            .enter().append("g").attr("transform", function (n, i) {
-                return "translate(" + 0 + "," + (i * 5) + ")";
-            }).append("polygon")
-            .attr("points", function () {
-                return drawAnalysisPolygon();
-            }).style({"fill": function (d, i) {
-                return gradientScale(i);
-            }, "stroke": "none", "stroke-width": "1px"});
-        layerNodeset1.append("text").attr("transform", "translate(20,16)").text(function () {
-            return "{5}";
-        });
-
-        var layerNodeset2 = lLayer.append("g").attr("transform", "translate(300,15)");
-        layerNodeset2.selectAll(".lan")
-            .data(layerExampleNodes)
-            .enter().append("g").attr("transform", function (n, i) {
-                return "translate(" + 0 + "," + (i * 5) + ")";
-            }).append("polygon")
-            .attr("points", function () {
-                return drawAnalysisPolygon();
-            }).style({"fill": function (d, i) {
-                return gradientScale(i);
-            }, "stroke": "none", "stroke-width": "1px"});
-        layerNodeset2.append("text").attr("transform", "translate(20,16)").text(function () {
-            return "{5}";
-        });
-
-
-        /* Aggregation. */
-        var lAggregation = d3.select("#prov-ctrl-legend-aggregation").append("svg").classed("provvis-legend-cell-canvas", true);
-        var aggrNodeset = lAggregation.append("g").attr("transform", "translate(15,15)");
-        aggrNodeset.selectAll(".lan")
-            .data(layerExampleNodes)
-            .enter().append("g").attr("transform", function (n, i) {
-                return "translate(" + (i * 5) + "," + 0 + ")";
-            }).append("polygon")
-            .attr("points", function () {
-                return drawAnalysisPolygon();
-            }).style({"fill": function () {
-                return gradientScale(2);
-            }, "stroke": "none", "stroke-width": "1px"});
-        aggrNodeset.append("text").attr("transform", "translate(40,4)").text(function () {
-            return "{5}";
-        });
-
-
-        /* Stratification. */
-        var lStratification = d3.select("#prov-ctrl-legend-stratification").append("svg").classed("provvis-legend-cell-canvas", true);
-        var stratNodeset = lStratification.append("g").attr("transform", "translate(15,15)");
-        stratNodeset.selectAll(".lan")
-            .data(layerExampleNodes)
-            .enter().append("g").attr("transform", function (n, i) {
-                return "translate(" + 0 + "," + (i * 5) + ")";
-            }).append("polygon")
-            .attr("points", function () {
-                return drawSubanalysisPolygon();
-            }).style({"fill": function () {
-                return gradientScale(3);
-            }, "stroke": "none", "stroke-width": "1px"});
-        stratNodeset.append("text").attr("transform", "translate(17,12)").text(function () {
-            return "{5}";
-        });
-    };
-
-    /**
-     * Sidebar.
-     * @param parentId Parent div id for the floating sidebar div.
-     * @param divId Container div id.
-     * @returns {*} The sidebar div container.
-     */
-    var createSidebar = function (parentId, divId) {
-        /* New sidebar view enclosing div. */
-        $('<div/>', {
-            "id": divId
-        }).appendTo("#" + parentId);
-
-        /* New sidebar view content. */
-        var sideBarContainer = d3.select("#" + divId);
-
-        return sideBarContainer;
     };
 
     /**
@@ -444,22 +194,16 @@ var provvis = function () {
                 /* Declare graph. */
                 var graph = Object.create(null);
 
-                /* Render glyph legend. */
-                renderGlyphLegend();
-
-                /* Left floated and docked sidebar. */
-                createSidebar("provenance-canvas", "provenance-sidebar");
-
                 /* On-top docked table. */
-                var nodeTable = createNodeTable("provenance-canvas", "provenance-table");
+                var nodeTable = d3.select("#provvis-nodeinfo-tab");
 
                 var colorcodingView = "#provenance-colorcoding-view";
 
                 /* Timeline view div. */
-                var timelineView = createTimelineView("provenance-sidebar", "provenance-timeline-view");
+                var timelineView = createTimelineView("provvis-filter-doi-tab", "provenance-timeline-view");
 
                 /* DOI view div. */
-                var doiView = createDOIView("provenance-sidebar", "provenance-doi-view");
+                var doiView = createDOIView("provvis-filter-doi-tab", "provenance-doi-view");
 
                 /* Init node cell dimensions. */
                 var cell = {width: r * 5, height: r * 5};
