@@ -66,7 +66,7 @@ var provvis = function () {
         }).appendTo(timelineContainer);
 
         d3.select("#tlCanvas").append("svg")
-            .attr("height", 60)
+            .attr("height", 80)
             .attr("width", 310)
             .style({"margin-top": "0px", "margin-bottom": "0px", "padding": "0px"})
             .attr("pointer-events", "all");
