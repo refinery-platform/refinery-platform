@@ -4513,19 +4513,15 @@ var provvisRender = function () {
         });
 
         /* Switch filter action. */
-        $("[id^=prov-ctrl-filter-list-]").click(function () {
-            $(this).find("input[type='radio']").prop("checked", true);
+        $("#prov-ctrl-filter-action > button").click(function () {
+            filterAction = $(this).prop('value');
 
-            var selectedFilterAction = $(this).find("label").text();
-            switch (selectedFilterAction) {
-                case "Hide":
-                    $("#prov-ctrl-filter-list-blend").find("input[type='radio']").prop("checked", false);
-                    filterAction = "hide";
-                    break;
-                case "Blend":
-                    $("#prov-ctrl-filter-list-hide").find("input[type='radio']").prop("checked", false);
-                    filterAction = "blend";
-                    break;
+            if (filterAction==="blend") {
+                $("#prov-ctrl-filter-action-blend").attr("class", 'active btn btn-mini btn-warning');
+                $("#prov-ctrl-filter-action-hide").attr("class", 'btn btn-mini btn-primary');
+            } else {
+                $("#prov-ctrl-filter-action-blend").attr("class", 'btn btn-mini btn-primary');
+                $("#prov-ctrl-filter-action-hide").attr("class", 'active btn btn-mini btn-warning');
             }
 
             if (filterMethod==="timeline") {
@@ -4559,18 +4555,16 @@ var provvisRender = function () {
 
         });
 
-        /* Sidebar. */
-        $("#prov-ctrl-sidebar-click").click(function () {
-            if ($("#provenance-sidebar").css("right") === "0px") {
+        /* Switch sidebar on or off. */
+        $("#prov-ctrl-toggle-sidebar").click(function () {
+            if ($(this).hasClass('active')) {
                 $("#provenance-sidebar").animate({right: '-355'}, nodeLinkTransitionTime);
-                setTimeout(function () {
-                    $("#prov-ctrl-sidebar-click").html("<i class=icon-filter></i>" + "&nbsp;Sidebar&nbsp;" + "<i class=icon-caret-left></i>");
-                }, nodeLinkTransitionTime);
+                $(this).toggleClass('btn-primary btn-warning');
+                $(this).html("OFF");
             } else {
                 $("#provenance-sidebar").animate({right: '0'}, nodeLinkTransitionTime);
-                setTimeout(function () {
-                    $("#prov-ctrl-sidebar-click").html("<i class=icon-filter></i>" + "&nbsp;Sidebar&nbsp;" + "<i class=icon-caret-right></i>");
-                }, nodeLinkTransitionTime);
+                $(this).toggleClass('btn-warning btn-primary');
+                $(this).html("ON");
             }
         });
     };
