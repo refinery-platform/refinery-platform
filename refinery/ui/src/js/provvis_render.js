@@ -59,6 +59,9 @@ var provvisRender = function () {
 
     var linkStyle = "bezier1";
 
+    var colorStrokes = "#136382",
+        colorHighlight = "#ed7407";
+
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
         .append("div")
@@ -3489,8 +3492,9 @@ var provvisRender = function () {
     var clearNodeSelection = function () {
         domNodeset.each(function (d) {
             d.selected = false;
-            d3.select(this).classed("selectedNode", false);
+            /*d3.select(this).classed("selectedNode", false);*/
             d.doi.selectedChanged();
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).style({"stroke": colorStrokes});
         });
 
         $('#nodeInfoTitle').html("Select a node: - ");
@@ -3509,12 +3513,16 @@ var provvisRender = function () {
         if (d.selected) {
             d.selected = false;
             selectedNodeSet.remove(d.autoId);
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).style({"stroke": colorStrokes});
+            $('#nodeInfoTitle').html("Select a node: - ");
+            $('#nodeInfoTitleLink').html("");
+            $("#" + "provenance-table-content").html("");
         } else {
             d.selected = true;
             selectedNodeSet.set(d.autoId, d);
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).style({"stroke": colorHighlight});
         }
 
-        d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected);
         d.doi.selectedChanged();
 
         /* TODO: Temporarily disabled. */
@@ -3575,9 +3583,6 @@ var provvisRender = function () {
             });
 
         });
-
-        var colorStrokes = "#136382",
-            colorHighlight = "#ed7407";
 
         var updateStrokesColor = function (color) {
             $("#provvis-cc-strokes-hex").text(color);
@@ -3784,9 +3789,9 @@ var provvisRender = function () {
             case "stored":
                 data = vis.graph.nodeData.get(selNode.uuid);
                 if (typeof data !== "undefined") {
-                    title = "<i class=\"icon-sitemap rotate-icon-90\"></i>&nbsp;" + selNode.fileType;
+                    title = '<i class="icon-sitemap rotate-icon-90"></i>&nbsp;"' + selNode.fileType;
                     if (data.file_url !== null) {
-                        titleLink = "<a href=" + data.file_url + " target=\"_blank\">" + data.name + "</a>";
+                        titleLink = '<a href="' + data.file_url + '"><i class="icon-download"></i>&nbsp;"' + data.name + '"</a>"';
                     } else {
                         titleLink = " - ";
                     }
@@ -3802,7 +3807,7 @@ var provvisRender = function () {
                 if (typeof data !== "undefined") {
                     title = "<i class=\"icon-sitemap rotate-icon-90\"></i>&nbsp;" + selNode.fileType;
                     if (data.file_url !== null) {
-                        titleLink = "<a href=" + data.file_url + " target=\"_blank\">" + data.name + "</a>";
+                        titleLink = "<a href=" + data.file_url + " target=\"_blank\">" + "<i class=\"icon-download\"></i>&nbsp;" + data.name + "</a>";
                     }
                 }
                 break;
@@ -3833,7 +3838,7 @@ var provvisRender = function () {
                 data = {aggregation_count: selNode.children.size(), workflow: selNode.wfName, subanalysis_count: selNode.motif.numSubanalyses, wfUuid: selNode.motif.wfUuid};
                 if (typeof data !== "undefined") {
                     title = "<i class=\"icon-reorder\"></i>&nbsp; Layer";
-                    titleLink = "<a href=/workflows/" + data.wfUuid + " target=\"_blank\">" + data.workflow + "</a>";
+                    titleLink ="<a href=/workflows/" + data.wfUuid + " target=\"_blank\">" + data.workflow + "</a>";
                 }
                 break;
         }

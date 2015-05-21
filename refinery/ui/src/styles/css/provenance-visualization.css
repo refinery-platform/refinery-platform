@@ -146,7 +146,7 @@
 }
 
 .filteredNode:hover {
-    stroke: #ed7407;
+    /*stroke: #ed7407;*/
     stroke-width: 1.0px;
     stroke-opacity: 1.0;
 }
