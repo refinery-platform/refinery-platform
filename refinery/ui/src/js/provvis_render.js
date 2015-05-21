@@ -683,14 +683,20 @@ var provvisRender = function () {
      */
     var drawTimelineView = function (vis) {
         var svg = d3.select("#provenance-timeline-view").select("svg").append("g").append("g").attr("transform", function () {
-            return "translate(5,0)";
+            return "translate(20,0)";
         });
 
-        var x = d3.scale.linear()
-            .domain([0, 300])
-            .range([0, 300]);
+        var tlHeight = 50,
+            tlWidth = 250,
+            numXTicks = 10;
 
-        var tlHeight = 50;
+        var x = d3.scale.linear()
+            .domain([0, tlWidth])
+            .range([0, tlWidth]);
+
+        var y = d3.scale.linear()
+            .domain([5, 0])
+            .range([0, tlHeight - 10]);
 
         /**
          * Drag start listener support for time lines.
@@ -709,13 +715,13 @@ var provvisRender = function () {
                 upperTimeThreshold = Object.create(null);
 
             if (l.className === "startTimeline") {
-                lowerTimeThreshold = new Date(timeLineGradientScale(l.x));
-                upperTimeThreshold = new Date(timeLineGradientScale(
+                lowerTimeThreshold = new Date(timeLineGradientScale.invert(l.x));
+                upperTimeThreshold = new Date(timeLineGradientScale.invert(
                     x.invert(d3.transform(d3.select(".endTimeline").attr("transform")).translate[0])));
             } else {
-                lowerTimeThreshold = new Date(timeLineGradientScale(
+                lowerTimeThreshold = new Date(timeLineGradientScale.invert(
                     x.invert(d3.transform(d3.select(".startTimeline").attr("transform")).translate[0])));
-                upperTimeThreshold = new Date(timeLineGradientScale(l.x));
+                upperTimeThreshold = new Date(timeLineGradientScale.invert(l.x));
             }
 
             return [lowerTimeThreshold, upperTimeThreshold];
@@ -756,8 +762,8 @@ var provvisRender = function () {
             /* Check borders. */
             if (d3.event.x < 0) {
                 l.x = 0;
-            } else if (d3.event.x > 300) {
-                l.x = 300;
+            } else if (d3.event.x > tlWidth) {
+                l.x = tlWidth;
             } else {
                 l.x = d3.event.x;
             }
@@ -772,7 +778,7 @@ var provvisRender = function () {
 
             /* On hover filter update. */
             var tlTickCoords = aNodesBAK.map(function (an) {
-                return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
+                return timeLineGradientScale(parseISOTimeFormat(an.start));
             });
             if (l.className === "startTimeline") {
                 if (tlTickCoords.some(function (t) {
@@ -795,7 +801,7 @@ var provvisRender = function () {
          */
         var dragLineEnd = function (l) {
 
-            l.time = new Date(timeLineGradientScale(l.x));
+            l.time = new Date(timeLineGradientScale.invert(l.x));
 
             /* Update labels. */
             updateTimelineLabels(l);
@@ -830,10 +836,10 @@ var provvisRender = function () {
             /* Translations. */
             svg.selectAll(".tlAnalysis")
                 .attr("x1", function (an) {
-                    return x(timeLineGradientScale.invert(parseISOTimeFormat(an.start)));
+                    return x(timeLineGradientScale(parseISOTimeFormat(an.start)));
                 })
                 .attr("x2", function (an) {
-                    return x(timeLineGradientScale.invert(parseISOTimeFormat(an.start)));
+                    return x(timeLineGradientScale(parseISOTimeFormat(an.start)));
                 });
 
             svg.selectAll(".startTimeline, .endTimeline")
@@ -843,7 +849,25 @@ var provvisRender = function () {
 
             svg.select("#timelineView")
                 .attr("x", x(0))
-                .attr("width", x(300) - x(0));
+                .attr("width", x(tlWidth) - x(0));
+
+            svg.select("#tlxAxis")
+                .attr("transform", function () {
+                    return "translate(" + x(0) + "," + tlHeight + ")";
+                });
+
+            svg.select("#tlxAxis").selectAll(".tick").attr("transform", function (d) {
+                return "translate(" + (x(timeLineGradientScale(d)) - (d3.event.translate[0])) + "," + 0 + ")";
+            });
+
+            svg.select("#tlxAxis").select("path").attr("d", function () {
+                return "M0,6V0H" + (tlWidth * d3.event.scale) + "V6";
+            });
+
+            svg.select("#tlyAxis")
+                .attr("transform", function () {
+                    return "translate(" + x(0) + "," + 10 + ")";
+                });
         };
 
         /* Timeline zoom behavior. */
@@ -869,23 +893,52 @@ var provvisRender = function () {
             .attr("id", "timelineView")
             .attr("x", 0)
             .attr("y", 10)
-            .attr("width", 300)
+            .attr("width", tlWidth)
             .attr("height", tlHeight - 10)
             .style({"fill": "url(#gradientGrayscale)", "stroke": "white", "stroke-width": "1px"});
 
-        timeLineGradientScale = d3.scale.linear()
-            .domain([0, 300])
-            .range([Date.parse(timeColorScale.domain()[0]), Date.parse(timeColorScale.domain()[1])]);
+        timeLineGradientScale = d3.time.scale()
+            .domain([Date.parse(timeColorScale.domain()[0]), Date.parse(timeColorScale.domain()[1])])
+            .range([0, tlWidth])
+            .nice();
+
+        var xAxis = d3.svg.axis()
+            .scale(timeLineGradientScale)
+            .orient('bottom')
+            .ticks(5);
+
+        var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient('left')
+            .ticks(7);
+
+        svg.append('g')
+            .classed({"x": true, "axis": true})
+            .attr("id", "tlxAxis")
+            .attr("transform", "translate(0," + tlHeight + ")")
+            .call(xAxis);
+
+        svg.append('g')
+            .classed({"y": true, "axis": true})
+            .attr("id", "tlyAxis")
+            .attr("transform", "translate(0," + 10 + ")")
+            .call(yAxis);
+
+        d3.select("#tlyAxis").selectAll(".tick").each(function (d) {
+            if (d === 5) {
+                d3.select(this).select("text").text("+5");
+            }
+        });
 
         var startTime = {
             className: "startTimeline",
             x: 0,
-            time: new Date(timeLineGradientScale(0))
+            time: new Date(timeLineGradientScale.invert(0))
         };
         var endTime = {
             className: "endTimeline",
-            x: 300,
-            time: new Date(timeLineGradientScale(300))
+            x: tlWidth,
+            time: new Date(timeLineGradientScale.invert(tlWidth))
         };
 
         var timeLineThreshold = svg.selectAll(".line")
@@ -913,13 +966,13 @@ var provvisRender = function () {
             })
             .enter().append("line").classed("tlAnalysis", true)
             .attr("x1", function (an) {
-                return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
+                return timeLineGradientScale(parseISOTimeFormat(an.start));
             })
             .attr("y1", function (an) {
                 return an.children.size() >= 5 ? 10 : parseInt(tlHeight - (tlHeight - 10) / 5 * an.children.size(), 10);
             })
             .attr("x2", function (an) {
-                return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
+                return timeLineGradientScale(parseISOTimeFormat(an.start));
             })
             .attr("y2", tlHeight);
 
