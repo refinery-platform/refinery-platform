@@ -35,6 +35,7 @@ var provvisRender = function () {
 
     var timeColorScale = Object.create(null);
     var filterAction = Object.create(null);
+    var filterMethod = "timeline";
     var timeLineGradientScale = Object.create(null);
 
     var lastSolrResponse = Object.create(null);
@@ -57,6 +58,9 @@ var provvisRender = function () {
     var layoutCols = d3.map();
 
     var linkStyle = "bezier1";
+
+    var colorStrokes = "#136382",
+        colorHighlight = "#ed7407";
 
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
@@ -116,32 +120,34 @@ var provvisRender = function () {
                 /* Expand. */
                 handleCollapseExpandNode(an, "e", "auto");
                 //console.log("expand an " + an.autoId);
-            } else if (an.doi.doiWeightedSum < (1 / 4) && !an.hidden && an.parent.children.size() > 1 && an.filtered) {
+            } else if (an.doi.doiWeightedSum < (1 / 4) && !an.hidden && an.parent.children.size() > 1) {
                 /* Collapse. */
 
                 handleCollapseExpandNode(an, "c", "auto");
                 //console.log("colapse an " + an.autoId);
 
-                /* Only collapse those analysis nodes into the layered node which are below the threshold. */
-                an.parent.children.values().forEach(function (d) {
-                    if (d.doi.doiWeightedSum >= (1 / 4)) {
-                        d.exaggerated = true;
+                if (an.parent.filtered) {
+                    /* Only collapse those analysis nodes into the layered node which are below the threshold. */
+                    an.parent.children.values().forEach(function (d) {
+                        if (d.doi.doiWeightedSum >= (1 / 4)) {
+                            d.exaggerated = true;
 
-                        d.hidden = false;
-                        d3.select("#nodeId-" + d.autoId).classed("hiddenNode", false);
-                        updateLink(d);
+                            d.hidden = false;
+                            d3.select("#nodeId-" + d.autoId).classed("hiddenNode", false);
+                            updateLink(d);
 
-                        if (d.doi.doiWeightedSum >= (2 / 4) && !d.hidden && d.filtered) {
-                            /* Expand. */
-                            handleCollapseExpandNode(d, "e", "auto");
-                            //console.log("expand an " + an.autoId);
+                            if (d.doi.doiWeightedSum >= (2 / 4) && !d.hidden && d.filtered) {
+                                /* Expand. */
+                                handleCollapseExpandNode(d, "e", "auto");
+                                //console.log("expand an " + an.autoId);
+                            }
+                        } else {
+                            d.exaggerated = false;
+                            d.hidden = true;
+                            d3.select("#nodeId-" + an.autoId).classed("hiddenNode", true);
                         }
-                    } else {
-                        d.exaggerated = false;
-                        d.hidden = true;
-                        d3.select("#nodeId-" + an.autoId).classed("hiddenNode", true);
-                    }
-                });
+                    });
+                }
             }
         });
 
@@ -165,7 +171,7 @@ var provvisRender = function () {
             if (san.doi.doiWeightedSum >= (3 / 4) && !san.hidden && san.filtered) {
                 /* Expand. */
                 handleCollapseExpandNode(san, "e", "auto");
-            } else if (maxDoi < (2 / 4) && (allParentsHidden(san) && san.filtered || san.parent.exaggerated)) {
+            } else if (maxDoi < (2 / 4) && (allParentsHidden(san) || san.parent.exaggerated)) {
                 /* Collapse. */
                 handleCollapseExpandNode(san, "c", "auto");
             }
@@ -693,7 +699,7 @@ var provvisRender = function () {
         /**
          * Drag start listener support for time lines.
          */
-        var dragLineStart = function (l) {
+        var dragLineStart = function () {
             d3.event.sourceEvent.stopPropagation();
         };
 
@@ -793,11 +799,15 @@ var provvisRender = function () {
          */
         var dragLineEnd = function (l) {
 
+            l.time = new Date(timeLineGradientScale(l.x));
+
             /* Update labels. */
             updateTimelineLabels(l);
 
             /* Filter action. */
             filterAnalysesByTime(getTimeLineThresholds(l)[0], getTimeLineThresholds(l)[1], vis);
+
+            filterMethod = "timeline";
         };
 
         /**
@@ -867,13 +877,19 @@ var provvisRender = function () {
             .attr("height", tlHeight - 10)
             .style({"fill": "url(#gradientGrayscale)", "stroke": "white", "stroke-width": "1px"});
 
+        timeLineGradientScale = d3.scale.linear()
+            .domain([0, 300])
+            .range([Date.parse(timeColorScale.domain()[0]), Date.parse(timeColorScale.domain()[1])]);
+
         var startTime = {
             className: "startTimeline",
-            x: 0
+            x: 0,
+            time: new Date(timeLineGradientScale(0))
         };
         var endTime = {
             className: "endTimeline",
-            x: 300
+            x: 300,
+            time: new Date(timeLineGradientScale(300))
         };
 
         var timeLineThreshold = svg.selectAll(".line")
@@ -895,10 +911,6 @@ var provvisRender = function () {
         timeLineThreshold.append("polygon").classed("timeMarker", true)
             .attr("points", "0,10 5,0 -5,0");
 
-        timeLineGradientScale = d3.scale.linear()
-            .domain([0, 300])
-            .range([Date.parse(timeColorScale.domain()[0]), Date.parse(timeColorScale.domain()[1])]);
-
         svg.selectAll(".line")
             .data(function () {
                 return vis.graph.aNodes;
@@ -919,54 +931,12 @@ var provvisRender = function () {
             d3.select(this).classed("mouseoverTimeline", true);
         });
 
-        $("#prov-timeline-view-reset-time").click(function () {
-            filterAnalysesByTime(new Date(timeLineGradientScale(0)), new Date(timeLineGradientScale(300)), vis);
-            d3.select(this.parentNode).select(".startTimeline")
-                .attr("transform", function (d) {
-                    d.x = 0;
-                    return "translate(0,0)";
-                });
-            d3.select(this.parentNode).select(".endTimeline")
-                .attr("transform", function (d) {
-                    d.x = 300;
-                    return "translate(300,0)";
-                });
-            d3.select("#tlThreshold").html("<br>" + "All" + "" + "<br>");
-
-            svg.select("#timelineView").attr("transform", function () {
-                return "translate(5,0)";
-            }).attr("x", 5)
-                .attr("y", 10)
-                .attr("width", 300)
-                .attr("height", tlHeight)
-                .style({"fill": "url(#gradientGrayscale)", "stroke": "white", "stroke-width": "1px"});
-
-            d3.selectAll(".tlAnalysis")
-                .attr("x1", function (an) {
-                    return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
-                })
-                .attr("y1", function (an) {
-                    return an.children.size() >= 5 ? 10 : parseInt(tlHeight - (tlHeight - 10) / 5 * an.children.size(), 10);
-                })
-                .attr("x2", function (an) {
-                    return timeLineGradientScale.invert(parseISOTimeFormat(an.start));
-                })
-                .attr("y2", tlHeight);
-
-            svg.select("svg.g.g").attr("transform", "translate(5,0)scale(1)");
-
-            /* TODO: Fix zoom reset. */
-            svg.zoom.translate([5, 0]);
-            svg.zoom.scale(1);
-        });
-
         applyTimeLineDragBehavior(d3.selectAll(".startTimeline, .endTimeline"));
 
         updateTimelineLabels(startTime);
     };
 
-
-    /* TODO: Placeholder code. */
+    /* TODO: Prototype code. */
     /**
      * Draws the DOI view.
      */
@@ -2429,20 +2399,6 @@ var provvisRender = function () {
                     .attr("rx", cell.width / 5)
                     .attr("ry", cell.height / 5);
 
-                /* Workflow name as label. */
-                /*subanalysisBBox.append("g").classed({"labels": true}).attr("clip-path", "url(#saBBClipId-" + san.autoId + ")")
-                 .append("text")
-                 .attr("transform", function () {
-                 return "translate(" + 0 + "," + 0 + ")";
-                 }).attr("class", "saBBoxLabel")
-                 .text(function () {
-                 var wfName = "dataset";
-                 if (typeof vis.graph.workflowData.get(san.parent.wfUuid) !== "undefined") {
-                 wfName = vis.graph.workflowData.get(san.parent.wfUuid).name;
-                 }
-                 return wfName.toString();
-                 });*/
-
                 /* Draw subanalysis node. */
                 var subanalysisNode = self.append("g")
                     .attr("id", function () {
@@ -2496,14 +2452,6 @@ var provvisRender = function () {
                     }).attr("class", "saLabel")
                     .style("display", "inline");
 
-                /*saGlyph.append("rect")
-                 .attr("x", -2 * scaleFactor * vis.radius)
-                 .attr("y", -1 * scaleFactor * vis.radius)
-                 .attr("rx", 1)
-                 .attr("ry", 1)
-                 .attr("width", 4 * scaleFactor * vis.radius)
-                 .attr("height", 2 * scaleFactor * vis.radius);*/
-
                 saGlyph.append("rect")
                     .attr("x", -2 * scaleFactor * vis.radius)
                     .attr("y", -1.5 * scaleFactor * vis.radius)
@@ -2511,13 +2459,6 @@ var provvisRender = function () {
                     .attr("ry", 1)
                     .attr("width", 4 * scaleFactor * vis.radius)
                     .attr("height", 3 * scaleFactor * vis.radius);
-
-                /*.attr("x", -1.5 * scaleFactor * vis.radius)
-                 .attr("y", -1 * scaleFactor * vis.radius)
-                 .attr("rx", 1)
-                 .attr("ry", 1)
-                 .attr("width", 3 * scaleFactor * vis.radius)
-                 .attr("height", 2 * scaleFactor * vis.radius);*/
 
                 /* Add text labels. */
                 saLabels.append("text")
@@ -2568,7 +2509,6 @@ var provvisRender = function () {
                     .style("display", "inline");
             });
         });
-
 
         /* Set dom elements. */
         saNode = d3.selectAll(".saNode");
@@ -2786,7 +2726,6 @@ var provvisRender = function () {
 
         graph.lNodes.values().forEach(function (ln) {
             curWidth = vis.cell.width;
-            //curHeight = vis.cell.height;
             curHeight = vis.cell.height;
 
             g.setNode(ln.autoId, {label: ln.autoId, width: curWidth, height: curHeight});
@@ -2872,7 +2811,7 @@ var provvisRender = function () {
                 }).sort(function (a, b) {
                     return a.y - b.y;
                 }).forEach(function (an) {
-                    if (an.exaggerated) {
+                    if (an.exaggerated && an.filtered) {
                         exNum++;
                         an.x = an.parent.x;
                         an.y = accY;
@@ -3310,7 +3249,9 @@ var provvisRender = function () {
             if (d.nodeType === "subanalysis") {
                 d3.select("#BBoxId-" + d.autoId).classed("hiddenBBox", true);
             } else if (d.nodeType === "analysis") {
-
+                if (!d.parent.filtered) {
+                    d3.select("#BBoxId-" + d.parent.autoId).classed("hiddenBBox", true);
+                }
             } else {
                 d3.select("#BBoxId-" + d.parent.autoId).classed("hiddenBBox", true);
             }
@@ -3423,7 +3364,7 @@ var provvisRender = function () {
             /* Recompute layout. */
             dagreDynamicLayerLayout(vis.graph);
 
-            //fitGraphToWindow(nodeLinkTransitionTime);
+            fitGraphToWindow(nodeLinkTransitionTime);
         }
     };
 
@@ -3551,8 +3492,9 @@ var provvisRender = function () {
     var clearNodeSelection = function () {
         domNodeset.each(function (d) {
             d.selected = false;
-            d3.select(this).classed("selectedNode", false);
+            /*d3.select(this).classed("selectedNode", false);*/
             d.doi.selectedChanged();
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).style({"stroke": colorStrokes});
         });
 
         $('#nodeInfoTitle').html("Select a node: - ");
@@ -3571,12 +3513,16 @@ var provvisRender = function () {
         if (d.selected) {
             d.selected = false;
             selectedNodeSet.remove(d.autoId);
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).style({"stroke": colorStrokes});
+            $('#nodeInfoTitle').html("Select a node: - ");
+            $('#nodeInfoTitleLink').html("");
+            $("#" + "provenance-table-content").html("");
         } else {
             d.selected = true;
             selectedNodeSet.set(d.autoId, d);
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).style({"stroke": colorHighlight});
         }
 
-        d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected);
         d.doi.selectedChanged();
 
         /* TODO: Temporarily disabled. */
@@ -3637,9 +3583,6 @@ var provvisRender = function () {
             });
 
         });
-
-        var colorStrokes = "#136382",
-            colorHighlight = "#ed7407";
 
         var updateStrokesColor = function (color) {
             $("#provvis-cc-strokes-hex").text(color);
@@ -3846,9 +3789,9 @@ var provvisRender = function () {
             case "stored":
                 data = vis.graph.nodeData.get(selNode.uuid);
                 if (typeof data !== "undefined") {
-                    title = "<i class=\"icon-sitemap rotate-icon-90\"></i>&nbsp;" + selNode.fileType;
+                    title = '<i class="icon-sitemap rotate-icon-90"></i>&nbsp;"' + selNode.fileType;
                     if (data.file_url !== null) {
-                        titleLink = "<a href=" + data.file_url + " target=\"_blank\">" + data.name + "</a>";
+                        titleLink = '<a href="' + data.file_url + '"><i class="icon-download"></i>&nbsp;"' + data.name + '"</a>"';
                     } else {
                         titleLink = " - ";
                     }
@@ -3864,7 +3807,7 @@ var provvisRender = function () {
                 if (typeof data !== "undefined") {
                     title = "<i class=\"icon-sitemap rotate-icon-90\"></i>&nbsp;" + selNode.fileType;
                     if (data.file_url !== null) {
-                        titleLink = "<a href=" + data.file_url + " target=\"_blank\">" + data.name + "</a>";
+                        titleLink = "<a href=" + data.file_url + " target=\"_blank\">" + "<i class=\"icon-download\"></i>&nbsp;" + data.name + "</a>";
                     }
                 }
                 break;
@@ -3895,7 +3838,7 @@ var provvisRender = function () {
                 data = {aggregation_count: selNode.children.size(), workflow: selNode.wfName, subanalysis_count: selNode.motif.numSubanalyses, wfUuid: selNode.motif.wfUuid};
                 if (typeof data !== "undefined") {
                     title = "<i class=\"icon-reorder\"></i>&nbsp; Layer";
-                    titleLink = "<a href=/workflows/" + data.wfUuid + " target=\"_blank\">" + data.workflow + "</a>";
+                    titleLink ="<a href=/workflows/" + data.wfUuid + " target=\"_blank\">" + data.workflow + "</a>";
                 }
                 break;
         }
@@ -4574,53 +4517,23 @@ var provvisRender = function () {
             fitGraphToWindow(nodeLinkTransitionTime);
         });
 
-        /* Switch link styles. */
-        $("[id^=prov-ctrl-links-list-]").click(function () {
-            $(this).find("input[type='radio']").prop("checked", true);
-
-            var selectedLinkStyle = $(this).find("label").text();
-            switch (selectedLinkStyle) {
-                case "Bezier":
-                    $("#prov-ctrl-links-list-straight").find("input[type='radio']").prop("checked", false);
-                    break;
-                case "Straight":
-                    $("#prov-ctrl-links-list-bezier").find("input[type='radio']").prop("checked", false);
-                    break;
-            }
-
-            aNode.each(function (an) {
-                updateLink(an);
-                an.children.values().forEach(function (san) {
-                    san.links.values().forEach(function (l) {
-                        /* Redraw links within subanalysis. */
-                        d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).attr("d", function (l) {
-                            if ($("#prov-ctrl-links-list-bezier").find("input[type='radio']").prop("checked")) {
-                                return drawBezierLink(l, l.source.x, l.source.y, l.target.x, l.target.y);
-                            } else {
-                                return drawStraightLink(l, l.source.x, l.source.y, l.target.x, l.target.y);
-                            }
-                        });
-                    });
-                });
-            });
-        });
-
         /* Switch filter action. */
-        $("[id^=prov-ctrl-filter-list-]").click(function () {
-            $(this).find("input[type='radio']").prop("checked", true);
+        $("#prov-ctrl-filter-action > button").click(function () {
+            filterAction = $(this).prop('value');
 
-            var selectedFilterAction = $(this).find("label").text();
-            switch (selectedFilterAction) {
-                case "Hide":
-                    $("#prov-ctrl-filter-list-blend").find("input[type='radio']").prop("checked", false);
-                    filterAction = "hide";
-                    break;
-                case "Blend":
-                    $("#prov-ctrl-filter-list-hide").find("input[type='radio']").prop("checked", false);
-                    filterAction = "blend";
-                    break;
+            if (filterAction==="blend") {
+                $("#prov-ctrl-filter-action-blend").attr("class", 'active btn btn-mini btn-warning');
+                $("#prov-ctrl-filter-action-hide").attr("class", 'btn btn-mini btn-primary');
+            } else {
+                $("#prov-ctrl-filter-action-blend").attr("class", 'btn btn-mini btn-primary');
+                $("#prov-ctrl-filter-action-hide").attr("class", 'active btn btn-mini btn-warning');
             }
-            runRenderUpdatePrivate(vis, lastSolrResponse);
+
+            if (filterMethod==="timeline") {
+                filterAnalysesByTime(d3.select(".startTimeline").data()[0].time, d3.select(".endTimeline").data()[0].time, vis);
+            } else {
+                runRenderUpdatePrivate(vis, lastSolrResponse);
+            }
         });
 
         /* Choose visible node attribute. */
@@ -4647,34 +4560,16 @@ var provvisRender = function () {
 
         });
 
-
-        /* Node info. */
-        $("#prov-ctrl-nodeinfo-click").click(function () {
-            if ($("#provenance-table").css("top") === "0px") {
-                $("#provenance-table").animate({top: '-155'}, nodeLinkTransitionTime);
-                setTimeout(function () {
-                    $("#prov-ctrl-nodeinfo-click").html("<i class=icon-info-sign></i>" + "&nbsp;Node info&nbsp;" + "<i class=icon-caret-down></i>");
-                }, nodeLinkTransitionTime);
-            } else {
-                $("#provenance-table").animate({top: '0'}, nodeLinkTransitionTime);
-                setTimeout(function () {
-                    $("#prov-ctrl-nodeinfo-click").html("<i class=icon-info-sign></i>" + "&nbsp;Node info&nbsp;" + "<i class=icon-caret-up></i>");
-                }, nodeLinkTransitionTime);
-            }
-        });
-
-        /* Sidebar. */
-        $("#prov-ctrl-sidebar-click").click(function () {
-            if ($("#provenance-sidebar").css("right") === "0px") {
+        /* Switch sidebar on or off. */
+        $("#prov-ctrl-toggle-sidebar").click(function () {
+            if ($(this).hasClass('active')) {
                 $("#provenance-sidebar").animate({right: '-355'}, nodeLinkTransitionTime);
-                setTimeout(function () {
-                    $("#prov-ctrl-sidebar-click").html("<i class=icon-filter></i>" + "&nbsp;Sidebar&nbsp;" + "<i class=icon-caret-left></i>");
-                }, nodeLinkTransitionTime);
+                $(this).toggleClass('btn-primary btn-warning');
+                $(this).html("OFF");
             } else {
                 $("#provenance-sidebar").animate({right: '0'}, nodeLinkTransitionTime);
-                setTimeout(function () {
-                    $("#prov-ctrl-sidebar-click").html("<i class=icon-filter></i>" + "&nbsp;Sidebar&nbsp;" + "<i class=icon-caret-right></i>");
-                }, nodeLinkTransitionTime);
+                $(this).toggleClass('btn-warning btn-primary');
+                $(this).html("ON");
             }
         });
     };
@@ -5124,6 +5019,8 @@ var provvisRender = function () {
      */
     var runRenderUpdatePrivate = function (vis, solrResponse) {
         var selNodes = [];
+
+        filterMethod = "facet";
 
         if (solrResponse instanceof SolrResponse) {
 

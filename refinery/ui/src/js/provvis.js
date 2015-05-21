@@ -121,7 +121,7 @@ var provvis = function () {
 
         $("<button/>", {
             "id": "prov-doi-view-apply",
-            "class": "btn btn-warning",
+            "class": "btn btn-primary",
             "type": "button",
             "html": "Apply",
             "style": "position: absolute; left: 0px; top: 340px;"

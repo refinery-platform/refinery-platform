@@ -4,49 +4,33 @@
  * @author sluger Stefan Luger https://github.com/sluger
  */
 
-.provvis-legend-cell {
-    width: auto;
-    height: 45px;
-    padding: 0px;
-    margin: 0px;
-    display: inline-block;
-}
-
-.provvis-legend-cell-canvas {
-    width: 500px;
-    height: 45px;
-    padding: 0px;
-    margin: 0px;
-}
-
-.provvis-legend-cell text {
-    text-align: left;
-}
-
-#legend-modal {
-    max-height: 500px;
-}
-
-#legend-body {
-    max-height: 460px;
-}
-
 #provenance-canvas {
     position: relative;
     overflow: hidden;
 }
 
-#provenance-controls {
-    margin-bottom: 5px;
+#prov-ctrl-node-labeling-btn-group {
+    margin-left: 20px;
+    margin-right: 20px;
 }
 
-#prov-ctrl-node-labeling-btn-group, #prov-ctrl-global-btn-group, #prov-ctrl-nodeinfo-click, #prov-ctrl-sidebar-click, #prov-ctrl-help {
-    margin-left: 15px;
+#prov-ctrl-visible-attribute {
+    padding: 0;
 }
 
-#prov-ctrl-visible-attribute, #prov-ctrl-filter, #prov-ctrl-colorcoding {
-    padding-left: 0;
-    padding-right: 0;
+#prov-ctrl-filter-action {
+    margin-right: 20px;
+}
+
+#prov-ctrl-toggle-sidebar {
+    margin-right: 20px;
+    width: 32px;
+}
+
+#prov-ctrl-toggle-sidebar-label {
+    display: inline;
+    margin-top: 3px;
+    margin-right: 5px;
 }
 
 #provenance-sidebar {
@@ -59,20 +43,6 @@
     background-color: #ffffff;
 }
 
-#provenance-table {
-    position: relative;
-    left: 0;
-    right: 0;
-    top: 0;
-    width: 100%;
-    /*max-height: 150px;*/
-    overflow-y: scroll;
-    background-color: #ffffff;
-    border-style: solid;
-    border-color: lightgray;
-    border-width: 1.0px;
-}
-
 #provenance-colorcoding-view {
     position: relative;
     left: 0;
@@ -80,10 +50,6 @@
     top: 0;
     width: 100%;
     background-color: #ffffff;
-}
-
-#provenance-table-content {
-    /*background-color: #ffffff;*/
 }
 
 #provenance-timeline-view {
@@ -142,12 +108,6 @@
     overflow-y: auto;
 }
 
-.canvas {
-}
-
-.analysis, .layer {
-}
-
 .node, .aNode, .saNode, .lNode {
     stroke: #136382;
     stroke-width: 0.5px;
@@ -186,7 +146,7 @@
 }
 
 .filteredNode:hover {
-    stroke: #ed7407;
+    /*stroke: #ed7407;*/
     stroke-width: 1.0px;
     stroke-opacity: 1.0;
 }
@@ -302,17 +262,11 @@
     alignment-baseline: middle;
 }
 
-.lsaAnchor, .rsaAnchor, .laAnchor, .raAnchor, .llAnchor, .rlAnchor, .lnAnchor, .rnAnchor {
-}
-
 .glAnchor, .grAnchor {
     stroke-opacity: 1.0;
     fill-opacity: 1.0;
     fill: #136382;
     stroke-width: 0.5;
-}
-
-.mouseoverNode text {
 }
 
 .saBBox {
@@ -542,9 +496,6 @@
 .spin-icon-infinite {
     -webkit-animation: spin 2s infinite linear;
     -moz-animation: spin 2s infinite linear;
-}
-
-#provvis-loader {
 }
 
 #provvis-loader-icon {
