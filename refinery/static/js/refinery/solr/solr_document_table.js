@@ -167,6 +167,7 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
     self._commands.execute(
       SOLR_DOCUMENT_ORDER_UPDATED_COMMAND, {'fieldname': fieldName});
   });
+
   // attach event to node selection mode checkbox
   $("#" + "node-selection-mode").click(function(event) {
     if (self._query.getDocumentSelectionBlacklistMode()) {
@@ -228,6 +229,17 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
         this.parentElement.parentElement.innerHTML + '</table>'
       })
     );
+  });
+
+  //click event to show entire string for trimDocEntry
+  self._toggleIndicator();
+};
+
+
+//Toggles the indicator to show the entire string.
+SolrDocumentTable.prototype._toggleIndicator = function(){
+  $( ".indicator").click(function(e) {
+    $(this).children().toggle();
   });
 };
 
@@ -297,15 +309,21 @@ SolrDocumentTable.prototype._generateTableBody = function(solrResponse) {
 
 SolrDocumentTable.prototype._trimDocumentEntry = function(
     string, length, indicator) {
+  var self = this;
 
   indicator = indicator || "...";
 
   if (string.length > length) {
+    var trimmedChars = self._getTrimmedChars(string, length);
     return string.substring(0, length) +
-           "<span style=\"border-radius: 2px; background:lightgray; padding: 2px; font-face: bold; color:gray; display:inline-block; margin-top: -2px; margin-bottom: -2px; margin-left: 2px; margin-right: 2px; vertical-align: bottom;\">" + indicator + "</span>";
+        "<span class=indicator><span class=trimmedDocStr>" + trimmedChars + " </span>" + indicator + "</span>";
   }
-
   return string;
+};
+
+SolrDocumentTable.prototype._getTrimmedChars = function(
+    string, length) {
+  return string.substring(length, string.length);
 };
 
 SolrDocumentTable.prototype._generateTableHead = function(solrResponse) {
