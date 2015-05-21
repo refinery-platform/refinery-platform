@@ -121,7 +121,7 @@ var provvis = function () {
 
         $("<button/>", {
             "id": "prov-doi-view-apply",
-            "class": "btn btn-warning",
+            "class": "btn btn-primary",
             "type": "button",
             "html": "Apply",
             "style": "position: absolute; left: 0px; top: 340px;"
@@ -131,7 +131,7 @@ var provvis = function () {
             "id": "prov-doi-view-show",
             "class": "prov-doi-view-show-checkbox",
             "style": "display: flex; position: absolute; left: 75px; top: 340px; margin-top: 5px;",
-            "html": "<input id=\"prov-doi-view-show-input\" type=\"checkbox\" style=\"margin-right: 3px;\">Show DOI values"
+            "html": '<input id="prov-doi-view-show-input" type="checkbox" style="margin-right: 3px;">Show DOI values'
         }).appendTo(doiContainer);
 
         return doiContainer;

@@ -173,7 +173,7 @@ var provvisInit = function () {
                 }
             });
 
-            n.succs.values().forEach( function (sn) {
+            n.succs.values().forEach(function (sn) {
                 if (sn.subanalysis === null) {
                     traverseDataset(sn, subanalysis);
                 }
@@ -460,7 +460,6 @@ var provvisInit = function () {
             });
 
             /* TODO: Bug when deleting a successful analysis through django admin gui. */
-
             /* Set successor analyses. */
             an.children.values().forEach(function (san) {
                 san.succs.values().forEach(function (ssan) {
@@ -557,7 +556,7 @@ var provvisInit = function () {
         nodeAttributeList.forEach(function (na) {
             $("<li/>", {
                 "id": "prov-ctrl-visible-attribute-list-" + na,
-                "html": "<a href=\"#\" class=\"field-name\">" + "<label class=\"radio\">" + "<input type=\"radio\">" + na + "</label>" + "</a>"
+                "html": '<a href="#" class="field-name"><label class="radio" style="text-align: start"><input type="radio">' + na + '</label></a>'
             }).appendTo("#prov-ctrl-visible-attribute-list");
         });
 

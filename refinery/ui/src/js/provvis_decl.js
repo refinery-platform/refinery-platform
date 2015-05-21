@@ -63,15 +63,6 @@ var provvisDecl = function () {
         /* A node is part of a node-link path highlighted. */
         this.doiHighlighted = 0;
 
-        /* A node's attribute is matched during a search task. */
-        this.searched = 0;
-
-        /* A node is separated through alignment from its surrounding nodes. */
-        this.aligned = 0;
-
-        /* Multiple nodes are manually merged into a stratified node. */
-        this.stratified = 0;
-
 
         /* Distance. */
         /*************/
