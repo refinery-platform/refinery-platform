@@ -35,6 +35,7 @@ var provvisRender = function () {
 
     var timeColorScale = Object.create(null);
     var filterAction = Object.create(null);
+    var filterMethod = "timeline";
     var timeLineGradientScale = Object.create(null);
 
     var lastSolrResponse = Object.create(null);
@@ -695,7 +696,7 @@ var provvisRender = function () {
         /**
          * Drag start listener support for time lines.
          */
-        var dragLineStart = function (l) {
+        var dragLineStart = function () {
             d3.event.sourceEvent.stopPropagation();
         };
 
@@ -795,11 +796,15 @@ var provvisRender = function () {
          */
         var dragLineEnd = function (l) {
 
+            l.time = new Date(timeLineGradientScale(l.x));
+
             /* Update labels. */
             updateTimelineLabels(l);
 
             /* Filter action. */
             filterAnalysesByTime(getTimeLineThresholds(l)[0], getTimeLineThresholds(l)[1], vis);
+
+            filterMethod = "timeline";
         };
 
         /**
@@ -869,13 +874,19 @@ var provvisRender = function () {
             .attr("height", tlHeight - 10)
             .style({"fill": "url(#gradientGrayscale)", "stroke": "white", "stroke-width": "1px"});
 
+        timeLineGradientScale = d3.scale.linear()
+            .domain([0, 300])
+            .range([Date.parse(timeColorScale.domain()[0]), Date.parse(timeColorScale.domain()[1])]);
+
         var startTime = {
             className: "startTimeline",
-            x: 0
+            x: 0,
+            time: new Date(timeLineGradientScale(0))
         };
         var endTime = {
             className: "endTimeline",
-            x: 300
+            x: 300,
+            time: new Date(timeLineGradientScale(300))
         };
 
         var timeLineThreshold = svg.selectAll(".line")
@@ -896,10 +907,6 @@ var provvisRender = function () {
             .attr("points", "0,50 5,60 -5,60");
         timeLineThreshold.append("polygon").classed("timeMarker", true)
             .attr("points", "0,10 5,0 -5,0");
-
-        timeLineGradientScale = d3.scale.linear()
-            .domain([0, 300])
-            .range([Date.parse(timeColorScale.domain()[0]), Date.parse(timeColorScale.domain()[1])]);
 
         svg.selectAll(".line")
             .data(function () {
@@ -4520,7 +4527,12 @@ var provvisRender = function () {
                     filterAction = "blend";
                     break;
             }
-            runRenderUpdatePrivate(vis, lastSolrResponse);
+
+            if (filterMethod==="timeline") {
+                filterAnalysesByTime(d3.select(".startTimeline").data()[0].time, d3.select(".endTimeline").data()[0].time, vis);
+            } else {
+                runRenderUpdatePrivate(vis, lastSolrResponse);
+            }
         });
 
         /* Choose visible node attribute. */
@@ -4545,22 +4557,6 @@ var provvisRender = function () {
                 d3.select("#nodeId-" + n.autoId).select(".nodeAttrLabel").text(n.attributes.get(selAttrName));
             });
 
-        });
-
-
-        /* Node info. */
-        $("#prov-ctrl-nodeinfo-click").click(function () {
-            if ($("#provenance-table").css("top") === "0px") {
-                $("#provenance-table").animate({top: '-155'}, nodeLinkTransitionTime);
-                setTimeout(function () {
-                    $("#prov-ctrl-nodeinfo-click").html("<i class=icon-info-sign></i>" + "&nbsp;Node info&nbsp;" + "<i class=icon-caret-down></i>");
-                }, nodeLinkTransitionTime);
-            } else {
-                $("#provenance-table").animate({top: '0'}, nodeLinkTransitionTime);
-                setTimeout(function () {
-                    $("#prov-ctrl-nodeinfo-click").html("<i class=icon-info-sign></i>" + "&nbsp;Node info&nbsp;" + "<i class=icon-caret-up></i>");
-                }, nodeLinkTransitionTime);
-            }
         });
 
         /* Sidebar. */
@@ -5024,6 +5020,8 @@ var provvisRender = function () {
      */
     var runRenderUpdatePrivate = function (vis, solrResponse) {
         var selNodes = [];
+
+        filterMethod = "facet";
 
         if (solrResponse instanceof SolrResponse) {
 
