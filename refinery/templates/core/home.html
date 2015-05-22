@@ -65,9 +65,11 @@
 							Description
 						</th>
 						{% endif %}	    
-            <th>
-              Share
-            </th>
+            {% if user.is_authenticated %}
+                <th>
+                  Share
+                </th>
+            {% endif %}
 					</tr>
 				</thead>
 				<tbody>
@@ -105,9 +107,13 @@
 								</table>
 							{% endif %}
 			        	</td>
-                <td width="0%">
-                    <a ng-click="openPermissionEditor('dataset_sharing', '{{ data_set.uuid }}')">Edit</a>
-                </td>
+                {% if user.is_authenticated %}
+                    <td width="0%">
+                        <div style="display:none;">
+                            <a ng-click="openPermissionEditor('dataset_sharing', '{{ data_set.uuid }}')">Edit</a>
+                        </div>
+                    </td>
+                {% endif %}
 						{% if REFINERY_REPOSITORY_MODE %}
 				    	<td width="100%">
 							{{ data_set.summary }}
@@ -166,9 +172,11 @@
 				Analyses		
 				{% endif %}
 			</th>    
-      <th width="0%">
-        Share
-      </th>
+      {% if user.is_authenticated %}
+        <th width="0%">
+          Share
+        </th>
+      {% endif %}
 		</tr>
 	</thead>
 	<tbody>
@@ -226,9 +234,13 @@
 	    	<td>
 	        {{project.analyses.all|length}}
 	      </td>
-        <td>
-            <a ng-click="openPermissionEditor('project_sharing', '{{ project.uuid }}')">Edit</a>
-        </td>
+        {% if user.is_authenticated %}
+            <td>
+                <div style="display:none;">
+                    <a ng-click="openPermissionEditor('project_sharing', '{{ project.uuid }}')">Edit</a>
+                </div>
+            </td>
+        {% endif %}
 	    </tr>
 			{% for analysis in project.analyses.all %}
 			    <tr>
