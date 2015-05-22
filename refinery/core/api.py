@@ -75,7 +75,7 @@ class AnalysisResource(ModelResource):
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         # required for public data set access by anonymous users
         authentication = Authentication()
-        authorization = GuardianAuthorization()
+        authorization = Authorization()
         allowed_methods = ["get"]
         fields = [
             'data_set', 'creation_date', 'history_id', 'library_id', 'name',
@@ -188,7 +188,7 @@ class NodeSetResource(ModelResource):
         resource_name = 'nodeset'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
-        authorization = GuardianAuthorization()
+        authorization = Authorization()
         fields = [
             'is_current', 'name', 'summary', 'assay', 'study', 'uuid',
             'is_implicit', 'node_count', 'solr_query','solr_query_components'
@@ -266,7 +266,7 @@ class NodeSetListResource(ModelResource):
         resource_name = 'nodesetlist'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
-        authorization = GuardianAuthorization()
+        authorization = Authorization()
         fields = ['is_current', 'name', 'summary', 'assay', 'study', 'uuid']
         allowed_methods = ["get"]
         filtering = {"study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS}

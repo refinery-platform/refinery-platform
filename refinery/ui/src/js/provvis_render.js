@@ -687,8 +687,7 @@ var provvisRender = function () {
         });
 
         var tlHeight = 50,
-            tlWidth = 250,
-            numXTicks = 10;
+            tlWidth = 250;
 
         var x = d3.scale.linear()
             .domain([0, tlWidth])
@@ -697,6 +696,27 @@ var provvisRender = function () {
         var y = d3.scale.linear()
             .domain([5, 0])
             .range([0, tlHeight - 10]);
+
+        timeLineGradientScale = d3.time.scale()
+            .domain([Date.parse(timeColorScale.domain()[0]), Date.parse(timeColorScale.domain()[1])])
+            .range([0, tlWidth])
+            .nice();
+
+        var xAxis = d3.svg.axis()
+            .scale(timeLineGradientScale)
+            .orient('bottom')
+            .ticks(5);
+
+        var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient('left')
+            .ticks(7);
+
+        var tlTickCoords = d3.map();
+
+        aNodesBAK.forEach(function (an) {
+            tlTickCoords.set(an.autoId, timeLineGradientScale(parseISOTimeFormat(an.start)));
+        });
 
         /**
          * Drag start listener support for time lines.
@@ -769,30 +789,59 @@ var provvisRender = function () {
             }
 
             /* Update lines. */
-            d3.select(this).attr("transform", function (d) {
+            d3.select(this).attr("transform", function () {
                 return "translate(" + x(l.x) + ",0)";
             });
 
             /* Update labels. */
             updateTimelineLabels(l);
+            /* TODO: Append time labels to sliders. */
 
             /* On hover filter update. */
-            var tlTickCoords = aNodesBAK.map(function (an) {
-                return timeLineGradientScale(parseISOTimeFormat(an.start));
-            });
-            if (l.className === "startTimeline") {
-                if (tlTickCoords.some(function (t) {
-                    return x(l.x) - x(t) >= 0 && x(l.x) - x(t) <= 1;
-                })) {
-                    filterAnalysesByTime(getTimeLineThresholds(l)[0], getTimeLineThresholds(l)[1], vis);
+            if (d3.entries(tlTickCoords).some(function (t) {
+
+                if (l.className === "startTimeline") {
+
+                    /* Left to right. */
+                    if (l.x > l.lastX) {
+                        if (x(l.x) - x(t.value) > 0 && x(l.x) - x(t.value) <= 1) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    /* Right to left. */
+                    } else {
+                        if (x(l.x) - x(t.value) >= -1 && x(l.x) - x(t.value) < 0) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                } else {
+                    /* Right to left. */
+                    if (l.x < l.lastX) {
+
+                        /* TODO: Small bug, time scale is off by 30 seconds. */
+                        if (x(l.x) - x(t.value) >= -5 && x(l.x) - x(t.value) < 0) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                        /* Left to right. */
+                    } else {
+                        if (x(l.x) - x(t.value) > 0 && x(l.x) - x(t.value) <=1) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
                 }
-            } else {
-                if (tlTickCoords.some(function (t) {
-                    return x(l.x) - x(t) < 0 && x(l.x) - x(t) > -1;
-                })) {
-                    filterAnalysesByTime(getTimeLineThresholds(l)[0], getTimeLineThresholds(l)[1], vis);
-                }
+            })) {
+                filterAnalysesByTime(getTimeLineThresholds(l)[0], getTimeLineThresholds(l)[1], vis);
             }
+
+            /* Remember last drag x coord. */
+            l.lastX = l.x;
         };
 
         /**
@@ -897,21 +946,6 @@ var provvisRender = function () {
             .attr("height", tlHeight - 10)
             .style({"fill": "url(#gradientGrayscale)", "stroke": "white", "stroke-width": "1px"});
 
-        timeLineGradientScale = d3.time.scale()
-            .domain([Date.parse(timeColorScale.domain()[0]), Date.parse(timeColorScale.domain()[1])])
-            .range([0, tlWidth])
-            .nice();
-
-        var xAxis = d3.svg.axis()
-            .scale(timeLineGradientScale)
-            .orient('bottom')
-            .ticks(5);
-
-        var yAxis = d3.svg.axis()
-            .scale(y)
-            .orient('left')
-            .ticks(7);
-
         svg.append('g')
             .classed({"x": true, "axis": true})
             .attr("id", "tlxAxis")
@@ -933,11 +967,13 @@ var provvisRender = function () {
         var startTime = {
             className: "startTimeline",
             x: 0,
+            lastX: -1,
             time: new Date(timeLineGradientScale.invert(0))
         };
         var endTime = {
             className: "endTimeline",
             x: tlWidth,
+            lastX: tlWidth+1,
             time: new Date(timeLineGradientScale.invert(tlWidth))
         };
 
@@ -964,7 +1000,9 @@ var provvisRender = function () {
             .data(function () {
                 return vis.graph.aNodes;
             })
-            .enter().append("line").classed("tlAnalysis", true)
+            .enter().append("line")
+            .attr("id", function (an) {return "tlAnalysisId-" + an.autoId;})
+            .classed("tlAnalysis", true)
             .attr("x1", function (an) {
                 return timeLineGradientScale(parseISOTimeFormat(an.start));
             })
@@ -3501,7 +3539,7 @@ var provvisRender = function () {
             d.selected = false;
             /*d3.select(this).classed("selectedNode", false);*/
             d.doi.selectedChanged();
-            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).style({"stroke": colorStrokes});
+            d3.select(this).classed("selectedNode", false).select(".glyph").select("rect, circle").style({"stroke": colorStrokes});
         });
 
         $('#nodeInfoTitle').html("Select a node: - ");
@@ -3509,6 +3547,13 @@ var provvisRender = function () {
         $("#" + "provenance-table-content").html("");
 
         selectedNodeSet = d3.map();
+
+        $(".filteredNode").hover(function () {
+            $(this).find("rect, circle").css({"stroke": colorHighlight});
+        }, function () {
+            $(this).find("rect, circle").css({"stroke": colorStrokes});
+        });
+
     };
 
     /**
@@ -3520,14 +3565,26 @@ var provvisRender = function () {
         if (d.selected) {
             d.selected = false;
             selectedNodeSet.remove(d.autoId);
-            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).style({"stroke": colorStrokes});
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).select(".glyph").select("rect, circle").style({"stroke": colorStrokes});
             $('#nodeInfoTitle').html("Select a node: - ");
             $('#nodeInfoTitleLink').html("");
             $("#" + "provenance-table-content").html("");
+
+            $("#nodeId-" + d.autoId).hover(function () {
+                $(this).find("rect, circle").css({"stroke": colorHighlight});
+            }, function () {
+                $(this).find("rect, circle").css({"stroke": colorStrokes});
+            });
         } else {
             d.selected = true;
             selectedNodeSet.set(d.autoId, d);
-            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).style({"stroke": colorHighlight});
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).select(".glyph").select("rect, circle").style({"stroke": colorHighlight});
+
+            $("#nodeId-" + d.autoId).hover(function () {
+                $(this).find("rect, circle").css({"stroke": colorHighlight});
+            }, function () {
+                $(this).find("rect, circle").css({"stroke": colorHighlight});
+            });
         }
 
         d.doi.selectedChanged();
@@ -3602,9 +3659,9 @@ var provvisRender = function () {
             hLink.style({"stroke": color});
 
             $(".filteredNode").hover(function () {
-                $(this).css({"stroke": color});
+                $(this).find("rect, circle").css({"stroke": color});
             }, function () {
-                $(this).css({"stroke": colorStrokes});
+                $(this).find("rect, circle").css({"stroke": colorStrokes});
             });
 
             $(".glAnchor, .grAnchor").hover(function () {
@@ -4600,7 +4657,7 @@ var provvisRender = function () {
 
         /* Handle click separation on nodes. */
         var domNodesetClickTimeout;
-        domNodeset.on("click", function (d) {
+        domNodeset.on("mousedown", function (d) {
             if (d3.event.defaultPrevented) return;
             clearTimeout(domNodesetClickTimeout);
 
@@ -4739,10 +4796,14 @@ var provvisRender = function () {
         /* Handle path highlighting. */
         d3.selectAll(".glAnchor").on("click", function (d) {
             handlePathHighlighting(d, "p");
+        }).on("mousedown", function () {
+            d3.event.stopPropagation();
         });
 
         d3.selectAll(".grAnchor").on("click", function (d) {
             handlePathHighlighting(d, "s");
+        }).on("mousedown", function () {
+            d3.event.stopPropagation();
         });
     };
 
