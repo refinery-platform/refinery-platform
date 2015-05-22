@@ -51,16 +51,21 @@ angular.module("refinerySharing", [])
                 var group = row.insertCell(0);
                 group.innerHTML = shareList[i].name + '<div style="display: none;">' + shareList[i].id+ '</div>';
                 
-                var permissions = row.insertCell(1);
-                var noPerm = !(readPerm || changePerm)? 'checked' : '';
-                var readOnly = (readPerm && !changePerm)? 'checked' : '';
-                var changeAllowed = (changePerm)? 'checked': '';
-                
-                var noPermHTML = '<td><input type="radio" name="' + i + '"' + noPerm + '></td>';
-                var readOnlyHTML = '<td><input type="radio" name="' + i + '"' + readOnly + '></td>';
-                var changeAllowedHTML = '<td><input type="radio" name="' + i + '"' + changeAllowed + '></td>';
+                var noPermDOM = row.insertCell(1);
+                var readOnlyDOM = row.insertCell(2);
+                var editDOM = row.insertCell(3);
 
-                permissions.innerHTML = '<tr>' + noPermHTML + readOnlyHTML + changeAllowedHTML + '</tr>';
+                var isNoPerm = !(readPerm || changePerm)? 'checked' : '';
+                var isReadOnly = (readPerm && !changePerm)? 'checked' : '';
+                var isChangeAllowed = (changePerm)? 'checked': '';
+                
+                var noPermHTML = '<td><input type="radio" name="' + i + '" ' + isNoPerm + '></td>';
+                var readOnlyHTML = '<td><input type="radio" name="' + i + '" ' + isReadOnly + '></td>';
+                var changeAllowedHTML = '<td><input type="radio" name="' + i + '" ' + isChangeAllowed + '></td>';
+
+                noPermDOM.innerHTML = noPermHTML;
+                readOnlyDOM.innerHTML = readOnlyHTML;
+                editDOM.innerHTML = changeAllowedHTML;
             }
         });
     }
@@ -91,20 +96,20 @@ angular.module("refinerySharing", [])
             var pTable = document.getElementById('permission-table');
             var cells = pTable.getElementsByTagName('td');
             var data = '{"shares": [';
-            // Data is clustered into sets of 2 -- i is name, i+1 the permission stuff.
-            for (var i = 0; i < cells.length; i += 2) {
+            // Data is clustered into sets of 4 -- i is name, i+1 is noperm, i+2 is readonly, i+3 is edit.
+            for (var i = 0; i < cells.length; i += 4) {
                 // Add the group.
                 var name = cells[i].innerText;
                 var id = cells[i].children[0].innerText;
                 data += '{"name": "' + name + '", "id": ' + id + ', "permission": ';
 
-                // Add permissions -- 0 is none, 1 is readonly, 2 is edit.
-                cellButtons = cells[i+1].children;
-                var read = cellButtons[1].checked || cellButtons[2].checked;
-                var change = cellButtons[2].checked;
+                var read = cells[i+2].children[0].checked || cells[i+3].children[0].checked;
+                var change = cells[i+3].children[0].checked;
+                // var read = cellButtons[2].checked || cellButtons[3].checked;
+                // var change = cellButtons[3].checked;
                 
                 data += '{"read": ' + read + ', "change": ' + change + '}}';
-                if (i + 2 < cells.length) {
+                if (i+5 < cells.length) {
                     data += ', ';
                 }
             }
