@@ -1,109 +1,191 @@
 <div ng-controller="provvisCanvasController">
     <div id="provenance-canvas">
-        <div id="provenance-colorcoding-view">
-            <table class="table">
-                <tbody>
-                    <tr>
-                        <td>
-                            <table>
-                                <tbody>
-                                    <tr>
-                                        <td id="prov-ctrl-cc-none">
-                                            <label class="radio"><input type="radio">None</label>
-                                        </td>
-                                        <td id="prov-ctrl-cc-time">
-                                            <label class="radio"><input type="radio" checked>Time</label>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <table class="table-bordered">
-                                <tbody>
-                                    <tr>
-                                        <td id="prov-ctrl-cc-strokes">
-                                            <label class="provvis-cc-label">Edges:
-                                                <input type='text' id="provvis-cc-strokes"/>
-                                                <em id='provvis-cc-strokes-hex'>#136382</em>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td id="prov-ctrl-cc-highlight">
-                                            <label class="provvis-cc-label">Highlighting:
-                                                <input type='text' id="provvis-cc-highlight"/>
-                                                <em id='provvis-cc-highlight-hex'>#ed7407</em>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </td>
-                        <td id="prov-ctrl-cc-workflow">
-                            <label class="radio"><input type="radio">Workflow</label>
-                            <table class="table-striped table-bordered table-condensed">
-                                <tbody id="prov-ctrl-cc-workflow-content">
+        <div id="provenance-sidebar">
+            <div class="refinery-panel-tabs tabbable">
+                <div class="row-fluid">
+                    <div class="span12">
+                        <ul id="provvis-sidebar-tabs" class="nav nav-tabs">
+                            <li class="active">
+                                <a href="#provvis-filter-doi-tab" data-toggle="tab">Filter</a>
+                            </li>
+                            <li><a href="#provvis-nodeinfo-tab" data-toggle="tab">Node</a></li>
+                            <li><a href="#provvis-colorcoding-tab" data-toggle="tab">Colors</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div id="provvis-sidebar-content" class="refinery-panel refinery-panel-content scrollable tab-content">
+                <div class="tab-pane active" id="provvis-filter-doi-tab">
 
-                                </tbody>
-                            </table>
-                        </td>
-                        <td id="prov-ctrl-cc-nodetype">
-                            <label class="radio"><input type="radio">Node type</label>
-                            <table class="table-bordered">
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <label class="provvis-cc-label">Layer:
-                                                <input type='text' id="provvis-cc-layer"/>
-                                                <em id='provvis-cc-layer-hex'>#1f77b4</em>
-                                            </label>
-                                        </td>
-                                        <td>
-                                            <label class="provvis-cc-label">Analysis:
-                                                <input type='text' id="provvis-cc-analysis"/>
-                                                <em id='provvis-cc-analysis-hex'>#2ca02c</em>
-                                            </label>
-                                        </td>
-                                        <td>
-                                            <label class="provvis-cc-label">Subanalysis:
-                                                <input type='text' id="provvis-cc-subanalysis"/>
-                                                <em id='provvis-cc-subanalysis-hex'>#d62728</em>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label class="provvis-cc-label">Data Transformation:
-                                                <input type='text' id="provvis-cc-dt"/>
-                                                <em id='provvis-cc-dt-hex'>#7f7f7f</em>
-                                            </label>
-                                        </td>
-                                        <td>
-                                            <label class="provvis-cc-label">Intermediate:
-                                                <input type='text' id="provvis-cc-intermediate"/>
-                                                <em id='provvis-cc-intermediate-hex'>#bcbd22</em>
-                                            </label>
-                                        </td>
-                                        <td>
-                                            <label class="provvis-cc-label">Stored:
-                                                <input type='text' id="provvis-cc-stored"/>
-                                                <em id='provvis-cc-stored-hex'>#8c564b</em>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <label class="provvis-cc-label">Special:
-                                                <input type='text' id="provvis-cc-special"/>
-                                                <em id='provvis-cc-special-hex'>#17becf</em>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                </div>
+                <div class="tab-pane" id="provvis-nodeinfo-tab">
+                    <div class="nodeInfoHeader">
+                        <h3 id="nodeInfoTitle">
+                            Select a node: -
+                        </h3>
+                        <a id="nodeInfoTitleLink"></a>
+                    </div>
+                    <div id="provenance-table-content"></div>
+                </div>
+                <div class="tab-pane" id="provvis-colorcoding-tab">
+                    <div id="provenance-colorcoding-view">
+
+                        <div class="accordion" id="provvis-color-accordion-edges">
+                            <div class="accordion-group">
+                                <div class="accordion-heading">
+                                    <a class="accordion-toggle" data-toggle="collapse"
+                                       data-parent="#provvis-color-accordion-edges" href="#pv-edges">
+                                        Edges and Highlighting
+                                    </a>
+                                </div>
+                                <div id="pv-edges" class="accordion-body collapse">
+                                    <div class="accordion-inner">
+                                        <table>
+                                            <tbody>
+                                            <tr>
+                                                <td id="prov-ctrl-cc-strokes">
+                                                    <label class="provvis-cc-label">
+                                                        <input type='text' id="provvis-cc-strokes"/>Edges
+                                                        <em id='provvis-cc-strokes-hex' class="provvis-cc-hide-hex">#136382</em>
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td id="prov-ctrl-cc-highlight">
+                                                    <label class="provvis-cc-label">
+                                                        <input type='text' id="provvis-cc-highlight"/>Highlighting
+                                                        <em id='provvis-cc-highlight-hex' class="provvis-cc-hide-hex">#ed7407</em>
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion" id="provvis-color-accordion">
+                            <div class="accordion-group">
+                                <div class="accordion-heading">
+                                    <a class="accordion-toggle" id="prov-ctrl-cc-none-acc" data-toggle="collapse"
+                                       data-parent="#provvis-color-accordion" href="#pv-none"
+                                       class="provvis-panel-href">
+                                        None
+                                    </a>
+                                </div>
+                                <div id="pv-none" class="accordion-body collapse">
+                                    <div class="accordion-inner">White nodes with black labels.</div>
+                                </div>
+                            </div>
+                            <div class="accordion-group">
+                                <div class="accordion-heading">
+                                    <a class="accordion-toggle" id="prov-ctrl-cc-time-acc" data-toggle="collapse"
+                                       data-parent="#provvis-color-accordion" href="#pv-time"
+                                       class="provvis-panel-href">
+                                        Analysis Execution Time
+                                    </a>
+                                </div>
+                                <div id="pv-time" class="accordion-body collapse">
+                                    <div class="accordion-inner">Nodes are colored based on their execution date and
+                                        time.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-group">
+                                <div class="accordion-heading">
+                                    <a class="accordion-toggle" id="prov-ctrl-cc-workflow-acc" data-toggle="collapse"
+                                       data-parent="#provvis-color-accordion" href="#pv-wf" class="provvis-panel-href">
+                                        Workflows
+                                    </a>
+                                </div>
+                                <div id="pv-wf" class="accordion-body collapse">
+                                    <div class="accordion-inner">
+                                        <table>
+                                            <tbody id="prov-ctrl-cc-workflow-content">
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-group">
+                                <div class="accordion-heading">
+                                    <a class="accordion-toggle" id="prov-ctrl-cc-nodetype-acc" data-toggle="collapse"
+                                       data-parent="#provvis-color-accordion" href="#pv-nt" class="provvis-panel-href">
+                                        Node types
+                                    </a>
+                                </div>
+                                <div id="pv-nt" class="accordion-body collapse">
+                                    <div class="accordion-inner">
+                                        <table>
+                                            <tbody>
+                                            <tr>
+                                                <td>
+                                                    <label class="provvis-cc-label">
+                                                        <input type='text' id="provvis-cc-layer"/>Layer
+                                                        <em id='provvis-cc-layer-hex' class="provvis-cc-hide-hex">#1f77b4</em>
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <label class="provvis-cc-label">
+                                                        <input type='text' id="provvis-cc-analysis"/>Analysis
+                                                        <em id='provvis-cc-analysis-hex' class="provvis-cc-hide-hex">#2ca02c</em>
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <label class="provvis-cc-label">
+                                                        <input type='text' id="provvis-cc-subanalysis"/>Subanalysis
+                                                        <em id='provvis-cc-subanalysis-hex' class="provvis-cc-hide-hex">#d62728</em>
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <label class="provvis-cc-label">
+                                                        <input type='text' id="provvis-cc-dt"/>Data Transformation
+                                                        <em id='provvis-cc-dt-hex'
+                                                            class="provvis-cc-hide-hex">#7f7f7f</em>
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <label class="provvis-cc-label">
+                                                        <input type='text' id="provvis-cc-intermediate"/>Intermediate
+                                                        <em id='provvis-cc-intermediate-hex'
+                                                            class="provvis-cc-hide-hex">#bcbd22</em>
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <label class="provvis-cc-label">
+                                                        <input type='text' id="provvis-cc-stored"/>Stored
+                                                        <em id='provvis-cc-stored-hex' class="provvis-cc-hide-hex">#8c564b</em>
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <label class="provvis-cc-label">
+                                                        <input type='text' id="provvis-cc-special"/>Special
+                                                        <em id='provvis-cc-special-hex' class="provvis-cc-hide-hex">#17becf</em>
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

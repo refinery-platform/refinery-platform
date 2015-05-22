@@ -1,0 +1,8 @@
+// https://stackoverflow.com/questions/26628309/less-v2-does-not-compile-twitters-bootstrap-2-x
+#grid {
+    .core  {
+        .span(@gridColumns) {
+            width: (@gridColumnWidth * @gridColumns) + (@gridGutterWidth * (@gridColumns - 1));
+        }
+    }
+};

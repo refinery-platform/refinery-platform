@@ -368,7 +368,7 @@ class ExternalToolStatusResource(ModelResource):
         authentication = Authentication()
         authorization = Authorization()
         allowed_methods = ["get"]
-        fields = ['name', 'is_active', 'unique_instance_identifier']
+        fields = ['name', 'is_active', 'last_time_check',  'unique_instance_identifier']
 
     def dehydrate(self, bundle):
         # call to method

@@ -50,7 +50,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Refinery'
-copyright = u'2011-2013, Park Lab at Harvard Medical School in collaboration with Hide Lab at Harvard School of Public Health'
+copyright = u'2011-2015, Park Lab at Harvard Medical School in collaboration with Hide Lab at Harvard School of Public Health'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

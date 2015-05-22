@@ -4,89 +4,51 @@
  * @author sluger Stefan Luger https://github.com/sluger
  */
 
-.provvis-legend-cell {
-    width: auto;
-    height: 45px;
-    padding: 0px;
-    margin: 0px;
-    display: inline-block;
-}
-
-.provvis-legend-cell-canvas {
-    width: 500px;
-    height: 45px;
-    padding: 0px;
-    margin: 0px;
-}
-
-.provvis-legend-cell text {
-    text-align: left;
-}
-
-#legend-modal {
-    max-height: 500px;
-}
-
-#legend-body {
-    max-height: 460px;
-}
-
 #provenance-canvas {
     position: relative;
     overflow: hidden;
 }
 
-#provenance-controls {
-    margin-bottom: 5px;
+#prov-ctrl-node-labeling-btn-group {
+    margin-left: 20px;
+    margin-right: 20px;
 }
 
-#prov-ctrl-node-labeling-btn-group, #prov-ctrl-global-btn-group, #prov-ctrl-nodeinfo-click, #prov-ctrl-sidebar-click, #prov-ctrl-help {
-    margin-left: 15px;
+#prov-ctrl-visible-attribute {
+    padding: 0;
 }
 
-#prov-ctrl-visible-attribute, #prov-ctrl-filter, #prov-ctrl-colorcoding {
-    padding-left: 0;
-    padding-right: 0;
+#prov-ctrl-filter-action {
+    margin-right: 20px;
+}
+
+#prov-ctrl-toggle-sidebar {
+    margin-right: 20px;
+    width: 32px;
+}
+
+#prov-ctrl-toggle-sidebar-label {
+    display: inline;
+    margin-top: 3px;
+    margin-right: 5px;
 }
 
 #provenance-sidebar {
     position: absolute;
     top: 0;
-    right: -320px;
-    width: 315px;
+    margin-top: 5px;
+    right: -355px;
+    width: 350px;
     height: 100%;
     background-color: #ffffff;
 }
 
-#provenance-table {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: -155px;
-    width: 100%;
-    max-height: 150px;
-    overflow-y: scroll;
-    background-color: #ffffff;
-    border-style: solid;
-    border-color: lightgray;
-    border-width: 1.0px;
-}
-
 #provenance-colorcoding-view {
-    position: absolute;
+    position: relative;
     left: 0;
     right: 0;
-    top: -165px;
+    top: 0;
     width: 100%;
-    max-height: 160px;
-    overflow-y: scroll;
-    background-color: #ffffff;
-    border-style: solid;
-    border-color: lightgray;
-    border-width: 1.0px;
-}
-
-#provenance-table-content {
     background-color: #ffffff;
 }
 
@@ -146,12 +108,6 @@
     overflow-y: auto;
 }
 
-.canvas {
-}
-
-.analysis, .layer {
-}
-
 .node, .aNode, .saNode, .lNode {
     stroke: #136382;
     stroke-width: 0.5px;
@@ -185,16 +141,15 @@
 
 .selectedNode rect, .selectedNode circle {
     stroke-width: 1.5px;
-    /*stroke: #ed7407;*/
-    stroke-opacity: 1.0;
-}
-
-.filteredNode:hover {
     stroke: #ed7407;
-    stroke-width: 1.0px;
     stroke-opacity: 1.0;
 }
 
+.filteredNode:hover > .glyph > rect, .filteredNode:hover > .glyph > circle {
+    stroke: #ed7407;
+    stroke-width: 1.5px;
+    stroke-opacity: 1.0;
+}
 
 .glAnchor:hover, .grAnchor:hover {
     stroke: #ed7407;
@@ -307,16 +262,12 @@
     alignment-baseline: middle;
 }
 
-.lsaAnchor, .rsaAnchor, .laAnchor, .raAnchor, .llAnchor, .rlAnchor, .lnAnchor, .rnAnchor {}
-
 .glAnchor, .grAnchor {
     stroke-opacity: 1.0;
     fill-opacity: 1.0;
     fill: #136382;
     stroke-width: 0.5;
 }
-
-.mouseoverNode text {}
 
 .saBBox {
     fill-opacity: 0.0;
@@ -384,13 +335,17 @@
     cursor: col-resize;
 }
 
-#tlTitle, #doiTitle {
+#tlTitle, #doiTitle, .pv-colors-title {
     font-style: italic;
     font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: darkgray;
     font-size: 14px;
     font-weight: normal;
     line-height: 20px;
+}
+
+.nodeInfoHeader {
+    margin-bottom: 20px;
 }
 
 #tlTitle {
@@ -486,7 +441,7 @@
     margin: 0px;
 }
 
-.sp-dd, .sp-button-container {
+.sp-dd/*, .sp-button-container*/ {
     display: none;
 }
 
@@ -517,6 +472,10 @@
     padding-left: 15px;
 }
 
+.provvis-cc-hide-hex {
+    display: none;
+}
+
 .rotate-icon-90:before {
     -webkit-transform: rotate(270deg);
     -moz-transform: rotate(270deg);
@@ -532,4 +491,38 @@
     dominant-baseline: central;
     font-family: FontAwesome;
     font-size: 7px;
+}
+
+.spin-icon-infinite {
+    -webkit-animation: spin 2s infinite linear;
+    -moz-animation: spin 2s infinite linear;
+}
+
+#provvis-loader-icon {
+    font-size: 30px;
+    width: 30px;
+    height: 30px;
+    margin: auto;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 30%;
+    color: #333333;
+    opacity: 0.7;
+}
+
+/* http://bost.ocks.org/mike/bar/3/ */
+.axis text {
+    font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+#provvis-sidebar-content {
+    height: 100%;
 }
