@@ -44,7 +44,7 @@ python-dateutil==2.1
 python-ldap==2.3.13
 python-ptrace==0.6.4
 readline==6.2.2
-requests==2.4.0
+requests==2.7.0
 simplejson==2.4.0
 six==1.5.2
 sphinx-bootstrap-theme==0.1.2
