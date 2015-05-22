@@ -782,7 +782,7 @@ var provvisRender = function () {
             });
             if (l.className === "startTimeline") {
                 if (tlTickCoords.some(function (t) {
-                    return x(l.x) - x(t) >= 0 && x(l.x) - x(t) <= 1;
+                    return (x(l.x) - x(t) >= 0 && x(l.x) - x(t) <= 1) || (x(l.x) - x(t) < 0 && x(l.x) - x(t) > -1);
                 })) {
                     filterAnalysesByTime(getTimeLineThresholds(l)[0], getTimeLineThresholds(l)[1], vis);
                 }
@@ -3501,7 +3501,7 @@ var provvisRender = function () {
             d.selected = false;
             /*d3.select(this).classed("selectedNode", false);*/
             d.doi.selectedChanged();
-            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).style({"stroke": colorStrokes});
+            d3.select(this).classed("selectedNode", false).select(".glyph").select("rect, circle").style({"stroke": colorStrokes});
         });
 
         $('#nodeInfoTitle').html("Select a node: - ");
@@ -3509,6 +3509,13 @@ var provvisRender = function () {
         $("#" + "provenance-table-content").html("");
 
         selectedNodeSet = d3.map();
+
+        $(".filteredNode").hover(function () {
+            $(this).find("rect, circle").css({"stroke": colorHighlight});
+        }, function () {
+            $(this).find("rect, circle").css({"stroke": colorStrokes});
+        });
+
     };
 
     /**
@@ -3520,14 +3527,26 @@ var provvisRender = function () {
         if (d.selected) {
             d.selected = false;
             selectedNodeSet.remove(d.autoId);
-            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).style({"stroke": colorStrokes});
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).select(".glyph").select("rect, circle").style({"stroke": colorStrokes});
             $('#nodeInfoTitle').html("Select a node: - ");
             $('#nodeInfoTitleLink').html("");
             $("#" + "provenance-table-content").html("");
+
+            $("#nodeId-" + d.autoId).hover(function () {
+                $(this).find("rect, circle").css({"stroke": colorHighlight});
+            }, function () {
+                $(this).find("rect, circle").css({"stroke": colorStrokes});
+            });
         } else {
             d.selected = true;
             selectedNodeSet.set(d.autoId, d);
-            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).style({"stroke": colorHighlight});
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).select(".glyph").select("rect, circle").style({"stroke": colorHighlight});
+
+            $("#nodeId-" + d.autoId).hover(function () {
+                $(this).find("rect, circle").css({"stroke": colorHighlight});
+            }, function () {
+                $(this).find("rect, circle").css({"stroke": colorHighlight});
+            });
         }
 
         d.doi.selectedChanged();
@@ -3602,9 +3621,9 @@ var provvisRender = function () {
             hLink.style({"stroke": color});
 
             $(".filteredNode").hover(function () {
-                $(this).css({"stroke": color});
+                $(this).find("rect, circle").css({"stroke": color});
             }, function () {
-                $(this).css({"stroke": colorStrokes});
+                $(this).find("rect, circle").css({"stroke": colorStrokes});
             });
 
             $(".glAnchor, .grAnchor").hover(function () {
@@ -4600,7 +4619,7 @@ var provvisRender = function () {
 
         /* Handle click separation on nodes. */
         var domNodesetClickTimeout;
-        domNodeset.on("click", function (d) {
+        domNodeset.on("mousedown", function (d) {
             if (d3.event.defaultPrevented) return;
             clearTimeout(domNodesetClickTimeout);
 
@@ -4739,10 +4758,14 @@ var provvisRender = function () {
         /* Handle path highlighting. */
         d3.selectAll(".glAnchor").on("click", function (d) {
             handlePathHighlighting(d, "p");
+        }).on("mousedown", function () {
+            d3.event.stopPropagation();
         });
 
         d3.selectAll(".grAnchor").on("click", function (d) {
             handlePathHighlighting(d, "s");
+        }).on("mousedown", function () {
+            d3.event.stopPropagation();
         });
     };
 

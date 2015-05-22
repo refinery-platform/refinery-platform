@@ -141,13 +141,13 @@
 
 .selectedNode rect, .selectedNode circle {
     stroke-width: 1.5px;
-    /*stroke: #ed7407;*/
+    stroke: #ed7407;
     stroke-opacity: 1.0;
 }
 
-.filteredNode:hover {
-    /*stroke: #ed7407;*/
-    stroke-width: 1.0px;
+.filteredNode:hover > .glyph > rect, .filteredNode:hover > .glyph > circle {
+    stroke: #ed7407;
+    stroke-width: 1.5px;
     stroke-opacity: 1.0;
 }
 
