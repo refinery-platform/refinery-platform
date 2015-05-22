@@ -74,10 +74,9 @@ module.exports = function(grunt) {
           "<%= styles_dir %>/css/font-awesome.css": "<%= styles_dir %>/less/font-awesome.less",
           "<%= styles_dir %>/css/font-awesome-ie7.css": "<%= styles_dir %>/less/font-awesome-ie7.less",
           "<%= styles_dir %>/css/variables.css": "<%= styles_dir %>/less/variables.less",
-          "<%= styles_dir %>/css/refinery-style.css": "<%= styles_dir %>/less/refinery-style.less"
-          // the following fail to compile:
-          //"<%= styles_dir %>/css/refinery-style-bootstrap.css": "<%= styles_dir %>/less/refinery-style-bootstrap.less",
-          //"<%= styles_dir %>/css/refinery-style-bootstrap-responsive.css": "<%= styles_dir %>/less/refinery-style-bootstrap-responsive.less",
+          "<%= styles_dir %>/css/refinery-style.css": "<%= styles_dir %>/less/refinery-style.less",
+          "<%= styles_dir %>/css/refinery-style-bootstrap.css": "<%= styles_dir %>/less/refinery-style-bootstrap.less",
+          "<%= styles_dir %>/css/refinery-style-bootstrap-responsive.css": "<%= styles_dir %>/less/refinery-style-bootstrap-responsive.less"
         }
       }
     },
@@ -195,7 +194,7 @@ module.exports = function(grunt) {
         options: {
           nospawn: true
         }
-      }      
+      }
     }
   });
 
@@ -205,7 +204,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-contrib-less');  
+  grunt.loadNpmTasks('grunt-contrib-less');
 
   // Default task(s).
   grunt.registerTask('default', ['jshint', 'clean', 'uglify', 'less', 'copy']);
