@@ -413,6 +413,7 @@ var provvisRender = function () {
         /* Get input links and update coordinates for x2 and y2. */
         predLinks.values().forEach(function (l) {
             d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId)
+                .classed("link-transition", true)
                 .transition()
                 .duration(draggingActive ? 0 : nodeLinkTransitionTime)
                 .attr("d", function (l) {
@@ -426,11 +427,16 @@ var provvisRender = function () {
                         return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
                     }
                 });
+
+            setTimeout(function () {
+                d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("link-transition", false);
+            }, nodeLinkTransitionTime);
         });
 
         /* Get output links and update coordinates for x1 and y1. */
         succLinks.values().forEach(function (l) {
             d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId)
+                .classed("link-transition", true)
                 .transition()
                 .duration(draggingActive ? 0 : nodeLinkTransitionTime)
                 .attr("d", function (l) {
@@ -444,6 +450,10 @@ var provvisRender = function () {
                         return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x, tarCoords.y);
                     }
                 });
+
+            setTimeout(function () {
+                d3.selectAll("#linkId-" + l.autoId + ", #hLinkId-" + l.autoId).classed("link-transition", false);
+            }, nodeLinkTransitionTime);
         });
     };
 

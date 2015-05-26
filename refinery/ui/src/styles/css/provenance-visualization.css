@@ -526,3 +526,7 @@
 #provvis-sidebar-content {
     height: 100%;
 }
+
+.link-transition {
+    stroke-opacity: 0.3;
+}
