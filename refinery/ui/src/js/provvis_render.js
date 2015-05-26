@@ -218,15 +218,15 @@ var provvisRender = function () {
         var x = 0,
             y = 0;
 
-        while (curN.hidden && curN !== vis.graph) {
+        while (curN.hidden && !(curN instanceof provvisDecl.Layer)) {
             curN = curN.parent;
         }
 
         if (curN instanceof provvisDecl.Layer) {
-            x += curN.x;
-            y += curN.y;
+            x = curN.x;
+            y = curN.y;
         } else {
-            while (!(curN instanceof provvisDecl.Layer) && !(curN instanceof provvisDecl.ProvGraph)) {
+            while (!(curN instanceof provvisDecl.Layer)) {
                 x += curN.x;
                 y += curN.y;
                 curN = curN.parent;
@@ -262,7 +262,13 @@ var provvisRender = function () {
                 if (curN instanceof provvisDecl.Analysis && !curN.parent.hidden && l.source.hidden) {
                     curN = curN.parent;
                 }
-                hLineSrc = getABBoxCoords(curN, 0).x.max - vis.cell.width / 2;
+
+                /* TODO: Revise. */
+                if (l.source instanceof provvisDecl.Layer && l.source.hidden) {
+                    hLineSrc = srcX + vis.cell.width / 2;
+                } else {
+                    hLineSrc = getABBoxCoords(curN, 0).x.max - vis.cell.width / 2;
+                }
 
                 /* LayoutCols provides the maximum width of any potential expanded node
                  * within the column of the graph. An the width difference is calculated as offset and added as
@@ -1455,7 +1461,8 @@ var provvisRender = function () {
             n.children.values().forEach(function (an) {
                 an.predLinks.values().forEach(function (l) {
                     l.highlighted = true;
-                    if (!l.hidden)
+                    //if (!l.hidden)
+                        l.hidden = false;
                         d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
 
                     highlightPredPath(l.source);
@@ -1494,7 +1501,8 @@ var provvisRender = function () {
             n.children.values().forEach(function (an) {
                 an.succLinks.values().forEach(function (l) {
                     l.highlighted = true;
-                    if (!l.hidden)
+                    //if (!l.hidden)
+                        l.hidden = false;
                         d3.select("#hLinkId-" + l.autoId).classed("hiddenLink", false);
 
                     highlightSuccPath(l.target);
@@ -3433,6 +3441,13 @@ var provvisRender = function () {
             highlightPredPath(d);
         }
 
+        d3.select(".aHLinks").selectAll(".hLink").each( function (l) {
+            if (l.highlighted) {
+                l.hidden = false;
+                d3.select(this).classed("hiddenLink", false);
+            }
+        });
+
         /* TODO: Temporarily disabled. */
         //updateNodeDoi();
     };
@@ -3484,13 +3499,11 @@ var provvisRender = function () {
             if (newScale < 1) {
                 vis.canvas.selectAll(".labels")
                     .classed("hiddenLabel", true);
-                d3.selectAll(".glAnchor").classed("hiddenNode", true);
-                d3.selectAll(".grAnchor").classed("hiddenNode", true);
+                d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", true);
             } else {
                 vis.canvas.selectAll(".labels")
                     .classed("hiddenLabel", false);
-                d3.selectAll(".glAnchor").classed("hiddenNode", false);
-                d3.selectAll(".grAnchor").classed("hiddenNode", false);
+                d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
             }
         }, transitionTime);
 
@@ -4551,10 +4564,23 @@ var provvisRender = function () {
             });
         });
 
+        aLink.each(function (l) {
+            l.hidden = true;
+        });
+        aLink.classed("hiddenLink", true);
+
         lLink.each(function (l) {
             l.hidden = false;
         });
         lLink.classed("hiddenLink", false);
+
+        /* Show highlighted alinks. */
+        d3.select(".aHLinks").selectAll(".hLink").each(function (l) {
+           if (l.highlighted) {
+               l.hidden = false;
+               d3.select(this).classed("hiddenLink", false);
+           }
+        });
     };
 
     /**
