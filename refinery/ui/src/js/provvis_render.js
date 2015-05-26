@@ -44,7 +44,7 @@ var provvisRender = function () {
 
     var draggingActive = false;
 
-    var nodeLinkTransitionTime = 500;
+    var nodeLinkTransitionTime = 1000;
 
     var aNodesBAK = [],
         saNodesBAK = [],
@@ -4591,13 +4591,13 @@ var provvisRender = function () {
         $("#prov-ctrl-filter-action > button").click(function () {
             filterAction = $(this).prop('value');
 
-            if (filterAction === "blend") {
+            /*if (filterAction === "blend") {
                 $("#prov-ctrl-filter-action-blend").attr("class", 'active btn btn-mini btn-warning');
                 $("#prov-ctrl-filter-action-hide").attr("class", 'btn btn-mini btn-primary');
             } else {
                 $("#prov-ctrl-filter-action-blend").attr("class", 'btn btn-mini btn-primary');
                 $("#prov-ctrl-filter-action-hide").attr("class", 'active btn btn-mini btn-warning');
-            }
+            }*/
 
             if (filterMethod === "timeline") {
                 filterAnalysesByTime(d3.select(".startTimeline").data()[0].time, d3.select(".endTimeline").data()[0].time, vis);
@@ -4634,11 +4634,11 @@ var provvisRender = function () {
         $("#prov-ctrl-toggle-sidebar").click(function () {
             if ($(this).hasClass('active')) {
                 $("#provenance-sidebar").animate({right: '-355'}, nodeLinkTransitionTime);
-                $(this).toggleClass('btn-primary btn-warning');
+                //$(this).toggleClass('btn-primary btn-warning');
                 $(this).html("OFF");
             } else {
                 $("#provenance-sidebar").animate({right: '0'}, nodeLinkTransitionTime);
-                $(this).toggleClass('btn-warning btn-primary');
+                //$(this).toggleClass('btn-warning btn-primary');
                 $(this).html("ON");
             }
         });
