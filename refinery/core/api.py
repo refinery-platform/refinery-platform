@@ -410,12 +410,14 @@ class StatisticsResource(Resource):
         dataset_summary = {}
         workflow_summary = {}
         project_summary = {}
+
         if 'dataset' in request.GET:
             dataset_summary = self.stat_summary(DataSet)
         if 'workflow' in request.GET:
             workflow_summary = self.stat_summary(Workflow)
         if 'project' in request.GET:
             project_summary = self.stat_summary(Project)
+        
         request_string = request.GET.get('type')
         if request_string is not None:
             if 'dataset' in request_string:
@@ -424,6 +426,7 @@ class StatisticsResource(Resource):
                 workflow_summary = self.stat_summary(Workflow)
             if 'project' in request_string:
                 project_summary = self.stat_summary(Project)
+        
         results = [
             StatisticsObject(user_count, group_count, files_count, dataset_summary, workflow_summary, project_summary)
         ]
@@ -448,18 +451,21 @@ class SharablePermission(object):
         return None if len(group_list) == 0 else group_list[0]
 
     def get_share_list(self, user, res):
-        group_dict = {}
+        group_dict = {}        
         all_groups = filter(lambda g: user in g.user_set.all(), Group.objects.all())
         for i in all_groups:
             group_dict[i.id] = (i.name, {'read': False, 'change': False})
+
         groups_shared_with = map(lambda g: (g['group'].id, g['group'].group_ptr.name, {'read': g['read'], 'change': g['change']}), res.get_groups())
         for i in groups_shared_with:
             # 0 = id, 1 = name, 2 = permissions
             group_dict[i[0]] = (i[1], i[2])
+        
         share_list = []
         for k, v in group_dict.iteritems():
             # k = id, v[0] = name, v[1] = permissions
             share_list.append({'id': k, 'name': v[0], 'permissions': v[1]})
+        
         return share_list
 
     def detail_uri_kwargs(self, bundle_or_obj):
@@ -480,12 +486,14 @@ class SharablePermission(object):
         res = self.get_res(uuid)
         owner = res.get_owner()
         share_list = bundle.data['shares']
+        
         if ((res is None) or (owner is None) or (share_list is None)):
             raise ImmediateHttpResponse(response=HttpBadRequest("Bad request data or invalid input format"))
-        permission_object = self.perm_obj()
+
         # remove all objects before adding them
         for i in res.get_groups():
             res.unshare(self.get_group(i['id']))
+        
         for group_data in share_list:
             group = self.get_group(group_data['id'])
             # sharing only allowed if read or change is true and if user is part of the group
@@ -493,8 +501,9 @@ class SharablePermission(object):
             is_read_only = not (group_data['permission']['change'])
             if should_share:
                 res.share(group, is_read_only)
+        
         res.save()
-        return permission_object
+        return self.perm_obj()
 
     def obj_get_list(self, bundle, **kwargs):
         return self.get_object_list(bundle.request)
