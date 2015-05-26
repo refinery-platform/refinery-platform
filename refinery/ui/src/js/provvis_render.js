@@ -3719,7 +3719,7 @@ var provvisRender = function () {
             showAlpha: true,
             change: function (color) {
                 $("#provvis-cc-layer-hex").text(color.toHexString());
-                switchColorScheme("nodeType");
+                switchColorScheme("nodetype");
             }
         });
 
@@ -3728,7 +3728,7 @@ var provvisRender = function () {
             showAlpha: true,
             change: function (color) {
                 $("#provvis-cc-analysis-hex").text(color.toHexString());
-                switchColorScheme("nodeType");
+                switchColorScheme("nodetype");
             }
         });
 
@@ -3737,7 +3737,7 @@ var provvisRender = function () {
             showAlpha: true,
             change: function (color) {
                 $("#provvis-cc-subanalysis-hex").text(color.toHexString());
-                switchColorScheme("nodeType");
+                switchColorScheme("nodetype");
             }
         });
 
@@ -3746,6 +3746,7 @@ var provvisRender = function () {
             showAlpha: true,
             change: function (color) {
                 $("#provvis-cc-special-hex").text(color.toHexString());
+                switchColorScheme("nodetype");
             }
         });
 
@@ -3754,7 +3755,7 @@ var provvisRender = function () {
             showAlpha: true,
             change: function (color) {
                 $("#provvis-cc-dt-hex").text(color.toHexString());
-                switchColorScheme("nodeType");
+                switchColorScheme("nodetype");
             }
         });
 
@@ -3763,7 +3764,7 @@ var provvisRender = function () {
             showAlpha: true,
             change: function (color) {
                 $("#provvis-cc-intermediate-hex").text(color.toHexString());
-                switchColorScheme("nodeType");
+                switchColorScheme("nodetype");
             }
         });
 
@@ -3772,7 +3773,7 @@ var provvisRender = function () {
             showAlpha: true,
             change: function (color) {
                 $("#provvis-cc-stored-hex").text(color.toHexString());
-                switchColorScheme("nodeType");
+                switchColorScheme("nodetype");
             }
         });
 
