@@ -70,4 +70,4 @@ deployment/Puppetfile.lock
 
 # to be moved into refinery/ui/app/
 refinery/static/styles/css/font-awesome*.css
-refinery/static/styles/css/refinery-style.css
+refinery/static/styles/css/refinery-style*.css
