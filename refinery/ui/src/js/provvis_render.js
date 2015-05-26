@@ -1063,7 +1063,7 @@ var provvisRender = function () {
             var gDCompUpdate = dComp.attr("id", function (d, i) {
                 return "doiCompId-" + i;
             }).classed({"doiComp": true});
-            gDCompUpdate.select("rect")
+            gDCompUpdate.select(".doiCompRect")
                 .classed("doiCompRect", true)
                 .attr("x", 0)
                 .attr("y", function (d) {
@@ -1073,8 +1073,30 @@ var provvisRender = function () {
                 .attr("height", function (d) {
                     return d.value * 300;
                 });
+            gDCompUpdate.select(".doiCompHandle")
+                .classed("doiCompHandle", true)
+                .attr("x", 40 + labelOffset)
+                .attr("y", function (d,i) {
+                    return labelsStart + labelOffset*i;
+                }).attr("width", labelOffset)
+                .attr("height", labelOffset)
+                .style({"fill": function (d, i) {
+                    return doiColorScale(10 - i);
+                }, "fill-opacity": 0.7});
             rectOffset = 0;
-            gDCompUpdate.select("path").classed("doiCompHandle", true).attr("d", function (d, i) {
+            gDCompUpdate.select(".doiCompLine", true)
+                .attr("x1", 40)
+                .attr("y1", function (d) {
+                    rectOffset += d.value * 300;
+                    return rectOffset - (d.value * 300 / 2);
+                }).attr("x2", 40+labelOffset)
+                .attr("y2", function (d,i) {
+                    return labelsStart + labelOffset*i + labelOffset/2;
+                })
+                .style({"stroke": function (d, i) {
+                    return doiColorScale(10 - i);
+                }, "stroke-opacity": 0.7, "stroke-width": "2px"});
+            /*gDCompUpdate.select("path").classed("doiCompHandle", true).attr("d", function (d, i) {
                 rectOffset += d.value * 300;
                 var numMaskedComps = d3.values(provvisDecl.DoiFactors.factors).filter(function (dc, i) {
                     return provvisDecl.DoiFactors.isMasked(dc.label);
@@ -1095,7 +1117,7 @@ var provvisRender = function () {
                         "h" + (-labelOffset) + " " +
                         "L" + (40) + ",150";
                 }
-            });
+            });*/
 
             /* Enter. */
             var gDCompEnter = dComp.enter().append("g")
@@ -1115,7 +1137,31 @@ var provvisRender = function () {
                     return doiColorScale(10 - i);
                 }, "fill-opacity": 0.7});
             rectOffset = 0;
-            gDCompEnter.append("path").classed("doiCompHandle", true).attr("d", function (d, i) {
+            gDCompEnter.append("rect")
+                .classed("doiCompHandle", true)
+                .attr("x", 40 + labelOffset)
+                .attr("y", function (d,i) {
+                    return labelsStart + labelOffset*i;
+                }).attr("width", labelOffset)
+                .attr("height", labelOffset)
+                .style({"fill": function (d, i) {
+                    return doiColorScale(10 - i);
+                }, "fill-opacity": 0.7});
+            rectOffset = 0;
+            gDCompEnter.append("line").classed("doiCompLine", true)
+                .attr("x1", 40)
+                .attr("y1", function (d) {
+                    rectOffset += d.value * 300;
+                    return rectOffset - (d.value * 300 / 2);
+                }).attr("x2", 40+labelOffset)
+                .attr("y2", function (d,i) {
+                    return labelsStart + labelOffset*i + labelOffset/2;
+                })
+                .style({"stroke": function (d, i) {
+                    return doiColorScale(10 - i);
+                }, "stroke-opacity": 0.7, "stroke-width": "2px"});
+
+            /*gDCompEnter.append("path").classed("doiCompHandle", true).attr("d", function (d, i) {
                 rectOffset += d.value * 300;
                 return "M40," + (rectOffset - d.value * 300) + " " +
                     "L" + (40 + labelOffset) + "," + (labelsStart + i * labelOffset) + " " +
@@ -1126,7 +1172,7 @@ var provvisRender = function () {
                     "V" + (rectOffset - d.value * 300);
             }).style({"fill": function (d, i) {
                 return doiColorScale(10 - i);
-            }, "fill-opacity": 0.7});
+            }, "fill-opacity": 0.7});*/
 
             dComp.exit().remove();
 
@@ -1246,6 +1292,7 @@ var provvisRender = function () {
                 $("#dc-label-" + dcId).css("opacity", 0.3);
                 d3.select("#doiCompId-" + dcId).select(".doiCompRect").style("fill-opacity", 0.3);
                 d3.select("#doiCompId-" + dcId).select(".doiCompHandle").style("fill-opacity", 0.3);
+                d3.select("#doiCompId-" + dcId).select(".doiCompLine").style("display", "none");
                 $("#dc-input-" + dcId).val(val);
                 provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, false);
             } else {
@@ -1253,6 +1300,7 @@ var provvisRender = function () {
                 $("#dc-label-" + dcId).css("opacity", 0.7);
                 d3.select("#doiCompId-" + dcId).select(".doiCompRect").style("fill-opacity", 0.7);
                 d3.select("#doiCompId-" + dcId).select(".doiCompHandle").style("fill-opacity", 0.7);
+                d3.select("#doiCompId-" + dcId).select(".doiCompLine").style("display", "inline");
                 provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, true);
             }
             toggleDoiComps();
@@ -1266,12 +1314,14 @@ var provvisRender = function () {
                 $(this.parentNode).find(".dc-label").css("opacity", 0.7);
                 d3.select("#doiCompId-" + dcId).select(".doiCompRect").style("fill-opacity", 0.7);
                 d3.select("#doiCompId-" + dcId).select(".doiCompHandle").style("fill-opacity", 0.7);
+                d3.select("#doiCompId-" + dcId).select(".doiCompLine").style("display", "inline");
                 val = 0.0;
                 provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, true);
             } else {
                 $(this.parentNode).find(".dc-label").css("opacity", 0.3);
                 d3.select("#doiCompId-" + dcId).select(".doiCompRect").style("fill-opacity", 0.3);
                 d3.select("#doiCompId-" + dcId).select(".doiCompHandle").style("fill-opacity", 0.3);
+                d3.select("#doiCompId-" + dcId).select(".doiCompLine").style("display", "none");
                 val = 0.0;
                 $("#dc-input-" + dcId).val(val);
                 provvisDecl.DoiFactors.set(d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, false);
