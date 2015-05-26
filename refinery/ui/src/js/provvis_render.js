@@ -62,6 +62,8 @@ var provvisRender = function () {
     var colorStrokes = "#136382",
         colorHighlight = "#ed7407";
 
+    var fitToWindow = true;
+
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
         .append("div")
@@ -175,7 +177,10 @@ var provvisRender = function () {
 
         /* Recompute layout. */
         dagreDynamicLayerLayout(vis.graph);
-        fitGraphToWindow(nodeLinkTransitionTime);
+
+        if (fitToWindow) {
+            fitGraphToWindow(nodeLinkTransitionTime);
+        }
     };
 
     /**
@@ -675,7 +680,10 @@ var provvisRender = function () {
         }
 
         dagreDynamicLayerLayout(vis.graph);
-        fitGraphToWindow(nodeLinkTransitionTime);
+
+        if (fitToWindow) {
+            fitGraphToWindow(nodeLinkTransitionTime);
+        }
 
         updateNodeFilter();
         updateLinkFilter();
@@ -3477,7 +3485,9 @@ var provvisRender = function () {
             /* Recompute layout. */
             dagreDynamicLayerLayout(vis.graph);
 
-            fitGraphToWindow(nodeLinkTransitionTime);
+            if (fitToWindow) {
+                fitGraphToWindow(nodeLinkTransitionTime);
+            }
         }
     };
 
@@ -4673,25 +4683,33 @@ var provvisRender = function () {
         $("#prov-ctrl-layers-click").click(function () {
             showAllLayers();
             dagreDynamicLayerLayout(graph);
-            fitGraphToWindow(nodeLinkTransitionTime);
+            if (fitToWindow) {
+                fitGraphToWindow(nodeLinkTransitionTime);
+            }
         });
 
         $("#prov-ctrl-analyses-click").click(function () {
             showAllAnalyses();
             dagreDynamicLayerLayout(graph);
-            fitGraphToWindow(nodeLinkTransitionTime);
+            if (fitToWindow) {
+                fitGraphToWindow(nodeLinkTransitionTime);
+            }
         });
 
         $("#prov-ctrl-subanalyses-click").click(function () {
             showAllSubanalyses();
             dagreDynamicLayerLayout(graph);
-            fitGraphToWindow(nodeLinkTransitionTime);
+            if (fitToWindow) {
+                fitGraphToWindow(nodeLinkTransitionTime);
+            }
         });
 
         $("#prov-ctrl-workflows-click").click(function () {
             showAllWorkflows();
             dagreDynamicLayerLayout(graph);
-            fitGraphToWindow(nodeLinkTransitionTime);
+            if (fitToWindow) {
+                fitGraphToWindow(nodeLinkTransitionTime);
+            }
         });
 
         /* Switch filter action. */
@@ -4746,6 +4764,17 @@ var provvisRender = function () {
             } else {
                 $("#provenance-sidebar").animate({right: '0'}, nodeLinkTransitionTime);
                 //$(this).toggleClass('btn-warning btn-primary');
+                $(this).html("ON");
+            }
+        });
+
+        /* Switch fit to screen on or off. */
+        $("#prov-ctrl-toggle-fit").click(function () {
+            if ($(this).hasClass('active')) {
+                fitToWindow = false;
+                $(this).html("OFF");
+            } else {
+                fitToWindow = true;
                 $(this).html("ON");
             }
         });
@@ -5326,7 +5355,9 @@ var provvisRender = function () {
             }
 
             dagreDynamicLayerLayout(vis.graph);
-            fitGraphToWindow(nodeLinkTransitionTime);
+            if (fitToWindow) {
+                fitGraphToWindow(nodeLinkTransitionTime);
+            }
 
             updateNodeFilter();
             updateLinkFilter();
