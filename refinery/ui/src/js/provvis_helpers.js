@@ -16,3 +16,20 @@ var hideChildNodes = function (n) {
         });
     }
 };
+
+/**
+ * Set selected attribute for object of BaseNode.
+ * @param n BaseNode.
+ * @param selected Node may be selected or not.
+ */
+var propagateNodeSelection = function (n, selected) {
+    if (!n.children.empty()) {
+        n.children.values().forEach(function (cn) {
+            cn.selected = selected;
+            cn.doi.selectedChanged();
+            //d3.selectAll("#nodeId-" + cn.autoId).classed({"selectedNode": selected});
+            if (!cn.children.empty())
+                propagateNodeSelection(cn, selected);
+        });
+    }
+};

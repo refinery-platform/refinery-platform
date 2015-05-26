@@ -3587,6 +3587,7 @@ var provvisRender = function () {
         /* Update selection. */
         if (d.selected) {
             d.selected = false;
+            propagateNodeSelection(d, false);
             selectedNodeSet.remove(d.autoId);
             d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).select(".glyph").select("rect, circle").style({"stroke": colorStrokes});
             $('#nodeInfoTitle').html("Select a node: - ");
@@ -3600,6 +3601,7 @@ var provvisRender = function () {
             });
         } else {
             d.selected = true;
+            propagateNodeSelection(d, true);
             selectedNodeSet.set(d.autoId, d);
             d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).select(".glyph").select("rect, circle").style({"stroke": colorHighlight});
 
@@ -3852,6 +3854,8 @@ var provvisRender = function () {
                         }
                         d3.select("#nodeId-" + d.autoId).select(".glyph").selectAll("rect, circle").style({"fill": wfc(wfColorData.get(cur.wfName))});
                     });
+                    domNodeset.selectAll(".anLabel, .sanLabel, .anwfLabel, .sanwfLabel, .an-node-type-icon, .san-node-type-icon").style({"fill": "#000000"});
+                    lNode.selectAll(".lnLabel, .wfLabel, .l-node-type-icon").style({"fill": "#000000"});
                     break;
                 case "nodetype":
                     var nt = function (t) {
@@ -3861,6 +3865,8 @@ var provvisRender = function () {
                     domNodeset.each(function (d) {
                         d3.select("#nodeId-" + d.autoId).select(".glyph").selectAll("rect, circle").style({"fill": nt(d.nodeType)});
                     });
+                    domNodeset.selectAll(".anLabel, .sanLabel, .anwfLabel, .sanwfLabel, .an-node-type-icon, .san-node-type-icon").style({"fill": "#000000"});
+                    lNode.selectAll(".lnLabel, .wfLabel, .l-node-type-icon").style({"fill": "#000000"});
                     break;
             }
         };
@@ -3998,6 +4004,8 @@ var provvisRender = function () {
             });
             showTooltip(ttStr, event);
             /*self.classed("mouseoverNode", true);*/
+            d3.select("#BBoxId-" + d.parent.parent.autoId).classed("mouseoverBBox", true);
+            d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", true);
             self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             var ttStr = createHTMLKeyValuePair("Name", d.name) + "<br>" +
@@ -4007,11 +4015,15 @@ var provvisRender = function () {
             d.attributes.forEach(function (key, value) {
                 ttStr += createHTMLKeyValuePair(key, value) + "<br>";
             });
+            d3.select("#BBoxId-" + d.parent.parent.autoId).classed("mouseoverBBox", true);
+            d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", true);
             showTooltip(ttStr, event);
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             hideTooltip();
             /*self.classed("mouseoverNode", false);*/
+            d3.select("#BBoxId-" + d.parent.parent.autoId).classed("mouseoverBBox", false);
+            d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", false);
             self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
@@ -4023,16 +4035,22 @@ var provvisRender = function () {
              createHTMLKeyValuePair("Workflow", getWfNameByNode(d)) + "<br>" +
              "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
             /*self.classed("mouseoverNode", true);*/
+            d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", true);
+            d3.select("#BBoxId-" + d.autoId).classed("mouseoverBBox", true);
             self.select(".labels").attr("clip-path", "");
         }).on("mousemove", function (d) {
             /*showTooltip(
              createHTMLKeyValuePair("Subanalysis", d.subanalysis) + "<br>" +
              createHTMLKeyValuePair("Workflow", getWfNameByNode(d)) + "<br>" +
              "<b>" + "Workflow: " + "<b>" + "<a href=/workflows/" + d.wfUuid + ">Workflow</a>", event);*/
+            d3.select("#BBoxId-" + d.parent.parent.autoId).classed("mouseoverBBox", true);
+            d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", true);
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             /*hideTooltip();*/
             /*self.classed("mouseoverNode", false);*/
+            d3.select("#BBoxId-" + d.parent.parent.autoId).classed("mouseoverBBox", false);
+            d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", false);
             self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
         });
 
@@ -4070,13 +4088,15 @@ var provvisRender = function () {
         });
 
         /* On mouseover subanalysis bounding box. */
-        saBBox.on("mouseover", function () {
+        saBBox.on("mouseover", function (d) {
             var self = d3.select(this);
             self.classed("mouseoverBBox", true);
+            d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", true);
             self.select(".labels").attr("clip-path", "");
         }).on("mouseout", function (d) {
             var self = d3.select(this);
             self.classed("mouseoverBBox", false);
+            d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", false);
             self.select(".labels").attr("clip-path", "url(#saBBClipId-" + d.autoId + ")");
         });
 
