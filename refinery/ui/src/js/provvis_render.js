@@ -64,6 +64,8 @@ var provvisRender = function () {
 
     var fitToWindow = true;
 
+    var customTimeFormat = d3.time.format("%Y-%m-%d %H:%M:%S %p");
+
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
         .append("div")
@@ -759,13 +761,11 @@ var provvisRender = function () {
                 upperTimeThreshold = Object.create(null);
 
             if (l.className === "startTimeline") {
-                lowerTimeThreshold = new Date(timeLineGradientScale.invert(l.x));
-                upperTimeThreshold = new Date(timeLineGradientScale.invert(
-                    x.invert(d3.transform(d3.select(".endTimeline").attr("transform")).translate[0])));
+                lowerTimeThreshold = l.time;
+                upperTimeThreshold = d3.select(".endTimeline").data()[0].time;
             } else {
-                lowerTimeThreshold = new Date(timeLineGradientScale.invert(
-                    x.invert(d3.transform(d3.select(".startTimeline").attr("transform")).translate[0])));
-                upperTimeThreshold = new Date(timeLineGradientScale.invert(l.x));
+                lowerTimeThreshold = d3.select(".startTimeline").data()[0].time;
+                upperTimeThreshold = l.time;
             }
 
             return [lowerTimeThreshold, upperTimeThreshold];
@@ -776,14 +776,11 @@ var provvisRender = function () {
          * @param l Time line.
          */
         var updateTimelineLabels = function (l) {
-
             var tlThreshold = getTimeLineThresholds(l);
             tlThreshold[1].setSeconds(tlThreshold[1].getSeconds() + 1);
 
-            var labelStart = d3.time.format.iso(tlThreshold[0]),
-                labelEnd = d3.time.format.iso(tlThreshold[1]);
-            labelStart = createCustomTimeFormat(labelStart.substr(0, labelStart.length - 1));
-            labelEnd = createCustomTimeFormat(labelEnd.substr(0, labelEnd.length - 1));
+            var labelStart = customTimeFormat(tlThreshold[0]),
+                labelEnd = customTimeFormat(tlThreshold[1]);
 
             d3.select("#tlThresholdStart").html("Start: " + labelStart);
             d3.select("#tlThresholdEnd").html("End: " + labelEnd);
@@ -811,6 +808,7 @@ var provvisRender = function () {
             } else {
                 l.x = d3.event.x;
             }
+            l.time = new Date(timeLineGradientScale.invert(l.x));
 
             /* Update lines. */
             d3.select(this).attr("transform", function () {
@@ -1694,9 +1692,8 @@ var provvisRender = function () {
      * @returns {*} The time in custom format.
      */
     var createCustomTimeFormat = function (value) {
-        var isoDate = parseISOTimeFormat(value),
-            customFormat = d3.time.format("%Y-%m-%d %H:%M:%S %p");
-        return customFormat(isoDate);
+        var isoDate = parseISOTimeFormat(value);
+        return customTimeFormat(isoDate);
     };
 
     /**
@@ -4178,6 +4175,10 @@ var provvisRender = function () {
 
             an.parent.children.values().forEach(function (sibling) {
                 d3.select("#BBoxId-" + sibling.autoId).classed("mouseoverBBox", false);
+            });
+
+            an.children.values().forEach(function (san) {
+                d3.select("#BBoxId-" + san.autoId).classed("mouseoverBBox", false);
             });
         });
 
