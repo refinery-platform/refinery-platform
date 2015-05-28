@@ -335,7 +335,7 @@
     cursor: col-resize;
 }
 
-#tlTitle, #doiTitle, .pv-colors-title {
+#tlTitle, #doiTitle, #changeLayerTitle, .pv-colors-title {
     font-style: italic;
     font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: darkgray;

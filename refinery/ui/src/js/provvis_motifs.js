@@ -3,51 +3,14 @@
  */
 var provvisMotifs = function () {
 
-    var motifs = d3.map();
-
-    /**
-     * Breadth first search algorithm.
-     * @param dsn Dataset node.
-     */
-    var bfs = function (dsn) {
-
-        /**
-         * Helper function to get successors of the current node;
-         * @param n Node.
-         */
-        var getSuccs = function (n) {
-
-            /* Add successor nodes to queue. */
-            n.succs.values().forEach(function (s) {
-                if (s instanceof provvisDecl.Node && nset.indexOf(s.parent.parent) === -1) {
-                    nset.push(s.parent.parent);
-                    nqueue.push(s.parent.parent);
-                } else if (nset.indexOf(s) === -1) {
-                    nset.push(s);
-                    nqueue.push(s);
-                }
-            });
-        };
-
-        var nqueue = [],
-            nset = [];
-
-        nset.push(dsn);
-        nqueue.push(dsn);
-
-        while (nqueue.length > 0) {
-            getSuccs(nqueue.shift());
-        }
-    };
-
-
     /* TODO: May refine algorithm. */
     /**
      * Find and mark sequential and parallel analysis steps.
      * @param graph The provenance graph.
+     * @param layerMethod Strict or weak layering, changing the condition analyses are layered together.
      * @returns {*} Layered nodes.
      */
-    var createLayerNodes = function (graph) {
+    var createLayerNodes = function (graph, layerMethod) {
 
         var layers = [],
             lNodes = d3.map(),
@@ -56,28 +19,12 @@ var provvisMotifs = function () {
         /* Iterate breath first search. */
         graph.bclgNodes.forEach(function (l, i) {
 
-            /**
-             * Helper function to compare two d3.map() objects.
-             * @param a
-             * @param b
-             * @returns {boolean}
-             */
-            var compareMaps = function (a, b) {
-                var equal = true;
-                if (a.size() === b.size()) {
-                    a.keys().forEach(function (k) {
-                        if (!b.has(k)) {
-                            equal = false;
-                        }
-                    });
-                } else {
-                    equal = false;
-                }
-                return equal;
-            };
+            var motifs = d3.map();
 
             /* For each depth-level. */
-            l.forEach(function (an) {
+            l.sort(function (a, b) {
+                return parseISOTimeFormat(a.start) - parseISOTimeFormat(b.start);
+            }).forEach(function (an) {
                 var foundMotif = false,
                     thisMotif = null,
                     anPreds = d3.map(),
@@ -92,15 +39,16 @@ var provvisMotifs = function () {
 
                 /* Check if the current analysis conforms to a motif already created. */
                 motifs.values().forEach(function (m) {
-                    if (m.wfUuid === an.wfUuid && m.numSubanalyses === an.children.size() &&
-                        an.predLinks.size() === m.numIns && an.succLinks.size() === m.numOuts) {
 
-                        /* TODO: Revise tricky condition. */
-                        if (an.preds.size() === 1 && an.preds.values()[0].uuid === "dataset" &&
-                            compareMaps(anPreds, m.preds)) {
-                            foundMotif = true;
-                            thisMotif = m;
-                        } else if (an.preds.size() === 1 && an.preds.values()[0].uuid !== "dataset") {
+                    /* Strict or weak layering. */
+                    if ((m.wfUuid === an.wfUuid && layerMethod === "weak") ||
+                        (m.wfUuid === an.wfUuid && layerMethod === "strict" &&
+                            m.numSubanalyses === an.children.size() &&
+                            an.predLinks.size() === m.numIns &&
+                            an.succLinks.size() === m.numOuts)) {
+
+                        if ((an.preds.values()[0].uuid === "dataset" && compareMaps(anPreds, m.preds)) ||
+                            an.preds.values()[0].uuid !== "dataset") {
                             foundMotif = true;
                             thisMotif = m;
                         }
@@ -138,6 +86,9 @@ var provvisMotifs = function () {
                     }),
                     layer = Object.create(null);
 
+                /* Check topology of pred motifs and actual motif. */
+
+                /* Create new layer. */
                 if (!(layers[i].has(keyStr + "-" + an.motif.autoId))) {
                     layer = new provvisDecl.Layer(layerId, an.motif, graph, false);
                     layer.children.set(an.autoId, an);
@@ -146,12 +97,13 @@ var provvisMotifs = function () {
                     layerId++;
 
                     layers[i].set(keyStr + "-" + an.motif.autoId, layer.autoId);
+
+                /* Add to existing layer. */
                 } else {
                     layer = lNodes.get(layers[i].get(keyStr + "-" + an.motif.autoId));
                     layer.children.set(an.autoId, an);
                     an.layer = layer;
                 }
-
             });
         });
         return lNodes;
@@ -253,16 +205,52 @@ var provvisMotifs = function () {
         });
     };
 
+    /**
+     * Compute difference between motif and analysis.
+     * @param graph The provenance graph.
+     */
+    var computeAnalysisMotifDiff = function (graph) {
+
+        /* Compute motif analysis change*/
+        graph.aNodes.sort(function (a, b) {
+            return parseISOTimeFormat(a.start) - parseISOTimeFormat(b.start);
+        }).forEach( function (an) {
+            an.motifDiff.numSubanalyses = an.children.size() - an.motif.numSubanalyses;
+            an.motifDiff.numIns = an.predLinks.size() - an.motif.numIns;
+            an.motifDiff.numOuts = an.succLinks.size() - an.motif.numOuts;
+        });
+    };
+
+    /**
+     * Clear all layer information from analyses.
+     * @param graph The provenance graph.
+     */
+    var cleanLayerAnalysisMapping = function(graph) {
+        graph.aNodes.forEach( function (an) {
+            an.layer = Object.create(null);
+            an.motif = Object.create(null);
+            an.parent = graph;
+            an.motifDiff = {
+                numIns: 0,
+                numOuts: 0,
+                wfUuid: an.wfUuid,
+                numSubanalyses: 0
+            };
+        });
+        graph.lNodes = d3.map();
+        graph.lLinks = d3.map();
+    };
 
     /**
      * Main motif discovery and injection module function.
      * @param graph The main graph object of the provenance visualization.
-     * @param cell Node cell dimensions.
+     * @param layerMethod Strict or weak layering, changing the condition analyses are layered together.
      */
-    var runMotifsPrivate = function (graph, cell) {
-        graph.lNodes = createLayerNodes(graph);
+    var runMotifsPrivate = function (graph, layerMethod) {
+        cleanLayerAnalysisMapping(graph);
+        graph.lNodes = createLayerNodes(graph, layerMethod);
         createLayerAnalysisMapping(graph);
-
+        computeAnalysisMotifDiff(graph);
     };
 
     /**

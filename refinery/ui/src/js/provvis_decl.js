@@ -253,6 +253,13 @@ var provvisDecl = function () {
         this.motif = "";
 
         this.exaggerated = false;
+
+        this.motifDiff = {
+            numIns: 0,
+            numOuts: 0,
+            wfUuid: this.wfUuid,
+            numSubanalyses: 0
+        };
     };
 
     Analysis.prototype = Object.create(BaseNode.prototype);
@@ -358,7 +365,6 @@ var provvisDecl = function () {
      * @param data
      * @param url
      * @param canvas
-     * @param nodeTable
      * @param rect
      * @param margin
      * @param width
@@ -366,19 +372,17 @@ var provvisDecl = function () {
      * @param radius
      * @param color
      * @param graph
-     * @param timelineView
      * @param cell
-     * @param colorcodingView
+     * @param layerMethod
      * @constructor
      */
-    var ProvVis = function (parentDiv, zoom, data, url, canvas, nodeTable, rect, margin, width, height, radius, color, graph, timelineView, cell, colorcodingView) {
+    var ProvVis = function (parentDiv, zoom, data, url, canvas, rect, margin, width, height, radius, color, graph, cell, layerMethod) {
         this._parentDiv = parentDiv;
         this.zoom = zoom;
         this._data = data;
         this._url = url;
 
         this.canvas = canvas;
-        this.nodeTable = nodeTable;
         this.rect = rect;
         this.margin = margin;
         this.width = width;
@@ -386,9 +390,8 @@ var provvisDecl = function () {
         this.radius = radius;
         this.color = color;
         this.graph = graph;
-        this.timelineView = timelineView;
         this.cell = cell;
-        this.colorcodingView = colorcodingView;
+        this.layerMethod = layerMethod;
     };
 
     /**

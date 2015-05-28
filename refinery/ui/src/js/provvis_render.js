@@ -64,8 +64,6 @@ var provvisRender = function () {
 
     var fitToWindow = true;
 
-    var customTimeFormat = d3.time.format("%Y-%m-%d %H:%M:%S %p");
-
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
         .append("div")
@@ -982,7 +980,7 @@ var provvisRender = function () {
 
         d3.select("#tlyAxis").selectAll(".tick").each(function (d) {
             if (d === 5) {
-                d3.select(this).select("text").text("+5");
+                d3.select(this).select("text").text(">5");
             }
         });
 
@@ -1674,26 +1672,6 @@ var provvisRender = function () {
         /* Set dom elements. */
         aLink = d3.selectAll(".aLink");
         link = d3.selectAll(".link");
-    };
-
-    /**
-     * Parses a string into the ISO time format.
-     * @param value The time in the string format.
-     * @returns {*} The value in the ISO time format.
-     */
-    var parseISOTimeFormat = function (value) {
-        var strictIsoFormat = d3.time.format("%Y-%m-%dT%H:%M:%S.%L");
-        return strictIsoFormat.parse(value);
-    };
-
-    /**
-     * Parses a string into the ISO time format.
-     * @param value The time in iso time format.
-     * @returns {*} The time in custom format.
-     */
-    var createCustomTimeFormat = function (value) {
-        var isoDate = parseISOTimeFormat(value);
-        return customTimeFormat(isoDate);
     };
 
     /**
@@ -3636,7 +3614,7 @@ var provvisRender = function () {
 
         $('#nodeInfoTitle').html("Select a node: - ");
         $('#nodeInfoTitleLink').html("");
-        $("#" + "provenance-table-content").html("");
+        $("#" + "provenance-nodeInfo-content").html("");
 
         selectedNodeSet = d3.map();
 
@@ -3661,7 +3639,7 @@ var provvisRender = function () {
             d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected).select(".glyph").select("rect, circle").style({"stroke": colorStrokes});
             $('#nodeInfoTitle').html("Select a node: - ");
             $('#nodeInfoTitleLink').html("");
-            $("#" + "provenance-table-content").html("");
+            $("#" + "provenance-nodeInfo-content").html("");
 
             $("#nodeId-" + d.autoId).hover(function () {
                 $(this).find("rect, circle").css({"stroke": colorHighlight});
@@ -3948,10 +3926,10 @@ var provvisRender = function () {
 
     /* TODO: Left clicking on href links doesn't trigger the download. */
     /**
-     * Update table on node selection.
+     * Update node info tab on node selection.
      * @param selNode Selected node.
      */
-    var updateTableContent = function (selNode) {
+    var updateNodeInfoTab = function (selNode) {
         var title = " - ",
             titleLink = " - ",
             data = Object.create(null);
@@ -4021,16 +3999,16 @@ var provvisRender = function () {
         $('#nodeInfoTitleLink').html(titleLink);
 
 
-        $("#" + "provenance-table-content").html("");
+        $("#" + "provenance-nodeInfo-content").html("");
         d3.entries(data).forEach(function (d) {
             $("<div/>", {
                 "class": "refinery-subheader",
                 "html": "<h4>" + d.key + "</h4>"
-            }).appendTo("#" + "provenance-table-content");
+            }).appendTo("#" + "provenance-nodeInfo-content");
             $("<p/>", {
                 "class": "provvisNodeInfoValue",
                 "html": "<i>" + d.value + "</i>"
-            }).appendTo("#" + "provenance-table-content");
+            }).appendTo("#" + "provenance-nodeInfo-content");
         });
     };
 
@@ -4822,7 +4800,7 @@ var provvisRender = function () {
             domNodesetClickTimeout = setTimeout(function () {
                 if (!draggingActive) {
                     handleNodeSelection(d);
-                    updateTableContent(d);
+                    updateNodeInfoTab(d);
                 }
             }, 200);
         });

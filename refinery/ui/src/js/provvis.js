@@ -38,16 +38,9 @@ var provvis = function () {
     /* TODO: Rewrite in angular template. */
     /**
      * Timeline view only showing analysis within a time-gradient background.
-     * @param parentId Parent div id for the floating table div.
      * @param divId Div id.
-     * @returns {*} The timeline view div container.
      */
-    var createTimelineView = function (parentId, divId) {
-        /* New timeline view enclosing div. */
-        $('<div/>', {
-            "id": divId
-        }).appendTo("#" + parentId);
-
+    var createTimelineView = function (divId) {
         /* New timeline view content. */
         var timelineContainer = d3.select("#" + divId);
 
@@ -75,30 +68,20 @@ var provvis = function () {
             "id": "tlThresholdEnd",
             "class": "tlThreshold"
         }).appendTo(timelineContainer);
-
-        return timelineContainer;
     };
 
     /* TODO: Rewrite in angular template. */
     /**
      * DOI view.
-     * @param parentId Parent div id for the floating table div.
      * @param divId Div id.
-     * @returns {*} The DOI view div container.
      */
-    var createDOIView = function (parentId, divId) {
-        /* New DOI view enclosing div. */
-        $('<div/>', {
-            "id": divId,
-            "style": "margin-top: 30px; width: 100%;"
-        }).appendTo("#" + parentId);
-
+    var createDOIView = function (divId) {
         /* New DOI view content. */
         var doiContainer = d3.select("#" + divId);
 
         $("<p/>", {
             "id": "doiTitle",
-            "html": "DOI components"
+            "html": "DOI Components"
         }).appendTo(doiContainer);
 
         $("<div/>", {
@@ -133,8 +116,43 @@ var provvis = function () {
             "style": "display: flex; position: absolute; left: 75px; top: 340px; margin-top: 5px;",
             "html": '<input id="prov-doi-view-show-input" type="checkbox" style="margin-right: 3px;">Show DOI values'
         }).appendTo(doiContainer);
+    };
 
-        return doiContainer;
+    /**
+     * Layer reload view.
+     * @param divId Div id.
+     */
+    var createChangeLayersView = function (divId) {
+
+        /* New DOI view content. */
+        var layerContainer = d3.select("#" + divId);
+
+        $("<p/>", {
+            "id": "changeLayerTitle",
+            "html": "Change Layering"
+        }).appendTo(layerContainer);
+
+        $("<div/>", {
+            "id": "prov-layering-method",
+            "class": "btn-group",
+            "data-toggle": "buttons-radio"
+        }).appendTo(layerContainer);
+
+        $("<button/>", {
+            "id": "prov-layering-strict",
+            "class": "active btn btn-primary",
+            "type": "button",
+            "value": "strict",
+            "html": "Strict"
+        }).appendTo("#prov-layering-method");
+
+        $("<button/>", {
+            "id": "prov-layering-weak",
+            "class": "btn btn-primary",
+            "type": "button",
+            "value": "weak",
+            "html": "Weak"
+        }).appendTo("#prov-layering-method");
     };
 
     /**
@@ -194,16 +212,14 @@ var provvis = function () {
                 /* Declare graph. */
                 var graph = Object.create(null);
 
-                /* On-top docked table. */
-                var nodeTable = d3.select("#provvis-nodeinfo-tab");
-
-                var colorcodingView = "#provenance-colorcoding-view";
-
                 /* Timeline view div. */
-                var timelineView = createTimelineView("provvis-filter-doi-tab", "provenance-timeline-view");
+                createTimelineView("provenance-timeline-view");
 
                 /* DOI view div. */
-                var doiView = createDOIView("provvis-filter-doi-tab", "provenance-doi-view");
+                createDOIView("provenance-doi-view");
+
+                /* Layer view div. */
+                createChangeLayersView("provenance-layer-change-view");
 
                 /* Init node cell dimensions. */
                 var cell = {width: r * 5, height: r * 5};
@@ -214,9 +230,11 @@ var provvis = function () {
 
                 var scaleFactor = 0.75;
 
+                var layerMethod = "strict"; /* weak | strict */
+
                 /* Create vis and add graph. */
-                vis = new provvisDecl.ProvVis("provenance-graph", zoom, data, url, canvas, nodeTable, rect, margin, width,
-                    height, r, color, graph, timelineView, cell, colorcodingView);
+                vis = new provvisDecl.ProvVis("provenance-graph", zoom, data, url, canvas, rect, margin, width,
+                    height, r, color, graph, cell, layerMethod);
 
                 /* Geometric zoom. */
                 var redraw = function () {
@@ -283,12 +301,42 @@ var provvis = function () {
                 vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
 
                 /* Discover and and inject motifs. */
-                provvisMotifs.run(vis.graph, vis.cell);
+                provvisMotifs.run(vis.graph, layerMethod);
 
                 /* Render graph. */
                 provvisRender.run(vis);
 
                 removeProvvisLoaderIcon();
+
+                /* Switch filter action. */
+                $("#prov-layering-method > button").click(function () {
+                    layerMethod = $(this).prop('value');
+
+                    addProvvisLoaderIcon();
+
+                    $(".aHLinks").remove();
+                    $(".aLinks").remove();
+                    $(".lLinks").remove();
+                    $(".lLink").remove();
+                    $(".layers").remove();
+                    $(".analyses").remove();
+
+                    $('#provenance-timeline-view').children().remove();
+                    $('#provenance-doi-view').children().remove();
+                    /*$('#provenance-layer-change-view').children().remove();*/
+
+                    createTimelineView("provenance-timeline-view");
+                    createDOIView("provenance-doi-view");
+                    /*createChangeLayersView("provenance-layer-change-view");*/
+
+                    /* Discover and and inject motifs. */
+                    provvisMotifs.run(vis.graph, layerMethod);
+
+                    /* Render graph. */
+                    provvisRender.run(vis);
+
+                    removeProvvisLoaderIcon();
+                });
             });
         }
     };
