@@ -212,10 +212,10 @@
     alignment-baseline: middle;
 }
 
-.aBBoxLabel, .saBBoxLabel {
-    fill: #000000;
-    fill-opacity: 1.0;
-    stroke: #000000;
+.lBBoxLabel, .aBBoxLabel, .saBBoxLabel {
+    fill: #136382;
+    fill-opacity: 0.6;
+    stroke: #136382;
     stroke-width: 0.0px;
     font-size: 13px;
     font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -310,7 +310,7 @@
 }
 
 .mouseoverBBox .nodeAttrLabel, .mouseoverBBox .subanalysisLabel, .mouseoverBBox .analysisLabel, .mouseoverBBox .layerLabel,
-.mouseoverBBox .aBBoxLabel, .mouseoverBBox .saBBoxLabel {
+.mouseoverBBox .aBBoxLabel, .mouseoverBBox .saBBoxLabel, .mouseoverBBox .lBBoxLabel {
     fill-opacity: 1.0;
     text-anchor: left;
     alignment-baseline: middle;
@@ -491,6 +491,18 @@
     dominant-baseline: central;
     font-family: FontAwesome;
     font-size: 7px;
+}
+
+.stored-node-type-icon {
+    fill: #ffffff;
+    fill-opacity: 1.0;
+    stroke: #ffffff;
+    stroke-width: 0.0px;
+    cursor: default;
+    text-anchor: middle;
+    dominant-baseline: central;
+    font-family: FontAwesome;
+    font-size: 6px;
 }
 
 .spin-icon-infinite {
