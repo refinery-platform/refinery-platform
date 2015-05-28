@@ -1100,28 +1100,6 @@ var provvisRender = function () {
                 .style({"stroke": function (d, i) {
                     return doiColorScale(10 - i);
                 }, "stroke-opacity": 0.7, "stroke-width": "2px"});
-            /*gDCompUpdate.select("path").classed("doiCompHandle", true).attr("d", function (d, i) {
-                rectOffset += d.value * 300;
-                var numMaskedComps = d3.values(provvisDecl.DoiFactors.factors).filter(function (dc, i) {
-                    return provvisDecl.DoiFactors.isMasked(dc.label);
-                }).length;
-                if (numMaskedComps > 0) {
-                    return "M40," + (rectOffset - d.value * 300) + " " +
-                        "L" + (40 + labelOffset) + "," + (labelsStart + i * labelOffset) + " " +
-                        "h" + labelOffset + " " +
-                        "v" + labelOffset + " " +
-                        "h" + (-labelOffset) + " " +
-                        "L" + (40) + "," + (rectOffset) + " " +
-                        "V" + (rectOffset - d.value * 300);
-                } else {
-                    return "M40,150 " +
-                        "L" + (40 + labelOffset) + "," + (labelsStart + i * labelOffset) + " " +
-                        "h" + labelOffset + " " +
-                        "v" + labelOffset + " " +
-                        "h" + (-labelOffset) + " " +
-                        "L" + (40) + ",150";
-                }
-            });*/
 
             /* Enter. */
             var gDCompEnter = dComp.enter().append("g")
@@ -1164,19 +1142,6 @@ var provvisRender = function () {
                 .style({"stroke": function (d, i) {
                     return doiColorScale(10 - i);
                 }, "stroke-opacity": 0.7, "stroke-width": "2px"});
-
-            /*gDCompEnter.append("path").classed("doiCompHandle", true).attr("d", function (d, i) {
-                rectOffset += d.value * 300;
-                return "M40," + (rectOffset - d.value * 300) + " " +
-                    "L" + (40 + labelOffset) + "," + (labelsStart + i * labelOffset) + " " +
-                    "h" + parseInt(labelOffset * 5) + " " +
-                    "v" + labelOffset + " " +
-                    "h" + (-parseInt(labelOffset * 5)) + " " +
-                    "L" + (40) + "," + (rectOffset) + " " +
-                    "V" + (rectOffset - d.value * 300);
-            }).style({"fill": function (d, i) {
-                return doiColorScale(10 - i);
-            }, "fill-opacity": 0.7});*/
 
             dComp.exit().remove();
 
@@ -2133,11 +2098,11 @@ var provvisRender = function () {
 
         aGlyph.select("rect")
             .attr("x", -2 * scaleFactor * vis.radius)
-            .attr("y", -1 * scaleFactor * vis.radius)
+            .attr("y", -1.5 * scaleFactor * vis.radius)
             .attr("rx", 1)
             .attr("ry", 1)
             .attr("width", 4 * scaleFactor * vis.radius)
-            .attr("height", 2 * scaleFactor * vis.radius);
+            .attr("height", 3 * scaleFactor * vis.radius);
 
         /* Add text labels. */
         aLabels.select("text")
@@ -2280,11 +2245,11 @@ var provvisRender = function () {
 
         aGlyph.append("rect")
             .attr("x", -2 * scaleFactor * vis.radius)
-            .attr("y", -1 * scaleFactor * vis.radius)
+            .attr("y", -1.5 * scaleFactor * vis.radius)
             .attr("rx", 1)
             .attr("ry", 1)
             .attr("width", 4 * scaleFactor * vis.radius)
-            .attr("height", 2 * scaleFactor * vis.radius)
+            .attr("height", 3 * scaleFactor * vis.radius)
             .classed({"aGlyph": true});
 
         /* Add text labels. */
@@ -2320,20 +2285,6 @@ var provvisRender = function () {
                 }
             })
             .style("display", "inline");
-
-        /*aLabels.append("text")
-            .attr("transform", function () {
-                return "translate(" + 0 + "," + (1 * scaleFactor * vis.radius) + ")";
-            })
-            .text(function (d) {
-                return d.wfCode;
-            }).attr("class", "anwfLabel")
-            .style({
-                "fill": function (an) {
-                    return timeColorScale(parseISOTimeFormat(an.start)) < "#888888" ? "#ffffff" : "#000000";
-                }
-            })
-            .style("display", "inline");*/
 
         /* Exit. */
         lAnalysis.exit().remove();
@@ -2956,7 +2907,7 @@ var provvisRender = function () {
                         "translate(" + (-accWidth / 2) + "," + (-vis.cell.height / 2) + ")")
                     .select("rect")
                     .attr("width", accWidth)
-                    .attr("height", accHeight);
+                    .attr("height", accHeight+1);
 
                 g.setNode(ln.autoId, {label: ln.autoId, width: accWidth, height: accHeight});
             } else {
@@ -5006,6 +4957,43 @@ var provvisRender = function () {
     };
 
     /**
+     * Compute doi weight based on the motif diff.
+     * @param lNodes Layer nodes.
+     * @param aNodes Analysis nodes.
+     */
+    var initDoiLayerDiffComponent = function (lNodes, aNodes) {
+        var min = d3.min(aNodes, function (an) {
+                return Math.abs(an.motifDiff.numIns) + Math.abs(an.motifDiff.numOuts) + Math.abs(an.motifDiff.numSubanalyses);
+            }),
+            max = d3.max(aNodes, function (an) {
+                return Math.abs(an.motifDiff.numIns) + Math.abs(an.motifDiff.numOuts) + Math.abs(an.motifDiff.numSubanalyses);
+            });
+
+        var doiDiffScale = d3.scale.linear()
+            .domain([min, max])
+            .range([0.0, 1.0]);
+
+        /* Init analysis nodes with a factor in relation to the highes diff in the whole graph. */
+        aNodes.forEach( function (an) {
+            an.doi.initLayerDiffComponent(doiDiffScale(Math.abs(an.motifDiff.numIns) + Math.abs(an.motifDiff.numOuts) + Math.abs(an.motifDiff.numSubanalyses)));
+            an.children.values().forEach( function (san) {
+                san.doi.initLayerDiffComponent(an.doi.doiLayerDiff);
+                san.children.values().forEach( function (cn) {
+                    cn.doi.initLayerDiffComponent(an.doi.doiLayerDiff);
+                });
+            });
+        });
+
+        /* Init layer nodes with max value from child nodes. */
+        lNodes.values().forEach( function (ln) {
+           var anMax = d3.max(ln.children.values(), function (an) {
+               return an.doi.doiLayerDiff;
+           });
+           ln.doi.initLayerDiffComponent(anMax);
+        });
+    };
+
+    /**
      * Concats an array of dom elements.
      * @param domArr An array of dom class selector strings.
      */
@@ -5045,6 +5033,9 @@ var provvisRender = function () {
         /* Init all nodes filtered. */
         initDoiFilterComponent(vis.graph.lNodes);
         filterAction = "blend";
+
+        /* Init all nodes with the motif diff. */
+        initDoiLayerDiffComponent(vis.graph.lNodes, vis.graph.aNodes);
 
         /* Draw analysis links. */
         vis.canvas.append("g").classed({"aHLinks": true});

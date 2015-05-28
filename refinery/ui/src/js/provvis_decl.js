@@ -9,7 +9,8 @@ var provvisDecl = function () {
             filtered: {label: "filtered", value: 0.25, masked: true},
             selected: {label: "selected", value: 0.25, masked: true},
             highlighted: {label: "highlighted", value: 0.25, masked: true},
-            time: {label: "time", value: 0.25, masked: true}
+            time: {label: "time", value: 0.25, masked: true},
+            layerdiff: {label: "layerdiff", value: 0, masked: false}
         };
 
         return {
@@ -40,6 +41,12 @@ var provvisDecl = function () {
 
         /* The latest execution time of a node is more important than earlier executions.*/
         this.doiTime = 0;
+
+        /* For weak layering, analyses are layered without considering the number of
+           subanlayses, inputs or outputs. Therefore a diff in those three categories may occur.
+           The number of nodes carrying a diff in relation to the number of layered nodes. */
+
+        this.doiLayerDiff = 0;
 
         /* For layered nodes: Workflow parameters, files or topology changes over time.*/
         this.change = {wfParams: d3.map(), files: d3.map(), topology: d3.map()};
@@ -116,6 +123,15 @@ var provvisDecl = function () {
     };
 
     /**
+     * Based on amount of nodes with a diff within a layer, calculate component weight.
+     * @param factor The accumulated diffs scaled between 0 and 1.
+     */
+    DoiComponents.prototype.initLayerDiffComponent = function (factor) {
+        this.doiLayerDiff = factor;
+        this.computeWeightedSum();
+    };
+
+    /**
      * Calculates the dominant doi component.
      */
     DoiComponents.prototype.computeMinMax = function () {
@@ -133,7 +149,8 @@ var provvisDecl = function () {
             this.doiFiltered * provvisDecl.DoiFactors.factors.filtered.value +
             this.doiSelected * provvisDecl.DoiFactors.factors.selected.value +
             this.doiHighlighted * provvisDecl.DoiFactors.factors.highlighted.value +
-            this.doiTime * provvisDecl.DoiFactors.factors.time.value
+            this.doiTime * provvisDecl.DoiFactors.factors.time.value +
+            this.doiLayerDiff * provvisDecl.DoiFactors.factors.layerdiff.value
             ).toFixed(2);
     };
 
