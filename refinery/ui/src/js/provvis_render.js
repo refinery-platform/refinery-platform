@@ -3617,9 +3617,9 @@ var provvisRender = function () {
     var clearNodeSelection = function () {
         domNodeset.each(function (d) {
             d.selected = false;
-            /*d3.select(this).classed("selectedNode", false);*/
             d.doi.selectedChanged();
-            d3.select(this).classed("selectedNode", false).select(".glyph").select("rect, circle").style({"stroke": colorStrokes});
+            d3.select("#nodeId-" + d.autoId).classed("selectedNode", false);
+            $("#nodeId-256").find(".glyph").find("rect, circle").css({"stroke": colorStrokes});
         });
 
         $('#nodeInfoTitle').html("Select a node: - ");
