@@ -22,7 +22,7 @@ from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow,\
     WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus,\
     StatisticsObject, ProjectSharingObject, DataSetSharingObject,\
-    WorkflowSharingObject
+    WorkflowSharingObject, GroupManagementObject
 from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
@@ -385,11 +385,15 @@ class StatisticsResource(Resource):
     project = fields.DictField(attribute='project')
 
     def stat_summary(self, model):
-        total = len(model.objects.all())
-        public = len(filter(lambda x: x.is_public(), model.objects.all()))
-        private_shared = len(filter(lambda x: (not x.is_public() and len(x.get_groups()) > 1), model.objects.all()))
+        model_list = model.objects.all()
+        total = len(model_list)
+        public = len(filter(lambda x: x.is_public(), model_list))
+        private_shared = len(filter(
+            lambda x: not x.is_public() and len(x.get_groups()) > 1, 
+            model_list))
         private = total - public - private_shared
-        return {'total': total, 'public': public, 'private': private, 'private_shared': private_shared}
+        return {'total': total, 'public': public, \
+                'private': private, 'private_shared': private_shared}
 
     class Meta:
         resource_name = 'statistics'
@@ -427,10 +431,8 @@ class StatisticsResource(Resource):
             if 'project' in request_string:
                 project_summary = self.stat_summary(Project)
         
-        results = [
-            StatisticsObject(user_count, group_count, files_count, dataset_summary, workflow_summary, project_summary)
-        ]
-        return results
+        return [StatisticsObject(user_count, group_count, files_count, \
+                dataset_summary, workflow_summary, project_summary)]
 
 
 class SharablePermission(object):
@@ -451,15 +453,21 @@ class SharablePermission(object):
         return None if len(group_list) == 0 else group_list[0]
 
     def get_share_list(self, user, res):
-        group_dict = {}        
-        all_groups = filter(lambda g: user in g.user_set.all(), Group.objects.all())
-        for i in all_groups:
+        group_dict = {} 
+        group_list = Group.objects.all()
+        groups_in = filter(lambda g: user in g.user_set.all(), group_list)
+        for i in groups_in:
             group_dict[i.id] = (i.name, {'read': False, 'change': False})
 
-        groups_shared_with = map(lambda g: (g['group'].id, g['group'].group_ptr.name, {'read': g['read'], 'change': g['change']}), res.get_groups())
-        for i in groups_shared_with:
+        groups_shared_with = map(
+            lambda g: (
+                g['group'].id, 
+                g['group'].group_ptr.name, 
+                {'read': g['read'], 'change': g['change']}), 
+            res.get_groups())
+        for g in groups_shared_with:
             # 0 = id, 1 = name, 2 = permissions
-            group_dict[i[0]] = (i[1], i[2])
+            group_dict[g[0]] = (g[1], g[2])
         
         share_list = []
         for k, v in group_dict.iteritems():
@@ -480,31 +488,6 @@ class SharablePermission(object):
         uuid = kwargs['pk']
         return self.get_res(uuid)
 
-    def obj_update(self, bundle, **kwargs):
-        kwargs = self.detail_uri_kwargs(bundle)
-        uuid = kwargs['pk']
-        res = self.get_res(uuid)
-        owner = res.get_owner()
-        share_list = bundle.data['shares']
-        
-        if ((res is None) or (owner is None) or (share_list is None)):
-            raise ImmediateHttpResponse(response=HttpBadRequest("Bad request data or invalid input format"))
-
-        # remove all objects before adding them
-        for i in res.get_groups():
-            res.unshare(self.get_group(i['id']))
-        
-        for group_data in share_list:
-            group = self.get_group(group_data['id'])
-            # sharing only allowed if read or change is true and if user is part of the group
-            should_share = ((group_data['permission']['read']) or (group_data['permission']['change'])) and (owner in group.user_set.all())
-            is_read_only = not (group_data['permission']['change'])
-            if should_share:
-                res.share(group, is_read_only)
-        
-        res.save()
-        return self.perm_obj()
-
     def obj_get_list(self, bundle, **kwargs):
         return self.get_object_list(bundle.request)
 
@@ -512,15 +495,44 @@ class SharablePermission(object):
         user = self.get_user(request.GET['owner-id'])
         res = self.get_res(request.GET['uuid'])
         if (user is None):
-            raise ImmediateHttpResponse(response=HttpNotFound("User cannot be found"))
+            raise ImmediateHttpResponse(response=HttpNotFound())
         elif (res is None):
-            raise ImmediateHttpResponse(response=HttpNotFound("User found, but resource cannot be found"))
+            raise ImmediateHttpResponse(response=HttpNotFound())
         elif (res.get_owner().id != user.id):
-            raise ImmediateHttpResponse(response=HttpForbidden("User does not have ownership of the resource"))
+            raise ImmediateHttpResponse(response=HttpForbidden())
         else:
             shares = self.get_share_list(user, res)
-            return [self.perm_obj(user.username, user.id, res.name, res.uuid, shares)]
+            return [self.perm_obj(user.username, user.id, res.name, \
+                    res.uuid, shares)]
 
+    def obj_update(self, bundle, **kwargs):
+        kwargs = self.detail_uri_kwargs(bundle)
+        uuid = kwargs['pk']
+        res = self.get_res(uuid)
+        owner = res.get_owner()
+        user = bundle.request.user
+        share_list = bundle.data['shares']
+        
+        if ((res is None) or (owner is None) or (share_list is None)):
+            raise ImmediateHttpResponse(response=HttpBadRequest())
+
+        # remove all objects before adding them
+        for i in res.get_groups():
+            res.unshare(self.get_group(i['id']))
+        
+        for group_data in share_list:
+            group = self.get_group(group_data['id'])
+            # sharing only allowed if can read or change and user is in group
+            should_share = ((group_data['permission']['read']) or \
+                (group_data['permission']['change'])) and \
+                (user == owner) and \
+                (user in group.user_set.all())
+            is_read_only = not (group_data['permission']['change'])
+            if should_share:
+                res.share(group, is_read_only)
+        
+        res.save()
+        return self.perm_obj()
 
 class ProjectSharingResource(SharablePermission, Resource):
     owner = fields.CharField(attribute='owner', null=True)
@@ -537,7 +549,7 @@ class ProjectSharingResource(SharablePermission, Resource):
         resource_name = 'project_sharing'
         object_class = ProjectSharingObject
         authentication = SessionAuthentication()
-        # authorization = Authorization()
+        authorization = GuardianAuthorization()
 
 
 class DataSetSharingResource(SharablePermission, Resource):
@@ -555,7 +567,7 @@ class DataSetSharingResource(SharablePermission, Resource):
         resource_name = 'dataset_sharing'
         object_class = DataSetSharingObject
         authentication = SessionAuthentication()
-        # authorization = Authorization()
+        authorization = GuardianAuthorization()
 
 
 class WorkflowSharingResource(SharablePermission, Resource):
@@ -573,4 +585,60 @@ class WorkflowSharingResource(SharablePermission, Resource):
         resource_name = 'workflow_sharing'
         object_class = WorkflowSharingObject
         authentication = SessionAuthentication()
-        # authorization = Authorization()
+        authorization = GuardianAuthorization()
+        
+
+class GroupManagementResource(Resource):
+    member_list = fields.ListField(attribute='member_list', null=True)
+
+    def get_group(self, group_id):
+        group_list = Group.objects.filter(id=int(group_id))
+        return None if len(group_list) == 0 else group_list[0]
+
+    def get_members(self, group):
+        user_list = group.user_set.all()
+        return map(lambda u: {'username': u.username, 'id': u.id}, user_list)
+
+    class Meta:
+        resource_name = 'group_management'
+        object_class = GroupManagementObject
+        # authentication = SessionAuthentication
+
+    def detail_uri_kwargs(self, bundle_or_obj):
+        kwargs = {}
+        if isinstance(bundle_or_obj, Bundle):
+            kwargs['pk'] = bundle_or_obj.obj.id
+        else:
+            kwargs['pk'] = bundle_or_obj.id
+        return kwargs
+
+    def obj_get(self, bundle, **kwargs):
+        uuid = kwargs['pk']
+        return self.get_group(uuid)
+
+    def obj_get_list(self, bundle, **kwargs):
+        return self.get_object_list(bundle.request)
+
+    def get_object_list(self, request):
+        group = self.get_group(request.GET['id'])
+        return [GroupManagementObject(group.id, self.get_members(group))]
+
+    def obj_update(self, bundle, **kwargs):
+        kwargs = self.detail_uri_kwargs(bundle)
+        id = kwargs['pk']
+        group = self.get_group(id)
+        user = bundle.request.user
+        member_list = bundle.data['member_list']
+
+        # Verify that user has permission - if they are in the manager group.
+        if user not in group.extendedgroup.manager_group.user_set.all():
+            # raise ImmediateHttpResponse(response=HttpForbidden())
+            pass
+
+        # Remove all objects before readding them.
+        group.user_set.clear()
+        for i in member_list:
+            group.user_set.add(i['id'])
+        return GroupManagementResource()
+
+

@@ -1099,5 +1099,6 @@ class WorkflowSharingObject(ResourceSharingObject):
 
 
 class GroupManagementObject(object):
-    def __init__(self, members=None):
-        self.members=members
+    def __init__(self, id=None, member_list=None):
+        self.id = id;
+        self.member_list = member_list

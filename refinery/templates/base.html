@@ -175,8 +175,10 @@
 		// activate bootstrap tooltips
 	    $('a[rel=tooltip]').tooltip();
 	
+    var username = '{{ user.username }}';
     var user_id = '{{ user.id }}';
-    if (user_id === 'None') {
+    if (username === 'None' || user_id === 'None') {
+        username = undefined;
         user_id = undefined;
     }
 
