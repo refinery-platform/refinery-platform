@@ -45,6 +45,7 @@ angular.module('refineryExternalToolStatus', [])
   var vm = this;
   var tools;
   vm.tools_details = externalToolStatusService.getToolsDetails();
+        $scope.tools_details = vm.tools_details;
 
   (function tick() {
       externalToolStatusFactory.get(function(response) {
@@ -182,6 +183,37 @@ angular.module('refineryExternalToolStatus', [])
     controllerAs: 'externalToolStatusController',
     bindToController: true,
   };
+})
+
+.directive('externaltoolstatusdetailspopover', function($log) {
+  return {
+    restrict: 'E',
+    templateUrl: '/static/partials/external_tool_status_details_popover.tpls.html',
+    scope: {
+       tools_details: '@'
+    },
+    controller: 'ExternalToolStatusController',
+    controllerAs: 'externalToolStatusController',
+    bindToController: true,
+  };
+})
+
+.directive('externaltoolpopover', function ($compile,$templateCache) {
+    return {
+        restrict: "AE",
+
+        link: function (scope, element, attrs) {
+            var template = $templateCache.get("externaltool.html");
+            var popOverContent = $compile(template)(scope);
+
+            var options = {
+                content: popOverContent,
+                placement: "bottom",
+                html: true,
+                date: scope.date,
+                trigger: "hover"
+            };
+            $(element).popover(options);
+        }
+    };
 });
-
-
