@@ -1098,9 +1098,7 @@ class WorkflowSharingObject(ResourceSharingObject):
         super(WorkflowSharingObject, self).__init__(owner, owner_id, Workflow, res_name, uuid, shares)
 
 
-class OwnershipPermissionObject(object):
-    def __init__(self, owner=None, owner_id=None, res_list=None):
-        self.owner = owner
-        self.owner_id = owner_id
-        self.res_list = res_list
-
+class GroupManagementObject(object):
+    def __init__(self, id=None, member_list=None):
+        self.id = id;
+        self.member_list = member_list

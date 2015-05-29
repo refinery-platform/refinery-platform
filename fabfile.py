@@ -83,8 +83,8 @@ def update_refinery():
     with cd(env.refinery_project_dir):
         run("git pull")
     with cd(os.path.join(env.refinery_app_dir, "ui")):
-        run("npm install")
-        run("bower install --config.interactive=false")
+        run("npm update")
+        run("bower update --config.interactive=false")
         run("grunt")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("pip install -r {refinery_project_dir}/requirements.txt".format(**env))
@@ -105,7 +105,7 @@ def relaunch_refinery(dependencies=False, migrations=False):
     puts("Relaunching Refinery")
     with cd(os.path.join(env.refinery_app_dir, "ui")):
         if dependencies:
-            run("bower install --config.interactive=false")
+            run("bower update --config.interactive=false")
         run("grunt")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         if dependencies:
