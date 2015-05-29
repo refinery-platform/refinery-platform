@@ -64,6 +64,8 @@ var provvisRender = function () {
 
     var fitToWindow = true;
 
+    var doiDiffScale = Object.create(null);
+
     /* Simple tooltips by NG. */
     var tooltip = d3.select("body")
         .append("div")
@@ -1729,8 +1731,82 @@ var provvisRender = function () {
             .attr("height", function () {
                 return cell.height - 1;
             })
-            .attr("rx", cell.width / 5)
-            .attr("ry", cell.height / 5);
+            .attr("rx", cell.width / 8)
+            .attr("ry", cell.height / 8);
+
+        lBBox.each( function (ln) {
+            if (ln.children.values().some( function (an) {
+                return an.motifDiff.numIns !== 0 || an.motifDiff.numOuts !== 0 || an.motifDiff.numSubanalyses !== 0;
+            })) {
+
+                var lDoiNegIns = 0,
+                    lDoiPosIns = 0,
+                    lDoiNegSA = 0,
+                    lDoiPosSA = 0,
+                    lDoiNegOuts = 0,
+                    lDoiPosOuts = 0;
+
+                ln.children.values().forEach( function (an) {
+                    if (an.motifDiff.numIns < 0) {
+                        lDoiNegIns += an.motifDiff.numIns;
+                    } else {
+                        lDoiPosIns += an.motifDiff.numIns;
+                    }
+                    if (an.motifDiff.numSubanalyses < 0) {
+                        lDoiNegSA += an.motifDiff.numSubanalyses;
+                    } else {
+                        lDoiPosSA += an.motifDiff.numSubanalyses;
+                    }
+                    if (an.motifDiff.numOuts < 0) {
+                        lDoiNegOuts += an.motifDiff.numOuts;
+                    } else {
+                        lDoiPosOuts += an.motifDiff.numOuts;
+                    }
+                });
+
+                d3.select(this).append("line")
+                    .attr("x1", 0)
+                    .attr("y1", 0)
+                    .attr("x2", 0)
+                    .attr("y2", 2 * scaleFactor * vis.radius)
+                    .classed("lDoiDiffLine", true);
+
+                /*if (ln.children.values().some( function (an) {return an.motifDiff.numIns !== 0;})) {*/
+                    d3.select(this).append("path")
+                        .attr("d", function () {
+                            return "M" + (0.5 * -doiDiffScale(Math.abs(lDoiNegIns)) * scaleFactor * vis.radius)  + ",0 " +
+                                "h" + (0.5 * scaleFactor * vis.radius*(doiDiffScale(Math.abs(lDoiNegIns) + lDoiPosIns))) + ", " +
+                                "v" + (2 / 3 * scaleFactor * vis.radius) + ", " +
+                                "h" + (-0.5 * scaleFactor * vis.radius*(doiDiffScale(Math.abs(lDoiNegIns) + lDoiPosIns))) + ", " +
+                                "v" + (-2 / 3 * scaleFactor * vis.radius);
+                        }).classed("lDoiIns", true);
+                /*}*/
+
+                /*if (ln.children.values().some( function (an) {return an.motifDiff.numSubanalyses !== 0;})) {*/
+                    d3.select(this).append("path")
+                        .attr("d", function () {
+                            return "M" + (0.5 * -doiDiffScale(Math.abs(lDoiNegSA)) * scaleFactor * vis.radius) +
+                                "," + ((2 / 3) * scaleFactor * vis.radius) + ", " +
+                                "h" + (0.5 * scaleFactor * vis.radius * (doiDiffScale(Math.abs(lDoiNegSA) + lDoiPosSA))) + ", " +
+                                "v" + (2 / 3 * scaleFactor * vis.radius) + ", " +
+                                "h" + (-0.5 * scaleFactor * vis.radius * (doiDiffScale(Math.abs(lDoiNegSA) + lDoiPosSA))) + ", " +
+                                "v" + (-2 / 3 * scaleFactor * vis.radius);
+                        }).classed("lDoiSA", true);
+                /*}*/
+
+                /*if (ln.children.values().some( function (an) {return an.motifDiff.numOuts !== 0;})) {*/
+                    d3.select(this).append("path")
+                        .attr("d", function () {
+                            return "M" + (0.5 * -doiDiffScale(Math.abs(lDoiNegOuts)) * scaleFactor * vis.radius) +
+                                "," + ((4 / 3) * scaleFactor * vis.radius) + ", " +
+                                "h" + (0.5 * scaleFactor * vis.radius * (doiDiffScale(Math.abs(lDoiNegOuts) + lDoiPosOuts))) + ", " +
+                                "v" + (2 / 3 * scaleFactor * vis.radius) + ", " +
+                                "h" + (-0.5 * scaleFactor * vis.radius * (doiDiffScale(Math.abs(lDoiNegOuts) + lDoiPosOuts))) + ", " +
+                                "v" + (-2 / 3 * scaleFactor * vis.radius);
+                        }).classed("lDoiOuts", true);
+                /*}*/
+            }
+        });
 
         /* Add a clip-path to restrict labels within the cell area. */
         lBBox.append("defs")
@@ -1742,8 +1818,8 @@ var provvisRender = function () {
             .attr("y", -/*3 * */scaleFactor * vis.radius)
             .attr("width", cell.width - 4)
             .attr("height", cell.height - 2 + 2 * scaleFactor * vis.radius)
-            .attr("rx", cell.width / 5)
-            .attr("ry", cell.height / 5);
+            .attr("rx", cell.width / 8)
+            .attr("ry", cell.height / 8);
 
         /* Time as label. */
         lBBox.append("g").classed({"labels": true})
@@ -1752,7 +1828,7 @@ var provvisRender = function () {
             })
             .append("text")
             .attr("transform", function () {
-                return "translate(" + 2 + "," + 0.5 * scaleFactor * vis.radius + ")";
+                return "translate(" + 1 * scaleFactor * vis.radius + "," + 0.5 * scaleFactor * vis.radius + ")";
             })
             .text(function (d) {
                 return '\uf013' + ' ' + d.wfCode;
@@ -1851,7 +1927,7 @@ var provvisRender = function () {
 
         lLabels.append('text')
             .attr("transform", function () {
-                return "translate(" + (-1.1 * scaleFactor * vis.radius) + "," + (-0.1 * scaleFactor * vis.radius) + ")";
+                return "translate(" + (-1.1 * scaleFactor * vis.radius) + "," + (0.1 * scaleFactor * vis.radius) + ")";
             }).text(function () {
                 return "\uf0c9";
             })
@@ -1868,7 +1944,7 @@ var provvisRender = function () {
 
         lLabels.append("text")
             .attr("transform", function () {
-                return "translate(" + (0.7 * scaleFactor * vis.radius) + ",0)";
+                return "translate(" + (0.8*scaleFactor * vis.radius) + "," + (0.1 * scaleFactor * vis.radius) + ")";
             })
             .text(function (d) {
                 return d.children.size();
@@ -1881,6 +1957,25 @@ var provvisRender = function () {
                     return timeColorScale(parseISOTimeFormat(latestDate)) < "#888888" ? "#ffffff" : "#000000";
                 }
             });
+
+        /*lLabels.append("text")
+            .attr("transform", function () {
+                return "translate(" + (1 * scaleFactor * vis.radius) + "," + (-1 * scaleFactor * vis.radius) + ")";
+            })
+            .text(function (ln) {
+                var numDiffAN = 0;
+                ln.children.values().forEach( function (an) {
+                    if (an.motifDiff.numIns !== 0 || an.motifDiff.numOuts !== 0 || an.motifDiff.numSubanalyses !== 0) {
+                        numDiffAN++;
+                    }
+                });
+                if (numDiffAN > 0) {
+                    return "- "+numDiffAN;
+                } else {
+                    return "";
+                }
+            }).classed({"lnLabel": true, "lDoiNegDiff": true})
+            .style({"fill": "#ed7407", "stroke": "#136382"});*/
 
         /* Enter and update. */
         var lUpdate = ln.attr("id", function (d) {
@@ -1960,6 +2055,10 @@ var provvisRender = function () {
      */
     var updateAnalysisNodes = function () {
 
+
+        /* TODO: Add diff encoding. */
+
+
         /* Data join. */
         var lAnalysis = d3.select("g.analyses").selectAll(".analysis")
             .data(vis.graph.aNodes.sort(function (a, b) {
@@ -1990,8 +2089,8 @@ var provvisRender = function () {
             .attr("y", -/*3 * */scaleFactor * vis.radius)
             .attr("width", cell.width - 4)
             .attr("height", cell.height - 2/* + 3 * scaleFactor * vis.radius*/)
-            .attr("rx", cell.width / 5)
-            .attr("ry", cell.height / 5);
+            .attr("rx", cell.width / 8)
+            .attr("ry", cell.height / 8);
 
         /* Draw bounding box. */
         var analysisBBox = anUpdate.select("g")
@@ -2010,8 +2109,8 @@ var provvisRender = function () {
             .attr("height", function () {
                 return cell.height - 2/* + 3 * scaleFactor * vis.radius*/;
             })
-            .attr("rx", cell.width / 5)
-            .attr("ry", cell.height / 5);
+            .attr("rx", cell.width / 8)
+            .attr("ry", cell.height / 8);
 
         /* Add a clip-path to restrict labels within the cell area. */
         analysisBBox.select("defs")
@@ -2023,8 +2122,8 @@ var provvisRender = function () {
             .attr("y", -/*3 * */scaleFactor * vis.radius)
             .attr("width", cell.width - 4)
             .attr("height", cell.height - 2/* + 3 * scaleFactor * vis.radius*/)
-            .attr("rx", cell.width / 5)
-            .attr("ry", cell.height / 5);
+            .attr("rx", cell.width / 8)
+            .attr("ry", cell.height / 8);
 
         /* Time as label. */
         analysisBBox.select("g").classed({"labels": true})
@@ -2033,7 +2132,7 @@ var provvisRender = function () {
             })
             .select("text")
             .attr("transform", function () {
-                return "translate(" + 2 + "," + 0.5 * scaleFactor * vis.radius + ")";
+                return "translate(" + 1 * scaleFactor * vis.radius + "," + scaleFactor * vis.radius + ")";
             })
             .text(function (d) {
                 return '\uf013' + ' ' + d.wfCode;
@@ -2137,8 +2236,8 @@ var provvisRender = function () {
             .attr("y", -/*3 * */scaleFactor * vis.radius)
             .attr("width", cell.width - 4)
             .attr("height", cell.height - 2 + 2 * scaleFactor * vis.radius)
-            .attr("rx", cell.width / 5)
-            .attr("ry", cell.height / 5);
+            .attr("rx", cell.width / 8)
+            .attr("ry", cell.height / 8);
 
         /* Draw bounding box. */
         analysisBBox = anEnter.append("g")
@@ -2157,8 +2256,46 @@ var provvisRender = function () {
             .attr("height", function () {
                 return cell.height - 2/* + 3 * scaleFactor * vis.radius*/;
             })
-            .attr("rx", cell.width / 5)
-            .attr("ry", cell.height / 5);
+            .attr("rx", cell.width / 8)
+            .attr("ry", cell.height / 8);
+
+        analysisBBox.each( function (an) {
+            if (an.motifDiff.numIns !== 0 || an.motifDiff.numOuts !== 0 || an.motifDiff.numSubanalyses !== 0) {
+                d3.select(this).append("line")
+                    .attr("x1", 0)
+                    .attr("y1", 0)
+                    .attr("x2", 0)
+                    .attr("y2", 2 * scaleFactor * vis.radius)
+                    .classed("aDoiDiffLine", true);
+
+                d3.select(this).append("path")
+                    .attr("d", function () {
+                        return "M0,0 " +
+                            "h" + (0.5*scaleFactor * vis.radius*(doiDiffScale(an.motifDiff.numIns))) + ", " +
+                            "v" + (2/3*scaleFactor * vis.radius) + ", " +
+                            "h" + (-0.5*scaleFactor * vis.radius*(doiDiffScale(an.motifDiff.numIns))) + ", " +
+                            "v" + (-2/3*scaleFactor * vis.radius);
+                    }).classed("aDoiIns", true);
+
+                d3.select(this).append("path")
+                    .attr("d", function () {
+                        return "M0," + ((2/3)*scaleFactor * vis.radius) + ", " +
+                            "h" + (0.5*scaleFactor * vis.radius*(doiDiffScale(an.motifDiff.numSubanalyses))) + ", " +
+                            "v" + (2/3*scaleFactor * vis.radius) + ", " +
+                            "h" + (-0.5*scaleFactor * vis.radius*(doiDiffScale(an.motifDiff.numSubanalyses))) + ", " +
+                            "v" + (-2/3*scaleFactor * vis.radius);
+                    }).classed("aDoiSA", true);
+
+                d3.select(this).append("path")
+                    .attr("d", function () {
+                        return "M0," + ((4/3)*scaleFactor * vis.radius) + ", " +
+                            "h" + (0.5*scaleFactor * vis.radius*(doiDiffScale(an.motifDiff.numOuts))) + ", " +
+                            "v" + (2/3*scaleFactor * vis.radius) + ", " +
+                            "h" + (-0.5*scaleFactor * vis.radius*(doiDiffScale(an.motifDiff.numOuts))) + ", " +
+                            "v" + (-2/3*scaleFactor * vis.radius);
+                    }).classed("aDoiOuts", true);
+            }
+        });
 
         /* Add a clip-path to restrict labels within the cell area. */
         analysisBBox.append("defs")
@@ -2170,17 +2307,17 @@ var provvisRender = function () {
             .attr("y", -/*3 * */scaleFactor * vis.radius)
             .attr("width", cell.width - 4)
             .attr("height", cell.height - 2/* + 3 * scaleFactor * vis.radius*/)
-            .attr("rx", cell.width / 5)
-            .attr("ry", cell.height / 5);
+            .attr("rx", cell.width / 8)
+            .attr("ry", cell.height / 8);
 
-        /* Time as label. */
+        /* Workflow as label. */
         analysisBBox.append("g").classed({"labels": true})
             .attr("clip-path", function (an) {
                 return "url(#aBBClipId-" + an.autoId + ")";
             })
             .append("text")
             .attr("transform", function () {
-                return "translate(" + 2 + "," + 0.5 * scaleFactor * vis.radius + ")";
+                return "translate(" + 1 * scaleFactor * vis.radius + "," + scaleFactor * vis.radius + ")";
             })
             .text(function (d) {
                 return '\uf013' + ' ' + d.wfCode;
@@ -2245,11 +2382,11 @@ var provvisRender = function () {
 
         aGlyph.append("rect")
             .attr("x", -2 * scaleFactor * vis.radius)
-            .attr("y", -1.5 * scaleFactor * vis.radius)
+            .attr("y", -1.0 * scaleFactor * vis.radius)
             .attr("rx", 1)
             .attr("ry", 1)
             .attr("width", 4 * scaleFactor * vis.radius)
-            .attr("height", 3 * scaleFactor * vis.radius)
+            .attr("height", 2 * scaleFactor * vis.radius)
             .classed({"aGlyph": true});
 
         /* Add text labels. */
@@ -2442,8 +2579,8 @@ var provvisRender = function () {
                     .attr("height", function () {
                         return saBBoxCoords.y.max - saBBoxCoords.y.min - 5;
                     })
-                    .attr("rx", cell.width / 5)
-                    .attr("ry", cell.height / 5);
+                    .attr("rx", cell.width / 8)
+                    .attr("ry", cell.height / 8);
 
                 /* Draw subanalysis node. */
                 var subanalysisNode = self.append("g")
@@ -3405,8 +3542,8 @@ var provvisRender = function () {
                     d3.select("#aBBClipId-" + d.parent.parent.autoId).select("rect")
                         .attr("width", cell.width - 4)
                         .attr("height", cell.height - 2 + 2 * scaleFactor * vis.radius)
-                        .attr("rx", cell.width / 5)
-                        .attr("ry", cell.height / 5);
+                        .attr("rx", cell.width / 8)
+                        .attr("ry", cell.height / 8);
                 }
                 /* Update links. */
                 updateLink(d.parent.parent);
@@ -3519,17 +3656,12 @@ var provvisRender = function () {
         vis.canvas.selectAll(".lBBoxLabel")
             .transition()
             .duration(transitionTime)
-            .attr("transform", "translate(" + 2 + "," + (0.5 * scaleFactor * vis.radius) + ") scale(" + (1 / newScale) + ")");
+            .attr("transform", "translate(" + 1 * scaleFactor * vis.radius + "," + 0.5 * scaleFactor * vis.radius + ") scale(" + (1 / newScale) + ")");
 
         vis.canvas.selectAll(".aBBoxLabel")
             .transition()
             .duration(transitionTime)
-            .attr("transform", "translate(" + 2 + "," + (0.5 * scaleFactor * vis.radius) + ") scale(" + (1 / newScale) + ")");
-
-        vis.canvas.selectAll(".saBBoxLabel")
-            .transition()
-            .duration(transitionTime)
-            .attr("transform", "translate(" + 0 + "," + 0 + ") scale(" + (1 / newScale) + ")");
+            .attr("transform", "translate(" + 1 * scaleFactor * vis.radius + "," + scaleFactor * vis.radius + ") scale(" + (1 / newScale) + ")");
 
         vis.canvas.selectAll(".nodeDoiLabel")
             .transition()
@@ -4962,15 +5094,13 @@ var provvisRender = function () {
      * @param aNodes Analysis nodes.
      */
     var initDoiLayerDiffComponent = function (lNodes, aNodes) {
-        var min = d3.min(aNodes, function (an) {
-                return Math.abs(an.motifDiff.numIns) + Math.abs(an.motifDiff.numOuts) + Math.abs(an.motifDiff.numSubanalyses);
-            }),
-            max = d3.max(aNodes, function (an) {
+        var doiDiffMin = 0,
+            doiDiffMax = d3.max(aNodes, function (an) {
                 return Math.abs(an.motifDiff.numIns) + Math.abs(an.motifDiff.numOuts) + Math.abs(an.motifDiff.numSubanalyses);
             });
 
-        var doiDiffScale = d3.scale.linear()
-            .domain([min, max])
+        doiDiffScale = d3.scale.linear()
+            .domain([doiDiffMin, doiDiffMax])
             .range([0.0, 1.0]);
 
         /* Init analysis nodes with a factor in relation to the highes diff in the whole graph. */

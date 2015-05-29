@@ -316,6 +316,26 @@
     alignment-baseline: middle;
 }
 
+.lDoiDiffLine, .aDoiDiffLine {
+    stroke-width: 1px;
+    stroke-opacity: 1.0;
+    fill: none;
+    fill-opacity: 0.0;
+    stroke: #136382;
+    cursor: default;
+    stroke-dasharray: none;
+}
+
+.lDoiIns, .lDoiOuts, .lDoiSA, .aDoiIns, .aDoiOuts, .aDoiSA {
+    stroke-width: 0.25px;
+    stroke-opacity: 1.0;
+    fill: #ed7407;
+    fill-opacity: 1.0;
+    stroke: #ffffff;
+    cursor: default;
+    stroke-dasharray: none;
+}
+
 .hiddenLabel {
     display: none;
 }
