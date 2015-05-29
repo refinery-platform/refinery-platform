@@ -25,6 +25,9 @@ angular.module("refinerySharing", [])
 
     function loadResource(api, uuid) {
         $http.get('api/v1/' + api + '/?owner-id=' + user_id + '&uuid=' + uuid + '&format=json').success(function (response) {
+            // Update the username and resource name thing in the modal description.
+            document.getElementById('modal-description').innerText = response.objects[0].owner + ' | ' + response.objects[0].res_name;
+
             var shareList = response.objects[0].shares;
             var pTable = document.getElementById('permission-table');
             for (var i = 0; i < shareList.length; i++) {
