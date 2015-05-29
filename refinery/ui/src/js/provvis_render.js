@@ -1254,6 +1254,8 @@ var provvisRender = function () {
             updateDoiView(d3.values(provvisDecl.DoiFactors.factors));
         };
 
+        /* TODO: Check opacity. */
+
         /* Toggle component on svg click. */
         d3.selectAll(".doiComp").on("click", function () {
             var dcId = d3.select(this).attr("id").substr(d3.select(this).attr("id").length - 1, 1);
@@ -1738,7 +1740,6 @@ var provvisRender = function () {
             if (ln.children.values().some( function (an) {
                 return an.motifDiff.numIns !== 0 || an.motifDiff.numOuts !== 0 || an.motifDiff.numSubanalyses !== 0;
             })) {
-
                 var lDoiNegIns = 0,
                     lDoiPosIns = 0,
                     lDoiNegSA = 0,
@@ -1766,45 +1767,45 @@ var provvisRender = function () {
 
                 d3.select(this).append("line")
                     .attr("x1", 0)
-                    .attr("y1", 0)
+                    .attr("y1", -0.2 * scaleFactor * vis.radius)
                     .attr("x2", 0)
-                    .attr("y2", 2 * scaleFactor * vis.radius)
+                    .attr("y2", 2.2 * scaleFactor * vis.radius)
                     .classed("lDoiDiffLine", true);
 
-                /*if (ln.children.values().some( function (an) {return an.motifDiff.numIns !== 0;})) {*/
+                if (ln.children.values().some( function (an) {return an.motifDiff.numIns !== 0;})) {
                     d3.select(this).append("path")
                         .attr("d", function () {
-                            return "M" + (0.5 * -doiDiffScale(Math.abs(lDoiNegIns)) * scaleFactor * vis.radius)  + ",0 " +
+                            return "M" + (-0.5 * doiDiffScale(Math.abs(lDoiNegIns)) * scaleFactor * vis.radius)  + ",0 " +
                                 "h" + (0.5 * scaleFactor * vis.radius*(doiDiffScale(Math.abs(lDoiNegIns) + lDoiPosIns))) + ", " +
                                 "v" + (2 / 3 * scaleFactor * vis.radius) + ", " +
                                 "h" + (-0.5 * scaleFactor * vis.radius*(doiDiffScale(Math.abs(lDoiNegIns) + lDoiPosIns))) + ", " +
                                 "v" + (-2 / 3 * scaleFactor * vis.radius);
                         }).classed("lDoiIns", true);
-                /*}*/
+                }
 
-                /*if (ln.children.values().some( function (an) {return an.motifDiff.numSubanalyses !== 0;})) {*/
+                if (ln.children.values().some( function (an) {return an.motifDiff.numSubanalyses !== 0;})) {
                     d3.select(this).append("path")
                         .attr("d", function () {
-                            return "M" + (0.5 * -doiDiffScale(Math.abs(lDoiNegSA)) * scaleFactor * vis.radius) +
+                            return "M" + (-0.5 * doiDiffScale(Math.abs(lDoiNegSA)) * scaleFactor * vis.radius) +
                                 "," + ((2 / 3) * scaleFactor * vis.radius) + ", " +
                                 "h" + (0.5 * scaleFactor * vis.radius * (doiDiffScale(Math.abs(lDoiNegSA) + lDoiPosSA))) + ", " +
                                 "v" + (2 / 3 * scaleFactor * vis.radius) + ", " +
                                 "h" + (-0.5 * scaleFactor * vis.radius * (doiDiffScale(Math.abs(lDoiNegSA) + lDoiPosSA))) + ", " +
                                 "v" + (-2 / 3 * scaleFactor * vis.radius);
                         }).classed("lDoiSA", true);
-                /*}*/
+                }
 
-                /*if (ln.children.values().some( function (an) {return an.motifDiff.numOuts !== 0;})) {*/
+                if (ln.children.values().some( function (an) {return an.motifDiff.numOuts !== 0;})) {
                     d3.select(this).append("path")
                         .attr("d", function () {
-                            return "M" + (0.5 * -doiDiffScale(Math.abs(lDoiNegOuts)) * scaleFactor * vis.radius) +
+                            return "M" + (-0.5 * doiDiffScale(Math.abs(lDoiNegOuts)) * scaleFactor * vis.radius) +
                                 "," + ((4 / 3) * scaleFactor * vis.radius) + ", " +
                                 "h" + (0.5 * scaleFactor * vis.radius * (doiDiffScale(Math.abs(lDoiNegOuts) + lDoiPosOuts))) + ", " +
                                 "v" + (2 / 3 * scaleFactor * vis.radius) + ", " +
                                 "h" + (-0.5 * scaleFactor * vis.radius * (doiDiffScale(Math.abs(lDoiNegOuts) + lDoiPosOuts))) + ", " +
                                 "v" + (-2 / 3 * scaleFactor * vis.radius);
                         }).classed("lDoiOuts", true);
-                /*}*/
+                }
             }
         });
 
@@ -2132,7 +2133,7 @@ var provvisRender = function () {
             })
             .select("text")
             .attr("transform", function () {
-                return "translate(" + 1 * scaleFactor * vis.radius + "," + scaleFactor * vis.radius + ")";
+                return "translate(" + 1 * scaleFactor * vis.radius + "," + 0.5*scaleFactor * vis.radius + ")";
             })
             .text(function (d) {
                 return '\uf013' + ' ' + d.wfCode;
@@ -2261,39 +2262,71 @@ var provvisRender = function () {
 
         analysisBBox.each( function (an) {
             if (an.motifDiff.numIns !== 0 || an.motifDiff.numOuts !== 0 || an.motifDiff.numSubanalyses !== 0) {
+
+                var anDoiNegIns = 0,
+                    anDoiPosIns = 0,
+                    anDoiNegSA = 0,
+                    anDoiPosSA = 0,
+                    anDoiNegOuts = 0,
+                    anDoiPosOuts = 0;
+
+                if (an.motifDiff.numIns < 0) {
+                    anDoiNegIns = an.motifDiff.numIns;
+                } else {
+                    anDoiPosIns = an.motifDiff.numIns;
+                }
+                if (an.motifDiff.numSubanalyses < 0) {
+                    anDoiNegSA = an.motifDiff.numSubanalyses;
+                } else {
+                    anDoiPosSA = an.motifDiff.numSubanalyses;
+                }
+                if (an.motifDiff.numOuts < 0) {
+                    anDoiNegOuts = an.motifDiff.numOuts;
+                } else {
+                    anDoiPosOuts = an.motifDiff.numOuts;
+                }
+
                 d3.select(this).append("line")
                     .attr("x1", 0)
-                    .attr("y1", 0)
+                    .attr("y1", -0.2 * scaleFactor * vis.radius)
                     .attr("x2", 0)
-                    .attr("y2", 2 * scaleFactor * vis.radius)
+                    .attr("y2", 2.2 * scaleFactor * vis.radius)
                     .classed("aDoiDiffLine", true);
 
-                d3.select(this).append("path")
-                    .attr("d", function () {
-                        return "M0,0 " +
-                            "h" + (0.5*scaleFactor * vis.radius*(doiDiffScale(an.motifDiff.numIns))) + ", " +
-                            "v" + (2/3*scaleFactor * vis.radius) + ", " +
-                            "h" + (-0.5*scaleFactor * vis.radius*(doiDiffScale(an.motifDiff.numIns))) + ", " +
-                            "v" + (-2/3*scaleFactor * vis.radius);
-                    }).classed("aDoiIns", true);
+                if (an.motifDiff.numIns !== 0) {
+                    d3.select(this).append("path")
+                        .attr("d", function () {
+                            return "M" + (-0.5 * doiDiffScale(Math.abs(anDoiNegIns)) * scaleFactor * vis.radius)  + ",0 " +
+                                "h" + (0.5 * scaleFactor * vis.radius*(doiDiffScale(Math.abs(anDoiNegIns) + anDoiPosIns))) + ", " +
+                                "v" + (2 / 3 * scaleFactor * vis.radius) + ", " +
+                                "h" + (-0.5 * scaleFactor * vis.radius*(doiDiffScale(Math.abs(anDoiNegIns) + anDoiPosIns))) + ", " +
+                                "v" + (-2 / 3 * scaleFactor * vis.radius);
+                        }).classed("aDoiIns", true);
+                }
 
-                d3.select(this).append("path")
-                    .attr("d", function () {
-                        return "M0," + ((2/3)*scaleFactor * vis.radius) + ", " +
-                            "h" + (0.5*scaleFactor * vis.radius*(doiDiffScale(an.motifDiff.numSubanalyses))) + ", " +
-                            "v" + (2/3*scaleFactor * vis.radius) + ", " +
-                            "h" + (-0.5*scaleFactor * vis.radius*(doiDiffScale(an.motifDiff.numSubanalyses))) + ", " +
-                            "v" + (-2/3*scaleFactor * vis.radius);
-                    }).classed("aDoiSA", true);
+                if (an.motifDiff.numSubanalyses !== 0) {
+                    d3.select(this).append("path")
+                        .attr("d", function () {
+                            return "M" + (-0.5 * doiDiffScale(Math.abs(anDoiNegSA)) * scaleFactor * vis.radius) +
+                                "," + ((2 / 3) * scaleFactor * vis.radius) + ", " +
+                                "h" + (0.5 * scaleFactor * vis.radius * (doiDiffScale(Math.abs(anDoiNegSA) + anDoiPosSA))) + ", " +
+                                "v" + (2 / 3 * scaleFactor * vis.radius) + ", " +
+                                "h" + (-0.5 * scaleFactor * vis.radius * (doiDiffScale(Math.abs(anDoiNegSA) + anDoiPosSA))) + ", " +
+                                "v" + (-2 / 3 * scaleFactor * vis.radius);
+                        }).classed("aDoiSA", true);
+                }
 
-                d3.select(this).append("path")
-                    .attr("d", function () {
-                        return "M0," + ((4/3)*scaleFactor * vis.radius) + ", " +
-                            "h" + (0.5*scaleFactor * vis.radius*(doiDiffScale(an.motifDiff.numOuts))) + ", " +
-                            "v" + (2/3*scaleFactor * vis.radius) + ", " +
-                            "h" + (-0.5*scaleFactor * vis.radius*(doiDiffScale(an.motifDiff.numOuts))) + ", " +
-                            "v" + (-2/3*scaleFactor * vis.radius);
-                    }).classed("aDoiOuts", true);
+                    if (an.motifDiff.numOuts !== 0) {
+                        d3.select(this).append("path")
+                            .attr("d", function () {
+                                return "M" + (-0.5 * doiDiffScale(Math.abs(anDoiNegOuts)) * scaleFactor * vis.radius) +
+                                    "," + ((4 / 3) * scaleFactor * vis.radius) + ", " +
+                                    "h" + (0.5 * scaleFactor * vis.radius * (doiDiffScale(Math.abs(anDoiNegOuts) + anDoiPosOuts))) + ", " +
+                                    "v" + (2 / 3 * scaleFactor * vis.radius) + ", " +
+                                    "h" + (-0.5 * scaleFactor * vis.radius * (doiDiffScale(Math.abs(anDoiNegOuts) + anDoiPosOuts))) + ", " +
+                                    "v" + (-2 / 3 * scaleFactor * vis.radius);
+                            }).classed("aDoiOuts", true);
+                    }
             }
         });
 
@@ -2317,7 +2350,7 @@ var provvisRender = function () {
             })
             .append("text")
             .attr("transform", function () {
-                return "translate(" + 1 * scaleFactor * vis.radius + "," + scaleFactor * vis.radius + ")";
+                return "translate(" + 1 * scaleFactor * vis.radius + "," + 0.5*scaleFactor * vis.radius + ")";
             })
             .text(function (d) {
                 return '\uf013' + ' ' + d.wfCode;
@@ -3661,7 +3694,7 @@ var provvisRender = function () {
         vis.canvas.selectAll(".aBBoxLabel")
             .transition()
             .duration(transitionTime)
-            .attr("transform", "translate(" + 1 * scaleFactor * vis.radius + "," + scaleFactor * vis.radius + ") scale(" + (1 / newScale) + ")");
+            .attr("transform", "translate(" + 1 * scaleFactor * vis.radius + "," + 0.5*scaleFactor * vis.radius + ") scale(" + (1 / newScale) + ")");
 
         vis.canvas.selectAll(".nodeDoiLabel")
             .transition()
@@ -5096,7 +5129,10 @@ var provvisRender = function () {
     var initDoiLayerDiffComponent = function (lNodes, aNodes) {
         var doiDiffMin = 0,
             doiDiffMax = d3.max(aNodes, function (an) {
-                return Math.abs(an.motifDiff.numIns) + Math.abs(an.motifDiff.numOuts) + Math.abs(an.motifDiff.numSubanalyses);
+                return d3.max([Math.abs(an.motifDiff.numIns), Math.abs(an.motifDiff.numSubanalyses),
+                    Math.abs(an.motifDiff.numOuts)], function (d) {
+                    return d;
+                });
             });
 
         doiDiffScale = d3.scale.linear()

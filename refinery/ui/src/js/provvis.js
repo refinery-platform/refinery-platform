@@ -263,7 +263,7 @@ var provvis = function () {
                     vis.canvas.selectAll(".lBBoxLabel").attr("transform", "translate(" + 1 * scaleFactor *
                         vis.radius + "," + (0.5 * scaleFactor * vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
                     vis.canvas.selectAll(".aBBoxLabel").attr("transform", "translate(" + 1 * scaleFactor *
-                        vis.radius + "," + scaleFactor * vis.radius + ")" + "scale(" + (+1 / d3.event.scale) + ")");
+                        vis.radius + "," + 0.5*scaleFactor * vis.radius + ")" + "scale(" + (+1 / d3.event.scale) + ")");
                     vis.canvas.selectAll(".nodeDoiLabel").attr("transform", "translate(" + 0 +
                         "," + (2 * scaleFactor * vis.radius) + ")" + "scale(" + (+1 / d3.event.scale) + ")");
                     vis.canvas.selectAll(".nodeAttrLabel").attr("transform", "translate(" +

@@ -6,11 +6,11 @@ var provvisDecl = function () {
     var DoiFactors = (function () {
 
         var factors = {
-            filtered: {label: "filtered", value: 0.25, masked: true},
-            selected: {label: "selected", value: 0.25, masked: true},
-            highlighted: {label: "highlighted", value: 0.25, masked: true},
-            time: {label: "time", value: 0.25, masked: true},
-            layerdiff: {label: "layerdiff", value: 0, masked: false}
+            filtered: {label: "filtered", value: 0.2, masked: true},
+            selected: {label: "selected", value: 0.2, masked: true},
+            highlighted: {label: "highlighted", value: 0.2, masked: true},
+            time: {label: "time", value: 0.2, masked: true},
+            diff: {label: "diff", value: 0.2, masked: true}
         };
 
         return {
@@ -150,7 +150,7 @@ var provvisDecl = function () {
             this.doiSelected * provvisDecl.DoiFactors.factors.selected.value +
             this.doiHighlighted * provvisDecl.DoiFactors.factors.highlighted.value +
             this.doiTime * provvisDecl.DoiFactors.factors.time.value +
-            this.doiLayerDiff * provvisDecl.DoiFactors.factors.layerdiff.value
+            this.doiLayerDiff * provvisDecl.DoiFactors.factors.diff.value
             ).toFixed(2);
     };
 

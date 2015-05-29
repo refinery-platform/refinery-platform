@@ -215,9 +215,13 @@ var provvisMotifs = function () {
         graph.aNodes.sort(function (a, b) {
             return parseISOTimeFormat(a.start) - parseISOTimeFormat(b.start);
         }).forEach( function (an) {
-            an.motifDiff.numSubanalyses = an.children.size() - an.motif.numSubanalyses;
-            an.motifDiff.numIns = an.predLinks.size() - an.motif.numIns;
-            an.motifDiff.numOuts = an.succLinks.size() - an.motif.numOuts;
+
+            /* TODO: Fix as some new layers with a single analysis may have the motif of the last layer created. */
+            if (an.parent.children.size() !== 1) {
+                an.motifDiff.numSubanalyses = an.children.size() - an.motif.numSubanalyses;
+                an.motifDiff.numIns = an.predLinks.size() - an.motif.numIns;
+                an.motifDiff.numOuts = an.succLinks.size() - an.motif.numOuts;
+            }
         });
     };
 
