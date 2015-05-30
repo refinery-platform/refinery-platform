@@ -1862,7 +1862,7 @@ var provvisRender = function () {
         if (ln.children.values().some(function (an) {
           return an.motifDiff.numIns !== 0;
         })) {
-          lDiffG.append("path")
+          var lDiffIns = lDiffG.append("path")
               .attr("d", function () {
                 return "M" + (-0.5 * doiDiffScale(Math.abs(lDiffNegIns)) *
                     scaleFactor * vis.radius) + ",0 " +
@@ -1878,7 +1878,7 @@ var provvisRender = function () {
         if (ln.children.values().some(function (an) {
           return an.motifDiff.numSubanalyses !== 0;
         })) {
-          lDiffG.append("path")
+          var lDiffSA = lDiffG.append("path")
               .attr("d", function () {
                 return "M" + (-0.5 * doiDiffScale(Math.abs(lDiffNegSA)) *
                     scaleFactor * vis.radius) +
@@ -1895,7 +1895,7 @@ var provvisRender = function () {
         if (ln.children.values().some(function (an) {
           return an.motifDiff.numOuts !== 0;
         })) {
-          lDiffG.append("path")
+          var lDiffOuts = lDiffG.append("path")
               .attr("d", function () {
                 return "M" + (-0.5 * doiDiffScale(Math.abs(lDiffNegOuts)) *
                     scaleFactor * vis.radius) +
@@ -1909,6 +1909,60 @@ var provvisRender = function () {
                     ", " +
                     "v" + (-2 / 3 * scaleFactor * vis.radius);
               }).classed("lDiffOuts", true);
+
+          if (lDiffNegIns < 0) {
+            lDiffG.append("text")
+                .attr("transform", function () {
+                  return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + (0.5) + ")";})
+                .text(Math.abs(lDiffNegIns))
+                .classed({"lDiffLabel": true})
+                .style({"fill": "#000000", "stroke": "#000000"});
+          }
+
+          if (lDiffPosIns > 0) {
+            lDiffG.append("text")
+                .attr("transform", function () {
+                  return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((1/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                .text(lDiffPosIns)
+                .classed({"lDiffLabel": true})
+                .style({"fill": "#000000", "stroke": "#000000"});
+          }
+
+          if (lDiffNegSA < 0) {
+            lDiffG.append("text")
+                .attr("transform", function () {
+                  return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + ((3/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                .text(Math.abs(lDiffNegSA))
+                .classed({"lDiffLabel": true})
+                .style({"fill": "#000000", "stroke": "#000000"});
+          }
+
+          if (lDiffPosSA > 0) {
+            lDiffG.append("text")
+                .attr("transform", function () {
+                  return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((3/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                .text(lDiffPosSA)
+                .classed({"lDiffLabel": true})
+                .style({"fill": "#000000", "stroke": "#000000"});
+          }
+
+          if (lDiffNegOuts < 0) {
+            lDiffG.append("text")
+                .attr("transform", function () {
+                  return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + ((5/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                .text(Math.abs(lDiffNegOuts))
+                .classed({"lDiffLabel": true})
+                .style({"fill": "#000000", "stroke": "#000000"});
+          }
+
+          if (lDiffPosOuts > 0) {
+            lDiffG.append("text")
+                .attr("transform", function () {
+                  return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((5/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                .text(lDiffPosOuts)
+                .classed({"lDiffLabel": true})
+                .style({"fill": "#000000", "stroke": "#000000"});
+          }
         }
       }
     });
@@ -2075,27 +2129,6 @@ var provvisRender = function () {
                 "#ffffff" : "#000000";
           }
         });
-
-    /*lLabels.append("text")
-     .attr("transform", function () {
-     return "translate(" + (1 * scaleFactor * vis.radius) + "," +
-     (-1 * scaleFactor * vis.radius) + ")";
-     })
-     .text(function (ln) {
-     var numDiffAN = 0;
-     ln.children.values().forEach( function (an) {
-     if (an.motifDiff.numIns !== 0 || an.motifDiff.numOuts !== 0 ||
-     an.motifDiff.numSubanalyses !== 0) {
-     numDiffAN++;
-     }
-     });
-     if (numDiffAN > 0) {
-     return "- "+numDiffAN;
-     } else {
-     return "";
-     }
-     }).classed({"lnLabel": true, "lDiffNegDiff": true})
-     .style({"fill": "#ed7407", "stroke": "#136382"});*/
 
     /* Enter and update. */
     var lUpdate = ln.attr("id", function (d) {
@@ -2397,27 +2430,27 @@ var provvisRender = function () {
       if (an.motifDiff.numIns !== 0 || an.motifDiff.numOuts !== 0 ||
           an.motifDiff.numSubanalyses !== 0) {
 
-        var anDoiNegIns = 0,
-            anDoiPosIns = 0,
-            anDoiNegSA = 0,
-            anDoiPosSA = 0,
-            anDoiNegOuts = 0,
-            anDoiPosOuts = 0;
+        var aDiffNegIns = 0,
+            aDiffPosIns = 0,
+            aDiffNegSA = 0,
+            aDiffPosSA = 0,
+            aDiffNegOuts = 0,
+            aDiffPosOuts = 0;
 
         if (an.motifDiff.numIns < 0) {
-          anDoiNegIns = an.motifDiff.numIns;
+          aDiffNegIns = an.motifDiff.numIns;
         } else {
-          anDoiPosIns = an.motifDiff.numIns;
+          aDiffPosIns = an.motifDiff.numIns;
         }
         if (an.motifDiff.numSubanalyses < 0) {
-          anDoiNegSA = an.motifDiff.numSubanalyses;
+          aDiffNegSA = an.motifDiff.numSubanalyses;
         } else {
-          anDoiPosSA = an.motifDiff.numSubanalyses;
+          aDiffPosSA = an.motifDiff.numSubanalyses;
         }
         if (an.motifDiff.numOuts < 0) {
-          anDoiNegOuts = an.motifDiff.numOuts;
+          aDiffNegOuts = an.motifDiff.numOuts;
         } else {
-          anDoiPosOuts = an.motifDiff.numOuts;
+          aDiffPosOuts = an.motifDiff.numOuts;
         }
 
         var aDiffG = d3.select(this).append("g").classed("aDiff", true);
@@ -2432,14 +2465,14 @@ var provvisRender = function () {
         if (an.motifDiff.numIns !== 0) {
           aDiffG.append("path")
               .attr("d", function () {
-                return "M" + (-0.5 * doiDiffScale(Math.abs(anDoiNegIns)) *
+                return "M" + (-0.5 * doiDiffScale(Math.abs(aDiffNegIns)) *
                     scaleFactor * vis.radius) + ",0 " +
                     "h" + (0.5 * scaleFactor * vis.radius *
-                    (doiDiffScale(Math.abs(anDoiNegIns) + anDoiPosIns))) +
+                    (doiDiffScale(Math.abs(aDiffNegIns) + aDiffPosIns))) +
                     ", " +
                     "v" + (2 / 3 * scaleFactor * vis.radius) + ", " +
                     "h" + (-0.5 * scaleFactor * vis.radius *
-                    (doiDiffScale(Math.abs(anDoiNegIns) + anDoiPosIns))) +
+                    (doiDiffScale(Math.abs(aDiffNegIns) + aDiffPosIns))) +
                     ", " +
                     "v" + (-2 / 3 * scaleFactor * vis.radius);
               }).classed("aDiffIns", true);
@@ -2448,14 +2481,14 @@ var provvisRender = function () {
         if (an.motifDiff.numSubanalyses !== 0) {
           aDiffG.append("path")
               .attr("d", function () {
-                return "M" + (-0.5 * doiDiffScale(Math.abs(anDoiNegSA)) *
+                return "M" + (-0.5 * doiDiffScale(Math.abs(aDiffNegSA)) *
                     scaleFactor * vis.radius) +
                     "," + ((2 / 3) * scaleFactor * vis.radius) + ", " +
                     "h" + (0.5 * scaleFactor * vis.radius *
-                    (doiDiffScale(Math.abs(anDoiNegSA) + anDoiPosSA))) + ", " +
+                    (doiDiffScale(Math.abs(aDiffNegSA) + aDiffPosSA))) + ", " +
                     "v" + (2 / 3 * scaleFactor * vis.radius) + ", " +
                     "h" + (-0.5 * scaleFactor * vis.radius *
-                    (doiDiffScale(Math.abs(anDoiNegSA) + anDoiPosSA))) + ", " +
+                    (doiDiffScale(Math.abs(aDiffNegSA) + aDiffPosSA))) + ", " +
                     "v" + (-2 / 3 * scaleFactor * vis.radius);
               }).classed("aDiffSA", true);
         }
@@ -2463,18 +2496,72 @@ var provvisRender = function () {
         if (an.motifDiff.numOuts !== 0) {
           aDiffG.append("path")
               .attr("d", function () {
-                return "M" + (-0.5 * doiDiffScale(Math.abs(anDoiNegOuts)) *
+                return "M" + (-0.5 * doiDiffScale(Math.abs(aDiffNegOuts)) *
                     scaleFactor * vis.radius) +
                     "," + ((4 / 3) * scaleFactor * vis.radius) + ", " +
                     "h" + (0.5 * scaleFactor * vis.radius *
-                    (doiDiffScale(Math.abs(anDoiNegOuts) + anDoiPosOuts))) +
+                    (doiDiffScale(Math.abs(aDiffNegOuts) + aDiffPosOuts))) +
                     ", " +
                     "v" + (2 / 3 * scaleFactor * vis.radius) + ", " +
                     "h" + (-0.5 * scaleFactor * vis.radius *
-                    (doiDiffScale(Math.abs(anDoiNegOuts) + anDoiPosOuts))) +
+                    (doiDiffScale(Math.abs(aDiffNegOuts) + aDiffPosOuts))) +
                     ", " +
                     "v" + (-2 / 3 * scaleFactor * vis.radius);
               }).classed("aDiffOuts", true);
+        }
+
+        if (aDiffNegIns < 0) {
+          aDiffG.append("text")
+              .attr("transform", function () {
+                return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + (0.5) + ")";})
+              .text(Math.abs(aDiffNegIns))
+              .classed({"aDiffLabel": true})
+              .style({"fill": "#000000", "stroke": "#000000"});
+        }
+
+        if (aDiffPosIns > 0) {
+          aDiffG.append("text")
+              .attr("transform", function () {
+                return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((1/3) * scaleFactor * vis.radius + 0.5) + ")";})
+              .text(aDiffPosIns)
+              .classed({"aDiffLabel": true})
+              .style({"fill": "#000000", "stroke": "#000000"});
+        }
+
+        if (aDiffNegSA < 0) {
+          aDiffG.append("text")
+              .attr("transform", function () {
+                return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + ((3/3) * scaleFactor * vis.radius + 0.5) + ")";})
+              .text(Math.abs(aDiffNegSA))
+              .classed({"aDiffLabel": true})
+              .style({"fill": "#000000", "stroke": "#000000"});
+        }
+
+        if (aDiffPosSA > 0) {
+          aDiffG.append("text")
+              .attr("transform", function () {
+                return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((3/3) * scaleFactor * vis.radius + 0.5) + ")";})
+              .text(aDiffPosSA)
+              .classed({"aDiffLabel": true})
+              .style({"fill": "#000000", "stroke": "#000000"});
+        }
+
+        if (aDiffNegOuts < 0) {
+          aDiffG.append("text")
+              .attr("transform", function () {
+                return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + ((5/3) * scaleFactor * vis.radius + 0.5) + ")";})
+              .text(Math.abs(aDiffNegOuts))
+              .classed({"aDiffLabel": true})
+              .style({"fill": "#000000", "stroke": "#000000"});
+        }
+
+        if (aDiffPosOuts > 0) {
+          aDiffG.append("text")
+              .attr("transform", function () {
+                return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((5/3) * scaleFactor * vis.radius + 0.5) + ")";})
+              .text(aDiffPosOuts)
+              .classed({"aDiffLabel": true})
+              .style({"fill": "#000000", "stroke": "#000000"});
         }
       }
     });
@@ -3899,16 +3986,28 @@ var provvisRender = function () {
     vis.zoom.translate(newPos);
     vis.zoom.scale(newScale);
 
-    /* Hide and show labels at specific threshold. */
+    /* Semantic zoom. */
     setTimeout(function () {
       if (newScale < 1) {
-        vis.canvas.selectAll(".labels")
-            .classed("hiddenLabel", true);
-        d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", true);
+        d3.selectAll(".BBox").classed("hiddenNode", true);
       } else {
-        vis.canvas.selectAll(".labels")
-            .classed("hiddenLabel", false);
+        d3.selectAll(".BBox").classed("hiddenNode", false);
+      }
+
+      if (newScale < 2) {
+        vis.canvas.selectAll(".labels").classed("hiddenLabel", true);
+        d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", true);
+        d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
+      } else {
+        vis.canvas.selectAll(".labels").classed("hiddenLabel", false);
         d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
+        d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
+      }
+
+      if(newScale < 3) {
+        d3.selectAll(".lDiffLabel, .aDiffLabel").classed("hiddenLabel", true);
+      } else {
+        d3.selectAll(".lDiffLabel, .aDiffLabel").classed("hiddenLabel", false);
       }
     }, transitionTime);
 

@@ -269,6 +269,19 @@
   alignment-baseline: middle;
 }
 
+.lDiffLabel, .aDiffLabel {
+  fill: #000000;
+  fill-opacity: 1.0;
+  stroke: #000000;
+  stroke-width: 0.0px;
+  font-size: 5px;
+  font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial,
+  sans-serif;
+  cursor: default;
+  text-anchor: middle;
+  alignment-baseline: middle;
+}
+
 .glAnchor, .grAnchor {
   stroke-opacity: 1.0;
   fill-opacity: 1.0;

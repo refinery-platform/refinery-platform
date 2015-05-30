@@ -256,8 +256,14 @@ var provvis = function () {
           vis.canvas.attr("transform", "translate(" + d3.event.translate + ")" +
               " scale(" + d3.event.scale + ")");
 
-          /* Hide and show labels at specific threshold. */
+          /* Semantic zoom. */
           if (d3.event.scale < 1) {
+            d3.selectAll(".BBox").classed("hiddenNode", true);
+          } else {
+            d3.selectAll(".BBox").classed("hiddenNode", false);
+          }
+
+          if (d3.event.scale < 2) {
             vis.canvas.selectAll(".labels").classed("hiddenLabel", true);
             d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", true);
             d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
@@ -265,6 +271,12 @@ var provvis = function () {
             vis.canvas.selectAll(".labels").classed("hiddenLabel", false);
             d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
             d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
+          }
+
+          if(d3.event.scale < 3) {
+            d3.selectAll(".lDiffLabel, .aDiffLabel").classed("hiddenLabel", true);
+          } else {
+            d3.selectAll(".lDiffLabel, .aDiffLabel").classed("hiddenLabel", false);
           }
 
           /* Fix for rectangle getting translated too - doesn't work after
