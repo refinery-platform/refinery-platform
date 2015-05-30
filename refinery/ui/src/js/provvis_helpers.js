@@ -7,14 +7,15 @@
  * @param n BaseNode.
  */
 var hideChildNodes = function (n) {
-    if (!n.children.empty()) {
-        n.children.values().forEach(function (cn) {
-            cn.hidden = true;
-            d3.selectAll("#nodeId-" + cn.autoId).classed({"selectedNode": false, "hiddenNode": true});
-            if (!cn.children.empty())
-                hideChildNodes(cn);
-        });
-    }
+  if (!n.children.empty()) {
+    n.children.values().forEach(function (cn) {
+      cn.hidden = true;
+      d3.selectAll("#nodeId-" + cn.autoId).classed({"selectedNode": false,
+        "hiddenNode": true});
+      if (!cn.children.empty())
+        hideChildNodes(cn);
+    });
+  }
 };
 
 /**
@@ -23,15 +24,16 @@ var hideChildNodes = function (n) {
  * @param selected Node may be selected or not.
  */
 var propagateNodeSelection = function (n, selected) {
-    if (!n.children.empty()) {
-        n.children.values().forEach(function (cn) {
-            cn.selected = selected;
-            cn.doi.selectedChanged();
-            //d3.selectAll("#nodeId-" + cn.autoId).classed({"selectedNode": selected});
-            if (!cn.children.empty())
-                propagateNodeSelection(cn, selected);
-        });
-    }
+  if (!n.children.empty()) {
+    n.children.values().forEach(function (cn) {
+      cn.selected = selected;
+      cn.doi.selectedChanged();
+      // d3.selectAll("#nodeId-" + cn.autoId).classed({"selectedNode":
+      // selected});
+      if (!cn.children.empty())
+        propagateNodeSelection(cn, selected);
+    });
+  }
 };
 
 /**
@@ -39,7 +41,7 @@ var propagateNodeSelection = function (n, selected) {
  * @returns {*} Returns the custom time format.
  */
 var customTimeFormat = function (date) {
-    return d3.time.format("%Y-%m-%d %H:%M:%S %p")(date);
+  return d3.time.format("%Y-%m-%d %H:%M:%S %p")(date);
 };
 
 /**
@@ -48,8 +50,8 @@ var customTimeFormat = function (date) {
  * @returns {*} The value in the ISO time format.
  */
 var parseISOTimeFormat = function (value) {
-    var strictIsoFormat = d3.time.format("%Y-%m-%dT%H:%M:%S.%L");
-    return strictIsoFormat.parse(value);
+  var strictIsoFormat = d3.time.format("%Y-%m-%dT%H:%M:%S.%L");
+  return strictIsoFormat.parse(value);
 };
 
 /**
@@ -59,17 +61,17 @@ var parseISOTimeFormat = function (value) {
  * @returns {boolean}
  */
 var compareMaps = function (a, b) {
-    var equal = true;
-    if (a.size() === b.size()) {
-        a.keys().forEach(function (k) {
-            if (!b.has(k)) {
-                equal = false;
-            }
-        });
-    } else {
+  var equal = true;
+  if (a.size() === b.size()) {
+    a.keys().forEach(function (k) {
+      if (!b.has(k)) {
         equal = false;
-    }
-    return equal;
+      }
+    });
+  } else {
+    equal = false;
+  }
+  return equal;
 };
 
 /**
@@ -78,31 +80,32 @@ var compareMaps = function (a, b) {
  */
 var bfs = function (dsn) {
 
-    /**
-     * Helper function to get successors of the current node;
-     * @param n Node.
-     */
-    var getSuccs = function (n) {
+  /**
+   * Helper function to get successors of the current node;
+   * @param n Node.
+   */
+  var getSuccs = function (n) {
 
-        /* Add successor nodes to queue. */
-        n.succs.values().forEach(function (s) {
-            if (s instanceof provvisDecl.Node && nset.indexOf(s.parent.parent) === -1) {
-                nset.push(s.parent.parent);
-                nqueue.push(s.parent.parent);
-            } else if (nset.indexOf(s) === -1) {
-                nset.push(s);
-                nqueue.push(s);
-            }
-        });
-    };
+    /* Add successor nodes to queue. */
+    n.succs.values().forEach(function (s) {
+      if (s instanceof provvisDecl.Node &&
+          nset.indexOf(s.parent.parent) === -1) {
+        nset.push(s.parent.parent);
+        nqueue.push(s.parent.parent);
+      } else if (nset.indexOf(s) === -1) {
+        nset.push(s);
+        nqueue.push(s);
+      }
+    });
+  };
 
-    var nqueue = [],
-        nset = [];
+  var nqueue = [],
+      nset = [];
 
-    nset.push(dsn);
-    nqueue.push(dsn);
+  nset.push(dsn);
+  nqueue.push(dsn);
 
-    while (nqueue.length > 0) {
-        getSuccs(nqueue.shift());
-    }
+  while (nqueue.length > 0) {
+    getSuccs(nqueue.shift());
+  }
 };
