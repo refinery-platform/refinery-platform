@@ -212,10 +212,10 @@
     alignment-baseline: middle;
 }
 
-.aBBoxLabel, .saBBoxLabel {
-    fill: #000000;
-    fill-opacity: 1.0;
-    stroke: #000000;
+.lBBoxLabel, .aBBoxLabel, .saBBoxLabel {
+    fill: #136382;
+    fill-opacity: 0.6;
+    stroke: #136382;
     stroke-width: 0.0px;
     font-size: 13px;
     font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -310,10 +310,31 @@
 }
 
 .mouseoverBBox .nodeAttrLabel, .mouseoverBBox .subanalysisLabel, .mouseoverBBox .analysisLabel, .mouseoverBBox .layerLabel,
-.mouseoverBBox .aBBoxLabel, .mouseoverBBox .saBBoxLabel {
+.mouseoverBBox .aBBoxLabel, .mouseoverBBox .saBBoxLabel, .mouseoverBBox .lBBoxLabel {
     fill-opacity: 1.0;
     text-anchor: left;
     alignment-baseline: middle;
+}
+
+.lDoiDiffLine, .aDoiDiffLine {
+    stroke-width: 0.5px;
+    stroke-opacity: 1.0;
+    fill: none;
+    fill-opacity: 0.0;
+    stroke: #136382;
+    cursor: default;
+    stroke-dasharray: none;
+}
+
+.lDoiIns, .lDoiOuts, .lDoiSA, .aDoiIns, .aDoiOuts, .aDoiSA {
+    stroke-width: 0.25px;
+    stroke: none;
+    stroke-opacity: 1.0;
+    fill: #ed7407;
+    fill-opacity: 1.0;
+    stroke: #ed7407;
+    cursor: default;
+    stroke-dasharray: none;
 }
 
 .hiddenLabel {
@@ -335,7 +356,7 @@
     cursor: col-resize;
 }
 
-#tlTitle, #doiTitle, .pv-colors-title {
+#tlTitle, #doiTitle, #changeLayerTitle, .pv-colors-title {
     font-style: italic;
     font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: darkgray;
@@ -491,6 +512,18 @@
     dominant-baseline: central;
     font-family: FontAwesome;
     font-size: 7px;
+}
+
+.stored-node-type-icon {
+    fill: #ffffff;
+    fill-opacity: 1.0;
+    stroke: #ffffff;
+    stroke-width: 0.0px;
+    cursor: default;
+    text-anchor: middle;
+    dominant-baseline: central;
+    font-family: FontAwesome;
+    font-size: 6px;
 }
 
 .spin-icon-infinite {
