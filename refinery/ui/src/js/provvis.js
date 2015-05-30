@@ -391,6 +391,13 @@ var provvis = function () {
           $('#provenance-doi-view').children().remove();
 
           createTimelineView("provenance-timeline-view");
+
+          provvisDecl.DoiFactors.set("filtered", 0.2, true);
+          provvisDecl.DoiFactors.set("selected", 0.2, true);
+          provvisDecl.DoiFactors.set("highlighted", 0.2, true);
+          provvisDecl.DoiFactors.set("time", 0.2, true);
+          provvisDecl.DoiFactors.set("diff", 0.2, true);
+
           createDOIView("provenance-doi-view");
 
           /* Discover and and inject motifs. */
