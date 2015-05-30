@@ -259,12 +259,12 @@ var provvis = function () {
           /* Hide and show labels at specific threshold. */
           if (d3.event.scale < 1) {
             vis.canvas.selectAll(".labels").classed("hiddenLabel", true);
-            d3.selectAll(".glAnchor").classed("hiddenNode", true);
-            d3.selectAll(".grAnchor").classed("hiddenNode", true);
+            d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", true);
+            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
           } else {
             vis.canvas.selectAll(".labels").classed("hiddenLabel", false);
-            d3.selectAll(".glAnchor").classed("hiddenNode", false);
-            d3.selectAll(".grAnchor").classed("hiddenNode", false);
+            d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
+            d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
           }
 
           /* Fix for rectangle getting translated too - doesn't work after
@@ -344,6 +344,8 @@ var provvis = function () {
 
         removeProvvisLoaderIcon();
 
+
+        /* TODO: Refine to only redraw affected canvas components. */
         /* Switch filter action. */
         $("#prov-layering-method > button").click(function () {
           layerMethod = $(this).prop('value');
@@ -359,11 +361,9 @@ var provvis = function () {
 
           $('#provenance-timeline-view').children().remove();
           $('#provenance-doi-view').children().remove();
-          /*$('#provenance-layer-change-view').children().remove();*/
 
           createTimelineView("provenance-timeline-view");
           createDOIView("provenance-doi-view");
-          /*createChangeLayersView("provenance-layer-change-view");*/
 
           /* Discover and and inject motifs. */
           provvisMotifs.run(vis.graph, layerMethod);

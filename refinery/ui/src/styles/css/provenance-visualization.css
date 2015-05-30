@@ -324,7 +324,7 @@
   alignment-baseline: middle;
 }
 
-.lDoiDiffLine, .aDoiDiffLine {
+.lDiffLine, .aDiffLine {
   stroke-width: 0.5px;
   stroke-opacity: 1.0;
   fill: none;
@@ -334,7 +334,7 @@
   stroke-dasharray: none;
 }
 
-.lDoiIns, .lDoiOuts, .lDoiSA, .aDoiIns, .aDoiOuts, .aDoiSA {
+.lDiffIns, .lDiffOuts, .lDiffSA, .aDiffIns, .aDiffOuts, .aDiffSA {
   stroke-width: 0.25px;
   stroke: none;
   stroke-opacity: 1.0;
