@@ -1131,9 +1131,9 @@ var provvisRender = function () {
             return labelsStart + labelOffset * i;
           }).attr("width", labelOffset)
           .attr("height", labelOffset)
-          .style({"fill": function (d, i) {
+          .style("fill", function (d, i) {
             return doiColorScale(10 - i);
-          }, "fill-opacity": 0.7});
+          });
       rectOffset = 0;
       gDCompUpdate.select(".doiCompLine", true)
           .attr("x1", 40)
@@ -1162,9 +1162,9 @@ var provvisRender = function () {
           }).attr("width", 40)
           .attr("height", function (d) {
             return d.value * 300;
-          }).style({"fill": function (d, i) {
+          }).style("fill", function (d, i) {
             return doiColorScale(10 - i);
-          }, "fill-opacity": 0.7});
+          });
       rectOffset = 0;
       gDCompEnter.append("rect")
           .classed("doiCompHandle", true)
@@ -1173,9 +1173,9 @@ var provvisRender = function () {
             return labelsStart + labelOffset * i;
           }).attr("width", labelOffset)
           .attr("height", labelOffset)
-          .style({"fill": function (d, i) {
+          .style("fill", function (d, i) {
             return doiColorScale(10 - i);
-          }, "fill-opacity": 0.7});
+          });
       rectOffset = 0;
       gDCompEnter.append("line").classed("doiCompLine", true)
           .attr("x1", 40)
@@ -1265,7 +1265,6 @@ var provvisRender = function () {
     }).appendTo("#" + "doiVis");
 
     /* TODO: Code cleanup. */
-    /* Ex- and include doi component. */
     /**
      * Toggle doi components.
      */
@@ -1310,8 +1309,6 @@ var provvisRender = function () {
       updateDoiView(d3.values(provvisDecl.DoiFactors.factors));
     };
 
-    /* TODO: Check opacity. */
-
     /* Toggle component on svg click. */
     d3.selectAll(".doiComp").on("click", function () {
       var dcId = d3.select(this).attr("id").substr(d3.select(this).attr("id")
@@ -1320,10 +1317,9 @@ var provvisRender = function () {
       if ($("#dc-checkbox-" + dcId)[0].checked) {
         $("#dc-checkbox-" + dcId).prop("checked", false);
         $("#dc-label-" + dcId).css("opacity", 0.3);
-        d3.select("#doiCompId-" + dcId).select(".doiCompRect")
-            .style("fill-opacity", 0.3);
-        d3.select("#doiCompId-" + dcId).select(".doiCompHandle")
-            .style("fill-opacity", 0.3);
+        d3.select("#doiCompId-" + dcId)
+            .select(".doiCompHandle")
+            .classed("blendedDoiComp", true);
         d3.select("#doiCompId-" + dcId).select(".doiCompLine")
             .style("display", "none");
         $("#dc-input-" + dcId).val(val);
@@ -1332,10 +1328,9 @@ var provvisRender = function () {
       } else {
         $($("#dc-checkbox-" + dcId)).prop("checked", true);
         $("#dc-label-" + dcId).css("opacity", 0.7);
-        d3.select("#doiCompId-" + dcId).select(".doiCompRect")
-            .style("fill-opacity", 0.7);
-        d3.select("#doiCompId-" + dcId).select(".doiCompHandle")
-            .style("fill-opacity", 0.7);
+        d3.select("#doiCompId-" + dcId)
+            .select(".doiCompHandle")
+            .classed("blendedDoiComp", false);
         d3.select("#doiCompId-" + dcId).select(".doiCompLine")
             .style("display", "inline");
         provvisDecl.DoiFactors.set(
@@ -1350,10 +1345,8 @@ var provvisRender = function () {
           val = 0.0;
       if ($(this)[0].checked) {
         $(this.parentNode).find(".dc-label").css("opacity", 0.7);
-        d3.select("#doiCompId-" + dcId).select(".doiCompRect")
-            .style("fill-opacity", 0.7);
         d3.select("#doiCompId-" + dcId).select(".doiCompHandle")
-            .style("fill-opacity", 0.7);
+            .classed("blendedDoiComp", false);
         d3.select("#doiCompId-" + dcId).select(".doiCompLine")
             .style("display", "inline");
         val = 0.0;
@@ -1361,10 +1354,8 @@ var provvisRender = function () {
             d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, true);
       } else {
         $(this.parentNode).find(".dc-label").css("opacity", 0.3);
-        d3.select("#doiCompId-" + dcId).select(".doiCompRect")
-            .style("fill-opacity", 0.3);
         d3.select("#doiCompId-" + dcId).select(".doiCompHandle")
-            .style("fill-opacity", 0.3);
+            .classed("blendedDoiComp", true);
         d3.select("#doiCompId-" + dcId).select(".doiCompLine")
             .style("display", "none");
         val = 0.0;
