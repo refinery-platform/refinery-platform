@@ -2050,23 +2050,31 @@ var provvisRender = function () {
               "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
         }).classed({"rlAnchor": true});
 
-    lGlyph.select("g.glAnchor").append("text")
-        .attr("transform", function () {
-          return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," +
-              0.5 + ")";
-        })
-        .text(function (d) {
-          return d.inputs.size();
-        }).attr("class", "lLabel");
+    lGlyph.each( function (ln) {
+      if (ln.inputs.size() > 1) {
+        d3.select(this).select("g.glAnchor").append("text")
+            .attr("transform", function () {
+              return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," +
+                  0.5 + ")";
+            })
+            .text(function (d) {
+              return d.inputs.size();
+            }).attr("class", "lLabel");
+      }
+    });
 
-    lGlyph.select("g.grAnchor").append("text")
-        .attr("transform", function () {
-          return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," +
-              0.5 + ")";
-        })
-        .text(function (d) {
-          return d.outputs.size();
-        }).attr("class", "lLabel");
+    lGlyph.each( function (ln) {
+      if(ln.outputs.size() > 1) {
+        d3.select(this).select("g.grAnchor").append("text")
+            .attr("transform", function () {
+              return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," +
+                  0.5 + ")";
+            })
+            .text(function (d) {
+              return d.outputs.size();
+            }).attr("class", "lLabel");
+      }
+    });
 
     lGlyph.append("rect")
         .attr("x", -2 * scaleFactor * vis.radius)
@@ -2110,7 +2118,7 @@ var provvisRender = function () {
                 "#ffffff" : "#000000";
           }
         })
-        .style("display", "inline");
+        /*.style("display", "inline")*/;
 
     lLabels.append("text")
         .attr("transform", function () {
@@ -2330,16 +2338,19 @@ var provvisRender = function () {
               "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
         });
 
-    aGlyph.select("g.grAnchor").select("text")
-        .attr("transform", function () {
-          return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," +
-              0.5 + ")";
-        })
-        .text(function (d) {
-          return d.predLinks.size();
-        }).attr("class", "aLabel")
-        .style("display", "inline");
-
+    aGlyph.each( function (an) {
+      if (an.predLinks.size() > 1) {
+        aGlyph.select("g.grAnchor").select("text")
+            .attr("transform", function () {
+              return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," +
+                  0.5 + ")";
+            })
+            .text(function (d) {
+              return d.predLinks.size();
+            }).attr("class", "aLabel")
+            .style("display", "inline");
+      }
+    });
 
     aGlyph.select("path")
         .attr("d", function () {
@@ -2350,15 +2361,21 @@ var provvisRender = function () {
               (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
               "0 " + (1 * scaleFactor * vis.radius) + " " +
               "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
-        }).select("text")
-        .attr("transform", function () {
-          return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," +
-              0.5 + ")";
-        })
-        .text(function (d) {
-          return d.succLinks.size();
-        }).attr("class", "aLabel")
-        .style("display", "inline");
+        });
+
+    aGlyph.each( function (an) {
+      if (an.succLinks.size() > 1) {
+        d3.select(this).select("text")
+            .attr("transform", function () {
+              return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," +
+                  0.5 + ")";
+            })
+            .text(function (d) {
+              return d.succLinks.size();
+            }).attr("class", "aLabel")
+            .style("display", "inline");
+      }
+    });
 
     aGlyph.select("rect")
         .attr("x", -2 * scaleFactor * vis.radius)
@@ -2625,15 +2642,20 @@ var provvisRender = function () {
               "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
         }).classed({"laAnchor": true});
 
-    aGlyph.select("g.glAnchor").append("text")
-        .attr("transform", function () {
-          return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," +
-              0.5 + ")";
-        })
-        .text(function (d) {
-          return d.predLinks.size();
-        }).attr("class", "aLabel")
-        .style("display", "inline");
+    aGlyph.each( function (an) {
+      if (an.predLinks.size() > 1) {
+        d3.select(this)
+            .select("g.glAnchor").append("text")
+            .attr("transform", function () {
+              return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," +
+                  0.5 + ")";
+            })
+            .text(function (d) {
+              return d.predLinks.size();
+            }).attr("class", "aLabel")
+            .style("display", "inline");
+      }
+    });
 
 
     aGlyph.append("g").classed({"grAnchor": true}).append("path")
@@ -2647,15 +2669,19 @@ var provvisRender = function () {
               "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
         }).classed({"raAnchor": true});
 
-    aGlyph.select("g.grAnchor").append("text")
-        .attr("transform", function () {
-          return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," +
-              0.5 + ")";
-        })
-        .text(function (d) {
-          return d.succLinks.size();
-        }).attr("class", "aLabel")
-        .style("display", "inline");
+    aGlyph.each( function (an) {
+      if (an.succLinks.size() > 1) {
+        d3.select(this).select("g.grAnchor").append("text")
+            .attr("transform", function () {
+              return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," +
+                  0.5 + ")";
+            })
+            .text(function (d) {
+              return d.succLinks.size();
+            }).attr("class", "aLabel")
+            .style("display", "inline");
+      }
+    });
 
     aGlyph.append("rect")
         .attr("x", -2 * scaleFactor * vis.radius)
@@ -2685,7 +2711,7 @@ var provvisRender = function () {
                 "#ffffff" : "#000000";
           }
         })
-        .style("display", "inline");
+        /*.style("display", "inline")*/;
 
     aLabels.append("text")
         .attr("transform", function () {
@@ -2700,7 +2726,7 @@ var provvisRender = function () {
                 "#ffffff" : "#000000";
           }
         })
-        .style("display", "inline");
+        /*.style("display", "inline")*/;
 
     /* Exit. */
     lAnalysis.exit().remove();
@@ -2905,15 +2931,19 @@ var provvisRender = function () {
                   "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
             }).classed({"lsaAnchor": true});
 
-        saGlyph.select("g.glAnchor").append("text")
-            .attr("transform", function () {
-              return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," +
-                  0.5 + ")";
-            })
-            .text(function (d) {
-              return d.predLinks.size();
-            }).attr("class", "saLabel")
-            .style("display", "inline");
+        saGlyph.each( function (san) {
+          if (san.predLinks.size() > 1) {
+            d3.select(this).select("g.glAnchor").append("text")
+                .attr("transform", function () {
+                  return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," +
+                      0.5 + ")";
+                })
+                .text(function (d) {
+                  return d.predLinks.size();
+                }).attr("class", "saLabel")
+                .style("display", "inline");
+          }
+        });
 
         saGlyph.append("g").classed({"grAnchor": true}).append("path")
             .attr("d", function () {
@@ -2926,15 +2956,19 @@ var provvisRender = function () {
                   "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
             }).classed({"rsaAnchor": true});
 
-        saGlyph.select("g.grAnchor").append("text")
-            .attr("transform", function () {
-              return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," +
-                  0.5 + ")";
-            })
-            .text(function (d) {
-              return d.succLinks.size();
-            }).attr("class", "saLabel")
-            .style("display", "inline");
+        saGlyph.each( function (san) {
+          if (san.succLinks.size() > 1) {
+            d3.select(this).select("g.grAnchor").append("text")
+                .attr("transform", function () {
+                  return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," +
+                      0.5 + ")";
+                })
+                .text(function (d) {
+                  return d.succLinks.size();
+                }).attr("class", "saLabel")
+                .style("display", "inline");
+          }
+        });
 
         saGlyph.append("rect")
             .attr("x", -2 * scaleFactor * vis.radius)
@@ -2964,7 +2998,7 @@ var provvisRender = function () {
                     "#888888" ? "#ffffff" : "#000000";
               }
             })
-            .style("display", "inline");
+            /*.style("display", "inline")*/;
 
         saLabels.append("text")
             .attr("transform", function () {
@@ -2979,7 +3013,7 @@ var provvisRender = function () {
                     "#888888" ? "#ffffff" : "#000000";
               }
             })
-            .style("display", "inline");
+            /*.style("display", "inline")*/;
       });
     });
 
@@ -3111,7 +3145,7 @@ var provvisRender = function () {
             .text(function (d) {
               return d.attributes.get("name");
             }).attr("class", "nodeAttrLabel")
-            .style("display", "inline");
+            /*.style("display", "inline")*/;
 
         nLabels.each( function (d) {
           if (d.nodeType === "stored") {
@@ -3127,7 +3161,7 @@ var provvisRender = function () {
                         n.parent.parent.start)) < "#888888" ?
                         "#ffffff" : "#000000";
                   }
-                }).style("display", "inline");
+                })/*.style("display", "inline")*/;
           }
         });
 
@@ -3994,20 +4028,36 @@ var provvisRender = function () {
         d3.selectAll(".BBox").classed("hiddenNode", false);
       }
 
-      if (newScale < 2) {
-        vis.canvas.selectAll(".labels").classed("hiddenLabel", true);
+      if (newScale < 1.5) {
+        vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel")
+            .classed("hiddenLabel", true);
+      } else {
+        vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel")
+            .classed("hiddenLabel", false);
+      }
+
+      if (newScale < 1.75) {
+        vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
+            ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
+            ".san-node-type-icon, .l-node-type-icon")
+            .classed("hiddenLabel", true);
         d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", true);
         d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
       } else {
-        vis.canvas.selectAll(".labels").classed("hiddenLabel", false);
+        vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
+            ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
+            ".san-node-type-icon, .l-node-type-icon")
+            .classed("hiddenLabel", false);
         d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
         d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
       }
 
       if(newScale < 3) {
-        d3.selectAll(".lDiffLabel, .aDiffLabel").classed("hiddenLabel", true);
+        d3.selectAll(".lDiffLabel, .aDiffLabel")
+            .classed("hiddenLabel", true);
       } else {
-        d3.selectAll(".lDiffLabel, .aDiffLabel").classed("hiddenLabel", false);
+        d3.selectAll(".lDiffLabel, .aDiffLabel")
+            .classed("hiddenLabel", false);
       }
     }, transitionTime);
 

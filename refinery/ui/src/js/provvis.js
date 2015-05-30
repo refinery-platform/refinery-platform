@@ -263,20 +263,36 @@ var provvis = function () {
             d3.selectAll(".BBox").classed("hiddenNode", false);
           }
 
-          if (d3.event.scale < 2) {
-            vis.canvas.selectAll(".labels").classed("hiddenLabel", true);
+          if (d3.event.scale < 1.5) {
+            vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel")
+                .classed("hiddenLabel", true);
+          } else {
+            vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel")
+                .classed("hiddenLabel", false);
+          }
+
+          if (d3.event.scale < 1.75) {
+            vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
+                ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
+                ".san-node-type-icon, .l-node-type-icon")
+                .classed("hiddenLabel", true);
             d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", true);
             d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
           } else {
-            vis.canvas.selectAll(".labels").classed("hiddenLabel", false);
+            vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
+                ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
+                ".san-node-type-icon, .l-node-type-icon")
+                .classed("hiddenLabel", false);
             d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
             d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
           }
 
           if(d3.event.scale < 3) {
-            d3.selectAll(".lDiffLabel, .aDiffLabel").classed("hiddenLabel", true);
+            d3.selectAll(".lDiffLabel, .aDiffLabel")
+                .classed("hiddenLabel", true);
           } else {
-            d3.selectAll(".lDiffLabel, .aDiffLabel").classed("hiddenLabel", false);
+            d3.selectAll(".lDiffLabel, .aDiffLabel")
+                .classed("hiddenLabel", false);
           }
 
           /* Fix for rectangle getting translated too - doesn't work after
