@@ -17,7 +17,8 @@ from tastypie.authorization import Authorization
 from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS, ALL
 from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
-from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest
+from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
+    HttpUnauthorized
 from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow,\
     WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus,\
@@ -392,8 +393,10 @@ class StatisticsResource(Resource):
             lambda x: not x.is_public() and len(x.get_groups()) > 1, 
             model_list))
         private = total - public - private_shared
-        return {'total': total, 'public': public, \
-                'private': private, 'private_shared': private_shared}
+        return {
+            'total': total, 'public': public, \
+            'private': private, 'private_shared': private_shared
+        }
 
     class Meta:
         resource_name = 'statistics'
@@ -431,8 +434,9 @@ class StatisticsResource(Resource):
             if 'project' in request_string:
                 project_summary = self.stat_summary(Project)
         
-        return [StatisticsObject(user_count, group_count, files_count, \
-                dataset_summary, workflow_summary, project_summary)]
+        return [StatisticsObject(
+            user_count, group_count, files_count, \
+            dataset_summary, workflow_summary, project_summary)]
 
 
 class SharablePermission(object):
@@ -482,6 +486,7 @@ class SharablePermission(object):
             kwargs['pk'] = bundle_or_obj.obj.uuid
         else:
             kwargs['pk'] = bundle_or_obj.uuid
+
         return kwargs
 
     def obj_get(self, bundle, **kwargs):
@@ -492,18 +497,20 @@ class SharablePermission(object):
         return self.get_object_list(bundle.request)
 
     def get_object_list(self, request):
-        user = self.get_user(request.GET['owner-id'])
+        user = self.get_user(request.user.id)
         res = self.get_res(request.GET['uuid'])
         if (user is None):
-            raise ImmediateHttpResponse(response=HttpNotFound())
+            raise ImmediateHttpResponse(response=HttpBadRequest())
         elif (res is None):
             raise ImmediateHttpResponse(response=HttpNotFound())
         elif (res.get_owner().id != user.id):
-            raise ImmediateHttpResponse(response=HttpForbidden())
+            raise ImmediateHttpResponse(response=HttpUnauthorized())
         else:
             shares = self.get_share_list(user, res)
-            return [self.perm_obj(user.username, user.id, res.name, \
-                    res.uuid, shares)]
+            return [
+                self.perm_obj(
+                    user.username, user.id, res.name, res.uuid, shares)
+            ]
 
     def obj_update(self, bundle, **kwargs):
         kwargs = self.detail_uri_kwargs(bundle)
@@ -523,8 +530,9 @@ class SharablePermission(object):
         for group_data in share_list:
             group = self.get_group(group_data['id'])
             # sharing only allowed if can read or change and user is in group
-            should_share = ((group_data['permission']['read']) or \
-                (group_data['permission']['change'])) and \
+            should_share = (
+                (group_data['permission']['read']) or \
+                    (group_data['permission']['change'])) and \
                 (user == owner) and \
                 (user in group.user_set.all())
             is_read_only = not (group_data['permission']['change'])
@@ -610,6 +618,7 @@ class GroupManagementResource(Resource):
             kwargs['pk'] = bundle_or_obj.obj.id
         else:
             kwargs['pk'] = bundle_or_obj.id
+
         return kwargs
 
     def obj_get(self, bundle, **kwargs):
@@ -639,6 +648,7 @@ class GroupManagementResource(Resource):
         group.user_set.clear()
         for i in member_list:
             group.user_set.add(i['id'])
+
         return GroupManagementResource()
 
 
