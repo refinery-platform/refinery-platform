@@ -4056,11 +4056,16 @@ var provvisRender = function () {
       }
     });
 
+    /* TODO: Fix for temporary sidebar overlap. */
+    var sidebarOverlap = $("#provenance-sidebar").width() -
+        $("#solr-facet-view").width();
+
     var delta = [max[0] - min[0], max[1] - min[1]],
         factor = [(vis.width / delta[0]), (vis.height / delta[1])],
     /* Maximize scale to factor 3. */
         newScale = d3.min(factor.concat([3])) * 0.9,
-        newPos = [vis.margin.left * 2 * newScale,
+        newPos = [(sidebarOverlap > 0 ? sidebarOverlap : 0) +
+            vis.margin.left * 2 * newScale,
           ((vis.height - delta[1] * newScale) / 2 + vis.margin.top * 2)];
 
     vis.canvas
@@ -4080,10 +4085,10 @@ var provvisRender = function () {
       }
 
       if (newScale < 1.5) {
-        vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel")
+        vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel, .nodeDoiLabel")
             .classed("hiddenLabel", true);
       } else {
-        vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel")
+        vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel, .nodeDoiLabel")
             .classed("hiddenLabel", false);
       }
 
@@ -4652,7 +4657,6 @@ var provvisRender = function () {
 
     $("#" + "provenance-nodeInfo-content").html("");
     nodeDiff.entries().forEach(function (d) {
-      console.log(d);
       $("<div/>", {
         "class": "refinery-subheader",
         "html": "<h4>" + d.key + "</h4>"
@@ -5400,14 +5404,17 @@ var provvisRender = function () {
     $("#prov-ctrl-toggle-sidebar").click(function () {
       if ($(this).hasClass('active')) {
         $("#provenance-sidebar")
-            .animate({right: '-355'}, nodeLinkTransitionTime);
+            .animate({left: '-355'}, nodeLinkTransitionTime);
         //$(this).toggleClass('btn-primary btn-warning');
         $(this).html("OFF");
       } else {
         $("#provenance-sidebar")
-            .animate({right: '0'}, nodeLinkTransitionTime);
+            .animate({left: '20'}, nodeLinkTransitionTime);
         //$(this).toggleClass('btn-warning btn-primary');
         $(this).html("ON");
+
+        /* TODO: Temporary fix for sidbear div. */
+        $("#provvis-sidebar-content").css({"height": "720px"});
       }
     });
 
@@ -5498,7 +5505,7 @@ var provvisRender = function () {
         handleCollapseExpandNode(d.children.values()[0], "c");
 
         /* Deselect. */
-        clearNodeSelection();
+        //clearNodeSelection();
 
         /* TODO: Temporarily disabled. */
         /* Update node doi. */
@@ -5528,7 +5535,7 @@ var provvisRender = function () {
             handleCollapseExpandNode(d, "c");
           }
           /* Deselect. */
-          clearNodeSelection();
+          //clearNodeSelection();
 
           /* TODO: Temporarily disabled. */
           /* Update node doi. */
@@ -5547,8 +5554,9 @@ var provvisRender = function () {
         });
         handleCollapseExpandNode(d.children.values()[0], "c");
         handleCollapseExpandNode(d, "c");
+
         /* Deselect. */
-        clearNodeSelection();
+        //clearNodeSelection();
 
         /* TODO: Temporarily disabled. */
         /* Update node doi. */
@@ -5570,7 +5578,7 @@ var provvisRender = function () {
         handleCollapseExpandNode(d.children.values()[0], "c");
 
         /* Deselect. */
-        clearNodeSelection();
+        //clearNodeSelection();
 
         /* TODO: Temporarily disabled. */
         /* Update node doi. */

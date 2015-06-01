@@ -63,7 +63,7 @@ var provvis = function () {
 
     d3.select("#tlCanvas").append("svg")
         .attr("height", 80)
-        .attr("width", 310)
+        .attr("width", 275)
         .style({"margin-top": "0px", "margin-bottom": "0px", "padding": "0px"})
         .attr("pointer-events", "all");
 
@@ -238,7 +238,7 @@ var provvis = function () {
         /* Initialize canvas dimensions. */
         var width = $("div#provenance-canvas").width() - margin.left -
                 margin.right,
-            height = 700/*window.innerHeight*/ - margin.top - margin.bottom;
+            height = 740/*window.innerHeight*/ - margin.top - margin.bottom;
 
         var scaleFactor = 0.75;
 
@@ -264,10 +264,10 @@ var provvis = function () {
           }
 
           if (d3.event.scale < 1.5) {
-            vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel")
+            vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel, .nodeDoiLabel")
                 .classed("hiddenLabel", true);
           } else {
-            vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel")
+            vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel, .nodeDoiLabel")
                 .classed("hiddenLabel", false);
           }
 
@@ -287,7 +287,7 @@ var provvis = function () {
             d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
           }
 
-          if(d3.event.scale < 3) {
+          if (d3.event.scale < 3) {
             d3.selectAll(".lDiffLabel, .aDiffLabel")
                 .classed("hiddenLabel", true);
           } else {
