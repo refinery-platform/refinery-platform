@@ -190,17 +190,33 @@ include rabbit
 
 class ui {
   # need a version of Node that's more recent than one included with Ubuntu 12.04
-  apt::ppa { 'ppa:chris-lea/node.js': }
+  # apt::ppa { 'ppa:chris-lea/node.js': }
   include apt
+
+  apt::ppa { 'ppa:chris-lea/node.js':
+    ensure => 'absent'
+  }
+
+  apt::source { 'nodejs':
+    ensure      => 'present',
+    comment     => 'Nodesource nodejs repo.',
+    location    => 'https://deb.nodesource.com/node_0.12',
+    release     => 'trusty',
+    repos       => 'main',
+    key         => '9FD3B784BC1C6FC31A8A0A1C1655A0AB68576280',
+    key_server  => 'keys.gnupg.net',
+    include_src => true,
+    include_deb => true
+  }
 
   package { 'nodejs':
     name => 'nodejs',
-    require => Apt::Ppa['ppa:chris-lea/node.js'],
+    ensure => '0.12.4-1nodesource1~trusty1',
+    require => Apt::Source['nodejs']
   }
   ->
   package {
-    'bower': ensure => '1.3.8', provider => 'npm';
-    'jshint': ensure => '2.4.4', provider => 'npm';
+    'bower': ensure => '1.4.1', provider => 'npm';
     'grunt-cli': ensure => '0.1.13', provider => 'npm';
   }
   ->
