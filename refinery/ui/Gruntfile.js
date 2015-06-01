@@ -90,6 +90,14 @@ module.exports = function(grunt) {
           dest: '<%= cfg.basePath.ui.build %>/vendor/'
         }]
       },
+      uiCompileScripts: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/js/',
+          src: ['**/*.js'],
+          dest: '<%= cfg.basePath.ui.compile %>/js/'
+        }]
+      },
       uiCompileTemplates: {
         files: [{
           expand: true,
@@ -383,10 +391,14 @@ module.exports = function(grunt) {
     'jshint',
     'clean:uiCompile',
     'clean:staticCompile',
-    'uglify',
     'less:compile',
     'autoprefixer',
     'cssmin',
+    // Minifying JS files seems to cause severe trouble at the moment so it's
+    // deactivated until everything works fine.
+    // 'uglify',
+    // For the time being, scripts are simply copied.
+    'copy:uiCompileScripts',
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
     'copy:staticCompile',
