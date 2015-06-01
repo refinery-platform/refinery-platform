@@ -183,8 +183,7 @@ INSTALLED_APPS = (
     'annotation_server',
     'registration',
     'flatblocks',
-    'resumable',
-    # RP: added for database migration between builds 
+    # RP: added for database migration between builds
     'south', 
 )
 
