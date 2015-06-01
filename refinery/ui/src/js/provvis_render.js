@@ -4058,7 +4058,10 @@ var provvisRender = function () {
 
     /* TODO: Fix for temporary sidebar overlap. */
     var sidebarOverlap = $("#provenance-sidebar").width() -
-        $("#solr-facet-view").width();
+        $("#solr-facet-view").width() -
+        parseFloat($("#main-area").css("margin-left").replace("px", ""));
+
+
 
     var delta = [max[0] - min[0], max[1] - min[1]],
         factor = [(vis.width / delta[0]), (vis.height / delta[1])],
