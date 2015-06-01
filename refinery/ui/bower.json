@@ -19,6 +19,7 @@
     "angular-ui-select2": "0.0.5",
     "angular-ui-router": "0.2.7",
     "angular-bootstrap": "0.8.0",
+    "angular-mocks": "1.2.9",
     "tipsy": "0.1.7",
     "c3": "0.3.0",
     "ng-grid": "2.0.13",

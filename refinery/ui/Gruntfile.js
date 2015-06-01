@@ -15,6 +15,13 @@ module.exports = function(grunt) {
       css: ['**/*.css'],
       html: ['**/*.html']
     },
+
+    karma: {
+      unit: {
+      configFile: 'karma.conf.js'
+      }
+    },
+
     vendor_files: {
       js: [
         'select2/select2.min.js',
@@ -205,6 +212,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-less');
+  grunt.loadNpmTasks('grunt-karma');
 
   // Default task(s).
   grunt.registerTask('default', ['jshint', 'clean', 'uglify', 'less', 'copy']);
