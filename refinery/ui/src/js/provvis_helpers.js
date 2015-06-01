@@ -75,6 +75,32 @@ var compareMaps = function (a, b) {
 };
 
 /**
+ * Get layer child analysis predecessor link count.
+ * @param ln Layer node.
+ */
+var getLayerPredCount = function (ln) {
+  return ln.children.values()
+      .map(function (an) {
+        return an.predLinks.size();
+      }).reduce(function (acc, pls) {
+        return acc + pls;
+      });
+};
+
+/**
+ * Get layer child analysis successor link count.
+ * @param ln Layer node.
+ */
+var getLayerSuccCount = function (ln) {
+  return ln.children.values()
+      .map(function (an) {
+        return an.succLinks.size();
+      }).reduce(function (acc, pls) {
+        return acc + pls;
+      });
+};
+
+/**
  * Breadth first search algorithm.
  * @param dsn Dataset node.
  */

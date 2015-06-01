@@ -1913,7 +1913,8 @@ var provvisRender = function () {
           if (lDiffNegIns < 0) {
             lDiffG.append("text")
                 .attr("transform", function () {
-                  return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + (0.5) + ")";})
+                  return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + (0.5) + ")";
+                })
                 .text(Math.abs(lDiffNegIns))
                 .classed({"lDiffLabel": true})
                 .style({"fill": "#000000", "stroke": "#000000"});
@@ -1922,7 +1923,8 @@ var provvisRender = function () {
           if (lDiffPosIns > 0) {
             lDiffG.append("text")
                 .attr("transform", function () {
-                  return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((1/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                  return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((1 / 3) * scaleFactor * vis.radius + 0.5) + ")";
+                })
                 .text(lDiffPosIns)
                 .classed({"lDiffLabel": true})
                 .style({"fill": "#000000", "stroke": "#000000"});
@@ -1931,7 +1933,8 @@ var provvisRender = function () {
           if (lDiffNegSA < 0) {
             lDiffG.append("text")
                 .attr("transform", function () {
-                  return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + ((3/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                  return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + ((3 / 3) * scaleFactor * vis.radius + 0.5) + ")";
+                })
                 .text(Math.abs(lDiffNegSA))
                 .classed({"lDiffLabel": true})
                 .style({"fill": "#000000", "stroke": "#000000"});
@@ -1940,7 +1943,8 @@ var provvisRender = function () {
           if (lDiffPosSA > 0) {
             lDiffG.append("text")
                 .attr("transform", function () {
-                  return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((3/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                  return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((3 / 3) * scaleFactor * vis.radius + 0.5) + ")";
+                })
                 .text(lDiffPosSA)
                 .classed({"lDiffLabel": true})
                 .style({"fill": "#000000", "stroke": "#000000"});
@@ -1949,7 +1953,8 @@ var provvisRender = function () {
           if (lDiffNegOuts < 0) {
             lDiffG.append("text")
                 .attr("transform", function () {
-                  return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + ((5/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                  return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + ((5 / 3) * scaleFactor * vis.radius + 0.5) + ")";
+                })
                 .text(Math.abs(lDiffNegOuts))
                 .classed({"lDiffLabel": true})
                 .style({"fill": "#000000", "stroke": "#000000"});
@@ -1958,7 +1963,8 @@ var provvisRender = function () {
           if (lDiffPosOuts > 0) {
             lDiffG.append("text")
                 .attr("transform", function () {
-                  return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((5/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                  return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((5 / 3) * scaleFactor * vis.radius + 0.5) + ")";
+                })
                 .text(lDiffPosOuts)
                 .classed({"lDiffLabel": true})
                 .style({"fill": "#000000", "stroke": "#000000"});
@@ -2028,50 +2034,58 @@ var provvisRender = function () {
         .attr("width", 4 * scaleFactor * vis.radius)
         .attr("height", 4 * scaleFactor * vis.radius);
 
-    lGlyph.append("g").classed({"glAnchor": true}).append("path")
-        .attr("d", function () {
-          return "m" + (-2 * scaleFactor * vis.radius) + " " +
-              (-0.5 * scaleFactor * vis.radius) + " " +
-              "h" + (-0.5 * scaleFactor * vis.radius) + " " +
-              "a" + (-0.5 * scaleFactor * vis.radius) + " " +
-              (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
-              "0 " + (1 * scaleFactor * vis.radius) + " " +
-              "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
-        }).classed({"llAnchor": true});
+    lGlyph.each(function (ln) {
+      if (getLayerPredCount(ln) > 0) {
+        d3.select(this).append("g").classed({"glAnchor": true}).append("path")
+            .attr("d", function () {
+              return "m" + (-2 * scaleFactor * vis.radius) + " " +
+                  (-0.5 * scaleFactor * vis.radius) + " " +
+                  "h" + (-0.5 * scaleFactor * vis.radius) + " " +
+                  "a" + (-0.5 * scaleFactor * vis.radius) + " " +
+                  (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
+                  "0 " + (1 * scaleFactor * vis.radius) + " " +
+                  "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
+            }).classed({"llAnchor": true});
+      }
+    });
 
-    lGlyph.append("g").classed({"grAnchor": true}).append("path")
-        .attr("d", function () {
-          return "m" + (2 * scaleFactor * vis.radius) + " " +
-              (-0.5 * scaleFactor * vis.radius) + " " +
-              "h" + (0.5 * scaleFactor * vis.radius) + " " +
-              "a" + (0.5 * scaleFactor * vis.radius) + " " +
-              (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
-              "0 " + (1 * scaleFactor * vis.radius) + " " +
-              "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
-        }).classed({"rlAnchor": true});
+    lGlyph.each(function (ln) {
+      if (getLayerSuccCount(ln) > 0) {
+        d3.select(this).append("g").classed({"grAnchor": true}).append("path")
+            .attr("d", function () {
+              return "m" + (2 * scaleFactor * vis.radius) + " " +
+                  (-0.5 * scaleFactor * vis.radius) + " " +
+                  "h" + (0.5 * scaleFactor * vis.radius) + " " +
+                  "a" + (0.5 * scaleFactor * vis.radius) + " " +
+                  (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
+                  "0 " + (1 * scaleFactor * vis.radius) + " " +
+                  "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
+            }).classed({"rlAnchor": true});
+      }
+    });
 
-    lGlyph.each( function (ln) {
-      if (ln.inputs.size() > 1) {
+    lGlyph.each(function (ln) {
+      if (getLayerPredCount(ln) > 1) {
         d3.select(this).select("g.glAnchor").append("text")
             .attr("transform", function () {
               return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," +
                   0.5 + ")";
             })
-            .text(function (d) {
-              return d.inputs.size();
+            .text(function () {
+              return getLayerPredCount(ln);
             }).attr("class", "lLabel");
       }
     });
 
-    lGlyph.each( function (ln) {
-      if(ln.outputs.size() > 1) {
+    lGlyph.each(function (ln) {
+      if (getLayerSuccCount(ln) > 1) {
         d3.select(this).select("g.grAnchor").append("text")
             .attr("transform", function () {
               return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," +
                   0.5 + ")";
             })
-            .text(function (d) {
-              return d.outputs.size();
+            .text(function () {
+              return getLayerSuccCount(ln);
             }).attr("class", "lLabel");
       }
     });
@@ -2118,7 +2132,7 @@ var provvisRender = function () {
                 "#ffffff" : "#000000";
           }
         })
-        /*.style("display", "inline")*/;
+      /*.style("display", "inline")*/;
 
     lLabels.append("text")
         .attr("transform", function () {
@@ -2327,18 +2341,22 @@ var provvisRender = function () {
 
     scaleFactor = 0.75;
 
-    aGlyph.select("g.glAnchor").select("path")
-        .attr("d", function () {
-          return "m" + (-2 * scaleFactor * vis.radius) + " " +
-              (-0.5 * scaleFactor * vis.radius) + " " +
-              "h" + (-0.5 * scaleFactor * vis.radius) + " " +
-              "a" + (-0.5 * scaleFactor * vis.radius) + " " +
-              (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
-              "0 " + (1 * scaleFactor * vis.radius) + " " +
-              "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
-        });
+    aGlyph.each(function (an) {
+      if (an.predLinks.size() > 0) {
+        d3.select(this).select("g.glAnchor").select("path")
+            .attr("d", function () {
+              return "m" + (-2 * scaleFactor * vis.radius) + " " +
+                  (-0.5 * scaleFactor * vis.radius) + " " +
+                  "h" + (-0.5 * scaleFactor * vis.radius) + " " +
+                  "a" + (-0.5 * scaleFactor * vis.radius) + " " +
+                  (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
+                  "0 " + (1 * scaleFactor * vis.radius) + " " +
+                  "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
+            });
+      }
+    });
 
-    aGlyph.each( function (an) {
+    aGlyph.each(function (an) {
       if (an.predLinks.size() > 1) {
         aGlyph.select("g.grAnchor").select("text")
             .attr("transform", function () {
@@ -2352,18 +2370,22 @@ var provvisRender = function () {
       }
     });
 
-    aGlyph.select("path")
-        .attr("d", function () {
-          return "m" + (2 * scaleFactor * vis.radius) + " " +
-              (-0.5 * scaleFactor * vis.radius) + " " +
-              "h" + (0.5 * scaleFactor * vis.radius) + " " +
-              "a" + (0.5 * scaleFactor * vis.radius) + " " +
-              (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
-              "0 " + (1 * scaleFactor * vis.radius) + " " +
-              "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
-        });
+    aGlyph.each(function (an) {
+      if (an.succLinks.size() > 0) {
+        d3.select(this).select("path")
+            .attr("d", function () {
+              return "m" + (2 * scaleFactor * vis.radius) + " " +
+                  (-0.5 * scaleFactor * vis.radius) + " " +
+                  "h" + (0.5 * scaleFactor * vis.radius) + " " +
+                  "a" + (0.5 * scaleFactor * vis.radius) + " " +
+                  (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
+                  "0 " + (1 * scaleFactor * vis.radius) + " " +
+                  "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
+            });
+      }
+    });
 
-    aGlyph.each( function (an) {
+    aGlyph.each(function (an) {
       if (an.succLinks.size() > 1) {
         d3.select(this).select("text")
             .attr("transform", function () {
@@ -2530,7 +2552,8 @@ var provvisRender = function () {
         if (aDiffNegIns < 0) {
           aDiffG.append("text")
               .attr("transform", function () {
-                return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + (0.5) + ")";})
+                return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + (0.5) + ")";
+              })
               .text(Math.abs(aDiffNegIns))
               .classed({"aDiffLabel": true})
               .style({"fill": "#000000", "stroke": "#000000"});
@@ -2539,7 +2562,8 @@ var provvisRender = function () {
         if (aDiffPosIns > 0) {
           aDiffG.append("text")
               .attr("transform", function () {
-                return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((1/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((1 / 3) * scaleFactor * vis.radius + 0.5) + ")";
+              })
               .text(aDiffPosIns)
               .classed({"aDiffLabel": true})
               .style({"fill": "#000000", "stroke": "#000000"});
@@ -2548,7 +2572,8 @@ var provvisRender = function () {
         if (aDiffNegSA < 0) {
           aDiffG.append("text")
               .attr("transform", function () {
-                return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + ((3/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + ((3 / 3) * scaleFactor * vis.radius + 0.5) + ")";
+              })
               .text(Math.abs(aDiffNegSA))
               .classed({"aDiffLabel": true})
               .style({"fill": "#000000", "stroke": "#000000"});
@@ -2557,7 +2582,8 @@ var provvisRender = function () {
         if (aDiffPosSA > 0) {
           aDiffG.append("text")
               .attr("transform", function () {
-                return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((3/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((3 / 3) * scaleFactor * vis.radius + 0.5) + ")";
+              })
               .text(aDiffPosSA)
               .classed({"aDiffLabel": true})
               .style({"fill": "#000000", "stroke": "#000000"});
@@ -2566,7 +2592,8 @@ var provvisRender = function () {
         if (aDiffNegOuts < 0) {
           aDiffG.append("text")
               .attr("transform", function () {
-                return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + ((5/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                return "translate(" + (-0.5 * scaleFactor * vis.radius) + "," + ((5 / 3) * scaleFactor * vis.radius + 0.5) + ")";
+              })
               .text(Math.abs(aDiffNegOuts))
               .classed({"aDiffLabel": true})
               .style({"fill": "#000000", "stroke": "#000000"});
@@ -2575,7 +2602,8 @@ var provvisRender = function () {
         if (aDiffPosOuts > 0) {
           aDiffG.append("text")
               .attr("transform", function () {
-                return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((5/3) * scaleFactor * vis.radius + 0.5) + ")";})
+                return "translate(" + (0.5 * scaleFactor * vis.radius) + "," + ((5 / 3) * scaleFactor * vis.radius + 0.5) + ")";
+              })
               .text(aDiffPosOuts)
               .classed({"aDiffLabel": true})
               .style({"fill": "#000000", "stroke": "#000000"});
@@ -2631,18 +2659,22 @@ var provvisRender = function () {
               return "url(#bbClipId-" + an.autoId + ")";
             });
 
-    aGlyph.append("g").classed({"glAnchor": true}).append("path")
-        .attr("d", function () {
-          return "m" + (-2 * scaleFactor * vis.radius) + " " +
-              (-0.5 * scaleFactor * vis.radius) + " " +
-              "h" + (-0.5 * scaleFactor * vis.radius) + " " +
-              "a" + (-0.5 * scaleFactor * vis.radius) + " " +
-              (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
-              "0 " + (1 * scaleFactor * vis.radius) + " " +
-              "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
-        }).classed({"laAnchor": true});
+    aGlyph.each(function (an) {
+      if (an.predLinks.size() > 0) {
+        d3.select(this).append("g").classed({"glAnchor": true}).append("path")
+            .attr("d", function () {
+              return "m" + (-2 * scaleFactor * vis.radius) + " " +
+                  (-0.5 * scaleFactor * vis.radius) + " " +
+                  "h" + (-0.5 * scaleFactor * vis.radius) + " " +
+                  "a" + (-0.5 * scaleFactor * vis.radius) + " " +
+                  (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
+                  "0 " + (1 * scaleFactor * vis.radius) + " " +
+                  "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
+            }).classed({"laAnchor": true});
+      }
+    });
 
-    aGlyph.each( function (an) {
+    aGlyph.each(function (an) {
       if (an.predLinks.size() > 1) {
         d3.select(this)
             .select("g.glAnchor").append("text")
@@ -2657,19 +2689,22 @@ var provvisRender = function () {
       }
     });
 
+    aGlyph.each(function (an) {
+      if (an.succLinks.size() > 0) {
+        d3.select(this).append("g").classed({"grAnchor": true}).append("path")
+            .attr("d", function () {
+              return "m" + (2 * scaleFactor * vis.radius) + " " +
+                  (-0.5 * scaleFactor * vis.radius) + " " +
+                  "h" + (0.5 * scaleFactor * vis.radius) + " " +
+                  "a" + (0.5 * scaleFactor * vis.radius) + " " +
+                  (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
+                  "0 " + (1 * scaleFactor * vis.radius) + " " +
+                  "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
+            }).classed({"raAnchor": true});
+      }
+    });
 
-    aGlyph.append("g").classed({"grAnchor": true}).append("path")
-        .attr("d", function () {
-          return "m" + (2 * scaleFactor * vis.radius) + " " +
-              (-0.5 * scaleFactor * vis.radius) + " " +
-              "h" + (0.5 * scaleFactor * vis.radius) + " " +
-              "a" + (0.5 * scaleFactor * vis.radius) + " " +
-              (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
-              "0 " + (1 * scaleFactor * vis.radius) + " " +
-              "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
-        }).classed({"raAnchor": true});
-
-    aGlyph.each( function (an) {
+    aGlyph.each(function (an) {
       if (an.succLinks.size() > 1) {
         d3.select(this).select("g.grAnchor").append("text")
             .attr("transform", function () {
@@ -2711,7 +2746,7 @@ var provvisRender = function () {
                 "#ffffff" : "#000000";
           }
         })
-        /*.style("display", "inline")*/;
+      /*.style("display", "inline")*/;
 
     aLabels.append("text")
         .attr("transform", function () {
@@ -2726,7 +2761,7 @@ var provvisRender = function () {
                 "#ffffff" : "#000000";
           }
         })
-        /*.style("display", "inline")*/;
+      /*.style("display", "inline")*/;
 
     /* Exit. */
     lAnalysis.exit().remove();
@@ -2920,18 +2955,22 @@ var provvisRender = function () {
             saLabels = subanalysisNode.append("g").classed({"labels": true})
                 .attr("clip-path", "url(#bbClipId-" + san.autoId + ")");
 
-        saGlyph.append("g").classed({"glAnchor": true}).append("path")
-            .attr("d", function () {
-              return "m" + (-2 * scaleFactor * vis.radius) + " " +
-                  (-0.5 * scaleFactor * vis.radius) + " " +
-                  "h" + (-0.5 * scaleFactor * vis.radius) + " " +
-                  "a" + (-0.5 * scaleFactor * vis.radius) + " " +
-                  (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
-                  "0 " + (1 * scaleFactor * vis.radius) + " " +
-                  "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
-            }).classed({"lsaAnchor": true});
+        saGlyph.each(function (san) {
+          if (san.predLinks.size() > 0) {
+            d3.select(this).append("g").classed({"glAnchor": true}).append("path")
+                .attr("d", function () {
+                  return "m" + (-2 * scaleFactor * vis.radius) + " " +
+                      (-0.5 * scaleFactor * vis.radius) + " " +
+                      "h" + (-0.5 * scaleFactor * vis.radius) + " " +
+                      "a" + (-0.5 * scaleFactor * vis.radius) + " " +
+                      (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
+                      "0 " + (1 * scaleFactor * vis.radius) + " " +
+                      "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
+                }).classed({"lsaAnchor": true});
+          }
+        });
 
-        saGlyph.each( function (san) {
+        saGlyph.each(function (san) {
           if (san.predLinks.size() > 1) {
             d3.select(this).select("g.glAnchor").append("text")
                 .attr("transform", function () {
@@ -2945,18 +2984,22 @@ var provvisRender = function () {
           }
         });
 
-        saGlyph.append("g").classed({"grAnchor": true}).append("path")
-            .attr("d", function () {
-              return "m" + (2 * scaleFactor * vis.radius) + " " +
-                  (-0.5 * scaleFactor * vis.radius) + " " +
-                  "h" + (0.5 * scaleFactor * vis.radius) + " " +
-                  "a" + (0.5 * scaleFactor * vis.radius) + " " +
-                  (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
-                  "0 " + (1 * scaleFactor * vis.radius) + " " +
-                  "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
-            }).classed({"rsaAnchor": true});
+        saGlyph.each(function (san) {
+          if (san.succLinks.size() > 0) {
+            saGlyph.append("g").classed({"grAnchor": true}).append("path")
+                .attr("d", function () {
+                  return "m" + (2 * scaleFactor * vis.radius) + " " +
+                      (-0.5 * scaleFactor * vis.radius) + " " +
+                      "h" + (0.5 * scaleFactor * vis.radius) + " " +
+                      "a" + (0.5 * scaleFactor * vis.radius) + " " +
+                      (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
+                      "0 " + (1 * scaleFactor * vis.radius) + " " +
+                      "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
+                }).classed({"rsaAnchor": true});
+          }
+        });
 
-        saGlyph.each( function (san) {
+        saGlyph.each(function (san) {
           if (san.succLinks.size() > 1) {
             d3.select(this).select("g.grAnchor").append("text")
                 .attr("transform", function () {
@@ -2998,7 +3041,7 @@ var provvisRender = function () {
                     "#888888" ? "#ffffff" : "#000000";
               }
             })
-            /*.style("display", "inline")*/;
+          /*.style("display", "inline")*/;
 
         saLabels.append("text")
             .attr("transform", function () {
@@ -3013,7 +3056,7 @@ var provvisRender = function () {
                     "#888888" ? "#ffffff" : "#000000";
               }
             })
-            /*.style("display", "inline")*/;
+          /*.style("display", "inline")*/;
       });
     });
 
@@ -3076,25 +3119,33 @@ var provvisRender = function () {
             nLabels = self.append("g").classed({"labels": true})
                 .attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
 
-        nGlyph.append("g").classed({"glAnchor": true}).append("path")
-            .attr("d", function () {
-              return "m" + 0 + " " + (-0.5 * scaleFactor * vis.radius) + " " +
-                  "h" + (-1 * scaleFactor * vis.radius) + " " +
-                  "a" + (-0.5 * scaleFactor * vis.radius) + " " +
-                  (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
-                  "0 " + (1 * scaleFactor * vis.radius) + " " +
-                  "h" + (+1 * scaleFactor * vis.radius) + " " + "z";
-            }).classed({"lnAnchor": true});
+        nGlyph.each(function (n) {
+          if (n.predLinks.size() > 0) {
+            d3.select(this).append("g").classed({"glAnchor": true}).append("path")
+                .attr("d", function () {
+                  return "m" + 0 + " " + (-0.5 * scaleFactor * vis.radius) + " " +
+                      "h" + (-1 * scaleFactor * vis.radius) + " " +
+                      "a" + (-0.5 * scaleFactor * vis.radius) + " " +
+                      (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
+                      "0 " + (1 * scaleFactor * vis.radius) + " " +
+                      "h" + (+1 * scaleFactor * vis.radius) + " " + "z";
+                }).classed({"lnAnchor": true});
+          }
+        });
 
-        nGlyph.append("g").classed({"grAnchor": true}).append("path")
-            .attr("d", function () {
-              return "m" + 0 + " " + (-0.5 * scaleFactor * vis.radius) + " " +
-                  "h" + (1 * scaleFactor * vis.radius) + " " +
-                  "a" + (0.5 * scaleFactor * vis.radius) + " " +
-                  (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
-                  "0 " + (1 * scaleFactor * vis.radius) + " " +
-                  "h" + (-1 * scaleFactor * vis.radius) + " " + "z";
-            }).classed({"rnAnchor": true});
+        nGlyph.each(function (n) {
+          if (n.succLinks.size() > 0) {
+            nGlyph.append("g").classed({"grAnchor": true}).append("path")
+                .attr("d", function () {
+                  return "m" + 0 + " " + (-0.5 * scaleFactor * vis.radius) + " " +
+                      "h" + (1 * scaleFactor * vis.radius) + " " +
+                      "a" + (0.5 * scaleFactor * vis.radius) + " " +
+                      (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
+                      "0 " + (1 * scaleFactor * vis.radius) + " " +
+                      "h" + (-1 * scaleFactor * vis.radius) + " " + "z";
+                }).classed({"rnAnchor": true});
+          }
+        });
 
         if (d.nodeType === "raw" || d.nodeType === "intermediate" ||
             d.nodeType === "stored") {
@@ -3145,9 +3196,9 @@ var provvisRender = function () {
             .text(function (d) {
               return d.attributes.get("name");
             }).attr("class", "nodeAttrLabel")
-            /*.style("display", "inline")*/;
+          /*.style("display", "inline")*/;
 
-        nLabels.each( function (d) {
+        nLabels.each(function (d) {
           if (d.nodeType === "stored") {
 
             d3.select(this).append('text')
@@ -4052,7 +4103,7 @@ var provvisRender = function () {
         d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
       }
 
-      if(newScale < 3) {
+      if (newScale < 3) {
         d3.selectAll(".lDiffLabel, .aDiffLabel")
             .classed("hiddenLabel", true);
       } else {
@@ -4135,19 +4186,19 @@ var provvisRender = function () {
    * @param d Node
    */
   var handleNodeSelection = function (d) {
-      clearNodeSelection();
-      d.selected = true;
-      propagateNodeSelection(d, true);
-      selectedNodeSet.set(d.autoId, d);
-      d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected)
-          .select(".glyph").select("rect, circle")
-          .style({"stroke": colorHighlight});
+    clearNodeSelection();
+    d.selected = true;
+    propagateNodeSelection(d, true);
+    selectedNodeSet.set(d.autoId, d);
+    d3.select("#nodeId-" + d.autoId).classed("selectedNode", d.selected)
+        .select(".glyph").select("rect, circle")
+        .style({"stroke": colorHighlight});
 
-      $("#nodeId-" + d.autoId).hover(function () {
-        $(this).find("rect, circle").css({"stroke": colorHighlight});
-      }, function () {
-        $(this).find("rect, circle").css({"stroke": colorHighlight});
-      });
+    $("#nodeId-" + d.autoId).hover(function () {
+      $(this).find("rect, circle").css({"stroke": colorHighlight});
+    }, function () {
+      $(this).find("rect, circle").css({"stroke": colorHighlight});
+    });
 
     d.doi.selectedChanged();
   };
@@ -4443,7 +4494,7 @@ var provvisRender = function () {
     var title = " - ",
         titleLink = " - ",
         data = Object.create(null),
-        nodeDiff =  d3.map(),
+        nodeDiff = d3.map(),
         diffNegIns = 0,
         diffPosIns = 0,
         diffNegSA = 0,
@@ -4496,25 +4547,25 @@ var provvisRender = function () {
           title = '<i class="icon-cog"></i>&nbsp; Dataset';
         }
 
-          if (selNode.parent.motifDiff.numIns !== 0 ||
-              selNode.parent.motifDiff.numOuts !== 0 ||
-                selNode.parent.motifDiff.numSubanalyses !== 0) {
-              if (selNode.parent.motifDiff.numIns < 0) {
-                diffNegIns += selNode.parent.motifDiff.numIns;
-              } else {
-                diffPosIns += selNode.parent.motifDiff.numIns;
-              }
-              if (selNode.parent.motifDiff.numSubanalyses < 0) {
-                diffNegSA += selNode.parent.motifDiff.numSubanalyses;
-              } else {
-                diffPosSA += selNode.parent.motifDiff.numSubanalyses;
-              }
-              if (selNode.parent.motifDiff.numOuts < 0) {
-                diffNegOuts += selNode.parent.motifDiff.numOuts;
-              } else {
-                diffPosOuts += selNode.parent.motifDiff.numOuts;
-              }
+        if (selNode.parent.motifDiff.numIns !== 0 ||
+            selNode.parent.motifDiff.numOuts !== 0 ||
+            selNode.parent.motifDiff.numSubanalyses !== 0) {
+          if (selNode.parent.motifDiff.numIns < 0) {
+            diffNegIns += selNode.parent.motifDiff.numIns;
+          } else {
+            diffPosIns += selNode.parent.motifDiff.numIns;
           }
+          if (selNode.parent.motifDiff.numSubanalyses < 0) {
+            diffNegSA += selNode.parent.motifDiff.numSubanalyses;
+          } else {
+            diffPosSA += selNode.parent.motifDiff.numSubanalyses;
+          }
+          if (selNode.parent.motifDiff.numOuts < 0) {
+            diffNegOuts += selNode.parent.motifDiff.numOuts;
+          } else {
+            diffPosOuts += selNode.parent.motifDiff.numOuts;
+          }
+        }
         break;
 
       case "analysis":
@@ -4529,21 +4580,21 @@ var provvisRender = function () {
         }
         if (selNode.motifDiff.numIns !== 0 || selNode.motifDiff.numOuts !== 0 ||
             selNode.motifDiff.numSubanalyses !== 0) {
-            if (selNode.motifDiff.numIns < 0) {
-              diffNegIns += selNode.motifDiff.numIns;
-            } else {
-              diffPosIns += selNode.motifDiff.numIns;
-            }
-            if (selNode.motifDiff.numSubanalyses < 0) {
-              diffNegSA += selNode.motifDiff.numSubanalyses;
-            } else {
-              diffPosSA += selNode.motifDiff.numSubanalyses;
-            }
-            if (selNode.motifDiff.numOuts < 0) {
-              diffNegOuts += selNode.motifDiff.numOuts;
-            } else {
-              diffPosOuts += selNode.motifDiff.numOuts;
-            }
+          if (selNode.motifDiff.numIns < 0) {
+            diffNegIns += selNode.motifDiff.numIns;
+          } else {
+            diffPosIns += selNode.motifDiff.numIns;
+          }
+          if (selNode.motifDiff.numSubanalyses < 0) {
+            diffNegSA += selNode.motifDiff.numSubanalyses;
+          } else {
+            diffPosSA += selNode.motifDiff.numSubanalyses;
+          }
+          if (selNode.motifDiff.numOuts < 0) {
+            diffNegOuts += selNode.motifDiff.numOuts;
+          } else {
+            diffPosOuts += selNode.motifDiff.numOuts;
+          }
         }
         break;
 
@@ -4797,7 +4848,7 @@ var provvisRender = function () {
               createHTMLKeyValuePair("Created", parseISOTimeFormat(an.start)) +
               "<br>" +
               createHTMLKeyValuePair("Workflow", getWfNameByNode(an)) +
-                  "<br>", event);
+              "<br>", event);
     }).on("mouseout", function (an) {
       hideTooltip();
       d3.select("#BBoxId-" + an.autoId).classed("mouseoverTlBBox", false);
@@ -5391,7 +5442,7 @@ var provvisRender = function () {
 
 
       /* Click event is executed after 100ms unless the double click event
-      below clears the click event timeout.*/
+       below clears the click event timeout.*/
       domNodesetClickTimeout = setTimeout(function () {
         if (!draggingActive) {
           handleNodeSelection(d);
@@ -5405,7 +5456,7 @@ var provvisRender = function () {
       clearTimeout(domNodesetClickTimeout);
 
       /* Double click event is executed when this event is triggered before
-      the click timeout has finished. */
+       the click timeout has finished. */
       handleCollapseExpandNode(d, "e");
     });
 
@@ -5413,29 +5464,29 @@ var provvisRender = function () {
     var bRectClickTimeout;
     d3.selectAll(".brect, .link, .hLink, .vLine, .hLine", ".cell")
         .on("click", function () {
-      if (d3.event.defaultPrevented) return;
-      clearTimeout(bRectClickTimeout);
+          if (d3.event.defaultPrevented) return;
+          clearTimeout(bRectClickTimeout);
 
-      /* Click event is executed after 100ms unless the double click event
-      below clears the click event timeout.*/
-      bRectClickTimeout = setTimeout(function () {
-        clearHighlighting(graph.links);
-        clearNodeSelection();
+          /* Click event is executed after 100ms unless the double click event
+           below clears the click event timeout.*/
+          bRectClickTimeout = setTimeout(function () {
+            clearHighlighting(graph.links);
+            clearNodeSelection();
 
-        /* Currently disabled. */
-        //updateNodeDoi();
-      }, 200);
-    });
+            /* Currently disabled. */
+            //updateNodeDoi();
+          }, 200);
+        });
 
     d3.selectAll(".brect, .link, .hLink, .vLine, .hLine, .cell")
         .on("dblclick", function () {
-      if (d3.event.defaultPrevented) return;
-      clearTimeout(bRectClickTimeout);
+          if (d3.event.defaultPrevented) return;
+          clearTimeout(bRectClickTimeout);
 
-      /* Double click event is executed when this event is triggered
-      before the click timeout has finished. */
-      fitGraphToWindow(1000);
-    });
+          /* Double click event is executed when this event is triggered
+           before the click timeout has finished. */
+          fitGraphToWindow(1000);
+        });
 
     /* Handle tooltips. */
     handleTooltips();
@@ -5625,7 +5676,7 @@ var provvisRender = function () {
         .range([0.0, 1.0]);
 
     /* Init analysis nodes with a factor in relation to the highes diff in
-    the whole graph. */
+     the whole graph. */
     aNodes.forEach(function (an) {
       an.doi.initLayerDiffComponent(doiDiffScale(Math.abs(an.motifDiff.numIns) +
           Math.abs(an.motifDiff.numOuts) +
