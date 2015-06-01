@@ -287,7 +287,7 @@ var provvis = function () {
             d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
           }
 
-          if (d3.event.scale < 3) {
+          if (d3.event.scale < 2.5) {
             d3.selectAll(".lDiffLabel, .aDiffLabel")
                 .classed("hiddenLabel", true);
           } else {

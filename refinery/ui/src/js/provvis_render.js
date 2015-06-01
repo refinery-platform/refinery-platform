@@ -598,7 +598,8 @@ var provvisRender = function () {
    * are hidden.
    * @param vis The provenance visualization root object.
    */
-  var filterAnalysesByTime = function (lowerTimeThreshold, upperTimeThreshold, vis) {
+  var filterAnalysesByTime = function (lowerTimeThreshold, upperTimeThreshold,
+      vis) {
     vis.graph.lNodes = lNodesBAK;
     vis.graph.aNodes = aNodesBAK;
     vis.graph.saNodes = saNodesBAK;
@@ -4062,7 +4063,6 @@ var provvisRender = function () {
         parseFloat($("#main-area").css("margin-left").replace("px", ""));
 
 
-
     var delta = [max[0] - min[0], max[1] - min[1]],
         factor = [(vis.width / delta[0]), (vis.height / delta[1])],
     /* Maximize scale to factor 3. */
@@ -4111,7 +4111,7 @@ var provvisRender = function () {
         d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
       }
 
-      if (newScale < 3) {
+      if (newScale < 2.5) {
         d3.selectAll(".lDiffLabel, .aDiffLabel")
             .classed("hiddenLabel", true);
       } else {
@@ -4749,7 +4749,8 @@ var provvisRender = function () {
       d3.select("#BBoxId-" + d.parent.parent.autoId)
           .classed("mouseoverBBox", false);
       d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", false);
-      self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
+      self.select(".labels").attr("clip-path",
+              "url(#bbClipId-" + d.autoId + ")");
     });
 
     /* Subanalysis tooltips. */
@@ -4759,13 +4760,16 @@ var provvisRender = function () {
       d3.select("#BBoxId-" + d.autoId).classed("mouseoverBBox", true);
       self.select(".labels").attr("clip-path", "");
     }).on("mousemove", function (d) {
-      d3.select("#BBoxId-" + d.parent.parent.autoId).classed("mouseoverBBox", true);
+      d3.select("#BBoxId-" + d.parent.parent.autoId).classed("mouseoverBBox",
+          true);
       d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", true);
     }).on("mouseout", function (d) {
       var self = d3.select(this);
-      d3.select("#BBoxId-" + d.parent.parent.autoId).classed("mouseoverBBox", false);
+      d3.select("#BBoxId-" + d.parent.parent.autoId).classed("mouseoverBBox",
+          false);
       d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", false);
-      self.select(".labels").attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
+      self.select(".labels").attr("clip-path",
+              "url(#bbClipId-" + d.autoId + ")");
     });
 
     /* Analysis tolltips. */
