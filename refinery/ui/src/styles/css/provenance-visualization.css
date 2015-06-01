@@ -34,13 +34,15 @@
 }
 
 #provenance-sidebar {
-  position: absolute;
-  top: 0;
+  position: fixed;
+  top: 200px;
   margin-top: 5px;
-  right: -355px;
-  width: 350px;
-  height: 100%;
-  background-color: #ffffff;
+  left: -355px;
+  width: 320px;
+  z-index: 2;
+}
+
+#provvis-sidebar-content {
 }
 
 #provenance-colorcoding-view {
@@ -48,7 +50,7 @@
   left: 0;
   right: 0;
   top: 0;
-  width: 100%;
+  /*width: 100%;*/
   background-color: #ffffff;
 }
 
@@ -56,8 +58,8 @@
   position: relative;
   left: 0;
   top: 0;
-  width: 100%;
-  height: 130px;
+  /*width: 100%;*/
+  height: 150px;
   margin-top: 5px;
   margin-left: 5px;
   margin-right: 5px;
@@ -68,7 +70,7 @@
   position: relative;
   left: 0;
   top: 0;
-  width: 100%;
+  /*width: 100%;*/
   height: 370px;
   margin-top: 5px;
   margin-left: 5px;
@@ -585,10 +587,10 @@
   shape-rendering: crispEdges;
 }
 
-#provvis-sidebar-content {
-  height: 100%;
-}
-
 .link-transition {
   stroke-opacity: 0.3;
+}
+
+.provvisNodeInfoDiff {
+  color: #ed7407;
 }
