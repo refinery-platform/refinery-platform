@@ -89,8 +89,8 @@
           {% if request.user.is_superuser %}
          	&nbsp;&nbsp;|&nbsp;&nbsp;
          	<span ng-controller="ExternalToolStatusController">
-                <a href="#" externaltoolpopover data-placement="bottom" title="External Tool Status">
-                    <span externaltoolstatus></span>
+                <a href="#" external-tool-status-popover data-placement="bottom" title="External Tool Status">
+                    <span external-tool-status></span>
                 </a>
             </span>
           {% endif %}
@@ -144,7 +144,7 @@
 
   <!-- Script for popup content in the tool status icon Try out ng-template -->
     <script type="text/ng-template" id="externaltool.html">
-        <externaltoolstatusdetailspopover></externaltoolstatusdetailspopover>
+        <external-tool-status-details-popover></external-tool-status-details-popover>
     </script>
   <!-- 3rd party libraries -->
   <script src="{% static "vendor/jquery/dist/jquery.min.js" %}"></script>
@@ -162,7 +162,14 @@
   <script src="{% static "js/workflows.js" %}"></script>
   <script src="{% static "js/analysis.js" %}"></script>
   <script src="{% static "js/solr.js" %}"></script>
-  <script src="{% static "js/external_tool_status.js" %}"></script>
+  <script src="{% static "js/ExternalToolStatus/ExternalToolStatusModule.js" %}"></script>
+  <script src="{% static "js/ExternalToolStatus/ExternalToolStatusFactory.js" %}"></script>
+  <script src="{% static "js/ExternalToolStatus/ExternalToolStatusService.js" %}"></script>
+  <script src="{% static "js/ExternalToolStatus/ExternalToolStatusController.js" %}"></script>
+  <script src="{% static "js/ExternalToolStatus/Directives/ExternalToolStatusDirective.js" %}"></script>
+  <script src="{% static "js/ExternalToolStatus/Directives/ExternalToolStatusDetailsDirective.js" %}"></script>
+  <script src="{% static "js/ExternalToolStatus/Directives/ExternalToolStatusPopupDirective.js" %}"></script>
+  <script src="{% static "js/ExternalToolStatus/Directives/ExternalToolStatusPopupDetailsDirective.js" %}"></script>
   <script src="{% static "js/node_relationship.js" %}"></script>
   <script src="{% static "js/igv.js" %}"></script>
   <script src="{% static "js/statistics.js" %}"></script>

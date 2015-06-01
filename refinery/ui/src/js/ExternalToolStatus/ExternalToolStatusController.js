@@ -1,47 +1,12 @@
-angular.module('refineryExternalToolStatus', [])
+angular.module('refineryExternalToolStatus')
+    .controller('ExternalToolStatusController',
+    ['externalToolStatusFactory', 'externalToolStatusService', '$scope', '$timeout', '$log', ExternalToolStatusController]);
 
-.factory("externalToolStatusFactory", function($resource) {
-  'use strict';
-  return $resource('/api/v1/externaltoolstatus/', {format: 'json'});
-})
 
-.service("externalToolStatusService", function(){
-    vm = this;
-    var tools_details = [
-        {"name": "SOLR", "status": "N/A", "last_time_check": "N/A", "is_active":"N/A"},
-        {"name": "CELERY", "status": "N/A", "last_time_check": "N/A", "is_active":"N/A"},
-        {"name": "GALAXY", "status": "N/A", "last_time_check": "N/A", "is_active":"N/A"}
-    ];
-
-    vm.getToolsDetails = function(){
-        return tools_details;
-    };
-
-    vm.setWhichTool = function(tool_data){
-      switch(tool_data.name){
-          case "SOLR":
-            vm.setToolDetail(0, tool_data);
-            break;
-          case "CELERY":
-            vm.setToolDetail(1, tool_data);
-              break;
-          case "GALAXY":
-            vm.setToolDetail(2, tool_data);
-              break;
-          default:
-              console.log("Additional external tools data available: " + tool_data);
-              break;
-      }
-  };
-    vm.setToolDetail = function(ind, tool_data){
-      tools_details[ind].status=tool_data.status;
-      tools_details[ind].last_time_check=tool_data.last_time_check;
-      tools_details[ind].is_active=tool_data.is_active;
-    };
-})
-
-.controller('ExternalToolStatusController', function(
+function ExternalToolStatusController(
     externalToolStatusFactory, externalToolStatusService, $scope, $timeout, $log) {
+    "use strict";
+        console.log("in external tool status controller");
   var vm = this;
   var tools;
   vm.tools_details = externalToolStatusService.getToolsDetails();
@@ -73,10 +38,10 @@ angular.module('refineryExternalToolStatus', [])
           }
           if ( !tools.SOLR ) {
             return false;
-          } 
+          }
           return tools.SOLR[null] === "SUCCESS";
       };
-        
+
       var isCeleryUp = function() {
           if ( !tools ) {
             return undefined;
@@ -135,7 +100,7 @@ angular.module('refineryExternalToolStatus', [])
       $scope.isSolrUp = isSolrUp();
       $scope.isCeleryUp = isCeleryUp();
       $scope.isGalaxyUp = isGalaxyUp();
-      
+
       if (getSystemStatus() === "OK") {
         $scope.systemStatusOk = true;
         $scope.systemStatusWarning = false;
@@ -163,57 +128,4 @@ angular.module('refineryExternalToolStatus', [])
 
       $timeout(tick, 1000);
   })();
-})
-
-.directive('externaltoolstatus', function($log) {
-  return {
-    templateUrl: '/static/partials/external_tool_status.tpls.html',
-    restrict: 'A',
-  };
-})
-
-.directive('externaltoolstatusdetails', function($log) {
-  return {
-    restrict: 'E',
-    templateUrl: '/static/partials/external_tool_status_details.tpls.html',
-    scope: {
-       tools_details: '@'
-    },
-    controller: 'ExternalToolStatusController',
-    controllerAs: 'externalToolStatusController',
-    bindToController: true,
-  };
-})
-
-.directive('externaltoolstatusdetailspopover', function($log) {
-  return {
-    restrict: 'E',
-    templateUrl: '/static/partials/external_tool_status_details_popover.tpls.html',
-    scope: {
-       tools_details: '@'
-    },
-    controller: 'ExternalToolStatusController',
-    controllerAs: 'externalToolStatusController',
-    bindToController: true,
-  };
-})
-
-.directive('externaltoolpopover', function ($compile,$templateCache) {
-    return {
-        restrict: "AE",
-
-        link: function (scope, element, attrs) {
-            var template = $templateCache.get("externaltool.html");
-            var popOverContent = $compile(template)(scope);
-
-            var options = {
-                content: popOverContent,
-                placement: "bottom",
-                html: true,
-                date: scope.date,
-                trigger: "hover"
-            };
-            $(element).popover(options);
-        }
-    };
-});
+}
