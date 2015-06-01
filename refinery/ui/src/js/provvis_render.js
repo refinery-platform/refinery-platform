@@ -4442,7 +4442,14 @@ var provvisRender = function () {
   var updateNodeInfoTab = function (selNode) {
     var title = " - ",
         titleLink = " - ",
-        data = Object.create(null);
+        data = Object.create(null),
+        nodeDiff =  d3.map(),
+        diffNegIns = 0,
+        diffPosIns = 0,
+        diffNegSA = 0,
+        diffPosSA = 0,
+        diffNegOuts = 0,
+        diffPosOuts = 0;
 
     switch (selNode.nodeType) {
       case "raw":
@@ -4488,6 +4495,26 @@ var provvisRender = function () {
         } else {
           title = '<i class="icon-cog"></i>&nbsp; Dataset';
         }
+
+          if (selNode.parent.motifDiff.numIns !== 0 ||
+              selNode.parent.motifDiff.numOuts !== 0 ||
+                selNode.parent.motifDiff.numSubanalyses !== 0) {
+              if (selNode.parent.motifDiff.numIns < 0) {
+                diffNegIns += selNode.parent.motifDiff.numIns;
+              } else {
+                diffPosIns += selNode.parent.motifDiff.numIns;
+              }
+              if (selNode.parent.motifDiff.numSubanalyses < 0) {
+                diffNegSA += selNode.parent.motifDiff.numSubanalyses;
+              } else {
+                diffPosSA += selNode.parent.motifDiff.numSubanalyses;
+              }
+              if (selNode.parent.motifDiff.numOuts < 0) {
+                diffNegOuts += selNode.parent.motifDiff.numOuts;
+              } else {
+                diffPosOuts += selNode.parent.motifDiff.numOuts;
+              }
+          }
         break;
 
       case "analysis":
@@ -4499,6 +4526,24 @@ var provvisRender = function () {
               selNode.wfName + "</a>";
         } else {
           title = '<i class="icon-cogs"></i>&nbsp; Dataset';
+        }
+        if (selNode.motifDiff.numIns !== 0 || selNode.motifDiff.numOuts !== 0 ||
+            selNode.motifDiff.numSubanalyses !== 0) {
+            if (selNode.motifDiff.numIns < 0) {
+              diffNegIns += selNode.motifDiff.numIns;
+            } else {
+              diffPosIns += selNode.motifDiff.numIns;
+            }
+            if (selNode.motifDiff.numSubanalyses < 0) {
+              diffNegSA += selNode.motifDiff.numSubanalyses;
+            } else {
+              diffPosSA += selNode.motifDiff.numSubanalyses;
+            }
+            if (selNode.motifDiff.numOuts < 0) {
+              diffNegOuts += selNode.motifDiff.numOuts;
+            } else {
+              diffPosOuts += selNode.motifDiff.numOuts;
+            }
         }
         break;
 
@@ -4515,14 +4560,58 @@ var provvisRender = function () {
           titleLink = '<a href=/workflows/' + data.wfUuid +
               ' target="_blank">' + data.workflow + '</a>';
         }
+        if (selNode.children.values().some(function (an) {
+          return an.motifDiff.numIns !== 0 || an.motifDiff.numOuts !== 0 ||
+              an.motifDiff.numSubanalyses !== 0;
+        })) {
+          selNode.children.values().forEach(function (an) {
+            if (an.motifDiff.numIns < 0) {
+              diffNegIns += an.motifDiff.numIns;
+            } else {
+              diffPosIns += an.motifDiff.numIns;
+            }
+            if (an.motifDiff.numSubanalyses < 0) {
+              diffNegSA += an.motifDiff.numSubanalyses;
+            } else {
+              diffPosSA += an.motifDiff.numSubanalyses;
+            }
+            if (an.motifDiff.numOuts < 0) {
+              diffNegOuts += an.motifDiff.numOuts;
+            } else {
+              diffPosOuts += an.motifDiff.numOuts;
+            }
+          });
+        }
         break;
+    }
+
+    /* Add diff info to data. */
+    if (diffNegIns !== 0 || diffPosIns !== 0) {
+      nodeDiff.set("Diff: Inputs", (diffNegIns + " " + diffPosIns));
+    }
+    if (diffNegSA !== 0 || diffPosSA !== 0) {
+      nodeDiff.set("Diff: Subanalyses", (diffNegSA + " " + diffPosSA));
+    }
+    if (diffNegOuts !== 0 || diffPosOuts !== 0) {
+      nodeDiff.set("Diff: Outputs", (diffNegOuts + " " + diffPosOuts));
     }
 
     $('#nodeInfoTitle').html(title);
     $('#nodeInfoTitleLink').html(titleLink);
 
-
     $("#" + "provenance-nodeInfo-content").html("");
+    nodeDiff.entries().forEach(function (d) {
+      console.log(d);
+      $("<div/>", {
+        "class": "refinery-subheader",
+        "html": "<h4>" + d.key + "</h4>"
+      }).appendTo("#" + "provenance-nodeInfo-content");
+      $("<p/>", {
+        "class": "provvisNodeInfoValue provvisNodeInfoDiff",
+        "html": "<i><b>" + d.value + "</b></i>"
+      }).appendTo("#" + "provenance-nodeInfo-content");
+    });
+
     d3.entries(data).forEach(function (d) {
       $("<div/>", {
         "class": "refinery-subheader",

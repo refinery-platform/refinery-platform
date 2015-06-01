@@ -592,3 +592,7 @@
 .link-transition {
   stroke-opacity: 0.3;
 }
+
+.provvisNodeInfoDiff {
+  color: #ed7407;
+}
