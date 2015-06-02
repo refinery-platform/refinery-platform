@@ -2137,8 +2137,7 @@ var provvisRender = function () {
             return timeColorScale(parseISOTimeFormat(latestDate)) < "#888888" ?
                 "#ffffff" : "#000000";
           }
-        })
-      /*.style("display", "inline")*/;
+        });
 
     lLabels.append("text")
         .attr("transform", function () {
@@ -2751,8 +2750,7 @@ var provvisRender = function () {
             return timeColorScale(parseISOTimeFormat(an.start)) < "#888888" ?
                 "#ffffff" : "#000000";
           }
-        })
-      /*.style("display", "inline")*/;
+        });
 
     aLabels.append("text")
         .attr("transform", function () {
@@ -2766,8 +2764,7 @@ var provvisRender = function () {
             return timeColorScale(parseISOTimeFormat(an.start)) < "#888888" ?
                 "#ffffff" : "#000000";
           }
-        })
-      /*.style("display", "inline")*/;
+        });
 
     /* Exit. */
     lAnalysis.exit().remove();
@@ -3046,23 +3043,25 @@ var provvisRender = function () {
                 return timeColorScale(parseISOTimeFormat(san.parent.start)) <
                     "#888888" ? "#ffffff" : "#000000";
               }
-            })
-          /*.style("display", "inline")*/;
+            });
 
         saLabels.append("text")
             .attr("transform", function () {
               return "translate(" + (1.0 * scaleFactor * vis.radius) + ",0)";
             })
             .text(function (d) {
-              return d.children.size();
+
+              return d.wfUuid !== "dataset" ?
+                  d.children.values().filter(function(cn) {
+                    return cn.nodeType === "dt";
+                  }).length : d.children.size();
             }).attr("class", "sanLabel")
             .style({
               "fill": function (san) {
                 return timeColorScale(parseISOTimeFormat(san.parent.start)) <
                     "#888888" ? "#ffffff" : "#000000";
               }
-            })
-          /*.style("display", "inline")*/;
+            });
       });
     });
 
@@ -3202,7 +3201,7 @@ var provvisRender = function () {
             .text(function (d) {
               return d.attributes.get("name");
             }).attr("class", "nodeAttrLabel")
-          /*.style("display", "inline")*/;
+          ;
 
         nLabels.each(function (d) {
           if (d.nodeType === "stored") {
@@ -3218,7 +3217,7 @@ var provvisRender = function () {
                         n.parent.parent.start)) < "#888888" ?
                         "#ffffff" : "#000000";
                   }
-                })/*.style("display", "inline")*/;
+                });
           }
         });
 
