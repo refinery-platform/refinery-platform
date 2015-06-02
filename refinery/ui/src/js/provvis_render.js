@@ -1101,7 +1101,7 @@ var provvisRender = function () {
         }).select("g");
 
     var doiFactors = d3.values(provvisDecl.DoiFactors.factors);
-    var doiColorScale = d3.scale.category10().range(["#333333", "#136382"]);
+    var doiColorScale = d3.scale.category10()/*.range(["#333333", "#136382"])*/;
 
     var updateDoiView = function (data) {
       var rectOffset = 0,
@@ -3048,9 +3048,7 @@ var provvisRender = function () {
         saLabels.append("text")
             .attr("transform", function () {
               return "translate(" + (1.0 * scaleFactor * vis.radius) + ",0)";
-            })
-            .text(function (d) {
-
+            }).text(function (d) {
               return d.wfUuid !== "dataset" ?
                   d.children.values().filter(function(cn) {
                     return cn.nodeType === "dt";
