@@ -1,93 +1,158 @@
 <div ng-controller="provvisNavbarController">
-    <div id="provenance-controls">
-        <div class="row-fluid">
+  <div id="provenance-controls">
+    <div class="row-fluid">
 
-            <!-- Show all controls -->
-            <div class="span10">
-                <div id="prov-ctrl-node-btn-group" class="btn-group">
-                    <button id="prov-ctrl-layers-click" class="btn btn-mini btn-primary"><i class="icon-reorder"></i>&nbsp;Layers</button>
-                    <button id="prov-ctrl-analyses-click" class="btn btn-mini btn-primary"><i class="icon-cogs"></i>&nbsp;Analyses</button>
-                    <button id="prov-ctrl-subanalyses-click" class="btn btn-mini btn-primary"><i class="icon-cog"></i>&nbsp;Subanalyses</button>
-                    <button id="prov-ctrl-workflows-click" class="btn btn-mini btn-primary"><i class="icon-sitemap rotate-icon-90"></i>&nbsp;Workflows</button>
-                </div>
-
-
-                <div id="prov-ctrl-node-labeling-btn-group" class="btn-group">
-
-                    <!-- Attributes -->
-                    <button id="prov-ctrl-visible-attribute" class="btn">
-                        <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown-toggle" href="#">
-                            <i class="icon-wrench"></i>&nbsp;Attributes&nbsp;<i class="icon-caret-down"></i>
-                        </a>
-                        <ul id="prov-ctrl-visible-attribute-list" class="dropdown-menu scrollable-menu"></ul>
-                        <script>
-                            /* Stop dropdown menu from closing on click. */
-                            $("#prov-ctrl-visible-attribute-list").bind("click", function (e) {
-                                e.stopPropagation();
-                            });
-                        </script>
-                    </button>
-                </div>
-
-                <label style="display: inline; margin-top: 3px; margin-right: 5px;">Filter</label>
-                <div id="prov-ctrl-filter-action" class="btn-group" data-toggle="buttons-radio">
-                    <button id="prov-ctrl-filter-action-blend" type="button" class="active btn btn-mini" value="blend">Blend</button>
-                    <button id="prov-ctrl-filter-action-hide" type="button" class="btn btn-mini" value="hide">Hide</button>
-                </div>
-
-                <!-- Help modal. -->
-                <div id="help-modal" class="modal hide fade bs-example-modal-sm-help" tabindex="-1" role="dialog"
-                     aria-hidden="true">
-                    <div id="help-dialog" class="modal-dialog modal-sm">
-                        <div id="help-content" class="modal-dialog">
-                            <div class="modal-body">
-                                <h3>Provenance Visualization Info</h3>
-                                <ul>
-                                    <li>
-                                        <div class="refinery-subheader">
-                                            <h4>Node and path specific:</h4>
-                                        </div>
-                                    </li>
-                                    <ul>
-                                        <li>(Un)Select: Left click</li>
-                                        <li>Highlight predecessors: Left click on left anchor</li>
-                                        <li>Highlight successors: Left click on right anchor</li>
-                                        <li>Collapse Node: Left click on enclosing bounding box</li>
-                                        <li>Expand Node: Double click on node</li>
-                                    </ul>
-                                    <br>
-                                    <li>
-                                        <div class="refinery-subheader">
-                                            <h4>Global:</h4>
-                                        </div>
-                                    </li>
-                                    <ul>
-                                        <li>Clear highlighting: Left click on background</li>
-                                        <li>Fit graph to screen: Left double click on background</li>
-                                    </ul>
-                                </ul>
-                            </div>
-                            <div id="help-footer" class="modal-footer">
-                                <button class="btn btn-primary" data-dismiss="modal">OK</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <label id="prov-ctrl-toggle-sidebar-label">Sidebar</label>
-                <button id="prov-ctrl-toggle-sidebar" data-toggle="button" type="button" class="btn btn-mini">OFF</button>
-
-                <label id="prov-ctrl-toggle-fit-label">Fit to screen</label>
-                <button id="prov-ctrl-toggle-fit" data-toggle="button" type="button" class="btn btn-mini active">ON</button>
-
-                <a href="#" id="prov-ctrl-help" type="button" rel="tooltip" data-placement="bottom"
-                   data-toggle="modal" data-target="#help-modal" data-html="true"
-                   style="height: 20px;">
-                    <i class=icon-question-sign style="font-size: 20px; position: relative; top: 4px;"></i>
-                </a>
-            </div>
-
-            <div class="span2"></div>
+      <!-- Show all controls -->
+      <div class="span10">
+        <div id="prov-ctrl-node-btn-group"
+            class="btn-group">
+          <button id="prov-ctrl-layers-click"
+              class="btn btn-mini btn-primary"><i
+              class="icon-reorder"></i>&nbsp;Layers
+          </button>
+          <button id="prov-ctrl-analyses-click"
+              class="btn btn-mini btn-primary"><i
+              class="icon-cogs"></i>&nbsp;Analyses
+          </button>
+          <button id="prov-ctrl-subanalyses-click"
+              class="btn btn-mini btn-primary"><i
+              class="icon-cog"></i>&nbsp;Subanalyses
+          </button>
+          <button id="prov-ctrl-workflows-click"
+              class="btn btn-mini btn-primary"><i
+              class="icon-sitemap rotate-icon-90"></i>&nbsp;Workflows
+          </button>
         </div>
+
+        <div id="prov-ctrl-node-labeling-btn-group"
+            class="btn-group">
+
+          <!-- Attributes -->
+          <button id="prov-ctrl-visible-attribute"
+              class="btn">
+            <a class="btn btn-mini dropdown-toggle"
+                data-toggle="dropdown-toggle"
+                href="#">
+              <i class="icon-wrench"></i>&nbsp;Attributes&nbsp;<i
+                class="icon-caret-down"></i>
+            </a>
+            <ul id="prov-ctrl-visible-attribute-list"
+                class="dropdown-menu scrollable-menu"></ul>
+            <script>
+              /* Stop dropdown menu from closing on click. */
+              $("#prov-ctrl-visible-attribute-list").bind("click",
+                  function (e) {
+                    e.stopPropagation();
+                  });
+            </script>
+          </button>
+        </div>
+
+        <label style="display: inline; margin-top: 3px; margin-right: 5px;"
+            >Filter</label>
+
+        <div id="prov-ctrl-filter-action"
+            class="btn-group"
+            data-toggle="buttons-radio">
+          <button id="prov-ctrl-filter-action-blend"
+              type="button"
+              class="active btn btn-mini"
+              value="blend">Blend
+          </button>
+          <button id="prov-ctrl-filter-action-hide"
+              type="button"
+              class="btn btn-mini"
+              value="hide">Hide
+          </button>
+        </div>
+
+        <!-- Help modal. -->
+        <div id="help-modal"
+            class="modal hide fade bs-example-modal-sm-help"
+            tabindex="-1"
+            role="dialog"
+            aria-hidden="true">
+          <div id="help-dialog"
+              class="modal-dialog modal-sm">
+            <div id="help-content"
+                class="modal-dialog">
+              <div class="modal-body">
+                <h3>Provenance Visualization Info</h3>
+                <ul>
+                  <li>
+                    <div class="refinery-subheader">
+                      <h4>Node and path specific:</h4>
+                    </div>
+                  </li>
+                  <ul>
+                    <li>(Un)Select: Left click</li>
+                    <li>Highlight predecessors: Left click
+                      on left anchor
+                    </li>
+                    <li>Highlight successors: Left click on
+                      right anchor
+                    </li>
+                    <li>Collapse Node: Left click on
+                      enclosing bounding box
+                    </li>
+                    <li>Expand Node: Double click on node
+                    </li>
+                  </ul>
+                  <br>
+                  <li>
+                    <div class="refinery-subheader">
+                      <h4>Global:</h4>
+                    </div>
+                  </li>
+                  <ul>
+                    <li>Clear highlighting: Left click on
+                      background
+                    </li>
+                    <li>Fit graph to screen: Left double
+                      click on background
+                    </li>
+                  </ul>
+                </ul>
+              </div>
+              <div id="help-footer"
+                  class="modal-footer">
+                <button class="btn btn-primary"
+                    data-dismiss="modal">OK
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <label id="prov-ctrl-toggle-sidebar-label">Tools</label>
+        <button id="prov-ctrl-toggle-sidebar"
+            data-toggle="button"
+            type="button"
+            class="btn btn-mini">OFF
+        </button>
+
+        <label id="prov-ctrl-toggle-fit-label">Scale graph</label>
+        <button id="prov-ctrl-toggle-fit"
+            data-toggle="button"
+            type="button"
+            class="btn btn-mini active">ON
+        </button>
+
+        <a href="#"
+            id="prov-ctrl-help"
+            type="button"
+            rel="tooltip"
+            data-placement="bottom"
+            data-toggle="modal"
+            data-target="#help-modal"
+            data-html="true"
+            style="height: 20px;">
+          <i class=icon-question-sign
+              style="font-size: 20px; position: relative; top: 4px;"></i>
+        </a>
+      </div>
+
+      <div class="span2"></div>
     </div>
+  </div>
 </div>

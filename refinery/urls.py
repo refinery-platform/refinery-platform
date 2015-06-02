@@ -13,7 +13,8 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     NodeRelationshipResource, WorkflowResource,\
     WorkflowInputRelationshipsResource, DataSetResource,\
     ExternalToolStatusResource, StatisticsResource, \
-    ProjectSharingResource, DataSetSharingResource, WorkflowSharingResource
+    ProjectSharingResource, DataSetSharingResource, WorkflowSharingResource,\
+    GroupManagementResource
 from core.models import DataSet
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource
@@ -47,6 +48,7 @@ v1_api.register(StatisticsResource())
 v1_api.register(ProjectSharingResource())
 v1_api.register(DataSetSharingResource())
 v1_api.register(WorkflowSharingResource())
+v1_api.register(GroupManagementResource())
 #v1_api.register(TaxonResource())
 #v1_api.register(GenomeBuildResource())
 #v1_api.register(CytoBandResource())
@@ -74,7 +76,6 @@ urlpatterns = patterns('',
     url(r'^data_set_manager/', include('data_set_manager.urls')),
     url(r'^visualization_manager/', include('visualization_manager.urls')),
     url(r'^file_server/', include('file_server.urls')),
-    url(r'^file_store/', include('file_store.urls')),
 
     url(r'^tasks/', include('djcelery.urls')),
 

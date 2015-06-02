@@ -1,9 +1,34 @@
 # Django settings for refinery project.
 # requires settings_local.py with machine specific information
-# splitting ideas taken from https://code.djangoproject.com/wiki/SplitSettings (solution by Steven Armstrong)
+# splitting ideas taken from https://code.djangoproject.com/wiki/SplitSettings
+# (solution by Steven Armstrong)
 
 import djcelery
 import os
+import json
+
+from django.core.exceptions import ImproperlyConfigured
+
+try:
+    with open('settings.json', 'r') as f:
+        local_settings = json.loads(f.read())
+except IOError:
+    local_settings = {}
+
+
+def get_setting(setting, mandatory=False, settings=local_settings):
+    """Get the local settings variable or return explicit exception."""
+    try:
+        return settings[setting]
+    except KeyError:
+        # Only raise an error when the setting is mandatory
+        if mandatory:
+            error_msg = "Set the {0} environment variable".format(setting)
+            raise ImproperlyConfigured(error_msg)
+        # Otherwise return `None` so that the config can gracefully fall back to
+        # a default value
+        else:
+            return None
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -13,7 +38,7 @@ djcelery.setup_loader()
 # Required when DEBUG = False
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.50.50']
 
-DEBUG = True
+DEBUG = get_setting('DEBUG') or True
 TEMPLATE_DEBUG = DEBUG
 
 # A tuple that lists people who get code error notifications.
@@ -27,17 +52,24 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'refinery',              # Or path to database file if using sqlite3.
-        'USER': 'vagrant',               # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or
+        # 'oracle'.
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        # Or path to database file if using sqlite3.
+        'NAME': 'refinery',
+        # Not used with sqlite3.
+        'USER': 'vagrant',
+        # Not used with sqlite3.
+        'PASSWORD': '',
+        # Set to empty string for localhost. Not used with sqlite3.
+        'HOST': '',
+        # Set to empty string for default. Not used with sqlite3.
+        'PORT': '',
     }
 }
 
 # transport://userid:password@hostname:port/virtual_host
-#BROKER_URL = "amqp://guest:guest@localhost:5672//"
+# BROKER_URL = "amqp://guest:guest@localhost:5672//"
 BROKER_HOST = "localhost"
 BROKER_PORT = 5672
 BROKER_USER = "guest"
@@ -92,12 +124,13 @@ STATIC_URL = '/static/'
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 # Additional locations of static files
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "static"),
-    os.path.join(BASE_DIR, "ui/app")
-    # Put strings here, like "/home/html/static" or "C:/www/django/static".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
+STATICFILES_LIST = get_setting('STATICFILES_DIRS') or ['static/production',
+                                                       'ui/app']
+STATICFILES_DIRS = tuple(
+    map(
+        lambda x: os.path.join(BASE_DIR, x),
+        STATICFILES_LIST
+    )
 )
 
 # List of finder classes that know how to find static files in
@@ -106,7 +139,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'djangular.finders.NamespacedAngularAppDirectoriesFinder',
-    #'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    # 'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # Overwritten in settings_local.py
@@ -116,7 +149,7 @@ SECRET_KEY = 'SECRET'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
+    # 'django.template.loaders.eggs.Loader',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -127,16 +160,16 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
     "core.context_processors.extra_context",
-    "django.core.context_processors.request",    
+    "django.core.context_processors.request",
 )
 
-MIDDLEWARE_CLASSES = (                      
+MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    #'core.middleware.ExternalToolErrorMiddleware',
+    # 'core.middleware.ExternalToolErrorMiddleware',
     'core.middleware.DatabaseFailureMiddleware',
 )
 
@@ -144,7 +177,8 @@ ROOT_URLCONF = 'refinery.urls'
 
 TEMPLATE_DIRS = (
     os.path.join(BASE_DIR, "templates"),
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+    # Put strings here, like "/home/html/django_templates" or
+    # "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
 )
@@ -165,9 +199,9 @@ INSTALLED_APPS = (
     'django.contrib.markup',
     'django_extensions',
     # NG: added for search and faceting (Solr support)
-    'haystack', 
+    'haystack',
     # NG: added for celery (task queue)
-    'djcelery', #django-celery
+    'djcelery',  # django-celery
     # NG: added for API
     "tastypie",
     'guardian',
@@ -177,30 +211,31 @@ INSTALLED_APPS = (
     'analysis_manager',
     'workflow_manager',
     'file_store',
-    'file_server',   
+    'file_server',
     'visualization_manager',
-    'data_set_manager', 
+    'data_set_manager',
     'annotation_server',
     'registration',
     'flatblocks',
-    'resumable',
-    # RP: added for database migration between builds 
-    'south', 
+    # RP: added for database migration between builds
+    'south',
 )
 
 # NG: added for django-guardian
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend', # default
+    'django.contrib.auth.backends.ModelBackend',  # default
     'guardian.backends.ObjectPermissionBackend',
 )
 
 # NG: added to support sessions
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
-# NG: added to support anonymous users through django-guardian (id can be set to any value apparently)
+# NG: added to support anonymous users through django-guardian
+# (id can be set to any value apparently)
 ANONYMOUS_USER_ID = -1
 
-# NG: added to enable user profiles (recommended way to extend Django user model)
+# NG: added to enable user profiles
+# (recommended way to extend Django user model)
 AUTH_PROFILE_MODULE = 'core.UserProfile'
 
 # A sample logging configuration. The only tangible logging
@@ -217,10 +252,12 @@ LOGGING = {
     },
     'formatters': {
         'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d '
+                      '%(thread)d %(message)s'
         },
         'default': {
-            'format': '%(asctime)s %(levelname)-8s %(module)s %(funcName)s: %(message)s',
+            'format': '%(asctime)s %(levelname)-8s %(module)s %(funcName)s: '
+                      '%(message)s',
             'datefmt': '%Y-%m-%d %H:%M:%S'
         },
     },
@@ -290,14 +327,17 @@ LOGGING = {
     },
 }
 
-# send email via SMTP, can be replaced with "django.core.mail.backends.console.EmailBackend" to send emails to the console
+# send email via SMTP, can be replaced with
+# "django.core.mail.backends.console.EmailBackend" to send emails to the console
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = '/tmp/refinery-emails'
-# Default email address to use for various automated correspondence from the site manager(s).
+# Default email address to use for various automated correspondence from the
+# site manager(s).
 DEFAULT_FROM_EMAIL = 'webmaster@localhost'
 EMAIL_HOST = 'localhost'
 EMAIL_PORT = 25
-# The email address that error messages come from, such as those sent to ADMINS and MANAGERS.
+# The email address that error messages come from, such as those sent to ADMINS
+# and MANAGERS.
 SERVER_EMAIL = 'root@localhost'
 
 # Disable migrations when running unittests and use syncdb instead
@@ -315,14 +355,18 @@ REGISTRATION_OPEN = True
 # Message to display on registration page when REGISTRATION_OPEN is set to False
 REFINERY_REGISTRATION_CLOSED_MESSAGE = ''
 
-# set the name of the group that is used to share data with all users (= "the public")
-REFINERY_PUBLIC_GROUP_NAME = "Public" 
-REFINERY_PUBLIC_GROUP_ID = 100  # DO NOT CHANGE THIS after initialization of your Refinery instance
+# set the name of the group that is used to share data with all users
+# (= "the public")
+REFINERY_PUBLIC_GROUP_NAME = "Public"
+# DO NOT CHANGE THIS after initialization of your Refinery instance
+REFINERY_PUBLIC_GROUP_ID = 100
 
-#Base query for what kind of ArrayExpress studies to pull in (e.g. only ChIP-Seq studies, or studies updated after a certain date)
+# Base query for what kind of ArrayExpress studies to pull in
+# (e.g. only ChIP-Seq studies, or studies updated after a certain date)
 AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
 
-#prefix of the URL where all ArrayExpress studies' MAGE-TAB files can be accessed
+# prefix of the URL where all ArrayExpress studies' MAGE-TAB files can be
+# accessed
 AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 
 ISA_TAB_DIR = '/vagrant/isa-tab'
@@ -366,27 +410,30 @@ HAYSTACK_CONNECTIONS = {
     },
 }
 
-# list of paths to CSS files used to style Refinery pages (relative to STATIC_URL)
+# list of paths to CSS files used to style Refinery pages
+# (relative to STATIC_URL)
 REFINERY_CSS = ["styles/css/refinery-style-bootstrap.css",
                 "styles/css/refinery-style-bootstrap-responsive.css",
-                "styles/css/refinery-style.css" ]
+                "styles/css/refinery-style.css"]
 
 # set height of navigation bar (e.g. to fit a logo)
 REFINERY_INNER_NAVBAR_HEIGHT = 20
 
-# supply a path to a logo that will become part of the branding (see navbar height correctly!)
+# supply a path to a logo that will become part of the branding
+# (see navbar height correctly!)
 REFINERY_MAIN_LOGO = ""
 
-# supply a Google analytics id "UA-..." (if set to "" tracking will be deactivated)
+# supply a Google analytics id "UA-..."
+# (if set to "" tracking will be deactivated)
 REFINERY_GOOGLE_ANALYTICS_ID = ""
 
 # so managers and admins know Refinery is emailing them
 EMAIL_SUBJECT_PREFIX = '[Refinery] '
 
-#dump of the entire NCBI taxonomy archive
+# dump of the entire NCBI taxonomy archive
 TAXONOMY_URL = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"
 
-#table of UCSC genomes and their corresponding organisms
+# table of UCSC genomes and their corresponding organisms
 UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 
 # Tag for repository mode
@@ -402,18 +449,20 @@ REFINERY_BANNER_ANONYMOUS_ONLY = False
 REFINERY_WELCOME_EMAIL_SUBJECT = 'Welcome to Refinery'
 REFINERY_WELCOME_EMAIL_MESSAGE = 'Please fill out your user profile'
 
-# Use external authentication system like django-auth-ldap (disables password management URLs)
+# Use external authentication system like django-auth-ldap (disables password
+# management URLs)
 REFINERY_EXTERNAL_AUTH = False
-# Message to display on password management pages when REFINERY_EXTERNAL_AUTH is set to True
+# Message to display on password management pages when REFINERY_EXTERNAL_AUTH is
+# set to True
 REFINERY_EXTERNAL_AUTH_MESSAGE = ''
 
-#external tool status settings 
+# external tool status settings
 INTERVAL_BETWEEN_CHECKS = {
                             "CELERY": 10.0,
                             "SOLR": 10.0,
                             "GALAXY": 10.0,
                             }
-    
+
 TIMEOUT = {
            "CELERY": 2.0,
            "SOLR": 2.5,
