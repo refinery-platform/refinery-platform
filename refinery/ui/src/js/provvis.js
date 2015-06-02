@@ -152,7 +152,7 @@ var provvis = function () {
       "class": "btn btn-primary",
       "type": "button",
       "value": "strict",
-      "html": "Strict"
+      "html": "Hard"
     }).appendTo("#prov-layering-method");
 
     $("<button/>", {
@@ -160,7 +160,7 @@ var provvis = function () {
       "class": "active btn btn-primary",
       "type": "button",
       "value": "weak",
-      "html": "Weak"
+      "html": "Soft"
     }).appendTo("#prov-layering-method");
   };
 
@@ -233,7 +233,7 @@ var provvis = function () {
         createChangeLayersView("provenance-layer-change-view");
 
         /* Init node cell dimensions. */
-        var cell = {width: r * 5, height: r * 5};
+        var cell = {width: r * 5, height: r * 3};
 
         /* Initialize canvas dimensions. */
         var width = $("div#provenance-canvas").width() - margin.left -
@@ -263,25 +263,19 @@ var provvis = function () {
             d3.selectAll(".BBox").classed("hiddenNode", false);
           }
 
-          if (d3.event.scale < 1.5) {
-            vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel, .nodeDoiLabel")
-                .classed("hiddenLabel", true);
-          } else {
-            vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel, .nodeDoiLabel")
-                .classed("hiddenLabel", false);
-          }
-
           if (d3.event.scale < 1.75) {
             vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
                 ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
-                ".san-node-type-icon, .l-node-type-icon")
+                ".san-node-type-icon, .l-node-type-icon, .lBBoxLabel, " +
+                ".aBBoxLabel, .nodeDoiLabel")
                 .classed("hiddenLabel", true);
             d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", true);
             d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
           } else {
             vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
                 ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
-                ".san-node-type-icon, .l-node-type-icon")
+                ".san-node-type-icon, .l-node-type-icon, .lBBoxLabel, " +
+                ".aBBoxLabel, .nodeDoiLabel")
                 .classed("hiddenLabel", false);
             d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
             d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
@@ -308,7 +302,7 @@ var provvis = function () {
           vis.canvas.selectAll(".lBBoxLabel")
               .attr("transform", "translate(" +
                   1 * scaleFactor * vis.radius + "," +
-                  (0.5 * scaleFactor * vis.radius) + ")" +
+                  0.5 * scaleFactor * vis.radius + ")" +
                   "scale(" + (+1 / d3.event.scale) + ")");
 
           vis.canvas.selectAll(".aBBoxLabel")
@@ -319,21 +313,13 @@ var provvis = function () {
 
           vis.canvas.selectAll(".nodeDoiLabel")
               .attr("transform", "translate(" +
-                  0 + "," + (2 * scaleFactor * vis.radius) + ")" +
+                  0 + "," + (1.6 * scaleFactor * vis.radius) + ")" +
                   "scale(" + (+1 / d3.event.scale) + ")");
 
           vis.canvas.selectAll(".nodeAttrLabel")
               .attr("transform", "translate(" +
-                  (-cell.width / 2 + 5) + "," + (-vis.radius) + ")" +
-                  "scale(" + (+1 / d3.event.scale) + ")");
-
-          vis.canvas.selectAll(".subanalysisLabel")
-              .attr("transform", "translate(" + 0 +
-                  "," + 0 + ")" + "scale(" + (+1 / d3.event.scale) + ")");
-
-          vis.canvas.selectAll(".analysisLabel")
-              .attr("transform", "translate(" + 0 + "," +
-                  (scaleFactor * vis.radius) + ")" +
+                  (-1.5*scaleFactor * vis.radius) + "," +
+                  (-1.5 * scaleFactor * vis.radius) + ")" +
                   "scale(" + (+1 / d3.event.scale) + ")");
         };
 

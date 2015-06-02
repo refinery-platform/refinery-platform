@@ -231,7 +231,7 @@
   font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial,
   sans-serif;
   cursor: default;
-  text-anchor: left;
+  text-anchor: start;
   alignment-baseline: middle;
 }
 
@@ -340,8 +340,7 @@
 .analysisLabel, .mouseoverBBox .layerLabel, .mouseoverBBox .aBBoxLabel,
 .mouseoverBBox .saBBoxLabel, .mouseoverBBox .lBBoxLabel {
   fill-opacity: 1.0;
-  text-anchor: left;
-  alignment-baseline: middle;
+  text-anchor: start;
 }
 
 .lDiffLine, .aDiffLine {

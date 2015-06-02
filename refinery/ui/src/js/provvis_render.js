@@ -1813,18 +1813,15 @@ var provvisRender = function () {
         });
 
     lBBox.append("rect")
-        .attr("y", -/*3 * */scaleFactor * vis.radius)
+        .attr("y", -0.5 * scaleFactor * vis.radius)
         .attr("width", function () {
-          return cell.width - 2;
-        })
-        .attr("width", function () {
-          return cell.width - 1;
+          return cell.width;
         })
         .attr("height", function () {
-          return cell.height - 1;
+          return cell.height;
         })
-        .attr("rx", cell.width / 8)
-        .attr("ry", cell.height / 8);
+        .attr("rx", cell.width / 7)
+        .attr("ry", cell.height / 7);
 
     lBBox.each(function (ln) {
       if (ln.children.values().some(function (an) {
@@ -1857,13 +1854,6 @@ var provvisRender = function () {
         });
 
         var lDiffG = d3.select(this).append("g").classed("lDiff", true);
-
-        lDiffG.append("line")
-            .attr("x1", 0)
-            .attr("y1", -0.2 * scaleFactor * vis.radius)
-            .attr("x2", 0)
-            .attr("y2", 2.2 * scaleFactor * vis.radius)
-            .classed("lDiffLine", true);
 
         if (ln.children.values().some(function (an) {
           return an.motifDiff.numIns !== 0;
@@ -1986,11 +1976,11 @@ var provvisRender = function () {
           return "lBBClipId-" + ln.autoId;
         })
         .append("rect")
-        .attr("y", -/*3 * */scaleFactor * vis.radius)
-        .attr("width", cell.width - 4)
-        .attr("height", cell.height - 2 + 2 * scaleFactor * vis.radius)
-        .attr("rx", cell.width / 8)
-        .attr("ry", cell.height / 8);
+        .attr("y", -0.5*scaleFactor * vis.radius)
+        .attr("width", cell.width )
+        .attr("height", cell.height  + 2 * scaleFactor * vis.radius)
+        .attr("rx", cell.width / 7)
+        .attr("ry", cell.height / 7);
 
     /* Time as label. */
     lBBox.append("g").classed({"labels": true})
@@ -2046,11 +2036,11 @@ var provvisRender = function () {
             .attr("d", function () {
               return "m" + (-2 * scaleFactor * vis.radius) + " " +
                   (-0.5 * scaleFactor * vis.radius) + " " +
-                  "h" + (-0.5 * scaleFactor * vis.radius) + " " +
+                  "h" + (-0.8 * scaleFactor * vis.radius) + " " +
                   "a" + (-0.5 * scaleFactor * vis.radius) + " " +
                   (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
                   "0 " + (1 * scaleFactor * vis.radius) + " " +
-                  "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
+                  "h" + (+0.8 * scaleFactor * vis.radius) + " " + "z";
             }).classed({"llAnchor": true});
       }
     });
@@ -2061,11 +2051,11 @@ var provvisRender = function () {
             .attr("d", function () {
               return "m" + (2 * scaleFactor * vis.radius) + " " +
                   (-0.5 * scaleFactor * vis.radius) + " " +
-                  "h" + (0.5 * scaleFactor * vis.radius) + " " +
+                  "h" + (0.8 * scaleFactor * vis.radius) + " " +
                   "a" + (0.5 * scaleFactor * vis.radius) + " " +
                   (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
                   "0 " + (1 * scaleFactor * vis.radius) + " " +
-                  "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
+                  "h" + (-0.8 * scaleFactor * vis.radius) + " " + "z";
             }).classed({"rlAnchor": true});
       }
     });
@@ -2074,7 +2064,7 @@ var provvisRender = function () {
       if (getLayerPredCount(ln) > 1) {
         d3.select(this).select("g.glAnchor").append("text")
             .attr("transform", function () {
-              return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," +
+              return "translate(" + ( -2.8 * scaleFactor * vis.radius) + "," +
                   0.5 + ")";
             })
             .text(function () {
@@ -2087,7 +2077,7 @@ var provvisRender = function () {
       if (getLayerSuccCount(ln) > 1) {
         d3.select(this).select("g.grAnchor").append("text")
             .attr("transform", function () {
-              return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," +
+              return "translate(" + ( 2.8 * scaleFactor * vis.radius) + "," +
                   0.5 + ")";
             })
             .text(function () {
@@ -2097,12 +2087,12 @@ var provvisRender = function () {
     });
 
     lGlyph.append("rect")
-        .attr("x", -2 * scaleFactor * vis.radius)
-        .attr("y", -2 * scaleFactor * vis.radius)
+        .attr("x", -2.25 * scaleFactor * vis.radius)
+        .attr("y", -1 * scaleFactor * vis.radius)
         .attr("rx", 1)
         .attr("ry", 1)
-        .attr("width", 4 * scaleFactor * vis.radius)
-        .attr("height", 3 * scaleFactor * vis.radius).style({
+        .attr("width", 4.5 * scaleFactor * vis.radius)
+        .attr("height", 2 * scaleFactor * vis.radius).style({
           "fill": function (d) {
             return "url(#layerGradientId-" + d.autoId + ")";
           }
@@ -2124,7 +2114,7 @@ var provvisRender = function () {
     lLabels.append('text')
         .attr("transform", function () {
           return "translate(" + (-1.1 * scaleFactor * vis.radius) + "," +
-              (0.1 * scaleFactor * vis.radius) + ")";
+              (0 * scaleFactor * vis.radius) + ")";
         }).text(function () {
           return "\uf0c9";
         })
@@ -2142,7 +2132,7 @@ var provvisRender = function () {
     lLabels.append("text")
         .attr("transform", function () {
           return "translate(" + (0.8 * scaleFactor * vis.radius) + "," +
-              (0.1 * scaleFactor * vis.radius) + ")";
+              (0 * scaleFactor * vis.radius) + ")";
         })
         .text(function (d) {
           return d.children.size();
@@ -2267,13 +2257,13 @@ var provvisRender = function () {
         .select("rect")
         .attr("transform", function () {
           return "translate(" + (-cell.width / 2) + "," +
-              (-cell.height / 2 + 1) + ")";
+              (-cell.height / 2) + ")";
         })
-        .attr("y", -/*3 * */scaleFactor * vis.radius)
-        .attr("width", cell.width - 4)
-        .attr("height", cell.height - 2/* + 3 * scaleFactor * vis.radius*/)
-        .attr("rx", cell.width / 8)
-        .attr("ry", cell.height / 8);
+        .attr("y", -scaleFactor * vis.radius)
+        .attr("width", cell.width)
+        .attr("height", cell.height)
+        .attr("rx", cell.width / 7)
+        .attr("ry", cell.height / 7);
 
     /* Draw bounding box. */
     var analysisBBox = anUpdate.select("g")
@@ -2281,20 +2271,20 @@ var provvisRender = function () {
           return "BBoxId-" + an.autoId;
         }).classed({"aBBox": true, "BBox": true, "hiddenBBox": true})
         .attr("transform", function () {
-          return "translate(" + (-cell.width / 2 + 1) + "," +
-              (-cell.height / 2 + 1) + ")";
+          return "translate(" + (-cell.width / 2) + "," +
+              (-cell.height / 2) + ")";
         });
 
     analysisBBox.select("rect")
-        .attr("y", -/*3 * */scaleFactor * vis.radius)
+        .attr("y", -0.5 * scaleFactor * vis.radius)
         .attr("width", function () {
-          return cell.width - 2;
+          return cell.width;
         })
         .attr("height", function () {
-          return cell.height - 2/* + 3 * scaleFactor * vis.radius*/;
+          return cell.height;
         })
-        .attr("rx", cell.width / 8)
-        .attr("ry", cell.height / 8);
+        .attr("rx", cell.width / 7)
+        .attr("ry", cell.height / 7);
 
     /* Add a clip-path to restrict labels within the cell area. */
     analysisBBox.select("defs")
@@ -2303,11 +2293,11 @@ var provvisRender = function () {
           return "aBBClipId-" + an.autoId;
         })
         .select("rect")
-        .attr("y", -/*3 * */scaleFactor * vis.radius)
-        .attr("width", cell.width - 4)
-        .attr("height", cell.height - 2/* + 3 * scaleFactor * vis.radius*/)
-        .attr("rx", cell.width / 8)
-        .attr("ry", cell.height / 8);
+        .attr("y", -0.5*scaleFactor * vis.radius)
+        .attr("width", cell.width)
+        .attr("height", cell.height)
+        .attr("rx", cell.width / 7)
+        .attr("ry", cell.height / 7);
 
     /* Time as label. */
     analysisBBox.select("g").classed({"labels": true})
@@ -2352,11 +2342,11 @@ var provvisRender = function () {
             .attr("d", function () {
               return "m" + (-2 * scaleFactor * vis.radius) + " " +
                   (-0.5 * scaleFactor * vis.radius) + " " +
-                  "h" + (-0.5 * scaleFactor * vis.radius) + " " +
+                  "h" + (-0.8 * scaleFactor * vis.radius) + " " +
                   "a" + (-0.5 * scaleFactor * vis.radius) + " " +
                   (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
                   "0 " + (1 * scaleFactor * vis.radius) + " " +
-                  "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
+                  "h" + (+0.8 * scaleFactor * vis.radius) + " " + "z";
             });
       }
     });
@@ -2365,7 +2355,7 @@ var provvisRender = function () {
       if (an.predLinks.size() > 1) {
         aGlyph.select("g.grAnchor").select("text")
             .attr("transform", function () {
-              return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," +
+              return "translate(" + ( -2.8 * scaleFactor * vis.radius) + "," +
                   0.5 + ")";
             })
             .text(function (d) {
@@ -2381,11 +2371,11 @@ var provvisRender = function () {
             .attr("d", function () {
               return "m" + (2 * scaleFactor * vis.radius) + " " +
                   (-0.5 * scaleFactor * vis.radius) + " " +
-                  "h" + (0.5 * scaleFactor * vis.radius) + " " +
+                  "h" + (0.8 * scaleFactor * vis.radius) + " " +
                   "a" + (0.5 * scaleFactor * vis.radius) + " " +
                   (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
                   "0 " + (1 * scaleFactor * vis.radius) + " " +
-                  "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
+                  "h" + (-0.8 * scaleFactor * vis.radius) + " " + "z";
             });
       }
     });
@@ -2394,7 +2384,7 @@ var provvisRender = function () {
       if (an.succLinks.size() > 1) {
         d3.select(this).select("text")
             .attr("transform", function () {
-              return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," +
+              return "translate(" + ( 2.8 * scaleFactor * vis.radius) + "," +
                   0.5 + ")";
             })
             .text(function (d) {
@@ -2441,13 +2431,13 @@ var provvisRender = function () {
         .append("rect")
         .attr("transform", function () {
           return "translate(" + (-cell.width / 2) + "," +
-              (-cell.height / 2 + 1) + ")";
+              (-cell.height / 2) + ")";
         })
-        .attr("y", -/*3 * */scaleFactor * vis.radius)
-        .attr("width", cell.width - 4)
-        .attr("height", cell.height - 2 + 2 * scaleFactor * vis.radius)
-        .attr("rx", cell.width / 8)
-        .attr("ry", cell.height / 8);
+        .attr("y", -scaleFactor * vis.radius)
+        .attr("width", cell.width)
+        .attr("height", cell.height + 2 * scaleFactor * vis.radius)
+        .attr("rx", cell.width / 7)
+        .attr("ry", cell.height / 7);
 
     /* Draw bounding box. */
     analysisBBox = anEnter.append("g")
@@ -2455,20 +2445,20 @@ var provvisRender = function () {
           return "BBoxId-" + an.autoId;
         }).classed({"aBBox": true, "BBox": true, "hiddenBBox": true})
         .attr("transform", function () {
-          return "translate(" + (-cell.width / 2 + 1) + "," +
-              (-cell.height / 2 + 1) + ")";
+          return "translate(" + (-cell.width / 2) + "," +
+              (-cell.height / 2) + ")";
         });
 
     analysisBBox.append("rect")
-        .attr("y", -/*3 * */scaleFactor * vis.radius)
+        .attr("y", -0.5 * scaleFactor * vis.radius)
         .attr("width", function () {
-          return cell.width - 2;
+          return cell.width;
         })
         .attr("height", function () {
-          return cell.height - 2/* + 3 * scaleFactor * vis.radius*/;
+          return cell.height;
         })
-        .attr("rx", cell.width / 8)
-        .attr("ry", cell.height / 8);
+        .attr("rx", cell.width / 7)
+        .attr("ry", cell.height / 7);
 
     analysisBBox.each(function (an) {
       if (an.motifDiff.numIns !== 0 || an.motifDiff.numOuts !== 0 ||
@@ -2498,13 +2488,6 @@ var provvisRender = function () {
         }
 
         var aDiffG = d3.select(this).append("g").classed("aDiff", true);
-
-        aDiffG.append("line")
-            .attr("x1", 0)
-            .attr("y1", -0.2 * scaleFactor * vis.radius)
-            .attr("x2", 0)
-            .attr("y2", 2.2 * scaleFactor * vis.radius)
-            .classed("aDiffLine", true);
 
         if (an.motifDiff.numIns !== 0) {
           aDiffG.append("path")
@@ -2623,11 +2606,11 @@ var provvisRender = function () {
           return "aBBClipId-" + an.autoId;
         })
         .append("rect")
-        .attr("y", -/*3 * */scaleFactor * vis.radius)
-        .attr("width", cell.width - 4)
-        .attr("height", cell.height - 2/* + 3 * scaleFactor * vis.radius*/)
-        .attr("rx", cell.width / 8)
-        .attr("ry", cell.height / 8);
+        .attr("y", -0.5*scaleFactor * vis.radius)
+        .attr("width", cell.width)
+        .attr("height", cell.height)
+        .attr("rx", cell.width / 7)
+        .attr("ry", cell.height / 7);
 
     /* Workflow as label. */
     analysisBBox.append("g").classed({"labels": true})
@@ -2670,11 +2653,11 @@ var provvisRender = function () {
             .attr("d", function () {
               return "m" + (-2 * scaleFactor * vis.radius) + " " +
                   (-0.5 * scaleFactor * vis.radius) + " " +
-                  "h" + (-0.5 * scaleFactor * vis.radius) + " " +
+                  "h" + (-0.8 * scaleFactor * vis.radius) + " " +
                   "a" + (-0.5 * scaleFactor * vis.radius) + " " +
                   (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
                   "0 " + (1 * scaleFactor * vis.radius) + " " +
-                  "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
+                  "h" + (+0.8 * scaleFactor * vis.radius) + " " + "z";
             }).classed({"laAnchor": true});
       }
     });
@@ -2684,7 +2667,7 @@ var provvisRender = function () {
         d3.select(this)
             .select("g.glAnchor").append("text")
             .attr("transform", function () {
-              return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," +
+              return "translate(" + ( -2.8 * scaleFactor * vis.radius) + "," +
                   0.5 + ")";
             })
             .text(function (d) {
@@ -2700,11 +2683,11 @@ var provvisRender = function () {
             .attr("d", function () {
               return "m" + (2 * scaleFactor * vis.radius) + " " +
                   (-0.5 * scaleFactor * vis.radius) + " " +
-                  "h" + (0.5 * scaleFactor * vis.radius) + " " +
+                  "h" + (0.8 * scaleFactor * vis.radius) + " " +
                   "a" + (0.5 * scaleFactor * vis.radius) + " " +
                   (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
                   "0 " + (1 * scaleFactor * vis.radius) + " " +
-                  "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
+                  "h" + (-0.8 * scaleFactor * vis.radius) + " " + "z";
             }).classed({"raAnchor": true});
       }
     });
@@ -2713,7 +2696,7 @@ var provvisRender = function () {
       if (an.succLinks.size() > 1) {
         d3.select(this).select("g.grAnchor").append("text")
             .attr("transform", function () {
-              return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," +
+              return "translate(" + ( 2.8 * scaleFactor * vis.radius) + "," +
                   0.5 + ")";
             })
             .text(function (d) {
@@ -2724,11 +2707,11 @@ var provvisRender = function () {
     });
 
     aGlyph.append("rect")
-        .attr("x", -2 * scaleFactor * vis.radius)
+        .attr("x", -2.25 * scaleFactor * vis.radius)
         .attr("y", -1.0 * scaleFactor * vis.radius)
         .attr("rx", 1)
         .attr("ry", 1)
-        .attr("width", 4 * scaleFactor * vis.radius)
+        .attr("width", 4.5 * scaleFactor * vis.radius)
         .attr("height", 2 * scaleFactor * vis.radius)
         .classed({"aGlyph": true});
 
@@ -2898,7 +2881,7 @@ var provvisRender = function () {
         drawSubanalysisLinks(san);
 
         /* Compute bounding box for subanalysis child nodes. */
-        var saBBoxCoords = getWFBBoxCoords(san, 5);
+        var saBBoxCoords = getWFBBoxCoords(san, 0);
 
         /* Add a clip-path to restrict labels within the cell area. */
         self.append("defs")
@@ -2906,11 +2889,11 @@ var provvisRender = function () {
             .attr("id", "bbClipId-" + san.autoId)
             .append("rect")
             .attr("transform", function () {
-              return "translate(" + (-cell.width / 2 + 5) + "," +
-                  (-cell.height / 2 + 5) + ")";
+              return "translate(" + (-cell.width / 2) + "," +
+                  (-cell.height / 2) + ")";
             })
-            .attr("width", cell.width - 10)
-            .attr("height", cell.height - 10);
+            .attr("width", cell.width)
+            .attr("height", cell.height);
 
         /* Draw bounding box. */
         var subanalysisBBox = self.append("g")
@@ -2918,27 +2901,34 @@ var provvisRender = function () {
               return "BBoxId-" + san.autoId;
             }).classed({"saBBox": true, "BBox": true, "hiddenBBox": true})
             .attr("transform", function () {
-              return "translate(" + (-cell.width / 2 + 5) + "," +
-                  (-cell.height / 2 + 5) + ")";
+              return "translate(" + (-cell.width / 2) + "," +
+                  (-cell.height / 2) + ")";
             });
 
         /* Add a clip-path to restrict labels within the cell area. */
         subanalysisBBox.append("defs")
+            .attr("x", scaleFactor * vis.radius)
+            .attr("y", -0.5*scaleFactor * vis.radius)
             .append("clipPath")
             .attr("id", "saBBClipId-" + san.autoId)
             .append("rect")
-            .attr("width", saBBoxCoords.x.max - saBBoxCoords.x.min - 10)
-            .attr("height", cell.height - 10);
+            .attr("width", saBBoxCoords.x.max - saBBoxCoords.x.min -
+                scaleFactor * vis.radius)
+            .attr("height", cell.height);
 
         subanalysisBBox.append("rect")
+            .attr("x", scaleFactor * vis.radius)
+            .attr("y", scaleFactor * vis.radius)
             .attr("width", function () {
-              return saBBoxCoords.x.max - saBBoxCoords.x.min;
+              return saBBoxCoords.x.max - saBBoxCoords.x.min -
+                  2*scaleFactor * vis.radius;
             })
             .attr("height", function () {
-              return saBBoxCoords.y.max - saBBoxCoords.y.min - 5;
+              return saBBoxCoords.y.max - saBBoxCoords.y.min -
+                  2*scaleFactor * vis.radius;
             })
-            .attr("rx", cell.width / 8)
-            .attr("ry", cell.height / 8);
+            .attr("rx", cell.width / 7)
+            .attr("ry", cell.height / 7);
 
         /* Draw subanalysis node. */
         var subanalysisNode = self.append("g")
@@ -2964,11 +2954,11 @@ var provvisRender = function () {
                 .attr("d", function () {
                   return "m" + (-2 * scaleFactor * vis.radius) + " " +
                       (-0.5 * scaleFactor * vis.radius) + " " +
-                      "h" + (-0.5 * scaleFactor * vis.radius) + " " +
+                      "h" + (-0.8 * scaleFactor * vis.radius) + " " +
                       "a" + (-0.5 * scaleFactor * vis.radius) + " " +
                       (0.5 * scaleFactor * vis.radius) + " 0 0 0 " +
                       "0 " + (1 * scaleFactor * vis.radius) + " " +
-                      "h" + (+0.5 * scaleFactor * vis.radius) + " " + "z";
+                      "h" + (+0.8 * scaleFactor * vis.radius) + " " + "z";
                 }).classed({"lsaAnchor": true});
           }
         });
@@ -2977,7 +2967,7 @@ var provvisRender = function () {
           if (san.predLinks.size() > 1) {
             d3.select(this).select("g.glAnchor").append("text")
                 .attr("transform", function () {
-                  return "translate(" + ( -2.5 * scaleFactor * vis.radius) + "," +
+                  return "translate(" + ( -2.8 * scaleFactor * vis.radius) + "," +
                       0.5 + ")";
                 })
                 .text(function (d) {
@@ -2993,11 +2983,11 @@ var provvisRender = function () {
                 .attr("d", function () {
                   return "m" + (2 * scaleFactor * vis.radius) + " " +
                       (-0.5 * scaleFactor * vis.radius) + " " +
-                      "h" + (0.5 * scaleFactor * vis.radius) + " " +
+                      "h" + (0.8 * scaleFactor * vis.radius) + " " +
                       "a" + (0.5 * scaleFactor * vis.radius) + " " +
                       (0.5 * scaleFactor * vis.radius) + " 0 0 1 " +
                       "0 " + (1 * scaleFactor * vis.radius) + " " +
-                      "h" + (-0.5 * scaleFactor * vis.radius) + " " + "z";
+                      "h" + (-0.8 * scaleFactor * vis.radius) + " " + "z";
                 }).classed({"rsaAnchor": true});
           }
         });
@@ -3006,7 +2996,7 @@ var provvisRender = function () {
           if (san.succLinks.size() > 1) {
             d3.select(this).select("g.grAnchor").append("text")
                 .attr("transform", function () {
-                  return "translate(" + ( 2.5 * scaleFactor * vis.radius) + "," +
+                  return "translate(" + ( 2.8 * scaleFactor * vis.radius) + "," +
                       0.5 + ")";
                 })
                 .text(function (d) {
@@ -3017,11 +3007,11 @@ var provvisRender = function () {
         });
 
         saGlyph.append("rect")
-            .attr("x", -2 * scaleFactor * vis.radius)
+            .attr("x", -2.25 * scaleFactor * vis.radius)
             .attr("y", -1 * scaleFactor * vis.radius)
             .attr("rx", 1)
             .attr("ry", 1)
-            .attr("width", 4 * scaleFactor * vis.radius)
+            .attr("width", 4.5 * scaleFactor * vis.radius)
             .attr("height", 2 * scaleFactor * vis.radius);
 
         /* Add text labels. */
@@ -3112,11 +3102,11 @@ var provvisRender = function () {
             .attr("id", "bbClipId-" + d.autoId)
             .append("rect")
             .attr("transform", function () {
-              return "translate(" + (-cell.width / 2 + 5) + "," +
-                  (-cell.height / 2 + 5) + ")";
+              return "translate(" + (-cell.width*1/2) + "," +
+                  (-cell.height * 3 / 4) + ")";
             })
-            .attr("width", cell.width - 10)
-            .attr("height", cell.height - 10);
+            .attr("width", cell.width)
+            .attr("height", cell.height);
 
         var nGlyph = self.append("g").classed({"glyph": true}),
             nLabels = self.append("g").classed({"labels": true})
@@ -3193,8 +3183,8 @@ var provvisRender = function () {
           return d.nodeType === "stored";
         }).append("text")
             .attr("transform", function () {
-              return "translate(" + (-cell.width / 2 + 5) + "," +
-                  (-vis.radius) + ")";
+              return "translate(" + (-1.5 * scaleFactor * vis.radius) + "," +
+                  (-1.5 * scaleFactor * vis.radius) + ")";
             })
             .text(function (d) {
               return d.attributes.get("name");
@@ -3435,15 +3425,15 @@ var provvisRender = function () {
             });
 
         /* Get potential expanded bounding box size. */
-        var accHeight = curHeight - 2,
-            accWidth = curWidth - 2;
+        var accHeight = curHeight,
+            accWidth = curWidth;
         ln.children.values().filter(function (an) {
           return an.filtered || filterAction === "blend";
         }).forEach(function (an) {
           if (an.exaggerated) {
             anBBoxCoords = getABBoxCoords(an, 0);
-            if (anBBoxCoords.x.max - anBBoxCoords.x.min - 2 > accWidth) {
-              accWidth = anBBoxCoords.x.max - anBBoxCoords.x.min - 2;
+            if (anBBoxCoords.x.max - anBBoxCoords.x.min > accWidth) {
+              accWidth = anBBoxCoords.x.max - anBBoxCoords.x.min;
             }
             accHeight += anBBoxCoords.y.max - anBBoxCoords.y.min;
           }
@@ -3459,7 +3449,7 @@ var provvisRender = function () {
                 (-vis.cell.height / 2) + ")")
             .select("rect")
             .attr("width", accWidth)
-            .attr("height", accHeight + 1);
+            .attr("height", accHeight);
 
         g.setNode(ln.autoId, {label: ln.autoId, width: accWidth,
           height: accHeight});
@@ -3708,7 +3698,7 @@ var provvisRender = function () {
         d3.select("#BBoxId-" + d.autoId).classed("hiddenBBox", false);
 
         /* Update. */
-        wfBBoxCoords = getWFBBoxCoords(d, 1);
+        wfBBoxCoords = getWFBBoxCoords(d, 0);
         d.x = 0;
         updateLink(d.parent);
         updateNode(d3.select("#gNodeId-" + d.autoId), d, d.x, d.y);
@@ -3723,7 +3713,7 @@ var provvisRender = function () {
         });
 
         /* Adjust analysis bounding box. */
-        anBBoxCoords = getABBoxCoords(d.parent, 1);
+        anBBoxCoords = getABBoxCoords(d.parent, 0);
         d3.selectAll("#BBoxId-" + d.parent.autoId + ", #aBBClipId-" +
             d.parent.autoId).selectAll("rect")
             .attr("width", function () {
@@ -3746,7 +3736,7 @@ var provvisRender = function () {
       } else if (d.nodeType === "analysis") {
 
         /* Adjust analysis bounding box. */
-        anBBoxCoords = getABBoxCoords(d, 1);
+        anBBoxCoords = getABBoxCoords(d, 0);
         d3.select("#BBoxId-" + d.autoId).select("rect")
             .attr("width", function () {
               return anBBoxCoords.x.max - anBBoxCoords.x.min;
@@ -3776,14 +3766,14 @@ var provvisRender = function () {
           });
 
           /* Adjust bounding box. */
-          anBBoxCoords = getABBoxCoords(an, 1);
+          anBBoxCoords = getABBoxCoords(an, 0);
           d3.selectAll("#BBoxId-" + an.autoId + ", #aBBClipId-" + an.autoId)
               .select("rect")
               .attr("width", function () {
-                return cell.width - 2;
+                return cell.width;
               })
               .attr("height", function () {
-                return cell.height - 2/* + 3 * scaleFactor * vis.radius*/;
+                return cell.height;
               });
         });
 
@@ -3828,39 +3818,42 @@ var provvisRender = function () {
         //console.log("#COLLAPSE node " + d.autoId);
 
         /* Collapse workflow. */
-        wfBBoxCoords = getWFBBoxCoords(d.parent, 1);
+        if (d.hidden === false) {
 
-        /* Shift sibling subanalyses vertical. */
-        siblings = d.parent.parent.children.values().filter(function (san) {
-          return san !== d.parent && san.y > d.parent.y;
-        });
-        siblings.forEach(function (san) {
-          san.y -= wfBBoxCoords.y.max - wfBBoxCoords.y.min - cell.height;
-          updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
-        });
-
-        if (d.parent.parent.children.values().filter(function (san) {
-          return san !== d.parent;
-        }).some(function (san) {
-          return san.hidden;
-        })) {
-          anBBoxCoords = getABBoxCoords(d.parent.parent, 1);
-          d.parent.x = (anBBoxCoords.x.max - anBBoxCoords.x.min) / 2 -
-              vis.cell.width / 2;
-          updateNode(d3.select("#gNodeId-" + d.parent.autoId),
-              d.parent, d.parent.x, d.parent.y);
-        }
-
-        if (d.parent.parent.children.values().filter(function (san) {
-          return san !== d.parent;
-        }).every(function (san) {
-          return !san.hidden;
-        })) {
-          d.parent.parent.children.values().forEach(function (san) {
-            san.x = 0;
+          /* Shift sibling subanalyses vertical. */
+          wfBBoxCoords = getWFBBoxCoords(d.parent, 0);
+          siblings = d.parent.parent.children.values().filter(function (san) {
+            return san !== d.parent && san.y > d.parent.y;
+          });
+          siblings.forEach(function (san) {
+            san.y -= wfBBoxCoords.y.max - wfBBoxCoords.y.min - cell.height;
             updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
           });
+
+          if (d.parent.parent.children.values().filter(function (san) {
+            return san !== d.parent;
+          }).some(function (san) {
+            return san.hidden;
+          })) {
+            anBBoxCoords = getABBoxCoords(d.parent.parent, 0);
+            d.parent.x = (anBBoxCoords.x.max - anBBoxCoords.x.min) / 2 -
+                vis.cell.width / 2;
+            updateNode(d3.select("#gNodeId-" + d.parent.autoId),
+                d.parent, d.parent.x, d.parent.y);
+          }
+
+          if (d.parent.parent.children.values().filter(function (san) {
+            return san !== d.parent;
+          }).every(function (san) {
+            return !san.hidden;
+          })) {
+            d.parent.parent.children.values().forEach(function (san) {
+              san.x = 0;
+              updateNode(d3.select("#gNodeId-" + san.autoId), san, san.x, san.y);
+            });
+          }
         }
+
       }
 
       /* Set node visibility. */
@@ -3912,10 +3905,10 @@ var provvisRender = function () {
             .attr("width", function () {
               return (d3.select(this.parentElement).attr("id") === "BBoxId-" +
                   d.parent.autoId) ?
-                  cell.width - 2 : cell.width - 4;
+                  cell.width : cell.width;
             })
             .attr("height", function () {
-              return cell.height - 2/* + 3 * scaleFactor * vis.radius*/;
+              return cell.height;
             });
 
         /* Update links. */
@@ -3948,7 +3941,7 @@ var provvisRender = function () {
             d.parent.parent, d.parent.parent.x, d.parent.parent.y);
 
         /* Compute bounding box for analysis child nodes. */
-        anBBoxCoords = getABBoxCoords(d.parent.parent, 1);
+        anBBoxCoords = getABBoxCoords(d.parent.parent, 0);
 
         /* Adjust analysis bounding box. */
         d3.selectAll("#BBoxId-" + d.parent.parent.autoId + ", #aBBClipId-" +
@@ -3966,7 +3959,7 @@ var provvisRender = function () {
           return san.hidden;
         })) {
           /* Compute bounding box for analysis child nodes. */
-          anBBoxCoords = getABBoxCoords(d.parent.parent, 1);
+          anBBoxCoords = getABBoxCoords(d.parent.parent, 0);
 
           /* Adjust analysis bounding box. */
           d3.select("#BBoxId-" + d.parent.parent.autoId).select("rect")
@@ -3979,10 +3972,10 @@ var provvisRender = function () {
 
           /* Adjust clippath. */
           d3.select("#aBBClipId-" + d.parent.parent.autoId).select("rect")
-              .attr("width", cell.width - 4)
-              .attr("height", cell.height - 2 + 2 * scaleFactor * vis.radius)
-              .attr("rx", cell.width / 8)
-              .attr("ry", cell.height / 8);
+              .attr("width", cell.width)
+              .attr("height", cell.height + 2 * scaleFactor * vis.radius)
+              .attr("rx", cell.width / 7)
+              .attr("ry", cell.height / 7);
         }
         /* Update links. */
         updateLink(d.parent.parent);
@@ -4089,25 +4082,19 @@ var provvisRender = function () {
         d3.selectAll(".BBox").classed("hiddenNode", false);
       }
 
-      if (newScale < 1.5) {
-        vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel, .nodeDoiLabel")
-            .classed("hiddenLabel", true);
-      } else {
-        vis.canvas.selectAll(".lBBoxLabel, .aBBoxLabel, .nodeDoiLabel")
-            .classed("hiddenLabel", false);
-      }
-
       if (newScale < 1.75) {
         vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
             ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
-            ".san-node-type-icon, .l-node-type-icon")
+            ".san-node-type-icon, .l-node-type-icon, .lBBoxLabel, " +
+            ".aBBoxLabel, .nodeDoiLabel")
             .classed("hiddenLabel", true);
         d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", true);
         d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", true);
       } else {
         vis.canvas.selectAll(".anLabel, .sanLabel, .lnLabel, " +
             ".nodeAttrLabel, .stored-node-type-icon, .an-node-type-icon, " +
-            ".san-node-type-icon, .l-node-type-icon")
+            ".san-node-type-icon, .l-node-type-icon, .lBBoxLabel, " +
+            ".aBBoxLabel, .nodeDoiLabel")
             .classed("hiddenLabel", false);
         d3.selectAll(".glAnchor, .grAnchor").classed("hiddenNode", false);
         d3.selectAll(".lDiff, .aDiff").classed("hiddenNode", false);
@@ -4124,45 +4111,42 @@ var provvisRender = function () {
 
 
     /* Background rectangle fix. */
-    vis.rect.attr("transform", "translate(" + (-newPos[0] / newScale) + "," +
-        (-newPos[1] / newScale) + ")" + " scale(" + (1 / newScale) + ")");
+    vis.rect.attr("transform", "translate(" +
+        (-newPos[0] / newScale) + "," +
+        (-newPos[1] / newScale) + ")" + " " +
+        "scale(" + (1 / newScale) + ")");
 
     /* Quick fix to exclude scale from text labels. */
     vis.canvas.selectAll(".lBBoxLabel")
         .transition()
         .duration(transitionTime)
-        .attr("transform", "translate(" + 1 * scaleFactor * vis.radius + "," +
-            0.5 * scaleFactor * vis.radius + ") scale(" + (1 / newScale) + ")");
+        .attr("transform", "translate(" +
+            1 * scaleFactor * vis.radius + "," +
+            0.5 * scaleFactor * vis.radius + ") " +
+            "scale(" + (1 / newScale) + ")");
 
     vis.canvas.selectAll(".aBBoxLabel")
         .transition()
         .duration(transitionTime)
-        .attr("transform", "translate(" + 1 * scaleFactor * vis.radius + "," +
-            0.5 * scaleFactor * vis.radius + ") scale(" + (1 / newScale) + ")");
+        .attr("transform", "translate(" +
+            1 * scaleFactor * vis.radius + "," +
+            0.5 * scaleFactor * vis.radius + ") " +
+            "scale(" + (1 / newScale) + ")");
 
     vis.canvas.selectAll(".nodeDoiLabel")
         .transition()
         .duration(transitionTime)
         .attr("transform", "translate(" + 0 + "," +
-            (2 * scaleFactor * vis.radius) + ") scale(" + (1 / newScale) + ")");
+            (1.6 * scaleFactor * vis.radius) + ") " +
+            "scale(" + (1 / newScale) + ")");
 
     vis.canvas.selectAll(".nodeAttrLabel")
         .transition()
         .duration(transitionTime)
-        .attr("transform", "translate(" + (-cell.width / 2 + 5) + "," +
-            (-vis.radius) + ") scale(" + (1 / newScale) + ")");
-
-    vis.canvas.selectAll(".subanalysisLabel")
-        .transition()
-        .duration(transitionTime)
-        .attr("transform", "translate(" + 0 + "," + 0 + ") scale(" +
-            (1 / newScale) + ")");
-
-    vis.canvas.selectAll(".analysisLabel")
-        .transition()
-        .duration(transitionTime)
-        .attr("transform", "translate(" + 0 + "," +
-            (scaleFactor * vis.radius) + ") scale(" + (1 / newScale) + ")");
+        .attr("transform", "translate(" +
+            (-1.5*scaleFactor * vis.radius) + "," +
+            (-1.5 * scaleFactor * vis.radius) + ") " +
+            "scale(" + (1 / newScale) + ")");
   };
 
   /**
@@ -5071,7 +5055,7 @@ var provvisRender = function () {
         an.children.values().sort(function (a, b) {
           return a.y - b.y;
         }).forEach(function (san, i) {
-          var wfBBoxCoords = getWFBBoxCoords(san, 1);
+          var wfBBoxCoords = getWFBBoxCoords(san, 0);
           san.y = yOffset;
           yOffset += (wfBBoxCoords.y.max - wfBBoxCoords.y.min);
           san.x = 0;
@@ -5080,7 +5064,7 @@ var provvisRender = function () {
         });
       } else {
         /* Adjust subanalysis coords. */
-        var wfBBoxCoords = getWFBBoxCoords(an.children.values()[0], 1);
+        var wfBBoxCoords = getWFBBoxCoords(an.children.values()[0], 0);
         an.children.values().sort(function (a, b) {
           return a.y - b.y;
         }).forEach(function (san, i) {
@@ -5092,7 +5076,7 @@ var provvisRender = function () {
       }
 
       /* Adjust analysis bounding box. */
-      var anBBoxCoords = getABBoxCoords(an, 1);
+      var anBBoxCoords = getABBoxCoords(an, 0);
       d3.selectAll("#BBoxId-" + an.autoId + ", #aBBClipId-" + an.autoId)
           .selectAll("rect")
           .attr("width", function () {
@@ -5175,10 +5159,10 @@ var provvisRender = function () {
       });
 
       /* Adjust analysis bounding box. */
-      var anBBoxCoords = getABBoxCoords(an, 1);
+      var anBBoxCoords = getABBoxCoords(an, 0);
       d3.selectAll("#BBoxId-" + an.autoId + ", #aBBClipId-" + an.autoId)
           .selectAll("rect")
-          .attr("width", vis.cell.width - 2)
+          .attr("width", vis.cell.width)
           .attr("height", function () {
             return anBBoxCoords.y.max - anBBoxCoords.y.min;
           });
@@ -5233,8 +5217,8 @@ var provvisRender = function () {
       /* Bounding box size. */
       d3.selectAll("#BBoxId-" + an.autoId + ", #aBBClipId-" + an.autoId)
           .select("rect")
-          .attr("width", vis.cell.width - 2)
-          .attr("height", vis.cell.height);
+          .attr("width", vis.cell.width )
+          .attr("height", vis.cell.height );
 
       /* Adjust subanalysis coords. */
       an.children.values().sort(function (a, b) {
