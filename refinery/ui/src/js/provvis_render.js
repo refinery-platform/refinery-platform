@@ -1454,6 +1454,12 @@ var provvisRender = function () {
         }
 
         $(this).val(val);
+        $($("#dc-checkbox-" + dcId)).prop("checked", true);
+        $("#doiCompId-" + dcId).find(".dc-label").css("opacity", 0.7);
+        d3.select("#doiCompId-" + dcId).select(".doiCompHandle")
+            .classed("blendedDoiComp", false);
+        d3.select("#doiCompId-" + dcId).select(".doiCompLine")
+            .style("display", "inline");
         provvisDecl.DoiFactors.set(
             d3.keys(provvisDecl.DoiFactors.factors)[dcId], val, true);
 
@@ -1470,8 +1476,7 @@ var provvisRender = function () {
 
         var tar = parseFloat(1 - val);
 
-        d3.values(provvisDecl.DoiFactors.factors)
-            .forEach(function (dc, i) {
+        d3.values(provvisDecl.DoiFactors.factors).forEach(function (dc, i) {
               if (i != dcId && provvisDecl.DoiFactors.isMasked(dc.label)) {
                 var isMasked = $("#dc-checkbox-" + i)[0].checked;
                 provvisDecl.DoiFactors.set(
