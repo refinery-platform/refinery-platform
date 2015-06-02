@@ -31,9 +31,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 #   puts("WARNING: $GALAXY_DATABASE_DIR is not set: copying files from local Galaxy instance will not work.")
   end
 
-  # If you'd like to be able to copy data from an instance of Galaxy
-  # that's installed on the host, set $GALAXY_DATABSE_DIR environment
-  # variable to the absolute path of the $GALAXY_ROOT/database folder
+  # If you'd like to be able to copy data from your host into the VM, set
+  # REFINERY_VM_TRANSFER_DIR on the host to a directory of your choice.
   if ENV['REFINERY_VM_TRANSFER_DIR']
     config.vm.synced_folder ENV['REFINERY_VM_TRANSFER_DIR'], "/vagrant/transfer"
 #    puts("INFO: Using host directory #{ENV['REFINERY_VM_TRANSFER_DIR']} to import datasets.")
