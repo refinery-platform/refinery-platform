@@ -15,11 +15,21 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'js/*.js',
+      'bower_components/jquery/dist/jquery.min.js',
+      'bower_components/angular/angular.js',
+      'bower_components/angular-ui-router/release/angular-ui-router.min.js',
+      'bower_components/select2/select2.js',
+      'bower_components/angular-resource/angular-resource.js',
+      'bower_components/angular-mocks/angular-mocks.js',
+      'bower_components/d3/d3.js',
+      'src/js/refinery.js',
+      'src/js/**/*Module.js',
+      'src/js/**/*Controller.js',
+      'src/js/**/*Factory.js',
       'src/js/*.js',
       'src/js/*Spec.js',
       'src/js/**/*.js',
-      'src/js/**/*Spec.js'
+      'src/js/**/*Spec.js',
     ],
 
 
@@ -32,7 +42,6 @@ module.exports = function(config) {
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
     },
-
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
@@ -56,14 +65,19 @@ module.exports = function(config) {
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: true,
 
+  // Which plugins to enable
+    plugins: [
+      'karma-phantomjs-launcher',
+      'karma-jasmine',
+      'karma-chrome-launcher'
+    ],
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
     browsers: ['Chrome', 'PhantomJS'],
 
-
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: false
+    singleRun: true
   });
 };

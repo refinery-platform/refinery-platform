@@ -3,14 +3,13 @@ angular.module('refineryExternalToolStatus')
     ['externalToolStatusFactory', '$scope', '$timeout', '$log', ExternalToolStatusController]);
 
 
-function ExternalToolStatusController(
-    externalToolStatusFactory, $scope, $timeout, $log) {
-    "use strict";
+function ExternalToolStatusController(externalToolStatusFactory, $scope, $timeout, $log) {
+  "use strict";
   var vm = this;
   vm.tools = externalToolStatusFactory.tools;
   vm.tools_details = externalToolStatusFactory.toolsDetails;
 
-  var setSystemStatus = function(status){
+  vm.setSystemStatus = function(status){
     if (status === "OK") {
       $scope.systemStatusOk = true;
       $scope.systemStatusWarning = false;
@@ -46,7 +45,7 @@ function ExternalToolStatusController(
     $scope.isGalaxyUp = externalToolStatusFactory.isGalaxyUp();
 
     var toolStatus = externalToolStatusFactory.getSystemStatus();
-    setSystemStatus(toolStatus);
+    vm.setSystemStatus(toolStatus);
 
     $timeout(tick, 1000);
   })();
