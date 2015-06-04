@@ -204,7 +204,7 @@ class ui {
     release     => 'trusty',
     repos       => 'main',
     key         => '9FD3B784BC1C6FC31A8A0A1C1655A0AB68576280',
-    key_server  => 'keys.gnupg.net',
+    key_server  => 'keyserver.ubuntu.com',
     include_src => true,
     include_deb => true
   }

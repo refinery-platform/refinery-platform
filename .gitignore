@@ -39,6 +39,7 @@ Thumbs.db
 ###############################
 setup_refinery.sh
 settings_local*.py
+/settings.json
 /docs/_build/*
 /docs/_static/*
 .idea/
@@ -56,7 +57,10 @@ codekit-config.json
 /deployment/.tmp/
 deployment/Puppetfile.lock
 /refinery/celerybeat-schedule*
+/refinery/static/production/
+/refinery/static/development/
 /refinery/ui/app/
+/refinery/ui/development/
 /refinery/ui/bower_components/
 /refinery/ui/node_modules/
 /media/

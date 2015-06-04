@@ -50,20 +50,25 @@
   left: 0;
   right: 0;
   top: 0;
-  /*width: 100%;*/
-  background-color: #ffffff;
 }
 
 #provenance-timeline-view {
   position: relative;
   left: 0;
   top: 0;
-  /*width: 100%;*/
   height: 150px;
   margin-top: 5px;
   margin-left: 5px;
   margin-right: 5px;
-  background-color: #ffffff;
+}
+
+#provenance-layer-change-view {
+  position: relative;
+  left: 0;
+  top: 0;
+  margin-top: 5px;
+  margin-left: 5px;
+  margin-right: 5px;
 }
 
 #provenance-doi-view {
@@ -226,7 +231,7 @@
   font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial,
   sans-serif;
   cursor: default;
-  text-anchor: left;
+  text-anchor: start;
   alignment-baseline: middle;
 }
 
@@ -264,19 +269,6 @@
   stroke: #ffffff;
   stroke-width: 0.0px;
   font-size: 5px;
-  font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial,
-  sans-serif;
-  cursor: default;
-  text-anchor: middle;
-  alignment-baseline: middle;
-}
-
-.lDiffLabel, .aDiffLabel {
-  fill: #000000;
-  fill-opacity: 1.0;
-  stroke: #000000;
-  stroke-width: 0.0px;
-  font-size: 4px;
   font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial,
   sans-serif;
   cursor: default;
@@ -335,29 +327,7 @@
 .analysisLabel, .mouseoverBBox .layerLabel, .mouseoverBBox .aBBoxLabel,
 .mouseoverBBox .saBBoxLabel, .mouseoverBBox .lBBoxLabel {
   fill-opacity: 1.0;
-  text-anchor: left;
-  alignment-baseline: middle;
-}
-
-.lDiffLine, .aDiffLine {
-  stroke-width: 0.5px;
-  stroke-opacity: 1.0;
-  fill: none;
-  fill-opacity: 0.0;
-  stroke: #136382;
-  cursor: default;
-  stroke-dasharray: none;
-}
-
-.lDiffIns, .lDiffOuts, .lDiffSA, .aDiffIns, .aDiffOuts, .aDiffSA {
-  stroke-width: 0.25px;
-  stroke: none;
-  stroke-opacity: 1.0;
-  fill: #ed7407;
-  fill-opacity: 1.0;
-  stroke: #ed7407;
-  cursor: default;
-  stroke-dasharray: none;
+  text-anchor: start;
 }
 
 .hiddenLabel {
@@ -492,7 +462,7 @@
   margin: 0px;
 }
 
-.sp-dd/*, .sp-button-container*/      {
+.sp-dd/*, .sp-button-container*/       {
   display: none;
 }
 
@@ -593,4 +563,17 @@
 
 .provvisNodeInfoDiff {
   color: #ed7407;
+}
+
+.diff-node-type-icon {
+  fill: #ed7407;
+  fill-opacity: 1.0;
+  stroke: #ed7407;
+  stroke-width: 0.0px;
+  cursor: default;
+  text-anchor: middle;
+  dominant-baseline: central;
+  font-family: FontAwesome;
+  font-size: 4px;
+  stroke-dasharray: none;
 }
