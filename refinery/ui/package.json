@@ -29,6 +29,13 @@
     "less-plugin-autoprefix": "^1.4.2",
     "less-plugin-clean-css": "^1.5.0",
     "load-grunt-tasks": "^3.2.0",
-    "time-grunt": "^1.2.1"
+    "time-grunt": "^1.2.1",
+    "grunt-karma": "^0.11.0",
+    "jasmine-core": "^2.3.4",
+    "karma": "^0.12.35",
+    "karma-chrome-launcher": "^0.1.7",
+    "karma-firefox-launcher": "^0.1.6",
+    "karma-jasmine": "~0.3.5",
+    "karma-phantomjs-launcher": "^0.1.4"
   }
 }

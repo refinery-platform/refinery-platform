@@ -35,6 +35,11 @@ module.exports = function(grunt) {
       }
     },
 
+    karma: {
+      unit: {
+      configFile: 'karma.conf.js'
+      }
+    },
     /*
      * Read configs from `config.json`. Separating scripts and configs help
      * to keep things readable.
@@ -52,6 +57,7 @@ module.exports = function(grunt) {
       },
       uiBuild: [
         '<%= cfg.basePath.ui.build %>'
+
       ],
       uiCompile: [
         '<%= cfg.basePath.ui.compile %>'

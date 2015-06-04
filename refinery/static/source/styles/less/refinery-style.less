@@ -66,12 +66,71 @@ tr:nth-child(odd) .trimmedDocStr{
   background-color: #f9f9f9;
 }
 
-@media (max-width: 979px) {
-body {
-    margin-top: 0;
-}
+ul.externalToolList{
+  list-style-type: none;
+  float: left;
 }
 
+ul.externalToolList li{
+  display: inline-block;
+  min-width: 100px;
+  max-width: 240px;
+  padding-left: 10px;
+}
+
+ul.externalToolList li#lastTimeCheck{
+  width: 240px;
+}
+
+.popover{
+  color: #000000;
+  text-align: left;
+}
+
+.popover-title{
+  font-size: 0.9em;
+}
+
+ul#externalToolListPopover{
+  font-size: 0.8em;
+  list-style-type: none;
+  margin: 0 0 10px 0;
+  padding: 0px;
+}
+
+ul#externalToolListPopover li{
+  padding: 0;
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+   #textToolStatus{
+    width: 100%;
+    heigth: 200px;
+  }
+
+  ul.externalToolList{
+    float: none;
+    padding-left: 0px;
+    margin-left: 0px;
+  }
+
+  ul.externalToolList li{
+    display: block;
+  }
+
+  ul.externalToolList li#lastTimeCheck{
+  width: auto;
+  }
+
+}
+
+
+@media (max-width: 979px) {
+  body {
+    margin-top: 0;
+  }
+}
 
 .navbar .navbar-inner {
   border-bottom-width: 0px;
