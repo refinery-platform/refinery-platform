@@ -15,24 +15,28 @@ describe('Controller: ExternalToolStatusController', function(){
 		it("setSystemStatus should set the boolean logic for the different status", function(){
 			ctrl.setSystemStatus("OK");
 			expect(scope.systemStatusOk).toEqual(true);
-			expect(scope.systemStatusWarning && scope.systemStatusError
-				&& scope.systemStatusUnknown ).toEqual(false);
+			expect(
+				scope.systemStatusWarning && scope.systemStatusError && scope.systemStatusUnknown )
+				.toEqual(false);
 
 			ctrl.setSystemStatus("WARNING");
 			expect(scope.systemStatusWarning).toEqual(true);
-			expect(scope.systemStatusOk && scope.systemStatusUnknown
-			&& scope.systemStatusError).toEqual(false);
+			expect(
+				scope.systemStatusOk && scope.systemStatusUnknown && scope.systemStatusError)
+				.toEqual(false);
 
 			ctrl.setSystemStatus("ERROR");
 			expect(scope.systemStatusError).toEqual(true);
-			expect(scope.systemStatusOk && scope.systemStatusUnknown
-			&& scope.systemStatusWarning).toEqual(false);
+			expect(
+				scope.systemStatusOk && scope.systemStatusUnknown && scope.systemStatusWarning)
+				.toEqual(false);
 
 
 			ctrl.setSystemStatus("UNKNOWN");
 			expect(scope.systemStatusUnknown).toEqual(true);
-			expect(scope.systemStatusOk && scope.systemStatusWarning
-			&& scope.systemStatusError).toEqual(false);
+			expect(
+				scope.systemStatusOk && scope.systemStatusWarning && scope.systemStatusError)
+				.toEqual(false);
 
 		});
 
