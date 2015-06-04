@@ -38,7 +38,7 @@ djcelery.setup_loader()
 # Required when DEBUG = False
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.50.50']
 
-DEBUG = get_setting('DEBUG') or True
+DEBUG = get_setting('DEBUG') or False
 TEMPLATE_DEBUG = DEBUG
 
 # A tuple that lists people who get code error notifications.
