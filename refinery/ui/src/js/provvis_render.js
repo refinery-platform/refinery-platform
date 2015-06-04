@@ -1808,7 +1808,7 @@ var provvisRender = function () {
         });
 
     lBBox.append("rect")
-        .attr("y", -0.5 * scaleFactor * vis.radius)
+        .attr("y", -0.6 * scaleFactor * vis.radius)
         .attr("width", function () {
           return cell.width;
         })
@@ -1825,7 +1825,7 @@ var provvisRender = function () {
           return "lBBClipId-" + ln.autoId;
         })
         .append("rect")
-        .attr("y", -0.5 * scaleFactor * vis.radius)
+        .attr("y", -0.6 * scaleFactor * vis.radius)
         .attr("width", cell.width)
         .attr("height", cell.height + 2 * scaleFactor * vis.radius)
         .attr("rx", cell.width / 7)
@@ -2138,7 +2138,7 @@ var provvisRender = function () {
         });
 
     analysisBBox.select("rect")
-        .attr("y", -0.5 * scaleFactor * vis.radius)
+        .attr("y", -0.6 * scaleFactor * vis.radius)
         .attr("width", function () {
           return cell.width;
         })
@@ -2155,7 +2155,7 @@ var provvisRender = function () {
           return "aBBClipId-" + an.autoId;
         })
         .select("rect")
-        .attr("y", -0.5 * scaleFactor * vis.radius)
+        .attr("y", -0.6 * scaleFactor * vis.radius)
         .attr("width", cell.width)
         .attr("height", cell.height)
         .attr("rx", cell.width / 7)
@@ -2312,7 +2312,7 @@ var provvisRender = function () {
         });
 
     analysisBBox.append("rect")
-        .attr("y", -0.5 * scaleFactor * vis.radius)
+        .attr("y", -0.6 * scaleFactor * vis.radius)
         .attr("width", function () {
           return cell.width;
         })
@@ -2347,7 +2347,7 @@ var provvisRender = function () {
           return "aBBClipId-" + an.autoId;
         })
         .append("rect")
-        .attr("y", -0.5 * scaleFactor * vis.radius)
+        .attr("y", -0.6 * scaleFactor * vis.radius)
         .attr("width", cell.width)
         .attr("height", cell.height)
         .attr("rx", cell.width / 7)
@@ -2850,7 +2850,7 @@ var provvisRender = function () {
                   (-cell.height * 3 / 4) + ")";
             })
             .attr("width", cell.width)
-            .attr("height", cell.height);
+            .attr("height", cell.height + 1 * scaleFactor * vis.radius);
 
         var nGlyph = self.append("g").classed({"glyph": true}),
             nLabels = self.append("g").classed({"labels": true})
