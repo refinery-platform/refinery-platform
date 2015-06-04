@@ -1,6 +1,5 @@
 from celery.task.sets import TaskSet
 from data_set_manager.tasks import parse_isatab
-from core.models import DataSet
 from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
 import os
@@ -119,15 +118,38 @@ class Command(BaseCommand):
         job = TaskSet(tasks=s_tasks)
         result = job.apply_async()
 
-        for i in result.iterate():
+        task_num = 1
+        total = len(isatab_dict)
+        for (i, filename) in result.iterate():
             try:
-                ds = DataSet.objects.get(uuid=i)
-                inv = ds.get_investigation()
-                print """
-                Successfully parsed %s into DataSet
-                """ % inv.get_identifier()
-                print "with UUID %s" % i
+                if i:
+                    print (
+                        "{num} / {total}: Successfully parsed {file} into "
+                        "DataSet with UUID {uuid}".format(
+                            num=task_num,
+                            total=total,
+                            file=filename,
+                            uuid=i
+                        )
+                    )
+                else:
+                    print (
+                        "{num} / {total}: Skipped {file} as it has been "
+                        "successfully parsed already".format(
+                            num=task_num,
+                            total=total,
+                            file=filename
+                        )
+                    )
+                task_num += 1
                 sys.stdout.flush()
             except:
-                print "Unsuccessful parse and DataSet Creation of %s." % i
+                print (
+                    "{num} / {total}: Unsuccessful parsed {file}".format(
+                        num=task_num,
+                        total=total,
+                        file=filename
+                    )
+                )
+                task_num += 1
                 sys.stdout.flush()

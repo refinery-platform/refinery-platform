@@ -8,7 +8,9 @@ module.exports = function(grunt) {
   require('time-grunt')(grunt);
 
   grunt.initConfig({
-
+    /*
+     * Add vendor prefixes to out CSS to ensure better browser support.
+     */
     autoprefixer: {
       options: {
         browsers: [
@@ -38,9 +40,16 @@ module.exports = function(grunt) {
       configFile: 'karma.conf.js'
       }
     },
-
+    /*
+     * Read configs from `config.json`. Separating scripts and configs help
+     * to keep things readable.
+     */
     cfg: grunt.file.readJSON('config.json'),
 
+    /*
+     * Cleaning tasks for all non-source directory for building and compiling
+     * assets.
+     */
     clean: {
       options: {
         // We need this because the static dirs are outside of Grunt's root
@@ -64,6 +73,9 @@ module.exports = function(grunt) {
       ]
     },
 
+    /*
+     *
+     */
     copy: {
       uiBuildScripts: {
         files: [{
@@ -169,6 +181,9 @@ module.exports = function(grunt) {
       }
     },
 
+    /*
+     * Minify CSS.
+     */
     cssmin: {
       ui: {
         files: [{
@@ -277,6 +292,10 @@ module.exports = function(grunt) {
       }
     },
 
+    /*
+     * Lint source JS files to find possible flaws that could lead to errors.
+     * Custom code
+     */
     jshint: {
       src: [
         '<%= cfg.basePath.ui.src %>/js/**/*.js'
@@ -297,6 +316,9 @@ module.exports = function(grunt) {
       }
     },
 
+    /*
+     * Translate LESS into CSS. While compiling also minify and autoprefix.
+     */
     less: {
       build: {
         options: {
@@ -348,8 +370,35 @@ module.exports = function(grunt) {
       }
     },
 
+    /*
+     * `ng-annotate` annotates the sources before minifying. That is, it
+     * provides a back up solution if we forgot about the array syntax. Still
+     * we should not trust the plugin to cover all cases.
+     */
+    ngAnnotate: {
+      options: {
+        singleQuotes: true
+      },
+      compile: {
+        files: [
+          {
+            expand: true,
+            cwd: '<%= cfg.basePath.ui.src %>',
+            src: ['**/*.js'],
+            dest: '<%= cfg.basePath.ui.tmp %>/js'
+          }
+        ]
+      },
+    },
+
+    /*
+     * Load `package.json` for meta data.
+     */
     pkg: grunt.file.readJSON('package.json'),
 
+    /*
+     * Minify JS
+     */
     uglify: {
       options: {
         banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
@@ -359,7 +408,7 @@ module.exports = function(grunt) {
         files: [
           {
             expand: true,
-            cwd: '<%= cfg.basePath.ui.src %>/',
+            cwd: '<%= cfg.basePath.ui.tmp %>/js',
             src: '**/*.js',
             dest: '<%= cfg.basePath.ui.compile %>/'
           }
@@ -403,9 +452,10 @@ module.exports = function(grunt) {
     'cssmin',
     // Minifying JS files seems to cause severe trouble at the moment so it's
     // deactivated until everything works fine.
-    // 'uglify',
+    'ngAnnotate',
+    'uglify',
     // For the time being, scripts are simply copied.
-    'copy:uiCompileScripts',
+    // 'copy:uiCompileScripts',
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
     'copy:staticCompile',
