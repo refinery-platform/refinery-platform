@@ -238,8 +238,10 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
 
 //Toggles the indicator to show the entire string.
 SolrDocumentTable.prototype._toggleIndicator = function(){
-  $( ".indicator").click(function(e) {
-    $(this).children().toggle();
+  $( ".trimmedTextArrow").click(function(e) {
+    $(".trimmedDocStr").toggle();
+    $(".trimmedTextArrow#right").toggle();
+    $(".icon-chevron-sign-left").toggle();
   });
 };
 
@@ -316,7 +318,9 @@ SolrDocumentTable.prototype._trimDocumentEntry = function(
   if (string.length > length) {
     var trimmedChars = self._getTrimmedChars(string, length);
     return string.substring(0, length) +
-        "<span class=indicator><span class=trimmedDocStr>" + trimmedChars + " </span>" + indicator + "</span>";
+      "<span class=trimmedDocStr>" + trimmedChars + " </span>" +
+      "<a href='#' class='trimmedTextArrow' id='right'>" + indicator + "<i class='icon-chevron-sign-right'></i></a>" +
+      "<a href='#' class='trimmedTextArrow'><i class='icon-chevron-sign-left' style='display:none'></i></a>";
   }
   return string;
 };

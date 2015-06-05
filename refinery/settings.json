@@ -1,0 +1,8 @@
+{
+  "STATICFILES_DIRS": [
+    "static/development",
+    "ui/development"
+  ],
+  "DEBUG": true
+}
+g
