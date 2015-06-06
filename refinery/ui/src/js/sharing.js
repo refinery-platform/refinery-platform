@@ -79,7 +79,7 @@ angular.module("refinerySharing", [])
         
         data += '{"read": ' + canRead + ', "change": ' + canChange + '}}';
         if (i+5 < cells.length) {
-            data += ', ';
+          data += ', ';
         }
       }
       data += ']}';

@@ -14,7 +14,7 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     WorkflowInputRelationshipsResource, DataSetResource,\
     ExternalToolStatusResource, StatisticsResource, \
     ProjectSharingResource, DataSetSharingResource, WorkflowSharingResource,\
-    GroupManagementResource
+    MemberManagementResource, GroupManagementResource
 from core.models import DataSet
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource
@@ -48,6 +48,7 @@ v1_api.register(StatisticsResource())
 v1_api.register(ProjectSharingResource())
 v1_api.register(DataSetSharingResource())
 v1_api.register(WorkflowSharingResource())
+v1_api.register(MemberManagementResource())
 v1_api.register(GroupManagementResource())
 #v1_api.register(TaxonResource())
 #v1_api.register(GenomeBuildResource())
