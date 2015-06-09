@@ -28,7 +28,7 @@ angular.module("refinerySharing", [])
       // Update the username and resource name thing in the modal description.
       document.getElementById('modal-description').innerText = response.objects[0].owner + ' | ' + response.objects[0].res_name;
 
-      var shareList = response.objects[0].shares;
+      var shareList = response.objects;
       var pTable = document.getElementById('permission-table');
       for (var i = 0; i < shareList.length; i++) {
         var canRead = shareList[i].permissions.read;
@@ -38,7 +38,7 @@ angular.module("refinerySharing", [])
         
         var row = pTable.insertRow(-1);
         var group = row.insertCell(0);
-        group.innerHTML = shareList[i].name + '<div style="display: none;">' + shareList[i].id+ '</div>';
+        group.innerHTML = shareList[i].group_name + '<div style="display: none;">' + shareList[i].group_id+ '</div>';
         
         var noPermCell = row.insertCell(1);
         var readOnlyCell = row.insertCell(2);
@@ -66,24 +66,20 @@ angular.module("refinerySharing", [])
     $scope.save = function () {
       var pTable = document.getElementById('permission-table');
       var cells = pTable.getElementsByTagName('td');
-      var data = '{"shares": [';
       // Data is clustered into sets of 4 -- i is name, i+1 is noperm, i+2 is readonly, i+3 is edit.
       for (var i = 0; i < cells.length; i += 4) {
         // Add the group.
         var name = cells[i].innerText;
         var id = cells[i].children[0].innerText;
-        data += '{"name": "' + name + '", "id": ' + id + ', "permission": ';
 
         var canRead = cells[i+2].children[0].checked || cells[i+3].children[0].checked;
         var canChange = cells[i+3].children[0].checked;
         
-        data += '{"read": ' + canRead + ', "change": ' + canChange + '}}';
-        if (i+5 < cells.length) {
-          data += ', ';
-        }
+        var data = '{"read": ' + canRead + ', "change": ' + canChange + '}';
+
+        // need to somehow store the group id in the cells as a hidden thing
+        $http({method: 'PATCH', url: 'api/v1/' + config.api + '/' + config.uuid + '_' + id + '/', data: data});
       }
-      data += ']}';
-      $http({method: 'PATCH', url: 'api/v1/' + config.api + '/' + config.uuid + '/', data: data});
       $modalInstance.dismiss('saved');
     };
 

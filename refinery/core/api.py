@@ -388,10 +388,13 @@ class StatisticsResource(Resource):
     def stat_summary(self, model):
         model_list = model.objects.all()
         total = len(model_list)
+        
         public = len(filter(lambda x: x.is_public(), model_list))
+
         private_shared = len(filter(
             lambda x: not x.is_public() and len(x.get_groups()) > 1, 
             model_list))
+        
         private = total - public - private_shared
         return {
             'total': total, 'public': public, \
@@ -453,11 +456,14 @@ class SharablePermission(object):
         group_list = Group.objects.filter(id=int(group_id))
         return None if len(group_list) == 0 else group_list[0]
 
+    # Permissions that a res has for all the groups that the user is in.
     def get_share_list(self, user, res):
         group_dict = {} 
         group_list = Group.objects.all()
+
         groups_in = filter(lambda g: user in g.user_set.all(), group_list)
         
+        # Set everything to False as default first before changing accoridngly. 
         for i in groups_in:
             group_dict[i.id] = (i.name, {'read': False, 'change': False})
 
@@ -479,79 +485,94 @@ class SharablePermission(object):
             share_list.append({'id': k, 'name': v[0], 'permissions': v[1]})
         
         return share_list
+    
+    # Complete permission objects for the groups that the resource is in.
+    def perm_obj_list(self, user, res):
+        return map(
+            lambda s:
+                self.perm_obj(
+                    res.uuid, res.name, s['id'], s['name'], s['permissions']),
+                self.get_share_list(user, res))
 
     def detail_uri_kwargs(self, bundle_or_obj):
         kwargs = {}
 
         if isinstance(bundle_or_obj, Bundle):
-            kwargs['pk'] = bundle_or_obj.obj.uuid
+            kwargs['pk'] = bundle_or_obj.obj.res_uuid + '_' + \
+                str(bundle_or_obj.obj.group_id)
         else:
-            kwargs['pk'] = bundle_or_obj.uuid
+            kwargs['pk'] = bundle_or_obj.res_uuid + '_' + \
+                str(bundle_or_obj.group_id)
 
         return kwargs
 
     def obj_get(self, bundle, **kwargs):
-        uuid = kwargs['pk']
-        return self.get_res(uuid)
+        user = bundle.request.user
+        # args 0 = res uuid, 1 = group id.
+        args = kwargs['pk'].split('_', 1)
+        res = self.get_res(args[0])
+        group = self.get_group(int(args[1]))
+        share_list = self.get_share_list(user, res)
+        # If the res is not shared with group, the res's get_groups function
+        # doesn't display the group. Which is why we need default values here.
+        perm = {'read': False, 'change': False}
+        
+        perm_list = filter(lambda s: s['id'] == group.id, share_list)
+
+        if len(perm_list) != 0:
+            perm = perm_list[0]['permissions']
+
+        return self.perm_obj(res.uuid, res.name, group.id, group.name, perm)
 
     def obj_get_list(self, bundle, **kwargs):
         return self.get_object_list(bundle.request)
 
     def get_object_list(self, request):
         user = request.user
-        res = self.get_res(request.GET['uuid'])
-
-        if (user is None):
-            raise ImmediateHttpResponse(response=HttpBadRequest())
-        elif (res is None):
-            raise ImmediateHttpResponse(response=HttpNotFound())
-        elif (res.get_owner().id != user.id):
-            raise ImmediateHttpResponse(response=HttpUnauthorized())
+        # Return result for 1 res, or for all res that user owns.
+        if 'uuid' in request.GET:
+            res = self.get_res(request.GET['uuid'])
+            return self.perm_obj_list(user, res)
         else:
-            shares = self.get_share_list(user, res)
-            return [
-                self.perm_obj(
-                    user.username, user.id, res.name, res.uuid, shares)
-            ]
+            res_list = filter(
+                lambda r: r.get_owner().id == user.id,
+                self.res_type.objects.all())
+            sum_list = []
+            
+            for i in res_list:
+                sum_list = sum_list + self.perm_obj_list(user, i)
+          
+            return sum_list
 
     def obj_update(self, bundle, **kwargs):
-        kwargs = self.detail_uri_kwargs(bundle)
-        uuid = kwargs['pk']
-        res = self.get_res(uuid)
-        owner = res.get_owner()
-        user = bundle.request.user
-        share_list = bundle.data['shares']
-        
-        if ((res is None) or (owner.id != user.id) or (share_list is None)):
-            raise ImmediateHttpResponse(response=HttpBadRequest())
+        res = self.get_res(bundle.data['res_uuid'])
+        group = self.get_group(bundle.data['group_id'])
+        can_read = bundle.data['read']
+        can_change = bundle.data['change']
+        should_share = can_read or can_change
+        is_read_only = can_read and not can_change
 
-        # remove all objects before adding them
-        for i in res.get_groups():
-            res.unshare(self.get_group(i['id']))
-        
-        for group_data in share_list:
-            group = self.get_group(group_data['id'])
-            # sharing only allowed if can read or change and user is in group
-            should_share = (
-                (group_data['permission']['read']) or \
-                    (group_data['permission']['change'])) and \
-                (user == owner) and \
-                (user in group.user_set.all())
-            is_read_only = not (group_data['permission']['change'])
+        if should_share:
+            res.share(group, is_read_only)
+        else:
+            res.unshare(group)
 
-            if should_share:
-                res.share(group, is_read_only)
-        
-        res.save()
         return self.perm_obj()
+    
+    def obj_delete(self, bundle, **kwargs):
+        args = kwargs['pk'].split('_', 1)
+        res = self.get_res(args[0])
+        group = self.get_group(int(args[1]))
+        res.unshare(group)
+
 
 class ProjectSharingResource(SharablePermission, Resource):
-    owner = fields.CharField(attribute='owner', null=True)
-    owner_id = fields.CharField(attribute='owner_id', null=True)
     res_name = fields.CharField(attribute='res_name', null=True)
     res_uuid = fields.CharField(attribute='res_uuid', null=True)
-    shares = fields.ListField(attribute='shares', null=True)
-    
+    group_id = fields.IntegerField(attribute='group_id', null=True)
+    group_name = fields.CharField(attribute='group_name', null=True)
+    permissions = fields.DictField(attribute='permissions', null=True)
+
     def __init__(self):
         SharablePermission.__init__(self, Project, ProjectSharingObject)
         Resource.__init__(self)
@@ -562,14 +583,17 @@ class ProjectSharingResource(SharablePermission, Resource):
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
 
+    def get_bundle_detail_data(self, bundle):
+        return bundle.obj.res_uuid
+
 
 class DataSetSharingResource(SharablePermission, Resource):
-    owner = fields.CharField(attribute='owner', null=True)
-    owner_id = fields.CharField(attribute='owner_id', null=True)
     res_name = fields.CharField(attribute='res_name', null=True)
     res_uuid = fields.CharField(attribute='res_uuid', null=True)
-    shares = fields.ListField(attribute='shares', null=True)
-    
+    group_id = fields.IntegerField(attribute='group_id', null=True)
+    group_name = fields.CharField(attribute='group_name', null=True)
+    permissions = fields.DictField(attribute='permissions', null=True)
+
     def __init__(self):
         SharablePermission.__init__(self, DataSet, DataSetSharingObject)
         Resource.__init__(self)
@@ -580,13 +604,16 @@ class DataSetSharingResource(SharablePermission, Resource):
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
 
+    def get_bundle_detail_data(self, bundle):
+        return bundle.obj.res_uuid
+
 
 class WorkflowSharingResource(SharablePermission, Resource):
-    owner = fields.CharField(attribute='owner', null=True)
-    owner_id = fields.CharField(attribute='owner_id', null=True)
     res_name = fields.CharField(attribute='res_name', null=True)
     res_uuid = fields.CharField(attribute='res_uuid', null=True)
-    shares = fields.ListField(attribute='shares', null=True)
+    group_id = fields.IntegerField(attribute='group_id', null=True)
+    group_name = fields.CharField(attribute='group_name', null=True)
+    permissions = fields.DictField(attribute='permissions', null=True)
     
     def __init__(self):
         SharablePermission.__init__(self, Workflow, WorkflowSharingObject)
@@ -597,7 +624,10 @@ class WorkflowSharingResource(SharablePermission, Resource):
         object_class = WorkflowSharingObject
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
-        
+ 
+    def get_bundle_detail_data(self, bundle):
+        return bundle.obj.res_uuid       
+
 
 class MemberManagementResource(Resource):
     member_list = fields.ListField(attribute='member_list', null=True)
@@ -673,8 +703,8 @@ class MemberManagementResource(Resource):
 
 
 class GroupManagementResource(Resource):
-    id = fields.IntegerField(attribute='id', null=True)
-    name = fields.CharField(attribute='name', null=True)
+    group_id = fields.IntegerField(attribute='group_id', null=True)
+    group_name = fields.CharField(attribute='group_name', null=True)
     
     def get_group(self, group_id):
         group_list = Group.objects.filter(id=int(group_id))
@@ -685,46 +715,41 @@ class GroupManagementResource(Resource):
         object_class = GroupManagementObject
         # authentication = SessionAuthentication
 
-    # Should be based on each user's unique things
     def detail_uri_kwargs(self, bundle_or_obj):
-        logger.info("detail uri called")
         kwargs = {}
         
         if isinstance(bundle_or_obj, Bundle):
-            kwargs['pk'] = bundle_or_obj.obj.id
-            logger.info("the if is called")
+            kwargs['pk'] = bundle_or_obj.obj.group_id
         else:
-            kwargs['pk'] = bundle_or_obj.id
+            kwargs['pk'] = bundle_or_obj.group_id
 
         return kwargs
 
     def obj_get(self, bundle, **kwargs):
-        logger.info("obj_get called")
-        user = bundle.request.user
-        group_list = user.groups.all()
-        return group_list
+        group = self.get_group(kwargs['pk'])
+        return GroupManagementObject(group.id, group.name)
+        # return group_list
 
     def obj_get_list(self, bundle, **kwargs):
-        logger.info("obj_get_list called")
         return self.get_object_list(bundle.request);
 
     def get_object_list(self, request):
-        logger.info("get_object_list called")
         user = request.user
-        # group_list = map(lambda g: (g.name, g.id), user.groups.all())
-        # return [GroupManagementObject(group_list)]
+
         group_list = map(
             lambda g: GroupManagementObject(g.id, g.name),
             user.groups.all())
 
-        logger.info("just before get_object_list return")
         return group_list
 
-    """
     def obj_update(self, bundle, **kwargs):
-        user = bundle.request.user
-    """
-    
+        return self.obj_create(bundle, **kwargs)
+
+    def obj_create(self, bundle, **kwargs):
+        new_name = bundle.data['name']
+        # create group here and be sure to assign the manager group stuff
+        return bundle
+
     def obj_delete(self, bundle, **kwargs):
         user = bundle.request.user
         logger.info(bundle.data)

@@ -1074,52 +1074,76 @@ class ResourceStatisticsObject(object):
 
 class ResourceSharingObject(object):
     def __init__(
-            self, owner=None, owner_id=None, res_type=None, \
-            res_name=None, uuid=None, shares=None):
-        self.owner = owner
-        self.owner_id = owner_id
+            self,
+            res_type=None,
+            res_uuid=None,
+            res_name=None,
+            group_id=None,
+            group_name=None,
+            permissions=None):
         self.res_type = res_type
+        self.res_uuid = res_uuid
         self.res_name = res_name
-        self.uuid = uuid
-        self.shares = shares
+        self.group_id = group_id
+        self.group_name = group_name
+        self.permissions=permissions
 
 
 class ProjectSharingObject(ResourceSharingObject):
-    def __init__(
-            self, owner=None, owner_id=None, res_name=None, \
-            uuid=None, shares=None):
+    def __init__(self, 
+            res_uuid=None,
+            res_name=None,
+            group_id=None,
+            group_name=None,
+            permissions=None):
         super(ProjectSharingObject, self).__init__(
-            owner, owner_id, Project, res_name, uuid, shares)
+            Project,
+            res_uuid,
+            res_name,
+            group_id,
+            group_name,
+            permissions)
 
 
 class DataSetSharingObject(ResourceSharingObject):
-    def __init__(
-            self, owner=None, owner_id=None, res_name=None, \
-            uuid=None, shares=None):
+    def __init__(self, 
+            res_uuid=None,
+            res_name=None,
+            group_id=None,
+            group_name=None,
+            permissions=None):
         super(DataSetSharingObject, self).__init__(
-            owner, owner_id, DataSet, res_name, uuid, shares)
+            DataSet,
+            res_uuid,
+            res_name,
+            group_id,
+            group_name,
+            permissions)
 
 
 class WorkflowSharingObject(ResourceSharingObject):
-    def __init__(
-            self, owner=None, owner_id=None, res_name=None, \
-            uuid=None, shares=None):
+    def __init__(self, 
+            res_uuid=None,
+            res_name=None,
+            group_id=None,
+            group_name=None,
+            permissions=None):
         super(WorkflowSharingObject, self).__init__(
-            owner, owner_id, Workflow, res_name, uuid, shares)
+            Workflow,
+            res_uuid,
+            res_name,
+            group_id,
+            group_name,
+            permissions)
 
 
 class MemberManagementObject(object):
     def __init__(self, id=None, member_list=None):
-        self.id = id;
+        self.id = id
         self.member_list = member_list
 
-"""
-class GroupManagementObject(object):
-    def __init__(self, group_list=None):
-        self.group_list = group_list
-"""
 
 class GroupManagementObject(object):
-    def __init__(self, id=None, name=None):
-        self.id = id
-        self.name = name
+    def __init__(self, group_id=None, group_name=None):
+        self.group_id = group_id
+        self.group_name = group_name
