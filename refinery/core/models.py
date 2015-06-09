@@ -214,10 +214,7 @@ class OwnableResource (BaseResource):
 
 class SharableResource (OwnableResource):
     '''Abstract base class for core resources that can be shared
-    (projects, data sets, workflows, workflow engines, etc.).
-    IMPORTANT: expects derived classes to have "add/read/change/write_xxx" +
-    "share_xxx" permissions, where "xxx" is the simple_modelname
-
+    (projects, data sets, workflows, workflow engines, etc.).  IMPORTANT: expects derived classes to have "add/read/change/write_xxx" + "share_xxx" permissions, where "xxx" is the simple_modelname 
     '''
     def __unicode__(self):
         return self.name
@@ -1304,7 +1301,7 @@ class ExternalToolStatus(models.Model):
         unique_together = ('name', 'unique_instance_identifier')
 
 
-class StatisticsObject(object):
+class ResourceStatisticsObject(object):
     def __init__(
             self,
             user=0,
@@ -1324,75 +1321,78 @@ class StatisticsObject(object):
 class ResourceSharingObject(object):
     def __init__(
             self,
-            owner=None,
-            owner_id=None,
             res_type=None,
+            res_uuid=None,
             res_name=None,
-            uuid=None,
-            shares=None):
-        self.owner = owner
-        self.owner_id = owner_id
+            group_id=None,
+            group_name=None,
+            permissions=None):
         self.res_type = res_type
+        self.res_uuid = res_uuid
         self.res_name = res_name
-        self.uuid = uuid
-        self.shares = shares
+        self.group_id = group_id
+        self.group_name = group_name
+        self.permissions=permissions
 
 
 class ProjectSharingObject(ResourceSharingObject):
     def __init__(
-            self,
-            owner=None,
-            owner_id=None,
+            self, 
+            res_uuid=None,
             res_name=None,
-            uuid=None,
-            shares=None):
+            group_id=None,
+            group_name=None,
+            permissions=None):
         super(ProjectSharingObject, self).__init__(
-            owner,
-            owner_id,
             Project,
+            res_uuid,
             res_name,
-            uuid,
-            shares
-        )
+            group_id,
+            group_name,
+            permissions)
 
 
 class DataSetSharingObject(ResourceSharingObject):
     def __init__(
-            self,
-            owner=None,
-            owner_id=None,
+            self, 
+            res_uuid=None,
             res_name=None,
-            uuid=None,
-            shares=None):
+            group_id=None,
+            group_name=None,
+            permissions=None):
         super(DataSetSharingObject, self).__init__(
-            owner,
-            owner_id,
             DataSet,
+            res_uuid,
             res_name,
-            uuid,
-            shares
-        )
+            group_id,
+            group_name,
+            permissions)
 
 
 class WorkflowSharingObject(ResourceSharingObject):
     def __init__(
-            self,
-            owner=None,
-            owner_id=None,
+            self, 
+            res_uuid=None,
             res_name=None,
-            uuid=None,
-            shares=None):
+            group_id=None,
+            group_name=None,
+            permissions=None):
         super(WorkflowSharingObject, self).__init__(
-            owner,
-            owner_id,
             Workflow,
+            res_uuid,
             res_name,
-            uuid,
-            shares
-        )
+            group_id,
+            group_name,
+            permissions)
 
 
-class GroupManagementObject(object):
+class MemberManagementObject(object):
     def __init__(self, id=None, member_list=None):
         self.id = id
         self.member_list = member_list
+
+
+class GroupManagementObject(object):
+    def __init__(self, group_id=None, group_name=None):
+        self.group_id = group_id
+        self.group_name = group_name
