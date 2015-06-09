@@ -583,6 +583,7 @@ class ProjectSharingResource(SharablePermission, Resource):
         authentication = SessionAuthentication()
         authorization = GuardianAuthorization()
 
+    # Overriden because this "convenience" method wasn't being convenient.
     def get_bundle_detail_data(self, bundle):
         return bundle.obj.res_uuid
 
