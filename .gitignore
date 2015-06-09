@@ -39,7 +39,7 @@ Thumbs.db
 ###############################
 setup_refinery.sh
 settings_local*.py
-/settings.json
+/refinery/settings.json
 /docs/_build/*
 /docs/_static/*
 .idea/
