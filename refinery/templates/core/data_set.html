@@ -817,16 +817,31 @@
         };
       }
 
+      /*
+       * Initialize floatThead with all its magic.
+       */
       function initFloatThead () {
+        /*
+         * Start floatThead
+         */
         $table.floatThead({
           scrollContainer: function($table){
             return $table.closest('.scrollable-floatThead');
-          }
+          },
+          zIndex: 2
         });
+
+        /*
+         * Reflow floatThead when the browser's window size changes
+         */
         $window.on('resize orientationchange', debounce(function () {
           $table.floatThead('reflow');
         }, 250));
 
+        /*
+         * Reflow floatThead when an custom script makes changes that change
+         * the tables layout.
+         */
         $window.on('refinery/floatThead/reflow', debounce(function () {
           $table.floatThead('reflow');
         }, 50));
