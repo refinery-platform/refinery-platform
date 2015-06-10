@@ -184,7 +184,8 @@ INSTALLED_APPS = (
     'registration',
     'flatblocks',
     # RP: added for database migration between builds
-    'south', 
+    'south',
+    'chunked_upload',
 )
 
 # NG: added for django-guardian
@@ -305,6 +306,8 @@ SOUTH_TESTS_MIGRATE = False
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = 100
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
+
+CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 
 # === Refinery Settings ===
 

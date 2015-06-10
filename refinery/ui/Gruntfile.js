@@ -34,7 +34,14 @@ module.exports = function(grunt) {
         'lodash/dist/lodash.min.js',
         'graphlib/dist/graphlib.core.min.js',
         'dagre/dist/dagre.core.min.js',
-        'spectrum/spectrum.js'
+        'spectrum/spectrum.js',
+        'jquery-file-upload/js/vendor/jquery.ui.widget.js',
+        'jquery-file-upload/js/jquery.iframe-transport.js',
+        'jquery-file-upload/js/jquery.fileupload.js',
+        'jquery-file-upload/js/jquery.fileupload-process.js',
+        'jquery-file-upload/js/jquery.fileupload-validate.js',
+        'jquery-file-upload/js/jquery.fileupload-angular.js',
+        'spark-md5/spark-md5.js'
       ],
       map: [
         // uncompressed source is required along with map for debugging
@@ -51,12 +58,16 @@ module.exports = function(grunt) {
         'tipsy/src/stylesheets/tipsy.css',
         'c3/c3.css',
         'ng-grid/ng-grid.css',
-        'spectrum/spectrum.css'
+        'spectrum/spectrum.css',
+        'jquery-file-upload/css/style.css',
+        'jquery-file-upload/css/jquery.fileupload.css',
+        'jquery-file-upload/css/jquery.fileupload-ui.css'
       ],
       img: [
         'select2/select2.png',
         'select2/select2-spinner.gif',
-        'tipsy/src/images/tipsy.gif'
+        'tipsy/src/images/tipsy.gif',
+        'jquery-file-upload/img/loading.gif'
       ]
     },
 

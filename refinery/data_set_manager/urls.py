@@ -7,8 +7,11 @@ Created on May 11, 2012
 from django.conf.urls.defaults import patterns, url
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from data_set_manager.views import ImportISATabView, ProcessISATabView,\
-    ProcessMetadataTableView, CheckDataFilesView
+from data_set_manager.views import (
+    ImportISATabView, ProcessISATabView, ProcessMetadataTableView,
+    CheckDataFilesView, FileUploadView, ChunkedFileUploadView,
+    ChunkedFileUploadCompleteView
+)
 
 
 urlpatterns = patterns('data_set_manager.views',
@@ -33,4 +36,12 @@ urlpatterns = patterns('data_set_manager.views',
         name='process_metadata_table'),
     url(r'^import/check_files/$', CheckDataFilesView.as_view(),
         name='check_files'),
+    url(r'^import/file-upload-form/$', login_required(FileUploadView.as_view()),
+        name='upload_files'),
+    url(r'^import/chunked-upload/$',
+        csrf_exempt(ChunkedFileUploadView.as_view()),
+        name='api_chunked_upload'),
+    url(r'^import/chunked-upload-complete/$',
+        csrf_exempt(ChunkedFileUploadCompleteView.as_view()),
+        name='api_chunked_upload_complete'),
 )

@@ -8,6 +8,8 @@ import os
 import simplejson as json
 from urlparse import urlparse
 from celery.result import AsyncResult
+from chunked_upload.models import ChunkedUpload
+from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 from django import forms
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse, \
@@ -15,6 +17,7 @@ from django.http import HttpResponseRedirect, HttpResponse, \
 from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
+from django.views.generic.base import TemplateView
 from haystack.query import SearchQuerySet
 from core.models import *
 from data_set_manager.single_file_column_parser import process_metadata_table
@@ -347,3 +350,43 @@ class CheckDataFilesView(View):
         # prefix output to protect from JSON vulnerability (stripped by Angular)
         return HttpResponse(")]}',\n" + json.dumps(bad_file_list),
                             content_type="application/json")
+
+
+class FileUploadView(TemplateView):
+    """Data file upload form view
+
+    """
+    template_name = 'data_set_manager/file-import.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
+
+
+class ChunkedFileUploadView(ChunkedUploadView):
+
+    model = ChunkedUpload
+    field_name = "files[]"
+
+    def check_permissions(self, request):
+        # Allow non authenticated users to make uploads
+        pass
+
+
+class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
+
+    model = ChunkedUpload
+
+    def check_permissions(self, request):
+        # Allow non authenticated users to make uploads
+        pass
+
+    def on_completion(self, uploaded_file, request):
+        # Do something with the uploaded file. E.g.:
+        # * Store the uploaded file on another model:
+        # SomeModel.objects.create(user=request.user, file=uploaded_file)
+        # * Pass it as an argument to a function:
+        # function_that_process_file(uploaded_file)
+        pass
+
+    def get_response_data(self, chunked_upload, request):
+        return {'message': 'You successfully uploaded this file'}

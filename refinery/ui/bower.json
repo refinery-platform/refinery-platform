@@ -26,6 +26,8 @@
     "lodash": "2.4.1",
     "graphlib": "1.0.1",
     "dagre": "0.7.1",
-    "spectrum": "1.7.0"
+    "spectrum": "1.7.0",
+    "jquery-file-upload": "~9.10.0",
+    "spark-md5": "~0.0.5"
   }
 }
