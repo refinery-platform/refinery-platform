@@ -97,7 +97,9 @@ SolrDocumentTable.prototype.initialize = function() {
 SolrDocumentTable.prototype.render = function(solrResponse) {
   var self = this;
   // clear parent element
-  $("#" + self._parentElementId).html("");
+  $("#" + self._parentElementId)
+    .trigger('refinery/solrTable/destroy')
+    .html("");
   self._renderTable(solrResponse);
   //$( "#" + self._parentElementId ).html( code );
   // attach event listeners
@@ -161,7 +163,7 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
    * Trigger event on self._parentElementId so that subsequent tools know that
    * the table exists
    */
-  $('#' + self._parentElementId).trigger('refinery/table_matrix/created');
+  $('#' + self._parentElementId).trigger('refinery/solrTable/created');
 
   self._generatePagerControl(pagerControlId, 5, 2, 2);
 

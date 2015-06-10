@@ -796,7 +796,8 @@
     (function(window, $, undefined){
       'use strict';
 
-      var $table = $('#table_matrix'),
+      var $solrTable = $('#solr-table-view'),
+          $table = $('#table_matrix'),
           $window = $(window);
 
       /**
@@ -845,6 +846,12 @@
         $window.on('refinery/floatThead/reflow', debounce(function () {
           $table.floatThead('reflow');
         }, 50));
+
+        $solrTable.on('refinery/solrTable/destroy', destroyFloatThead);
+      }
+
+      function destroyFloatThead () {
+        $table.floatThead('destroy');
       }
 
       /*
@@ -853,7 +860,7 @@
        * to only listen to that event once!
        */
       if (!$table.length) {
-        $('#solr-table-view').one('refinery/table_matrix/created', function () {
+        $solrTable.on('refinery/solrTable/created', function () {
           $table = $('#table_matrix');
           initFloatThead();
         })
