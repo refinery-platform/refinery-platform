@@ -826,10 +826,19 @@
         $window.on('resize orientationchange', debounce(function () {
           $table.floatThead('reflow');
         }, 250));
+
+        $window.on('refinery/floatThead/reflow', debounce(function () {
+          $table.floatThead('reflow');
+        }, 50));
       }
 
+      /*
+       * The table might not have been created when this code runs so we have to
+       * listen to a custom event to tell us that we are all set. We make sure
+       * to only listen to that event once!
+       */
       if (!$table.length) {
-        $('#solr-table-view').on('refinery/table_matrix/created', function () {
+        $('#solr-table-view').one('refinery/table_matrix/created', function () {
           $table = $('#table_matrix');
           initFloatThead();
         })

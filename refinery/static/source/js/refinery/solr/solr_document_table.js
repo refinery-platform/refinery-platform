@@ -247,6 +247,7 @@ SolrDocumentTable.prototype._toggleIndicator = function(){
     $(".trimmedDocStr").toggle();
     $(".trimmedTextArrow#right").toggle();
     $(".icon-chevron-sign-left").toggle();
+    $(window).trigger('refinery/floatThead/reflow');
   });
 };
 
