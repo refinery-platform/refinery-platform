@@ -57,7 +57,6 @@ module.exports = function(grunt) {
       },
       uiBuild: [
         '<%= cfg.basePath.ui.build %>'
-
       ],
       uiCompile: [
         '<%= cfg.basePath.ui.compile %>'
@@ -77,6 +76,14 @@ module.exports = function(grunt) {
      *
      */
     copy: {
+      uiBuildImages: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/images/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.ui.build %>/images/'
+        }]
+      },
       uiBuildScripts: {
         files: [{
           expand: true,
@@ -107,6 +114,14 @@ module.exports = function(grunt) {
           cwd: '<%= cfg.vendorPath %>/',
           src: ['<%= cfg.files.vendor %>'],
           dest: '<%= cfg.basePath.ui.build %>/vendor/'
+        }]
+      },
+      uiCompileImages: {
+        files: [{
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/images/',
+          src: ['**/*'],
+          dest: '<%= cfg.basePath.ui.compile %>/images/'
         }]
       },
       uiCompileScripts: {
@@ -228,6 +243,18 @@ module.exports = function(grunt) {
         options: {
           livereload: false
         }
+      },
+
+      /*
+       * When UI images change we copy them over.
+       */
+      uiImages: {
+        files: [
+          '<%= cfg.basePath.ui.src %>/images/**/*'
+        ],
+        tasks: [
+          'copy:uiBuildImages'
+        ]
       },
 
       /*
@@ -456,6 +483,7 @@ module.exports = function(grunt) {
     'clean:uiBuild',
     'clean:staticBuild',
     'less:build',
+    'copy:uiBuildImages',
     'copy:uiBuildScripts',
     'copy:uiBuildStyles',
     'copy:uiBuildTemplates',
@@ -477,6 +505,7 @@ module.exports = function(grunt) {
     'uglify',
     // For the time being, scripts are simply copied.
     // 'copy:uiCompileScripts',
+    'copy:uiCompileImages',
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
     'copy:staticCompile',
