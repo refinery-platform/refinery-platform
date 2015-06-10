@@ -1,5 +1,6 @@
 {
     "basePath": {
+        "djangoTemplates": "../templates",
         "ui": {
             "build": "development",
             "compile": "app",
@@ -45,7 +46,8 @@
             "spectrum/spectrum.js",
             "tipsy/src/images/tipsy.gif",
             "tipsy/src/javascripts/jquery.tipsy.js",
-            "tipsy/src/stylesheets/tipsy.css"
+            "tipsy/src/stylesheets/tipsy.css",
+            "floatThead/dist/jquery.floatThead.min.js"
         ]
     },
     "vendorPath": "bower_components"

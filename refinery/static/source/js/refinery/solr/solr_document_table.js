@@ -1,10 +1,10 @@
 /*
  * solr_document_table.js
- *  
- * Author: Nils Gehlenborg 
+ *
+ * Author: Nils Gehlenborg
  * Created: 28 January 2013
  *
- * A table viewer that operates on a DataSetSolrQuery. 
+ * A table viewer that operates on a DataSetSolrQuery.
  */
 
 /*
@@ -151,12 +151,17 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
     'html': ''
   }).appendTo('#' + self._parentElementId);
 
-
   $('<div/>', {
     'class': 'dropdown',
     'id': pagerControlId,
     'html': ''
   }).appendTo('#' + bottomControlsId);
+
+  /*
+   * Trigger event on self._parentElementId so that subsequent tools know that
+   * the table exists
+   */
+  $('#' + self._parentElementId).trigger('refinery/table_matrix/created');
 
   self._generatePagerControl(pagerControlId, 5, 2, 2);
 

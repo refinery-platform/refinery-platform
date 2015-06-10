@@ -6,7 +6,7 @@ var currentDataSetUiMode = DATA_SET_UI_MODE_BROWSE;
 
 // Angular monkey patch to address removal of trailing slashes by $resource: https://github.com/angular/angular.js/issues/992
 angular.module('ngResource').config(['$provide', '$httpProvider',
-    function($provide, $httpProvider) {        
+    function($provide, $httpProvider) {
         $provide.decorator('$resource', function($delegate) {
             return function() {
                 'use strict';
@@ -53,7 +53,7 @@ angular.module('refineryNodeMapping', [
 .config(['$httpProvider', function($httpProvider) {
   // use Django XSRF/CSRF lingo to enable communication with API
   $httpProvider.defaults.xsrfCookieName = 'csrftoken';
-  $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';      
+  $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
 }])
 
 
@@ -71,9 +71,9 @@ angular.module('refineryNodeMapping', [
       controller: function($scope,$rootScope,$timeout) {
         $rootScope.mode = "browse";
         $rootScope.showCtrlTab = false;
-        $rootScope.mainTabSpanSize = "span12";
+        $rootScope.mainTabSpanSize = "span12 no-margin";
         $rootScope.ctrlTabSpanSize = "";
-        
+
         // calls global resizing function implemented in base.html to rescale height of scrollable elements
         // timeout is needed to execute after DOM changes
         $timeout( sizing, 0 );
@@ -83,7 +83,7 @@ angular.module('refineryNodeMapping', [
   $stateProvider
     .state('analyze', {
       templateUrl: "/static/partials/data_set_ui_mode_analyze.html",
-      //url: '/analyze',      
+      //url: '/analyze',
       controller: function($scope,$rootScope,$timeout) {
         $rootScope.mode = "analyze";
         $rootScope.showCtrlTab = true;
@@ -104,7 +104,7 @@ angular.module('refineryNodeMapping', [
         $rootScope.mode = "visualize";
         $rootScope.showCtrlTab = true;
         $rootScope.mainTabSpanSize = "span10";
-        $rootScope.ctrlTabSpanSize = "span2";        
+        $rootScope.ctrlTabSpanSize = "span2";
 
         // calls global resizing function implemented in base.html to rescale height of scrollable elements
         // timeout is needed to execute after DOM changes
@@ -153,14 +153,14 @@ angular.module('refineryNodeMapping', [
     }
 
     // calls global resizing function implemented in base.html to rescale height of scrollable elements
-    // timeout is needed to execute after DOM changes    
+    // timeout is needed to execute after DOM changes
     $timeout( sizing, 0 );
-    
+
     $scope.currentNodePairIndex = 0;
     $scope.loadMapping( $scope.currentNodePairIndex );
 
     $scope.initializeNodeDropzones( $scope.currentWorkflow.input_relationships[0].set1, $scope.currentWorkflow.input_relationships[0].set2 );
-  });  
+  });
 
   $scope.initializeNodeDropzones = function( name0, name1 ) {
     name0 = name0 || "";
@@ -179,7 +179,7 @@ angular.module('refineryNodeMapping', [
           "attributes": null,
           "uuid": null
         }
-      };    
+      };
   };
 
   $scope.initializeNodeDropzones();
@@ -209,7 +209,7 @@ angular.module('refineryNodeMapping', [
         }
         else {
           $scope.createMapping();
-        }        
+        }
       }, function() {
         $log.error( "Unable to remove pair " + $scope.currentNodeRelationship.uuid + " from mapping " + $scope.currentNodeRelationship.name );
         // TODO: show error message
@@ -250,15 +250,15 @@ angular.module('refineryNodeMapping', [
   $scope.loadMapping = function( index ) {
     $log.debug( "Loading pair " + index + "... ");
 
-    if ( $scope.currentNodeRelationship.node_pairs.length > index ) {      
+    if ( $scope.currentNodeRelationship.node_pairs.length > index ) {
       $scope.currentNodePair = $resource( $scope.currentNodeRelationship.node_pairs[index], { format: 'json' } ).get( {}, function ( data ) {
         $scope.updateNodeDropzone( 0, data.node1.split("/").reverse()[1] );
         $scope.updateNodeDropzone( 1, data.node2.split("/").reverse()[1] );
       }, function ( error ) {
-        $scope.currentNodePair = null;        
+        $scope.currentNodePair = null;
         console.error( "Failed to load mapping." );
       } );
-    } 
+    }
     else {
       $scope.initializeNodeDropzones();
       $scope.currentNodePair = null;
@@ -268,7 +268,7 @@ angular.module('refineryNodeMapping', [
   $scope.hasNextMapping = function () {
     if ( $scope.currentNodeRelationship.node_pairs.length < 1 ) {
       return false;
-    }    
+    }
 
     return true;
   };
@@ -292,7 +292,7 @@ angular.module('refineryNodeMapping', [
     if ( 0 > --$scope.currentNodePairIndex ) {
       $scope.currentNodePairIndex = $scope.currentNodeRelationship.node_pairs.length - 1;
     }
-    $scope.loadMapping( $scope.currentNodePairIndex );      
+    $scope.loadMapping( $scope.currentNodePairIndex );
   };
 
   $scope.updateNodeDropzone = function(dropzoneIndex, uuid ) {
@@ -303,7 +303,7 @@ angular.module('refineryNodeMapping', [
         if ( data.response.docs.length == 1 ) {
           angular.forEach( $scope.attributeOrderList, function( attribute ) {
             attributes.push( { "name": solrService.prettifyFieldName( attribute, true ), "value": data.response.docs[0][attribute] } );
-          });          
+          });
         }
         else {
           attributes = null;
@@ -320,7 +320,7 @@ angular.module('refineryNodeMapping', [
 
       var uuid = event.srcElement.attributes['node-uuid'].value;
       event.dataTransfer.setData('text/plain', JSON.stringify( { uuid: uuid, html: this.innerHTML } ) );
-  };  
+  };
 
   $scope.handleNodeDragEnd = function(e){
       this.style.opacity = '1.0';
@@ -339,7 +339,7 @@ angular.module('refineryNodeMapping', [
 
       // get dropzone index
       var dropzoneIndex = null;
-      try {        
+      try {
         // here we have to deal with browser specific differences in the dropevent event data structure
         if ( e.srcElement ) {
           // safari, chrome
@@ -361,7 +361,7 @@ angular.module('refineryNodeMapping', [
       // parse incoming data into object
       try {
         data = JSON.parse( dataString );
-      } 
+      }
       catch ( exception ) {
         console.error("Parsing error: " + exception);
       }
@@ -374,7 +374,7 @@ angular.module('refineryNodeMapping', [
         if ( $scope.isPending() ) {
           $log.debug("Saving new file pair ...");
           $scope.currentNodePair = new nodePairResource( { node1: "/api/v1/node/" + $scope.nodeDropzones[0].uuid + "/", node2: "/api/v1/node/" + $scope.nodeDropzones[1].uuid + "/" } );
-  
+
           $scope.currentNodePair.$save( function( response, responseHeaders) {
             $scope.currentNodePair = response;
             $scope.currentNodeRelationship.node_pairs.push( $scope.currentNodePair.resource_uri );
@@ -395,7 +395,7 @@ angular.module('refineryNodeMapping', [
 
       $scope.$apply();
   };
-  
+
   $scope.handleNodeDragEnter = function (e) {
       e.preventDefault(); // Necessary. Allows us to drop.
       e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
@@ -419,7 +419,7 @@ angular.module('refineryNodeMapping', [
       e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
 
       return false;
-  };  
+  };
 
   $scope.loadNodeAttributes = function( uuid, attributeList, success, error ) {
       solrFactory.get({ "nodeUuid": uuid, "attributeList": attributeList.join() }, function( data ) { success( data ); }, function( data ) { error( data ); } );
@@ -443,18 +443,18 @@ angular.module('refineryNodeMapping', [
       setA: '=',
       setB: '='
     },
-    link: function (scope, elem, attrs) {        
+    link: function (scope, elem, attrs) {
 
         var updateDiff = function() {
           scope.diffAttributes = [];
           scope.commonAttributes = [];
-          
+
           var i = 0;
 
           $log.debug( "Updating diff lists ..." );
 
           if ( scope.setA.attributes === null && scope.setB.attributes === null ) {
-            $log.debug( "Both sets empty" );            
+            $log.debug( "Both sets empty" );
             return;
           }
 
@@ -468,25 +468,25 @@ angular.module('refineryNodeMapping', [
                   scope.diffAttributes.push( { name: scope.setA.attributes[i].name, valueSetA: scope.setA.attributes[i].value, valueSetB: scope.setB.attributes[i].value });
                 }
               }
-            }          
+            }
 
             return;
-          }           
+          }
 
           if ( scope.setA.attributes === null ) {
             for ( i = 0; i < scope.setB.attributes.length; ++i ) {
                   scope.commonAttributes.push( { name: scope.setB.attributes[i].name, value: scope.setB.attributes[i].value });
-            }      
+            }
 
-            return;                 
+            return;
           }
-          
+
           if ( scope.setB.attributes === null ) {
             for ( i = 0; i < scope.setA.attributes.length; ++i ) {
                   scope.commonAttributes.push( { name: scope.setA.attributes[i].name, value: scope.setA.attributes[i].value });
-            }      
+            }
 
-            return;                 
+            return;
           }
 
         };
@@ -500,7 +500,7 @@ angular.module('refineryNodeMapping', [
                $log.debug( "Attribute setA changed" );
                updateDiff();
              }
-         });        
+         });
 
         scope.$watch('setB.attributes', function( oldVal, newVal ) {
              if( oldVal && !newVal ) {
@@ -511,8 +511,8 @@ angular.module('refineryNodeMapping', [
                $log.debug( "Attribute setB changed" );
                updateDiff();
              }
-         });        
-    }    
+         });
+    }
   };
 })
 
@@ -541,12 +541,12 @@ angular.module('refineryNodeMapping', [
   $rootScope.mode = DATA_SET_UI_MODE_BROWSE;
 
   $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
-    $scope.currentWorkflow = currentWorkflow;  
-  });  
+    $scope.currentWorkflow = currentWorkflow;
+  });
 
   $scope.$onRootScope('nodeRelationshipChangedEvent', function( event, currentNodeRelationship ) {
     $scope.currentNodeRelationship = currentNodeRelationship;
-  });  
+  });
 })
 
 .factory("NodeSetList", function($resource) {

@@ -13,12 +13,12 @@
 				{% if user.first_name != "" or user.last_name != "" %}
 					{{ user.first_name }} {{ user.last_name }}
 				{% else %}
-					{{ user.username }}				
+					{{ user.username }}
 				{% endif %}
 			</small>
       <div id="user-id" style="display:none;">{{ user.id }}</div>
-		{% endif %} 
-	</h1>  	  	
+		{% endif %}
+	</h1>
   </div>
 {% endblock %}
 
@@ -26,7 +26,7 @@
 {% if users %}
 	<!-- only super users get to see this -->
 	<!--
-	<h2>Users ({{ users|length}})</h2> 
+	<h2>Users ({{ users|length}})</h2>
     <ul>
     {% for user in users %}
         <li><a href="users/{{ user.username }}">{{ user.username }}</a>: {{ user.first_name }} {{ user.last_name }} ({{ user.get_profile.affiliation }}): {{ user.email }}</li>
@@ -40,20 +40,24 @@
 		<div class="span8">
 	{% else %}
 		<div class="span4">
-	{% endif %}	
+	{% endif %}
 		<div class="refinery-panel refinery-panel-content scrollable">
 			<div class="refinery-header">
 				<span class="refinery-header-left">
-					<h3><i class="icon-file"></i>&nbsp;&nbsp;Data Sets</h3>
+					<h3><i class="icon-file m-r-1-4"></i>Data Sets</h3>
 				</span>
-				{% if user.is_authenticated and not REFINERY_REPOSITORY_MODE %}       
+				{% if user.is_authenticated and not REFINERY_REPOSITORY_MODE %}
 					<span class="refinery-header-right">
-						<h4><a href={% url "process_isa_tab" %}><i class="icon-plus-sign"></i></a></h4>
-					</span> 
-				{% endif %}				
+						<h4>
+              <a href={% url "process_isa_tab" %} class="no-underline-hover">
+                <i class="icon-plus-sign"></i>
+              </a>
+            </h4>
+					</span>
+				{% endif %}
 			</div>
-		
-		{% if data_sets %}	
+
+		{% if data_sets %}
 			<table id="dataset-table" class="table table-condensed">
 				<thead>
 					<tr>
@@ -64,7 +68,7 @@
 						<th>
 							Description
 						</th>
-						{% endif %}	    
+						{% endif %}
             {% if user.is_authenticated %}
                 <th>
                   Share
@@ -82,7 +86,7 @@
 								{% if data_set.is_public %}
 									<i class="icon-globe"></i>
 								{% else %}
-									<i class="icon-group"></i>								
+									<i class="icon-group"></i>
 								{% endif %}
 							{% endif %}
 						</td>
@@ -95,22 +99,24 @@
 									<tr>
 										<td>
 											<i class="icon-download"></i>
-										</td>																		
+										</td>
 										<td>
 											<a href="{{download.file_store_item.get_full_url}}">{{ download.name }}</a>
-										</td>																		
+										</td>
 										<td>
 											{{ download.file_store_item.get_file_size|filesizeformat }}
-										</td>																		
+										</td>
 									</tr>
 									{% endfor %}
 								</table>
 							{% endif %}
 			        	</td>
                 {% if user.is_authenticated %}
-                    <td width="0%">
+                    <td width="0%" class="text-align-center">
                         <div style="display:none;">
-                            <a ng-click="openPermissionEditor('dataset_sharing', '{{ data_set.uuid }}')">Edit</a>
+                            <a ng-click="openPermissionEditor('dataset_sharing', '{{ data_set.uuid }}')" class="icon-only">
+                              <i class="icon-edit icon-bigger p-a-1-4"></i>
+                            </a>
                         </div>
                     </td>
                 {% endif %}
@@ -118,42 +124,42 @@
 				    	<td width="100%">
 							{{ data_set.summary }}
 						</td>
-						{% endif %}	    
+						{% endif %}
 			        </tr>
 		    	{% endfor %}
-				</tbody>		
+				</tbody>
 			</table>
-			 
+
 		{% else %}
 			<div class="alert alert-info">
-				{% if user.is_authenticated %}       
+				{% if user.is_authenticated %}
 					No data sets available.
 				{% else %}
 					No public data sets available.
-				{% endif %}		  
+				{% endif %}
 			</div>
 		{% endif %}
-		
-		</div>	
-	</div>	
-	
+
+		</div>
+	</div>
+
 <div class="span4">
 
 <div class="refinery-panel refinery-panel-content scrollable">
 <div class="refinery-header">
 	<span class="refinery-header-left">
 		{% if REFINERY_REPOSITORY_MODE %}
-		<h3><i class="icon-download"></i>&nbsp;&nbsp;Downloads</h3>
+		<h3><i class="icon-download m-r-1-4"></i>Downloads</h3>
 		{% else %}
-		<h3><i class="icon-folder-open"></i>&nbsp;&nbsp;Projects</h3>		
+		<h3><i class="icon-folder-open m-r-1-4"></i>Projects</h3>
 		{% endif %}
 	</span>
 
-	{% if user.is_authenticated and not REFINERY_REPOSITORY_MODE %}       
+	{% if user.is_authenticated and not REFINERY_REPOSITORY_MODE %}
 		<span class="refinery-header-right">
-			<h4><a href="{% url "project_new" %}"><i class="icon-plus-sign"></i></a></h4> 
-		</span>	
-	{% endif %}		
+			<h4><a href="{% url "project_new" %}" class="no-underline-hover"><i class="icon-plus-sign"></i></a></h4>
+		</span>
+	{% endif %}
 </div>
 
 
@@ -164,14 +170,14 @@
 		<tr>
 			<th width="100%">
 				Name
-			</th>    
+			</th>
 			<th width="0%">
 				{% if REFINERY_REPOSITORY_MODE %}
 				Archives
 				{% else %}
-				Analyses		
+				Analyses
 				{% endif %}
-			</th>    
+			</th>
       {% if user.is_authenticated %}
         <th width="0%">
           Share
@@ -180,7 +186,7 @@
 		</tr>
 	</thead>
 	<tbody>
-		
+
 	{% if unassigned_analyses %}
 		{% if unassigned_analyses.all|length > 0 %}
 			{% if not REFINERY_REPOSITORY_MODE %}
@@ -211,7 +217,7 @@
 			    		{% endif %}
 			    	</td>
 			    </tr>
-			{% endfor %}	
+			{% endfor %}
 		{% endif %}
 	{% endif %}
 
@@ -225,7 +231,7 @@
 					{% if project.is_public %}
 						<i class="icon-globe"></i>
 					{% else %}
-						<i class="icon-group"></i>								
+						<i class="icon-group"></i>
 					{% endif %}
 				{% endif %}
 	        	&nbsp;<a href="{% url "project" project.uuid %}">{{ project.name }}</a>
@@ -235,9 +241,11 @@
 	        {{project.analyses.all|length}}
 	      </td>
         {% if user.is_authenticated %}
-            <td>
+            <td class="text-align-center">
                 <div style="display:none;">
-                    <a ng-click="openPermissionEditor('project_sharing', '{{ project.uuid }}')">Edit</a>
+                    <a ng-click="openPermissionEditor('project_sharing', '{{ project.uuid }}')" class="icon-only">
+                      <i class="icon-edit icon-bigger p-a-1-4"></i>
+                    </a>
                 </div>
             </td>
         {% endif %}
@@ -262,47 +270,47 @@
 			{% endfor %}
 	    {% endfor %}
 	{% endif %}
-		
+
 	</tbody>
 </table>
 {% else %}
 
 	<div class="alert alert-info">
 		{% if REFINERY_REPOSITORY_MODE %}
-			{% if user.is_authenticated %}       
+			{% if user.is_authenticated %}
 				No archives available.
 			{% else %}
 				No public archives available.
-			{% endif %}		  
+			{% endif %}
 		{% else %}
-			{% if user.is_authenticated %}       
+			{% if user.is_authenticated %}
 				No projects available.
 			{% else %}
 				No public projects available.
-			{% endif %}		  
-		{% endif %}	
+			{% endif %}
+		{% endif %}
 	</div>
 {% endif %}
-</div> 		
+</div>
 </div>
 
 
 {% if not REFINERY_REPOSITORY_MODE %}
 <div class="span4">
-<div class="refinery-panel refinery-panel-content scrollable">	
+<div class="refinery-panel refinery-panel-content scrollable">
 <div class="refinery-header">
 	<span class="refinery-header-left">
-		<h3><i class="icon-cog"></i>&nbsp;&nbsp;Workflows</h3>
+		<h3><i class="icon-cog m-r-1-4"></i>Workflows</h3>
 	</span>
 </div>
-	
+
 {% if workflows %}
 	<table id="workflow-table" class="table table-condensed">
 		<thead>
 			<tr>
 				<th>
 					Name
-				</th>    
+				</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -314,18 +322,18 @@
         	</td>
         </tr>
     	{% endfor %}
-		</tbody>		
+		</tbody>
 	</table>
 {% else %}
 	<div class="alert alert-info">
-		{% if user.is_authenticated %}       
+		{% if user.is_authenticated %}
 			No workflows available.
 		{% else %}
 			No public workflows available.
-		{% endif %}		  
+		{% endif %}
 	</div>
 {% endif %}
-	
+
 </div>
 </div>
 {% endif %}
@@ -336,8 +344,8 @@
 {% block script %}
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/analysis_manager/analysis_monitor.js"></script>
 
-  <script>	    	
-    $(document).ready(function() {		
+  <script>
+    $(document).ready(function() {
       var monitors = [];
       var callbacks = [];
       var intervalIds = [];
@@ -374,10 +382,10 @@
         };
 
         //monitors["{{ analysis.uuid }}"].isAnalysisRunning( callbacks["{{ analysis.uuid }}"]() );
-        callbacks["{{ analysis.uuid }}"]();			
+        callbacks["{{ analysis.uuid }}"]();
 
         intervalIds["{{ analysis.uuid }}"] = setInterval( callbacks["{{ analysis.uuid }}"], 5000 );
       {% endfor %}
-    });    		
+    });
   </script>
 {% endblock %}

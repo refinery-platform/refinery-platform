@@ -23,7 +23,11 @@ from settings import MEDIA_ROOT, MEDIA_URL
 
 
 # NG: facets for Haystack
-sqs = SearchQuerySet().using( "core" ).models( DataSet ).facet('measurement').facet('technology').highlight()
+sqs = (SearchQuerySet().using("core")
+                       .models(DataSet)
+                       .facet('measurement')
+                       .facet('technology')
+                       .highlight())
 
 # Uncomment the next two lines to enable the admin:
 admin.autodiscover()
@@ -50,25 +54,26 @@ v1_api.register(DataSetSharingResource())
 v1_api.register(WorkflowSharingResource())
 v1_api.register(MemberManagementResource())
 v1_api.register(GroupManagementResource())
-#v1_api.register(TaxonResource())
-#v1_api.register(GenomeBuildResource())
-#v1_api.register(CytoBandResource())
-#v1_api.register(ChromInfoResource())
-#v1_api.register(GeneResource())
-#v1_api.register(GapRegionFileResource())
-#v1_api.register(WigDescriptionResource())
-#v1_api.register(EmpiricalMappabilityResource())
-#v1_api.register(TheoreticalMappabilityResource())
-#v1_api.register(GCContentResource())
-#v1_api.register(ConservationTrackResource())
-#v1_api.register(hg19_GenCodeResource())
-#v1_api.register(ce10_WormBaseResource())
-#v1_api.register(dm3_FlyBaseResource())
+# v1_api.register(TaxonResource())
+# v1_api.register(GenomeBuildResource())
+# v1_api.register(CytoBandResource())
+# v1_api.register(ChromInfoResource())
+# v1_api.register(GeneResource())
+# v1_api.register(GapRegionFileResource())
+# v1_api.register(WigDescriptionResource())
+# v1_api.register(EmpiricalMappabilityResource())
+# v1_api.register(TheoreticalMappabilityResource())
+# v1_api.register(GCContentResource())
+# v1_api.register(ConservationTrackResource())
+# v1_api.register(hg19_GenCodeResource())
+# v1_api.register(ce10_WormBaseResource())
+# v1_api.register(dm3_FlyBaseResource())
 
 
-#patterns for all of the different applications
-urlpatterns = patterns('',
-    #links in core urls
+# patterns for all of the different applications
+urlpatterns = patterns(
+    '',
+    # links in core urls
     url(r'^', include('core.urls')),
 
     url(r'^annotation_server/', include('annotation_server.urls')),
@@ -82,32 +87,65 @@ urlpatterns = patterns('',
 
     # NG: added to include additional views for admin
     # (this is not the recommended way but the only one I got to work)
-    #url(r"^admin/core/test_workflows/$", admin.site.admin_view( import_workflows ) ),    
-    #url(r"^admin/core/test_data/$", admin.site.admin_view( admin_test_data ) ),    
+    # url(
+    #     r"^admin/core/test_workflows/$",
+    #     admin.site.admin_view(import_workflows)
+    # ),
+    # url(r"^admin/core/test_data/$", admin.site.admin_view(admin_test_data)),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^djangular/', include('djangular.urls')),    
-    url(r'^accounts/password/reset/confirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$',
+    url(r'^djangular/', include('djangular.urls')),
+    url(
+        r'^accounts/password/reset/confirm/' +
+        '(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$',
         'django.contrib.auth.views.password_reset_confirm',
-        {'post_reset_redirect': '/accounts/login/?next=/'}),
+        {
+            'post_reset_redirect': '/accounts/login/?next=/'
+        }
+    ),
     url(r'^accounts/profile/$', 'core.views.user_profile', name='user_profile'),
-    url(r'^accounts/profile/edit/$', 'core.views.user_profile_edit', name='user_profile_edit'),
-    url(r'^accounts/register/$', RegistrationView.as_view(),
-        {'form_class': RegistrationFormUniqueEmail,
-         'backend': 'registration.backends.default.DefaultBackend'}, name='registration.views.register'),
-    url(r'^accounts/activate/(?P<activation_key>\w+)/$', ActivationView.as_view(),
-        {'success_url': '/accounts/login/?next=/accounts/profile/edit',
-         'backend': 'registration.backends.default.DefaultBackend'}, name='registration.views.activate'),
+    url(
+        r'^accounts/profile/edit/$',
+        'core.views.user_profile_edit',
+        name='user_profile_edit'
+    ),
+    url(
+        r'^accounts/register/$', RegistrationView.as_view(),
+        {
+            'form_class': RegistrationFormUniqueEmail,
+            'backend': 'registration.backends.default.DefaultBackend'
+        },
+        name='registration.views.register'
+    ),
+    url(
+        r'^accounts/activate/(?P<activation_key>\w+)/$',
+        ActivationView.as_view(),
+        {
+            'success_url': '/accounts/login/?next=/accounts/profile/edit',
+            'backend': 'registration.backends.default.DefaultBackend'
+        },
+        name='registration.views.activate'
+    ),
     url(r'^accounts/', include('registration.urls')),
 
     # NG: tastypie API urls
     url(r'^api/', include(v1_api.urls)),
-    
+
     # NG: Haystack (searching and querying) urls
-    #url(r'^search/', include('haystack.urls')),
-    url(r'^search/', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=sqs), name='search' ),
+    # url(r'^search/', include('haystack.urls')),
+    url(
+        r'^search/',
+        FacetedSearchView(
+            form_class=FacetedSearchForm,
+            searchqueryset=sqs
+        ),
+        name='search'
+    ),
     url(r'^typeahead/$', search_typeahead),
 
-    #(r'^favicon\.ico$', 'django.views.generic.simple.redirect_to', {'url': STATIC_URL+'images/favicon.ico'}),
+    # (r'^favicon\.ico$',
+    # 'django.views.generic.simple.redirect_to',
+    # {'url': STATIC_URL+'images/favicon.ico'}),
 
-) + static( MEDIA_URL, document_root=MEDIA_ROOT)
-# for "static" see https://docs.djangoproject.com/en/dev/howto/static-files/#serving-other-directories
+) + static(MEDIA_URL, document_root=MEDIA_ROOT)
+# for "static" see
+# https://docs.djangoproject.com/en/dev/howto/static-files/#serving-other-directories

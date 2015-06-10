@@ -280,6 +280,18 @@ module.exports = function(grunt) {
       },
 
       /*
+       * When static script files change we copy them over.
+       */
+      staticScripts: {
+        files: [
+          '<%= cfg.basePath.static.src %>/js/**/*.js'
+        ],
+        tasks: [
+          'copy:staticBuild'
+        ]
+      },
+
+      /*
        * When static LESS files change we translate them.
        */
       staticStyles: {
@@ -289,7 +301,16 @@ module.exports = function(grunt) {
         tasks: [
           'less:build'
         ]
-      }
+      },
+
+      /*
+       * When any of the django templates changes we just trigger a page reload
+       */
+      djangoTemplates: {
+        files: [
+          '<%= cfg.basePath.djangoTemplates %>/**/*'
+        ]
+      },
     },
 
     /*

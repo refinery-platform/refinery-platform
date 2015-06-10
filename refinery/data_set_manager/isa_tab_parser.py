@@ -20,7 +20,6 @@ import re
 import string
 import tempfile
 import data_set_manager.tasks
-import hashlib
 
 # get module logger
 logger = logging.getLogger(__name__)

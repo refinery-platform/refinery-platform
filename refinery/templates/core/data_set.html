@@ -321,8 +321,8 @@
                         <div class="tab-content">
                           <div class="tab-pane active fade in" id="table-view-tab">
                             <dynamic>
-                              <div class="refinery-panel-content scrollable">
-                                <div id="solr-table-view"></div>
+                              <div class="refinery-panel-content">
+                                <div id="solr-table-view" class="scrollable scrollable-floatThead"></div>
                               </div>
                             </dynamic>
                           </div>
@@ -703,6 +703,8 @@
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/analysis_api_client.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/data_set_monitor.js"></script>
 
+  <script type="text/javascript" src="{% static "vendor/floatThead/dist/jquery.floatThead.min.js" %}"></script>
+
   <!-- provenance visualization -->
   <script type="text/javascript" src="{% static "vendor/lodash/dist/lodash.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/graphlib/dist/graphlib.core.min.js" %}"></script>
@@ -787,6 +789,54 @@
       });
 
     });
+
+    /*
+     * Sticky table header using floatThead.js
+     */
+    (function(window, $, undefined){
+      'use strict';
+
+      var $table = $('#table_matrix'),
+          $window = $(window);
+
+      /**
+       * Debounce / Throttle
+       * Call a function with a delay after some calling.
+       * @param  {Function} fn    Function to be called.
+       * @param  {Int}      delay Delay in milliseconds.
+       * @return {Function}       Function to be called.
+       */
+      function debounce(fn, delay) {
+        var timer = null;
+        return function () {
+          var context = this, args = arguments;
+          clearTimeout(timer);
+          timer = setTimeout(function () {
+            fn.apply(context, args);
+          }, delay);
+        };
+      }
+
+      function initFloatThead () {
+        $table.floatThead({
+          scrollContainer: function($table){
+            return $table.closest('.scrollable-floatThead');
+          }
+        });
+        $window.on('resize orientationchange', debounce(function () {
+          $table.floatThead('reflow');
+        }, 250));
+      }
+
+      if (!$table.length) {
+        $('#solr-table-view').on('refinery/table_matrix/created', function () {
+          $table = $('#table_matrix');
+          initFloatThead();
+        })
+      } else {
+        initFloatThead();
+      }
+    })(window, jQuery);
   </script>
 
 {% endblock %}
