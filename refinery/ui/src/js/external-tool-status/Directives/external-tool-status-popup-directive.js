@@ -1,4 +1,4 @@
-angular.module('refineryExternalToolStatus')
+git angular.module('refineryExternalToolStatus')
     .directive("externalToolStatusPopover", ['$compile', '$templateCache', externalToolStatusPopover]);
 
 function externalToolStatusPopover($compile,$templateCache) {

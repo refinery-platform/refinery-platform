@@ -23,13 +23,13 @@ module.exports = function(config) {
       'bower_components/angular-mocks/angular-mocks.js',
       'bower_components/d3/d3.js',
       'src/js/refinery.js',
-      'src/js/**/*Module.js',
-      'src/js/**/*Controller.js',
-      'src/js/**/*Factory.js',
+      'src/js/**/*module.js',
+      'src/js/**/*controller.js',
+      'src/js/**/*factory.js',
       'src/js/*.js',
-      'src/js/*Spec.js',
+      'src/js/*.spec.js',
       'src/js/**/*.js',
-      'src/js/**/*Spec.js',
+      'src/js/**/*spec.js',
     ],
 
 

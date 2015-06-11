@@ -509,7 +509,7 @@ def delete_associated_externaltoolstatus(sender, instance, **kwargs):
         externaltool.delete()
     except:
         logger.error(
-            "There's no ExternalToolStatus with that unique instance identifier"
+            "There's no external-tool-status with that unique instance identifier"
         )
 
 

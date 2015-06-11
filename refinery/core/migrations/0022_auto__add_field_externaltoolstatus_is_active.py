@@ -8,14 +8,14 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'ExternalToolStatus.is_active'
+        # Adding field 'external-tool-status.is_active'
         db.add_column(u'core_externaltoolstatus', 'is_active',
                       self.gf('django.db.models.fields.BooleanField')(default=True),
                       keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting field 'ExternalToolStatus.is_active'
+        # Deleting field 'external-tool-status.is_active'
         db.delete_column(u'core_externaltoolstatus', 'is_active')
 
 
@@ -151,7 +151,7 @@ class Migration(SchemaMigration):
             'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
         },
         u'core.externaltoolstatus': {
-            'Meta': {'unique_together': "(('name', 'unique_instance_identifier'),)", 'object_name': 'ExternalToolStatus'},
+            'Meta': {'unique_together': "(('name', 'unique_instance_identifier'),)", 'object_name': 'external-tool-status'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'last_time_check': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
