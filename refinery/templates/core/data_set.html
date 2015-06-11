@@ -12,12 +12,12 @@
   <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
 
   <style type="text/css">
-    svg {
+    /*svg {
       background-color: none;
       padding: 5px;
       margin-top: 15px;
       margin-bottom: 15px;
-    }
+    }*/
 
     .background {
       fill: #FD0;
@@ -321,8 +321,8 @@
                         <div class="tab-content">
                           <div class="tab-pane active fade in" id="table-view-tab">
                             <dynamic>
-                              <div class="refinery-panel-content scrollable">
-                                <div id="solr-table-view"></div>
+                              <div class="refinery-panel-content">
+                                <div id="solr-table-view" class="scrollable scrollable-floatThead"></div>
                               </div>
                             </dynamic>
                           </div>
@@ -703,6 +703,8 @@
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/analysis_api_client.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/core/data_set_monitor.js"></script>
 
+  <script type="text/javascript" src="{% static "vendor/floatThead/dist/jquery.floatThead.min.js" %}"></script>
+
   <!-- provenance visualization -->
   <script type="text/javascript" src="{% static "vendor/lodash/dist/lodash.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/graphlib/dist/graphlib.core.min.js" %}"></script>
@@ -787,6 +789,85 @@
       });
 
     });
+
+    /*
+     * Sticky table header using floatThead.js
+     */
+    (function(window, $, undefined){
+      'use strict';
+
+      var $solrTable = $('#solr-table-view'),
+          $table = $('#table_matrix'),
+          $window = $(window);
+
+      /**
+       * Debounce / Throttle
+       * Call a function with a delay after some calling.
+       * @param  {Function} fn    Function to be called.
+       * @param  {Int}      delay Delay in milliseconds.
+       * @return {Function}       Function to be called.
+       */
+      function debounce(fn, delay) {
+        var timer = null;
+        return function () {
+          var context = this, args = arguments;
+          clearTimeout(timer);
+          timer = setTimeout(function () {
+            fn.apply(context, args);
+          }, delay);
+        };
+      }
+
+      /*
+       * Initialize floatThead with all its magic.
+       */
+      function initFloatThead () {
+        /*
+         * Start floatThead
+         */
+        $table.floatThead({
+          scrollContainer: function($table){
+            return $table.closest('.scrollable-floatThead');
+          },
+          zIndex: 2
+        });
+
+        /*
+         * Reflow floatThead when the browser's window size changes
+         */
+        $window.on('resize orientationchange', debounce(function () {
+          $table.floatThead('reflow');
+        }, 250));
+
+        /*
+         * Reflow floatThead when an custom script makes changes that change
+         * the tables layout.
+         */
+        $window.on('refinery/floatThead/reflow', debounce(function () {
+          $table.floatThead('reflow');
+        }, 50));
+
+        $solrTable.on('refinery/solrTable/destroy', destroyFloatThead);
+      }
+
+      function destroyFloatThead () {
+        $table.floatThead('destroy');
+      }
+
+      /*
+       * The table might not have been created when this code runs so we have to
+       * listen to a custom event to tell us that we are all set. We make sure
+       * to only listen to that event once!
+       */
+      if (!$table.length) {
+        $solrTable.on('refinery/solrTable/created', function () {
+          $table = $('#table_matrix');
+          initFloatThead();
+        })
+      } else {
+        initFloatThead();
+      }
+    })(window, jQuery);
   </script>
 
 {% endblock %}

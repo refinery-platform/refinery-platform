@@ -24,14 +24,15 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
     :type sharename: str.
     :param filetype: File type (must be one of the types declared in models.py).
     :type filetype: str.
-    :param permanent: Flag indicating whether to add this instance to the cache or not.
+    :param permanent: Flag indicating whether to add this instance to the cache
+        or not.
     :type permanent: bool.
-    :param file_size: For cases when the remote site specified by source URL doesn't provide file size in the HTTP headers.
+    :param file_size: For cases when the remote site specified by source URL
+        doesn't provide file size in the HTTP headers.
     :type file_size: int.
     :returns: FileStoreItem UUID if success, None if failure.
-
     """
-    #TODO: move to file_store/models.py since it's never used as a task
+    # TODO: move to file_store/models.py since it's never used as a task
     logger.info("Creating FileStoreItem using source '%s'", source)
 
     item = FileStoreItem.objects.create_item(
@@ -42,7 +43,7 @@ def create(source, sharename='', filetype='', permanent=False, file_size=1):
 
     logger.info("FileStoreItem created with UUID %s", item.uuid)
 
-    #TODO: don't add to cache if permanent
+    # TODO: don't add to cache if permanent
 
     return item.uuid
 
@@ -91,7 +92,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
                 return None
             srcfilename = os.path.basename(item.source)
 
-            #TODO: copy file in chunks to display progress report
+            # TODO: copy file in chunks to display progress report
             # model is saved by default if FileField.save() is called
             item.datafile.save(srcfilename, srcfile)
             srcfile.close()
@@ -119,7 +120,9 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         tmpfile = NamedTemporaryFile(dir=get_temp_dir(), delete=False)
 
         # provide a default value in case Content-Length is missing
-        remotefilesize = int(response.info().getheader("Content-Length", file_size))
+        remotefilesize = int(
+            response.info().getheader("Content-Length", file_size)
+        )
 
         logger.debug("Starting download from '%s'", item.source)
         # download and save the file
@@ -139,7 +142,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
                       'current': localfilesize, 'total': remotefilesize}
                 )
         # cleanup
-        #TODO: delete temp file if download failed 
+        # TODO: delete temp file if download failed
         tmpfile.flush()
         tmpfile.close()
         response.close()
@@ -149,7 +152,9 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         u = urlparse(item.source)
         src_file_name = os.path.basename(u.path)
         # construct destination path based on source file name
-        rel_dst_path = item.datafile.storage.get_available_name(file_path(item, src_file_name))
+        rel_dst_path = item.datafile.storage.get_available_name(
+            file_path(item, src_file_name)
+        )
         abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
         # move the temp file into the file store
         try:
@@ -157,8 +162,10 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
                 os.makedirs(os.path.dirname(abs_dst_path))
             os.rename(tmpfile.name, abs_dst_path)
         except OSError as e:
-            logger.error("Error moving temp file into the file store. OSError: %s, file name: %s, error: %s",
-                         e.errno, e.filename, e.strerror)
+            logger.error(
+                "Error moving temp file into the file store. OSError: %s, file "
+                "name: %s, error: %s", e.errno, e.filename, e.strerror
+            )
             return False
         # temp file is only accessible by the owner by default which prevents
         # access by the web server if it is running as it's own user
@@ -176,7 +183,7 @@ def import_file(uuid, permanent=False, refresh=False, file_size=1):
         # save the model instance
         item.save()
 
-    #TODO: if permanent is False then add to cache
+    # TODO: if permanent is False then add to cache
 
     return item
 
@@ -188,8 +195,8 @@ def read(uuid):
     :param uuid: UUID of a FileStoreItem.
     :type uuid: str.
     :returns: FileStoreItem -- Model instance if reading the file succeeded,
-    None if failed. 
-    
+    None if failed.
+
     '''
     return FileStoreItem.objects.get_item(uuid)
 
@@ -223,29 +230,32 @@ def update(uuid, source):
     :type uuid: str.
     :param source: New source of the FileStoreItem.
     :type source: str.
-    :returns: FileStoreItem -- model instance if update succeeded, None if failed. 
+    :returns: FileStoreItem -- model instance if update succeeded, None if
+        failed.
 
     '''
-    #TODO: check for number of affected rows to determine if there was an error
+    # TODO: check for number of affected rows to determine if there was an error
     # https://docs.djangoproject.com/en/dev/ref/models/querysets/#django.db.models.query.QuerySet.update
     FileStoreItem.objects.filter(uuid=uuid).update(source=source)
 
     # import new file from updated source
-    #TODO: call import_file as subtask?
+    # TODO: call import_file as subtask?
     return import_file(uuid, refresh=True)
 
 
 @task()
 def rename(uuid, name):
-    """Change name of the file on disk and return the updated FileStoreItem instance.
+    """Change name of the file on disk and return the updated FileStoreItem
+    instance.
 
     :param uuid: UUID of a FileStoreItem.
     :type uuid: str.
     :param name: New name of the FileStoreItem specified by the UUID.
     :type name: str.
-    :returns: FileStoreItem - updated FileStoreItem instance or None if there was an error.
-
+    :returns: FileStoreItem - updated FileStoreItem instance or None if there
+        was an error.
     """
+
     try:
         item = FileStoreItem.objects.get_item(uuid=uuid)
     except FileStoreItem.DoesNotExist:
@@ -271,12 +281,12 @@ def download_file(url, target_path, file_size=1):
     :returns: bool -- True if success, False if failure.
 
     '''
-    #TODO: handle out of disk space condition
+    # TODO: handle out of disk space condition
     logger.debug("Downloading file from '%s'", url)
 
     req = urllib2.Request(url)
     # check if source file can be downloaded
-    #TODO: refactor to use requests
+    # TODO: refactor to use requests
     try:
         response = urllib2.urlopen(req)
     except urllib2.URLError as e:
@@ -285,10 +295,11 @@ def download_file(url, target_path, file_size=1):
     except ValueError as e:
         raise DownloadError("Could not open URL '{}'".format(url))
 
-    # get remote file size, provide a default value in case Content-Length is missing
+    # get remote file size, provide a default value in case Content-Length is
+    # missing
     remotefilesize = int(response.info().getheader("Content-Length", file_size))
 
-    #TODO: handle IOError
+    # TODO: handle IOError
     with open(target_path, 'wb+') as destination:
         # download and save the file
         localfilesize = 0
@@ -308,7 +319,7 @@ def download_file(url, target_path, file_size=1):
                           'total': remotefilesize}
                     )
         # cleanup
-        #TODO: delete temp file if download failed 
+        # TODO: delete temp file if download failed
         destination.flush()
 
     response.close()
@@ -321,6 +332,6 @@ class DownloadError(StandardError):
     '''
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
-#        return StandardError.__str__(self, *args, **kwargs)
         return repr(self.value)

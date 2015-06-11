@@ -281,62 +281,66 @@ var provvisLayout = function () {
 
   /**
    * Dagre layout for subanalysis.
-   * @param san Subanalysis.
+   * @param graph The provenance graph.
    * @param cell Width and height of a workflow node.
    */
-  var dagreWorkflowLayout = function (san, cell) {
+  var dagreWorkflowLayout = function (graph, cell) {
 
-    /* Init graph. */
-    var g = new dagre.graphlib.Graph();
-    g.setGraph({
-      rankdir: "LR",
-      nodesep: 0,
-      edgesep: 0,
-      ranksep: 0,
-      marginx: 0,
-      marginy: 0
-    });
-    g.setDefaultEdgeLabel(function () {
-      return {};
-    });
+    graph.saNodes.forEach( function (san) {
 
-    /* Add nodes. */
-    san.children.values().forEach(function (n) {
-      g.setNode(n.autoId, {
-        label: n.autoId,
-        width: cell.width,
-        height: cell.height
+      /* Init graph. */
+      var g = new dagre.graphlib.Graph();
+      g.setGraph({
+        rankdir: "LR",
+        nodesep: 0,
+        edgesep: 0,
+        ranksep: 0,
+        marginx: 0,
+        marginy: 0
       });
-    });
-
-    /* Add edges. */
-    san.links.values().forEach(function (l) {
-      g.setEdge(l.source.autoId, l.target.autoId, {
-        minlen: 0,
-        weight: 1,
-        width: 0,
-        height: 0,
-        labelpos: "r",
-        labeloffset: 10
+      g.setDefaultEdgeLabel(function () {
+        return {};
       });
-    });
 
-    /* Compute layout. */
-    dagre.layout(g);
+      /* Add nodes. */
+      san.children.values().forEach(function (n) {
+        g.setNode(n.autoId, {
+          label: n.autoId,
+          width: cell.width,
+          height: cell.height
+        });
+      });
 
-    /* Init workflow node coords. */
-    d3.entries(g._nodes).forEach(function (n) {
-      /* TODO: Revise potential refinery database bug. */
-      if (san.children.has(n.key)) {
-        san.children.get(n.key).x = parseInt(n.value.x - cell.width / 2, 10);
-        san.children.get(n.key).y = parseInt(n.value.y - cell.height / 2, 10);
-      }
+      /* Add edges. */
+      san.links.values().forEach(function (l) {
+        g.setEdge(l.source.autoId, l.target.autoId, {
+          minlen: 0,
+          weight: 1,
+          width: 0,
+          height: 0,
+          labelpos: "r",
+          labeloffset: 10
+        });
+      });
+
+      /* Compute layout. */
+      dagre.layout(g);
+
+      /* Init workflow node coords. */
+      d3.entries(g._nodes).forEach(function (n) {
+        /* TODO: Revise potential refinery database bug. */
+        if (san.children.has(n.key)) {
+          san.children.get(n.key).x = parseInt(n.value.x - cell.width / 2, 10);
+          san.children.get(n.key).y = parseInt(n.value.y - cell.height / 2, 10);
+        }
+      });
     });
   };
 
   /**
    * Dagre layout for analysis.
-   * @param san Graph.
+   * @param graph The provenance Graph.
+   * @param cell Grid cell.
    */
   var dagreGraphLayout = function (graph, cell) {
 
@@ -400,10 +404,9 @@ var provvisLayout = function () {
     dagreGraphLayout(graph, cell);
 
     /* Workflow layout. */
-    graph.saNodes.forEach(function (san) {
-      dagreWorkflowLayout(san, cell);
-    });
-
+    //graph.saNodes.forEach(function (san) {
+      dagreWorkflowLayout(graph, cell);
+    //});
 
     /* Analysis layout:
      * Topology sort first, followed by layering and the creation of a 2d-array.

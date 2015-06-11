@@ -1,0 +1,6 @@
+{
+  "STATICFILES_DIRS": [
+    "static/development",
+    "ui/development"
+  ]
+}

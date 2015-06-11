@@ -19,6 +19,7 @@
     "angular-ui-select2": "0.0.5",
     "angular-ui-router": "0.2.7",
     "angular-bootstrap": "0.8.0",
+    "angular-mocks": "1.2.9",
     "tipsy": "0.1.7",
     "c3": "0.3.0",
     "ng-grid": "2.0.13",
@@ -27,6 +28,7 @@
     "graphlib": "1.0.1",
     "dagre": "0.7.1",
     "spectrum": "1.7.0",
+    "floatThead": "~1.2.12"
     "jquery-file-upload": "~9.10.0",
     "spark-md5": "~0.0.5"
   }
