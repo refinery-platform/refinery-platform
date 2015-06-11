@@ -539,13 +539,13 @@ def parse_isatab(
     # 2. If user exists we need to quickly get the dataset title to see if its
     # already in the DB
     if user:
+        checksum = None
         (identifier, title) = p.get_dataset_name(path)
         if identifier is None or title is None:
             datasets = []
         else:
             dataset_title = "%s: %s" % (identifier, title)
             datasets = DataSet.objects.filter(name=dataset_title)
-            checksum = None
         # check if the investigation already exists
         if len(datasets):  # if not 0, update dataset with new investigation
             """go through datasets until you find one with the correct owner"""
@@ -559,19 +559,26 @@ def parse_isatab(
                         uuid=investigation.isarchive_file
                     )
                     if fileStoreItem:
-                        checksum = calculate_checksum(
+                        logger.debug(
+                            'Get file: %s',
                             fileStoreItem.get_absolute_path()
+                        )
+                        checksum = calculate_checksum(
+                            fileStoreItem.get_file_object()
                         )
         # 4. Finally if we got a checksum for an existing file, we calculate
         # the checksum for the new file and compare them
-        if (checksum and
-                checksum == calculate_checksum(path)):
-            # Checksums are identical so we can skip this file.
-            logger.info(
-                'The checksum of both files is the same: {checksum}'
-                .format(checksum=checksum)
-            )
-            return (None, os.path.basename(path))
+        if (checksum):
+            new_checksum = None
+            with open(path, 'rb') as f:
+                new_checksum = calculate_checksum(f)
+            if (checksum == new_checksum):
+                # Checksums are identical so we can skip this file.
+                logger.info(
+                    'The checksum of both files is the same: %s',
+                    checksum
+                )
+                return (None, os.path.basename(path))
 
     try:
         investigation = p.run(

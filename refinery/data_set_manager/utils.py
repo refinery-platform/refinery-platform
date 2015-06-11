@@ -401,14 +401,13 @@ def update_annotated_nodes(node_type, study_uuid, assay_uuid=None, update=False)
     logger.info(str(counter) + " annotated nodes generated in " + str(end - start))
 
 
-def calculate_checksum(path, algorithm='md5', bufsize=8192):
+def calculate_checksum(f, algorithm='md5', bufsize=8192):
     """Calculate the checksum of the datafile"""
     hasher = hashlib.new(algorithm)
-    with open(path, 'rb') as f:
+    block = f.read(bufsize)
+    while len(block) > 0:
+        hasher.update(block)
         block = f.read(bufsize)
-        while len(block) > 0:
-            hasher.update(block)
-            block = f.read(bufsize)
     return hasher.hexdigest()
 
 
