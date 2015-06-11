@@ -410,18 +410,26 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
   for (entry in fields) {
     if (fields.hasOwnProperty(entry)) {
       if (fields[entry].isVisible && !fields[entry].isInternal) {
-        visibleItems.push("<a class=\"field-name\">" + '<label id="' + self._composeFieldId(entry) + '" class="checkbox"><input type="checkbox" checked>' + "&nbsp;" + prettifySolrFieldName(entry, true) + "</label></a>");
+          visibleItems.push("<a class=\"field-name\">" + '<label for="' +
+            self._composeFieldId(entry) + '" class="checkbox">' +
+            '<input type="checkbox" checked id="' + self._composeFieldId(entry) +
+            '">' + "&nbsp;" + prettifySolrFieldName(entry, true) + "</label></a>");
       }
       else {
         if (self._hiddenFieldNames.indexOf(entry) < 0 && !fields[entry].isInternal) {
-          visibleItems.push("<a class=\"field-name\">" + '<label id="' + self._composeFieldId(entry) + '" class="checkbox"><input type="checkbox">' + "&nbsp;" + prettifySolrFieldName(entry, true) + "</label></a>");
+           visibleItems.push("<a class=\"field-name\">" + '<label for="' +
+            self._composeFieldId(entry) + '" class="checkbox">' +
+            '<input type="checkbox" id="' + self._composeFieldId(entry) +
+            '">' + "&nbsp;" + prettifySolrFieldName(entry, true) + "</label></a>");
         }
       }
     }
   }
 
   $("#" + parentElementId).html("");
-  var listHeader = '<a href="#" class="dropdown-toggle btn btn-mini btn-default" data-toggle="dropdown"><i class="icon-wrench"></i>&nbsp;Columns&nbsp;<i class="icon-caret-down"></i></a>';
+  var listHeader = '<a href="#" class="dropdown-toggle btn btn-mini btn-default" ' +
+      'data-toggle="dropdown"><i class="icon-wrench"></i>&nbsp;Columns&nbsp;' +
+      '<i class="icon-caret-down"></i></a>';
   var listId = parentElementId + "-list";
 
   if (visibleItems.length > 0) {
@@ -434,7 +442,7 @@ SolrDocumentTable.prototype._generateVisibleFieldsControl = function (parentElem
   }
 
   // configure columns
-  $("#" + listId).children().click(function (event) {
+  $("#" + listId).click(function (event) {
     event.stopPropagation();
 
     var fieldId = event.target.id;

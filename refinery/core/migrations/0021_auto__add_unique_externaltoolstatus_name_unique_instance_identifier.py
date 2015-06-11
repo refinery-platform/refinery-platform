@@ -8,12 +8,12 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding unique constraint on 'ExternalToolStatus', fields ['name', 'unique_instance_identifier']
+        # Adding unique constraint on 'external-tool-status', fields ['name', 'unique_instance_identifier']
         db.create_unique(u'core_externaltoolstatus', ['name', 'unique_instance_identifier'])
 
 
     def backwards(self, orm):
-        # Removing unique constraint on 'ExternalToolStatus', fields ['name', 'unique_instance_identifier']
+        # Removing unique constraint on 'external-tool-status', fields ['name', 'unique_instance_identifier']
         db.delete_unique(u'core_externaltoolstatus', ['name', 'unique_instance_identifier'])
 
 
@@ -149,7 +149,7 @@ class Migration(SchemaMigration):
             'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
         },
         u'core.externaltoolstatus': {
-            'Meta': {'unique_together': "(('name', 'unique_instance_identifier'),)", 'object_name': 'ExternalToolStatus'},
+            'Meta': {'unique_together': "(('name', 'unique_instance_identifier'),)", 'object_name': 'external-tool-status'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'last_time_check': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),

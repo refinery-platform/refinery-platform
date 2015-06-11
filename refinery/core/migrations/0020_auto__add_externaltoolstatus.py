@@ -8,7 +8,7 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'ExternalToolStatus'
+        # Adding model 'external-tool-status'
         db.create_table('core_externaltoolstatus', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('status', self.gf('django.db.models.fields.TextField')(default='UNKNOWN', null=True, blank=True)),
@@ -16,11 +16,11 @@ class Migration(SchemaMigration):
             ('name', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
             ('unique_instance_identifier', self.gf('django.db.models.fields.CharField')(max_length=256, null=True, blank=True)),
         ))
-        db.send_create_signal('core', ['ExternalToolStatus'])
+        db.send_create_signal('core', ['external-tool-status'])
 
 
     def backwards(self, orm):
-        # Deleting model 'ExternalToolStatus'
+        # Deleting model 'external-tool-status'
         db.delete_table('core_externaltoolstatus')
 
 
@@ -156,7 +156,7 @@ class Migration(SchemaMigration):
             'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})
         },
         'core.externaltoolstatus': {
-            'Meta': {'object_name': 'ExternalToolStatus'},
+            'Meta': {'object_name': 'external-tool-status'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'last_time_check': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),

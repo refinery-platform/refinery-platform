@@ -82,12 +82,12 @@
             {% for result in page.object_list %}
         <tr>
         	<td>
-				<i class="icon-file"></i> <a href="{% url 'data_set' uuid=result.object.uuid %}">{{ result.object.name }}</a><br>... {{ result.highlighted.text.0|safe }} ...        		
+				<i class="icon-file"></i> <a href="{% url "data_set" result.object.uuid %}">{{ result.object.name }}</a><br>... {{ result.highlighted.text.0|safe }} ...        		
         	</td>
         </tr>
     {% empty %}
 		No data sets available.  
-    {% endfor %}s
+    {% endfor %}
 		</tbody>		
 	</table>
 	 
