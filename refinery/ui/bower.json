@@ -28,7 +28,7 @@
     "graphlib": "1.0.1",
     "dagre": "0.7.1",
     "spectrum": "1.7.0",
-    "floatThead": "~1.2.12"
+    "floatThead": "~1.2.12",
     "jquery-file-upload": "~9.10.0",
     "spark-md5": "~0.0.5"
   }

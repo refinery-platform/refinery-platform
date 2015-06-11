@@ -40,41 +40,35 @@ module.exports = function(grunt) {
       configFile: 'karma.conf.js'
       }
     },
-    vendor_files: {
-      js: [
-        'select2/select2.min.js',
-        'jquery/dist/jquery.min.js',
-        'angular/angular.min.js',
-        'angular-ui-select2/release/select2.min.js',
-        'angular-bootstrap/ui-bootstrap-tpls.min.js',
-        'angular-resource/angular-resource.min.js',
-        'angular-ui-router/release/angular-ui-router.min.js',
-        'angular-bootstrap/ui-bootstrap-tpls.min.js',
-        'angular-bootstrap/ui-bootstrap.min.js',
-        'tipsy/src/javascripts/jquery.tipsy.js',
-        'd3/d3.min.js',
-        'c3/c3.min.js',
-        'ng-file-upload/angular-file-upload.min.js',
-        'ng-grid/build/ng-grid.min.js',
-        'lodash/dist/lodash.min.js',
-        'graphlib/dist/graphlib.core.min.js',
-        'dagre/dist/dagre.core.min.js',
-        'spectrum/spectrum.js'
+    /*
+     * Read configs from `config.json`. Separating scripts and configs help
+     * to keep things readable.
+     */
+    cfg: grunt.file.readJSON('config.json'),
+
+    /*
+     * Cleaning tasks for all non-source directory for building and compiling
+     * assets.
+     */
+    clean: {
+      options: {
+        // We need this because the static dirs are outside of Grunt's root
+        force: true
+      },
+      uiBuild: [
+        '<%= cfg.basePath.ui.build %>'
       ],
       uiCompile: [
         '<%= cfg.basePath.ui.compile %>'
       ],
-      css: [
-        'select2/select2.css',
-        'tipsy/src/stylesheets/tipsy.css',
-        'c3/c3.css',
-        'ng-grid/ng-grid.css',
-        'spectrum/spectrum.css'
+      uiTmp: [
+        '<%= cfg.basePath.ui.tmp %>'
       ],
-      img: [
-        'select2/select2.png',
-        'select2/select2-spinner.gif',
-        'tipsy/src/images/tipsy.gif'
+      staticBuild: [
+        '<%= cfg.basePath.static.build %>'
+      ],
+      staticCompile: [
+        '<%= cfg.basePath.static.compile %>'
       ]
     },
 

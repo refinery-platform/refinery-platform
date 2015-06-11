@@ -13,7 +13,6 @@ angular
   'refinerySharing',
   'refineryDataFileUpload'
 ])
-
 .config(['$provide', function ($provide) {
   // http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
   $provide.decorator('$rootScope', ['$delegate', function ($delegate) {
@@ -26,6 +25,5 @@ angular
     });
     return $delegate;
   }]);
-}]);
-
+}])
 .constant('$', jQuery);
