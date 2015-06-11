@@ -9,11 +9,19 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
+    <!-- http://www.jonathantneal.com/blog/understand-the-favicon/ -->
+    <link rel="apple-touch-icon" href="{% static "images/touchicon.png" %}">
+    <link rel="icon" href="{% static "images/favicon.png" %}">
+    <!--[if IE]><link rel="shortcut icon" href="{% static "images/favicon.ico" %}"><![endif]-->
+    <!-- IE10 Win 8 -->
+    <meta name="msapplication-TileColor" content="#FFFFFF">
+    <meta name="msapplication-TileImage" content="{% static "images/tileicon.png" %}">
+
     <!-- Le styles -->
     {% for css_file in REFINERY_CSS %}
     <link href="{% static css_file %}" rel="stylesheet">
    	{% endfor %}
-    
+
     <style type="text/css">
       body {
         /*padding-top: {{ REFINERY_INNER_NAVBAR_HEIGHT|add:"20" }}px;*/
@@ -21,29 +29,29 @@
          /*position: relative;*/
       }
     </style>
-    
+
     {% block head_html %}
     {% endblock %}
-    
+
     <title>{{REFINERY_INSTANCE_NAME}} {% block title %}{% endblock %}</title>
-        
+
     {% block tracking %}
-    
-	    {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}    
+
+	    {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}
 			<script type="text/javascript">
-			
+
 			  var _gaq = _gaq || [];
 			  _gaq.push(['_setAccount', '{{ REFINERY_GOOGLE_ANALYTICS_ID }}']);
 			  _gaq.push(['_trackPageview']);
-			
+
 			  (function() {
 			    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
 			    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
 			    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 			  })();
 			</script>
-		{% endif %}    
-	    
+		{% endif %}
+
     {% endblock %}
 </head>
 
@@ -61,22 +69,36 @@
         </a>
 
         <a class="brand" href="{% url "home" %}">
-          {% if REFINERY_MAIN_LOGO != "" %}
-          	<img style="height: {{ REFINERY_INNER_NAVBAR_HEIGHT }}px" src="{% static REFINERY_MAIN_LOGO %}"/>&nbsp;&nbsp;
+          {% if REFINERY_MAIN_LOGO != False %}
+            {% if REFINERY_MAIN_LOGO != '' %}
+          	<img
+              class="m-r-1-5"
+              style="height: {{ REFINERY_INNER_NAVBAR_HEIGHT }} px"
+              src="{% static REFINERY_MAIN_LOGO %}" />
+            {% else %}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="{{ REFINERY_INNER_NAVBAR_HEIGHT }}"
+              height="{{ REFINERY_INNER_NAVBAR_HEIGHT }}"
+              viewBox="0 0 200 200">
+                <path
+                  d="M200 101.844C199.572 45.532 154.992 0 100 0 45.007 0 .427 45.532 0 101.844c.232 39.782 23.206 74.12 56.41 90.417.23.123.463.245.707.318.745.402 1.526.72 2.307 1.074 6.116 2.697 12.55 4.834 19.25 6.348-24.622-19.75-48.645-50.366-5.688-110.327l.122-.17c27.71-38.697 25.83-75.392 18.506-82.57 4.346 4.25 48.523 42.042 6.19 101.222l-.16.146c-25.867 36.183-31.91 64.1-11.01 85.28.94.11 1.22 1.623-.782-3.492-4.163-10.633-4.626-24.988-.195-37.793 4.42-12.817 14.343-32.8 16.93-34.63-1.293.914-4.7 12.73-1.098 24.425 2.428 7.86 11.718 20.117 14.342 28.882 4.395 14.515-1.172 18.005-3.49 22.718 1.062-.11.12-.232 1.184-.428 13.086-11.463 15.283-23.682 2.82-46.924l-.074-.122C93.25 103.31 130.188 67.7 140.027 65.112c-4.518 1.196-18.812 37.146-2.405 65.784 15.735 27.465 1.966 58.47-13.99 68.59.233-.048.44-.084.673-.158.658-.158 1.293-.316 1.953-.524.83-.23 1.647-.464 2.44-.708.623-.158 1.245-.354 1.88-.562 1.1-.354 2.197-.745 3.248-1.1.244-.12.512-.206.744-.28 37.99-14.16 65.15-51 65.43-94.31z"/>
+            </svg>
+            {% endif %}
           {% endif %}
-          {{REFINERY_INSTANCE_NAME}}
+          {{ REFINERY_INSTANCE_NAME }}
         </a>
 
         <p class="navbar-text pull-right">
-        {% if user.is_authenticated %}       
+        {% if user.is_authenticated %}
           <i class="icon-user"></i>
           <a href="{% url "user" user.get_profile.uuid %}">
           {% if user.first_name != "" or user.last_name != "" %}
             {{ user.first_name }} {{ user.last_name }}
           {% else %}
-            {{ user.username }}				
+            {{ user.username }}
           {% endif %}
-          </a>&nbsp;&nbsp;|&nbsp;&nbsp; 				
+          </a>&nbsp;&nbsp;|&nbsp;&nbsp;
           <i class="icon-signout"></i>&nbsp;<a href="{% url "django.contrib.auth.views.logout" %}?next={% url "home" %}">Logout</a>
         {% else %}
           {% url 'registration.views.register' as registration_url %}
@@ -104,7 +126,7 @@
             <li class="{{ navbar_class_contact }}"><a href="{% url "contact" %}">Contact</a></li>
             -->
             <li class="{{ navbar_class_statistics }}"><a href="{% url "statistics" %}">Statistics</a></li>
-            <li class="{{ navbar_class_about }}"><a href="{% url "about" %}">About</a></li>              
+            <li class="{{ navbar_class_about }}"><a href="{% url "about" %}">About</a></li>
           </ul>
         </div>
       </div>
@@ -116,8 +138,8 @@
               {% block subheader %}{% endblock %}
             </div>
           </div>
-        </div>			
-      </div>		                
+        </div>
+      </div>
     </div>
   </div>
 
@@ -139,7 +161,7 @@
       </div>
     </div>
     {% block content %}
-    {% endblock %}							
+    {% endblock %}
   </div>
 
   <!-- Script for popup content in the tool status icon Try out ng-template -->
@@ -186,7 +208,7 @@
 	<script type="text/javascript">
 		// activate bootstrap tooltips
 	    $('a[rel=tooltip]').tooltip();
-	
+
     var username = '{{ user.username }}';
     var user_id = '{{ user.id }}';
     if (username === 'None' || user_id === 'None') {
@@ -197,14 +219,14 @@
 		function sizing() {
 		    var windowwidth=$(window).width();
 		    if(windowwidth<=767) {
-		    	$('.scrollable').css('height', 'inherit' );      
+		    	$('.scrollable').css('height', 'inherit' );
 		    }
 		    else {
 			    $('.scrollable').map( function() {
 			    	var targetHeight = ( $(window).height() - $(this).offset().top - 40 );
 			    	var minHeight = parseInt( $('.scrollable').css( "min-height" ) );
 			    	var newHeight = Math.max( targetHeight, minHeight );
-			    	$(this).css('height', newHeight + 'px');  
+			    	$(this).css('height', newHeight + 'px');
 		    	});
 	    	}
 		}
@@ -213,7 +235,7 @@
 
 		$(document).ready( function(){
 			sizing();
-			
+
 			// detect IE: https://gist.github.com/527683
 			// ----------------------------------------------------------
 			// A short snippet for detecting versions of IE in JavaScript
@@ -230,33 +252,33 @@
 			//     ie > 7 // IE8, IE9 ...
 			//     ie < 9 // Anything less than IE9
 			// ----------------------------------------------------------
-			
+
 			// UPDATE: Now using Live NodeList idea from @jdalton
-			
+
 			var ie = (function(){
-			
+
 			    var undef,
 			        v = 3,
 			        div = document.createElement('div'),
 			        all = div.getElementsByTagName('i');
-			    
+
 			    while (
 			        div.innerHTML = '<!--[if gt IE ' + (++v) + ']><i></i><![endif]-->',
 			        all[0]
 			    );
-			    
+
 			    return v > 4 ? v : undef;
-			    
+
 			}());
-			
+
 	  // jQuery > 1.9.0 no longer supports UA sniffing
       // if ( ie !== undefined || $.browser.msie ) {
-      if ( ie !== undefined ) {  
+      if ( ie !== undefined ) {
 				// detected IE
 				$( "#warning-ie-not-supported" ).show();
-				sizing();				
-			}							
+				sizing();
+			}
 		});
-	</script>    
+	</script>
 </body>
 </html>

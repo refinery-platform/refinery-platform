@@ -68,7 +68,7 @@ angular.module('refineryNodeMapping', [
     .state('browse', {
       templateUrl: '/static/partials/data_set_ui_mode_browse.html',
       //url: '/browse',
-      controller: function($scope,$rootScope,$timeout) {
+      controller: function($scope, $rootScope, $timeout, $) {
         $rootScope.mode = "browse";
         $rootScope.showCtrlTab = false;
         $rootScope.mainTabSpanSize = "span12 no-margin";
@@ -76,7 +76,9 @@ angular.module('refineryNodeMapping', [
 
         // calls global resizing function implemented in base.html to rescale height of scrollable elements
         // timeout is needed to execute after DOM changes
-        $timeout( sizing, 0 );
+        $timeout(sizing, 0);
+
+        $(window).trigger('refinery/floatThead/reflow');
       }
     });
 
@@ -84,7 +86,7 @@ angular.module('refineryNodeMapping', [
     .state('analyze', {
       templateUrl: "/static/partials/data_set_ui_mode_analyze.html",
       //url: '/analyze',
-      controller: function($scope,$rootScope,$timeout) {
+      controller: function($scope, $rootScope, $timeout, $window, $) {
         $rootScope.mode = "analyze";
         $rootScope.showCtrlTab = true;
         $rootScope.mainTabSpanSize = "span10";
@@ -92,7 +94,9 @@ angular.module('refineryNodeMapping', [
 
         // calls global resizing function implemented in base.html to rescale height of scrollable elements
         // timeout is needed to execute after DOM changes
-        $timeout( sizing, 0 );
+        $timeout(sizing, 0);
+
+        $(window).trigger('refinery/floatThead/reflow');
       }
     });
 
@@ -100,7 +104,7 @@ angular.module('refineryNodeMapping', [
     .state('visualize', {
       templateUrl: "/static/partials/data_set_ui_mode_visualize.html",
       //url: '/visualize',
-      controller: function($scope,$rootScope,$timeout) {
+      controller: function($scope,$rootScope,$timeout, $window, $) {
         $rootScope.mode = "visualize";
         $rootScope.showCtrlTab = true;
         $rootScope.mainTabSpanSize = "span10";
@@ -108,7 +112,9 @@ angular.module('refineryNodeMapping', [
 
         // calls global resizing function implemented in base.html to rescale height of scrollable elements
         // timeout is needed to execute after DOM changes
-        $timeout( sizing, 0 );
+        $timeout(sizing, 0);
+
+        $(window).trigger('refinery/floatThead/reflow');
       }
     });
 

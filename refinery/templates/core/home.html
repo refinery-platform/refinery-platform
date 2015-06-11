@@ -342,7 +342,10 @@
 {% endblock %}
 
 {% block script %}
-  <script type="text/javascript" src="{{ STATIC_URL }}js/refinery/analysis_manager/analysis_monitor.js"></script>
+  <script
+    type="text/javascript"
+    src="{{ STATIC_URL }}js/refinery/analysis_manager/analysis_monitor.js">
+  </script>
 
   <script>
     $(document).ready(function() {

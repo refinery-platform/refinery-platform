@@ -421,6 +421,7 @@ REFINERY_INNER_NAVBAR_HEIGHT = 20
 
 # supply a path to a logo that will become part of the branding
 # (see navbar height correctly!)
+# Set to `false` to disable Refinery's default logotype.
 REFINERY_MAIN_LOGO = ""
 
 # supply a Google analytics id "UA-..."
