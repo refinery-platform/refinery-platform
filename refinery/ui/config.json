@@ -47,7 +47,18 @@
             "tipsy/src/images/tipsy.gif",
             "tipsy/src/javascripts/jquery.tipsy.js",
             "tipsy/src/stylesheets/tipsy.css",
-            "floatThead/dist/jquery.floatThead.min.js"
+            "floatThead/dist/jquery.floatThead.min.js",
+            "jquery-file-upload/js/vendor/jquery.ui.widget.js",
+            "jquery-file-upload/js/jquery.iframe-transport.js",
+            "jquery-file-upload/js/jquery.fileupload.js",
+            "jquery-file-upload/js/jquery.fileupload-process.js",
+            "jquery-file-upload/js/jquery.fileupload-validate.js",
+            "jquery-file-upload/js/jquery.fileupload-angular.js",
+            "spark-md5/spark-md5.js",
+            "jquery-file-upload/css/style.css",
+            "jquery-file-upload/css/jquery.fileupload.css",
+            "jquery-file-upload/css/jquery.fileupload-ui.css",
+            "jquery-file-upload/img/loading.gif"
         ]
     },
     "vendorPath": "bower_components"
