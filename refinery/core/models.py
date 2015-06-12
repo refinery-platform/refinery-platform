@@ -214,7 +214,11 @@ class OwnableResource (BaseResource):
 
 class SharableResource (OwnableResource):
     '''Abstract base class for core resources that can be shared
-    (projects, data sets, workflows, workflow engines, etc.).  IMPORTANT: expects derived classes to have "add/read/change/write_xxx" + "share_xxx" permissions, where "xxx" is the simple_modelname
+    (projects, data sets, workflows, workflow engines, etc.).
+
+    IMPORTANT:
+    expects derived classes to have "add/read/change/write_xxx" + "share_xxx"
+    permissions, where "xxx" is the simple_modelname
     '''
     def __unicode__(self):
         return self.name
@@ -1336,7 +1340,7 @@ class ResourceSharingObject(object):
         self.res_name = res_name
         self.group_id = group_id
         self.group_name = group_name
-        self.permissions=permissions
+        self.permissions = permissions
 
 
 class ProjectSharingObject(ResourceSharingObject):
