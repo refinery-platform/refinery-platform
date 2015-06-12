@@ -8,13 +8,23 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding unique constraint on 'ExternalToolStatus', fields ['name', 'unique_instance_identifier']
-        db.create_unique(u'core_externaltoolstatus', ['name', 'unique_instance_identifier'])
+        # Adding field 'DataSet.accession'
+        db.add_column(u'core_dataset', 'accession',
+                      self.gf('django.db.models.fields.CharField')(max_length=32, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'DataSet.accession_source'
+        db.add_column(u'core_dataset', 'accession_source',
+                      self.gf('django.db.models.fields.CharField')(max_length=128, null=True, blank=True),
+                      keep_default=False)
 
 
     def backwards(self, orm):
-        # Removing unique constraint on 'ExternalToolStatus', fields ['name', 'unique_instance_identifier']
-        db.delete_unique(u'core_externaltoolstatus', ['name', 'unique_instance_identifier'])
+        # Deleting field 'DataSet.accession'
+        db.delete_column(u'core_dataset', 'accession')
+
+        # Deleting field 'DataSet.accession_source'
+        db.delete_column(u'core_dataset', 'accession_source')
 
 
     models = {
@@ -103,6 +113,8 @@ class Migration(SchemaMigration):
         },
         u'core.dataset': {
             'Meta': {'object_name': 'DataSet'},
+            'accession': ('django.db.models.fields.CharField', [], {'max_length': '32', 'null': 'True', 'blank': 'True'}),
+            'accession_source': ('django.db.models.fields.CharField', [], {'max_length': '128', 'null': 'True', 'blank': 'True'}),
             'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.TextField', [], {'max_length': '5000', 'blank': 'True'}),
             'file_count': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
@@ -151,10 +163,11 @@ class Migration(SchemaMigration):
         u'core.externaltoolstatus': {
             'Meta': {'unique_together': "(('name', 'unique_instance_identifier'),)", 'object_name': 'ExternalToolStatus'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'last_time_check': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'status': ('django.db.models.fields.TextField', [], {'default': "'UNKNOWN'", 'null': 'True', 'blank': 'True'}),
-            'unique_instance_identifier': ('django.db.models.fields.CharField', [], {'max_length': '256', 'null': 'True', 'blank': 'True'})
+            'unique_instance_identifier': ('django.db.models.fields.CharField', [], {'default': 'None', 'max_length': '256', 'null': 'True', 'blank': 'True'})
         },
         u'core.investigationlink': {
             'Meta': {'unique_together': "(('data_set', 'investigation', 'version'),)", 'object_name': 'InvestigationLink'},
@@ -179,6 +192,7 @@ class Migration(SchemaMigration):
             'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.TextField', [], {'max_length': '5000', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'is_current': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
             'node_pairs': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "'node_pairs'", 'null': 'True', 'symmetrical': 'False', 'to': u"orm['core.NodePair']"}),
@@ -196,6 +210,7 @@ class Migration(SchemaMigration):
             'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.TextField', [], {'max_length': '5000', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'is_current': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'is_implicit': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
@@ -345,6 +360,7 @@ class Migration(SchemaMigration):
             'datafile': ('django.db.models.fields.files.FileField', [], {'max_length': '1024', 'blank': 'True'}),
             'filetype': ('django.db.models.fields.CharField', [], {'max_length': '15', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'import_task_id': ('django.db.models.fields.CharField', [], {'max_length': '36', 'blank': 'True'}),
             'sharename': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
             'source': ('django.db.models.fields.CharField', [], {'max_length': '1024'}),
             'uuid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'})

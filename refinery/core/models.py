@@ -214,7 +214,7 @@ class OwnableResource (BaseResource):
 
 class SharableResource (OwnableResource):
     '''Abstract base class for core resources that can be shared
-    (projects, data sets, workflows, workflow engines, etc.).  IMPORTANT: expects derived classes to have "add/read/change/write_xxx" + "share_xxx" permissions, where "xxx" is the simple_modelname 
+    (projects, data sets, workflows, workflow engines, etc.).  IMPORTANT: expects derived classes to have "add/read/change/write_xxx" + "share_xxx" permissions, where "xxx" is the simple_modelname
     '''
     def __unicode__(self):
         return self.name
@@ -338,6 +338,10 @@ class DataSet(SharableResource):
     file_count = models.IntegerField(blank=True, null=True, default=0)
     # total number of bytes of all files in this data set
     file_size = models.BigIntegerField(blank=True, null=True, default=0)
+    # accession number (e.g. "E-MTAB-2646")
+    accession = models.CharField(max_length=32, blank=True,  null=True)
+    # name of the source database for the accession number (e.g. "ArrayExpress")
+    accession_source = models.CharField(max_length=128, blank=True,  null=True)
 
     class Meta:
         verbose_name = "dataset"
@@ -509,7 +513,7 @@ def delete_associated_externaltoolstatus(sender, instance, **kwargs):
         externaltool.delete()
     except:
         logger.error(
-            "There's no external-tool-status with that unique instance identifier"
+            "There's no ExternalToolStatus with that unique instance identifier"
         )
 
 
@@ -1337,7 +1341,7 @@ class ResourceSharingObject(object):
 
 class ProjectSharingObject(ResourceSharingObject):
     def __init__(
-            self, 
+            self,
             res_uuid=None,
             res_name=None,
             group_id=None,
@@ -1354,7 +1358,7 @@ class ProjectSharingObject(ResourceSharingObject):
 
 class DataSetSharingObject(ResourceSharingObject):
     def __init__(
-            self, 
+            self,
             res_uuid=None,
             res_name=None,
             group_id=None,
@@ -1371,7 +1375,7 @@ class DataSetSharingObject(ResourceSharingObject):
 
 class WorkflowSharingObject(ResourceSharingObject):
     def __init__(
-            self, 
+            self,
             res_uuid=None,
             res_name=None,
             group_id=None,
