@@ -154,7 +154,11 @@
 
     <field name="modification_date" type="date" indexed="true" stored="true" multiValued="false" />
 
+    <field name="title" type="text_en" indexed="true" stored="true" multiValued="false" />
+
     <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="description" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="measurement" type="text_en" indexed="true" stored="true" multiValued="true" />
 
@@ -173,8 +177,6 @@
     <field name="technology" type="text_en" indexed="true" stored="true" multiValued="true" />
 
     <field name="owner_id" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="description" type="text_en" indexed="true" stored="true" multiValued="false" />
 
   </fields>
 
