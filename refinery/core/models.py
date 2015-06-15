@@ -1328,74 +1328,6 @@ class ResourceStatisticsObject(object):
         self.project = project
 
 
-class ResourceSharingObject(object):
-    def __init__(
-            self,
-            res_type=None,
-            res_uuid=None,
-            res_name=None,
-            group_id=None,
-            group_name=None,
-            permissions=None):
-        self.res_type = res_type
-        self.res_uuid = res_uuid
-        self.res_name = res_name
-        self.group_id = group_id
-        self.group_name = group_name
-        self.permissions = permissions
-
-
-class ProjectSharingObject(ResourceSharingObject):
-    def __init__(
-            self,
-            res_uuid=None,
-            res_name=None,
-            group_id=None,
-            group_name=None,
-            permissions=None):
-        super(ProjectSharingObject, self).__init__(
-            Project,
-            res_uuid,
-            res_name,
-            group_id,
-            group_name,
-            permissions)
-
-
-class DataSetSharingObject(ResourceSharingObject):
-    def __init__(
-            self,
-            res_uuid=None,
-            res_name=None,
-            group_id=None,
-            group_name=None,
-            permissions=None):
-        super(DataSetSharingObject, self).__init__(
-            DataSet,
-            res_uuid,
-            res_name,
-            group_id,
-            group_name,
-            permissions)
-
-
-class WorkflowSharingObject(ResourceSharingObject):
-    def __init__(
-            self,
-            res_uuid=None,
-            res_name=None,
-            group_id=None,
-            group_name=None,
-            permissions=None):
-        super(WorkflowSharingObject, self).__init__(
-            Workflow,
-            res_uuid,
-            res_name,
-            group_id,
-            group_name,
-            permissions)
-
-
 class MemberManagementObject(object):
     def __init__(self, id=None, member_list=None):
         self.id = id
@@ -1403,6 +1335,15 @@ class MemberManagementObject(object):
 
 
 class GroupManagementObject(object):
-    def __init__(self, group_id=None, group_name=None):
+    def __init__(
+            self,
+            group_id=None,
+            group_name=None,
+            member_list=None,
+            perm_list=None,
+            can_edit=False):
         self.group_id = group_id
         self.group_name = group_name
+        self.member_list = member_list
+        self.perm_list = perm_list
+        self.can_edit = can_edit
