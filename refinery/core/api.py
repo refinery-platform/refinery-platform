@@ -18,7 +18,7 @@ from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS, ALL
 from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
 from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
-    HttpUnauthorized
+    HttpUnauthorized, HttpMethodNotAllowed, HttpAccepted
 from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow,\
     WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus,\
@@ -29,21 +29,356 @@ from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
 from file_store.models import FileStoreItem
 from GuardianTastypieAuthz import GuardianAuthorization
+from django.core.paginator import Paginator, InvalidPage, PageNotAnInteger, \
+    EmptyPage
+from haystack.query import SearchQuerySet, EmptySearchQuerySet
+import ast
 
 
 logger = logging.getLogger(__name__)
 
+class SharableResourceAPIInterface(object):
+    uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+    response_format = 'application/json'
 
-class DataSetResource(ModelResource):
+    def __init__(self, res_type):
+        self.res_type = res_type
+    
+    # Useful getter methods that process data.
+
+    def get_res(self, res_uuid):
+        res_list = self.res_type.objects.filter(uuid=res_uuid)
+        return None if len(res_list) == 0 else res_list[0]
+
+    def get_group(self, group_id):
+        group_list = Group.objects.filter(id=int(group_id))
+        return None if len(group_list) == 0 else group_list[0]
+
+    def get_perms(self, res, group):
+        # Default values.
+        perms = {'read': False, 'change': False}
+
+        # Find matching ones if available.
+        for i in res.get_groups():
+            if i['group'].group_ptr.id == group.id:
+                perms = {'read': i['read'], 'change': i['change']}
+
+        return perms
+
+    def get_share_list(self, user, res):
+        groups_in = filter(
+            lambda g: user in g.user_set.all(),
+            Group.objects.all())
+
+        return map(
+            lambda g: {
+                'group_id': g.id,
+                'group_name': g.name,
+                'perms': self.get_perms(res, g)},
+            groups_in)
+
+    # Generalizes bundle construction and resource processing. Turning on more
+    # options may require going to the SharableResource class and adding them.
+
+    # Turns on certain things depending on flags
+    def build_res_list(self, user, res_list, **kwargs):
+        if 'sharing' in kwargs and kwargs['sharing']:
+            for i in res_list:
+                setattr(i, 'share_list', self.get_share_list(user, i))
+
+        return res_list
+
+    def build_res_list_bundle(self, request, res_list, **kwargs):
+        bundle = []
+
+        for i in res_list:
+            built_obj = self.build_bundle(obj=i, request=request)
+            bundle.append(self.full_dehydrate(built_obj))
+
+        return bundle
+
+    # **kwargs added in case there is other data for future expansion.
+    def build_object_list(self, bundle, **kwargs):
+        return {
+            'meta': {
+                'total_count': len(bundle)
+            },
+            'objects': bundle
+        }
+        
+    def build_response(self, request, object_list, **kwargs):
+        return self.create_response(request, object_list)
+
+    # Makes everything simpler for GET requests.
+    def process_get(self, request, res_list, **kwargs):
+        user = request.user
+        mod_res_list = self.build_res_list(user, res_list, **kwargs)
+        bundle = self.build_res_list_bundle(request, mod_res_list, **kwargs)
+        object_list = self.build_object_list(bundle, **kwargs)
+        return self.build_response(request, object_list, **kwargs)
+
+    # A few default URL endpoints as directed by prepend_urls in subclasses.
+
+    def prepend_urls(self):
+        return [
+            url(r'^(?P<resource_name>%s)/$' %
+                (self._meta.resource_name), 
+                self.wrap_view('res_default_basic_list'),
+                name='api_%s_basic_list' % (self._meta.resource_name)),
+            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/$' %
+                (self._meta.resource_name, self.uuid_regex),
+                self.wrap_view('res_default_basic'),
+                name='api_%s_basic' % (self._meta.resource_name)),
+            url(r'^(?P<resource_name>%s)/sharing/$' %
+                (self._meta.resource_name),
+                self.wrap_view('res_default_sharing_list'),
+                name='api_%s_sharing_list' % (self._meta.resource_name)),
+            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/sharing/$' %
+                (self._meta.resource_name, self.uuid_regex),
+                self.wrap_view('res_default_sharing'),
+                name='api_%s_sharing' % (self._meta.resource_name)),
+        ]
+
+    def res_default_basic(self, request, **kwargs):
+        res = self.get_res(kwargs['uuid'])
+        if request.method == 'GET':
+            res_list = [res]
+            return self.process_get(request, res_list)
+        else:
+            return HttpMethodNotAllowed()
+
+    def res_default_basic_list(self, request, **kwargs):
+        if request.method == 'GET':
+            res_list = filter(
+                lambda r: r.get_owner().id == request.user.id,
+                self.res_type.objects.all())
+            return self.process_get(request, res_list)
+        else:
+            return HttpMethodNotAllowed()
+
+    # TODO: Make sure GuardianAuthorization works.
+    def res_default_sharing(self, request, **kwargs):
+        res = self.get_res(kwargs['uuid'])
+        if request.method == 'GET':
+            res_list = [res]
+            return self.process_get(request, res_list, sharing=True)
+        elif request.method == 'PATCH':
+            data = json.loads(request.raw_post_data)
+            new_share_list = data['share_list']
+
+            groups_shared_with = map(
+                lambda g: g['group'].group_ptr,
+                res.get_groups())
+
+            # Unshare everything before sharing.
+            for i in groups_shared_with:
+                res.unshare(i)
+
+            for i in new_share_list:
+                group = self.get_group(int(i['id']))
+                can_read = i['read']
+                can_change = i['change']
+                is_read_only = can_read and not can_change
+                should_share = can_read or can_change
+
+                if should_share:
+                    res.share(group, is_read_only)
+
+            return HttpAccepted()
+        else:
+            return HttpMethodNotAllowed()
+
+    def res_default_sharing_list(self, request, **kwargs):
+        if request.method == 'GET':
+            res_list = filter(
+                lambda r: r.get_owner().id == request.user.id,
+                self.res_type.objects.all())
+            return self.process_get(request, res_list, sharing=True)
+        else:
+            return HttpMethodNotAllowed()
+
+    # Some other useful methods
+    
+    def determine_format(self, request):
+        return self.response_format
+
+
+class ProjectResource(ModelResource, SharableResourceAPIInterface):
+    share_list = fields.ListField(attribute='share_list', null=True)
+
+    def __init__(self):
+        SharableResourceAPIInterface.__init__(self, Project)
+        ModelResource.__init__(self)
+
+    class Meta:
+        #authentication = ApiKeyAuthentication()
+        queryset = Project.objects.all()
+        resource_name = 'projects'
+        detail_uri_name = 'uuid'
+        fields = ['name', 'id', 'uuid', 'summary', 'share_list']
+        # authentication = SessionAuthentication
+        # authorization = GuardianAuthorization
+
+    def prepend_urls(self):
+        return SharableResourceAPIInterface.prepend_urls(self)
+
+    def determine_format(self, request):
+        return SharableResourceAPIInterface.determine_format(self, request)
+
+
+class DataSetResource(ModelResource, SharableResourceAPIInterface):
+    share_list = fields.ListField(attribute='share_list', null=True)
+
+    def __init__(self):
+        SharableResourceAPIInterface.__init__(self, DataSet)
+        ModelResource.__init__(self)
+
     class Meta:
         queryset = DataSet.objects.all()
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
-        allowed_methods = ['get']
-        resource_name = 'data_set'
-        authentication = SessionAuthentication()
-        authorization = GuardianAuthorization()        
+        # allowed_methods = ['get']
+        resource_name = 'data_sets'
+        # authentication = SessionAuthentication()
+        # authorization = GuardianAuthorization()        
         filtering = {'uuid': ALL}
         fields = ['uuid']
+
+    def prepend_urls(self):
+        prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
+            url(r'^(?P<resource_name>%s)/search/$' %
+                (self._meta.resource_name),
+                self.wrap_view('get_search'),
+                name='api_%s_search' % (self._meta.resource_name)),
+            url(r'^(?P<resource_name>%s)/autocomplete/$' %
+                (self._meta.resource_name),
+                self.wrap_view('get_autocomplete'),
+                name='api_%s_autocomplete' % (self._meta.resource_name)),
+        ]
+        return prepend_urls_list
+
+    def determine_format(self, request):
+        return SharableResourceAPIInterface.determine_format(self, request)
+
+    def get_search(self, request, **kwargs):
+        query = request.GET.get('q', None)
+        if not query:
+            raise ImmediateHttpResponse(response=HttpBadRequest('Please supply the search parameter q'))
+
+        # Do the query.
+        results = (SearchQuerySet().using('core')
+                                   .models(DataSet)
+                                   .facet('measurement', mincount=1)
+                                   .facet('technology', mincount=1)
+                                   .load_all()
+                                   .auto_query(query))
+
+        if not results:
+            results = EmptySearchQuerySet()
+
+        paginator = Paginator(results, 10)
+
+        page = request.GET.get('page', 1)
+        try:
+            current_results = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            current_results = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            current_results = paginator.page(paginator.num_pages)
+
+        result_list = map(lambda r: r.object, current_results.object_list)
+        bundle = self.build_res_list_bundle(request, result_list, **kwargs)
+        object_list = self.build_object_list(bundle, **kwargs)
+        
+        self.log_throttled_access(request)
+        return self.build_response(request, object_list, **kwargs)
+
+    def get_autocomplete(self, request, **kwargs):
+        query = request.GET.get('q', None)
+        if not query:
+            raise HttpBadRequest('Please supply the search parameter q')
+
+        # Do the autocomplete query.
+        results = (SearchQuerySet().using('core')
+                                   .models(DataSet)
+                                   .autocomplete(content_auto=query))
+        
+        # logger.debug('')
+
+        if not results:
+            results = EmptySearchQuerySet()
+
+        paginator = Paginator(results, 5)
+
+        page = request.GET.get('page', 1)
+        try: 
+            current_results = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            current_reuslts = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            current_results = paginator.page(paginator.num_pages)
+
+        result_list = map(lambda r: r.object, current_results.object_list)
+        bundle = self.build_res_list_bundle(request, result_list, **kwargs)
+        object_list = self.build_object_list(bundle, **kwargs)
+        
+        self.log_throttled_access(request)
+        return self.build_response(request, object_list, **kwargs)
+
+
+class WorkflowResource(ModelResource, SharableResourceAPIInterface):
+    input_relationships = fields.ToManyField(
+        "core.api.WorkflowInputRelationshipsResource", 'input_relationships',
+        full=True)
+    share_list = fields.ListField(attribute='share_list', null=True)
+
+    def __init__(self):
+        SharableResourceAPIInterface.__init__(self, Workflow)
+        ModelResource.__init__(self)
+
+    class Meta:
+        queryset = Workflow.objects.filter(is_active=True).order_by('name')
+        detail_resource_name = 'workflow'
+        resource_name = 'workflow'
+        detail_uri_name = 'uuid'
+        # allowed_methods = ['get']
+        fields = ['name', 'uuid', 'summary']
+        # authentication = SessionAuthentication
+        # authorization = GuardianAuthorization
+
+    def prepend_ruls(self):
+        return SharableResourceAPIInterface.prepend_urls(self)
+
+    def determine_format(self, request):
+        return SharableResourceAPIInterface.determine_format(self, request)
+
+    def dehydrate(self, bundle):
+        # detect if detail
+        if self.get_resource_uri(bundle) == bundle.request.path:
+            # detail detected, add graph as json
+            try:
+                bundle.data['graph'] = json.loads(bundle.obj.graph)
+            except ValueError:
+                logger.error(
+                    "Failed to decode workflow graph into dictionary for " +
+                    "workflow '%s'", str(bundle.obj))
+                # don't include in response if error occurs
+        bundle.data['author'] = bundle.obj.get_owner()
+        bundle.data['galaxy_instance_identifier'] = \
+            bundle.obj.workflow_engine.instance.api_key
+        return bundle
+
+
+class WorkflowInputRelationshipsResource(ModelResource):
+    class Meta:
+        queryset = WorkflowInputRelationships.objects.all()
+        detail_resource_name = 'workflowrelationships' 
+        resource_name = 'workflowrelationships'
+        #detail_uri_name = 'uuid'   
+        fields = ['category', 'set1', 'set2', 'workflow']
 
 
 class AnalysisResource(ModelResource):
@@ -88,12 +423,6 @@ class AnalysisResource(ModelResource):
             'workflow_steps_num': ALL_WITH_RELATIONS
         }
         ordering = ['name', 'creation_date']
-
-
-class ProjectResource(ModelResource):
-    class Meta:
-        #authentication = ApiKeyAuthentication()
-        queryset = Project.objects.all()
 
 
 class NodeResource(ModelResource):
@@ -321,45 +650,6 @@ class NodeRelationshipResource(ModelResource):
         #fields = ['type', 'study', 'assay', 'node_pairs']
         ordering = ['is_current', 'name', 'type', 'node_pairs']
         filtering = {'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS}
-
-
-class WorkflowResource(ModelResource):
-    input_relationships = fields.ToManyField(
-        "core.api.WorkflowInputRelationshipsResource", 'input_relationships',
-        full=True)
-
-    class Meta:
-        queryset = Workflow.objects.filter(is_active=True).order_by('name')
-        detail_resource_name = 'workflow'
-        resource_name = 'workflow'
-        detail_uri_name = 'uuid'
-        allowed_methods = ['get']
-        fields = ['name', 'uuid', 'summary']
-
-    def dehydrate(self, bundle):
-        # detect if detail
-        if self.get_resource_uri(bundle) == bundle.request.path:
-            # detail detected, add graph as json
-            try:
-                bundle.data['graph'] = json.loads(bundle.obj.graph)
-            except ValueError:
-                logger.error(
-                    "Failed to decode workflow graph into dictionary for " +
-                    "workflow '%s'", str(bundle.obj))
-                # don't include in response if error occurs
-        bundle.data['author'] = bundle.obj.get_owner()
-        bundle.data['galaxy_instance_identifier'] = \
-            bundle.obj.workflow_engine.instance.api_key
-        return bundle
-
-
-class WorkflowInputRelationshipsResource(ModelResource):
-    class Meta:
-        queryset = WorkflowInputRelationships.objects.all()
-        detail_resource_name = 'workflowrelationships' 
-        resource_name = 'workflowrelationships'
-        #detail_uri_name = 'uuid'   
-        fields = ['category', 'set1', 'set2', 'workflow']
 
 
 class ExternalToolStatusResource(ModelResource):
