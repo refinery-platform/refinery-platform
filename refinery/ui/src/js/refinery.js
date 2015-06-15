@@ -1,5 +1,13 @@
 angular
 .module('refineryApp', [
+  /*
+   * Angular modules
+   */
+  'ngCookies',
+
+  /*
+   * Refinery modules
+   */
   'refineryWorkflows',
   'refineryNodeMapping',
   'refineryAnalysis',
@@ -25,5 +33,4 @@ angular
     });
     return $delegate;
   }]);
-}])
-.constant('$', jQuery);
+}]);
