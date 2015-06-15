@@ -118,6 +118,7 @@ class SharableResourceAPIInterface(object):
         return self.build_response(request, object_list, **kwargs)
 
     # A few default URL endpoints as directed by prepend_urls in subclasses.
+
     def prepend_urls(self):
         return [
             url(r'^(?P<resource_name>%s)/$' %
@@ -143,8 +144,6 @@ class SharableResourceAPIInterface(object):
         if request.method == 'GET':
             res_list = [res]
             return self.process_get(request, res_list)
-        elif request.method == 'PATCH':
-            pass
         else:
             return HttpMethodNotAllowed()
 
@@ -237,7 +236,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     class Meta:
         queryset = DataSet.objects.all()
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
-        allowed_methods = ['get']
+        # allowed_methods = ['get']
         resource_name = 'data_sets'
         # authentication = SessionAuthentication()
         # authorization = GuardianAuthorization()        
@@ -330,18 +329,31 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         return self.build_response(request, object_list, **kwargs)
 
 
-class WorkflowResource(ModelResource):
+class WorkflowResource(ModelResource, SharableResourceAPIInterface):
     input_relationships = fields.ToManyField(
         "core.api.WorkflowInputRelationshipsResource", 'input_relationships',
         full=True)
+    share_list = fields.ListField(attribute='share_list', null=True)
+
+    def __init__(self):
+        SharableResourceAPIInterface.__init__(self, Workflow)
+        ModelResource.__init__(self)
 
     class Meta:
         queryset = Workflow.objects.filter(is_active=True).order_by('name')
         detail_resource_name = 'workflow'
         resource_name = 'workflow'
         detail_uri_name = 'uuid'
-        allowed_methods = ['get']
+        # allowed_methods = ['get']
         fields = ['name', 'uuid', 'summary']
+        # authentication = SessionAuthentication
+        # authorization = GuardianAuthorization
+
+    def prepend_ruls(self):
+        return SharableResourceAPIInterface.prepend_urls(self)
+
+    def determine_format(self, request):
+        return SharableResourceAPIInterface.determine_format(self, request)
 
     def dehydrate(self, bundle):
         # detect if detail
