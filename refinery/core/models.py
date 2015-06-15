@@ -220,6 +220,8 @@ class SharableResource (OwnableResource):
     expects derived classes to have "add/read/change/write_xxx" + "share_xxx"
     permissions, where "xxx" is the simple_modelname
     '''
+    share_list = []
+
     def __unicode__(self):
         return self.name
 
