@@ -48,12 +48,11 @@ NR_TYPES = (
 
 
 class UserProfile (models.Model):
-    '''Extends Django user model:
+    """Extends Django user model:
     https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
 
-    '''
+    """
     uuid = UUIDField(unique=True, auto=True)
-
     user = models.OneToOneField(User)
     affiliation = models.CharField(max_length=100, blank=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
@@ -68,8 +67,10 @@ class UserProfile (models.Model):
         )
 
 
-# automatic creation of a user profile when a user is created:
 def create_user_profile(sender, instance, created, **kwargs):
+    """automatic creation of a user profile when a user is created:
+
+    """
     if created:
         UserProfile.objects.get_or_create(user=instance)
 
@@ -78,9 +79,9 @@ post_save.connect(create_user_profile, sender=User)
 
 @receiver(post_save, sender=User)
 def add_new_user_to_public_group(sender, instance, created, **kwargs):
-    '''Add new users to Public group automatically
+    """Add new users to Public group automatically
 
-    '''
+    """
     if created:
         public_group = ExtendedGroup.objects.public_group()
         # need to check if Public group exists to avoid errors when creating
