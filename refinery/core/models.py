@@ -7,6 +7,7 @@ Created on Feb 20, 2012
 from bioblend import galaxy
 from datetime import datetime
 import logging
+import os
 import smtplib
 import socket
 from django.conf import settings
@@ -48,12 +49,11 @@ NR_TYPES = (
 
 
 class UserProfile (models.Model):
-    '''Extends Django user model:
+    """Extends Django user model:
     https://docs.djangoproject.com/en/dev/topics/auth/#storing-additional-information-about-users
 
-    '''
+    """
     uuid = UUIDField(unique=True, auto=True)
-
     user = models.OneToOneField(User)
     affiliation = models.CharField(max_length=100, blank=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
@@ -68,8 +68,18 @@ class UserProfile (models.Model):
         )
 
 
-# automatic creation of a user profile when a user is created:
+def get_user_import_dir(user):
+    """Return import directory for given user
+    :param user: User model
+    :return: str - absolute path to user's import dir
+    """
+    return os.path.join(settings.REFINERY_DATA_IMPORT_DIR, user.username)
+
+
 def create_user_profile(sender, instance, created, **kwargs):
+    """automatic creation of a user profile when a user is created:
+
+    """
     if created:
         UserProfile.objects.get_or_create(user=instance)
 
@@ -78,9 +88,9 @@ post_save.connect(create_user_profile, sender=User)
 
 @receiver(post_save, sender=User)
 def add_new_user_to_public_group(sender, instance, created, **kwargs):
-    '''Add new users to Public group automatically
+    """Add new users to Public group automatically
 
-    '''
+    """
     if created:
         public_group = ExtendedGroup.objects.public_group()
         # need to check if Public group exists to avoid errors when creating
@@ -88,6 +98,17 @@ def add_new_user_to_public_group(sender, instance, created, **kwargs):
         # is created by init_refinery command
         if public_group:
             instance.groups.add(public_group)
+
+
+@receiver(post_save, sender=User)
+def create_user_import_directory(sender, instance, created, **kwargs):
+    """Create import directory for new user
+    """
+    if created:
+        try:
+            os.mkdir(get_user_import_dir(instance))
+        except OSError as e:
+            logger.warn(e)
 
 
 def create_user_profile_registered(sender, user, request, **kwargs):
@@ -220,6 +241,8 @@ class SharableResource (OwnableResource):
     expects derived classes to have "add/read/change/write_xxx" + "share_xxx"
     permissions, where "xxx" is the simple_modelname
     '''
+    share_list = []
+
     def __unicode__(self):
         return self.name
 
@@ -1326,74 +1349,6 @@ class ResourceStatisticsObject(object):
         self.project = project
 
 
-class ResourceSharingObject(object):
-    def __init__(
-            self,
-            res_type=None,
-            res_uuid=None,
-            res_name=None,
-            group_id=None,
-            group_name=None,
-            permissions=None):
-        self.res_type = res_type
-        self.res_uuid = res_uuid
-        self.res_name = res_name
-        self.group_id = group_id
-        self.group_name = group_name
-        self.permissions = permissions
-
-
-class ProjectSharingObject(ResourceSharingObject):
-    def __init__(
-            self,
-            res_uuid=None,
-            res_name=None,
-            group_id=None,
-            group_name=None,
-            permissions=None):
-        super(ProjectSharingObject, self).__init__(
-            Project,
-            res_uuid,
-            res_name,
-            group_id,
-            group_name,
-            permissions)
-
-
-class DataSetSharingObject(ResourceSharingObject):
-    def __init__(
-            self,
-            res_uuid=None,
-            res_name=None,
-            group_id=None,
-            group_name=None,
-            permissions=None):
-        super(DataSetSharingObject, self).__init__(
-            DataSet,
-            res_uuid,
-            res_name,
-            group_id,
-            group_name,
-            permissions)
-
-
-class WorkflowSharingObject(ResourceSharingObject):
-    def __init__(
-            self,
-            res_uuid=None,
-            res_name=None,
-            group_id=None,
-            group_name=None,
-            permissions=None):
-        super(WorkflowSharingObject, self).__init__(
-            Workflow,
-            res_uuid,
-            res_name,
-            group_id,
-            group_name,
-            permissions)
-
-
 class MemberManagementObject(object):
     def __init__(self, id=None, member_list=None):
         self.id = id
@@ -1401,6 +1356,27 @@ class MemberManagementObject(object):
 
 
 class GroupManagementObject(object):
-    def __init__(self, group_id=None, group_name=None):
+    def __init__(
+            self,
+            group_id=None,
+            group_name=None,
+            member_list=None,
+            perm_list=None,
+            can_edit=False):
         self.group_id = group_id
         self.group_name = group_name
+        self.member_list = member_list
+        self.perm_list = perm_list
+        self.can_edit = can_edit
+
+class UserAuthenticationObject(object):
+    def __init__(
+            self,
+            is_logged_in=None,
+            is_admin=None,
+            id=None,
+            username=None):
+        self.is_logged_in = is_logged_in
+        self.is_admin = is_admin
+        self.id = id
+        self.username = username
