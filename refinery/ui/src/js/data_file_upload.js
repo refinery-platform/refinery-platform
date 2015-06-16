@@ -35,7 +35,7 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
       done: uploadDone,
       fail: uploadFail
     };
-    //$scope.loadingFiles = true;
+    $scope.loadingFiles = false;
     //$http.get(url)
     //    .then(
     //    function (response) {
@@ -84,7 +84,7 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
 
 var url = '/data_set_manager/import/chunked-upload/',
     chunkSize = 10 * 1000 * 1000,  // 1MB
-    md5 = "",
+    md5 = {},
     formData = [];  //TODO: add CSRF token to formData?
 
 function calculate_md5(file, chunk_size) {
@@ -99,7 +99,7 @@ function calculate_md5(file, chunk_size) {
     if (current_chunk < chunks) {
       read_next_chunk();
     } else {
-      md5 = spark.end();
+      md5[file.name] = spark.end();
     }
   }
   function read_next_chunk() {
@@ -124,29 +124,36 @@ var chunkDone = function(e, data) {
   }
 };
 
-var uploadSubmit = function(e, data) {
+var uploadAdd = function(e, data) {
   "use strict";
+  console.log("Adding file ", data.files[0]);
   //var that = angular.element(this);
-  calculate_md5(data.files[0], chunkSize);
-  console.log("upload started, md5 = ", md5);
   //console.log("autoUpload", that.fileupload('option', 'autoUpload'));
   //console.log("scope", that.fileupload('option', 'scope'));
   //$.blueimp.fileupload.prototype.options.add.call(that, e, data);
   //data.submit();
 };
 
+var uploadSubmit = function(e, data) {
+  "use strict";
+  console.log("Starting to calculate md5 for:", data.files[0].name);
+  calculate_md5(data.files[0], chunkSize);
+};
+
 var uploadDone = function(e, data) {
   "use strict";
+  console.log("Finished uploading chunks for:", data.files[0].name,
+      "md5 =", md5[data.files[0].name]);
   $.ajax({
     type: "POST",
     url: "/data_set_manager/import/chunked-upload-complete/",
     data: {
         upload_id: data.result.upload_id,
-        md5: md5
+        md5: md5[data.files[0].name]
     },
     dataType: "json",
     success: function(data) {
-      console.log("Upload successful", data, md5);
+      console.log(data);
     }
   });
   formData = [];  // clear upload_id for the next upload
