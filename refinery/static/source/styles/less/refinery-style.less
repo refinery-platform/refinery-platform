@@ -151,8 +151,80 @@ ul#externalToolListPopover li{
   color: @white;
 }
 
-.navbar .brand svg path {
-  fill: #fff;
+.navbar .brand .svg-container {
+  position: relative;
+  display: inline-block;
+  width: @baseLineHeight;
+  height: @baseLineHeight;
+  background-color: #fff;
+}
+
+.navbar .brand .svg-container .bg {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: @baseLineHeight;
+  height: @baseLineHeight;
+}
+
+.navbar .brand .svg-container .bg-1,
+.navbar .brand .svg-container .bg-2 {
+  opacity: 0;
+}
+
+.navbar .brand .svg-container .bg-1 {
+  background-color: #ffcf40;
+  transition: opacity @slowTransitionSpeed @easeInOutCubic;
+}
+
+.navbar .brand .svg-container .bg-2 {
+  background: linear-gradient(rgba(255, 115, 87, 0.66), rgba(255, 115, 87, 1));
+  transition: opacity @normalTransitionSpeed @easeInOutCubic;
+}
+
+.navbar .brand:hover .svg-container .bg-1,
+.navbar .brand:hover .svg-container .bg-2 {
+  opacity: 1;
+}
+
+.navbar .brand:hover .svg-container .bg-1 {
+  transition: opacity @fastTransitionSpeed @easeInOutCubic;
+}
+
+.navbar .brand:hover .svg-container .bg-2 {
+  transition: opacity @normalTransitionSpeed @easeInOutCubic;
+}
+
+.navbar .brand svg {
+  position: relative;
+  z-index: 2;
+}
+
+.navbar .brand path {
+  fill: @navbarBackground;
+}
+
+.navbar .brand .name {
+  position: relative;
+  display: inline-block;
+  vertical-align: top;
+}
+
+.navbar .brand .name:before {
+  content: '';
+  position: absolute;
+  display: block;
+  bottom: 1px;
+  width: 100%;
+  height: 1px;
+  background-color: #fff;
+  opacity: 0;
+  transition: opacity @fastTransitionSpeed @easeInOutCubic;
+}
+
+.navbar .brand:hover .name:before {
+  opacity: 0.33;
 }
 
 .navbar li a {

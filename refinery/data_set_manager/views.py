@@ -4,7 +4,7 @@ Created on May 11, 2012
 @author: nils
 '''
 
-import os
+import shutil
 import simplejson as json
 from urlparse import urlparse
 from celery.result import AsyncResult
@@ -367,26 +367,23 @@ class ChunkedFileUploadView(ChunkedUploadView):
     model = ChunkedUpload
     field_name = "files[]"
 
-    def check_permissions(self, request):
-        # Allow non authenticated users to make uploads
-        pass
-
 
 class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
 
     model = ChunkedUpload
 
-    def check_permissions(self, request):
-        # Allow non authenticated users to make uploads
-        pass
-
     def on_completion(self, uploaded_file, request):
-        # Do something with the uploaded file. E.g.:
-        # * Store the uploaded file on another model:
-        # SomeModel.objects.create(user=request.user, file=uploaded_file)
-        # * Pass it as an argument to a function:
-        # function_that_process_file(uploaded_file)
-        pass
+        # move file to the user's import directory
+        logger.debug(request.POST.get('md5'))
+        upload_id = request.POST.get('upload_id')
+        chunked_upload = ChunkedUpload.objects.get(upload_id=upload_id)
+        dst = os.path.join(get_user_import_dir(request.user),
+                           chunked_upload.filename)
+        try:
+            shutil.move(chunked_upload.file.path, dst)
+        except shutil.Error as e:
+            logger.error(
+                "Error moving uploaded file to user's import directory: %s", e)
 
     def get_response_data(self, chunked_upload, request):
         return {'message': 'You successfully uploaded this file'}

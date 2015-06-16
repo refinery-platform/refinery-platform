@@ -235,6 +235,17 @@ module.exports = function(grunt) {
        * When the Gruntfile changes, we just want to lint it. In fact, when
        * your Gruntfile changes, it will automatically be reloaded!
        */
+      config: {
+        files: 'config.json',
+        tasks: [
+          'build'
+        ]
+      },
+
+      /*
+       * When the Gruntfile changes, we just want to lint it. In fact, when
+       * your Gruntfile changes, it will automatically be reloaded!
+       */
       gruntfile: {
         files: 'Gruntfile.js',
         tasks: [

@@ -35,7 +35,7 @@
    -->
 {% endif %}
 
-<div class="row-fluid" ng-controller="refinerySharingController">
+<div class="row-fluid">
 	{% if REFINERY_REPOSITORY_MODE %}
 		<div class="span8">
 	{% else %}
@@ -69,11 +69,6 @@
 							Description
 						</th>
 						{% endif %}
-            {% if user.is_authenticated %}
-                <th>
-                  Share
-                </th>
-            {% endif %}
 					</tr>
 				</thead>
 				<tbody>
@@ -111,16 +106,7 @@
 								</table>
 							{% endif %}
 			        	</td>
-                {% if user.is_authenticated %}
-                    <td width="0%" class="text-align-center">
-                        <div style="display:none;">
-                            <a ng-click="openPermissionEditor('dataset_sharing', '{{ data_set.uuid }}')" class="icon-only">
-                              <i class="icon-edit icon-bigger p-a-1-4"></i>
-                            </a>
-                        </div>
-                    </td>
-                {% endif %}
-						{% if REFINERY_REPOSITORY_MODE %}
+              {% if REFINERY_REPOSITORY_MODE %}
 				    	<td width="100%">
 							{{ data_set.summary }}
 						</td>
@@ -178,11 +164,6 @@
 				Analyses
 				{% endif %}
 			</th>
-      {% if user.is_authenticated %}
-        <th width="0%">
-          Share
-        </th>
-      {% endif %}
 		</tr>
 	</thead>
 	<tbody>
@@ -240,16 +221,7 @@
 	    	<td>
 	        {{project.analyses.all|length}}
 	      </td>
-        {% if user.is_authenticated %}
-            <td class="text-align-center">
-                <div style="display:none;">
-                    <a ng-click="openPermissionEditor('project_sharing', '{{ project.uuid }}')" class="icon-only">
-                      <i class="icon-edit icon-bigger p-a-1-4"></i>
-                    </a>
-                </div>
-            </td>
-        {% endif %}
-	    </tr>
+      </tr>
 			{% for analysis in project.analyses.all %}
 			    <tr>
 			    	<td>
