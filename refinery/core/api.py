@@ -22,7 +22,8 @@ from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
 from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow,\
     WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus,\
-    ResourceStatisticsObject, MemberManagementObject, GroupManagementObject
+    ResourceStatisticsObject, MemberManagementObject, GroupManagementObject,\
+    UserAuthenticationObject
 from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
@@ -1066,3 +1067,41 @@ class GroupManagementResource(Resource):
         else:
             return HttpMethodNotAllowed()
 
+
+class UserAuthenticationResource(Resource):
+    is_logged_in = fields.BooleanField(attribute='is_logged_in', default=False)
+    is_admin = fields.CharField(attribute='is_admin', default=False)
+    id = fields.CharField(attribute='id', default='-1')
+    username = fields.CharField(attribute='username', default='AnonymousUser')
+
+    class Meta:
+        resource_name = 'user_authentication'
+        object_class = UserAuthenticationObject
+        detail_uri_name = 'user_type'
+
+    def determine_format(self, request):
+        return 'application/json'
+
+    def prepend_urls(self):
+        return [
+            url(r'^user_authentication/check/$',
+                self.wrap_view('check_user_status'),
+                name='api_user_authentication_check'),
+        ]
+
+    def check_user_status(self, request, **kwargs):
+        user = request.user
+        is_logged_in = user.is_authenticated()
+        is_admin = user.is_staff
+        id = user.id
+        username = user.username if is_logged_in else 'AnonymousUser'
+        auth_obj = UserAuthenticationObject(
+            is_logged_in,
+            is_admin,
+            user.id,
+            username)
+
+        built_obj = self.build_bundle(obj=auth_obj, request=request)
+        bundle = self.full_dehydrate(built_obj)
+        return self.create_response(request, bundle)
+ 
