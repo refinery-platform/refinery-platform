@@ -124,19 +124,8 @@ var chunkDone = function(e, data) {
   }
 };
 
-var uploadAdd = function(e, data) {
-  "use strict";
-  console.log("Adding file ", data.files[0]);
-  //var that = angular.element(this);
-  //console.log("autoUpload", that.fileupload('option', 'autoUpload'));
-  //console.log("scope", that.fileupload('option', 'scope'));
-  //$.blueimp.fileupload.prototype.options.add.call(that, e, data);
-  //data.submit();
-};
-
 var uploadSubmit = function(e, data) {
   "use strict";
-  console.log("Starting to calculate md5 for:", data.files[0].name);
   calculate_md5(data.files[0], chunkSize);
 };
 
@@ -161,7 +150,5 @@ var uploadDone = function(e, data) {
 
 var uploadFail = function(e, data) {
   "use strict";
-  console.log(data.errorThrown);
-  console.log(data.textStatus);
-  console.log(md5);
+  console.log(data.errorThrown, data.textStatus);
 };

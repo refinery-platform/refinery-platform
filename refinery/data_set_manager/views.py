@@ -375,15 +375,15 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
     def on_completion(self, uploaded_file, request):
         # move file to the user's import directory
         logger.debug(request.POST.get('md5'))
-        # upload_id = request.POST.get('upload_id')
-        # chunked_upload = ChunkedUpload.objects.get(upload_id=upload_id)
-        # dst = os.path.join(get_user_import_dir(request.user),
-        #                    chunked_upload.filename)
-        # try:
-        #     shutil.move(chunked_upload.file.path, dst)
-        # except shutil.Error as e:
-        #     logger.error(
-        #         "Error moving uploaded file to user's import directory: %s", e)
+        upload_id = request.POST.get('upload_id')
+        chunked_upload = ChunkedUpload.objects.get(upload_id=upload_id)
+        dst = os.path.join(get_user_import_dir(request.user),
+                           chunked_upload.filename)
+        try:
+            shutil.move(chunked_upload.file.path, dst)
+        except shutil.Error as e:
+            logger.error(
+                "Error moving uploaded file to user's import directory: %s", e)
 
     def get_response_data(self, chunked_upload, request):
         return {'message': 'You successfully uploaded this file'}
