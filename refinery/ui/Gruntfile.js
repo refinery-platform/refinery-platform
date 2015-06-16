@@ -35,11 +35,6 @@ module.exports = function(grunt) {
       }
     },
 
-    karma: {
-      unit: {
-      configFile: 'karma.conf.js'
-      }
-    },
     /*
      * Read configs from `config.json`. Separating scripts and configs help
      * to keep things readable.
@@ -106,6 +101,11 @@ module.exports = function(grunt) {
           cwd: '<%= cfg.basePath.ui.src %>/partials/',
           src: ['**/*.html'],
           dest: '<%= cfg.basePath.ui.build %>/partials/'
+        }, {
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/js/',
+          src: ['**/*.html'],
+          dest: '<%= cfg.basePath.ui.build %>/partials/'
         }]
       },
       uiBuildVendor: {
@@ -124,18 +124,15 @@ module.exports = function(grunt) {
           dest: '<%= cfg.basePath.ui.compile %>/images/'
         }]
       },
-      uiCompileScripts: {
-        files: [{
-          expand: true,
-          cwd: '<%= cfg.basePath.ui.src %>/js/',
-          src: ['**/*.js'],
-          dest: '<%= cfg.basePath.ui.compile %>/js/'
-        }]
-      },
       uiCompileTemplates: {
         files: [{
           expand: true,
           cwd: '<%= cfg.basePath.ui.src %>/partials/',
+          src: ['**/*.html'],
+          dest: '<%= cfg.basePath.ui.compile %>/partials/'
+        }, {
+          expand: true,
+          cwd: '<%= cfg.basePath.ui.src %>/js/',
           src: ['**/*.html'],
           dest: '<%= cfg.basePath.ui.compile %>/partials/'
         }]
@@ -249,7 +246,8 @@ module.exports = function(grunt) {
       gruntfile: {
         files: 'Gruntfile.js',
         tasks: [
-          'jshint:gruntfile'
+          'jshint:gruntfile',
+          'build'
         ],
         options: {
           livereload: false
@@ -277,7 +275,8 @@ module.exports = function(grunt) {
         ],
         tasks: [
           'jshint:src',
-          'copy:uiBuildScripts'
+          'copy:uiBuildScripts',
+          'concat-by-feature:build'
         ]
       },
 
@@ -375,6 +374,12 @@ module.exports = function(grunt) {
       }
     },
 
+    karma: {
+      unit: {
+      configFile: 'karma.conf.js'
+      }
+    },
+
     /*
      * Translate LESS into CSS. While compiling also minify and autoprefix.
      */
@@ -442,7 +447,7 @@ module.exports = function(grunt) {
         files: [
           {
             expand: true,
-            cwd: '<%= cfg.basePath.ui.src %>',
+            cwd: '<%= cfg.basePath.ui.src %>/js',
             src: ['**/*.js'],
             dest: '<%= cfg.basePath.ui.tmp %>/js'
           }
@@ -484,6 +489,126 @@ module.exports = function(grunt) {
     }
   });
 
+  grunt.registerTask(
+    'concat-by-feature',
+    'Concat files by features excluding `spec` files',
+    function(mode) {
+      /*
+       * A utility function for sorting JavaScript sources.
+       */
+      function importanceSortJS (a, b) {
+        /*
+         * Give each type of JavaScript file a category according to then they
+         * should be loaded. The lower the number the earlier the files should
+         * be loaded.
+         */
+        var objs = [a, b];
+        for (var i = objs.length - 1; i >= 0; i--) {
+          switch (true) {
+            case objs[i].indexOf('vendor') >= 0:
+              objs[i] = 0;
+              break;
+            case objs[i].indexOf('module') >= 0:
+              objs[i] = 1;
+              break;
+            case objs[i].indexOf('settings') >= 0:
+              objs[i] = 2;
+              break;
+            case objs[i].indexOf('config') >= 0:
+              objs[i] = 3;
+              break;
+            case objs[i].indexOf('state') >= 0:
+              objs[i] = 4;
+              break;
+            case objs[i].indexOf('controller') >= 0:
+              objs[i] = 5;
+              break;
+            case objs[i].indexOf('directives') >= 0:
+              objs[i] = 6;
+              break;
+            case objs[i].indexOf('services') >= 0:
+              objs[i] = 7;
+              break;
+            case objs[i].indexOf('filters') >= 0:
+              objs[i] = 8;
+              break;
+            case objs[i].indexOf('libraries') >= 0:
+              objs[i] = 9;
+              break;
+            default:
+              objs[i] = 10;
+              break;
+          }
+        }
+        return objs[0] - objs[1];
+      }
+
+      // Read config
+      var cfg = grunt.file.readJSON('config.json'),
+          concat = grunt.config.get('concat') || {},
+          destination = mode === 'build' ? cfg.basePath.ui.build : cfg.basePath.ui.tmp,
+          features = cfg.files.features,
+          files,
+          ngAnnotate = grunt.config.get('ngAnnotate') || {};
+
+      // Loop over all features
+      features.forEach(function (feature) {
+        files = [];
+        // Get all files within a feature
+        grunt
+          .file
+          .expand([
+            cfg.basePath.ui.src + '/js/' + feature + '/**/*.js',
+            '!' + cfg.basePath.ui.src + '/js/' + feature + '/**/*.spec.js'
+          ])
+          .forEach(function (file) {
+            files.push(file);
+          });
+
+        // Sort files
+        files.sort(importanceSortJS);
+
+        // Add module prefix and suffix
+        files.unshift('module.prefix');
+        files.push('module.suffix');
+
+        concat[feature] = {
+          options: {
+            // Remove all 'use strict' statements
+            process: function(src, filepath) {
+              return '// Source: ' + filepath + '\n' +
+                src.replace(/(^|\n)[ \t]*('use strict'|"use strict");?\s*/g, '$1');
+            },
+          },
+          src: files,
+          dest: destination + '/js/' + feature + '.js'
+        };
+      });
+      // save the new concat configuration
+      grunt.config.set('concat', concat);
+
+      // when finished run the concatinations
+      grunt.task.run('concat');
+
+      // Make sure to annotate features in place.
+      // ngAnnotate will be called by the compile script just after this task
+      // has finished.
+      if (mode === 'compile') {
+        ngAnnotate.features = {
+          files: [{
+            expand: true,
+            src: features.map(function (feature) {
+              return feature + '.js';
+            }),
+            cwd: cfg.basePath.ui.tmp + '/js',
+            dest: cfg.basePath.ui.tmp + '/js'
+          }]
+        };
+        grunt.config.set('ngAnnotate', ngAnnotate);
+      }
+    }
+  );
+
   // Default task.
   grunt.registerTask('default', ['compile']);
 
@@ -499,7 +624,8 @@ module.exports = function(grunt) {
     'copy:uiBuildStyles',
     'copy:uiBuildTemplates',
     'copy:uiBuildVendor',
-    'copy:staticBuild'
+    'copy:staticBuild',
+    'concat-by-feature:build'
   ]);
 
   // Do all the heavy lifting to get Refinery ready for production.
@@ -510,12 +636,12 @@ module.exports = function(grunt) {
     'less:compile',
     'autoprefixer',
     'cssmin',
-    // Minifying JS files seems to cause severe trouble at the moment so it's
-    // deactivated until everything works fine.
+    // IMPORTANT:
+    // `concat-by-feature:compile` has to be called before `ngAnnotate` because
+    // it adds features to the `ngAnnotate` task.
+    'concat-by-feature:compile',
     'ngAnnotate',
     'uglify',
-    // For the time being, scripts are simply copied.
-    // 'copy:uiCompileScripts',
     'copy:uiCompileImages',
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
