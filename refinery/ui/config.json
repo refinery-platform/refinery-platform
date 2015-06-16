@@ -3,7 +3,7 @@
     "djangoTemplates": "../templates",
     "ui": {
       "build": "development",
-      "compile": "app",
+      "compile": "production",
       "src": "src",
       "tmp": ".tmp"
     },
