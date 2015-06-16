@@ -972,6 +972,9 @@ class GroupManagementResource(Resource):
                 group_list)
 
             return self.process_get(request, group_obj_list, **kwargs)
+        elif request.method == 'DELETE':
+            logger.info("Delete thign called")
+
         else:
             return HttpMethodNotAllowed()
 
@@ -1073,7 +1076,7 @@ class GroupManagementResource(Resource):
 
 class UserAuthenticationResource(Resource):
     is_logged_in = fields.BooleanField(attribute='is_logged_in', default=False)
-    is_admin = fields.CharField(attribute='is_admin', default=False)
+    is_admin = fields.BooleanField(attribute='is_admin', default=False)
     id = fields.CharField(attribute='id', default='-1')
     username = fields.CharField(attribute='username', default='AnonymousUser')
 
