@@ -10,7 +10,7 @@ import re
 import uuid
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group
-from guardian.shortcuts import get_objects_for_user
+from guardian.shortcuts import get_objects_for_user, get_objects_for_group
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import Authorization
@@ -22,7 +22,8 @@ from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
 from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow,\
     WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus,\
-    ResourceStatisticsObject, MemberManagementObject, GroupManagementObject
+    ResourceStatisticsObject, MemberManagementObject, GroupManagementObject,\
+    ExtendedGroup
 from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
@@ -42,7 +43,7 @@ class SharableResourceAPIInterface(object):
 
     def __init__(self, res_type):
         self.res_type = res_type
-    
+
     # Useful getter methods that process data.
 
     def get_res(self, res_uuid):
@@ -104,7 +105,7 @@ class SharableResourceAPIInterface(object):
             },
             'objects': bundle
         }
-        
+
     def build_response(self, request, object_list, **kwargs):
         return self.create_response(request, object_list)
 
@@ -125,7 +126,7 @@ class SharableResourceAPIInterface(object):
                 self.wrap_view('res_default_basic'),
                 name='api_%s_basic' % (self._meta.resource_name)),
             url(r'^(?P<resource_name>%s)/$' %
-                (self._meta.resource_name), 
+                (self._meta.resource_name),
                 self.wrap_view('res_default_basic_list'),
                 name='api_%s_basic_list' % (self._meta.resource_name)),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/sharing/$' %
@@ -152,7 +153,7 @@ class SharableResourceAPIInterface(object):
             res_list = filter(
                 lambda r: r.get_owner().id == request.user.id,
                 self.res_type.objects.all())
-            
+
             return self.process_get(request, res_list, **kwargs)
         else:
             return HttpMethodNotAllowed()
@@ -160,7 +161,7 @@ class SharableResourceAPIInterface(object):
     # TODO: Make sure GuardianAuthorization works.
     def res_default_sharing(self, request, **kwargs):
         res = self.get_res(kwargs['uuid'])
-        
+
         if request.method == 'GET':
             res_list = [res]
             kwargs['sharing'] = True
@@ -197,13 +198,13 @@ class SharableResourceAPIInterface(object):
             res_list = filter(
                 lambda r: r.get_owner().id == request.user.id,
                 self.res_type.objects.all())
-            
+
             return self.process_get(request, res_list, **kwargs)
         else:
             return HttpMethodNotAllowed()
 
     # Some other useful methods
-    
+
     def determine_format(self, request):
         return self.response_format
 
@@ -295,7 +296,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         result_list = map(lambda r: r.object, current_results.object_list)
         bundle = self.build_res_list_bundle(request, result_list, **kwargs)
         object_list = self.build_object_list(bundle, **kwargs)
-        
+
         self.log_throttled_access(request)
         return self.build_response(request, object_list, **kwargs)
 
@@ -308,7 +309,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         results = (SearchQuerySet().using('core')
                                    .models(DataSet)
                                    .autocomplete(content_auto=query))
-        
+
         # logger.debug('')
 
         if not results:
@@ -317,7 +318,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         paginator = Paginator(results, 5)
 
         page = request.GET.get('page', 1)
-        try: 
+        try:
             current_results = paginator.page(page)
         except PageNotAnInteger:
             # If page is not an integer, deliver first page.
@@ -329,7 +330,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         result_list = map(lambda r: r.object, current_results.object_list)
         bundle = self.build_res_list_bundle(request, result_list, **kwargs)
         object_list = self.build_object_list(bundle, **kwargs)
-        
+
         self.log_throttled_access(request)
         return self.build_response(request, object_list, **kwargs)
 
@@ -380,9 +381,9 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
 class WorkflowInputRelationshipsResource(ModelResource):
     class Meta:
         queryset = WorkflowInputRelationships.objects.all()
-        detail_resource_name = 'workflowrelationships' 
+        detail_resource_name = 'workflowrelationships'
         resource_name = 'workflowrelationships'
-        #detail_uri_name = 'uuid'   
+        #detail_uri_name = 'uuid'
         fields = ['category', 'set1', 'set2', 'workflow']
 
 
@@ -486,7 +487,10 @@ class NodeResource(ModelResource):
 
         """
         perm = 'read_%s' % DataSet._meta.module_name
-        allowed_datasets = get_objects_for_user(request.user, perm, DataSet)
+        if ( request.user.is_authenticated() ):
+            allowed_datasets = get_objects_for_user(request.user, perm, DataSet)
+        else:
+            allowed_datasets = get_objects_for_group(ExtendedGroup.objects.public_group(), perm, DataSet)
         # get a list of node UUIDs that belong to all data sets available to the
         # current user
         all_allowed_studies = []
@@ -519,7 +523,7 @@ class NodeSetResource(ModelResource):
     class Meta:
         # create node count attribute on the fly - node_count field has to be
         # defined on resource
-        queryset = NodeSet.objects.all().order_by( '-is_current', 'name') 
+        queryset = NodeSet.objects.all().order_by( '-is_current', 'name')
         resource_name = 'nodeset'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
@@ -595,7 +599,7 @@ class NodeSetListResource(ModelResource):
     class Meta:
         # create node count attribute on the fly - node_count field has to be
         # defined on resource
-        queryset = NodeSet.objects.all().order_by( '-is_current', 'name') 
+        queryset = NodeSet.objects.all().order_by( '-is_current', 'name')
         # NG: introduced to get correct resource IDs
         detail_resource_name = 'nodeset'
         resource_name = 'nodesetlist'
@@ -619,15 +623,15 @@ class NodePairResource(ModelResource):
     node1 = fields.ToOneField(NodeResource, 'node1')
     node2 = fields.ToOneField(NodeResource, 'node2', null=True)
     group = fields.CharField(attribute='group', null=True)
-    
+
     class Meta:
         detail_allowed_methods = ['get', 'post', 'delete', 'put', 'patch']
         queryset = NodePair.objects.all()
-        detail_resource_name = 'nodepair' 
+        detail_resource_name = 'nodepair'
         resource_name = 'nodepair'
-        detail_uri_name = 'uuid'  
+        detail_uri_name = 'uuid'
         authentication = SessionAuthentication()
-        authorization = Authorization()        
+        authorization = Authorization()
         # for use with AngularJS $resources: returns newly created object upon
         # POST (in addition to the location response header)
         always_return_data = True
@@ -644,9 +648,9 @@ class NodeRelationshipResource(ModelResource):
     class Meta:
         detail_allowed_methods = ['get', 'post', 'delete', 'put', 'patch']
         queryset = NodeRelationship.objects.all().order_by('-is_current', 'name')
-        detail_resource_name = 'noderelationship' 
+        detail_resource_name = 'noderelationship'
         resource_name = 'noderelationship'
-        detail_uri_name = 'uuid'  
+        detail_uri_name = 'uuid'
         authentication = SessionAuthentication()
         authorization = Authorization()
         # for use with AngularJS $resources: returns newly created object upon
@@ -683,13 +687,13 @@ class StatisticsResource(Resource):
     def stat_summary(self, model):
         model_list = model.objects.all()
         total = len(model_list)
-        
+
         public = len(filter(lambda x: x.is_public(), model_list))
 
         private_shared = len(filter(
-            lambda x: not x.is_public() and len(x.get_groups()) > 1, 
+            lambda x: not x.is_public() and len(x.get_groups()) > 1,
             model_list))
-        
+
         private = total - public - private_shared
         return {
             'total': total, 'public': public, \
@@ -698,12 +702,12 @@ class StatisticsResource(Resource):
 
     class Meta:
         resource_name = 'statistics'
-        object_class = ResourceStatisticsObject 
+        object_class = ResourceStatisticsObject
 
     def detail_uri_kwargs(self, bundle_or_obj):
         kwargs = {}
         kwargs['pk'] = uuid.uuid1()
-        return kwargs 
+        return kwargs
 
     def obj_get_list(self, bundle, **kwargs):
         return self.get_object_list(bundle.request)
@@ -722,7 +726,7 @@ class StatisticsResource(Resource):
             workflow_summary = self.stat_summary(Workflow)
         if 'project' in request.GET:
             project_summary = self.stat_summary(Project)
-        
+
         request_string = request.GET.get('type')
 
         if request_string is not None:
@@ -732,7 +736,7 @@ class StatisticsResource(Resource):
                 workflow_summary = self.stat_summary(Workflow)
             if 'project' in request_string:
                 project_summary = self.stat_summary(Project)
-        
+
         return [ResourceStatisticsObject(
             user_count, group_count, files_count, \
             dataset_summary, workflow_summary, project_summary)]
@@ -743,7 +747,7 @@ class MemberManagementResource(Resource):
 
     # Assume that groups only exist in Group-Manager pairs. 
     def is_manager_group(self, group):
-        return group.extendedgroup.manager_group is None 
+        return group.extendedgroup.manager_group is None
 
     def get_group(self, group_id):
         group_list = Group.objects.filter(id=int(group_id))
@@ -797,7 +801,7 @@ class MemberManagementResource(Resource):
         """
 
         # Remove all objects before readding them.
-        group.user_set.clear() 
+        group.user_set.clear()
 
         for m in member_list:
             group.user_set.add(m['id'])
@@ -843,7 +847,7 @@ class GroupManagementResource(Resource):
             lambda u: {
                 'user_id': u.id,
                 'username': u.username
-            }, 
+            },
             group.user_set.all())
 
     # TODO: Implement.
@@ -940,21 +944,21 @@ class GroupManagementResource(Resource):
     def group_basic(self, request, **kwargs):
         user = request.user
         group = self.get_group(kwargs['id'])
-        
+
         if request.method == 'GET':
             group_obj_list = [GroupManagementObject(
                 group.id,
                 group.name,
                 None,
                 None,
-                self.user_authorized(user, group))]  
+                self.user_authorized(user, group))]
             return self.process_get(request, group_obj_list, **kwargs)
         else:
             return HttpMethodNotAllowed()
 
     def group_basic_list(self, request, **kwargs):
         user = request.user
-        
+
         if request.method == 'GET':
             group_list = self.groups_with_user(user)
 
@@ -974,7 +978,7 @@ class GroupManagementResource(Resource):
     def group_members(self, request, **kwargs):
         user = request.user
         group = self.get_group(kwargs['id'])
-        
+
         if request.method == 'GET':
             group_obj_list = [GroupManagementObject(
                 group.id,
@@ -1010,7 +1014,7 @@ class GroupManagementResource(Resource):
 
     def group_members_list(self, request, **kwargs):
         user = request.user
-        
+
         if request.method == 'GET':
             group_list = self.groups_with_user(user)
 
