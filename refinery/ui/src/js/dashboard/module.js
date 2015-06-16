@@ -1,2 +1,4 @@
 angular
-  .module('refineryDashboard', []);
+  .module('refineryDashboard', [
+    'ui.router'
+  ]);

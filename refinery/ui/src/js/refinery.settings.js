@@ -1,6 +1,7 @@
 angular
   .module('refineryApp')
   .constant('settings', {
-    refineryApi: 'api/v1/',
-    solrApi: ''
+    appRoot: document.location.protocol + '//' + document.location.host,
+    refineryApi: '/api/v1/',
+    solrApi: '/solr/'
   });

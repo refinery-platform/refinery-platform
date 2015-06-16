@@ -1,9 +1,9 @@
 angular
 .module('refineryApp', [
   /*
-   * Angular modules
+   * Angular App commons
    */
-  'ngCookies',
+  'errors',
 
   /*
    * Refinery modules
@@ -19,9 +19,10 @@ angular
   'refineryMetadataTableImport',
   'refineryProvvis',
   'refinerySharing',
-  'refineryDataFileUpload'
+  'refineryDataFileUpload',
+  'refineryDashboard'
 ])
-.config(['$provide', function ($provide) {
+.config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
   // http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
   $provide.decorator('$rootScope', ['$delegate', function ($delegate) {
     Object.defineProperty($delegate.constructor.prototype, '$onRootScope', {
@@ -33,4 +34,8 @@ angular
     });
     return $delegate;
   }]);
+
+  // use Django XSRF/CSRF lingo to enable communication with API
+  $httpProvider.defaults.xsrfCookieName = 'csrftoken';
+  $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
 }]);

@@ -14,6 +14,11 @@
         }
     },
     "files": {
+        "features": [
+            "commons",
+            "dashboard",
+            "globals"
+        ],
         "vendor": [
             "angular-bootstrap/ui-bootstrap-tpls.min.js",
             "angular-bootstrap/ui-bootstrap-tpls.min.js",
