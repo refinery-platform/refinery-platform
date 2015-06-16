@@ -1,5 +1,6 @@
 {
-  "STATICFILES_DIRS": [
+  "DEBUG": true,
+  "STATICFILES": [
     "static/development",
     "ui/development"
   ]

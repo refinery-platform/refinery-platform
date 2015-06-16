@@ -106,6 +106,13 @@ file { ["/vagrant/media",
   group => $appgroup,
 }
 
+file { "${project_root}/settings.json":
+  ensure => file,
+  source => "${project_root}/settings.json.sample",
+  owner => $appuser,
+  group => $appgroup,
+}
+->
 exec { "syncdb":
   command => "${virtualenv}/bin/python ${project_root}/manage.py syncdb --migrate --noinput",
   user => $appuser,
