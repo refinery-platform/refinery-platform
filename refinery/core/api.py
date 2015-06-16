@@ -145,6 +145,9 @@ class SharableResourceAPIInterface(object):
         if request.method == 'GET':
             res_list = [res]
             return self.process_get(request, res_list, **kwargs)
+        if request.method == 'DELETE':
+            logger.info("target to be deleted:")
+            logger.info(res)
         else:
             return HttpMethodNotAllowed()
 
@@ -1077,7 +1080,6 @@ class UserAuthenticationResource(Resource):
     class Meta:
         resource_name = 'user_authentication'
         object_class = UserAuthenticationObject
-        detail_uri_name = 'user_type'
 
     def determine_format(self, request):
         return 'application/json'
