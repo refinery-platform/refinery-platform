@@ -1368,3 +1368,15 @@ class GroupManagementObject(object):
         self.member_list = member_list
         self.perm_list = perm_list
         self.can_edit = can_edit
+
+class UserAuthenticationObject(object):
+    def __init__(
+            self,
+            is_logged_in=None,
+            is_admin=None,
+            id=None,
+            username=None):
+        self.is_logged_in = is_logged_in
+        self.is_admin = is_admin
+        self.id = id
+        self.username = username
