@@ -826,6 +826,10 @@ class GroupManagementResource(Resource):
             },
             group.user_set.all())
 
+    # Group permissions against a single resource.
+    def get_perms(self, res, group):
+        return None
+
     # TODO: Implement.
     def get_perm_list(self, group):
         return []

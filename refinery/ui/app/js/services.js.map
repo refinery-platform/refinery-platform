@@ -1,1 +1,0 @@
-{"version":3,"file":"services.js","sources":["../../.tmp/js/js/services.js"],"names":["angular","module","factory","$resource","format"],"mappings":";;AAAAA,QAAQC,OAAO,uBAEdC,QAAQ,YAAa,YAAa,SAASC,GAC1C,YAEA,OAAOA,GACL,qBAAsBC,OAAQ"}
