@@ -1,0 +1,15 @@
+<ul id="externalToolListPopover" ng-repeat="tool in externalToolStatusController.tools_details">
+    <li>
+        Name: {{ tool.name }}
+    </li>
+    <li>
+        Status: {{ tool.status }}
+    </li>
+    <li>
+        Last Updated: {{ tool.last_time_check | date:'MM/dd/yy@h:mma' }}
+    </li>
+    <li>
+        Active: {{ tool.is_active }}
+    </li>
+</ul>
+
