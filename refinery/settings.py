@@ -1,45 +1,35 @@
-# Django settings for refinery project.
-# requires settings_local.py with machine specific information
-# splitting ideas taken from https://code.djangoproject.com/wiki/SplitSettings
-# (solution by Steven Armstrong)
-
 import djcelery
-import os
 import json
-
+import os
 from django.core.exceptions import ImproperlyConfigured
 
+
+# require settings.json
 try:
     with open('settings.json', 'r') as f:
         local_settings = json.loads(f.read())
-except IOError:
-    local_settings = {}
+except IOError as e:
+    raise ImproperlyConfigured("Could not open settings.json: {}".format(e))
 
 
-def get_setting(setting, mandatory=False, settings=local_settings):
-    """Get the local settings variable or return explicit exception."""
+def get_setting(name, settings=local_settings):
+    """Get the local settings variable or return explicit exception
+    """
     try:
-        return settings[setting]
+        return settings[name]
     except KeyError:
-        # Only raise an error when the setting is mandatory
-        if mandatory:
-            error_msg = "Set the {0} environment variable".format(setting)
-            raise ImproperlyConfigured(error_msg)
-        # Otherwise return `None` so that the config can gracefully fall back to
-        # a default value
-        else:
-            return None
+        raise ImproperlyConfigured("Missing setting '{0}'".format(name))
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 djcelery.setup_loader()
 
+DEBUG = get_setting('DEBUG')
+TEMPLATE_DEBUG = DEBUG
+
 # Required when DEBUG = False
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.50.50']
-
-DEBUG = get_setting('DEBUG') or False
-TEMPLATE_DEBUG = DEBUG
 
 # A tuple that lists people who get code error notifications.
 ADMINS = (
@@ -124,25 +114,17 @@ STATIC_URL = '/static/'
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 # Additional locations of static files
-STATICFILES_LIST = get_setting('STATICFILES_DIRS') or ['static/production',
-                                                       'ui/app']
-STATICFILES_DIRS = tuple(
-    map(
-        lambda x: os.path.join(BASE_DIR, x),
-        STATICFILES_LIST
-    )
-)
+STATICFILES = get_setting('STATICFILES')
+STATICFILES_DIRS = tuple(map(lambda x: os.path.join(BASE_DIR, x), STATICFILES))
 
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'djangular.finders.NamespacedAngularAppDirectoriesFinder',
-    # 'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
-# Overwritten in settings_local.py
+# Make sure to set this to a random string in production
 SECRET_KEY = 'SECRET'
 
 # List of callables that know how to import templates from various sources.

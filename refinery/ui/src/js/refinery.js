@@ -38,4 +38,12 @@ angular
   // use Django XSRF/CSRF lingo to enable communication with API
   $httpProvider.defaults.xsrfCookieName = 'csrftoken';
   $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+}])
+.run(['$','$rootScope', function($, $rootScope){
+    //  trigger from the contents.js when the node selection list has been
+    // updated. Used by node_mapping.js
+  $(document).on('refinery/nodeSelectCheckbox', function(e){
+    $rootScope.$broadcast('refinery/nodeSelectCheckbox');
+    $rootScope.$digest();
+  });
 }]);

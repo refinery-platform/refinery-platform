@@ -181,13 +181,13 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
       self._query.setDocumentSelectionBlacklistMode(false);
       self._query.clearDocumentSelection();
       // update individual checkboxes in table
-      $("." + "document-checkbox-select").removeAttr("checked");
+      $("." + "document-checkbox-select").prop("checked", false).change();
     }
     else {
       self._query.setDocumentSelectionBlacklistMode(true);
       self._query.clearDocumentSelection();
       // update individual checkboxes in table
-      $("." + "document-checkbox-select").attr("checked", "checked");
+      $("." + "document-checkbox-select").prop("checked", true).change();
     }
     self._commands.execute(
       SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, {'event': event});

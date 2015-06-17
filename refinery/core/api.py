@@ -10,7 +10,7 @@ import re
 import uuid
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group
-from guardian.shortcuts import get_objects_for_user
+from guardian.shortcuts import get_objects_for_user, get_objects_for_group
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import Authorization
@@ -18,12 +18,13 @@ from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS, ALL
 from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
 from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
-    HttpUnauthorized, HttpMethodNotAllowed, HttpAccepted
+    HttpUnauthorized, HttpMethodNotAllowed, HttpAccepted, HttpCreated, \
+    HttpNoContent
 from tastypie.resources import ModelResource, Resource
-from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow,\
-    WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus,\
-    ResourceStatisticsObject, MemberManagementObject, GroupManagementObject,\
-    UserAuthenticationObject
+from core.models import Project, NodeSet, NodeRelationship, NodePair, \
+    Workflow, WorkflowInputRelationships, Analysis, DataSet, \
+    ExternalToolStatus, ResourceStatisticsObject, MemberManagementObject, \
+    GroupManagementObject, ExtendedGroup, UserAuthenticationObject
 from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
@@ -39,7 +40,6 @@ logger = logging.getLogger(__name__)
 # Specifically made for descendants of SharableResource.
 class SharableResourceAPIInterface(object):
     uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
-    response_format = 'application/json'
 
     def __init__(self, res_type):
         self.res_type = res_type
@@ -121,48 +121,18 @@ class SharableResourceAPIInterface(object):
 
     def prepend_urls(self):
         return [
-            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/$' %
-                (self._meta.resource_name, self.uuid_regex),
-                self.wrap_view('res_default_basic'),
-                name='api_%s_basic' % (self._meta.resource_name)),
-            url(r'^(?P<resource_name>%s)/$' %
-                (self._meta.resource_name),
-                self.wrap_view('res_default_basic_list'),
-                name='api_%s_basic_list' % (self._meta.resource_name)),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/sharing/$' %
                 (self._meta.resource_name, self.uuid_regex),
-                self.wrap_view('res_default_sharing'),
+                self.wrap_view('res_sharing'),
                 name='api_%s_sharing' % (self._meta.resource_name)),
             url(r'^(?P<resource_name>%s)/sharing/$' %
                 (self._meta.resource_name),
-                self.wrap_view('res_default_sharing_list'),
+                self.wrap_view('res_sharing_list'),
                 name='api_%s_sharing_list' % (self._meta.resource_name)),
         ]
 
-    def res_default_basic(self, request, **kwargs):
-        res = self.get_res(kwargs['uuid'])
-
-        if request.method == 'GET':
-            res_list = [res]
-            return self.process_get(request, res_list, **kwargs)
-        if request.method == 'DELETE':
-            logger.info("target to be deleted:")
-            logger.info(res)
-        else:
-            return HttpMethodNotAllowed()
-
-    def res_default_basic_list(self, request, **kwargs):
-        if request.method == 'GET':
-            res_list = filter(
-                lambda r: r.get_owner().id == request.user.id,
-                self.res_type.objects.all())
-
-            return self.process_get(request, res_list, **kwargs)
-        else:
-            return HttpMethodNotAllowed()
-
     # TODO: Make sure GuardianAuthorization works.
-    def res_default_sharing(self, request, **kwargs):
+    def res_sharing(self, request, **kwargs):
         res = self.get_res(kwargs['uuid'])
 
         if request.method == 'GET':
@@ -195,22 +165,27 @@ class SharableResourceAPIInterface(object):
         else:
             return HttpMethodNotAllowed()
 
-    def res_default_sharing_list(self, request, **kwargs):
+    def res_sharing_list(self, request, **kwargs):
         if request.method == 'GET':
             kwargs['sharing'] = True
             res_list = filter(
-                lambda r: r.get_owner().id == request.user.id,
+                lambda r: 
+                    (r.get_owner() is not None and
+                    r.get_owner().id == request.user.id),
                 self.res_type.objects.all())
 
             return self.process_get(request, res_list, **kwargs)
         else:
             return HttpMethodNotAllowed()
 
-    # Some other useful methods
-
-    def determine_format(self, request):
-        return self.response_format
-
+    # Overriding some ORM methods.
+    
+    # Handles POST requests.
+    def obj_create(self, bundle, **kwargs):
+        bundle = ModelResource.obj_create(self, bundle, **kwargs)
+        bundle.obj.set_owner(bundle.request.user)
+        return bundle
+          
 
 class ProjectResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
@@ -227,12 +202,13 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         fields = ['name', 'id', 'uuid', 'summary', 'share_list']
         # authentication = SessionAuthentication
         # authorization = GuardianAuthorization
+        authorization = Authorization()
 
     def prepend_urls(self):
         return SharableResourceAPIInterface.prepend_urls(self)
 
-    def determine_format(self, request):
-        return SharableResourceAPIInterface.determine_format(self, request)
+    def obj_create(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
 
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
@@ -248,9 +224,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         # allowed_methods = ['get']
         resource_name = 'data_sets'
         # authentication = SessionAuthentication()
-        # authorization = GuardianAuthorization()
+        # authorization = GuardianAuthorization()        
         filtering = {'uuid': ALL}
-        # fields = ['uuid']
+        fields = ['uuid']
 
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
@@ -264,9 +240,6 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                 name='api_%s_autocomplete' % (self._meta.resource_name)),
         ]
         return prepend_urls_list
-
-    def determine_format(self, request):
-        return SharableResourceAPIInterface.determine_format(self, request)
 
     def get_search(self, request, **kwargs):
         query = request.GET.get('q', None)
@@ -337,6 +310,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         self.log_throttled_access(request)
         return self.build_response(request, object_list, **kwargs)
 
+    def obj_create(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
+
 
 class WorkflowResource(ModelResource, SharableResourceAPIInterface):
     input_relationships = fields.ToManyField(
@@ -361,9 +337,6 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
     def prepend_ruls(self):
         return SharableResourceAPIInterface.prepend_urls(self)
 
-    def determine_format(self, request):
-        return SharableResourceAPIInterface.determine_format(self, request)
-
     def dehydrate(self, bundle):
         # detect if detail
         if self.get_resource_uri(bundle) == bundle.request.path:
@@ -379,6 +352,9 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         bundle.data['galaxy_instance_identifier'] = \
             bundle.obj.workflow_engine.instance.api_key
         return bundle
+
+    def obj_create(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
 
 
 class WorkflowInputRelationshipsResource(ModelResource):
@@ -490,7 +466,10 @@ class NodeResource(ModelResource):
 
         """
         perm = 'read_%s' % DataSet._meta.module_name
-        allowed_datasets = get_objects_for_user(request.user, perm, DataSet)
+        if ( request.user.is_authenticated() ):
+            allowed_datasets = get_objects_for_user(request.user, perm, DataSet)
+        else:
+            allowed_datasets = get_objects_for_group(ExtendedGroup.objects.public_group(), perm, DataSet)
         # get a list of node UUIDs that belong to all data sets available to the
         # current user
         all_allowed_studies = []
@@ -745,7 +724,7 @@ class StatisticsResource(Resource):
 class MemberManagementResource(Resource):
     member_list = fields.ListField(attribute='member_list', null=True)
 
-    # Assume that groups only exist in Group-Manager pairs.
+    # Assume that groups only exist in Group-Manager pairs. 
     def is_manager_group(self, group):
         return group.extendedgroup.manager_group is None
 
@@ -829,9 +808,6 @@ class GroupManagementResource(Resource):
         # authentication = SessionAuthentication
         # authorization = GuardianAuthorization
 
-    def determine_format(self, request):
-        return 'application/json'
-
     def get_group(self, group_id):
         group_list = Group.objects.filter(id=int(group_id))
         return None if len(group_list) == 0 else group_list[0]
@@ -849,6 +825,10 @@ class GroupManagementResource(Resource):
                 'username': u.username
             },
             group.user_set.all())
+
+    # Group permissions against a single resource.
+    def get_perms(self, res, group):
+        return None
 
     # TODO: Implement.
     def get_perm_list(self, group):
@@ -898,7 +878,7 @@ class GroupManagementResource(Resource):
         object_list = self.build_object_list(bundle, **kwargs)
         return self.build_response(request, object_list, **kwargs)
 
-    # This implies that users just have to be in the manager group, not
+    # This implies that users just have to be in the manager group, not 
     # necessarily in the group itself.
     def user_authorized(self, user, group):
         if self.is_manager_group(group) and user in group.user_set.all():
@@ -953,6 +933,9 @@ class GroupManagementResource(Resource):
                 None,
                 self.user_authorized(user, group))]
             return self.process_get(request, group_obj_list, **kwargs)
+        elif request.method == 'DELETE':
+            group.delete()
+            return HttpNoContent()
         else:
             return HttpMethodNotAllowed()
 
@@ -972,9 +955,13 @@ class GroupManagementResource(Resource):
                 group_list)
 
             return self.process_get(request, group_obj_list, **kwargs)
-        elif request.method == 'DELETE':
-            logger.info("Delete thign called")
-
+        elif request.method == 'POST':
+            data = json.loads(request.raw_post_data)
+            new_group = ExtendedGroup(name=data['name'])
+            new_group.save()
+            new_group.group_ptr.user_set.add(user)
+            new_group.manager_group.user_set.add(user)
+            return HttpCreated()
         else:
             return HttpMethodNotAllowed()
 
@@ -1077,7 +1064,7 @@ class GroupManagementResource(Resource):
 class UserAuthenticationResource(Resource):
     is_logged_in = fields.BooleanField(attribute='is_logged_in', default=False)
     is_admin = fields.BooleanField(attribute='is_admin', default=False)
-    id = fields.CharField(attribute='id', default='-1')
+    id = fields.IntegerField(attribute='id', default=-1)
     username = fields.CharField(attribute='username', default='AnonymousUser')
 
     class Meta:
@@ -1109,4 +1096,4 @@ class UserAuthenticationResource(Resource):
         built_obj = self.build_bundle(obj=auth_obj, request=request)
         bundle = self.full_dehydrate(built_obj)
         return self.create_response(request, bundle)
-
+ 

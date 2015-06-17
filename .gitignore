@@ -44,7 +44,6 @@ settings_local*.py
 /docs/_static/*
 .idea/
 .project
-.DS_Store
 .pydevproject
 .settings/*
 /refinery/*.pid
@@ -59,7 +58,7 @@ deployment/Puppetfile.lock
 /refinery/celerybeat-schedule*
 /refinery/static/production/
 /refinery/static/development/
-/refinery/ui/app/
+/refinery/ui/production/
 /refinery/ui/development/
 /refinery/ui/bower_components/
 /refinery/ui/node_modules/
@@ -69,9 +68,8 @@ deployment/Puppetfile.lock
 /import/
 *.conflict
 *.sublime-*
-.idea/
 .editorconfig
 
-# to be moved into refinery/ui/app/
+# to be moved into refinery/ui
 refinery/static/styles/css/font-awesome*.css
 refinery/static/styles/css/refinery-style*.css
