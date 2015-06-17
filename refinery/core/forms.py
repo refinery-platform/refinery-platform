@@ -10,6 +10,11 @@ from registration.forms import RegistrationFormUniqueEmail, RegistrationFormTerm
 from core.models import Project, UserProfile, Workflow, DataSet
 
 class ProjectForm(ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(ProjectForm, self).__init__(*args, **kwargs)
+        self.fields['slug'].label = "Shortcut Name"
+
     class Meta:
         model = Project
         fields = ["name", "slug", "summary", "description"]
