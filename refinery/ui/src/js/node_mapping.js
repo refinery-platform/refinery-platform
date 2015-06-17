@@ -525,12 +525,6 @@ angular.module('refineryNodeMapping', [
 .controller('NodeSetListApiCtrl', function($scope, $rootScope, NodeSetList) {
   'use strict';
 
-  var NodeSets = NodeSetList.get(
-    {study__uuid: externalStudyUuid, assay__uuid: externalAssayUuid},
-    function() {
-      $scope.nodesetList = NodeSets.objects;
-  });
-
   $scope.updateCurrentNodeSet = function() {
     $scope.currentNodeSet = $scope.nodesetList[$scope.nodesetIndex];
     // FIXME: temp workaround - this should be handled through the event bus
@@ -541,6 +535,24 @@ angular.module('refineryNodeMapping', [
       // analysisConfig.nodeRelationshipUuid = null;
     }
   };
+
+  $scope.getCurrentNodeSet = function(){
+    NodeSetList.get(
+      {
+        study__uuid: externalStudyUuid, assay__uuid: externalAssayUuid
+      }).$promise.then(function(data){
+        $scope.nodesetList = data.objects;
+        $scope.updateCurrentNodeSet();
+      },function(error){
+        console.log(error);
+    });
+  };
+
+  $scope.$on('refinery/nodeSelectCheckbox', function(e){
+    $scope.getCurrentNodeSet();
+  });
+
+  $scope.getCurrentNodeSet();
 })
 
 .controller('DataSetUiModeCtrl', function($scope, $location, $rootScope) {
