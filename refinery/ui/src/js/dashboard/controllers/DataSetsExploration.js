@@ -1,5 +1,5 @@
 function DataSetsExplorationCtrl () {
-  this.state = 'Data Set Exploration';
+  this.test = 'Data Set Exploration';
 }
 
 angular

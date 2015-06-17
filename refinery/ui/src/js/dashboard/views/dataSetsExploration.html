@@ -1,5 +1,5 @@
-<div ng-class="span12">
-  <div class="refinery-panel refinery-panel-content scrollable">
+<div class="span12">
+  <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
         <h3><i class="m-r-1-4 icon-file"></i>Data Sets</h3>
@@ -11,16 +11,22 @@
       </span>
     </div>
 
-    <div class="scrollable">
-      <span class="alert alert-info">
-        No data sets imported.
-      </span>
-    </div>
+    <form class="navbar-search">
+      <i class="icon-search"></i>
+      <input
+        autofocus
+        type="text"
+        class="search-query"
+        placeholder="Search"
+        ng-model="dashboard.searchQueryDataSets"
+        ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
+    </form>
 
-    <div class="scrollable">
-      <span class="alert alert-info">
-        No data sets imported.
-      </span>
+    <div class="refinery-panel-content scrollable">
+      {{ dse.test }}
+      <ul>
+        <li ng-repeat="dataSet in dse.dataSets.objects">{{ dse.resource_uri }}</li>
+      </ul>
     </div>
   </div>
 </div>

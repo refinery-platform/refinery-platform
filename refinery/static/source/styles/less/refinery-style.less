@@ -270,23 +270,6 @@ ul#externalToolListPopover li{
   box-shadow: 0 -2px 2px rgba(0, 0, 0, 0.3);
 }
 
-
-.refinery-panel {
-
-  background-color: white;
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
-  padding-left: 15px;
-  padding-right: 15px;
-  padding-bottom: 5px;
-  padding-top: 10px;
-  margin-top: 0px;
-  margin-bottom: 10px;
-  border-top: 5px solid @gray;
-
-  .refinery-panel-shadow;
-}
-
 .scrollable {
   overflow-y: scroll;
   height: 100px;
@@ -325,6 +308,14 @@ ul#externalToolListPopover li{
 }
 
 .refinery-panel {
+  background-color: white;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-top: 5px solid @gray;
+  margin-bottom: 10px;
+
+  .refinery-panel-shadow;
+
   &-header {
     border-top: none;
     border-radius: 5px;
@@ -337,6 +328,10 @@ ul#externalToolListPopover li{
   }
 
   &-content {
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-bottom: 5px;
+    padding-top: 10px;
   }
 
   &-error {
@@ -412,15 +407,58 @@ ul#externalToolListPopover li{
     padding-bottom: 2px;
   }
 
+  .navbar-search {
+    display: block;
+    float: none;
+    margin: 0 0 10px 0;
+    padding: 5px 5px;
+    border-bottom: 1px solid darken(@grayLighter, 10%);
+    background-color: @grayLighter;
+
+    .search-query {
+      box-sizing: border-box;
+      width: 100%;
+      height: 25px;
+      font-size: 15px;
+      line-height: normal;
+      padding-left: 25px;
+    }
+
+    .search-query::placeholder {
+      line-height: normal;
+    }
+
+    .icon-search {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+    }
+  }
+}
+
+.dashboard {
+  position: relative;
+
+  [class^="span"].expandable {
+    position: relative;
+    transition: width @fastTransitionSpeed @easeInOutCubic;
+  }
+
+  [class^="span"].expandable.full-width {
+    position: absolute;
+    z-index: 2;
+    width: 100%;
+  }
 }
 
 
 
 .refinery-header {
+  position: relative;
   display: block;
-  border-bottom: 1px solid @grayLighter;
-  padding-bottom: -10px;
-  margin-bottom: 10px;
+  padding: 5px 15px;
+  border-bottom: 1px solid darken(@grayLighter, 10%);
+  background-color: @grayLighter;
 }
 
 

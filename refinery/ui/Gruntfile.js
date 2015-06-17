@@ -248,10 +248,7 @@ module.exports = function(grunt) {
         tasks: [
           'jshint:gruntfile',
           'build'
-        ],
-        options: {
-          livereload: false
-        }
+        ]
       },
 
       /*
@@ -271,7 +268,7 @@ module.exports = function(grunt) {
        */
       uiScripts: {
         files: [
-          '<%= cfg.basePath.ui.src %>/js/*.js'
+          '<%= cfg.basePath.ui.src %>/js/**/*.js'
         ],
         tasks: [
           'jshint:src',
@@ -297,7 +294,7 @@ module.exports = function(grunt) {
        */
       uiTemplates: {
         files: [
-          '<%= cfg.basePath.ui.src %>/partials/*.html'
+          '<%= cfg.basePath.ui.src %>/**/*.html'
         ],
         tasks: [
           'copy:uiBuildTemplates'
@@ -399,7 +396,8 @@ module.exports = function(grunt) {
           '<%= cfg.basePath.static.build %>/styles/css/refinery-style-bootstrap.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style-bootstrap.less',
           '<%= cfg.basePath.static.build %>/styles/css/refinery-style.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style.less',
           '<%= cfg.basePath.static.build %>/styles/css/variables.css': '<%= cfg.basePath.static.src %>/styles/less/variables.less',
-          '<%= cfg.basePath.static.build %>/styles/css/workflow_visualization.css': '<%= cfg.basePath.static.src %>/styles/less/workflow_visualization.less'
+          '<%= cfg.basePath.static.build %>/styles/css/workflow_visualization.css': '<%= cfg.basePath.static.src %>/styles/less/workflow_visualization.less',
+          '<%= cfg.basePath.static.build %>/styles/css/animate.css': '<%= cfg.basePath.static.src %>/styles/less/animate.less',
         }
       },
       compile: {

@@ -6,6 +6,10 @@
 {{ block.super }} - Home
 {% endblock %}
 
+{% block head_html %}
+<link href="{% static 'styles/css/animate.css' %}" rel="stylesheet">
+{% endblock %}
+
 {% block subheader %}
   <div class="page-header">
     <h1>
@@ -37,8 +41,7 @@
    -->
 {% endif %}
 
-<div class="row-fluid" ng-controller="DashboardCtrl as dashboard">
-  <div ui-view></div>
+<div class="row-fluid dashboard" ng-controller="DashboardCtrl as dashboard" ui-view></div>
   <!--
   {% if REFINERY_REPOSITORY_MODE %}
     <div class="span8" ng-controller="refinerySharingController as sharing">
@@ -337,7 +340,7 @@
 {% endblock %}
 
 {% block script %}
-  <script src="{% static "js/dashboard.js" %}"></script>
+  <script src="{% static 'js/dashboard.js' %}"></script>
 
   <script
     type="text/javascript"

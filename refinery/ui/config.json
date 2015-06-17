@@ -32,6 +32,8 @@
       "angular/angular.js",
       "angular/angular.min.js",
       "angular/angular.min.js.map",
+      "angular-animate/angular-animate.min.js",
+      "angular-animate/angular-animate.min.js.map",
       "angular-cookies/angular-cookies.min.js",
       "angular-cookies/angular-cookies.min.js.map",
       "c3/c3.css",

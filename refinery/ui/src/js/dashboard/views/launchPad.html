@@ -1,5 +1,5 @@
-<div ng-class="span4">
-  <div class="refinery-panel refinery-panel-content scrollable">
+<div id="launch-pad" class="span4 expandable" ng-class="{'full-width': dashboard.expandDataSetPanel}">
+  <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
         <h3><i class="m-r-1-4 icon-file"></i>Data Sets</h3>
@@ -11,16 +11,26 @@
       </span>
     </div>
 
-    <div class="scrollable">
-      <span class="alert alert-info">
-        No data sets imported.
-      </span>
+    <form class="navbar-search">
+      <i class="icon-search"></i>
+      <input
+        type="text"
+        class="search-query"
+        placeholder="Search"
+        ng-model="dashboard.searchQueryDataSets"
+        ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
+    </form>
+
+    <div class="refinery-panel-content scrollable">
+      <ul>
+        <li ng-repeat="dataSet in launchPad.dataSets.objects">{{ dataSet.resource_uri }}</li>
+      </ul>
     </div>
   </div>
 </div>
 
-<div ng-class="span4">
-  <div class="refinery-panel refinery-panel-content scrollable">
+<div class="span4">
+  <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
         <h3><i class="m-r-1-4 icon-folder-open"></i>Projects</h3>
@@ -32,7 +42,7 @@
       </span>
     </div>
 
-    <div class="scrollable">
+    <div class="refinery-panel-content scrollable">
       <span class="alert alert-info">
         No projects found.
       </span>
@@ -40,8 +50,8 @@
   </div>
 </div>
 
-<div ng-class="span4">
-  <div class="refinery-panel refinery-panel-content scrollable">
+<div class="span4">
+  <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
         <h3><i class="m-r-1-4 icon-cog"></i>Workflows</h3>
@@ -53,10 +63,11 @@
       </span>
     </div>
 
-    <div class="scrollable">
+    <div class="refinery-panel-content scrollable">
       <span class="alert alert-info">
         No workflows imported.
       </span>
     </div>
   </div>
+</div>
 </div>
