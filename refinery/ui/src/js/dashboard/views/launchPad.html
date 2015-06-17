@@ -21,10 +21,33 @@
         ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
     </form>
 
+    <div class="refinery-panel-header">
+      <div class="floatbox">
+        <div class="floatbox-min-right">
+          <h4>Share</h4>
+        </div>
+        <div class="floatbox-max-left">
+          <h4>Name</h4>
+        </div>
+      </div>
+    </div>
     <div class="refinery-panel-content scrollable">
-      <ul>
-        <li ng-repeat="dataSet in launchPad.dataSets.objects">{{ dataSet.resource_uri }}</li>
+      <ul
+        class="no-list-style"
+        ng-if="dashboard.allDataSets.meta.total_count > 0">
+        <li ng-repeat="dataSet in dashboard.allDataSets.objects">
+          <i class="icon-user"></i>
+          <a ng-href="data_sets/{{ dataSet.uuid }}">{{ dataSet.name }}</a>
+        </li>
       </ul>
+      <span
+        class="request-loading"
+        ng-if="dashboard.dataSetsServiceLoading">Loading</span>
+      <span
+        class="alert alert-info"
+        ng-if="dashboard.allDataSets.meta.total_count == 0">
+        No data sets found.
+      </span>
     </div>
   </div>
 </div>

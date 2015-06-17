@@ -1,26 +1,26 @@
-function LaunchPadCtrl ($scope, $state, $timeout, dataSets) {
-  var ctrl = this;
+function LaunchPadCtrl (projectService) {
+  var that = this;
 
-  ctrl.dataSets = dataSets.query();
+  that.projectServiceLoading = false;
 
-  $scope.$watch(function () {
-    return ctrl.searchQueryDataSets;
-  }, function (query) {
-    if (query) {
-      ctrl.expandDataSetPanel = true;
-      $timeout(function () {
-        $state.go('dataSetsExploration');
-      }, 200);
-    }
-  });
+  projects = that.projectService.query();
+  projects
+    .$promise
+    .then(
+      /* Success */
+      function (results) {
+        that.projectServiceLoading = false;
+      },
+      /* Failure */
+      function (error) {
+        that.projectServiceLoading = false;
+      }
+    );
 }
 
 angular
   .module('refineryDashboard')
   .controller('LaunchPadCtrl', [
-    '$scope',
-    '$state',
-    '$timeout',
-    'dataSets',
+    'projectService',
     LaunchPadCtrl
   ]);

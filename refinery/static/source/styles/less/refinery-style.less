@@ -318,20 +318,22 @@ ul#externalToolListPopover li{
 
   &-header {
     border-top: none;
-    border-radius: 5px;
-    padding-top: 5px;
-    padding-bottom: 1px;
-    margin-bottom: 5px;
-    background-color: @grayLighter;
-     //#gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+    margin: 0 10px;
+    padding: 0;
+    border-bottom: 1px solid @grayLighter;
+    background-color: @white;
 
+    h4 {
+      margin: 0;
+      padding: 5px 0;
+      font-size: 14px;
+      line-height: 1em;
+    }
   }
 
   &-content {
-    padding-left: 15px;
-    padding-right: 15px;
-    padding-bottom: 5px;
-    padding-top: 10px;
+    margin: 0 10px;
+    padding: 5px 0;
   }
 
   &-error {
@@ -410,7 +412,7 @@ ul#externalToolListPopover li{
   .navbar-search {
     display: block;
     float: none;
-    margin: 0 0 10px 0;
+    margin: 0;
     padding: 5px 5px;
     border-bottom: 1px solid darken(@grayLighter, 10%);
     background-color: @grayLighter;
@@ -432,6 +434,17 @@ ul#externalToolListPopover li{
       position: absolute;
       top: 10px;
       left: 12px;
+    }
+  }
+
+  ul {
+    li {
+      padding: 2px 0;
+      border-top: 1px solid @grayLighter;
+
+      &:first-child {
+        border-top: none;
+      }
     }
   }
 }
@@ -628,6 +641,33 @@ ul#externalToolListPopover li{
 
 .no-margin {
   margin: 0 !important;
+}
+
+.floatbox {
+  clear: both;
+  overflow: hidden;
+
+  [class^='floatbox-'] {
+    width: auto;
+  }
+
+  [class^='floatbox-max-'] {
+    overflow: hidden;
+  }
+
+  [class$='min-left'] {
+    float: left;
+  }
+
+  [class$='min-right'] {
+    float: right;
+  }
+}
+
+.no-list-style {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 /*
