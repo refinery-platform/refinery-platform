@@ -15,8 +15,8 @@ function externalToolStatusFactory($http) {
     return $http.get(serverUrl).then(function (response) {
       processResponse(response.data.objects);
     }, function (response) {
-      tools = undefined;
-      $log.error("Error accessing external tool status API.");
+      tools = {};
+      console.error("Error accessing external tool status API.");
     });
   };
 
