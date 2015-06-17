@@ -82,9 +82,17 @@ class SharableResourceAPIInterface(object):
 
     # Turns on certain things depending on flags
     def build_res_list(self, user, res_list, **kwargs):
-        if 'sharing' in kwargs and kwargs['sharing']:
-            for i in res_list:
+        for i in res_list:
+            if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(i, 'share_list', self.get_share_list(user, i))
+
+            if 'show_public' in kwargs and kwargs['show_public']:
+                setattr(i, 'is_public', i.is_public())
+
+            if 'show_owner_info' in kwargs and kwargs['show_owner_info']:
+                setattr(i, 'owner_id', i.get_owner().id)
+                setattr(i, 'owner_username', i.get_owner().username)
+                setattr(i, 'is_owner', i.get_owner().id == user.id)
 
         return res_list
 
@@ -138,6 +146,7 @@ class SharableResourceAPIInterface(object):
         if request.method == 'GET':
             res_list = [res]
             kwargs['sharing'] = True
+            kwargs['show_owner_info'] = True
             return self.process_get(request, res_list, **kwargs)
         elif request.method == 'PATCH':
             data = json.loads(request.raw_post_data)
@@ -168,6 +177,7 @@ class SharableResourceAPIInterface(object):
     def res_sharing_list(self, request, **kwargs):
         if request.method == 'GET':
             kwargs['sharing'] = True
+            kwargs['show_owner_info'] = True
             res_list = filter(
                 lambda r: 
                     (r.get_owner() is not None and
@@ -185,10 +195,31 @@ class SharableResourceAPIInterface(object):
         bundle = ModelResource.obj_create(self, bundle, **kwargs)
         bundle.obj.set_owner(bundle.request.user)
         return bundle
-          
+    
+    def obj_get(self, bundle, **kwargs):
+        obj = ModelResource.obj_get(self, bundle, **kwargs)
+        return self.build_res_list(
+            bundle.request.user,
+            [obj],
+            show_public=True,
+            show_owner_info=True)[0]
+
+
+    def obj_get_list(self, bundle, **kwargs):
+        logger.info("called")
+        return self.get_object_list(bundle, request)
+
+    def get_object_list(self, bundle, **kwargs):
+        logger.info("called")
+        return self.res_type.objects.all()
+
 
 class ProjectResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
+    is_public = fields.BooleanField(attribute='is_public', null=True)
+    is_owner = fields.BooleanField(attribute='is_owner', null=True)
+    owner_id = fields.IntegerField(attribute='owner_id', null=True)
+    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, Project)
@@ -199,7 +230,10 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         queryset = Project.objects.all()
         resource_name = 'projects'
         detail_uri_name = 'uuid'
-        fields = ['name', 'id', 'uuid', 'summary', 'share_list']
+        fields = [
+            'name', 'id', 'uuid', 'summary', 'share_list', 'is_public',
+            'is_owner', 'owner_id', 'owner_name'
+        ]
         # authentication = SessionAuthentication
         # authorization = GuardianAuthorization
         authorization = Authorization()
@@ -210,6 +244,8 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
 
+    def obj_get(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
@@ -828,11 +864,38 @@ class GroupManagementResource(Resource):
 
     # Group permissions against a single resource.
     def get_perms(self, res, group):
-        return None
+        # Default values.
+        perms = {'read': False, 'change': False}
 
-    # TODO: Implement.
+        # Find matching perms if available.
+        for i in res.get_groups():
+            if i['group'].group_ptr.id == group.id:
+                perms = {
+                    'uuid': '' if res.uuid is None else res.uuid,
+                    'name': '' if res.name is None else res.name,
+                    'read': i['read'],
+                    'change':i['change']
+                }
+
+        return perms
+
     def get_perm_list(self, group):
-        return []
+        f = lambda r: self.get_perms(r, group)
+        dataset_perms = map(f, DataSet.objects.all())
+        project_perms = map(f, Project.objects.all())
+        workflow_perms = map(f, Workflow.objects.all())
+        # workflow_engine_perms = map(f, WorkflowEngine.objects.all())
+        # analysis_perms = map(f, Analysis.objects.all())
+        # download_perms = map(f, Download.objects.all())
+        return [
+            dataset_perms,
+            project_perms,
+            workflow_perms,
+            # workflow_engine_perms,
+            # analysis_perms,
+            # download_perms
+        ]
+
 
     # Bundle building methods.
 
