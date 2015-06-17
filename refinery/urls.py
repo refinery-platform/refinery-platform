@@ -5,8 +5,8 @@ from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
 from registration.forms import RegistrationFormUniqueEmail
-from registration.views import ActivationView
-from registration.views import RegistrationView
+from registration.backends.default.views import ActivationView
+from registration.backends.default.views import RegistrationView
 from tastypie.api import Api
 from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     NodeResource, NodeSetListResource, NodePairResource,\
@@ -106,24 +106,20 @@ urlpatterns = patterns(
         'core.views.user_profile_edit',
         name='user_profile_edit'
     ),
+
     url(
-        r'^accounts/register/$', RegistrationView.as_view(),
-        {
-            'form_class': RegistrationFormUniqueEmail,
-            'backend': 'registration.backends.default.DefaultBackend'
-        },
+        r'^accounts/register/$',
+        RegistrationView.as_view(),
         name='registration.views.register'
     ),
+
     url(
-        r'^accounts/activate/(?P<activation_key>\w+)/$',
+        r'^activate/(?P<activation_key>\w+)/$',
         ActivationView.as_view(),
-        {
-            'success_url': '/accounts/login/?next=/accounts/profile/edit',
-            'backend': 'registration.backends.default.DefaultBackend'
-        },
         name='registration.views.activate'
     ),
-    url(r'^accounts/', include('registration.urls')),
+
+    url(r'^accounts/', include('registration.backends.default.urls')),
 
     # NG: tastypie API urls
     url(r'^api/', include(v1_api.urls)),
