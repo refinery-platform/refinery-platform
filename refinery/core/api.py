@@ -40,7 +40,6 @@ logger = logging.getLogger(__name__)
 # Specifically made for descendants of SharableResource.
 class SharableResourceAPIInterface(object):
     uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
-    response_format = 'application/json'
 
     def __init__(self, res_type):
         self.res_type = res_type
@@ -77,9 +76,6 @@ class SharableResourceAPIInterface(object):
                 'group_name': g.name,
                 'perms': self.get_perms(res, g)},
             groups_in)
-
-    def determine_format(self, request):
-        return self.response_format
 
     # Generalizes bundle construction and resource processing. Turning on more
     # options may require going to the SharableResource class and adding them.
@@ -186,15 +182,9 @@ class SharableResourceAPIInterface(object):
     
     # Handles POST requests.
     def obj_create(self, bundle, **kwargs):
-        bundle.obj = self._meta.object_class()
-
-        for key, value in kwargs.items():
-            setattr(bundle.obj, key, value)
-
-        bundle = self.full_hydrate(bundle)
-        self.save(bundle)
+        bundle = ModelResource.obj_create(self, bundle, **kwargs)
         bundle.obj.set_owner(bundle.request.user)
-        return HttpCreated()
+        return bundle
           
 
 class ProjectResource(ModelResource, SharableResourceAPIInterface):
@@ -216,9 +206,6 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
 
     def prepend_urls(self):
         return SharableResourceAPIInterface.prepend_urls(self)
-
-    def determine_format(self, request):
-        return SharableResourceAPIInterface.determine_format(self, request)
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
@@ -253,9 +240,6 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                 name='api_%s_autocomplete' % (self._meta.resource_name)),
         ]
         return prepend_urls_list
-
-    def determine_format(self, request):
-        return SharableResourceAPIInterface.determine_format(self, request)
 
     def get_search(self, request, **kwargs):
         query = request.GET.get('q', None)
@@ -326,6 +310,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         self.log_throttled_access(request)
         return self.build_response(request, object_list, **kwargs)
 
+    def obj_create(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
+
 
 class WorkflowResource(ModelResource, SharableResourceAPIInterface):
     input_relationships = fields.ToManyField(
@@ -350,9 +337,6 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
     def prepend_ruls(self):
         return SharableResourceAPIInterface.prepend_urls(self)
 
-    def determine_format(self, request):
-        return SharableResourceAPIInterface.determine_format(self, request)
-
     def dehydrate(self, bundle):
         # detect if detail
         if self.get_resource_uri(bundle) == bundle.request.path:
@@ -368,6 +352,9 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         bundle.data['galaxy_instance_identifier'] = \
             bundle.obj.workflow_engine.instance.api_key
         return bundle
+
+    def obj_create(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
 
 
 class WorkflowInputRelationshipsResource(ModelResource):
@@ -821,9 +808,6 @@ class GroupManagementResource(Resource):
         # authentication = SessionAuthentication
         # authorization = GuardianAuthorization
 
-    def determine_format(self, request):
-        return 'application/json'
-
     def get_group(self, group_id):
         group_list = Group.objects.filter(id=int(group_id))
         return None if len(group_list) == 0 else group_list[0]
@@ -1076,7 +1060,7 @@ class GroupManagementResource(Resource):
 class UserAuthenticationResource(Resource):
     is_logged_in = fields.BooleanField(attribute='is_logged_in', default=False)
     is_admin = fields.BooleanField(attribute='is_admin', default=False)
-    id = fields.CharField(attribute='id', default='-1')
+    id = fields.IntegerField(attribute='id', default=-1)
     username = fields.CharField(attribute='username', default='AnonymousUser')
 
     class Meta:
