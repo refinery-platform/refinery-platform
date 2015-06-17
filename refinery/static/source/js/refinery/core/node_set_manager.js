@@ -146,7 +146,8 @@ NodeSetManager.prototype.createUpdateUrl = function (nodeSet) {
 };
 
 
-NodeSetManager.prototype.updateState = function (state, callback) {
+NodeSetManager.prototype.updateState = function (state, callbackSuccess) {
+  callbackSuccess = callbackSuccess || function(){};
   var self = this;
 
   // --- START: set correct CSRF token via cookie ---
@@ -195,8 +196,8 @@ NodeSetManager.prototype.updateState = function (state, callback) {
     dataType: "json",
     processData: false,
     success: function (result) {
+       callbackSuccess(result);
       if ($.isEmptyObject(result)) {
-        // do nothing
         return;
       }
     }
