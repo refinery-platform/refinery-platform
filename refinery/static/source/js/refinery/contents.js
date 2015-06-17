@@ -189,7 +189,9 @@
             nodeSetManager.currentSelectionNodeSet.solr_query = client.createUrl(query, SOLR_FULL_QUERY);
             nodeSetManager.currentSelectionNodeSet.solr_query_components = query.serialize();
             nodeSetManager.currentSelectionNodeSet.node_count = query.getCurrentDocumentCount();
-            nodeSetManager.updateState(nodeSetManager.currentSelectionNodeSet);
+            nodeSetManager.updateState(nodeSetManager.currentSelectionNodeSet,
+            function(){ $(document).trigger('refinery/nodeSelectCheckbox')});
+              //global event to update angularjs nodeSetList);
             console.log("Updated current selection node set (facet selection).");
           }
         }
