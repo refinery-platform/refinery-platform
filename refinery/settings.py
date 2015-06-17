@@ -4,12 +4,17 @@ import os
 from django.core.exceptions import ImproperlyConfigured
 
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+local_settings_file_path = os.path.join(BASE_DIR, 'settings.json')
+
 # require settings.json
 try:
-    with open('settings.json', 'r') as f:
+    with open(local_settings_file_path, 'r') as f:
         local_settings = json.loads(f.read())
 except IOError as e:
-    raise ImproperlyConfigured("Could not open settings.json: {}".format(e))
+    error_msg = "Could not open '{}': {}".format(local_settings_file_path, e)
+    raise ImproperlyConfigured(error_msg)
 
 
 def get_setting(name, settings=local_settings):
@@ -20,8 +25,6 @@ def get_setting(name, settings=local_settings):
     except KeyError:
         raise ImproperlyConfigured("Missing setting '{0}'".format(name))
 
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 djcelery.setup_loader()
 
