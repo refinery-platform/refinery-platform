@@ -18,12 +18,12 @@ from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS, ALL
 from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
 from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
-    HttpUnauthorized, HttpMethodNotAllowed, HttpAccepted
+    HttpUnauthorized, HttpMethodNotAllowed, HttpAccepted, HttpCreated
 from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, Workflow,\
     WorkflowInputRelationships, Analysis, DataSet, ExternalToolStatus,\
     ResourceStatisticsObject, MemberManagementObject, GroupManagementObject,\
-    UserAuthenticationObject
+    UserAuthenticationObject, ExtendedGroup
 from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
@@ -77,6 +77,9 @@ class SharableResourceAPIInterface(object):
                 'perms': self.get_perms(res, g)},
             groups_in)
 
+    def determine_format(self, request):
+        return self.response_format
+
     # Generalizes bundle construction and resource processing. Turning on more
     # options may require going to the SharableResource class and adding them.
 
@@ -121,48 +124,18 @@ class SharableResourceAPIInterface(object):
 
     def prepend_urls(self):
         return [
-            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/$' %
-                (self._meta.resource_name, self.uuid_regex),
-                self.wrap_view('res_default_basic'),
-                name='api_%s_basic' % (self._meta.resource_name)),
-            url(r'^(?P<resource_name>%s)/$' %
-                (self._meta.resource_name), 
-                self.wrap_view('res_default_basic_list'),
-                name='api_%s_basic_list' % (self._meta.resource_name)),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/sharing/$' %
                 (self._meta.resource_name, self.uuid_regex),
-                self.wrap_view('res_default_sharing'),
+                self.wrap_view('res_sharing'),
                 name='api_%s_sharing' % (self._meta.resource_name)),
             url(r'^(?P<resource_name>%s)/sharing/$' %
                 (self._meta.resource_name),
-                self.wrap_view('res_default_sharing_list'),
+                self.wrap_view('res_sharing_list'),
                 name='api_%s_sharing_list' % (self._meta.resource_name)),
         ]
 
-    def res_default_basic(self, request, **kwargs):
-        res = self.get_res(kwargs['uuid'])
-
-        if request.method == 'GET':
-            res_list = [res]
-            return self.process_get(request, res_list, **kwargs)
-        if request.method == 'DELETE':
-            logger.info("target to be deleted:")
-            logger.info(res)
-        else:
-            return HttpMethodNotAllowed()
-
-    def res_default_basic_list(self, request, **kwargs):
-        if request.method == 'GET':
-            res_list = filter(
-                lambda r: r.get_owner().id == request.user.id,
-                self.res_type.objects.all())
-            
-            return self.process_get(request, res_list, **kwargs)
-        else:
-            return HttpMethodNotAllowed()
-
     # TODO: Make sure GuardianAuthorization works.
-    def res_default_sharing(self, request, **kwargs):
+    def res_sharing(self, request, **kwargs):
         res = self.get_res(kwargs['uuid'])
         
         if request.method == 'GET':
@@ -195,22 +168,33 @@ class SharableResourceAPIInterface(object):
         else:
             return HttpMethodNotAllowed()
 
-    def res_default_sharing_list(self, request, **kwargs):
+    def res_sharing_list(self, request, **kwargs):
         if request.method == 'GET':
             kwargs['sharing'] = True
             res_list = filter(
-                lambda r: r.get_owner().id == request.user.id,
+                lambda r: 
+                    (r.get_owner() is not None and
+                    r.get_owner().id == request.user.id),
                 self.res_type.objects.all())
             
             return self.process_get(request, res_list, **kwargs)
         else:
             return HttpMethodNotAllowed()
 
-    # Some other useful methods
+    # Overriding some ORM methods.
     
-    def determine_format(self, request):
-        return self.response_format
+    # Handles POST requests.
+    def obj_create(self, bundle, **kwargs):
+        bundle.obj = self._meta.object_class()
 
+        for key, value in kwargs.items():
+            setattr(bundle.obj, key, value)
+
+        bundle = self.full_hydrate(bundle)
+        self.save(bundle)
+        bundle.obj.set_owner(bundle.request.user)
+        return HttpCreated()
+          
 
 class ProjectResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
@@ -227,12 +211,16 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         fields = ['name', 'id', 'uuid', 'summary', 'share_list']
         # authentication = SessionAuthentication
         # authorization = GuardianAuthorization
+        authorization = Authorization()
 
     def prepend_urls(self):
         return SharableResourceAPIInterface.prepend_urls(self)
 
     def determine_format(self, request):
         return SharableResourceAPIInterface.determine_format(self, request)
+
+    def obj_create(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
 
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
@@ -953,6 +941,9 @@ class GroupManagementResource(Resource):
                 None,
                 self.user_authorized(user, group))]  
             return self.process_get(request, group_obj_list, **kwargs)
+        elif request.method == 'DELETE':
+            logger.info("delete claled")
+            # group.delete()
         else:
             return HttpMethodNotAllowed()
 
@@ -972,9 +963,13 @@ class GroupManagementResource(Resource):
                 group_list)
 
             return self.process_get(request, group_obj_list, **kwargs)
-        elif request.method == 'DELETE':
-            logger.info("Delete thign called")
-
+        elif request.method == 'POST':
+            data = json.loads(request.raw_post_data)
+            new_group = ExtendedGroup(name=data['name'])
+            new_group.save()
+            new_group.group_ptr.user_set.add(user)
+            new_group.manager_group.user_set.add(user)
+            return HttpCreated()
         else:
             return HttpMethodNotAllowed()
 
