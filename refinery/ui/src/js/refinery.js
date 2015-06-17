@@ -31,7 +31,7 @@ angular
     //  trigger from the contents.js when the node selection list has been
     // updated. Used by node_mapping.js
   $(document).on('refinery/nodeSelectCheckbox', function(e){
-    $rootScope.$broadcast('refinery/nodeSelectCheckbox')
+    $rootScope.$broadcast('refinery/nodeSelectCheckbox');
     $rootScope.$digest();
   });
 }]);
