@@ -176,8 +176,9 @@ class BaseResource (models.Model):
     creation_date = models.DateTimeField(auto_now_add=True)
     modification_date = models.DateTimeField(auto_now=True)
     description = models.TextField(max_length=5000, blank=True)
-
     slug = models.CharField(max_length=250, blank=True, null=True)
+
+    is_public = None
 
     def __unicode__(self):
         return self.name + " (" + self.uuid + ")"
@@ -194,6 +195,10 @@ class OwnableResource (BaseResource):
     permissions, where "xxx" is the simple_modelname
 
     '''
+    is_owner = None
+    owner_id = None
+    owner_username = None
+
     def __unicode__(self):
         return self.name
 
@@ -241,7 +246,7 @@ class SharableResource (OwnableResource):
     expects derived classes to have "add/read/change/write_xxx" + "share_xxx"
     permissions, where "xxx" is the simple_modelname
     '''
-    share_list = []
+    share_list = None
 
     def __unicode__(self):
         return self.name

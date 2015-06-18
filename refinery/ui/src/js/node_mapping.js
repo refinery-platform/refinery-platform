@@ -548,7 +548,7 @@ angular.module('refineryNodeMapping', [
     });
   };
 
-  $scope.$on('refinery/nodeSelectCheckbox', function(e){
+  $scope.$on('refinery/updateCurrentNodeSelection', function(){
     $scope.getCurrentNodeSet();
   });
 
