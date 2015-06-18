@@ -385,6 +385,8 @@
             } else {
               nodeSetManager.postState(name, "Summary for Node Set", solr_query, solr_query_components, query.getCurrentDocumentCount(), function () {
                 bootbox.alert('The selection was saved as "' + name + '".');
+                 //global event to update angularjs nodeSetList
+                $(document).trigger('refinery/nodeSelectDatasetNew');
                 nodeSetManager.getList(function () {
                   nodeSetManager.renderList()
                 });
