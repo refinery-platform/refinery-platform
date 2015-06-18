@@ -278,7 +278,8 @@ SolrFacetView.prototype._getFacetLabel = function( facet ) {
 
 	return ( '<span style="width: 10px; text-align: center; display: inline-block;">' +
 	  '<i class="' + indicator + '"></i></span>&nbsp;' +
-  prettifySolrFieldName( facet, true ) + '&nbsp;(' + facetValueCount.total + ')');
+    prettifySolrFieldName( facet, true ) + '&nbsp;(' + facetValueCount.total + ')'
+  );
 }
 
 SolrFacetView.prototype._toggleExpandedFacet = function( facet ) {	
