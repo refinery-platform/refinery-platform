@@ -82,20 +82,28 @@ class SharableResourceAPIInterface(object):
 
     # Turns on certain things depending on flags
     def build_res_list(self, user, res_list, **kwargs):
-        if 'sharing' in kwargs and kwargs['sharing']:
-            for i in res_list:
+        for i in res_list:
+            if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(i, 'share_list', self.get_share_list(user, i))
+
+            if 'show_public' in kwargs and kwargs['show_public']:
+                setattr(i, 'is_public', i.is_public())
+
+            if 'show_owner_info' in kwargs and kwargs['show_owner_info']:
+                setattr(i, 'owner_id', i.get_owner().id)
+                setattr(i, 'owner_username', i.get_owner().username)
+                setattr(i, 'is_owner', i.get_owner().id == user.id)
 
         return res_list
 
-    def build_res_list_bundle(self, request, res_list, **kwargs):
-        bundle = []
+    def build_bundle_list(self, request, res_list, **kwargs):
+        bundle_list = []
 
         for i in res_list:
             built_obj = self.build_bundle(obj=i, request=request)
-            bundle.append(self.full_dehydrate(built_obj))
+            bundle_list.append(self.full_dehydrate(built_obj))
 
-        return bundle
+        return bundle_list
 
     # **kwargs added in case there is other data for future expansion.
     def build_object_list(self, bundle, **kwargs):
@@ -110,12 +118,44 @@ class SharableResourceAPIInterface(object):
         return self.create_response(request, object_list)
 
     # Makes everything simpler for GET requests.
-    def process_get(self, request, res_list, **kwargs):
+    def process_get(self, request, res, **kwargs):
+        user = request.user
+        mod_res_list = self.build_res_list(user, [res], **kwargs)
+        bundle = self.build_bundle_list(request, mod_res_list)[0]
+        return self.build_response(request, bundle, **kwargs)
+
+    def process_get_list(self, request, res_list, **kwargs):
         user = request.user
         mod_res_list = self.build_res_list(user, res_list, **kwargs)
-        bundle = self.build_res_list_bundle(request, mod_res_list, **kwargs)
-        object_list = self.build_object_list(bundle, **kwargs)
+        bundle_list = self.build_bundle_list(request, mod_res_list, **kwargs)
+        object_list = self.build_object_list(bundle_list, **kwargs)
         return self.build_response(request, object_list, **kwargs)
+
+    # Overriding some ORM methods.
+
+    # Handles POST requests.
+    def obj_create(self, bundle, **kwargs):
+        bundle = ModelResource.obj_create(self, bundle, **kwargs)
+        bundle.obj.set_owner(bundle.request.user)
+        return bundle
+
+    def obj_get(self, bundle, **kwargs):
+        obj = ModelResource.obj_get(self, bundle, **kwargs)
+        kwargs['show_public'] = True
+        kwargs['show_owner_info'] = True
+        return self.build_res_list(bundle.request.user, [obj], **kwargs)[0]
+
+    def obj_get_list(self, bundle, **kwargs):
+        logger.info("called")
+        return self.get_object_list(bundle.request)
+
+    def get_object_list(self, request):
+        obj_list = ModelResource.get_object_list(self, request)
+        logger.info("called")
+        kwargs = {}
+        kwargs['show_public'] = True
+        kwargs['show_owner_info'] = True
+        return self.build_res_list(request.user, obj_list, **kwargs)
 
     # A few default URL endpoints as directed by prepend_urls in subclasses.
 
@@ -136,9 +176,9 @@ class SharableResourceAPIInterface(object):
         res = self.get_res(kwargs['uuid'])
 
         if request.method == 'GET':
-            res_list = [res]
             kwargs['sharing'] = True
-            return self.process_get(request, res_list, **kwargs)
+            kwargs['show_owner_info'] = True
+            return self.process_get(request, res, **kwargs)
         elif request.method == 'PATCH':
             data = json.loads(request.raw_post_data)
             new_share_list = data['share_list']
@@ -168,18 +208,18 @@ class SharableResourceAPIInterface(object):
     def res_sharing_list(self, request, **kwargs):
         if request.method == 'GET':
             kwargs['sharing'] = True
+            kwargs['show_owner_info'] = True
             res_list = filter(
                 lambda r:
                     (r.get_owner() is not None and
-                    r.get_owner().id == request.user.id),
+                     r.get_owner().id == request.user.id),
                 self.res_type.objects.all())
 
-            return self.process_get(request, res_list, **kwargs)
+            return self.process_get_list(request, res_list, **kwargs)
         else:
             return HttpMethodNotAllowed()
 
     # Overriding some ORM methods.
-
     # Handles POST requests.
     def obj_create(self, bundle, **kwargs):
         bundle = ModelResource.obj_create(self, bundle, **kwargs)
@@ -189,17 +229,24 @@ class SharableResourceAPIInterface(object):
 
 class ProjectResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
+    is_public = fields.BooleanField(attribute='is_public', null=True)
+    is_owner = fields.BooleanField(attribute='is_owner', null=True)
+    owner_id = fields.IntegerField(attribute='owner_id', null=True)
+    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, Project)
         ModelResource.__init__(self)
 
     class Meta:
-        #authentication = ApiKeyAuthentication()
+        # authentication = ApiKeyAuthentication()
         queryset = Project.objects.all()
         resource_name = 'projects'
         detail_uri_name = 'uuid'
-        # fields = ['name', 'id', 'uuid', 'summary', 'share_list']
+        fields = [
+            'name', 'id', 'uuid', 'summary', 'share_list', 'is_public',
+            'is_owner', 'owner_id', 'owner_name'
+        ]
         # authentication = SessionAuthentication
         # authorization = GuardianAuthorization
         authorization = Authorization()
@@ -209,6 +256,15 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
+
+    def obj_get(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
+
+    def obj_get_list(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_get_list(self, bundle, **kwargs)
+
+    def get_object_list(self, request):
+        return SharableResourceAPIInterface.get_object_list(self, request)
 
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
@@ -244,7 +300,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def get_search(self, request, **kwargs):
         query = request.GET.get('q', None)
         if not query:
-            raise ImmediateHttpResponse(response=HttpBadRequest('Please supply the search parameter q'))
+            raise ImmediateHttpResponse(
+                response=HttpBadRequest('Please supply the search parameter q')
+            )
 
         # Do the query.
         results = (SearchQuerySet().using('core')
@@ -270,7 +328,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             current_results = paginator.page(paginator.num_pages)
 
         result_list = map(lambda r: r.object, current_results.object_list)
-        bundle = self.build_res_list_bundle(request, result_list, **kwargs)
+        bundle = self.build_bundles(request, result_list, **kwargs)
         object_list = self.build_object_list(bundle, **kwargs)
 
         self.log_throttled_access(request)
@@ -304,7 +362,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             current_results = paginator.page(paginator.num_pages)
 
         result_list = map(lambda r: r.object, current_results.object_list)
-        bundle = self.build_res_list_bundle(request, result_list, **kwargs)
+        bundle = self.build_bundle_list(request, result_list, **kwargs)
         object_list = self.build_object_list(bundle, **kwargs)
 
         self.log_throttled_access(request)
@@ -362,7 +420,7 @@ class WorkflowInputRelationshipsResource(ModelResource):
         queryset = WorkflowInputRelationships.objects.all()
         detail_resource_name = 'workflowrelationships'
         resource_name = 'workflowrelationships'
-        #detail_uri_name = 'uuid'
+        # detail_uri_name = 'uuid'
         fields = ['category', 'set1', 'set2', 'workflow']
 
 
@@ -467,10 +525,14 @@ class NodeResource(ModelResource):
 
         """
         perm = 'read_%s' % DataSet._meta.module_name
-        if ( request.user.is_authenticated() ):
+        if (request.user.is_authenticated()):
             allowed_datasets = get_objects_for_user(request.user, perm, DataSet)
         else:
-            allowed_datasets = get_objects_for_group(ExtendedGroup.objects.public_group(), perm, DataSet)
+            allowed_datasets = get_objects_for_group(
+                ExtendedGroup.objects.public_group(),
+                perm,
+                DataSet
+            )
         # get a list of node UUIDs that belong to all data sets available to the
         # current user
         all_allowed_studies = []
@@ -490,7 +552,7 @@ class NodeSetResource(ModelResource):
     # https://github.com/toastdriven/django-tastypie/issues/526
     # Once the above has been integrated into a tastypie release branch remove
     # NodeSetListResource and use "use_in" instead
-    #nodes = fields.ToManyField(NodeResource, 'nodes', use_in="detail" )
+    # nodes = fields.ToManyField(NodeResource, 'nodes', use_in="detail" )
 
     solr_query = fields.CharField(attribute='solr_query', null=True)
     solr_query_components = fields.CharField(
@@ -503,20 +565,20 @@ class NodeSetResource(ModelResource):
     class Meta:
         # create node count attribute on the fly - node_count field has to be
         # defined on resource
-        queryset = NodeSet.objects.all().order_by( '-is_current', 'name')
+        queryset = NodeSet.objects.all().order_by('-is_current', 'name')
         resource_name = 'nodeset'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
         authorization = Authorization()
         fields = [
             'is_current', 'name', 'summary', 'assay', 'study', 'uuid',
-            'is_implicit', 'node_count', 'solr_query','solr_query_components'
+            'is_implicit', 'node_count', 'solr_query', 'solr_query_components'
         ]
         ordering = [
             'is_current', 'name', 'summary', 'assay', 'study', 'uuid',
-            'is_implicit', 'node_count', 'solr_query','solr_query_components'
+            'is_implicit', 'node_count', 'solr_query', 'solr_query_components'
         ]
-        allowed_methods = ["get", "post", "put" ]
+        allowed_methods = ["get", "post", "put"]
         filtering = {
             "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS,
             "uuid": ALL
@@ -554,7 +616,10 @@ class NodeSetResource(ModelResource):
         # an investigation is only associated with a single data set even though
         # InvestigationLink is a many to many relationship
         try:
-            dataset = study.investigation.investigationlink_set.all()[0].data_set
+            dataset = (study.investigation
+                            .investigationlink_set
+                            .all()[0]
+                            .data_set)
         except IndexError:
             logger.error("Data set not found for study '{}'".format(study.uuid))
             self.unauthorized_result(
@@ -573,13 +638,13 @@ class NodeSetResource(ModelResource):
 class NodeSetListResource(ModelResource):
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
-    node_count = fields.IntegerField(attribute='node_count',readonly=True)
+    node_count = fields.IntegerField(attribute='node_count', readonly=True)
     is_implicit = fields.BooleanField(attribute='is_implicit')
 
     class Meta:
         # create node count attribute on the fly - node_count field has to be
         # defined on resource
-        queryset = NodeSet.objects.all().order_by( '-is_current', 'name')
+        queryset = NodeSet.objects.all().order_by('-is_current', 'name')
         # NG: introduced to get correct resource IDs
         detail_resource_name = 'nodeset'
         resource_name = 'nodesetlist'
@@ -620,14 +685,16 @@ class NodePairResource(ModelResource):
 class NodeRelationshipResource(ModelResource):
     name = fields.CharField(attribute='name', null=True)
     type = fields.CharField(attribute='type', null=True)
-    #, full=True), if you need each attribute for each nodepair
+    # full=True), if you need each attribute for each nodepair
     node_pairs = fields.ToManyField(NodePairResource, 'node_pairs')
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
 
     class Meta:
         detail_allowed_methods = ['get', 'post', 'delete', 'put', 'patch']
-        queryset = NodeRelationship.objects.all().order_by('-is_current', 'name')
+        queryset = (NodeRelationship.objects
+                                    .all()
+                                    .order_by('-is_current', 'name'))
         detail_resource_name = 'noderelationship'
         resource_name = 'noderelationship'
         detail_uri_name = 'uuid'
@@ -636,7 +703,7 @@ class NodeRelationshipResource(ModelResource):
         # for use with AngularJS $resources: returns newly created object upon
         # POST (in addition to the location response header)
         always_return_data = True
-        #fields = ['type', 'study', 'assay', 'node_pairs']
+        # fields = ['type', 'study', 'assay', 'node_pairs']
         ordering = ['is_current', 'name', 'type', 'node_pairs']
         filtering = {'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS}
 
@@ -648,7 +715,11 @@ class ExternalToolStatusResource(ModelResource):
         authentication = Authentication()
         authorization = Authorization()
         allowed_methods = ["get"]
-        fields = ['name', 'is_active', 'last_time_check',  'unique_instance_identifier']
+        fields = [
+            'name',
+            'is_active',
+            'last_time_check',
+            'unique_instance_identifier']
 
     def dehydrate(self, bundle):
         # call to method
@@ -676,7 +747,7 @@ class StatisticsResource(Resource):
 
         private = total - public - private_shared
         return {
-            'total': total, 'public': public, \
+            'total': total, 'public': public,
             'private': private, 'private_shared': private_shared
         }
 
@@ -718,8 +789,12 @@ class StatisticsResource(Resource):
                 project_summary = self.stat_summary(Project)
 
         return [ResourceStatisticsObject(
-            user_count, group_count, files_count, \
-            dataset_summary, workflow_summary, project_summary)]
+            user_count,
+            group_count,
+            files_count,
+            dataset_summary,
+            workflow_summary,
+            project_summary)]
 
 
 class MemberManagementResource(Resource):
@@ -766,7 +841,7 @@ class MemberManagementResource(Resource):
     def obj_update(self, bundle, **kwargs):
         id = kwargs['pk']
         group = self.get_group(id)
-        user = bundle.request.user
+        # user = bundle.request.user
         member_list = bundle.data['member_list']
         is_manager = self.is_manager_group(group)
 
@@ -829,11 +904,32 @@ class GroupManagementResource(Resource):
 
     # Group permissions against a single resource.
     def get_perms(self, res, group):
-        return None
+        # Default values.
+        perms = {
+            'uuid': res.uuid,
+            'name': res.name,
+            'type': res._meta.object_name,
+            'read': False,
+            'change': False
+        }
 
-    # TODO: Implement.
+        # Find matching perms if available.
+        for i in res.get_groups():
+            if i['group'].group_ptr.id == group.id:
+                perms['read'] = i['read']
+                perms['change'] = i['change']
+
+        return perms
+
     def get_perm_list(self, group):
-        return []
+        f = lambda r: self.get_perms(r, group)
+        dataset_perms = map(f, DataSet.objects.all())
+        project_perms = map(f, Project.objects.all())
+        workflow_perms = map(f, Workflow.objects.all())
+        # workflow_engine_perms = map(f, WorkflowEngine.objects.all())
+        # analysis_perms = map(f, Analysis.objects.all())
+        # download_perms = map(f, Download.objects.all())
+        return dataset_perms + project_perms + workflow_perms
 
     # Bundle building methods.
 
@@ -902,7 +998,7 @@ class GroupManagementResource(Resource):
 
     def prepend_urls(self):
         return [
-             url(r'^groups/(?P<id>[0-9]+)/$',
+            url(r'^groups/(?P<id>[0-9]+)/$',
                 self.wrap_view('group_basic'),
                 name='api_group_basic'),
             url(r'^groups/$',
@@ -920,7 +1016,7 @@ class GroupManagementResource(Resource):
             url(r'^groups/perms/$',
                 self.wrap_view('group_perms_list'),
                 name='api_group_perms_list'),
-       ]
+        ]
 
     def group_basic(self, request, **kwargs):
         user = request.user
@@ -985,7 +1081,7 @@ class GroupManagementResource(Resource):
 
             # Verify that the user holds appropriate power.
             # if not self.user_authorized(user, group):
-                # raise ImmediateHttpResponse(response=HttpUnauthorized())
+            #   raise ImmediateHttpResponse(response=HttpUnauthorized())
 
             # Remove old members before updating.
             group.user_set.clear()
@@ -1086,7 +1182,6 @@ class UserAuthenticationResource(Resource):
         user = request.user
         is_logged_in = user.is_authenticated()
         is_admin = user.is_staff
-        id = user.id
         username = user.username if is_logged_in else 'AnonymousUser'
         auth_obj = UserAuthenticationObject(
             is_logged_in,
@@ -1097,4 +1192,3 @@ class UserAuthenticationResource(Resource):
         built_obj = self.build_bundle(obj=auth_obj, request=request)
         bundle = self.full_dehydrate(built_obj)
         return self.create_response(request, bundle)
-
