@@ -124,6 +124,7 @@ STATICFILES_DIRS = tuple(map(lambda x: os.path.join(BASE_DIR, x), STATICFILES))
 # various locations.
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',  # for admin app
     'djangular.finders.NamespacedAngularAppDirectoriesFinder',
 )
 
