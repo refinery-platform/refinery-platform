@@ -96,14 +96,14 @@ class SharableResourceAPIInterface(object):
 
         return res_list
 
-    def build_res_list_bundle(self, request, res_list, **kwargs):
-        bundle = []
+    def build_bundle_list(self, request, res_list, **kwargs):
+        bundle_list = []
 
         for i in res_list:
             built_obj = self.build_bundle(obj=i, request=request)
-            bundle.append(self.full_dehydrate(built_obj))
+            bundle_list.append(self.full_dehydrate(built_obj))
 
-        return bundle
+        return bundle_list
 
     # **kwargs added in case there is other data for future expansion.
     def build_object_list(self, bundle, **kwargs):
@@ -118,12 +118,44 @@ class SharableResourceAPIInterface(object):
         return self.create_response(request, object_list)
 
     # Makes everything simpler for GET requests.
-    def process_get(self, request, res_list, **kwargs):
+    def process_get(self, request, res, **kwargs):
+        user = request.user
+        mod_res_list = self.build_res_list(user, [res], **kwargs)
+        bundle = self.build_bundle_list(request, mod_res_list)[0]
+        return self.build_response(request, bundle, **kwargs)
+
+    def process_get_list(self, request, res_list, **kwargs):
         user = request.user
         mod_res_list = self.build_res_list(user, res_list, **kwargs)
-        bundle = self.build_res_list_bundle(request, mod_res_list, **kwargs)
-        object_list = self.build_object_list(bundle, **kwargs)
+        bundle_list = self.build_bundle_list(request, mod_res_list, **kwargs)
+        object_list = self.build_object_list(bundle_list, **kwargs)
         return self.build_response(request, object_list, **kwargs)
+
+    # Overriding some ORM methods.
+    
+    # Handles POST requests.
+    def obj_create(self, bundle, **kwargs):
+        bundle = ModelResource.obj_create(self, bundle, **kwargs)
+        bundle.obj.set_owner(bundle.request.user)
+        return bundle
+    
+    def obj_get(self, bundle, **kwargs):
+        obj = ModelResource.obj_get(self, bundle, **kwargs)
+        kwargs['show_public'] = True
+        kwargs['show_owner_info'] = True
+        return self.build_res_list(bundle.request.user, [obj], **kwargs)[0]
+
+    def obj_get_list(self, bundle, **kwargs):
+        logger.info("called")
+        return self.get_object_list(bundle.request)
+
+    def get_object_list(self, request):
+        obj_list = ModelResource.get_object_list(self, request)
+        logger.info("called")
+        kwargs = {}
+        kwargs['show_public'] = True
+        kwargs['show_owner_info'] = True
+        return self.build_res_list(request.user, obj_list, **kwargs)
 
     # A few default URL endpoints as directed by prepend_urls in subclasses.
 
@@ -144,10 +176,9 @@ class SharableResourceAPIInterface(object):
         res = self.get_res(kwargs['uuid'])
 
         if request.method == 'GET':
-            res_list = [res]
             kwargs['sharing'] = True
             kwargs['show_owner_info'] = True
-            return self.process_get(request, res_list, **kwargs)
+            return self.process_get(request, res, **kwargs)
         elif request.method == 'PATCH':
             data = json.loads(request.raw_post_data)
             new_share_list = data['share_list']
@@ -184,34 +215,9 @@ class SharableResourceAPIInterface(object):
                     r.get_owner().id == request.user.id),
                 self.res_type.objects.all())
 
-            return self.process_get(request, res_list, **kwargs)
+            return self.process_get_list(request, res_list, **kwargs)
         else:
             return HttpMethodNotAllowed()
-
-    # Overriding some ORM methods.
-    
-    # Handles POST requests.
-    def obj_create(self, bundle, **kwargs):
-        bundle = ModelResource.obj_create(self, bundle, **kwargs)
-        bundle.obj.set_owner(bundle.request.user)
-        return bundle
-    
-    def obj_get(self, bundle, **kwargs):
-        obj = ModelResource.obj_get(self, bundle, **kwargs)
-        return self.build_res_list(
-            bundle.request.user,
-            [obj],
-            show_public=True,
-            show_owner_info=True)[0]
-
-
-    def obj_get_list(self, bundle, **kwargs):
-        logger.info("called")
-        return self.get_object_list(bundle, request)
-
-    def get_object_list(self, bundle, **kwargs):
-        logger.info("called")
-        return self.res_type.objects.all()
 
 
 class ProjectResource(ModelResource, SharableResourceAPIInterface):
@@ -246,6 +252,13 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
 
     def obj_get(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
+
+    def obj_get_list(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_get_list(self, bundle, **kwargs)
+
+    def get_object_list(self, request):
+        return SharableResourceAPIInterface.get_object_list(self, request)
+
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
@@ -306,7 +319,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             current_results = paginator.page(paginator.num_pages)
 
         result_list = map(lambda r: r.object, current_results.object_list)
-        bundle = self.build_res_list_bundle(request, result_list, **kwargs)
+        bundle = self.build_bundles(request, result_list, **kwargs)
         object_list = self.build_object_list(bundle, **kwargs)
 
         self.log_throttled_access(request)
@@ -340,7 +353,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             current_results = paginator.page(paginator.num_pages)
 
         result_list = map(lambda r: r.object, current_results.object_list)
-        bundle = self.build_res_list_bundle(request, result_list, **kwargs)
+        bundle = self.build_bundle_list(request, result_list, **kwargs)
         object_list = self.build_object_list(bundle, **kwargs)
 
         self.log_throttled_access(request)
@@ -865,17 +878,19 @@ class GroupManagementResource(Resource):
     # Group permissions against a single resource.
     def get_perms(self, res, group):
         # Default values.
-        perms = {'read': False, 'change': False}
+        perms = {
+            'uuid': res.uuid,
+            'name': res.name,
+            'type': res._meta.object_name,
+            'read': False,
+            'change': False
+        }
 
         # Find matching perms if available.
         for i in res.get_groups():
             if i['group'].group_ptr.id == group.id:
-                perms = {
-                    'uuid': '' if res.uuid is None else res.uuid,
-                    'name': '' if res.name is None else res.name,
-                    'read': i['read'],
-                    'change':i['change']
-                }
+                perms['read'] = i['read']
+                perms['change'] = i['change']
 
         return perms
 
@@ -887,15 +902,7 @@ class GroupManagementResource(Resource):
         # workflow_engine_perms = map(f, WorkflowEngine.objects.all())
         # analysis_perms = map(f, Analysis.objects.all())
         # download_perms = map(f, Download.objects.all())
-        return [
-            dataset_perms,
-            project_perms,
-            workflow_perms,
-            # workflow_engine_perms,
-            # analysis_perms,
-            # download_perms
-        ]
-
+        return dataset_perms + project_perms + workflow_perms
 
     # Bundle building methods.
 
