@@ -190,7 +190,7 @@
             nodeSetManager.currentSelectionNodeSet.solr_query_components = query.serialize();
             nodeSetManager.currentSelectionNodeSet.node_count = query.getCurrentDocumentCount();
             nodeSetManager.updateState(nodeSetManager.currentSelectionNodeSet,
-            function(){ $(document).trigger('refinery/nodeSelectCheckbox')});
+            function(){ $(document).trigger('refinery/updateCurrentNodeSelection')});
               //global event to update angularjs nodeSetList);
             console.log("Updated current selection node set (facet selection).");
           }
@@ -251,7 +251,7 @@
             nodeSetManager.currentSelectionNodeSet.solr_query_components = query.serialize();
             nodeSetManager.currentSelectionNodeSet.node_count = query.getCurrentDocumentCount();
             nodeSetManager.updateState(nodeSetManager.currentSelectionNodeSet,
-              function(){ $(document).trigger('refinery/nodeSelectCheckbox')}
+              function(){ $(document).trigger('refinery/updateCurrentNodeSelection')}
               //global event to update angularjs nodeSetList
             );
             console.log("Updated current selection node set (document selection).");
@@ -386,7 +386,7 @@
               nodeSetManager.postState(name, "Summary for Node Set", solr_query, solr_query_components, query.getCurrentDocumentCount(), function () {
                 bootbox.alert('The selection was saved as "' + name + '".');
                  //global event to update angularjs nodeSetList
-                $(document).trigger('refinery/nodeSelectDatasetNew');
+                $(document).trigger('refinery/updateCurrentNodeSelection');
                 nodeSetManager.getList(function () {
                   nodeSetManager.renderList()
                 });
