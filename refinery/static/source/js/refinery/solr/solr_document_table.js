@@ -245,10 +245,9 @@ SolrDocumentTable.prototype._renderTable = function(solrResponse) {
 
 //Toggles the indicator to show the entire string.
 SolrDocumentTable.prototype._toggleIndicator = function(){
-  $( ".trimmedTextArrow").click(function(e) {
-    $(".trimmedDocStr").toggle();
-    $(".trimmedTextArrow#right").toggle();
-    $(".icon-chevron-sign-left").toggle();
+  $(".trimmedTextArrow").click(function(e) {
+    $(".trimmedFileName#right").toggle();
+    $(".entireFilePath#left").toggle();
     $(window).trigger('refinery/floatThead/reflow');
   });
 };
@@ -324,18 +323,32 @@ SolrDocumentTable.prototype._trimDocumentEntry = function(
   indicator = indicator || "...";
 
   if (string.length > length) {
-    var trimmedChars = self._getTrimmedChars(string, length);
-    return string.substring(0, length) +
-      "<span class=trimmedDocStr>" + trimmedChars + " </span>" +
-      "<a href='#' class='trimmedTextArrow' id='right'>" + indicator + "<i class='icon-chevron-sign-right'></i></a>" +
-      "<a href='#' class='trimmedTextArrow'><i class='icon-chevron-sign-left' style='display:none'></i></a>";
+    var trimFileName = self._getTrimFileName(string, length);
+    return "<span class='trimmedFileName' id='right'>" +
+      "<a href='#' class='trimmedTextArrow'>"+
+      "<i class='icon-chevron-sign-right'></i>"+ indicator + "</a>" + trimFileName
+      +"</span>"+ "<span class='entireFilePath' id='left' style='display:none'>" +
+      "<a href='#' class='trimmedTextArrow'>" +
+      "<i class='icon-chevron-sign-left'></i></a>" + string + " </span>";
   }
   return string;
 };
 
-SolrDocumentTable.prototype._getTrimmedChars = function(
-    string, length) {
-  return string.substring(length, string.length);
+SolrDocumentTable.prototype._getTrimmedChars = function(string, length) {
+  return string.substring(0, length);
+};
+
+//function will return the trimmed filename out of the filepath.
+SolrDocumentTable.prototype._getTrimFileName = function(fileName, length){
+  var self = this;
+  var ind = fileName.lastIndexOf('/');
+  var trimFileName = fileName.substring(ind, fileName.length);
+
+  if(fileName.length < length) {
+    return trimFileName;
+  }else{
+    return self._getTrimmedChars(trimFileName, length);
+  }
 };
 
 SolrDocumentTable.prototype._generateTableHead = function(solrResponse) {
