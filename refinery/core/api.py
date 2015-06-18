@@ -24,7 +24,8 @@ from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, \
     Workflow, WorkflowInputRelationships, Analysis, DataSet, \
     ExternalToolStatus, ResourceStatisticsObject, MemberManagementObject, \
-    GroupManagementObject, ExtendedGroup, UserAuthenticationObject
+    GroupManagementObject, ExtendedGroup, UserAuthenticationObject, \
+    Invitation
 from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
@@ -33,9 +34,11 @@ from GuardianTastypieAuthz import GuardianAuthorization
 from django.core.paginator import Paginator, InvalidPage, PageNotAnInteger, \
     EmptyPage
 from haystack.query import SearchQuerySet, EmptySearchQuerySet
-
+from django.http import HttpResponse
+import datetime
 
 logger = logging.getLogger(__name__)
+
 
 # Specifically made for descendants of SharableResource.
 class SharableResourceAPIInterface(object):
@@ -132,13 +135,13 @@ class SharableResourceAPIInterface(object):
         return self.build_response(request, object_list, **kwargs)
 
     # Overriding some ORM methods.
-    
+
     # Handles POST requests.
     def obj_create(self, bundle, **kwargs):
         bundle = ModelResource.obj_create(self, bundle, **kwargs)
         bundle.obj.set_owner(bundle.request.user)
         return bundle
-    
+
     def obj_get(self, bundle, **kwargs):
         obj = ModelResource.obj_get(self, bundle, **kwargs)
         kwargs['show_public'] = True
@@ -210,9 +213,9 @@ class SharableResourceAPIInterface(object):
             kwargs['sharing'] = True
             kwargs['show_owner_info'] = True
             res_list = filter(
-                lambda r: 
+                lambda r:
                     (r.get_owner() is not None and
-                    r.get_owner().id == request.user.id),
+                     r.get_owner().id == request.user.id),
                 self.res_type.objects.all())
 
             return self.process_get_list(request, res_list, **kwargs)
@@ -232,7 +235,7 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         ModelResource.__init__(self)
 
     class Meta:
-        #authentication = ApiKeyAuthentication()
+        # authentication = ApiKeyAuthentication()
         queryset = Project.objects.all()
         resource_name = 'projects'
         detail_uri_name = 'uuid'
@@ -254,7 +257,9 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
 
     def obj_get_list(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get_list(self, bundle, **kwargs)
+        return SharableResourceAPIInterface.obj_get_list(self,
+                                                         bundle,
+                                                         **kwargs)
 
     def get_object_list(self, request):
         return SharableResourceAPIInterface.get_object_list(self, request)
@@ -273,7 +278,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         # allowed_methods = ['get']
         resource_name = 'data_sets'
         # authentication = SessionAuthentication()
-        # authorization = GuardianAuthorization()        
+        # authorization = GuardianAuthorization()
         filtering = {'uuid': ALL}
         fields = ['uuid']
 
@@ -293,7 +298,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def get_search(self, request, **kwargs):
         query = request.GET.get('q', None)
         if not query:
-            raise ImmediateHttpResponse(response=HttpBadRequest('Please supply the search parameter q'))
+            return HttpBadRequest('Please supply the search parameter q')
 
         # Do the query.
         results = (SearchQuerySet().using('core')
@@ -315,7 +320,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             # If page is not an integer, deliver first page.
             current_results = paginator.page(1)
         except EmptyPage:
-            # If page is out of range (e.g. 9999), deliver last page of results.
+            # If page is out of range (e.g. 9999) deliver last page of results.
             current_results = paginator.page(paginator.num_pages)
 
         result_list = map(lambda r: r.object, current_results.object_list)
@@ -349,7 +354,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             # If page is not an integer, deliver first page.
             current_reuslts = paginator.page(1)
         except EmptyPage:
-            # If page is out of range (e.g. 9999), deliver last page of results.
+            # If page is out of range (e.g. 9999) deliver last page of results.
             current_results = paginator.page(paginator.num_pages)
 
         result_list = map(lambda r: r.object, current_results.object_list)
@@ -383,7 +388,7 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         # authentication = SessionAuthentication
         # authorization = GuardianAuthorization
 
-    def prepend_ruls(self):
+    def prepend_urls(self):
         return SharableResourceAPIInterface.prepend_urls(self)
 
     def dehydrate(self, bundle):
@@ -411,7 +416,7 @@ class WorkflowInputRelationshipsResource(ModelResource):
         queryset = WorkflowInputRelationships.objects.all()
         detail_resource_name = 'workflowrelationships'
         resource_name = 'workflowrelationships'
-        #detail_uri_name = 'uuid'
+        # detail_uri_name = 'uuid'
         fields = ['category', 'set1', 'set2', 'workflow']
 
 
@@ -485,7 +490,7 @@ class NodeResource(ModelResource):
     def prepend_urls(self):
         return [
             url(r"^(?P<resource_name>%s)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$" %
-                    self._meta.resource_name,
+                self._meta.resource_name,
                 self.wrap_view('dispatch_detail'),
                 name="api_dispatch_detail"),
         ]
@@ -514,12 +519,13 @@ class NodeResource(ModelResource):
         Temp workaround due to Node being not Ownable
 
         """
+        user = request.user
         perm = 'read_%s' % DataSet._meta.module_name
-        if ( request.user.is_authenticated() ):
-            allowed_datasets = get_objects_for_user(request.user, perm, DataSet)
+        if (user.is_authenticated()):
+            allowed_datasets = get_objects_for_user(user, perm, DataSet)
         else:
             allowed_datasets = get_objects_for_group(ExtendedGroup.objects.public_group(), perm, DataSet)
-        # get a list of node UUIDs that belong to all data sets available to the
+        # get a list of node UUIDs that belong to all datasets available to the
         # current user
         all_allowed_studies = []
         for dataset in allowed_datasets:
@@ -538,7 +544,7 @@ class NodeSetResource(ModelResource):
     # https://github.com/toastdriven/django-tastypie/issues/526
     # Once the above has been integrated into a tastypie release branch remove
     # NodeSetListResource and use "use_in" instead
-    #nodes = fields.ToManyField(NodeResource, 'nodes', use_in="detail" )
+    # nodes = fields.ToManyField(NodeResource, 'nodes', use_in="detail" )
 
     solr_query = fields.CharField(attribute='solr_query', null=True)
     solr_query_components = fields.CharField(
@@ -551,20 +557,20 @@ class NodeSetResource(ModelResource):
     class Meta:
         # create node count attribute on the fly - node_count field has to be
         # defined on resource
-        queryset = NodeSet.objects.all().order_by( '-is_current', 'name')
+        queryset = NodeSet.objects.all().order_by('-is_current', 'name')
         resource_name = 'nodeset'
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         authentication = SessionAuthentication()
         authorization = Authorization()
         fields = [
             'is_current', 'name', 'summary', 'assay', 'study', 'uuid',
-            'is_implicit', 'node_count', 'solr_query','solr_query_components'
+            'is_implicit', 'node_count', 'solr_query', 'solr_query_components'
         ]
         ordering = [
             'is_current', 'name', 'summary', 'assay', 'study', 'uuid',
-            'is_implicit', 'node_count', 'solr_query','solr_query_components'
+            'is_implicit', 'node_count', 'solr_query', 'solr_query_components'
         ]
-        allowed_methods = ["get", "post", "put" ]
+        allowed_methods = ["get", "post", "put"]
         filtering = {
             "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS,
             "uuid": ALL
@@ -575,7 +581,7 @@ class NodeSetResource(ModelResource):
     def prepend_urls(self):
         return [
             url(r"^(?P<resource_name>%s)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$" %
-                    self._meta.resource_name,
+                self._meta.resource_name,
                 self.wrap_view('dispatch_detail'),
                 name="api_dispatch_detail"),
         ]
@@ -599,12 +605,12 @@ class NodeSetResource(ModelResource):
             self.unauthorized_result(
                 Unauthorized("You are not allowed to create a new NodeSet."))
         # look up the dataset via InvestigationLink relationship
-        # an investigation is only associated with a single data set even though
+        # an investigation is only associated with a single dataset even though
         # InvestigationLink is a many to many relationship
         try:
             dataset = study.investigation.investigationlink_set.all()[0].data_set
         except IndexError:
-            logger.error("Data set not found for study '{}'".format(study.uuid))
+            logger.error("Data set not found in study '{}'".format(study.uuid))
             self.unauthorized_result(
                 Unauthorized("You are not allowed to create a new NodeSet."))
         permission = "read_%s" % dataset._meta.module_name
@@ -621,13 +627,13 @@ class NodeSetResource(ModelResource):
 class NodeSetListResource(ModelResource):
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
-    node_count = fields.IntegerField(attribute='node_count',readonly=True)
+    node_count = fields.IntegerField(attribute='node_count', readonly=True)
     is_implicit = fields.BooleanField(attribute='is_implicit')
 
     class Meta:
         # create node count attribute on the fly - node_count field has to be
         # defined on resource
-        queryset = NodeSet.objects.all().order_by( '-is_current', 'name')
+        queryset = NodeSet.objects.all().order_by('-is_current', 'name')
         # NG: introduced to get correct resource IDs
         detail_resource_name = 'nodeset'
         resource_name = 'nodesetlist'
@@ -668,14 +674,15 @@ class NodePairResource(ModelResource):
 class NodeRelationshipResource(ModelResource):
     name = fields.CharField(attribute='name', null=True)
     type = fields.CharField(attribute='type', null=True)
-    #, full=True), if you need each attribute for each nodepair
+    # , full=True), if you need each attribute for each nodepair
     node_pairs = fields.ToManyField(NodePairResource, 'node_pairs')
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
 
     class Meta:
         detail_allowed_methods = ['get', 'post', 'delete', 'put', 'patch']
-        queryset = NodeRelationship.objects.all().order_by('-is_current', 'name')
+        queryset = NodeRelationship.objects.all().order_by('-is_current',
+                                                           'name')
         detail_resource_name = 'noderelationship'
         resource_name = 'noderelationship'
         detail_uri_name = 'uuid'
@@ -684,7 +691,7 @@ class NodeRelationshipResource(ModelResource):
         # for use with AngularJS $resources: returns newly created object upon
         # POST (in addition to the location response header)
         always_return_data = True
-        #fields = ['type', 'study', 'assay', 'node_pairs']
+        # fields = ['type', 'study', 'assay', 'node_pairs']
         ordering = ['is_current', 'name', 'type', 'node_pairs']
         filtering = {'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS}
 
@@ -696,7 +703,12 @@ class ExternalToolStatusResource(ModelResource):
         authentication = Authentication()
         authorization = Authorization()
         allowed_methods = ["get"]
-        fields = ['name', 'is_active', 'last_time_check',  'unique_instance_identifier']
+        fields = [
+            'name',
+            'is_active',
+            'last_time_check',
+            'unique_instance_identifier'
+        ]
 
     def dehydrate(self, bundle):
         # call to method
@@ -724,7 +736,7 @@ class StatisticsResource(Resource):
 
         private = total - public - private_shared
         return {
-            'total': total, 'public': public, \
+            'total': total, 'public': public,
             'private': private, 'private_shared': private_shared
         }
 
@@ -766,14 +778,14 @@ class StatisticsResource(Resource):
                 project_summary = self.stat_summary(Project)
 
         return [ResourceStatisticsObject(
-            user_count, group_count, files_count, \
+            user_count, group_count, files_count,
             dataset_summary, workflow_summary, project_summary)]
 
 
 class MemberManagementResource(Resource):
     member_list = fields.ListField(attribute='member_list', null=True)
 
-    # Assume that groups only exist in Group-Manager pairs. 
+    # Assume that groups only exist in Group-Manager pairs.
     def is_manager_group(self, group):
         return group.extendedgroup.manager_group is None
 
@@ -943,12 +955,12 @@ class GroupManagementResource(Resource):
     # Simplify things for GET requests.
     def process_get(self, request, group_list, **kwargs):
         user = request.user
-        mod_group_list = self.build_group_list(user, group_list, **kwargs)
-        bundle = self.build_group_list_bundle(request, mod_group_list, **kwargs)
+        m_group_list = self.build_group_list(user, group_list, **kwargs)
+        bundle = self.build_group_list_bundle(request, m_group_list, **kwargs)
         object_list = self.build_object_list(bundle, **kwargs)
         return self.build_response(request, object_list, **kwargs)
 
-    # This implies that users just have to be in the manager group, not 
+    # This implies that users just have to be in the manager group, not
     # necessarily in the group itself.
     def user_authorized(self, user, group):
         if self.is_manager_group(group) and user in group.user_set.all():
@@ -971,7 +983,7 @@ class GroupManagementResource(Resource):
 
     def prepend_urls(self):
         return [
-             url(r'^groups/(?P<id>[0-9]+)/$',
+            url(r'^groups/(?P<id>[0-9]+)/$',
                 self.wrap_view('group_basic'),
                 name='api_group_basic'),
             url(r'^groups/$',
@@ -989,7 +1001,7 @@ class GroupManagementResource(Resource):
             url(r'^groups/perms/$',
                 self.wrap_view('group_perms_list'),
                 name='api_group_perms_list'),
-       ]
+        ]
 
     def group_basic(self, request, **kwargs):
         user = request.user
@@ -1054,7 +1066,7 @@ class GroupManagementResource(Resource):
 
             # Verify that the user holds appropriate power.
             # if not self.user_authorized(user, group):
-                # raise ImmediateHttpResponse(response=HttpUnauthorized())
+            #      return HttpUnauthorized()
 
             # Remove old members before updating.
             group.user_set.clear()
@@ -1166,4 +1178,93 @@ class UserAuthenticationResource(Resource):
         built_obj = self.build_bundle(obj=auth_obj, request=request)
         bundle = self.full_dehydrate(built_obj)
         return self.create_response(request, bundle)
+
+
+class InvitationResource(ModelResource):
+    uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+
+    class Meta:
+        queryset = Invitation.objects.all()
+        resource_name = 'invitation'
+        list_allowed_methods = ['get']
+
+    def get_group(self, group_id):
+        group_list = Group.objects.filter(id=int(group_id))
+        return None if len(group_list) == 0 else group_list[0]
+
+    def is_manager_group(self, group):
+        return group.extendedgroup.manager_group is None
+
+    def user_authorized(self, user, group):
+        if self.is_manager_group(group) and user in group.user_set.all():
+            return True
+        else:
+            return user in group.extendedgroup.manager_group.user_set.all()
+
+    def has_expired(self, token):
+        if token.expires is None:
+            return True
  
+        return (datetime.datetime.now() - token.expires).total_seconds() >= 0
+
+    def prepend_urls(self):
+        return [
+            url(r'^invitation/request/(?P<group_id>[0-9]+)/$',
+                self.wrap_view('get_token'),
+                name='api_invitation_get_token'),
+            url(r'^invitation/verify/(?P<token>%s)/$' % self.uuid_regex,
+                self.wrap_view('verify_token'),
+                name='api_invitation_verify_token'),
+            url(r'^invitation/update/$',
+                self.wrap_view('update_db'),
+                name='api_invitation_update_db'),
+        ]
+
+    def get_token(self, request, **kwargs):
+        self.update_db(request, **kwargs)
+
+        if request.method == 'GET':
+            user = request.user
+            group = self.get_group(int(kwargs['group_id']))
+            
+            if not self.user_authorized(user, group):
+                return HttpUnauthorized()
+
+            inv = Invitation(token_uuid=uuid.uuid1(), group_id=group.id)
+            inv.expires = datetime.datetime.now() + datetime.timedelta(days=3)
+            inv.save()
+            return HttpResponse(inv.token_uuid)
+        else:
+            return HttpMethodNotAllowed()
+
+    def verify_token(self, request, **kwargs):
+        self.update_db(request, **kwargs)
+
+        if request.method == 'GET':
+            user = request.user
+            token = kwargs['token']
+            invite_list = Invitation.objects.filter(token_uuid=token)
+
+            if len(invite_list) == 0:
+                return HttpNotFound()
+
+            invite = invite_list[0]
+            group = self.get_group(invite.group_id)
+            group.user_set.add(user)
+
+            if self.is_manager_group(group):
+                for i in group.extended_group.managed_group.all():
+                    i.user_set.add(user)
+
+            invite.delete()
+            return HttpAccepted()
+        else:
+            return HttpMethodNotAllowed()
+
+    def update_db(self, request, **kwargs):
+        for i in Invitation.objects.all():
+            if self.has_expired(i):
+                i.delete()
+
+        return HttpNoContent()
+
