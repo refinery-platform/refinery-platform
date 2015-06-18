@@ -169,7 +169,7 @@ class SharableResourceAPIInterface(object):
         if request.method == 'GET':
             kwargs['sharing'] = True
             res_list = filter(
-                lambda r: 
+                lambda r:
                     (r.get_owner() is not None and
                     r.get_owner().id == request.user.id),
                 self.res_type.objects.all())
@@ -179,13 +179,13 @@ class SharableResourceAPIInterface(object):
             return HttpMethodNotAllowed()
 
     # Overriding some ORM methods.
-    
+
     # Handles POST requests.
     def obj_create(self, bundle, **kwargs):
         bundle = ModelResource.obj_create(self, bundle, **kwargs)
         bundle.obj.set_owner(bundle.request.user)
         return bundle
-          
+
 
 class ProjectResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
@@ -199,7 +199,7 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         queryset = Project.objects.all()
         resource_name = 'projects'
         detail_uri_name = 'uuid'
-        fields = ['name', 'id', 'uuid', 'summary', 'share_list']
+        # fields = ['name', 'id', 'uuid', 'summary', 'share_list']
         # authentication = SessionAuthentication
         # authorization = GuardianAuthorization
         authorization = Authorization()
@@ -224,9 +224,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         # allowed_methods = ['get']
         resource_name = 'data_sets'
         # authentication = SessionAuthentication()
-        # authorization = GuardianAuthorization()        
+        # authorization = GuardianAuthorization()
         filtering = {'uuid': ALL}
-        fields = ['uuid']
+        # fields = ['uuid']
 
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
@@ -368,6 +368,7 @@ class WorkflowInputRelationshipsResource(ModelResource):
 
 class AnalysisResource(ModelResource):
     data_set = fields.ToOneField(DataSetResource, 'data_set', use_in='detail')
+    data_set__uuid = fields.CharField(attribute='data_set__uuid', use_in='all')
     uuid = fields.CharField(attribute='uuid', use_in='all')
     name = fields.CharField(attribute='name', use_in='all')
     workflow__uuid = fields.CharField(attribute='workflow__uuid', use_in='all')
@@ -724,7 +725,7 @@ class StatisticsResource(Resource):
 class MemberManagementResource(Resource):
     member_list = fields.ListField(attribute='member_list', null=True)
 
-    # Assume that groups only exist in Group-Manager pairs. 
+    # Assume that groups only exist in Group-Manager pairs.
     def is_manager_group(self, group):
         return group.extendedgroup.manager_group is None
 
@@ -878,7 +879,7 @@ class GroupManagementResource(Resource):
         object_list = self.build_object_list(bundle, **kwargs)
         return self.build_response(request, object_list, **kwargs)
 
-    # This implies that users just have to be in the manager group, not 
+    # This implies that users just have to be in the manager group, not
     # necessarily in the group itself.
     def user_authorized(self, user, group):
         if self.is_manager_group(group) and user in group.user_set.all():
@@ -1096,4 +1097,4 @@ class UserAuthenticationResource(Resource):
         built_obj = self.build_bundle(obj=auth_obj, request=request)
         bundle = self.full_dehydrate(built_obj)
         return self.create_response(request, bundle)
- 
+

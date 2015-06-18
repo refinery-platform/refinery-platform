@@ -311,29 +311,26 @@ ul#externalToolListPopover li{
   background-color: white;
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
-  border-top: 5px solid @gray;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-bottom: 5px;
+  padding-top: 10px;
+  margin-top: 0px;
   margin-bottom: 10px;
+  border-top: 5px solid @gray;
 
   .refinery-panel-shadow;
 
   &-header {
     border-top: none;
-    margin: 0 10px;
-    padding: 0;
-    border-bottom: 1px solid @grayLighter;
-    background-color: @white;
-
-    h4 {
-      margin: 0;
-      padding: 5px 0;
-      font-size: 14px;
-      line-height: 1em;
-    }
+    border-radius: 5px;
+    padding-top: 5px;
+    padding-bottom: 1px;
+    margin-bottom: 5px;
+    background-color: @grayLighter;
   }
 
   &-content {
-    margin: 0 10px;
-    padding: 5px 0;
   }
 
   &-error {
@@ -449,8 +446,42 @@ ul#externalToolListPopover li{
   }
 }
 
-.dashboard {
+.refinery-dashboard {
   position: relative;
+
+  .refinery-header {
+    position: relative;
+    margin: 0;
+    padding: 5px 15px;
+    border-bottom: 1px solid darken(@grayLighter, 10%);
+    background-color: @grayLighter;
+  }
+
+  .refinery-panel {
+    margin: 0 0 10px 0;
+    padding: 0;
+
+    .refinery-panel-header {
+      border-top: none;
+      margin: 0 10px;
+      padding: 0;
+      border-bottom: 1px solid @grayLighter;
+      border-radius: 0;
+      background-color: @white;
+
+      h4 {
+        margin: 0;
+        padding: 5px 0;
+        font-size: 14px;
+        line-height: 1em;
+      }
+    }
+
+    .refinery-panel-content {
+      margin: 0 10px;
+      padding: 5px 0;
+    }
+  }
 
   [class^="span"].expandable {
     position: relative;
@@ -462,16 +493,19 @@ ul#externalToolListPopover li{
     z-index: 2;
     width: 100%;
   }
+
+  .refinery-request-loading {
+    height: 20px;
+  }
 }
 
 
 
 .refinery-header {
-  position: relative;
   display: block;
-  padding: 5px 15px;
-  border-bottom: 1px solid darken(@grayLighter, 10%);
-  background-color: @grayLighter;
+  border-bottom: 1px solid @grayLighter;
+  padding-bottom: -10px;
+  margin-bottom: 10px;
 }
 
 
@@ -612,6 +646,47 @@ ul#externalToolListPopover li{
   width: 100%;
   margin-top: 5px;
   margin-bottom: 2px;
+}
+
+.refinery-spinner {
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin: 0 auto;
+  background-color: @gray;
+  border-radius: 100%;
+  -webkit-animation: refinery-pulseScaleOut @slowTransitionSpeed infinite @easeInOutCubic;
+          animation: refinery-pulseScaleOut @slowTransitionSpeed infinite @easeInOutCubic;
+}
+
+.no-animation .refinery-spinner {
+  background: url(/static/images/spinner.gif) center center no-repeat;
+  animation: none;
+  -webkit-animation: none;
+}
+
+@-webkit-keyframes refinery-pulseScaleOut {
+  0% {
+    -webkit-transform: scale(0);
+            transform: scale(0);
+  }
+  100% {
+    -webkit-transform: scale(1);
+            transform: scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes refinery-pulseScaleOut {
+  0% {
+    -webkit-transform: scale(0);
+            transform: scale(0);
+  }
+  100% {
+    -webkit-transform: scale(1);
+            transform: scale(1);
+    opacity: 0;
+  }
 }
 
 .icon-bigger {

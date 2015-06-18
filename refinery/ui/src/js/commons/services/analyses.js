@@ -1,10 +1,10 @@
 angular
   .module('refineryApp')
-  .factory('dataSetService', ['$resource', 'settings',
+  .factory('analysisService', ['$resource', 'settings',
     function ($resource, settings) {
 
-      var dataSets = $resource(
-        settings.appRoot + settings.refineryApi + '/data_sets/',
+      var analyses = $resource(
+        settings.appRoot + settings.refineryApi + '/analysis/',
         {
           format: 'json'
         },
@@ -16,6 +16,6 @@ angular
         }
       );
 
-      return dataSets;
+      return analyses;
     }
   ]);

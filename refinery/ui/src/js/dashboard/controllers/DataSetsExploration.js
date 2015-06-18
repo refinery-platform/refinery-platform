@@ -2,10 +2,6 @@ function DataSetsExplorationCtrl ($stateParams) {
   var that = this;
 
   that.test = 'Data Set Exploration';
-
-  if (dashboard.searchQueryDataSets) {
-
-  }
 }
 
 angular

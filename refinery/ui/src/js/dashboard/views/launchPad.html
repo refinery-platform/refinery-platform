@@ -1,4 +1,4 @@
-<div id="launch-pad" class="span4 expandable" ng-class="{'full-width': dashboard.expandDataSetPanel}">
+<div class="span4 expandable" ng-class="{'full-width': dashboard.expandDataSetPanel}">
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
@@ -34,15 +34,18 @@
     <div class="refinery-panel-content scrollable">
       <ul
         class="no-list-style"
-        ng-if="dashboard.allDataSets.meta.total_count > 0">
+        ng-if="dashboard.allDataSets.meta.total_count > 0"
+        infinite-scroll="dashboard.getMoreDataSets()">
         <li ng-repeat="dataSet in dashboard.allDataSets.objects">
           <i class="icon-user"></i>
           <a ng-href="data_sets/{{ dataSet.uuid }}">{{ dataSet.name }}</a>
         </li>
       </ul>
-      <span
-        class="request-loading"
-        ng-if="dashboard.dataSetsServiceLoading">Loading</span>
+      <div
+        class="refinery-request-loading"
+        ng-if="dashboard.dataSetServiceLoading">
+        <span class="refinery-spinner"></span>
+      </div>
       <span
         class="alert alert-info"
         ng-if="dashboard.allDataSets.meta.total_count == 0">
@@ -56,17 +59,63 @@
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
-        <h3><i class="m-r-1-4 icon-folder-open"></i>Projects</h3>
-      </span>
-      <span class="refinery-header-right" ng-if="sharingEnabled">
-        <a href="./data_set_manager/import/isa-tab-form/" class="no-underline-hover">
-          <i class="icon-plus-sign"></i>
-        </a>
+        <h3>
+          <span>
+            <i class="m-r-1-4 icon-folder-open"></i>Projects
+          </span>
+          <span ng-if="dashboard.allAnalyses.meta.total_count > 0">
+            &amp; <i class="m-r-1-4 icon-bar-chart"></i>Analyses
+          </span>
+        </h3>
       </span>
     </div>
-
+    <div class="refinery-panel-header">
+      <div class="floatbox">
+        <div class="floatbox-min-right">
+          <h4>Share</h4>
+        </div>
+        <div class="floatbox-max-left">
+          <h4>Name</h4>
+        </div>
+      </div>
+    </div>
     <div class="refinery-panel-content scrollable">
-      <span class="alert alert-info">
+      <ul
+        class="no-list-style"
+        ng-if="dashboard.allAnalyses.meta.total_count > 0">
+        <li ng-repeat="analysis in dashboard.allAnalyses.objects">
+          <span ng-if="analysis.status == 'SUCCESS'">
+            <i class="icon-ok-sign"></i>
+            <a ng-href="data_sets/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">{{ analysis.name }}</a>
+          </span>
+          <span ng-if="analysis.status == 'FAILURE'">
+            <i class="icon-warning-sign"></i>
+            <a ng-href="analysis_manager/{{ analysis.uuid }}">{{ analysis.name }}</a>
+          </span>
+        </li>
+      </ul>
+      <div
+        class="refinery-request-loading"
+        ng-if="dashboard.analysisServiceLoading">
+        <span class="refinery-spinner"></span>
+      </div>
+      <div class="separator"></div>
+      <ul
+        class="no-list-style"
+        ng-if="dashboard.allProjects.meta.total_count > 0">
+        <li ng-repeat="project in dashboard.allProjects.objects">
+          <i class="icon-user"></i>
+          <a ng-href="projects/{{ project.uuid }}">{{ project.name }}</a>
+        </li>
+      </ul>
+      <div
+        class="refinery-request-loading"
+        ng-if="dashboard.projectServiceLoading">
+        <span class="refinery-spinner"></span>
+      </div>
+      <span
+        class="alert alert-info"
+        ng-if="dashboard.allProjects.meta.total_count == 0">
         No projects found.
       </span>
     </div>
@@ -86,11 +135,31 @@
       </span>
     </div>
 
+    <div class="refinery-panel-header">
+      <div class="floatbox">
+        <div class="floatbox-max-left">
+          <h4>Name</h4>
+        </div>
+      </div>
+    </div>
     <div class="refinery-panel-content scrollable">
-      <span class="alert alert-info">
-        No workflows imported.
+      <ul
+        class="no-list-style"
+        ng-if="dashboard.allWorkflows.meta.total_count > 0">
+        <li ng-repeat="workflow in dashboard.allWorkflows.objects">
+          <a ng-href="workflows/{{ workflow.uuid }}">{{ workflow.name }}</a>
+        </li>
+      </ul>
+      <div
+        class="refinery-request-loading"
+        ng-if="dashboard.workflowServiceLoading">
+        <span class="refinery-spinner"></span>
+      </div>
+      <span
+        class="alert alert-info"
+        ng-if="dashboard.allWorkflows.meta.total_count == 0">
+        No workflows found.
       </span>
     </div>
   </div>
-</div>
 </div>
