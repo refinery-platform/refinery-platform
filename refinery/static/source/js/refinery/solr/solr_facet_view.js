@@ -17,7 +17,8 @@
 SOLR_FACET_SELECTION_UPDATED_COMMAND = 'solr_facet_selection_updated';
 SOLR_FACET_SELECTION_CLEARED_COMMAND = 'solr_facet_selection_cleared';
 
-SolrFacetView = function( parentElementId, idPrefix, solrQuery, configurator, commands ) {
+SolrFacetView = function( parentElementId, idPrefix, solrQuery,
+                          configurator, commands ) {
   	
   	var self = this;
 	
@@ -104,7 +105,8 @@ SolrFacetView.prototype._renderTree = function( solrResponse ) {
    		var facet = self._decomposeFacetValueId( facetValueId ).facet;
    		var facetValue = self._decomposeFacetValueId( facetValueId ).facetValue;
    	   		
-   		self._query._facetSelection[facet][facetValue].isSelected = !self._query._facetSelection[facet][facetValue].isSelected;
+   		self._query._facetSelection[facet][facetValue].isSelected =
+        !self._query._facetSelection[facet][facetValue].isSelected;
    		
 		self._query.clearDocumentSelection();
    		
@@ -138,10 +140,10 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 	
 		if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal ) {
 			//facets[attribute.solr_field] = [];
-			
+
 			var counts = self._query.getNumberOfFacetValues( attribute.solr_field );
 			var countsString = ""; //"(" + counts.total + ")";
-			
+
 			$('<div/>', {
 				'href': '#' + self._composeFacetId( attribute.solr_field + "___inactive" ),
 				'class': 'refinery-facet-title',
@@ -152,8 +154,8 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 				'id': self._composeFacetId( attribute.solr_field ),
 				'html': '<span class="refinery-facet-label" id="' +
 				self._composeFacetId( attribute.solr_field + '___label' ) +
-					'">' + self._getFacetLabel( attribute.solr_field ) + '</span>'
-					}).appendTo('#' + self._parentElementId);
+					'">' + self._getFacetLabel( attribute.solr_field ) +
+          '</span>'}).appendTo('#' + self._parentElementId);
 			
 			// only show active facet values when facet is collapsed
 			$('<div/>', { 'class': 'facet-value-list selected ' +
@@ -192,7 +194,8 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 		   		self._setFacetCollapsed( facet );
 		   		
 		   		// update facet label (i.e. show triangle pointing to the right before label)		   		
-				$( "#" + self._composeFacetId( facet + '___label' ) ).html( self._getFacetLabel( facet ) );
+				$( "#" + self._composeFacetId( facet + '___label' ) )
+          .html( self._getFacetLabel( facet ) );
 		   		
 				// show active facet section
 	   			$( "#" + self._composeFacetId( facet + "___active" ) ).removeClass( "hidden" );
@@ -263,16 +266,19 @@ SolrFacetView.prototype._getFacetLabel = function( facet ) {
 	var self = this;
 	
 	var indicator = ""
-	
+
+  var facetValueCount = self._query.getNumberOfFacetValues(facet);
+
 	if ( self._isFacetExpanded( facet ) ) {
 		indicator = "icon-caret-down";
 	}
 	else {
 		indicator = "icon-caret-right";
 	}
-	
+
 	return ( '<span style="width: 10px; text-align: center; display: inline-block;">' +
-	'<i class="' + indicator + '"></i></span>&nbsp;' + prettifySolrFieldName( facet, true ) );
+	  '<i class="' + indicator + '"></i></span>&nbsp;' +
+  prettifySolrFieldName( facet, true ) + '&nbsp;(' + facetValueCount.total + ')');
 }
 
 SolrFacetView.prototype._toggleExpandedFacet = function( facet ) {	
@@ -324,7 +330,10 @@ SolrFacetView.prototype._composeFacetValueId = function( facet, facetValue ) {
 
 SolrFacetView.prototype._decomposeFacetValueId = function( facetValueId ) {
 	var self = this;
-	return ( { facet: facetValueId.split( "___" )[2], facetValue: facetValueId.split( "___" )[3] } );
+	return ( {
+    facet: facetValueId.split( "___" )[2],
+    facetValue: facetValueId.split( "___" )[3]
+  } );
 }
 
 SolrFacetView.prototype._composeFacetId = function( facet ) {
