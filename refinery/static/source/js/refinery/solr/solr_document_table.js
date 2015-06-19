@@ -334,10 +334,11 @@ SolrDocumentTable.prototype._trimDocumentEntry = function(
   if (string.length > length) {
     var trimmedChars = self._getTrimmedChars(string, length, string.length);
     return string.substring(0, length) +
-      "<span class=trimmedDocStr style='display:none'>" + trimmedChars + " </span>" +
-      "<a href='#' class='trimmedDocEntryArrow' id='right'>" + indicator + "<i" +
-      " class='icon-chevron-sign-right'></i></a>" +
-      "<a href='#' class='trimmedDocEntryArrow' id='left' style='display:none'><i class='icon-chevron-sign-left'></i></a>";
+      "<span class=trimmedDocStr style='display:none'>" + trimmedChars +
+      " </span>&nbsp;<a href='#' class='trimmedDocEntryArrow' id='right'>" +
+      indicator + "&nbsp;<i class='icon-chevron-sign-right'></i></a>" +
+      "<a href='#' class='trimmedDocEntryArrow' id='left' style='display:none'>" +
+      "<i class='icon-chevron-sign-left'></i></a>";
   }
   return string;
 };
@@ -351,11 +352,11 @@ SolrDocumentTable.prototype._trimFilePathEntry = function(
   if (string.length > length && self._isFilePath()) {
     var trimFileName = self._getTrimFileName(string, length);
     return "<span class='trimmedFileName' id='right'>" +
-      "<a href='#' class='trimmedFilePathArrow'>"+
-      "<i class='icon-chevron-sign-right'></i>"+ indicator + "</a>" + trimFileName
-      +"</span>"+ "<span class='entireFilePath' id='left' style='display:none'>" +
+      "<a href='#' class='trimmedFilePathArrow'><i class='icon-chevron-sign-right'>" +
+      "</i>&nbsp;"+ indicator + "</a>" + trimFileName +"</span>" +
+      "<span class='entireFilePath' id='left' style='display:none;'>" +
       "<a href='#' class='trimmedFilePathArrow'>" +
-      "<i class='icon-chevron-sign-left'></i></a>" + string + " </span>";
+      "<i class='icon-chevron-sign-left'></i></a>&nbsp;" + string + " </span>";
   }
   return string;
 };
