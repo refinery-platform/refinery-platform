@@ -80,23 +80,41 @@ class SharableResourceAPIInterface(object):
                 'perms': self.get_perms(res, g)},
             groups_in)
 
+    def list_to_queryset(self, res_list):
+        return self.res_type.objects.filter(id__in=[r.id for r in res_list])
+
     # Generalizes bundle construction and resource processing. Turning on more
     # options may require going to the SharableResource class and adding them.
 
+    # Apply filters.
+    def do_filtering(self, res_list, get_req_dict):
+        mod_list = res_list
+
+        for k in get_req_dict:
+            if k == 'format':
+                continue
+
+            mod_list = [x for x in mod_list
+                        if (hasattr(x, k) and 
+                            str(getattr(x, k)) == get_req_dict[k])]
+
+        return mod_list
+
     # Turns on certain things depending on flags
-    def build_res_list(self, user, res_list, **kwargs):
+    def build_res_list(self, user, res_list, request, **kwargs):
         for i in res_list:
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(i, 'share_list', self.get_share_list(user, i))
 
             if 'show_public' in kwargs and kwargs['show_public']:
-                setattr(i, 'is_public', i.is_public())
+                setattr(i, 'public', i.is_public())
 
             if 'show_owner_info' in kwargs and kwargs['show_owner_info']:
                 setattr(i, 'owner_id', i.get_owner().id)
                 setattr(i, 'owner_username', i.get_owner().username)
                 setattr(i, 'is_owner', i.get_owner().id == user.id)
 
+        res_list = self.do_filtering(res_list, request.GET)
         return res_list
 
     def build_bundle_list(self, request, res_list, **kwargs):
@@ -123,13 +141,13 @@ class SharableResourceAPIInterface(object):
     # Makes everything simpler for GET requests.
     def process_get(self, request, res, **kwargs):
         user = request.user
-        mod_res_list = self.build_res_list(user, [res], **kwargs)
+        mod_res_list = self.build_res_list(user, [res], request, **kwargs)
         bundle = self.build_bundle_list(request, mod_res_list)[0]
         return self.build_response(request, bundle, **kwargs)
 
     def process_get_list(self, request, res_list, **kwargs):
         user = request.user
-        mod_res_list = self.build_res_list(user, res_list, **kwargs)
+        mod_res_list = self.build_res_list(user, res_list, request, **kwargs)
         bundle_list = self.build_bundle_list(request, mod_res_list, **kwargs)
         object_list = self.build_object_list(bundle_list, **kwargs)
         return self.build_response(request, object_list, **kwargs)
@@ -144,21 +162,21 @@ class SharableResourceAPIInterface(object):
 
     def obj_get(self, bundle, **kwargs):
         obj = ModelResource.obj_get(self, bundle, **kwargs)
+        request = bundle.request
         kwargs['show_public'] = True
         kwargs['show_owner_info'] = True
-        return self.build_res_list(bundle.request.user, [obj], **kwargs)[0]
+        return self.build_res_list(request.user, [obj], request, **kwargs)[0]
 
     def obj_get_list(self, bundle, **kwargs):
-        logger.info("called")
         return self.get_object_list(bundle.request)
 
     def get_object_list(self, request):
         obj_list = ModelResource.get_object_list(self, request)
-        logger.info("called")
         kwargs = {}
         kwargs['show_public'] = True
         kwargs['show_owner_info'] = True
-        return self.build_res_list(request.user, obj_list, **kwargs)
+        r_list = self.build_res_list(request.user, obj_list, request, **kwargs)
+        return r_list
 
     # A few default URL endpoints as directed by prepend_urls in subclasses.
 
@@ -225,10 +243,6 @@ class SharableResourceAPIInterface(object):
 
 class ProjectResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
-    is_public = fields.BooleanField(attribute='is_public', null=True)
-    is_owner = fields.BooleanField(attribute='is_owner', null=True)
-    owner_id = fields.IntegerField(attribute='owner_id', null=True)
-    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, Project)
@@ -240,8 +254,8 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         resource_name = 'projects'
         detail_uri_name = 'uuid'
         fields = [
-            'name', 'id', 'uuid', 'summary', 'share_list', 'is_public',
-            'is_owner', 'owner_id', 'owner_name'
+            'name', 'id', 'uuid', 'summary', 'share_list', 'public',
+            'is_owner', 'owner_id', 'owner_username'
         ]
         # authentication = SessionAuthentication
         # authorization = GuardianAuthorization
