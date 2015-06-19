@@ -125,7 +125,7 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 	for ( var i = 0; i < configurator.state.objects.length; ++i ) {
 		var attribute = configurator.state.objects[i];
 		var isHiddenField = false;
-		
+
 		// test if this field should be skipped
 		for ( var p = 0; p < self._hiddenFieldPrefixes.length; ++p ) {
 			if ( attribute.solr_field.indexOf( self._hiddenFieldPrefixes[p] ) == 0 ) {
@@ -140,9 +140,9 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 	
 		if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal ) {
 			//facets[attribute.solr_field] = [];
-
-			var counts = self._query.getNumberOfFacetValues( attribute.solr_field );
-			var countsString = ""; //"(" + counts.total + ")";
+      //Commented out the following methods which are not being used.
+	    //var counts = self._query.getNumberOfFacetValues( attribute.solr_field );
+		  //	var countsString = ""; //"(" + counts.total + ")";
 
 			$('<div/>', {
 				'href': '#' + self._composeFacetId( attribute.solr_field + "___inactive" ),
@@ -154,7 +154,7 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 				'id': self._composeFacetId( attribute.solr_field ),
 				'html': '<span class="refinery-facet-label" id="' +
 				self._composeFacetId( attribute.solr_field + '___label' ) +
-					'">' + self._getFacetLabel( attribute.solr_field ) +
+					'">' + self._getFacetLabel( attribute.solr_field , facetCounts ) +
           '</span>'}).appendTo('#' + self._parentElementId);
 			
 			// only show active facet values when facet is collapsed
@@ -179,7 +179,7 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 		   		
 		   		// update facet label (i.e. show downward pointing triangle before label)
 				$( "#" + self._composeFacetId( facet + '___label' ) )
-					.html( self._getFacetLabel( facet ) );
+					.html( self._getFacetLabel( facet, facetCounts ) );
 				
 				// hide active facet section (to avoid showing duplicate facet values)
 		   		$( "#" + self._composeFacetId( facet + "___active" ) ).hide(); //slideUp( "slow" );		   			
@@ -195,7 +195,7 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 		   		
 		   		// update facet label (i.e. show triangle pointing to the right before label)		   		
 				$( "#" + self._composeFacetId( facet + '___label' ) )
-          .html( self._getFacetLabel( facet ) );
+          .html( self._getFacetLabel( facet, facetCounts ) );
 		   		
 				// show active facet section
 	   			$( "#" + self._composeFacetId( facet + "___active" ) ).removeClass( "hidden" );
@@ -205,6 +205,7 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 	}	
 
 	for ( var facet in facetCounts ) {
+
 		if ( facetCounts.hasOwnProperty( facet ) ) {
 			var unselectedItems = [];
 			var selectedItems = [];
@@ -262,12 +263,11 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
     }
 }
 
-SolrFacetView.prototype._getFacetLabel = function( facet ) {	
+SolrFacetView.prototype._getFacetLabel = function( facet, facetObj ) {
 	var self = this;
-	
 	var indicator = ""
 
-  var facetValueCount = self._query.getNumberOfFacetValues(facet);
+  var facetValueCount = Object.keys(facetObj[facet]).length;
 
 	if ( self._isFacetExpanded( facet ) ) {
 		indicator = "icon-caret-down";
@@ -278,8 +278,7 @@ SolrFacetView.prototype._getFacetLabel = function( facet ) {
 
 	return ( '<span style="width: 10px; text-align: center; display: inline-block;">' +
 	  '<i class="' + indicator + '"></i></span>&nbsp;' +
-    prettifySolrFieldName( facet, true ) + '&nbsp;(' + facetValueCount.total + ')'
-  );
+      prettifySolrFieldName( facet, true ) + '&nbsp;(' + facetValueCount + ')');
 }
 
 SolrFacetView.prototype._toggleExpandedFacet = function( facet ) {	
