@@ -302,7 +302,7 @@ SolrDocumentTable.prototype._generateTableBody = function(solrResponse) {
               s += '<i class="icon-refresh icon-spin" style="padding: 2px"></i>';
               s += "</td>";
             }
-          }else if(entry.indexOf("REFINERY_NAME") > -1 ){
+          }else if(self._isFilePath(entry)){
             s += "<td title=\"" + document[entry] + "\">";
             s += self._trimFilePathEntry(document[entry], 25);
             s += "</td>";
@@ -349,7 +349,7 @@ SolrDocumentTable.prototype._trimFilePathEntry = function(
 
   indicator = indicator || "...";
 
-  if (string.length > length && self._isFilePath()) {
+  if (string.length > length) {
     var trimFileName = self._getTrimFileName(string, length);
     return "<span class='trimmedFileName' id='right'>" +
       "<a href='#' class='trimmedFilePathArrow'><i class='icon-chevron-sign-right'>" +
@@ -361,8 +361,12 @@ SolrDocumentTable.prototype._trimFilePathEntry = function(
   return string;
 };
 
-SolrDocumentTable.prototype._isFilePath = function(string) {
-  return(true);
+SolrDocumentTable.prototype._isFilePath = function(entryStr) {
+  if( entryStr.indexOf("REFINERY_NAME") > -1){
+    return true;
+  }else{
+    return false;
+  }
 };
 
 SolrDocumentTable.prototype._getTrimmedChars = function(string, startInd, endInd) {
