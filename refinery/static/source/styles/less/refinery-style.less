@@ -439,7 +439,19 @@ ul#externalToolListPopover li{
       padding: 2px 0;
       border-top: 1px solid @grayLighter;
 
+      // Hack because uiScroll adds another invisible first child to the list.
       &:first-child {
+        padding: 0;
+        border-top: none;
+      }
+
+      // Hack because uiScroll adds another invisible first child to the list.
+      &:first-child + li {
+        border-top: none;
+      }
+
+      // Hack because uiScroll adds another invisible last child to the list.
+      &:last-child {
         border-top: none;
       }
     }
@@ -492,6 +504,10 @@ ul#externalToolListPopover li{
     position: absolute;
     z-index: 2;
     width: 100%;
+  }
+
+  .shrinkable {
+    transition: all @fastTransitionSpeed @easeInOutCubic !important;
   }
 
   .refinery-request-loading {

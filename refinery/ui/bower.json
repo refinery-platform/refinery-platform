@@ -33,6 +33,7 @@
     "spectrum": "1.7.0",
     "floatThead": "1.2.12",
     "jquery-file-upload": "9.10.0",
-    "spark-md5": "0.0.5"
+    "spark-md5": "0.0.5",
+    "angular-ui-utils": "bower-scroll"
   }
 }

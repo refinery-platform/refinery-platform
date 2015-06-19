@@ -1,24 +1,14 @@
 angular
   .module('refineryDashboard')
   .directive('refineryDashboardPanel', [
-    '$compile', '$templateCache', '$timeout',
-    function ($compile, $templateCache, $timeout) {
+    function () {
       var directive = {
         link: link,
-        replace: true,
-        restrict: 'E',
-        scope: {
-          headerIcon: '@',
-          spanSize: '@',
-          title: '@'
-        },
-        templateUrl: '/static/partials/dashboard/directives/panel.html'
+        restrict: 'AE'
       };
 
       function link (scope, element, attrs) {
-        scope.sharingEnabled = function () {
-          return true;
-        };
+        // scope.expandDataSetPanel();
       }
 
       return directive;

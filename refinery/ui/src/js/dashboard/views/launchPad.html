@@ -18,8 +18,14 @@
         class="search-query"
         placeholder="Search"
         ng-model="dashboard.searchQueryDataSets"
-        ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
+        ng-blur="dashboard.blurSearchDataSetsInput()"
+        ng-focus="dashboard.focusSearchDataSetsInput()"
+        ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)"
+        refinery-dashboard-focus>
     </form>
+
+    <p ng-if="dashboard.dataSetInputFocus">Focus</p>
+    <p ng-if="!dashboard.dataSetInputFocus">Blur</p>
 
     <div class="refinery-panel-header">
       <div class="floatbox">
@@ -31,24 +37,28 @@
         </div>
       </div>
     </div>
-    <div class="refinery-panel-content scrollable">
+    <div
+      class="refinery-panel-content scrollable"
+      ui-scroll-viewport
+      refinery-dashboard-panel>
       <ul
         class="no-list-style"
-        ng-if="dashboard.allDataSets.meta.total_count > 0"
-        infinite-scroll="dashboard.getMoreDataSets()">
-        <li ng-repeat="dataSet in dashboard.allDataSets.objects">
+        ng-if="dashboard.dataSets.total > 0">
+        <li
+          ui-scroll="dataSet in dashboard.dataSets"
+          adapter="launchPad.dataSetsAdapter">
           <i class="icon-user"></i>
           <a ng-href="data_sets/{{ dataSet.uuid }}">{{ dataSet.name }}</a>
         </li>
       </ul>
       <div
         class="refinery-request-loading"
-        ng-if="dashboard.dataSetServiceLoading">
+        ng-if="launchPad.dataSetsAdapter.isLoading">
         <span class="refinery-spinner"></span>
       </div>
       <span
         class="alert alert-info"
-        ng-if="dashboard.allDataSets.meta.total_count == 0">
+        ng-if="dashboard.dataSets.total == 0">
         No data sets found.
       </span>
     </div>

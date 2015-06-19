@@ -3,5 +3,5 @@ angular
     'ngAnimate',
     'ngResource',
     'ui.router',
-    'infinite-scroll'
+    'ui.scroll'
   ]);
