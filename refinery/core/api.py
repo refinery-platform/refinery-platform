@@ -107,7 +107,7 @@ class SharableResourceAPIInterface(object):
                 setattr(i, 'share_list', self.get_share_list(user, i))
 
             if 'show_public' in kwargs and kwargs['show_public']:
-                setattr(i, 'is_public', i.is_public())
+                setattr(i, 'public', i.is_public())
 
             if 'show_owner_info' in kwargs and kwargs['show_owner_info']:
                 setattr(i, 'owner_id', i.get_owner().id)
@@ -176,7 +176,7 @@ class SharableResourceAPIInterface(object):
         kwargs['show_public'] = True
         kwargs['show_owner_info'] = True
         r_list = self.build_res_list(request.user, obj_list, request, **kwargs)
-        return self.list_to_queryset(r_list)
+        return r_list
 
     # A few default URL endpoints as directed by prepend_urls in subclasses.
 
@@ -243,10 +243,6 @@ class SharableResourceAPIInterface(object):
 
 class ProjectResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
-    is_public = fields.BooleanField(attribute='is_public', null=True)
-    is_owner = fields.BooleanField(attribute='is_owner', null=True)
-    owner_id = fields.IntegerField(attribute='owner_id', null=True)
-    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, Project)
@@ -258,8 +254,8 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         resource_name = 'projects'
         detail_uri_name = 'uuid'
         fields = [
-            'name', 'id', 'uuid', 'summary', 'share_list', 'is_public',
-            'is_owner', 'owner_id', 'owner_name'
+            'name', 'id', 'uuid', 'summary', 'share_list', 'public',
+            'is_owner', 'owner_id', 'owner_username'
         ]
         # authentication = SessionAuthentication
         # authorization = GuardianAuthorization
