@@ -178,7 +178,7 @@ class BaseResource (models.Model):
     description = models.TextField(max_length=5000, blank=True)
     slug = models.CharField(max_length=250, blank=True, null=True)
 
-    is_public = None
+    public = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.name + " (" + self.uuid + ")"
@@ -195,9 +195,9 @@ class OwnableResource (BaseResource):
     permissions, where "xxx" is the simple_modelname
 
     '''
-    is_owner = None
-    owner_id = None
-    owner_username = None
+    is_owner = models.BooleanField(default=False)
+    owner_id = models.IntegerField(null=True)
+    owner_username = models.CharField(max_length=250, null=True)
 
     def __unicode__(self):
         return self.name
