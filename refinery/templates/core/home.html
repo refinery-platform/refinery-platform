@@ -193,6 +193,8 @@
 			    	<td>
 			    		{% if analysis.status == "SUCCESS" %}
 				    		<span class="badge badge-info"><i class="icon-ok"></i></span>
+                        {% elif analysis.status == "FAILURE" %}
+				    	   <span class="badge badge-info"><i class="icon-warning-sign"></i></span>
 			    		{% else %}
 				    		<span id="analysis-{{ analysis.uuid }}-status"></span>
 			    		{% endif %}
@@ -326,40 +328,44 @@
       var intervalIds = [];
 
       {% for analysis in unassigned_analyses.all %}
-        monitors["{{ analysis.uuid }}"] = new AnalysisMonitor(
-          "{{ analysis.uuid }}",
-          document.location.protocol + "//" + document.location.host,
-          "",
-          "{{ csrf_token }}"
-        );
+        {% if analysis.status != "SUCCESS" and analysis.status != "FAILURE" %}
+          {
+              monitors["{{ analysis.uuid }}"] = new AnalysisMonitor(
+                      "{{ analysis.uuid }}",
+                      document.location.protocol + "//" + document.location.host,
+                      "",
+                      "{{ csrf_token }}"
+              );
 
-        callbacks["{{ analysis.uuid }}"] = function() {
-          monitors["{{ analysis.uuid }}"].getAnalysisProgress(
-            function(percentDone) {
-              $("#analysis-{{ analysis.uuid }}-status")
-              .html("<span class=\"badge\"><i class=\"icon-cog icon-spin\"></i>&nbsp;" + percentDone + "</span>");
-            },
-            function(result) {
-              if (result.overall === 'SUCCESS') {
-                $("#analysis-{{ analysis.uuid }}-status")
-                .html("<span class=\"badge badge-info\"><i class=\"icon-ok\"></i></span>");
-              }
-              else {
-                $("#analysis-{{ analysis.uuid }}-status")
-                .html("<span class=\"badge badge-info\"><i class=\"icon-warning-sign\"></i></span>");
-              }
-              // analysis has finished successfully - no more monitoring required
-              clearInterval( intervalIds["{{ analysis.uuid }}"] );
-              delete callbacks["{{ analysis.uuid }}"];
-              delete monitors["{{ analysis.uuid }}"];
-            }
-          );
-        };
+              callbacks["{{ analysis.uuid }}"] = function () {
+                  monitors["{{ analysis.uuid }}"].getAnalysisProgress(
+                          function (percentDone) {
+                              $("#analysis-{{ analysis.uuid }}-status")
+                                      .html("<span class=\"badge\"><i class=\"icon-cog icon-spin\"></i>&nbsp;" + percentDone + "</span>");
+                          },
+                          function (result) {
+                              if (result.overall === 'SUCCESS') {
+                                  $("#analysis-{{ analysis.uuid }}-status")
+                                          .html("<span class=\"badge badge-info\"><i class=\"icon-ok\"></i></span>");
+                              }
+                              else {
+                                  $("#analysis-{{ analysis.uuid }}-status")
+                                          .html("<span class=\"badge badge-info\"><i class=\"icon-warning-sign\"></i></span>");
+                              }
+                              // analysis has finished successfully - no more monitoring required
+                              clearInterval(intervalIds["{{ analysis.uuid }}"]);
+                              delete callbacks["{{ analysis.uuid }}"];
+                              delete monitors["{{ analysis.uuid }}"];
+                          }
+                  );
+              };
 
-        //monitors["{{ analysis.uuid }}"].isAnalysisRunning( callbacks["{{ analysis.uuid }}"]() );
-        callbacks["{{ analysis.uuid }}"]();
+              //monitors["{{ analysis.uuid }}"].isAnalysisRunning( callbacks["{{ analysis.uuid }}"]() );
+              callbacks["{{ analysis.uuid }}"]();
 
-        intervalIds["{{ analysis.uuid }}"] = setInterval( callbacks["{{ analysis.uuid }}"], 5000 );
+              intervalIds["{{ analysis.uuid }}"] = setInterval(callbacks["{{ analysis.uuid }}"], 5000);
+          }
+          {% endif %}
       {% endfor %}
     });
   </script>
