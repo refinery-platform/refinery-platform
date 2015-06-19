@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from celery.task.sets import TaskSet
 from data_set_manager.tasks import parse_isatab
 from django.core.management.base import BaseCommand, CommandError
@@ -55,10 +56,16 @@ class Command(BaseCommand):
         """
         Get a list of all the isatab files in base_isa_dir.
         """
-        isatab_dict = dict()
+        isatab_dict = OrderedDict()
         for root, dirs, filenames in os.walk(base_isa_dir):
             for filename in filenames:
-                isatab_dict[filename] = [os.path.join(root, filename)]
+                _, extension = os.path.splitext(filename)
+
+                if extension.lower() == '.zip':
+                    isatab_dict[filename] = [os.path.join(root, filename)]
+
+        isatab_dict = OrderedDict(sorted(isatab_dict.iteritems()))
+
 
         """
         If isatab_dict is empty, then base_isa_dir is a file, not a directory.
