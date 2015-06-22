@@ -7,7 +7,8 @@ Created on Feb 20, 2012
 from core.models import Analysis, AnalysisNodeConnection, AnalysisResult, \
     DataSet, DiskQuota, ExtendedGroup, InvestigationLink, NodePair, NodeRelationship, \
     NodeSet, Project, UserProfile, Workflow, WorkflowDataInput, WorkflowDataInputMap, \
-    WorkflowEngine, WorkflowFilesDL, WorkflowInputRelationships, Download, ExternalToolStatus
+    WorkflowEngine, WorkflowFilesDL, WorkflowInputRelationships, Download, ExternalToolStatus, \
+    Invitation
 from django.contrib import admin
 from django.db import models
 from django_extensions.admin import ForeignKeyAutocompleteAdmin
@@ -64,3 +65,4 @@ admin.site.register(NodeRelationship)
 admin.site.register(WorkflowInputRelationships)
 admin.site.register(WorkflowFilesDL)
 admin.site.register(NodeSet)
+admin.site.register(Invitation)

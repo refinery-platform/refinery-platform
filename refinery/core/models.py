@@ -151,8 +151,8 @@ def create_catch_all_project(sender, user, request, **kwargs):
         user.get_profile().save()
         messages.success(
             request,
-            "If you don't want to fill your profile out now, you can go to the "
-            "<a href='/'>homepage</a>.",
+            "If you don't want to fill your profile out now, you can go to "
+            "the <a href='/'>homepage</a>.",
             extra_tags='safe',
             fail_silently=True
         )   # needed to avoid MessageFailure when running tests
@@ -163,7 +163,7 @@ user_logged_in.connect(create_catch_all_project)
 
 class BaseResource (models.Model):
     '''
-    Abstract base class for core resources such as projects, analyses, data sets
+    Abstract base class for core resources such as projects, analyses, datasets
     and so on.
 
     See
@@ -178,7 +178,7 @@ class BaseResource (models.Model):
     description = models.TextField(max_length=5000, blank=True)
     slug = models.CharField(max_length=250, blank=True, null=True)
 
-    is_public = None
+    public = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.name + " (" + self.uuid + ")"
@@ -195,9 +195,9 @@ class OwnableResource (BaseResource):
     permissions, where "xxx" is the simple_modelname
 
     '''
-    is_owner = None
-    owner_id = None
-    owner_username = None
+    is_owner = models.BooleanField(default=False)
+    owner_id = models.IntegerField(null=True)
+    owner_username = models.CharField(max_length=250, null=True)
 
     def __unicode__(self):
         return self.name
@@ -364,7 +364,7 @@ class ManageableResource:
 
 class DataSet(SharableResource):
     # TODO: add function to restore earlier version
-    # TODO: add collections (of assays in the investigation) and associate those
+    # TODO: add collections (of assays in the investigation) and associate them
     # with the versions
     # total number of files in this data set
     file_count = models.IntegerField(blank=True, null=True, default=0)
@@ -372,7 +372,7 @@ class DataSet(SharableResource):
     file_size = models.BigIntegerField(blank=True, null=True, default=0)
     # accession number (e.g. "E-MTAB-2646")
     accession = models.CharField(max_length=32, blank=True,  null=True)
-    # name of the source database for the accession number (e.g. "ArrayExpress")
+    # name of source database for the accession number (e.g. "ArrayExpress")
     accession_source = models.CharField(max_length=128, blank=True,  null=True)
 
     class Meta:
@@ -925,8 +925,8 @@ def create_manager_group(sender, instance, created, **kwargs):
     if created and \
        instance.manager_group is None and \
        not instance.name.startswith(".Managers "):
-        # create the manager group for the newly created group (but don't create
-        # manager groups for manager groups ...)
+        # create the manager group for the newly created group
+        # (but don't create manager groups for manager groups ...)
         post_save.disconnect(create_manager_group, sender=ExtendedGroup)
         instance.manager_group = ExtendedGroup.objects.create(
             name=unicode(".Managers " + instance.uuid)
@@ -1224,8 +1224,8 @@ class RefineryLDAPBackend(LDAPBackend):
                 email_address_list = ldap_user.attrs.data[email_attribute_name]
             except KeyError:
                 logger.error(
-                    "Cannot send welcome email to user '{}': attribute '{}' was"
-                    " not provided by the LDAP server"
+                    "Cannot send welcome email to user '{}': attribute '{}'"
+                    " was not provided by the LDAP server"
                     .format(username, email_attribute_name)
                 )
                 return user, created
@@ -1374,6 +1374,7 @@ class GroupManagementObject(object):
         self.perm_list = perm_list
         self.can_edit = can_edit
 
+
 class UserAuthenticationObject(object):
     def __init__(
             self,
@@ -1385,3 +1386,20 @@ class UserAuthenticationObject(object):
         self.is_admin = is_admin
         self.id = id
         self.username = username
+        
+
+class Invitation(models.Model):
+    token_uuid = UUIDField(unique=True, auto=True)
+    group_id = models.IntegerField(blank=True, null=True)
+    created = models.DateTimeField(editable=False, null=True)
+    expires = models.DateTimeField(editable=False, null=True)
+
+    def __unicode__(self):
+        return self.token_uuid + ' | ' + str(self.group_id)
+
+    def save(self, *arg, **kwargs):
+        if not self.id:
+          self.created = datetime.now()
+        
+        return super(Invitation, self).save(*arg, **kwargs)
+
