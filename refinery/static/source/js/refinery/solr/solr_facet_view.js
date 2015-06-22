@@ -136,9 +136,10 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
 		if ( isHiddenField ) {
 			continue;
 		}
-				
+
 	
-		if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal ) {
+		if ( attribute.is_facet && attribute.is_exposed && !attribute.is_internal &&
+			self._countFacetValues(attribute.solr_field, facetCounts) > 1 ) {
 			//facets[attribute.solr_field] = [];
       //Commented out the following methods which are not being used.
 	    //var counts = self._query.getNumberOfFacetValues( attribute.solr_field );
@@ -263,11 +264,15 @@ SolrFacetView.prototype._generateTree = function( solrResponse ) {
     }
 }
 
+SolrFacetView.prototype._countFacetValues = function( keyName, facetObj ) {
+	return Object.keys(facetObj[keyName]).length;
+}
+
 SolrFacetView.prototype._getFacetLabel = function( facet, facetObj ) {
 	var self = this;
 	var indicator = ""
 
-  var facetValueCount = Object.keys(facetObj[facet]).length;
+  var facetValueCount = self._countFacetValues(facet,facetObj);
 
 	if ( self._isFacetExpanded( facet ) ) {
 		indicator = "icon-caret-down";
