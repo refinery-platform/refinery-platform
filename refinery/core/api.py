@@ -1285,3 +1285,5 @@ class InvitationResource(ModelResource):
 
         return HttpNoContent()
 
+
+
