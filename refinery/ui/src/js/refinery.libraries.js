@@ -1,3 +1,4 @@
 angular
   .module('refineryApp')
-  .constant('$', jQuery);
+  .constant('$', window.jQuery)
+  .constant('_', window.lodash3);
