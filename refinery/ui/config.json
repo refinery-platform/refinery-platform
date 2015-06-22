@@ -27,6 +27,7 @@
       "angular-resource/angular-resource.min.js",
       "angular-resource/angular-resource.min.js.map",
       "angular-ui-router/release/angular-ui-router.min.js",
+      "angular-ui-utils/scroll.js",
       "angular-ui-utils/scroll.min.js",
       "angular-ui-select2/release/select2.min.js",
       "angular-ui-select2/release/select2.min.js.map",

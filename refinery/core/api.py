@@ -265,7 +265,7 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
             'name', 'id', 'uuid', 'summary', 'share_list', 'public',
             'is_owner', 'owner_id', 'owner_username'
         ]
-        # authentication = SessionAuthentication
+        authentication = SessionAuthentication
         # authorization = GuardianAuthorization
         authorization = Authorization()
 
