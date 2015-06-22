@@ -107,14 +107,6 @@ class SharableResourceAPIInterface(object):
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(i, 'share_list', self.get_share_list(user, i))
 
-            if 'show_public' in kwargs and kwargs['show_public']:
-                setattr(i, 'public', i.is_public())
-
-            if 'show_owner_info' in kwargs and kwargs['show_owner_info']:
-                setattr(i, 'owner_id', i.get_owner().id)
-                setattr(i, 'owner_username', i.get_owner().username)
-                setattr(i, 'is_owner', i.get_owner().id == user.id)
-
         res_list = self.do_filtering(res_list, request.GET)
         return res_list
 
@@ -241,6 +233,16 @@ class SharableResourceAPIInterface(object):
         else:
             return HttpMethodNotAllowed()
 
+    # Hydrate / dehydration cycle code.
+    def dehydrate(self, bundle):
+        bundle = super(ModelResource, self).dehydrate(bundle)
+        obj = bundle.obj
+        bundle.data['public'] = obj.is_public()
+        bundle.data['is_owner'] = obj.get_owner().id == bundle.request.user.id
+        bundle.data['owner_id'] = obj.get_owner().id
+        bundle.data['owner_username'] = obj.get_owner().username
+        return bundle
+
 
 class ProjectResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
@@ -254,10 +256,7 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         queryset = Project.objects.all()
         resource_name = 'projects'
         detail_uri_name = 'uuid'
-        fields = [
-            'name', 'id', 'uuid', 'summary', 'share_list', 'public',
-            'is_owner', 'owner_id', 'owner_username'
-        ]
+        fields = ['name', 'id', 'uuid', 'summary']
         # authentication = SessionAuthentication
         # authorization = GuardianAuthorization
         authorization = Authorization()
@@ -278,6 +277,9 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
 
     def get_object_list(self, request):
         return SharableResourceAPIInterface.get_object_list(self, request)
+
+    def dehydrate(self, bundle):
+        return SharableResourceAPIInterface.dehydrate(self, bundle)
 
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
@@ -309,6 +311,23 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                 name='api_%s_autocomplete' % (self._meta.resource_name)),
         ]
         return prepend_urls_list
+
+    def obj_get(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
+
+    def obj_get_list(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_get_list(self,
+                                                         bundle,
+                                                         **kwargs)
+
+    def get_object_list(self, request):
+        return SharableResourceAPIInterface.get_object_list(self, request)
+
+    def obj_create(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
+
+    def dehydrate(self, bundle):
+        return SharableResourceAPIInterface.dehydrate(self, bundle)
 
     def get_search(self, request, **kwargs):
         query = request.GET.get('q', None)
@@ -379,9 +398,6 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         self.log_throttled_access(request)
         return self.build_response(request, object_list, **kwargs)
 
-    def obj_create(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
-
 
 class WorkflowResource(ModelResource, SharableResourceAPIInterface):
     input_relationships = fields.ToManyField(
@@ -406,7 +422,23 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
     def prepend_urls(self):
         return SharableResourceAPIInterface.prepend_urls(self)
 
+    def obj_get(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
+
+    def obj_get_list(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_get_list(self,
+                                                         bundle,
+                                                         **kwargs)
+
+    def get_object_list(self, request):
+        return SharableResourceAPIInterface.get_object_list(self, request)
+
+    def obj_create(self, bundle, **kwargs):
+        return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
+
     def dehydrate(self, bundle):
+        bundle = SharableResoruceAPIInterface.dehydrate(self, bundle)
+
         # detect if detail
         if self.get_resource_uri(bundle) == bundle.request.path:
             # detail detected, add graph as json
@@ -421,9 +453,6 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         bundle.data['galaxy_instance_identifier'] = \
             bundle.obj.workflow_engine.instance.api_key
         return bundle
-
-    def obj_create(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
 
 
 class WorkflowInputRelationshipsResource(ModelResource):
