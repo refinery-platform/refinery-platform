@@ -81,6 +81,17 @@ class SharableResourceAPIInterface(object):
                 'perms': self.get_perms(res, g)},
             groups_in)
 
+    def groups_with_user(self, user):
+        return filter(lambda g: user in g.user_set.all(), Group.objects.all())
+
+    def has_access(self, user, res):
+        for i in self.groups_with_user(user):
+            perms = self.get_perms(res, i)
+            if perms['read'] or perms['change'] or res.is_public():
+                return True
+
+        return False
+
     def list_to_queryset(self, res_list):
         return self.res_type.objects.filter(id__in=[r.id for r in res_list])
 
@@ -112,6 +123,10 @@ class SharableResourceAPIInterface(object):
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(i, 'share_list', self.get_share_list(user, i))
 
+        # Filter for access rights.
+        res_list = filter(lambda r: self.has_access(user, r), res_list)
+        
+        # Filter for query flags.
         res_list = self.do_filtering(res_list, request.GET)
         return res_list
 
