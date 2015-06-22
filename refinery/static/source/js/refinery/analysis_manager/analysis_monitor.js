@@ -237,7 +237,6 @@ AnalysisMonitor.prototype.cancelAnalysis = function(successCallback,errorCallbac
 	$.ajax({
      url: self.baseUrl + "/analysis_manager/analysis_cancel/",
      type:"POST",
-     dataType: "json",
      data: { csrfmiddlewaretoken: self.crsfMiddlewareToken, uuid: self.uuid },
      success: function( result ) {
      	successCallback( result );
