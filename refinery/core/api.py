@@ -87,6 +87,11 @@ class SharableResourceAPIInterface(object):
     def has_access(self, user, res):
         for i in self.groups_with_user(user):
             perms = self.get_perms(res, i)
+            owner = res.get_owner()
+
+            if owner and owner.id == user.id:
+                return True
+
             if perms['read'] or perms['change'] or res.is_public():
                 return True
 
@@ -115,10 +120,11 @@ class SharableResourceAPIInterface(object):
     # Turns on certain things depending on flags
     def build_res_list(self, user, res_list, request, **kwargs):
         for i in res_list:
+            own = i.get_owner()
             setattr(i, 'public', i.is_public())
-            setattr(i, 'owner_id', i.get_owner().id)
-            setattr(i, 'is_owner', i.get_owner().id == user.id)
-            setattr(i, 'owner_username', i.get_owner().username)
+            setattr(i, 'owner_id', None if own is None else own.id)
+            setattr(i, 'is_owner', None if own is None else own.id == user.id)
+            setattr(i, 'owner_username', None if own is None else own.username)
 
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(i, 'share_list', self.get_share_list(user, i))
