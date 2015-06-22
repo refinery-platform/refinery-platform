@@ -314,6 +314,10 @@ LOGGING = {
     },
 }
 
+# Expiration time of a token API that was originally designed to handle group
+# invitations using uuid-based tokens.
+TOKEN_DURATION = 1
+
 # send email via SMTP, can be replaced with
 # "django.core.mail.backends.console.EmailBackend" to send emails to the console
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'

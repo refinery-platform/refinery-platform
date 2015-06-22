@@ -8,6 +8,7 @@ import json
 import logging
 import re
 import uuid
+import settings
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group
@@ -1265,7 +1266,9 @@ class InvitationResource(ModelResource):
                 return HttpUnauthorized()
 
             inv = Invitation(token_uuid=uuid.uuid1(), group_id=group.id)
-            inv.expires = datetime.datetime.now() + datetime.timedelta(days=3)
+            now = datetime.datetime.now()
+            token_duration = datetime.timedelta(days=settings.TOKEN_DURATION)
+            inv.expires = now + token_duration
             inv.save()
             return HttpResponse(inv.token_uuid)
         else:

@@ -178,7 +178,6 @@ class BaseResource (models.Model):
     description = models.TextField(max_length=5000, blank=True)
     slug = models.CharField(max_length=250, blank=True, null=True)
 
-    public = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.name + " (" + self.uuid + ")"
@@ -247,6 +246,7 @@ class SharableResource (OwnableResource):
     permissions, where "xxx" is the simple_modelname
     '''
     share_list = None
+    public = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.name
