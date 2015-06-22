@@ -1,14 +1,11 @@
-function DataSetsExplorationCtrl ($stateParams) {
+function DataSetsExplorationCtrl () {
   var that = this;
 
-  that.test = 'Data Set Exploration';
-
-  console.log('Uhhh we initialize  DataSetsExplorationCtrl');
+  window.sizing();
 }
 
 angular
   .module('refineryDashboard')
   .controller('DataSetsExplorationCtrl', [
-    '$stateParams',
     DataSetsExplorationCtrl
   ]);

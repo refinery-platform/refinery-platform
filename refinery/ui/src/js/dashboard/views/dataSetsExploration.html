@@ -4,10 +4,13 @@
       <span class="refinery-header-left">
         <h3><i class="m-r-1-4 icon-file"></i>Data Sets</h3>
       </span>
-      <span class="refinery-header-right" ng-if="sharingEnabled">
-        <a href="./data_set_manager/import/isa-tab-form/" class="no-underline-hover">
-          <i class="icon-plus-sign"></i>
-        </a>
+      <span class="refinery-header-right">
+        <button
+          class="no-underline-hover"
+          ng-click="dashboard.toggleDataSetsExploration()">
+          <i class="icon-chevron-sign-left" title="Explore data sets"></i>
+          Close
+        </button>
       </span>
     </div>
 
@@ -23,7 +26,6 @@
     </form>
 
     <div class="refinery-panel-content scrollable">
-      {{ dse.test }}
       <ul>
         <li ng-repeat="dataSet in dse.dataSets.objects">{{ dse.resource_uri }}</li>
       </ul>

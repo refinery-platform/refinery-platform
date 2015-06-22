@@ -1,11 +1,25 @@
-<div class="span4 expandable" ng-class="{'full-width': dashboard.expandDataSetPanel}">
+<div
+  class="span4 expandable"
+  ng-class="{'full-width': dashboard.expandDataSetPanel}">
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
-        <h3><i class="m-r-1-4 icon-file"></i>Data Sets</h3>
+        <h3>
+          <a ui-sref="dataSetsExploration">
+            <i class="m-r-1-4 icon-file"></i>Data Sets
+          </a>
+        </h3>
       </span>
-      <span class="refinery-header-right" ng-if="sharingEnabled">
-        <a href="./data_set_manager/import/isa-tab-form/" class="no-underline-hover">
+      <span class="refinery-header-right">
+        <button
+          class="no-underline-hover"
+          ng-click="dashboard.toggleDataSetsExploration()">
+          <i class="icon-compass" title="Explore data sets"></i>
+        </button>
+        <a
+          href="./data_set_manager/import/isa-tab-form/"
+          class="no-underline-hover"
+          ng-if="sharingEnabled">
           <i class="icon-plus-sign"></i>
         </a>
       </span>
@@ -18,14 +32,8 @@
         class="search-query"
         placeholder="Search"
         ng-model="dashboard.searchQueryDataSets"
-        ng-blur="dashboard.blurSearchDataSetsInput()"
-        ng-focus="dashboard.focusSearchDataSetsInput()"
-        ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)"
-        refinery-dashboard-focus>
+        ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
     </form>
-
-    <p ng-if="dashboard.dataSetInputFocus">Focus</p>
-    <p ng-if="!dashboard.dataSetInputFocus">Blur</p>
 
     <div class="refinery-panel-header">
       <div class="floatbox">
@@ -46,14 +54,14 @@
         ng-if="dashboard.dataSets.total > 0">
         <li
           ui-scroll="dataSet in dashboard.dataSets"
-          adapter="launchPad.dataSetsAdapter">
+          adapter="dashboard.dataSetsAdapter">
           <i class="icon-user"></i>
           <a ng-href="data_sets/{{ dataSet.uuid }}">{{ dataSet.name }}</a>
         </li>
       </ul>
       <div
         class="refinery-request-loading"
-        ng-if="launchPad.dataSetsAdapter.isLoading">
+        ng-if="dashboard.dataSetsAdapter.isLoading">
         <span class="refinery-spinner"></span>
       </div>
       <span
@@ -139,7 +147,9 @@
         <h3><i class="m-r-1-4 icon-cog"></i>Workflows</h3>
       </span>
       <span class="refinery-header-right" ng-if="sharingEnabled">
-        <a href="./data_set_manager/import/isa-tab-form/" class="no-underline-hover">
+        <a
+          href="./data_set_manager/import/isa-tab-form/"
+          class="no-underline-hover">
           <i class="icon-plus-sign"></i>
         </a>
       </span>

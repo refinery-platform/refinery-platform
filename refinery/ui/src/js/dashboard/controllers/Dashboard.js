@@ -1,25 +1,38 @@
 function DashboardCtrl (
+  // Angular modules
   $q,
   $state,
   $timeout,
+  // 3rd party library
+  _,
+  // Refinery modules
+  settings,
+  solrService,
+  dataSetService,
   projectService,
   analysisService,
   workflowService,
   dashboardDataSetService,
-  dataSetSearchInputService) {
+  dashboardDataSetSourceService) {
   // Store the context.
   var that = this;
 
   // Construct Angular modules
+  that.$q = $q;
   that.$state = $state;
   that.$timeout = $timeout;
-  that.$q = $q;
+
+  // Construct 3rd party library
+  that._ = _;
 
   // Construct Refinery modules
+  that.solrService = solrService;
+  that.dataSetService = dataSetService;
   that.projectService = projectService;
   that.analysisService = analysisService;
   that.workflowService = workflowService;
-  that.dataSetSearchInputService = dataSetSearchInputService;
+  that.dashboardDataSetSourceService = dashboardDataSetSourceService;
+
 
   // Construct class variables
   that.dataSetServiceLoading = false;
@@ -38,8 +51,27 @@ function DashboardCtrl (
   });
 
   that.dataSets = dashboardDataSetService;
+
+  that.searchDataSets = that._.debounce(function (name) {
+    if (name) {
+      // Switch source of data sets.
+      that.setDataSetSource(name);
+      // Trigger uiScroll to revaluate
+
+    } else {
+      that.setDataSetSource();
+    }
+  }, settings.debounceSearch);
+
+  // Initilize data set source
+  that.setDataSetSource();
 }
 
+/*
+ * -----------------------------------------------------------------------------
+ * Define prototype
+ * -----------------------------------------------------------------------------
+ */
 Object.defineProperty(
   DashboardCtrl.prototype,
   'expandDataSetPanel', {
@@ -49,39 +81,69 @@ Object.defineProperty(
     writable: true
 });
 
-Object.defineProperty(
-  DashboardCtrl.prototype,
-  'dataSetInputFocus', {
-    enumerable: true,
-    configurable: false,
-    value: false,
-    writable: true
-});
-
-DashboardCtrl.prototype.searchDataSets = function (name) {
+DashboardCtrl.prototype.toggleDataSetsExploration = function () {
   var that = this;
 
-  if (name) {
-    that.expandDataSetPanel = true;
-    that.$timeout(function () {
+  that.expandDataSetPanel = !that.expandDataSetPanel;
+  that.$timeout(function () {
+    if (that.expandDataSetPanel === true) {
       that.$state.go('dataSetsExploration');
-    }, 250);
-  } else {
-    that.expandDataSetPanel = false;
-    that.$timeout(function () {
+    } else {
       that.$state.go('launchPad');
-    }, 250);
+    }
+  }, 250);
+};
+
+DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
+  var that = this;
+
+  if (searchQuery) {
+    that.dashboardDataSetSourceService.setSource(function (limit, offset) {
+      var deferred = that.$q.defer(),
+          query = that.solrService.get({
+            df: 'text',
+            fl: 'name,uuid',
+            q: searchQuery,
+            rows: limit,
+            start: offset
+          }, {
+            index: 'core'
+          });
+
+      query
+        .$promise
+        .then(
+          function (data) {
+            deferred.resolve({
+              meta: {
+                total_count: data.response.numFound
+              },
+              objects: data.response.docs
+            });
+          },
+          function (error) {
+            deferred.reject(error);
+          }
+        );
+
+      return deferred.promise;
+    });
+    // NOTE Index / offset is not reset to 0!
+    that.dataSetsAdapter.applyUpdates(function (item, scope) {
+      return [];
+    });
+    that.dataSets.update('search/' + searchQuery);
+  } else {
+    that.dashboardDataSetSourceService.setSource(function (limit, offset) {
+      var query = that.dataSetService.query({
+        limit: limit,
+        offset: offset
+      });
+
+      return query.$promise;
+    });
+    that.dataSets.update('all');
   }
-};
-
-DashboardCtrl.prototype.blurSearchDataSetsInput = function () {
-  this.dataSetSearchInputService.focus = false;
-  console.log('Bye', this.dataSetSearchInputService.focus);
-};
-
-DashboardCtrl.prototype.focusSearchDataSetsInput = function () {
-  this.dataSetSearchInputService.focus = true;
-  console.log('Hola', this.dataSetSearchInputService.focus);
 };
 
 DashboardCtrl.prototype.getProjects = function (limit, offset) {
@@ -157,10 +219,14 @@ angular
     '$q',
     '$state',
     '$timeout',
+    '_',
+    'settings',
+    'solrService',
+    'dataSetService',
     'projectService',
     'analysisService',
     'workflowService',
     'dashboardDataSetService',
-    'dataSetSearchInputService',
+    'dashboardDataSetSourceService',
     DashboardCtrl
   ]);

@@ -1,7 +1,7 @@
 angular
   .module('refineryDashboard')
-  .factory('dashboardDataSetService', ['$timeout', 'dataSetService',
-    function ($timeout, dataSetService) {
+  .factory('dashboardDataSetService', ['dashboardDataSetSourceService',
+    function (dashboardDataSetSourceService) {
 
       var dataSets = {
         /**
@@ -25,8 +25,8 @@ angular
 
           /**
            * Get cached items wrapper.
-           * @param  {number}   offset  First item returned by the API.
-           * @param  {number}   limit   Number of items returned by the API.
+           * @param  {Number}   offset  First item returned by the API.
+           * @param  {Number}   limit   Number of items returned by the API.
            * @param  {function} success Callback on success.
            * @return {(boolean|function)}
            */
@@ -48,8 +48,8 @@ angular
 
           /**
            * Get cached items.
-           * @param  {number}   offset  First item returned by the API.
-           * @param  {number}   limit   Number of items returned by the API.
+           * @param  {Number}   offset  First item returned by the API.
+           * @param  {Number}   limit   Number of items returned by the API.
            * @param  {function} success Callback on success.
            * @return {boolean}          Got cached items?
            */
@@ -57,10 +57,10 @@ angular
             var results = [];
 
             for (var i = offset, end = offset + limit; i < end; i++) {
-              if (!dataSets.cache.items.hasOwnProperty(i)) {
+              if (!this.items.hasOwnProperty(i)) {
                 return;
               }
-              results.push(dataSets.cache.items[i]);
+              results.push(this.items[i]);
             }
 
             success(results);
@@ -70,25 +70,28 @@ angular
 
           /**
            * Store results in the cache.
-           * @param  {number} offset  First item returned by the API.
-           * @param  {number} limit   Number of items returned by the API.
+           * @param  {Number} offset  First item returned by the API.
+           * @param  {Number} limit   Number of items returned by the API.
            * @param  {Array}  results Array of results.
            */
           saveItems: function (offset, limit, results) {
+            console.log('dashboardDataSetService', results);
             for (var i = 0, len = results.length; i < len; i++) {
-              dataSets.cache.items[offset + i] = results[i];
+              this.items[offset + i] = results[i];
             }
           }
         },
 
         /**
          * Query the dataSetService service.
-         * @param  {number}   offset  First item returned by the API.
-         * @param  {number}   limit   Number of items returned by the API.
+         * @param  {Number}   offset  First item returned by the API.
+         * @param  {Number}   limit   Number of items returned by the API.
          * @param  {function} success Callback on success.
          * @return {boolean}
          */
         get: function (offset, limit, success) {
+          offset--;
+
           // Avoid negative offset API calls.
           if (offset < 0) {
             success([]);
@@ -96,21 +99,20 @@ angular
           }
 
           // Avoid API calls when the total is reached.
-          if (offset >= dataSets.total) {
+          if (offset >= this.total) {
             success([]);
             return;
           }
 
-          var query = dataSetService.query({
-                limit: limit,
-                offset: offset
-              });
+          console.log('REQUEST:', offset, limit);
+
+          var query = dashboardDataSetSourceService.get(limit, offset);
 
           query
-            .$promise
             .then(
               // Success
               function (response) {
+                console.log('RESPONSE:', response);
                 success(response.objects);
                 if (!dataSets.initializedWithData) {
                   dataSets.initializedWithData = true;
@@ -125,14 +127,30 @@ angular
         },
 
         /**
-         * Total number of data sets available.
-         * @type {number}
+         * Unique name of this data collection. uiScroll watches this reloads
+         * name and reloads whenever it changes.
+         * @type {Number}
          */
-        total: Number.POSITIVE_INFINITY
+        revision: 0,
+
+        /**
+         * Total number of data sets available.
+         * @type {Number}
+         */
+        total: Number.POSITIVE_INFINITY,
+
+        /**
+         * Utility function that triggers the initialization and revision change
+         * @param  {Number} revision Unique revision name.
+         */
+        update: function (revision) {
+          this.items = {};
+          this.revision = revision;
+        }
       };
 
       // Init the cache to get started.
-      dataSets.cache.initialize();
+      // dataSets.cache.initialize();
 
       return dataSets;
     }
