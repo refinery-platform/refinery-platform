@@ -111,6 +111,10 @@ class SharableResourceAPIInterface(object):
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(i, 'share_list', self.get_share_list(user, i))
 
+        # Filter for access rights.
+        res_list = filter(lambda r: self.has_access(user, r), res_list)
+        
+        # Filter for query flags.
         res_list = self.do_filtering(res_list, request.GET)
         return res_list
 
