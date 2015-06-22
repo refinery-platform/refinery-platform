@@ -81,6 +81,17 @@ class SharableResourceAPIInterface(object):
                 'perms': self.get_perms(res, g)},
             groups_in)
 
+    def groups_with_user(self, user):
+        return filter(lambda g: user in g.user_set.all(), Group.objects.all())
+
+    def has_access(self, user, res):
+        for i in self.groups_with_user(user):
+            perms = self.get_perms(res, i)
+            if perms['read'] or perms['change'] or res.is_public():
+                return True
+
+        return False
+
     def list_to_queryset(self, res_list):
         return self.res_type.objects.filter(id__in=[r.id for r in res_list])
 
@@ -104,9 +115,18 @@ class SharableResourceAPIInterface(object):
     # Turns on certain things depending on flags
     def build_res_list(self, user, res_list, request, **kwargs):
         for i in res_list:
+            setattr(i, 'public', i.is_public())
+            setattr(i, 'owner_id', i.get_owner().id)
+            setattr(i, 'is_owner', i.get_owner().id == user.id)
+            setattr(i, 'owner_username', i.get_owner().username)
+
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(i, 'share_list', self.get_share_list(user, i))
 
+        # Filter for access rights.
+        res_list = filter(lambda r: self.has_access(user, r), res_list)
+        
+        # Filter for query flags.
         res_list = self.do_filtering(res_list, request.GET)
         return res_list
 
@@ -157,7 +177,6 @@ class SharableResourceAPIInterface(object):
         obj = ModelResource.obj_get(self, bundle, **kwargs)
         request = bundle.request
         kwargs['show_public'] = True
-        kwargs['show_owner_info'] = True
         return self.build_res_list(request.user, [obj], request, **kwargs)[0]
 
     def obj_get_list(self, bundle, **kwargs):
@@ -167,7 +186,6 @@ class SharableResourceAPIInterface(object):
         obj_list = ModelResource.get_object_list(self, request)
         kwargs = {}
         kwargs['show_public'] = True
-        kwargs['show_owner_info'] = True
         r_list = self.build_res_list(request.user, obj_list, request, **kwargs)
         return r_list
 
@@ -191,7 +209,6 @@ class SharableResourceAPIInterface(object):
 
         if request.method == 'GET':
             kwargs['sharing'] = True
-            kwargs['show_owner_info'] = True
             return self.process_get(request, res, **kwargs)
         elif request.method == 'PATCH':
             data = json.loads(request.raw_post_data)
@@ -222,7 +239,6 @@ class SharableResourceAPIInterface(object):
     def res_sharing_list(self, request, **kwargs):
         if request.method == 'GET':
             kwargs['sharing'] = True
-            kwargs['show_owner_info'] = True
             res_list = filter(
                 lambda r:
                     (r.get_owner() is not None and
@@ -233,19 +249,13 @@ class SharableResourceAPIInterface(object):
         else:
             return HttpMethodNotAllowed()
 
-    # Hydrate / dehydration cycle code.
-    def dehydrate(self, bundle):
-        bundle = super(ModelResource, self).dehydrate(bundle)
-        obj = bundle.obj
-        bundle.data['public'] = obj.is_public()
-        bundle.data['is_owner'] = obj.get_owner().id == bundle.request.user.id
-        bundle.data['owner_id'] = obj.get_owner().id
-        bundle.data['owner_username'] = obj.get_owner().username
-        return bundle
-
 
 class ProjectResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
+    public = fields.BooleanField(attribute='public', null=True)
+    is_owner = fields.BooleanField(attribute='is_owner', null=True)
+    owner_id = fields.IntegerField(attribute='owner_id', null=True)
+    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, Project)
@@ -278,12 +288,13 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
     def get_object_list(self, request):
         return SharableResourceAPIInterface.get_object_list(self, request)
 
-    def dehydrate(self, bundle):
-        return SharableResourceAPIInterface.dehydrate(self, bundle)
-
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
+    public = fields.BooleanField(attribute='public', null=True)
+    is_owner = fields.BooleanField(attribute='is_owner', null=True)
+    owner_id = fields.IntegerField(attribute='owner_id', null=True)
+    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, DataSet)
@@ -325,9 +336,6 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
-
-    def dehydrate(self, bundle):
-        return SharableResourceAPIInterface.dehydrate(self, bundle)
 
     def get_search(self, request, **kwargs):
         query = request.GET.get('q', None)
@@ -404,6 +412,10 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         "core.api.WorkflowInputRelationshipsResource", 'input_relationships',
         full=True)
     share_list = fields.ListField(attribute='share_list', null=True)
+    public = fields.BooleanField(attribute='public', null=True)
+    is_owner = fields.BooleanField(attribute='is_owner', null=True)
+    owner_id = fields.IntegerField(attribute='owner_id', null=True)
+    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, Workflow)
@@ -437,8 +449,6 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
 
     def dehydrate(self, bundle):
-        bundle = SharableResoruceAPIInterface.dehydrate(self, bundle)
-
         # detect if detail
         if self.get_resource_uri(bundle) == bundle.request.path:
             # detail detected, add graph as json
