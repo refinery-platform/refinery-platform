@@ -12,6 +12,7 @@
 # serve to show the default.
 
 import sys, os
+from mock import Mock as MagicMock
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -253,3 +254,14 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+
+# the python-ldap module doesn't compile in the Read The Docs environment
+# https://github.com/parklab/refinery-platform/issues/531
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+
+MOCK_MODULES = ['python-ldap']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
