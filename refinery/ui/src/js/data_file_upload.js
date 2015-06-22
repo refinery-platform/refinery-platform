@@ -7,7 +7,7 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
     $httpProvider.defaults.xsrfCookieName = 'csrftoken';
     $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
     // file upload settings:
-    //angular.extend(fileUploadProvider.defaults, {
+    angular.extend(fileUploadProvider.defaults, {
     //  maxChunkSize: chunkSize,
     //  sequentialUploads: true,
     //  autoUpload: false,
@@ -15,8 +15,8 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
     //  chunkdone: chunkDone,
     //  submit: uploadSubmit,
     //  done: uploadDone,
-    //  fail: uploadFail
-    //});
+    //  always: uploadFail
+    });
   }
 ])
 
@@ -32,8 +32,7 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
       formData: getFormData,
       chunkdone: chunkDone,
       submit: uploadSubmit,
-      done: uploadDone,
-      fail: uploadFail
+      done: uploadDone
     };
     $scope.loadingFiles = false;
     //$http.get(url)
@@ -146,9 +145,4 @@ var uploadDone = function(e, data) {
     }
   });
   formData = [];  // clear upload_id for the next upload
-};
-
-var uploadFail = function(e, data) {
-  "use strict";
-  console.log(data.errorThrown, data.textStatus);
 };
