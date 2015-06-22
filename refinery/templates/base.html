@@ -185,6 +185,12 @@
   <script src="{% static "vendor/angular-bootstrap/ui-bootstrap.min.js" %}"></script>
   <script src="{% static "vendor/angular-bootstrap/ui-bootstrap-tpls.min.js" %}"></script>
   <script src="{% static "js/bootstrap/bootstrap.min.js" %}"></script>
+  <script src="{% static "vendor/lodash-3/lodash.min.js" %}"></script>
+  <script type="text/javascript">
+    // Assign lodash v3.9.3 to a special variable so it doesn't conflict with
+    // lodash v2 or other libraries like underscore.
+    window.lodash3 = _.noConflict();
+  </script>
 
   <!-- Refinery Angular App -->
   <script src="{% static "js/refinery.js" %}"></script>

@@ -46,6 +46,7 @@
       "jquery/dist/jquery.min.js",
       "jquery/dist/jquery.min.map",
       "lodash/dist/lodash.min.js",
+      "lodash-3/lodash.min.js",
       "ng-file-upload/angular-file-upload.min.js",
       "ng-grid/build/ng-grid.min.js",
       "ng-grid/ng-grid.css",

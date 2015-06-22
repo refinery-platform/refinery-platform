@@ -28,6 +28,7 @@
     "ng-file-upload": "1.6.6",
     "ngInfiniteScroll": "~1.2.1",
     "lodash": "2.4.1",
+    "lodash-3": "lodash#3.9.3",
     "graphlib": "1.0.1",
     "dagre": "0.7.1",
     "spectrum": "1.7.0",
