@@ -22,7 +22,11 @@ from mock import Mock as MagicMock
 # added these lines to avoid ImportError
 # see: http://stackoverflow.com/questions/9612296/importerror-in-django-in-sphinx-python
 parent_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.join( parent_directory, "refinery" ) )
+#sys.path.append(os.path.join( parent_directory, "refinery" ) )
+# https://github.com/rtfd/readthedocs.org/issues/104
+sys.path.insert(0, os.path.join( parent_directory, "refinery" ) )
+
+
 
 import settings
 from django.core.management import setup_environ
