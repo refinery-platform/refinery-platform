@@ -7,6 +7,7 @@ function DashboardCtrl (
   _,
   // Refinery modules
   settings,
+  authService,
   solrService,
   dataSetService,
   projectService,
@@ -26,6 +27,7 @@ function DashboardCtrl (
   that._ = _;
 
   // Construct Refinery modules
+  that.authService = authService;
   that.solrService = solrService;
   that.dataSetService = dataSetService;
   that.projectService = projectService;
@@ -33,9 +35,16 @@ function DashboardCtrl (
   that.workflowService = workflowService;
   that.dashboardDataSetSourceService = dashboardDataSetSourceService;
 
-
   // Construct class variables
   that.dataSetServiceLoading = false;
+
+  // Check authentication
+  that.authService.isAuthenticated().then(function (isAuthenticated) {
+    that.userIsAuthenticated = isAuthenticated;
+  });
+  that.authService.isAdmin().then(function (isAdmin) {
+    that.userIsAdmin = isAdmin;
+  });
 
   // Get data
   that.getProjects().then(function (results) {
@@ -129,10 +138,12 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
       return deferred.promise;
     });
     // NOTE Index / offset is not reset to 0!
-    that.dataSetsAdapter.applyUpdates(function (item, scope) {
-      return [];
-    });
-    that.dataSets.update('search/' + searchQuery);
+    if (that.dataSetsAdapter) {
+      that.dataSetsAdapter.applyUpdates(function (item, scope) {
+        return [];
+      });
+      that.dataSetsAdapter.reload();
+    }
   } else {
     that.dashboardDataSetSourceService.setSource(function (limit, offset) {
       var query = that.dataSetService.query({
@@ -142,7 +153,12 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
 
       return query.$promise;
     });
-    that.dataSets.update('all');
+    if (that.dataSetsAdapter) {
+      that.dataSetsAdapter.applyUpdates(function (item, scope) {
+        return [];
+      });
+      that.dataSetsAdapter.reload();
+    }
   }
 };
 
@@ -221,6 +237,7 @@ angular
     '$timeout',
     '_',
     'settings',
+    'authService',
     'solrService',
     'dataSetService',
     'projectService',

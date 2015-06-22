@@ -19,7 +19,7 @@
         <a
           href="./data_set_manager/import/isa-tab-form/"
           class="no-underline-hover"
-          ng-if="sharingEnabled">
+          ng-if="userIsAuthenticated">
           <i class="icon-plus-sign"></i>
         </a>
       </span>
@@ -80,9 +80,6 @@
         <h3>
           <span>
             <i class="m-r-1-4 icon-folder-open"></i>Projects
-          </span>
-          <span ng-if="dashboard.allAnalyses.meta.total_count > 0">
-            &amp; <i class="m-r-1-4 icon-bar-chart"></i>Analyses
           </span>
         </h3>
       </span>

@@ -104,7 +104,7 @@ angular
             return;
           }
 
-          console.log('REQUEST:', offset, limit);
+          console.log('dashboardDataSetService: REQUEST:', offset, limit);
 
           var query = dashboardDataSetSourceService.get(limit, offset);
 
@@ -112,7 +112,7 @@ angular
             .then(
               // Success
               function (response) {
-                console.log('RESPONSE:', response);
+                console.log('dashboardDataSetService: RESPONSE:', response);
                 success(response.objects);
                 if (!dataSets.initializedWithData) {
                   dataSets.initializedWithData = true;
@@ -127,26 +127,17 @@ angular
         },
 
         /**
-         * Unique name of this data collection. uiScroll watches this reloads
-         * name and reloads whenever it changes.
-         * @type {Number}
+         * Reset the cache
          */
-        revision: 0,
+        resetCache: function () {
+          this.items = {};
+        },
 
         /**
          * Total number of data sets available.
          * @type {Number}
          */
-        total: Number.POSITIVE_INFINITY,
-
-        /**
-         * Utility function that triggers the initialization and revision change
-         * @param  {Number} revision Unique revision name.
-         */
-        update: function (revision) {
-          this.items = {};
-          this.revision = revision;
-        }
+        total: Number.POSITIVE_INFINITY
       };
 
       // Init the cache to get started.
