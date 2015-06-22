@@ -4,8 +4,6 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
   '$httpProvider', 'fileUploadProvider',
   function ($httpProvider, fileUploadProvider) {
     "use strict";
-    $httpProvider.defaults.xsrfCookieName = 'csrftoken';
-    $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
     // file upload settings:
     angular.extend(fileUploadProvider.defaults, {
     //  maxChunkSize: chunkSize,
@@ -15,7 +13,6 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
     //  chunkdone: chunkDone,
     //  submit: uploadSubmit,
     //  done: uploadDone,
-    //  always: uploadFail
     });
   }
 ])
@@ -84,7 +81,12 @@ angular.module('refineryDataFileUpload', ['blueimp.fileupload'])
 var url = '/data_set_manager/import/chunked-upload/',
     chunkSize = 10 * 1000 * 1000,  // 1MB
     md5 = {},
-    formData = [];  //TODO: add CSRF token to formData?
+    csrf = "",
+    formData = [];
+    if ($("input[name='csrfmiddlewaretoken']")[0]) {
+      csrf = $("input[name='csrfmiddlewaretoken']")[0].value;
+      formData = [{"name": "csrfmiddlewaretoken", "value": csrf}];
+    }
 
 function calculate_md5(file, chunk_size) {
   "use strict";
@@ -118,7 +120,7 @@ var getFormData = function(form) {
 
 var chunkDone = function(e, data) {
   "use strict";
-  if (formData < 2) {
+  if (formData.length < 2) {
     formData.push({"name": "upload_id", "value": data.result.upload_id});
   }
 };
@@ -136,6 +138,7 @@ var uploadDone = function(e, data) {
     type: "POST",
     url: "/data_set_manager/import/chunked-upload-complete/",
     data: {
+        csrfmiddlewaretoken: csrf,
         upload_id: data.result.upload_id,
         md5: md5[data.files[0].name]
     },
@@ -144,5 +147,5 @@ var uploadDone = function(e, data) {
       console.log(data);
     }
   });
-  formData = [];  // clear upload_id for the next upload
+  formData.splice(1);  // clear upload_id for the next upload
 };
