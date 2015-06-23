@@ -1,7 +1,6 @@
 function DashboardCtrl (
   // Angular modules
   $q,
-  $sce,
   $state,
   $timeout,
   // 3rd party library
@@ -9,19 +8,18 @@ function DashboardCtrl (
   // Refinery modules
   settings,
   authService,
-  solrService,
-  dataSetService,
   projectService,
   analysisService,
   workflowService,
   dashboardDataSetService,
+  dashboardDataSetListService,
+  dashboardDataSetSearchService,
   dashboardDataSetSourceService) {
   // Store the context.
   var that = this;
 
   // Construct Angular modules
   that.$q = $q;
-  that.$sce = $sce;
   that.$state = $state;
   that.$timeout = $timeout;
 
@@ -30,17 +28,19 @@ function DashboardCtrl (
 
   // Construct Refinery modules
   that.authService = authService;
-  that.solrService = solrService;
-  that.dataSetService = dataSetService;
   that.projectService = projectService;
   that.analysisService = analysisService;
   that.workflowService = workflowService;
+  that.dashboardDataSetListService = dashboardDataSetListService;
+  that.dashboardDataSetSearchService = dashboardDataSetSearchService;
   that.dashboardDataSetSourceService = dashboardDataSetSourceService;
 
   // Construct class variables
   that.dataSetServiceLoading = false;
 
   // Check authentication
+  // This should idealy be moved to the global APP controller, which we don't
+  // have right now.
   that.authService.isAuthenticated().then(function (isAuthenticated) {
     that.userIsAuthenticated = isAuthenticated;
     console.log('authentication? ' + that.userIsAuthenticated);
@@ -111,74 +111,18 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
   var that = this;
 
   if (searchQuery) {
-    that.dashboardDataSetSourceService.setSource(function (limit, offset) {
-      var deferred = that.$q.defer(),
-          query = that.solrService.get({
-            'defType': 'dismax',
-            'fl': 'id,title,uuid',
-            'hl': true,
-            'hl.fl': 'content_auto',
-            'hl.simple.pre': '<em>',
-            'hl.simple.post': '</em>',
-            'q': searchQuery,
-            'qf': 'content_auto^0.5 text',
-            'rows': limit,
-            'start': offset
-          }, {
-            index: 'core'
-          });
-
-      query
-        .$promise
-        .then(
-          function (data) {
-            var docId ;
-
-            for (var i = 0, len = data.response.docs.length; i < len; i++) {
-              docId = data.response.docs[i].id;
-              if (data.highlighting[docId]) {
-                data.response.docs[i].highlighting = that.$sce.trustAsHtml(data.highlighting[docId].content_auto[0]);
-              } else {
-                data.response.docs[i].highlighting = false;
-              }
-            }
-
-            deferred.resolve({
-              meta: {
-                total_count: data.response.numFound
-              },
-              objects: data.response.docs
-            });
-          },
-          function (error) {
-            deferred.reject(error);
-          }
-        );
-
-      return deferred.promise;
-    });
-    // NOTE Index / offset is not reset to 0!
-    if (that.dataSetsAdapter) {
-      that.dataSetsAdapter.applyUpdates(function (item, scope) {
-        return [];
-      });
-      that.dataSetsAdapter.reload();
-    }
+    var searchResults = new that.dashboardDataSetSearchService(searchQuery);
+    that.dashboardDataSetSourceService.setSource(searchResults);
   } else {
-    that.dashboardDataSetSourceService.setSource(function (limit, offset) {
-      var query = that.dataSetService.query({
-        limit: limit,
-        offset: offset
-      });
+    that.dashboardDataSetSourceService.setSource(that.dashboardDataSetListService);
+  }
 
-      return query.$promise;
+  // Reset current list and reload uiScroll
+  if (that.dataSetsAdapter) {
+    that.dataSetsAdapter.applyUpdates(function (item, scope) {
+      return [];
     });
-    if (that.dataSetsAdapter) {
-      that.dataSetsAdapter.applyUpdates(function (item, scope) {
-        return [];
-      });
-      that.dataSetsAdapter.reload();
-    }
+    that.dataSetsAdapter.reload();
   }
 };
 
@@ -253,18 +197,17 @@ angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
     '$q',
-    '$sce',
     '$state',
     '$timeout',
     '_',
     'settings',
     'authService',
-    'solrService',
-    'dataSetService',
     'projectService',
     'analysisService',
     'workflowService',
     'dashboardDataSetService',
+    'dashboardDataSetListService',
+    'dashboardDataSetSearchService',
     'dashboardDataSetSourceService',
     DashboardCtrl
   ]);

@@ -1172,7 +1172,7 @@ class IsaTabParser:
 
     def get_dataset_name(self, path):
         if not os.path.isdir(path):
-            logger.info(
+            logger.debug(
                 "Supplied path \"" + path + "\" is not a directory. Assuming "
                 "ISArchive file."
             )
@@ -1222,7 +1222,7 @@ class IsaTabParser:
             )
             return (None, None)
 
-        logger.info(
+        logger.debug(
             "Investigation file path: {f}".format(f=investigation_file_name)
         )
 
@@ -1231,33 +1231,39 @@ class IsaTabParser:
         investigation_title = True
         title = None
 
-        with open(investigation_file_name, 'r') as f:
-            for line in f:
-                line = line.strip('\n')
-                if not identifier and \
-                   investigation_id and \
-                   line.startswith("Investigation Identifier"):
-                    identifier = line.split('\t')[1].strip(' "')
-                    investigation_id = False
-                if not identifier and \
-                   not investigation_id and \
-                   line.startswith("Study Identifier"):
-                    identifier = line.split('\t')[1].strip(' "')
-                    investigation_id = True
-                if not title and \
-                   investigation_title and \
-                   line.startswith("Investigation Title"):
-                    logger.info('Found line: {l}'.format(l=line))
-                    title = line.split('\t')[1].strip(' "')
-                    investigation_title = False
-                if not title and \
-                   not investigation_title and \
-                   line.startswith("Study Title"):
-                    title = line.split('\t')[1].strip(' "')
-                    investigation_title = True
-                if identifier and title:
-                    return (identifier, title)
-        return (None, None)
+        try:
+            with open(investigation_file_name, 'r') as f:
+                for line in f:
+                    line = line.strip('\n')
+                    if not identifier and \
+                       investigation_id and \
+                       line.startswith("Investigation Identifier"):
+                        identifier = line.split('\t')[1].strip(' "')
+                        investigation_id = False
+                    if not identifier and \
+                       not investigation_id and \
+                       line.startswith("Study Identifier"):
+                        identifier = line.split('\t')[1].strip(' "')
+                        investigation_id = True
+                    if not title and \
+                       investigation_title and \
+                       line.startswith("Investigation Title"):
+                        logger.info('Found line: {l}'.format(l=line))
+                        title = line.split('\t')[1].strip(' "')
+                        investigation_title = False
+                    if not title and \
+                       not investigation_title and \
+                       line.startswith("Study Title"):
+                        title = line.split('\t')[1].strip(' "')
+                        investigation_title = True
+                    if identifier and title:
+                        return (identifier, title)
+            return (None, None)
+        except:
+            logger.exception(
+                "Unable to open investigation file: '%s'.",
+                investigation_file_name
+            )
 
     def _adjust_string_case(self, string):
         '''
