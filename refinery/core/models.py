@@ -1393,6 +1393,7 @@ class Invitation(models.Model):
 
 
 class EmailInvite(object):
-    def __init__(self, email=None, group_id=None):
+    def __init__(self, email=None, group_id=None, group_name=None):
         self.email = email
         self.group_id = group_id
+        self.group_name = group_name

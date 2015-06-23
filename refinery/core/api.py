@@ -36,6 +36,10 @@ from django.core.paginator import Paginator, InvalidPage, PageNotAnInteger, \
 from haystack.query import SearchQuerySet, EmptySearchQuerySet
 from django.http import HttpResponse
 import datetime
+from django.core.mail import EmailMessage
+import urllib2
+import requests
+
 
 logger = logging.getLogger(__name__)
 
@@ -111,9 +115,6 @@ class SharableResourceAPIInterface(object):
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(i, 'share_list', self.get_share_list(user, i))
 
-        # Filter for access rights.
-        res_list = filter(lambda r: self.has_access(user, r), res_list)
-        
         # Filter for query flags.
         res_list = self.do_filtering(res_list, request.GET)
         return res_list
@@ -1187,6 +1188,7 @@ class InvitationResource(ModelResource):
             url(r'^invitation/update/$',
                 self.wrap_view('update_db'),
                 name='api_invitation_update_db'),
+            url(r'^invitation/send/$'
         ]
 
     def get_token(self, request, **kwargs):
@@ -1196,6 +1198,8 @@ class InvitationResource(ModelResource):
             user = request.user
             group = self.get_group(int(kwargs['group_id']))
             
+            logger.info(user)
+
             if not self.user_authorized(user, group):
                 return HttpUnauthorized()
 
@@ -1213,6 +1217,10 @@ class InvitationResource(ModelResource):
 
         if request.method == 'GET':
             user = request.user
+
+            if not user.is_authenticated():
+                return HttpUnauthorized()
+
             token = kwargs['token']
             invite_list = Invitation.objects.filter(token_uuid=token)
 
@@ -1239,5 +1247,69 @@ class InvitationResource(ModelResource):
 
         return HttpNoContent()
 
+    def email_token(self, request, **kwargs):
+        pass
 
+
+class EmailInviteResource(Resource):
+    email = fields.CharField(attribute='email', null=True)
+    group_id = fields.IntegerField(attribute='group_id', null=True)
+    group_name = fields.CharField(attribute='group_name', null=True)
+
+    group_id_regex = '[0-9]+'
+    email_regex = '[^@|\s]+@[^@]+\.[^@|\s]+'
+    # email_regex = '[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+
+    class Meta:
+        resource_name = 'email_invite'
+        object_class = EmailInvite
+        # authentication = SessionAuthentication
+    
+    def get_group(self, group_id):
+        group_list = Group.objects.filter(id=int(group_id))
+        return None if len(group_list) == 0 else group_list[0]
+
+    def prepend_urls(self):
+        return [
+            url(r'^email_invite/send/(?P<group_id>%s)/(?P<email>%s)/$'
+                % (self.group_id_regex, self.email_regex),
+                self.wrap_view('send_invite'),
+                name='api_send_invite'),
+        ]
+
+    def send_invite(self, request, **kwargs):
+        group = self.get_group(kwargs['group_id'])
+        address = kwargs['email']
+        subject = 'Invitation to join group %s' % group.name
+
+        token_url = 'http://192.168.50.50:8000/api/v1/invitation/request/%d/' % group.id
+
+        """
+        opener = urllib2.build_opener()
+
+        for k in request.COOKIES.keys():
+            logger.info("%s | %s" % (k, request.COOKIES[k]))
+            opener.addheaders.append((k, request.COOKIES[k]))
+
+        logger.info(opener.getheader
+
+        f = opener.open(token_url).read()
+
+        logger.info(f)
+        """
+
+        r = requests.get(token_url, headers=request.COOKIES)
+
+        logger.info(r.headers)
+        
+
+        # token = urllib2.urlopen(token_url).read()
+
+        join_url = 'http://192.168.50.50:8000/api/v1/invitation/verify/%s/' % token
+        
+        body = 'Go to %s to join' % join_url
+
+        email = EmailMessage(subject, body, to=[address])
+        email.send()
+        return HttpAccepted()
 
