@@ -24,9 +24,8 @@ from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
 from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, \
     Workflow, WorkflowInputRelationships, Analysis, DataSet, \
-    ExternalToolStatus, ResourceStatisticsObject, MemberManagementObject, \
-    GroupManagementObject, ExtendedGroup, UserAuthenticationObject, \
-    Invitation
+    ExternalToolStatus, ResourceStatistics, GroupManagement, ExtendedGroup, \
+    UserAuthentication, Invitation, EmailInvite
 from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
@@ -37,6 +36,10 @@ from django.core.paginator import Paginator, InvalidPage, PageNotAnInteger, \
 from haystack.query import SearchQuerySet, EmptySearchQuerySet
 from django.http import HttpResponse
 import datetime
+from django.core.mail import EmailMessage
+import urllib2
+import requests
+
 
 logger = logging.getLogger(__name__)
 
@@ -799,7 +802,7 @@ class StatisticsResource(Resource):
 
     class Meta:
         resource_name = 'statistics'
-        object_class = ResourceStatisticsObject
+        object_class = ResourceStatistics
 
     def detail_uri_kwargs(self, bundle_or_obj):
         kwargs = {}
@@ -834,82 +837,9 @@ class StatisticsResource(Resource):
             if 'project' in request_string:
                 project_summary = self.stat_summary(Project)
 
-        return [ResourceStatisticsObject(
+        return [ResourceStatistics(
             user_count, group_count, files_count,
             dataset_summary, workflow_summary, project_summary)]
-
-
-class MemberManagementResource(Resource):
-    member_list = fields.ListField(attribute='member_list', null=True)
-
-    # Assume that groups only exist in Group-Manager pairs.
-    def is_manager_group(self, group):
-        return group.extendedgroup.manager_group is None
-
-    def get_group(self, group_id):
-        group_list = Group.objects.filter(id=int(group_id))
-        return None if len(group_list) == 0 else group_list[0]
-
-    def get_members(self, group):
-        user_list = group.user_set.all()
-        return map(lambda u: {'username': u.username, 'id': u.id}, user_list)
-
-    class Meta:
-        resource_name = 'member_management'
-        object_class = MemberManagementObject
-        # authentication = SessionAuthentication
-
-    def detail_uri_kwargs(self, bundle_or_obj):
-        kwargs = {}
-
-        if isinstance(bundle_or_obj, Bundle):
-            kwargs['pk'] = bundle_or_obj.obj.id
-        else:
-            kwargs['pk'] = bundle_or_obj.id
-
-        return kwargs
-
-    def obj_get(self, bundle, **kwargs):
-        uuid = kwargs['pk']
-        return self.get_group(uuid)
-
-    def obj_get_list(self, bundle, **kwargs):
-        return self.get_object_list(bundle.request)
-
-    def get_object_list(self, request):
-        group = self.get_group(request.GET['id'])
-        return [MemberManagementObject(group.id, self.get_members(group))]
-
-    def obj_update(self, bundle, **kwargs):
-        id = kwargs['pk']
-        group = self.get_group(id)
-        user = bundle.request.user
-        member_list = bundle.data['member_list']
-        is_manager = self.is_manager_group(group)
-
-        """
-        # Verify that the user has is in the manager group
-        if is_manager:
-            if user not in group.user_set.all():
-                # raise ImmediateHttpResponse(response=HttpUnauthorized)
-        else:
-            if user not in group.extendedgroup.manager_group.user_set.all():
-                # raise ImmediateHttpResponse(response=HttpUnauthorized)
-        """
-
-        # Remove all objects before readding them.
-        group.user_set.clear()
-
-        for m in member_list:
-            group.user_set.add(m['id'])
-
-        # Managers should also be in the group that they manage.
-        if is_manager:
-            for g in group.extendedgroup.managed_group.all():
-                for m in member_list:
-                    g.user_set.add(m['id'])
-
-        return MemberManagementResource()
 
 
 class GroupManagementResource(Resource):
@@ -921,7 +851,7 @@ class GroupManagementResource(Resource):
 
     class Meta:
         resource_name = 'groups'
-        object_class = GroupManagementObject
+        object_class = GroupManagement
         detail_uri_name = 'group_id'
         # authentication = SessionAuthentication
         # authorization = GuardianAuthorization
@@ -975,7 +905,7 @@ class GroupManagementResource(Resource):
 
     # Bundle building methods.
 
-    # The group_list is actually a list of GroupManagementObjects.
+    # The group_list is actually a list of GroupManagement objects.
     def build_group_list(self, user, group_list, **kwargs):
         if 'members' in kwargs and kwargs['members']:
             for i in group_list:
@@ -1065,7 +995,7 @@ class GroupManagementResource(Resource):
         group = self.get_group(kwargs['id'])
 
         if request.method == 'GET':
-            group_obj_list = [GroupManagementObject(
+            group_obj_list = [GroupManagement(
                 group.id,
                 group.name,
                 None,
@@ -1085,7 +1015,7 @@ class GroupManagementResource(Resource):
             group_list = self.groups_with_user(user)
 
             group_obj_list = map(
-                lambda g: GroupManagementObject(
+                lambda g: GroupManagement(
                     g.id,
                     g.name,
                     None,
@@ -1109,7 +1039,7 @@ class GroupManagementResource(Resource):
         group = self.get_group(kwargs['id'])
 
         if request.method == 'GET':
-            group_obj_list = [GroupManagementObject(
+            group_obj_list = [GroupManagement(
                 group.id,
                 group.name,
                 self.get_member_list(group),
@@ -1148,7 +1078,7 @@ class GroupManagementResource(Resource):
             group_list = self.groups_with_user(user)
 
             group_obj_list = map(
-                lambda g: GroupManagementObject(
+                lambda g: GroupManagement(
                     g.id,
                     g.name,
                     self.get_member_list(g),
@@ -1166,7 +1096,7 @@ class GroupManagementResource(Resource):
         group = self.get_group(kwargs['id'])
 
         if request.method == 'GET':
-            group_obj_list = [GroupManagementObject(
+            group_obj_list = [GroupManagement(
                 group.id,
                 group.name,
                 None,
@@ -1186,7 +1116,7 @@ class GroupManagementResource(Resource):
             group_list = self.groups_with_user(user)
 
             group_obj_list = map(
-                lambda g: GroupManagementObject(
+                lambda g: GroupManagement(
                     g.id,
                     g.name,
                     None,
@@ -1208,7 +1138,7 @@ class UserAuthenticationResource(Resource):
 
     class Meta:
         resource_name = 'user_authentication'
-        object_class = UserAuthenticationObject
+        object_class = UserAuthentication
 
     def determine_format(self, request):
         return 'application/json'
@@ -1226,7 +1156,7 @@ class UserAuthenticationResource(Resource):
         is_admin = user.is_staff
         id = user.id
         username = user.username if is_logged_in else 'AnonymousUser'
-        auth_obj = UserAuthenticationObject(
+        auth_obj = UserAuthentication(
             is_logged_in,
             is_admin,
             user.id,
@@ -1239,6 +1169,8 @@ class UserAuthenticationResource(Resource):
 
 class InvitationResource(ModelResource):
     uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+    group_id_regex = '[0-9]+'
+    email_regex = '[^@|\s]+@[^@]+\.[^@|\s]+'
 
     class Meta:
         queryset = Invitation.objects.all()
@@ -1275,6 +1207,10 @@ class InvitationResource(ModelResource):
             url(r'^invitation/update/$',
                 self.wrap_view('update_db'),
                 name='api_invitation_update_db'),
+            url(r'^invitation/send/(?P<group_id>%s)/(?P<email>%s)/$'
+                    % (self.group_id_regex, self.email_regex),
+                self.wrap_view('email_token'),
+                name='api_invitation_email_token'),
         ]
 
     def get_token(self, request, **kwargs):
@@ -1301,6 +1237,10 @@ class InvitationResource(ModelResource):
 
         if request.method == 'GET':
             user = request.user
+
+            if not user.is_authenticated():
+                return HttpUnauthorized()
+
             token = kwargs['token']
             invite_list = Invitation.objects.filter(token_uuid=token)
 
@@ -1327,5 +1267,28 @@ class InvitationResource(ModelResource):
 
         return HttpNoContent()
 
+    def email_token(self, request, **kwargs):
+        group = self.get_group(int(kwargs['group_id']))
 
+        if not self.user_authorized(request.user, group):
+            return HttpUnauthorized()
+
+        get_token_response = self.get_token(request, **kwargs)
+
+        if type(get_token_response) is type(HttpUnauthorized()):
+            return HttpUnauthorized()
+
+        token = get_token_response.content
+        address = kwargs['email']
+        subject = 'Invitation to join group %s' % group.name
+        body = """
+You have been invited to join %s. Please use the following steps:
+
+1. Make a Refinery account if you have not already, and log in.
+2. Click on this link: http://192.168.50.50:8000/api/v1/invitation/verify/%s/
+        """ % (group.name, token)
+
+        email = EmailMessage(subject, body, to=[address])
+        email.send()
+        return HttpAccepted()
 

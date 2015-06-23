@@ -12,9 +12,8 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     NodeResource, NodeSetListResource, NodePairResource,\
     NodeRelationshipResource, WorkflowResource,\
     WorkflowInputRelationshipsResource, DataSetResource,\
-    ExternalToolStatusResource, StatisticsResource, \
-    MemberManagementResource, GroupManagementResource, \
-    UserAuthenticationResource, InvitationResource
+    ExternalToolStatusResource, StatisticsResource, GroupManagementResource, \
+    UserAuthenticationResource, InvitationResource, EmailInviteResource
 from core.models import DataSet
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource
@@ -49,10 +48,10 @@ v1_api.register(WorkflowResource())
 v1_api.register(WorkflowInputRelationshipsResource())
 v1_api.register(ExternalToolStatusResource())
 v1_api.register(StatisticsResource())
-v1_api.register(MemberManagementResource())
 v1_api.register(GroupManagementResource())
 v1_api.register(UserAuthenticationResource())
 v1_api.register(InvitationResource())
+v1_api.register(EmailInviteResource())
 # v1_api.register(TaxonResource())
 # v1_api.register(GenomeBuildResource())
 # v1_api.register(CytoBandResource())
