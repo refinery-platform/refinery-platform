@@ -85,14 +85,17 @@ class SharableResourceAPIInterface(object):
         return filter(lambda g: user in g.user_set.all(), Group.objects.all())
 
     def has_access(self, user, res):
+        if res.is_public():
+            return True
+
+        if res.get_owner().id == user.id:
+            return True
+
         for i in self.groups_with_user(user):
             perms = self.get_perms(res, i)
             owner = res.get_owner()
 
-            if owner and owner.id == user.id:
-                return True
-
-            if perms['read'] or perms['change'] or res.is_public():
+            if perms['read'] or perms['change']:
                 return True
 
         return False
@@ -106,34 +109,34 @@ class SharableResourceAPIInterface(object):
     # Apply filters.
     def do_filtering(self, res_list, get_req_dict):
         mod_list = res_list
-
+        
         for k in get_req_dict:
-            if k == 'format':
-                continue
-
+            # Skip if res does not have the attribute. Done to help avoid
+            # whatever internal filtering can be performed on other things,
+            # like limiting the return amount.
             mod_list = [x for x in mod_list
-                        if (hasattr(x, k) and 
-                            str(getattr(x, k)) == get_req_dict[k])]
+                        if not hasattr(x, k) or 
+                        str(getattr(x, k)) == get_req_dict[k]]
 
         return mod_list
 
     # Turns on certain things depending on flags
     def build_res_list(self, user, res_list, request, **kwargs):
+        # Filter for access rights.
+        res_list = filter(lambda r: self.has_access(user, r), res_list)
+
         for i in res_list:
+            # Avoid breaking things if owner does not exist.
             own = i.get_owner()
             setattr(i, 'public', i.is_public())
-            setattr(i, 'owner_id', None if own is None else own.id)
             setattr(i, 'is_owner', None if own is None else own.id == user.id)
-            setattr(i, 'owner_username', None if own is None else own.username)
 
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(i, 'share_list', self.get_share_list(user, i))
 
-        # Filter for access rights.
-        res_list = filter(lambda r: self.has_access(user, r), res_list)
-        
         # Filter for query flags.
         res_list = self.do_filtering(res_list, request.GET)
+ 
         return res_list
 
     def build_bundle_list(self, request, res_list, **kwargs):
@@ -260,8 +263,6 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
-    owner_id = fields.IntegerField(attribute='owner_id', null=True)
-    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, Project)
@@ -299,8 +300,6 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
-    owner_id = fields.IntegerField(attribute='owner_id', null=True)
-    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, DataSet)
@@ -420,8 +419,6 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
-    owner_id = fields.IntegerField(attribute='owner_id', null=True)
-    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, Workflow)
