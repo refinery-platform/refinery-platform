@@ -54,12 +54,12 @@
           ng-controller="RefineryFileUploadController"
           data-file-upload="options"
           ng-class="{'fileupload-processing': processing() || loadingFiles}">
+      {% csrf_token %}
       <!-- Redirect browsers with JavaScript disabled to the origin page -->
       <noscript>
         <input type="hidden" name="redirect"
                value="https://blueimp.github.io/jQuery-File-Upload/">
       </noscript>
-      {% csrf_token %}
       <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
       <div class="row fileupload-buttonbar">
         <div class="col-lg-7">

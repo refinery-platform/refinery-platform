@@ -85,9 +85,17 @@ class SharableResourceAPIInterface(object):
         return filter(lambda g: user in g.user_set.all(), Group.objects.all())
 
     def has_access(self, user, res):
+        if res.is_public():
+            return True
+
+        if res.get_owner().id == user.id:
+            return True
+
         for i in self.groups_with_user(user):
             perms = self.get_perms(res, i)
-            if perms['read'] or perms['change'] or res.is_public():
+            owner = res.get_owner()
+
+            if perms['read'] or perms['change']:
                 return True
 
         return False
@@ -101,33 +109,34 @@ class SharableResourceAPIInterface(object):
     # Apply filters.
     def do_filtering(self, res_list, get_req_dict):
         mod_list = res_list
-
+        
         for k in get_req_dict:
-            if k == 'format':
-                continue
-
+            # Skip if res does not have the attribute. Done to help avoid
+            # whatever internal filtering can be performed on other things,
+            # like limiting the return amount.
             mod_list = [x for x in mod_list
-                        if (hasattr(x, k) and
-                            str(getattr(x, k)) == get_req_dict[k])]
+                        if not hasattr(x, k) or 
+                        str(getattr(x, k)) == get_req_dict[k]]
 
         return mod_list
 
     # Turns on certain things depending on flags
     def build_res_list(self, user, res_list, request, **kwargs):
+        # Filter for access rights.
+        res_list = filter(lambda r: self.has_access(user, r), res_list)
+
         for i in res_list:
+            # Avoid breaking things if owner does not exist.
+            own = i.get_owner()
             setattr(i, 'public', i.is_public())
-            setattr(i, 'owner_id', i.get_owner().id)
-            setattr(i, 'is_owner', i.get_owner().id == user.id)
-            setattr(i, 'owner_username', i.get_owner().username)
+            setattr(i, 'is_owner', None if own is None else own.id == user.id)
 
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(i, 'share_list', self.get_share_list(user, i))
 
-        # Filter for access rights.
-        res_list = filter(lambda r: self.has_access(user, r), res_list)
-
         # Filter for query flags.
         res_list = self.do_filtering(res_list, request.GET)
+ 
         return res_list
 
     def build_bundle_list(self, request, res_list, **kwargs):
@@ -249,20 +258,11 @@ class SharableResourceAPIInterface(object):
         else:
             return HttpMethodNotAllowed()
 
-    # Overriding some ORM methods.
-    # Handles POST requests.
-    def obj_create(self, bundle, **kwargs):
-        bundle = ModelResource.obj_create(self, bundle, **kwargs)
-        bundle.obj.set_owner(bundle.request.user)
-        return bundle
-
 
 class ProjectResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
-    owner_id = fields.IntegerField(attribute='owner_id', null=True)
-    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, Project)
@@ -300,8 +300,6 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
-    owner_id = fields.IntegerField(attribute='owner_id', null=True)
-    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, DataSet)
@@ -315,7 +313,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         # authentication = SessionAuthentication()
         # authorization = GuardianAuthorization()
         filtering = {'uuid': ALL}
-        # fields = ['uuid']
+        fields = ['uuid']
 
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
@@ -421,8 +419,6 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
-    owner_id = fields.IntegerField(attribute='owner_id', null=True)
-    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, Workflow)
@@ -483,7 +479,6 @@ class WorkflowInputRelationshipsResource(ModelResource):
 
 class AnalysisResource(ModelResource):
     data_set = fields.ToOneField(DataSetResource, 'data_set', use_in='detail')
-    data_set__uuid = fields.CharField(attribute='data_set__uuid', use_in='all')
     uuid = fields.CharField(attribute='uuid', use_in='all')
     name = fields.CharField(attribute='name', use_in='all')
     workflow__uuid = fields.CharField(attribute='workflow__uuid', use_in='all')
@@ -586,11 +581,7 @@ class NodeResource(ModelResource):
         if (user.is_authenticated()):
             allowed_datasets = get_objects_for_user(user, perm, DataSet)
         else:
-            allowed_datasets = get_objects_for_group(
-                ExtendedGroup.objects.public_group(),
-                perm,
-                DataSet
-            )
+            allowed_datasets = get_objects_for_group(ExtendedGroup.objects.public_group(), perm, DataSet)
         # get a list of node UUIDs that belong to all datasets available to the
         # current user
         all_allowed_studies = []
@@ -674,10 +665,7 @@ class NodeSetResource(ModelResource):
         # an investigation is only associated with a single dataset even though
         # InvestigationLink is a many to many relationship
         try:
-            dataset = (study.investigation
-                            .investigationlink_set
-                            .all()[0]
-                            .data_set)
+            dataset = study.investigation.investigationlink_set.all()[0].data_set
         except IndexError:
             logger.error("Data set not found in study '{}'".format(study.uuid))
             self.unauthorized_result(
@@ -743,16 +731,15 @@ class NodePairResource(ModelResource):
 class NodeRelationshipResource(ModelResource):
     name = fields.CharField(attribute='name', null=True)
     type = fields.CharField(attribute='type', null=True)
-    # full=True), if you need each attribute for each nodepair
+    # , full=True), if you need each attribute for each nodepair
     node_pairs = fields.ToManyField(NodePairResource, 'node_pairs')
     study = fields.ToOneField(StudyResource, 'study')
     assay = fields.ToOneField(AssayResource, 'assay')
 
     class Meta:
         detail_allowed_methods = ['get', 'post', 'delete', 'put', 'patch']
-        queryset = (NodeRelationship.objects
-                                    .all()
-                                    .order_by('-is_current', 'name'))
+        queryset = NodeRelationship.objects.all().order_by('-is_current',
+                                                           'name')
         detail_resource_name = 'noderelationship'
         resource_name = 'noderelationship'
         detail_uri_name = 'uuid'
@@ -848,13 +835,8 @@ class StatisticsResource(Resource):
                 project_summary = self.stat_summary(Project)
 
         return [ResourceStatisticsObject(
-            user_count,
-            group_count,
-            files_count,
-            dataset_summary,
-            workflow_summary,
-            project_summary)
-        ]
+            user_count, group_count, files_count,
+            dataset_summary, workflow_summary, project_summary)]
 
 
 class MemberManagementResource(Resource):
@@ -901,7 +883,7 @@ class MemberManagementResource(Resource):
     def obj_update(self, bundle, **kwargs):
         id = kwargs['pk']
         group = self.get_group(id)
-        # user = bundle.request.user
+        user = bundle.request.user
         member_list = bundle.data['member_list']
         is_manager = self.is_manager_group(group)
 
@@ -1141,7 +1123,7 @@ class GroupManagementResource(Resource):
 
             # Verify that the user holds appropriate power.
             # if not self.user_authorized(user, group):
-            #   raise ImmediateHttpResponse(response=HttpUnauthorized())
+            #      return HttpUnauthorized()
 
             # Remove old members before updating.
             group.user_set.clear()
@@ -1242,6 +1224,7 @@ class UserAuthenticationResource(Resource):
         user = request.user
         is_logged_in = user.is_authenticated()
         is_admin = user.is_staff
+        id = user.id
         username = user.username if is_logged_in else 'AnonymousUser'
         auth_obj = UserAuthenticationObject(
             is_logged_in,
@@ -1278,7 +1261,7 @@ class InvitationResource(ModelResource):
     def has_expired(self, token):
         if token.expires is None:
             return True
-
+ 
         return (datetime.datetime.now() - token.expires).total_seconds() >= 0
 
     def prepend_urls(self):
@@ -1300,7 +1283,7 @@ class InvitationResource(ModelResource):
         if request.method == 'GET':
             user = request.user
             group = self.get_group(int(kwargs['group_id']))
-
+            
             if not self.user_authorized(user, group):
                 return HttpUnauthorized()
 
@@ -1343,3 +1326,6 @@ class InvitationResource(ModelResource):
                 i.delete()
 
         return HttpNoContent()
+
+
+

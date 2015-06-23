@@ -12,6 +12,7 @@
 # serve to show the default.
 
 import sys, os
+from mock import Mock as MagicMock
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -21,7 +22,11 @@ import sys, os
 # added these lines to avoid ImportError
 # see: http://stackoverflow.com/questions/9612296/importerror-in-django-in-sphinx-python
 parent_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.join( parent_directory, "refinery" ) )
+#sys.path.append(os.path.join( parent_directory, "refinery" ) )
+# https://github.com/rtfd/readthedocs.org/issues/104
+sys.path.insert(0, os.path.join( parent_directory, "refinery" ) )
+
+
 
 import settings
 from django.core.management import setup_environ
@@ -253,3 +258,14 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+
+# the python-ldap module doesn't compile in the Read The Docs environment
+# https://github.com/parklab/refinery-platform/issues/531
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+
+MOCK_MODULES = ['python-ldap', 'pysolr']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
