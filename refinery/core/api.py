@@ -185,20 +185,22 @@ class SharableResourceAPIInterface(object):
         bundle.obj.set_owner(bundle.request.user)
         return bundle
 
+    # Some wacky custom job because ModelResource's get calls some things that
+    # we don't want to get called :(
     def obj_get(self, bundle, **kwargs):
-        obj = ModelResource.obj_get(self, bundle, **kwargs)
+        res = self.get_res(kwargs['uuid'])
         request = bundle.request
-        kwargs['show_public'] = True
-        return self.build_res_list(request.user, [obj], request, **kwargs)[0]
+        user = request.user
+        mod_res_list = self.build_res_list(user, [res], request, **kwargs)
+        bundle = self.build_bundle_list(request, mod_res_list)[0]
+        return bundle.obj
 
     def obj_get_list(self, bundle, **kwargs):
         return self.get_object_list(bundle.request)
 
     def get_object_list(self, request):
         obj_list = ModelResource.get_object_list(self, request)
-        kwargs = {}
-        kwargs['show_public'] = True
-        r_list = self.build_res_list(request.user, obj_list, request, **kwargs)
+        r_list = self.build_res_list(request.user, obj_list, request)
         return r_list
 
     # A few default URL endpoints as directed by prepend_urls in subclasses.
@@ -919,7 +921,7 @@ class GroupManagementResource(Resource):
 
         return group_list
 
-    def build_group_list_bundle(self, request, group_list, **kwargs):
+    def build_bundle_list(self, request, group_list, **kwargs):
         bundle = []
 
         for i in group_list:
@@ -940,10 +942,16 @@ class GroupManagementResource(Resource):
         return self.create_response(request, object_list)
 
     # Simplify things for GET requests.
-    def process_get(self, request, group_list, **kwargs):
+    def process_get(self, request, group, **kwargs):
+        user = request.user
+        m_group_list = self.build_group_list(user, [group], **kwargs)
+        bundle = self.build_bundle_list(request, m_group_list, **kwargs)[0]
+        return self.build_response(request, bundle, **kwargs)
+
+    def process_get_list(self, request, group_list, **kwargs):
         user = request.user
         m_group_list = self.build_group_list(user, group_list, **kwargs)
-        bundle = self.build_group_list_bundle(request, m_group_list, **kwargs)
+        bundle = self.build_bundle_list(request, m_group_list, **kwargs)
         object_list = self.build_object_list(bundle, **kwargs)
         return self.build_response(request, object_list, **kwargs)
 
@@ -1068,6 +1076,8 @@ class GroupManagementResource(Resource):
                         g.user_set.add(int(m['id']))
 
             return HttpAccepted()
+        elif request.method == 'POST':
+            data = json.loads(request.raw_post_data)
         else:
             return HttpMethodNotAllowed()
 
