@@ -75,7 +75,6 @@ angular
            * @param  {Array}  results Array of results.
            */
           saveItems: function (offset, limit, results) {
-            console.log('dashboardDataSetService', results);
             for (var i = 0, len = results.length; i < len; i++) {
               this.items[offset + i] = results[i];
             }
@@ -92,10 +91,14 @@ angular
         get: function (offset, limit, success) {
           offset--;
 
-          // Avoid negative offset API calls.
           if (offset < 0) {
-            success([]);
-            return;
+            // Avoid negative offset API calls.
+            if (offset + limit <= 0) {
+              success([]);
+              return;
+            }
+            // We start from zero if the total call includes positive items.
+            offset = 0;
           }
 
           // Avoid API calls when the total is reached.
@@ -104,15 +107,12 @@ angular
             return;
           }
 
-          console.log('dashboardDataSetService: REQUEST:', offset, limit);
-
           var query = dashboardDataSetSourceService.get(limit, offset);
 
           query
             .then(
               // Success
               function (response) {
-                console.log('dashboardDataSetService: RESPONSE:', response);
                 success(response.objects);
                 if (!dataSets.initializedWithData) {
                   dataSets.initializedWithData = true;

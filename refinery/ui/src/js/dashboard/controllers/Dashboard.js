@@ -1,6 +1,7 @@
 function DashboardCtrl (
   // Angular modules
   $q,
+  $sce,
   $state,
   $timeout,
   // 3rd party library
@@ -20,6 +21,7 @@ function DashboardCtrl (
 
   // Construct Angular modules
   that.$q = $q;
+  that.$sce = $sce;
   that.$state = $state;
   that.$timeout = $timeout;
 
@@ -41,9 +43,11 @@ function DashboardCtrl (
   // Check authentication
   that.authService.isAuthenticated().then(function (isAuthenticated) {
     that.userIsAuthenticated = isAuthenticated;
+    console.log('authentication? ' + that.userIsAuthenticated);
   });
   that.authService.isAdmin().then(function (isAdmin) {
     that.userIsAdmin = isAdmin;
+    console.log('admin? ' + that.userIsAdmin);
   });
 
   // Get data
@@ -110,11 +114,16 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
     that.dashboardDataSetSourceService.setSource(function (limit, offset) {
       var deferred = that.$q.defer(),
           query = that.solrService.get({
-            df: 'text',
-            fl: 'name,uuid',
-            q: searchQuery,
-            rows: limit,
-            start: offset
+            'defType': 'dismax',
+            'fl': 'id,title,uuid',
+            'hl': true,
+            'hl.fl': 'content_auto',
+            'hl.simple.pre': '<em>',
+            'hl.simple.post': '</em>',
+            'q': searchQuery,
+            'qf': 'content_auto^0.5 text',
+            'rows': limit,
+            'start': offset
           }, {
             index: 'core'
           });
@@ -123,6 +132,17 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
         .$promise
         .then(
           function (data) {
+            var docId ;
+
+            for (var i = 0, len = data.response.docs.length; i < len; i++) {
+              docId = data.response.docs[i].id;
+              if (data.highlighting[docId]) {
+                data.response.docs[i].highlighting = that.$sce.trustAsHtml(data.highlighting[docId].content_auto[0]);
+              } else {
+                data.response.docs[i].highlighting = false;
+              }
+            }
+
             deferred.resolve({
               meta: {
                 total_count: data.response.numFound
@@ -233,6 +253,7 @@ angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
     '$q',
+    '$sce',
     '$state',
     '$timeout',
     '_',

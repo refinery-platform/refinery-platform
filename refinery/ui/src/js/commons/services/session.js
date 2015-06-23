@@ -17,7 +17,7 @@ angular
 
       session.get = function (prop) {
         if (sessionData.hasOwnProperty(prop)) {
-          return sessionData.prop;
+          return sessionData[prop];
         }
         return;
       };

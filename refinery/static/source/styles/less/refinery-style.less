@@ -424,29 +424,6 @@ ul#externalToolListPopover li{
       left: 12px;
     }
   }
-
-  ul {
-    li {
-      padding: 2px 0;
-      border-top: 1px solid @grayLighter;
-
-      // Hack because uiScroll adds another invisible first child to the list.
-      &:first-child {
-        padding: 0;
-        border-top: none;
-      }
-
-      // Hack because uiScroll adds another invisible first child to the list.
-      &:first-child + li {
-        border-top: none;
-      }
-
-      // Hack because uiScroll adds another invisible last child to the list.
-      &:last-child {
-        border-top: none;
-      }
-    }
-  }
 }
 
 .refinery-dashboard {
@@ -499,6 +476,61 @@ ul#externalToolListPopover li{
       margin: 0 10px;
       padding: 5px 0;
     }
+
+    ul.results {
+      li {
+        padding: 2px 0;
+        border-top: 1px solid @grayLighter;
+
+        // Hack because uiScroll adds another invisible first child to the list.
+        &:first-child {
+          padding: 0;
+          border-top: none;
+        }
+
+        // Hack because uiScroll adds another invisible first child to the list.
+        &:first-child + li {
+          border-top: none;
+        }
+
+        // Hack because uiScroll adds another invisible last child to the list.
+        &:last-child {
+          border-top: none;
+        }
+      }
+
+      a > em {
+        font-weight: bold;
+        font-style: normal;
+        background: fade(lighten(@blueLight, 25%), 15%);
+      }
+    }
+
+    ul.controls {
+      float: right;
+      opacity: 0.33;
+      transition: opacity @normalTransitionSpeed @easeInOutCubic;
+
+      button {
+        padding: 0;
+        margin: 0;
+        line-height: normal;
+        border: 0;
+        background: none;
+        opacity: 0.5;
+        transition: opacity @normalTransitionSpeed @easeInOutCubic;
+      }
+
+      button:hover {
+        opacity: 1;
+        transition: opacity @fastTransitionSpeed @easeInOutCubic;
+      }
+    }
+
+    ul.results > li:hover ul.controls {
+      opacity: 1;
+      transition: opacity @fastTransitionSpeed @easeInOutCubic;
+    }
   }
 
   [class^="span"].expandable {
@@ -521,7 +553,9 @@ ul#externalToolListPopover li{
   }
 }
 
+button.icon-only {
 
+}
 
 .refinery-header {
   display: block;

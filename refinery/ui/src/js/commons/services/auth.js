@@ -5,9 +5,12 @@ angular
       var auth = {},
           authLastCheck = 0;
 
+      /**
+       * [checkUserStatus description]
+       * @return {[type]} [description]
+       */
       function checkUserStatus () {
-        var deferred = $q.defer(),
-            query = $resource(
+        var query = $resource(
               settings.appRoot + settings.refineryApi + '/user_authentication/check/',
               {
                 format: 'json'
@@ -18,7 +21,7 @@ angular
                   isArray: false,
                 }
               }
-            );
+            ).query();
 
         return query.$promise;
       }
@@ -45,7 +48,7 @@ angular
         if (now - sessionService.get('date') > settings.authThrottling) {
           session = createSession();
         } else {
-          session = $q.defer().resolve();
+          session = $q.when();
         }
 
         return session.then(
@@ -63,7 +66,7 @@ angular
         if (now - sessionService.get('date') > settings.authThrottling) {
           session = createSession();
         } else {
-          session = $q.defer().resolve();
+          session = $q.when();
         }
 
         return session.then(

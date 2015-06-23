@@ -19,7 +19,7 @@
         <a
           href="./data_set_manager/import/isa-tab-form/"
           class="no-underline-hover"
-          ng-if="userIsAuthenticated">
+          ng-if="dashboard.userIsAuthenticated">
           <i class="icon-plus-sign"></i>
         </a>
       </span>
@@ -50,13 +50,27 @@
       ui-scroll-viewport
       refinery-dashboard-panel>
       <ul
-        class="no-list-style"
+        class="results no-list-style"
         ng-if="dashboard.dataSets.total > 0">
         <li
           ui-scroll="dataSet in dashboard.dataSets"
           adapter="dashboard.dataSetsAdapter">
+          <ul class="controls no-list-style">
+            <li>
+              <button
+                ng-click="launchPad.openPermissionEditor('dataset_sharing', dataSet.uuid)">
+                <i class="icon-edit"></i>
+              </button>
+            </li>
+          </ul>
           <i class="icon-user"></i>
-          <a ng-href="data_sets/{{ dataSet.uuid }}">{{ dataSet.name }}</a>
+          <a
+            ng-if="!dashboard.searchQueryDataSets"
+            ng-href="data_sets/{{ dataSet.uuid }}">{{ dataSet.name }}</a>
+          <a
+            ng-if="dashboard.searchQueryDataSets"
+            ng-href="data_sets/{{ dataSet.uuid }}"
+            ng-bind-html="dataSet.highlighting"></a>
         </li>
       </ul>
       <div

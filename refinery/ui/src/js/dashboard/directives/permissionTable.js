@@ -1,6 +1,6 @@
 angular
   .module('refineryDashboard')
-  .directive('refineryDashboardPanel', [
+  .directive('refineryPermissionTable', [
     function () {
       var directive = {
         link: link,
