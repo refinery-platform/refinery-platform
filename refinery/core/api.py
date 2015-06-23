@@ -1152,6 +1152,8 @@ class UserAuthenticationResource(Resource):
 
 class InvitationResource(ModelResource):
     uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+    group_id_regex = '[0-9]+'
+    email_regex = '[^@|\s]+@[^@]+\.[^@|\s]+'
 
     class Meta:
         queryset = Invitation.objects.all()
@@ -1188,7 +1190,10 @@ class InvitationResource(ModelResource):
             url(r'^invitation/update/$',
                 self.wrap_view('update_db'),
                 name='api_invitation_update_db'),
-            url(r'^invitation/send/$'
+            url(r'^invitation/send/(?P<group_id>%s)/(?P<email>%s)/$'
+                    % (self.group_id_regex, self.email_regex),
+                self.wrap_view('email_token'),
+                name='api_invitation_email_token'),
         ]
 
     def get_token(self, request, **kwargs):
@@ -1198,8 +1203,6 @@ class InvitationResource(ModelResource):
             user = request.user
             group = self.get_group(int(kwargs['group_id']))
             
-            logger.info(user)
-
             if not self.user_authorized(user, group):
                 return HttpUnauthorized()
 
@@ -1248,66 +1251,25 @@ class InvitationResource(ModelResource):
         return HttpNoContent()
 
     def email_token(self, request, **kwargs):
-        pass
+        group = self.get_group(int(kwargs['group_id']))
 
+        if not self.user_authorized(request.user, group):
+            return HttpUnauthorized()
 
-class EmailInviteResource(Resource):
-    email = fields.CharField(attribute='email', null=True)
-    group_id = fields.IntegerField(attribute='group_id', null=True)
-    group_name = fields.CharField(attribute='group_name', null=True)
+        get_token_response = self.get_token(request, **kwargs)
 
-    group_id_regex = '[0-9]+'
-    email_regex = '[^@|\s]+@[^@]+\.[^@|\s]+'
-    # email_regex = '[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+        if type(get_token_response) is type(HttpUnauthorized()):
+            return HttpUnauthorized()
 
-    class Meta:
-        resource_name = 'email_invite'
-        object_class = EmailInvite
-        # authentication = SessionAuthentication
-    
-    def get_group(self, group_id):
-        group_list = Group.objects.filter(id=int(group_id))
-        return None if len(group_list) == 0 else group_list[0]
-
-    def prepend_urls(self):
-        return [
-            url(r'^email_invite/send/(?P<group_id>%s)/(?P<email>%s)/$'
-                % (self.group_id_regex, self.email_regex),
-                self.wrap_view('send_invite'),
-                name='api_send_invite'),
-        ]
-
-    def send_invite(self, request, **kwargs):
-        group = self.get_group(kwargs['group_id'])
+        token = get_token_response.content
         address = kwargs['email']
         subject = 'Invitation to join group %s' % group.name
+        body = """
+You have been invited to join %s. Please use the following steps:
 
-        token_url = 'http://192.168.50.50:8000/api/v1/invitation/request/%d/' % group.id
-
-        """
-        opener = urllib2.build_opener()
-
-        for k in request.COOKIES.keys():
-            logger.info("%s | %s" % (k, request.COOKIES[k]))
-            opener.addheaders.append((k, request.COOKIES[k]))
-
-        logger.info(opener.getheader
-
-        f = opener.open(token_url).read()
-
-        logger.info(f)
-        """
-
-        r = requests.get(token_url, headers=request.COOKIES)
-
-        logger.info(r.headers)
-        
-
-        # token = urllib2.urlopen(token_url).read()
-
-        join_url = 'http://192.168.50.50:8000/api/v1/invitation/verify/%s/' % token
-        
-        body = 'Go to %s to join' % join_url
+1. Make a Refinery account if you have not already, and log in.
+2. Click on this link: http://192.168.50.50:8000/api/v1/invitation/verify/%s/
+        """ % (group.name, token)
 
         email = EmailMessage(subject, body, to=[address])
         email.send()
