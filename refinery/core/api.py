@@ -273,7 +273,7 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
 
     class Meta:
         # authentication = ApiKeyAuthentication()
-        queryset = Project.objects.all()
+        queryset = Project.objects.filter(is_catch_all=False)
         resource_name = 'projects'
         detail_uri_name = 'uuid'
         fields = ['name', 'id', 'uuid', 'summary']
@@ -316,7 +316,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         # authentication = SessionAuthentication()
         # authorization = GuardianAuthorization()
         filtering = {'uuid': ALL}
-        fields = ['uuid']
+        # fields = ['uuid']
 
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
