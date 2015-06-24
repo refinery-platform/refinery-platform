@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block head_html %}
+
+{% endblock head_html %}
+
+{% block title %}data file upload{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+  <h1>Upload data files&nbsp;
+    <small id="import-message"></small>
+  </h1>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="refinery-panel-tabs">
+  <div class="row-fluid">
+    <div class="span10">
+      <ul class="nav nav-tabs" id="tabs">
+        <li class="active">
+            <a href="#tab1content" data-toggle="tab">
+                Tab 1
+            </a>
+        </li>
+        <li>
+            <a href="#tab2content" data-toggle="tab">
+                Tab 2
+            </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="refinery-panel refinery-panel-content scrollable">
+
+  Content goes here.
+
+</div>
+
+
+{% endblock %}
+
+
+
+{% block script %}
+
+{% endblock %}
+

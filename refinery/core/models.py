@@ -1331,7 +1331,7 @@ class ExternalToolStatus(models.Model):
         unique_together = ('name', 'unique_instance_identifier')
 
 
-class ResourceStatisticsObject(object):
+class ResourceStatistics(object):
     def __init__(
             self,
             user=0,
@@ -1348,13 +1348,7 @@ class ResourceStatisticsObject(object):
         self.project = project
 
 
-class MemberManagementObject(object):
-    def __init__(self, id=None, member_list=None):
-        self.id = id
-        self.member_list = member_list
-
-
-class GroupManagementObject(object):
+class GroupManagement(object):
     def __init__(
             self,
             group_id=None,
@@ -1369,7 +1363,7 @@ class GroupManagementObject(object):
         self.can_edit = can_edit
 
 
-class UserAuthenticationObject(object):
+class UserAuthentication(object):
     def __init__(
             self,
             is_logged_in=None,
@@ -1397,3 +1391,9 @@ class Invitation(models.Model):
         
         return super(Invitation, self).save(*arg, **kwargs)
 
+
+class EmailInvite(object):
+    def __init__(self, email=None, group_id=None, group_name=None):
+        self.email = email
+        self.group_id = group_id
+        self.group_name = group_name

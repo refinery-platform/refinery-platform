@@ -356,7 +356,7 @@ class FileUploadView(TemplateView):
     """Data file upload form view
 
     """
-    template_name = 'data_set_manager/file-import.html'
+    template_name = 'data_set_manager/import.html'
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
