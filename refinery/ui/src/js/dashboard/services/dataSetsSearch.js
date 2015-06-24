@@ -6,15 +6,25 @@ angular
         return function (limit, offset) {
           var deferred = $q.defer(),
               query = solrService.get({
-                'defType': 'dismax',
+                // Extended DisMax
+                'defType': 'edismax',
+                // Fields that are returned
                 'fl': 'id,title,uuid',
+                // Highlighting enabled
                 'hl': true,
+                // Fields that are highlighted
                 'hl.fl': 'content_auto',
+                // Highlighting prefix
                 'hl.simple.pre': '<em>',
+                // Highlighting suffix
                 'hl.simple.post': '</em>',
+                // Query
                 'q': searchQuery,
+                // Query fields
                 'qf': 'content_auto^0.5 text',
+                // # results returned
                 'rows': limit,
+                // Start of return
                 'start': offset
               }, {
                 index: 'core'

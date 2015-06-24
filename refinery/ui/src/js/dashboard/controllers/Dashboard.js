@@ -65,16 +65,10 @@ function DashboardCtrl (
 
   that.dataSets = dashboardDataSetService;
 
-  that.searchDataSets = that._.debounce(function (name) {
-    if (name) {
-      // Switch source of data sets.
-      that.setDataSetSource(name);
-      // Trigger uiScroll to revaluate
-
-    } else {
-      that.setDataSetSource();
-    }
-  }, settings.debounceSearch);
+  that.searchDataSets = that._.debounce(
+    that.setDataSetSource,
+    settings.debounceSearch
+  );
 
   // Initilize data set source
   that.setDataSetSource();
@@ -111,9 +105,11 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
   var that = this;
 
   if (searchQuery) {
+    that.searchDataSet = true;
     var searchResults = new that.dashboardDataSetSearchService(searchQuery);
     that.dashboardDataSetSourceService.setSource(searchResults);
   } else {
+    that.searchDataSet = false;
     that.dashboardDataSetSourceService.setSource(that.dashboardDataSetListService);
   }
 

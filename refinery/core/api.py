@@ -26,7 +26,7 @@ from core.models import Project, NodeSet, NodeRelationship, NodePair, \
     Workflow, WorkflowInputRelationships, Analysis, DataSet, \
     ExternalToolStatus, ResourceStatisticsObject, MemberManagementObject, \
     GroupManagementObject, ExtendedGroup, UserAuthenticationObject, \
-    Invitation
+    Invitation, UserProfile
 from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
@@ -109,13 +109,13 @@ class SharableResourceAPIInterface(object):
     # Apply filters.
     def do_filtering(self, res_list, get_req_dict):
         mod_list = res_list
-        
+
         for k in get_req_dict:
             # Skip if res does not have the attribute. Done to help avoid
             # whatever internal filtering can be performed on other things,
             # like limiting the return amount.
             mod_list = [x for x in mod_list
-                        if not hasattr(x, k) or 
+                        if not hasattr(x, k) or
                         str(getattr(x, k)) == get_req_dict[k]]
 
         return mod_list
@@ -136,7 +136,7 @@ class SharableResourceAPIInterface(object):
 
         # Filter for query flags.
         res_list = self.do_filtering(res_list, request.GET)
- 
+
         return res_list
 
     def build_bundle_list(self, request, res_list, **kwargs):
@@ -270,7 +270,7 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
 
     class Meta:
         # authentication = ApiKeyAuthentication()
-        queryset = Project.objects.all()
+        queryset = Project.objects.filter(is_catch_all=False)
         resource_name = 'projects'
         detail_uri_name = 'uuid'
         fields = ['name', 'id', 'uuid', 'summary']
@@ -313,7 +313,6 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         # authentication = SessionAuthentication()
         # authorization = GuardianAuthorization()
         filtering = {'uuid': ALL}
-        fields = ['uuid']
 
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
@@ -336,8 +335,19 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                                                          bundle,
                                                          **kwargs)
 
-    def get_object_list(self, request):
-        return SharableResourceAPIInterface.get_object_list(self, request)
+    # def get_object_list(self, request):
+    #     return SharableResourceAPIInterface.get_object_list(self, request)
+
+    def get_object_list(self, request, **kwargs):
+        data_sets = get_objects_for_user(
+            request.user,
+            "core.read_dataset"
+        )
+        for data_set in data_sets:
+            data_set.is_owner = request.user.pk == data_set.get_owner().pk
+            data_set.public = data_set.is_public
+
+        return data_sets
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
@@ -445,8 +455,14 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
                                                          bundle,
                                                          **kwargs)
 
-    def get_object_list(self, request):
-        return SharableResourceAPIInterface.get_object_list(self, request)
+    # def get_object_list(self, request):
+    #     return SharableResourceAPIInterface.get_object_list(self, request)
+
+    def get_object_list(self, request, **kwargs):
+        return get_objects_for_user(
+            request.user,
+            "core.read_workflow"
+        ).filter(is_active=True)
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
@@ -506,7 +522,7 @@ class AnalysisResource(ModelResource):
         resource_name = Analysis._meta.module_name
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         # required for public data set access by anonymous users
-        authentication = Authentication()
+        authentication = SessionAuthentication()
         authorization = Authorization()
         allowed_methods = ["get"]
         fields = [
@@ -519,6 +535,13 @@ class AnalysisResource(ModelResource):
             'workflow_steps_num': ALL_WITH_RELATIONS
         }
         ordering = ['name', 'creation_date']
+
+    def get_object_list(self, request, **kwargs):
+        return UserProfile.objects.get(
+            user=User.objects.get(
+                username=request.user
+            )
+        ).catch_all_project.analyses.all().order_by("-time_start")
 
 
 class NodeResource(ModelResource):
@@ -1261,7 +1284,7 @@ class InvitationResource(ModelResource):
     def has_expired(self, token):
         if token.expires is None:
             return True
- 
+
         return (datetime.datetime.now() - token.expires).total_seconds() >= 0
 
     def prepend_urls(self):
@@ -1283,7 +1306,7 @@ class InvitationResource(ModelResource):
         if request.method == 'GET':
             user = request.user
             group = self.get_group(int(kwargs['group_id']))
-            
+
             if not self.user_authorized(user, group):
                 return HttpUnauthorized()
 

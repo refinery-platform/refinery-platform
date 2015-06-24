@@ -63,12 +63,14 @@
               </button>
             </li>
           </ul>
-          <i class="icon-user"></i>
+          <i class="icon-user" ng-if="dataSet.is_owner"></i>
+          <i class="icon-group" ng-if="!dataSet.is_owner"></i>
+          <i class="icon-globe" ng-if="dataSet.public"></i>
           <a
-            ng-if="!dashboard.searchQueryDataSets"
+            ng-if="!dashboard.searchDataSet"
             ng-href="data_sets/{{ dataSet.uuid }}">{{ dataSet.name }}</a>
           <a
-            ng-if="dashboard.searchQueryDataSets"
+            ng-if="dashboard.searchDataSet"
             ng-href="data_sets/{{ dataSet.uuid }}"
             ng-bind-html="dataSet.highlighting"></a>
         </li>
