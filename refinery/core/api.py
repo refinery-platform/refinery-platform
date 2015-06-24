@@ -295,8 +295,21 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
                                                          bundle,
                                                          **kwargs)
 
-    def get_object_list(self, request):
-        return SharableResourceAPIInterface.get_object_list(self, request)
+    # def get_object_list(self, request):
+    #     return SharableResourceAPIInterface.get_object_list(self, request)
+
+    def get_object_list(self, request, **kwargs):
+        if(request.user.is_authenticated()):
+            return get_objects_for_user(
+                request.user,
+                "core.read_project"
+            ).filter(is_catch_all=False)
+        else:
+            group = ExtendedGroup.objects.public_group()
+            return get_objects_for_group(
+                group,
+                'core.read_project'
+            ).filter(is_catch_all=False)
 
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
@@ -342,13 +355,22 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     #     return SharableResourceAPIInterface.get_object_list(self, request)
 
     def get_object_list(self, request, **kwargs):
-        data_sets = get_objects_for_user(
-            request.user,
-            "core.read_dataset"
-        )
-        for data_set in data_sets:
-            data_set.is_owner = request.user.pk == data_set.get_owner().pk
-            data_set.public = data_set.is_public
+        if(request.user.is_authenticated()):
+            data_sets = get_objects_for_user(
+                request.user,
+                'core.read_dataset'
+            )
+            for data_set in data_sets:
+                # Assuming that only owners can share an object.
+                # add_dataset is not unique to owners unfortunately
+                data_set.is_owner = request.user.has_perm(
+                    'core.share_dataset',
+                    data_set
+                )
+                data_set.public = data_set.is_public
+        else:
+            group = ExtendedGroup.objects.public_group()
+            data_sets = get_objects_for_group(group, 'core.read_dataset')
 
         return data_sets
 
@@ -462,10 +484,17 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
     #     return SharableResourceAPIInterface.get_object_list(self, request)
 
     def get_object_list(self, request, **kwargs):
-        return get_objects_for_user(
-            request.user,
-            "core.read_workflow"
-        ).filter(is_active=True)
+        if(request.user.is_authenticated()):
+            return get_objects_for_user(
+                request.user,
+                "core.read_workflow"
+            ).filter(is_active=True)
+        else:
+            group = ExtendedGroup.objects.public_group()
+            return get_objects_for_group(
+                group,
+                'core.read_workflow'
+            ).filter(is_active=True)
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
@@ -525,7 +554,7 @@ class AnalysisResource(ModelResource):
         resource_name = Analysis._meta.module_name
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         # required for public data set access by anonymous users
-        authentication = SessionAuthentication()
+        authentication = Authentication()
         authorization = Authorization()
         allowed_methods = ["get"]
         fields = [
@@ -540,11 +569,14 @@ class AnalysisResource(ModelResource):
         ordering = ['name', 'creation_date']
 
     def get_object_list(self, request, **kwargs):
-        return UserProfile.objects.get(
-            user=User.objects.get(
-                username=request.user
-            )
-        ).catch_all_project.analyses.all().order_by("-time_start")
+        if(request.user.is_authenticated()):
+            return UserProfile.objects.get(
+                user=User.objects.get(
+                    username=request.user
+                )
+            ).catch_all_project.analyses.all().order_by("-time_start")
+        else:
+            return Analysis.objects.none()
 
 
 class NodeResource(ModelResource):
