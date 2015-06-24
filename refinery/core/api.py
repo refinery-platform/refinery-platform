@@ -24,9 +24,8 @@ from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
 from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, \
     Workflow, WorkflowInputRelationships, Analysis, DataSet, \
-    ExternalToolStatus, ResourceStatisticsObject, MemberManagementObject, \
-    GroupManagementObject, ExtendedGroup, UserAuthenticationObject, \
-    Invitation
+    ExternalToolStatus, ResourceStatistics, GroupManagement, ExtendedGroup, \
+    UserAuthentication, Invitation, EmailInvite, UserProfile
 from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource
 from data_set_manager.models import Node, Study
@@ -37,6 +36,10 @@ from django.core.paginator import Paginator, InvalidPage, PageNotAnInteger, \
 from haystack.query import SearchQuerySet, EmptySearchQuerySet
 from django.http import HttpResponse
 import datetime
+from django.core.mail import EmailMessage
+import urllib2
+import requests
+
 
 logger = logging.getLogger(__name__)
 
@@ -85,14 +88,17 @@ class SharableResourceAPIInterface(object):
         return filter(lambda g: user in g.user_set.all(), Group.objects.all())
 
     def has_access(self, user, res):
+        if res.is_public():
+            return True
+
+        if res.get_owner().id == user.id:
+            return True
+
         for i in self.groups_with_user(user):
             perms = self.get_perms(res, i)
             owner = res.get_owner()
 
-            if owner and owner.id == user.id:
-                return True
-
-            if perms['read'] or perms['change'] or res.is_public():
+            if perms['read'] or perms['change']:
                 return True
 
         return False
@@ -108,32 +114,32 @@ class SharableResourceAPIInterface(object):
         mod_list = res_list
 
         for k in get_req_dict:
-            if k == 'format':
-                continue
-
+            # Skip if res does not have the attribute. Done to help avoid
+            # whatever internal filtering can be performed on other things,
+            # like limiting the return amount.
             mod_list = [x for x in mod_list
-                        if (hasattr(x, k) and 
-                            str(getattr(x, k)) == get_req_dict[k])]
+                        if not hasattr(x, k) or
+                        str(getattr(x, k)) == get_req_dict[k]]
 
         return mod_list
 
     # Turns on certain things depending on flags
     def build_res_list(self, user, res_list, request, **kwargs):
+        # Filter for access rights.
+        res_list = filter(lambda r: self.has_access(user, r), res_list)
+
         for i in res_list:
+            # Avoid breaking things if owner does not exist.
             own = i.get_owner()
             setattr(i, 'public', i.is_public())
-            setattr(i, 'owner_id', None if own is None else own.id)
             setattr(i, 'is_owner', None if own is None else own.id == user.id)
-            setattr(i, 'owner_username', None if own is None else own.username)
 
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(i, 'share_list', self.get_share_list(user, i))
 
-        # Filter for access rights.
-        res_list = filter(lambda r: self.has_access(user, r), res_list)
-        
         # Filter for query flags.
         res_list = self.do_filtering(res_list, request.GET)
+
         return res_list
 
     def build_bundle_list(self, request, res_list, **kwargs):
@@ -260,8 +266,6 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
-    owner_id = fields.IntegerField(attribute='owner_id', null=True)
-    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, Project)
@@ -269,7 +273,7 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
 
     class Meta:
         # authentication = ApiKeyAuthentication()
-        queryset = Project.objects.all()
+        queryset = Project.objects.filter(is_catch_all=False)
         resource_name = 'projects'
         detail_uri_name = 'uuid'
         fields = ['name', 'id', 'uuid', 'summary']
@@ -291,16 +295,27 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
                                                          bundle,
                                                          **kwargs)
 
-    def get_object_list(self, request):
-        return SharableResourceAPIInterface.get_object_list(self, request)
+    # def get_object_list(self, request):
+    #     return SharableResourceAPIInterface.get_object_list(self, request)
+
+    def get_object_list(self, request, **kwargs):
+        if(request.user.is_authenticated()):
+            return get_objects_for_user(
+                request.user,
+                "core.read_project"
+            ).filter(is_catch_all=False)
+        else:
+            group = ExtendedGroup.objects.public_group()
+            return get_objects_for_group(
+                group,
+                'core.read_project'
+            ).filter(is_catch_all=False)
 
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
-    owner_id = fields.IntegerField(attribute='owner_id', null=True)
-    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, DataSet)
@@ -314,7 +329,6 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         # authentication = SessionAuthentication()
         # authorization = GuardianAuthorization()
         filtering = {'uuid': ALL}
-        fields = ['uuid']
 
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
@@ -337,8 +351,28 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                                                          bundle,
                                                          **kwargs)
 
-    def get_object_list(self, request):
-        return SharableResourceAPIInterface.get_object_list(self, request)
+    # def get_object_list(self, request):
+    #     return SharableResourceAPIInterface.get_object_list(self, request)
+
+    def get_object_list(self, request, **kwargs):
+        if(request.user.is_authenticated()):
+            data_sets = get_objects_for_user(
+                request.user,
+                'core.read_dataset'
+            )
+            for data_set in data_sets:
+                # Assuming that only owners can share an object.
+                # add_dataset is not unique to owners unfortunately
+                data_set.is_owner = request.user.has_perm(
+                    'core.share_dataset',
+                    data_set
+                )
+                data_set.public = data_set.is_public
+        else:
+            group = ExtendedGroup.objects.public_group()
+            data_sets = get_objects_for_group(group, 'core.read_dataset')
+
+        return data_sets
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
@@ -420,8 +454,6 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
-    owner_id = fields.IntegerField(attribute='owner_id', null=True)
-    owner_username = fields.CharField(attribute='owner_username', null=True)
 
     def __init__(self):
         SharableResourceAPIInterface.__init__(self, Workflow)
@@ -448,8 +480,21 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
                                                          bundle,
                                                          **kwargs)
 
-    def get_object_list(self, request):
-        return SharableResourceAPIInterface.get_object_list(self, request)
+    # def get_object_list(self, request):
+    #     return SharableResourceAPIInterface.get_object_list(self, request)
+
+    def get_object_list(self, request, **kwargs):
+        if(request.user.is_authenticated()):
+            return get_objects_for_user(
+                request.user,
+                "core.read_workflow"
+            ).filter(is_active=True)
+        else:
+            group = ExtendedGroup.objects.public_group()
+            return get_objects_for_group(
+                group,
+                'core.read_workflow'
+            ).filter(is_active=True)
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
@@ -522,6 +567,16 @@ class AnalysisResource(ModelResource):
             'workflow_steps_num': ALL_WITH_RELATIONS
         }
         ordering = ['name', 'creation_date']
+
+    def get_object_list(self, request, **kwargs):
+        if(request.user.is_authenticated()):
+            return UserProfile.objects.get(
+                user=User.objects.get(
+                    username=request.user
+                )
+            ).catch_all_project.analyses.all().order_by("-time_start")
+        else:
+            return Analysis.objects.none()
 
 
 class NodeResource(ModelResource):
@@ -802,7 +857,7 @@ class StatisticsResource(Resource):
 
     class Meta:
         resource_name = 'statistics'
-        object_class = ResourceStatisticsObject
+        object_class = ResourceStatistics
 
     def detail_uri_kwargs(self, bundle_or_obj):
         kwargs = {}
@@ -837,82 +892,9 @@ class StatisticsResource(Resource):
             if 'project' in request_string:
                 project_summary = self.stat_summary(Project)
 
-        return [ResourceStatisticsObject(
+        return [ResourceStatistics(
             user_count, group_count, files_count,
             dataset_summary, workflow_summary, project_summary)]
-
-
-class MemberManagementResource(Resource):
-    member_list = fields.ListField(attribute='member_list', null=True)
-
-    # Assume that groups only exist in Group-Manager pairs.
-    def is_manager_group(self, group):
-        return group.extendedgroup.manager_group is None
-
-    def get_group(self, group_id):
-        group_list = Group.objects.filter(id=int(group_id))
-        return None if len(group_list) == 0 else group_list[0]
-
-    def get_members(self, group):
-        user_list = group.user_set.all()
-        return map(lambda u: {'username': u.username, 'id': u.id}, user_list)
-
-    class Meta:
-        resource_name = 'member_management'
-        object_class = MemberManagementObject
-        # authentication = SessionAuthentication
-
-    def detail_uri_kwargs(self, bundle_or_obj):
-        kwargs = {}
-
-        if isinstance(bundle_or_obj, Bundle):
-            kwargs['pk'] = bundle_or_obj.obj.id
-        else:
-            kwargs['pk'] = bundle_or_obj.id
-
-        return kwargs
-
-    def obj_get(self, bundle, **kwargs):
-        uuid = kwargs['pk']
-        return self.get_group(uuid)
-
-    def obj_get_list(self, bundle, **kwargs):
-        return self.get_object_list(bundle.request)
-
-    def get_object_list(self, request):
-        group = self.get_group(request.GET['id'])
-        return [MemberManagementObject(group.id, self.get_members(group))]
-
-    def obj_update(self, bundle, **kwargs):
-        id = kwargs['pk']
-        group = self.get_group(id)
-        user = bundle.request.user
-        member_list = bundle.data['member_list']
-        is_manager = self.is_manager_group(group)
-
-        """
-        # Verify that the user has is in the manager group
-        if is_manager:
-            if user not in group.user_set.all():
-                # raise ImmediateHttpResponse(response=HttpUnauthorized)
-        else:
-            if user not in group.extendedgroup.manager_group.user_set.all():
-                # raise ImmediateHttpResponse(response=HttpUnauthorized)
-        """
-
-        # Remove all objects before readding them.
-        group.user_set.clear()
-
-        for m in member_list:
-            group.user_set.add(m['id'])
-
-        # Managers should also be in the group that they manage.
-        if is_manager:
-            for g in group.extendedgroup.managed_group.all():
-                for m in member_list:
-                    g.user_set.add(m['id'])
-
-        return MemberManagementResource()
 
 
 class GroupManagementResource(Resource):
@@ -924,7 +906,7 @@ class GroupManagementResource(Resource):
 
     class Meta:
         resource_name = 'groups'
-        object_class = GroupManagementObject
+        object_class = GroupManagement
         detail_uri_name = 'group_id'
         # authentication = SessionAuthentication
         # authorization = GuardianAuthorization
@@ -978,7 +960,7 @@ class GroupManagementResource(Resource):
 
     # Bundle building methods.
 
-    # The group_list is actually a list of GroupManagementObjects.
+    # The group_list is actually a list of GroupManagement objects.
     def build_group_list(self, user, group_list, **kwargs):
         if 'members' in kwargs and kwargs['members']:
             for i in group_list:
@@ -1068,7 +1050,7 @@ class GroupManagementResource(Resource):
         group = self.get_group(kwargs['id'])
 
         if request.method == 'GET':
-            group_obj_list = [GroupManagementObject(
+            group_obj_list = [GroupManagement(
                 group.id,
                 group.name,
                 None,
@@ -1088,7 +1070,7 @@ class GroupManagementResource(Resource):
             group_list = self.groups_with_user(user)
 
             group_obj_list = map(
-                lambda g: GroupManagementObject(
+                lambda g: GroupManagement(
                     g.id,
                     g.name,
                     None,
@@ -1112,7 +1094,7 @@ class GroupManagementResource(Resource):
         group = self.get_group(kwargs['id'])
 
         if request.method == 'GET':
-            group_obj_list = [GroupManagementObject(
+            group_obj_list = [GroupManagement(
                 group.id,
                 group.name,
                 self.get_member_list(group),
@@ -1151,7 +1133,7 @@ class GroupManagementResource(Resource):
             group_list = self.groups_with_user(user)
 
             group_obj_list = map(
-                lambda g: GroupManagementObject(
+                lambda g: GroupManagement(
                     g.id,
                     g.name,
                     self.get_member_list(g),
@@ -1169,7 +1151,7 @@ class GroupManagementResource(Resource):
         group = self.get_group(kwargs['id'])
 
         if request.method == 'GET':
-            group_obj_list = [GroupManagementObject(
+            group_obj_list = [GroupManagement(
                 group.id,
                 group.name,
                 None,
@@ -1189,7 +1171,7 @@ class GroupManagementResource(Resource):
             group_list = self.groups_with_user(user)
 
             group_obj_list = map(
-                lambda g: GroupManagementObject(
+                lambda g: GroupManagement(
                     g.id,
                     g.name,
                     None,
@@ -1211,7 +1193,7 @@ class UserAuthenticationResource(Resource):
 
     class Meta:
         resource_name = 'user_authentication'
-        object_class = UserAuthenticationObject
+        object_class = UserAuthentication
 
     def determine_format(self, request):
         return 'application/json'
@@ -1229,7 +1211,7 @@ class UserAuthenticationResource(Resource):
         is_admin = user.is_staff
         id = user.id
         username = user.username if is_logged_in else 'AnonymousUser'
-        auth_obj = UserAuthenticationObject(
+        auth_obj = UserAuthentication(
             is_logged_in,
             is_admin,
             user.id,
@@ -1242,6 +1224,8 @@ class UserAuthenticationResource(Resource):
 
 class InvitationResource(ModelResource):
     uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+    group_id_regex = '[0-9]+'
+    email_regex = '[^@|\s]+@[^@]+\.[^@|\s]+'
 
     class Meta:
         queryset = Invitation.objects.all()
@@ -1264,7 +1248,7 @@ class InvitationResource(ModelResource):
     def has_expired(self, token):
         if token.expires is None:
             return True
- 
+
         return (datetime.datetime.now() - token.expires).total_seconds() >= 0
 
     def prepend_urls(self):
@@ -1278,6 +1262,11 @@ class InvitationResource(ModelResource):
             url(r'^invitation/update/$',
                 self.wrap_view('update_db'),
                 name='api_invitation_update_db'),
+            url(r'^invitation/send/(?P<group_id>%s)/(?P<email>%s)/$'
+                % (self.group_id_regex, self.email_regex),
+                self.wrap_view('email_token'),
+                name='api_invitation_email_token'),
+
         ]
 
     def get_token(self, request, **kwargs):
@@ -1286,7 +1275,7 @@ class InvitationResource(ModelResource):
         if request.method == 'GET':
             user = request.user
             group = self.get_group(int(kwargs['group_id']))
-            
+
             if not self.user_authorized(user, group):
                 return HttpUnauthorized()
 
@@ -1304,6 +1293,10 @@ class InvitationResource(ModelResource):
 
         if request.method == 'GET':
             user = request.user
+
+            if not user.is_authenticated():
+                return HttpUnauthorized()
+
             token = kwargs['token']
             invite_list = Invitation.objects.filter(token_uuid=token)
 
@@ -1331,4 +1324,27 @@ class InvitationResource(ModelResource):
         return HttpNoContent()
 
 
+    def email_token(self, request, **kwargs):
+        group = self.get_group(int(kwargs['group_id']))
 
+        if not self.user_authorized(request.user, group):
+            return HttpUnauthorized()
+
+        get_token_response = self.get_token(request, **kwargs)
+
+        if type(get_token_response) is type(HttpUnauthorized()):
+            return HttpUnauthorized()
+
+        token = get_token_response.content
+        address = kwargs['email']
+        subject = 'Invitation to join group %s' % group.name
+        body = """
+You have been invited to join %s. Please use the following steps:
+
+1. Make a Refinery account if you have not already, and log in.
+2. Click on this link: http://192.168.50.50:8000/api/v1/invitation/verify/%s/
+        """ % (group.name, token)
+
+        email = EmailMessage(subject, body, to=[address])
+        email.send()
+        return HttpAccepted()

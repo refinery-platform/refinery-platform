@@ -35,8 +35,8 @@
 
 #provenance-sidebar {
   position: fixed;
-  top: 200px;
-  margin-top: 5px;
+  /*top: 200px;*/
+  /*margin-top: 5px;*/
   left: -355px;
   width: 320px;
   z-index: 2;
