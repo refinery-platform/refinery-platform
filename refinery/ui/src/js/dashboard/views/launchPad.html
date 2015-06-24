@@ -25,7 +25,7 @@
       </span>
     </div>
 
-    <form class="navbar-search">
+    <form class="navbar-search" ng-if="dashboard.dataSets.total > 0">
       <i class="icon-search"></i>
       <input
         type="text"
@@ -63,9 +63,18 @@
               </button>
             </li>
           </ul>
-          <i class="icon-user" ng-if="dataSet.is_owner"></i>
-          <i class="icon-group" ng-if="!dataSet.is_owner"></i>
-          <i class="icon-globe" ng-if="dataSet.public"></i>
+          <i
+            class="icon-user"
+            title="You own this data set"
+            ng-if="dataSet.is_owner"></i>
+          <i
+            class="icon-group"
+            title="This data set is shared with you"
+            ng-if="!dataSet.is_owner"></i>
+          <i
+            class="icon-globe"
+            title="This file is publicly available"
+            ng-if="dataSet.public"></i>
           <a
             ng-if="!dashboard.searchDataSet"
             ng-href="data_sets/{{ dataSet.uuid }}">{{ dataSet.name }}</a>

@@ -43,25 +43,35 @@ function DashboardCtrl (
   // have right now.
   that.authService.isAuthenticated().then(function (isAuthenticated) {
     that.userIsAuthenticated = isAuthenticated;
-    console.log('authentication? ' + that.userIsAuthenticated);
   });
   that.authService.isAdmin().then(function (isAdmin) {
     that.userIsAdmin = isAdmin;
-    console.log('admin? ' + that.userIsAdmin);
   });
 
   // Get data
-  that.getProjects().then(function (results) {
-    that.allProjects = results;
-  });
+  that.getProjects()
+    .then(function (results) {
+      that.allProjects = results;
+    })
+    .catch(function (error) {
+      that.allProjects = [];
+    });
 
-  that.getAnalyses().then(function (results) {
-    that.allAnalyses = results;
-  });
+  that.getAnalyses()
+    .then(function (results) {
+      that.allAnalyses = results;
+    })
+    .catch(function (error) {
+      that.allAnalyses = [];
+    });
 
-  that.getWorkflows().then(function (results) {
-    that.allWorkflows = results;
-  });
+  that.getWorkflows()
+    .then(function (results) {
+      that.allWorkflows = results;
+    })
+    .catch(function (error) {
+      that.allWorkflows = [];
+    });
 
   that.dataSets = dashboardDataSetService;
 

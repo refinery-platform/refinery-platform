@@ -21,13 +21,13 @@
     "angular-sanitize": "1.2.9",
     "angular-ui-select2": "0.0.5",
     "angular-ui-router": "0.2.15",
+    "angular-ui-utils": "flekschas/ui-utils#expose-reload",
     "angular-bootstrap": "0.8.0",
     "angular-mocks": "1.2.9",
     "tipsy": "0.1.7",
     "c3": "0.3.0",
     "ng-grid": "2.0.13",
     "ng-file-upload": "1.6.6",
-    "ngInfiniteScroll": "~1.2.1",
     "lodash": "2.4.1",
     "lodash-3": "lodash#3.9.3",
     "graphlib": "1.0.1",
@@ -35,7 +35,6 @@
     "spectrum": "1.7.0",
     "floatThead": "1.2.12",
     "jquery-file-upload": "9.10.0",
-    "spark-md5": "0.0.5",
-    "angular-ui-utils": "bower-scroll"
+    "spark-md5": "0.0.5"
   }
 }
