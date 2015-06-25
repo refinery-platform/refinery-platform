@@ -229,8 +229,6 @@ class SharableResourceAPIInterface(object):
         if not user.is_authenticated() and res and not res.is_public():
             return HttpUnauthorized()
 
-        logger.info("ere")
-
         if request.method == 'GET':
             kwargs['sharing'] = True
             return self.process_get(request, res, **kwargs)
@@ -1297,19 +1295,27 @@ class InvitationResource(ModelResource):
             url(r'^invitation/update/$',
                 self.wrap_view('update_db'),
                 name='api_invitation_update_db'),
-            url(r'^invitation/send/(?P<group_id>%s)/(?P<email>%s)/$'
-                % (self.group_id_regex, self.email_regex),
+            url(r'^invitation/send/$',
                 self.wrap_view('email_token'),
                 name='api_invitation_email_token'),
-
         ]
 
     def get_token(self, request, **kwargs):
         self.update_db(request, **kwargs)
 
-        if request.method == 'GET':
+        if request.method == 'GET' or request.method == 'POST':
             user = request.user
-            group = self.get_group(int(kwargs['group_id']))
+            group = None
+
+            if request.method == 'GET':
+                group = self.get_group(int(kwargs['group_id']))
+
+            if request.method == 'POST':
+                data = request.raw_post_data
+                group = self.get_group(int(json.loads(data)['group_id']))
+
+            if not group:
+                return HttpBadRequest()
 
             if not self.user_authorized(user, group):
                 return HttpUnauthorized()
@@ -1360,7 +1366,10 @@ class InvitationResource(ModelResource):
 
 
     def email_token(self, request, **kwargs):
-        group = self.get_group(int(kwargs['group_id']))
+        self.update_db(request, **kwargs)
+
+        data = json.loads(request.raw_post_data)
+        group = self.get_group(int(data['group_id']))
 
         if not self.user_authorized(request.user, group):
             return HttpUnauthorized()
@@ -1371,7 +1380,7 @@ class InvitationResource(ModelResource):
             return HttpUnauthorized()
 
         token = get_token_response.content
-        address = kwargs['email']
+        address = data['email']
         subject = 'Invitation to join group %s' % group.name
         body = """
 You have been invited to join %s. Please use the following steps:
