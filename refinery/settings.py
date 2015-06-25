@@ -208,6 +208,14 @@ INSTALLED_APPS = (
     'chunked_upload',
 )
 
+# required for Django Debug Tool Bar
+if get_setting('DEBUG_TOOLBAR'):
+    INSTALLED_APPS += (
+        'debug_toolbar',
+    )
+    INTERNAL_IPS = ('192.168.50.1' )
+
+
 # NG: added for django-guardian
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # default
