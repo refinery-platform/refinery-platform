@@ -373,15 +373,22 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
     model = ChunkedUpload
 
     def on_completion(self, uploaded_file, request):
-        # move file to the user's import directory
-        logger.debug(request.POST.get('md5'))
+        """Move file to the user's import directory"""
         upload_id = request.POST.get('upload_id')
         chunked_upload = ChunkedUpload.objects.get(upload_id=upload_id)
-        dst = os.path.join(get_user_import_dir(request.user),
-                           chunked_upload.filename)
+        user_import_dir = get_user_import_dir(request.user)
+        if not os.path.exists(user_import_dir):
+            try:
+                os.mkdir(user_import_dir)
+                logger.info("Created user import directory '%s'",
+                            user_import_dir)
+            except OSError as e:
+                logger.error("Error creating user import directory '%s': %s",
+                             user_import_dir, e)
+        dst = os.path.join(user_import_dir, chunked_upload.filename)
         try:
             shutil.move(chunked_upload.file.path, dst)
-        except shutil.Error as e:
+        except (shutil.Error, IOError) as e:
             logger.error(
                 "Error moving uploaded file to user's import directory: %s", e)
 

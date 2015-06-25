@@ -1227,7 +1227,9 @@ class IsaTabParser:
         )
 
         identifier = None
+        study_id = True
         investigation_id = True
+        study_title = True
         investigation_title = True
         title = None
 
@@ -1237,25 +1239,42 @@ class IsaTabParser:
                 if not identifier and \
                    investigation_id and \
                    line.startswith("Investigation Identifier"):
-                    identifier = line.split('\t')[1].strip(' "')
+                    try:
+                        identifier = line.split('\t')[1].strip(' "')
+                    except IndexError:
+                        pass
                     investigation_id = False
                 if not identifier and \
                    not investigation_id and \
+                   study_id and \
                    line.startswith("Study Identifier"):
-                    identifier = line.split('\t')[1].strip(' "')
-                    investigation_id = True
+                    try:
+                        identifier = line.split('\t')[1].strip(' "')
+                    except IndexError:
+                        pass
+                    study_id = False
                 if not title and \
                    investigation_title and \
                    line.startswith("Investigation Title"):
-                    logger.info('Found line: {l}'.format(l=line))
-                    title = line.split('\t')[1].strip(' "')
+                    try:
+                        title = line.split('\t')[1].strip(' "')
+                    except IndexError:
+                        pass
                     investigation_title = False
                 if not title and \
                    not investigation_title and \
                    line.startswith("Study Title"):
-                    title = line.split('\t')[1].strip(' "')
-                    investigation_title = True
-                if identifier and title:
+                    try:
+                        title = line.split('\t')[1].strip(' "')
+                    except IndexError:
+                        pass
+                    study_title = False
+                if ((identifier and title) or
+                    (not (
+                        study_id or
+                        study_title or
+                        investigation_id or
+                        investigation_title))):
                     return (identifier, title)
         return (None, None)
 

@@ -32,24 +32,20 @@ logger = logging.getLogger('file_store')
 
 
 def _mkdir(path):
-    '''Create directory given absolute file system path.
+    """Create directory given absolute file system path.
     Does not create intermediate dirs if they don't exist.
 
     :param path: Absolute file system path.
     :type path: str.
     :returns: bool -- True if directory was created, False if it wasn't.
-
-    '''
-    logger.debug("Creating directory %s", path)
+    """
+    logger.debug("Creating directory '%s'", path)
     try:
         os.mkdir(path)
     except OSError as e:
-        logger.error(
-            "Error creating directory. OSError: [Errno %s], error: %s, path: "
-            "%s", e.errno, e.strerror, e.filename
-        )
+        logger.error("Error creating directory '%s': %s", path, e)
         return False
-    logger.info("Directory %s created", path)
+    logger.info("Created directory '%s'", path)
     return True
 
 

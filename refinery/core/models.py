@@ -100,17 +100,6 @@ def add_new_user_to_public_group(sender, instance, created, **kwargs):
             instance.groups.add(public_group)
 
 
-@receiver(post_save, sender=User)
-def create_user_import_directory(sender, instance, created, **kwargs):
-    """Create import directory for new user
-    """
-    if created:
-        try:
-            os.mkdir(get_user_import_dir(instance))
-        except OSError as e:
-            logger.warn(e)
-
-
 def create_user_profile_registered(sender, user, request, **kwargs):
     UserProfile.objects.get_or_create(user=user)
 

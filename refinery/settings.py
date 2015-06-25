@@ -155,7 +155,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # 'core.middleware.ExternalToolErrorMiddleware',
     'core.middleware.DatabaseFailureMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
@@ -214,7 +213,11 @@ if get_setting('DEBUG_TOOLBAR'):
     INSTALLED_APPS += (
         'debug_toolbar',
     )
-    INTERNAL_IPS = ('192.168.50.1' )
+    MIDDLEWARE_CLASSES += (
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+        'middleware.JsonAsHTML',
+    )
+    INTERNAL_IPS = ('192.168.50.1')
 
 
 # NG: added for django-guardian
