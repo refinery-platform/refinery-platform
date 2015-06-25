@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block head_html %}
+<!-- for metadata table upload -->
+<!-- CSS to style the file input field as button and adjust the Bootstrap progress bars -->
+<link rel="stylesheet"
+      href="{% static "vendor/jquery-file-upload/css/jquery.fileupload.css" %}"/>
+<link rel="stylesheet"
+      href="{% static "vendor/jquery-file-upload/css/jquery.fileupload-ui.css" %}"/>
+<style>
+  /* Hide Angular JS elements before initializing */
+  .ng-cloak {
+    display: none;
+  }
+</style>
+<!-- end metadata table upload -->
+{% endblock head_html %}
+
+{% block title %}data file upload{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+  <h1>Data set import&nbsp;
+    <small id="import-message"></small>
+  </h1>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Tab names -->
+<div class="refinery-panel-tabs">
+  <div class="row-fluid">
+    <div class="span10">
+      <ul class="nav nav-tabs" id="tabs">
+        <li class="active">
+          <a href="#metadata-table" data-toggle="tab">Metadata table</a>
+        </li>
+        <li>
+          <a href="#isa-archive" data-toggle="tab">ISA archive</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<!-- Tab contents -->
+<div class="refinery-panel refinery-panel-content scrollable">
+  <div class="tab-content">
+    <!-- metadata table upload -->
+    <div class="tab-pane fade active in" id="metadata-table">
+      <div class="refinery-header">
+        <span class="refinery-header-left">
+          <h3>Metadata table import</h3>
+        </span>
+      </div>
+      <form id="fileupload" method="POST" enctype="multipart/form-data"
+            ng-controller="RefineryFileUploadController"
+            data-file-upload="options"
+            ng-class="{'fileupload-processing': processing() || loadingFiles}">
+        {% csrf_token %}
+        <!-- Redirect browsers with JavaScript disabled to the origin page -->
+        <noscript>
+          <input type="hidden" name="redirect"
+                 value="/">
+        </noscript>
+        <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
+        <div class="row-fluid fileupload-buttonbar">
+          <div class="col-lg-7">
+            <!-- The fileinput-button span is used to style the file input field as button -->
+          <span class="btn btn-success fileinput-button"
+                ng-class="{disabled: disabled}">
+            <i class="glyphicon glyphicon-plus"></i>
+            <span>Add files...</span>
+            <input type="file" name="files[]" multiple ng-disabled="disabled">
+          </span>
+            <button type="button" class="btn btn-primary start"
+                    data-ng-click="submit()">
+              <i class="glyphicon glyphicon-upload"></i>
+              <span>Start upload</span>
+            </button>
+            <button type="button" class="btn btn-warning cancel"
+                    data-ng-click="cancel()">
+              <i class="glyphicon glyphicon-ban-circle"></i>
+              <span>Cancel upload</span>
+            </button>
+            <!-- The global file processing state -->
+            <span class="fileupload-process"></span>
+          </div>
+          <!-- The global progress state -->
+          <div class="col-lg-5 fade" data-ng-class="{in: active()}">
+            <!-- The global progress bar -->
+            <div class="progress progress-striped active"
+                 data-file-upload-progress="progress()">
+              <div class="progress-bar progress-bar-success"
+                   data-ng-style="{width: num + '%'}"></div>
+            </div>
+            <!-- The extended global progress state -->
+            <div class="progress-extended">&nbsp;</div>
+          </div>
+        </div>
+        <!-- The table listing the files available for upload/download -->
+        {% verbatim %}
+        <table class="table table-striped files ng-cloak">
+          <tr data-ng-repeat="file in queue"
+              data-ng-class="{'processing': file.$processing()}">
+            <td data-ng-switch data-on="!!file.thumbnailUrl">
+              <div class="preview" data-ng-switch-when="true">
+                <a data-ng-href="{{file.url}}" title="{{file.name}}"
+                   download="{{file.name}}" data-gallery><img
+                    data-ng-src="{{file.thumbnailUrl}}" alt=""></a>
+              </div>
+              <div class="preview" data-ng-switch-default
+                   data-file-upload-preview="file"></div>
+            </td>
+            <td>
+              <p class="name" data-ng-switch data-on="!!file.url">
+              <span data-ng-switch-when="true" data-ng-switch
+                    data-on="!!file.thumbnailUrl">
+                <a data-ng-switch-when="true"
+                   data-ng-href="{{file.url}}" title="{{file.name}}"
+                   download="{{file.name}}" data-gallery>{{file.name}}</a>
+                <a data-ng-switch-default
+                   data-ng-href="{{file.url}}" title="{{file.name}}"
+                   download="{{file.name}}">{{file.name}}</a>
+              </span>
+                <span data-ng-switch-default>{{file.name}}</span>
+              </p>
+              <strong data-ng-show="file.error" class="error text-danger">
+                {{file.error}}
+              </strong>
+            </td>
+            <td>
+              <p class="size">{{file.size | formatFileSize}}</p>
+
+              <div class="progress progress-striped active fade"
+                   data-ng-class="{pending: 'in'}[file.$state()]"
+                   data-file-upload-progress="file.$progress()">
+                <div class="progress-bar progress-bar-success"
+                     data-ng-style="{width: num + '%'}"></div>
+              </div>
+            </td>
+            <td>
+              <button type="button" class="btn btn-primary start"
+                      data-ng-click="file.$submit()"
+                      data-ng-hide="!file.$submit || options.autoUpload"
+                      data-ng-disabled="file.$state() == 'pending' || file.$state() == 'rejected'">
+                <i class="glyphicon glyphicon-upload"></i>
+                <span>Start</span>
+              </button>
+              <button type="button" class="btn btn-warning cancel"
+                      data-ng-click="file.$cancel()" data-ng-hide="!file.$cancel">
+                <i class="glyphicon glyphicon-ban-circle"></i>
+                <span>Cancel</span>
+              </button>
+              <button data-ng-controller="RefineryFileDestroyController" type="button"
+                      class="btn btn-danger destroy"
+                      data-ng-click="file.$destroy()"
+                      data-ng-hide="!file.$destroy">
+                <i class="glyphicon glyphicon-trash"></i>
+                <span>Delete</span>
+              </button>
+            </td>
+          </tr>
+        </table>
+        {% endverbatim %}
+      </form>
+    </div>
+    <!-- end metadata table upload -->
+    <!-- ISA archive upload form -->
+    <div class="tab-pane" id="isa-archive">
+      <div class="refinery-header">
+        <span class="refinery-header-left">
+          <h3>ISA archive import</h3>
+        </span>
+      </div>
+      <form id="isaTabImportForm" enctype="multipart/form-data"
+            action="isa-tab-form/" method="post">
+        {% csrf_token %}
+
+        <p>{{ form.non_field_errors }}</p>
+        <p>{{ error }}</p>
+
+        <div class="refinery-subheader">
+          <h4>From Disk</h4>
+        </div>
+        <p>
+          {{ form.isa_tab_file.errors}}
+          {{ form.isa_tab_file }}
+        </p>
+
+        <div class="refinery-subheader">
+          <h4>From URL</h4>
+        </div>
+        <p>
+          {{ form.isa_tab_url.errors }}
+          {{ form.isa_tab_url }}
+        </p>
+        <input style="float: left;" class="btn" id="import-button"
+               type="submit" value="Import"/>
+        <div style="margin-left: 15px; padding: 15px; float: left; display: block; height: 22px; width: 22px;"
+             id="spinner">
+        </div>
+      </form>
+    </div>
+    <!-- end ISA archive upload form -->
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<!-- for metadata table upload -->
+<!-- The jQuery UI widget factory, can be omitted if jQuery UI is already included -->
+<script src="{% static "vendor/jquery-file-upload/js/vendor/jquery.ui.widget.js" %}"></script>
+<!-- Bootstrap JS is not required, but included for the responsive demo navigation -->
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<!-- The Iframe Transport is required for browsers without support for XHR file uploads -->
+<script src="{% static "vendor/jquery-file-upload/js/jquery.iframe-transport.js" %}"></script>
+<!-- The basic File Upload plugin -->
+<script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload.js" %}"></script>
+<!-- The File Upload processing plugin -->
+<script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload-process.js" %}"></script>
+<!-- Calculate md5 -->
+<script src="{% static "vendor/spark-md5/spark-md5.js" %}"></script>
+<!-- end metadata table upload -->
+<!-- for ISA archive upload form -->
+<script language="javascript" type="text/javascript"
+        src="{% static "js/spin/spin.min.js" %}"></script>
+<script language="javascript" type="text/javascript">
+   var opts = {
+   lines: 13, // The number of lines to draw
+   length: 4, // The length of each line
+   width: 2, // The line thickness
+   radius: 6, // The radius of the inner circle
+   corners: 1, // Corner roundness (0..1)
+    rotate: 0, // The rotation offset
+    color: '#000', // #rgb or #rrggbb
+    speed: 1, // Rounds per second
+    trail: 60, // Afterglow percentage
+    shadow: false, // Whether to render a shadow
+    hwaccel: false, // Whether to use hardware acceleration
+    className: 'spinner', // The CSS class to assign to the spinner
+    zIndex: 2e9, // The z-index (defaults to 2000000000)
+    top: 'auto', // Top position relative to parent in px
+    left: 'auto' // Left position relative to parent in px
+    };
+   $("#import-button").on( "click", function() {
+     $("#import-errors").html( "");
+     var target = document.getElementById('spinner');
+     //var spinner = new Spinner(opts).spin(target);
+     var spinner = new Spinner(opts).spin();
+     target.appendChild(spinner.el);
+     $("#import-message").html( "Running ...")
+   });
+</script>
+<!-- end ISA archive upload form -->
+{% endblock %}
