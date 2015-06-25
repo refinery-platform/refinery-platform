@@ -214,8 +214,9 @@ if get_setting('DEBUG_TOOLBAR'):
     )
     MIDDLEWARE_CLASSES += (
         'debug_toolbar.middleware.DebugToolbarMiddleware',
+        'middleware.JsonAsHTML',
     )
-    INTERNAL_IPS = ('192.168.50.1' )
+    INTERNAL_IPS = ('192.168.50.1')
 
 
 # NG: added for django-guardian
