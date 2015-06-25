@@ -412,6 +412,7 @@ ul#externalToolListPopover li{
       font-size: 15px;
       line-height: normal;
       padding-left: 25px;
+      padding-right: 25px;
     }
 
     .search-query::placeholder {
@@ -422,6 +423,29 @@ ul#externalToolListPopover li{
       position: absolute;
       top: 10px;
       left: 12px;
+    }
+
+    .icon-remove-sign {
+      position: absolute;
+      top: 11px;
+      right: 12px;
+      opacity: 0.5;
+      transition: opacity @fastTransitionSpeed @easeInOutCubic;
+    }
+
+    .icon-remove-sign.ng-enter,
+    .icon-remove-sign.ng-leave.ng-leave-active {
+      opacity: 0;
+    }
+
+    .icon-remove-sign.ng-leave,
+    .icon-remove-sign.ng-enter.ng-enter-active {
+      opacity: 0.5;
+    }
+
+    .icon-remove-sign:hover {
+      cursor: pointer;
+      opacity: 1;
     }
   }
 }

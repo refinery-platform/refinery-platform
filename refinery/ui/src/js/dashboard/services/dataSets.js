@@ -1,7 +1,13 @@
 angular
   .module('refineryDashboard')
-  .factory('dashboardDataSetService', ['dashboardDataSetSourceService',
-    function (dashboardDataSetSourceService) {
+  .factory('dashboardDataSetService', [
+    '$cacheFactory',
+    'dashboardDataSetSourceService',
+    function ($cacheFactory, dashboardDataSetSourceService) {
+
+      var cacheStore = $cacheFactory('dashboardDataSetServiceCache', {
+        capacity: 10
+      });
 
       var dataSets = {
         /**
@@ -13,10 +19,17 @@ angular
          */
         cache: {
           /**
+           * Default cache identifier
+           * @type {number}
+           */
+          defaultId: 'default',
+
+          /**
            * Initialize cache.
            * @type {function}
            */
-          initialize: function () {
+          initialize: function (id) {
+            this.id = id;
             this.isEnabled = true;
             this.items = {};
             this.getPure = dataSets.get;
@@ -33,10 +46,13 @@ angular
           getCached: function (offset, limit, success) {
             var self = dataSets.cache;
 
+            offset--;
+
             if (self.isEnabled) {
               if (self.getItems(offset, limit, success)) {
                 return true;
               }
+
               return self.getPure(offset, limit, function (results) {
                 self.saveItems(offset, limit, results);
                 success(results);
@@ -55,6 +71,8 @@ angular
            */
           getItems: function (offset, limit, success) {
             var results = [];
+
+            console.log('HERE IS DA CA$$', this.items);
 
             for (var i = offset, end = offset + limit; i < end; i++) {
               if (!this.items.hasOwnProperty(i)) {
@@ -78,6 +96,12 @@ angular
             for (var i = 0, len = results.length; i < len; i++) {
               this.items[offset + i] = results[i];
             }
+          },
+
+          store: {},
+
+          storeQueue: {
+
           }
         },
 
@@ -129,8 +153,15 @@ angular
         /**
          * Reset the cache
          */
-        resetCache: function () {
-          this.items = {};
+        resetCache: function (id) {
+          id = id || dataSets.cache.defaultId;
+          // Cache current cache store.
+          // (Yes we cache the cache!)
+          cacheStore.put(this.cache.id, this.cache.items);
+          // Restore former cache or reset cache.
+          this.cache.items = cacheStore.get(id) || {};
+          // Set new id
+          this.cache.id = id;
         },
 
         /**
@@ -141,7 +172,7 @@ angular
       };
 
       // Init the cache to get started.
-      // dataSets.cache.initialize();
+      dataSets.cache.initialize(dataSets.cache.defaultId);
 
       return dataSets;
     }

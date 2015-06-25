@@ -1,7 +1,5 @@
 function DataSetsExplorationCtrl () {
   var that = this;
-
-  window.sizing();
 }
 
 angular

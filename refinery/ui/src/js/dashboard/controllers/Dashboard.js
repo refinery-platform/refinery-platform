@@ -3,6 +3,7 @@ function DashboardCtrl (
   $q,
   $state,
   $timeout,
+  $rootScope,
   // 3rd party library
   _,
   // Refinery modules
@@ -82,6 +83,10 @@ function DashboardCtrl (
 
   // Initilize data set source
   that.setDataSetSource();
+
+  $rootScope.$on('$stateChangeSuccess', function () {
+    $timeout(window.sizing, 0);
+  });
 }
 
 /*
@@ -111,6 +116,11 @@ DashboardCtrl.prototype.toggleDataSetsExploration = function () {
   }, 250);
 };
 
+DashboardCtrl.prototype.resetDataSetSearch = function () {
+  this.searchQueryDataSets = '';
+  this.setDataSetSource();
+};
+
 DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
   var that = this;
 
@@ -118,9 +128,11 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
     that.searchDataSet = true;
     var searchResults = new that.dashboardDataSetSearchService(searchQuery);
     that.dashboardDataSetSourceService.setSource(searchResults);
+    that.dataSets.resetCache(searchQuery);
   } else {
     that.searchDataSet = false;
     that.dashboardDataSetSourceService.setSource(that.dashboardDataSetListService);
+    that.dataSets.resetCache();
   }
 
   // Reset current list and reload uiScroll
@@ -205,6 +217,7 @@ angular
     '$q',
     '$state',
     '$timeout',
+    '$rootScope',
     '_',
     'settings',
     'authService',

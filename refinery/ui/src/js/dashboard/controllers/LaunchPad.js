@@ -1,8 +1,6 @@
 function LaunchPadCtrl ($modal) {
   var that = this;
 
-  window.sizing();
-
   that.openPermissionEditor = function (api, uuid) {
     var modalInstance = $modal.open({
       templateUrl: '/static/partials/dashboard/partials/permission.modal.html',

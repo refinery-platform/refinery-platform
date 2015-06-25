@@ -27,6 +27,10 @@
 
     <form class="navbar-search" ng-if="dashboard.dataSets.total > 0">
       <i class="icon-search"></i>
+      <i
+        class="icon-remove-sign"
+        ng-if="dashboard.searchQueryDataSets"
+        ng-click="dashboard.resetDataSetSearch()"></i>
       <input
         type="text"
         class="search-query"
@@ -76,12 +80,15 @@
             title="This file is publicly available"
             ng-if="dataSet.public"></i>
           <a
-            ng-if="!dashboard.searchDataSet"
-            ng-href="data_sets/{{ dataSet.uuid }}">{{ dataSet.name }}</a>
-          <a
-            ng-if="dashboard.searchDataSet"
             ng-href="data_sets/{{ dataSet.uuid }}"
-            ng-bind-html="dataSet.highlighting"></a>
+            ng-if="!dashboard.searchDataSet">{{ dataSet.name }}</a>
+          <a
+            ng-href="data_sets/{{ dataSet.uuid }}"
+            ng-if="dashboard.searchDataSet"
+            ng-bind-html="dataSet.title"></a>
+          <p
+            ng-if="dataSet.description"
+            ng-bind-html="dataSet.description"></p>
         </li>
       </ul>
       <div
