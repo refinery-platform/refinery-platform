@@ -155,7 +155,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # 'core.middleware.ExternalToolErrorMiddleware',
     'core.middleware.DatabaseFailureMiddleware',
 )
 
@@ -212,6 +211,9 @@ INSTALLED_APPS = (
 if get_setting('DEBUG_TOOLBAR'):
     INSTALLED_APPS += (
         'debug_toolbar',
+    )
+    MIDDLEWARE_CLASSES += (
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
     INTERNAL_IPS = ('192.168.50.1' )
 
