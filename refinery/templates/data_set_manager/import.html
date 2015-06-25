@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block head_html %}
-<!-- for metadata table upload -->
+<!-- for tabular file upload -->
 <!-- CSS to style the file input field as button and adjust the Bootstrap progress bars -->
 <link rel="stylesheet"
       href="{% static "vendor/jquery-file-upload/css/jquery.fileupload.css" %}"/>
@@ -15,7 +15,7 @@
     display: none;
   }
 </style>
-<!-- end metadata table upload -->
+<!-- end tabular file upload -->
 {% endblock head_html %}
 
 {% block title %}data file upload{% endblock %}
@@ -35,7 +35,7 @@
     <div class="span10">
       <ul class="nav nav-tabs" id="tabs">
         <li class="active">
-          <a href="#metadata-table" data-toggle="tab">Metadata table</a>
+          <a href="#tabular-file" data-toggle="tab">Tabular file</a>
         </li>
         <li>
           <a href="#isa-archive" data-toggle="tab">ISA archive</a>
@@ -47,11 +47,11 @@
 <!-- Tab contents -->
 <div class="refinery-panel refinery-panel-content scrollable">
   <div class="tab-content">
-    <!-- metadata table upload -->
-    <div class="tab-pane fade active in" id="metadata-table">
+    <!-r tabular file upload -->
+    <div class="tab-pane fade active in" id="tabular-file">
       <div class="refinery-header">
         <span class="refinery-header-left">
-          <h3>Metadata table import</h3>
+          <h3>Data file upload</h3>
         </span>
       </div>
       <form id="fileupload" method="POST" enctype="multipart/form-data"
@@ -61,8 +61,7 @@
         {% csrf_token %}
         <!-- Redirect browsers with JavaScript disabled to the origin page -->
         <noscript>
-          <input type="hidden" name="redirect"
-                 value="/">
+          <input type="hidden" name="redirect" value="/">
         </noscript>
         <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
         <div class="row-fluid fileupload-buttonbar">
@@ -166,12 +165,12 @@
         {% endverbatim %}
       </form>
     </div>
-    <!-- end metadata table upload -->
+    <!-- end tabular file upload -->
     <!-- ISA archive upload form -->
     <div class="tab-pane" id="isa-archive">
       <div class="refinery-header">
         <span class="refinery-header-left">
-          <h3>ISA archive import</h3>
+          <h3>ISA archive upload</h3>
         </span>
       </div>
       <form id="isaTabImportForm" enctype="multipart/form-data"
@@ -209,7 +208,7 @@
 {% endblock %}
 
 {% block script %}
-<!-- for metadata table upload -->
+<!-- for tabular file upload -->
 <!-- The jQuery UI widget factory, can be omitted if jQuery UI is already included -->
 <script src="{% static "vendor/jquery-file-upload/js/vendor/jquery.ui.widget.js" %}"></script>
 <!-- Bootstrap JS is not required, but included for the responsive demo navigation -->
@@ -222,7 +221,7 @@
 <script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload-process.js" %}"></script>
 <!-- Calculate md5 -->
 <script src="{% static "vendor/spark-md5/spark-md5.js" %}"></script>
-<!-- end metadata table upload -->
+<!-- end tabular file upload -->
 <!-- for ISA archive upload form -->
 <script language="javascript" type="text/javascript"
         src="{% static "js/spin/spin.min.js" %}"></script>
