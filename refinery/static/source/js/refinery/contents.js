@@ -117,14 +117,12 @@
       clientCommands.addHandler(SOLR_QUERY_INITIALIZED_COMMAND, function (arguments) {
         //console.log( SOLR_QUERY_INITIALIZED_COMMAND + ' executed' );
         //console.log( arguments );
-
         if (arguments.query && !(arguments.query instanceof SolrQuery)) {
           return;
         }
 
           tableView = new SolrDocumentTable("solr-table-view", "solrdoctab1", query, client, configurator, documentTableCommands, dataSetMonitor);
           tableView.setDocumentsPerPage(20);
-
           analysisView = new SolrAnalysisView("solr-analysis-view", "solranalysis1", query, configurator, analysisViewCommands, dataSetMonitor);
           facetView = new SolrFacetView("solr-facet-view", "solrfacets1", query, configurator, facetViewCommands);
           documentCountView = new SolrDocumentCountView("solr-document-count-view", "solrcounts1", query, undefined);
@@ -353,12 +351,17 @@
 
 
       dataSetMonitorCommands.addHandler(DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND, function (arguments) {
-          console.log(DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND + ' executed');
-          console.log(arguments);
-          console.log("Updating tables ...");
+        console.log(DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND + ' executed');
+        console.log(arguments);
+        console.log("Updating tables ...");
+        //method is called before the analysisView and tableViews are created
+        if('undefined'!== typeof(analysisView)) {
           analysisView.render(lastSolrResponse);
-          tableView.render(lastSolrResponse);
+        };
 
+        if('undefined'!== typeof(tableView)) {
+          tableView.render(lastSolrResponse);
+        };
           client.run(query, SOLR_FULL_QUERY);
       });
 
