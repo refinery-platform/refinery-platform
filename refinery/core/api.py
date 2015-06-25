@@ -186,20 +186,22 @@ class SharableResourceAPIInterface(object):
         bundle.obj.set_owner(bundle.request.user)
         return bundle
 
+    # Some wacky custom job because ModelResource's get calls some things that
+    # we don't want to get called :(
     def obj_get(self, bundle, **kwargs):
-        obj = ModelResource.obj_get(self, bundle, **kwargs)
+        res = self.get_res(kwargs['uuid'])
         request = bundle.request
-        kwargs['show_public'] = True
-        return self.build_res_list(request.user, [obj], request, **kwargs)[0]
+        user = request.user
+        mod_res_list = self.build_res_list(user, [res], request, **kwargs)
+        bundle = self.build_bundle_list(request, mod_res_list)[0]
+        return bundle.obj
 
     def obj_get_list(self, bundle, **kwargs):
         return self.get_object_list(bundle.request)
 
     def get_object_list(self, request):
         obj_list = ModelResource.get_object_list(self, request)
-        kwargs = {}
-        kwargs['show_public'] = True
-        r_list = self.build_res_list(request.user, obj_list, request, **kwargs)
+        r_list = self.build_res_list(request.user, obj_list, request)
         return r_list
 
     # A few default URL endpoints as directed by prepend_urls in subclasses.
@@ -909,8 +911,12 @@ class GroupManagementResource(Resource):
         resource_name = 'groups'
         object_class = GroupManagement
         detail_uri_name = 'group_id'
-        # authentication = SessionAuthentication
+        authentication = SessionAuthentication
         # authorization = GuardianAuthorization
+
+    def get_user(self, user_id):
+        user_list = User.objects.filter(id=int(user_id))
+        return None if len(user_list) == 0 else user_list[0]
 
     def get_group(self, group_id):
         group_list = Group.objects.filter(id=int(group_id))
@@ -920,7 +926,7 @@ class GroupManagementResource(Resource):
         return filter(lambda g: user in g.user_set.all(), Group.objects.all())
 
     def is_manager_group(self, group):
-        return group.extendedgroup.manager_group is None
+        return not group.extendedgroup.is_managed()
 
     def get_member_list(self, group):
         return map(
@@ -975,7 +981,7 @@ class GroupManagementResource(Resource):
 
         return group_list
 
-    def build_group_list_bundle(self, request, group_list, **kwargs):
+    def build_bundle_list(self, request, group_list, **kwargs):
         bundle = []
 
         for i in group_list:
@@ -996,19 +1002,24 @@ class GroupManagementResource(Resource):
         return self.create_response(request, object_list)
 
     # Simplify things for GET requests.
-    def process_get(self, request, group_list, **kwargs):
+    def process_get(self, request, group, **kwargs):
+        user = request.user
+        m_group_list = self.build_group_list(user, [group], **kwargs)
+        bundle = self.build_bundle_list(request, m_group_list, **kwargs)[0]
+        return self.build_response(request, bundle, **kwargs)
+
+    def process_get_list(self, request, group_list, **kwargs):
         user = request.user
         m_group_list = self.build_group_list(user, group_list, **kwargs)
-        bundle = self.build_group_list_bundle(request, m_group_list, **kwargs)
+        bundle = self.build_bundle_list(request, m_group_list, **kwargs)
         object_list = self.build_object_list(bundle, **kwargs)
         return self.build_response(request, object_list, **kwargs)
 
     # This implies that users just have to be in the manager group, not
     # necessarily in the group itself.
     def user_authorized(self, user, group):
-        if self.is_manager_group(group) and user in group.user_set.all():
-            # User is in manager group.
-            return True
+        if self.is_manager_group(group):
+            return user in group.user_set.all()
         else:
             return user in group.extendedgroup.manager_group.user_set.all()
 
@@ -1035,6 +1046,9 @@ class GroupManagementResource(Resource):
             url(r'^groups/(?P<id>[0-9]+)/members/$',
                 self.wrap_view('group_members'),
                 name='api_group_members'),
+            url(r'^groups/(?P<id>[0-9]+)/members/(?P<user_id>[0-9])/$',
+                self.wrap_view('group_members_detail'),
+                name='api_group_members_detail'),
             url(r'^groups/members/$',
                 self.wrap_view('group_members_list'),
                 name='api_group_members_list'),
@@ -1050,22 +1064,37 @@ class GroupManagementResource(Resource):
         user = request.user
         group = self.get_group(kwargs['id'])
 
+        if not user.is_authenticated():
+            return HttpUnauthorized()
+
         if request.method == 'GET':
-            group_obj_list = [GroupManagement(
+            group_obj = GroupManagement(
                 group.id,
                 group.name,
                 None,
                 None,
-                self.user_authorized(user, group))]
-            return self.process_get(request, group_obj_list, **kwargs)
+                self.user_authorized(user, group))
+            return self.process_get(request, group_obj, **kwargs)
         elif request.method == 'DELETE':
+            if not self.user_authorized(user, group):
+                return HttpUnauthorized()
+
+            # Cannot delete manager groups directly, must delete their managed
+            # group, which causes manager group deletion.
+            if self.is_manager_group(group):
+                return HttpUnauthorized()
+
             group.delete()
+            group.extendedgroup.manager_group.delete()
             return HttpNoContent()
         else:
             return HttpMethodNotAllowed()
 
     def group_basic_list(self, request, **kwargs):
         user = request.user
+
+        if not user.is_authenticated():
+            return HttpUnauthorized()
 
         if request.method == 'GET':
             group_list = self.groups_with_user(user)
@@ -1079,7 +1108,7 @@ class GroupManagementResource(Resource):
                     self.user_authorized(user, g)),
                 group_list)
 
-            return self.process_get(request, group_obj_list, **kwargs)
+            return self.process_get_list(request, group_obj_list, **kwargs)
         elif request.method == 'POST':
             data = json.loads(request.raw_post_data)
             new_group = ExtendedGroup(name=data['name'])
@@ -1095,21 +1124,20 @@ class GroupManagementResource(Resource):
         group = self.get_group(kwargs['id'])
 
         if request.method == 'GET':
-            group_obj_list = [GroupManagement(
+            group_obj = GroupManagement(
                 group.id,
                 group.name,
                 self.get_member_list(group),
                 None,
-                self.user_authorized(user, group))]
+                self.user_authorized(user, group))
             kwargs['members'] = True
-            return self.process_get(request, group_obj_list, **kwargs)
+            return self.process_get(request, group_obj, **kwargs)
         elif request.method == 'PATCH':
+            if not self.user_authorized(user, group):
+                 return HttpUnauthorized()
+                 
             data = json.loads(request.raw_post_data)
             new_member_list = data['member_list']
-
-            # Verify that the user holds appropriate power.
-            # if not self.user_authorized(user, group):
-            #      return HttpUnauthorized()
 
             # Remove old members before updating.
             group.user_set.clear()
@@ -1124,11 +1152,45 @@ class GroupManagementResource(Resource):
                         g.user_set.add(int(m['id']))
 
             return HttpAccepted()
+        elif request.method == 'POST':
+            if not self.user_authorized(user, group):
+                return HttpUnauthorized()
+
+            data = json.loads(request.raw_post_data)
+            new_member = data['user_id']
+            group.user_set.add(new_member)
+
+            if self.is_manager_group(group):
+                for g in group.extendedgroup.managed_group.all():
+                    g.user_set.add(new_member)
+
+            return HttpAccepted()
+        else:
+            return HttpMethodNotAllowed()
+
+    def group_members_detail(self, request, **kwargs):
+        group = self.get_group(kwargs['id'])
+        user = request.user
+ 
+        if not user.is_authenticated():
+            return HttpUnauthorized()
+
+        if request.method == 'GET':
+            raise NotImplementedError()
+        elif request.method == 'DELETE':
+            if not self.user_authorized(user, group):
+                return HttpUnauthorized()
+
+            group.user_set.remove(int(kwargs['user_id']))
+            return HttpNoContent()
         else:
             return HttpMethodNotAllowed()
 
     def group_members_list(self, request, **kwargs):
         user = request.user
+
+        if not user.is_authenticated():
+            return HttpUnauthorized()
 
         if request.method == 'GET':
             group_list = self.groups_with_user(user)
@@ -1143,7 +1205,7 @@ class GroupManagementResource(Resource):
                 group_list)
 
             kwargs['members'] = True
-            return self.process_get(request, group_obj_list, **kwargs)
+            return self.process_get_list(request, group_obj_list, **kwargs)
         else:
             return HttpMethodNotAllowed()
 
@@ -1151,15 +1213,18 @@ class GroupManagementResource(Resource):
         user = request.user
         group = self.get_group(kwargs['id'])
 
+        if not user.is_authenticated():
+            return HttpUnauthorized()
+
         if request.method == 'GET':
-            group_obj_list = [GroupManagement(
+            group_obj = GroupManagement(
                 group.id,
                 group.name,
                 None,
                 self.get_perm_list(group),
-                self.user_authorized(user, group))]
+                self.user_authorized(user, group))
             kwargs['perms'] = True
-            return self.process_get(request, group_obj_list, **kwargs)
+            return self.process_get(request, group_obj, **kwargs)
         elif request.method == 'PATCH':
             raise NotImplementedError()
         else:
@@ -1167,6 +1232,9 @@ class GroupManagementResource(Resource):
 
     def group_perms_list(self, request, **kwargs):
         user = request.user
+
+        if not user.is_authenticated():
+            return HttpUnauthorized()
 
         if request.method == 'GET':
             group_list = self.groups_with_user(user)
@@ -1181,7 +1249,7 @@ class GroupManagementResource(Resource):
                 group_list)
 
             kwargs['perms'] = True
-            return self.process_get(request, group_obj_list, **kwargs)
+            return self.process_get_list(request, group_obj_list, **kwargs)
         else:
             return HttpMethodNotAllowed()
 
@@ -1238,11 +1306,11 @@ class InvitationResource(ModelResource):
         return None if len(group_list) == 0 else group_list[0]
 
     def is_manager_group(self, group):
-        return group.extendedgroup.manager_group is None
+        return not group.extendedgroup.is_managed()
 
     def user_authorized(self, user, group):
-        if self.is_manager_group(group) and user in group.user_set.all():
-            return True
+        if self.is_manager_group(group):
+            return user in group.user_set.all()
         else:
             return user in group.extendedgroup.manager_group.user_set.all()
 

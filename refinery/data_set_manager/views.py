@@ -99,54 +99,18 @@ def search_typeahead(request):
                             mimetype='application/json')
 
 
-# ===============================================================================
-# ISA-Tab import
-#===============================================================================
-class ImportISATabView(View):
-    '''Capture ISA archive URL from POST requests submitted from external sites
+# Data set import
 
-    '''
+class DataSetImportView(View):
+    """Main view for data set importing
 
-    def post(self, request, *args, **kwargs):
-        try:
-            isa_tab_url = request.POST['isa_tab_url']
-        except KeyError:
-            logger.error("ISA archive URL was not provided")
-            return HttpResponseBadRequest("Please provide an ISA archive URL")
-        else:
-            # set cookie and redirect to process_isa_tab view
-            response = HttpResponseRedirect(reverse('process_isa_tab'))
-            response.set_cookie('isa_tab_url', isa_tab_url)
-            return response
-
-
-class ImportISATabFileForm(forms.Form):
-    '''ISA-Tab file upload form
-
-    '''
-    isa_tab_file = forms.FileField(label='ISA-Tab file', required=False)
-    isa_tab_url = forms.URLField(label='ISA-Tab URL', required=False,
-                                 widget=forms.TextInput(attrs={'size': '37'}))
-
-    def clean(self):
-        cleaned_data = super(ImportISATabFileForm, self).clean()
-        f = cleaned_data.get("isa_tab_file")
-        url = cleaned_data.get("isa_tab_url")
-        # either a file or a URL must be provided
-        if f or url:
-            return cleaned_data
-        else:
-            raise forms.ValidationError("Please provide either a file or a URL")
-
-
-class ProcessISATabView(View):
-    '''Process ISA-Tab archive
-
-    '''
-    template_name = 'data_set_manager/isa-tab-import.html'
+    """
+    template_name = "data_set_manager/import.html"
     success_view_name = 'data_set'
     isa_tab_cookie_name = 'isa_tab_url'
 
+    # def get(self, request, *args, **kwargs):
+    #     return render(request, self.template_name)
     # a workaround for automatic ISA archive import after logging in
     def get(self, request, *args, **kwargs):
         try:
@@ -199,6 +163,52 @@ class ProcessISATabView(View):
                                           context_instance=context)
             response.delete_cookie(self.isa_tab_cookie_name)
             return response
+
+
+class ImportISATabView(View):
+    '''Capture ISA archive URL from POST requests submitted from external sites
+
+    '''
+
+    def post(self, request, *args, **kwargs):
+        try:
+            isa_tab_url = request.POST['isa_tab_url']
+        except KeyError:
+            logger.error("ISA archive URL was not provided")
+            return HttpResponseBadRequest("Please provide an ISA archive URL")
+        else:
+            # set cookie and redirect to process_isa_tab view
+            response = HttpResponseRedirect(reverse('process_isa_tab'))
+            response.set_cookie('isa_tab_url', isa_tab_url)
+            return response
+
+
+class ImportISATabFileForm(forms.Form):
+    '''ISA-Tab file upload form
+
+    '''
+    isa_tab_file = forms.FileField(label='ISA-Tab file', required=False)
+    isa_tab_url = forms.URLField(label='ISA-Tab URL', required=False,
+                                 widget=forms.TextInput(attrs={'size': '37'}))
+
+    def clean(self):
+        cleaned_data = super(ImportISATabFileForm, self).clean()
+        f = cleaned_data.get("isa_tab_file")
+        url = cleaned_data.get("isa_tab_url")
+        # either a file or a URL must be provided
+        if f or url:
+            return cleaned_data
+        else:
+            raise forms.ValidationError("Please provide either a file or a URL")
+
+
+class ProcessISATabView(View):
+    '''Process ISA-Tab archive
+
+    '''
+    template_name = 'data_set_manager/isa-tab-import.html'
+    success_view_name = 'data_set'
+    isa_tab_cookie_name = 'isa_tab_url'
 
     def post(self, request, *args, **kwargs):
         form = ImportISATabFileForm(request.POST, request.FILES)
@@ -350,16 +360,6 @@ class CheckDataFilesView(View):
         # prefix output to protect from JSON vulnerability (stripped by Angular)
         return HttpResponse(")]}',\n" + json.dumps(bad_file_list),
                             content_type="application/json")
-
-
-class FileUploadView(TemplateView):
-    """Data file upload form view
-
-    """
-    template_name = 'data_set_manager/import.html'
-
-    def get(self, request, *args, **kwargs):
-        return render(request, self.template_name)
 
 
 class ChunkedFileUploadView(ChunkedUploadView):
