@@ -157,6 +157,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     # 'core.middleware.ExternalToolErrorMiddleware',
     'core.middleware.DatabaseFailureMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
 ROOT_URLCONF = 'refinery.urls'
