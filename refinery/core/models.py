@@ -21,7 +21,7 @@ from django.db.models import Max
 from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, post_delete
 from django.db.utils import IntegrityError
-from django.dispatch import receiver
+from django.dispatch import receiver, Signal
 from django_extensions.db.fields import UUIDField
 from django_auth_ldap.backend import LDAPBackend
 from guardian.shortcuts import get_users_with_perms, \
@@ -251,6 +251,8 @@ class SharableResource (OwnableResource):
         if not readonly:
             assign_perm('change_%s' % self._meta.verbose_name, group, self)
 
+        resource_shared.send(sender=self)
+
     def unshare(self, group):
         remove_perm('read_%s' % self._meta.verbose_name, group, self)
         remove_perm('change_%s' % self._meta.verbose_name, group, self)
@@ -301,6 +303,13 @@ class SharableResource (OwnableResource):
     class Meta:
         verbose_name = "sharableresource"
         abstract = True
+
+
+def print_shared(sender, **kwargs):
+    logger.info("Sharable Resouce has been shared with sender: %s" % sender)
+
+resource_shared = Signal()
+resource_shared.connect(print_shared)
 
 
 class TemporaryResource:
