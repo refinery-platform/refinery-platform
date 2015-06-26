@@ -33,7 +33,7 @@ def home(request):
 
     if not request.user.is_authenticated():
         group = ExtendedGroup.objects.public_group()
-        
+
         projects = get_objects_for_group( group, "core.read_project" ).filter( is_catch_all=False )
         workflow_engines = get_objects_for_group( group, "core.read_workflowengine" )
         data_sets = get_objects_for_group( group, "core.read_dataset" )
@@ -49,7 +49,7 @@ def home(request):
         workflow_engines = get_objects_for_user( request.user, "core.read_workflowengine" )
         workflows = get_objects_for_user( request.user, "core.read_workflow" ).filter( is_active=True )
         data_sets = get_objects_for_user( request.user, "core.read_dataset" )
-            
+
     return render_to_response('core/home.html', {'users': users, 'projects': projects, 'unassigned_analyses': unassigned_analyses, 'workflow_engines': workflow_engines, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext( request ) )
 
 
@@ -72,12 +72,12 @@ def custom_error_page(request, template, context_dict):
 
 @login_required()
 def user(request, query):
-    
+
     try:
         user = User.objects.get( username=query )
     except User.DoesNotExist:
         user = get_object_or_404( UserProfile, uuid=query ).user
-        
+
     if len( get_shared_groups( request.user, user ) ) == 0 and user != request.user:
         return HttpResponseForbidden(custom_error_page(request, '403.html', {'user': request.user, 'msg': "view the profile of user %s" % user.username}))
 
@@ -104,7 +104,7 @@ def user_edit(request, uuid):
     else:
         uform = UserForm(instance=user_object)
         pform = UserProfileForm(instance=profile_object)
-        
+
     return render_to_response('core/edit_user.html', {'profile_user': user_object, 'uform': uform, 'pform': pform}, context_instance=RequestContext(request))
 
 @login_required()
@@ -113,7 +113,7 @@ def user_profile_edit(request):
 
 @login_required()
 def group(request, query):
-    
+
     group = get_object_or_404( ExtendedGroup, uuid=query )
 
     # only group members are allowed to see group pages
@@ -125,14 +125,14 @@ def group(request, query):
 
 
 def project_slug(request,slug):
-    p = get_object_or_404( Project, slug=slug )    
+    p = get_object_or_404( Project, slug=slug )
     return project(request,p.uuid)
 
 
 def project(request, uuid):
     project = get_object_or_404( Project, uuid=uuid )
     public_group = ExtendedGroup.objects.public_group()
-        
+
     if not request.user.has_perm('core.read_project', project ):
         if not 'read_project' in get_perms( public_group, project ):
             if request.user.is_authenticated():
@@ -141,7 +141,7 @@ def project(request, uuid):
                 return HttpResponse(custom_error_page(request, '401.html', {'msg': "view this project"}), status='401')
 
     analyses = project.analyses.all()
-    
+
     return render_to_response('core/project.html', { 'project': project, "analyses": analyses }, context_instance=RequestContext( request ) )
 
 
@@ -150,12 +150,12 @@ def project_new(request):
     if request.method == "POST": # If the form has been submitted...
         form = ProjectForm( request.POST ) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
-            
+
             project = form.save()
             project.set_owner( request.user )
             # Process the data in form.cleaned_data
             # ...
-            
+
             return HttpResponseRedirect( reverse('project', args=(project.uuid,)) ) # Redirect after POST
     else:
         form = ProjectForm() # An unbound form
@@ -164,19 +164,19 @@ def project_new(request):
         'form': form
         },
         context_instance=RequestContext( request )
-    )    
+    )
 
 
 @login_required()
 def project_edit(request,uuid):
     project = get_object_or_404( Project, uuid=uuid )
-        
+
     if not request.user.has_perm('core.change_project', project ):
         return HttpResponseForbidden(custom_error_page(request, '403.html', {user: request.user, 'msg': "edit this project"}))
 
     if request.method == "POST": # If the form has been submitted...
         form = ProjectForm(data=request.POST, instance=project) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass            
+        if form.is_valid(): # All validation rules pass
             form.save()
             # Process the data in form.cleaned_data
             # ...
@@ -189,7 +189,7 @@ def project_edit(request,uuid):
         'project': project
         },
         context_instance=RequestContext( request )
-    )    
+    )
 
 
 
@@ -207,7 +207,7 @@ def data_sets(request):
         try:
             investigation = dataset.get_investigation()
             investigation_titles.append(investigation.get_title())
-            
+
             study_count = investigation.get_study_count()
             if study_count > 1:
                 studies.append("%d studies" % study_count)
@@ -223,12 +223,12 @@ def data_sets(request):
             investigation_titles.append("--")
             studies.append("0 studies")
             assays.append("0 assays")
-        
+
     datasets_info = zip(dataset_list, investigation_titles, studies, assays)
-    
+
     #pagination
     paginator = Paginator(datasets_info, 15)
-    
+
     page = request.GET.get('page')
     try:
         datasets = paginator.page(page)
@@ -238,14 +238,14 @@ def data_sets(request):
         datasets = paginator.page(paginator.num_pages)
     except TypeError:
         datasets = paginator.page(1)
-        
-    return render_to_response("core/data_sets.html", 
+
+    return render_to_response("core/data_sets.html",
                               {'datasets': datasets},
                               context_instance=RequestContext(request))
-    
+
 
 def data_set_slug(request,slug):
-    d = get_object_or_404( DataSet, slug=slug )    
+    d = get_object_or_404( DataSet, slug=slug )
     return data_set(request,d.uuid)
 
 
@@ -263,22 +263,22 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
     #get studies
     investigation = data_set.get_investigation()
     studies = investigation.study_set.all()
-    
+
     # If repository mode, only return workflows tagged for the repository
     if (settings.REFINERY_REPOSITORY_MODE):
         workflows = Workflow.objects.filter(show_in_repository_mode=True)
     else:
         workflows = Workflow.objects.all()
-    
+
     study_uuid = studies[0].uuid
     study_id = studies[0].id # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
     assay_uuid = studies[0].assay_set.all()[0].uuid
     assay_id = studies[0].assay_set.all()[0].id # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
-    
+
     # TODO: catch errors
     isatab_archive = None
     pre_isatab_archive = None
-    
+
     try:
         if investigation.isarchive_file is not None:
             isatab_archive = FileStoreItem.objects.get(uuid=investigation.isarchive_file)
@@ -310,7 +310,7 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
         context_instance=RequestContext(request))
 
 
-def data_set_edit(request,uuid):    
+def data_set_edit(request,uuid):
     data_set = get_object_or_404( DataSet, uuid=uuid )
     public_group = ExtendedGroup.objects.public_group()
 
@@ -342,10 +342,10 @@ def data_set_edit(request,uuid):
             pre_isatab_archive = FileStoreItem.objects.get( uuid=investigation.pre_isarchive_file )
     except:
         pass
-    
+
     if request.method == "POST": # If the form has been submitted...
         form = DataSetForm(data=request.POST, instance=data_set) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass    
+        if form.is_valid(): # All validation rules pass
             form.save()
             # Process the data in form.cleaned_data
             # ...
@@ -368,13 +368,13 @@ def data_set_edit(request,uuid):
 
 def samples(request, ds_uuid, study_uuid, assay_uuid):
     data_set = get_object_or_404( DataSet, uuid=ds_uuid )
-    
+
     # getting current workflows
     workflows = Workflow.objects.all();
 
-    start = datetime.now()    
-    node_matrix = get_matrix(node_type="Raw Data File", 
-                                                  study_uuid=study_uuid, 
+    start = datetime.now()
+    node_matrix = get_matrix(node_type="Raw Data File",
+                                                  study_uuid=study_uuid,
                                                   assay_uuid=assay_uuid
                                                   )
     end = datetime.now()
@@ -382,20 +382,20 @@ def samples(request, ds_uuid, study_uuid, assay_uuid):
 
     #import json
     #print json.dumps(node_matrix, indent=4)
-    
-    return render_to_response('core/samples.html', {'workflows': workflows, 'data_set': data_set, "matrix": node_matrix}, 
+
+    return render_to_response('core/samples.html', {'workflows': workflows, 'data_set': data_set, "matrix": node_matrix},
                               context_instance=RequestContext(request))
 
 
 def workflow_slug(request,slug):
-    w = get_object_or_404( Workflow, slug=slug )    
+    w = get_object_or_404( Workflow, slug=slug )
     return workflow(request,w.uuid)
 
 
 def workflow(request, uuid):
     workflow = get_object_or_404( Workflow, uuid=uuid )
     public_group = ExtendedGroup.objects.public_group()
-    
+
     if not request.user.has_perm('core.read_workflow', workflow ):
         if not 'read_workflow' in get_perms( public_group, workflow ):
             if request.user.is_authenticated():
@@ -405,17 +405,17 @@ def workflow(request, uuid):
 
     # load graph dictionary from Galaxy
     workflow = Workflow.objects.filter( uuid=uuid ).get()
-            
+
     return render_to_response('core/workflow.html', { 'workflow': workflow }, context_instance=RequestContext( request ) )
 
 
 def graph_node_shape(node_type):
     if node_type == "input":
         return ">"
-    
+
     if node_type == "tool":
         return "<"
-    
+
     return "o"
 
 
@@ -428,21 +428,21 @@ def workflow_edit(request, uuid):
 
     if request.method == "POST": # If the form has been submitted...
         form = WorkflowForm(data=request.POST, instance=workflow) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass    
+        if form.is_valid(): # All validation rules pass
             form.save()
             # Process the data in form.cleaned_data
             # ...
             return HttpResponseRedirect(reverse('core.views.workflow', args=(uuid,))) # Redirect after POST
     else:
         form = WorkflowForm( instance=workflow ) # An unbound form
-    
+
     return render_to_response('core/workflow_edit.html', {'workflow': workflow, 'form': form}, context_instance=RequestContext(request))
 
 
-def workflow_engine(request,uuid):  
+def workflow_engine(request,uuid):
     workflow_engine = get_object_or_404( WorkflowEngine, uuid=uuid )
     public_group = ExtendedGroup.objects.public_group()
-    
+
     if not request.user.has_perm('core.read_workflowengine', workflow_engine ):
         if not 'read_workflowengine' in get_perms( public_group, workflow_engine ):
             if request.user.is_authenticated():
@@ -463,8 +463,8 @@ def admin_test_data( request ):
     - workflows:
     - analyses
     '''
-    
-    users = [ 
+
+    users = [
              { "username": ".nils",
                "password": "test",
                "first_name": "Nils",
@@ -501,26 +501,26 @@ def admin_test_data( request ):
                "affiliation": "Harvard School of Public Health"
              }
             ]
-    
+
     user_objects = []
-    
+
     # create user accounts
     for user in users:
-        
+
         # delete if exists
         user_object = User.objects.filter( username__exact=user["username"] )
         if user_object is not None:
             user_object.delete()
-    
+
         user_object = User.objects.create_user( user["username"], email=user["email"], password=user["password"] )
         user_object.first_name = user["first_name"]
         user_object.last_name = user["last_name"]
         user_object.get_profile().affiliation = user["affiliation"]
-        user_object.save() 
-    
+        user_object.save()
+
         user_objects.append( user_object )
-        
-    groups = [ 
+
+    groups = [
                 { "name": ".Park Lab",
                   "members": [ ".nils", ".richard", ".psalm" ]
                 },
@@ -531,15 +531,15 @@ def admin_test_data( request ):
                   "members": [ ".nils", ".shannan", ".richard", ".psalm", ".ilya" ]
                 },
              ]
-    
+
     group_objects = []
 
     # create groups
     for group in groups:
-        
+
         # delete if exists
         try:
-            group_object = ExtendedGroup.objects.get( name__exact=group["name"] )            
+            group_object = ExtendedGroup.objects.get( name__exact=group["name"] )
             if group_object.is_managed():
                 print( group_object.manager_group )
                 group_object.manager_group.delete()
@@ -549,7 +549,7 @@ def admin_test_data( request ):
             pass
 
         group_object = ExtendedGroup.objects.create( name=group["name"] )
-        #manager_group_object = ExtendedGroup.objects.create( name=str( group["name"] + " Managers" ) )        
+        #manager_group_object = ExtendedGroup.objects.create( name=str( group["name"] + " Managers" ) )
         #group_object.manager_group = manager_group_object
         #group_object.save()
 
@@ -557,42 +557,42 @@ def admin_test_data( request ):
         for username in group["members"]:
             user_object = User.objects.get( username__exact=username )
             user_object.groups.add( group_object )
-        
-        # Add first two members of each group to the manager group    
+
+        # Add first two members of each group to the manager group
         User.objects.get( username__exact=group["members"][0] ).groups.add( group_object.manager_group )
         User.objects.get( username__exact=group["members"][1] ).groups.add( group_object.manager_group )
-                    
+
         group_objects.append( group_object )
-        
+
     """
-    # disk quotas (for each user) 
+    # disk quotas (for each user)
     for user_object in user_objects:
-                
+
         ## PRIVATE PROJECT
         quota_name = user_object.first_name + "\'s Quota"
         quota_summary = "Initial user quota."
-        
+
         # delete if exists
         quota_object = DiskQuota.objects.filter( name__exact=quota_name )
         if quota_object is not None:
             quota_object.delete()
-    
+
         quota_object = DiskQuota.objects.create( name=quota_name, summary=quota_summary, maximum=20*1024*1024*1024, current=20*1024*1024*1024 )
         quota_object.set_owner( user_object )
 
-    
-    # disk quotas (for each user) 
+
+    # disk quotas (for each user)
     for group_object in group_objects:
-                
+
         ## PRIVATE PROJECT
         quota_name = group_object.name + "\'s Quota"
         quota_summary = "Initial group quota."
-        
+
         # delete if exists
         quota_object = DiskQuota.objects.filter( name__exact=quota_name )
         if quota_object is not None:
             quota_object.delete()
-    
+
         quota_object = DiskQuota.objects.create( name=quota_name, summary=quota_summary, maximum=100*1024*1024*1024, current=100*1024*1024*1024 )
         quota_object.set_manager_group( group_object.manager_group )
         quota_object.share( group_object, readonly=False )
@@ -600,64 +600,64 @@ def admin_test_data( request ):
 
     project_objects = []
 
-    # create projects (for each user: private, lab shared read/write, project group shared read-only, public shared) 
+    # create projects (for each user: private, lab shared read/write, project group shared read-only, public shared)
     for user_object in user_objects:
-                
+
         ## PRIVATE PROJECT
         project_name = user_object.first_name + "\'s Private Project"
         project_summary = "A project that is only visible to " + user_object.first_name + "."
-        
+
         # delete if exists
         project_object = Project.objects.filter( name__exact=project_name )
         if project_object is not None:
             project_object.delete()
-    
+
         project_object = Project.objects.create( name=project_name, summary=project_summary )
         project_object.set_owner( user_object )
-        
+
         project_objects.append( project_object )
 
         ## PUBLIC PROJECT
-        project_name = user_object.first_name + "\'s Public Project" 
+        project_name = user_object.first_name + "\'s Public Project"
         project_summary = "A project that is owned by " + user_object.first_name + " and shared for reading with the general public."
-        
+
         # delete if exists
         project_object = Project.objects.filter( name__exact=project_name, summary=project_summary )
         if project_object is not None:
             project_object.delete()
-    
+
         project_object = Project.objects.create( name=project_name, summary=project_summary )
         project_object.set_owner( user_object )
         group_object = ExtendedGroup.objects.public_group()
         project_object.share( group_object )
-    
+
         project_objects.append( project_object )
 
         ## PROJECT GROUP READ-ONLY PROJECT
-        project_name = user_object.first_name + "\'s Refinery Project" 
+        project_name = user_object.first_name + "\'s Refinery Project"
         project_summary = "A project that is owned by " + user_object.first_name + " and shared for reading with the \'Refinery Project\' ExtendedGroup."
-        
+
         # delete if exists
         project_object = Project.objects.filter( name__exact=project_name )
         if project_object is not None:
             project_object.delete()
-    
+
         project_object = Project.objects.create( name=project_name, summary=project_summary )
         project_object.set_owner( user_object )
         group_object = ExtendedGroup.objects.get( name__exact=".Refinery Project" )
         project_object.share( group_object )
-    
+
         project_objects.append( project_object )
 
         ## LAB READ/WRITE PROJECT
-        project_name = user_object.first_name + "\'s Lab Project" 
+        project_name = user_object.first_name + "\'s Lab Project"
         project_summary = "A project that is owned by " + user_object.first_name + " and shared for reading and writing their lab ExtendedGroup."
-        
+
         # delete if exists
         project_object = Project.objects.filter( name__exact=project_name )
         if project_object is not None:
             project_object.delete()
-    
+
         project_object = Project.objects.create( name=project_name, summary=project_summary )
         project_object.set_owner( user_object )
         group_object = user_object.groups.get( name__endswith="Lab" )
@@ -666,13 +666,13 @@ def admin_test_data( request ):
 
     data_set_objects = []
 
-    # create data_sets (for each user: private, lab shared read/write, data_set group shared read-only, public shared) 
+    # create data_sets (for each user: private, lab shared read/write, data_set group shared read-only, public shared)
     for user_object in user_objects:
-        
+
         ## PRIVATE data_set
         data_set_name = user_object.first_name + "\'s Private Data Set"
         data_set_summary = "A data set that is only visible to " + user_object.first_name + "."
-        
+
         # delete if exists
         data_set_object = DataSet.objects.filter( name__exact=data_set_name )
         if data_set_object is not None:
@@ -683,9 +683,9 @@ def admin_test_data( request ):
         data_set_objects.append( data_set_object )
 
         ## PUBLIC data_set
-        data_set_name = user_object.first_name + "\'s Public Data Set" 
+        data_set_name = user_object.first_name + "\'s Public Data Set"
         data_set_summary = "A data set that is owned by " + user_object.first_name + " and shared for reading with the general public."
-        
+
         # delete if exists
         data_set_object = DataSet.objects.filter( name__exact=data_set_name, summary=data_set_summary )
         if data_set_object is not None:
@@ -698,9 +698,9 @@ def admin_test_data( request ):
         data_set_objects.append( data_set_object )
 
         ## data_set GROUP READ-ONLY data_set
-        data_set_name = user_object.first_name + "\'s Refinery Data Set" 
+        data_set_name = user_object.first_name + "\'s Refinery Data Set"
         data_set_summary = "A data_set that is owned by " + user_object.first_name + " and shared for reading with the \'Refinery Project\' group."
-        
+
         # delete if exists
         data_set_object = DataSet.objects.filter( name__exact=data_set_name )
         if data_set_object is not None:
@@ -711,11 +711,11 @@ def admin_test_data( request ):
         group_object = ExtendedGroup.objects.get( name__exact=".Refinery Project" )
         data_set_object.share( group_object )
         data_set_objects.append( data_set_object )
-    
+
         ## LAB READ/WRITE data_set
         data_set_name = user_object.first_name + "\'s Lab Data Set"
         data_set_summary = "A data set that is owned by " + user_object.first_name + " and shared for reading and writing their lab group."
-        
+
         # delete if exists
         data_set_object = DataSet.objects.filter( name__exact=data_set_name )
         if data_set_object is not None:
@@ -736,13 +736,13 @@ def admin_test_data( request ):
             instance=instance, name=instance.description,
             summary=instance.base_url + " " + instance.api_key
             )
-        # TODO: introduce group managers and assign ownership to them        
+        # TODO: introduce group managers and assign ownership to them
         workflow_engine_object.set_manager_group(
             ExtendedGroup.objects.public_group().manager_group)
         workflow_engine_objects.append(workflow_engine_object)
 
-    template = "admin/core/test_data.html"    
-    
+    template = "admin/core/test_data.html"
+
     return render_to_response(template,
                               {"users": user_objects,
                                "groups": group_objects,
@@ -754,10 +754,10 @@ def admin_test_data( request ):
 
 def analyses(request, project_uuid ):
     project = Project.objects.get(uuid=project_uuid)
-    
+
     analyses = project.analyses.all()
-    
-    return render_to_response('core/analyses.html', 
+
+    return render_to_response('core/analyses.html',
                               {"project": project, "analyses": analyses},
                               context_instance=RequestContext(request))
 
@@ -794,16 +794,16 @@ def analysis(request, analysis_uuid ):
                                "analysis": analysis,
                                "analysis_results": analysis_results,
                                "inputs": data_inputs,
-                               "input_filenames": input_filenames, 
+                               "input_filenames": input_filenames,
                                "project": project,
-                               "workflow": workflow, 
+                               "workflow": workflow,
                                "fs_files" : file_all
                                },
                               context_instance=RequestContext(request))
 
 
 def solr_select(request, core):
-    # core format is <name_of_core>    
+    # core format is <name_of_core>
     # query.GET is a querydict containing all parts of the query
     #TODO: handle runtime errors when making GET request
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
@@ -812,19 +812,19 @@ def solr_select(request, core):
     f = urllib2.urlopen(req)
     response = f.read()
     f.close()
-    return HttpResponse( response, mimetype='application/json' )    
+    return HttpResponse( response, mimetype='application/json' )
     #return HttpResponse( urllib2.urlopen( url ).read() )
 
 
 def solr_igv(request):
     '''Function for taking solr request url.
-    Removes pagination, facets from input query to create multiple 
-    
-    :param request: Django HttpRequest object including solr query 
+    Removes pagination, facets from input query to create multiple
+
+    :param request: Django HttpRequest object including solr query
     :type source: HttpRequest object.
-    :returns: 
+    :returns:
     '''
-    
+
     # copy querydict to make it editable
     if request.is_ajax():
         #logger.debug("solr_igv called: request is ajax")
@@ -833,21 +833,21 @@ def solr_igv(request):
         igv_config = simplejson.loads( request.body );
 
         logger.debug(simplejson.dumps( igv_config, indent=4))
-        
+
         logger.debug( 'IGV data query: ' + str( igv_config['query'] ) )
         logger.debug( 'IGV annotation query: ' + str( igv_config['annotation'] ) )
-        
+
         # attributes associated with node selection from interface
         node_selection_blacklist_mode = igv_config['node_selection_blacklist_mode']
         node_selection = igv_config['node_selection']
-        
+
         solr_results = get_solr_results(igv_config['query'], selected_mode=node_selection_blacklist_mode, selected_nodes=node_selection)
-        
+
         if igv_config['annotation'] is not None:
             solr_annot = get_solr_results(igv_config['annotation'])
         else:
             solr_annot = None
-        
+
         # if solr query returns results
         if solr_results:
             try:
@@ -855,10 +855,10 @@ def solr_igv(request):
             except GenomeBuild.DoesNotExist:
                 logger.error("Provided genome build cannot be found in the database.")
                 session_urls = "Couldn't find the provided genome build."
-        
+
         logger.debug("session_urls")
         logger.debug(simplejson.dumps(session_urls, indent=4))
-        
+
         return HttpResponse(simplejson.dumps(session_urls),
                             mimetype='application/json')
 
@@ -866,8 +866,8 @@ def solr_igv(request):
 def get_solr_results(query, facets=False, jsonp=False, annotation=False,
                      only_uuids=False, selected_mode=True, selected_nodes=None):
     '''Helper function for taking solr request url.
-    Removes facet requests, converts to json, from input solr query  
-    
+    Removes facet requests, converts to json, from input solr query
+
     :param query: solr http query string
     :type query: string
     :param facets: Removes facet query from solr query string
@@ -882,21 +882,21 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
     :type selected_nodes: array
     :returns: dictionary of current solr results
     '''
-    
+
     logger.debug("core.views: get_solr_results")
-    
+
     if not facets:
-        # replacing facets w/ false 
+        # replacing facets w/ false
         query = query.replace('facet=true', 'facet=false')
-    
+
     if not jsonp:
-        # ensuring json not jsonp response 
+        # ensuring json not jsonp response
         query = query.replace('&json.wrf=?', '')
-        
+
     if annotation:
-        # changing annotation 
+        # changing annotation
         query = query.replace('is_annotation:false', 'is_annotation:true')
-        
+
     # Checks for limit on solr query
     # replaces i.e. '&rows=20' to '&rows=10000'
     m_obj = re.search(r"&rows=(\d+)", query)
@@ -904,36 +904,36 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
         # TODO: replace 10000 with settings parameter for max solr results
         replace_rows_str = '&rows=' + str(10000)
         query = query.replace(m_obj.group(), replace_rows_str)
-        
-    # proper url encoding                  
+
+    # proper url encoding
     query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
-    
+
     # opening solr query results
     results =  urllib2.urlopen( query ).read()
-        
-    # converting results into json for python 
+
+    # converting results into json for python
     results = simplejson.loads(results)
-    
+
     # IF list of nodes to remove from query exists
     if selected_nodes:
         # need to iterate over list backwards to properly delete from a list
         for i in xrange(len(results["response"]["docs"]) - 1, -1, -1):
             node = results["response"]["docs"][i]
-            
-            # blacklist mode (remove uuid's from solr query) 
+
+            # blacklist mode (remove uuid's from solr query)
             if selected_mode:
                 if 'uuid' in node:
                     # if the current node should be removed from the results
-                    if node['uuid'] in selected_nodes: 
+                    if node['uuid'] in selected_nodes:
                         del results["response"]["docs"][i]
                         #num_found -= 1
-            # whitelist mode (add's uuids from solr query) 
+            # whitelist mode (add's uuids from solr query)
             else:
                 if 'uuid' in node:
                     # if the current node should be removed from the results
-                    if node['uuid'] not in selected_nodes: 
+                    if node['uuid'] not in selected_nodes:
                         del results["response"]["docs"][i]
-                        #num_found += 1    
+                        #num_found += 1
     # Will return only list of file_uuids
     if only_uuids:
         ret_file_uuids = []
@@ -941,8 +941,8 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
         for res in solr_results:
             ret_file_uuids.append(res["uuid"])
         return ret_file_uuids
-        
-    return results    
+
+    return results
 
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
@@ -950,7 +950,7 @@ def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
     data_set = get_object_or_404(DataSet, uuid=ds_uuid)
 
     workflows = Workflow.objects.all();
-    
+
     # TODO: replace from settings.py or settings_local.py
     solr_url = 'http://127.0.0.1:8983'
 
@@ -959,5 +959,5 @@ def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
                                'data_set': data_set,
                                'study_uuid': study_uuid,
                                'assay_uuid': assay_uuid,
-                               'solr_url': solr_url}, 
+                               'solr_url': solr_url},
                               context_instance=RequestContext(request))
