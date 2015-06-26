@@ -9,6 +9,7 @@ import logging
 import re
 import uuid
 import settings
+from sets import Set
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group, \
@@ -38,8 +39,6 @@ from haystack.query import SearchQuerySet, EmptySearchQuerySet
 from django.http import HttpResponse
 import datetime
 from django.core.mail import EmailMessage
-import urllib2
-import requests
 
 
 logger = logging.getLogger(__name__)
@@ -88,30 +87,11 @@ class SharableResourceAPIInterface(object):
     def groups_with_user(self, user):
         return filter(lambda g: user in g.user_set.all(), Group.objects.all())
 
-    def has_access(self, user, res):
-        if res.is_public():
-            return True
-
-        if res.get_owner().id == user.id:
-            return True
-
-        for i in self.groups_with_user(user):
-            perms = self.get_perms(res, i)
-            owner = res.get_owner()
-
-            if perms['read'] or perms['change']:
-                return True
-
-        return False
-
-    def list_to_queryset(self, res_list):
-        return self.res_type.objects.filter(id__in=[r.id for r in res_list])
-
     # Generalizes bundle construction and resource processing. Turning on more
     # options may require going to the SharableResource class and adding them.
 
     # Apply filters.
-    def do_filtering(self, res_list, get_req_dict):
+    def query_filtering(self, res_list, get_req_dict):
         mod_list = res_list
 
         for k in get_req_dict:
@@ -124,22 +104,40 @@ class SharableResourceAPIInterface(object):
 
         return mod_list
 
-    # Turns on certain things depending on flags
-    def build_res_list(self, user, res_list, request, **kwargs):
-        # Filter for access rights.
-        res_list = filter(lambda r: self.has_access(user, r), res_list)
+    def build_res_list(self, user):
+        if user.is_authenticated():
+            return get_objects_for_user(
+                user,
+                'core.read_%s' % self.res_type._meta.verbose_name
+            )
+        else:
+            return get_objects_for_group(
+                ExtendedGroup.objects.public_group(),
+                'core.read_%s' % self.res_type._meta.verbose_name
+            )
 
-        for i in res_list:
-            # Avoid breaking things if owner does not exist.
-            own = i.get_owner()
-            setattr(i, 'public', i.is_public())
-            setattr(i, 'is_owner', None if own is None else own.id == user.id)
+    # Turns on certain things depending on flags
+    def transform_res_list(self, user, res_list, request, **kwargs):
+
+        owned_res_set = Set(
+            get_objects_for_user(
+                user,
+                'core.share_%s' % self.res_type._meta.verbose_name).values_list( "id", flat=True))
+        public_res_set = Set(
+            get_objects_for_group(
+                ExtendedGroup.objects.public_group(),
+                'core.read_%s' % self.res_type._meta.verbose_name).values_list( "id", flat=True))
+
+        # instantiate owner and public fields
+        for res in res_list:
+            setattr(res, 'is_owner', res.id in owned_res_set )
+            setattr(res, 'public', res.id in public_res_set )
 
             if 'sharing' in kwargs and kwargs['sharing']:
-                setattr(i, 'share_list', self.get_share_list(user, i))
+                setattr(res, 'share_list', self.get_share_list(user, res))
 
         # Filter for query flags.
-        res_list = self.do_filtering(res_list, request.GET)
+        res_list = self.query_filtering(res_list, request.GET)
 
         return res_list
 
@@ -167,13 +165,13 @@ class SharableResourceAPIInterface(object):
     # Makes everything simpler for GET requests.
     def process_get(self, request, res, **kwargs):
         user = request.user
-        mod_res_list = self.build_res_list(user, [res], request, **kwargs)
+        mod_res_list = self.transform_res_list(user, [res], request, **kwargs)
         bundle = self.build_bundle_list(request, mod_res_list)[0]
         return self.build_response(request, bundle, **kwargs)
 
     def process_get_list(self, request, res_list, **kwargs):
         user = request.user
-        mod_res_list = self.build_res_list(user, res_list, request, **kwargs)
+        mod_res_list = self.transform_res_list(user, res_list, request, **kwargs)
         bundle_list = self.build_bundle_list(request, mod_res_list, **kwargs)
         object_list = self.build_object_list(bundle_list, **kwargs)
         return self.build_response(request, object_list, **kwargs)
@@ -192,7 +190,15 @@ class SharableResourceAPIInterface(object):
         res = self.get_res(kwargs['uuid'])
         request = bundle.request
         user = request.user
-        mod_res_list = self.build_res_list(user, [res], request, **kwargs)
+
+        if not res:
+            return HttpBadRequest() 
+
+        # User not authenticated, res is not public.
+        if not user.is_authenticated() and res and not res.is_public():
+            return HttpUnauthorized()
+
+        mod_res_list = self.transform_res_list(user, [res], request, **kwargs)
         bundle = self.build_bundle_list(request, mod_res_list)[0]
         return bundle.obj
 
@@ -200,8 +206,9 @@ class SharableResourceAPIInterface(object):
         return self.get_object_list(bundle.request)
 
     def get_object_list(self, request):
-        obj_list = ModelResource.get_object_list(self, request)
-        r_list = self.build_res_list(request.user, obj_list, request)
+        user = request.user
+        obj_list = self.build_res_list(user)
+        r_list = self.transform_res_list(user, obj_list, request)
         return r_list
 
     # A few default URL endpoints as directed by prepend_urls in subclasses.
@@ -221,6 +228,14 @@ class SharableResourceAPIInterface(object):
     # TODO: Make sure GuardianAuthorization works.
     def res_sharing(self, request, **kwargs):
         res = self.get_res(kwargs['uuid'])
+        user = request.user
+
+        if not res:
+            return HttpBadRequest() 
+
+        # User not authenticated, res is not public.
+        if not user.is_authenticated() and res and not res.is_public():
+            return HttpUnauthorized()
 
         if request.method == 'GET':
             kwargs['sharing'] = True
@@ -254,12 +269,7 @@ class SharableResourceAPIInterface(object):
     def res_sharing_list(self, request, **kwargs):
         if request.method == 'GET':
             kwargs['sharing'] = True
-            res_list = filter(
-                lambda r:
-                    (r.get_owner() is not None and
-                     r.get_owner().id == request.user.id),
-                self.res_type.objects.all())
-
+            res_list = self.build_res_list(request.user)
             return self.process_get_list(request, res_list, **kwargs)
         else:
             return HttpMethodNotAllowed()
@@ -287,6 +297,17 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
     def prepend_urls(self):
         return SharableResourceAPIInterface.prepend_urls(self)
 
+    def res_sharing_list(self, request, **kwargs):
+        if request.method == 'GET':
+            kwargs['sharing'] = True
+            res_list = filter(
+                lambda r: not r.is_catch_all,
+                self.build_res_list(request.user)
+            )
+            return self.process_get_list(request, res_list, **kwargs)
+        else:
+            return HttpMethodNotAllowed()
+
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
 
@@ -294,25 +315,11 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
 
     def obj_get_list(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get_list(self,
-                                                         bundle,
-                                                         **kwargs)
+        return SharableResourceAPIInterface.obj_get_list(self, bundle, **kwargs)
 
-    # def get_object_list(self, request):
-    #     return SharableResourceAPIInterface.get_object_list(self, request)
-
-    def get_object_list(self, request, **kwargs):
-        if(request.user.is_authenticated()):
-            return get_objects_for_user(
-                request.user,
-                "core.read_project"
-            ).filter(is_catch_all=False)
-        else:
-            group = ExtendedGroup.objects.public_group()
-            return get_objects_for_group(
-                group,
-                'core.read_project'
-            ).filter(is_catch_all=False)
+    def get_object_list(self, request):
+        obj_list = SharableResourceAPIInterface.get_object_list(self, request)
+        return filter(lambda o: not o.is_catch_all, obj_list)
 
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
@@ -350,32 +357,11 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
 
     def obj_get_list(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get_list(self,
-                                                         bundle,
-                                                         **kwargs)
+        return SharableResourceAPIInterface.obj_get_list(self, bundle, **kwargs)
 
-    # def get_object_list(self, request):
-    #     return SharableResourceAPIInterface.get_object_list(self, request)
-
-    def get_object_list(self, request, **kwargs):
-        if(request.user.is_authenticated()):
-            data_sets = get_objects_for_user(
-                request.user,
-                'core.read_dataset'
-            )
-            for data_set in data_sets:
-                # Assuming that only owners can share an object.
-                # add_dataset is not unique to owners unfortunately
-                data_set.is_owner = request.user.has_perm(
-                    'core.share_dataset',
-                    data_set
-                )
-                data_set.public = data_set.is_public
-        else:
-            group = ExtendedGroup.objects.public_group()
-            data_sets = get_objects_for_group(group, 'core.read_dataset')
-
-        return data_sets
+    def get_object_list(self, request):
+        obj_list = SharableResourceAPIInterface.get_object_list(self, request)
+        return obj_list
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
@@ -479,25 +465,11 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
 
     def obj_get_list(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get_list(self,
-                                                         bundle,
-                                                         **kwargs)
+        return SharableResourceAPIInterface.obj_get_list(self, bundle, **kwargs)
 
-    # def get_object_list(self, request):
-    #     return SharableResourceAPIInterface.get_object_list(self, request)
-
-    def get_object_list(self, request, **kwargs):
-        if(request.user.is_authenticated()):
-            return get_objects_for_user(
-                request.user,
-                "core.read_workflow"
-            ).filter(is_active=True)
-        else:
-            group = ExtendedGroup.objects.public_group()
-            return get_objects_for_group(
-                group,
-                'core.read_workflow'
-            ).filter(is_active=True)
+    def get_object_list(self, request):
+        obj_list = SharableResourceAPIInterface.get_object_list(self, request)
+        return filter(lambda o: o.is_active, obj_list)
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
@@ -1331,19 +1303,27 @@ class InvitationResource(ModelResource):
             url(r'^invitation/update/$',
                 self.wrap_view('update_db'),
                 name='api_invitation_update_db'),
-            url(r'^invitation/send/(?P<group_id>%s)/(?P<email>%s)/$'
-                % (self.group_id_regex, self.email_regex),
+            url(r'^invitation/send/$',
                 self.wrap_view('email_token'),
                 name='api_invitation_email_token'),
-
         ]
 
     def get_token(self, request, **kwargs):
         self.update_db(request, **kwargs)
 
-        if request.method == 'GET':
+        if request.method == 'GET' or request.method == 'POST':
             user = request.user
-            group = self.get_group(int(kwargs['group_id']))
+            group = None
+
+            if request.method == 'GET':
+                group = self.get_group(int(kwargs['group_id']))
+
+            if request.method == 'POST':
+                data = request.raw_post_data
+                group = self.get_group(int(json.loads(data)['group_id']))
+
+            if not group:
+                return HttpBadRequest()
 
             if not self.user_authorized(user, group):
                 return HttpUnauthorized()
@@ -1394,7 +1374,10 @@ class InvitationResource(ModelResource):
 
 
     def email_token(self, request, **kwargs):
-        group = self.get_group(int(kwargs['group_id']))
+        self.update_db(request, **kwargs)
+
+        data = json.loads(request.raw_post_data)
+        group = self.get_group(int(data['group_id']))
 
         if not self.user_authorized(request.user, group):
             return HttpUnauthorized()
@@ -1405,7 +1388,7 @@ class InvitationResource(ModelResource):
             return HttpUnauthorized()
 
         token = get_token_response.content
-        address = kwargs['email']
+        address = data['email']
         subject = 'Invitation to join group %s' % group.name
         body = """
 You have been invited to join %s. Please use the following steps:
