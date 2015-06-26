@@ -573,8 +573,8 @@ class NodeResource(ModelResource):
         ]
         filtering = {
             'uuid': ALL,
-            #'study': ALL_WITH_RELATIONS,
-            #'assay': ALL_WITH_RELATIONS
+            'study': ALL_WITH_RELATIONS,
+            'assay': ALL_WITH_RELATIONS
         }
 
     def prepend_urls(self):
