@@ -537,7 +537,7 @@ def delete_associated_externaltoolstatus(sender, instance, **kwargs):
         externaltool.delete()
     except:
         logger.error(
-            "There's no ExternalToolStatus with that unique instance identifier"
+            "There's no ExternalToolStatus with the unique instance identifier"
         )
 
 
@@ -1204,7 +1204,7 @@ class RefineryLDAPBackend(LDAPBackend):
         # to get email address from an attribute in ldap_user
         if created:
             try:
-                email_attribute_name = settings.AUTH_LDAP_USER_ATTR_MAP['email']
+                email_attr_name = settings.AUTH_LDAP_USER_ATTR_MAP['email']
             except KeyError:
                 logger.error(
                     "Cannot send welcome email to user '{}': key 'email' does "
@@ -1213,12 +1213,12 @@ class RefineryLDAPBackend(LDAPBackend):
                 )
                 return user, created
             try:
-                email_address_list = ldap_user.attrs.data[email_attribute_name]
+                email_address_list = ldap_user.attrs.data[email_attr_name]
             except KeyError:
                 logger.error(
                     "Cannot send welcome email to user '{}': attribute '{}'"
                     " was not provided by the LDAP server"
-                    .format(username, email_attribute_name)
+                    .format(username, email_attr_name)
                 )
                 return user, created
             try:
@@ -1372,7 +1372,7 @@ class UserAuthentication(object):
         self.is_admin = is_admin
         self.id = id
         self.username = username
-        
+
 
 class Invitation(models.Model):
     token_uuid = UUIDField(unique=True, auto=True)
@@ -1385,8 +1385,8 @@ class Invitation(models.Model):
 
     def save(self, *arg, **kwargs):
         if not self.id:
-          self.created = datetime.now()
-        
+            self.created = datetime.now()
+
         return super(Invitation, self).save(*arg, **kwargs)
 
 
