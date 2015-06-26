@@ -572,8 +572,9 @@ class NodeResource(ModelResource):
             'children', 'type', 'analysis_uuid', 'subanalysis'
         ]
         filtering = {
-            'uuid': ALL, 'study': ALL_WITH_RELATIONS,
-            'assay': ALL_WITH_RELATIONS
+            'uuid': ALL,
+            #'study': ALL_WITH_RELATIONS,
+            #'assay': ALL_WITH_RELATIONS
         }
 
     def prepend_urls(self):
@@ -603,30 +604,31 @@ class NodeResource(ModelResource):
             bundle.data['file_import_status'] = file_item.get_import_status()
         return bundle
 
-    def get_object_list(self, request):
-        """Get all nodes that are available to the current user (via data set)
-        Temp workaround due to Node being not Ownable
-
-        """
-        user = request.user
-        perm = 'read_%s' % DataSet._meta.module_name
-        if (user.is_authenticated()):
-            allowed_datasets = get_objects_for_user(user, perm, DataSet)
-        else:
-            allowed_datasets = get_objects_for_group(ExtendedGroup.objects.public_group(), perm, DataSet)
-        # get a list of node UUIDs that belong to all datasets available to the
-        # current user
-        all_allowed_studies = []
-        for dataset in allowed_datasets:
-            dataset_studies = dataset.get_investigation().study_set.all()
-            all_allowed_studies.extend([study for study in dataset_studies])
-        allowed_nodes = []
-        for study in all_allowed_studies:
-            allowed_nodes.extend(study.node_set.all().values('uuid'))
-        # filter nodes using that list
-        return super(NodeResource, self).get_object_list(request).filter(
-            uuid__in=[node['uuid'] for node in allowed_nodes])
-
+    # def get_object_list(self, request):
+    #     """
+    #     Temporarily removed for performance reasons (and not required without authorization)
+    #     Get all nodes that are available to the current user (via data set)
+    #     Temp workaround due to Node being not Ownable
+    #
+    #     """
+    #     user = request.user
+    #     perm = 'read_%s' % DataSet._meta.module_name
+    #     if (user.is_authenticated()):
+    #         allowed_datasets = get_objects_for_user(user, perm, DataSet)
+    #     else:
+    #         allowed_datasets = get_objects_for_group(ExtendedGroup.objects.public_group(), perm, DataSet)
+    #     # get a list of node UUIDs that belong to all datasets available to the
+    #     # current user
+    #     all_allowed_studies = []
+    #     for dataset in allowed_datasets:
+    #         dataset_studies = dataset.get_investigation().study_set.all()
+    #         all_allowed_studies.extend([study for study in dataset_studies])
+    #     allowed_nodes = []
+    #     for study in all_allowed_studies:
+    #         allowed_nodes.extend(study.node_set.all().values('uuid'))
+    #     # filter nodes using that list
+    #     return super(NodeResource, self).get_object_list(request).filter(
+    #         uuid__in=[node['uuid'] for node in allowed_nodes])
 
 class NodeSetResource(ModelResource):
     # https://github.com/toastdriven/django-tastypie/pull/538
