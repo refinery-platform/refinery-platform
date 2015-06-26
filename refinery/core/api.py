@@ -132,9 +132,8 @@ class SharableResourceAPIInterface(object):
             setattr(res, 'is_owner', res.id in owned_res_set )
             setattr(res, 'public', res.id in public_res_set )
 
-        for i in res_list:
             if 'sharing' in kwargs and kwargs['sharing']:
-                setattr(i, 'share_list', self.get_share_list(user, i))
+                setattr(res, 'share_list', self.get_share_list(user, res))
 
         # Filter for query flags.
         res_list = self.query_filtering(res_list, request.GET)
