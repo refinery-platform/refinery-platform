@@ -8,7 +8,7 @@ from django.conf.urls.defaults import patterns, url
 
 
 urlpatterns = patterns('core.views',
-    url(r'^$', 'home', name="home" ),        
+    url(r'^$', 'home', name="home" ),
     url(r'^about/$', 'about', name="about" ),
     url(r'^contact/$', 'contact', name="contact" ),
     url(r'^statistics/$', 'statistics', name="statistics" ),
@@ -30,14 +30,14 @@ urlpatterns = patterns('core.views',
     url(r'^data_sets/(?P<slug>[a-zA-Z0-9\_]+)/$', 'data_set_slug', name="data_set_slug"),
     url(r'^workflows/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'workflow', name="workflow"),
     url(r'^workflows/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/edit/$', 'workflow_edit', name="workflow_edit"),
-    url(r'^workflows/(?P<slug>[a-zA-Z0-9\_]+)/$', 'workflow_slug', name="workflow_slug"),    
+    url(r'^workflows/(?P<slug>[a-zA-Z0-9\_]+)/$', 'workflow_slug', name="workflow_slug"),
     url(r'^workflow_engines/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'workflow_engine', name="workflow_engine"),
 
     url(r'^data_sets/(?P<ds_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/samples/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'samples', name="samples"),
-        
+
     url(r'^solr/igv/$', 'solr_igv' ),
     url(r'^solr/(?P<core>.+)/select/$', 'solr_select', name="solr_select"),
-    
+
     # test solr/search view
     url(r'^data_sets/(?P<ds_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/samples/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/solr$', 'samples_solr', name="samples"),
 )
@@ -54,6 +54,6 @@ urlpatterns += patterns('',
             context_object_name='datasets',
             paginate_by=15,
             template_name='core/data_sets.html'
-        ))              
+        ))
 )
 """
