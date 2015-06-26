@@ -9,6 +9,7 @@ import logging
 import re
 import uuid
 import settings
+from sets import Set
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group
@@ -116,15 +117,22 @@ class SharableResourceAPIInterface(object):
 
     # Turns on certain things depending on flags
     def transform_res_list(self, user, res_list, request, **kwargs):
-        for i in res_list:
-            is_owner = user.has_perm(
-                'core.share_%s' % self.res_type._meta.verbose_name,
-                i
-            )
-            
-            setattr(i, 'public', i.is_public())
-            setattr(i, 'is_owner', is_owner)
 
+        owned_res_set = Set(
+            get_objects_for_user(
+                user,
+                'core.share_%s' % self.res_type._meta.verbose_name).values_list( "id", flat=True))
+        public_res_set = Set(
+            get_objects_for_group(
+                ExtendedGroup.objects.public_group(),
+                'core.read_%s' % self.res_type._meta.verbose_name).values_list( "id", flat=True))
+
+        # instantiate owner and public fields
+        for res in res_list:
+            setattr(res, 'is_owner', res.id in owned_res_set )
+            setattr(res, 'public', res.id in public_res_set )
+
+        for i in res_list:
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(i, 'share_list', self.get_share_list(user, i))
 
