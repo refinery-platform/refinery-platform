@@ -18,10 +18,6 @@ logger = logging.getLogger(__name__)
 
 class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
-    # id of the user who owns this project
-    owner_id = indexes.CharField()
-    # ids of the groups who have read permission for this data set
-    group_ids = indexes.MultiValueField(null=True)
     name = indexes.CharField(model_attr='name', null=True)
     title = indexes.CharField(null=True)
     uuid = indexes.CharField(model_attr='uuid')
@@ -33,6 +29,10 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     submitter = indexes.MultiValueField(null=True)
     measurement = indexes.MultiValueField(null=True, faceted=True)
     technology = indexes.MultiValueField(null=True, faceted=True)
+
+    # We only need one multi value field to story every id that has access since
+    # Solr only handles read permissions.
+    access = indexes.MultiValueField(null=True)
 
     # We add this for autocomplete.
     content_auto = indexes.EdgeNgramField(null=True)
@@ -53,14 +53,14 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_content_auto(self, object):
         return object.get_investigation().get_title()
 
-    def prepare_owner_id(self, object):
-        if object.get_owner() is None:
-            return None
-
-        return object.get_owner().id
-
-    def prepare_group_ids(self, object):
-        return [g["id"] for g in object.get_groups()]
+    def prepare_access(self, object):
+        access_list = []
+        if object.get_owner() is not None:
+            access_list.append('u_{}'.format(object.get_owner().id))
+        for group in object.get_groups():
+            if id in group:
+                access_list.append('g_{}'.format(group.id))
+        return access_list
 
     def prepare_submitter(self, object):
         investigation = object.get_investigation()
@@ -174,10 +174,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
 
 class ProjectIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
-    # id of the user who owns this project
-    owner_id = indexes.CharField()
-    # ids of the groups who have read permission for this data set
-    group_ids = indexes.MultiValueField(null=True)
+    access = indexes.MultiValueField(null=True)
     name = indexes.CharField(model_attr='name', null=True)
     uuid = indexes.CharField(model_attr='uuid')
     summary = indexes.CharField(model_attr='summary')
@@ -192,11 +189,14 @@ class ProjectIndex(indexes.SearchIndex, indexes.Indexable):
     def get_model(self):
         return Project
 
-    def prepare_owner_id(self, object):
-        return object.get_owner().id
-
-    def prepare_group_ids(self, object):
-        return [g["id"] for g in object.get_groups()]
+    def prepare_access(self, object):
+        access_list = []
+        if object.get_owner() is not None:
+            access_list.append('u_{}'.format(object.get_owner().id))
+        for group in object.get_groups():
+            if id in group:
+                access_list.append('g_{}'.format(group.id))
+        return access_list
 
     def index_queryset(self, using=None):
         """Used when the entire index for model is updated."""
