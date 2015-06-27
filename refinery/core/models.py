@@ -30,6 +30,7 @@ from registration.signals import user_registered, user_activated
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
+from core.utils import update_data_set_index
 
 
 logger = logging.getLogger(__name__)
@@ -286,6 +287,16 @@ class SharableResource (OwnableResource):
 
         return groups
 
+    def get_group_ids(self, changeonly=False, readonly=False):
+        groups = get_groups_with_perms(self)
+
+        ids = []
+
+        for group in groups:
+            ids.append(group.id)
+
+        return ids
+
     # TODO: clean this up
     def is_public(self):
         permissions = get_groups_with_perms(self, attach_perms=True)
@@ -309,7 +320,8 @@ def print_shared(sender, **kwargs):
     logger.info("Sharable Resouce has been shared with sender: %s" % sender)
 
 resource_shared = Signal()
-resource_shared.connect(print_shared)
+# WORK ON
+# resource_shared.connect(update_data_set_index)
 
 
 class TemporaryResource:
@@ -1372,7 +1384,7 @@ class UserAuthentication(object):
         self.is_admin = is_admin
         self.id = id
         self.username = username
-        
+
 
 class Invitation(models.Model):
     token_uuid = UUIDField(unique=True, auto=True)
@@ -1386,7 +1398,7 @@ class Invitation(models.Model):
     def save(self, *arg, **kwargs):
         if not self.id:
           self.created = datetime.now()
-        
+
         return super(Invitation, self).save(*arg, **kwargs)
 
 

@@ -503,7 +503,7 @@ ul#externalToolListPopover li{
 
     ul.results {
       li {
-        padding: 2px 0;
+        padding: 5px 0;
         border-top: 1px solid @grayLighter;
 
         // Hack because uiScroll adds another invisible first child to the list.
@@ -527,6 +527,27 @@ ul#externalToolListPopover li{
         font-weight: bold;
         font-style: normal;
         background: fade(lighten(@blueLight, 25%), 15%);
+      }
+    }
+
+    ul.results.search {
+      a.title {
+        font-size: @baseFontSize + 1;
+        color: #006f99;
+      }
+
+      a.title:hover {
+        color: inherit;
+      }
+
+      a.title:visited {
+        color: #4f38a6;
+        background: fade(lighten(#4f38a6, 25%), 15%);
+      }
+
+      p.snippet {
+        margin: 2px 0 0 0;
+        color: lighten(@gray, 10%);
       }
     }
 

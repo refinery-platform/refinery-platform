@@ -2,6 +2,7 @@ from datetime import datetime
 import os.path
 import re
 import json
+import urllib
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import get_current_site
@@ -100,7 +101,7 @@ def user_edit(request, uuid):
             profile = pform.save(commit = False)
             profile.user = user
             profile.save()
-            return HttpResponseRedirect(reverse('core.views.user', args=(uuid, )))
+            return HttpResponseRedirect(reverse('core.views.user', args=(uuid,)))
     else:
         uform = UserForm(instance=user_object)
         pform = UserProfileForm(instance=profile_object)
@@ -156,7 +157,7 @@ def project_new(request):
             # Process the data in form.cleaned_data
             # ...
 
-            return HttpResponseRedirect(reverse('project', args=(project.uuid, )))  # Redirect after POST
+            return HttpResponseRedirect(reverse('project', args=(project.uuid,)))  # Redirect after POST
     else:
         form = ProjectForm()  # An unbound form
 
@@ -164,7 +165,7 @@ def project_new(request):
         'form': form
         },
         context_instance=RequestContext(request)
-   )
+  )
 
 
 @login_required()
@@ -180,7 +181,7 @@ def project_edit(request, uuid):
             form.save()
             # Process the data in form.cleaned_data
             # ...
-            return HttpResponseRedirect(reverse('core.views.project', args=(uuid, )))  # Redirect after POST
+            return HttpResponseRedirect(reverse('core.views.project', args=(uuid,)))  # Redirect after POST
     else:
         form = ProjectForm(instance=project)  # An unbound form
 
@@ -189,7 +190,7 @@ def project_edit(request, uuid):
         'project': project
         },
         context_instance=RequestContext(request)
-   )
+  )
 
 
 
@@ -349,7 +350,7 @@ def data_set_edit(request, uuid):
             form.save()
             # Process the data in form.cleaned_data
             # ...
-            return HttpResponseRedirect(reverse('core.views.data_set', args=(uuid, )))  # Redirect after POST
+            return HttpResponseRedirect(reverse('core.views.data_set', args=(uuid,)))  # Redirect after POST
     else:
         form = DataSetForm(instance=data_set)  # An unbound form
 
@@ -376,7 +377,7 @@ def samples(request, ds_uuid, study_uuid, assay_uuid):
     node_matrix = get_matrix(node_type="Raw Data File",
                                                   study_uuid=study_uuid,
                                                   assay_uuid=assay_uuid
-                                                 )
+                                                )
     end = datetime.now()
     print("Time to retrieve node matrix: " + str(end - start))
 
@@ -432,7 +433,7 @@ def workflow_edit(request, uuid):
             form.save()
             # Process the data in form.cleaned_data
             # ...
-            return HttpResponseRedirect(reverse('core.views.workflow', args=(uuid, )))  # Redirect after POST
+            return HttpResponseRedirect(reverse('core.views.workflow', args=(uuid,)))  # Redirect after POST
     else:
         form = WorkflowForm(instance=workflow)  # An unbound form
 
@@ -735,7 +736,7 @@ def admin_test_data(request):
         workflow_engine_object = WorkflowEngine.objects.create(
             instance=instance, name=instance.description,
             summary=instance.base_url + " " + instance.api_key
-           )
+          )
         # TODO: introduce group managers and assign ownership to them
         workflow_engine_object.set_manager_group(
             ExtendedGroup.objects.public_group().manager_group)
@@ -802,26 +803,34 @@ def analysis(request, analysis_uuid):
                               context_instance=RequestContext(request))
 
 
+def solr_core_search(request):
+    """Augmenting Solr queries to ensure only allowed access, is currently only
+    available for querying core indexes."""
+    url = settings.REFINERY_SOLR_BASE_URL + "core/select"
+    data = request.GET.dict()
+    # Generate access list
+    access = ['u_{}'.format(request.user.id)]
+    for group in request.user.groups.all():
+        access.append('g_{}'.format(group.id))
+    data['fq'] = data['fq'] + ' AND access:({})'.format(' OR '.join(access))
+    req = urllib2.Request(url, urllib.urlencode(data))
+    f = urllib2.urlopen(req)
+    response = f.read()
+    f.close()
+    return HttpResponse(response, mimetype='application/json')
+
+
 def solr_select(request, core):
     # core format is <name_of_core>
     # query.GET is a querydict containing all parts of the query
     # TODO: handle runtime errors when making GET request
     url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
-    data = request.GET
-    groups = request.user.groups.all()
-    # Generate access list
-    access = ['u_{}'.format(request.user.id)]
-    for group in groups:
-        access.append('g_{}'.format(group.id))
-    data.appendlist('fq', 'access:({})'.format('+'.join(access)))
-    logger.debug("HURZ: %s", data)
-    data = data.urlencode()
+    data = request.GET.urlencode()
     req = urllib2.Request(url, data)  # {'Content-Type': 'application/json'})
     f = urllib2.urlopen(req)
     response = f.read()
     f.close()
     return HttpResponse(response, mimetype='application/json')
-    # return HttpResponse(urllib2.urlopen(url).read())
 
 
 def solr_igv(request):

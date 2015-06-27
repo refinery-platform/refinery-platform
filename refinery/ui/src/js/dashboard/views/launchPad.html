@@ -11,11 +11,13 @@
         </h3>
       </span>
       <span class="refinery-header-right">
+        <!--
         <button
           class="no-underline-hover"
           ng-click="dashboard.toggleDataSetsExploration()">
           <i class="icon-compass" title="Explore data sets"></i>
         </button>
+        -->
         <a
           href="./data_set_manager/import/isa-tab-form/"
           class="no-underline-hover"
@@ -25,7 +27,7 @@
       </span>
     </div>
 
-    <form class="navbar-search" ng-if="dashboard.dataSets.total > 0">
+    <form class="navbar-search">
       <i class="icon-search"></i>
       <i
         class="icon-remove-sign"
@@ -55,6 +57,7 @@
       refinery-dashboard-panel>
       <ul
         class="results no-list-style"
+        ng-class="{'search': dashboard.searchDataSet}"
         ng-if="dashboard.dataSets.total > 0">
         <li
           ui-scroll="dataSet in dashboard.dataSets"
@@ -83,10 +86,12 @@
             ng-href="data_sets/{{ dataSet.uuid }}"
             ng-if="!dashboard.searchDataSet">{{ dataSet.name }}</a>
           <a
+            class="title"
             ng-href="data_sets/{{ dataSet.uuid }}"
             ng-if="dashboard.searchDataSet"
             ng-bind-html="dataSet.title"></a>
           <p
+            class="snippet"
             ng-if="dataSet.description"
             ng-bind-html="dataSet.description"></p>
         </li>

@@ -37,6 +37,11 @@ urlpatterns = patterns(
     url(r'^data_sets/(?P<ds_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/samples/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'samples', name="samples"),
 
     url(r'^solr/igv/$', 'solr_igv'),
+    url(
+        r'^solr/core/select/$',
+        'solr_core_search',
+        name="solr_core_search"
+    ),
     url(r'^solr/(?P<core>.+)/select/$', 'solr_select', name="solr_select"),
 
     # test solr/search view

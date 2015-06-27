@@ -43,48 +43,45 @@ angular
               });
           query
             .$promise
-            .then(
-              function (data) {
-                var doc;
+            .then(function (data) {
+              var doc;
 
-                for (var i = 0, len = data.response.docs.length; i < len; i++) {
-                  doc = data.response.docs[i];
-                  if (Object.keys(doc).length) {
-                    if (data.highlighting[doc.id].content_auto) {
-                      doc.title = $sce.trustAsHtml(
-                        data.highlighting[doc.id].content_auto[0]
-                      );
-                    } else {
-                      doc.title = sce.trustAsHtml(
-                        '<span class="is-unknown">Unknown</span>'
-                      );
-                    }
-                    if (data.highlighting[doc.id].description) {
-                      doc.description = $sce.trustAsHtml(
-                        data.highlighting[doc.id].description[0]
-                      );
-                    } else {
-                      doc.description = null;
-                    }
+              for (var i = 0, len = data.response.docs.length; i < len; i++) {
+                doc = data.response.docs[i];
+                if (Object.keys(doc).length) {
+                  if (data.highlighting[doc.id].content_auto) {
+                    doc.title = $sce.trustAsHtml(
+                      data.highlighting[doc.id].content_auto[0]
+                    );
                   } else {
-                    // When there is no title and no description something's
-                    // wrong with the document, so we better remove the doc from
-                    // the results.
-
+                    doc.title = sce.trustAsHtml(
+                      '<span class="is-unknown">Unknown</span>'
+                    );
                   }
+                  if (data.highlighting[doc.id].description) {
+                    doc.description = $sce.trustAsHtml(
+                      data.highlighting[doc.id].description[0]
+                    );
+                  } else {
+                    doc.description = null;
+                  }
+                } else {
+                  // When there is no title and no description something's
+                  // wrong with the document, so we better remove the doc from
+                  // the results.
                 }
-
-                deferred.resolve({
-                  meta: {
-                    total_count: data.response.numFound
-                  },
-                  objects: data.response.docs
-                });
-              },
-              function (error) {
-                deferred.reject(error);
               }
-            );
+
+              deferred.resolve({
+                meta: {
+                  total_count: data.response.numFound
+                },
+                objects: data.response.docs
+              });
+            })
+          .catch(function (error) {
+              deferred.reject(error);
+          });
 
           return deferred.promise;
         };

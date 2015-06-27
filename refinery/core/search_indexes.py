@@ -57,9 +57,8 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
         access_list = []
         if object.get_owner() is not None:
             access_list.append('u_{}'.format(object.get_owner().id))
-        for group in object.get_groups():
-            if id in group:
-                access_list.append('g_{}'.format(group.id))
+        for group_id in object.get_group_ids():
+            access_list.append('g_{}'.format(group_id))
         return access_list
 
     def prepare_submitter(self, object):
