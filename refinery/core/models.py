@@ -497,6 +497,15 @@ class DataSet(SharableResource):
         logger.info("Re-index / update data set: %s", self)
         DataSetIndex().update_object(self, using='core')
 
+    def unshare(self, group):
+        super(DataSet, self).unshare(group)
+        # This might be a hack but I couldn't find an easier solution to about
+        # the import loop. I found this solution here
+        # http://stackoverflow.com/a/7199514/981933
+        from core.search_indexes import DataSetIndex
+        logger.info("Re-index / update data set: %s", self)
+        DataSetIndex().update_object(self, using='core')
+
 
 class InvestigationLink(models.Model):
     data_set = models.ForeignKey(DataSet)
