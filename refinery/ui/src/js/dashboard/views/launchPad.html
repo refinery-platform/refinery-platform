@@ -57,8 +57,7 @@
       refinery-dashboard-panel>
       <ul
         class="results no-list-style"
-        ng-class="{'search': dashboard.searchDataSet}"
-        ng-if="dashboard.dataSets.total > 0">
+        ng-class="{'search': dashboard.searchDataSet}">
         <li
           ui-scroll="dataSet in dashboard.dataSets"
           adapter="dashboard.dataSetsAdapter">
