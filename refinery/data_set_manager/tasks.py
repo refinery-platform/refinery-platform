@@ -578,7 +578,11 @@ def parse_isatab(
                     'The checksum of both files is the same: %s',
                     checksum
                 )
-                return (investigation.isarchive_file, os.path.basename(path), True)
+                return (
+                    investigation.investigationlink_set.all()[0].data_set.uuid,
+                    os.path.basename(path),
+                    True
+                )
 
     try:
         investigation = p.run(
