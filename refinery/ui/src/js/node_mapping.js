@@ -565,6 +565,9 @@ angular.module('refineryNodeMapping', [
   $scope.$onRootScope('nodeRelationshipChangedEvent', function( event, currentNodeRelationship ) {
     $scope.currentNodeRelationship = currentNodeRelationship;
   });
+
+  // Go to default state
+  $state.go('browse');
 })
 
 .factory("NodeSetList", function($resource) {
@@ -596,8 +599,4 @@ angular.module('refineryNodeMapping', [
       is_exposed: 'true',
     }
   );
-})
-
-.run(['$state', function ($state,$scope) {
-   $state.transitionTo('browse');
-}]);
+});
