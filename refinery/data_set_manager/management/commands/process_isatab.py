@@ -129,7 +129,7 @@ class Command(BaseCommand):
         total = len(isatab_dict)
         for (i, filename, skipped) in result.iterate():
             try:
-                if !skipped:
+                if not skipped:
                     print (
                         "{num} / {total}: Successfully parsed {file} into "
                         "DataSet with UUID {uuid}".format(
