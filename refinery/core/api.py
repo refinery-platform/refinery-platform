@@ -122,16 +122,18 @@ class SharableResourceAPIInterface(object):
         owned_res_set = Set(
             get_objects_for_user(
                 user,
-                'core.share_%s' % self.res_type._meta.verbose_name).values_list( "id", flat=True))
+                'core.share_%s' %
+                self.res_type._meta.verbose_name).values_list("id", flat=True))
         public_res_set = Set(
             get_objects_for_group(
                 ExtendedGroup.objects.public_group(),
-                'core.read_%s' % self.res_type._meta.verbose_name).values_list( "id", flat=True))
+                'core.read_%s' %
+                self.res_type._meta.verbose_name).values_list("id", flat=True))
 
         # instantiate owner and public fields
         for res in res_list:
-            setattr(res, 'is_owner', res.id in owned_res_set )
-            setattr(res, 'public', res.id in public_res_set )
+            setattr(res, 'is_owner', res.id in owned_res_set)
+            setattr(res, 'public', res.id in public_res_set)
 
             if 'sharing' in kwargs and kwargs['sharing']:
                 setattr(res, 'share_list', self.get_share_list(user, res))
@@ -192,7 +194,7 @@ class SharableResourceAPIInterface(object):
         user = request.user
 
         if not res:
-            return HttpBadRequest() 
+            return HttpBadRequest()
 
         # User not authenticated, res is not public.
         if not user.is_authenticated() and res and not res.is_public():
@@ -231,7 +233,7 @@ class SharableResourceAPIInterface(object):
         user = request.user
 
         if not res:
-            return HttpBadRequest() 
+            return HttpBadRequest()
 
         # User not authenticated, res is not public.
         if not user.is_authenticated() and res and not res.is_public():
@@ -630,6 +632,7 @@ class NodeResource(ModelResource):
     #     # filter nodes using that list
     #     return super(NodeResource, self).get_object_list(request).filter(
     #         uuid__in=[node['uuid'] for node in allowed_nodes])
+
 
 class NodeSetResource(ModelResource):
     # https://github.com/toastdriven/django-tastypie/pull/538
@@ -1108,8 +1111,8 @@ class GroupManagementResource(Resource):
             return self.process_get(request, group_obj, **kwargs)
         elif request.method == 'PATCH':
             if not self.user_authorized(user, group):
-                 return HttpUnauthorized()
-                 
+                return HttpUnauthorized()
+
             data = json.loads(request.raw_post_data)
             new_member_list = data['member_list']
 
@@ -1145,7 +1148,7 @@ class GroupManagementResource(Resource):
     def group_members_detail(self, request, **kwargs):
         group = self.get_group(kwargs['id'])
         user = request.user
- 
+
         if not user.is_authenticated():
             return HttpUnauthorized()
 
@@ -1374,7 +1377,6 @@ class InvitationResource(ModelResource):
 
         return HttpNoContent()
 
-
     def email_token(self, request, **kwargs):
         self.update_db(request, **kwargs)
 
@@ -1386,7 +1388,7 @@ class InvitationResource(ModelResource):
 
         get_token_response = self.get_token(request, **kwargs)
 
-        if type(get_token_response) is type(HttpUnauthorized()):
+        if isinstance(get_token_response, HttpUnauthorized):
             return HttpUnauthorized()
 
         token = get_token_response.content

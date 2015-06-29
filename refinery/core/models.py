@@ -30,7 +30,6 @@ from registration.signals import user_registered, user_activated
 from data_set_manager.models import Investigation, Node, Study, Assay
 from file_store.models import get_file_size, FileStoreItem
 from galaxy_connector.models import Instance
-from core.utils import update_data_set_index
 
 
 logger = logging.getLogger(__name__)
@@ -287,16 +286,6 @@ class SharableResource (OwnableResource):
 
         return groups
 
-    def get_group_ids(self, changeonly=False, readonly=False):
-        groups = get_groups_with_perms(self)
-
-        ids = []
-
-        for group in groups:
-            ids.append(group.id)
-
-        return ids
-
     # TODO: clean this up
     def is_public(self):
         permissions = get_groups_with_perms(self, attach_perms=True)
@@ -320,8 +309,7 @@ def print_shared(sender, **kwargs):
     logger.info("Sharable Resouce has been shared with sender: %s" % sender)
 
 resource_shared = Signal()
-# WORK ON
-# resource_shared.connect(update_data_set_index)
+resource_shared.connect(print_shared)
 
 
 class TemporaryResource:
@@ -549,7 +537,7 @@ def delete_associated_externaltoolstatus(sender, instance, **kwargs):
         externaltool.delete()
     except:
         logger.error(
-            "There's no ExternalToolStatus with that unique instance identifier"
+            "There's no ExternalToolStatus with the unique instance identifier"
         )
 
 
@@ -1216,7 +1204,7 @@ class RefineryLDAPBackend(LDAPBackend):
         # to get email address from an attribute in ldap_user
         if created:
             try:
-                email_attribute_name = settings.AUTH_LDAP_USER_ATTR_MAP['email']
+                email_attr_name = settings.AUTH_LDAP_USER_ATTR_MAP['email']
             except KeyError:
                 logger.error(
                     "Cannot send welcome email to user '{}': key 'email' does "
@@ -1225,12 +1213,12 @@ class RefineryLDAPBackend(LDAPBackend):
                 )
                 return user, created
             try:
-                email_address_list = ldap_user.attrs.data[email_attribute_name]
+                email_address_list = ldap_user.attrs.data[email_attr_name]
             except KeyError:
                 logger.error(
                     "Cannot send welcome email to user '{}': attribute '{}'"
                     " was not provided by the LDAP server"
-                    .format(username, email_attribute_name)
+                    .format(username, email_attr_name)
                 )
                 return user, created
             try:
@@ -1397,7 +1385,7 @@ class Invitation(models.Model):
 
     def save(self, *arg, **kwargs):
         if not self.id:
-          self.created = datetime.now()
+            self.created = datetime.now()
 
         return super(Invitation, self).save(*arg, **kwargs)
 
