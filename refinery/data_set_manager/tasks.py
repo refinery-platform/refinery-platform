@@ -1,5 +1,6 @@
 from celery.task import task
 from core.models import *
+from core.utils import index_data_set
 from data_set_manager.isa_tab_parser import IsaTabParser
 from data_set_manager.models import Investigation, Node, \
     initialize_attribute_order
@@ -454,6 +455,9 @@ def create_dataset(
         dataset.file_count = dataset.get_file_count()
 
         dataset.save()
+
+        # Finally index data set
+        index_data_set(dataset)
 
         return dataset.uuid
 
