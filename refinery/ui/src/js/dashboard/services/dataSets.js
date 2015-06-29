@@ -72,8 +72,6 @@ angular
           getItems: function (offset, limit, success) {
             var results = [];
 
-            console.log('HERE IS DA CA$$', this.items);
-
             for (var i = offset, end = offset + limit; i < end; i++) {
               if (!this.items.hasOwnProperty(i)) {
                 return;
@@ -162,6 +160,8 @@ angular
           this.cache.items = cacheStore.get(id) || {};
           // Set new id
           this.cache.id = id;
+          // Reset init to false
+          this.initializedWithData = false;
         },
 
         /**
