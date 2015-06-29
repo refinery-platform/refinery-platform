@@ -180,7 +180,7 @@ class ProcessISATabView(View):
         file_name = u.path.split('/')[-1]
         temp_file_path = os.path.join(get_temp_dir(), file_name)
         try:
-            #TODO: refactor download_file to take file handle instead of path
+            # TODO: refactor download_file to take file handle instead of path
             download_file(url, temp_file_path)
         except DownloadError as e:
             logger.error("Problem downloading ISA-Tab file. %s", e)
@@ -191,13 +191,15 @@ class ProcessISATabView(View):
             response.delete_cookie(self.isa_tab_cookie_name)
             return response
         logger.debug("Temp file name: '%s'", temp_file_path)
-        dataset_uuid, _, _ = parse_isatab.delay(request.user.username,
-                                          False,
-                                          temp_file_path).get()
-        #TODO: exception handling
+        dataset_uuid = (parse_isatab.delay(
+            request.user.username,
+            False,
+            temp_file_path
+        ).get())[0]
+        # TODO: exception handling
         os.unlink(temp_file_path)
         if dataset_uuid:
-            #TODO: redirect to the list of analysis samples for the given UUID
+            # TODO: redirect to the list of analysis samples for the given UUID
             response = HttpResponseRedirect(
                 reverse(self.success_view_name, args=(dataset_uuid,)))
             response.delete_cookie(self.isa_tab_cookie_name)
@@ -247,12 +249,16 @@ class ProcessISATabView(View):
                     return render_to_response(self.template_name,
                                               context_instance=context)
             logger.debug("Temp file name: '%s'", temp_file_path)
-            dataset_uuid, _, _ = parse_isatab.delay(request.user.username,
-                                              False, temp_file_path).get()
-            #TODO: exception handling (OSError)
+            dataset_uuid = (parse_isatab.delay(
+                request.user.username,
+                False,
+                temp_file_path
+            ).get())[0]
+            # TODO: exception handling (OSError)
             os.unlink(temp_file_path)
             if dataset_uuid:
-                #TODO: redirect to the list of analysis samples for the given UUID
+                # TODO: redirect to the list of analysis samples for the given
+                # UUID
                 return HttpResponseRedirect(
                     reverse(self.success_view_name, args=(dataset_uuid,)))
             else:
