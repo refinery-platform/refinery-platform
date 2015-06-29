@@ -118,7 +118,6 @@ PermissionEditorCtrl.prototype.save = function () {
     })
     .$promise
       .then(function () {
-        console.log('Sweet permissions are saved');
         that.$modalInstance.dismiss('saved');
       })
       .catch(function (error) {
