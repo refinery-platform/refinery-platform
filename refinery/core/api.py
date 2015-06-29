@@ -242,8 +242,8 @@ class SharableResourceAPIInterface(object):
         if request.method == 'GET':
             kwargs['sharing'] = True
             return self.process_get(request, res, **kwargs)
-        elif request.method == 'PATCH':
-            data = json.loads(request.raw_post_data)
+        elif request.method == 'PUT':
+            data = json.loads(request.body)
             new_share_list = data['share_list']
 
             groups_shared_with = map(

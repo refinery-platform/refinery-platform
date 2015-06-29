@@ -1,14 +1,14 @@
 function LaunchPadCtrl ($modal) {
   var that = this;
 
-  that.openPermissionEditor = function (api, uuid) {
+  that.openPermissionEditor = function (model, uuid) {
     var modalInstance = $modal.open({
       templateUrl: '/static/partials/dashboard/partials/permission.modal.html',
       controller: 'PermissionEditorCtrl as modal',
       resolve: {
-        params: function () {
+        config: function () {
           return {
-            api: api,
+            model: model,
             uuid: uuid
           };
         }
