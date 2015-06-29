@@ -108,9 +108,6 @@ class DataSetImportView(View):
     success_view_name = 'data_set'
     isa_tab_cookie_name = 'isa_tab_url'
 
-    # def get(self, request, *args, **kwargs):
-    #     return render(request, self.template_name)
-
     def get(self, request, *args, **kwargs):
         form = ImportISATabFileForm()
         context = RequestContext(request, {'form': form})
