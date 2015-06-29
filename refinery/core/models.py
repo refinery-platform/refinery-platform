@@ -286,6 +286,16 @@ class SharableResource (OwnableResource):
 
         return groups
 
+    def get_group_ids(self, changeonly=False, readonly=False):
+        groups = get_groups_with_perms(self)
+
+        ids = []
+
+        for group in groups:
+            ids.append(group.id)
+
+        return ids
+
     # TODO: clean this up
     def is_public(self):
         permissions = get_groups_with_perms(self, attach_perms=True)
