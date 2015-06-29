@@ -12,7 +12,8 @@ import settings
 from sets import Set
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group
-from guardian.shortcuts import get_objects_for_user, get_objects_for_group
+from guardian.shortcuts import get_objects_for_user, get_objects_for_group, \
+    get_perms
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import Authorization

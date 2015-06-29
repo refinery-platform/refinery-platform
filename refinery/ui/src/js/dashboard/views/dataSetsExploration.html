@@ -1,0 +1,95 @@
+<div class="shrinkable" ng-class="dashboard.expandDataSetPanel ? 'span12' : 'span4'">
+  <div class="refinery-panel">
+    <div class="refinery-header">
+      <span class="refinery-header-left">
+        <h3><i class="m-r-1-4 icon-file"></i>Data Sets</h3>
+      </span>
+      <span class="refinery-header-right">
+        <button
+          class="no-underline-hover"
+          ng-click="dashboard.toggleDataSetsExploration()">
+          <i class="icon-chevron-sign-left" title="Explore data sets"></i>
+          Close
+        </button>
+      </span>
+    </div>
+
+    <form class="navbar-search" ng-if="dashboard.dataSets.total > 0">
+      <i class="icon-search"></i>
+      <i
+        class="icon-remove-sign"
+        ng-if="dashboard.searchQueryDataSets"
+        ng-click="dashboard.resetDataSetSearch()"></i>
+      <input
+        type="text"
+        class="search-query"
+        placeholder="Search"
+        ng-model="dashboard.searchQueryDataSets"
+        ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
+    </form>
+
+    <div class="refinery-panel-header">
+      <div class="floatbox">
+        <div class="floatbox-min-right">
+          <h4>Share</h4>
+        </div>
+        <div class="floatbox-max-left">
+          <h4>Name</h4>
+        </div>
+      </div>
+    </div>
+    <div
+      class="refinery-panel-content scrollable"
+      ui-scroll-viewport
+      refinery-dashboard-panel>
+      <ul
+        class="results no-list-style"
+        ng-if="dashboard.dataSets.total > 0">
+        <li
+          ui-scroll="dataSet in dashboard.dataSets"
+          adapter="dashboard.dataSetsAdapter">
+          <ul class="controls no-list-style">
+            <li>
+              <button
+                ng-click="launchPad.openPermissionEditor('dataset_sharing', dataSet.uuid)">
+                <i class="icon-edit"></i>
+              </button>
+            </li>
+          </ul>
+          <i
+            class="icon-user"
+            title="You own this data set"
+            ng-if="dataSet.is_owner"></i>
+          <i
+            class="icon-group"
+            title="This data set is shared with you"
+            ng-if="!dataSet.is_owner"></i>
+          <i
+            class="icon-globe"
+            title="This file is publicly available"
+            ng-if="dataSet.public"></i>
+          <a
+            ng-href="data_sets/{{ dataSet.uuid }}"
+            ng-if="!dashboard.searchDataSet">{{ dataSet.name }}</a>
+          <a
+            ng-href="data_sets/{{ dataSet.uuid }}"
+            ng-if="dashboard.searchDataSet"
+            ng-bind-html="dataSet.title"></a>
+          <p
+            ng-if="dataSet.description"
+            ng-bind-html="dataSet.description"></p>
+        </li>
+      </ul>
+      <div
+        class="refinery-request-loading"
+        ng-if="dashboard.dataSetsAdapter.isLoading">
+        <span class="refinery-spinner"></span>
+      </div>
+      <span
+        class="alert alert-info"
+        ng-if="dashboard.dataSets.total == 0">
+        No data sets found.
+      </span>
+    </div>
+  </div>
+</div>

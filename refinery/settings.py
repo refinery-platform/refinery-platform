@@ -474,7 +474,6 @@ TIMEOUT = {
            "GALAXY": 2.0,
            }
 
-
 # import local settings
 try:
     from settings_local import *
