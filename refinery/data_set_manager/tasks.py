@@ -578,7 +578,7 @@ def parse_isatab(
                     'The checksum of both files is the same: %s',
                     checksum
                 )
-                return (None, os.path.basename(path))
+                return (investigation.isarchive_file, os.path.basename(path), True)
 
     try:
         investigation = p.run(
@@ -586,7 +586,7 @@ def parse_isatab(
             isa_archive=isa_archive,
             preisa_archive=pre_isa_archive)
         data_uuid = create_dataset(investigation.uuid, username, public=public)
-        return (data_uuid, os.path.basename(path))
+        return (data_uuid, os.path.basename(path), False)
     except:  # prints the error message without breaking things
         logger.error("*** print_tb:")
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -600,4 +600,4 @@ def parse_isatab(
                 file=sys.stdout
             )
         )
-    return (None, os.path.basename(path))
+    return (None, os.path.basename(path), False)

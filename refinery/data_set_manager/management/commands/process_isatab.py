@@ -127,9 +127,9 @@ class Command(BaseCommand):
 
         task_num = 1
         total = len(isatab_dict)
-        for (i, filename) in result.iterate():
+        for (i, filename, skipped) in result.iterate():
             try:
-                if i:
+                if !skipped:
                     print (
                         "{num} / {total}: Successfully parsed {file} into "
                         "DataSet with UUID {uuid}".format(
@@ -142,10 +142,11 @@ class Command(BaseCommand):
                 else:
                     print (
                         "{num} / {total}: Skipped {file} as it has been "
-                        "successfully parsed already".format(
+                        "successfully parsed already. UUID {uuid}".format(
                             num=task_num,
                             total=total,
-                            file=filename
+                            file=filename,
+                            uuid=i
                         )
                     )
                 task_num += 1

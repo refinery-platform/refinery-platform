@@ -145,7 +145,7 @@ class DataSetImportView(View):
             response.delete_cookie(self.isa_tab_cookie_name)
             return response
         logger.debug("Temp file name: '%s'", temp_file_path)
-        dataset_uuid, _ = parse_isatab.delay(request.user.username,
+        dataset_uuid, _, _ = parse_isatab.delay(request.user.username,
                                           False,
                                           temp_file_path).get()
         #TODO: exception handling
@@ -247,7 +247,7 @@ class ProcessISATabView(View):
                     return render_to_response(self.template_name,
                                               context_instance=context)
             logger.debug("Temp file name: '%s'", temp_file_path)
-            dataset_uuid, _ = parse_isatab.delay(request.user.username,
+            dataset_uuid, _, _ = parse_isatab.delay(request.user.username,
                                               False, temp_file_path).get()
             #TODO: exception handling (OSError)
             os.unlink(temp_file_path)
