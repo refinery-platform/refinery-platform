@@ -4,6 +4,7 @@ import os
 from django.core.exceptions import ImproperlyConfigured
 
 
+# get the absolute path of the parent dir
 BASE_DIR = os.path.dirname(os.path.split(os.path.abspath(__file__))[0])
 
 local_settings_file_path = os.path.join(BASE_DIR, 'config.json')
@@ -27,12 +28,6 @@ def get_setting(name, settings=local_settings):
 
 
 djcelery.setup_loader()
-
-DEBUG = get_setting('DEBUG')
-TEMPLATE_DEBUG = DEBUG
-
-# Required when DEBUG = False
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.50.50']
 
 # A tuple that lists people who get code error notifications.
 ADMINS = (
@@ -206,18 +201,6 @@ INSTALLED_APPS = (
     'south',
     'chunked_upload',
 )
-
-# required for Django Debug Tool Bar
-if get_setting('DEBUG_TOOLBAR'):
-    INSTALLED_APPS += (
-        'debug_toolbar',
-    )
-    MIDDLEWARE_CLASSES += (
-        'debug_toolbar.middleware.DebugToolbarMiddleware',
-        'middleware.JsonAsHTML',
-    )
-    INTERNAL_IPS = ('192.168.50.1')
-
 
 # NG: added for django-guardian
 AUTHENTICATION_BACKENDS = (
@@ -473,9 +456,3 @@ TIMEOUT = {
            "SOLR": 2.5,
            "GALAXY": 2.0,
            }
-
-# import local settings
-try:
-    from settings_local import *
-except ImportError:
-    pass

@@ -108,7 +108,7 @@ file { ["/vagrant/media",
 
 file_line { "django_settings_module":
   path => "/home/${appuser}/.profile",
-  line => "export DJANGO_SETTINGS_MODULE=settings.vagrant",
+  line => "export DJANGO_SETTINGS_MODULE=settings.development",
 }
 ->
 file { "${project_root}/config.json":

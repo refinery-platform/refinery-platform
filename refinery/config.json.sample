@@ -1,6 +1,4 @@
 {
-  "DEBUG_TOOLBAR": false,
-  "DEBUG": true,
   "STATICFILES": [
     "static/development",
     "ui/development"
