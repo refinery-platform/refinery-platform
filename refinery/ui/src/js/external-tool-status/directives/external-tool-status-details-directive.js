@@ -11,6 +11,7 @@ function externalToolStatusDetails() {
     controllerAs: 'externalToolStatusController',
     bindToController: {
        tools_details: '@'
-    }
+    },
+    scope: {}
   };
 }

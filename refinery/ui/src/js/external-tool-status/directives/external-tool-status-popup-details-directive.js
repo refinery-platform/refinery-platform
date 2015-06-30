@@ -11,6 +11,7 @@ function externalToolStatusDetailsPopover() {
     controllerAs: 'externalToolStatusController',
     bindToController: {
        tools_details: '@'
-    }
+    },
+    scope: {}
   };
 }
