@@ -809,9 +809,12 @@ def solr_core_search(request):
     url = settings.REFINERY_SOLR_BASE_URL + "core/select"
     data = request.GET.dict()
     # Generate access list
-    access = ['u_{}'.format(request.user.id)]
-    for group in request.user.groups.all():
-        access.append('g_{}'.format(group.id))
+    if (request.user.id is None):
+        access = ['g_{}'.format(settings.REFINERY_PUBLIC_GROUP_ID)]
+    else:
+        access = ['u_{}'.format(request.user.id)]
+        for group in request.user.groups.all():
+            access.append('g_{}'.format(group.id))
     data['fq'] = data['fq'] + ' AND access:({})'.format(' OR '.join(access))
     req = urllib2.Request(url, urllib.urlencode(data))
     f = urllib2.urlopen(req)

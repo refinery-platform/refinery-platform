@@ -3,19 +3,48 @@
     <h4 id="modal-description"></h4>
 </div>
 <div class="modal-body">
-  <!--
-  <table class="table" id="permission-table">
+<table class="table table-hover" id="permission-table">
+  <thead>
     <tr>
       <th>Group</th>
       <th>None</th>
-      <th>Readonly</th>
+      <th>Read-only</th>
       <th>Edit</th>
     </tr>
-  </table>
-  -->
-  <p><em><h2>Coming back soon.</h2></em></p>
+  </thead>
+  <tbody>
+    <tr ng-repeat="group in modal.permissions.groups track by $index">
+      <td>
+        {{ group.name }}
+      </td>
+      <td>
+        <input
+          type="radio"
+          value="none"
+          ng-model="group.permission">
+      </td>
+      <td>
+        <input
+          type="radio"
+          value="read"
+          ng-model="group.permission">
+      </td>
+      <td>
+        <input
+          type="radio"
+          value="edit"
+          ng-model="group.permission">
+      </td>
+    </tr>
+  </tbody>
+</table>
 </div>
 <div class="modal-footer">
-  <button class="btn" ng-click="modal.cancel()">Cancel</button>
-  <!-- <button class="btn btn-primary" ng-click="modal.save()">Save</button> -->
+  <div class="float-left">
+    <div class="refinery-spinner" ng-if="modal.isSaving"></div>
+  </div>
+  <div class="float-right">
+    <button class="btn" ng-click="modal.cancel()">Cancel</button>
+    <button class="btn btn-primary" ng-click="modal.save()">Save</button>
+  </div>
 </div>

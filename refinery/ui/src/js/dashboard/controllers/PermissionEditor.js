@@ -1,41 +1,148 @@
-function PermissionEditorCtrl ($scope, $http, $modalInstance, params) {
-  var ctrl = this;
+function PermissionEditorCtrl (
+  $modalInstance,
+  _,
+  sharingService,
+  dashboardDataSetReloadService,
+  config) {
+  var that = this;
 
-  // loadResource(config.api, config.uuid);
+  this._ = _;
+  this.config = config;
+  this.$modalInstance = $modalInstance;
+  this.sharingService = sharingService;
+  this.dashboardDataSetReloadService = dashboardDataSetReloadService;
 
-  console.log($modalInstance);
+  this.getPermissions(
+    this.config.model,
+    this.config.uuid
+  ).then(function (data) {
+    that.permissions = data;
+  }).catch(function (error) {
+    console.error(error);
+  });
 
-  ctrl.save = function () {
-    var pTable = document.getElementById('permission-table');
-    var cells = pTable.getElementsByTagName('td');
-    // Data is clustered into sets of 4 -- i is name, i+1 is noperm, i+2 is readonly, i+3 is edit.
-    for (var i = 0; i < cells.length; i += 4) {
-      // Add the group.
-      var name = cells[i].innerText;
-      var id = cells[i].children[0].innerText;
-
-      var canRead = cells[i+2].children[0].checked || cells[i+3].children[0].checked;
-      var canChange = cells[i+3].children[0].checked;
-
-      var data = '{"read": ' + canRead + ', "change": ' + canChange + '}';
-
-      // need to somehow store the group id in the cells as a hidden thing
-      $http({method: 'PATCH', url: 'api/v1/' + config.api + '/' + config.uuid + '_' + id + '/', data: data});
-    }
-    $modalInstance.dismiss('saved');
-  };
-
-  ctrl.cancel = function () {
-    $modalInstance.dismiss('cancel');
+  // Used as a shorthand to avoid complicated permission checking in `ngRepeat`
+  this.permissionLevel = {
+    none: {
+      read: false,
+      change: false
+    },
+    read: {
+      read: true,
+      change: false
+    },
+    edit: {
+      read: true,
+      change: true
+    },
   };
 }
+
+/**
+ * Cancel permission editing.
+ * @type  {function}
+ */
+PermissionEditorCtrl.prototype.cancel = function () {
+  this.$modalInstance.dismiss('cancel');
+};
+
+/**
+ * [getPermissions description]
+ * @type   {function}
+ * @param  {string}   model Model which permissions are to be edited.
+ * @param  {string}   uuid  UUID of the exact model entity.
+ * @return {object}         Angular promise.
+ */
+PermissionEditorCtrl.prototype.getPermissions = function (model, uuid) {
+  var that = this,
+      permissions;
+
+  permissions = this.sharingService.get({
+    model: model,
+    uuid: uuid
+  });
+
+  return permissions
+    .$promise
+    .then(function (data) {
+      groups = [];
+      for (var i = 0, len = data.share_list.length; i < len; i++) {
+        groups.push({
+          id: data.share_list[i].group_id,
+          name: data.share_list[i].group_name,
+          permission: that.getPermissionLevel(data.share_list[i].perms)
+        });
+      }
+      return {
+        isOwner: data.is_owner,
+        groups: groups
+      };
+    })
+    .catch(function (error) {
+      return error;
+    });
+};
+
+/**
+ * Turns permission object into a simple string.
+ * @type   {function}
+ * @param  {object} perms Object of the precise permissions.
+ * @return {string}       Permission's name.
+ */
+PermissionEditorCtrl.prototype.getPermissionLevel = function (perms) {
+  if (perms.read === false) {
+    return 'none';
+  }
+  if (perms.change === true) {
+    return 'edit';
+  }
+  return 'read';
+};
+
+/**
+ * Save permissions
+ * @type   {function}
+ */
+PermissionEditorCtrl.prototype.save = function () {
+  var that = this,
+      accessList = [];
+
+  this.isSaving = true;
+
+  for (var i = 0, len = this.permissions.groups.length; i < len; i++) {
+    accessList.push(this._.assign({
+      id: this.permissions.groups[i].id
+    }, this.permissionLevel[this.permissions.groups[i].permission]));
+  }
+
+  this
+    .sharingService
+    .update({
+      model: this.config.model,
+      uuid: this.config.uuid
+    }, {
+      'share_list': accessList
+    })
+    .$promise
+      .then(function () {
+        that.dashboardDataSetReloadService.reload(true);
+        that.$modalInstance.dismiss('saved');
+      })
+      .catch(function (error) {
+        console.error(error);
+      })
+      .finally(function () {
+        that.isSaving = false;
+      });
+};
 
 angular
   .module('refineryDashboard')
   .controller('PermissionEditorCtrl', [
-    '$scope',
-    '$http',
     '$modalInstance',
-    'params',
+    '_',
+    'sharingService',
+    'dashboardDataSetReloadService',
+    'config',
     PermissionEditorCtrl
   ]);

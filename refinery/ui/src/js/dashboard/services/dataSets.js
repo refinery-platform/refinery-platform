@@ -151,11 +151,15 @@ angular
         /**
          * Reset the cache
          */
-        resetCache: function (id) {
+        resetCache: function (id, hardReset) {
           id = id || dataSets.cache.defaultId;
-          // Cache current cache store.
-          // (Yes we cache the cache!)
-          cacheStore.put(this.cache.id, this.cache.items);
+          if (hardReset) {
+            cacheStore.removeAll();
+          } else {
+            // Cache current cache store.
+            // (Yes we cache the cache!)
+            cacheStore.put(this.cache.id, this.cache.items);
+          }
           // Restore former cache or reset cache.
           this.cache.items = cacheStore.get(id) || {};
           // Set new id

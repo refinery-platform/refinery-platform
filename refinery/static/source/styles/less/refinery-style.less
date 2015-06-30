@@ -87,6 +87,10 @@ ul#externalToolListPopover li{
   margin: 0;
 }
 
+.bootboxAnalysisWidth form input{
+  width: 96%;
+}
+
 @media (max-width: 760px) {
    #textToolStatus{
     width: 100%;
@@ -522,18 +526,18 @@ ul#externalToolListPopover li{
           border-top: none;
         }
       }
-
-      a > em {
-        font-weight: bold;
-        font-style: normal;
-        background: fade(lighten(@blueLight, 25%), 15%);
-      }
     }
 
     ul.results.search {
       a.title {
         font-size: @baseFontSize + 1;
         color: #006f99;
+      }
+
+      a.title > em {
+        font-weight: bold;
+        font-style: normal;
+        background: fade(lighten(@blueLight, 25%), 15%);
       }
 
       a.title:hover {
@@ -548,6 +552,11 @@ ul#externalToolListPopover li{
       p.snippet {
         margin: 2px 0 0 0;
         color: lighten(@gray, 10%);
+      }
+
+      p.snippet > em {
+        font-weight: bold;
+        font-style: normal;
       }
     }
 
@@ -838,6 +847,14 @@ button.icon-only {
   [class$='min-right'] {
     float: right;
   }
+}
+
+.float-left {
+  float: left;
+}
+
+.float-right {
+  float: right;
 }
 
 .no-list-style {
