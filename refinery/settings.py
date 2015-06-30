@@ -6,9 +6,9 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-local_settings_file_path = os.path.join(BASE_DIR, 'settings.json')
+local_settings_file_path = os.path.join(BASE_DIR, 'config.json')
 
-# require settings.json
+# require config.json
 try:
     with open(local_settings_file_path, 'r') as f:
         local_settings = json.loads(f.read())

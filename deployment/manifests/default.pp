@@ -106,9 +106,9 @@ file { ["/vagrant/media",
   group => $appgroup,
 }
 
-file { "${project_root}/settings.json":
+file { "${project_root}/config.json":
   ensure => file,
-  source => "${project_root}/settings.json.sample",
+  source => "${project_root}/config.json.sample",
   owner => $appuser,
   group => $appgroup,
 }
