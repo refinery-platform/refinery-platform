@@ -380,6 +380,7 @@ def run(request):
         study_uuid = analysis_config['studyUuid']
         node_set_uuid = analysis_config['nodeSetUuid']
         node_relationship_uuid = analysis_config['nodeRelationshipUuid']
+        custom_name = analysis_config['name']
     except KeyError:
         return HttpResponseBadRequest()  # 400
     # must provide workflow and study UUIDs,
@@ -417,7 +418,12 @@ def run(request):
 
         ######### ANALYSIS MODEL ########
         # How to create a simple analysis object
-        temp_name = curr_workflow.name + " " + datetime.now().strftime("%Y-%m-%d @ %H:%M:%S")
+
+        if not custom_name:
+            temp_name = curr_workflow.name + " " + datetime.now().strftime("%Y-%m-%d @ %H:%M:%S")
+        else:
+            temp_name = custom_name
+
         summary_name = "None provided."
 
         analysis = Analysis(summary=summary_name,

@@ -103,6 +103,10 @@ function DashboardCtrl (
   $rootScope.$on('$stateChangeSuccess', function () {
     $timeout(window.sizing, 0);
   });
+
+  $timeout(function () {
+    that.$state.go('launchPad');
+  }, 0);
 }
 
 /*
