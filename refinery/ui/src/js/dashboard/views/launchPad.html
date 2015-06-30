@@ -166,7 +166,7 @@
       </div>
       <span
         class="alert alert-info"
-        ng-if="dashboard.allProjects.meta.total_count == 0">
+        ng-if="dashboard.allProjects.meta.total_count === 0 && dashboard.allAnalyses.meta.total_count === 0">
         No projects found.
       </span>
     </div>
