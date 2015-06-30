@@ -1,7 +1,7 @@
 angular.module('refineryExternalToolStatus')
-    .directive("externalToolStatusPopover", ['$compile', '$templateCache', externalToolStatusPopover]);
+    .directive("externalToolStatusPopover", ['$compile', '$templateCache', '$', externalToolStatusPopover]);
 
-function externalToolStatusPopover($compile,$templateCache) {
+function externalToolStatusPopover($compile, $templateCache, $) {
     "use strict";
 
     return {
