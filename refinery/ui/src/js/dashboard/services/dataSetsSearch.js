@@ -1,7 +1,12 @@
 angular
   .module('refineryDashboard')
-  .factory('dashboardDataSetSearchService', ['$q', '$sce', 'solrService',
-    function ($q, $sce, solrService) {
+  .factory('dashboardDataSetSearchService', [
+    '$q',
+    '$sce',
+    'settings',
+    'solrService',
+    'sessionService',
+    function ($q, $sce, settings, solrService, sessionService) {
       return function (searchQuery) {
         return function (limit, offset) {
           var deferred = $q.defer(),
@@ -15,7 +20,7 @@ angular
                 // found
                 'f.description.hl.alternateField': 'description',
                 // Fields that are returned
-                'fl': 'id,uuid',
+                'fl': 'id,uuid,access',
                 // Limit search space to data sets only
                 'fq': 'django_ct:core.dataset',
                 // Highlighting enabled
@@ -44,32 +49,34 @@ angular
           query
             .$promise
             .then(function (data) {
-              var doc;
+              var doc,
+                  userId = sessionService.get('userId');
 
               for (var i = 0, len = data.response.docs.length; i < len; i++) {
                 doc = data.response.docs[i];
-                if (Object.keys(doc).length) {
-                  if (data.highlighting[doc.id].content_auto) {
-                    doc.title = $sce.trustAsHtml(
-                      data.highlighting[doc.id].content_auto[0]
-                    );
-                  } else {
-                    doc.title = sce.trustAsHtml(
-                      '<span class="is-unknown">Unknown</span>'
-                    );
-                  }
-                  if (data.highlighting[doc.id].description) {
-                    doc.description = $sce.trustAsHtml(
-                      data.highlighting[doc.id].description[0]
-                    );
-                  } else {
-                    doc.description = null;
-                  }
+                if (data.highlighting[doc.id].content_auto) {
+                  doc.title = $sce.trustAsHtml(
+                    data.highlighting[doc.id].content_auto[0]
+                  );
                 } else {
-                  // When there is no title and no description something's
-                  // wrong with the document, so we better remove the doc from
-                  // the results.
+                  doc.title = sce.trustAsHtml(
+                    '<span class="is-unknown">Unknown</span>'
+                  );
                 }
+                if (data.highlighting[doc.id].description) {
+                  doc.description = $sce.trustAsHtml(
+                    data.highlighting[doc.id].description[0]
+                  );
+                } else {
+                  doc.description = null;
+                }
+                if (userId && doc.access.indexOf('u_' + userId) >= 0) {
+                  doc.is_owner = true;
+                }
+                if (doc.access.indexOf('g_' + settings.publicGroupId) >= 0) {
+                  doc.public = true;
+                }
+                console.log(doc.access, doc.access.indexOf('g_' + settings.publicGroupId), settings.publicGroupId);
               }
 
               deferred.resolve({
