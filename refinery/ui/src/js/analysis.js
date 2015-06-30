@@ -2,6 +2,7 @@ angular.module('refineryAnalysis', [])
 
 .controller('AnalysisCtrl', function(
     $scope, $rootScope, $http, $window, $log, $timeout, workflow) {
+    var vm = this;
 
   'use strict';
 
@@ -9,7 +10,8 @@ angular.module('refineryAnalysis', [])
     studyUuid: $window.externalStudyUuid,
     workflowUuid: null,
     nodeSetUuid: null,
-    nodeRelationshipUuid: null
+    nodeRelationshipUuid: null,
+    name: null,
   };
 
   $scope.$onRootScope('nodeSetChangedEvent', function(event, currentNodeSet) {
@@ -31,22 +33,52 @@ angular.module('refineryAnalysis', [])
     $scope.analysisConfig.nodeSetUuid = null;
   });
 
-  $scope.launchAnalysis = function() {
-    $scope.analysisConfig.workflowUuid = workflow.getUuid();
+  $scope.setAnalysisName = function(){
+    var timeStamp = vm.getTimeStamp();
+    var workflowUuid = workflow.getName();
+    var tempName = workflowUuid + " " + timeStamp;
+    bootbox.prompt("Enter an Analysis Name:", "Cancel Analysis", "Confirm" +
+      " Name", function(name) {
+      if (name == null) {
+        bootbox.alert("Analysis was canceled.");
+      }else {
+        vm.launchAnalysis(name);
+      }
+    }, tempName).addClass("bootboxAnalysisWidth");
+  };
 
+  vm.launchAnalysis = function(analysisName) {
+    $scope.analysisConfig.name = analysisName;
+    $scope.analysisConfig.workflowUuid = workflow.getUuid();
     $http({
       method: 'POST',
       url: '/analysis_manager/run/',
       headers: {'X-Requested-With': 'XMLHttpRequest'},
       data: $scope.analysisConfig,
-    }).success(function(response) {
+    }).success(function (response) {
       $log.debug("Launching analysis with config:");
       $log.debug("Workflow: " + $scope.analysisConfig.workflowUuid);
       $log.debug("NodeSET: " + $scope.analysisConfig.nodeSetUuid);
       $log.debug("NodeREL: " + $scope.analysisConfig.nodeRelationshipUuid);
       $window.location.assign(response);
-    }).error(function(response, status) {
+    }).error(function (response, status) {
       $log.debug("Request failed: error " + status);
     });
   };
+
+  vm.getTimeStamp = function(){
+    var currentDate = new Date();
+    var month = currentDate.getMonth() + 1;
+    var day = currentDate.getDate();
+    var year = currentDate.getFullYear();
+    var hour = currentDate.getHours();
+    var mins= currentDate.getMinutes();
+    var sec = currentDate.getSeconds();
+
+    var dateStr = month + "-" + day + "-" + year;
+    var timeStr = "@" + hour + ":" + mins + ":" + sec;
+
+    return (dateStr + timeStr);
+
+  }
 });

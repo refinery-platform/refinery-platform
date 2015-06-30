@@ -44,7 +44,8 @@
       -->
 
       <!-- no external tool status monitoring -->
-        <button class="btn btn-warning" ng-click="launchAnalysis()" ng-disabled="!(currentNodeSet && currentNodeSet.node_count > 0)" style="width: 100%">Launch Analysis</button>
+        <button class="btn btn-warning" ng-click="setAnalysisName()"
+                ng-disabled="!(currentNodeSet && currentNodeSet.node_count > 0)" style="width: 100%">Launch Analysis</button>
 
       </div>
     </div>
@@ -69,7 +70,7 @@
         </div>
       -->
       <!-- no external tool status monitoring -->
-        <button class="btn btn-warning" ng-click="launchAnalysis()" ng-disabled="!(currentNodeRelationship && currentNodeRelationship.node_pairs.length > 0 )" style="width: 100%">Launch Analysis</button>
+        <button class="btn btn-warning" ng-click="setAnalysisName()" ng-disabled="!(currentNodeRelationship && currentNodeRelationship.node_pairs.length > 0 )" style="width: 100%">Launch Analysis</button>
       </div>
     </div>
   </div>
