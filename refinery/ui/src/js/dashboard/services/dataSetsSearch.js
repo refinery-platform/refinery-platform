@@ -76,7 +76,6 @@ angular
                 if (doc.access.indexOf('g_' + settings.publicGroupId) >= 0) {
                   doc.public = true;
                 }
-                console.log(doc.access, doc.access.indexOf('g_' + settings.publicGroupId), settings.publicGroupId);
               }
 
               deferred.resolve({
