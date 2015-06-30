@@ -43,7 +43,7 @@
 
     <div class="refinery-panel-header">
       <div class="floatbox">
-        <div class="floatbox-min-right">
+        <div class="floatbox-min-right" ng-if="dashboard.userIsAuthenticated">
           <h4>Share</h4>
         </div>
         <div class="floatbox-max-left">
@@ -62,7 +62,7 @@
           ui-scroll="dataSet in dashboard.dataSets"
           adapter="dashboard.dataSetsAdapter">
           <ul class="controls no-list-style">
-            <li>
+            <li ng-if="dashboard.userIsAuthenticated">
               <button
                 ng-click="launchPad.openPermissionEditor('data_sets', dataSet.uuid)">
                 <i class="icon-edit"></i>
@@ -122,7 +122,7 @@
     </div>
     <div class="refinery-panel-header">
       <div class="floatbox">
-        <div class="floatbox-min-right">
+        <div class="floatbox-min-right" ng-if="dashboard.userIsAuthenticated">
           <h4>Share</h4>
         </div>
         <div class="floatbox-max-left">
