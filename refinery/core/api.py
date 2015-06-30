@@ -12,7 +12,8 @@ import settings
 from sets import Set
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group
-from guardian.shortcuts import get_objects_for_user, get_objects_for_group
+from guardian.shortcuts import get_objects_for_user, get_objects_for_group, \
+    get_perms
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import Authorization
@@ -241,8 +242,8 @@ class SharableResourceAPIInterface(object):
         if request.method == 'GET':
             kwargs['sharing'] = True
             return self.process_get(request, res, **kwargs)
-        elif request.method == 'PATCH':
-            data = json.loads(request.raw_post_data)
+        elif request.method == 'PUT':
+            data = json.loads(request.body)
             new_share_list = data['share_list']
 
             groups_shared_with = map(

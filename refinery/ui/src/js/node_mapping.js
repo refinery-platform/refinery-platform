@@ -555,7 +555,7 @@ angular.module('refineryNodeMapping', [
   $scope.getCurrentNodeSet();
 })
 
-.controller('DataSetUiModeCtrl', function($scope, $location, $rootScope) {
+.controller('DataSetUiModeCtrl', function($scope, $location, $rootScope, $state, $timeout) {
   $rootScope.mode = DATA_SET_UI_MODE_BROWSE;
 
   $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
@@ -565,6 +565,11 @@ angular.module('refineryNodeMapping', [
   $scope.$onRootScope('nodeRelationshipChangedEvent', function( event, currentNodeRelationship ) {
     $scope.currentNodeRelationship = currentNodeRelationship;
   });
+
+  // Go to default state
+  $timeout(function () {
+    $state.go('browse');
+  }, 0);
 })
 
 .factory("NodeSetList", function($resource) {
@@ -596,8 +601,4 @@ angular.module('refineryNodeMapping', [
       is_exposed: 'true',
     }
   );
-})
-
-.run(['$state', function ($state,$scope) {
-   $state.transitionTo('browse');
-}]);
+});

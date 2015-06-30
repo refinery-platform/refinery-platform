@@ -7,13 +7,14 @@ Created on Feb 20, 2012
 from django.conf.urls.defaults import patterns, url
 
 
-urlpatterns = patterns('core.views',
-    url(r'^$', 'home', name="home" ),        
-    url(r'^about/$', 'about', name="about" ),
-    url(r'^contact/$', 'contact', name="contact" ),
-    url(r'^statistics/$', 'statistics', name="statistics" ),
+urlpatterns = patterns(
+    'core.views',
+    url(r'^$', 'home', name="home"),
+    url(r'^about/$', 'about', name="about"),
+    url(r'^contact/$', 'contact', name="contact"),
+    url(r'^statistics/$', 'statistics', name="statistics"),
     url(r'^users/(?P<query>[\@\.\-\+a-z0-9]+)/$', 'user'),
-        # "name" is required for use with the url tag in templates
+    # "name" is required for use with the url tag in templates
     url(r'^users/(?P<query>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'user', name="user"),
     url(r'^users/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/edit/$', 'user_edit', name="user_edit"),
     url(r'^groups/(?P<query>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'group', name="group"),
@@ -30,14 +31,19 @@ urlpatterns = patterns('core.views',
     url(r'^data_sets/(?P<slug>[a-zA-Z0-9\_]+)/$', 'data_set_slug', name="data_set_slug"),
     url(r'^workflows/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'workflow', name="workflow"),
     url(r'^workflows/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/edit/$', 'workflow_edit', name="workflow_edit"),
-    url(r'^workflows/(?P<slug>[a-zA-Z0-9\_]+)/$', 'workflow_slug', name="workflow_slug"),    
+    url(r'^workflows/(?P<slug>[a-zA-Z0-9\_]+)/$', 'workflow_slug', name="workflow_slug"),
     url(r'^workflow_engines/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'workflow_engine', name="workflow_engine"),
 
     url(r'^data_sets/(?P<ds_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/samples/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'samples', name="samples"),
-        
-    url(r'^solr/igv/$', 'solr_igv' ),
+
+    url(r'^solr/igv/$', 'solr_igv'),
+    url(
+        r'^solr/core/select/$',
+        'solr_core_search',
+        name="solr_core_search"
+    ),
     url(r'^solr/(?P<core>.+)/select/$', 'solr_select', name="solr_select"),
-    
+
     # test solr/search view
     url(r'^data_sets/(?P<ds_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/samples/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/solr$', 'samples_solr', name="samples"),
 )
@@ -54,6 +60,6 @@ urlpatterns += patterns('',
             context_object_name='datasets',
             paginate_by=15,
             template_name='core/data_sets.html'
-        ))              
+       ))
 )
 """

@@ -1,5 +1,6 @@
 from celery.task import task
 from core.models import *
+from core.utils import index_data_set
 from data_set_manager.isa_tab_parser import IsaTabParser
 from data_set_manager.models import Investigation, Node, \
     initialize_attribute_order
@@ -455,6 +456,9 @@ def create_dataset(
 
         dataset.save()
 
+        # Finally index data set
+        index_data_set(dataset)
+
         return dataset.uuid
 
     return None
@@ -578,7 +582,11 @@ def parse_isatab(
                     'The checksum of both files is the same: %s',
                     checksum
                 )
-                return (None, os.path.basename(path))
+                return (
+                    investigation.investigationlink_set.all()[0].data_set.uuid,
+                    os.path.basename(path),
+                    True
+                )
 
     try:
         investigation = p.run(
@@ -586,7 +594,7 @@ def parse_isatab(
             isa_archive=isa_archive,
             preisa_archive=pre_isa_archive)
         data_uuid = create_dataset(investigation.uuid, username, public=public)
-        return (data_uuid, os.path.basename(path))
+        return (data_uuid, os.path.basename(path), False)
     except:  # prints the error message without breaking things
         logger.error("*** print_tb:")
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -600,4 +608,4 @@ def parse_isatab(
                 file=sys.stdout
             )
         )
-    return (None, os.path.basename(path))
+    return (None, os.path.basename(path), False)

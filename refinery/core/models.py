@@ -251,8 +251,6 @@ class SharableResource (OwnableResource):
         if not readonly:
             assign_perm('change_%s' % self._meta.verbose_name, group, self)
 
-        resource_shared.send(sender=self)
-
     def unshare(self, group):
         remove_perm('read_%s' % self._meta.verbose_name, group, self)
         remove_perm('change_%s' % self._meta.verbose_name, group, self)
@@ -286,6 +284,16 @@ class SharableResource (OwnableResource):
 
         return groups
 
+    def get_group_ids(self, changeonly=False, readonly=False):
+        groups = get_groups_with_perms(self)
+
+        ids = []
+
+        for group in groups:
+            ids.append(group.id)
+
+        return ids
+
     # TODO: clean this up
     def is_public(self):
         permissions = get_groups_with_perms(self, attach_perms=True)
@@ -303,13 +311,6 @@ class SharableResource (OwnableResource):
     class Meta:
         verbose_name = "sharableresource"
         abstract = True
-
-
-def print_shared(sender, **kwargs):
-    logger.info("Sharable Resouce has been shared with sender: %s" % sender)
-
-resource_shared = Signal()
-resource_shared.connect(print_shared)
 
 
 class TemporaryResource:
@@ -486,6 +487,24 @@ class DataSet(SharableResource):
                 file_size += size
 
         return file_size
+
+    def share(self, group, readonly=True):
+        super(DataSet, self).share(group, readonly)
+        # This might be a hack but I couldn't find an easier solution to about
+        # the import loop. I found this solution here
+        # http://stackoverflow.com/a/7199514/981933
+        from core.search_indexes import DataSetIndex
+        logger.info("Re-index / update data set: %s", self)
+        DataSetIndex().update_object(self, using='core')
+
+    def unshare(self, group):
+        super(DataSet, self).unshare(group)
+        # This might be a hack but I couldn't find an easier solution to about
+        # the import loop. I found this solution here
+        # http://stackoverflow.com/a/7199514/981933
+        from core.search_indexes import DataSetIndex
+        logger.info("Re-index / update data set: %s", self)
+        DataSetIndex().update_object(self, using='core')
 
 
 class InvestigationLink(models.Model):

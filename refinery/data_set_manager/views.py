@@ -103,14 +103,60 @@ def search_typeahead(request):
 
 class DataSetImportView(View):
     """Main view for data set importing
-
     """
     template_name = "data_set_manager/import.html"
     success_view_name = 'data_set'
     isa_tab_cookie_name = 'isa_tab_url'
 
-    # def get(self, request, *args, **kwargs):
-    #     return render(request, self.template_name)
+    def get(self, request, *args, **kwargs):
+        form = ImportISATabFileForm()
+        context = RequestContext(request, {'form': form})
+        response = render_to_response(self.template_name,
+                                      context_instance=context)
+        return response
+
+
+class ImportISATabView(View):
+    """Capture ISA archive URL from POST requests submitted from external sites
+    """
+    def post(self, request, *args, **kwargs):
+        try:
+            isa_tab_url = request.POST['isa_tab_url']
+        except KeyError:
+            logger.error("ISA archive URL was not provided")
+            return HttpResponseBadRequest("Please provide an ISA archive URL")
+        else:
+            # set cookie and redirect to process_isa_tab view
+            response = HttpResponseRedirect(reverse('process_isa_tab'))
+            response.set_cookie('isa_tab_url', isa_tab_url)
+            return response
+
+
+class ImportISATabFileForm(forms.Form):
+    """ISA archive upload form
+    """
+    isa_tab_file = forms.FileField(label='ISA-Tab file', required=False)
+    isa_tab_url = forms.URLField(label='ISA-Tab URL', required=False,
+                                 widget=forms.TextInput(attrs={'size': '37'}))
+
+    def clean(self):
+        cleaned_data = super(ImportISATabFileForm, self).clean()
+        f = cleaned_data.get("isa_tab_file")
+        url = cleaned_data.get("isa_tab_url")
+        # either a file or a URL must be provided
+        if f or url:
+            return cleaned_data
+        else:
+            raise forms.ValidationError("Please provide either a file or a URL")
+
+
+class ProcessISATabView(View):
+    """Process ISA archive
+    """
+    template_name = 'data_set_manager/isa-tab-import.html'
+    success_view_name = 'data_set'
+    isa_tab_cookie_name = 'isa_tab_url'
+
     # a workaround for automatic ISA archive import after logging in
     def get(self, request, *args, **kwargs):
         try:
@@ -134,7 +180,7 @@ class DataSetImportView(View):
         file_name = u.path.split('/')[-1]
         temp_file_path = os.path.join(get_temp_dir(), file_name)
         try:
-            #TODO: refactor download_file to take file handle instead of path
+            # TODO: refactor download_file to take file handle instead of path
             download_file(url, temp_file_path)
         except DownloadError as e:
             logger.error("Problem downloading ISA-Tab file. %s", e)
@@ -145,13 +191,15 @@ class DataSetImportView(View):
             response.delete_cookie(self.isa_tab_cookie_name)
             return response
         logger.debug("Temp file name: '%s'", temp_file_path)
-        dataset_uuid, _ = parse_isatab.delay(request.user.username,
-                                          False,
-                                          temp_file_path).get()
-        #TODO: exception handling
+        dataset_uuid = (parse_isatab.delay(
+            request.user.username,
+            False,
+            temp_file_path
+        ).get())[0]
+        # TODO: exception handling
         os.unlink(temp_file_path)
         if dataset_uuid:
-            #TODO: redirect to the list of analysis samples for the given UUID
+            # TODO: redirect to the list of analysis samples for the given UUID
             response = HttpResponseRedirect(
                 reverse(self.success_view_name, args=(dataset_uuid,)))
             response.delete_cookie(self.isa_tab_cookie_name)
@@ -163,52 +211,6 @@ class DataSetImportView(View):
                                           context_instance=context)
             response.delete_cookie(self.isa_tab_cookie_name)
             return response
-
-
-class ImportISATabView(View):
-    '''Capture ISA archive URL from POST requests submitted from external sites
-
-    '''
-
-    def post(self, request, *args, **kwargs):
-        try:
-            isa_tab_url = request.POST['isa_tab_url']
-        except KeyError:
-            logger.error("ISA archive URL was not provided")
-            return HttpResponseBadRequest("Please provide an ISA archive URL")
-        else:
-            # set cookie and redirect to process_isa_tab view
-            response = HttpResponseRedirect(reverse('process_isa_tab'))
-            response.set_cookie('isa_tab_url', isa_tab_url)
-            return response
-
-
-class ImportISATabFileForm(forms.Form):
-    '''ISA-Tab file upload form
-
-    '''
-    isa_tab_file = forms.FileField(label='ISA-Tab file', required=False)
-    isa_tab_url = forms.URLField(label='ISA-Tab URL', required=False,
-                                 widget=forms.TextInput(attrs={'size': '37'}))
-
-    def clean(self):
-        cleaned_data = super(ImportISATabFileForm, self).clean()
-        f = cleaned_data.get("isa_tab_file")
-        url = cleaned_data.get("isa_tab_url")
-        # either a file or a URL must be provided
-        if f or url:
-            return cleaned_data
-        else:
-            raise forms.ValidationError("Please provide either a file or a URL")
-
-
-class ProcessISATabView(View):
-    '''Process ISA-Tab archive
-
-    '''
-    template_name = 'data_set_manager/isa-tab-import.html'
-    success_view_name = 'data_set'
-    isa_tab_cookie_name = 'isa_tab_url'
 
     def post(self, request, *args, **kwargs):
         form = ImportISATabFileForm(request.POST, request.FILES)
@@ -247,12 +249,16 @@ class ProcessISATabView(View):
                     return render_to_response(self.template_name,
                                               context_instance=context)
             logger.debug("Temp file name: '%s'", temp_file_path)
-            dataset_uuid, _ = parse_isatab.delay(request.user.username,
-                                              False, temp_file_path).get()
-            #TODO: exception handling (OSError)
+            dataset_uuid = (parse_isatab.delay(
+                request.user.username,
+                False,
+                temp_file_path
+            ).get())[0]
+            # TODO: exception handling (OSError)
             os.unlink(temp_file_path)
             if dataset_uuid:
-                #TODO: redirect to the list of analysis samples for the given UUID
+                # TODO: redirect to the list of analysis samples for the given
+                # UUID
                 return HttpResponseRedirect(
                     reverse(self.success_view_name, args=(dataset_uuid,)))
             else:
