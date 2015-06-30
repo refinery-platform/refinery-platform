@@ -4,7 +4,7 @@ import os
 from django.core.exceptions import ImproperlyConfigured
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.split(os.path.abspath(__file__))[0])
 
 local_settings_file_path = os.path.join(BASE_DIR, 'config.json')
 

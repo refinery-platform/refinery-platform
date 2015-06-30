@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.conf.urls.defaults import patterns, include, url
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -18,7 +19,6 @@ from core.models import DataSet
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource
 from data_set_manager.views import search_typeahead
-from settings import MEDIA_ROOT, MEDIA_URL
 
 
 # NG: facets for Haystack
@@ -139,6 +139,6 @@ urlpatterns = patterns(
     # 'django.views.generic.simple.redirect_to',
     # {'url': STATIC_URL+'images/favicon.ico'}),
 
-) + static(MEDIA_URL, document_root=MEDIA_ROOT)
+) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 # for "static" see
 # https://docs.djangoproject.com/en/dev/howto/static-files/#serving-other-directories

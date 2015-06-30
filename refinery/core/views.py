@@ -971,7 +971,7 @@ def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
 
     workflows = Workflow.objects.all()
 
-    # TODO: replace from settings.py or settings_local.py
+    # TODO: retrieve from Django settings
     solr_url = 'http://127.0.0.1:8983'
 
     return render_to_response('core/samples_solr.html',
