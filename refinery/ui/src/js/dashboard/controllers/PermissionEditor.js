@@ -1,10 +1,16 @@
-function PermissionEditorCtrl ($http, $modalInstance, _, sharingService, config) {
+function PermissionEditorCtrl (
+  $modalInstance,
+  _,
+  sharingService,
+  dashboardDataSetReloadService,
+  config) {
   var that = this;
 
   this._ = _;
   this.config = config;
   this.$modalInstance = $modalInstance;
   this.sharingService = sharingService;
+  this.dashboardDataSetReloadService = dashboardDataSetReloadService;
 
   this.getPermissions(
     this.config.model,
@@ -15,6 +21,7 @@ function PermissionEditorCtrl ($http, $modalInstance, _, sharingService, config)
     console.error(error);
   });
 
+  // Used as a shorthand to avoid complicated permission checking in `ngRepeat`
   this.permissionLevel = {
     none: {
       read: false,
@@ -118,6 +125,7 @@ PermissionEditorCtrl.prototype.save = function () {
     })
     .$promise
       .then(function () {
+        that.dashboardDataSetReloadService.reload(true);
         that.$modalInstance.dismiss('saved');
       })
       .catch(function (error) {
@@ -131,10 +139,10 @@ PermissionEditorCtrl.prototype.save = function () {
 angular
   .module('refineryDashboard')
   .controller('PermissionEditorCtrl', [
-    '$http',
     '$modalInstance',
     '_',
     'sharingService',
+    'dashboardDataSetReloadService',
     'config',
     PermissionEditorCtrl
   ]);

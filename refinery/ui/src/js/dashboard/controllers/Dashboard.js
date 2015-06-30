@@ -15,7 +15,8 @@ function DashboardCtrl (
   dashboardDataSetService,
   dashboardDataSetListService,
   dashboardDataSetSearchService,
-  dashboardDataSetSourceService) {
+  dashboardDataSetSourceService,
+  dashboardDataSetReloadService) {
   // Store the context.
   var that = this;
 
@@ -35,6 +36,7 @@ function DashboardCtrl (
   that.dashboardDataSetListService = dashboardDataSetListService;
   that.dashboardDataSetSearchService = dashboardDataSetSearchService;
   that.dashboardDataSetSourceService = dashboardDataSetSourceService;
+  that.dashboardDataSetReloadService = dashboardDataSetReloadService;
 
   // Construct class variables
   that.dataSetServiceLoading = false;
@@ -83,6 +85,20 @@ function DashboardCtrl (
 
   // Initilize data set source
   that.setDataSetSource();
+
+  // Set reloader
+  that.dashboardDataSetReloadService.setReload(function (hardReset) {
+    if (hardReset) {
+      that.dataSets.resetCache(undefined, hardReset);
+    }
+    // Reset current list and reload uiScroll
+    if (that.dataSetsAdapter) {
+      that.dataSetsAdapter.applyUpdates(function (item, scope) {
+        return [];
+      });
+      that.dataSetsAdapter.reload();
+    }
+  });
 
   $rootScope.$on('$stateChangeSuccess', function () {
     $timeout(window.sizing, 0);
@@ -135,13 +151,7 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
     that.dataSets.resetCache();
   }
 
-  // Reset current list and reload uiScroll
-  if (that.dataSetsAdapter) {
-    that.dataSetsAdapter.applyUpdates(function (item, scope) {
-      return [];
-    });
-    that.dataSetsAdapter.reload();
-  }
+  that.dashboardDataSetReloadService.reload();
 };
 
 DashboardCtrl.prototype.getProjects = function (limit, offset) {
@@ -228,5 +238,6 @@ angular
     'dashboardDataSetListService',
     'dashboardDataSetSearchService',
     'dashboardDataSetSourceService',
+    'dashboardDataSetReloadService',
     DashboardCtrl
   ]);
