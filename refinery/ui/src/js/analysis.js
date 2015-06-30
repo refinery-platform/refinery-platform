@@ -44,11 +44,10 @@ angular.module('refineryAnalysis', [])
       }else {
         vm.launchAnalysis(name);
       }
-    }, tempName);
+    }, tempName).addClass("bootboxAnalysisWidth");
   };
 
   vm.launchAnalysis = function(analysisName) {
-    debugger;
     $scope.analysisConfig.name = analysisName;
     $scope.analysisConfig.workflowUuid = workflow.getUuid();
     $http({
