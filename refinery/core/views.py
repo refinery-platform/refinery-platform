@@ -926,7 +926,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
         query = query.replace(m_obj.group(), replace_rows_str)
 
     # proper url encoding
-    query = urllib2.quote(query, safe="%/:=&?~# +!$, ;'@()*[]")
+    query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
 
     # opening solr query results
     results = urllib2.urlopen(query).read()
