@@ -8,6 +8,10 @@
 
 {% block head_html %}
 <link href="{% static 'styles/css/animate.css' %}" rel="stylesheet">
+<script type="text/javascript">
+  // Global variables for the JavaScript world
+  window.publicGroupId = {{ public_group_id }};
+</script>
 {% endblock %}
 
 {% block subheader %}
