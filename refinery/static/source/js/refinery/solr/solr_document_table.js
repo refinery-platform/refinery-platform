@@ -379,11 +379,11 @@ SolrDocumentTable.prototype._getTrimFileName = function(fileName, length){
   var ind = fileName.lastIndexOf('/');
   var trimFileName = fileName.substring(ind, fileName.length);
 
-  if(fileName.length < length) {
+  if(fileName.length <= length) {
     return trimFileName;
-  }else{
-    return self._getTrimmedChars(trimFileName, 0, length);
-  }
+  }else {
+    return self._getTrimmedChars(trimFileName, 0, length) + "...";
+  };
 };
 
 SolrDocumentTable.prototype._generateTableHead = function(solrResponse) {
