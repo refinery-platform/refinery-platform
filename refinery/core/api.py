@@ -506,6 +506,7 @@ class AnalysisResource(ModelResource):
     data_set = fields.ToOneField(DataSetResource, 'data_set', use_in='detail')
     uuid = fields.CharField(attribute='uuid', use_in='all')
     name = fields.CharField(attribute='name', use_in='all')
+    data_set__uuid = fields.CharField(attribute='data_set__uuid', use_in='all')
     workflow__uuid = fields.CharField(attribute='workflow__uuid', use_in='all')
     creation_date = fields.CharField(attribute='creation_date', use_in='all')
     workflow_steps_num = fields.IntegerField(
