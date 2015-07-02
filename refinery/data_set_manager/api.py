@@ -18,8 +18,8 @@ class StudyResource(ModelResource):
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         allowed_methods = ["get"]
         resource_name = "study"
-        filtering = { "uuid": ALL }
-        fields = [ "uuid" ]
+        filtering = {"uuid": ALL}
+        fields = ["uuid"]
 
 
 class AssayResource(ModelResource):
@@ -28,8 +28,8 @@ class AssayResource(ModelResource):
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         allowed_methods = ["get"]
         resource_name = "assay"
-        filtering = { "uuid": ALL }
-        fields = [ "uuid" ]
+        filtering = {"uuid": ALL}
+        fields = ["uuid"]
 
 
 class AttributeOrderResource(ModelResource):
@@ -38,10 +38,17 @@ class AttributeOrderResource(ModelResource):
 
     class Meta:
         queryset = AttributeOrder.objects.all().order_by("rank")
-        allowed_methods = ["get", "patch", "put", "post" ]
+        allowed_methods = ["get", "patch", "put", "post"]
 
-        # TODO: replace with session or api key authentication and internal authorization
+        # TODO: replace with session or api key authentication and internal
+        # authorization
         authentication = Authentication()
         authorization = Authorization()
-        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS, "subtype": ALL, "is_exposed": ALL, "is_internal": ALL }
+        filtering = {
+            "study": ALL_WITH_RELATIONS,
+            "assay": ALL_WITH_RELATIONS,
+            "subtype": ALL,
+            "is_exposed": ALL,
+            "is_internal": ALL
+        }
         excludes = []
