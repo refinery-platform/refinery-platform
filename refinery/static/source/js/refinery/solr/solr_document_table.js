@@ -380,9 +380,11 @@ SolrDocumentTable.prototype._getTrimFileName = function(fileName, length){
   var trimFileName = fileName.substring(ind, fileName.length);
 
   if(fileName.length <= length) {
-    return trimFileName;
-  }else {
+    return fileName;
+  }else if(trimFileName.length > length){
     return self._getTrimmedChars(trimFileName, 0, length) + "...";
+  }else{
+    return trimFileName;
   };
 };
 

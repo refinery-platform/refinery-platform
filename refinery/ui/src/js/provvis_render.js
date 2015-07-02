@@ -2926,17 +2926,17 @@ var provvisRender = function () {
             }).attr("class", "nodeDoiLabel")
             .style("display", "none");
 
-        nLabels.filter(function (d) {
-          return d.nodeType === "stored";
-        }).append("text")
-            .attr("transform", function () {
-              return "translate(" + (-1.5 * scaleFactor * vis.radius) + "," +
-                  (-1.5 * scaleFactor * vis.radius) + ")";
-            })
-            .text(function (d) {
-              return d.attributes.get("name");
-            }).attr("class", "nodeAttrLabel")
-        ;
+        nLabels.each( function (d) {
+            d3.select(this).append("text")
+                .attr("transform", function () {
+                    return "translate(" + (-1.5 * scaleFactor * vis.radius) + "," +
+                        (-1.5 * scaleFactor * vis.radius) + ")";
+                })
+                .text(function (d) {
+                    return d.nodeType === "stored" ? d.attributes.get("name") : d.name;
+                }).attr("class", "nodeAttrLabel")
+            ;
+        });
 
         nLabels.each(function (d) {
           if (d.nodeType === "stored") {
