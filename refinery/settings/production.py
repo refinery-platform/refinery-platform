@@ -1,4 +1,4 @@
-# custom settings for Vagrant VM
+# custom settings for production environment
 
 from .base import *
 

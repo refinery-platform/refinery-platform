@@ -1,11 +1,11 @@
-# custom settings for Vagrant VM
+# custom settings for development environment (e.g., Vagrant VM)
 
 from .base import *
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-# required for Django Debug Tool Bar
+# required for Django Debug Toolbar
 INSTALLED_APPS += (
     'debug_toolbar',
 )
