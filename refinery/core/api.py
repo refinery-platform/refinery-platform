@@ -368,13 +368,24 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                 name='api_%s_get_studies' % (
                     self._meta.resource_name
                 )),
-            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/assays%s$' % (
+            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/analyses%s$' % (
                     self._meta.resource_name,
                     self.uuid_regex,
                     trailing_slash()
                 ),
-                self.wrap_view('get_all_assays'),
-                name='api_%s_get_all_assays' % (
+                self.wrap_view('get_analyses'),
+                name='api_%s_get_analyses' % (
+                    self._meta.resource_name
+                )),
+            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies/'
+                r'(?P<study_uuid>%s)/assays%s$' % (
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_assays'),
+                name='api_%s_get_assays' % (
                     self._meta.resource_name
                 )),
         ]
@@ -414,6 +425,17 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         return StudyResource().get_list(
             request=request,
             investigation_uuid=data_set.get_investigation().uuid
+        )
+
+    def get_analyses(self, request, **kwargs):
+        try:
+            DataSet.objects.get(uuid=kwargs['uuid'])
+        except ObjectDoesNotExist:
+            return HttpGone()
+
+        return AnalysisResource().get_list(
+            request=request,
+            data_set__uuid=kwargs['uuid']
         )
 
     def get_assays(self, request, **kwargs):
@@ -533,7 +555,8 @@ class AnalysisResource(ModelResource):
         ]
         filtering = {
             'data_set': ALL_WITH_RELATIONS,
-            'workflow_steps_num': ALL_WITH_RELATIONS
+            'workflow_steps_num': ALL_WITH_RELATIONS,
+            'data_set__uuid': ALL
         }
         ordering = ['name', 'creation_date']
 
