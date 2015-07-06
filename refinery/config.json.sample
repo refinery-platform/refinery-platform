@@ -13,5 +13,6 @@
     }
   },
   "BROKER_URL": "amqp://guest:guest@localhost:5672//",
+  "TIME_ZONE": "America/New_York",
   "SECRET_KEY": "SECRET"
 }
