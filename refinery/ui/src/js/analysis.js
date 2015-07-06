@@ -2,9 +2,9 @@ angular.module('refineryAnalysis', [])
 
 .controller('AnalysisCtrl', function(
     $scope, $rootScope, $http, $window, $log, $timeout, workflow) {
-    var vm = this;
+    "use strict";
 
-  'use strict';
+    var vm = this;
 
   $scope.analysisConfig = {
     studyUuid: $window.externalStudyUuid,
@@ -80,5 +80,5 @@ angular.module('refineryAnalysis', [])
 
     return (dateStr + timeStr);
 
-  }
+  };
 });

@@ -21,37 +21,20 @@ from galaxy_connector.models import Instance
 from visualization_manager.views import igv_multi_species
 from annotation_server.models import GenomeBuild
 from file_store.models import FileStoreItem, file_path
+from django.conf import settings
 
 
 logger = logging.getLogger(__name__)
 
 
 def home(request):
-    if request.user.is_superuser:
-        users = User.objects.all()
-    else:
-        users = []
-
-    if not request.user.is_authenticated():
-        group = ExtendedGroup.objects.public_group()
-
-        projects = get_objects_for_group(group, "core.read_project").filter(is_catch_all=False)
-        workflow_engines = get_objects_for_group(group, "core.read_workflowengine")
-        data_sets = get_objects_for_group(group, "core.read_dataset")
-        workflows = get_objects_for_group(group, "core.read_workflow").filter(is_active=True)
-        unassigned_analyses = []
-    else:
-        projects = get_objects_for_user(request.user, "core.read_project").filter(is_catch_all=False)
-        try:
-            unassigned_analyses = request.user.get_profile().catch_all_project.analyses.all().order_by("-time_start")
-        except:
-            unassigned_analyses = []
-            logger.warning("User " + request.user + " does not have a \"catch all\" project.")
-        workflow_engines = get_objects_for_user(request.user, "core.read_workflowengine")
-        workflows = get_objects_for_user(request.user, "core.read_workflow").filter(is_active=True)
-        data_sets = get_objects_for_user(request.user, "core.read_dataset")
-
-    return render_to_response('core/home.html', {'users': users, 'projects': projects, 'unassigned_analyses': unassigned_analyses, 'workflow_engines': workflow_engines, 'workflows': workflows, 'data_sets': data_sets }, context_instance=RequestContext(request))
+    return render_to_response(
+        'core/home.html',
+        {
+            'public_group_id': settings.REFINERY_PUBLIC_GROUP_ID
+        },
+        context_instance=RequestContext(request)
+    )
 
 
 def about(request):
@@ -926,7 +909,7 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
         query = query.replace(m_obj.group(), replace_rows_str)
 
     # proper url encoding
-    query = urllib2.quote(query, safe="%/:=&?~# +!$, ;'@()*[]")
+    query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
 
     # opening solr query results
     results = urllib2.urlopen(query).read()

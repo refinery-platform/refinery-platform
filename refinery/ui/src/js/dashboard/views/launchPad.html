@@ -44,7 +44,7 @@
     <div class="refinery-panel-header">
       <div class="floatbox">
         <div class="floatbox-min-right">
-          <h4>Share</h4>
+          <h4 ng-if="dashboard.userIsAuthenticated">Share</h4>
         </div>
         <div class="floatbox-max-left">
           <h4>Name</h4>
@@ -62,7 +62,7 @@
           ui-scroll="dataSet in dashboard.dataSets"
           adapter="dashboard.dataSetsAdapter">
           <ul class="controls no-list-style">
-            <li>
+            <li ng-if="dashboard.userIsAuthenticated">
               <button
                 ng-click="launchPad.openPermissionEditor('data_sets', dataSet.uuid)">
                 <i class="icon-edit"></i>
@@ -123,7 +123,7 @@
     <div class="refinery-panel-header">
       <div class="floatbox">
         <div class="floatbox-min-right">
-          <h4>Share</h4>
+          <h4 ng-if="dashboard.userIsAuthenticated">Share</h4>
         </div>
         <div class="floatbox-max-left">
           <h4>Name</h4>
@@ -166,7 +166,7 @@
       </div>
       <span
         class="alert alert-info"
-        ng-if="dashboard.allProjects.meta.total_count == 0">
+        ng-if="dashboard.allProjects.meta.total_count === 0 && dashboard.allAnalyses.meta.total_count === 0">
         No projects found.
       </span>
     </div>

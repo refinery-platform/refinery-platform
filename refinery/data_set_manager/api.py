@@ -4,7 +4,7 @@ Created on Nov 29, 2012
 @author: nils
 '''
 
-from data_set_manager.models import AttributeOrder, Study, Assay
+from data_set_manager.models import Investigation, Study, Assay, AttributeOrder
 from tastypie import fields
 from tastypie.authentication import Authentication
 from tastypie.authorization import Authorization
@@ -12,24 +12,52 @@ from tastypie.constants import ALL, ALL_WITH_RELATIONS
 from tastypie.resources import ModelResource
 
 
+class InvestigationResource(ModelResource):
+    class Meta:
+        queryset = Investigation.objects.all()
+        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
+        allowed_methods = ['get']
+        resource_name = 'investigation'
+        filtering = {
+            'uuid': ALL
+        }
+        # fields = ["uuid"]
+
+
 class StudyResource(ModelResource):
+    investigation_uuid = fields.CharField(
+        attribute='investigation__uuid',
+        use_in='all'
+    )
+
     class Meta:
         queryset = Study.objects.all()
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         allowed_methods = ["get"]
         resource_name = "study"
-        filtering = { "uuid": ALL }
-        fields = [ "uuid" ]
+        filtering = {
+            'uuid': ALL,
+            'investigation_uuid': ALL
+        }
+        # fields = ["uuid"]
 
 
 class AssayResource(ModelResource):
+    study_uuid = fields.CharField(
+        attribute='study__uuid',
+        use_in='all'
+    )
+
     class Meta:
         queryset = Assay.objects.all()
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
-        allowed_methods = ["get"]
-        resource_name = "assay"
-        filtering = { "uuid": ALL }
-        fields = [ "uuid" ]
+        allowed_methods = ['get']
+        resource_name = 'assay'
+        filtering = {
+            'uuid': ALL,
+            'study_uuid': ALL
+        }
+        # fields = ["uuid"]
 
 
 class AttributeOrderResource(ModelResource):
@@ -38,10 +66,17 @@ class AttributeOrderResource(ModelResource):
 
     class Meta:
         queryset = AttributeOrder.objects.all().order_by("rank")
-        allowed_methods = ["get", "patch", "put", "post" ]
-        
-        # TODO: replace with session or api key authentication and internal authorization 
+        allowed_methods = ["get", "patch", "put", "post"]
+
+        # TODO: replace with session or api key authentication and internal
+        # authorization
         authentication = Authentication()
         authorization = Authorization()
-        filtering = { "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS, "subtype": ALL, "is_exposed": ALL, "is_internal": ALL }
+        filtering = {
+            "study": ALL_WITH_RELATIONS,
+            "assay": ALL_WITH_RELATIONS,
+            "subtype": ALL,
+            "is_exposed": ALL,
+            "is_internal": ALL
+        }
         excludes = []

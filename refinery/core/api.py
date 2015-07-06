@@ -12,6 +12,7 @@ import settings
 from sets import Set
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group
+from django.core.exceptions import ObjectDoesNotExist
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group, \
     get_perms
 from tastypie import fields
@@ -22,14 +23,15 @@ from tastypie.constants import ALL_WITH_RELATIONS, ALL
 from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
 from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
     HttpUnauthorized, HttpMethodNotAllowed, HttpAccepted, HttpCreated, \
-    HttpNoContent
+    HttpNoContent, HttpGone
 from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, \
     Workflow, WorkflowInputRelationships, Analysis, DataSet, \
     ExternalToolStatus, ResourceStatistics, GroupManagement, ExtendedGroup, \
     UserAuthentication, Invitation, EmailInvite, UserProfile
 from core.tasks import check_tool_status
-from data_set_manager.api import StudyResource, AssayResource
+from data_set_manager.api import StudyResource, AssayResource, \
+    InvestigationResource
 from data_set_manager.models import Node, Study
 from file_store.models import FileStoreItem
 from GuardianTastypieAuthz import GuardianAuthorization
@@ -39,6 +41,7 @@ from haystack.query import SearchQuerySet, EmptySearchQuerySet
 from django.http import HttpResponse
 import datetime
 from django.core.mail import EmailMessage
+from tastypie.utils import trailing_slash
 
 
 logger = logging.getLogger(__name__)
@@ -325,6 +328,7 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
 
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
+    uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
@@ -340,18 +344,39 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         resource_name = 'data_sets'
         # authentication = SessionAuthentication()
         # authorization = GuardianAuthorization()
-        filtering = {'uuid': ALL}
+        filtering = {
+            'uuid': ALL,
+        }
 
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
-            url(r'^(?P<resource_name>%s)/search/$' %
-                (self._meta.resource_name),
-                self.wrap_view('get_search'),
-                name='api_%s_search' % (self._meta.resource_name)),
-            url(r'^(?P<resource_name>%s)/autocomplete/$' %
-                (self._meta.resource_name),
-                self.wrap_view('get_autocomplete'),
-                name='api_%s_autocomplete' % (self._meta.resource_name)),
+            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/investigation%s$' % (
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_investigation'),
+                name='api_%s_get_investigation' % (
+                    self._meta.resource_name)
+                ),
+            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies%s$' % (
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_studies'),
+                name='api_%s_get_studies' % (
+                    self._meta.resource_name
+                )),
+            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/assays%s$' % (
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_all_assays'),
+                name='api_%s_get_all_assays' % (
+                    self._meta.resource_name
+                )),
         ]
         return prepend_urls_list
 
@@ -368,74 +393,40 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
 
-    def get_search(self, request, **kwargs):
-        query = request.GET.get('q', None)
-        if not query:
-            return HttpBadRequest('Please supply the search parameter q')
-
-        # Do the query.
-        results = (SearchQuerySet().using('core')
-                                   .models(DataSet)
-                                   .facet('measurement', mincount=1)
-                                   .facet('technology', mincount=1)
-                                   .load_all()
-                                   .auto_query(query))
-
-        if not results:
-            results = EmptySearchQuerySet()
-
-        paginator = Paginator(results, 10)
-
-        page = request.GET.get('page', 1)
+    def get_investigation(self, request, **kwargs):
         try:
-            current_results = paginator.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
-            current_results = paginator.page(1)
-        except EmptyPage:
-            # If page is out of range (e.g. 9999) deliver last page of results.
-            current_results = paginator.page(paginator.num_pages)
+            data_set = DataSet.objects.get(uuid=kwargs['uuid'])
+        except ObjectDoesNotExist:
+            return HttpGone()
 
-        result_list = map(lambda r: r.object, current_results.object_list)
-        bundle = self.build_bundles(request, result_list, **kwargs)
-        object_list = self.build_object_list(bundle, **kwargs)
+        # Assuming 1 to 1 relationship between DataSet and investigation
+        return InvestigationResource().get_detail(
+            request,
+            uuid=data_set.get_investigation().uuid
+        )
 
-        self.log_throttled_access(request)
-        return self.build_response(request, object_list, **kwargs)
-
-    def get_autocomplete(self, request, **kwargs):
-        query = request.GET.get('q', None)
-        if not query:
-            raise HttpBadRequest('Please supply the search parameter q')
-
-        # Do the autocomplete query.
-        results = (SearchQuerySet().using('core')
-                                   .models(DataSet)
-                                   .autocomplete(content_auto=query))
-
-        # logger.debug('')
-
-        if not results:
-            results = EmptySearchQuerySet()
-
-        paginator = Paginator(results, 5)
-
-        page = request.GET.get('page', 1)
+    def get_studies(self, request, **kwargs):
         try:
-            current_results = paginator.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
-            current_reuslts = paginator.page(1)
-        except EmptyPage:
-            # If page is out of range (e.g. 9999) deliver last page of results.
-            current_results = paginator.page(paginator.num_pages)
+            data_set = DataSet.objects.get(uuid=kwargs['uuid'])
+        except ObjectDoesNotExist:
+            return HttpGone()
 
-        result_list = map(lambda r: r.object, current_results.object_list)
-        bundle = self.build_bundle_list(request, result_list, **kwargs)
-        object_list = self.build_object_list(bundle, **kwargs)
+        return StudyResource().get_list(
+            request=request,
+            investigation_uuid=data_set.get_investigation().uuid
+        )
 
-        self.log_throttled_access(request)
-        return self.build_response(request, object_list, **kwargs)
+    def get_assays(self, request, **kwargs):
+        try:
+            DataSet.objects.get(uuid=kwargs['uuid'])
+            Study.objects.get(uuid=kwargs['study_uuid'])
+        except ObjectDoesNotExist:
+            return HttpGone()
+
+        return AssayResource().get_list(
+            request=request,
+            study_uuid=kwargs['study_uuid']
+        )
 
 
 class WorkflowResource(ModelResource, SharableResourceAPIInterface):
@@ -506,6 +497,7 @@ class AnalysisResource(ModelResource):
     data_set = fields.ToOneField(DataSetResource, 'data_set', use_in='detail')
     uuid = fields.CharField(attribute='uuid', use_in='all')
     name = fields.CharField(attribute='name', use_in='all')
+    data_set__uuid = fields.CharField(attribute='data_set__uuid', use_in='all')
     workflow__uuid = fields.CharField(attribute='workflow__uuid', use_in='all')
     creation_date = fields.CharField(attribute='creation_date', use_in='all')
     workflow_steps_num = fields.IntegerField(
