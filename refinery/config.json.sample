@@ -2,5 +2,15 @@
   "ADMINS": [
     ["Refinery Admin", "admin@example.org"]
   ],
+  "DATABASES": {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": "refinery",
+        "USER": "vagrant",
+        "PASSWORD": "",
+        "HOST": "",
+        "PORT": ""
+    }
+  },
   "SECRET_KEY": "SECRET"
 }

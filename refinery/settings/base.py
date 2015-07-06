@@ -36,23 +36,7 @@ ADMINS = tuple(map(lambda x: tuple(x), get_setting("ADMINS")))
 # notifications when BrokenLinkEmailsMiddleware is enabled.
 MANAGERS = ADMINS
 
-DATABASES = {
-    'default': {
-        # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or
-        # 'oracle'.
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        # Or path to database file if using sqlite3.
-        'NAME': 'refinery',
-        # Not used with sqlite3.
-        'USER': 'vagrant',
-        # Not used with sqlite3.
-        'PASSWORD': '',
-        # Set to empty string for localhost. Not used with sqlite3.
-        'HOST': '',
-        # Set to empty string for default. Not used with sqlite3.
-        'PORT': '',
-    }
-}
+DATABASES = get_setting("DATABASES")
 
 # transport://userid:password@hostname:port/virtual_host
 # BROKER_URL = "amqp://guest:guest@localhost:5672//"
