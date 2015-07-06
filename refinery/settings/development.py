@@ -12,6 +12,9 @@ STATICFILES_DIRS = (
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+# Disable migrations when running unittests and use syncdb instead
+SOUTH_TESTS_MIGRATE = False
+
 # required for Django Debug Toolbar
 # https://github.com/django-debug-toolbar/django-debug-toolbar/issues/529
 DEBUG_TOOLBAR_PATCH_SETTINGS = False

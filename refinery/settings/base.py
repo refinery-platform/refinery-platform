@@ -276,9 +276,6 @@ EMAIL_PORT = get_setting("EMAIL_PORT")
 # and MANAGERS.
 SERVER_EMAIL = get_setting("SERVER_EMAIL")
 
-# Disable migrations when running unittests and use syncdb instead
-SOUTH_TESTS_MIGRATE = False
-
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = 100
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
