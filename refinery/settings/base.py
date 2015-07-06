@@ -304,7 +304,7 @@ AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
 # accessed
 AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 
-ISA_TAB_DIR = '/vagrant/isa-tab'
+ISA_TAB_DIR = get_setting("ISA_TAB_DIR")
 
 # relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
 FILE_STORE_DIR = 'file_store'
