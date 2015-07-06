@@ -22,5 +22,9 @@
   "STATIC_ROOT": "/vagrant/static",
   "STATIC_URL": "/static/",
   "ADMIN_MEDIA_PREFIX": "/static/admin/",
-  "SECRET_KEY": "SECRET"
+  "SECRET_KEY": "SECRET",
+  "DEFAULT_FROM_EMAIL": "webmaster@localhost",
+  "EMAIL_HOST": "localhost",
+  "EMAIL_PORT": 25,
+  "SERVER_EMAIL": "root@localhost"
 }

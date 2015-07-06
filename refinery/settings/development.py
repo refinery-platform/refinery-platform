@@ -10,6 +10,8 @@ STATICFILES_DIRS = (
     "/vagrant/refinery/ui/development"
 )
 
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
 # required for Django Debug Toolbar
 # https://github.com/django-debug-toolbar/django-debug-toolbar/issues/529
 DEBUG_TOOLBAR_PATCH_SETTINGS = False

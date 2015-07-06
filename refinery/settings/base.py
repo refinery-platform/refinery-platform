@@ -267,18 +267,14 @@ LOGGING = {
 # invitations using uuid-based tokens.
 TOKEN_DURATION = 1
 
-# send email via SMTP, can be replaced with
-# "django.core.mail.backends.console.EmailBackend" to send emails to the console
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = '/tmp/refinery-emails'
 # Default email address to use for various automated correspondence from the
 # site manager(s).
-DEFAULT_FROM_EMAIL = 'webmaster@localhost'
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 25
+DEFAULT_FROM_EMAIL = get_setting("DEFAULT_FROM_EMAIL")
+EMAIL_HOST = get_setting("EMAIL_HOST")
+EMAIL_PORT = get_setting("EMAIL_PORT")
 # The email address that error messages come from, such as those sent to ADMINS
 # and MANAGERS.
-SERVER_EMAIL = 'root@localhost'
+SERVER_EMAIL = get_setting("SERVER_EMAIL")
 
 # Disable migrations when running unittests and use syncdb instead
 SOUTH_TESTS_MIGRATE = False

@@ -12,3 +12,5 @@ STATICFILES_DIRS = (
     "/vagrant/refinery/static/production",
     "/vagrant/refinery/ui/production"
 )
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
