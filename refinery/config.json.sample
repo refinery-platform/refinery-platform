@@ -1,3 +1,6 @@
 {
+  "ADMINS": [
+    ["Refinery Admin", "admin@example.org"]
+  ],
   "SECRET_KEY": "SECRET"
 }

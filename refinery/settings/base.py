@@ -28,10 +28,9 @@ def get_setting(name, settings=local_settings):
 
 djcelery.setup_loader()
 
-# A tuple that lists people who get code error notifications.
-ADMINS = (
-    ('Refinery Admin', 'admin@example.org'),
-)
+# a tuple that lists people who get code error notifications
+# (convert JSON list of lists to tuple of tuples)
+ADMINS = tuple(map(lambda x: tuple(x), get_setting("ADMINS")))
 
 # A tuple in the same format as ADMINS that specifies who should get broken link
 # notifications when BrokenLinkEmailsMiddleware is enabled.
