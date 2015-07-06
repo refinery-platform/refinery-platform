@@ -12,5 +12,6 @@
         "PORT": ""
     }
   },
+  "BROKER_URL": "amqp://guest:guest@localhost:5672//",
   "SECRET_KEY": "SECRET"
 }

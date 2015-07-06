@@ -39,12 +39,7 @@ MANAGERS = ADMINS
 DATABASES = get_setting("DATABASES")
 
 # transport://userid:password@hostname:port/virtual_host
-# BROKER_URL = "amqp://guest:guest@localhost:5672//"
-BROKER_HOST = "localhost"
-BROKER_PORT = 5672
-BROKER_USER = "guest"
-BROKER_PASSWORD = "guest"
-BROKER_VHOST = "/"
+BROKER_URL = get_setting("BROKER_URL")
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
