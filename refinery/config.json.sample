@@ -27,4 +27,7 @@
   "EMAIL_HOST": "localhost",
   "EMAIL_PORT": 25,
   "SERVER_EMAIL": "root@localhost"
+  "ACCOUNT_ACTIVATION_DAYS": 7,
+  "REGISTRATION_OPEN": true,
+  "REFINERY_REGISTRATION_CLOSED_MESSAGE": ""
 }

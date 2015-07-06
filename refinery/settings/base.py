@@ -285,10 +285,10 @@ CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 # === Refinery Settings ===
 
 # for registration module
-ACCOUNT_ACTIVATION_DAYS = 7
-REGISTRATION_OPEN = True
-# Message to display on registration page when REGISTRATION_OPEN is set to False
-REFINERY_REGISTRATION_CLOSED_MESSAGE = ''
+ACCOUNT_ACTIVATION_DAYS = get_setting("ACCOUNT_ACTIVATION_DAYS")
+REGISTRATION_OPEN = get_setting("REGISTRATION_OPEN")
+# message to display on registration page when REGISTRATION_OPEN is set to False
+REFINERY_REGISTRATION_CLOSED_MESSAGE = get_setting("REFINERY_REGISTRATION_CLOSED_MESSAGE")
 
 # set the name of the group that is used to share data with all users
 # (= "the public")
