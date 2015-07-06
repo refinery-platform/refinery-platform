@@ -142,4 +142,12 @@ urlpatterns = patterns(
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 # for "static" see
-# https://docs.djangoproject.com/en/dev/howto/static-files/#serving-other-directories
+# https://docs.djangoproject.com/en/dev/howto/static-files/#serving-static-files-during-development
+
+# for using DjDT with mod_wsgi
+# https://github.com/django-debug-toolbar/django-debug-toolbar/issues/529
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += patterns(
+        '', url(r'^__debug__/', include(debug_toolbar.urls)),
+    )
