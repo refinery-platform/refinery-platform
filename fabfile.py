@@ -26,65 +26,58 @@ env.forward_agent = True    # for Github operations
 
 
 def setup():
-    """Check if the required variable were initialized in ~/.fabricrc
-
-    """
+    """Check if the required variable were initialized in ~/.fabricrc"""
     require("project_user", "refinery_project_dir", "refinery_virtualenv_name")
     env.refinery_app_dir = os.path.join(env.refinery_project_dir, "refinery")
 
 
 @task
 def vm():
-    """Configure environment for deployment on Vagrant VM
-
-    """
+    """Configure environment for deployment on Vagrant VM"""
     env.project_user = "vagrant"    # since it's used as arg for decorators
     env.refinery_project_dir = "/vagrant"
     env.refinery_virtual_env_name = "refinery-platform"
+    env.grunt = "grunt build"
     setup()
     execute(vagrant)
 
 
 @task
 def dev():
-    """Set config for deployment on development VM
-
-    """
+    """Set config for deployment on development VM"""
     setup()
     env.hosts = [env.dev_host]
+    env.grunt = "grunt build"
 
 
 @task
 def stage():
-    """Set config for deployment on staging VM
-
-    """
+    """Set config for deployment on staging VM"""
     setup()
     env.hosts = [env.stage_host]
+    env.grunt = "grunt compile"
 
 
 @task
 def prod():
-    """Set config for deployment on production VM
-
-    """
+    """Set config for deployment on production VM"""
     #TODO: add a warning message/confirmation about updating production VM?
     setup()
     env.hosts = [env.prod_host]
+    env.grunt = "grunt compile"
 
 
 @task(alias="update")
 @with_settings(user=env.project_user)
 def update_refinery():
-    """Perform full update of a Refinery Platform instance
-    """
+    """Perform full update of a Refinery Platform instance"""
     puts("Updating Refinery")
     with cd(env.refinery_project_dir):
         run("git pull")
     with cd(os.path.join(env.refinery_app_dir, "ui")):
         run("npm prune && npm update")
         run("bower prune && bower update --config.interactive=false")
-        run("grunt")
+        run("{grunt}".format(**env))
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("pip install -r {refinery_project_dir}/requirements.txt".format(**env))
         run("find . -name '*.pyc' -delete")
@@ -93,6 +86,7 @@ def update_refinery():
         run("supervisorctl reload")
     with cd(os.path.join(env.refinery_project_dir)):
         run("touch {refinery_app_dir}/wsgi.py".format(**env))
+
 
 @task(alias="relaunch")
 @with_settings(user=env.project_user)
