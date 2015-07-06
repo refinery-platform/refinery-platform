@@ -12,7 +12,7 @@ local_settings_file_path = os.path.join(BASE_DIR, 'config.json')
 # load config.json
 try:
     with open(local_settings_file_path, 'r') as f:
-        local_settings = json.loads(f.read())
+        local_settings = json.load(f)
 except IOError as e:
     error_msg = "Could not open '{}': {}".format(local_settings_file_path, e)
     raise ImproperlyConfigured(error_msg)
