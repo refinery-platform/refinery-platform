@@ -77,20 +77,19 @@ def prod():
 @with_settings(user=env.project_user)
 def update_refinery():
     """Perform full update of a Refinery Platform instance
-
     """
     puts("Updating Refinery")
     with cd(env.refinery_project_dir):
         run("git pull")
     with cd(os.path.join(env.refinery_app_dir, "ui")):
-        run("npm update")
-        run("bower update --config.interactive=false")
+        run("npm prune && npm update")
+        run("bower prune && bower update --config.interactive=false")
         run("grunt")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("pip install -r {refinery_project_dir}/requirements.txt".format(**env))
         run("find . -name '*.pyc' -delete")
         run("{refinery_app_dir}/manage.py syncdb --migrate".format(**env))
-        run("{refinery_app_dir}/manage.py collectstatic --noinput".format(**env))
+        run("{refinery_app_dir}/manage.py collectstatic --clear --noinput".format(**env))
         run("supervisorctl reload")
     with cd(os.path.join(env.refinery_project_dir)):
         run("touch {refinery_app_dir}/wsgi.py".format(**env))

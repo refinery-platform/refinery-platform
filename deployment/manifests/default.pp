@@ -116,10 +116,12 @@ file { "${project_root}/config.json":
   source => "${project_root}/config.json.sample",
   owner => $appuser,
   group => $appgroup,
+  replace => false,
 }
 ->
 exec { "syncdb":
   command => "${virtualenv}/bin/python ${project_root}/manage.py syncdb --migrate --noinput",
+  environment => ["DJANGO_SETTINGS_MODULE=settings.development"],
   user => $appuser,
   group => $appgroup,
   require => [
@@ -131,18 +133,21 @@ exec { "syncdb":
 ->
 exec { "create_superuser":
   command => "${virtualenv}/bin/python ${project_root}/manage.py loaddata superuser.json",
+  environment => ["DJANGO_SETTINGS_MODULE=settings.development"],
   user => $appuser,
   group => $appgroup,
 }
 ->
 exec { "init_refinery":
   command => "${virtualenv}/bin/python ${project_root}/manage.py init_refinery 'Refinery' '192.168.50.50:8000'",
+  environment => ["DJANGO_SETTINGS_MODULE=settings.development"],
   user => $appuser,
   group => $appgroup,
 }
 ->
 exec { "create_user":
   command => "${virtualenv}/bin/python ${project_root}/manage.py create_user 'guest' 'guest' 'guest@example.com' 'Guest' '' ''",
+  environment => ["DJANGO_SETTINGS_MODULE=settings.development"],
   user => $appuser,
   group => $appgroup,
 }
@@ -150,11 +155,13 @@ exec { "create_user":
 exec {
   "build_core_schema":
     command => "${virtualenv}/bin/python ${project_root}/manage.py build_solr_schema --using=core > solr/core/conf/schema.xml",
+    environment => ["DJANGO_SETTINGS_MODULE=settings.development"],
     cwd => $project_root,
     user => $appuser,
     group => $appgroup;
   "build_data_set_manager_schema":
     command => "${virtualenv}/bin/python ${project_root}/manage.py build_solr_schema --using=data_set_manager > solr/data_set_manager/conf/schema.xml",
+    environment => ["DJANGO_SETTINGS_MODULE=settings.development"],
     cwd => $project_root,
     user => $appuser,
     group => $appgroup;
@@ -233,7 +240,7 @@ class ui {
   }
   ->
   exec { "npm_local_modules":
-    command => "/usr/bin/npm install",
+    command => "/usr/bin/npm prune && /usr/bin/npm install",
     cwd => $ui_app_root,
     logoutput => on_failure,
     user => $appuser,
@@ -241,7 +248,7 @@ class ui {
   }
   ->
   exec { "bower_modules":
-    command => "/usr/bin/bower install --config.interactive=false",
+    command => "/usr/bin/bower prune && /usr/bin/bower install --config.interactive=false",
     cwd => $ui_app_root,
     logoutput => on_failure,
     user => $appuser,
@@ -258,7 +265,8 @@ class ui {
   }
   ->
   exec { "collectstatic":
-    command => "${virtualenv}/bin/python ${project_root}/manage.py collectstatic --noinput",
+    command => "${virtualenv}/bin/python ${project_root}/manage.py collectstatic --clear --noinput",
+    environment => ["DJANGO_SETTINGS_MODULE=settings.development"],
     user => $appuser,
     group => $appgroup,
     require => Python::Requirements[$requirements],
