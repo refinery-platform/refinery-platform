@@ -9,7 +9,7 @@ BASE_DIR = os.path.dirname(os.path.split(os.path.abspath(__file__))[0])
 
 local_settings_file_path = os.path.join(BASE_DIR, 'config.json')
 
-# require config.json
+# load config.json
 try:
     with open(local_settings_file_path, 'r') as f:
         local_settings = json.loads(f.read())
@@ -19,8 +19,7 @@ except IOError as e:
 
 
 def get_setting(name, settings=local_settings):
-    """Get the local settings variable or return explicit exception
-    """
+    """Get the local settings variable or return explicit exception"""
     try:
         return settings[name]
     except KeyError:
@@ -120,7 +119,7 @@ STATICFILES_FINDERS = (
 )
 
 # Make sure to set this to a random string in production
-SECRET_KEY = 'SECRET'
+SECRET_KEY = get_setting("SECRET_KEY")
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
