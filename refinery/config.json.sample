@@ -30,5 +30,6 @@
   "ACCOUNT_ACTIVATION_DAYS": 7,
   "REGISTRATION_OPEN": true,
   "REFINERY_REGISTRATION_CLOSED_MESSAGE": "",
-  "ISA_TAB_DIR": "/vagrant/isa-tab"
+  "ISA_TAB_DIR": "/vagrant/isa-tab",
+  "REFINERY_FILE_SOURCE_MAP": {}
 }
