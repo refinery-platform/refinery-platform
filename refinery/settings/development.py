@@ -14,3 +14,8 @@ MIDDLEWARE_CLASSES += (
     'middleware.JsonAsHTML',
 )
 INTERNAL_IPS = ('192.168.50.1')
+
+STATICFILES_DIRS = (
+    "/vagrant/refinery/static/development",
+    "/vagrant/refinery/ui/development"
+)

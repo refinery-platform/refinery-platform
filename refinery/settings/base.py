@@ -111,10 +111,6 @@ STATIC_URL = '/static/'
 # Examples: "http://foo.com/static/admin/", "/static/admin/".
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
-# Additional locations of static files
-STATICFILES = get_setting('STATICFILES')
-STATICFILES_DIRS = tuple(map(lambda x: os.path.join(BASE_DIR, x), STATICFILES))
-
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (

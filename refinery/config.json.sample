@@ -1,6 +1,2 @@
 {
-  "STATICFILES": [
-    "static/development",
-    "ui/development"
-  ]
 }
