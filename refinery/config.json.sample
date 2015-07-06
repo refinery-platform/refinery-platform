@@ -15,5 +15,7 @@
   "BROKER_URL": "amqp://guest:guest@localhost:5672//",
   "TIME_ZONE": "America/New_York",
   "LANGUAGE_CODE": "en-us",
+  "USE_I18N": true,
+  "USE_L10N": true,
   "SECRET_KEY": "SECRET"
 }
