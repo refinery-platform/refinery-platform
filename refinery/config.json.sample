@@ -19,5 +19,8 @@
   "USE_L10N": true,
   "MEDIA_ROOT": "/vagrant/media",
   "MEDIA_URL": "/media/",
+  "STATIC_ROOT": "/vagrant/static",
+  "STATIC_URL": "/static/",
+  "ADMIN_MEDIA_PREFIX": "/static/admin/",
   "SECRET_KEY": "SECRET"
 }
