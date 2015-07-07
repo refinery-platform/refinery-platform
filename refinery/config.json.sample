@@ -27,7 +27,8 @@
   "DEFAULT_FROM_EMAIL": "webmaster@localhost",
   "EMAIL_HOST": "localhost",
   "EMAIL_PORT": 25,
-  "SERVER_EMAIL": "root@localhost"
+  "SERVER_EMAIL": "root@localhost",
+  "CELERYD_MAX_TASKS_PER_CHILD": 100,
   "ACCOUNT_ACTIVATION_DAYS": 7,
   "REGISTRATION_OPEN": true,
   "REFINERY_REGISTRATION_CLOSED_MESSAGE": "",

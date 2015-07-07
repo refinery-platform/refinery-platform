@@ -277,7 +277,7 @@ EMAIL_PORT = get_setting("EMAIL_PORT")
 SERVER_EMAIL = get_setting("SERVER_EMAIL")
 
 # for system stability
-CELERYD_MAX_TASKS_PER_CHILD = 100
+CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
