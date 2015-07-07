@@ -275,6 +275,8 @@ EMAIL_PORT = get_setting("EMAIL_PORT")
 # The email address that error messages come from, such as those sent to ADMINS
 # and MANAGERS.
 SERVER_EMAIL = get_setting("SERVER_EMAIL")
+# so managers and admins know Refinery is emailing them
+EMAIL_SUBJECT_PREFIX = get_setting("EMAIL_SUBJECT_PREFIX")
 
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
@@ -363,10 +365,7 @@ REFINERY_MAIN_LOGO = get_setting("REFINERY_MAIN_LOGO")
 
 # supply a Google analytics id "UA-..."
 # (if set to "" tracking will be deactivated)
-REFINERY_GOOGLE_ANALYTICS_ID = ""
-
-# so managers and admins know Refinery is emailing them
-EMAIL_SUBJECT_PREFIX = '[Refinery] '
+REFINERY_GOOGLE_ANALYTICS_ID = get_setting("REFINERY_GOOGLE_ANALYTICS_ID")
 
 # dump of the entire NCBI taxonomy archive
 TAXONOMY_URL = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"
