@@ -15,9 +15,10 @@ Requirements:
 import os
 from fabric.api import settings, run, env, sudo, execute
 from fabric.context_managers import hide, prefix, cd
+from fabric.contrib.files import sed
 from fabric.decorators import task, with_settings
 from fabric.operations import require
-from fabric.utils import puts
+from fabric.utils import abort, puts
 from fabtools.vagrant import vagrant
 
 
@@ -29,6 +30,7 @@ def setup():
     """Check if the required variable were initialized in ~/.fabricrc"""
     require("project_user", "refinery_project_dir", "refinery_virtualenv_name")
     env.refinery_app_dir = os.path.join(env.refinery_project_dir, "refinery")
+    env.refinery_ui_dir = os.path.join(env.refinery_app_dir, "ui")
 
 
 @task
@@ -67,6 +69,50 @@ def prod():
     env.grunt = "grunt compile"
 
 
+@task
+@with_settings(user=env.project_user)
+def conf(mode=None):
+    """Switch Refinery between development and production configurations"""
+    # must provide config mode and apply to Vagrant VM only
+    if (mode is None) or (env.hosts != ['vagrant@127.0.0.1:2222']):
+        abort("usage: fab vm conf:<dev|prod>")
+    puts("Switching Refinery running on Vagrant VM to '{}' mode".format(mode))
+    if mode == "dev":
+        env.grunt = "grunt build"
+        env.shell_before = "export DJANGO_SETTINGS_MODULE=settings.production"
+        env.shell_after = "export DJANGO_SETTINGS_MODULE=settings.development"
+        env.apache_before = "SetEnv DJANGO_SETTINGS_MODULE settings.production"
+        env.apache_after = "SetEnv DJANGO_SETTINGS_MODULE settings.development"
+    elif mode == "prod":
+        env.grunt = "grunt compile"
+        env.shell_before = "export DJANGO_SETTINGS_MODULE=settings.development"
+        env.shell_after = "export DJANGO_SETTINGS_MODULE=settings.production"
+        env.apache_before = "SetEnv DJANGO_SETTINGS_MODULE settings.development"
+        env.apache_after = "SetEnv DJANGO_SETTINGS_MODULE settings.production"
+    else:
+        abort("Mode must be either 'dev' or 'prod'")
+    # stop supervisord and Apache
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
+        run("supervisorctl shutdown")
+    sudo("/usr/sbin/service apache2 stop")
+    # update DJANGO_SETTINGS_MODULE
+    sed('/home/vagrant/.profile', before=env.shell_before,
+        after=env.shell_after, backup='')
+    sed('/etc/apache2/sites-enabled/001-refinery.conf',
+        before=env.apache_before, after=env.apache_after, use_sudo=True,
+        backup='')
+    # update static files
+    with cd(env.refinery_ui_dir):
+        run("{grunt}".format(**env))
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
+        run("{refinery_app_dir}/manage.py collectstatic --clear --noinput"
+            .format(**env))
+    # start supervisord and Apache
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
+        run("supervisord")
+    sudo("/usr/sbin/service apache2 start")
+
+
 @task(alias="update")
 @with_settings(user=env.project_user)
 def update_refinery():
@@ -74,26 +120,29 @@ def update_refinery():
     puts("Updating Refinery")
     with cd(env.refinery_project_dir):
         run("git pull")
-    with cd(os.path.join(env.refinery_app_dir, "ui")):
+    with cd(env.refinery_ui_dir):
         run("npm prune && npm update")
         run("bower prune && bower update --config.interactive=false")
         run("{grunt}".format(**env))
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
-        run("pip install -r {refinery_project_dir}/requirements.txt".format(**env))
+        run("pip install -r {refinery_project_dir}/requirements.txt"
+            .format(**env))
         run("find . -name '*.pyc' -delete")
         run("{refinery_app_dir}/manage.py syncdb --migrate".format(**env))
-        run("{refinery_app_dir}/manage.py collectstatic --clear --noinput".format(**env))
+        run("{refinery_app_dir}/manage.py collectstatic --clear --noinput"
+            .format(**env))
         run("supervisorctl reload")
-    with cd(os.path.join(env.refinery_project_dir)):
+    with cd(env.refinery_project_dir):
         run("touch {refinery_app_dir}/wsgi.py".format(**env))
 
 
 @task(alias="relaunch")
 @with_settings(user=env.project_user)
 def relaunch_refinery(dependencies=False, migrations=False):
-    """Perform a relaunch of a Refinery Platform instance, including processing of grunt tasks
-        dependencies: update bower and pip dependencies
-        migrations: apply migrations
+    """Perform a relaunch of a Refinery Platform instance, including processing
+    of grunt tasks
+    dependencies: update bower and pip dependencies
+    migrations: apply migrations
     """
     puts("Relaunching Refinery")
     with cd(os.path.join(env.refinery_app_dir, "ui")):
@@ -102,13 +151,12 @@ def relaunch_refinery(dependencies=False, migrations=False):
         run("grunt")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         if dependencies:
-            run("pip install -r {refinery_project_dir}/requirements.txt".format(**env))
-
+            run("pip install -r {refinery_project_dir}/requirements.txt"
+                .format(**env))
         run("find . -name '*.pyc' -delete")
-
         if migrations:
             run("{refinery_app_dir}/manage.py syncdb --migrate".format(**env))
         run("{refinery_app_dir}/manage.py collectstatic --noinput".format(**env))
         run("supervisorctl restart all")
-    with cd(os.path.join(env.refinery_project_dir)):
+    with cd(env.refinery_project_dir):
         run("touch {refinery_app_dir}/wsgi.py".format(**env))
