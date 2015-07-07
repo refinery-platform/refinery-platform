@@ -45,5 +45,7 @@
   "REFINERY_BANNER": "",
   "REFINERY_BANNER_ANONYMOUS_ONLY": false,
   "REFINERY_WELCOME_EMAIL_SUBJECT": "Welcome to Refinery",
-  "REFINERY_WELCOME_EMAIL_MESSAGE": "Please fill out your user profile"
+  "REFINERY_WELCOME_EMAIL_MESSAGE": "Please fill out your user profile",
+  "REFINERY_EXTERNAL_AUTH": false,
+  "REFINERY_EXTERNAL_AUTH_MESSAGE": ""
 }
