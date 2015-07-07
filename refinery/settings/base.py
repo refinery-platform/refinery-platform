@@ -1,8 +1,10 @@
-import djcelery
 import json
+import logging
 import os
+import djcelery
 from django.core.exceptions import ImproperlyConfigured
 
+logger = logging.getLogger(__name__)
 
 # get the absolute path of the parent dir
 BASE_DIR = os.path.dirname(os.path.split(os.path.abspath(__file__))[0])
@@ -396,3 +398,20 @@ REFINERY_EXTERNAL_AUTH_MESSAGE = get_setting("REFINERY_EXTERNAL_AUTH_MESSAGE")
 # external tool status settings
 INTERVAL_BETWEEN_CHECKS = get_setting("INTERVAL_BETWEEN_CHECKS")
 TIMEOUT = get_setting("TIMEOUT")
+
+if REFINERY_EXTERNAL_AUTH:
+    # enable LDAP authentication
+    try:
+        import ldap
+        from django_auth_ldap.config import LDAPSearch
+    except ImportError:
+        logger.info("Failed to configure LDAP authentication")
+    else:
+        AUTH_LDAP_SERVER_URI = get_setting("AUTH_LDAP_SERVER_URI")
+        AUTH_LDAP_BIND_DN = get_setting("AUTH_LDAP_BIND_DN")
+        AUTH_LDAP_BIND_PASSWORD = get_setting("AUTH_LDAP_BIND_PASSWORD")
+        AUTH_LDAP_USER_SEARCH = LDAPSearch(
+            "OU=Domain Users,DC=Domain", ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
+        # populate Django user profile from the LDAP directory
+        AUTH_LDAP_USER_ATTR_MAP = get_setting("AUTH_LDAP_USER_ATTR_MAP")
+        AUTHENTICATION_BACKENDS += ('refinery.core.models.RefineryLDAPBackend',)

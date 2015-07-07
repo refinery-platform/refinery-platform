@@ -57,5 +57,13 @@
     "CELERY": 2.0,
     "SOLR": 2.5,
     "GALAXY": 2.0
+  },
+  "AUTH_LDAP_SERVER_URI": "ldap://auth.example.org",
+  "AUTH_LDAP_BIND_DN": "",
+  "AUTH_LDAP_BIND_PASSWORD": "",
+  "AUTH_LDAP_USER_ATTR_MAP": {
+    "first_name": "givenName",
+    "last_name": "sn",
+    "email": "mail"
   }
 }
