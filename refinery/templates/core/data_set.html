@@ -429,6 +429,11 @@
                 </span>
               </div>
               <p>
+              <div class="row-fluid">
+                <div class="span12 well"  ng-controller="AnalysesCtrl">
+                    <analyses-list></analyses-list>
+                </div>
+              </div>
                 {% if data_set.analysis_set.all|length > 0 %}
                   {% for analysis in data_set.analysis_set.all %}
                     <a href="{% url 'analysis_status' analysis.uuid %}">

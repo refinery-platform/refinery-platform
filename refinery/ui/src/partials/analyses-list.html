@@ -1,0 +1,9 @@
+<div ng-repeat ="analysis in AnalysesCtrl.analysesList">
+    <ul class="analysesList">
+        <li>
+            {{ analysis.name }}
+            <span ng-if= "analysis.status== 'PROGRESS'">
+                in progress.</span>
+</span>        </li>
+    </ul>
+</div>
