@@ -1,3 +1,4 @@
+import logging
 from django.conf import settings
 from django.conf.urls.defaults import patterns, include, url
 from django.conf.urls.static import static
@@ -19,6 +20,9 @@ from core.models import DataSet
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
     AssayResource, InvestigationResource
 from data_set_manager.views import search_typeahead
+
+
+logger = logging.getLogger(__name__)
 
 
 # NG: facets for Haystack
@@ -147,7 +151,13 @@ urlpatterns = patterns(
 # for using DjDT with mod_wsgi
 # https://github.com/django-debug-toolbar/django-debug-toolbar/issues/529
 if settings.DEBUG:
-    import debug_toolbar
-    urlpatterns += patterns(
-        '', url(r'^__debug__/', include(debug_toolbar.urls)),
-    )
+    try:
+        import debug_toolbar
+    except ImportError:
+        logger.info(
+            "Couldn't set up DjDT for use with mod_wsgi: missing debug_toolbar"
+        )
+    else:
+        urlpatterns += patterns(
+            '', url(r'^__debug__/', include(debug_toolbar.urls)),
+        )
