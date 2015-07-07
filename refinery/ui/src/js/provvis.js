@@ -35,7 +35,7 @@ angular.module("refineryProvvis", [])
  * @author sluger Stefan Luger https://github.com/sluger
  * @exports runProvVis The published function to run the visualization.
  */
-var provvis = function () {
+var provvis = (function () {
   var vis = Object.create(null);
 
   /* TODO: Rewrite in angular template. */
@@ -121,9 +121,9 @@ var provvis = function () {
       "id": "prov-doi-view-show",
       "class": "prov-doi-view-show-checkbox",
       "style": "display: flex; position: absolute; left: 75px; top: 340px; " +
-          "margin-top: 5px;",
+      "margin-top: 5px;",
       "html": '<input id="prov-doi-view-show-input" type="checkbox" ' +
-          'style="margin-right: 3px;">Show DOI values'
+      'style="margin-right: 3px;">Show DOI values'
     }).appendTo(doiContainer);
   };
 
@@ -301,33 +301,33 @@ var provvis = function () {
           /* Fix to exclude zoom scale from text labels. */
           vis.canvas.selectAll(".lBBoxLabel")
               .attr("transform", "translate(" +
-                  1 * scaleFactor * vis.radius + "," +
-                  0.5 * scaleFactor * vis.radius + ")" +
-                  "scale(" + (+1 / d3.event.scale) + ")");
+              1 * scaleFactor * vis.radius + "," +
+              0.5 * scaleFactor * vis.radius + ")" +
+              "scale(" + (+1 / d3.event.scale) + ")");
 
           vis.canvas.selectAll(".aBBoxLabel")
               .attr("transform", "translate(" +
-                  0 * scaleFactor * vis.radius + "," +
-                  0 * scaleFactor * vis.radius + ")" +
-                  "scale(" + (+1 / d3.event.scale) + ")");
+              1 * scaleFactor * vis.radius + "," +
+              0 * scaleFactor * vis.radius + ")" +
+              "scale(" + (+1 / d3.event.scale) + ")");
 
           vis.canvas.selectAll(".nodeDoiLabel")
               .attr("transform", "translate(" +
-                  0 + "," + (1.6 * scaleFactor * vis.radius) + ")" +
-                  "scale(" + (+1 / d3.event.scale) + ")");
+              0 + "," + (1.6 * scaleFactor * vis.radius) + ")" +
+              "scale(" + (+1 / d3.event.scale) + ")");
 
           vis.canvas.selectAll(".nodeAttrLabel")
               .attr("transform", "translate(" +
-                  (-1.5*scaleFactor * vis.radius) + "," +
-                  (-1.5 * scaleFactor * vis.radius) + ")" +
-                  "scale(" + (+1 / d3.event.scale) + ")");
+              (-1.5 * scaleFactor * vis.radius) + "," +
+              (-1.5 * scaleFactor * vis.radius) + ")" +
+              "scale(" + (+1 / d3.event.scale) + ")");
         };
 
         /* Main canvas drawing area. */
         vis.canvas = d3.select("#provenance-canvas")
             .append("svg")
             .attr("transform", "translate(" +
-                vis.margin.left + "," + vis.margin.top + ")")
+            vis.margin.left + "," + vis.margin.top + ")")
             .attr("viewBox", "0 0 " + (width) + " " + (height))
             .attr("preserveAspectRatio", "xMinYMin meet")
             .attr("pointer-events", "all")
@@ -418,7 +418,7 @@ var provvis = function () {
   /**
    * Publish module function.
    */
-  return{
+  return {
     run: function (studyUuid, studyAnalyses, solrResponse) {
       runProvVisPrivate(studyUuid, studyAnalyses, solrResponse);
     }, update: function (solrResponse) {
@@ -427,4 +427,4 @@ var provvis = function () {
       return getProvVisPrivate();
     }
   };
-}();
+}());

@@ -594,6 +594,8 @@ class NodeResource(ModelResource):
             'study': ALL_WITH_RELATIONS,
             'assay': ALL_WITH_RELATIONS
         }
+        limit = 0
+        max_limit = 0
 
     def prepend_urls(self):
         return [
