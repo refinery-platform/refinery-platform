@@ -377,10 +377,10 @@ UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 REFINERY_REPOSITORY_MODE = get_setting("REFINERY_REPOSITORY_MODE")
 
 # Message to be displayed near the top of every page (HTML allowed)
-REFINERY_BANNER = ''
+REFINERY_BANNER = get_setting("REFINERY_BANNER")
 
 # Display REFINERY_BANNER to anonymous users only
-REFINERY_BANNER_ANONYMOUS_ONLY = False
+REFINERY_BANNER_ANONYMOUS_ONLY = get_setting("REFINERY_BANNER_ANONYMOUS_ONLY")
 
 # Subject and message body of the welcome email sent to new users
 REFINERY_WELCOME_EMAIL_SUBJECT = 'Welcome to Refinery'
