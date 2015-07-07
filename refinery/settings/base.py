@@ -394,14 +394,5 @@ REFINERY_EXTERNAL_AUTH = get_setting("REFINERY_EXTERNAL_AUTH")
 REFINERY_EXTERNAL_AUTH_MESSAGE = get_setting("REFINERY_EXTERNAL_AUTH_MESSAGE")
 
 # external tool status settings
-INTERVAL_BETWEEN_CHECKS = {
-                            "CELERY": 10.0,
-                            "SOLR": 10.0,
-                            "GALAXY": 10.0,
-                            }
-
-TIMEOUT = {
-           "CELERY": 2.0,
-           "SOLR": 2.5,
-           "GALAXY": 2.0,
-           }
+INTERVAL_BETWEEN_CHECKS = get_setting("INTERVAL_BETWEEN_CHECKS")
+TIMEOUT = get_setting("TIMEOUT")
