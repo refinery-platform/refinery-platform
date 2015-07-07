@@ -307,7 +307,7 @@ var provvis = function () {
 
           vis.canvas.selectAll(".aBBoxLabel")
               .attr("transform", "translate(" +
-                  0 * scaleFactor * vis.radius + "," +
+                  1 * scaleFactor * vis.radius + "," +
                   0 * scaleFactor * vis.radius + ")" +
                   "scale(" + (+1 / d3.event.scale) + ")");
 

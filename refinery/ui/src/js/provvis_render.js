@@ -2155,7 +2155,7 @@ var provvisRender = function () {
           return "aBBClipId-" + an.autoId;
         })
         .select("rect")
-        .attr("y", -0.6 * scaleFactor * vis.radius)
+        .attr("y", -scaleFactor * vis.radius)
         .attr("width", cell.width)
         .attr("height", cell.height)
         .attr("rx", cell.width / 7)
@@ -2169,7 +2169,7 @@ var provvisRender = function () {
         .select("text")
         .attr("transform", function () {
           return "translate(" + 1 * scaleFactor * vis.radius + "," +
-              0.5 * scaleFactor * vis.radius + ")";
+              0 * scaleFactor * vis.radius + ")";
         })
         .text(function (d) {
           return '\uf013' + ' ' + d.wfCode;
@@ -2347,7 +2347,7 @@ var provvisRender = function () {
           return "aBBClipId-" + an.autoId;
         })
         .append("rect")
-        .attr("y", -0.6 * scaleFactor * vis.radius)
+        .attr("y", -scaleFactor * vis.radius)
         .attr("width", cell.width)
         .attr("height", cell.height)
         .attr("rx", cell.width / 7)
@@ -2361,7 +2361,7 @@ var provvisRender = function () {
         .append("text")
         .attr("transform", function () {
           return "translate(" + 1 * scaleFactor * vis.radius + "," +
-              0.5 * scaleFactor * vis.radius + ")";
+              0 * scaleFactor * vis.radius + ")";
         })
         .text(function (d) {
           return '\uf013' + ' ' + d.wfCode;
@@ -3872,7 +3872,7 @@ var provvisRender = function () {
         .duration(transitionTime)
         .attr("transform", "translate(" +
             1 * scaleFactor * vis.radius + "," +
-            0.5 * scaleFactor * vis.radius + ") " +
+            0 * scaleFactor * vis.radius + ") " +
             "scale(" + (1 / newScale) + ")");
 
     vis.canvas.selectAll(".nodeDoiLabel")
