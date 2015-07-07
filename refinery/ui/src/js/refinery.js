@@ -18,7 +18,6 @@ angular
   'refineryStatistics',
   'refineryMetadataTableImport',
   'refineryProvvis',
-  'refinerySharing',
   'refineryDataFileUpload',
   'refineryDashboard'
 ])
