@@ -33,5 +33,8 @@
   "REGISTRATION_OPEN": true,
   "REFINERY_REGISTRATION_CLOSED_MESSAGE": "",
   "ISA_TAB_DIR": "/vagrant/isa-tab",
-  "REFINERY_FILE_SOURCE_MAP": {}
+  "REFINERY_FILE_SOURCE_MAP": {},
+  "REFINERY_DATA_IMPORT_DIR": "/vagrant/import",
+  "REFINERY_SOLR_BASE_URL": "http://localhost:8983/solr/",
+  "REFINERY_SOLR_SPACE_DYNAMIC_FIELDS": "_"
 }

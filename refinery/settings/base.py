@@ -288,7 +288,8 @@ CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 ACCOUNT_ACTIVATION_DAYS = get_setting("ACCOUNT_ACTIVATION_DAYS")
 REGISTRATION_OPEN = get_setting("REGISTRATION_OPEN")
 # message to display on registration page when REGISTRATION_OPEN is set to False
-REFINERY_REGISTRATION_CLOSED_MESSAGE = get_setting("REFINERY_REGISTRATION_CLOSED_MESSAGE")
+REFINERY_REGISTRATION_CLOSED_MESSAGE = get_setting(
+    "REFINERY_REGISTRATION_CLOSED_MESSAGE")
 
 # set the name of the group that is used to share data with all users
 # (= "the public")
@@ -316,13 +317,14 @@ REFINERY_FILE_SOURCE_MAP = get_setting("REFINERY_FILE_SOURCE_MAP")
 
 # data file import directory; it should be located on the same partition as
 # FILE_STORE_DIR and MEDIA_ROOT to make import operations fast
-REFINERY_DATA_IMPORT_DIR = '/vagrant/import'
+REFINERY_DATA_IMPORT_DIR = get_setting("REFINERY_DATA_IMPORT_DIR")
 
 # location of the Solr server (must be accessible from the web browser)
-REFINERY_SOLR_BASE_URL = "http://localhost:8983/solr/"
+REFINERY_SOLR_BASE_URL = get_setting("REFINERY_SOLR_BASE_URL")
 
 # used to replaces spaces in the names of dynamic fields in Solr indexing
-REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = "_"
+REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = get_setting(
+    "REFINERY_SOLR_SPACE_DYNAMIC_FIELDS")
 
 HAYSTACK_CONNECTIONS = {
     'default': {
