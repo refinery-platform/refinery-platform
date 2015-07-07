@@ -383,8 +383,8 @@ REFINERY_BANNER = get_setting("REFINERY_BANNER")
 REFINERY_BANNER_ANONYMOUS_ONLY = get_setting("REFINERY_BANNER_ANONYMOUS_ONLY")
 
 # Subject and message body of the welcome email sent to new users
-REFINERY_WELCOME_EMAIL_SUBJECT = 'Welcome to Refinery'
-REFINERY_WELCOME_EMAIL_MESSAGE = 'Please fill out your user profile'
+REFINERY_WELCOME_EMAIL_SUBJECT = get_setting("REFINERY_WELCOME_EMAIL_SUBJECT")
+REFINERY_WELCOME_EMAIL_MESSAGE = get_setting("REFINERY_WELCOME_EMAIL_MESSAGE")
 
 # Use external authentication system like django-auth-ldap (disables password
 # management URLs)
