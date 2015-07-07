@@ -848,21 +848,23 @@ var provvisRender = function () {
 
       /* Update labels. */
       updateTimelineLabels(l);
-      /* TODO: Append time labels to sliders. */
+
+      /* TODO: Temporarily disabled live filtering as it does not scale
+       * well with big graphs. */
 
       /* On hover filter update. */
-      if (d3.entries(tlTickCoords).some(function (t) {
+      /*if (d3.entries(tlTickCoords).some(function (t) {
 
         if (l.className === "startTimeline") {
 
-          /* Left to right. */
+          *//* Left to right. *//*
           if (l.x > l.lastX) {
             if (x(l.x) - x(t.value) > 0 && x(l.x) - x(t.value) <= 1) {
               return true;
             } else {
               return false;
             }
-            /* Right to left. */
+            *//* Right to left. *//*
           } else {
             if (x(l.x) - x(t.value) >= -1 && x(l.x) - x(t.value) < 0) {
               return true;
@@ -871,16 +873,16 @@ var provvisRender = function () {
             }
           }
         } else {
-          /* Right to left. */
+          *//* Right to left. *//*
           if (l.x < l.lastX) {
 
-            /* TODO: Small bug, time scale is off by 30 seconds. */
+            *//* TODO: Small bug, time scale is off by 30 seconds. *//*
             if (x(l.x) - x(t.value) >= -5 && x(l.x) - x(t.value) < 0) {
               return true;
             } else {
               return false;
             }
-            /* Left to right. */
+            *//* Left to right. *//*
           } else {
             if (x(l.x) - x(t.value) > 0 && x(l.x) - x(t.value) <= 1) {
               return true;
@@ -892,7 +894,7 @@ var provvisRender = function () {
       })) {
         filterAnalysesByTime(getTimeLineThresholds(l)[0],
             getTimeLineThresholds(l)[1], vis);
-      }
+      }*/
 
       /* Remember last drag x coord. */
       l.lastX = l.x;
