@@ -1,7 +1,7 @@
 /**
  * Module for motif discovery and injection.
  */
-var provvisMotifs = function () {
+var provvisMotifs = (function () {
 
   /* TODO: May refine algorithm. */
   /**
@@ -44,9 +44,9 @@ var provvisMotifs = function () {
           /* Strict or weak layering. */
           if ((m.wfUuid === an.wfUuid && layerMethod === "weak") ||
               (m.wfUuid === an.wfUuid && layerMethod === "strict" &&
-                  m.numSubanalyses === an.children.size() &&
-                  an.predLinks.size() === m.numIns &&
-                  an.succLinks.size() === m.numOuts)) {
+              m.numSubanalyses === an.children.size() &&
+              an.predLinks.size() === m.numIns &&
+              an.succLinks.size() === m.numOuts)) {
 
             if ((an.preds.values()[0].uuid === "dataset" &&
                 compareMaps(anPreds, m.preds)) ||
@@ -271,4 +271,4 @@ var provvisMotifs = function () {
       return runMotifsPrivate(graph, cell);
     }
   };
-}();
+}());

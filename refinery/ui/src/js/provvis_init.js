@@ -1,7 +1,7 @@
 /**
  * Module for init.
  */
-var provvisInit = function () {
+var provvisInit = (function () {
 
   /* Initialize node-link arrays. */
   var dataset = Object.create(null),
@@ -363,8 +363,8 @@ var provvisInit = function () {
       /* Set input nodes for subanalysis. */
       san.children.values().filter(function (n) {
         return n.preds.values().some(function (p) {
-          return p.analysis !== san.parent.uuid;
-        }) || n.preds.empty();
+              return p.analysis !== san.parent.uuid;
+            }) || n.preds.empty();
         /* If no src analyses exists. */
       }).forEach(function (inn) {
         san.inputs.set(inn.autoId, inn);
@@ -373,8 +373,8 @@ var provvisInit = function () {
       /* Set output nodes for subanalysis. */
       san.children.values().filter(function (n) {
         return n.succs.empty() || n.succs.values().some(function (s) {
-          return s.analysis !== san.parent.uuid;
-        });
+              return s.analysis !== san.parent.uuid;
+            });
       }).forEach(function (onn) {
         san.outputs.set(onn.autoId, onn);
       });
@@ -577,8 +577,8 @@ var provvisInit = function () {
       $("<li/>", {
         "id": "prov-ctrl-visible-attribute-list-" + na,
         "html": '<a href="#" class="field-name"><label class="radio" ' +
-            'style="text-align: start"><input type="radio">' +
-            na + '</label></a>'
+        'style="text-align: start"><input type="radio">' +
+        na + '</label></a>'
       }).appendTo("#prov-ctrl-visible-attribute-list");
     });
 
@@ -651,9 +651,9 @@ var provvisInit = function () {
   /**
    * Publish module function.
    */
-  return{
+  return {
     run: function (data, analysesData, solrResponse) {
       return runInitPrivate(data, analysesData, solrResponse);
     }
   };
-}();
+}());
