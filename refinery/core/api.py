@@ -23,7 +23,7 @@ from tastypie.constants import ALL_WITH_RELATIONS, ALL
 from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
 from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
     HttpUnauthorized, HttpMethodNotAllowed, HttpAccepted, HttpCreated, \
-    HttpNoContent, HttpGone
+    HttpNoContent, HttpGone, HttpForbidden
 from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, \
     Workflow, WorkflowInputRelationships, Analysis, DataSet, \
@@ -295,8 +295,8 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         resource_name = 'projects'
         detail_uri_name = 'uuid'
         fields = ['name', 'id', 'uuid', 'summary']
-        # authentication = SessionAuthentication
-        # authorization = GuardianAuthorization
+        # authentication = SessionAuthentication()
+        # authorization = GuardianAuthorization()
         authorization = Authorization()
 
     def prepend_urls(self):
@@ -470,8 +470,8 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         detail_uri_name = 'uuid'
         # allowed_methods = ['get']
         fields = ['name', 'uuid', 'summary']
-        # authentication = SessionAuthentication
-        # authorization = GuardianAuthorization
+        # authentication = SessionAuthentication()
+        # authorization = GuardianAuthorization()
 
     def prepend_urls(self):
         return SharableResourceAPIInterface.prepend_urls(self)
@@ -905,8 +905,9 @@ class GroupManagementResource(Resource):
         resource_name = 'groups'
         object_class = GroupManagement
         detail_uri_name = 'group_id'
-        authentication = SessionAuthentication
+        authentication = SessionAuthentication()
         # authorization = GuardianAuthorization
+        authorization = Authorization()
 
     def get_user(self, user_id):
         user_list = User.objects.filter(id=int(user_id))
@@ -921,6 +922,17 @@ class GroupManagementResource(Resource):
 
     def is_manager_group(self, group):
         return not group.extendedgroup.is_managed()
+
+    # Removes the user from both the manager and user group.
+    def full_remove(self, user, group):
+        if self.is_manager_group(group):
+            group.user_set.remove(user)
+
+            for i in group.extendedgroup.managed_group.all():
+                i.user_set.remove(user)
+        else:
+            group.user_set.remove(user)
+            group.extendedgroup.manager_group.user_set.remove(user)
 
     def get_member_list(self, group):
         return map(
@@ -1172,10 +1184,20 @@ class GroupManagementResource(Resource):
         if request.method == 'GET':
             raise NotImplementedError()
         elif request.method == 'DELETE':
+            # Removing yourself - can't leave a group if you're the last member,
+            # must delete it.
+            if user.id == int(kwargs['user_id']):
+                if group.user_set.count() == 1:
+                    return HttpForbidden('Last member - must delete group')
+
+                self.full_remove(user, group)
+                return HttpNoContent()
+
+            # Removing other people from the group
             if not self.user_authorized(user, group):
                 return HttpUnauthorized()
 
-            group.user_set.remove(int(kwargs['user_id']))
+            self.full_remove(int(kwargs['user_id']), group)
             return HttpNoContent()
         else:
             return HttpMethodNotAllowed()
