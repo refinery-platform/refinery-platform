@@ -265,7 +265,7 @@ LOGGING = {
 
 # Expiration time of a token API that was originally designed to handle group
 # invitations using uuid-based tokens.
-TOKEN_DURATION = 1
+TOKEN_DURATION = get_setting("TOKEN_DURATION")
 
 # Default email address to use for various automated correspondence from the
 # site manager(s).
