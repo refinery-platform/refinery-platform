@@ -748,6 +748,7 @@ class Analysis(OwnableResource):
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
         )
+        ordering = ['-time_end', '-time_start']
 
     def get_status(self):
         return self.status
