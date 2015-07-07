@@ -374,7 +374,7 @@ TAXONOMY_URL = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"
 UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 
 # Tag for repository mode
-REFINERY_REPOSITORY_MODE = False
+REFINERY_REPOSITORY_MODE = get_setting("REFINERY_REPOSITORY_MODE")
 
 # Message to be displayed near the top of every page (HTML allowed)
 REFINERY_BANNER = ''
