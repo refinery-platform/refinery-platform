@@ -31,7 +31,8 @@ def home(request):
     return render_to_response(
         'core/home.html',
         {
-            'public_group_id': settings.REFINERY_PUBLIC_GROUP_ID
+            'public_group_id': settings.REFINERY_PUBLIC_GROUP_ID,
+            'main_container_no_padding': True
         },
         context_instance=RequestContext(request)
     )

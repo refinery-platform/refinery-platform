@@ -7,36 +7,36 @@
 
 {% block subheader %}
 <div class="page-header">
-<h1>User&nbsp;<small>{{ profile_user.username }}</small></h1>	
+<h1>User&nbsp;<small>{{ profile_user.username }}</small></h1>
 </div>
 {% endblock %}
 
 
 {% block content %}
-<div class="refinery-panel refinery-panel-content scrollable">
-	<div class="row-fluid">		
+<div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
+	<div class="row-fluid">
 	{% if user %}
 		<div class="refinery-header">
 			<span class="refinery-header-left">
-				<h3>Profile for {{profile_user.username}}</h3>				
-			</span>			
-		</div>		
-		
+				<h3>Profile for {{profile_user.username}}</h3>
+			</span>
+		</div>
+
 		<div class="refinery-subheader">
 			<h4>First Name</h4>
-		</div>		
+		</div>
 		<p>{% if profile_user.first_name %} {{ profile_user.first_name }} {% else %} <i>None provided.</i>{% endif %}</p>
-	
+
 		<div class="refinery-subheader">
 			<h4>Last Name</h4>
-		</div>		
+		</div>
 		<p>{% if profile_user.last_name %} {{ profile_user.last_name }} {% else %} <i>None provided.</i>{% endif %}</p>
-		
+
 		<div class="refinery-subheader">
 			<h4>Email</h4>
-		</div>		
+		</div>
 		<p>{% if profile_user.email %} {{ profile_user.email }} {% else %} <i>None provided.</i>{% endif %}</p>
-		
+
 		<div class="refinery-subheader">
 			<h4>Affiliation</h4>
 		</div>
@@ -44,7 +44,7 @@
 
 		<div class="refinery-subheader">
 			<h4>Profile Visibility</h4>
-		</div>		
+		</div>
 		{% if profile_user.get_profile.is_public %}
 			<p><i class="icon-eye-open"></i>&nbsp;Profile is visible to the public.</p>
 		{% else %}
@@ -63,10 +63,10 @@
 		{% if profile_user.groups.count > 0 %}
 			<div class="refinery-header">
 				<span class="refinery-header-left">
-					<h3>Groups</h3>				
-				</span>			
-			</div>		
-		    <p>   
+					<h3>Groups</h3>
+				</span>
+			</div>
+		    <p>
 			{% for group in profile_user.groups.all %}
 		       	<a href="{% url 'group' group.extendedgroup.uuid %}">{{ group.name }}</a></br>
 		   	{% endfor %}
@@ -75,17 +75,17 @@
 
 		<div class="refinery-header">
 			<span class="refinery-header-left">
-				<h3>History</h3>				
-			</span>			
-		</div>		
+				<h3>History</h3>
+			</span>
+		</div>
 		<p>Joined on {{ profile_user.date_joined }} Last login on {{ profile_user.last_login }}</p>
 
-		<a class="btn" href="{% url 'user_edit' profile_user.get_profile.uuid %}">Edit</a>				
+		<a class="btn" href="{% url 'user_edit' profile_user.get_profile.uuid %}">Edit</a>
 	{% else %}
 	    <p>No valid user.</p>
-	{% endif %}	
-			
-	</div>	
+	{% endif %}
+
+	</div>
 </div>
 
 {% endblock %}
