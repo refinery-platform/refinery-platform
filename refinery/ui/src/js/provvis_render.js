@@ -2962,7 +2962,14 @@ var provvisRender = (function () {
               })
               .text(function (d) {
                 return d.nodeType === "stored" ? d.attributes.get("name") :
-                    d.name;
+                    (
+                        /* Trim data transformation node names.*/
+                        d.nodeType === "dt" ?
+                            d.name.substr(
+                                d.name.indexOf(' '),
+                                d.name.length - d.name.indexOf(' ')
+                            ) : d.name
+                    );
               }).attr("class", "nodeAttrLabel")
           ;
         });
