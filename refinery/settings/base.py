@@ -354,12 +354,12 @@ REFINERY_CSS = ["styles/css/refinery-style-bootstrap.css",
                 "styles/css/refinery-style.css"]
 
 # set height of navigation bar (e.g. to fit a logo)
-REFINERY_INNER_NAVBAR_HEIGHT = 20
+REFINERY_INNER_NAVBAR_HEIGHT = get_setting("REFINERY_INNER_NAVBAR_HEIGHT")
 
 # supply a path to a logo that will become part of the branding
 # (see navbar height correctly!)
 # Set to `false` to disable Refinery's default logotype.
-REFINERY_MAIN_LOGO = ""
+REFINERY_MAIN_LOGO = get_setting("REFINERY_MAIN_LOGO")
 
 # supply a Google analytics id "UA-..."
 # (if set to "" tracking will be deactivated)
