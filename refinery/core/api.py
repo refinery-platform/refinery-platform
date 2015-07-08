@@ -580,9 +580,13 @@ class NodeResource(ModelResource):
     attributes = fields.ToManyField(
         'data_set_manager.api.AttributeResource',
         attribute=lambda bundle: (
-            Attribute.objects.filter(
-                node=bundle.obj
-            ).exclude(value__isnull=True).exclude(value__exact='')
+            Attribute.objects
+                     .exclude(value__isnull=True)
+                     .exclude(value__exact='')
+                     .filter(
+                         node=bundle.obj,
+                         subtype='organism'
+                     )
         ),
         use_in='all',
         full=True,
