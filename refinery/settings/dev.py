@@ -14,3 +14,5 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # Disable migrations when running unittests and use syncdb instead
 SOUTH_TESTS_MIGRATE = False
+
+INSTALLED_APPS += ('django_extensions',)
