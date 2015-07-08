@@ -10,7 +10,8 @@ function analysesList() {
     controller: 'AnalysesCtrl',
     controllerAs: 'AnalysesCtrl',
     bindToController: {
-       analysesList: '@'
+       analysesList: '@',
+       analysesDetail: '@'
     }
   };
 }

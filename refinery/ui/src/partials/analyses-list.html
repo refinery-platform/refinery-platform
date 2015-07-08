@@ -1,9 +1,27 @@
 <div ng-repeat ="analysis in AnalysesCtrl.analysesList">
     <ul class="analysesList">
         <li>
-            {{ analysis.name }}
-            <span ng-if= "analysis.status== 'PROGRESS'">
-                in progress.</span>
-</span>        </li>
+            {{ analysis.name }}, {{ analysis.status }}
+            <span ng-if= "analysis.status == 'RUNNING'"
+                  ng-init="AnalysesCtrl.startAnalysisDetail(analysis.uuid)">
+
+                Preprocessing:
+                {{ AnalysesCtrl.analysesDetail[analysis.uuid]
+                        .preprocessing }}
+                {{ AnalysesCtrl.analysesDetail[analysis.uuid]
+                        .preprocessingPercentDone }}
+
+                Execution:
+                {{ AnalysesCtrl.analysesDetail[analysis.uuid].execution }}
+                {{ AnalysesCtrl.analysesDetail[analysis.uuid]
+                        .executionPercentDone }}
+
+                Postprocessing:
+                {{ AnalysesCtrl.analysesDetail[analysis.uuid].postprocessing}}
+                {{ AnalysesCtrl.analysesDetail[analysis.uuid]
+                        .postprocessingPercentDone}}
+
+            </span>
+        </li>
     </ul>
 </div>
