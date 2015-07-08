@@ -63,6 +63,9 @@
   "AUTH_LDAP_SERVER_URI": "ldap://auth.example.org",
   "AUTH_LDAP_BIND_DN": "",
   "AUTH_LDAP_BIND_PASSWORD": "",
+  "AUTH_LDAP_BASE_DN": "OU=Domain Users,DC=Domain",
+  "AUTH_LDAP_SCOPE": 2,
+  "AUTH_LDAP_FILTERSTR": "(uid=%(user)s)",
   "AUTH_LDAP_USER_ATTR_MAP": {
     "first_name": "givenName",
     "last_name": "sn",

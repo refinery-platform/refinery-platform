@@ -424,8 +424,9 @@ if REFINERY_EXTERNAL_AUTH:
         AUTH_LDAP_SERVER_URI = get_setting("AUTH_LDAP_SERVER_URI")
         AUTH_LDAP_BIND_DN = get_setting("AUTH_LDAP_BIND_DN")
         AUTH_LDAP_BIND_PASSWORD = get_setting("AUTH_LDAP_BIND_PASSWORD")
-        AUTH_LDAP_USER_SEARCH = LDAPSearch(
-            "OU=Domain Users,DC=Domain", ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
+        AUTH_LDAP_USER_SEARCH = LDAPSearch(get_setting("AUTH_LDAP_BASE_DN"),
+                                           get_setting("AUTH_LDAP_SCOPE"),
+                                           get_setting("AUTH_LDAP_FILTERSTR"))
         # populate Django user profile from the LDAP directory
         AUTH_LDAP_USER_ATTR_MAP = get_setting("AUTH_LDAP_USER_ATTR_MAP")
         AUTHENTICATION_BACKENDS += ('refinery.core.models.RefineryLDAPBackend',)
