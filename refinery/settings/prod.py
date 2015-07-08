@@ -6,7 +6,7 @@ DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 # Required when DEBUG = False
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.50.50']
+ALLOWED_HOSTS = get_setting("ALLOWED_HOSTS")
 
 STATICFILES_DIRS = (
     "/vagrant/refinery/static/production",
