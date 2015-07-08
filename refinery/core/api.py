@@ -32,7 +32,7 @@ from core.models import Project, NodeSet, NodeRelationship, NodePair, \
 from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource, \
     InvestigationResource
-from data_set_manager.models import Node, Study
+from data_set_manager.models import Node, Study, Attribute
 from file_store.models import FileStoreItem
 from GuardianTastypieAuthz import GuardianAuthorization
 from django.core.paginator import Paginator, InvalidPage, PageNotAnInteger, \
@@ -575,7 +575,19 @@ class NodeResource(ModelResource):
     parents = fields.ToManyField('core.api.NodeResource', 'parents')
     study = fields.ToOneField('data_set_manager.api.StudyResource', 'study')
     assay = fields.ToOneField(
-        'data_set_manager.api.AssayResource', 'assay', null=True)
+        'data_set_manager.api.AssayResource', 'assay', null=True
+    )
+    attributes = fields.ToManyField(
+        'data_set_manager.api.AttributeResource',
+        attribute=lambda bundle: (
+            Attribute.objects.filter(
+                node=bundle.obj
+            ).exclude(value__isnull=True).exclude(value__exact='')
+        ),
+        use_in='all',
+        full=True,
+        null=True
+    )
 
     class Meta:
         queryset = Node.objects.all()
@@ -587,12 +599,14 @@ class NodeResource(ModelResource):
         allowed_methods = ["get"]
         fields = [
             'name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay',
-            'children', 'type', 'analysis_uuid', 'subanalysis'
+            'children', 'type', 'analysis_uuid', 'subanalysis', 'attributes'
         ]
         filtering = {
             'uuid': ALL,
             'study': ALL_WITH_RELATIONS,
-            'assay': ALL_WITH_RELATIONS
+            'assay': ALL_WITH_RELATIONS,
+            'file_uuid': ALL,
+            'type': ALL
         }
         limit = 0
         max_limit = 0
