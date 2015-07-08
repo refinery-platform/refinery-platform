@@ -9,8 +9,8 @@ TEMPLATE_DEBUG = DEBUG
 ALLOWED_HOSTS = get_setting("ALLOWED_HOSTS")
 
 STATICFILES_DIRS = (
-    "/vagrant/refinery/static/production",
-    "/vagrant/refinery/ui/production"
+    os.path.join(BASE_DIR, "static/production"),
+    os.path.join(BASE_DIR, "ui/production")
 )
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

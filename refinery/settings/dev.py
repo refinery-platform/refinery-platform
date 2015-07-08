@@ -6,8 +6,8 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 STATICFILES_DIRS = (
-    "/vagrant/refinery/static/development",
-    "/vagrant/refinery/ui/development"
+    os.path.join(BASE_DIR, "static/development"),
+    os.path.join(BASE_DIR, "ui/development")
 )
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
