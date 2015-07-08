@@ -95,7 +95,7 @@ def conf(mode=None):
     # update DJANGO_SETTINGS_MODULE
     sed('/home/vagrant/.profile', before=env.shell_before,
         after=env.shell_after, backup='')
-    sed('/etc/apache2/sites-enabled/001-refinery.conf',
+    sed('/etc/apache2/sites-available/001-refinery.conf',
         before=env.apache_before, after=env.apache_after, use_sudo=True,
         backup='')
     # update static files
