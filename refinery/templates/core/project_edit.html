@@ -6,13 +6,13 @@
 
 {% block subheader %}
 <div class="page-header">
-	<h1>Edit Project Information</h1>	
+	<h1>Edit Project Information</h1>
 </div>
 {% endblock %}
 
 {% block content %}
-<div class="refinery-panel refinery-panel-content scrollable">
-	<div class="row-fluid">		
+<div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
+	<div class="row-fluid">
 		<form method="post" action="{% url 'project_edit' project.uuid %}" class="wide" id="project-edit-form">
 		{% csrf_token %}
 			{% if form.errors %}
@@ -41,7 +41,7 @@
 			<p class="errors">{{ form.description.errors.as_text }}</p>
 			{% endif %}
 			<p>{{form.description}}</p>
-	
+
 			<div class="refinery-subheader">
 				<h4>Shortcut Name</h4>
 			</div>
@@ -57,7 +57,7 @@
 
 			<div class="refinery-header">
 				<span class="refinery-header-left">
-					<h3>Sharing</h3>				
+					<h3>Sharing</h3>
 				</span>
 			</div>
 
@@ -119,14 +119,14 @@
 			</table>
 			{% endif %}
 			<a href="#" class="btn btn-primary" id="submit-link">Save</a>
-			<a href="{% url 'project' project.uuid %}" class="btn">Cancel</a>			
-		</form>		
+			<a href="{% url 'project' project.uuid %}" class="btn">Cancel</a>
+		</form>
 	</div>
 </div>
 {% endblock %}
 
 {% block script %}
 	<script>
-		$( "#submit-link" ).click( function() { $( "#project-edit-form" ).submit();});					
+		$( "#submit-link" ).click( function() { $( "#project-edit-form" ).submit();});
 	</script>
 {% endblock %}

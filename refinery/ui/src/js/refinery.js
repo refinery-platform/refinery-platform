@@ -1,6 +1,11 @@
 angular
 .module('refineryApp', [
   /*
+   * Third party modules
+   */
+  'xml',
+
+  /*
    * Angular App commons
    */
   'errors',
@@ -18,7 +23,6 @@ angular
   'refineryStatistics',
   'refineryMetadataTableImport',
   'refineryProvvis',
-  'refinerySharing',
   'refineryDataFileUpload',
   'refineryDashboard'
 ])

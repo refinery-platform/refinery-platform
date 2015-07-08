@@ -29,6 +29,7 @@
       "angular-sanitize/angular-sanitize.js",
       "angular-sanitize/angular-sanitize.min.js",
       "angular-sanitize/angular-sanitize.min.js.map",
+      "angular-xml/angular-xml.min.js",
       "angular-ui-router/release/angular-ui-router.min.js",
       "angular-ui-utils/modules/scroll/scroll.js",
       "angular-ui-select2/release/select2.min.js",
@@ -73,7 +74,8 @@
       "jquery-file-upload/css/style.css",
       "jquery-file-upload/css/jquery.fileupload.css",
       "jquery-file-upload/css/jquery.fileupload-ui.css",
-      "jquery-file-upload/img/loading.gif"
+      "jquery-file-upload/img/loading.gif",
+      "x2js/xml2json.min.js"
     ]
   },
   "vendorPath": "bower_components"

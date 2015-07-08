@@ -6,21 +6,21 @@
 
 {% block subheader %}
 <div class="page-header">
-	<h1>Create Project</h1>	
+	<h1>Create Project</h1>
 </div>
 {% endblock %}
 
 {% block content %}
-<div class="refinery-panel refinery-panel-content scrollable">
-	<div class="row-fluid">		
+<div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
+	<div class="row-fluid">
 
 	<form action="{% url 'project_new' %}" method="post">{% csrf_token %}
-		<table>		
+		<table>
 			{{ form.as_p }}
 		</table>
 		<input class="btn" type="submit" value="Save" />
 	</form>
 
 	</div>
-</div>	
+</div>
 {% endblock %}

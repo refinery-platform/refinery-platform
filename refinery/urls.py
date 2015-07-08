@@ -18,7 +18,9 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     UserAuthenticationResource, InvitationResource
 from core.models import DataSet
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
-    AssayResource, InvestigationResource
+    AssayResource, InvestigationResource, ProtocolResource, \
+    ProtocolReferenceResource, ProtocolReferenceParameterResource, \
+    PublicationResource
 from data_set_manager.views import search_typeahead
 
 
@@ -56,6 +58,10 @@ v1_api.register(GroupManagementResource())
 v1_api.register(UserAuthenticationResource())
 v1_api.register(InvitationResource())
 v1_api.register(InvestigationResource())
+v1_api.register(ProtocolResource())
+v1_api.register(ProtocolReferenceResource())
+v1_api.register(ProtocolReferenceParameterResource())
+v1_api.register(PublicationResource())
 # v1_api.register(TaxonResource())
 # v1_api.register(GenomeBuildResource())
 # v1_api.register(CytoBandResource())

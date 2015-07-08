@@ -257,6 +257,9 @@ class Protocol(models.Model):
     def __unicode__(self):
         return unicode(self.name) + ": " + unicode(self.type)
 
+    class Meta:
+        ordering = ['id']
+
 
 class ProtocolParameter(models.Model):
     study = models.ForeignKey(Study)
