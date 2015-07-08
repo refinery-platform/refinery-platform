@@ -360,8 +360,9 @@ module.exports = function(grunt) {
       ],
       options: {
         curly: true,
-        // This should actually be false to stop grunt from further execution
-        force: true,
+        // If `force` is true, Grunt will continue running, no matter if
+        // `jshint` throws errors or not.
+        force: false,
         immed: true,
         newcap: true,
         noarg: true,

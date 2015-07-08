@@ -2,7 +2,9 @@ angular
   .module('cut', [])
   .filter('cut', function () {
     return function (value, wordwise, max, tail) {
-      if (!value) return '';
+      if (!value) {
+        return '';
+      }
 
       max = parseInt(max, 10);
 
