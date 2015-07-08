@@ -80,7 +80,10 @@ def conf(mode=None):
     if mode not in modes:
         abort("Mode must be one of {}".format(modes))
     puts("Switching Refinery running on Vagrant VM to '{}' mode".format(mode))
-    env.grunt = "grunt build"
+    if mode == 'prod':
+        env.grunt = "grunt compile"
+    else:
+        env.grunt = "grunt build"
     env.shell_before = "export DJANGO_SETTINGS_MODULE=settings.*"
     env.shell_after = "export DJANGO_SETTINGS_MODULE=settings.{}".format(mode)
     env.apache_before = "SetEnv DJANGO_SETTINGS_MODULE settings.*"
