@@ -227,6 +227,16 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': False,
         },
+        'analysis_manager': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'annotation_server': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
         'core': {
             'level': 'DEBUG',
             'handlers': ['console'],
@@ -237,9 +247,9 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': False,
         },
-        'isa_tab_parser': {
-            'level': 'DEBUG',
+        'file_server': {
             'handlers': ['console'],
+            'level': 'DEBUG',
             'propagate': False,
         },
         'file_store': {
@@ -247,17 +257,22 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
-        'file_server': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'analysis_manager': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
         'galaxy_connector': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'isa_tab_parser': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'visualization_manager': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'workflow_manager': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
