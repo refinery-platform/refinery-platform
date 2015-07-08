@@ -11,4 +11,12 @@ function AnalysesCtrl(analysesFactory, $scope) {
     vm.analysesList = analysesFactory.analysesList;
   });
 
+  vm.updateAnalysisDetail = function(uuid){
+    analysesFactory.getAnalysisDetail(uuid).then(function(){
+      vm.analysisDetail = analysesFactory.analysisDetail;
+    }, function(error){
+      console.error(error);
+    });
+  }
+
 }

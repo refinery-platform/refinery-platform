@@ -1,21 +1,31 @@
 angular.module('refineryAnalyses')
-    .factory("analysesFactory", ['$http', '$location', analysesFactory]);
+    .factory("analysesFactory", ['$http', analysesFactory]);
 
-function analysesFactory($http, $location) {
+function analysesFactory($http) {
   "use strict";
-  var serverUrl = "/api/v1/analysis/";
+  var serverUrl = "/api/v1/analysis";
   var analysesList = [];
+  var analysisDetail = {};
   //http://192.168.50.50:8000/api/v1/analysis/?format=json&limit=0&order_by=creation_date&data_set__uuid=102b83f1-9568-48db-9562-9e9ec58ab83d
-  var getAnalysesList = function() {
-    //var params = {
-    //  'format':'json',
-    //  'limit': 0,
-    //  'order_by': 'creation_date',
-    //  'data_set__uuid': dataSetUuid
-    //};
 
+  //http.post needed to be adjusted because django was not recognizing it
+  // as an ajax call, hence line 18.
+  var getAnalysisDetail = function(uuid) {
+    return $http({
+      method: 'POST',
+      url: '/analysis_manager/' + uuid + "/?format=json",
+      data: {'csrfmiddlewaretoken': csrf_token},
+      headers: { "X-Requested-With" : 'XMLHttpRequest'}
+    }).then(function(response) {
+        angular.copy(response.data.objects, analysisDetail);
+      }, function(error){
+        console.error("Error accessing analysis monitoring API");
+      });
+  };
+
+  var getAnalysesList = function() {
     return $http.get(serverUrl +
-      '?format=json&limit=0&order_by=creation_date&data_set__uuid='+ dataSetUuid)
+      '/?format=json&limit=0&order_by=creation_date&data_set__uuid='+ dataSetUuid)
       .then(function (response) {
       angular.copy(response.data.objects,analysesList);
     }, function (response) {
@@ -25,6 +35,8 @@ function analysesFactory($http, $location) {
 
  return{
    getAnalysesList: getAnalysesList,
+   getAnalysisDetail: getAnalysisDetail,
+   analysisDetail: analysisDetail,
    analysesList: analysesList,
  };
 }
