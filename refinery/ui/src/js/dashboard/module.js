@@ -4,5 +4,6 @@ angular
     'ngResource',
     'ngSanitize',
     'ui.router',
-    'ui.scroll'
+    'ui.scroll',
+    'cut'
   ]);
