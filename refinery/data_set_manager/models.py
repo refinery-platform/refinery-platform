@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 '''
 General:
 - xyz_term = accession number of an ontology term
-- xyz_source = reference to the ontology where xyz_term originates (defined in the investigation)
+- xyz_source = reference to the ontology where xyz_term originates (defined in
+    the investigation)
 '''
 
 
@@ -36,41 +37,62 @@ class NodeCollection(models.Model):
     submission_date = models.DateField(blank=True, null=True)
     release_date = models.DateField(blank=True, null=True)
 
-    def __init__(self, *args, **kwargs ):
+    def __init__(self, *args, **kwargs):
         # change dates from empty string to None (to pass validation)
         if "submission_date" in kwargs:
             if kwargs["submission_date"] == "":
                 kwargs["submission_date"] = None
             else:
-                kwargs["submission_date"] = self.normalize_date( kwargs["submission_date"] )
+                kwargs["submission_date"] = self.normalize_date(
+                    kwargs["submission_date"]
+                )
 
         if "release_date" in kwargs:
             if kwargs["release_date"] == "":
                 kwargs["release_date"] = None
             else:
-                kwargs["release_date"] = self.normalize_date( kwargs["release_date"] )
+                kwargs["release_date"] = self.normalize_date(
+                    kwargs["release_date"]
+                )
 
-        super(NodeCollection, self).__init__( *args, **kwargs )
+        super(NodeCollection, self).__init__(*args, **kwargs)
 
     def __unicode__(self):
-        return unicode(self.identifier) + ( ": " + unicode(self.title) if unicode(self.title) != "" else "" ) + ": " + unicode(self.id)
-
+        return (
+            unicode(self.identifier) +
+            (
+                ": " +
+                unicode(self.title) if unicode(self.title) != "" else ""
+            ) +
+            ": " +
+            unicode(self.id)
+        )
 
     def normalize_date(self, dateString):
         '''
         Normalizes date strings in dd/mm/yyyy format to yyyy-mm-dd.
 
-        Returns normalized date string if in expected unnormalized format or unnormalized date string.
+        Returns normalized date string if in expected unnormalized format or
+        unnormalized date string.
         '''
-        logger.info( "Converting date " + str( dateString ) + " ..." )
+        logger.info("Converting date " + str(dateString) + " ...")
         try:
-            # try reformatting incorrect date format used by Nature Scientific Data
-            return str( datetime.strftime( datetime.strptime( dateString, "%d/%m/%Y"), "%Y-%m-%d" ) )
+            # try reformatting incorrect date format used by Nature Scientific
+            # Data
+            return str(
+                datetime.strftime(
+                    datetime.strptime(
+                        dateString,
+                        "%d/%m/%Y"
+                    ),
+                    "%Y-%m-%d"
+                )
+            )
         except ValueError:
-            # ignore - date either in correct format or in format not supported (will cause a validation error handled separately)
-            logger.info( "Failed to convert date " + str( dateString ) + "!" )
+            # ignore - date either in correct format or in format not supported
+            # (will cause a validation error handled separately)
+            logger.info("Failed to convert date " + str(dateString) + "!")
             return dateString
-
 
 
 class Publication(models.Model):
@@ -111,7 +133,14 @@ class Contact(models.Model):
     roles_source = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return unicode(self.first_name) + " " + unicode(self.last_name) + " (" + unicode( self.email ) + ")"
+        return (
+            unicode(self.first_name) +
+            " " +
+            unicode(self.last_name) +
+            " (" +
+            unicode(self.email) +
+            ")"
+        )
 
 
 class Investigation(NodeCollection):
@@ -121,20 +150,20 @@ class Investigation(NodeCollection):
     """easily retrieves the proper NodeCollection fields"""
     def get_identifier(self):
         print type(self.identifier)
-        if (self.identifier == None) or (self.identifier.strip() == ""):
-            #if there's no investigation identifier, then there's only 1 study
+        if (self.identifier is None) or (self.identifier.strip() == ""):
+            # if there's no investigation identifier, then there's only 1 study
             study = self.study_set.all()[0]
             return study.identifier
         return self.identifier
 
     def get_title(self):
-        if self.title == '' or self.title == None:
+        if self.title == '' or self.title is None:
             study = self.study_set.all()[0]
             return study.title
         return self.title
 
     def get_description(self):
-        if self.description == None or self.description == '':
+        if self.description is None or self.description == '':
             study = self.study_set.all()[0]
             return study.description
         return self.description
@@ -149,6 +178,7 @@ class Investigation(NodeCollection):
             assay_count += study.assay_set.count()
 
         return assay_count
+
 
 class Ontology(models.Model):
     '''
@@ -170,7 +200,7 @@ class Study(NodeCollection):
     file_name = models.TextField()
 
     def assay_nodes(self):
-        self.node_set( type=Node.ASSAY )
+        self.node_set(type=Node.ASSAY)
 
     def __unicode__(self):
         return unicode(self.identifier) + ": " + unicode(self.title)
@@ -240,7 +270,8 @@ class Protocol(models.Model):
     study = models.ForeignKey(Study)
     uuid = UUIDField(unique=True, auto=True)
     # workflow_uuid can be used to associate the protocol with a workflow
-    # TODO: should this be the analysis uuid? (problem: technically an analysis is the execution of a protocol)
+    # TODO: should this be the analysis uuid? (problem: technically an analysis
+    # is the execution of a protocol)
     workflow_uuid = UUIDField(unique=True, auto=True)
     version = models.TextField(blank=True, null=True)
     name = models.TextField(blank=True, null=True)
@@ -289,8 +320,8 @@ class NodeManager(models.Manager):
         result = {}
         for item in file_list:
             if (item["genome_build"] is None and
-                item["species"] is not None and
-                default_fallback == True):
+                    item["species"] is not None and
+                    default_fallback is True):
                 item["genome_build"] = map_species_id_to_default_genome_build(
                     item["species"])
             if item["genome_build"] not in result:
@@ -379,28 +410,28 @@ class Node(models.Model):
     type = models.TextField(db_index=True)
     name = models.TextField(db_index=True)
     # only used for nodes representing files
-    file_uuid = UUIDField(default=None,blank=True, null=True,auto=False)
+    file_uuid = UUIDField(default=None, blank=True, null=True, auto=False)
     # Refinery internal "attributes" (exported as comment attributes)
-    genome_build = models.TextField(db_index=True,null=True)
-    species =  models.IntegerField(db_index=True,null=True)
+    genome_build = models.TextField(db_index=True, null=True)
+    species = models.IntegerField(db_index=True, null=True)
     is_annotation = models.BooleanField(default=False)
-    analysis_uuid = UUIDField(default=None,blank=True, null=True,auto=False)
-    subanalysis = models.IntegerField(null=True,blank=False)
+    analysis_uuid = UUIDField(default=None, blank=True, null=True, auto=False)
+    subanalysis = models.IntegerField(null=True, blank=False)
     workflow_output = models.CharField(null=True, blank=False, max_length=100)
 
     def __unicode__(self):
         return unicode(self.type) + ": " + unicode(self.name) + " (" +\
                unicode(self.parents.count()) + " parents, " +\
                unicode(self.children.count()) + " children " + "| " +\
-               "species: " + unicode( self.species ) +\
-               ", genome build: " + unicode( self.genome_build ) + ")"
+               "species: " + unicode(self.species) +\
+               ", genome build: " + unicode(self.genome_build) + ")"
 
     def add_child(self, node):
         if node is None:
             return None
-        self.children.add( node )
+        self.children.add(node)
         self.save()
-        node.parents.add( self )
+        node.parents.add(self)
         node.save()
         return self
 
@@ -413,26 +444,52 @@ class Attribute(models.Model):
     LABEL = "Label"
     COMMENT = "Comment"
 
-    TYPES = { MATERIAL_TYPE, CHARACTERISTICS, FACTOR_VALUE, LABEL, COMMENT }
+    TYPES = {MATERIAL_TYPE, CHARACTERISTICS, FACTOR_VALUE, LABEL, COMMENT}
 
-    ALL_FIELDS = ["id", "type", "subtype", "value", "value_unit", "value_accession", "value_source", "node"]
-    NON_ONTOLOGY_FIELDS = ["id", "type", "subtype", "value", "value_unit", "node"]
+    ALL_FIELDS = [
+        "id",
+        "type",
+        "subtype",
+        "value",
+        "value_unit",
+        "value_accession",
+        "value_source",
+        "node"
+    ]
+    NON_ONTOLOGY_FIELDS = [
+        "id",
+        "type",
+        "subtype",
+        "value",
+        "value_unit",
+        "node"
+    ]
 
     def is_attribute(self, string):
-        return string.split( "[" )[0].strip() in self.TYPES
+        return string.split("[")[0].strip() in self.TYPES
 
     node = models.ForeignKey(Node, db_index=True)
     type = models.TextField(db_index=True)
-    # subtype further qualifies the attribute type, e.g. type = factor value and subtype = age
+    # subtype further qualifies the attribute type, e.g. type = factor value and
+    # subtype = age
     subtype = models.TextField(blank=True, null=True, db_index=True)
     value = models.TextField(blank=True, null=True, db_index=True)
     value_unit = models.TextField(blank=True, null=True)
-    # if value_unit is not null value is numeric and value_accession and value_source refer to value_unit (rather than value)
+    # if value_unit is not null value is numeric and value_accession and
+    # value_source refer to value_unit (rather than value)
     value_accession = models.TextField(blank=True, null=True)
     value_source = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return unicode(self.type) + ( "" if self.subtype is None else " (" + unicode(self.subtype) + ")" ) + " = " + unicode(self.value)
+        return (
+            unicode(self.type) + (
+                "" if self.subtype is None else " (" + unicode(
+                    self.subtype
+                ) + ")"
+            ) +
+            " = " +
+            unicode(self.value)
+        )
 
 
 # non-ISA Tab
@@ -463,7 +520,8 @@ class AttributeOrder(models.Model):
     # position of the attribute in the facet list and table
     rank = models.IntegerField(blank=True, null=True)
 
-    # should this attribute be exposed to the user? if false the attribute will never be shown to non-owner users
+    # should this attribute be exposed to the user? if false the attribute will
+    # never be shown to non-owner users
     is_exposed = models.BooleanField(default=True)
 
     # should this attribute be used as a facet?
@@ -472,19 +530,29 @@ class AttributeOrder(models.Model):
     # should be shown in the table by default?
     is_active = models.BooleanField(default=True)
 
-    # is this an internal attribute? (retrieved by solr by never exposed to any user)
+    # is this an internal attribute? (retrieved by solr by never exposed to any
+    # user)
     is_internal = models.BooleanField(default=False)
 
     def __unicode__(self):
-        return unicode( self.solr_field + " [facet = " + str(self.is_facet) + " exp = "  + str(self.is_exposed) + " act = "  + str(self.is_active) + " int = " + str(self.is_internal) + "] = " ) + str( self.rank )
+        return unicode(
+            self.solr_field +
+            " [facet = " +
+            str(self.is_facet) +
+            " exp = " +
+            str(self.is_exposed) +
+            " act = " +
+            str(self.is_active) +
+            " int = " + str(self.is_internal) + "] = "
+        ) + str(self.rank)
 
 
 class AnnotatedNodeRegistry(models.Model):
     study = models.ForeignKey(Study, db_index=True)
     assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
     node_type = models.TextField(db_index=True)
-    creation_date = models.DateTimeField( auto_now_add=True )
-    modification_date = models.DateTimeField( auto_now=True )
+    creation_date = models.DateTimeField(auto_now_add=True)
+    modification_date = models.DateTimeField(auto_now=True)
 
 
 class AnnotatedNode(models.Model):
@@ -497,16 +565,26 @@ class AnnotatedNode(models.Model):
     node_type = models.TextField(db_index=True)
     node_name = models.TextField(db_index=True)
     attribute_type = models.TextField(db_index=True)
-    # subtype further qualifies the attribute type, e.g. type = factor value and subtype = age
+    # subtype further qualifies the attribute type, e.g. type = factor value and
+    # subtype = age
     attribute_subtype = models.TextField(blank=True, null=True, db_index=True)
     attribute_value = models.TextField(blank=True, null=True, db_index=True)
     attribute_value_unit = models.TextField(blank=True, null=True)
     # genome information
     node_species = models.IntegerField(db_index=True, null=True)
     node_genome_build = models.TextField(db_index=True, null=True)
-    node_analysis_uuid = UUIDField(default=None,blank=True, null=True,auto=False)
-    node_subanalysis = models.IntegerField(null=True,blank=False)
-    node_workflow_output = models.CharField(null=True, blank=False, max_length=100)
+    node_analysis_uuid = UUIDField(
+        default=None,
+        blank=True,
+        null=True,
+        auto=False
+    )
+    node_subanalysis = models.IntegerField(null=True, blank=False)
+    node_workflow_output = models.CharField(
+        null=True,
+        blank=False,
+        max_length=100
+    )
     # other information
     is_annotation = models.BooleanField(default=False)
 
@@ -523,11 +601,11 @@ def _is_internal_attribute(attribute):
                          "name",
                          "analysis_uuid",
                          "subanalysis",
-                         "output_type" ]
+                         "output_type"]
 
 
 def _is_active_attribute(attribute):
-    return (not _is_internal_attribute(attribute) and attribute not in [] )
+    return (not _is_internal_attribute(attribute) and attribute not in [])
 
 
 def _is_exposed_attribute(attribute):
@@ -538,21 +616,37 @@ def _is_ignored_attribute(attribute):
     """
     Ignore Django internal Solr fields.
     """
-    return attribute in [ "django_ct", "django_id", "id" ]
+    return attribute in ["django_ct", "django_id", "id"]
 
 
-def _is_facet_attribute(attribute,study,assay):
+def _is_facet_attribute(attribute, study, assay):
     """
     Tests if a an attribute should be used as a facet by default.
 
     :param attribute: The name of the attribute.
     :type attribute: string
 
-    :returns: True if the ratio between items in the data set and the number of facet attribute values is smaller than settings.DEFAULT_FACET_ATTRIBUTE_VALUES_RATIO, false otherwise.
+    :returns: True if the ratio between items in the data set and the number of
+    facet attribute values is smaller than
+    settings.DEFAULT_FACET_ATTRIBUTE_VALUES_RATIO, false otherwise.
     """
     ratio = 0.5
 
-    query = settings.REFINERY_SOLR_BASE_URL + "data_set_manager" + "/select?" + "q=django_ct:data_set_manager.node&wt=json&start=0&rows=1&fq=(study_uuid:" + study.uuid + "%20AND%20assay_uuid:" + assay.uuid + "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22))&facet=true&facet.field=" + attribute + "&facet.sort=count&facet.limit=-1"
+    query = (
+        settings.REFINERY_SOLR_BASE_URL +
+        "data_set_manager" +
+        "/select?" +
+        "q=django_ct:data_set_manager.node&wt=json&start=0&rows=1&fq=" +
+        "(study_uuid:" +
+        study.uuid +
+        "%20AND%20assay_uuid:" +
+        assay.uuid +
+        "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22" +
+        "%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%" +
+        "20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22))&facet=" +
+        "true&facet.field=" +
+        attribute +
+        "&facet.sort=count&facet.limit=-1")
 
     # logger.debug( "Query for initialize_attribute_order: %s" % ( query, ) )
 
@@ -560,25 +654,27 @@ def _is_facet_attribute(attribute,study,assay):
     query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
 
     # opening solr query results
-    results =  urllib2.urlopen( query ).read()
+    results = urllib2.urlopen(query).read()
 
-    logger.debug( "Query results for initialize_attribute_order: %s" % ( results, ) )
+    logger.debug(
+        "Query results for initialize_attribute_order: %s" % (results, )
+    )
 
     # converting results into json for python
     results = simplejson.loads(results)
 
-
     items = results["response"]["numFound"]
-    attributeValues = len( results["facet_counts"]["facet_fields"][attribute] )/2
+    attributeValues = len(results["facet_counts"]["facet_fields"][attribute])/2
 
-    logger.debug( results["facet_counts"]["facet_fields"] );
+    logger.debug(results["facet_counts"]["facet_fields"])
 
-    return ( attributeValues/items ) < ratio
+    return (attributeValues/items) < ratio
 
 
-def initialize_attribute_order( study, assay ):
+def initialize_attribute_order(study, assay):
     """
-    Initializes the AttributeOrder table after all nodes for the given study and assay have been indexed by Solr.
+    Initializes the AttributeOrder table after all nodes for the given study and
+    assay have been indexed by Solr.
 
     :param study: Study object to query for in AnnotatedNode.
     :type study: Study
@@ -588,7 +684,20 @@ def initialize_attribute_order( study, assay ):
     :returns: Number of attributes that were indexed.
     """
 
-    query = settings.REFINERY_SOLR_BASE_URL + "data_set_manager" + "/select?" + "q=django_ct:data_set_manager.node&wt=json&start=0&rows=1&fq=(study_uuid:" + study.uuid + "%20AND%20assay_uuid:" + assay.uuid + "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22))&facet=true&facet.sort=count&facet.limit=-1"
+    query = (
+        settings.REFINERY_SOLR_BASE_URL +
+        "data_set_manager" +
+        "/select?" +
+        "q=django_ct:data_set_manager.node&wt=json&start=0&rows=1&fq=" +
+        "(study_uuid:" +
+        study.uuid +
+        "%20AND%20assay_uuid:" +
+        assay.uuid +
+        "%20AND%20is_annotation:false%20AND%20(type:%22Array%20Data%20File%22" +
+        "%20OR%20type:%22Derived%20Array%20Data%20File%22%20OR%20type:%22Raw%" +
+        "20Data%20File%22%20OR%20type:%20%22Derived%20Data%20File%22)"")&face" +
+        "t=true&facet.sort=count&facet.limit=-1"
+    )
 
     # logger.debug( "Query for initialize_attribute_order: %s" % ( query, ) )
 
@@ -596,9 +705,11 @@ def initialize_attribute_order( study, assay ):
     query = urllib2.quote(query, safe="%/:=&?~#+!$,;'@()*[]")
 
     # opening solr query results
-    results =  urllib2.urlopen( query ).read()
+    results = urllib2.urlopen(query).read()
 
-    logger.debug( "Query results for initialize_attribute_order: %s" % ( results, ) )
+    logger.debug(
+        "Query results for initialize_attribute_order: %s" % (results, )
+    )
 
     # converting results into json for python
     results = simplejson.loads(results)
@@ -607,18 +718,29 @@ def initialize_attribute_order( study, assay ):
     rank = 0
     for key in results["response"]["docs"][0]:
 
-        is_facet = _is_facet_attribute(key,study,assay)
+        is_facet = _is_facet_attribute(key, study, assay)
         is_exposed = _is_exposed_attribute(key)
-        is_internal = _is_internal_attribute(key);
+        is_internal = _is_internal_attribute(key)
         is_active = _is_active_attribute(key)
 
         if not _is_ignored_attribute(key):
-            attribute_order_objects.append( AttributeOrder( study=study, assay=assay, solr_field=key, rank=++rank, is_facet=is_facet, is_exposed=is_exposed, is_internal=is_internal, is_active=is_active ) )
+            attribute_order_objects.append(
+                AttributeOrder(
+                    study=study,
+                    assay=assay,
+                    solr_field=key,
+                    rank=++rank,
+                    is_facet=is_facet,
+                    is_exposed=is_exposed,
+                    is_internal=is_internal,
+                    is_active=is_active
+                )
+            )
 
     # insert AttributeOrder objects into database
     AttributeOrder.objects.bulk_create(attribute_order_objects)
 
-    return len( attribute_order_objects )
+    return len(attribute_order_objects)
 
 
 class ProtocolReference(models.Model):
@@ -631,7 +753,7 @@ class ProtocolReference(models.Model):
     comment = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return unicode( self.protocol ) + " (reference)"
+        return unicode(self.protocol) + " (reference)"
 
 
 class ProtocolReferenceParameter(models.Model):
@@ -639,9 +761,10 @@ class ProtocolReferenceParameter(models.Model):
     name = models.TextField(blank=True, null=True)
     value = models.TextField(blank=True, null=True)
     value_unit = models.TextField(blank=True, null=True)
-    # if value_unit is not null value is numeric and value_accession and value_source refer to value_unit (rather than value)
+    # if value_unit is not null value is numeric and value_accession and
+    # value_source refer to value_unit (rather than value)
     value_accession = models.TextField(blank=True, null=True)
     value_source = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return unicode(self.name) + " = " +  unicode(self.value)
+        return unicode(self.name) + " = " + unicode(self.value)
