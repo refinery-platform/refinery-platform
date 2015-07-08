@@ -23,6 +23,7 @@
   "STATIC_URL": "/static/",
   "ADMIN_MEDIA_PREFIX": "/static/admin/",
   "SECRET_KEY": "SECRET",
+  "LOG_LEVEL": "DEBUG",
   "TOKEN_DURATION": 1,
   "DEFAULT_FROM_EMAIL": "webmaster@localhost",
   "EMAIL_HOST": "localhost",
