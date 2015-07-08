@@ -72,25 +72,19 @@ def prod():
 @task
 @with_settings(user=env.project_user)
 def conf(mode=None):
-    """Switch Refinery between development and production configurations"""
-    # must provide config mode and apply to Vagrant VM only
+    """Switch Refinery configurations"""
+    # must provide a mode and apply to Vagrant VM only
     if (mode is None) or (env.hosts != ['vagrant@127.0.0.1:2222']):
-        abort("usage: fab vm conf:<dev|prod>")
+        abort("usage: fab vm conf:<mode>")
+    modes = ['dev', 'djdt', 'prod']
+    if mode not in modes:
+        abort("Mode must be one of {}".format(modes))
     puts("Switching Refinery running on Vagrant VM to '{}' mode".format(mode))
-    if mode == "dev":
-        env.grunt = "grunt build"
-        env.shell_before = "export DJANGO_SETTINGS_MODULE=settings.production"
-        env.shell_after = "export DJANGO_SETTINGS_MODULE=settings.development"
-        env.apache_before = "SetEnv DJANGO_SETTINGS_MODULE settings.production"
-        env.apache_after = "SetEnv DJANGO_SETTINGS_MODULE settings.development"
-    elif mode == "prod":
-        env.grunt = "grunt compile"
-        env.shell_before = "export DJANGO_SETTINGS_MODULE=settings.development"
-        env.shell_after = "export DJANGO_SETTINGS_MODULE=settings.production"
-        env.apache_before = "SetEnv DJANGO_SETTINGS_MODULE settings.development"
-        env.apache_after = "SetEnv DJANGO_SETTINGS_MODULE settings.production"
-    else:
-        abort("Mode must be either 'dev' or 'prod'")
+    env.grunt = "grunt build"
+    env.shell_before = "export DJANGO_SETTINGS_MODULE=settings.*"
+    env.shell_after = "export DJANGO_SETTINGS_MODULE=settings.{}".format(mode)
+    env.apache_before = "SetEnv DJANGO_SETTINGS_MODULE settings.*"
+    env.apache_after = "SetEnv DJANGO_SETTINGS_MODULE settings.{}".format(mode)
     # stop supervisord and Apache
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("supervisorctl shutdown")
