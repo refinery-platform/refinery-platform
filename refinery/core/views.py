@@ -4,6 +4,7 @@ import re
 import json
 import urllib
 import xmltodict
+import requests
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import get_current_site
@@ -979,25 +980,23 @@ def doi(request, id):
     id = urllib.unquote(id).decode('utf8')
     id = id.replace('$', '/')
 
-    url = "http://dx.doi.org/{id}".format(id=id)
+    url = "https://dx.doi.org/{id}".format(id=id)
     headers = {
         'Accept': 'application/json'
     }
-    req = urllib2.Request(url, None, headers)
-    f = urllib2.urlopen(req)
-    response = f.read()
-    f.close()
+
+    response = requests.get(url, headers=headers)
     return HttpResponse(response, mimetype='application/json')
 
 
 def pubmed_abstract(request, id):
     """Forwarding requests to PubMed's API
     Example:
-    http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=XML&rettype=abstract&id=25344497
+    https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=XML&rettype=abstract&id=25344497
     """
 
     url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
-    parameters = {
+    params = {
         'db': 'pubmed',
         'retmode': 'xml',
         'rettype': 'abstract',
@@ -1006,11 +1005,8 @@ def pubmed_abstract(request, id):
     headers = {
         'Accept': 'text/xml'
     }
-    data = urllib.urlencode(parameters)
-    req = urllib2.Request(url, data, headers)
-    f = urllib2.urlopen(req)
-    response = json.dumps(xmltodict.parse(f.read()))
-    f.close()
+
+    response = requests.get(url, params=params, headers=headers)
     return HttpResponse(response, mimetype='application/json')
 
 
@@ -1018,13 +1014,13 @@ def pubmed_search(request, term):
     """Forwarding requests to PubMed's API
 
     Example:
-    http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=1&term=10.1093%2Fbioinformatics%2Fbtu707
+    https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=1&term=10.1093%2Fbioinformatics%2Fbtu707
     """
     term = urllib.unquote(term).decode('utf8')
     term = term.replace('$', '/')
 
-    url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
-    parameters = {
+    url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+    params = {
         'db': 'pubmed',
         'retmode': 'json',
         'retmax': 1,
@@ -1033,11 +1029,8 @@ def pubmed_search(request, term):
     headers = {
         'Accept': 'application/json'
     }
-    data = urllib.urlencode(parameters)
-    req = urllib2.Request(url, data, headers)
-    f = urllib2.urlopen(req)
-    response = f.read()
-    f.close()
+
+    response = requests.get(url, params=params, headers=headers)
     return HttpResponse(response, mimetype='application/json')
 
 
@@ -1045,11 +1038,11 @@ def pubmed_summary(request, id):
     """Forwarding requests to PubMed's API
 
     Example:
-    http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=25344497
+    https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=25344497
     """
 
     url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
-    parameters = {
+    params = {
         'db': 'pubmed',
         'retmode': 'json',
         'id': id
@@ -1057,9 +1050,6 @@ def pubmed_summary(request, id):
     headers = {
         'Accept': 'application/json'
     }
-    data = urllib.urlencode(parameters)
-    req = urllib2.Request(url, data, headers)
-    f = urllib2.urlopen(req)
-    response = f.read()
-    f.close()
+
+    response = requests.get(url, params=params, headers=headers)
     return HttpResponse(response, mimetype='application/json')
