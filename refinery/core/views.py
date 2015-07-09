@@ -1016,7 +1016,12 @@ def pubmed_abstract(request, id):
 
 def pubmed_search(request, term):
     """Forwarding requests to PubMed's API
+
+    Example:
+    http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=1&term=10.1093%2Fbioinformatics%2Fbtu707
     """
+    term = urllib.unquote(term).decode('utf8')
+    term = term.replace('$', '/')
 
     url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
     parameters = {
