@@ -73,9 +73,11 @@ def conf(mode=None):
     # must provide a mode and apply to Vagrant VM only
     if (mode is None) or (env.hosts != ['vagrant@127.0.0.1:2222']):
         abort("usage: fab vm conf:<mode>")
-    modes = ['dev', 'djdt', 'prod']
+    modes = ['dev', 'djdt', 'gdev', 'prod']
     if mode not in modes:
         abort("Mode must be one of {}".format(modes))
+    if mode == 'gdev':
+        env.grunt = "grunt build"
     puts("Switching Refinery running on Vagrant VM to '{}' mode".format(mode))
     env.shell_before = "export DJANGO_SETTINGS_MODULE=settings.*"
     env.shell_after = "export DJANGO_SETTINGS_MODULE=settings.{}".format(mode)
