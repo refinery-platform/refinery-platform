@@ -81,6 +81,11 @@ STATIC_URL = get_setting("STATIC_URL")
 # Examples: "http://foo.com/static/admin/", "/static/admin/".
 ADMIN_MEDIA_PREFIX = get_setting("ADMIN_MEDIA_PREFIX")
 
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "static/production"),
+    os.path.join(BASE_DIR, "ui/production")
+)
+
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (

@@ -5,11 +5,6 @@ from .base import *
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "static/development"),
-    os.path.join(BASE_DIR, "ui/development")
-)
-
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # Disable migrations when running unittests and use syncdb instead

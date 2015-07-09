@@ -31,6 +31,7 @@ def setup():
     require("project_user", "refinery_project_dir", "refinery_virtualenv_name")
     env.refinery_app_dir = os.path.join(env.refinery_project_dir, "refinery")
     env.refinery_ui_dir = os.path.join(env.refinery_app_dir, "ui")
+    env.grunt = "grunt compile"
 
 
 @task
@@ -39,7 +40,6 @@ def vm():
     env.project_user = "vagrant"    # since it's used as arg for decorators
     env.refinery_project_dir = "/vagrant"
     env.refinery_virtual_env_name = "refinery-platform"
-    env.grunt = "grunt build"
     setup()
     execute(vagrant)
 
@@ -49,7 +49,6 @@ def dev():
     """Set config for deployment on development VM"""
     setup()
     env.hosts = [env.dev_host]
-    env.grunt = "grunt build"
 
 
 @task
@@ -57,7 +56,6 @@ def stage():
     """Set config for deployment on staging VM"""
     setup()
     env.hosts = [env.stage_host]
-    env.grunt = "grunt compile"
 
 
 @task
@@ -66,7 +64,6 @@ def prod():
     #TODO: add a warning message/confirmation about updating production VM?
     setup()
     env.hosts = [env.prod_host]
-    env.grunt = "grunt compile"
 
 
 @task
@@ -80,10 +77,6 @@ def conf(mode=None):
     if mode not in modes:
         abort("Mode must be one of {}".format(modes))
     puts("Switching Refinery running on Vagrant VM to '{}' mode".format(mode))
-    if mode == 'prod':
-        env.grunt = "grunt compile"
-    else:
-        env.grunt = "grunt build"
     env.shell_before = "export DJANGO_SETTINGS_MODULE=settings.*"
     env.shell_after = "export DJANGO_SETTINGS_MODULE=settings.{}".format(mode)
     env.apache_before = "SetEnv DJANGO_SETTINGS_MODULE settings.*"
