@@ -26,12 +26,29 @@ function analysesFactory($http) {
   };
 
   var processAnalysisDetail = function(data){
-    analysisDetail.preprocessing = data.preprocessing[0].state;
-    analysisDetail.preprocessingPercentDone = data.preprocessing[0].percent_done;
-    analysisDetail.postprocessing = data.postprocessing[0].state;
-    analysisDetail.postprocessingPercentDone = data.postprocessing[0].percent_done;
-    analysisDetail.execution = data.execution[0].state;
-    analysisDetail.executionPercentDone = data.execution[0].percent_done;
+
+    if (!(analysisDetail.hasOwnProperty('preprocessing')) || isNotPending(data.preprocessing[0].state)) {
+      analysisDetail.preprocessing = data.preprocessing[0].state;
+      analysisDetail.preprocessingPercentDone = data.preprocessing[0].percent_done;
+    }
+
+    if (!(analysisDetail.hasOwnProperty('postprocessing')) || isNotPending(data.postprocessing[0].state)) {
+      analysisDetail.postprocessing = data.postprocessing[0].state;
+      analysisDetail.postprocessingPercentDone = data.postprocessing[0].percent_done;
+    }
+
+    if (!(analysisDetail.hasOwnProperty('execution')) || isNotPending(data.execution[0].state)) {
+      analysisDetail.execution = data.execution[0].state;
+      analysisDetail.executionPercentDone = data.execution[0].percent_done;
+    }
+  };
+
+  var isNotPending = function(state){
+    if(state === 'PENDING'){
+      return false;
+    }else{
+      return true;
+    }
   };
 
   var getAnalysesList = function() {

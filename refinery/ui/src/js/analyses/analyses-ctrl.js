@@ -15,20 +15,23 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
 
   vm.updateAnalysesDetail = function(){
     for(var i = 0; i < vm.analysesRunningUuids.length; i++) {
-      console.log(i);
-      (function(i){
-        analysesFactory.getAnalysisDetail(vm.analysesRunningUuids[i]).then(function(response) {
-            vm.analysesDetail[vm.analysesRunningUuids[i]] = analysesFactory.analysisDetail;
-        }, function(error) {
-          console.error(error);
-        });
-      })(i);
+      vm.setAnalysesDetail(i);
     }
 
     if(vm.analysesRunningUuids.length > 0) {
       console.log("in the update place");
       $timeout(vm.updateAnalysesDetail, 10000);
     }
+  };
+
+  vm.setAnalysesDetail = function(i){
+    (function(i){
+      analysesFactory.getAnalysisDetail(vm.analysesRunningUuids[i]).then(function(response) {
+          vm.analysesDetail[vm.analysesRunningUuids[i]] = analysesFactory.analysisDetail;
+      }, function(error) {
+        console.error("Error in setAnalysesDetail");
+      });
+    })(i);
   };
 
   vm.createAnalysesRunningList = function(data){
