@@ -368,7 +368,7 @@ def create_dataset(
             username,
             identifier=None,
             title=None,
-            dataset_title=None,
+            dataset_name=None,
             slug=None,
             public=False
         ):
