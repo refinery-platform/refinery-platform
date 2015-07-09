@@ -2,6 +2,8 @@ angular
   .module('cut', [])
   .filter('cut', function () {
     return function (value, wordwise, max, tail) {
+      'use strict';
+
       if (!value) {
         return '';
       }
@@ -10,6 +12,12 @@ angular
 
       if (!max) {
         return value;
+      }
+
+      // Check if value is a string
+      // From: http://stackoverflow.com/a/9436948/981933
+      if (!(typeof(value) === 'string' || value instanceof String)) {
+        return '';
       }
 
       if (value.length <= max) {
