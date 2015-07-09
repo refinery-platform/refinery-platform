@@ -8,7 +8,7 @@ import json
 import logging
 import re
 import uuid
-import settings
+from django.conf import settings
 from sets import Set
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group

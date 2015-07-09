@@ -6,7 +6,7 @@ Created on May 10, 2012
 
 from datetime import datetime
 import logging
-import settings
+from django.conf import settings
 import simplejson
 import urllib2
 from django.db import models
