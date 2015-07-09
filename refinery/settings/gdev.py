@@ -1,6 +1,7 @@
-# custom settings for development environment specific to Grunt
+# custom settings for development the UI using `grunt watch` which relies on
+# `grunt build`.
 
-from .djdt import *
+from .dev import *
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static/development"),
