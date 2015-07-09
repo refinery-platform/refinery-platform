@@ -1167,6 +1167,41 @@ button.icon-only {
   }
 }
 
+ol.badge-list,
+ul.badge-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  >li {
+    margin-left: 0.25em;
+    padding: 0 0.25em;
+    border: 1px solid @grayLighter;
+    border-radius: 0.25em;
+
+    &:first-child {
+      margin-left: 0;
+    }
+
+    ol.badge-attribute-list,
+    ul.badge-attribute-list {
+      margin: 1px 1px 1px 3px;
+      padding: 0;
+      list-style: none;
+      font-size: @fontSizeSmall;
+      border: 1px solid green;
+      background: @white;
+    }
+
+    .badge-characteristic {
+      padding-left: 0.2em;
+      color: lighten(@gray, 25%);
+      font-size: @fontSizeSmall;
+      font-style: italic;
+    }
+  }
+}
+
 /*
  * Handy classes to control basic margin and padding according to the base em
  *

@@ -6,12 +6,36 @@ Created on Nov 29, 2012
 
 from data_set_manager.models import Investigation, Study, Assay, \
     AttributeOrder, Protocol, ProtocolReference, ProtocolReferenceParameter, \
-    Publication
+    Publication, Attribute, Node
 from tastypie import fields
 from tastypie.authentication import Authentication
 from tastypie.authorization import Authorization
 from tastypie.constants import ALL, ALL_WITH_RELATIONS
 from tastypie.resources import ModelResource
+
+
+class AttributeResource(ModelResource):
+    node = fields.ForeignKey('core.api.NodeResource', 'node', use_in='all')
+
+    class Meta:
+        queryset = Attribute.objects.all()
+        detail_uri_name = 'id'
+        allowed_methods = ['get']
+        resource_name = 'attributes'
+        include_resource_uri = False
+        filtering = {
+            'node': ALL_WITH_RELATIONS,
+            'type': ALL,
+            'value_accession': ALL,
+        }
+        fields = [
+            'subtype',
+            'type',
+            'value',
+            'value_accession',
+            'value_source',
+            'value_unit'
+        ]
 
 
 class InvestigationResource(ModelResource):
@@ -118,12 +142,24 @@ class StudyResource(ModelResource):
         full=True,
         null=True
     )
+    sources = fields.ToManyField(
+        'core.api.NodeResource',
+        attribute=lambda bundle: (
+            Node.objects
+                .filter(
+                    study=bundle.obj,
+                    type='Source Name'
+                )
+        ),
+        full=True,
+        null=True
+    )
 
     class Meta:
         queryset = Study.objects.all()
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         allowed_methods = ["get"]
-        resource_name = "study"
+        resource_name = "studies"
         filtering = {
             'uuid': ALL,
             'investigation_uuid': ALL

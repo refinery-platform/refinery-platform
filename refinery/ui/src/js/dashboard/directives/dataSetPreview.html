@@ -41,6 +41,19 @@
         <h6>Description</h6>
         <p>{{ preview.studies.description }}</p>
       </div>
+      <div class="inline-container" ng-if="preview.studies.sources.length">
+        <h6>Sources</h6>
+        <ul class="badge-list">
+          <li ng-repeat="source in preview.studies.sources track by $index">
+            {{ source.name }}
+            <span
+              class="badge-characteristic"
+              ng-if="source.attributes.length">
+              {{ source.attributes[0].value }}
+            </span>
+          </li>
+        </ul>
+      </div>
       <div class="inline-container">
         <h6>Number of files</h6>
         <p>{{ preview.dataSet.file_count }}</p>
