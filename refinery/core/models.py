@@ -1372,12 +1372,16 @@ class GroupManagement(object):
             group_name=None,
             member_list=None,
             perm_list=None,
-            can_edit=False):
+            can_edit=False,
+            is_manager_group=False,
+            manager_group_id=None):
         self.group_id = group_id
         self.group_name = group_name
         self.member_list = member_list
         self.perm_list = perm_list
         self.can_edit = can_edit
+        self.is_manager_group = is_manager_group
+        self.manager_group_id = manager_group_id
 
 
 class UserAuthentication(object):

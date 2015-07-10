@@ -1,16 +1,22 @@
 angular.module('refineryCollaborate', [])
-.controller('refineryCollaborateController', function ($scope, $http) {
+.controller('refineryCollaborateController', function ($scope, $http, $modal) {
   $scope.hasNotSelectedOtherResource = true;
+  var activeGroup = null;
+
   var activeResType = 'Data Set';
 
   $scope.resourceTypes = ['Data Set', 'Project', 'Workflow'];
 
   // Update group list.
-  $http.get('/api/v1/groups/?format=json').success(function (response) {
-    $scope.groupList = response.objects.filter(function (d) {
-      return d.group_name.indexOf('.Managers ') !== 0;
+  function updateGroupList() {
+    $http.get('/api/v1/groups/members/?format=json').success(function (response) {
+      $scope.groupList = response.objects.filter(function (d) {
+        return d.group_name.indexOf('.Managers ') !== 0;
+      });
     });
-  });
+  }
+
+  updateGroupList();
 
   $scope.setGroupActive = function () {
     if ($scope.lastGroupActive) {
@@ -19,11 +25,12 @@ angular.module('refineryCollaborate', [])
 
     this.groupActive = 'active';
     $scope.lastGroupActive = this;
-    updateControlPanel($scope.groupList[this.$index]);
+    updateControlPanel(this.group);
+    activeGroup = this.group;
 
     $scope.isManager = false;
 
-    if ($scope.groupList[this.$index].can_edit) {
+    if (this.group.can_edit) {
       $scope.isManager = true;
     }
   }
@@ -56,6 +63,7 @@ angular.module('refineryCollaborate', [])
     // Gets the members.
     $http.get('/api/v1/groups/' + group.group_id + '/members/?format=json').success(function (response) {
       $scope.memberList = response.member_list;
+      $scope.isManager = response.can_edit;
     });
 
     // Gets the permissions.
@@ -86,14 +94,111 @@ angular.module('refineryCollaborate', [])
     });
   }
 
-  function trim(text) {
-      console.log("trim called");
-      console.log($("#size-test"));
-      console.log($("#size-test").parent().width());
+  function clearControlPanel() {
+    $scope.memberList = [];
+    $scope.datasetPermList = [];
+    $scope.projectPermList = [];
+    $scope.workflowPermList = [];
   }
 
-  trim("asdfasdfsadf");
-  document.trim = trim;
+  // Handle group existence
+  var groupEditorController = function ($scope, $http, $modalInstance, config) {
+    $scope.groupList = config.pageScope.groupList;
+
+    $scope.leaveGroup = function (groupId) {
+      $http.delete('/api/v1/groups/' + groupId + '/members/' + user_id + '/').success(function (response) {
+        updateGroupList();
+        $modalInstance.dismiss();
+        clearControlPanel();
+      });
+    }
+
+    $scope.deleteGroup = function (groupId) {
+      $http.delete('/api/v1/groups/' + groupId + '/', {}).success(function (response) {
+        updateGroupList();
+        $modalInstance.dismiss();
+        clearControlPanel();
+      })
+    }
+
+    $scope.createGroup = function (groupName) {
+      console.log("Creating new group: " + groupName);
+
+      $http.post('/api/v1/groups/', {
+        name: groupName
+      }).success(function (response) {
+        updateGroupList();
+        // updateControlPanel();
+        $modalInstance.dismiss();
+      })
+    }
+  };
+
+  $scope.openGroupEditor = function () {
+    var modalInstance = $modal.open({
+      templateUrl: '/static/partials/collaborate.groups.modal.html',
+      controller: groupEditorController,
+      resolve: {
+        config: function () {
+          return {
+            pageScope: $scope,
+            groupList: $scope.groupList,
+            user_id: user_id
+          }  
+        }
+      }
+    });
+  }
+
+  // Handle member permissions
+  var memberEditorController = function ($scope, $http, $modalInstance, config) {
+    $scope.member = config.member;
+
+    $scope.promote = function (member) {
+      // Assume manager group id is 1 more than regular group's.
+      $http.post('/api/v1/groups/' + (activeGroup.manager_group_id) + '/members/', {
+        user_id: member.user_id
+      }).success(function (response) {
+        updateGroupList();
+        clearControlPanel();
+        updateControlPanel(activeGroup);
+        $modalInstance.dismiss();
+      });
+    }
+
+    $scope.demote = function (member) {
+      $http.delete('/api/v1/groups/' + (activeGroup.manager_group_id) +'/members/' + member.user_id).success(function (response) {
+        updateGroupList();
+        clearControlPanel();
+        updateControlPanel(activeGroup);
+        $modalInstance.dismiss();
+      });
+    }
+
+    $scope.remove = function (member) {
+      $http.delete('/api/v1/groups/' + (activeGroup.group_id) + '/members/' + member.user_id).success(function (response) {
+        updateGroupList();
+        clearControlPanel();
+        updateControlPanel(activeGroup);
+        $modalInstance.dismiss();
+      });
+    }
+  };
+
+  $scope.openMemberEditor = function (member) {
+    var modalInstance = $modal.open({
+      templateUrl: '/static/partials/collaborate.members.modal.html',
+      controller: memberEditorController,
+      resolve: {
+        config: function () {
+          return {
+            pageScope: $scope,
+            member: member
+          };
+        }
+      }
+    });
+  }
 })
 
 .directive('collaborateDisplay', function () {

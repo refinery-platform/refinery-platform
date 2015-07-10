@@ -1,10 +1,14 @@
 <div id="group-collab">
   <div class="row-fluid">
 
-    <div class="span3 well">
+    <div class="span6 well">
       <strong>Groups</strong>
+      <span style="float:right;margin-left:5px">
+        <a href="#" ng-click="openGroupEditor()"><i class="icon-cog"></i></a>
+      </span>
+
       <ul class="nav nav-list scrollable">
-        <li ng-repeat="group in groupList" ng-click="setGroupActive()" class="{{groupActive}}">
+        <li ng-repeat="group in groupList | filter:{manager_group:false} track by $index" ng-click="setGroupActive()" class="{{groupActive}}">
           <a href="#">
             {{group.group_name}}
             <span style="float:right;color:red" font-size="10px" ng-if="group.can_edit">
@@ -15,21 +19,30 @@
       </ul>
     </div>
 
-    <div class="span9">
+    <div class="span6">
       
-      <div class="span4 well">
+      <div class="span12 well">
+      <!--<div class="span4 well">-->
         <strong>Members</strong>
+        <span style="margin-left:5px" ng-if="isManager">
+          <a href="#"><i class="icon-plus"></i></a>
+        </span>
         <ul class="nav nav-list scrollable">
           <li ng-repeat="member in memberList">
             {{member.username}}
             <span style="float:right" ng-if="isManager">
-              <a href="#"><i class="icon-cog"></i></a>
+              <span ng-if="member.is_manager" style="float:left;color:red" font-size="5px">
+                manager
+              </span>
+              <a href="#" ng-click="openMemberEditor(member)" style="margin-left:10px">
+                <i class="icon-cog"></i>
+              </a>
             </span>
           </li>
         </ul>
       </div>
 
-      <div class="span8 well">
+      <div class="span8 well" style="display:none">
         <ul class="nav nav-tabs">
           <li ng-repeat="resource in resourceTypes.slice(0, 1)" ng-click="setResourceActive()" class="{{hasNotSelectedOtherResource && 'active' || resourceActive}}">
             <a href="#">{{resource}}</a>
