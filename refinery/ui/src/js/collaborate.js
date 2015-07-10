@@ -122,8 +122,6 @@ angular.module('refineryCollaborate', [])
     }
 
     $scope.createGroup = function (groupName) {
-      console.log("Creating new group: " + groupName);
-
       $http.post('/api/v1/groups/', {
         name: groupName
       }).success(function (response) {
@@ -195,6 +193,35 @@ angular.module('refineryCollaborate', [])
             pageScope: $scope,
             member: member
           };
+        }
+      }
+    });
+  }
+
+  // Send email invites
+  var emailInviteController = function ($scope, $http, $modalInstance, config) {
+    var groupId = config.groupId;
+
+    $scope.sendInvite = function(email) {
+      $http.post('/api/v1/invitation/send/?format=json', {
+        group_id: groupId,
+        email: email
+      }).success(function (response) {
+        $modalInstance.dismiss();
+        console.log("Successfully sent email");
+      });
+    };
+  }
+
+  $scope.openEmailInvite = function () {
+    var modalInstance = $modal.open({
+      templateUrl: '/static/partials/collaborate.addmembers.modal.html',
+      controller: emailInviteController,
+      resolve: {
+        config: function () {
+          return {
+            groupId: activeGroup.group_id
+          }
         }
       }
     });

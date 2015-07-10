@@ -25,7 +25,7 @@
       <!--<div class="span4 well">-->
         <strong>Members</strong>
         <span style="margin-left:5px" ng-if="isManager">
-          <a href="#"><i class="icon-plus"></i></a>
+          <a href="#" ng-click="openEmailInvite()"><i class="icon-plus"></i></a>
         </span>
         <ul class="nav nav-list scrollable">
           <li ng-repeat="member in memberList">
