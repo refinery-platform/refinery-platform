@@ -21,7 +21,7 @@ from django.db.models import Max
 from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, post_delete
 from django.db.utils import IntegrityError
-from django.dispatch import receiver, Signal
+from django.dispatch import receiver
 from django_extensions.db.fields import UUIDField
 from django_auth_ldap.backend import LDAPBackend
 from guardian.shortcuts import get_users_with_perms, \
@@ -748,6 +748,7 @@ class Analysis(OwnableResource):
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
         )
+        ordering = ['-time_end', '-time_start']
 
     def get_status(self):
         return self.status

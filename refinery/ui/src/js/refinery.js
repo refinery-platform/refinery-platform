@@ -1,6 +1,11 @@
 angular
 .module('refineryApp', [
   /*
+   * Third party modules
+   */
+  'xml',
+
+  /*
    * Angular App commons
    */
   'errors',

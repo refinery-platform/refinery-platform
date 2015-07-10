@@ -15,9 +15,10 @@ Requirements:
 import os
 from fabric.api import settings, run, env, sudo, execute
 from fabric.context_managers import hide, prefix, cd
+from fabric.contrib.files import sed
 from fabric.decorators import task, with_settings
 from fabric.operations import require
-from fabric.utils import puts
+from fabric.utils import abort, puts
 from fabtools.vagrant import vagrant
 
 
@@ -26,18 +27,16 @@ env.forward_agent = True    # for Github operations
 
 
 def setup():
-    """Check if the required variable were initialized in ~/.fabricrc
-
-    """
+    """Check if the required variable were initialized in ~/.fabricrc"""
     require("project_user", "refinery_project_dir", "refinery_virtualenv_name")
     env.refinery_app_dir = os.path.join(env.refinery_project_dir, "refinery")
+    env.refinery_ui_dir = os.path.join(env.refinery_app_dir, "ui")
+    env.grunt = "grunt compile"
 
 
 @task
 def vm():
-    """Configure environment for deployment on Vagrant VM
-
-    """
+    """Configure environment for deployment on Vagrant VM"""
     env.project_user = "vagrant"    # since it's used as arg for decorators
     env.refinery_project_dir = "/vagrant"
     env.refinery_virtual_env_name = "refinery-platform"
@@ -47,60 +46,95 @@ def vm():
 
 @task
 def dev():
-    """Set config for deployment on development VM
-
-    """
+    """Set config for deployment on development VM"""
     setup()
     env.hosts = [env.dev_host]
 
 
 @task
 def stage():
-    """Set config for deployment on staging VM
-
-    """
+    """Set config for deployment on staging VM"""
     setup()
     env.hosts = [env.stage_host]
 
 
 @task
 def prod():
-    """Set config for deployment on production VM
-
-    """
+    """Set config for deployment on production VM"""
     #TODO: add a warning message/confirmation about updating production VM?
     setup()
     env.hosts = [env.prod_host]
 
 
+@task
+@with_settings(user=env.project_user)
+def conf(mode=None):
+    """Switch Refinery configurations"""
+    # must provide a mode and apply to Vagrant VM only
+    if (mode is None) or (env.hosts != ['vagrant@127.0.0.1:2222']):
+        abort("usage: fab vm conf:<mode>")
+    modes = ['dev', 'djdt', 'gdev', 'prod']
+    if mode not in modes:
+        abort("Mode must be one of {}".format(modes))
+    if mode == 'gdev':
+        env.grunt = "grunt build"
+    puts("Switching Refinery running on Vagrant VM to '{}' mode".format(mode))
+    env.shell_before = "export DJANGO_SETTINGS_MODULE=settings.*"
+    env.shell_after = "export DJANGO_SETTINGS_MODULE=settings.{}".format(mode)
+    env.apache_before = "SetEnv DJANGO_SETTINGS_MODULE settings.*"
+    env.apache_after = "SetEnv DJANGO_SETTINGS_MODULE settings.{}".format(mode)
+    # stop supervisord and Apache
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
+        run("supervisorctl shutdown")
+    sudo("/usr/sbin/service apache2 stop")
+    # update DJANGO_SETTINGS_MODULE
+    sed('/home/vagrant/.profile', before=env.shell_before,
+        after=env.shell_after, backup='')
+    sed('/etc/apache2/sites-available/001-refinery.conf',
+        before=env.apache_before, after=env.apache_after, use_sudo=True,
+        backup='')
+    # update static files
+    with cd(env.refinery_ui_dir):
+        run("{grunt}".format(**env))
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
+        run("{refinery_app_dir}/manage.py collectstatic --clear --noinput"
+            .format(**env))
+    # start supervisord and Apache
+    with prefix("workon {refinery_virtualenv_name}".format(**env)):
+        run("supervisord")
+    sudo("/usr/sbin/service apache2 start")
+
+
 @task(alias="update")
 @with_settings(user=env.project_user)
 def update_refinery():
-    """Perform full update of a Refinery Platform instance
-
-    """
+    """Perform full update of a Refinery Platform instance"""
     puts("Updating Refinery")
     with cd(env.refinery_project_dir):
         run("git pull")
-    with cd(os.path.join(env.refinery_app_dir, "ui")):
-        run("npm update")
-        run("bower update --config.interactive=false")
-        run("grunt")
+    with cd(env.refinery_ui_dir):
+        run("npm prune && npm update")
+        run("bower prune && bower update --config.interactive=false")
+        run("{grunt}".format(**env))
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
-        run("pip install -r {refinery_project_dir}/requirements.txt".format(**env))
+        run("pip install -r {refinery_project_dir}/requirements.txt"
+            .format(**env))
         run("find . -name '*.pyc' -delete")
         run("{refinery_app_dir}/manage.py syncdb --migrate".format(**env))
-        run("{refinery_app_dir}/manage.py collectstatic --noinput".format(**env))
+        run("{refinery_app_dir}/manage.py collectstatic --clear --noinput"
+            .format(**env))
         run("supervisorctl reload")
-    with cd(os.path.join(env.refinery_project_dir)):
+    with cd(env.refinery_project_dir):
         run("touch {refinery_app_dir}/wsgi.py".format(**env))
+
 
 @task(alias="relaunch")
 @with_settings(user=env.project_user)
 def relaunch_refinery(dependencies=False, migrations=False):
-    """Perform a relaunch of a Refinery Platform instance, including processing of grunt tasks
-        dependencies: update bower and pip dependencies
-        migrations: apply migrations
+    """Perform a relaunch of a Refinery Platform instance, including processing
+    of grunt tasks
+    dependencies: update bower and pip dependencies
+    migrations: apply migrations
     """
     puts("Relaunching Refinery")
     with cd(os.path.join(env.refinery_app_dir, "ui")):
@@ -109,13 +143,12 @@ def relaunch_refinery(dependencies=False, migrations=False):
         run("grunt")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         if dependencies:
-            run("pip install -r {refinery_project_dir}/requirements.txt".format(**env))
-
+            run("pip install -r {refinery_project_dir}/requirements.txt"
+                .format(**env))
         run("find . -name '*.pyc' -delete")
-
         if migrations:
             run("{refinery_app_dir}/manage.py syncdb --migrate".format(**env))
         run("{refinery_app_dir}/manage.py collectstatic --noinput".format(**env))
         run("supervisorctl restart all")
-    with cd(os.path.join(env.refinery_project_dir)):
+    with cd(env.refinery_project_dir):
         run("touch {refinery_app_dir}/wsgi.py".format(**env))

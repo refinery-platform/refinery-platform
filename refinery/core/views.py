@@ -3,6 +3,8 @@ import os.path
 import re
 import json
 import urllib
+import xmltodict
+import requests
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import get_current_site
@@ -31,7 +33,8 @@ def home(request):
     return render_to_response(
         'core/home.html',
         {
-            'public_group_id': settings.REFINERY_PUBLIC_GROUP_ID
+            'public_group_id': settings.REFINERY_PUBLIC_GROUP_ID,
+            'main_container_no_padding': True
         },
         context_instance=RequestContext(request)
     )
@@ -953,7 +956,7 @@ def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
 
     workflows = Workflow.objects.all()
 
-    # TODO: replace from settings.py or settings_local.py
+    # TODO: retrieve from Django settings
     solr_url = 'http://127.0.0.1:8983'
 
     return render_to_response('core/samples_solr.html',
@@ -963,3 +966,89 @@ def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
                                'assay_uuid': assay_uuid,
                                'solr_url': solr_url},
                               context_instance=RequestContext(request))
+
+
+def doi(request, id):
+    """Forwarding requests to DOI's API"""
+
+    # Decode URL and replace dollar signs by forward slashes
+    #
+    # This encoding is needed because forward slashes cause 404 errors even
+    # when they are URL encoded as they are still regarded as forward
+    # slashes.
+    id = urllib.unquote(id).decode('utf8')
+    id = id.replace('$', '/')
+
+    url = "https://dx.doi.org/{id}".format(id=id)
+    headers = {
+        'Accept': 'application/json'
+    }
+
+    response = requests.get(url, headers=headers)
+    return HttpResponse(response, mimetype='application/json')
+
+
+def pubmed_abstract(request, id):
+    """Forwarding requests to PubMed's API
+    Example:
+    https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=XML&rettype=abstract&id=25344497
+    """
+
+    url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+    params = {
+        'db': 'pubmed',
+        'retmode': 'xml',
+        'rettype': 'abstract',
+        'id': id
+    }
+    headers = {
+        'Accept': 'text/xml'
+    }
+
+    response = requests.get(url, params=params, headers=headers)
+    return HttpResponse(response, mimetype='application/json')
+
+
+def pubmed_search(request, term):
+    """Forwarding requests to PubMed's API
+
+    Example:
+    https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=1&term=10.1093%2Fbioinformatics%2Fbtu707
+    """
+    term = urllib.unquote(term).decode('utf8')
+    term = term.replace('$', '/')
+
+    url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+    params = {
+        'db': 'pubmed',
+        'retmode': 'json',
+        'retmax': 1,
+        'term': term
+    }
+    headers = {
+        'Accept': 'application/json'
+    }
+
+    response = requests.get(url, params=params, headers=headers)
+    return HttpResponse(response, mimetype='application/json')
+
+
+def pubmed_summary(request, id):
+    """Forwarding requests to PubMed's API
+
+    Example:
+    https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=25344497
+    """
+
+    url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
+    params = {
+        'db': 'pubmed',
+        'retmode': 'json',
+        'id': id
+    }
+    headers = {
+        'Accept': 'application/json'
+    }
+
+    response = requests.get(url, params=params, headers=headers)
+    return HttpResponse(response, mimetype='application/json')

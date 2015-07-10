@@ -136,7 +136,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
                     node_types = get_node_types(
                         study.uuid,
                         assay.uuid,
-                        files_only=True,
+                        files_only=True,  # This parameter is never
                         filter_set=Node.FILES
                     )
                     for node_type in node_types:

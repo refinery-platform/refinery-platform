@@ -12,26 +12,26 @@
 {% endblock %}
 
 {% block content %}
-{% if project %}	
-<div class="refinery-panel refinery-panel-content scrollable">
-	<div class="row-fluid">		
-		
+{% if project %}
+<div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
+	<div class="row-fluid">
+
 		<div class="refinery-header">
 			<span class="refinery-header-left">
-				<h3>{{project.name}}</h3>				
-			</span>			
-		</div>		
+				<h3>{{project.name}}</h3>
+			</span>
+		</div>
 
 		<div class="refinery-subheader">
 			<h4>Summary</h4>
-		</div>	
+		</div>
 		<p>{% if project.summary %} {{ project.summary }} {% else %} <i>None provided.</i>{% endif %}</p>
 
 		<div class="refinery-subheader">
 			<h4>Description</h4>
-		</div>		
+		</div>
 		<p>{% if project.description %} {{ project.description|markdown:"safe" }} {% else %} <i>None provided.</i>{% endif %}</p>
-	
+
 		<div class="refinery-subheader">
 			<h4>Shortcut Name</h4>
 		</div>
@@ -44,22 +44,22 @@
 
 		<div class="refinery-header">
 			<span class="refinery-header-left">
-				<h3>Sharing</h3>				
-			</span>			
-		</div>		
+				<h3>Sharing</h3>
+			</span>
+		</div>
 
 		<div class="refinery-subheader">
 			<h4>Owner</h4>
-		</div>	
+		</div>
 		<p><i class="icon-user"></i>&nbsp;<a href="{% url 'user' project.get_owner.get_profile.uuid %}">{% if project.get_owner.get_full_name %}{{ project.get_owner.get_full_name }}{% else %}{{ project.get_owner }}{%endif%}</a></p>
-		
+
 		{% if project.get_groups|length > 0 %}
 		<div class="refinery-subheader">
 			<h4>Groups</h4>
 		</div>
 			<p>
 			{% for perm in project.get_groups %}
-				{% if perm.group.is_managed %}					
+				{% if perm.group.is_managed %}
 					<a href="{% url 'group' perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
 					{% if perm.read %}
 						<i class="icon-eye-open"></i>
@@ -75,11 +75,11 @@
 
 		<div class="refinery-header">
 			<span class="refinery-header-left">
-				<h3>History</h3>				
-			</span>			
-		</div>		
+				<h3>History</h3>
+			</span>
+		</div>
 		<p>Created: {{ project.creation_date }} | Last Modified: {{ project.modification_date }}</p>
-		
+
 		{% if project.analyses.count > 0 %}
 		<div class="refinery-header">
 			<span class="refinery-header-left">

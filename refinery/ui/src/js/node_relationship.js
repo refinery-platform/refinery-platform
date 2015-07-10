@@ -2,13 +2,13 @@ angular.module('refineryNodeRelationship', [
   'ngResource',
 ])
 
-.factory('nodeRelationshipResource', function($resource) {
+.factory('NodeRelationshipResource', function($resource) {
   'use strict';
 
   return $resource(
     "/api/v1/noderelationship/:uuid/", {
       format: "json",
-    }, 
+    },
     {
       'update': { method:'PUT' },
       'update_partial': { method:'PATCH' }
@@ -16,7 +16,7 @@ angular.module('refineryNodeRelationship', [
   );
 })
 
-.factory("nodePairResource", function($resource, $http) {
+.factory("NodePairResource", function($resource, $http) {
   'use strict';
 
   return $resource(
@@ -26,7 +26,7 @@ angular.module('refineryNodeRelationship', [
   );
 })
 
-.service( 'nodeRelationshipService', function($log, nodeRelationshipResource) {
+.service( 'nodeRelationshipService', function($log, NodeRelationshipResource) {
 
   var createCurrentNodeRelationship = function( name, type, success, error ) {
     _createNodeRelationship( name, type, "", true, success, error );
@@ -39,7 +39,7 @@ angular.module('refineryNodeRelationship', [
   var _createNodeRelationship = function( name, summary, type, is_current, success, error ) {
     //internal method -- call createNodeRelationship or createCurrentNodeRelationship
 
-    var resource = new nodeRelationshipResource( {study: "/api/v1/study/" + externalStudyUuid + "/", assay: "/api/v1/assay/" + externalAssayUuid + "/", node_pairs: [], name: name, summary: summary, type: type, is_current: is_current } );
+    var resource = new NodeRelationshipResource( {study: "/api/v1/study/" + externalStudyUuid + "/", assay: "/api/v1/assay/" + externalAssayUuid + "/", node_pairs: [], name: name, summary: summary, type: type, is_current: is_current } );
 
     resource.$save( success, error );
   };
@@ -50,7 +50,7 @@ angular.module('refineryNodeRelationship', [
       $log.error( "Cannot delete current node relationship." );
     }
     else {
-      nodeRelationshipResource.delete( { uuid: nodeRelationship.uuid }, success, error );
+      NodeRelationshipResource.delete( { uuid: nodeRelationship.uuid }, success, error );
     }
   };
 
@@ -60,7 +60,7 @@ angular.module('refineryNodeRelationship', [
       $log.error( 'Cannot update "current" node relationship.' );
     }
     else {
-      nodeRelationshipResource.update({uuid: nodeRelationship.uuid}, nodeRelationship, success, error );
+      NodeRelationshipResource.update({uuid: nodeRelationship.uuid}, nodeRelationship, success, error );
     }
   };
 
@@ -72,7 +72,7 @@ angular.module('refineryNodeRelationship', [
   });
 })
 
-.controller('NodeRelationshipListCtrl', function($scope, $rootScope, $element, $log, $modal, nodeRelationshipResource, nodeRelationshipService ) {
+.controller('NodeRelationshipListCtrl', function($scope, $rootScope, $element, $log, $modal, NodeRelationshipResource, nodeRelationshipService ) {
   'use strict';
 
   $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
@@ -81,7 +81,7 @@ angular.module('refineryNodeRelationship', [
     $scope.currentNodeRelationship = null;
 
     $rootScope.$emit("nodeRelationshipChangedEvent", $scope.currentNodeRelationship, undefined );
-  });  
+  });
 
   $scope.$onRootScope('nodeRelationshipChangedEvent', function( event, currentNodeRelationship, index ) {
     $scope.nodeRelationshipIndex = index;
@@ -93,7 +93,7 @@ angular.module('refineryNodeRelationship', [
   var successDelete = function( response ) {
     $log.debug( response );
     $log.debug( "Successfully deleted " + response.name );
-    
+
     $scope.currentNodeRelationship = null;
     $scope.nodeRelationshipIndex = 0;
     $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid );
@@ -110,15 +110,15 @@ angular.module('refineryNodeRelationship', [
   };
 
   $scope.loadNodeRelationshipList = function( studyUuid, assayUuid, selectedNodeRelationship ) {
-    return nodeRelationshipResource.get({ 
+    return NodeRelationshipResource.get({
         study__uuid: studyUuid,
         assay__uuid: assayUuid,
         order_by: [ "-is_current", "name" ]
-      },      
+      },
       function( response ) {
         // check if there is a "current mapping" in the list (this would be the first entry due to the ordering)
         if ( ( ( response.objects.length > 0 ) && ( !response.objects[0].is_current ) ) || ( response.objects.length === 0 ) ) {
-          nodeRelationshipService.createCurrentNodeRelationship( "Current Mapping", "1-N", 
+          nodeRelationshipService.createCurrentNodeRelationship( "Current Mapping", "1-N",
             function() { $scope.loadNodeRelationshipList( externalStudyUuid, externalAssayUuid ); },
             function( response ){ $log.error( response ); } );
         }
@@ -128,10 +128,10 @@ angular.module('refineryNodeRelationship', [
         // if a node relationship should be selected: find its index
         if ( selectedNodeRelationship ) {
           $scope.nodeRelationshipIndex = $scope.findNodeRelationshipListIndex( selectedNodeRelationship );
-          
+
           // if node relationship was found in list: fire update
-          if ( selectedNodeRelationship >= 0 ) {            
-            $scope.updateCurrentNodeRelationship();            
+          if ( selectedNodeRelationship >= 0 ) {
+            $scope.updateCurrentNodeRelationship();
           }
         }
     });
@@ -148,11 +148,11 @@ angular.module('refineryNodeRelationship', [
   };
 
   $scope.updateCurrentNodeRelationship = function() {
-    $scope.currentNodeRelationship = $scope.nodeRelationshipList[$scope.nodeRelationshipIndex];  
+    $scope.currentNodeRelationship = $scope.nodeRelationshipList[$scope.nodeRelationshipIndex];
     if ($scope.currentNodeRelationship) {
       $rootScope.$emit("nodeRelationshipChangedEvent", $scope.currentNodeRelationship, $scope.nodeRelationshipIndex);
     }
-  };  
+  };
 
 
   $scope.openNewMappingDialog = function() {

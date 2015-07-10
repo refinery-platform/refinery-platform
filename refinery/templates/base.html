@@ -154,7 +154,7 @@
       {% endif %}
   {% endif %}
 
-  <div class="container-fluid">
+  <div class="container-fluid {% if main_container_no_padding %}p-l-0 p-r-0{% endif %}">
     <div class="row-fluid" hidden id="warning-ie-not-supported">
       <div class="alert alert-error">
         <b>Notice</b>&nbsp;
@@ -186,6 +186,8 @@
   <script src="{% static "vendor/angular-ui-utils/modules/scroll/scroll.js" %}"></script>
   <script src="{% static "vendor/angular-bootstrap/ui-bootstrap.min.js" %}"></script>
   <script src="{% static "vendor/angular-bootstrap/ui-bootstrap-tpls.min.js" %}"></script>
+  <script src="{% static "vendor/x2js/xml2json.min.js" %}"></script>
+  <script src="{% static "vendor/angular-xml/angular-xml.min.js" %}"></script>
   <script src="{% static "js/bootstrap/bootstrap.min.js" %}"></script>
   <script src="{% static "vendor/lodash-3/lodash.min.js" %}"></script>
   <script type="text/javascript">
@@ -244,13 +246,13 @@
             windowHeight = $(window).height();
 
 		    if(windowWidth <= 767) {
-		    	$('.scrollable').css('height', 'inherit' );
+		    	$('.jquery-full-height').css('height', 'inherit' );
 		    }
 		    else {
-			    $('.scrollable').map( function() {
+			    $('.jquery-full-height').map( function() {
             var $this = $(this),
                 targetHeight = (windowHeight - $this.offset().top - 40),
-                minHeight = parseInt($('.scrollable').css("min-height")),
+                minHeight = parseInt($this.css("min-height")),
                 newHeight = Math.max(targetHeight, minHeight);
 
 			    	$this.css('height', newHeight + 'px');

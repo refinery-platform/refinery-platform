@@ -38,8 +38,7 @@ Thumbs.db
 # machine/user specific files #
 ###############################
 setup_refinery.sh
-settings_local*.py
-/refinery/settings.json
+/refinery/config.json
 /docs/_build/*
 /docs/_static/*
 .idea/
