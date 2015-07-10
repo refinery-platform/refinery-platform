@@ -1,0 +1,26 @@
+<div class="modal-header">
+  <h3>Member Editor!</h3>
+</div>
+<div class="modal-body">
+  <table class="table table-hover" id="member-table">
+    <thead>
+      <td>User</td>
+      <td></td>
+      <td></td>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          {{member.username}}
+        </td>
+        <td>
+          <button ng-if="member.is_manager" type="button" class="btn btn-default" ng-click="demote(member)">Demote</button>
+          <button ng-if="!member.is_manager" type="button" class="btn btn-default"ng-click="promote(member)">Promote</button>
+        </td>
+        <td>
+          <button type="button" class="btn btn-default" ng-click="remove(member)">Remove</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
