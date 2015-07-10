@@ -33,7 +33,7 @@ angular.module('refineryCollaborate', [])
     if (this.group.can_edit) {
       $scope.isManager = true;
     }
-  }
+  };
 
   $scope.setResourceActive = function () {
     if ($scope.lastResourceActive) {
@@ -57,7 +57,7 @@ angular.module('refineryCollaborate', [])
 
     $scope.hasNotSelectedOtherResource = false;
     activeResType = this.resource;
-  }
+  };
 
   function updateControlPanel(group) {
     // Gets the members.
@@ -111,15 +111,15 @@ angular.module('refineryCollaborate', [])
         $modalInstance.dismiss();
         clearControlPanel();
       });
-    }
+    };
 
     $scope.deleteGroup = function (groupId) {
       $http.delete('/api/v1/groups/' + groupId + '/', {}).success(function (response) {
         updateGroupList();
         $modalInstance.dismiss();
         clearControlPanel();
-      })
-    }
+      });
+    };
 
     $scope.createGroup = function (groupName) {
       $http.post('/api/v1/groups/', {
@@ -128,8 +128,8 @@ angular.module('refineryCollaborate', [])
         updateGroupList();
         // updateControlPanel();
         $modalInstance.dismiss();
-      })
-    }
+      });
+    };
   };
 
   $scope.openGroupEditor = function () {
@@ -142,11 +142,11 @@ angular.module('refineryCollaborate', [])
             pageScope: $scope,
             groupList: $scope.groupList,
             user_id: user_id
-          }  
+          };  
         }
       }
     });
-  }
+  };
 
   // Handle member permissions
   var memberEditorController = function ($scope, $http, $modalInstance, config) {
@@ -162,7 +162,7 @@ angular.module('refineryCollaborate', [])
         updateControlPanel(activeGroup);
         $modalInstance.dismiss();
       });
-    }
+    };
 
     $scope.demote = function (member) {
       $http.delete('/api/v1/groups/' + (activeGroup.manager_group_id) +'/members/' + member.user_id).success(function (response) {
@@ -171,7 +171,7 @@ angular.module('refineryCollaborate', [])
         updateControlPanel(activeGroup);
         $modalInstance.dismiss();
       });
-    }
+    };
 
     $scope.remove = function (member) {
       $http.delete('/api/v1/groups/' + (activeGroup.group_id) + '/members/' + member.user_id).success(function (response) {
@@ -180,7 +180,7 @@ angular.module('refineryCollaborate', [])
         updateControlPanel(activeGroup);
         $modalInstance.dismiss();
       });
-    }
+    };
   };
 
   $scope.openMemberEditor = function (member) {
@@ -196,7 +196,7 @@ angular.module('refineryCollaborate', [])
         }
       }
     });
-  }
+  };
 
   // Send email invites
   var emailInviteController = function ($scope, $http, $modalInstance, config) {
@@ -211,7 +211,7 @@ angular.module('refineryCollaborate', [])
         console.log("Successfully sent email");
       });
     };
-  }
+  };
 
   $scope.openEmailInvite = function () {
     var modalInstance = $modal.open({
@@ -221,11 +221,11 @@ angular.module('refineryCollaborate', [])
         config: function () {
           return {
             groupId: activeGroup.group_id
-          }
+          };
         }
       }
     });
-  }
+  };
 })
 
 .directive('collaborateDisplay', function () {
