@@ -1,13 +1,75 @@
-<div id="test">
-  Some other text also goes here
+<div id="group-collab">
+  <div class="row-fluid">
 
-  {{ foo }}
+    <div class="span6 well">
+      <strong>Groups</strong>
+      <span style="float:right;margin-left:5px">
+        <a href="#" ng-click="openGroupEditor()"><i class="icon-cog"></i></a>
+      </span>
 
-  <ul class="list-group">
-    <li class="list-group-item">Cras justo odio</li>
-    <li class="list-group-item">Dapibus ac facilisis in</li>
-    <li class="list-group-item">Morbi leo risus</li>
-    <li class="list-group-item">Porta ac consectetur ac</li>
-    <li class="list-group-item">Vestibulum at eros</li>
-  </ul>
+      <ul class="nav nav-list scrollable">
+        <li ng-repeat="group in groupList | filter:{manager_group:false} track by $index" ng-click="setGroupActive()" class="{{groupActive}}">
+          <a href="#">
+            {{group.group_name}}
+            <span style="float:right;color:red" font-size="10px" ng-if="group.can_edit">
+              manager
+            </span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="span6">
+      
+      <div class="span12 well">
+      <!--<div class="span4 well">-->
+        <strong>Members</strong>
+        <span style="margin-left:5px" ng-if="isManager">
+          <a href="#" ng-click="openEmailInvite()"><i class="icon-plus"></i></a>
+        </span>
+        <ul class="nav nav-list scrollable">
+          <li ng-repeat="member in memberList">
+            {{member.username}}
+            <span style="float:right" ng-if="isManager">
+              <span ng-if="member.is_manager" style="float:left;color:red" font-size="5px">
+                manager
+              </span>
+              <a href="#" ng-click="openMemberEditor(member)" style="margin-left:10px">
+                <i class="icon-cog"></i>
+              </a>
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="span8 well" style="display:none">
+        <ul class="nav nav-tabs">
+          <li ng-repeat="resource in resourceTypes.slice(0, 1)" ng-click="setResourceActive()" class="{{hasNotSelectedOtherResource && 'active' || resourceActive}}">
+            <a href="#">{{resource}}</a>
+          </li>
+          <li ng-repeat="resource in resourceTypes.slice(1)" ng-click="setResourceActive()" class="{{resourceActive}}">
+            <a href="#">{{resource}}</a>
+          </li>
+        </ul>
+        <ul class="nav nav-list scrollable">
+          <li ng-repeat="res in activePermList">
+            <span>
+              <a href="#" title={{res.name}}>{{res.name}}</a>
+              <span ng-if="isManager" style="float:right">
+                
+                <span ng-if="!res.read && !res.change" style="float:left">NO PERMISSION</span>
+                <span ng-if="res.read" style="float:left">CAN READ</span>
+                <span ng-if="res.change" style="float:left">CAN CHANGE</span> 
+                <a href="#" style="margin-left:5px"><i class="icon-cog"></i></a>
+              </span>    
+            </span>
+          </li>
+        </ul>
+        <div id="size-test" style="display:none">
+        </div>
+      </div>
+
+    </div>
+
+  </div>
 </div>

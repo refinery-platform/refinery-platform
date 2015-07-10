@@ -918,6 +918,8 @@ class GroupManagementResource(Resource):
     member_list = fields.ListField(attribute='member_list', null=True)
     perm_list = fields.ListField(attribute='perm_list', null=True)
     can_edit = fields.BooleanField(attribute='can_edit', default=False)
+    manager_group = fields.BooleanField(attribute='is_manager_group', default=False)
+    manager_group_id = fields.IntegerField(attribute='manager_group_id', null=True)
 
     class Meta:
         resource_name = 'groups'
@@ -956,7 +958,12 @@ class GroupManagementResource(Resource):
         return map(
             lambda u: {
                 'user_id': u.id,
-                'username': u.username
+                'username': u.username,
+                'is_manager': True if ((not self.is_manager_group(group) and
+                    u in group.extendedgroup.manager_group.user_set.all()) or
+                    (self.is_manager_group(group) and
+                    u in group.user_set.all()))
+                    else False
             },
             group.user_set.all())
 
@@ -981,9 +988,15 @@ class GroupManagementResource(Resource):
 
     def get_perm_list(self, group):
         f = lambda r: self.get_perms(r, group)
-        dataset_perms = map(f, DataSet.objects.all())
-        project_perms = map(f, Project.objects.all())
-        workflow_perms = map(f, Workflow.objects.all())
+        dataset_perms = filter(
+            lambda r: r['read'],
+            map(f, DataSet.objects.all()))
+        project_perms = filter(
+            lambda r: r['read'],
+            map(f, Project.objects.all()))
+        workflow_perms = filter(
+            lambda r: r['read'],
+            map(f, Workflow.objects.all()))
         # workflow_engine_perms = map(f, WorkflowEngine.objects.all())
         # analysis_perms = map(f, Analysis.objects.all())
         # download_perms = map(f, Download.objects.all())
@@ -1097,7 +1110,9 @@ class GroupManagementResource(Resource):
                 group.name,
                 None,
                 None,
-                self.user_authorized(user, group))
+                self.user_authorized(user, group),
+                self.is_manager_group(group),
+                group.id if self.is_manager_group(group) else group.extendedgroup.manager_group.id)
             return self.process_get(request, group_obj, **kwargs)
         elif request.method == 'DELETE':
             if not self.user_authorized(user, group):
@@ -1129,7 +1144,9 @@ class GroupManagementResource(Resource):
                     g.name,
                     None,
                     None,
-                    self.user_authorized(user, g)),
+                    self.user_authorized(user, g),
+                    self.is_manager_group(g),
+                    g.id if self.is_manager_group(g) else g.extendedgroup.manager_group.id),
                 group_list)
 
             return self.process_get_list(request, group_obj_list, **kwargs)
@@ -1153,7 +1170,9 @@ class GroupManagementResource(Resource):
                 group.name,
                 self.get_member_list(group),
                 None,
-                self.user_authorized(user, group))
+                self.user_authorized(user, group),
+                self.is_manager_group(group),
+                group.id if self.is_manager_group(group) else group.extendedgroup.manager_group.id)
             kwargs['members'] = True
             return self.process_get(request, group_obj, **kwargs)
         elif request.method == 'PATCH':
@@ -1208,14 +1227,32 @@ class GroupManagementResource(Resource):
                 if group.user_set.count() == 1:
                     return HttpForbidden('Last member - must delete group')
 
-                self.full_remove(user, group)
+                # When demoting yourself while targetting manager group.
+                if self.is_manager_group(group) and group.user_set.count() == 1:
+                    return HttpForbidden('Last manager must delete group to leave')
+
+                # When 
+                if not self.is_manager_group(group) and user in group.extendedgroup.manager_group.user_set.all():
+                    if group.extendedgroup.manager_group.user_set.count() == 1:
+                        return HttpForbidden('Last manager must delete group to leave')
+
+                group.user_set.remove(user);
+
+                if not self.is_manager_group(group):
+                    group.extendedgroup.manager_group.user_set.remove(user)
+
                 return HttpNoContent()
 
             # Removing other people from the group
             if not self.user_authorized(user, group):
                 return HttpUnauthorized()
 
-            self.full_remove(int(kwargs['user_id']), group)
+            if self.is_manager_group(group):
+                group.user_set.remove(int(kwargs['user_id']))
+            else:
+                group.user_set.remove(int(kwargs['user_id']))
+                group.extendedgroup.manager_group.user_set.remove(int(kwargs['user_id']))
+
             return HttpNoContent()
         else:
             return HttpMethodNotAllowed()
@@ -1235,7 +1272,9 @@ class GroupManagementResource(Resource):
                     g.name,
                     self.get_member_list(g),
                     None,
-                    self.user_authorized(user, g)),
+                    self.user_authorized(user, g),
+                    self.is_manager_group(g),
+                    g.id if self.is_manager_group(g) else g.extendedgroup.manager_group.id),
                 group_list)
 
             kwargs['members'] = True
@@ -1256,7 +1295,9 @@ class GroupManagementResource(Resource):
                 group.name,
                 None,
                 self.get_perm_list(group),
-                self.user_authorized(user, group))
+                self.user_authorized(user, group),
+                self.is_manager_group(group),
+                group.id if self.is_manager_group(group) else group.extendedgroup.manager_group.id)
             kwargs['perms'] = True
             return self.process_get(request, group_obj, **kwargs)
         elif request.method == 'PATCH':
@@ -1279,7 +1320,9 @@ class GroupManagementResource(Resource):
                     g.name,
                     None,
                     self.get_perm_list(g),
-                    self.user_authorized(user, g)),
+                    self.user_authorized(user, g),
+                    self.is_manager_group(g),
+                    g.id if self.is_manager_group(g) else g.extendedgroup.manager_group.id),
                 group_list)
 
             kwargs['perms'] = True

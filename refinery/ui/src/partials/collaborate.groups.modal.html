@@ -1,0 +1,32 @@
+<div class="modal-header">
+  <h3>Group Editor</h3>
+  <p>To leave groups with only one member left, you must delete it</p>
+</div>
+<div class="modal-body">
+  <table class="table table-hover" id="group-table">
+    <thead>
+      <tr>
+        <th>Group</th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="group in groupList">
+      <td>
+        {{group.group_name}}
+      </td>
+      <td>
+        <button type="button" class="btn btn-default" style="float:right" ng-click="leaveGroup(group.group_id, user_id)" ng-class="{disabled: group.member_list.length===1}"}>Leave</button>
+      </td>
+      <td>
+        <button type="button" class="btn btn-default" style="float:right" ng-click="deleteGroup(group.group_id)" ng-disabled="!group.can_edit">Delete</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  <form class="navbar-form" style="text-align:center">
+    <input type="text" class="form-control" placeholder="New group's name" ng-model="newGroupName">
+    <button type="submit" class="btn btn-default" ng-click="createGroup(newGroupName)">Create New Group</button>
+  </form>
+</div>
