@@ -2963,8 +2963,10 @@ var provvisRender = (function () {
               .text(function (d) {
                 return d.nodeType === "stored" ? d.attributes.get("name") :
                     (
-                        /* Trim data transformation node names.*/
-                        d.nodeType === "dt" ?
+                      /* Trim data transformation node names for
+                       testtoolshed repo.*/
+                        d.nodeType === "dt" &&
+                        d.name.substr(0, 13) === "testtoolshed." ?
                             d.name.substr(
                                 d.name.indexOf(' '),
                                 d.name.length - d.name.indexOf(' ')
