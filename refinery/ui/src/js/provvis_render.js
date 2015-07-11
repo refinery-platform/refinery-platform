@@ -4512,8 +4512,9 @@ var provvisRender = (function () {
       });
       showTooltip(ttStr, event);
       /*self.classed("mouseoverNode", true);*/
-      d3.select("#BBoxId-" + d.parent.parent.autoId)
-          .classed("mouseoverBBox", true);
+      d.parent.parent.parent.children.values().forEach(function (sibling) {
+        d3.select("#BBoxId-" + sibling.autoId).style("stroke-opacity", 0.3);
+      });
       d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", true);
       self.select(".labels").attr("clip-path", "");
 
@@ -4529,16 +4530,15 @@ var provvisRender = (function () {
       d.attributes.forEach(function (key, value) {
         ttStr += createHTMLKeyValuePair(key, value) + "<br>";
       });
-      d3.select("#BBoxId-" + d.parent.parent.autoId)
-          .classed("mouseoverBBox", true);
       d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", true);
       showTooltip(ttStr, event);
     }).on("mouseout", function (d) {
       var self = d3.select(this);
       hideTooltip();
       /*self.classed("mouseoverNode", false);*/
-      d3.select("#BBoxId-" + d.parent.parent.autoId)
-          .classed("mouseoverBBox", false);
+      d.parent.parent.parent.children.values().forEach(function (sibling) {
+        d3.select("#BBoxId-" + sibling.autoId).style("stroke-opacity", 0.0);
+      });
       d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", false);
       self.select(".labels").attr("clip-path",
           "url(#bbClipId-" + d.autoId + ")");
@@ -4551,22 +4551,34 @@ var provvisRender = (function () {
     saNode.on("mouseover", function (d) {
       var self = d3.select(this);
       self.select(".labels").attr("clip-path", "");
+      d.parent.parent.children.values().forEach(function (sibling) {
+        d3.select("#BBoxId-" + sibling.autoId).style("stroke-opacity", 0.3);
+      });
     }).on("mousemove", function (d) {
     }).on("mouseout", function (d) {
       var self = d3.select(this);
       self.select(".labels").attr("clip-path",
           "url(#bbClipId-" + d.autoId + ")");
+      d.parent.parent.children.values().forEach(function (sibling) {
+        d3.select("#BBoxId-" + sibling.autoId).style("stroke-opacity", 0.0);
+      });
     });
 
     /* Analysis tolltips. */
-    aNode.on("mouseover", function () {
+    aNode.on("mouseover", function (d) {
       var self = d3.select(this);
       self.select(".labels").attr("clip-path", "");
+      d.parent.children.values().forEach(function (sibling) {
+        d3.select("#BBoxId-" + sibling.autoId).style("stroke-opacity", 0.3);
+      });
     }).on("mousemove", function (d) {
     }).on("mouseout", function (d) {
       var self = d3.select(this);
       self.select(".labels")
           .attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
+      d.parent.children.values().forEach(function (sibling) {
+        d3.select("#BBoxId-" + sibling.autoId).style("stroke-opacity", 0.0);
+      });
     });
 
     /* Layer . */
@@ -4584,12 +4596,16 @@ var provvisRender = (function () {
     saBBox.on("mouseover", function (d) {
       var self = d3.select(this);
       self.classed("mouseoverBBox", true);
-      d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", true);
+      d.parent.parent.children.values().forEach(function (sibling) {
+        d3.select("#BBoxId-" + sibling.autoId).style("stroke-opacity", 0.3);
+      });
       self.select(".labels").attr("clip-path", "");
     }).on("mouseout", function (d) {
       var self = d3.select(this);
       self.classed("mouseoverBBox", false);
-      d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", false);
+      d.parent.parent.children.values().forEach(function (sibling) {
+        d3.select("#BBoxId-" + sibling.autoId).style("stroke-opacity", 0.0);
+      });
       self.select(".labels")
           .attr("clip-path", "url(#saBBClipId-" + d.autoId + ")");
     });
@@ -4598,21 +4614,17 @@ var provvisRender = (function () {
     aBBox.on("mouseover", function (an) {
       var self = d3.select(this);
       self.select(".labels").attr("clip-path", "");
-
+      //d3.select("#BBoxId-" + an.autoId).classed("mouseoverBBox", true);
       an.parent.children.values().forEach(function (sibling) {
-        d3.select("#BBoxId-" + sibling.autoId).classed("mouseoverBBox", true);
+        d3.select("#BBoxId-" + sibling.autoId).style("stroke-opacity", 0.3);
       });
     }).on("mouseout", function (an) {
       var self = d3.select(this);
       self.select(".labels")
           .attr("clip-path", "url(#aBBClipId-" + an.autoId + ")");
-
+      //d3.select("#BBoxId-" + an.autoId).classed("mouseoverBBox", false);
       an.parent.children.values().forEach(function (sibling) {
-        d3.select("#BBoxId-" + sibling.autoId).classed("mouseoverBBox", false);
-      });
-
-      an.children.values().forEach(function (san) {
-        d3.select("#BBoxId-" + san.autoId).classed("mouseoverBBox", false);
+        d3.select("#BBoxId-" + sibling.autoId).style("stroke-opacity", 0.0);
       });
     });
 
@@ -4620,12 +4632,12 @@ var provvisRender = (function () {
     lBBox.on("mouseover", function () {
       var self = d3.select(this);
       self.select(".labels").attr("clip-path", "");
-      self.classed("mouseoverBBox", true);
+      //self.classed("mouseoverBBox", true);
     }).on("mouseout", function (ln) {
       var self = d3.select(this);
       self.select(".labels")
           .attr("clip-path", "url(#lBBClipId-" + ln.autoId + ")");
-      self.classed("mouseoverBBox", false);
+      //self.classed("mouseoverBBox", false);
     });
 
     /* On mouseover timeline analysis lines. */
