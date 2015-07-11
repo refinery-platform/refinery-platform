@@ -4297,7 +4297,10 @@ var provvisRender = (function () {
           title = '<i class="icon-sitemap rotate-icon-90"></i>&nbsp;' +
               selNode.fileType;
           if (data.file_url !== null) {
-            titleLink = '<a href="' + data.file_url + '>' +
+            /* TODO: Trigger download without window.open. */
+            titleLink = '<a title="Download linked file" href="' +
+                data.file_url + '" onclick=window.open("' + data.file_url +
+                '")>' +
                 '<i class="icon-download"></i>&nbsp;' + data.name + '</a>';
           } else {
             titleLink = " - ";
@@ -4316,7 +4319,10 @@ var provvisRender = (function () {
           title = '<i class="icon-sitemap rotate-icon-90"></i>&nbsp;' +
               selNode.fileType;
           if (data.file_url !== null) {
-            titleLink = "<a href=" + data.file_url + ' target="_blank">' +
+            /* TODO: Trigger download without window.open. */
+            titleLink = '<a title="Download linked file" href="' +
+                data.file_url + '" onclick=window.open("' + data.file_url +
+                '")>' +
                 '<i class="icon-download"></i>&nbsp;' + data.name + '</a>';
           }
         }
