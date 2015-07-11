@@ -4518,8 +4518,8 @@ var provvisRender = (function () {
       self.select(".labels").attr("clip-path", "");
 
       d3.selectAll(".node:not(#nodeId-" + d.autoId +
-          ")").selectAll(".nodeAttrLabel").transition().duration(nodeLinkTransitionTime).attr("opacity",
-          0);
+          ")").selectAll(".nodeAttrLabel").transition()
+          .duration(nodeLinkTransitionTime).attr("opacity", 0);
 
     }).on("mousemove", function (d) {
       var ttStr = createHTMLKeyValuePair("Name", d.name) + "<br>" +
@@ -4543,25 +4543,17 @@ var provvisRender = (function () {
       self.select(".labels").attr("clip-path",
           "url(#bbClipId-" + d.autoId + ")");
 
-      d3.selectAll(".nodeAttrLabel").transition().duration(nodeLinkTransitionTime).attr("opacity",
-          1);
+      d3.selectAll(".nodeAttrLabel").transition()
+          .duration(nodeLinkTransitionTime).attr("opacity", 1);
     });
 
     /* Subanalysis tooltips. */
     saNode.on("mouseover", function (d) {
       var self = d3.select(this);
-      d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", true);
-      d3.select("#BBoxId-" + d.autoId).classed("mouseoverBBox", true);
       self.select(".labels").attr("clip-path", "");
     }).on("mousemove", function (d) {
-      d3.select("#BBoxId-" + d.parent.parent.autoId).classed("mouseoverBBox",
-          true);
-      d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", true);
     }).on("mouseout", function (d) {
       var self = d3.select(this);
-      d3.select("#BBoxId-" + d.parent.parent.autoId).classed("mouseoverBBox",
-          false);
-      d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", false);
       self.select(".labels").attr("clip-path",
           "url(#bbClipId-" + d.autoId + ")");
     });
@@ -4607,13 +4599,9 @@ var provvisRender = (function () {
       var self = d3.select(this);
       self.select(".labels").attr("clip-path", "");
 
-      /*if (!an.hidden) {*/
       an.parent.children.values().forEach(function (sibling) {
         d3.select("#BBoxId-" + sibling.autoId).classed("mouseoverBBox", true);
       });
-      /*            } else {
-       self.classed("mouseoverBBox", true);
-       }*/
     }).on("mouseout", function (an) {
       var self = d3.select(this);
       self.select(".labels")
@@ -4657,159 +4645,6 @@ var provvisRender = (function () {
     }).on("mouseout", function (an) {
       hideTooltip();
       d3.select("#BBoxId-" + an.autoId).classed("mouseoverTlBBox", false);
-    });
-  };
-
-  /**
-   * Adds tooltips to nodes.
-   */
-  var handleDebugTooltips = function () {
-
-    /**
-     * Helper function for tooltip creation.
-     * @param key Property name.
-     * @param value Property value.
-     * @returns {string} Inner html code.
-     */
-    var createHTMLKeyValuePair = function (key, value) {
-      return "<b>" + key + ": " + "</b>" + value;
-    };
-
-    /* Node tooltips. */
-    node.on("mouseover", function (d) {
-      var self = d3.select(this);
-      showTooltip(
-          createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-          createHTMLKeyValuePair("x", d.x) + "<br>" +
-          createHTMLKeyValuePair("y", d.y), event);
-      /*self.classed("mouseoverNode", true);*/
-      self.select(".labels").attr("clip-path", "");
-    }).on("mousemove", function (d) {
-      showTooltip(
-          createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-          createHTMLKeyValuePair("x", d.x) + "<br>" +
-          createHTMLKeyValuePair("y", d.y), event);
-    }).on("mouseout", function (d) {
-      var self = d3.select(this);
-      hideTooltip();
-      /*self.classed("mouseoverNode", false);*/
-      self.select(".labels")
-          .attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
-    });
-
-    /* Subanalysis tooltips. */
-    saNode.on("mouseover", function (d) {
-      var self = d3.select(this);
-      showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-          createHTMLKeyValuePair("x", d.x) + "<br>" +
-          createHTMLKeyValuePair("y", d.y), event);
-      self.select(".labels").attr("clip-path", "");
-    }).on("mousemove", function (d) {
-      showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-          createHTMLKeyValuePair("x", d.x) + "<br>" +
-          createHTMLKeyValuePair("y", d.y), event);
-    }).on("mouseout", function (d) {
-      var self = d3.select(this);
-      hideTooltip();
-      self.select(".labels")
-          .attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
-    });
-
-    /* Analysis tolltips. */
-    aNode.on("mouseover", function (d) {
-      var self = d3.select(this);
-      showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-          createHTMLKeyValuePair("x", d.x) + "<br>" +
-          createHTMLKeyValuePair("y", d.y), event);
-      self.select(".labels").attr("clip-path", "");
-    }).on("mousemove", function (d) {
-      showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-          createHTMLKeyValuePair("x", d.x) + "<br>" +
-          createHTMLKeyValuePair("y", d.y), event);
-    }).on("mouseout", function (d) {
-      var self = d3.select(this);
-      hideTooltip();
-      self.select(".labels")
-          .attr("clip-path", "url(#bbClipId-" + d.autoId + ")");
-    });
-
-    /* Layer tolltips. */
-    lNode.on("mouseover", function (d) {
-      showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-          createHTMLKeyValuePair("x", d.x) + "<br>" +
-          createHTMLKeyValuePair("y", d.y), event);
-    }).on("mousemove", function (d) {
-      showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-          createHTMLKeyValuePair("x", d.x) + "<br>" +
-          createHTMLKeyValuePair("y", d.y), event);
-    }).on("mouseout", function () {
-      hideTooltip();
-    });
-
-    /* On mouseover subanalysis bounding box. */
-    saBBox.on("mouseover", function () {
-      var self = d3.select(this);
-      self.classed("mouseoverBBox", true);
-      self.select(".labels").attr("clip-path", "");
-    }).on("mouseout", function (d) {
-      var self = d3.select(this);
-      self.classed("mouseoverBBox", false);
-      self.select(".labels")
-          .attr("clip-path", "url(#saBBClipId-" + d.autoId + ")");
-    });
-
-    /* On mouseover analysis bounding box. */
-    aBBox.on("mouseover", function (an) {
-      var self = d3.select(this);
-      self.select(".labels").attr("clip-path", "");
-
-      an.parent.children.values().forEach(function (sibling) {
-        d3.select("#BBoxId-" + sibling.autoId)
-            .classed("mouseoverBBox", true);
-      });
-
-    }).on("mouseout", function (an) {
-      var self = d3.select(this);
-      self.select(".labels")
-          .attr("clip-path", "url(#aBBClipId-" + an.autoId + ")");
-
-      an.parent.children.values().forEach(function (sibling) {
-        d3.select("#BBoxId-" + sibling.autoId).classed("mouseoverBBox", false);
-      });
-    });
-
-    /* On mouseover layer bounding box. */
-    lBBox.on("mouseover", function () {
-      var self = d3.select(this);
-      self.classed("mouseoverBBox", true);
-    }).on("mouseout", function (d) {
-      var self = d3.select(this);
-      self.classed("mouseoverBBox", false);
-    });
-
-    /* Link tooltips. */
-    link.on("mouseover", function (d) {
-      showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-          createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
-          createHTMLKeyValuePair("tar", d.target.autoId), event);
-    }).on("mousemove", function (d) {
-      showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-          createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
-          createHTMLKeyValuePair("tar", d.target.autoId), event);
-    }).on("mouseout", function () {
-      hideTooltip();
-    });
-
-    aLink.on("mouseover", function (d) {
-      showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-          createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
-          createHTMLKeyValuePair("tar", d.target.autoId), event);
-    }).on("mousemove", function (d) {
-      showTooltip(createHTMLKeyValuePair("autoId", d.autoId) + "<br>" +
-          createHTMLKeyValuePair("src", d.source.autoId) + "<br>" +
-          createHTMLKeyValuePair("tar", d.target.autoId), event);
-    }).on("mouseout", function () {
-      hideTooltip();
     });
   };
 
