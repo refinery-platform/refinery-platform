@@ -4516,6 +4516,11 @@ var provvisRender = (function () {
           .classed("mouseoverBBox", true);
       d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", true);
       self.select(".labels").attr("clip-path", "");
+
+      d3.selectAll(".node:not(#nodeId-" + d.autoId +
+          ")").selectAll(".nodeAttrLabel").transition().duration(nodeLinkTransitionTime).attr("opacity",
+          0);
+
     }).on("mousemove", function (d) {
       var ttStr = createHTMLKeyValuePair("Name", d.name) + "<br>" +
           createHTMLKeyValuePair("Type", d.fileType) + "<br>" +
@@ -4537,6 +4542,9 @@ var provvisRender = (function () {
       d3.select("#BBoxId-" + d.parent.autoId).classed("mouseoverBBox", false);
       self.select(".labels").attr("clip-path",
           "url(#bbClipId-" + d.autoId + ")");
+
+      d3.selectAll(".nodeAttrLabel").transition().duration(nodeLinkTransitionTime).attr("opacity",
+          1);
     });
 
     /* Subanalysis tooltips. */
