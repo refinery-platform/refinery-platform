@@ -1,9 +1,9 @@
 /*
  * node_set_manager.js
- *  
- * Author: Nils Gehlenborg 
+ *
+ * Author: Nils Gehlenborg
  * Created: 25 January 2013
- * 
+ *
  * This provides a UI and REST API interactions to allow users to create, edit
  * and delete node sets (representing a subset of files/samples/etc.) associated
  * with a data set.
@@ -366,10 +366,8 @@ NodeSetManager.prototype.postState = function(name, summary, solr_query,
         // do nothing
         return;
       }
-    }
-  )
-    .fail(function () {
-      console.error("Creation of node set failed.");
-    }
-  );
+    })
+    .fail(function (XMLHttpRequest, textStatus, errorThrown) {
+      console.error("Creation of node set failed.", XMLHttpRequest, textStatus, errorThrown);
+    });
 };
