@@ -1,115 +1,134 @@
 <div
-  class="span4 expandable"
-  ng-class="{'full-width': dashboard.expandDataSetPanel}">
+  class="span4"
+  refinery-expandable-panel>
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
         <h3>
-          <a ui-sref="dataSetsExploration">
-            <i class="m-r-1-4 icon-file"></i>Data Sets
-          </a>
+          <i class="m-r-1-4 icon-file"></i>Data Sets
         </h3>
       </span>
       <span class="refinery-header-right">
         <!--
         <button
-          class="no-underline-hover"
+          class="no-underline"
           ng-click="dashboard.toggleDataSetsExploration()">
           <i class="icon-compass" title="Explore data sets"></i>
         </button>
         -->
         <a
           href="./data_set_manager/import/"
-          class="no-underline-hover"
+          class="no-underline"
           ng-if="dashboard.userIsAuthenticated">
           <i class="icon-plus-sign"></i>
         </a>
       </span>
     </div>
 
-    <form class="navbar-search">
-      <i class="icon-search"></i>
-      <i
-        class="icon-remove-sign"
-        ng-if="dashboard.searchQueryDataSets"
-        ng-click="dashboard.resetDataSetSearch()"></i>
-      <input
-        type="text"
-        class="search-query"
-        placeholder="Search"
-        ng-model="dashboard.searchQueryDataSets"
-        ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
-    </form>
-
-    <div class="refinery-panel-header">
-      <div class="floatbox">
-        <div class="floatbox-min-right">
-          <h4 ng-if="dashboard.userIsAuthenticated">Share</h4>
-        </div>
-        <div class="floatbox-max-left">
-          <h4>Name</h4>
-        </div>
-      </div>
-    </div>
     <div
-      class="refinery-panel-content scrollable"
-      ui-scroll-viewport
-      refinery-dashboard-panel>
-      <ul
-        class="results no-list-style"
-        ng-class="{'search': dashboard.searchDataSet}">
-        <li
-          ui-scroll="dataSet in dashboard.dataSets"
-          adapter="dashboard.dataSetsAdapter">
-          <ul class="controls no-list-style">
-            <li ng-if="dashboard.userIsAuthenticated">
-              <button
-                ng-click="launchPad.openPermissionEditor('data_sets', dataSet.uuid)">
-                <i class="icon-edit"></i>
-              </button>
-            </li>
-          </ul>
-          <i
-            class="icon-user"
-            title="You own this data set"
-            ng-if="dataSet.is_owner"></i>
-          <i
-            class="icon-group"
-            title="This data set is shared with you"
-            ng-if="!dataSet.is_owner"></i>
-          <i
-            class="icon-globe"
-            title="This file is publicly available"
-            ng-if="dataSet.public"></i>
-          <a
-            ng-href="data_sets/{{ dataSet.uuid }}"
-            ng-if="!dashboard.searchDataSet">{{ dataSet.name }}</a>
-          <a
-            class="title"
-            ng-href="data_sets/{{ dataSet.uuid }}"
-            ng-if="dashboard.searchDataSet"
-            ng-bind-html="dataSet.title"></a>
-          <p
-            class="snippet"
-            ng-if="dataSet.description"
-            ng-bind-html="dataSet.description"></p>
-        </li>
-      </ul>
-      <div
-        class="refinery-request-loading"
-        ng-if="dashboard.dataSetsAdapter.isLoading">
-        <span class="refinery-spinner"></span>
+      class="refinery-sub-panel"
+      ng-class="{'border': dashboard.dataSetPreviewBorder}"
+      refinery-width-fixer>
+      <form class="navbar-search">
+        <i class="icon-search"></i>
+        <i class="icon-remove-sign"
+          ng-if="dashboard.searchQueryDataSets"
+          ng-click="dashboard.resetDataSetSearch()"></i>
+        <input
+          type="text"
+          class="search-query"
+          placeholder="Search"
+          ng-model="dashboard.searchQueryDataSets"
+          ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
+      </form>
+
+      <div class="refinery-panel-header" >
+        <div class="floatbox">
+          <div class="floatbox-max-left">
+            <h4>Name</h4>
+          </div>
+        </div>
       </div>
-      <span
-        class="alert alert-info"
-        ng-if="dashboard.dataSets.total == 0">
-        No data sets found.
-      </span>
+      <div
+        class="refinery-panel-content scrollable jquery-full-height"
+        ui-scroll-viewport
+        refinery-dashboard-panel>
+        <ul
+          class="results no-list-style"
+          ng-class="{'search': dashboard.searchDataSet}">
+          <li
+            ui-scroll="dataSet in dashboard.dataSets"
+            adapter="dashboard.dataSetsAdapter"
+            ng-class="{'previewing': dataSet.preview}">
+            <!--<ul class="controls no-list-style">
+              <li ng-if="dashboard.userIsAuthenticated">
+                <button
+                  ng-click="launchPad.openPermissionEditor('data_sets', dataSet.uuid)">
+                  <i class="icon-edit"></i>
+                </button>
+              </li>
+            </ul>-->
+            <button
+              class="preview"
+              ng-click="dashboard.showDataSetPreview(dataSet, $index)">
+              <i
+                class="icon-double-angle-right is-mirrorable"
+                ng-class="{'is-mirrored': dataSet.preview}"></i>
+            </button>
+            <i
+              class="icon-user"
+              title="You own this data set"
+              ng-if="dataSet.is_owner"></i>
+            <i
+              class="icon-group"
+              title="This data set is shared with you"
+              ng-if="!dataSet.is_owner"></i>
+            <i
+              class="icon-globe"
+              title="This file is publicly available"
+              ng-if="dataSet.public"></i>
+            <a
+              class="title"
+              ng-href="data_sets/{{ dataSet.uuid }}"
+              ng-bind-html="dataSet.title"></a>
+            <p
+              class="snippet"
+              ng-if="dataSet.description"
+              ng-bind-html="dataSet.description"></p>
+          </li>
+          <li
+            ng-if="dashboard.dataSetsAdapter.isLoading">
+            <div
+              class="refinery-request-loading"
+              ng-if="dashboard.dataSetsAdapter.isLoading">
+              <span class="refinery-spinner"></span>
+            </div>
+          </li>
+          <li
+            ng-if="dashboard.dataSets.total == 0">
+            <span
+              class="alert alert-info">
+              No data sets found.
+            </span>
+          </li>
+        </ul>
+      </div>
     </div>
+    <refinery-data-set-preview
+      class="preview-container"
+      close="dashboard.hideDataSetPreview()">
+    </refinery-data-set-preview>
   </div>
 </div>
 
-<div class="span4">
+<div
+  class="span4 shadowPanel"
+  ng-if="dashboard.dataSetPreviewBorder">
+</div>
+
+<div
+  class="span4 pushable"
+  ng-class="{'pushed': dashboard.dataSetPreview}">
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
@@ -119,6 +138,14 @@
           </span>
         </h3>
       </span>
+      <span class="refinery-header-right">
+        <a
+          href="./projects/new/"
+          class="no-underline"
+          ng-if="dashboard.userIsAuthenticated">
+          <i class="icon-plus-sign"></i>
+        </a>
+      </span>
     </div>
     <div class="refinery-panel-header">
       <div class="floatbox">
@@ -130,7 +157,7 @@
         </div>
       </div>
     </div>
-    <div class="refinery-panel-content scrollable">
+    <div class="refinery-panel-content scrollable jquery-full-height">
       <ul
         class="no-list-style"
         ng-if="dashboard.allAnalyses.meta.total_count > 0">
@@ -173,7 +200,9 @@
   </div>
 </div>
 
-<div class="span4">
+<div
+  class="span4 pushable"
+  ng-class="{'pushed': dashboard.dataSetPreview}">
   <div class="refinery-panel">
     <div class="refinery-header">
       <span class="refinery-header-left">
@@ -188,7 +217,7 @@
         </div>
       </div>
     </div>
-    <div class="refinery-panel-content scrollable">
+    <div class="refinery-panel-content scrollable jquery-full-height">
       <ul
         class="no-list-style"
         ng-if="dashboard.allWorkflows.meta.total_count > 0">

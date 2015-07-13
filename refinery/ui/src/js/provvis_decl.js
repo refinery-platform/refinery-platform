@@ -1,7 +1,7 @@
 /**
  * Module for constructor function declaration.
  */
-var provvisDecl = function () {
+var provvisDecl = (function () {
 
   var DoiFactors = (function () {
 
@@ -29,7 +29,8 @@ var provvisDecl = function () {
       diff: {
         label: "diff",
         value: 0.2,
-        masked: true}
+        masked: true
+      }
     };
 
     return {
@@ -37,7 +38,8 @@ var provvisDecl = function () {
         factors[prop] = {
           label: prop.toString(),
           value: value,
-          masked: masked};
+          masked: masked
+        };
       },
       get: function (prop) {
         return factors[prop].value;
@@ -186,7 +188,7 @@ var provvisDecl = function () {
         this.doiHighlighted * provvisDecl.DoiFactors.factors.highlighted.value +
         this.doiTime * provvisDecl.DoiFactors.factors.time.value +
         this.doiLayerDiff * provvisDecl.DoiFactors.factors.diff.value
-        ).toFixed(2);
+    ).toFixed(2);
   };
 
   /**
@@ -253,7 +255,7 @@ var provvisDecl = function () {
    * @constructor
    */
   var Node = function (id, nodeType, parent, hidden, name, fileType, study,
-      assay, parents, analysis, subanalysis, uuid, fileUrl) {
+                       assay, parents, analysis, subanalysis, uuid, fileUrl) {
     BaseNode.call(this, id, nodeType, parent, hidden);
 
     this.name = name;
@@ -287,7 +289,7 @@ var provvisDecl = function () {
    * @constructor
    */
   var Analysis = function (id, parent, hidden, uuid, wfUuid, analysis, start,
-      end, created) {
+                           end, created) {
     BaseNode.call(this, id, "analysis", parent, hidden);
 
     this.uuid = uuid;
@@ -432,7 +434,8 @@ var provvisDecl = function () {
    * @constructor
    */
   var ProvVis = function (parentDiv, zoom, data, url, canvas, rect, margin,
-      width, height, radius, color, graph, cell, layerMethod) {
+                          width, height, radius, color, graph, cell,
+                          layerMethod) {
     this._parentDiv = parentDiv;
     this.zoom = zoom;
     this._data = data;
@@ -469,8 +472,9 @@ var provvisDecl = function () {
    * @constructor
    */
   var ProvGraph = function (dataset, nodes, links, aLinks, iNodes, oNodes,
-      aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData, workflowData,
-      nodeData) {
+                            aNodes, saNodes, analysisWorkflowMap, nodeMap,
+                            analysisData, workflowData,
+                            nodeData) {
     this.dataset = dataset;
     this.nodes = nodes;
     this.links = links;
@@ -513,4 +517,4 @@ var provvisDecl = function () {
     ProvVis: ProvVis,
     ProvGraph: ProvGraph
   };
-}();
+}());

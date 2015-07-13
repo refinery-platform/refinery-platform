@@ -1,6 +1,11 @@
 angular
 .module('refineryApp', [
   /*
+   * Third party modules
+   */
+  'xml',
+
+  /*
    * Angular App commons
    */
   'errors',
@@ -18,10 +23,10 @@ angular
   'refineryStatistics',
   'refineryMetadataTableImport',
   'refineryProvvis',
-  'refinerySharing',
   'refineryDataFileUpload',
   'refineryDashboard',
-  'refineryAnalyses'
+  'refineryAnalyses',
+  'refineryCollaborate',
 ])
 .config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
   // http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs

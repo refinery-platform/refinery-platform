@@ -13,6 +13,7 @@ urlpatterns = patterns(
     url(r'^about/$', 'about', name="about"),
     url(r'^contact/$', 'contact', name="contact"),
     url(r'^statistics/$', 'statistics', name="statistics"),
+    url(r'^collaborate/$', 'collaborate', name='collaborate'),
     url(r'^users/(?P<query>[\@\.\-\+a-z0-9]+)/$', 'user'),
     # "name" is required for use with the url tag in templates
     url(r'^users/(?P<query>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'user', name="user"),
@@ -43,6 +44,27 @@ urlpatterns = patterns(
         name="solr_core_search"
     ),
     url(r'^solr/(?P<core>.+)/select/$', 'solr_select', name="solr_select"),
+
+    url(
+        r'^doi/(?P<id>.+)/',
+        'doi',
+        name="doi"
+    ),
+    url(
+        r'^pubmed/abstract/(?P<id>.+)/',
+        'pubmed_abstract',
+        name="pubmed_abstract"
+    ),
+    url(
+        r'^pubmed/search/(?P<term>.+)/',
+        'pubmed_search',
+        name="pubmed_search"
+    ),
+    url(
+        r'^pubmed/summary/(?P<id>.+)/',
+        'pubmed_summary',
+        name="pubmed_summary"
+    ),
 
     # test solr/search view
     url(r'^data_sets/(?P<ds_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/samples/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/solr$', 'samples_solr', name="samples"),

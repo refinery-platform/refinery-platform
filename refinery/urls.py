@@ -1,3 +1,5 @@
+import logging
+from django.conf import settings
 from django.conf.urls.defaults import patterns, include, url
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -16,9 +18,13 @@ from core.api import AnalysisResource, ProjectResource, NodeSetResource,\
     UserAuthenticationResource, InvitationResource
 from core.models import DataSet
 from data_set_manager.api import AttributeOrderResource, StudyResource,\
-    AssayResource
+    AssayResource, InvestigationResource, ProtocolResource, \
+    ProtocolReferenceResource, ProtocolReferenceParameterResource, \
+    PublicationResource, AttributeResource
 from data_set_manager.views import search_typeahead
-from settings import MEDIA_ROOT, MEDIA_URL
+
+
+logger = logging.getLogger(__name__)
 
 
 # NG: facets for Haystack
@@ -51,6 +57,12 @@ v1_api.register(StatisticsResource())
 v1_api.register(GroupManagementResource())
 v1_api.register(UserAuthenticationResource())
 v1_api.register(InvitationResource())
+v1_api.register(InvestigationResource())
+v1_api.register(ProtocolResource())
+v1_api.register(ProtocolReferenceResource())
+v1_api.register(ProtocolReferenceParameterResource())
+v1_api.register(PublicationResource())
+v1_api.register(AttributeResource())
 # v1_api.register(TaxonResource())
 # v1_api.register(GenomeBuildResource())
 # v1_api.register(CytoBandResource())
@@ -139,6 +151,20 @@ urlpatterns = patterns(
     # 'django.views.generic.simple.redirect_to',
     # {'url': STATIC_URL+'images/favicon.ico'}),
 
-) + static(MEDIA_URL, document_root=MEDIA_ROOT)
+) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 # for "static" see
-# https://docs.djangoproject.com/en/dev/howto/static-files/#serving-other-directories
+# https://docs.djangoproject.com/en/dev/howto/static-files/#serving-static-files-during-development
+
+# for using DjDT with mod_wsgi
+# https://github.com/django-debug-toolbar/django-debug-toolbar/issues/529
+if settings.DEBUG:
+    try:
+        import debug_toolbar
+    except ImportError:
+        logger.info(
+            "Couldn't set up DjDT for use with mod_wsgi: missing debug_toolbar"
+        )
+    else:
+        urlpatterns += patterns(
+            '', url(r'^__debug__/', include(debug_toolbar.urls)),
+        )

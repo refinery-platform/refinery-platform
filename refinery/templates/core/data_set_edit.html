@@ -6,12 +6,12 @@
 
 {% block subheader %}
 <div class="page-header">
-	<h1>Edit DataSet Information</h1>	
+	<h1>Edit DataSet Information</h1>
 </div>
 {% endblock %}
 
-{% block content %}	
-<div class="refinery-panel refinery-panel-content scrollable">
+{% block content %}
+<div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
 	<div class="row-fluid">
 		<form method="post" action="" class="wide" id="dataset-edit-form">
 		{% csrf_token %}
@@ -59,12 +59,12 @@
 				<ul>
 				{% for assay in study.assay_set.all %}
 					<!-- <li>Assay - <a href="{% url 'data_set_manager_contents' study.uuid assay.uuid %}">{{assay}}</a></li> -->
-					<li>Assay - {{assay}}</li> 
+					<li>Assay - {{assay}}</li>
 				{% endfor %}
 				</ul>
 				{% endfor %}
 			{% endif %}
-			
+
 			<div class="refinery-header">
 				<span class="refinery-header-left">
 					<h3>Files</h3>
@@ -90,7 +90,7 @@
 				<h3>Data Files</h3>
 			</span>
 			<p>{{ data_set.file_count }} files using {{ data_set.file_size|filesizeformat }}</p>
-								
+
 			<div class="refinery-header">
 				<span class="refinery-header-left">
 					<h3>History</h3>
@@ -100,7 +100,7 @@
 			Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{ data_set.modification_date }}</i>.</p>
 
 			<a href="#" class="btn btn-primary" id="submit-link">Save</a>
-			<a href="{% url 'data_set' data_set.uuid %}" class="btn">Cancel</a>			
+			<a href="{% url 'data_set' data_set.uuid %}" class="btn">Cancel</a>
 		</form>
 	</div>
 </div>

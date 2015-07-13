@@ -8,10 +8,11 @@ import json
 import logging
 import re
 import uuid
-import settings
+from django.conf import settings
 from sets import Set
 from django.conf.urls.defaults import url
 from django.contrib.auth.models import User, Group
+from django.core.exceptions import ObjectDoesNotExist
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group, \
     get_perms
 from tastypie import fields
@@ -22,15 +23,16 @@ from tastypie.constants import ALL_WITH_RELATIONS, ALL
 from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
 from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
     HttpUnauthorized, HttpMethodNotAllowed, HttpAccepted, HttpCreated, \
-    HttpNoContent
+    HttpNoContent, HttpGone, HttpForbidden
 from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, \
     Workflow, WorkflowInputRelationships, Analysis, DataSet, \
     ExternalToolStatus, ResourceStatistics, GroupManagement, ExtendedGroup, \
     UserAuthentication, Invitation, EmailInvite, UserProfile
 from core.tasks import check_tool_status
-from data_set_manager.api import StudyResource, AssayResource
-from data_set_manager.models import Node, Study
+from data_set_manager.api import StudyResource, AssayResource, \
+    InvestigationResource
+from data_set_manager.models import Node, Study, Attribute
 from file_store.models import FileStoreItem
 from GuardianTastypieAuthz import GuardianAuthorization
 from django.core.paginator import Paginator, InvalidPage, PageNotAnInteger, \
@@ -39,6 +41,7 @@ from haystack.query import SearchQuerySet, EmptySearchQuerySet
 from django.http import HttpResponse
 import datetime
 from django.core.mail import EmailMessage
+from tastypie.utils import trailing_slash
 
 
 logger = logging.getLogger(__name__)
@@ -292,8 +295,8 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
         resource_name = 'projects'
         detail_uri_name = 'uuid'
         fields = ['name', 'id', 'uuid', 'summary']
-        # authentication = SessionAuthentication
-        # authorization = GuardianAuthorization
+        # authentication = SessionAuthentication()
+        # authorization = GuardianAuthorization()
         authorization = Authorization()
 
     def prepend_urls(self):
@@ -325,6 +328,7 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
 
 
 class DataSetResource(ModelResource, SharableResourceAPIInterface):
+    uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
@@ -340,18 +344,50 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         resource_name = 'data_sets'
         # authentication = SessionAuthentication()
         # authorization = GuardianAuthorization()
-        filtering = {'uuid': ALL}
+        filtering = {
+            'uuid': ALL,
+        }
 
     def prepend_urls(self):
         prepend_urls_list = SharableResourceAPIInterface.prepend_urls(self) + [
-            url(r'^(?P<resource_name>%s)/search/$' %
-                (self._meta.resource_name),
-                self.wrap_view('get_search'),
-                name='api_%s_search' % (self._meta.resource_name)),
-            url(r'^(?P<resource_name>%s)/autocomplete/$' %
-                (self._meta.resource_name),
-                self.wrap_view('get_autocomplete'),
-                name='api_%s_autocomplete' % (self._meta.resource_name)),
+            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/investigation%s$' % (
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_investigation'),
+                name='api_%s_get_investigation' % (
+                    self._meta.resource_name)
+                ),
+            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies%s$' % (
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_studies'),
+                name='api_%s_get_studies' % (
+                    self._meta.resource_name
+                )),
+            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/analyses%s$' % (
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_analyses'),
+                name='api_%s_get_analyses' % (
+                    self._meta.resource_name
+                )),
+            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies/'
+                r'(?P<study_uuid>%s)/assays%s$' % (
+                    self._meta.resource_name,
+                    self.uuid_regex,
+                    self.uuid_regex,
+                    trailing_slash()
+                ),
+                self.wrap_view('get_assays'),
+                name='api_%s_get_assays' % (
+                    self._meta.resource_name
+                )),
         ]
         return prepend_urls_list
 
@@ -368,74 +404,51 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
 
-    def get_search(self, request, **kwargs):
-        query = request.GET.get('q', None)
-        if not query:
-            return HttpBadRequest('Please supply the search parameter q')
-
-        # Do the query.
-        results = (SearchQuerySet().using('core')
-                                   .models(DataSet)
-                                   .facet('measurement', mincount=1)
-                                   .facet('technology', mincount=1)
-                                   .load_all()
-                                   .auto_query(query))
-
-        if not results:
-            results = EmptySearchQuerySet()
-
-        paginator = Paginator(results, 10)
-
-        page = request.GET.get('page', 1)
+    def get_investigation(self, request, **kwargs):
         try:
-            current_results = paginator.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
-            current_results = paginator.page(1)
-        except EmptyPage:
-            # If page is out of range (e.g. 9999) deliver last page of results.
-            current_results = paginator.page(paginator.num_pages)
+            data_set = DataSet.objects.get(uuid=kwargs['uuid'])
+        except ObjectDoesNotExist:
+            return HttpGone()
 
-        result_list = map(lambda r: r.object, current_results.object_list)
-        bundle = self.build_bundles(request, result_list, **kwargs)
-        object_list = self.build_object_list(bundle, **kwargs)
+        # Assuming 1 to 1 relationship between DataSet and investigation
+        return InvestigationResource().get_detail(
+            request,
+            uuid=data_set.get_investigation().uuid
+        )
 
-        self.log_throttled_access(request)
-        return self.build_response(request, object_list, **kwargs)
-
-    def get_autocomplete(self, request, **kwargs):
-        query = request.GET.get('q', None)
-        if not query:
-            raise HttpBadRequest('Please supply the search parameter q')
-
-        # Do the autocomplete query.
-        results = (SearchQuerySet().using('core')
-                                   .models(DataSet)
-                                   .autocomplete(content_auto=query))
-
-        # logger.debug('')
-
-        if not results:
-            results = EmptySearchQuerySet()
-
-        paginator = Paginator(results, 5)
-
-        page = request.GET.get('page', 1)
+    def get_studies(self, request, **kwargs):
         try:
-            current_results = paginator.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
-            current_reuslts = paginator.page(1)
-        except EmptyPage:
-            # If page is out of range (e.g. 9999) deliver last page of results.
-            current_results = paginator.page(paginator.num_pages)
+            data_set = DataSet.objects.get(uuid=kwargs['uuid'])
+        except ObjectDoesNotExist:
+            return HttpGone()
 
-        result_list = map(lambda r: r.object, current_results.object_list)
-        bundle = self.build_bundle_list(request, result_list, **kwargs)
-        object_list = self.build_object_list(bundle, **kwargs)
+        return StudyResource().get_list(
+            request=request,
+            investigation_uuid=data_set.get_investigation().uuid
+        )
 
-        self.log_throttled_access(request)
-        return self.build_response(request, object_list, **kwargs)
+    def get_analyses(self, request, **kwargs):
+        try:
+            DataSet.objects.get(uuid=kwargs['uuid'])
+        except ObjectDoesNotExist:
+            return HttpGone()
+
+        return AnalysisResource().get_list(
+            request=request,
+            data_set__uuid=kwargs['uuid']
+        )
+
+    def get_assays(self, request, **kwargs):
+        try:
+            DataSet.objects.get(uuid=kwargs['uuid'])
+            Study.objects.get(uuid=kwargs['study_uuid'])
+        except ObjectDoesNotExist:
+            return HttpGone()
+
+        return AssayResource().get_list(
+            request=request,
+            study_uuid=kwargs['study_uuid']
+        )
 
 
 class WorkflowResource(ModelResource, SharableResourceAPIInterface):
@@ -457,8 +470,8 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         detail_uri_name = 'uuid'
         # allowed_methods = ['get']
         fields = ['name', 'uuid', 'summary']
-        # authentication = SessionAuthentication
-        # authorization = GuardianAuthorization
+        # authentication = SessionAuthentication()
+        # authorization = GuardianAuthorization()
 
     def prepend_urls(self):
         return SharableResourceAPIInterface.prepend_urls(self)
@@ -542,7 +555,8 @@ class AnalysisResource(ModelResource):
         ]
         filtering = {
             'data_set': ALL_WITH_RELATIONS,
-            'workflow_steps_num': ALL_WITH_RELATIONS
+            'workflow_steps_num': ALL_WITH_RELATIONS,
+            'data_set__uuid': ALL
         }
         ordering = ['name', 'creation_date']
 
@@ -561,7 +575,23 @@ class NodeResource(ModelResource):
     parents = fields.ToManyField('core.api.NodeResource', 'parents')
     study = fields.ToOneField('data_set_manager.api.StudyResource', 'study')
     assay = fields.ToOneField(
-        'data_set_manager.api.AssayResource', 'assay', null=True)
+        'data_set_manager.api.AssayResource', 'assay', null=True
+    )
+    attributes = fields.ToManyField(
+        'data_set_manager.api.AttributeResource',
+        attribute=lambda bundle: (
+            Attribute.objects
+                     .exclude(value__isnull=True)
+                     .exclude(value__exact='')
+                     .filter(
+                         node=bundle.obj,
+                         subtype='organism'
+                     )
+        ),
+        use_in='all',
+        full=True,
+        null=True
+    )
 
     class Meta:
         queryset = Node.objects.all()
@@ -573,13 +603,17 @@ class NodeResource(ModelResource):
         allowed_methods = ["get"]
         fields = [
             'name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay',
-            'children', 'type', 'analysis_uuid', 'subanalysis'
+            'children', 'type', 'analysis_uuid', 'subanalysis', 'attributes'
         ]
         filtering = {
             'uuid': ALL,
             'study': ALL_WITH_RELATIONS,
-            'assay': ALL_WITH_RELATIONS
+            'assay': ALL_WITH_RELATIONS,
+            'file_uuid': ALL,
+            'type': ALL
         }
+        limit = 0
+        max_limit = 0
 
     def prepend_urls(self):
         return [
@@ -884,13 +918,16 @@ class GroupManagementResource(Resource):
     member_list = fields.ListField(attribute='member_list', null=True)
     perm_list = fields.ListField(attribute='perm_list', null=True)
     can_edit = fields.BooleanField(attribute='can_edit', default=False)
+    manager_group = fields.BooleanField(attribute='is_manager_group', default=False)
+    manager_group_id = fields.IntegerField(attribute='manager_group_id', null=True)
 
     class Meta:
         resource_name = 'groups'
         object_class = GroupManagement
         detail_uri_name = 'group_id'
-        authentication = SessionAuthentication
+        authentication = SessionAuthentication()
         # authorization = GuardianAuthorization
+        authorization = Authorization()
 
     def get_user(self, user_id):
         user_list = User.objects.filter(id=int(user_id))
@@ -906,11 +943,27 @@ class GroupManagementResource(Resource):
     def is_manager_group(self, group):
         return not group.extendedgroup.is_managed()
 
+    # Removes the user from both the manager and user group.
+    def full_remove(self, user, group):
+        if self.is_manager_group(group):
+            group.user_set.remove(user)
+
+            for i in group.extendedgroup.managed_group.all():
+                i.user_set.remove(user)
+        else:
+            group.user_set.remove(user)
+            group.extendedgroup.manager_group.user_set.remove(user)
+
     def get_member_list(self, group):
         return map(
             lambda u: {
                 'user_id': u.id,
-                'username': u.username
+                'username': u.username,
+                'is_manager': True if ((not self.is_manager_group(group) and
+                    u in group.extendedgroup.manager_group.user_set.all()) or
+                    (self.is_manager_group(group) and
+                    u in group.user_set.all()))
+                    else False
             },
             group.user_set.all())
 
@@ -935,9 +988,15 @@ class GroupManagementResource(Resource):
 
     def get_perm_list(self, group):
         f = lambda r: self.get_perms(r, group)
-        dataset_perms = map(f, DataSet.objects.all())
-        project_perms = map(f, Project.objects.all())
-        workflow_perms = map(f, Workflow.objects.all())
+        dataset_perms = filter(
+            lambda r: r['read'],
+            map(f, DataSet.objects.all()))
+        project_perms = filter(
+            lambda r: r['read'],
+            map(f, Project.objects.all()))
+        workflow_perms = filter(
+            lambda r: r['read'],
+            map(f, Workflow.objects.all()))
         # workflow_engine_perms = map(f, WorkflowEngine.objects.all())
         # analysis_perms = map(f, Analysis.objects.all())
         # download_perms = map(f, Download.objects.all())
@@ -1051,7 +1110,9 @@ class GroupManagementResource(Resource):
                 group.name,
                 None,
                 None,
-                self.user_authorized(user, group))
+                self.user_authorized(user, group),
+                self.is_manager_group(group),
+                group.id if self.is_manager_group(group) else group.extendedgroup.manager_group.id)
             return self.process_get(request, group_obj, **kwargs)
         elif request.method == 'DELETE':
             if not self.user_authorized(user, group):
@@ -1083,7 +1144,9 @@ class GroupManagementResource(Resource):
                     g.name,
                     None,
                     None,
-                    self.user_authorized(user, g)),
+                    self.user_authorized(user, g),
+                    self.is_manager_group(g),
+                    g.id if self.is_manager_group(g) else g.extendedgroup.manager_group.id),
                 group_list)
 
             return self.process_get_list(request, group_obj_list, **kwargs)
@@ -1107,7 +1170,9 @@ class GroupManagementResource(Resource):
                 group.name,
                 self.get_member_list(group),
                 None,
-                self.user_authorized(user, group))
+                self.user_authorized(user, group),
+                self.is_manager_group(group),
+                group.id if self.is_manager_group(group) else group.extendedgroup.manager_group.id)
             kwargs['members'] = True
             return self.process_get(request, group_obj, **kwargs)
         elif request.method == 'PATCH':
@@ -1156,10 +1221,38 @@ class GroupManagementResource(Resource):
         if request.method == 'GET':
             raise NotImplementedError()
         elif request.method == 'DELETE':
+            # Removing yourself - can't leave a group if you're the last member,
+            # must delete it.
+            if user.id == int(kwargs['user_id']):
+                if group.user_set.count() == 1:
+                    return HttpForbidden('Last member - must delete group')
+
+                # When demoting yourself while targetting manager group.
+                if self.is_manager_group(group) and group.user_set.count() == 1:
+                    return HttpForbidden('Last manager must delete group to leave')
+
+                # When 
+                if not self.is_manager_group(group) and user in group.extendedgroup.manager_group.user_set.all():
+                    if group.extendedgroup.manager_group.user_set.count() == 1:
+                        return HttpForbidden('Last manager must delete group to leave')
+
+                group.user_set.remove(user);
+
+                if not self.is_manager_group(group):
+                    group.extendedgroup.manager_group.user_set.remove(user)
+
+                return HttpNoContent()
+
+            # Removing other people from the group
             if not self.user_authorized(user, group):
                 return HttpUnauthorized()
 
-            group.user_set.remove(int(kwargs['user_id']))
+            if self.is_manager_group(group):
+                group.user_set.remove(int(kwargs['user_id']))
+            else:
+                group.user_set.remove(int(kwargs['user_id']))
+                group.extendedgroup.manager_group.user_set.remove(int(kwargs['user_id']))
+
             return HttpNoContent()
         else:
             return HttpMethodNotAllowed()
@@ -1179,7 +1272,9 @@ class GroupManagementResource(Resource):
                     g.name,
                     self.get_member_list(g),
                     None,
-                    self.user_authorized(user, g)),
+                    self.user_authorized(user, g),
+                    self.is_manager_group(g),
+                    g.id if self.is_manager_group(g) else g.extendedgroup.manager_group.id),
                 group_list)
 
             kwargs['members'] = True
@@ -1200,7 +1295,9 @@ class GroupManagementResource(Resource):
                 group.name,
                 None,
                 self.get_perm_list(group),
-                self.user_authorized(user, group))
+                self.user_authorized(user, group),
+                self.is_manager_group(group),
+                group.id if self.is_manager_group(group) else group.extendedgroup.manager_group.id)
             kwargs['perms'] = True
             return self.process_get(request, group_obj, **kwargs)
         elif request.method == 'PATCH':
@@ -1223,7 +1320,9 @@ class GroupManagementResource(Resource):
                     g.name,
                     None,
                     self.get_perm_list(g),
-                    self.user_authorized(user, g)),
+                    self.user_authorized(user, g),
+                    self.is_manager_group(g),
+                    g.id if self.is_manager_group(g) else g.extendedgroup.manager_group.id),
                 group_list)
 
             kwargs['perms'] = True

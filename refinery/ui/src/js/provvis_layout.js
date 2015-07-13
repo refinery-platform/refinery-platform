@@ -1,7 +1,7 @@
 /**
  * Module for layout.
  */
-var provvisLayout = function () {
+var provvisLayout = (function () {
 
   /**
    * Generic implementation for the linear time topology sort [Kahn 1962]
@@ -449,4 +449,4 @@ var provvisLayout = function () {
       return runLayoutPrivate(graph, cell);
     }
   };
-}();
+}());

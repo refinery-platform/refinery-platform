@@ -292,6 +292,9 @@
 }
 
 .aBBox {
+  stroke: #136382;
+  stroke-opacity: 0.0;
+  stroke-width: 0.5px;
   fill: lightgray;
   fill-opacity: 0.6;
 }

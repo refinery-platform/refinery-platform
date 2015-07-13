@@ -368,7 +368,7 @@ def create_dataset(
             username,
             identifier=None,
             title=None,
-            dataset_title=None,
+            dataset_name=None,
             slug=None,
             public=False
         ):
@@ -413,15 +413,15 @@ def create_dataset(
         if title is None:
             title = investigation.get_title()
 
-        if dataset_title is None:
-            dataset_title = "%s: %s" % (identifier, title)
+        if dataset_name is None:
+            dataset_name = "%s: %s" % (identifier, title)
 
         logger.info(
-            "create_dataset: title = %s, identifer = %s, dataset_title = %s"
-            % (title, identifier, dataset_title)
+            "create_dataset: title = %s, identifer = %s, dataset_name = %s"
+            % (title, identifier, dataset_name)
         )
 
-        datasets = DataSet.objects.filter(name=dataset_title)
+        datasets = DataSet.objects.filter(name=dataset_name)
         # check if the investigation already exists
         if len(datasets):  # if not 0, update dataset with new investigation
             """go through datasets until you find one with the correct owner"""
@@ -438,10 +438,10 @@ def create_dataset(
 
         # create a new dataset if doesn't exist already for this user
         if not dataset:
-            dataset = DataSet.objects.create(name=dataset_title)
+            dataset = DataSet.objects.create(name=dataset_name)
             dataset.set_investigation(investigation)
             dataset.set_owner(user)
-            logger.info("create_dataset: Created data set %s" % dataset_title)
+            logger.info("create_dataset: Created data set %s" % dataset_name)
 
         if public:
             public_group = ExtendedGroup.objects.public_group()

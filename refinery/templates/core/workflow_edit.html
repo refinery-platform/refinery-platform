@@ -6,12 +6,12 @@
 
 {% block subheader %}
 <div class="page-header">
-	<h1>Edit Workflow Information</h1>	
+	<h1>Edit Workflow Information</h1>
 </div>
 {% endblock %}
 
-{% block content %}	
-<div class="refinery-panel refinery-panel-content scrollable">
+{% block content %}
+<div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
 	<div class="row-fluid">
 		<form method="post" action="" class="wide" id="workflow-edit-form">
 		{% csrf_token %}
@@ -98,7 +98,7 @@
 			</div>
 			<p>Created: {{ workflow.creation_date }} | Last Modified: {{ workflow.modification_date }}</p>
 			<a href="#" class="btn btn-primary" id="submit-link">Save</a>
-			<a href="{% url 'workflow' workflow.uuid %}" class="btn">Cancel</a>			
+			<a href="{% url 'workflow' workflow.uuid %}" class="btn">Cancel</a>
 		</form>
 	</div>
 </div>

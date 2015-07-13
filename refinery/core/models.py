@@ -21,7 +21,7 @@ from django.db.models import Max
 from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, post_delete
 from django.db.utils import IntegrityError
-from django.dispatch import receiver, Signal
+from django.dispatch import receiver
 from django_extensions.db.fields import UUIDField
 from django_auth_ldap.backend import LDAPBackend
 from guardian.shortcuts import get_users_with_perms, \
@@ -748,6 +748,7 @@ class Analysis(OwnableResource):
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
         )
+        ordering = ['-time_end', '-time_start']
 
     def get_status(self):
         return self.status
@@ -1372,12 +1373,16 @@ class GroupManagement(object):
             group_name=None,
             member_list=None,
             perm_list=None,
-            can_edit=False):
+            can_edit=False,
+            is_manager_group=False,
+            manager_group_id=None):
         self.group_id = group_id
         self.group_name = group_name
         self.member_list = member_list
         self.perm_list = perm_list
         self.can_edit = can_edit
+        self.is_manager_group = is_manager_group
+        self.manager_group_id = manager_group_id
 
 
 class UserAuthentication(object):

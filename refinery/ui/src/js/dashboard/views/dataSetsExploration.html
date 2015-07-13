@@ -31,7 +31,7 @@
     <div class="refinery-panel-header">
       <div class="floatbox">
         <div class="floatbox-min-right">
-          <h4>Share</h4>
+          <h4 ng-if="dashboard.userIsAuthenticated">Share</h4>
         </div>
         <div class="floatbox-max-left">
           <h4>Name</h4>
@@ -44,18 +44,23 @@
       refinery-dashboard-panel>
       <ul
         class="results no-list-style"
-        ng-if="dashboard.dataSets.total > 0">
+        ng-class="{'search': dashboard.searchDataSet}">
         <li
           ui-scroll="dataSet in dashboard.dataSets"
           adapter="dashboard.dataSetsAdapter">
-          <ul class="controls no-list-style">
-            <li>
+          <!--<ul class="controls no-list-style">
+            <li ng-if="dashboard.userIsAuthenticated">
               <button
-                ng-click="launchPad.openPermissionEditor('dataset_sharing', dataSet.uuid)">
+                ng-click="launchPad.openPermissionEditor('data_sets', dataSet.uuid)">
                 <i class="icon-edit"></i>
               </button>
             </li>
-          </ul>
+          </ul>-->
+          <button
+            class="preview"
+            ng-click="dashboard.toggleDataSetsExploration()">
+            <i class="icon-double-angle-right"></i>
+          </button>
           <i
             class="icon-user"
             title="You own this data set"
@@ -72,10 +77,12 @@
             ng-href="data_sets/{{ dataSet.uuid }}"
             ng-if="!dashboard.searchDataSet">{{ dataSet.name }}</a>
           <a
+            class="title"
             ng-href="data_sets/{{ dataSet.uuid }}"
             ng-if="dashboard.searchDataSet"
             ng-bind-html="dataSet.title"></a>
           <p
+            class="snippet"
             ng-if="dataSet.description"
             ng-bind-html="dataSet.description"></p>
         </li>

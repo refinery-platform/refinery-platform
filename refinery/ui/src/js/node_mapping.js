@@ -143,7 +143,7 @@ angular.module('refineryNodeMapping', [
   };
 })
 
-.controller('FileMappingCtrl', function($timeout, $resource, $log, $scope, $location, $rootScope, $sce, $http, nodePairResource, nodeRelationshipResource, AttributeOrder, solrFactory, solrService ) {
+.controller('FileMappingCtrl', function($timeout, $resource, $log, $scope, $location, $rootScope, $sce, $http, NodePairResource, NodeRelationshipResource, AttributeOrder, solrFactory, solrService ) {
 
   $scope.nodeDropzones = null;
   $scope.currentNodePair = null;
@@ -208,7 +208,7 @@ angular.module('refineryNodeMapping', [
     if ( $scope.currentNodePair ) {
       // update node relationship
       $scope.currentNodeRelationship.node_pairs.splice( $scope.currentNodePairIndex, 1 );
-      nodeRelationshipResource.update({uuid: $scope.currentNodeRelationship.uuid}, $scope.currentNodeRelationship, function(){
+      NodeRelationshipResource.update({uuid: $scope.currentNodeRelationship.uuid}, $scope.currentNodeRelationship, function(){
         $log.debug("Removed pair from node mapping.");
         if ($scope.hasNextMapping()) {
           $scope.loadPreviousMapping();
@@ -222,7 +222,7 @@ angular.module('refineryNodeMapping', [
       });
 
       // delete node pair
-      nodePairResource.delete({uuid: $scope.currentNodePair.uuid}, function(){
+      NodePairResource.delete({uuid: $scope.currentNodePair.uuid}, function(){
         $log.debug( "Deleted pair." );
       });
     }
@@ -236,7 +236,7 @@ angular.module('refineryNodeMapping', [
 
     // update node relationship
     $scope.currentNodeRelationship.node_pairs = [];
-    nodeRelationshipResource.update({uuid: $scope.currentNodeRelationship.uuid}, $scope.currentNodeRelationship, function(){
+    NodeRelationshipResource.update({uuid: $scope.currentNodeRelationship.uuid}, $scope.currentNodeRelationship, function(){
       $log.debug("Removed all pairs from node mapping.");
       $scope.createMapping();
     }, function() {
@@ -247,7 +247,7 @@ angular.module('refineryNodeMapping', [
     // delete node pairs
     // TODO: handle errors
     for ( var i = 0; i < nodePairsForDeletion.length; ++i ) {
-      nodePairResource.delete({uuid: nodePairsForDeletion[i].split("/").reverse()[1] });
+      NodePairResource.delete({uuid: nodePairsForDeletion[i].split("/").reverse()[1] });
     }
 
     $scope.initializeNodeDropzones( $scope.currentWorkflow.input_relationships[0].set1, $scope.currentWorkflow.input_relationships[0].set2 );
@@ -379,12 +379,12 @@ angular.module('refineryNodeMapping', [
       if ( $scope.nodeDropzones[0].uuid && $scope.nodeDropzones[1].uuid ) {
         if ( $scope.isPending() ) {
           $log.debug("Saving new file pair ...");
-          $scope.currentNodePair = new nodePairResource( { node1: "/api/v1/node/" + $scope.nodeDropzones[0].uuid + "/", node2: "/api/v1/node/" + $scope.nodeDropzones[1].uuid + "/" } );
+          $scope.currentNodePair = new NodePairResource( { node1: "/api/v1/node/" + $scope.nodeDropzones[0].uuid + "/", node2: "/api/v1/node/" + $scope.nodeDropzones[1].uuid + "/" } );
 
           $scope.currentNodePair.$save( function( response, responseHeaders) {
             $scope.currentNodePair = response;
             $scope.currentNodeRelationship.node_pairs.push( $scope.currentNodePair.resource_uri );
-            nodeRelationshipResource.update( { uuid: $scope.currentNodeRelationship.uuid }, $scope.currentNodeRelationship );
+            NodeRelationshipResource.update( { uuid: $scope.currentNodeRelationship.uuid }, $scope.currentNodeRelationship );
             $log.debug("New file pair saved.");
           });
         }

@@ -5,17 +5,17 @@ Created on Jul 2, 2012
 '''
 
 
-from data_set_manager.models import Node, AnnotatedNode
 from django.template import loader
 from django.template.context import Context
-from haystack import indexes
-import settings
 import string
 import logging
+from django.conf import settings
+from haystack import indexes
+from data_set_manager.models import Node, AnnotatedNode
 import file_store.tasks as file_store_tasks
 
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 
 class NodeIndex(indexes.SearchIndex, indexes.Indexable):
@@ -24,8 +24,8 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     WORKFLOW_OUTPUT_PREFIX = "REFINERY_WORKFLOW_OUTPUT"
     ANALYSIS_UUID_PREFIX = "REFINERY_ANALYSIS_UUID"
     SUBANALYSIS_PREFIX = "REFINERY_SUBANALYSIS"
-    FILETYPE_PREFIX = "REFINERY_FILETYPE" 
-    
+    FILETYPE_PREFIX = "REFINERY_FILETYPE"
+
     text = indexes.CharField(document=True, use_template=True)
     uuid = indexes.CharField(model_attr='uuid')
     study_uuid = indexes.CharField(model_attr='study__uuid')
@@ -36,13 +36,13 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     species = indexes.IntegerField(model_attr='species',null=True)
     genome_build = indexes.CharField(model_attr='genome_build',null=True)
     is_annotation = indexes.BooleanField(model_attr='is_annotation')
-    
+
     analysis_uuid = indexes.CharField(model_attr='analysis_uuid',null=True)
     subanalysis = indexes.IntegerField(model_attr='subanalysis',null=True)
     workflow_output = indexes.CharField(model_attr='workflow_output',null=True)
-    
+
     #TODO: add modification date (based on registry)
-        
+
     #attribute_type = models.TextField(db_index=True)
     # subtype further qualifies the attribute type, e.g. type = factor value and subtype = age
     #attribute_subtype = models.TextField(blank=True, null=True, db_index=True)
@@ -55,62 +55,62 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     def index_queryset(self, using=None):
         """Used when the entire index for model is updated."""
         return self.get_model().objects.all() #filter(modification_date__lte=datetime.datetime.now())
-    
+
     # dynamic fields: https://groups.google.com/forum/?fromgroups#!topic/django-haystack/g39QjTkN-Yg
     # and: http://stackoverflow.com/questions/7399871/django-haystack-sort-results-by-title
     def prepare(self, object):
         data = super(NodeIndex, self).prepare(object)
         annotations = AnnotatedNode.objects.filter( node=object )
-            
-        uuid = str( object.study.id )
-        
-        if object.assay is not None:
-            uuid += "_" + str( object.assay.id ) 
 
-        # create dynamic fields for each attribute  
+        uuid = str( object.study.id )
+
+        if object.assay is not None:
+            uuid += "_" + str( object.assay.id )
+
+        # create dynamic fields for each attribute
         for annotation in annotations:
             if annotation.attribute_subtype is None:
                 name = annotation.attribute_type
             else:
                 name = annotation.attribute_subtype + "_" + annotation.attribute_type
-                                 
+
             if annotation.attribute_value_unit is None:
                 value = annotation.attribute_value
-            else: 
+            else:
                 value = annotation.attribute_value + " " + annotation.attribute_value_unit
-            
+
             # replace problematic characters in field names
-            name = string.replace( name, "/", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
-            name = string.replace( name, "(", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
-            name = string.replace( name, ")", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
-            name = string.replace( name, "#", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
-            name = string.replace( name, ",", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
-                
-            name = string.replace( name, " ", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
-            name = string.replace( name, "'", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS ) 
+            name = string.replace( name, "/", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS )
+            name = string.replace( name, "(", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS )
+            name = string.replace( name, ")", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS )
+            name = string.replace( name, "#", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS )
+            name = string.replace( name, ",", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS )
+
+            name = string.replace( name, " ", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS )
+            name = string.replace( name, "'", settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS )
 
             key = name + "_" + uuid + "_s"
-                        
+
             # a node might have multiple parents with different attribute values for a given attribute
             # e.g. parentA Characteristic[cell type] = K562 and parentB Characteristic[cell type] = HeLa
-            # child nodes should inherit all attributes of their parents as a concatenation of the 
+            # child nodes should inherit all attributes of their parents as a concatenation of the
             # unique list
             #
             # old version (only one attribute kept):
             # data[key] = value
             if not key in data:
                 data[key] = set();
-            
-            if value != "":    
+
+            if value != "":
                 data[key].add( value )
             else:
                 data[key].add( "N/A" )
-            
+
         # iterate over all keys in data and join sets into strings
         for key, value in data.iteritems():
             if type(value) is set:
                 data[key] = " + ".join(value)
-            
+
         # add type as dynamic field to get proper facet values
         data[NodeIndex.TYPE_PREFIX + "_" + uuid + "_s"] = object.type
 
@@ -128,7 +128,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             data[NodeIndex.SUBANALYSIS_PREFIX + "_" + uuid + "_s"] = object.subanalysis
         else:
             data[NodeIndex.SUBANALYSIS_PREFIX + "_" + uuid + "_s"] = -1
-        
+
         # add workflow_output as dynamic field to get proper facet values
         if object.workflow_output is not None:
             data[NodeIndex.WORKFLOW_OUTPUT_PREFIX + "_" + uuid + "_s"] = object.workflow_output
@@ -136,15 +136,15 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             data[NodeIndex.WORKFLOW_OUTPUT_PREFIX + "_" + uuid + "_s"] = "N/A"
 
 
-        # add file type as facet value        
+        # add file type as facet value
         file_store_item = file_store_tasks.read( object.file_uuid );
-        
+
         if file_store_item:
             data[NodeIndex.FILETYPE_PREFIX + "_" + uuid + "_s"] = file_store_item.get_filetype()
         else:
             logger.warning( "Unable to get file store item " + str( object.file_uuid ) + ". No file type available." )
             data[NodeIndex.FILETYPE_PREFIX + "_" + uuid + "_s"] = ""
-                    
+
         return data
 
 

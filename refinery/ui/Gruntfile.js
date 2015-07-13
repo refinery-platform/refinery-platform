@@ -360,8 +360,9 @@ module.exports = function(grunt) {
       ],
       options: {
         curly: true,
-        // This should actually be false to stop grunt from further execution
-        force: true,
+        // If `force` is true, Grunt will continue running, no matter if
+        // `jshint` throws errors or not.
+        force: false,
         immed: true,
         newcap: true,
         noarg: true,
@@ -422,12 +423,15 @@ module.exports = function(grunt) {
           ]
         },
         files: {
-          '<%= cfg.basePath.static.compile %>/styles/css/font-awesome.css': '<%= cfg.basePath.static.src %>/styles/less/font-awesome.less',
           '<%= cfg.basePath.static.compile %>/styles/css/font-awesome-ie7.css': '<%= cfg.basePath.static.src %>/styles/less/font-awesome-ie7.less',
-          '<%= cfg.basePath.static.compile %>/styles/css/variables.css': '<%= cfg.basePath.static.src %>/styles/less/variables.less',
-          '<%= cfg.basePath.static.compile %>/styles/css/refinery-style.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/font-awesome.css': '<%= cfg.basePath.static.src %>/styles/less/font-awesome.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/galaxy_connector.css': '<%= cfg.basePath.static.src %>/styles/less/galaxy_connector.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/refinery-style-bootstrap-responsive.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style-bootstrap-responsive.less',
           '<%= cfg.basePath.static.compile %>/styles/css/refinery-style-bootstrap.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style-bootstrap.less',
-          '<%= cfg.basePath.static.compile %>/styles/css/refinery-style-bootstrap-responsive.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style-bootstrap-responsive.less'
+          '<%= cfg.basePath.static.compile %>/styles/css/refinery-style.css': '<%= cfg.basePath.static.src %>/styles/less/refinery-style.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/variables.css': '<%= cfg.basePath.static.src %>/styles/less/variables.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/workflow_visualization.css': '<%= cfg.basePath.static.src %>/styles/less/workflow_visualization.less',
+          '<%= cfg.basePath.static.compile %>/styles/css/animate.css': '<%= cfg.basePath.static.src %>/styles/less/animate.less',
         }
       }
     },
@@ -472,7 +476,7 @@ module.exports = function(grunt) {
             expand: true,
             cwd: '<%= cfg.basePath.ui.tmp %>/js',
             src: '**/*.js',
-            dest: '<%= cfg.basePath.ui.compile %>/'
+            dest: '<%= cfg.basePath.ui.compile %>/js'
           }
         ]
       },

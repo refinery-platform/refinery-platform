@@ -1,25 +1,27 @@
-import djcelery
 import json
+import logging
 import os
+import djcelery
 from django.core.exceptions import ImproperlyConfigured
 
+logger = logging.getLogger(__name__)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# get the absolute path of the parent dir
+BASE_DIR = os.path.dirname(os.path.split(os.path.abspath(__file__))[0])
 
-local_settings_file_path = os.path.join(BASE_DIR, 'settings.json')
+local_settings_file_path = os.path.join(BASE_DIR, 'config.json')
 
-# require settings.json
+# load config.json
 try:
     with open(local_settings_file_path, 'r') as f:
-        local_settings = json.loads(f.read())
+        local_settings = json.load(f)
 except IOError as e:
     error_msg = "Could not open '{}': {}".format(local_settings_file_path, e)
     raise ImproperlyConfigured(error_msg)
 
 
 def get_setting(name, settings=local_settings):
-    """Get the local settings variable or return explicit exception
-    """
+    """Get the local settings variable or return explicit exception"""
     try:
         return settings[name]
     except KeyError:
@@ -28,97 +30,61 @@ def get_setting(name, settings=local_settings):
 
 djcelery.setup_loader()
 
-DEBUG = get_setting('DEBUG')
-TEMPLATE_DEBUG = DEBUG
-
-# Required when DEBUG = False
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.50.50']
-
-# A tuple that lists people who get code error notifications.
-ADMINS = (
-    ('Refinery Admin', 'admin@example.org'),
-)
+# a tuple that lists people who get code error notifications
+# (convert JSON list of lists to tuple of tuples)
+ADMINS = tuple(map(lambda x: tuple(x), get_setting("ADMINS")))
 
 # A tuple in the same format as ADMINS that specifies who should get broken link
 # notifications when BrokenLinkEmailsMiddleware is enabled.
 MANAGERS = ADMINS
 
-DATABASES = {
-    'default': {
-        # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or
-        # 'oracle'.
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        # Or path to database file if using sqlite3.
-        'NAME': 'refinery',
-        # Not used with sqlite3.
-        'USER': 'vagrant',
-        # Not used with sqlite3.
-        'PASSWORD': '',
-        # Set to empty string for localhost. Not used with sqlite3.
-        'HOST': '',
-        # Set to empty string for default. Not used with sqlite3.
-        'PORT': '',
-    }
-}
+DATABASES = get_setting("DATABASES")
 
 # transport://userid:password@hostname:port/virtual_host
-# BROKER_URL = "amqp://guest:guest@localhost:5672//"
-BROKER_HOST = "localhost"
-BROKER_PORT = 5672
-BROKER_USER = "guest"
-BROKER_PASSWORD = "guest"
-BROKER_VHOST = "/"
+BROKER_URL = get_setting("BROKER_URL")
 
-# Local time zone for this installation. Choices can be found here:
-# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
-# although not all choices may be available on all operating systems.
-# On Unix systems, a value of None will cause Django to use the same
-# timezone as the operating system.
-# If running in a Windows environment this must be set to the same as your
-# system time zone.
-TIME_ZONE = 'America/New_York'
+TIME_ZONE = get_setting("TIME_ZONE")
 
-# Language code for this installation. All choices can be found here:
-# http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = get_setting("LANGUAGE_CODE")
 
 SITE_ID = 1
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
-USE_I18N = True
+USE_I18N = get_setting("USE_I18N")
 
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale
-USE_L10N = True
+USE_L10N = get_setting("USE_L10N")
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = '/vagrant/media'
+MEDIA_ROOT = get_setting("MEDIA_ROOT")
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = '/media/'
+MEDIA_URL = get_setting("MEDIA_URL")
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = '/vagrant/static'
+STATIC_ROOT = get_setting("STATIC_ROOT")
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = '/static/'
+STATIC_URL = get_setting("STATIC_URL")
 
 # URL prefix for admin static files -- CSS, JavaScript and images.
 # Make sure to use a trailing slash.
 # Examples: "http://foo.com/static/admin/", "/static/admin/".
-ADMIN_MEDIA_PREFIX = '/static/admin/'
+ADMIN_MEDIA_PREFIX = get_setting("ADMIN_MEDIA_PREFIX")
 
-# Additional locations of static files
-STATICFILES = get_setting('STATICFILES')
-STATICFILES_DIRS = tuple(map(lambda x: os.path.join(BASE_DIR, x), STATICFILES))
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "static/production"),
+    os.path.join(BASE_DIR, "ui/production")
+)
 
 # List of finder classes that know how to find static files in
 # various locations.
@@ -129,7 +95,7 @@ STATICFILES_FINDERS = (
 )
 
 # Make sure to set this to a random string in production
-SECRET_KEY = 'SECRET'
+SECRET_KEY = get_setting("SECRET_KEY")
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -182,7 +148,6 @@ INSTALLED_APPS = (
     # NG: added for that human touch ...
     'django.contrib.humanize',
     'django.contrib.markup',
-    'django_extensions',
     # NG: added for search and faceting (Solr support)
     'haystack',
     # NG: added for celery (task queue)
@@ -207,18 +172,6 @@ INSTALLED_APPS = (
     'chunked_upload',
 )
 
-# required for Django Debug Tool Bar
-if get_setting('DEBUG_TOOLBAR'):
-    INSTALLED_APPS += (
-        'debug_toolbar',
-    )
-    MIDDLEWARE_CLASSES += (
-        'debug_toolbar.middleware.DebugToolbarMiddleware',
-        'middleware.JsonAsHTML',
-    )
-    INTERNAL_IPS = ('192.168.50.1')
-
-
 # NG: added for django-guardian
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # default
@@ -236,11 +189,6 @@ ANONYMOUS_USER_ID = -1
 # (recommended way to extend Django user model)
 AUTH_PROFILE_MODULE = 'core.UserProfile'
 
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -249,10 +197,6 @@ LOGGING = {
         'handlers': ['console'],
     },
     'formatters': {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d '
-                      '%(thread)d %(message)s'
-        },
         'default': {
             'format': '%(asctime)s %(levelname)-8s %(module)s %(funcName)s: '
                       '%(message)s',
@@ -271,20 +215,30 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'console': {
-            'level': 'DEBUG',
+            'level': get_setting("LOG_LEVEL"),
             'class': 'logging.StreamHandler',
             'formatter': 'default'
         },
     },
     'loggers': {
         'django.request': {
-            'handlers': ['mail_admins'],
+            'handlers': ['console', 'mail_admins'],
             'level': 'ERROR',
             'propagate': True,
         },
         'django.db.backends': {
             'level': 'ERROR',
             'handlers': ['console'],
+            'propagate': False,
+        },
+        'analysis_manager': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'annotation_server': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
             'propagate': False,
         },
         'core': {
@@ -297,22 +251,12 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': False,
         },
-        'isa_tab_parser': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        'file_store': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
         'file_server': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
         },
-        'analysis_manager': {
+        'file_store': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
@@ -322,31 +266,41 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
+        'isa_tab_parser': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'visualization_manager': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'workflow_manager': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     },
 }
 
 # Expiration time of a token API that was originally designed to handle group
 # invitations using uuid-based tokens.
-TOKEN_DURATION = 1
+TOKEN_DURATION = get_setting("TOKEN_DURATION")
 
-# send email via SMTP, can be replaced with
-# "django.core.mail.backends.console.EmailBackend" to send emails to the console
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = '/tmp/refinery-emails'
 # Default email address to use for various automated correspondence from the
 # site manager(s).
-DEFAULT_FROM_EMAIL = 'webmaster@localhost'
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 25
+DEFAULT_FROM_EMAIL = get_setting("DEFAULT_FROM_EMAIL")
+EMAIL_HOST = get_setting("EMAIL_HOST")
+EMAIL_PORT = get_setting("EMAIL_PORT")
 # The email address that error messages come from, such as those sent to ADMINS
 # and MANAGERS.
-SERVER_EMAIL = 'root@localhost'
-
-# Disable migrations when running unittests and use syncdb instead
-SOUTH_TESTS_MIGRATE = False
+SERVER_EMAIL = get_setting("SERVER_EMAIL")
+# so managers and admins know Refinery is emailing them
+EMAIL_SUBJECT_PREFIX = get_setting("EMAIL_SUBJECT_PREFIX")
 
 # for system stability
-CELERYD_MAX_TASKS_PER_CHILD = 100
+CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
@@ -354,10 +308,11 @@ CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 # === Refinery Settings ===
 
 # for registration module
-ACCOUNT_ACTIVATION_DAYS = 7
-REGISTRATION_OPEN = True
-# Message to display on registration page when REGISTRATION_OPEN is set to False
-REFINERY_REGISTRATION_CLOSED_MESSAGE = ''
+ACCOUNT_ACTIVATION_DAYS = get_setting("ACCOUNT_ACTIVATION_DAYS")
+REGISTRATION_OPEN = get_setting("REGISTRATION_OPEN")
+# message to display on registration page when REGISTRATION_OPEN is set to False
+REFINERY_REGISTRATION_CLOSED_MESSAGE = get_setting(
+    "REFINERY_REGISTRATION_CLOSED_MESSAGE")
 
 # set the name of the group that is used to share data with all users
 # (= "the public")
@@ -373,25 +328,26 @@ AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
 # accessed
 AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 
-ISA_TAB_DIR = '/vagrant/isa-tab'
+ISA_TAB_DIR = get_setting("ISA_TAB_DIR")
 
 # relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
 FILE_STORE_DIR = 'file_store'
 
-# optional dictionary for translating file URLs into file system paths (and vice
-# versa) by substituting 'pattern' for 'replacement'
+# optional dictionary for translating file URLs into locally accessible file
+# system paths (and vice versa) by substituting 'pattern' for 'replacement'
 # format: {'pattern': 'replacement'} - may contain more than one key-value pair
-REFINERY_FILE_SOURCE_MAP = {}
+REFINERY_FILE_SOURCE_MAP = get_setting("REFINERY_FILE_SOURCE_MAP")
 
 # data file import directory; it should be located on the same partition as
 # FILE_STORE_DIR and MEDIA_ROOT to make import operations fast
-REFINERY_DATA_IMPORT_DIR = '/vagrant/import'
+REFINERY_DATA_IMPORT_DIR = get_setting("REFINERY_DATA_IMPORT_DIR")
 
 # location of the Solr server (must be accessible from the web browser)
-REFINERY_SOLR_BASE_URL = "http://localhost:8983/solr/"
+REFINERY_SOLR_BASE_URL = get_setting("REFINERY_SOLR_BASE_URL")
 
 # used to replaces spaces in the names of dynamic fields in Solr indexing
-REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = "_"
+REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = get_setting(
+    "REFINERY_SOLR_SPACE_DYNAMIC_FIELDS")
 
 HAYSTACK_CONNECTIONS = {
     'default': {
@@ -421,19 +377,16 @@ REFINERY_CSS = ["styles/css/refinery-style-bootstrap.css",
                 "styles/css/refinery-style.css"]
 
 # set height of navigation bar (e.g. to fit a logo)
-REFINERY_INNER_NAVBAR_HEIGHT = 20
+REFINERY_INNER_NAVBAR_HEIGHT = get_setting("REFINERY_INNER_NAVBAR_HEIGHT")
 
 # supply a path to a logo that will become part of the branding
 # (see navbar height correctly!)
 # Set to `false` to disable Refinery's default logotype.
-REFINERY_MAIN_LOGO = ""
+REFINERY_MAIN_LOGO = get_setting("REFINERY_MAIN_LOGO")
 
 # supply a Google analytics id "UA-..."
 # (if set to "" tracking will be deactivated)
-REFINERY_GOOGLE_ANALYTICS_ID = ""
-
-# so managers and admins know Refinery is emailing them
-EMAIL_SUBJECT_PREFIX = '[Refinery] '
+REFINERY_GOOGLE_ANALYTICS_ID = get_setting("REFINERY_GOOGLE_ANALYTICS_ID")
 
 # dump of the entire NCBI taxonomy archive
 TAXONOMY_URL = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"
@@ -442,40 +395,43 @@ TAXONOMY_URL = "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"
 UCSC_URL = "hgdownload.cse.ucsc.edu/admin/hgcentral.sql"
 
 # Tag for repository mode
-REFINERY_REPOSITORY_MODE = False
+REFINERY_REPOSITORY_MODE = get_setting("REFINERY_REPOSITORY_MODE")
 
 # Message to be displayed near the top of every page (HTML allowed)
-REFINERY_BANNER = ''
+REFINERY_BANNER = get_setting("REFINERY_BANNER")
 
 # Display REFINERY_BANNER to anonymous users only
-REFINERY_BANNER_ANONYMOUS_ONLY = False
+REFINERY_BANNER_ANONYMOUS_ONLY = get_setting("REFINERY_BANNER_ANONYMOUS_ONLY")
 
 # Subject and message body of the welcome email sent to new users
-REFINERY_WELCOME_EMAIL_SUBJECT = 'Welcome to Refinery'
-REFINERY_WELCOME_EMAIL_MESSAGE = 'Please fill out your user profile'
+REFINERY_WELCOME_EMAIL_SUBJECT = get_setting("REFINERY_WELCOME_EMAIL_SUBJECT")
+REFINERY_WELCOME_EMAIL_MESSAGE = get_setting("REFINERY_WELCOME_EMAIL_MESSAGE")
 
 # Use external authentication system like django-auth-ldap (disables password
 # management URLs)
-REFINERY_EXTERNAL_AUTH = False
+REFINERY_EXTERNAL_AUTH = get_setting("REFINERY_EXTERNAL_AUTH")
 # Message to display on password management pages when REFINERY_EXTERNAL_AUTH is
 # set to True
-REFINERY_EXTERNAL_AUTH_MESSAGE = ''
+REFINERY_EXTERNAL_AUTH_MESSAGE = get_setting("REFINERY_EXTERNAL_AUTH_MESSAGE")
 
 # external tool status settings
-INTERVAL_BETWEEN_CHECKS = {
-                            "CELERY": 10.0,
-                            "SOLR": 10.0,
-                            "GALAXY": 10.0,
-                            }
+INTERVAL_BETWEEN_CHECKS = get_setting("INTERVAL_BETWEEN_CHECKS")
+TIMEOUT = get_setting("TIMEOUT")
 
-TIMEOUT = {
-           "CELERY": 2.0,
-           "SOLR": 2.5,
-           "GALAXY": 2.0,
-           }
-
-# import local settings
-try:
-    from settings_local import *
-except ImportError:
-    pass
+if REFINERY_EXTERNAL_AUTH:
+    # enable LDAP authentication
+    try:
+        import ldap
+        from django_auth_ldap.config import LDAPSearch
+    except ImportError:
+        logger.info("Failed to configure LDAP authentication")
+    else:
+        AUTH_LDAP_SERVER_URI = get_setting("AUTH_LDAP_SERVER_URI")
+        AUTH_LDAP_BIND_DN = get_setting("AUTH_LDAP_BIND_DN")
+        AUTH_LDAP_BIND_PASSWORD = get_setting("AUTH_LDAP_BIND_PASSWORD")
+        AUTH_LDAP_USER_SEARCH = LDAPSearch(get_setting("AUTH_LDAP_BASE_DN"),
+                                           get_setting("AUTH_LDAP_SCOPE"),
+                                           get_setting("AUTH_LDAP_FILTERSTR"))
+        # populate Django user profile from the LDAP directory
+        AUTH_LDAP_USER_ATTR_MAP = get_setting("AUTH_LDAP_USER_ATTR_MAP")
+        AUTHENTICATION_BACKENDS += ('refinery.core.models.RefineryLDAPBackend',)

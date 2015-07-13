@@ -16,7 +16,10 @@ function DashboardCtrl (
   dashboardDataSetListService,
   dashboardDataSetSearchService,
   dashboardDataSetSourceService,
-  dashboardDataSetReloadService) {
+  dashboardDataSetReloadService,
+  dashboardWidthFixerService,
+  dashboardExpandablePanelService,
+  dashboardDataSetPreviewService) {
   // Store the context.
   var that = this;
 
@@ -37,9 +40,13 @@ function DashboardCtrl (
   that.dashboardDataSetSearchService = dashboardDataSetSearchService;
   that.dashboardDataSetSourceService = dashboardDataSetSourceService;
   that.dashboardDataSetReloadService = dashboardDataSetReloadService;
+  that.dashboardWidthFixerService = dashboardWidthFixerService;
+  that.dashboardExpandablePanelService = dashboardExpandablePanelService;
+  that.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
 
   // Construct class variables
   that.dataSetServiceLoading = false;
+  that.dataSetPreviewBorder = false;
 
   // Check authentication
   // This should idealy be moved to the global APP controller, which we don't
@@ -98,6 +105,11 @@ function DashboardCtrl (
       });
       that.dataSetsAdapter.reload();
     }
+  });
+
+
+  this.dashboardWidthFixerService.resetter.push(function () {
+    that.dataSetPreviewBorder = false;
   });
 
   $rootScope.$on('$stateChangeSuccess', function () {
@@ -225,6 +237,30 @@ DashboardCtrl.prototype.getWorkflows = function (limit, offset) {
   return workflows.$promise;
 };
 
+DashboardCtrl.prototype.showDataSetPreview = function (dataSet) {
+  if (!this.dashboardDataSetPreviewService.previewing) {
+    this.dashboardDataSetPreviewService.preview(dataSet);
+    this.dashboardWidthFixerService.trigger('fixer');
+    this.expandDataSetPanel = true;
+    this.dataSetPreview = true;
+    this.dataSetPreviewBorder = true;
+    this.dashboardExpandablePanelService.trigger('expander');
+  } else {
+    if (dataSet.preview) {
+      this.hideDataSetPreview(dataSet);
+    } else {
+      this.dashboardDataSetPreviewService.preview(dataSet);
+    }
+  }
+};
+
+DashboardCtrl.prototype.hideDataSetPreview = function (dataSet) {
+  this.dashboardDataSetPreviewService.close();
+  this.expandDataSetPanel = false;
+  this.dataSetPreview = false;
+  this.dashboardExpandablePanelService.trigger('collapser');
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
@@ -243,5 +279,8 @@ angular
     'dashboardDataSetSearchService',
     'dashboardDataSetSourceService',
     'dashboardDataSetReloadService',
+    'dashboardWidthFixerService',
+    'dashboardExpandablePanelService',
+    'dashboardDataSetPreviewService',
     DashboardCtrl
   ]);

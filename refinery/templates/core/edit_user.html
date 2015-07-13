@@ -8,7 +8,7 @@
 
 {% block subheader %}
 <div class="page-header">
-	<h1>Edit Your User Information</h1>	
+	<h1>Edit Your User Information</h1>
 </div>
 {% endblock %}
 
@@ -20,41 +20,41 @@
     	{% endif %}
     {% endfor %}
 {% endif %}
-<div class="refinery-panel refinery-panel-content scrollable">
+<div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
 	<div class="row-fluid">
 		<form method="post" action="" class="wide" id="user-edit-form">
 		{% csrf_token %}
 		<div class="refinery-header">
 			<span class="refinery-header-left">
-				<h3>Profile for {{profile_user.username}}</h3>				
+				<h3>Profile for {{profile_user.username}}</h3>
 			</span>
-		</div>		
+		</div>
 		{% if uform.errors %}
   		<div class="alert alert-error">Please correct the errors below.{{ uform.non_field_errors }}</div>
   		{% endif %}
 		<div class="refinery-subheader">
 			<h4>First Name</h4>
-		</div>		
+		</div>
 		<p>{{ uform.first_name }}</p>
-	
+
 		<div class="refinery-subheader">
 			<h4>Last Name</h4>
-		</div>		
+		</div>
 		<p>{{ uform.last_name }}</p>
-		
+
 		<div class="refinery-subheader">
 			<h4>Email</h4>
 		</div>
 		{% if uform.email.errors %}
 			<p class="errors">{{ uform.email.errors.as_text }}</p>
-		{% endif %}	
+		{% endif %}
 		<p>{{ uform.email }}</p>
-		
+
 		<div class="refinery-subheader">
 			<h4>Affiliation</h4>
-		</div>		
+		</div>
 		<p>{{ pform.affiliation }}</p>
-		
+
 		<div class="refinery-subheader">
 			<h4>Profile Visibility</h4>
 		</div>
@@ -68,10 +68,10 @@
 		{% if profile_user.groups.count > 0 %}
 			<div class="refinery-header">
 				<span class="refinery-header-left">
-					<h3>Groups</h3>				
-				</span>			
-			</div>		
-		    <p>   
+					<h3>Groups</h3>
+				</span>
+			</div>
+		    <p>
 			{% for group in profile_user.groups.all %}
 	        	<a href="{% url 'group' group.extendedgroup.uuid %}">{{ group.name }}</a></br>
 	    	{% endfor %}
@@ -80,21 +80,21 @@
 
 		<div class="refinery-header">
 			<span class="refinery-header-left">
-				<h3>History</h3>				
-			</span>			
-		</div>		
+				<h3>History</h3>
+			</span>
+		</div>
 		<p>Joined on {{ profile_user.date_joined }} Last login on {{ profile_user.last_login }}</p>
-		
+
 		<a href="#" class="btn btn-primary" id="submit-link">Save</a>
-		<a href="{% url 'user' profile_user.get_profile.uuid %}" class="btn">Cancel</a>			
-		
-		</form>		
+		<a href="{% url 'user' profile_user.get_profile.uuid %}" class="btn">Cancel</a>
+
+		</form>
 	</div>
-</div>  
+</div>
 {% endblock %}
 
 {% block script %}
 	<script>
-		$( "#submit-link" ).click( function() { $( "#user-edit-form" ).submit();});					
+		$( "#submit-link" ).click( function() { $( "#user-edit-form" ).submit();});
 	</script>
 {% endblock %}
