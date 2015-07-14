@@ -1006,7 +1006,10 @@ def pubmed_abstract(request, id):
     }
 
     response = requests.get(url, params=params, headers=headers)
-    return HttpResponse(response, mimetype='application/json')
+    return HttpResponse(
+        json.dumps(xmltodict.parse(response.text)),
+        mimetype='application/json'
+    )
 
 
 def pubmed_search(request, term):
