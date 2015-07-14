@@ -1403,6 +1403,7 @@ class Invitation(models.Model):
     group_id = models.IntegerField(blank=True, null=True)
     created = models.DateTimeField(editable=False, null=True)
     expires = models.DateTimeField(editable=False, null=True)
+    sender = models.ForeignKey(User, null=True)
 
     def __unicode__(self):
         return self.token_uuid + ' | ' + str(self.group_id)

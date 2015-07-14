@@ -1369,6 +1369,8 @@ class UserAuthenticationResource(Resource):
 
 
 class InvitationResource(ModelResource):
+    sender_id = fields.IntegerField(attribute='sender__id', null=True)
+
     uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
     group_id_regex = '[0-9]+'
     email_regex = '[^@|\s]+@[^@]+\.[^@|\s]+'
@@ -1437,6 +1439,7 @@ class InvitationResource(ModelResource):
             now = datetime.datetime.now()
             token_duration = datetime.timedelta(days=settings.TOKEN_DURATION)
             inv.expires = now + token_duration
+            inv.sender = user
             inv.save()
             return HttpResponse(inv.token_uuid)
         else:
