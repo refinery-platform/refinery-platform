@@ -2,20 +2,15 @@
   <ul class="analysesList">
     <li class="analysesListItems">
 
-{#   This span line is to try to get a spinning example working.   #}
-   <span> <i class=" icon-spinner icon-spin icon-large"></i>
-   </span>
-     <span class="spinner"><i class=
-                           "{{ analysis.status | analysesStatusIcon}}"></i>
+     <span class="spinner"><i class="{{ analysis.status | analysesStatusIcon}}"></i>
      </span>
       &nbsp;
       {{ analysis.name }}
 
       <span ng-if= "analysis.status=='RUNNING' || analysis.status=='INITIALIZED'" ng-init="AnalysesCtrl.refreshAnalysesDetail()">
 
-          &nbsp;<button class="btn btn-danger btn-mini"
-          rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl
-          .cancelAnalysis(analysis.uuid)">Cancel Analysis</button>
+        &nbsp;
+        <a rp-analyses-cancel-confirm confirmed-click="AnalysesCtrl.cancelAnalysis(analysis.uuid)"><i class="icon-remove"></i></a>
 
         <ul class="analysisRunningList">
           <li class="analysisRunningListItem">
