@@ -203,7 +203,7 @@ angular.module('refineryCollaborate', [])
     var groupId = config.groupId;
 
     $scope.sendInvite = function(email) {
-      $http.post('/api/v1/invitation/send/?format=json', {
+      $http.post('/api/v1/invitation/?format=json', {
         group_id: groupId,
         email: email
       }).success(function (response) {
