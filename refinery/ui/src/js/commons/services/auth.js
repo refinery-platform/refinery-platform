@@ -11,7 +11,7 @@ angular
        */
       function checkUserStatus () {
         var query = $resource(
-              settings.appRoot + settings.refineryApi + '/user_authentication/check/',
+              settings.appRoot + settings.refineryApi + '/user_authentication/',
               {
                 format: 'json'
               },

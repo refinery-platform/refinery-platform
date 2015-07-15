@@ -1346,7 +1346,7 @@ class UserAuthenticationResource(Resource):
 
     def prepend_urls(self):
         return [
-            url(r'^user_authentication/check/$',
+            url(r'^user_authentication/$',
                 self.wrap_view('check_user_status'),
                 name='api_user_authentication_check'),
         ]
