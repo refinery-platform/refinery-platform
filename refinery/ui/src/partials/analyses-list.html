@@ -1,7 +1,15 @@
 <div ng-repeat="analysis in AnalysesCtrl.analysesList track by analysis.uuid">
   <ul class="analysesList">
     <li class="analysesListItems">
-      {{ analysis.name }}, {{ analysis.status }}
+
+{#   This span line is to try to get a spinning example working.   #}
+   <span> <i class=" icon-spinner icon-spin icon-large"></i>
+   </span>
+     <span class="spinner"><i class=
+                           "{{ analysis.status | analysesStatusIcon}}"></i>
+     </span>
+      &nbsp;
+      {{ analysis.name }}
 
       <span ng-if= "analysis.status=='RUNNING' || analysis.status=='INITIALIZED'" ng-init="AnalysesCtrl.refreshAnalysesDetail()">
 
