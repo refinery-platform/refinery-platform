@@ -8,45 +8,56 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
   var vm = this;
   vm.analysesDetail = {};
 
-  analysesFactory.getAnalysesList().then(function(){
-    vm.analysesList = analysesFactory.analysesList;
-    vm.analysesRunningUuids = vm.createAnalysesRunningList(vm.analysesList);
-  });
-
-  vm.updateAnalysesDetail = function(){
-    for(var i = 0; i < vm.analysesRunningUuids.length; i++) {
-      vm.setAnalysesDetail(i);
-    }
-
-    if(vm.analysesRunningUuids.length > 0) {
-      console.log("in the update place");
-      $timeout(vm.updateAnalysesDetail, 10000);
-    }
-  };
-
-  vm.setAnalysesDetail = function(i){
-    (function(i){
-      analysesFactory.getAnalysisDetail(vm.analysesRunningUuids[i]).then(function(response) {
-          vm.analysesDetail[vm.analysesRunningUuids[i]] = analysesFactory.analysisDetail;
-      }, function(error) {
-        console.error("Error in setAnalysesDetail");
-      });
-    })(i);
+  vm.updateAnalysesList = function(){
+    analysesFactory.getAnalysesList().then(function(){
+      vm.analysesList = analysesFactory.analysesList;
+      vm.analysesRunningUuids = vm.createAnalysesRunningList(vm.analysesList);
+      vm.refreshAnalysesDetail();
+    });
   };
 
   vm.createAnalysesRunningList = function(data){
     var tempArr = [];
     for(var i = 0; i<data.length; i++){
-      if(data[i].status === "RUNNING"){
+      if(data[i].status === "RUNNING" || data[i].status === "INITIALIZED"){
         tempArr.push(data[i].uuid);
       }
     }
     return tempArr;
   };
 
-  vm.startAnalysisDetail = function(uuid){
-    if(Object.keys(vm.analysesDetail).length === 0){
-      vm.updateAnalysesDetail();
+  vm.refreshAnalysesDetail = function(){
+    for(var i = 0; i < vm.analysesRunningUuids.length; i++) {
+      vm.updateAnalysesDetail(i);
+    }
+    if(vm.analysesRunningUuids.length > 0) {
+      $timeout(vm.refreshAnalysesDetail, 10000);
     }
   };
+
+  //api request to update an analysis's details
+  vm.updateAnalysesDetail = function(i){
+    (function(i){
+      analysesFactory.getAnalysesDetail(vm.analysesRunningUuids[i]).then(function(response) {
+          vm.analysesDetail[vm.analysesRunningUuids[i]] = analysesFactory.analysesDetail;
+      });
+    })(i);
+  };
+
+  vm.cancelAnalysis = function(uuid){
+    analysesFactory.postCancelAnalysis(uuid).then(function(result)
+    {
+      alert( "Successfully canceled analysis." );
+      vm.updateAnalysesList();
+    }, function(error){
+      alert("Canceling analysis failed");
+    });
+  };
+
+  //watches for a successful analysis launch
+  $scope.$on('AnalysisLaunchNew', function(event) {
+    vm.updateAnalysesList();
+  });
+
+  vm.updateAnalysesList();
 }

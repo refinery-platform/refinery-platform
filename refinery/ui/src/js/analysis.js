@@ -60,6 +60,7 @@ angular.module('refineryAnalysis', [])
       $log.debug("Workflow: " + $scope.analysisConfig.workflowUuid);
       $log.debug("NodeSET: " + $scope.analysisConfig.nodeSetUuid);
       $log.debug("NodeREL: " + $scope.analysisConfig.nodeRelationshipUuid);
+      $rootScope.$broadcast('AnalysisLaunchNew');
     //  $window.location.assign(response);
     }).error(function (response, status) {
       $log.debug("Request failed: error " + status);
