@@ -1456,16 +1456,11 @@ class InvitationResource(ModelResource):
 
     # Handle POST requests for sending tokens.
     def obj_create(self, bundle, **kwargs):
-        logger.info("Calling obj create")
         self.update_db()
         request = bundle.request
         data = json.loads(request.raw_post_data)
         user = request.user
         group = self.get_group(int(data['group_id']))
-
-        logger.info(user)
-        logger.info(group)
-        logger.info(self.user_authorized(user, group))
 
         if not self.user_authorized(user, group):
             raise ImmediateHttpResponse(HttpUnauthorized());
