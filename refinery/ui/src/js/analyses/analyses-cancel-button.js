@@ -25,28 +25,3 @@ function rpAnalysesCancelConfirm() {
     }
   };
 }
-
-
-
-//$("#cancel-analysis-button").click( function(event) {
-//				bootbox.confirm(
-//	   				"<h3>Cancel Analysis?</h3>" +
-//					"<p>" +
-//					"Are you sure you want to cancel this analysis?" +
-//					"</p>",
-//					function(result) {
-//						if ( result ) {
-//							monitor.cancelAnalysis(
-//								function( result ) {
-//									alert( "Successfully canceled analysis." );
-//									window.location = "{% url 'data_set' status.analysis.data_set.uuid %}";
-//									// redirect to dataset page?
-//								},
-//								function( result ) {
-//									alert( "Cancelling analysis failed." );
-//								}
-//							 );
-//						}
-//					}
-//				);
-//			});

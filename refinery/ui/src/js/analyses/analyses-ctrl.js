@@ -12,7 +12,6 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
     analysesFactory.getAnalysesList().then(function(){
       vm.analysesList = analysesFactory.analysesList;
       vm.analysesRunningUuids = vm.createAnalysesRunningList(vm.analysesList);
-      vm.refreshAnalysesDetail();
     });
   };
 
@@ -35,7 +34,6 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
     }
   };
 
-  //api request to update an analysis's details
   vm.updateAnalysesDetail = function(i){
     (function(i){
       analysesFactory.getAnalysesDetail(vm.analysesRunningUuids[i]).then(function(response) {
@@ -54,7 +52,7 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
     });
   };
 
-  //watches for a successful analysis launch
+  //watches for a successful analysis launch to update AnalysesList
   $scope.$on('AnalysisLaunchNew', function(event) {
     vm.updateAnalysesList();
   });
