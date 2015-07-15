@@ -61,6 +61,7 @@ deployment/Puppetfile.lock
 /refinery/ui/development/
 /refinery/ui/bower_components/
 /refinery/ui/node_modules/
+/refinery/ui/.tmp/
 /media/
 /static/
 /isa-tab/
