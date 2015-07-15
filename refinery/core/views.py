@@ -48,8 +48,8 @@ def contact(request):
 def statistics(request):
     return render_to_response('core/statistics.html', {}, context_instance=RequestContext(request))
 
-def collaborations(request):
-    return render_to_response('core/collaborations.html', {}, context_instance=RequestContext(request))
+def collaboration(request):
+    return render_to_response('core/collaboration.html', {}, context_instance=RequestContext(request))
 
 @login_required
 def group_invite(request, token):
