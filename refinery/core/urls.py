@@ -14,6 +14,7 @@ urlpatterns = patterns(
     url(r'^contact/$', 'contact', name="contact"),
     url(r'^statistics/$', 'statistics', name="statistics"),
     url(r'^collaborations/$', 'collaborations', name='collaborations'),
+    url(r'^group_invite/(?P<token>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'group_invite', name='group_invite'),
     url(r'^users/(?P<query>[\@\.\-\+a-z0-9]+)/$', 'user'),
     # "name" is required for use with the url tag in templates
     url(r'^users/(?P<query>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', 'user', name="user"),

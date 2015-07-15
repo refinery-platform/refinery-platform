@@ -16,7 +16,7 @@ from django.template import RequestContext, loader
 from guardian.shortcuts import get_objects_for_group, get_objects_for_user, get_perms
 from core.forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm, DataSetForm
 from core.models import ExtendedGroup, Project, DataSet, Workflow, UserProfile, \
-    WorkflowEngine, Analysis, get_shared_groups
+    WorkflowEngine, Analysis, get_shared_groups, Invitation
 from data_set_manager.models import *
 from data_set_manager.utils import get_matrix
 from galaxy_connector.models import Instance
@@ -51,6 +51,42 @@ def statistics(request):
 def collaborations(request):
     return render_to_response('core/collaborations.html', {}, context_instance=RequestContext(request))
 
+@login_required
+def group_invite(request, token):
+    inv_list = Invitation.objects.filter(token_uuid=token)
+    if len(inv_list) == 0:
+        return render_to_response(
+            'core/group_invite.html',
+            {'message': 'Invalid token. Not found or expired.'},
+            context_instance=RequestContext(request))
+
+    inv = inv_list[0]
+    user = request.user
+    group_list = Group.objects.filter(id=int(inv.group_id))
+    group = None if len(group_list) == 0 else group_list[0]
+
+    if not group:
+        return render_to_response(
+            'core/group_invite.html',
+            {'message': 'Invalid token. Unable to find pairing group'},
+            context_instance=RequestContext(request))
+
+    group.user_set.add(user)
+
+    # If the group is a manager group.
+    if not group.extendedgroup.is_managed():
+        for i in group.managed_group.all():
+            i.user_set.add(user)
+
+    # We are done using this token.
+    inv.delete()
+    return render_to_response(
+            'core/group_invite.html',
+            {'message': '%s has been added to the group %s!' % (user.username, group.name)},
+            context_instance=RequestContext(request))
+
+
+
 def custom_error_page(request, template, context_dict):
     temp_loader = loader.get_template(template)
     context = RequestContext(request, context_dict)
@@ -58,7 +94,6 @@ def custom_error_page(request, template, context_dict):
 
 @login_required()
 def user(request, query):
-
     try:
         user = User.objects.get(username=query)
     except User.DoesNotExist:
