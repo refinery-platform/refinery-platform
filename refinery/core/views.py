@@ -48,8 +48,8 @@ def contact(request):
 def statistics(request):
     return render_to_response('core/statistics.html', {}, context_instance=RequestContext(request))
 
-def collaborate(request):
-    return render_to_response('core/collaborate.html', {}, context_instance=RequestContext(request))
+def collaborations(request):
+    return render_to_response('core/collaborations.html', {}, context_instance=RequestContext(request))
 
 def custom_error_page(request, template, context_dict):
     temp_loader = loader.get_template(template)
