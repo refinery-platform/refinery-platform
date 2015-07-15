@@ -1413,7 +1413,7 @@ class InvitationResource(ModelResource):
 
         1. Make a refinery acount if you have not already and log in.
         2. Click on this link: 
-           http://192.168.50.50:8000/api/v1/invitation/verify/?%s
+           http://192.168.50.50:8000/api/v1/invitation/verification/?token=%s
         """ % (group.name, invitation.token_uuid)
 
         email = EmailMessage(subject, body, to=[invitation.recipient_email])
