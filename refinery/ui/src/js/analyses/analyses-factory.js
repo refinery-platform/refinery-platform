@@ -16,7 +16,6 @@ function analysesFactory($http) {
       data: {'csrfmiddlewaretoken': csrf_token},
       headers: { "X-Requested-With" : 'XMLHttpRequest'}
     }).then(function(response){
-     //   angular.copy(response.data, analysisDetail);
       processAnalysesDetail(response.data);
       }, function(error){
         console.error("Error accessing analysis monitoring API");
@@ -84,7 +83,7 @@ function analysesFactory($http) {
     return $http.get(serverUrl +
       '/?format=json&limit=0&order_by=creation_date&data_set__uuid='+ dataSetUuid)
       .then(function (response) {
-      angular.copy(response.data.objects,analysesList);
+      angular.copy(response.data.objects.reverse(),analysesList);
     }, function (response) {
       console.error("Error accessing analyses API.");
     });
