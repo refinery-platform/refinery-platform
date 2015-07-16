@@ -14,93 +14,102 @@
         .cancelAnalysis(analysis.uuid)" rp-analyses-cancel-tooltip>
           <i class="icon-remove"></i>
         </a>
+        &nbsp;
+        <a ng-click="isCollapsed = !isCollapsed" data-toggle="collapse" data-target="#analysisStatusDetail">
+          <i ng-class="{'icon-collapse': isCollapsed, 'icon-collapse-top':
+          !isCollapsed}"></i>
+        </a>
 
-        <ul class="analysisRunningList">
-          <li class="analysisRunningListItem">
-            Preprocessing
-            <div ng-switch on="AnalysesCtrl.analysesDetail[analysis.uuid]
-            .preprocessing">
-              <div ng-switch-when="SUCCESS">
-                <div class="alert alert-success">
-                  {{ AnalysesCtrl.analysesDetail[analysis.uuid].preprocessing }}
-                </div>
-              </div>
-              <div ng-switch-when="RETRY">
-                <div class="progress progress-striped active">
-                  <div class="bar" style="width: {{AnalysesCtrl.analysesDetail[analysis.uuid]
-                  .executionPercentDone}}">{{AnalysesCtrl.analysesDetail[analysis.uuid]
-                  .preprocessingPercentDone}}</div>
-                </div>
-              </div>
-              <div ng-switch-when="FAILURE">
-                <div class="alert alert-warning">
-                  {{ AnalysesCtrl.analysesDetail[analysis.uuid].preprocessing }}
-                  </div>
-              </div>
-              <div ng-switch-default>
-                <div class="alert alert-info">
-                  {{ AnalysesCtrl.analysesDetail[analysis.uuid].preprocessing }}
-                  </div>
-              </div>
-            </div>
-          </li>
 
-          <li class="analysisRunningListItem">
-            Execution
-            <div ng-switch on="AnalysesCtrl.analysesDetail[analysis.uuid].execution">
-              <div ng-switch-when="SUCCESS">
-                <div class="alert alert-success">
-                  {{ AnalysesCtrl.analysesDetail[analysis.uuid].execution }}
-                </div>
-              </div>
-              <div ng-switch-when="RETRY">
-                <div class="progress progress-striped active">
-                  <div class="bar" style="width: {{AnalysesCtrl.analysesDetail[analysis.uuid]
-                  .executionPercentDone}}">{{AnalysesCtrl.analysesDetail[analysis.uuid]
-                  .executionPercentDone}}</div>
-                </div>
-              </div>
-              <div ng-switch-when="FAILURE">
-                <div class="alert alert-warning">
-                  {{ AnalysesCtrl.analysesDetail[analysis.uuid].execution }}
-                  </div>
-              </div>
-              <div ng-switch-default>
-                <div class="alert alert-info">
-                  {{ AnalysesCtrl.analysesDetail[analysis.uuid].execution }}
-                </div>
-              </div>
-            </div>
-          </li>
+        <div id="analysisStatusDetail" class="collapse in">
 
-          <li class="analysisRunningListItem">
-            Postprocessing
-            <div ng-switch on="AnalysesCtrl.analysesDetail[analysis.uuid].postprocessing">
-              <div ng-switch-when="SUCCESS">
-                <div class="alert alert-success">
-                  {{ AnalysesCtrl.analysesDetail[analysis.uuid].postprocessing }}
+          <ul class="analysisRunningList">
+            <li class="analysisRunningListItem">
+              Preprocessing
+              <div ng-switch on="AnalysesCtrl.analysesDetail[analysis.uuid]
+              .preprocessing">
+                <div ng-switch-when="SUCCESS">
+                  <div class="alert alert-success">
+                    {{ AnalysesCtrl.analysesDetail[analysis.uuid].preprocessing }}
+                  </div>
+                </div>
+                <div ng-switch-when="RETRY">
+                  <div class="progress progress-striped active">
+                    <div class="bar" style="width: {{AnalysesCtrl.analysesDetail[analysis.uuid]
+                    .executionPercentDone}}">{{AnalysesCtrl.analysesDetail[analysis.uuid]
+                    .preprocessingPercentDone}}</div>
+                  </div>
+                </div>
+                <div ng-switch-when="FAILURE">
+                  <div class="alert alert-warning">
+                    {{ AnalysesCtrl.analysesDetail[analysis.uuid].preprocessing }}
+                    </div>
+                </div>
+                <div ng-switch-default>
+                  <div class="alert alert-info">
+                    {{ AnalysesCtrl.analysesDetail[analysis.uuid].preprocessing }}
+                    </div>
                 </div>
               </div>
-              <div ng-switch-when="FAILURE">
-                <div class="alert alert-warning">
-                  {{ AnalysesCtrl.analysesDetail[analysis.uuid].postprocessing }}
+            </li>
+
+            <li class="analysisRunningListItem">
+              Execution
+              <div ng-switch on="AnalysesCtrl.analysesDetail[analysis.uuid].execution">
+                <div ng-switch-when="SUCCESS">
+                  <div class="alert alert-success">
+                    {{ AnalysesCtrl.analysesDetail[analysis.uuid].execution }}
+                  </div>
+                </div>
+                <div ng-switch-when="RETRY">
+                  <div class="progress progress-striped active">
+                    <div class="bar" style="width: {{AnalysesCtrl.analysesDetail[analysis.uuid]
+                    .executionPercentDone}}">{{AnalysesCtrl.analysesDetail[analysis.uuid]
+                    .executionPercentDone}}</div>
+                  </div>
+                </div>
+                <div ng-switch-when="FAILURE">
+                  <div class="alert alert-warning">
+                    {{ AnalysesCtrl.analysesDetail[analysis.uuid].execution }}
+                    </div>
+                </div>
+                <div ng-switch-default>
+                  <div class="alert alert-info">
+                    {{ AnalysesCtrl.analysesDetail[analysis.uuid].execution }}
+                  </div>
                 </div>
               </div>
-              <div ng-switch-when="RETRY">
-                <div class="progress progress-striped active">
-                  <div class="bar" style="width: {{AnalysesCtrl.analysesDetail[analysis.uuid]
-                  .executionPercentDone}}">{{AnalysesCtrl.analysesDetail[analysis.uuid]
-                  .postprocessingPercentDone}}</div>
+            </li>
+
+            <li class="analysisRunningListItem">
+              Postprocessing
+              <div ng-switch on="AnalysesCtrl.analysesDetail[analysis.uuid].postprocessing">
+                <div ng-switch-when="SUCCESS">
+                  <div class="alert alert-success">
+                    {{ AnalysesCtrl.analysesDetail[analysis.uuid].postprocessing }}
+                  </div>
+                </div>
+                <div ng-switch-when="FAILURE">
+                  <div class="alert alert-warning">
+                    {{ AnalysesCtrl.analysesDetail[analysis.uuid].postprocessing }}
+                  </div>
+                </div>
+                <div ng-switch-when="RETRY">
+                  <div class="progress progress-striped active">
+                    <div class="bar" style="width: {{AnalysesCtrl.analysesDetail[analysis.uuid]
+                    .executionPercentDone}}">{{AnalysesCtrl.analysesDetail[analysis.uuid]
+                    .postprocessingPercentDone}}</div>
+                  </div>
+                </div>
+                <div ng-switch-default>
+                  <div class="alert alert-info">
+                    {{ AnalysesCtrl.analysesDetail[analysis.uuid].postprocessing }}
+                  </div>
                 </div>
               </div>
-              <div ng-switch-default>
-                <div class="alert alert-info">
-                  {{ AnalysesCtrl.analysesDetail[analysis.uuid].postprocessing }}
-                </div>
-              </div>
-            </div>
-          </li>
-        </ul>
+            </li>
+          </ul>
+        </div>
       </span>
     </li>
   </ul>

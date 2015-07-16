@@ -12,6 +12,6 @@ function analysesStatusIcon(){
       default:
         return "icon-question-sign";
     }
-  }
-};
+  };
+}
 
