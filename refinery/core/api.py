@@ -1377,7 +1377,7 @@ class InvitationResource(ModelResource):
 
     class Meta:
         queryset = Invitation.objects.all()
-        resource_name = 'invitation'
+        resource_name = 'invitations'
         detail_uri_name = 'token_uuid'
         # authentication = SessionAuthentication()
 
