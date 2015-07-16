@@ -16,13 +16,14 @@
           <i class="icon-remove"></i>
         </a>
         &nbsp;
-        <a ng-click="isCollapsed = !isCollapsed" data-toggle="collapse" data-target="#analysisStatusDetail">
+        <a ng-click="isCollapsed = !isCollapsed" data-toggle="collapse"
+           data-target="#{{analysis.uuid}}">
           <i ng-class="{'icon-collapse': isCollapsed, 'icon-collapse-top':
           !isCollapsed}"></i>
         </a>
 
 
-        <div id="analysisStatusDetail" class="collapse in">
+        <div id="{{analysis.uuid}}" class="collapse in">
 
           <ul class="analysisRunningList">
             <li class="analysisRunningListItem">
