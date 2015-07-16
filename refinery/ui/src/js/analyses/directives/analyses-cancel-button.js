@@ -11,11 +11,6 @@ function rpAnalysesCancelConfirm() {
         " cancel this analysis?</p>";
       var clickAction = attr.confirmedClick;
       element.bind('click', function (event) {
-        //
-        //if (window.confirm(msg)) {
-        //  scope.$eval(clickAction)
-        //}
-
         bootbox.confirm( msg, function(result) {
           if (result) {
           scope.$eval(clickAction);
