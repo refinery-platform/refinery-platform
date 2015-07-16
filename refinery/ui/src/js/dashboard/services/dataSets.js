@@ -25,41 +25,27 @@ angular
           defaultId: 'default',
 
           /**
-           * Initialize cache.
-           * @type {function}
-           */
-          initialize: function (id) {
-            this.id = id;
-            this.isEnabled = true;
-            this.items = {};
-            this.getPure = dataSets.get;
-            dataSets.get = this.getCached;
-          },
-
-          /**
            * Get cached items wrapper.
            * @param  {Number}   offset  First item returned by the API.
            * @param  {Number}   limit   Number of items returned by the API.
            * @param  {function} success Callback on success.
            * @return {(boolean|function)}
            */
-          getCached: function (offset, limit, success) {
+          get: function (offset, limit, success) {
             var self = dataSets.cache;
-
-            offset--;
 
             if (self.isEnabled) {
               if (self.getItems(offset, limit, success)) {
                 return true;
               }
 
-              return self.getPure(offset, limit, function (results) {
+              return dataSets.queryEndpoint(offset, limit, function (results) {
                 self.saveItems(offset, limit, results);
                 success(results);
               });
             }
 
-            return self.getPure(offset, limit, success);
+            return dataSets.queryEndpoint(offset, limit, success);
           },
 
           /**
@@ -85,6 +71,22 @@ angular
           },
 
           /**
+           * Initialize cache.
+           * @type {function}
+           */
+          initialize: function (id) {
+            this.id = id;
+            this.isEnabled = true;
+            this.items = {};
+          },
+
+          /**
+           * Defines whether dataSets should be cached or not.
+           * @type {Boolean}
+           */
+          isEnabled: false,
+
+          /**
            * Store results in the cache.
            * @param  {Number} offset  First item returned by the API.
            * @param  {Number} limit   Number of items returned by the API.
@@ -94,17 +96,13 @@ angular
             for (var i = 0, len = results.length; i < len; i++) {
               this.items[offset + i] = results[i];
             }
-          },
-
-          store: {},
-
-          storeQueue: {
-
           }
         },
 
         /**
-         * Query the dataSetService service.
+         * Wrapper function that adjusts the offset and redirects the request
+         * either to the cache or du the function querying the endpoint.
+         *
          * @param  {Number}   offset  First item returned by the API.
          * @param  {Number}   limit   Number of items returned by the API.
          * @param  {function} success Callback on success.
@@ -129,6 +127,21 @@ angular
             return;
           }
 
+          if (this.cache.isEnabled) {
+            this.cache.get(offset, limit, success);
+          } else {
+            this.queryEndpoint(offset, limit, success);
+          }
+        },
+
+        /**
+         * Query the dataSetService service.
+         * @param  {Number}   offset  First item returned by the API.
+         * @param  {Number}   limit   Number of items returned by the API.
+         * @param  {function} success Callback on success.
+         * @return {boolean}
+         */
+        queryEndpoint: function (offset, limit, success) {
           var query = dashboardDataSetSourceService.get(limit, offset);
 
           query
