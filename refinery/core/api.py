@@ -1412,47 +1412,12 @@ class InvitationResource(ModelResource):
         You have been invited to join %s. Please use the following steps:
 
         1. Make a refinery acount if you have not already and log in.
-        2. Click on this link: 
-           http://192.168.50.50:8000/api/v1/invitation/verification/?token=%s
+        2. Click on this link: http://192.168.50.50:8000/group_invite/%s/
         """ % (group.name, invitation.token_uuid)
 
         email = EmailMessage(subject, body, to=[invitation.recipient_email])
         email.send()
         return HttpCreated("Email sent")
-
-    def prepend_urls(self):
-        return [
-            url(r'^invitation/verification/$',
-                self.wrap_view('verify_token'),
-                name='api_invitation_verify_token'),            
-        ]
-
-    def verify_token(self, request, **kwargs):
-        self.update_db()
-        token = request.GET.get('token')
-
-        if not token:
-            raise ImmediateHttpResponse(HttpBadRequest())
-
-        # Fixes problems if the URL with the query ends in trailing slash for
-        # whatever reason.
-        token = token.split('/')[0]
-        inv_list = Invitation.objects.filter(token_uuid=token)
-
-        if len(inv_list) == 0:
-            raise ImmediateHttpResponse(HttpNotFound("Not found or expired"))
-
-        inv = inv_list[0]
-        group = self.get_group(inv.group_id)
-        group.user_set.add(request.user)
-
-        # Add to all managed groups if adding to a manager group.
-        if self.is_manager_group(group):
-            for i in group.managed_group.all():
-                i.user_set.add(user)
-
-        inv.delete()
-        return HttpAccepted("Hello accepted")
 
     # Handle POST requests for sending tokens.
     def obj_create(self, bundle, **kwargs):

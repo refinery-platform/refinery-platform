@@ -25,7 +25,7 @@ angular
   'refineryProvvis',
   'refineryDataFileUpload',
   'refineryDashboard',
-  'refineryCollaborate',
+  'refineryCollaboration',
 ])
 .config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
   // http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
