@@ -845,9 +845,9 @@ class IsaTabParser:
 
                 # test if last column is the start of a multiline field
                 if not self.is_multiline_start(columns[-1]):
-                    fields[field_name] = [column.strip().strip("\"").replace("\"\"\"", "\"") for column in columns[1:]]
+                    fields[field_name] = [column.strip(" \"").replace("\"\"\"", "\"") for column in columns[1:]]
                 else:
-                    fields[field_name] = [column.strip().strip("\"").replace("\"\"\"", "\"") for column in columns[1:-1]]
+                    fields[field_name] = [column.strip(" \"").replace("\"\"\"", "\"") for column in columns[1:-1]]
 
                     # deal with multi line field: read lines and split on tab
                     # until the first field is the end of a multiline field
