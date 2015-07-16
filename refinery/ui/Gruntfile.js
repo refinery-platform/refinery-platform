@@ -612,7 +612,7 @@ module.exports = function(grunt) {
   );
 
   // Default task.
-  grunt.registerTask('default', ['compile']);
+  grunt.registerTask('default', ['build', 'compile']);
 
   // Do as little as possible to get Refinery running to keep grunt watch
   // responsive.
