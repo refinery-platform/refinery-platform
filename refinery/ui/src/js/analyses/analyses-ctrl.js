@@ -9,20 +9,11 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
   vm.analysesDetail = {};
 
   vm.updateAnalysesList = function(){
+    console.log("update List");
     analysesFactory.getAnalysesList().then(function(){
       vm.analysesList = analysesFactory.analysesList;
-      vm.analysesRunningUuids = vm.createAnalysesRunningList(vm.analysesList);
+      vm.analysesRunningUuids = analysesFactory.createAnalysesRunningList(vm.analysesList);
     });
-  };
-
-  vm.createAnalysesRunningList = function(data){
-    var tempArr = [];
-    for(var i = 0; i<data.length; i++){
-      if(data[i].status === "RUNNING" || data[i].status === "INITIALIZED"){
-        tempArr.push(data[i].uuid);
-      }
-    }
-    return tempArr;
   };
 
   vm.refreshAnalysesDetail = function(){
@@ -30,14 +21,17 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
       vm.updateAnalysesDetail(i);
     }
     if(vm.analysesRunningUuids.length > 0) {
-      $timeout(vm.refreshAnalysesDetail, 10000);
+      $timeout(vm.refreshAnalysesDetail, 5000);
+      $timeout(vm.updateAnalysesList, 30000);
+
     }
   };
 
   vm.updateAnalysesDetail = function(i){
     (function(i){
       analysesFactory.getAnalysesDetail(vm.analysesRunningUuids[i]).then(function(response) {
-          vm.analysesDetail[vm.analysesRunningUuids[i]] = analysesFactory.analysesDetail;
+          vm.analysesDetail[vm.analysesRunningUuids[i]] = analysesFactory.analysesDetail[vm.analysesRunningUuids[i]];
+        console.log(vm.analysesDetail[vm.analysesRunningUuids[i]]);
       });
     })(i);
   };
@@ -55,6 +49,7 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
   //watches for a successful analysis launch to update AnalysesList
   $scope.$on('AnalysisLaunchNew', function(event) {
     vm.updateAnalysesList();
+
   });
 
   vm.updateAnalysesList();

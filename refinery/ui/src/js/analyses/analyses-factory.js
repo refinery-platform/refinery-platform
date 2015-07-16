@@ -16,7 +16,9 @@ function analysesFactory($http) {
       data: {'csrfmiddlewaretoken': csrf_token},
       headers: { "X-Requested-With" : 'XMLHttpRequest'}
     }).then(function(response){
-      processAnalysesDetail(response.data);
+      processAnalysesDetail(response.data, uuid);
+      console.log(uuid);
+      console.log(analysesDetail[uuid]);
       }, function(error){
         console.error("Error accessing analysis monitoring API");
       });
@@ -36,11 +38,21 @@ function analysesFactory($http) {
     });
   };
 
-  var processAnalysesDetail = function(data){
-    setPreprocessingStatus(data);
-    setPostprocessingStatus(data);
+  var processAnalysesDetail = function(data, uuid){
+    if(!(analysesDetail.hasOwnProperty(uuid))){
+      analysesDetail[uuid]={
+        "preprocessing": null,
+        "preprocessingPercentDone":null,
+        "execution": null,
+        "executionPercentDone":null,
+        "postprocessing":null,
+        "postprocessingPercentDone":null
+      };
+    }
+    setPreprocessingStatus(data, uuid);
+    setPostprocessingStatus(data, uuid);
     if(data.execution != null){
-      setExecutionStatus(data);
+      setExecutionStatus(data, uuid);
     }
   };
 
@@ -52,29 +64,39 @@ function analysesFactory($http) {
     }
   };
 
-  var setPreprocessingStatus = function(data){
+  var createAnalysesRunningList = function(data){
+    var tempArr = [];
+    for(var i = 0; i<data.length; i++){
+      if(data[i].status === "RUNNING" || data[i].status === "INITIALIZED"){
+        tempArr.push(data[i].uuid);
+      }
+    }
+    return tempArr;
+  };
+
+  var setPreprocessingStatus = function(data, uuid){
      if(!(analysesDetail.hasOwnProperty('preprocessing')) || isNotPending(data.preprocessing[0].state)) {
-      analysesDetail.preprocessing = data.preprocessing[0].state;
-       if(!(analysesDetail.hasOwnProperty('preprocessingPrecentDone')) || data.preprocessing[0].percent_done > analysesDetail.preprocessingPercentDone) {
-        analysesDetail.preprocessingPercentDone = data.preprocessing[0].percent_done;
+      analysesDetail[uuid].preprocessing = data.preprocessing[0].state;
+       if(!(analysesDetail.hasOwnProperty('preprocessingPrecentDone')) || data.preprocessing[0].percent_done > analysesDetail[uuid].preprocessingPercentDone) {
+        analysesDetail[uuid].preprocessingPercentDone = data.preprocessing[0].percent_done;
        }
     }
   };
 
-  var setPostprocessingStatus = function(data){
+  var setPostprocessingStatus = function(data, uuid){
      if(!(analysesDetail.hasOwnProperty('postprocessing')) || isNotPending(data.postprocessing[0].state)) {
-      analysesDetail.postprocessing = data.postprocessing[0].state;
-       if(!(analysesDetail.hasOwnProperty('postprocessingPrecentDone')) || data.postprocessing[0].percent_done > analysesDetail.postprocessingPercentDone) {
-        analysesDetail.postprocessingPercentDone = data.postprocessing[0].percent_done;
+      analysesDetail[uuid].postprocessing = data.postprocessing[0].state;
+       if(!(analysesDetail.hasOwnProperty('postprocessingPrecentDone')) || data.postprocessing[0].percent_done > analysesDetail[uuid].postprocessingPercentDone) {
+        analysesDetail[uuid].postprocessingPercentDone = data.postprocessing[0].percent_done;
        }
     }
   };
 
-  var setExecutionStatus = function(data){
+  var setExecutionStatus = function(data, uuid){
      if(!(analysesDetail.hasOwnProperty('execution')) || isNotPending(data.execution[0].state)) {
-      analysesDetail.execution = data.execution[0].state;
-       if(!(analysesDetail.hasOwnProperty('executionPrecentDone')) || data.execution[0].percent_done > analysesDetail.executionPercentDone) {
-        analysesDetail.executionPercentDone = data.execution[0].percent_done;
+      analysesDetail[uuid].execution = data.execution[0].state;
+       if(!(analysesDetail.hasOwnProperty('executionPrecentDone')) || data.execution[0].percent_done > analysesDetail[uuid].executionPercentDone) {
+        analysesDetail[uuid].executionPercentDone = data.execution[0].percent_done;
        }
      }
   };
@@ -93,6 +115,7 @@ function analysesFactory($http) {
    getAnalysesList: getAnalysesList,
    getAnalysesDetail: getAnalysesDetail,
    postCancelAnalysis: postCancelAnalysis,
+   createAnalysesRunningList: createAnalysesRunningList,
    analysesDetail: analysesDetail,
    analysesList: analysesList,
  };

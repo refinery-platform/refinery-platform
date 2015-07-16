@@ -2,12 +2,12 @@
   <ul class="analysesList">
     <li class="analysesListItems">
 
-     <span class="spinner"><i class="{{ analysis.status | analysesStatusIcon}}"></i>
+     <span class="spinner"><i class="{{analysis.status | analysesStatusIcon}}"></i>
      </span>
       &nbsp;
       {{ analysis.name }}
 
-      <span ng-if= "analysis.status=='RUNNING' || analysis
+      <span ng-if="analysis.status=='RUNNING' || analysis
       .status=='INITIALIZED'" ng-init="AnalysesCtrl.refreshAnalysesDetail()">
 
         &nbsp;
@@ -37,7 +37,9 @@
                 </div>
                 <div ng-switch-when="RETRY">
                   <div class="progress progress-striped active">
-                    <div class="bar" style="width: {{AnalysesCtrl.analysesDetail[analysis.uuid]
+                    <div class="bar" id="preprocessing-
+                  {{ analysis.uuid }}" style="width:
+                    {{AnalysesCtrl.analysesDetail[analysis.uuid]
                     .executionPercentDone}}">{{AnalysesCtrl.analysesDetail[analysis.uuid]
                     .preprocessingPercentDone}}</div>
                   </div>
@@ -65,7 +67,8 @@
                 </div>
                 <div ng-switch-when="RETRY">
                   <div class="progress progress-striped active">
-                    <div class="bar" style="width: {{AnalysesCtrl.analysesDetail[analysis.uuid]
+                    <div class="bar" id="execution-
+                  {{ analysis.uuid }}" style="width:{{AnalysesCtrl.analysesDetail[analysis.uuid]
                     .executionPercentDone}}">{{AnalysesCtrl.analysesDetail[analysis.uuid]
                     .executionPercentDone}}</div>
                   </div>
@@ -98,7 +101,9 @@
                 </div>
                 <div ng-switch-when="RETRY">
                   <div class="progress progress-striped active">
-                    <div class="bar" style="width: {{AnalysesCtrl.analysesDetail[analysis.uuid]
+                    <div class="bar" id="postprocessing-
+                  {{ analysis.uuid }}" style="width:
+                    {{AnalysesCtrl.analysesDetail[analysis.uuid]
                     .executionPercentDone}}">{{AnalysesCtrl.analysesDetail[analysis.uuid]
                     .postprocessingPercentDone}}</div>
                   </div>
