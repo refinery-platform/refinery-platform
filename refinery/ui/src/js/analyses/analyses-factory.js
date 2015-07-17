@@ -44,7 +44,8 @@ function analysesFactory($http) {
         "execution": null,
         "executionPercentDone":'0%',
         "postprocessing":null,
-        "postprocessingPercentDone":'0%'
+        "postprocessingPercentDone":'0%',
+        "cancelingAnalyses":false,
       };
     }
     setPreprocessingStatus(data, uuid);
