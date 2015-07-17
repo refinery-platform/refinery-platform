@@ -7,6 +7,30 @@ function analysesFactory($http) {
   var analysesList = [];
   var analysesDetail = {};
 
+
+  var initializeAnalysesDetail = function(uuid){
+    analysesDetail[uuid]={
+      "preprocessing": null,
+      "preprocessingPercentDone":'0%',
+      "execution": null,
+      "executionPercentDone":'0%',
+      "postprocessing":null,
+      "postprocessingPercentDone":'0%',
+      "cancelingAnalyses":false,
+    };
+  };
+
+  //Ajax calls
+  var getAnalysesList = function() {
+    return $http.get(serverUrl +
+      '/?format=json&limit=0&order_by=creation_date&data_set__uuid='+ dataSetUuid)
+      .then(function (response) {
+      angular.copy(response.data.objects.reverse(),analysesList);
+    }, function (response) {
+      console.error("Error accessing analyses API.");
+    });
+  };
+
   //http.post header needed to be adjusted because django was not recognizing it
   // as an ajax call.
   var getAnalysesDetail = function(uuid) {
@@ -30,23 +54,15 @@ function analysesFactory($http) {
       headers: { "X-Requested-With" : 'XMLHttpRequest'}
     }).then(function(response){
       console.log(response);
-    }, function(jqXHR){
-      console.error("Error accessing postCancelAnalysis");
-      console.log(jqXHR);
+    }, function(error){
+      console.error("Error accessing analysis_cancel API");
     });
   };
 
+  /*process responses from api*/
   var processAnalysesDetail = function(data, uuid){
     if(!(analysesDetail.hasOwnProperty(uuid))){
-      analysesDetail[uuid]={
-        "preprocessing": null,
-        "preprocessingPercentDone":'0%',
-        "execution": null,
-        "executionPercentDone":'0%',
-        "postprocessing":null,
-        "postprocessingPercentDone":'0%',
-        "cancelingAnalyses":false,
-      };
+      initializeAnalysesDetail(uuid);
     }
     setPreprocessingStatus(data, uuid);
     setPostprocessingStatus(data, uuid);
@@ -61,16 +77,6 @@ function analysesFactory($http) {
     }else{
       return true;
     }
-  };
-
-  var createAnalysesRunningList = function(data){
-    var tempArr = [];
-    for(var i = 0; i<data.length; i++){
-      if(data[i].status === "RUNNING" || data[i].status === "INITIALIZED"){
-        tempArr.push(data[i].uuid);
-      }
-    }
-    return tempArr;
   };
 
   var setPreprocessingStatus = function(data, uuid){
@@ -100,14 +106,15 @@ function analysesFactory($http) {
      }
   };
 
-  var getAnalysesList = function() {
-    return $http.get(serverUrl +
-      '/?format=json&limit=0&order_by=creation_date&data_set__uuid='+ dataSetUuid)
-      .then(function (response) {
-      angular.copy(response.data.objects.reverse(),analysesList);
-    }, function (response) {
-      console.error("Error accessing analyses API.");
-    });
+  /*Creates a list of analysis running uuids for getting analyses details*/
+  var createAnalysesRunningList = function(data){
+    var tempArr = [];
+    for(var i = 0; i<data.length; i++){
+      if(data[i].status === "RUNNING" || data[i].status === "INITIALIZED"){
+        tempArr.push(data[i].uuid);
+      }
+    }
+    return tempArr;
   };
 
  return{
