@@ -1,6 +1,6 @@
 angular.module('refineryAnalyses')
     .controller('AnalysesCtrl',
-    ['analysesFactory','$scope','$timeout', AnalysesCtrl]);
+    ['analysesFactory','$scope','$timeout', '$rootScope', AnalysesCtrl]);
 
 
 function AnalysesCtrl(analysesFactory, $scope, $timeout) {
@@ -8,23 +8,33 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
   var vm = this;
   vm.analysesDetail = {};
 
+
   vm.updateAnalysesList = function(){
-    console.log("update List");
     analysesFactory.getAnalysesList().then(function(){
       vm.analysesList = analysesFactory.analysesList;
       vm.analysesRunningUuids = analysesFactory.createAnalysesRunningList(vm.analysesList);
     });
+
+    var timerList = $timeout(vm.updateAnalysesList, 30000);
+      $scope.$on('refinery/analyze-tab-inactive', function(){
+        $timeout.cancel(timerList);
+      });
   };
 
   vm.refreshAnalysesDetail = function(){
+    var timerDetail;
+
     for(var i = 0; i < vm.analysesRunningUuids.length; i++) {
       vm.updateAnalysesDetail(i);
     }
+    console.log("In refreshAnalysesDetail");
     if(vm.analysesRunningUuids.length > 0) {
-      $timeout(vm.refreshAnalysesDetail, 5000);
-      $timeout(vm.updateAnalysesList, 30000);
-
+      timerDetail = $timeout(vm.refreshAnalysesDetail, 5000);
     }
+
+    $scope.$on('refinery/analyze-tab-inactive', function(){
+      $timeout.cancel(timerDetail);
+    });
   };
 
   vm.updateAnalysesDetail = function(i){
@@ -40,17 +50,15 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
     analysesFactory.postCancelAnalysis(uuid).then(function(result)
     {
       alert( "Successfully canceled analysis." );
-      vm.updateAnalysesList();
     }, function(error){
       alert("Canceling analysis failed");
     });
   };
 
-  //watches for a successful analysis launch to update AnalysesList
-  $scope.$on('AnalysisLaunchNew', function(event) {
+  //watches for analyze tab view to update AnalysesList
+  $scope.$on('refinery/analyze-tab-active', function(){
     vm.updateAnalysesList();
-
   });
 
-  vm.updateAnalysesList();
+
 }
