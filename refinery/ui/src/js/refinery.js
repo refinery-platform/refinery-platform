@@ -50,8 +50,7 @@ angular
     // updated. Used by node_mapping.js Trigger for analyze tab view to run
     // analyses status.
   $(document).on('refinery/updateCurrentNodeSelection' +
-  ' refinery/analyze-tab-focus refinery/analyze-tab-blur', function(e){
-    console.log(e);
+  ' refinery/analyze-tab-active refinery/analyze-tab-inactive', function(e){
     $rootScope.$broadcast(e.type);
     $rootScope.$digest();
   });

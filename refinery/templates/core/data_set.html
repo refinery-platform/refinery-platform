@@ -715,16 +715,19 @@
         $( '#navigation-tabs a[href="#' + event.added.element[0].value + '"]').tab('show');
       });
 
+
   /*This triggers the analyses monitoring event when the tab is active*/
-      $('#analyze-tab').focus( function(e) {
-          $(document).trigger('refinery/analyze-tab-focus');
-        $('#analyze-tab').blur( function(e) {
-          $(document).trigger('refinery/analyze-tab-blur');
-         });
+      $('#analyze-tab').on("mouseup", function(e) {
+        $(window).unbind('hashchange');
+        $(document).trigger('refinery/analyze-tab-active');
+
+        $(window).bind('hashchange',function(e) {;
+          if (location.hash != "#/analyses"){
+            $(document).trigger('refinery/analyze-tab-inactive');
+            $(this).unbind();
+          }
+        });
       });
-
-
-
 
       $("[rel=tooltip]").tooltip();
 
