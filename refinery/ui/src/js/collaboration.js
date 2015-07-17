@@ -54,7 +54,6 @@ angular.module('refineryCollaboration', [])
       }).$promise.then(
         function (data) {
           pageScope.activeGroupInviteList = data.objects;
-          console.log(pageScope.activeGroupInviteList);
         },
         function (error) {
           console.error(error);
@@ -71,7 +70,6 @@ angular.module('refineryCollaboration', [])
         $scope.groupList = pageScope.groupList;
 
         $scope.leaveGroup = function (group) {
-          console.log(group.group_id);
           that.groupMemberService.remove({
             groupId: group.group_id,
             userId: user_id
@@ -182,6 +180,7 @@ angular.module('refineryCollaboration', [])
             email: email
           }).$promise.then(
             function (data) {
+              updateGroupList();
               $modalInstance.dismiss();
               alert("Email successfully sent");
             },
@@ -192,6 +191,19 @@ angular.module('refineryCollaboration', [])
         };
       }
     });
+  };
+
+  pageScope.revokeInvitation = function (invite) {
+    that.groupInviteService.revoke({
+      token: invite.token_uuid
+    }).$promise.then(
+      function (data) {
+        updateGroupList();
+      },
+      function (error) {
+        console.error(error);
+      }
+    );
   };
 })
 

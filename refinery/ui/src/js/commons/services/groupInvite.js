@@ -5,6 +5,7 @@ angular
       return $resource(
         settings.appRoot + settings.refineryApi + '/invitations/',
         {
+          token: '@token',
           format: 'json'
         },
         {
@@ -13,6 +14,10 @@ angular
           },
           send: {
             method: 'POST'
+          },
+          revoke: {
+            method: 'DELETE',
+            url: settings.appRoot + settings.refineryApi + '/invitations/:token/'
           }
         }
       );

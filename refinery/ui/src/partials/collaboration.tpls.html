@@ -1,7 +1,7 @@
 <div id="group-collab">
   <div class="row-fluid">
 
-    <div class="span6 well">
+    <div class="span4 well">
       <strong>Groups</strong>
       <span style="float:right;margin-left:5px">
         <a href="#" ng-click="openGroupEditor()"><i class="icon-cog"></i></a>
@@ -19,7 +19,7 @@
       </ul>
     </div>
 
-    <div class="span6 well">
+    <div class="span4 well">
       <strong>Members</strong>
       <span style="margin-left:5px" ng-if="activeGroup.can_edit">
         <a href="#" ng-click="openEmailInvite()"><i class="icon-plus"></i></a>
@@ -35,6 +35,18 @@
             <a href="#" ng-click="openMemberEditor(member)" style="margin-left:10px">
               <i class="icon-cog"></i>
             </a>
+          </span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="span4 well">
+      <strong>Pending Invitations</strong>
+      <ul class="nav nav-list scrollable">
+        <li ng-repeat="invite in activeGroupInviteList">
+          {{invite.recipient_email}}
+          <span style="float:right">
+            <a href="#" ng-click="revokeInvitation(invite)">Revoke</a>
           </span>
         </li>
       </ul>
