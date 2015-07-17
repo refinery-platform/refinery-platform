@@ -17,8 +17,6 @@ function analysesFactory($http) {
       headers: { "X-Requested-With" : 'XMLHttpRequest'}
     }).then(function(response){
       processAnalysesDetail(response.data, uuid);
-      console.log(uuid);
-      console.log(analysesDetail[uuid]);
       }, function(error){
         console.error("Error accessing analysis monitoring API");
       });
@@ -75,27 +73,27 @@ function analysesFactory($http) {
   };
 
   var setPreprocessingStatus = function(data, uuid){
-     if(!(analysesDetail.hasOwnProperty('preprocessing')) || isNotPending(data.preprocessing[0].state)) {
-      analysesDetail[uuid].preprocessing = data.preprocessing[0].state;
-       if(!(analysesDetail.hasOwnProperty('preprocessingPrecentDone')) || data.preprocessing[0].percent_done > analysesDetail[uuid].preprocessingPercentDone) {
+     if( isNotPending(data.preprocessing[0].state)) {
+       analysesDetail[uuid].preprocessing = data.preprocessing[0].state;
+       if( data.preprocessing[0].percent_done > analysesDetail[uuid].preprocessingPercentDone) {
         analysesDetail[uuid].preprocessingPercentDone = data.preprocessing[0].percent_done;
        }
     }
   };
 
   var setPostprocessingStatus = function(data, uuid){
-     if(!(analysesDetail.hasOwnProperty('postprocessing')) || isNotPending(data.postprocessing[0].state)) {
-      analysesDetail[uuid].postprocessing = data.postprocessing[0].state;
-       if(!(analysesDetail.hasOwnProperty('postprocessingPrecentDone')) || data.postprocessing[0].percent_done > analysesDetail[uuid].postprocessingPercentDone) {
+     if( isNotPending(data.postprocessing[0].state)) {
+       analysesDetail[uuid].postprocessing = data.postprocessing[0].state;
+       if(data.postprocessing[0].percent_done > analysesDetail[uuid].postprocessingPercentDone) {
         analysesDetail[uuid].postprocessingPercentDone = data.postprocessing[0].percent_done;
        }
     }
   };
 
   var setExecutionStatus = function(data, uuid){
-     if(!(analysesDetail.hasOwnProperty('execution')) || isNotPending(data.execution[0].state)) {
-      analysesDetail[uuid].execution = data.execution[0].state;
-       if(!(analysesDetail.hasOwnProperty('executionPrecentDone')) || data.execution[0].percent_done > analysesDetail[uuid].executionPercentDone) {
+     if(isNotPending(data.execution[0].state)) {
+       analysesDetail[uuid].execution = data.execution[0].state;
+       if( data.execution[0].percent_done > analysesDetail[uuid].executionPercentDone) {
         analysesDetail[uuid].executionPercentDone = data.execution[0].percent_done;
        }
      }
