@@ -48,6 +48,7 @@ def contact(request):
 def statistics(request):
     return render_to_response('core/statistics.html', {}, context_instance=RequestContext(request))
 
+@login_required
 def collaboration(request):
     return render_to_response('core/collaboration.html', {}, context_instance=RequestContext(request))
 

@@ -1371,15 +1371,14 @@ class UserAuthenticationResource(Resource):
 class InvitationResource(ModelResource):
     sender_id = fields.IntegerField(attribute='sender__id', null=True)
 
-    uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
-    group_id_regex = '[0-9]+'
-    email_regex = '[^@|\s]+@[^@]+\.[^@|\s]+'
-
     class Meta:
         queryset = Invitation.objects.all()
         resource_name = 'invitations'
         detail_uri_name = 'token_uuid'
-        # authentication = SessionAuthentication()
+        authentication = SessionAuthentication()
+        filtering = {
+            'group_id': ALL
+        }
 
     def get_group(self, group_id):
         group_list = Group.objects.filter(id=int(group_id))
@@ -1418,6 +1417,28 @@ class InvitationResource(ModelResource):
         email = EmailMessage(subject, body, to=[invitation.recipient_email])
         email.send()
         return HttpCreated("Email sent")
+
+    # Filter to only show own resources.
+    def obj_get_list(self, bundle, **kwargs):
+        get_dict = bundle.request.GET
+        user = bundle.request.user
+
+        auth_group_list = filter(
+            lambda g: self.user_authorized(user, g),
+            user.groups.all())
+
+        if get_dict.get('group_id'):
+            auth_group_list = filter(
+                lambda g: 
+                    get_dict['group_id'].isdigit() and
+                    g.id == int(get_dict['group_id']),
+                auth_group_list)
+
+        auth_group_id_set = map(lambda g: g.id, auth_group_list)
+
+        return filter(
+            lambda i: i.group_id in auth_group_id_set,
+            Invitation.objects.all())
 
     # Handle POST requests for sending tokens.
     def obj_create(self, bundle, **kwargs):

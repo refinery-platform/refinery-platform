@@ -8,6 +8,9 @@ angular
           format: 'json'
         },
         {
+          query: {
+            method: 'GET'
+          },
           send: {
             method: 'POST'
           }

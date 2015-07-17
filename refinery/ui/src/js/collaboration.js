@@ -47,6 +47,22 @@ angular.module('refineryCollaboration', [])
     }
   });
 
+  pageScope.$watch('activeGroup', function () {
+    if (pageScope.activeGroup) {
+      groupInviteService.query({
+        group_id: pageScope.activeGroup.group_id
+      }).$promise.then(
+        function (data) {
+          pageScope.activeGroupInviteList = data.objects;
+          console.log(pageScope.activeGroupInviteList);
+        },
+        function (error) {
+          console.error(error);
+        }
+      );
+    }
+  });
+
   // Handles groups.
   pageScope.openGroupEditor = function () {
     var modalInstance = $modal.open({
