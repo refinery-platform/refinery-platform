@@ -37,12 +37,15 @@ angular.module('refineryAnalysis', [])
     var timeStamp = vm.getTimeStamp();
     var workflowUuid = workflow.getName();
     var tempName = workflowUuid + " " + timeStamp;
-    bootbox.prompt("Enter an Analysis Name:", "Cancel Analysis", "Confirm" +
-      " Name", function(name) {
+    bootbox.prompt("Enter an Analysis Name", "Cancel Analysis", "Launch" +
+      " Analysis", function(name) {
       if (name == null) {
         bootbox.alert("Analysis was canceled.");
       }else {
         vm.launchAnalysis(name);
+        var msg = "<h3> Analysis Launched.</h3>" +
+        "<p>View progess in Analyses Tab.</p>";
+        bootbox.alert(msg);
       }
     }, tempName).addClass("bootboxAnalysisWidth");
   };
