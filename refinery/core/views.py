@@ -830,13 +830,14 @@ def solr_core_search(request):
     url = settings.REFINERY_SOLR_BASE_URL + "core/select"
     data = request.GET.dict()
     # Generate access list
-    if (request.user.id is None):
-        access = ['g_{}'.format(settings.REFINERY_PUBLIC_GROUP_ID)]
-    else:
-        access = ['u_{}'.format(request.user.id)]
-        for group in request.user.groups.all():
-            access.append('g_{}'.format(group.id))
-    data['fq'] = data['fq'] + ' AND access:({})'.format(' OR '.join(access))
+    if (not request.user.is_superuser):
+        if (request.user.id is None):
+            access = ['g_{}'.format(settings.REFINERY_PUBLIC_GROUP_ID)]
+        else:
+            access = ['u_{}'.format(request.user.id)]
+            for group in request.user.groups.all():
+                access.append('g_{}'.format(group.id))
+        data['fq'] = data['fq'] + ' AND access:({})'.format(' OR '.join(access))
     req = urllib2.Request(url, urllib.urlencode(data))
     f = urllib2.urlopen(req)
     response = f.read()

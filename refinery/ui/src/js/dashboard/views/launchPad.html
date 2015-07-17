@@ -64,8 +64,13 @@
           </div>
         </div>
         <div class="floatbox">
+          <div class="floatbox-min-right">
+          </div>
           <div class="floatbox-max-left">
-            <h4>Name</h4>
+            <h4>
+              {{ dashboard.dataSets.totalReadable }}
+              {{ dashboard.searchQueryDataSets.length > 1 ? 'results' : 'data sets' }}
+            </h4>
           </div>
         </div>
       </div>
@@ -155,7 +160,6 @@
     <div class="refinery-panel-header">
       <div class="floatbox">
         <div class="floatbox-min-right">
-          <h4 ng-if="dashboard.userIsAuthenticated">Share</h4>
         </div>
         <div class="floatbox-max-left">
           <h4>Name</h4>
