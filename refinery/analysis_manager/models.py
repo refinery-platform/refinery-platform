@@ -35,6 +35,9 @@ class AnalysisStatus( models.Model ):
     cleanup_taskset_id = UUIDField( blank=True, null=True, auto=False )
     execution_monitor_task_id = UUIDField( blank=True, null=True, auto=False )
 
+    def __unicode__(self):
+        return self.analysis.name
+
     def preprocessing_status(self):
         return get_payload(self.preprocessing_taskset_id)
 

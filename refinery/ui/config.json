@@ -17,7 +17,8 @@
     "features": [
       "commons",
       "dashboard",
-      "globals"
+      "globals",
+      "analyses"
     ],
     "vendor": [
       "angular-bootstrap/ui-bootstrap-tpls.min.js",

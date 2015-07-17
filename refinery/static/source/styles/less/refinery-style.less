@@ -95,6 +95,38 @@ ul#externalToolListPopover li{
   width: 96%;
 }
 
+ul.analysesList{
+  list-style-type: none;
+  width: 100%;
+}
+
+
+ul.analysesRunningList{
+   display: block;
+    width: 100%;
+}
+
+li.analysesListItems{
+  display: block;
+  float: left;
+  width: 100%;
+  list-style-type: none;
+}
+
+li.analysisRunningListItem{
+  display: inline;
+  list-style-type: none;
+  float: left;
+  padding-right: 20px;
+  width: 25%;
+}
+
+#analyses-cancel-notice{
+  display: inline;
+  width:200px;
+}
+
+
 @media (max-width: 760px) {
    #textToolStatus{
     width: 100%;
@@ -510,6 +542,7 @@ ul#externalToolListPopover li{
     }
 
     .refinery-panel-header {
+      position: relative;
       border-top: none;
       margin: 0 10px;
       padding: 0;
@@ -524,6 +557,38 @@ ul#externalToolListPopover li{
         font-size: 14px;
         line-height: 1em;
         text-transform: uppercase;
+      }
+
+      .refinery-notification {
+        position: absolute;
+        top: 0;
+        right: -10px;
+        bottom: -1px;
+        left: -10px;
+        overflow: hidden;
+        font-size: 14px;
+
+        [class^='refinery-notification'] {
+          position: absolute;
+          top: 0;
+          right: 0;
+          left: 0;
+          height: 20px;
+          padding: 2px 10px;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          transform: translate3d(0, 0, 0);
+        }
+
+        [class^='refinery-notification'].ng-hide-add.ng-hide-add-active,
+        [class^='refinery-notification'].ng-hide-remove.ng-hide-remove-active {
+          transition: transform @fastTransitionSpeed @easeInOutCubic @normalTransitionSpeed;
+        }
+
+        [class^='refinery-notification'].ng-hide {
+          transform: translate3d(0, -25px, 0);
+        }
       }
     }
 
@@ -846,6 +911,19 @@ ul#externalToolListPopover li{
 
   .shadowPanel {
     margin-left: 0;
+  }
+}
+
+.refinery-notification {
+  .refinery-notification-alert {
+    color: @yellow;
+    background: mix(@yellow, @white, 5%);
+    border-bottom: 1px solid darken(mix(@yellow, @white, 5%), 5%);
+  }
+  .refinery-notification-info {
+    color: @blue;
+    background: mix(@blue, @white, 5%);
+    border-bottom: 1px solid darken(mix(@blue, @white, 5%), 5%);
   }
 }
 

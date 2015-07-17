@@ -31,7 +31,6 @@ def setup():
     require("project_user", "refinery_project_dir", "refinery_virtualenv_name")
     env.refinery_app_dir = os.path.join(env.refinery_project_dir, "refinery")
     env.refinery_ui_dir = os.path.join(env.refinery_app_dir, "ui")
-    env.grunt = "grunt compile"
 
 
 @task
@@ -69,15 +68,12 @@ def prod():
 @task
 @with_settings(user=env.project_user)
 def conf(mode=None):
-    """Switch Refinery configurations"""
-    # must provide a mode and apply to Vagrant VM only
+    """Switch Refinery configurations on Vagrant VM"""
     if (mode is None) or (env.hosts != ['vagrant@127.0.0.1:2222']):
         abort("usage: fab vm conf:<mode>")
     modes = ['dev', 'djdt', 'gdev', 'prod']
     if mode not in modes:
         abort("Mode must be one of {}".format(modes))
-    if mode == 'gdev':
-        env.grunt = "grunt build"
     puts("Switching Refinery running on Vagrant VM to '{}' mode".format(mode))
     env.shell_before = "export DJANGO_SETTINGS_MODULE=settings.*"
     env.shell_after = "export DJANGO_SETTINGS_MODULE=settings.{}".format(mode)
@@ -95,7 +91,7 @@ def conf(mode=None):
         backup='')
     # update static files
     with cd(env.refinery_ui_dir):
-        run("{grunt}".format(**env))
+        run("grunt")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("{refinery_app_dir}/manage.py collectstatic --clear --noinput"
             .format(**env))
@@ -115,7 +111,7 @@ def update_refinery():
     with cd(env.refinery_ui_dir):
         run("npm prune && npm update")
         run("bower prune && bower update --config.interactive=false")
-        run("{grunt}".format(**env))
+        run("grunt")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("pip install -r {refinery_project_dir}/requirements.txt"
             .format(**env))

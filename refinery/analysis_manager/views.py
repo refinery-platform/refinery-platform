@@ -1,4 +1,5 @@
 import copy
+import json
 from datetime import datetime
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -91,11 +92,14 @@ def analysis_cancel(request):
     Returns HTTP status codes 200, 400, 403, 405, 500 or 503
 
     '''
+    #$http service returns json format.
+    dict = json.loads(request.body)
     if request.method == 'POST':
         try:
-            uuid = request.POST['uuid']
+           # uuid = request.POST['uuid']
+            uuid = dict['uuid']
         except KeyError:
-            return HttpResponseBadRequest()  # 400
+           return HttpResponseBadRequest()  # 400
         error_msg = "Cancellation failed for analysis '{}'".format(uuid)
         try:
             analysis = Analysis.objects.get(uuid=uuid)
@@ -752,5 +756,4 @@ def match_nodesets(ns1, ns2, diff_f, all_f, rel_type=None ):
     #print simplejson.dumps(best_list, indent=4)
     
     return best_list, ret_info
-    
     

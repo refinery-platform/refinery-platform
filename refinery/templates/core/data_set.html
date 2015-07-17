@@ -133,7 +133,7 @@
           <div class="btn-group">
             <a type="button" class="btn btn-warning" ng-class="{active: $root.mode==='browse'}" ui-sref="browse">Browse</a>
               {% if has_change_dataset_permission %}
-                <a type="button" class="btn btn-warning" ng-class="{active: $root.mode==='analyze'}" ui-sref="analyze">Analyze</a>
+                <a type="button" class="btn btn-warning" ng-class="{active:$root.mode==='analyze'}" ui-sref="analyze" >Analyze</a>
               {% endif %}
             <a type="button" class="btn btn-warning" ng-class="{active: $root.mode==='visualize'}" ui-sref="visualize">Visualize</a>
           </div>
@@ -146,7 +146,7 @@
               <li><a href="#configuration" data-toggle="tab">Attributes</a></li>
             {% endif %}
             {% if has_change_dataset_permission %}
-              <li><a href="#analyses" data-toggle="tab">Analyses</a></li>
+              <li><a href="#analyses" data-toggle="tab" id="analyze-tab"> Analyses</a></li>
             {% endif %}
             <li><a href="#downloads" data-toggle="tab">Downloads</a></li>
             <li><a href="#details" data-toggle="tab">Details</a></li>
@@ -429,25 +429,9 @@
                 </span>
               </div>
               <p>
-                {% if data_set.analysis_set.all|length > 0 %}
-                  {% for analysis in data_set.analysis_set.all %}
-                    <a href="{% url 'analysis_status' analysis.uuid %}">
-                      {{ analysis.name }}
-                    </a>
-                    {% if analysis.project.is_catch_all %}
-                      (unassigned)
-                    {% else %}
-                      (Project
-                      <a href="{% url 'project' analysis.project.uuid %}">
-                        {{ analysis.project.name }}
-                      </a>)
-                    {% endif %}
-                    <br/>
-                  {% endfor %}
-                {% else %}
-                  None.<br>
-                    <i>Any analyses performed on this data set would be shown here.</i>
-                {% endif %}
+                <div class="row-fluid">
+                  <analyses-list></analyses-list>
+                </div>
               </p>
             </div>
           {% endif %}
@@ -729,6 +713,20 @@
       $( "#view-selector" ).on("change", function(event) {
         console.log( event.added.element[0].value );
         $( '#navigation-tabs a[href="#' + event.added.element[0].value + '"]').tab('show');
+      });
+
+
+  /*This triggers the analyses monitoring event when the tab is active*/
+      $('#analyze-tab').on("mouseup", function(e) {
+        $(window).unbind('hashchange');
+        $(document).trigger('refinery/analyze-tab-active');
+
+        $(window).bind('hashchange',function(e) {;
+          if (location.hash != "#/analyses"){
+            $(document).trigger('refinery/analyze-tab-inactive');
+            $(this).unbind();
+          }
+        });
       });
 
       $("[rel=tooltip]").tooltip();

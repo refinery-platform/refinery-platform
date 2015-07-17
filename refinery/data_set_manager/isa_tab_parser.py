@@ -8,7 +8,7 @@ from collections import deque
 from data_set_manager.models import Node, Attribute, Investigation, Study, \
     ProtocolReference, Protocol, ProtocolReferenceParameter, \
     Ontology, Publication, Contact, Design, Factor, Assay
-from file_store.tasks import create
+from file_store.tasks import create, import_file
 from zipfile import ZipFile
 from urlparse import urlparse
 import csv
@@ -1072,21 +1072,27 @@ class IsaTabParser:
                             )
         else:
             logger.exception(
-                "No investigation was identified when parsing  investigation "
+                "No investigation was identified when parsing investigation "
                 "file \"" + investigation_file_name + "\""
             )
             raise Exception()
 
-        # assign ISA-Tab archive and pre-ISA-Tab archive if present
+        # 5. assign ISA-Tab archive and pre-ISA-Tab archive if present
         try:
             self._current_investigation.isarchive_file = \
                 create(isa_archive, permanent=True)
+            import_file(self._current_investigation.isarchive_file,
+                        permanent=True,
+                        refresh=True)
         except:
             pass
 
         if preisa_archive:
             self._current_investigation.pre_isarchive_file = \
                 create(preisa_archive, permanent=True)
+            import_file(self._current_investigation.pre_isarchive_file,
+                        permanent=True,
+                        refresh=True)
 
         self._current_investigation.save()
 

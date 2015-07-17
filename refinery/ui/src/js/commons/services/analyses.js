@@ -6,7 +6,8 @@ angular
       var analyses = $resource(
         settings.appRoot + settings.refineryApi + '/analysis/',
         {
-          format: 'json'
+          format: 'json',
+          limit: 0
         },
         {
           query: {
