@@ -7,6 +7,7 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
   "use strict";
   var vm = this;
   vm.analysesDetail = {};
+  vm.analysesRunningUuids = [];
 
   vm.updateAnalysesList = function(){
     analysesFactory.getAnalysesList().then(function(){
@@ -26,6 +27,7 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
     for(var i = 0; i < vm.analysesRunningUuids.length; i++) {
       vm.updateAnalysesDetail(i);
     }
+
     if(vm.analysesRunningUuids.length > 0) {
       timerDetail = $timeout(vm.refreshAnalysesDetail, 5000);
     }
@@ -59,6 +61,7 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
   //watches for analyze tab view to update AnalysesList
   $scope.$on('refinery/analyze-tab-active', function(){
     vm.updateAnalysesList();
+    vm.refreshAnalysesDetail();
   });
 
 }
