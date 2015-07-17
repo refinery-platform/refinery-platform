@@ -230,7 +230,6 @@ class ui {
 
   package { 'nodejs':
     name => 'nodejs',
-    ensure => '0.12.4-1nodesource1~trusty1',
     require => Apt::Source['nodejs']
   }
   ->

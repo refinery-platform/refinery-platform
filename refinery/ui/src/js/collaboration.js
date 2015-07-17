@@ -1,5 +1,5 @@
-angular.module('refineryCollaborate', [])
-.controller('refineryCollaborateController', function ($scope, $http, $modal) {
+angular.module('refineryCollaboration', [])
+.controller('refineryCollaborationController', function ($scope, $http, $modal) {
   $scope.hasNotSelectedOtherResource = true;
   var activeGroup = null;
 
@@ -134,7 +134,7 @@ angular.module('refineryCollaborate', [])
 
   $scope.openGroupEditor = function () {
     var modalInstance = $modal.open({
-      templateUrl: '/static/partials/collaborate.groups.modal.html',
+      templateUrl: '/static/partials/collaboration.groups.modal.html',
       controller: groupEditorController,
       resolve: {
         config: function () {
@@ -185,7 +185,7 @@ angular.module('refineryCollaborate', [])
 
   $scope.openMemberEditor = function (member) {
     var modalInstance = $modal.open({
-      templateUrl: '/static/partials/collaborate.members.modal.html',
+      templateUrl: '/static/partials/collaboration.members.modal.html',
       controller: memberEditorController,
       resolve: {
         config: function () {
@@ -203,7 +203,7 @@ angular.module('refineryCollaborate', [])
     var groupId = config.groupId;
 
     $scope.sendInvite = function(email) {
-      $http.post('/api/v1/invitation/send/?format=json', {
+      $http.post('/api/v1/invitation/?format=json', {
         group_id: groupId,
         email: email
       }).success(function (response) {
@@ -215,7 +215,7 @@ angular.module('refineryCollaborate', [])
 
   $scope.openEmailInvite = function () {
     var modalInstance = $modal.open({
-      templateUrl: '/static/partials/collaborate.addmembers.modal.html',
+      templateUrl: '/static/partials/collaboration.addmembers.modal.html',
       controller: emailInviteController,
       resolve: {
         config: function () {
@@ -230,7 +230,7 @@ angular.module('refineryCollaborate', [])
 
 .directive('collaborateDisplay', function () {
   return {
-    templateUrl: '/static/partials/collaborate.tpls.html',
+    templateUrl: '/static/partials/collaboration.tpls.html',
     restrict: 'A'
   };
 });

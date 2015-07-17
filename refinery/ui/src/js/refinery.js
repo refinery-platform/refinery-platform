@@ -25,7 +25,8 @@ angular
   'refineryProvvis',
   'refineryDataFileUpload',
   'refineryDashboard',
-  'refineryCollaborate',
+  'refineryAnalyses',
+  'refineryCollaboration'
 ])
 .config(['$provide', '$httpProvider', function ($provide, $httpProvider) {
   // http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
@@ -46,8 +47,10 @@ angular
 }])
 .run(['$','$rootScope', function($, $rootScope){
     //  trigger from the contents.js when the node selection list has been
-    // updated. Used by node_mapping.js
-  $(document).on('refinery/updateCurrentNodeSelection', function(e){
+    // updated. Used by node_mapping.js Trigger for analyze tab view to run
+    // analyses status.
+  $(document).on('refinery/updateCurrentNodeSelection' +
+  ' refinery/analyze-tab-active refinery/analyze-tab-inactive', function(e){
     $rootScope.$broadcast(e.type);
     $rootScope.$digest();
   });

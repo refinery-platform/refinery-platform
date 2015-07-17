@@ -208,7 +208,6 @@ function refineryDataSetPreview () {
     } else {
       citation.abstractLength = this.abstractLength;
     }
-    console.log(citation);
   };
 
   return {

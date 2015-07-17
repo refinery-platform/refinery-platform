@@ -159,7 +159,7 @@ class StudyResource(ModelResource):
         queryset = Study.objects.all()
         detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
         allowed_methods = ["get"]
-        resource_name = "studies"
+        resource_name = "study"
         filtering = {
             'uuid': ALL,
             'investigation_uuid': ALL
