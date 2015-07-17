@@ -157,17 +157,21 @@ DashboardCtrl.prototype.setDataSetSource = function (searchQuery) {
   var that = this;
 
   if (searchQuery) {
-    that.searchDataSet = true;
-    var searchResults = new that.dashboardDataSetSearchService(searchQuery);
-    that.dashboardDataSetSourceService.setSource(searchResults);
-    that.dataSets.resetCache(searchQuery);
+    if (searchQuery.length > 1) {
+      that.searchDataSet = true;
+      var searchResults = new that.dashboardDataSetSearchService(searchQuery);
+      that.dashboardDataSetSourceService.setSource(searchResults);
+      that.dataSets.resetCache(searchQuery);
+      that.dashboardDataSetReloadService.reload();
+    }
   } else {
-    that.searchDataSet = false;
     that.dashboardDataSetSourceService.setSource(that.dashboardDataSetListService);
     that.dataSets.resetCache();
+    if (that.searchDataSet) {
+      that.searchDataSet = false;
+      that.dashboardDataSetReloadService.reload();
+    }
   }
-
-  that.dashboardDataSetReloadService.reload();
 };
 
 DashboardCtrl.prototype.getProjects = function (limit, offset) {
