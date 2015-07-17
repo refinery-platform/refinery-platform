@@ -920,10 +920,25 @@ class ExtendedGroup(Group):
     is_public = models.BooleanField(default=False, blank=False, null=False)
 
     def delete(self):
-        super(ExtendedGroup, self).delete()
+        if self.is_manager_group():
+            for i in self.managed_group.all():
+                i.group_ptr.delete()
+
+            super(ExtendedGroup, self).delete()
+        else:
+            # Somehow not the only managed group. Shouldn't be possible.
+            if self.manager_group.managed_group.count() > 1:
+                super(ExtendedGroup, self).delete()
+            else:
+                # Recursive call.
+                self.manager_group.delete()
 
     def is_managed(self):
         return (self.manager_group is not None)
+
+    # Sometimes easier to rationalize this way because avoids passive voice.
+    def is_manager_group(self):
+        return not self.is_managed()
 
     def get_managed_group(self):
         try:

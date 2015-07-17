@@ -1,230 +1,209 @@
+// Note: be careful to distinguish between groupId, group_id, userId, and user_id.
+// camelCase is for JS, while snake_case is for the Python TastyPie API.
+
 angular.module('refineryCollaboration', [])
-.controller('refineryCollaborationController', function ($scope, $http, $modal) {
-  $scope.hasNotSelectedOtherResource = true;
-  var activeGroup = null;
-
-  var activeResType = 'Data Set';
-
-  $scope.resourceTypes = ['Data Set', 'Project', 'Workflow'];
-
-  // Update group list.
-  function updateGroupList() {
-    $http.get('/api/v1/groups/members/?format=json').success(function (response) {
-      $scope.groupList = response.objects.filter(function (d) {
-        return d.group_name.indexOf('.Managers ') !== 0;
-      });
-    });
-  }
-
+.controller('refineryCollaborationController', function ($scope, $modal, groupService, groupInviteService, groupMemberService) {
+  var that = this;
+  var pageScope = $scope;
+  that.groupService = groupService;
+  that.groupInviteService = groupInviteService;
+  that.groupMemberService = groupMemberService;
   updateGroupList();
 
-  $scope.setGroupActive = function () {
-    if ($scope.lastGroupActive) {
-      $scope.lastGroupActive.groupActive = '';
-    }
-
-    this.groupActive = 'active';
-    $scope.lastGroupActive = this;
-    updateControlPanel(this.group);
-    activeGroup = this.group;
-
-    $scope.isManager = false;
-
-    if (this.group.can_edit) {
-      $scope.isManager = true;
-    }
-  };
-
-  $scope.setResourceActive = function () {
-    if ($scope.lastResourceActive) {
-      $scope.lastResourceActive.resourceActive = '';
-    }
-
-    this.resourceActive = 'active';
-    $scope.lastResourceActive = this;
-    
-    if (this.resource === 'Data Set') {
-      $scope.activePermList = $scope.datasetPermList;
-    }
-
-    if (this.resource === 'Project') {
-      $scope.activePermList = $scope.projectPermList;
-    }
-
-    if (this.resource === 'Workflow') {
-      $scope.activePermList = $scope.workflowPermList;
-    }
-
-    $scope.hasNotSelectedOtherResource = false;
-    activeResType = this.resource;
-  };
-
-  function updateControlPanel(group) {
-    // Gets the members.
-    $http.get('/api/v1/groups/' + group.group_id + '/members/?format=json').success(function (response) {
-      $scope.memberList = response.member_list;
-      $scope.isManager = response.can_edit;
-    });
-
-    // Gets the permissions.
-    $http.get('/api/v1/groups/' + group.group_id + '/perms/?format=json').success(function (response) {
-      $scope.datasetPermList = response.perm_list.filter(function (d) {
-        return d.type === 'DataSet';
-      });
-
-      $scope.projectPermList = response.perm_list.filter(function (d) {
-        return d.type === 'Project';
-      });
-
-      $scope.workflowPermList = response.perm_list.filter(function (d) {
-        return d.type == 'Workflow';
-      });
-
-      if (activeResType === 'Data Set') {
-        $scope.activePermList = $scope.datasetPermList;
+  function updateGroupList() {
+    groupMemberService.query().$promise.then(
+      function (data) {
+        pageScope.groupList = data.objects.filter(function (g) {
+          return g.group_name.indexOf('.Managers') !== 0;
+        }).sort(function (a, b) {
+          return a.group_id > b.group_id;
+        });
+      },
+      function (error) {
+        console.error(error);
       }
-
-      if (activeResType === 'Project') {
-        $scope.activePermList = $scope.projectPermList;
-      }
-
-      if (activeResType === 'Workflow') {
-        $scope.activePermList = $scope.workflowPermList;
-      }
-    });
+    );
   }
 
-  function clearControlPanel() {
-    $scope.memberList = [];
-    $scope.datasetPermList = [];
-    $scope.projectPermList = [];
-    $scope.workflowPermList = [];
-  }
-
-  // Handle group existence
-  var groupEditorController = function ($scope, $http, $modalInstance, config) {
-    $scope.groupList = config.pageScope.groupList;
-
-    $scope.leaveGroup = function (groupId) {
-      $http.delete('/api/v1/groups/' + groupId + '/members/' + user_id + '/').success(function (response) {
-        updateGroupList();
-        $modalInstance.dismiss();
-        clearControlPanel();
-      });
-    };
-
-    $scope.deleteGroup = function (groupId) {
-      $http.delete('/api/v1/groups/' + groupId + '/', {}).success(function (response) {
-        updateGroupList();
-        $modalInstance.dismiss();
-        clearControlPanel();
-      });
-    };
-
-    $scope.createGroup = function (groupName) {
-      $http.post('/api/v1/groups/', {
-        name: groupName
-      }).success(function (response) {
-        updateGroupList();
-        // updateControlPanel();
-        $modalInstance.dismiss();
-      });
-    };
+  pageScope.setGroupActive = function (group) {
+    pageScope.activeGroup = group;
   };
 
-  $scope.openGroupEditor = function () {
+  pageScope.$watch('groupList', function () {
+    if (pageScope.groupList && pageScope.groupList instanceof(Array)) {
+      var accRes = pageScope.activeGroup ? 
+        pageScope.groupList.reduce(function (a, b) {
+          return a.group_id === pageScope.activeGroup.group_id ? a : b;
+        }) : null;
+
+      if (!accRes) {
+        pageScope.activeGroup = pageScope.groupList.length > 0 ?
+          pageScope.groupList[0] : null;
+      } else {
+        pageScope.activeGroup = accRes;
+      }
+    } else {
+      pageScope.activeGroup = null;
+    }
+  });
+
+  pageScope.$watch('activeGroup', function () {
+    if (pageScope.activeGroup) {
+      groupInviteService.query({
+        group_id: pageScope.activeGroup.group_id
+      }).$promise.then(
+        function (data) {
+          pageScope.activeGroupInviteList = data.objects;
+        },
+        function (error) {
+          console.error(error);
+        }
+      );
+    }
+  });
+
+  // Handles groups.
+  pageScope.openGroupEditor = function () {
     var modalInstance = $modal.open({
       templateUrl: '/static/partials/collaboration.groups.modal.html',
-      controller: groupEditorController,
-      resolve: {
-        config: function () {
-          return {
-            pageScope: $scope,
-            groupList: $scope.groupList,
-            user_id: user_id
-          };  
-        }
+      controller: function ($scope, $modalInstance) {
+        $scope.groupList = pageScope.groupList;
+
+        $scope.leaveGroup = function (group) {
+          that.groupMemberService.remove({
+            groupId: group.group_id,
+            userId: user_id
+          }).$promise.then(
+            function (data) {
+              updateGroupList();
+              $modalInstance.dismiss();
+            },
+            function (error) {
+              console.error(error);
+            }
+          );
+        };
+
+        $scope.deleteGroup = function (group) {
+          that.groupService.delete({
+            groupId: group.group_id
+          }).$promise.then(
+            function (data) {
+              updateGroupList();
+              $modalInstance.dismiss();
+            },
+            function (error) {
+              console.error(error);
+            }
+          );
+        };
+
+        $scope.createGroup = function (name) {
+          that.groupService.create({
+            name: name
+          }).$promise.then(
+            function (data) {
+              updateGroupList();
+              $modalInstance.dismiss();
+            },
+            function (error) {
+              console.error(error);
+            }
+          );
+        };
       }
     });
   };
 
-  // Handle member permissions
-  var memberEditorController = function ($scope, $http, $modalInstance, config) {
-    $scope.member = config.member;
-
-    $scope.promote = function (member) {
-      // Assume manager group id is 1 more than regular group's.
-      $http.post('/api/v1/groups/' + (activeGroup.manager_group_id) + '/members/', {
-        user_id: member.user_id
-      }).success(function (response) {
-        updateGroupList();
-        clearControlPanel();
-        updateControlPanel(activeGroup);
-        $modalInstance.dismiss();
-      });
-    };
-
-    $scope.demote = function (member) {
-      $http.delete('/api/v1/groups/' + (activeGroup.manager_group_id) +'/members/' + member.user_id).success(function (response) {
-        updateGroupList();
-        clearControlPanel();
-        updateControlPanel(activeGroup);
-        $modalInstance.dismiss();
-      });
-    };
-
-    $scope.remove = function (member) {
-      $http.delete('/api/v1/groups/' + (activeGroup.group_id) + '/members/' + member.user_id).success(function (response) {
-        updateGroupList();
-        clearControlPanel();
-        updateControlPanel(activeGroup);
-        $modalInstance.dismiss();
-      });
-    };
-  };
-
-  $scope.openMemberEditor = function (member) {
+  // Handles membership.
+  pageScope.openMemberEditor = function (member) {
     var modalInstance = $modal.open({
       templateUrl: '/static/partials/collaboration.members.modal.html',
-      controller: memberEditorController,
-      resolve: {
-        config: function () {
-          return {
-            pageScope: $scope,
-            member: member
-          };
-        }
+      controller: function ($scope, $modalInstance) {
+        $scope.member = member;
+
+        $scope.promote = function (member) {
+          that.groupMemberService.add({
+            groupId: pageScope.activeGroup.manager_group_id,
+            user_id: member.user_id
+          }).$promise.then(
+            function (data) {
+              updateGroupList();
+              $modalInstance.dismiss();
+            },
+            function (error) {
+              console.error(error);
+            }
+          );
+        };
+
+        $scope.demote = function (member) {
+          that.groupMemberService.remove({
+            groupId: pageScope.activeGroup.manager_group_id,
+            userId: member.user_id
+          }).$promise.then(
+            function (data) {
+              updateGroupList();
+              $modalInstance.dismiss();
+            },
+            function (error) {
+              console.error(error);
+            }
+          );
+        };
+
+        $scope.remove = function (member) {
+          that.groupMemberService.remove({
+            groupId: pageScope.activeGroup.group_id,
+            userId: member.user_id
+          }).$promise.then(
+            function (data) {
+              updateGroupList();
+              $modalInstance.dismiss();
+            },
+            function (error) {
+              console.error(error);
+            }
+          );
+        };
       }
     });
   };
 
-  // Send email invites
-  var emailInviteController = function ($scope, $http, $modalInstance, config) {
-    var groupId = config.groupId;
-
-    $scope.sendInvite = function(email) {
-      $http.post('/api/v1/invitation/?format=json', {
-        group_id: groupId,
-        email: email
-      }).success(function (response) {
-        $modalInstance.dismiss();
-        console.log("Successfully sent email");
-      });
-    };
-  };
-
-  $scope.openEmailInvite = function () {
+  pageScope.openEmailInvite = function () {
     var modalInstance = $modal.open({
       templateUrl: '/static/partials/collaboration.addmembers.modal.html',
-      controller: emailInviteController,
-      resolve: {
-        config: function () {
-          return {
-            groupId: activeGroup.group_id
-          };
-        }
+      controller: function ($scope, $modalInstance) {
+        $scope.sendInvite = function (email) {
+          that.groupInviteService.send({
+            group_id: pageScope.activeGroup.group_id,
+            email: email
+          }).$promise.then(
+            function (data) {
+              updateGroupList();
+              $modalInstance.dismiss();
+              alert("Email successfully sent");
+            },
+            function (error) {
+              console.error(error);
+            }
+          );
+        };
       }
     });
+  };
+
+  pageScope.revokeInvitation = function (invite) {
+    that.groupInviteService.revoke({
+      token: invite.token_uuid
+    }).$promise.then(
+      function (data) {
+        updateGroupList();
+      },
+      function (error) {
+        console.error(error);
+      }
+    );
   };
 })
 
