@@ -1,5 +1,5 @@
 angular.module('refineryAnalyses')
-  .directive("rpAnalysesCancelTooltip", rpAnalysesCancelTooltip)
+  .directive("rpAnalysesCancelTooltip", rpAnalysesCancelTooltip);
 
 function rpAnalysesCancelTooltip() {
   "use strict";
