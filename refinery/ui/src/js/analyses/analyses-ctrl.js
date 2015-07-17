@@ -48,11 +48,11 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
     analysesFactory.postCancelAnalysis(uuid).then(function(result)
     {
       alert( "Successfully canceled analysis." );
-      vm.analysesDetail[uuid].cancelingAnalyses = true;
+      vm.analysesDetail[uuid].cancelingAnalyses = false;
       vm.updateAnalysesList();
     }, function(error){
       alert("Canceling analysis failed");
-      vm.analysesDetail[uuid].cancelingAnalyses = true;
+      vm.analysesDetail[uuid].cancelingAnalyses = false;
     });
   };
 
