@@ -1346,7 +1346,7 @@ class UserAuthenticationResource(Resource):
 
     def prepend_urls(self):
         return [
-            url(r'^user_authentication/check/$',
+            url(r'^user_authentication/$',
                 self.wrap_view('check_user_status'),
                 name='api_user_authentication_check'),
         ]
@@ -1369,6 +1369,8 @@ class UserAuthenticationResource(Resource):
 
 
 class InvitationResource(ModelResource):
+    sender_id = fields.IntegerField(attribute='sender__id', null=True)
+
     uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
     group_id_regex = '[0-9]+'
     email_regex = '[^@|\s]+@[^@]+\.[^@|\s]+'
@@ -1376,7 +1378,8 @@ class InvitationResource(ModelResource):
     class Meta:
         queryset = Invitation.objects.all()
         resource_name = 'invitation'
-        list_allowed_methods = ['get']
+        detail_uri_name = 'token_uuid'
+        # authentication = SessionAuthentication()
 
     def get_group(self, group_id):
         group_list = Group.objects.filter(id=int(group_id))
@@ -1397,110 +1400,54 @@ class InvitationResource(ModelResource):
 
         return (datetime.datetime.now() - token.expires).total_seconds() >= 0
 
-    def prepend_urls(self):
-        return [
-            url(r'^invitation/request/(?P<group_id>[0-9]+)/$',
-                self.wrap_view('get_token'),
-                name='api_invitation_get_token'),
-            url(r'^invitation/verify/(?P<token>%s)/$' % self.uuid_regex,
-                self.wrap_view('verify_token'),
-                name='api_invitation_verify_token'),
-            url(r'^invitation/update/$',
-                self.wrap_view('update_db'),
-                name='api_invitation_update_db'),
-            url(r'^invitation/send/$',
-                self.wrap_view('email_token'),
-                name='api_invitation_email_token'),
-        ]
-
-    def get_token(self, request, **kwargs):
-        self.update_db(request, **kwargs)
-
-        if request.method == 'GET' or request.method == 'POST':
-            user = request.user
-            group = None
-
-            if request.method == 'GET':
-                group = self.get_group(int(kwargs['group_id']))
-
-            if request.method == 'POST':
-                data = request.raw_post_data
-                group = self.get_group(int(json.loads(data)['group_id']))
-
-            if not group:
-                return HttpBadRequest()
-
-            if not self.user_authorized(user, group):
-                return HttpUnauthorized()
-
-            inv = Invitation(token_uuid=uuid.uuid1(), group_id=group.id)
-            now = datetime.datetime.now()
-            token_duration = datetime.timedelta(days=settings.TOKEN_DURATION)
-            inv.expires = now + token_duration
-            inv.save()
-            return HttpResponse(inv.token_uuid)
-        else:
-            return HttpMethodNotAllowed()
-
-    def verify_token(self, request, **kwargs):
-        self.update_db(request, **kwargs)
-
-        if request.method == 'GET':
-            user = request.user
-
-            if not user.is_authenticated():
-                return HttpUnauthorized()
-
-            token = kwargs['token']
-            invite_list = Invitation.objects.filter(token_uuid=token)
-
-            if len(invite_list) == 0:
-                return HttpNotFound()
-
-            invite = invite_list[0]
-            group = self.get_group(invite.group_id)
-            group.user_set.add(user)
-
-            if self.is_manager_group(group):
-                for i in group.extended_group.managed_group.all():
-                    i.user_set.add(user)
-
-            invite.delete()
-            return HttpAccepted()
-        else:
-            return HttpMethodNotAllowed()
-
-    def update_db(self, request, **kwargs):
+    def update_db(self):
         for i in Invitation.objects.all():
             if self.has_expired(i):
                 i.delete()
 
-        return HttpNoContent()
-
-    def email_token(self, request, **kwargs):
-        self.update_db(request, **kwargs)
-
-        data = json.loads(request.raw_post_data)
-        group = self.get_group(int(data['group_id']))
-
-        if not self.user_authorized(request.user, group):
-            return HttpUnauthorized()
-
-        get_token_response = self.get_token(request, **kwargs)
-
-        if isinstance(get_token_response, HttpUnauthorized):
-            return HttpUnauthorized()
-
-        token = get_token_response.content
-        address = data['email']
+    def send_email(self, invitation):
+        group = self.get_group(invitation.group_id)
         subject = 'Invitation to join group %s' % group.name
         body = """
-You have been invited to join %s. Please use the following steps:
+        You have been invited to join %s. Please use the following steps:
 
-1. Make a Refinery account if you have not already, and log in.
-2. Click on this link: http://192.168.50.50:8000/api/v1/invitation/verify/%s/
-        """ % (group.name, token)
+        1. Make a refinery acount if you have not already and log in.
+        2. Click on this link: http://192.168.50.50:8000/group_invite/%s/
+        """ % (group.name, invitation.token_uuid)
 
-        email = EmailMessage(subject, body, to=[address])
+        email = EmailMessage(subject, body, to=[invitation.recipient_email])
         email.send()
-        return HttpAccepted()
+        return HttpCreated("Email sent")
+
+    # Handle POST requests for sending tokens.
+    def obj_create(self, bundle, **kwargs):
+        self.update_db()
+        request = bundle.request
+        data = json.loads(request.raw_post_data)
+        user = request.user
+        group = self.get_group(int(data['group_id']))
+
+        if not self.user_authorized(user, group):
+            raise ImmediateHttpResponse(HttpUnauthorized());
+
+        inv = Invitation(token_uuid=uuid.uuid1(), group_id=group.id)
+        now = datetime.datetime.now()
+        token_duration = datetime.timedelta(days=settings.TOKEN_DURATION)
+        inv.expires = now + token_duration
+        inv.sender = user
+        inv.recipient_email = data['email']
+        inv.save()
+        self.send_email(inv)
+        return bundle
+
+    # Handle PUT requests for resending tokens.
+    # Token UUIDs are embedded in URL for PUT requests.
+    def obj_update(self, bundle, **kwargs):
+        self.update_db()
+        inv_list = Invitation.objects.filter(token_uuid=kwargs['token_uuid'])
+
+        if len(inv_list) == 0:
+            raiseImmediateHttpResponse(HttpNotFound('Not found or expired'))
+
+        self.send_email(inv_list[0])
+        return bundle
