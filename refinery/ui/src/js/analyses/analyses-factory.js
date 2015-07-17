@@ -40,11 +40,11 @@ function analysesFactory($http) {
     if(!(analysesDetail.hasOwnProperty(uuid))){
       analysesDetail[uuid]={
         "preprocessing": null,
-        "preprocessingPercentDone":null,
+        "preprocessingPercentDone":'0%',
         "execution": null,
-        "executionPercentDone":null,
+        "executionPercentDone":'0%',
         "postprocessing":null,
-        "postprocessingPercentDone":null
+        "postprocessingPercentDone":'0%'
       };
     }
     setPreprocessingStatus(data, uuid);

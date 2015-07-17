@@ -8,7 +8,6 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
   var vm = this;
   vm.analysesDetail = {};
 
-
   vm.updateAnalysesList = function(){
     analysesFactory.getAnalysesList().then(function(){
       vm.analysesList = analysesFactory.analysesList;
@@ -27,7 +26,6 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
     for(var i = 0; i < vm.analysesRunningUuids.length; i++) {
       vm.updateAnalysesDetail(i);
     }
-    console.log("In refreshAnalysesDetail");
     if(vm.analysesRunningUuids.length > 0) {
       timerDetail = $timeout(vm.refreshAnalysesDetail, 5000);
     }
@@ -41,7 +39,6 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
     (function(i){
       analysesFactory.getAnalysesDetail(vm.analysesRunningUuids[i]).then(function(response) {
           vm.analysesDetail[vm.analysesRunningUuids[i]] = analysesFactory.analysesDetail[vm.analysesRunningUuids[i]];
-        console.log(vm.analysesDetail[vm.analysesRunningUuids[i]]);
       });
     })(i);
   };
@@ -50,6 +47,7 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
     analysesFactory.postCancelAnalysis(uuid).then(function(result)
     {
       alert( "Successfully canceled analysis." );
+      vm.updateAnalysesList();
     }, function(error){
       alert("Canceling analysis failed");
     });
@@ -59,6 +57,5 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
   $scope.$on('refinery/analyze-tab-active', function(){
     vm.updateAnalysesList();
   });
-
 
 }
