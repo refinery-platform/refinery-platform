@@ -171,14 +171,26 @@ angular
           } else {
             // Cache current cache store.
             // (Yes we cache the cache!)
-            cacheStore.put(this.cache.id, this.cache.items);
+            cacheStore.put(this.cache.id, {
+              initializedWithData: this.initializedWithData,
+              items: this.cache.items,
+              total: this.total
+            });
           }
+          // Get cached data
+          var cached = cacheStore.get(id) || {
+            initializedWithData: false,
+            items: {},
+            total: Number.POSITIVE_INFINITY
+          };
           // Restore former cache or reset cache.
-          this.cache.items = cacheStore.get(id) || {};
+          this.cache.items = cached.items;
           // Set new id
           this.cache.id = id;
-          // Reset init to false
-          this.initializedWithData = false;
+          // Reset init
+          this.initializedWithData = cached.initializedWithData;
+          // Reset total
+          this.total = cached.total;
         },
 
         /**
