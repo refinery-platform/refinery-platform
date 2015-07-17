@@ -43,7 +43,7 @@ pyasn1==0.1.7
 pycparser==2.13
 Pygments==1.6rc1
 pyOpenSSL==0.15.1
-pysolr==2.1.0-beta
+pysolr==3.3.2
 python-dateutil==2.1
 python-ldap==2.4.19
 python-magic==0.4.6
