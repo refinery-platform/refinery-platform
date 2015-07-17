@@ -44,12 +44,15 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
   };
 
   vm.cancelAnalysis = function(uuid){
+    vm.analysesDetail[uuid].cancelingAnalyses = true;
     analysesFactory.postCancelAnalysis(uuid).then(function(result)
     {
       alert( "Successfully canceled analysis." );
+      vm.analysesDetail[uuid].cancelingAnalyses = true;
       vm.updateAnalysesList();
     }, function(error){
       alert("Canceling analysis failed");
+      vm.analysesDetail[uuid].cancelingAnalyses = true;
     });
   };
 

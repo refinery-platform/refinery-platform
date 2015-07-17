@@ -21,7 +21,12 @@
           <i ng-class="{'icon-collapse': isCollapsed, 'icon-collapse-top':
           !isCollapsed}"></i>
         </a>
-
+         &nbsp;
+        <span ng-if="AnalysesCtrl.analysesDetail[analysis.uuid].cancelingAnalyses == true">
+          <div class="alert alert-danger" id="analyses-cancel-notice">
+            Canceling Analysis in Progress
+          </div>
+        </span>
 
         <div id="{{analysis.uuid}}" class="collapse in">
 
