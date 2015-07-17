@@ -581,19 +581,13 @@ li.analysisRunningListItem{
           transform: translate3d(0, 0, 0);
         }
 
-        [class^='refinery-notification'].ng-enter,
-        [class^='refinery-notification'].ng-leave {
+        [class^='refinery-notification'].ng-hide-add.ng-hide-add-active,
+        [class^='refinery-notification'].ng-hide-remove.ng-hide-remove-active {
           transition: transform @fastTransitionSpeed @easeInOutCubic @normalTransitionSpeed;
         }
 
-        [class^='refinery-notification'].ng-enter,
-        [class^='refinery-notification'].ng-leave.ng-leave-active {
+        [class^='refinery-notification'].ng-hide {
           transform: translate3d(0, -25px, 0);
-        }
-
-        [class^='refinery-notification'].ng-leave,
-        [class^='refinery-notification'].ng-enter.ng-enter-active {
-          transform: translate3d(0, 0, 0);
         }
       }
     }

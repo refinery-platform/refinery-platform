@@ -46,19 +46,19 @@
         <div class="refinery-notification">
           <div
             class="refinery-notification-info"
-            ng-if="dashboard.searchQueryDataSets.length === 1">
+            ng-show="dashboard.searchQueryDataSets.length === 1">
             <strong>Too short!</strong>
             2 characters needed to search.
           </div>
           <div
             class="refinery-notification-alert"
-            ng-if="dashboard.dataSets.total === 0 && dashboard.searchQueryDataSets.length > 1">
+            ng-show="dashboard.dataSets.total === 0 && dashboard.searchQueryDataSets.length > 1">
             <strong>No luck!</strong>
             No data sets found.
           </div>
           <div
             class="refinery-notification-info"
-            ng-if="dashboard.dataSets.total === 0 && dashboard.searchQueryDataSets.length === 0">
+            ng-show="dashboard.dataSets.total === 0 && dashboard.searchQueryDataSets.length === 0">
             <strong>Info</strong>
             No data sets are available.
           </div>
