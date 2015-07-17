@@ -42,7 +42,27 @@
           ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
       </form>
 
-      <div class="refinery-panel-header" >
+      <div class="refinery-panel-header">
+        <div class="refinery-notification">
+          <div
+            class="refinery-notification-info"
+            ng-if="dashboard.searchQueryDataSets.length === 1">
+            <strong>Too short!</strong>
+            2 characters needed to search.
+          </div>
+          <div
+            class="refinery-notification-alert"
+            ng-if="dashboard.dataSets.total === 0 && dashboard.searchQueryDataSets.length > 1">
+            <strong>No luck!</strong>
+            No data sets found.
+          </div>
+          <div
+            class="refinery-notification-info"
+            ng-if="dashboard.dataSets.total === 0 && dashboard.searchQueryDataSets.length === 0">
+            <strong>Info</strong>
+            No data sets are available.
+          </div>
+        </div>
         <div class="floatbox">
           <div class="floatbox-max-left">
             <h4>Name</h4>
@@ -60,14 +80,6 @@
             ui-scroll="dataSet in dashboard.dataSets"
             adapter="dashboard.dataSetsAdapter"
             ng-class="{'previewing': dataSet.preview}">
-            <!--<ul class="controls no-list-style">
-              <li ng-if="dashboard.userIsAuthenticated">
-                <button
-                  ng-click="launchPad.openPermissionEditor('data_sets', dataSet.uuid)">
-                  <i class="icon-edit"></i>
-                </button>
-              </li>
-            </ul>-->
             <button
               class="preview"
               ng-click="dashboard.showDataSetPreview(dataSet, $index)">
@@ -103,13 +115,6 @@
               ng-if="dashboard.dataSetsAdapter.isLoading">
               <span class="refinery-spinner"></span>
             </div>
-          </li>
-          <li
-            ng-if="dashboard.dataSets.total == 0">
-            <span
-              class="alert alert-info">
-              No data sets found.
-            </span>
           </li>
         </ul>
       </div>
