@@ -10,11 +10,11 @@ function analysesFactory($http) {
 
   var initializeAnalysesDetail = function(uuid){
     analysesDetail[uuid]={
-      "preprocessing": null,
+      "preprocessing": 'PENDING',
       "preprocessingPercentDone":'0%',
-      "execution": null,
+      "execution": 'PENDING',
       "executionPercentDone":'0%',
-      "postprocessing":null,
+      "postprocessing": 'PENDING',
       "postprocessingPercentDone":'0%',
       "cancelingAnalyses":false,
     };
@@ -41,6 +41,9 @@ function analysesFactory($http) {
       headers: { "X-Requested-With" : 'XMLHttpRequest'}
     }).then(function(response){
       processAnalysesDetail(response.data, uuid);
+      console.log(uuid);
+      console.log(response.data);
+
       }, function(error){
         console.error("Error accessing analysis monitoring API");
       });
