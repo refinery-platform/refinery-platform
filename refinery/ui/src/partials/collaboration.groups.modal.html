@@ -17,10 +17,10 @@
         {{group.group_name}}
       </td>
       <td>
-        <button type="button" class="btn btn-default" style="float:right" ng-click="leaveGroup(group.group_id, user_id)" ng-class="{disabled: group.member_list.length===1}"}>Leave</button>
+        <button type="button" class="btn btn-default" style="float:right" ng-click="leaveGroup(group)" ng-class="{disabled: group.member_list.length===1}"}>Leave</button>
       </td>
       <td>
-        <button type="button" class="btn btn-default" style="float:right" ng-click="deleteGroup(group.group_id)" ng-disabled="!group.can_edit">Delete</button>
+        <button type="button" class="btn btn-default" style="float:right" ng-click="deleteGroup(group)" ng-disabled="!group.can_edit">Delete</button>
       </td>
     </tr>
     </tbody>
