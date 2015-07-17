@@ -417,7 +417,7 @@ def create_dataset(
             dataset_name = "%s: %s" % (identifier, title)
 
         logger.info(
-            "create_dataset: title = %s, identifer = %s, dataset_name = %s"
+            "create_dataset: title = %s, identifer = %s, dataset_name = '%s'"
             % (title, identifier, dataset_name)
         )
 
@@ -441,7 +441,7 @@ def create_dataset(
             dataset = DataSet.objects.create(name=dataset_name)
             dataset.set_investigation(investigation)
             dataset.set_owner(user)
-            logger.info("create_dataset: Created data set %s" % dataset_name)
+            logger.info("create_dataset: Created data set '%s'" % dataset_name)
 
         if public:
             public_group = ExtendedGroup.objects.public_group()
@@ -492,10 +492,10 @@ def annotate_nodes(investigation_uuid):
 
             # initialize attribute order for this assay
             attribute_count = initialize_attribute_order(study, assay)
-            logger.info(
-                "Initialized attribute order with %d attributes for study = %s "
-                "and assay = %s" % (attribute_count, study, assay)
-            )
+            # logger.info(
+            #     "Initialized attribute order with %d attributes for study = %s "
+            #     "and assay = %s" % (attribute_count, study, assay)
+            # )
 
 
 @task()
@@ -527,7 +527,6 @@ def parse_isatab(
     pre_isa_archive: optional copy of files that were converted to ISA-Tab
     file_base_path: if you<r file locations are relative paths, this is the base
     """
-    logger.info("logging from parse_isatab")
     p = IsaTabParser()
     p.additional_raw_data_file_extension = additional_raw_data_file_extension
     p.file_base_path = file_base_path
@@ -563,13 +562,21 @@ def parse_isatab(
                         uuid=investigation.isarchive_file
                     )
                     if fileStoreItem:
-                        logger.debug(
-                            'Get file: %s',
-                            fileStoreItem.get_absolute_path()
-                        )
-                        checksum = calculate_checksum(
-                            fileStoreItem.get_file_object()
-                        )
+                        try:
+                            logger.info(
+                                'Get file: %s',
+                                fileStoreItem.get_absolute_path()
+                            )
+                            checksum = calculate_checksum(
+                                fileStoreItem.get_file_object()
+                            )
+                        except IOError as e:
+                            logger.error(
+                                'Original isatab archive wasn\'t found. '
+                                'Error: "%s"',
+                                e
+                            )
+
         # 4. Finally if we got a checksum for an existing file, we calculate
         # the checksum for the new file and compare them
         if (checksum):
