@@ -1,9 +1,15 @@
 angular
 .module('refineryApp', [
   /*
+   * Angular modules
+   */
+  'ngResource',
+
+  /*
    * Third party modules
    */
   'xml',
+  'ui.router',
 
   /*
    * Angular App commons
@@ -13,6 +19,7 @@ angular
   /*
    * Refinery modules
    */
+  'refineryState',
   'refineryWorkflows',
   'refineryNodeMapping',
   'refineryAnalysis',
