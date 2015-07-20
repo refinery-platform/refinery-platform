@@ -583,7 +583,7 @@ module.exports = function(grunt) {
             },
           },
           src: files,
-          dest: destination + '/js/' + feature + '.js'
+          dest: destination + '/js/' + feature.replace('/', '.') + '.js'
         };
       });
       // save the new concat configuration
