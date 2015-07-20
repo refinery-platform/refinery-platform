@@ -45,8 +45,11 @@
       <ul class="nav nav-list scrollable">
         <li ng-repeat="invite in activeGroupInviteList">
           {{invite.recipient_email}}
-          <span style="float:right">
+          <span style="float:right;margin-left:10px">
             <a href="#" ng-click="revokeInvitation(invite)">Revoke</a>
+          </span>
+          <span style="float:right">
+            <a href="#" ng-click="resendInvitation(invite)">Resend</a>
           </span>
         </li>
       </ul>
