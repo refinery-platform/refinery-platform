@@ -1,9 +1,9 @@
 angular.module('refineryAnalyses')
     .controller('AnalysesCtrl',
-    ['analysesFactory', 'analysesAlertService','$scope','$timeout', '$rootScope', AnalysesCtrl]);
+    ['analysesFactory', 'analysesAlertService','$scope','$timeout', AnalysesCtrl]);
 
 
-function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $rootScope) {
+function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout) {
   "use strict";
   var vm = this;
   vm.analysesDetail = {};
