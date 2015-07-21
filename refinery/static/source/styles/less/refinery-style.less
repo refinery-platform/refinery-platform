@@ -126,6 +126,16 @@ li.analysisRunningListItem{
   width:200px;
 }
 
+ul#analyses-popover{
+  font-size: 0.8em;
+  list-style-type: none;
+  margin: 0 0 10px 0;
+  padding: 0px;
+  li{
+    padding: 0;
+    margin: 0;
+  }
+}
 
 @media (max-width: 760px) {
    #textToolStatus{
@@ -265,6 +275,7 @@ li.analysisRunningListItem{
 .navbar a {
   color: @grayLighter;
 }
+
 
 // new class for fixed header as part of the navigation bar
 @navbarHeaderBackground:          fade( lighten( @navbarBackgroundHighlight, 30% ), 25% );
