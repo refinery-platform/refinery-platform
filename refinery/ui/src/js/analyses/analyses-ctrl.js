@@ -8,6 +8,7 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout) {
   var vm = this;
   vm.analysesDetail = {};
   vm.analysesRunningUuids = [];
+  vm.analysesRunningFlag = true;
 
   vm.updateAnalysesList = function(){
     analysesFactory.getAnalysesList().then(function(){
@@ -16,9 +17,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout) {
     });
 
     var timerList = $timeout(vm.updateAnalysesList, 30000);
-      $scope.$on('refinery/analyze-tab-inactive', function(){
-        $timeout.cancel(timerList);
-      });
   };
 
   vm.refreshAnalysesDetail = function(){
@@ -66,7 +64,6 @@ function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout) {
 
   //watches for analyze tab view to update AnalysesList
   $scope.$on('refinery/analyze-tab-active', function(){
-    vm.updateAnalysesList();
     vm.refreshAnalysesDetail();
   });
 
