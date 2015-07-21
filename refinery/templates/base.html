@@ -121,6 +121,12 @@
                 </a>
             </span>
           {% endif %}
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        <span ng-controller="AnalysesCtrl">
+          <a href="#" rf-analyses-global-list-status-popover data-placement="bottom">
+             <span rp-analyses-global-list-status></span>
+          </a>
+        </span>
         </p>
 
         <div class="nav-collapse collapse">
@@ -169,10 +175,14 @@
     {% endblock %}
   </div>
 
-  <!-- Script for popup content in the tool status icon Try out ng-template -->
+  <!-- Script for popup content in the tool status and analyses icon-->
     <script type="text/ng-template" id="externaltool.html">
         <external-tool-status-details-popover></external-tool-status-details-popover>
     </script>
+     <script type="text/ng-template" id="analysesgloballist.html">
+        <analyses-global-list-status-popover></analyses-global-list-status-popover>
+    </script>
+
   <!-- 3rd party libraries -->
   <script src="{% static "vendor/jquery/dist/jquery.min.js" %}"></script>
   <script src="{% static "js/jquery-ui/jquery-ui-1.10.0.custom.min.js" %}"></script>
