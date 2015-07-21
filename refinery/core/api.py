@@ -1440,9 +1440,12 @@ class InvitationResource(ModelResource):
 
         auth_group_id_set = map(lambda g: g.id, auth_group_list)
 
-        return filter(
+        inv_list = filter(
             lambda i: i.group_id in auth_group_id_set,
             Invitation.objects.all())
+
+        inv_list.sort(key=lambda i: i.id)
+        return inv_list
 
     # Handle POST requests for sending tokens.
     def obj_create(self, bundle, **kwargs):
