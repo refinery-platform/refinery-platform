@@ -6,6 +6,10 @@
 {{ block.super }} - Collaborate
 {% endblock %}
 
+{% block script %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/bootbox/bootbox.min.js"></script>
+{% endblock %}
+
 {% block subheader %}
 <div class="page-header">
   <h1>
@@ -28,3 +32,4 @@
   <div collaborate-display></div>
 </div>
 {% endblock %}
+

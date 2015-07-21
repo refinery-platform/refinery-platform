@@ -1,18 +1,25 @@
 angular
 .module('refineryApp', [
   /*
+   * Angular modules
+   */
+  'ngResource',
+
+  /*
    * Third party modules
    */
   'xml',
+  'ui.router',
 
   /*
-   * Angular App commons
+   * Angular App globals
    */
   'errors',
 
   /*
    * Refinery modules
    */
+  'refineryRouter',
   'refineryWorkflows',
   'refineryNodeMapping',
   'refineryAnalysis',

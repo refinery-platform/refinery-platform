@@ -25,8 +25,9 @@ urlpatterns = patterns('data_set_manager.views',
     url(r'^nodes/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<type>[\w ]+)/$', "nodes", name="data_set_manager_nodes" ),
 
     url(r'^nodes/(?P<study_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<assay_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<type>[\w ]+)/annotate$', "node_annotate", name="data_set_manager_update_annotated_nodes" ),
-    
-    url(r'^import/$', DataSetImportView.as_view(), name='import_data_set'),
+
+    url(r'^import/$', login_required(DataSetImportView.as_view()),
+        name='import_data_set'),
     url(r'^import/isa-tab/$', csrf_exempt(ImportISATabView.as_view()),
         name='import_isa_tab'),  # csrf_exempt required for POST requests from external sites
     url(r'^import/isa-tab-form/$', login_required(ProcessISATabView.as_view()),

@@ -182,7 +182,7 @@ angular.module('refineryCollaboration', [])
             function (data) {
               updateGroupList();
               $modalInstance.dismiss();
-              alert("Email successfully sent");
+              bootbox.alert("Invitation successfully sent");
             },
             function (error) {
               console.error(error);
@@ -199,6 +199,20 @@ angular.module('refineryCollaboration', [])
     }).$promise.then(
       function (data) {
         updateGroupList();
+      },
+      function (error) {
+        console.error(error);
+      }
+    );
+  };
+
+  pageScope.resendInvitation = function (invite) {
+    that.groupInviteService.resend({
+      token: invite.token_uuid
+    }).$promise.then(
+      function (data) {
+        updateGroupList();
+        bootbox.alert("Invitation successfully re-sent");
       },
       function (error) {
         console.error(error);

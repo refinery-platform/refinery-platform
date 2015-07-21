@@ -57,12 +57,15 @@ angular.module('refineryNodeMapping', [
 }])
 
 
-.config(['$stateProvider', function($stateProvider, $rootScope, $scope, $timeout) {
-  //
-  // For any unmatched url, redirect to /state1
-  //$urlRouterProvider.otherwise("/browse");
-  //
-  // Now set up the states
+.config([
+  '$stateProvider',
+  '$urlRouterProvider',
+  function($stateProvider, $urlRouterProvider) {
+  // Default state
+  $urlRouterProvider.otherwise(function($injector) {
+    var $state = $injector.get('$state');
+    $state.go('browse');
+  });
 
   $stateProvider
     .state('browse', {
@@ -555,7 +558,7 @@ angular.module('refineryNodeMapping', [
   $scope.getCurrentNodeSet();
 })
 
-.controller('DataSetUiModeCtrl', function($scope, $location, $rootScope, $state, $timeout) {
+.controller('DataSetUiModeCtrl', function($scope, $location, $rootScope) {
   $rootScope.mode = DATA_SET_UI_MODE_BROWSE;
 
   $scope.$onRootScope('workflowChangedEvent', function( event, currentWorkflow ) {
@@ -565,11 +568,6 @@ angular.module('refineryNodeMapping', [
   $scope.$onRootScope('nodeRelationshipChangedEvent', function( event, currentNodeRelationship ) {
     $scope.currentNodeRelationship = currentNodeRelationship;
   });
-
-  // Go to default state
-  $timeout(function () {
-    $state.go('browse');
-  }, 0);
 })
 
 .factory("NodeSetList", function($resource) {

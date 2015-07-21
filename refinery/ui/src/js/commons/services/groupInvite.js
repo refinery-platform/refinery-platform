@@ -15,6 +15,10 @@ angular
           send: {
             method: 'POST'
           },
+          resend: {
+            method: 'PUT',
+            url: settings.appRoot + settings.refineryApi + '/invitations/:token/'
+          },
           revoke: {
             method: 'DELETE',
             url: settings.appRoot + settings.refineryApi + '/invitations/:token/'
