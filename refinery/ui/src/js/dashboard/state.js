@@ -17,7 +17,7 @@ angular
         .state(
           'dataSetsExploration',
           {
-            url: '/explore',
+            url: '/explore/',
             templateUrl: '/static/partials/dashboard/views/dataSetsExploration.html',
             controller: 'DataSetsExplorationCtrl as dse'
           },
