@@ -154,7 +154,14 @@
               <li><a href="#configuration" data-toggle="tab">Attributes</a></li>
             {% endif %}
             {% if has_change_dataset_permission %}
-              <li><a href="#analyses" data-toggle="tab" id="analyze-tab"> Analyses</a></li>
+              <li>
+                <a href="#analyses" data-toggle="tab" id="analyze-tab">
+                  <span ng-controller="AnalysesCtrl">
+                    <span rp-analyses-running-tab-icon></span>
+                  </span>
+                  Analyses
+                </a>
+              </li>
             {% endif %}
             <li><a href="#downloads" data-toggle="tab">Downloads</a></li>
             <li><a href="#details" data-toggle="tab">Details</a></li>
