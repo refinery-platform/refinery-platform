@@ -4,12 +4,12 @@
     <div class="span4 well">
       <strong>Groups</strong>
       <span style="float:right;margin-left:5px">
-        <a href="#" ng-click="openGroupEditor()"><i class="icon-cog"></i></a>
+        <a href="#/{{activeGroup.group_id}}/" ng-click="openGroupEditor()"><i class="icon-cog"></i></a>
       </span>
 
       <ul class="nav nav-list scrollable">
         <li ng-repeat="group in groupList" ng-click="setGroupActive(group)" ng-class="group.group_id === activeGroup.group_id ? 'active' : ''">
-          <a href="#">
+          <a ng-href="#/{{group.group_id}}/">
             {{group.group_name}}
             <span style="float:right;color:red" font-size="10px" ng-if="group.can_edit">
               manager
@@ -22,7 +22,7 @@
     <div class="span4 well">
       <strong>Members</strong>
       <span style="margin-left:5px" ng-if="activeGroup.can_edit">
-        <a href="#" ng-click="openEmailInvite()"><i class="icon-plus"></i></a>
+        <a href="#/{{activeGroup.group_id}}/" ng-click="openEmailInvite()"><i class="icon-plus"></i></a>
       </span>
 
       <ul class="nav nav-list scrollable">
@@ -32,7 +32,7 @@
             <span ng-if="member.is_manager" style="float:left;color:red" font-size="5px">
               manager
             </span>
-            <a href="#" ng-click="openMemberEditor(member)" style="margin-left:10px">
+            <a href="#/{{activeGroup.group_id}}/" ng-click="openMemberEditor(member)" style="margin-left:10px">
               <i class="icon-cog"></i>
             </a>
           </span>
@@ -46,10 +46,10 @@
         <li ng-repeat="invite in activeGroupInviteList">
           {{invite.recipient_email}}
           <span style="float:right;margin-left:10px">
-            <a href="#" ng-click="revokeInvitation(invite)">Revoke</a>
+            <a href="#/{{activeGroup.group_id}}/" ng-click="revokeInvitation(invite)">Revoke</a>
           </span>
           <span style="float:right">
-            <a href="#" ng-click="resendInvitation(invite)">Resend</a>
+            <a href="#/{{activeGroup.group_id}}/" ng-click="resendInvitation(invite)">Resend</a>
           </span>
         </li>
       </ul>
