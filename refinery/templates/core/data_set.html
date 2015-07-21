@@ -123,6 +123,14 @@
     {% endfor %}
   {% endif %}
 
+
+  <span ng-controller="AnalysesCtrl">
+    <div ng-if="checkAnalysesViewFlag()">
+      <span rp-analyses-alert-msg></span>
+    </div>
+  </span>
+
+
   <div ng-controller="DataSetUiModeCtrl">
 
     <div class="refinery-panel-tabs">
@@ -727,6 +735,12 @@
             $(this).unbind();
           }
         });
+      });
+
+      $(document).on('refinery/analyses-trigger-redirect', function(e){
+        console.log("I'm in the html view!");
+        var analysesStatusMessage = "Analysis '{}' finished successfully.  " +
+          "View the " + "results in the" + " file browser."
       });
 
       $("[rel=tooltip]").tooltip();

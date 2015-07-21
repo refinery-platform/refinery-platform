@@ -1,9 +1,9 @@
 angular.module('refineryAnalyses')
     .controller('AnalysesCtrl',
-    ['analysesFactory','$scope','$timeout', '$rootScope', AnalysesCtrl]);
+    ['analysesFactory', 'analysesAlertService','$scope','$timeout', '$rootScope', AnalysesCtrl]);
 
 
-function AnalysesCtrl(analysesFactory, $scope, $timeout) {
+function AnalysesCtrl(analysesFactory, analysesAlertService, $scope, $timeout, $rootScope) {
   "use strict";
   var vm = this;
   vm.analysesDetail = {};
@@ -58,10 +58,29 @@ function AnalysesCtrl(analysesFactory, $scope, $timeout) {
     });
   };
 
+  vm.setAnalysesAlertMsg= function(){
+    var uuid = window.analysisUuid;
+    analysesAlertService.setAnalysesMsg(uuid);
+    vm.analysesMsg = analysesAlertService.getAnalysesMsg();
+  };
+
+
   //watches for analyze tab view to update AnalysesList
   $scope.$on('refinery/analyze-tab-active', function(){
     vm.updateAnalysesList();
     vm.refreshAnalysesDetail();
   });
 
+  $scope.checkAnalysesViewFlag = function() {
+    var flag;
+    if(typeof window.analysisUuid === 'undefined' || window.analysisUuid === "None") {
+      flag = false;
+    }else{
+      flag = true;
+      vm.setAnalysesAlertMsg();
+    }
+    return flag;
+  };
+
+  vm.updateAnalysesList();
 }

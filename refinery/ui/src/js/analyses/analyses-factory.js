@@ -7,7 +7,6 @@ function analysesFactory($http) {
   var analysesList = [];
   var analysesDetail = {};
 
-
   var initializeAnalysesDetail = function(uuid){
     analysesDetail[uuid]={
       "preprocessing": 'PENDING',
@@ -119,6 +118,7 @@ function analysesFactory($http) {
     }
     return tempArr;
   };
+
 
  return{
    getAnalysesList: getAnalysesList,
