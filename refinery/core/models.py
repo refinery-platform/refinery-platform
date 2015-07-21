@@ -1430,9 +1430,3 @@ class Invitation(models.Model):
 
         return super(Invitation, self).save(*arg, **kwargs)
 
-
-class EmailInvite(object):
-    def __init__(self, email=None, group_id=None, group_name=None):
-        self.email = email
-        self.group_id = group_id
-        self.group_name = group_name

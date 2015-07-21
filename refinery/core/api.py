@@ -28,7 +28,7 @@ from tastypie.resources import ModelResource, Resource
 from core.models import Project, NodeSet, NodeRelationship, NodePair, \
     Workflow, WorkflowInputRelationships, Analysis, DataSet, \
     ExternalToolStatus, ResourceStatistics, GroupManagement, ExtendedGroup, \
-    UserAuthentication, Invitation, EmailInvite, UserProfile
+    UserAuthentication, Invitation, UserProfile
 from core.tasks import check_tool_status
 from data_set_manager.api import StudyResource, AssayResource, \
     InvestigationResource
@@ -1423,6 +1423,7 @@ class InvitationResource(ModelResource):
 
     # Filter to only show own resources.
     def obj_get_list(self, bundle, **kwargs):
+        self.update_db()
         get_dict = bundle.request.GET
         user = bundle.request.user
 
@@ -1473,5 +1474,10 @@ class InvitationResource(ModelResource):
         if len(inv_list) == 0:
             raiseImmediateHttpResponse(HttpNotFound('Not found or expired'))
 
-        self.send_email(inv_list[0])
+        inv = inv_list[0]
+        now = datetime.datetime.now()
+        token_duration = datetime.timedelta(days=settings.TOKEN_DURATION)
+        inv.expires = now + token_duration
+        inv.save()
+        self.send_email(inv)
         return bundle
